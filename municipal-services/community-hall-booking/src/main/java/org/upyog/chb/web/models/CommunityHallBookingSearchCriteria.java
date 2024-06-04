@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -54,5 +53,10 @@ public class CommunityHallBookingSearchCriteria {
 
 	@JsonProperty("locality")
 	private String locality;
+
+	public boolean isEmpty() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 }

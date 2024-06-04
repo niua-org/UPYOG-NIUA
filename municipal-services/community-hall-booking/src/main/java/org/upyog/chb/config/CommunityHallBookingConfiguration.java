@@ -28,7 +28,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-@Import({TracerConfiguration.class})
+@Import({ TracerConfiguration.class })
 public class CommunityHallBookingConfiguration {
 
 	@Value("${app.timezone}")
@@ -58,6 +58,7 @@ public class CommunityHallBookingConfiguration {
 	@Value("${egov.idgen.comunityHallBooking.format}")
 	private String communityHallBookingIdFromat;
 
+	//Pagination cofig for search results
 	@Value("${egov.chb.default.limit}")
 	private Integer defaultLimit;
 
@@ -67,7 +68,8 @@ public class CommunityHallBookingConfiguration {
 	@Value("${egov.chb.max.limit}")
 	private Integer maxSearchLimit;
 
-	@Value("${workflow.context.path}")
+	//Workflow configs
+	@Value("${workflow.host}")
 	private String wfHost;
 
 	@Value("${workflow.transition.path}")
@@ -76,8 +78,17 @@ public class CommunityHallBookingConfiguration {
 	@Value("${workflow.businessservice.search.path}")
 	private String wfBusinessServiceSearchPath;
 
-	@Value("${workflow.process.path}")
-	private String wfProcessPath;
+	@Value("${workflow.processinstance.search.path}")
+	private String wfProcessSearchPath;
+
+	@Value("${egov.mdms.host}")
+	private String mdmsHost;
+
+	@Value("${egov.mdms.search.endpoint}")
+	private String mdmsPath;
+	
+	@Value("${employee.allowed.search.params}")
+	private String allowedEmployeeSearchParameters;
 
 	@Bean
 	public ObjectMapper objectMapper() {

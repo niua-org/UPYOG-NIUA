@@ -6,6 +6,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.validation.annotation.Validated;
+import org.upyog.chb.web.models.workflow.ProcessInstance;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -77,6 +78,9 @@ public class CommunityHallBookingDetail {
 	private BankDetails bankDetails = null;
 	
 	private AuditDetails auditDetails;
+	
+	 @JsonProperty("workflow")
+ 	private ProcessInstance workflow = null;
 	
 
 	public CommunityHallBookingDetail addUploadedDocumentDetailsItem(DocumentDetails uploadedDocumentDetailsItem) {
