@@ -10,18 +10,18 @@ const EWCard = () => {
   }
   const links=[
      {
-       label: t("INBOX"),
+       label: t("EW_INBOX"),
        link: `/digit-ui/employee/ew/inbox`,
        role: "EW_CEMP"
      },
      {
-      label: t("ES_COMMON_APPLICATION_SEARCH"),
+      label: t("EW_APPLICATION_SEARCH"),
       link: `/digit-ui/employee/ew/my-applications`,
    },
   ]
   const EW_CEMP = Digit.UserService.hasAccess(["EW_VENDOR"]) || false;
   const propsForModuleCard = {
-    Icon: <PropertyHouse />,
+    // Icon: <PropertyHouse />,
     moduleName: t("TITLE_E_WASTE"),
     kpis: [],
     links:links.filter(link=>!link?.role||EW_CEMP),

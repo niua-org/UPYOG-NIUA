@@ -169,7 +169,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
           </StatusTable>
           <br></br>
 
-          <CheckBox label={t("EWASTE_FINAL_DECLARATION_MESSAGE")} onChange={setdeclarationhandler} styles={{ height: "auto" }} />
+          <CheckBox label={t("EWASTE_FINAL_DECLARATION_MESSAGE")} onChange={setdeclarationhandler} styles={{ height: "auto", marginBottom: "20px" }} />
         </div>
         <SubmitBar label={t("EWASTE_COMMON_BUTTON_SUBMIT")} onSubmit={onSubmit} disabled={!agree} />
       </Card>
