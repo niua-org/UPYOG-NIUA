@@ -123,7 +123,7 @@ const EWOwnerDetails = ({ t, config, onSelect, userType, formData, ownerIndex })
             ValidationRequired={true}
             {...(validation = {
               isRequired: true,
-              pattern: "[A-Za-z]{i}\.[A-Za-z]{i}\.[A-Za-z]{i}",
+              pattern: "[a-z]+\.@[a-z]+\.[a-z]{2,3}",
               type: "email",
             })}
           />

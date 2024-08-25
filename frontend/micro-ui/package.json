@@ -1,4 +1,7 @@
 {
   "name": "digit-ui",
-  "version": "1.7.0-beta.2"
+  "version": "1.7.0-beta.2",
+  "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.11.0"
+  }
 }

@@ -23,6 +23,7 @@ import { initWSComponents } from "@nudmcdgnpm/digit-ui-module-ws";
 import { DigitUI } from "@nudmcdgnpm/digit-ui-module-core";
 import { initCommonPTComponents } from "@nudmcdgnpm/digit-ui-module-commonpt";
 import { initBillsComponents, BillsModule } from "@nudmcdgnpm/digit-ui-module-bills";
+import { COMMONMODULEComponents, COMMONMODULELinks, COMMONMODULEModule } from "@nudmcdgnpm/upyog-ui-module-cm";
 
 
 
@@ -75,7 +76,8 @@ const enabledModules = [
   "PTR",
   "ASSET",
   "EW",
-  "CHB"
+  "CHB",
+  "COMMONMODULE"
 ];
 
 const initTokens = (stateCode) => {
@@ -132,7 +134,10 @@ const initDigitUI = () => {
     ...EWComponents,
     CHBModule, 
     CHBLinks, 
-    ...CHBComponents
+    ...CHBComponents,
+    COMMONMODULELinks,
+    COMMONMODULEModule,
+    ...COMMONMODULEComponents
   });
 
   initFSMComponents();

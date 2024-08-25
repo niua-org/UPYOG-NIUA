@@ -10,15 +10,15 @@ const EWASTEDocuments = ({ t, config, onSelect, formData }) => {
 
   const tenantId = Digit.ULBService.getStateId();
   const stateId = Digit.ULBService.getStateId();
-  const [documents, setDocuments] = useState(formData?.documents?.documents || []);
+  // const [documents, setDocuments] = useState(formData?.documents?.documents || []);
 
-useEffect(() => {
-  if(formData?.documents?.documents){
-    setUploadedFiles(formData.documents.documents);
-    setInd(formData.documents.documents.length);
-    setFiles(new Array(formData.documents.documents.length).fill(null))
-  }
-}, [formData])
+  useEffect(() => {
+    if (formData?.documents?.documents) {
+      setUploadedFiles(formData.documents.documents);
+      setInd(formData.documents.documents.length);
+      setFiles(new Array(formData.documents.documents.length).fill(null));
+    }
+  }, [formData]);
 
   const handleSubmit = () => {
     let document = formData.documents;
@@ -91,6 +91,7 @@ useEffect(() => {
         config={config}
         onSelect={handleSubmit}
         onSkip={onSkip}
+        isDisabled={uploadedFiles.some((file) => file === null) && files.some((file) => file === null)}
         isDisabled={uploadedFiles.some((file) => file === null) && files.some((file) => file === null)}
       >
         {files.map((file, index) => (

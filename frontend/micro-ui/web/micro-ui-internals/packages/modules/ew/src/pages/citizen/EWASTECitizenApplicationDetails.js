@@ -54,6 +54,7 @@ const EWASTECitizenApplicationDetails = () => {
   useEffect(() => {
     fetchBillData();
   }, [tenantId, requestId]);
+  
 
   const { isLoading: auditDataLoading, isError: isAuditError, data: auditResponse } = Digit.Hooks.ew.useEWSearch(
     {
@@ -62,7 +63,6 @@ const EWASTECitizenApplicationDetails = () => {
     },
     {
       enabled: true,
-
     }
   );
 
