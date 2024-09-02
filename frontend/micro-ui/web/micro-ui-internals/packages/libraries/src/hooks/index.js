@@ -292,6 +292,8 @@ import useEWSearch from "./ew/useEWSearch";
 import useEwApplicationDetail from "./ew/useEwApplicationDetail";
 import useEWApplicationAction from "./ew/useEWApplicationAction";
 
+import useCMSearch from "./cm/useCMSearch";
+
 import useChbDocumentSearch from "./chb/useChbDocumentSearch";
 import useChbApplicationDetail from "./chb/useChbApplicationDetail";
 import useChbSearch from "./chb/useChbSearch";
@@ -332,6 +334,10 @@ const ew = {
   useEwApplicationDetail,
   useEWApplicationAction,
 };
+
+const cm = {
+  useCMSearch
+}
 
 const asset = {
   useAssetClassification,
@@ -649,6 +655,7 @@ const Hooks = {
   pt,
   ptr,
   ew,
+  cm,
   dss,
   mcollect,
   hrms,

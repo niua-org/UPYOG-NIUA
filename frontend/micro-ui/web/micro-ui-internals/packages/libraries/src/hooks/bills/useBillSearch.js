@@ -20,3 +20,4 @@ const useBillSearch = ({ filters, config = {} }) => {
 };
 
 export default useBillSearch;
+

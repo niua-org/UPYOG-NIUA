@@ -15,6 +15,7 @@ import {
   Card,
   Loader,
   Header,
+  MobileNumber,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 
@@ -35,7 +36,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
   const hcaptchaRef = useRef(null);
 
   const resetCaptcha = () => {
-    console.log("hcapthca dat: ", hcaptchaRef);
+    // console.log("hcapthca dat: ", hcaptchaRef);
     if (hcaptchaRef.current) {
       hcaptchaRef.current.resetCaptcha();
     }
@@ -44,7 +45,6 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
   function setcertificate_No(e) {
     setCertificate_No(e.target.value);
   }
-  // console.log("certificatename and certificate number ::", certificate_name, certificate_No);
 
   const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
     defaultValues: {
@@ -71,10 +71,6 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     // setValue("fromDate", today);
     // setValue("toDate", today);
   }, [register, setValue, today]);
-
-  // useEffect(() => {
-  //   console.log("switch case data test : :", updatedData);
-  // }, [certificate_name, certificate_No]);
 
   const columns = [
     { Header: t("CITIZEN_NAME"), accessor: "name" },
@@ -108,13 +104,48 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
       crtNo: 2,
     },
     {
-      code: "Asset Certificate",
-      i18nKey: "Asset Certificate",
+      code: "Property Tax",
+      i18nKey: "Property Tax",
       crtNo: 3,
+    },
+    {
+      code: "Water and Sewerage",
+      i18nKey: "Water and Sewerage",
+      crtNo: 4,
+    },
+    {
+      code: "Trade License",
+      i18nKey: "Trade License",
+      crtNo: 5,
+    },
+    {
+      code: "Public Grievance Redressal",
+      i18nKey: "Public Grievance Redressal",
+      crtNo: 6,
+    },
+    {
+      code: "Deslugging Service",
+      i18nKey: "Deslugging Service",
+      crtNo: 7,
+    },
+    {
+      code: "Fire NOC Certificate",
+      i18nKey: "Fire NOC Certificate",
+      crtNo: 8,
+    },
+    {
+      code: "Building Plan Approval",
+      i18nKey: "Building Plan Approval",
+      crtNo: 9,
+    },
+    {
+      code: "Pet Certificate",
+      i18nKey: "Pet Certificate",
+      crtNo: 10,
     },
   ];
 
-  const dataObjectConverter = (name, address, certificateNumber, issueDate, validUpto, certificateStatus) => {
+  const dataCMObjectConverter = (name, address, certificateNumber, issueDate, validUpto, certificateStatus) => {
     return {
       name: name,
       address: address,
@@ -125,113 +156,309 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     };
   };
 
-  let EW_Req_data;
-  let CHB_Req_data;
+  const getAddress = (module_data) => {
+    return (
+      (module_data?.address?.doorNo ? module_data?.address?.doorNo : "") +
+      (module_data?.address?.landmark ? ", " + module_data?.address?.landmark : "") +
+      (module_data.address?.locality ? ", " + module_data.address?.locality : "") +
+      (module_data?.address?.addressLine1 ? ", " + module_data?.address?.addressLine1 : "") +
+      (module_data?.address?.city ? ", " + module_data?.address?.city : "") +
+      (module_data?.address?.pincode ? ", " + module_data?.address?.pincode : "")
+    );
+  };
 
-  const onSort = useCallback(
-    (args) => {
-      if (args.length === 0) return;
-      setValue("sortBy", args.id);
-      setValue("sortOrder", args.desc ? "DESC" : "ASC");
-    },
-    [setValue]
-  );
+  // const onSort = useCallback(
+  //   (args) => {
+  //     if (args.length === 0) return;
+  //     setValue("sortBy", args.id);
+  //     setValue("sortOrder", args.desc ? "DESC" : "ASC");
+  //   },
+  //   [setValue]
+  // );
 
-  function onPageSizeChange(e) {
-    setValue("limit", Number(e.target.value));
-    handleSubmit(onSubmit)();
+  // function onPageSizeChange(e) {
+  //   setValue("limit", Number(e.target.value));
+  //   handleSubmit(onSubmit)();
+  // }
+
+  // function nextPage() {
+  //   setValue("offset", getValues("offset") + getValues("limit"));
+  //   handleSubmit(onSubmit)();
+  // }
+  // function previousPage() {
+  //   setValue("offset", getValues("offset") - getValues("limit"));
+  //   handleSubmit(onSubmit)();
+  // }
+
+  async function ewCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.EwService.search({ tenantId, filters: { requestId: certificate_No } });
+    const dataew = applicationDetails?.EwasteApplication[0];
+
+    const EW_Req_data = dataCMObjectConverter(
+      dataew?.applicant?.applicantName,
+      getAddress(dataew),
+      dataew?.requestId,
+      "-NA-",
+      "-NA-",
+      dataew?.requestStatus
+    );
+
+    setUpdatedData([EW_Req_data]);
   }
 
-  function nextPage() {
-    setValue("offset", getValues("offset") + getValues("limit"));
-    handleSubmit(onSubmit)();
+  async function chbCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.CHBServices.search({ tenantId, filters: { bookingNo: certificate_No } });
+    const datachb = applicationDetails?.hallsBookingApplication[0];
+
+    const CHB_Req_data = dataCMObjectConverter(
+      datachb?.applicantDetail?.accountHolderName,
+      getAddress(datachb),
+      datachb.bookingNo,
+      convertEpochToDate(datachb?.paymentDate),
+      "-NA-",
+      datachb?.bookingStatus
+    );
+
+    setUpdatedData([CHB_Req_data]);
   }
-  function previousPage() {
-    setValue("offset", getValues("offset") - getValues("limit"));
-    handleSubmit(onSubmit)();
+
+  async function ptCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.PTService.search({ tenantId, filters: { propertyId: certificate_No } });
+    const datapt = applicationDetails?.Properties[0];
+    // console.log("applicatin pt certificate data ::", datapt)
+
+    const ASSET_Req_data = dataCMObjectConverter(
+      datapt?.owners[0]?.additionalDetails?.ownerName,
+      getAddress(datapt),
+      datapt.propertyId,
+      convertEpochToDate(datapt?.owners[0]?.createdDate),
+      "-NA-",
+      datapt?.status
+    );
+
+    setUpdatedData([ASSET_Req_data]);
   }
 
-  const { data: chb_data, refetch } = Digit.Hooks.chb.useChbSearch({
-    tenantId,
-    filters: { bookingNo: certificate_No },
-  });
+  async function wsCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.WSService.wnsSearch({ tenantId, filters: { applicationNumber: certificate_No } });
+    const dataws = applicationDetails;
+    console.log("applicatin ws certificate data ::", dataws);
 
-  const { isError, error, data: ew_data } = Digit.Hooks.ew.useEWSearch({
-    tenantId,
-    filters: { requestId: certificate_No },
-  });
+    // const ASSET_Req_data = dataCMObjectConverter(
+    //   datapt?.owners[0]?.additionalDetails?.ownerName,
+    //   getAddress(datapt),
+    //   datapt.propertyId,
+    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
+    //   "-NA-",
+    //   datapt?.status
+    // );
 
-  const { isError: isAuditError, data: asset_data } = Digit.Hooks.asset.useASSETSearch({
-    tenantId,
-    // filters: { applicationNo: certificate_No, audit: true },
-  });
+    // setUpdatedData([ASSET_Req_data]);
+  }
 
-  console.log("asset hook in cm :", asset_data);
+  async function tlCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.TLService.TLsearch({ tenantId });
+    const datatl = applicationDetails;
+    console.log("trade license certificate data ::", datatl);
+
+    // const ASSET_Req_data = dataCMObjectConverter(
+    //   datapt?.owners[0]?.additionalDetails?.ownerName,
+    //   getAddress(datapt),
+    //   datapt.propertyId,
+    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
+    //   "-NA-",
+    //   datapt?.status
+    // );
+
+    // setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function pgrCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.PGRService.search(tenantId, { serviceRequestId: "PG-PGR-2024-05-31-001863" }); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
+    const datapgr = applicationDetails;
+    console.log("public grievance certificate data ::", datapgr);
+
+    // const ASSET_Req_data = dataCMObjectConverter(
+    //   datapt?.owners[0]?.additionalDetails?.ownerName,
+    //   getAddress(datapt),
+    //   datapt.propertyId,
+    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
+    //   "-NA-",
+    //   datapt?.status
+    // );
+
+    // setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function OBPSCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 }); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
+    const datapgr = applicationDetails;
+    console.log("public grievance certificate data ::", datapgr);
+
+    // const ASSET_Req_data = dataCMObjectConverter(
+    //   datapt?.owners[0]?.additionalDetails?.ownerName,
+    //   getAddress(datapt),
+    //   datapt.propertyId,
+    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
+    //   "-NA-",
+    //   datapt?.status
+    // );
+
+    // setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function fsmCertificate({ certificate_No }) {
+    // const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 } ); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
+    // const datapgr = applicationDetails;
+    // console.log("public grievance certificate data ::", datapgr);
+    // const ASSET_Req_data = dataCMObjectConverter(
+    //   datapt?.owners[0]?.additionalDetails?.ownerName,
+    //   getAddress(datapt),
+    //   datapt.propertyId,
+    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
+    //   "-NA-",
+    //   datapt?.status
+    // );
+    // setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function nocCertificate({ certificate_No }) {
+    // const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 } ); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
+    // const datapgr = applicationDetails;
+    // console.log("public grievance certificate data ::", datapgr);
+    // const ASSET_Req_data = dataCMObjectConverter(
+    //   datapt?.owners[0]?.additionalDetails?.ownerName,
+    //   getAddress(datapt),
+    //   datapt.propertyId,
+    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
+    //   "-NA-",
+    //   datapt?.status
+    // );
+    // setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function petCertificate({ certificate_No }) {
+    const applicationDetails = await Digit.PTRService.search({tenantId, filters: { applicationNumber: certificate_No } }); 
+    const datapet = applicationDetails?.PetRegistrationApplications[0];
+    // console.log("pet certificate data ::", datapet);
+
+    const PTR_Req_data = dataCMObjectConverter(
+      datapet?.applicantName,
+      getAddress(datapet),
+      datapet?.applicationNumber,
+      "-NA-",
+      datapet?.petDetails?.lastVaccineDate,
+      "-NA-"
+    );
+    setUpdatedData([PTR_Req_data]);
+  }
+
+  async function petCertificate({ certificate_No }) {
+    const applicationDetails = await Digit; 
+    const dataasset = applicationDetails;
+    console.log("asset certificate data ::", dataasset);
+  
+    ASSET_Req_data = dataCMObjectConverter(
+      dataasset?.applicantDetail?.accountHolderName,
+      getAddress(dataasset),
+      convertEpochToDate(dataasset?.paymentDate),
+      "-NA-",
+      dataasset?.bookingStatus
+    );
+    setUpdatedData([ASSET_Req_data]);
+  }
+
+
+
+  // const { data: chb_data, refetch } = Digit.Hooks.chb.useChbSearch({
+  //   tenantId,
+  //   filters: { bookingNo: certificate_No },
+  // });
+
+  // const { isError, error, data: ew_data } = Digit.Hooks.ew.useEWSearch({
+  //   tenantId,
+  //   filters: { requestId: certificate_No },
+  // });
+
+  // const { data: cm_data } = Digit.Hooks.cm.useCMSearch({
+  //   tenantId,
+  //   filters: {requestId: "PG-EW-2024-08-21-000221"},
+  //   type: "ewaste"
+  // });
 
   function onSubmit() {
     switch (certificate_name.crtNo) {
       case 1:
         if (certificate_No) {
-          // const dataew = ew_data?.EwasteApplication.filter((d) => d.requestId === certificate_No);
-          const dataew = ew_data?.EwasteApplication[0];
-          const addressew =
-            (dataew?.address?.landmark ? dataew?.address?.landmark + ", " : "") +
-            (dataew.address?.locality ? dataew.address?.locality + ", " : "") +
-            (dataew?.address?.addressLine1 ? dataew?.address?.addressLine1 + ", " : "") +
-            (dataew?.address?.city ? dataew?.address?.city + ", " : "") +
-            (dataew?.address?.pincode ? dataew?.address?.pincode : "");
-          EW_Req_data = dataObjectConverter(dataew?.applicant?.applicantName, addressew, dataew?.requestId, "-NA-", "-NA-", dataew?.requestStatus);
-          // console.log("request data from ew request :: ", EW_Req_data);
-          // console.log("ewaste hook in cm :", ew_data, dataew);
-          setUpdatedData([EW_Req_data]);
+
+          // const dataew = cm_data?.EwasteApplication[0];
+          // const addressew =
+          //   (dataew?.address?.landmark ? dataew?.address?.landmark + ", " : "") +
+          //   (dataew.address?.locality ? dataew.address?.locality + ", " : "") +
+          //   (dataew?.address?.addressLine1 ? dataew?.address?.addressLine1 + ", " : "") +
+          //   (dataew?.address?.city ? dataew?.address?.city + ", " : "") +
+          //   (dataew?.address?.pincode ? dataew?.address?.pincode : "");
+          // const EW_Req_data = dataCMObjectConverter(dataew?.applicant?.applicantName, addressew, dataew?.requestId, "-NA-", "-NA-", dataew?.requestStatus);
+          // // console.log("request data from ew request :: ", EW_Req_data);
+          // // console.log("ewaste hook in cm :", ew_data, dataew);
+          // setUpdatedData([EW_Req_data]);
+          ewCertificate({ certificate_No });
         }
         break;
 
       case 2:
         if (certificate_No) {
-          // const datachb = chb_data?.hallsBookingApplication.filter((d) => d.bookingNo === certificate_No);
-          const dataasset = asset_data?.hallsBookingApplication[0];
-          const addresschb =
-            (datachb?.address?.landmark ? datachb?.address?.landmark + ", " : "") +
-            (datachb.address?.locality ? datachb.address?.locality + ", " : "") +
-            (datachb?.address?.addressLine1 ? datachb?.address?.addressLine1 + ", " : "") +
-            (datachb?.address?.city ? datachb?.address?.city + ", " : "") +
-            (datachb?.address?.pincode ? datachb?.address?.pincode : "");
-          CHB_Req_data = dataObjectConverter(
-            datachb?.applicantDetail?.accountHolderName,
-            addresschb,
-            convertEpochToDate(datachb?.paymentDate),
-            "-NA-",
-            datachb?.bookingStatus
-          );
-          // console.log("request data of chb request ::: ", CHB_Req_data);
-          // console.log("epoch daten in cm hook :: ", convertEpochToDate(datachb?.paymentDate))
-          // console.log("chb hook in cm :", chb_data);
-          setUpdatedData([CHB_Req_data]);
+          chbCertificate({ certificate_No });
         }
         break;
 
       case 3:
         if (certificate_No) {
-          const dataasset = asset_data
-          const addressasset =
-            (dataasset?.address?.landmark ? dataasset?.address?.landmark + ", " : "") +
-            (dataasset.address?.locality ? dataasset.address?.locality + ", " : "") +
-            (dataasset?.address?.addressLine1 ? dataasset?.address?.addressLine1 + ", " : "") +
-            (dataasset?.address?.city ? dataasset?.address?.city + ", " : "") +
-            (dataasset?.address?.pincode ? dataasset?.address?.pincode : "");
-
-          ASSET_Req_data = dataObjectConverter(
-            dataasset?.applicantDetail?.accountHolderName,
-            addressasset,
-            convertEpochToDate(dataasset?.paymentDate),
-            "-NA-",
-            dataasset?.bookingStatus
-          );
-          setUpdatedData([ASSET_Req_data]);
-
+          ptCertificate({ certificate_No });
         }
         break;
+
+      case 4:
+        if (certificate_No) {
+          wsCertificate({ certificate_No });
+        }
+        break;
+
+      case 5:
+        if (certificate_No) {
+          tlCertificate({ certificate_No });
+        }
+        break;
+
+      case 6:
+        if (certificate_No) {
+          pgrCertificate({ certificate_No });
+        }
+        break;
+
+      case 7:
+        if (certificate_No) {
+          fsmCertificate({ certificate_No });
+        }
+        break;
+
+      case 8:
+        if (certificate_No) {
+          nocCertificate({ certificate_No });
+        }
+        break;
+
+      case 9:
+        if (certificate_No) {
+          OBPSCertificate({ certificate_No });
+        }
+        break;
+
+        case 10:
+          if (certificate_No) {
+            petCertificate({ certificate_No });
+          }
+          break;
 
       default:
         console.log("Please select a certificate");
@@ -292,7 +519,11 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
           </SearchField>
 
           <SearchField className="ssecondubmit">
-            <SubmitBar label={t("ES_COMMON_SEARCH")} submit disabled={!ishuman} />
+            <SubmitBar
+              label={t("ES_COMMON_SEARCH")}
+              submit
+              //  disabled={!ishuman}
+            />
             <p
               style={{ marginTop: "10px" }}
               onClick={() => {
@@ -309,7 +540,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
                 setShowToast(null);
                 previousPage();
                 setistable(false);
-                // setIshuman(false);
+                setIshuman(false);
                 setCertificate_name("");
                 setCertificate_No("");
                 resetCaptcha();
@@ -345,6 +576,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
                 },
               };
             }}
+            isPaginationRequired={false}
             // onPageSizeChange={onPageSizeChange}
             // currentPage={getValues("offset") / getValues("limit")}
             // onNextPage={nextPage}
