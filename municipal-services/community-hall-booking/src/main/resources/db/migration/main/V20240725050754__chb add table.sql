@@ -1,5 +1,5 @@
 
-create table eg_chb_booking_detail_init(
+create table  IF NOT EXISTS eg_chb_booking_detail_init(
   booking_id character varying(64) NOT NULL,
   tenant_id character varying(10) NOT NULL,
   community_hall_id character varying(64) NOT NULL, 
@@ -15,7 +15,7 @@ create table eg_chb_booking_detail_init(
 
 create table eg_chb_booking_detail(
   booking_id character varying(64) NOT NULL,
-  booking_no character varying(64),
+  booking_no character varying(64) UNIQUE,
   payment_date bigint,
   application_date bigint not null,
   tenant_id character varying(64) NOT NULL,
@@ -24,10 +24,13 @@ create table eg_chb_booking_detail(
   special_category character varying(60) NOT NULL,
   purpose character varying(60) NOT NULL,
   purpose_description character varying(100) NOT NULL,
+  receipt_no character varying(64),
   createdBy character varying(64) NOT NULL,
   createdTime bigint  NOT NULL,
   lastModifiedBy character varying(64),
   lastModifiedTime bigint,
+  permission_letter_filestore_id character varying(64),
+  payment_receipt_filestore_id character varying(64),
   constraint eg_chb_booking_detail_pk primary key (booking_id)
 );
 
@@ -48,16 +51,20 @@ create table eg_chb_booking_detail_audit(
   special_category character varying(60) NOT NULL,
   purpose character varying(60) NOT NULL,
   purpose_description character varying(100) NOT NULL,
+  receipt_no character varying(64),
   createdBy character varying(64) NOT NULL,
   createdTime bigint  NOT NULL,
   lastModifiedBy character varying(64),
-  lastModifiedTime bigint
+  lastModifiedTime bigint,
+   permission_letter_filestore_id character varying(64),
+  payment_receipt_filestore_id character varying(64)
 );
 
 create table eg_chb_slot_detail(
    slot_id character varying(64) NOT NULL,
    booking_id character varying(64) NOT NULL,
    hall_code character varying(64) NOT NULL,
+   capacity character varying(20) NOT NULL,
    booking_date character varying(20) NOT NULL,
    booking_from_time character varying(20) NOT NULL,
    booking_to_time character varying(20) NOT NULL,
@@ -73,10 +80,11 @@ create table eg_chb_slot_detail(
      ON DELETE NO ACTION
 );
 
-create table eg_chb_slot_detai_auditl(
+create table eg_chb_slot_detail_audit(
    slot_id character varying(64) NOT NULL,
    booking_id character varying(64) NOT NULL,
    hall_code character varying(64) NOT NULL,
+   capacity character varying(20) NOT NULL,
    booking_date character varying(20) NOT NULL,
    booking_from_time character varying(20) NOT NULL,
    booking_to_time character varying(20) NOT NULL,
@@ -144,12 +152,14 @@ create table eg_chb_address_detail (
     applicant_detail_id character varying(64)  NOT NULL,  -- Foreign Key
     door_no character varying(100),
     house_no character varying(100),
+    street_name character varying(150),
     address_line_1 character varying(150),
     landmark character varying(150),
     city character varying(100)  NOT NULL,
-    pincode VARCHAR(12)   NOT NULL,
-    street_name character varying(150),
+    city_code character varying(10)  NOT NULL,
+    locality character varying(100)  NOT NULL,
     locality_code character varying(20)  NOT NULL,
+    pincode VARCHAR(12)   NOT NULL,
     constraint eg_chb_address_detail_id_pk PRIMARY KEY (address_id),
     constraint eg_chb_address_applicant_detail_id_fk 
     FOREIGN KEY (applicant_detail_id) REFERENCES eg_chb_applicant_detail (applicant_detail_id)
