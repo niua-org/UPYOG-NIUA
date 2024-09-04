@@ -143,6 +143,21 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
       i18nKey: "Pet Certificate",
       crtNo: 10,
     },
+    {
+      code: "Birth Certificate",
+      i18nKey: "Birth Certificate",
+      crtNo: 11,
+    },
+    {
+      code: "Death Certificate",
+      i18nKey: "Death Certificate",
+      crtNo: 12,
+    },
+    {
+      code: "Asset Certificate",
+      i18nKey: "Asset Certificate",
+      crtNo: 13,
+    },
   ];
 
   const dataCMObjectConverter = (name, address, certificateNumber, issueDate, validUpto, certificateStatus) => {
@@ -257,20 +272,20 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
   }
 
   async function tlCertificate({ certificate_No }) {
-    const applicationDetails = await Digit.TLService.TLsearch({ tenantId });
-    const datatl = applicationDetails;
+    const applicationDetails = await Digit.TLService.TLsearch({ tenantId, filters: { applicationNumber: certificate_No } });
+    const datatl = applicationDetails?.Licenses[0];
     console.log("trade license certificate data ::", datatl);
 
-    // const ASSET_Req_data = dataCMObjectConverter(
-    //   datapt?.owners[0]?.additionalDetails?.ownerName,
-    //   getAddress(datapt),
-    //   datapt.propertyId,
-    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
-    //   "-NA-",
-    //   datapt?.status
-    // );
+    const TL_Req_data = dataCMObjectConverter(
+      datatl?.tradeLicenseDetail?.owners[0]?.name,
+      getAddress(datatl?.tradeLicenseDetail),
+      datatl?.applicationNumber,
+      convertEpochToDate(datatl?.applicationDate),
+      convertEpochToDate(datatl?.validTo),
+      datatl?.status
+    );
 
-    // setUpdatedData([ASSET_Req_data]);
+    setUpdatedData([TL_Req_data]);
   }
 
   async function pgrCertificate({ certificate_No }) {
@@ -291,9 +306,9 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
   }
 
   async function OBPSCertificate({ certificate_No }) {
-    const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 }); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
-    const datapgr = applicationDetails;
-    console.log("public grievance certificate data ::", datapgr);
+    const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 }); 
+    const databpa = applicationDetails.BPA;
+    console.log("obps certificate data ::", databpa);
 
     // const ASSET_Req_data = dataCMObjectConverter(
     //   datapt?.owners[0]?.additionalDetails?.ownerName,
@@ -338,7 +353,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
   }
 
   async function petCertificate({ certificate_No }) {
-    const applicationDetails = await Digit.PTRService.search({tenantId, filters: { applicationNumber: certificate_No } }); 
+    const applicationDetails = await Digit.PTRService.search({ tenantId, filters: { applicationNumber: certificate_No } });
     const datapet = applicationDetails?.PetRegistrationApplications[0];
     // console.log("pet certificate data ::", datapet);
 
@@ -353,11 +368,11 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     setUpdatedData([PTR_Req_data]);
   }
 
-  async function petCertificate({ certificate_No }) {
-    const applicationDetails = await Digit; 
+  async function assetCertificate({ certificate_No }) {
+    const applicationDetails = await Digit;
     const dataasset = applicationDetails;
     console.log("asset certificate data ::", dataasset);
-  
+
     ASSET_Req_data = dataCMObjectConverter(
       dataasset?.applicantDetail?.accountHolderName,
       getAddress(dataasset),
@@ -366,6 +381,36 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
       dataasset?.bookingStatus
     );
     setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function BirthCertificate({ certificate_No }) {
+    const applicationDetails = await Digit; 
+    const dataasset = applicationDetails?.applications[0];
+    console.log("asset certificate data ::", dataasset);
+
+    ASSET_Req_data = dataCMObjectConverter(
+      dataasset?.applicantDetail?.accountHolderName,
+      getAddress(dataasset),
+      convertEpochToDate(dataasset?.paymentDate),
+      "-NA-",
+      dataasset?.bookingStatus
+    );
+    setUpdatedData([ASSET_Req_data]);
+  }
+
+  async function DeathCertificate({ certificate_No }) {
+    // const applicationDetails = await Digit; 
+    // const dataasset = applicationDetails;
+    // console.log("asset certificate data ::", dataasset);
+
+    // ASSET_Req_data = dataCMObjectConverter(
+    //   dataasset?.applicantDetail?.accountHolderName,
+    //   getAddress(dataasset),
+    //   convertEpochToDate(dataasset?.paymentDate),
+    //   "-NA-",
+    //   dataasset?.bookingStatus
+    // );
+    // setUpdatedData([ASSET_Req_data]);
   }
 
 
@@ -454,11 +499,29 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
         }
         break;
 
-        case 10:
-          if (certificate_No) {
-            petCertificate({ certificate_No });
-          }
-          break;
+      case 10:
+        if (certificate_No) {
+          petCertificate({ certificate_No });
+        }
+        break;
+
+      case 11:
+        if (certificate_No) {
+          BirthCertificate({ certificate_No });
+        }
+        break;
+
+      case 12:
+        if (certificate_No) {
+          DeathCertificate({ certificate_No });
+        }
+        break;
+
+      case 13:
+        if (certificate_No) {
+          assetCertificate({ certificate_No });
+        }
+        break;
 
       default:
         console.log("Please select a certificate");
@@ -522,7 +585,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
             <SubmitBar
               label={t("ES_COMMON_SEARCH")}
               submit
-              //  disabled={!ishuman}
+            //  disabled={!ishuman}
             />
             <p
               style={{ marginTop: "10px" }}
@@ -577,14 +640,14 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
               };
             }}
             isPaginationRequired={false}
-            // onPageSizeChange={onPageSizeChange}
-            // currentPage={getValues("offset") / getValues("limit")}
-            // onNextPage={nextPage}
-            // onPrevPage={previousPage}
-            // pageSizeLimit={getValues("limit")}
-            // onSort={onSort}
-            // disableSort={false}
-            // sortParams={[{ id: getValues("sortBy"), desc: getValues("sortOrder") === "DESC" ? true : false }]}
+          // onPageSizeChange={onPageSizeChange}
+          // currentPage={getValues("offset") / getValues("limit")}
+          // onNextPage={nextPage}
+          // onPrevPage={previousPage}
+          // pageSizeLimit={getValues("limit")}
+          // onSort={onSort}
+          // disableSort={false}
+          // sortParams={[{ id: getValues("sortBy"), desc: getValues("sortOrder") === "DESC" ? true : false }]}
           />
         )}
 
