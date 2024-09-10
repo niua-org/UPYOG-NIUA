@@ -6,10 +6,12 @@ import { useRouteMatch } from "react-router-dom";
 import CitizenApp from "./pages/citizen";
 
 import CMSearchCertificate from "./pageComponents/CMSearchCertificate";
+import CMSearchApplication from "./components/SearchApplication";
 
 
 const componentsToRegister = {
-  CMSearchCertificate
+  CMSearchCertificate,
+  CMSearchApplication
 };
 
 const addComponentsToRegistry = () => {

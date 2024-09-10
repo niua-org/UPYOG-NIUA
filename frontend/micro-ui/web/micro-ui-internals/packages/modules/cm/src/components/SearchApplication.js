@@ -19,7 +19,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 
-const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBarStyle = {}, MenuStyle = {} }) => {
+const CMSearchApplication = ({ t, tenantId, setShowToast }) => {
   const isMobile = window.Digit.Utils.browser.isMobile();
   const todaydate = new Date();
   const today = todaydate.toISOString().split("T")[0];
@@ -27,18 +27,13 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
   const [token, setToken] = useState("");
   const captcha = useRef();
   const [ishuman, setIshuman] = useState(false);
-  const tenantId = "pg.citya";
   const [istable, setistable] = useState(false);
-
   const [certificate_name, setCertificate_name] = useState("");
   const [certificate_No, setCertificate_No] = useState("");
 
-  const hcaptchaRef = useRef(null);
-
   const resetCaptcha = () => {
-    // console.log("hcapthca dat: ", hcaptchaRef);
-    if (hcaptchaRef.current) {
-      hcaptchaRef.current.resetCaptcha();
+    if (captcha.current) {
+      captcha.current.resetCaptcha();
     }
   };
 
@@ -72,6 +67,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     // setValue("toDate", today);
   }, [register, setValue, today]);
 
+  // columns defined to be passed in applicationtable
   const columns = [
     { Header: t("CITIZEN_NAME"), accessor: "name" },
     { Header: t("CITIZEN_ADDRESS"), accessor: "address" },
@@ -92,11 +88,22 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     },
   ]);
 
+  // certificates to be passed in the dropdown to select a particular certificate and their crtNo for the switch case in onsubmit function
   const certificateTypes = [
     {
-      code: "E-Waste Certificate",
-      i18nKey: "E-Waste Certificate",
-      crtNo: 1,
+      code: "Asset Certificate",
+      i18nKey: "Asset Certificate",
+      crtNo: 14,
+    },
+    {
+      code: "Birth Certificate",
+      i18nKey: "Birth Certificate",
+      crtNo: 12,
+    },
+    {
+      code: "Building Plan Approval",
+      i18nKey: "Building Plan Approval",
+      crtNo: 10,
     },
     {
       code: "Community Hall Booking",
@@ -104,62 +111,58 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
       crtNo: 2,
     },
     {
-      code: "Property Tax",
-      i18nKey: "Property Tax",
-      crtNo: 3,
-    },
-    {
-      code: "Water and Sewerage",
-      i18nKey: "Water and Sewerage",
-      crtNo: 4,
-    },
-    {
-      code: "Trade License",
-      i18nKey: "Trade License",
-      crtNo: 5,
-    },
-    {
-      code: "Public Grievance Redressal",
-      i18nKey: "Public Grievance Redressal",
-      crtNo: 6,
+      code: "Death Certificate",
+      i18nKey: "Death Certificate",
+      crtNo: 13,
     },
     {
       code: "Deslugging Service",
       i18nKey: "Deslugging Service",
-      crtNo: 7,
+      crtNo: 8,
+    },
+    {
+      code: "E-Waste Certificate",
+      i18nKey: "E-Waste Certificate",
+      crtNo: 1,
     },
     {
       code: "Fire NOC Certificate",
       i18nKey: "Fire NOC Certificate",
-      crtNo: 8,
-    },
-    {
-      code: "Building Plan Approval",
-      i18nKey: "Building Plan Approval",
       crtNo: 9,
     },
     {
       code: "Pet Certificate",
       i18nKey: "Pet Certificate",
-      crtNo: 10,
-    },
-    {
-      code: "Birth Certificate",
-      i18nKey: "Birth Certificate",
       crtNo: 11,
     },
     {
-      code: "Death Certificate",
-      i18nKey: "Death Certificate",
-      crtNo: 12,
+      code: "Public Grievance Redressal",
+      i18nKey: "Public Grievance Redressal",
+      crtNo: 7,
     },
     {
-      code: "Asset Certificate",
-      i18nKey: "Asset Certificate",
-      crtNo: 13,
+      code: "Property Tax",
+      i18nKey: "Property Tax",
+      crtNo: 3,
+    },
+    {
+      code: "Sewerage Certificate",
+      i18nKey: "Sewerage Certificate",
+      crtNo: 5,
+    },
+    {
+      code: "Trade License",
+      i18nKey: "Trade License",
+      crtNo: 6,
+    },
+    {
+      code: "Water Certificate",
+      i18nKey: "Water Certificate",
+      crtNo: 4,
     },
   ];
 
+  // dataCMObjectConverter function to set data in a structure needed by the application table
   const dataCMObjectConverter = (name, address, certificateNumber, issueDate, validUpto, certificateStatus) => {
     return {
       name: name,
@@ -171,6 +174,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     };
   };
 
+  // getAddress function is defined for setting the structure of address to be passed in the address field for applicationtable
   const getAddress = (module_data) => {
     return (
       (module_data?.address?.doorNo ? module_data?.address?.doorNo : "") +
@@ -180,226 +184,238 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
       (module_data?.address?.city ? ", " + module_data?.address?.city : "") +
       (module_data?.address?.pincode ? ", " + module_data?.address?.pincode : "")
     );
+
   };
 
-  // const onSort = useCallback(
-  //   (args) => {
-  //     if (args.length === 0) return;
-  //     setValue("sortBy", args.id);
-  //     setValue("sortOrder", args.desc ? "DESC" : "ASC");
-  //   },
-  //   [setValue]
-  // );
-
-  // function onPageSizeChange(e) {
-  //   setValue("limit", Number(e.target.value));
-  //   handleSubmit(onSubmit)();
-  // }
-
-  // function nextPage() {
-  //   setValue("offset", getValues("offset") + getValues("limit"));
-  //   handleSubmit(onSubmit)();
-  // }
-  // function previousPage() {
-  //   setValue("offset", getValues("offset") - getValues("limit"));
-  //   handleSubmit(onSubmit)();
-  // }
-
-  async function ewCertificate({ certificate_No }) {
+  async function ewCertificate(certificate_No) {
     const applicationDetails = await Digit.EwService.search({ tenantId, filters: { requestId: certificate_No } });
     const dataew = applicationDetails?.EwasteApplication[0];
+    console.log("ewaste certificate::", dataew)
 
-    const EW_Req_data = dataCMObjectConverter(
-      dataew?.applicant?.applicantName,
-      getAddress(dataew),
-      dataew?.requestId,
-      "-NA-",
-      "-NA-",
-      dataew?.requestStatus
-    );
-
-    setUpdatedData([EW_Req_data]);
+    if (dataew?.requestId) {
+      const EW_Req_data = dataCMObjectConverter(
+        dataew?.applicant?.applicantName,
+        getAddress(dataew),
+        dataew?.requestId,
+        "-NA-",
+        "-NA-",
+        dataew?.requestStatus
+      );
+      setUpdatedData([EW_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function chbCertificate({ certificate_No }) {
+  async function chbCertificate(certificate_No) {
     const applicationDetails = await Digit.CHBServices.search({ tenantId, filters: { bookingNo: certificate_No } });
     const datachb = applicationDetails?.hallsBookingApplication[0];
 
-    const CHB_Req_data = dataCMObjectConverter(
-      datachb?.applicantDetail?.accountHolderName,
-      getAddress(datachb),
-      datachb.bookingNo,
-      convertEpochToDate(datachb?.paymentDate),
-      "-NA-",
-      datachb?.bookingStatus
-    );
+    if (datachb.bookingNo) {
+      const CHB_Req_data = dataCMObjectConverter(
+        datachb?.applicantDetail?.accountHolderName,
+        getAddress(datachb),
+        datachb.bookingNo,
+        convertEpochToDate(datachb?.paymentDate),
+        "-NA-",
+        datachb?.bookingStatus
+      );
 
-    setUpdatedData([CHB_Req_data]);
+      setUpdatedData([CHB_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function ptCertificate({ certificate_No }) {
+  async function ptCertificate(certificate_No) {
     const applicationDetails = await Digit.PTService.search({ tenantId, filters: { propertyId: certificate_No } });
     const datapt = applicationDetails?.Properties[0];
     // console.log("applicatin pt certificate data ::", datapt)
 
-    const ASSET_Req_data = dataCMObjectConverter(
-      datapt?.owners[0]?.additionalDetails?.ownerName,
-      getAddress(datapt),
-      datapt.propertyId,
-      convertEpochToDate(datapt?.owners[0]?.createdDate),
-      "-NA-",
-      datapt?.status
-    );
+    if (datapt.propertyId) {
+      const ASSET_Req_data = dataCMObjectConverter(
+        datapt?.owners[0]?.additionalDetails?.ownerName,
+        getAddress(datapt),
+        datapt.propertyId,
+        convertEpochToDate(datapt?.owners[0]?.createdDate),
+        "-NA-",
+        datapt?.status
+      );
 
-    setUpdatedData([ASSET_Req_data]);
+      setUpdatedData([ASSET_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function wsCertificate({ certificate_No }) {
-    const applicationDetails = await Digit.WSService.wnsSearch({ tenantId, filters: { applicationNumber: certificate_No } });
-    const dataws = applicationDetails;
-    console.log("applicatin ws certificate data ::", dataws);
+  async function wsCertificate(certificate_No) {
+    const applicationDetails = await Digit.WSService.WSWatersearch({ tenantId, filters: { applicationNumber: certificate_No } });
+    const dataws = applicationDetails.WaterConnection[0];
+    console.log("applicatin water certificate data ::", dataws);
 
-    // const ASSET_Req_data = dataCMObjectConverter(
-    //   datapt?.owners[0]?.additionalDetails?.ownerName,
-    //   getAddress(datapt),
-    //   datapt.propertyId,
-    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
-    //   "-NA-",
-    //   datapt?.status
-    // );
+    if (dataws.applicationNo) {
+      const WS_Req_data = dataCMObjectConverter(
+        dataws?.additionalDetails?.ownerName,
+        "-NA-",
+        dataws.applicationNo,
+        convertEpochToDate(dataws?.auditDetails?.createdTime),
+        "-NA-",
+        dataws?.applicationStatus
+      );
 
-    // setUpdatedData([ASSET_Req_data]);
+      setUpdatedData([WS_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function tlCertificate({ certificate_No }) {
+  async function swCertificate(certificate_No) {
+    const applicationDetails = await Digit.WSService.WSSewsearch({ tenantId, filters: { applicationNumber: certificate_No } });
+    const datasw = applicationDetails?.SewerageConnections[0];
+    console.log("applicatin ws sewarage certificate data ::", datasw);
+
+    if (datasw.applicationNo) {
+      const SW_Req_data = dataCMObjectConverter(
+        "-NA-",
+        "-NA-",
+        datasw.applicationNo,
+        convertEpochToDate(datasw?.additionalDetails?.appCreatedDate),
+        "-NA-",
+        datasw?.applicationStatus
+      );
+
+      setUpdatedData([SW_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
+  }
+
+  async function tlCertificate(certificate_No) {
     const applicationDetails = await Digit.TLService.TLsearch({ tenantId, filters: { applicationNumber: certificate_No } });
     const datatl = applicationDetails?.Licenses[0];
     console.log("trade license certificate data ::", datatl);
 
-    const TL_Req_data = dataCMObjectConverter(
-      datatl?.tradeLicenseDetail?.owners[0]?.name,
-      getAddress(datatl?.tradeLicenseDetail),
-      datatl?.applicationNumber,
-      convertEpochToDate(datatl?.applicationDate),
-      convertEpochToDate(datatl?.validTo),
-      datatl?.status
-    );
+    if (datatl?.applicationNumber) {
+      const TL_Req_data = dataCMObjectConverter(
+        datatl?.tradeLicenseDetail?.owners[0]?.name,
+        getAddress(datatl?.tradeLicenseDetail),
+        datatl?.applicationNumber,
+        convertEpochToDate(datatl?.applicationDate),
+        convertEpochToDate(datatl?.validTo),
+        datatl?.status
+      );
 
-    setUpdatedData([TL_Req_data]);
+      setUpdatedData([TL_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function pgrCertificate({ certificate_No }) {
-    const applicationDetails = await Digit.PGRService.search(tenantId, { serviceRequestId: "PG-PGR-2024-05-31-001863" }); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
-    const datapgr = applicationDetails;
-    console.log("public grievance certificate data ::", datapgr);
-
-    // const ASSET_Req_data = dataCMObjectConverter(
-    //   datapt?.owners[0]?.additionalDetails?.ownerName,
-    //   getAddress(datapt),
-    //   datapt.propertyId,
-    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
-    //   "-NA-",
-    //   datapt?.status
-    // );
-
-    // setUpdatedData([ASSET_Req_data]);
-  }
-
-  async function OBPSCertificate({ certificate_No }) {
-    const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 }); 
-    const databpa = applicationDetails.BPA;
-    console.log("obps certificate data ::", databpa);
-
-    // const ASSET_Req_data = dataCMObjectConverter(
-    //   datapt?.owners[0]?.additionalDetails?.ownerName,
-    //   getAddress(datapt),
-    //   datapt.propertyId,
-    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
-    //   "-NA-",
-    //   datapt?.status
-    // );
-
-    // setUpdatedData([ASSET_Req_data]);
-  }
-
-  async function fsmCertificate({ certificate_No }) {
-    // const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 } ); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
-    // const datapgr = applicationDetails;
+  async function pgrCertificate(certificate_No) {
+    console.log("pgr certificate no :: ", certificate_No)
+    const applicationDetails = await Digit.PGRService.search(tenantId, { serviceRequestId: certificate_No });
+    const datapgr = applicationDetails?.ServiceWrappers[0];
     // console.log("public grievance certificate data ::", datapgr);
-    // const ASSET_Req_data = dataCMObjectConverter(
-    //   datapt?.owners[0]?.additionalDetails?.ownerName,
-    //   getAddress(datapt),
-    //   datapt.propertyId,
-    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
-    //   "-NA-",
-    //   datapt?.status
-    // );
-    // setUpdatedData([ASSET_Req_data]);
+
+    if (datapgr.service?.serviceRequestId) {
+      const PGR_Req_data = dataCMObjectConverter(
+        datapgr?.service?.citizen?.name,
+        getAddress(datapgr?.service),
+        datapgr.service?.serviceRequestId,
+        convertEpochToDate(datapgr?.service?.auditDetails?.createdTime),
+        "-NA-",
+        datapgr?.service?.applicationStatus
+      );
+
+      setUpdatedData([PGR_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function nocCertificate({ certificate_No }) {
-    // const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { requestor: 9999999999, mobileNumber: 9999999999, limit: 50, offset: 0 } ); // serviceRequestId is hardcoded for testing only and will be made dynamic after fixing problems
-    // const datapgr = applicationDetails;
-    // console.log("public grievance certificate data ::", datapgr);
-    // const ASSET_Req_data = dataCMObjectConverter(
-    //   datapt?.owners[0]?.additionalDetails?.ownerName,
-    //   getAddress(datapt),
-    //   datapt.propertyId,
-    //   convertEpochToDate(datapt?.owners[0]?.createdDate),
-    //   "-NA-",
-    //   datapt?.status
-    // );
-    // setUpdatedData([ASSET_Req_data]);
+  async function OBPSCertificate(certificate_No) {
+    const applicationDetails = await Digit.OBPSService.BPASearch(tenantId, { applicationNo: certificate_No });
+    const databpa = applicationDetails?.BPA[0];
+    console.log("obps certificate data ::", applicationDetails);
+
+    if (databpa?.applicationNo) {
+      const OBPS_Req_data = dataCMObjectConverter(
+        databpa?.landInfo?.owners?.name,
+        getAddress(databpa?.landInfo),
+        databpa?.applicationNo,
+        convertEpochToDate(databpa?.landInfo?.owners?.auditDetails?.createdTime),
+        convertEpochToDate(databpa?.landInfo?.owners?.pwdExpiryDate),
+        databpa?.status
+      );
+
+      setUpdatedData([OBPS_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function petCertificate({ certificate_No }) {
+  async function fsmCertificate(certificate_No) {
+    const applicationDetails = await Digit.FSMService.search(tenantId, { applicationNos: certificate_No });
+    const datafsm = applicationDetails?.fsm[0];
+    console.log("fsm certificate data ::", datafsm);
+
+    if (datafsm?.applicationNo) {
+      const FSM_Req_data = dataCMObjectConverter(
+        datafsm?.citizen?.name,
+        getAddress(datafsm),
+        datafsm?.applicationNo,
+        convertEpochToDate(datafsm?.citizen?.createdDate),
+        convertEpochToDate(datafsm?.citizen?.pwdExpiryDate),
+        datafsm?.applicationStatus
+      );
+      setUpdatedData([FSM_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
+  }
+
+  async function nocCertificate(certificate_No) {
+    const applicationDetails = await Digit.NOCService.NOCsearch({ tenantId, filters: { applicationNo: certificate_No } });
+    const datanoc = applicationDetails?.Noc[0];
+    console.log("fire noc certificate data ::", datanoc);
+
+    if (datanoc.applicationNo) {
+      const NOC_Req_data = dataCMObjectConverter(
+        datanoc?.additionalDetails?.applicantName,
+        "-NA-",
+        datanoc.applicationNo,
+        "-NA-",
+        "-NA-",
+        datanoc?.applicationStatus
+      );
+      setUpdatedData([NOC_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
+  }
+
+  async function petCertificate(certificate_No) {
     const applicationDetails = await Digit.PTRService.search({ tenantId, filters: { applicationNumber: certificate_No } });
     const datapet = applicationDetails?.PetRegistrationApplications[0];
     // console.log("pet certificate data ::", datapet);
 
-    const PTR_Req_data = dataCMObjectConverter(
-      datapet?.applicantName,
-      getAddress(datapet),
-      datapet?.applicationNumber,
-      "-NA-",
-      datapet?.petDetails?.lastVaccineDate,
-      "-NA-"
-    );
-    setUpdatedData([PTR_Req_data]);
+    if (datapet?.applicationNumber) {
+      const PTR_Req_data = dataCMObjectConverter(
+        datapet?.applicantName,
+        getAddress(datapet),
+        datapet?.applicationNumber,
+        "-NA-",
+        datapet?.petDetails?.lastVaccineDate,
+        "-NA-"
+      );
+      setUpdatedData([PTR_Req_data]);
+    } else {
+      setShowToast({ label: "Application doesn't exist", warning: true })
+    }
   }
 
-  async function assetCertificate({ certificate_No }) {
-    const applicationDetails = await Digit;
-    const dataasset = applicationDetails;
-    console.log("asset certificate data ::", dataasset);
-
-    ASSET_Req_data = dataCMObjectConverter(
-      dataasset?.applicantDetail?.accountHolderName,
-      getAddress(dataasset),
-      convertEpochToDate(dataasset?.paymentDate),
-      "-NA-",
-      dataasset?.bookingStatus
-    );
-    setUpdatedData([ASSET_Req_data]);
-  }
-
-  async function BirthCertificate({ certificate_No }) {
-    const applicationDetails = await Digit; 
-    const dataasset = applicationDetails?.applications[0];
-    console.log("asset certificate data ::", dataasset);
-
-    ASSET_Req_data = dataCMObjectConverter(
-      dataasset?.applicantDetail?.accountHolderName,
-      getAddress(dataasset),
-      convertEpochToDate(dataasset?.paymentDate),
-      "-NA-",
-      dataasset?.bookingStatus
-    );
-    setUpdatedData([ASSET_Req_data]);
-  }
-
-  async function DeathCertificate({ certificate_No }) {
-    // const applicationDetails = await Digit; 
+  async function assetCertificate(certificate_No) {
+    // const applicationDetails = await Digit;
     // const dataasset = applicationDetails;
     // console.log("asset certificate data ::", dataasset);
 
@@ -413,122 +429,128 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
     // setUpdatedData([ASSET_Req_data]);
   }
 
+  async function BirthCertificate(certificate_No) {
+    const applicationDetails = await Digit.BnDService.Bsearch({ tenantId, filters: { registrationNo: certificate_No } });
+    const databirth = applicationDetails?.applications[0];
+    console.log("birth certificate data ::", databirth);
 
+    // Birth_Req_data = dataCMObjectConverter(
+    //   dataasset?.applicantDetail?.accountHolderName,
+    //   getAddress(dataasset),
+    //   convertEpochToDate(dataasset?.paymentDate),
+    //   "-NA-",
+    //   dataasset?.bookingStatus
+    // );
+    // setUpdatedData([Birth_Req_data]);
+  }
 
-  // const { data: chb_data, refetch } = Digit.Hooks.chb.useChbSearch({
-  //   tenantId,
-  //   filters: { bookingNo: certificate_No },
-  // });
+  async function DeathCertificate(certificate_No) {
+    const applicationDetails = await Digit.BnDService.Dsearch({ tenantId, filters: {} });
+    const datadeath = applicationDetails?.applications[0];
+    console.log("death certificate data ::", datadeath);
 
-  // const { isError, error, data: ew_data } = Digit.Hooks.ew.useEWSearch({
-  //   tenantId,
-  //   filters: { requestId: certificate_No },
-  // });
-
-  // const { data: cm_data } = Digit.Hooks.cm.useCMSearch({
-  //   tenantId,
-  //   filters: {requestId: "PG-EW-2024-08-21-000221"},
-  //   type: "ewaste"
-  // });
+    // ASSET_Req_data = dataCMObjectConverter(
+    //   dataasset?.applicantDetail?.accountHolderName,
+    //   getAddress(dataasset),
+    //   convertEpochToDate(dataasset?.paymentDate),
+    //   "-NA-",
+    //   dataasset?.bookingStatus
+    // );
+    // setUpdatedData([ASSET_Req_data]);
+  }
 
   function onSubmit() {
     switch (certificate_name.crtNo) {
       case 1:
         if (certificate_No) {
-
-          // const dataew = cm_data?.EwasteApplication[0];
-          // const addressew =
-          //   (dataew?.address?.landmark ? dataew?.address?.landmark + ", " : "") +
-          //   (dataew.address?.locality ? dataew.address?.locality + ", " : "") +
-          //   (dataew?.address?.addressLine1 ? dataew?.address?.addressLine1 + ", " : "") +
-          //   (dataew?.address?.city ? dataew?.address?.city + ", " : "") +
-          //   (dataew?.address?.pincode ? dataew?.address?.pincode : "");
-          // const EW_Req_data = dataCMObjectConverter(dataew?.applicant?.applicantName, addressew, dataew?.requestId, "-NA-", "-NA-", dataew?.requestStatus);
-          // // console.log("request data from ew request :: ", EW_Req_data);
-          // // console.log("ewaste hook in cm :", ew_data, dataew);
-          // setUpdatedData([EW_Req_data]);
-          ewCertificate({ certificate_No });
+          ewCertificate(certificate_No);
         }
         break;
 
       case 2:
         if (certificate_No) {
-          chbCertificate({ certificate_No });
+          chbCertificate(certificate_No);
         }
         break;
 
       case 3:
         if (certificate_No) {
-          ptCertificate({ certificate_No });
+          ptCertificate(certificate_No);
         }
         break;
 
       case 4:
         if (certificate_No) {
-          wsCertificate({ certificate_No });
+          wsCertificate(certificate_No);
         }
         break;
 
       case 5:
         if (certificate_No) {
-          tlCertificate({ certificate_No });
+          swCertificate(certificate_No);
         }
         break;
 
       case 6:
         if (certificate_No) {
-          pgrCertificate({ certificate_No });
+          tlCertificate(certificate_No);
         }
         break;
 
       case 7:
         if (certificate_No) {
-          fsmCertificate({ certificate_No });
+          pgrCertificate(certificate_No);
         }
         break;
 
       case 8:
         if (certificate_No) {
-          nocCertificate({ certificate_No });
+          fsmCertificate(certificate_No);
         }
         break;
 
       case 9:
         if (certificate_No) {
-          OBPSCertificate({ certificate_No });
+          nocCertificate(certificate_No);
         }
         break;
 
       case 10:
         if (certificate_No) {
-          petCertificate({ certificate_No });
+          OBPSCertificate(certificate_No);
         }
         break;
 
       case 11:
         if (certificate_No) {
-          BirthCertificate({ certificate_No });
+          petCertificate(certificate_No);
         }
         break;
 
       case 12:
         if (certificate_No) {
-          DeathCertificate({ certificate_No });
+          BirthCertificate(certificate_No);
         }
         break;
 
       case 13:
         if (certificate_No) {
-          assetCertificate({ certificate_No });
+          DeathCertificate(certificate_No);
+        }
+        break;
+
+      case 14:
+        if (certificate_No) {
+          assetCertificate(certificate_No);
         }
         break;
 
       default:
-        console.log("Please select a certificate");
         break;
     }
 
     setistable(true);
+    resetCaptcha();
   }
 
   return (
@@ -553,6 +575,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
                   optionKey="i18nKey"
                   t={t}
                   disable={false}
+                  placeholder={"Please type and select the certificate type"}
                 />
               )}
             />
@@ -564,6 +587,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
               t={t}
               type={"text"}
               optionKey="i18nKey"
+              placeholder={"Please enter unique certificate number"}
               value={certificate_No}
               onChange={setcertificate_No}
               style={{ width: "86%" }}
@@ -585,7 +609,7 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
             <SubmitBar
               label={t("ES_COMMON_SEARCH")}
               submit
-            //  disabled={!ishuman}
+            // disabled={!ishuman}
             />
             <p
               style={{ marginTop: "10px" }}
@@ -601,7 +625,6 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
                   sortOrder: "DESC",
                 });
                 setShowToast(null);
-                previousPage();
                 setistable(false);
                 setIshuman(false);
                 setCertificate_name("");
@@ -640,14 +663,6 @@ const CMSearchApplication = ({ isLoading, t, data, count, setShowToast, ActionBa
               };
             }}
             isPaginationRequired={false}
-          // onPageSizeChange={onPageSizeChange}
-          // currentPage={getValues("offset") / getValues("limit")}
-          // onNextPage={nextPage}
-          // onPrevPage={previousPage}
-          // pageSizeLimit={getValues("limit")}
-          // onSort={onSort}
-          // disableSort={false}
-          // sortParams={[{ id: getValues("sortBy"), desc: getValues("sortOrder") === "DESC" ? true : false }]}
           />
         )}
 
