@@ -609,7 +609,7 @@ const CMSearchApplication = ({ t, tenantId, setShowToast }) => {
             <SubmitBar
               label={t("ES_COMMON_SEARCH")}
               submit
-            // disabled={!ishuman}
+              disabled={!ishuman}
             />
             <p
               style={{ marginTop: "10px" }}
