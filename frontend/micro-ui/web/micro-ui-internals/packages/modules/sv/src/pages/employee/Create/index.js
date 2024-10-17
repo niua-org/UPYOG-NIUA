@@ -1,14 +1,12 @@
-import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { Fragment, useContext, useEffect } from "react";
+
+import React ,{Fragment}from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "react-query";
 import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
-// import { newConfig } from "../../../config/Create/config";
-import { citizenConfig } from "../../../config/Create/citizenconfig";
-import { data } from "jquery";
-import { ApplicationContext } from "../../../Module";
+import { Config } from "../../../config/config";
 
-const PTRCreate = ({ parentRoute }) => {
+// parent component index page for employee which will set ui forms through config
+const SVEmpCreate = ({ parentRoute }) => {
 
   const queryClient = useQueryClient();
   const match = useRouteMatch();
@@ -16,35 +14,11 @@ const PTRCreate = ({ parentRoute }) => {
   const { pathname } = useLocation();
   const history = useHistory();
   const stateId = Digit.ULBService.getStateId();
-
-  const { apptype, applicationId } = useContext(ApplicationContext)
-
   let config = [];
-  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("PTR_CREATE_PET", {});
-
-  let { data: commonFields, isLoading } = Digit.Hooks.useCustomMDMS(Digit.ULBService.getStateId(), "PetService", [{ name: "CommonFieldsConfig" }],
-    {
-      select: (data) => {
-        const formattedData = data?.["PetService"]?.["CommonFieldsConfigEmp"]
-        return formattedData;
-      },
-    });
-
-  // added applicationnumber and application type in the formData before adding other fields from the form
-  useEffect(() => {
-    const applicationType = apptype;
-    const previousapplicationnumber = applicationId;
-    if (!(params.applicationType === applicationType)) {
-      setParams({ ...params, applicationType, previousapplicationnumber });
-    }
-  }, [params.applicationType]);
-
-
-
-  const goNext = (skipStep, index, isAddMultiple, key) => {
-
-
-
+  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("SV_EMP_CREATES", {});
+  
+  // function used for traversing through form screens 
+  const goNext = (skipStep, index, isAddMultiple, key) => {  
     let currentPath = pathname.split("/").pop(),
       lastchar = currentPath.charAt(currentPath.length - 1),
       isMultiple = false,
@@ -65,9 +39,7 @@ const PTRCreate = ({ parentRoute }) => {
     if (!isNaN(lastchar)) {
       isMultiple = true;
     }
-    // let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
-    let { nextStep = {} } = config.find((routeObj) => routeObj.route === (currentPath || '0'));
-
+    let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
 
 
     let redirectWithHistory = history.push;
@@ -83,32 +55,25 @@ const PTRCreate = ({ parentRoute }) => {
     if (!isNaN(nextStep.split("/").pop())) {
       nextPage = `${match.path}/${nextStep}`;
     }
-    else {
+     else {
       nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
   };
 
-  // Maybe needed to use later based on requirement
-  // useEffect(() => {
-  //   if(apptype === "NEWAPPLICATION"){
-  //     clearParams();
-  //     // queryClient.invalidateQueries("PTR_CREATE_PET");
-  //   }
-  // }, [apptype])
+  // to clear formdata if the data is present before coming to first page of form
+  if(params && Object.keys(params).length>0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true")
+    {
+      clearParams();
+      queryClient.invalidateQueries("SV_EMP_CREATE"); // to be changed if error occurs while re-submitting data
+    }
 
-  // if(params && Object.keys(params).length>0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true")
-  //   {
-  //     clearParams();
-  //     queryClient.invalidateQueries("PTR_CREATE_PET");
-
-  //   }
-
-  const ptrcreate = async () => {
+  const svcreate = async () => {
     history.push(`${match.path}/acknowledgement`);
   };
 
+  // To do: need to check later according to requirments
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     if (key === "owners") {
       let owners = params.owners || [];
@@ -126,46 +91,44 @@ const PTRCreate = ({ parentRoute }) => {
     goNext(skipStep, index, isAddMultiple, key);
   }
 
-  const handleSkip = () => { };
-  const handleMultiple = () => { };
+  const handleSkip = () => {};
+  const handleMultiple = () => {};
 
   const onSuccess = () => {
     clearParams();
-    queryClient.invalidateQueries("PTR_CREATE_PET");
+    queryClient.invalidateQueries("SV_EMP_CREATE");
   };
-  if (isLoading) {
-    return <Loader />;
-  }
 
-
-  commonFields = commonFields ? commonFields : citizenConfig;
+  
+  let commonFields = Config;
   commonFields.forEach((obj) => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
-
+  
   config.indexRoute = "info";
 
-  const CheckPage = Digit?.ComponentRegistryService?.getComponent("PTRCheckPage");
-  const PTRAcknowledgement = Digit?.ComponentRegistryService?.getComponent("PTRAcknowledgement");
+  const SVCheckPage = Digit?.ComponentRegistryService?.getComponent("CheckPage");  
+  
   return (
     <Switch>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
+        const user = Digit.UserService.getUser().info.type;
         return (
           <Route path={`${match.path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
+            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} userType={user} />
           </Route>
         );
       })}
 
-
+      
       <Route path={`${match.path}/check`}>
-        <CheckPage onSubmit={ptrcreate} value={params} />
+        <SVCheckPage onSubmit={svcreate} value={params} />
       </Route>
-      <Route path={`${match.path}/acknowledgement`}>
+      {/* <Route path={`${match.path}/acknowledgement`}>
         <PTRAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
+      </Route> */}
       <Route>
         <Redirect to={`${match.path}/${config.indexRoute}`} />
       </Route>
@@ -173,4 +136,4 @@ const PTRCreate = ({ parentRoute }) => {
   );
 };
 
-export default PTRCreate;
+export default SVEmpCreate;
