@@ -86,7 +86,7 @@ config:
         image-name: "dashboard-ingest"
         dockerfile: "build/maven/Dockerfile"
 
-   - name: "builds/upyog/business-services/employee-dashboard"
+  - name: "builds/upyog/business-services/employee-dashboard"
     build:
       - work-dir: "business-services/employee-dashboard"
         image-name: "employee-dashboard"
