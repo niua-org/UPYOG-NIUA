@@ -837,7 +837,7 @@ config:
    
   - name: "builds/upyog/municipal-services/sv-services"
     build:
-      - work-dir: "municipal-services/sv-services"
+      - work-dir: "municipal-services/street-vending"
         image-name: "sv-services"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/sv-services/src/main/resources/db"
@@ -845,7 +845,7 @@ config:
 
   - name: "builds/upyog/municipal-services/adv-services"
     build:
-      - work-dir: "municipal-services/adv-services"
+      - work-dir: "municipal-services/advertisement-service"
         image-name: "adv-services"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/adv-services/src/main/resources/db"
