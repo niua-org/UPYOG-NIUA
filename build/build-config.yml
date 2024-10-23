@@ -835,7 +835,7 @@ config:
       - work-dir: "municipal-services/ewaste-servicessrc/main/resources/db"
         image-name: "ewaste-services-db"
    
-  - name: "builds/upyog/municipal-services/street-vending"
+  - name: "builds/upyog/municipal-services/sv-services"
     build:
       - work-dir: "municipal-services/street-vending"
         image-name: "sv-services"
@@ -843,7 +843,7 @@ config:
       - work-dir: "municipal-services/street-vending/src/main/resources/db"
         image-name: "sv-services-db"
 
-  - name: "builds/upyog/municipal-services/advertisement-service"
+  - name: "builds/upyog/municipal-services/adv-services"
     build:
       - work-dir: "municipal-services/advertisement-service"
         image-name: "adv-services"
