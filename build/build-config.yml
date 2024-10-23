@@ -835,18 +835,18 @@ config:
       - work-dir: "municipal-services/ewaste-servicessrc/main/resources/db"
         image-name: "ewaste-services-db"
    
-  - name: "builds/upyog/municipal-services/sv-services"
+  - name: "builds/upyog/municipal-services/street-vending"
     build:
       - work-dir: "municipal-services/street-vending"
         image-name: "sv-services"
         dockerfile: "build/maven/Dockerfile"
-      - work-dir: "municipal-services/sv-services/src/main/resources/db"
+      - work-dir: "municipal-services/street-vending/src/main/resources/db"
         image-name: "sv-services-db"
 
-  - name: "builds/upyog/municipal-services/adv-services"
+  - name: "builds/upyog/municipal-services/advertisement-service"
     build:
       - work-dir: "municipal-services/advertisement-service"
         image-name: "adv-services"
         dockerfile: "build/maven/Dockerfile"
-      - work-dir: "municipal-services/adv-services/src/main/resources/db"
+      - work-dir: "municipal-services/advertisement-service/src/main/resources/db"
         image-name: "adv-services-db" 
