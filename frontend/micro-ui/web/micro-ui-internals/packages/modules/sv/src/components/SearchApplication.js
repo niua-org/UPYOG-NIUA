@@ -56,23 +56,6 @@ const SVSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
         vending_Zone.push({ i18nKey: `${zone.name}`, code: `${zone.code}`, value: `${zone.name}` })
     })
 
-
-    // Maybe need to use later
-    //   const applicationStatuses = [
-    //       {
-    //           code: "ACTIVE",
-    //           i18nKey: "WF_SV_ACTIVE"
-    //       },
-    //       {
-    //           code: "INACTIVE",
-    //           i18nKey: "WF_SV_INACTIVE"
-    //       },
-    //       {
-    //           code: "INWORKFLOW",
-    //           i18nKey: "WF_SV_INWORKFLOW"
-    //       },
-    //   ]
-
     const stateId = Digit.ULBService.getStateId();
 
     const GetCell = (value) => <span className="cell-text">{value}</span>;
@@ -262,10 +245,8 @@ const SVSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
                                 applicationNumber: "",
                                 fromDate: "",
                                 toDate: "",
-                                petType: "",
                                 mobileNumber: "",
                                 status: "",
-                                breedType: "",
                                 offset: 0,
                                 limit: 10,
                                 sortBy: "commencementDate",

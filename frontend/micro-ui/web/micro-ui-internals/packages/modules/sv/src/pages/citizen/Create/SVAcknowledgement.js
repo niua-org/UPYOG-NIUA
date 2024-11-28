@@ -57,7 +57,7 @@ const BannerPicker = (props) => {
 
 const SVAcknowledgement = ({ data, onSuccess }) => {
   const { t } = useTranslation();
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const mutation = Digit.Hooks.sv.useSvCreateApi(tenantId,!window.location.href.includes("edit")); 
   const user = Digit.UserService.getUser().info;
   const { data: storeData } = Digit.Hooks.useStore.getInitData();

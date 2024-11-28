@@ -88,11 +88,6 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
   }, [file]);
 
 
-  console.log("actyhdesh,jhfsefsef",action,applicationData);
-
-
-
-
   function submit(data) {
     let workflow = { action: action?.action, comments: data?.comments, businessService, moduleName: moduleCode, assignes: action?.action==="SENDBACKTOCITIZEN"?[applicationData?.auditDetails?.createdBy]:selectedApprover?.uuid?[selectedApprover?.uuid]:null };
     if (uploadedFile)
