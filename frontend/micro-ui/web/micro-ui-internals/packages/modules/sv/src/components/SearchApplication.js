@@ -10,13 +10,17 @@ import { Link } from "react-router-dom";
 const SVSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
 
     const isMobile = window.Digit.Utils.browser.isMobile();
+    const todaydate = new Date();
+    const today = todaydate.toISOString().split("T")[0];
     const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
         defaultValues: {
             offset: 0,
             limit: !isMobile && 10,
             sortBy: "commencementDate",
             sortOrder: "DESC",
-            isDraftApplication:"false"
+            isDraftApplication:"false",
+            fromDate: today,
+            toDate: today
         }
     })
 
@@ -27,7 +31,9 @@ const SVSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
         register("sortBy", "commencementDate")
         register("sortOrder", "DESC")
         register("isDraftApplication", "false")
-    }, [register])
+        setValue("fromDate", today);
+        setValue("toDate", today);
+    }, [register, setValue, today])
 
 
     // hook for fetching vending type data
@@ -222,7 +228,7 @@ const SVSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchField>
                     <label>{t("SV_FROM_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
                         name="fromDate"
                         control={control}
                     />
@@ -230,7 +236,7 @@ const SVSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchField>
                     <label>{t("SV_TO_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
                         name="toDate"
                         control={control}
                     />

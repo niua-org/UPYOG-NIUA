@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { FormStep, TextInput, CardLabel,Dropdown, LinkButton,Toast} from "@nudmcdgnpm/digit-ui-react-components";
 import { Controller, useForm } from "react-hook-form";
 import GIS from "./GIS";
-import SVDayAndTimeSlot from "./SVDayAndTimeSlot";
 import Timeline from "../components/Timeline";
 import ApplicationTable from "../components/inbox/ApplicationTable";
 
@@ -40,8 +39,6 @@ const SVBusinessDetails = ({ t, config, onSelect, userType, formData,editdata,pr
   );
   const [backupDays, setBackupDays] = useState(formData?.businessDetails?.backupDays || [...daysOfOperation]); // Backup array to store original days of operation
 
-  console.log("formdata: ", formData)
-
   /* this checks two conditions:
    1. At least one day of the week is selected.
    2. If a day is selected, both the startTime and endTime for that day are filled.*/
@@ -50,17 +47,6 @@ const SVBusinessDetails = ({ t, config, onSelect, userType, formData,editdata,pr
     const atLeastOneDaySelected = daysOfOperation.some(day => day.startTime, day => day.endTime);
     return atLeastOneDaySelected;
   };
-
-  const nullData = () => [
-      { name: "Monday", isSelected: false, startTime: null, endTime:null },
-      { name: "Tuesday", isSelected: false, startTime: null, endTime:null },
-      { name: "Wednesday", isSelected: false, startTime: null, endTime:null },
-      { name: "Thursday", isSelected: false, startTime: null, endTime:null },
-      { name: "Friday", isSelected: false, startTime: null, endTime:null },
-      { name: "Saturday", isSelected: false, startTime: null, endTime:null },
-      { name: "Sunday", isSelected: false, startTime: null, endTime:null },
-    ]
-  
 
   // function to handle day time selection
   const onTimeChange = (index, time, value) => {

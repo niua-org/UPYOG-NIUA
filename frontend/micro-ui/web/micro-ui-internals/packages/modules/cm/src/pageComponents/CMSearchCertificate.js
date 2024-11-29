@@ -104,16 +104,17 @@ const CMSearchCertificate = ({ path }) => {
 
   // certificates to be passed in the dropdown to select a particular certificate and their crtNo for the switch case in onsubmit function
   const certificateTypes = [
-    {
-      code: "Asset Certificate",
-      i18nKey: "Asset Certificate",
-      crtNo: 14,
-    },
-    {
-      code: "Birth Certificate",
-      i18nKey: "Birth Certificate",
-      crtNo: 12,
-    },
+    // ------------The Commented Fields are for the certificates whose services are not currently in use----------------
+    // {
+    //   code: "Asset Certificate",
+    //   i18nKey: "Asset Certificate",
+    //   crtNo: 14,
+    // },
+    // {
+    //   code: "Birth Certificate",
+    //   i18nKey: "Birth Certificate",
+    //   crtNo: 12,
+    // },
     {
       code: "Building Plan Approval",
       i18nKey: "Building Plan Approval",
@@ -124,11 +125,11 @@ const CMSearchCertificate = ({ path }) => {
       i18nKey: "Community Hall Booking",
       crtNo: 2,
     },
-    {
-      code: "Death Certificate",
-      i18nKey: "Death Certificate",
-      crtNo: 13,
-    },
+    // {
+    //   code: "Death Certificate",
+    //   i18nKey: "Death Certificate",
+    //   crtNo: 13,
+    // },
     {
       code: "Deslugging Service",
       i18nKey: "Deslugging Service",
@@ -568,13 +569,11 @@ const CMSearchCertificate = ({ path }) => {
     resetCaptcha();
   }
 
+
   return (
     <React.Fragment>
-      <div>
+      <div style={{margin: "20px 10% 2px 10%"}}>
         <Header>{t("SEARCH_CERTIFICATE")}</Header>
-        <Card className={"card-search-heading"}>
-          <span style={{ color: "#505A5F" }}>{t("Provide at least one parameter to search for an application")}</span>
-        </Card>
         <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
           <SearchField>
             <label>{t("CERTIFICATE_TYPE")}</label>
@@ -605,35 +604,31 @@ const CMSearchCertificate = ({ path }) => {
               placeholder={"Please enter unique certificate number"}
               value={certificate_No}
               onChange={setcertificate_No}
-              style={{ width: "86%" }}
+              style={{ width: "100%"}}
             />
           </SearchField>
           <SearchField>
             <HCaptcha
               ref={captcha}
               sitekey="51424344-c730-4ac8-beec-0aca56be0754"
-              onVerify={(token, ekey) =>
-                //  handleVerificationSuccess(token, ekey)
+              onVerify={(token) =>
                 setToken(token)
               }
               onExpire={(e) => setToken("")}
             />
           </SearchField>
 
-          <SearchField className="ssecondubmit">
+          <SearchField className="submit">
             <SubmitBar
               label={t("ES_COMMON_SEARCH")}
               submit
               disabled={!ishuman}
             />
             <p
-              style={{ marginTop: "10px" }}
+              style={{ marginTop: "6px" }}
               onClick={() => {
                 reset({
                   applicationNo: "",
-                  fromDate: today,
-                  toDate: today,
-                  status: "",
                   offset: 0,
                   limit: 10,
                   sortBy: "commencementDate",
@@ -644,6 +639,7 @@ const CMSearchCertificate = ({ path }) => {
                 setIshuman(false);
                 setCertificate_name("");
                 setCertificate_No("");
+                setUpdatedData(null);
                 resetCaptcha();
               }}
             >
@@ -651,18 +647,11 @@ const CMSearchCertificate = ({ path }) => {
             </p>
           </SearchField>
         </SearchForm>
-        {/* {!isLoading && data?.display ? (
-          <Card style={{ marginTop: 20 }}>
-            {t(data.display)
-              .split("\\n")
-              .map((text, index) => (
-                <p key={index} style={{ textAlign: "center" }}>
-                  {text}
-                </p>
-              ))}
+        { !updatedData[0]?.certificateNumber && istable ? (
+          <Card style={{ marginTop: 20, textAlign: "center" }}>
+              No data available
           </Card>
-        ) : !isLoading && data !== "" ? ( */}
-        {istable && (
+        ) : istable && (
           <Table
             t={t}
             data={updatedData}

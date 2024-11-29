@@ -15,12 +15,12 @@ const App = () => {
   const CMSearchCertificate = Digit?.ComponentRegistryService?.getComponent("CMSearchCertificate");
 
   return (
-    <span className={"citizen"} style={{width:"100%"}}> 
+    <span  style={{width:"1700px"}}> 
     {/* Routes to the page components of the module */}
       <Switch>
         <AppContainer>
           {/* Rendered a back button which displays on each component which comes by routing */}
-          {!shouldHideBackButton(hideBackButtonConfig) ? <BackButton>Back</BackButton> : ""}
+          {!shouldHideBackButton(hideBackButtonConfig) ? <BackButton style={{marginLeft: "10%"}}>Back</BackButton> : ""}
           {/* routes of the components */}
           <PrivateRoute path={`${path}/cmservice/verify`} component={CMSearchCertificate} />
         </AppContainer>
