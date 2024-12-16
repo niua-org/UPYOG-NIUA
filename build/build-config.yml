@@ -856,5 +856,12 @@ config:
       - work-dir: "utilities/apply-workflow"
         image-name: "apply-workflow"
         dockerfile: "build/maven/Dockerfile"
-
+        
+  - name: "builds/upyog/business-services/common-module"
+    build:
+      - work-dir: "business-services/common-module"
+        image-name: "common-module"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "business-services/common-module/src/main/resources/db"
+        image-name: "common-module-db"
 
