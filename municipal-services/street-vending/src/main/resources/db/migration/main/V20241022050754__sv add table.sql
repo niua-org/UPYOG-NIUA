@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.eg_sv_street_vending_detail
+CREATE TABLE eg_sv_street_vending_detail
 (
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     tenant_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -28,12 +28,10 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_street_vending_detail
     CONSTRAINT eg_sv_street_vending_detail_pkey PRIMARY KEY (application_id),
     CONSTRAINT eg_sv_street_vending_detail_application_no_key UNIQUE (application_no),
     CONSTRAINT eg_sv_street_vending_detail_certificate_no_key UNIQUE (certificate_no)
-)
-
-TABLESPACE pg_default;
+);
 
 
-CREATE TABLE IF NOT EXISTS public.eg_sv_vendor_detail
+CREATE TABLE eg_sv_vendor_detail
 (
     id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -61,12 +59,10 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_vendor_detail
         REFERENCES public.eg_sv_vendor_detail (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
-)
-
-TABLESPACE pg_default;
+);
 
 
-CREATE TABLE IF NOT EXISTS public.eg_sv_address_detail
+CREATE TABLE eg_sv_address_detail
 (
     address_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     address_type character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -85,12 +81,10 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_address_detail
         REFERENCES public.eg_sv_vendor_detail (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-)
-
-TABLESPACE pg_default;
+);
 
 
-CREATE TABLE IF NOT EXISTS public.eg_sv_bank_detail
+CREATE TABLE eg_sv_bank_detail
 (
     bank_detail_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -108,11 +102,9 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_bank_detail
         REFERENCES public.eg_sv_street_vending_detail (application_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-)
+);
 
-TABLESPACE pg_default;
-
-CREATE TABLE IF NOT EXISTS public.eg_sv_document_detail
+CREATE TABLE eg_sv_document_detail
 (
     document_detail_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -127,11 +119,9 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_document_detail
         REFERENCES public.eg_sv_street_vending_detail (application_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-)
+);
 
-TABLESPACE pg_default;
-
-CREATE TABLE IF NOT EXISTS public.eg_sv_operation_time_detail
+CREATE TABLE eg_sv_operation_time_detail
 (
     id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -147,11 +137,9 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_operation_time_detail
         REFERENCES public.eg_sv_street_vending_detail (application_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-)
+);
 
-TABLESPACE pg_default;
-
-CREATE TABLE IF NOT EXISTS public.eg_sv_street_vending_detail_auditdetails
+CREATE TABLE eg_sv_street_vending_detail_auditdetails
 (
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     tenant_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -178,12 +166,10 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_street_vending_detail_auditdetails
     enrollment_id character varying(100) COLLATE pg_catalog."default",
     payment_receipt_id character varying(64) COLLATE pg_catalog."default",
     vending_license_id character varying(64) COLLATE pg_catalog."default"
-)
-
-TABLESPACE pg_default;
+);
 
 
-CREATE TABLE IF NOT EXISTS public.eg_sv_street_vending_draft_detail
+CREATE TABLE eg_sv_street_vending_draft_detail
 (
     draft_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     tenant_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -194,11 +180,9 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_street_vending_draft_detail
     createdtime bigint NOT NULL,
     lastmodifiedtime bigint,
     CONSTRAINT eg_sv_street_vending_draft_detail_pkey PRIMARY KEY (draft_id)
-)
+);
 
-TABLESPACE pg_default;
-
-CREATE TABLE IF NOT EXISTS public.eg_sv_vendor_detail_auditdetails
+CREATE TABLE eg_sv_vendor_detail_auditdetails
 (
     id character varying(64) COLLATE pg_catalog."default" NOT NULL,
     application_id character varying(64) COLLATE pg_catalog."default" NOT NULL,
@@ -217,6 +201,4 @@ CREATE TABLE IF NOT EXISTS public.eg_sv_vendor_detail_auditdetails
     user_category character varying(100) COLLATE pg_catalog."default",
     special_category character varying(100) COLLATE pg_catalog."default",
     is_involved boolean
-)
-
-TABLESPACE pg_default;
+);
