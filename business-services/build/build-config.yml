@@ -83,4 +83,12 @@ config:
     build:
       - work-dir: "dashboard-ingest"
         image-name: "dashboard-ingest"
-        dockerfile: "build/maven/Dockerfile"        
+        dockerfile: "build/maven/Dockerfile"      
+
+  - name: "builds/business-services/common-module"
+    build:
+      - work-dir: "common-module"
+        image-name: "common-module"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "common-module/src/main/resources/db"
+        image-name: "common-module-db"     
