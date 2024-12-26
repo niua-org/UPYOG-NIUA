@@ -226,8 +226,8 @@ import OpenLinkContainer from "./atoms/OpenLinkContainer";
 import UploadPitPhoto from "./molecules/UploadPitPhoto";
 import { DownloadBtnCommon } from "./atoms/svgindex";
 import ToggleSwitch from "./atoms/ToggleSwitch";
-
 import CitizenConsentForm from "./atoms/CitizenConsentForm";
+import ApplicantDetails from "./molecules/ApplicantDetails";
 
 export {
   Phone,
@@ -465,4 +465,5 @@ export {
   CitizenConsentForm,
   CHBIcon,
   PropertySearch,
+  ApplicantDetails
 };
