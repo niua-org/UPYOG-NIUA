@@ -80,7 +80,7 @@ public class CommunityHallBookingController {
 		 * This update booking method will be called for below two tasks : 
 		 * 1.Update filestoreid for payment link and permission letter link
 		 * 2. Update status when cancelled
-		 * 
+		 * 3. Update workflow when the application has reached employee login
 		 */
 		
 		CommunityHallBookingDetail bookingDetail = bookingService.updateBooking(communityHallsBookingRequest, null, 

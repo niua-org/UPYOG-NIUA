@@ -49,4 +49,6 @@ public interface CommunityHallBookingRepository {
 
 	List<BookingPaymentTimerDetails> getBookingTimerByCreatedBy(RequestInfo info, CommunityHallSlotSearchCriteria criteria);
 
+	void updateBookingStatus(String bookingId, String uuid, String status);
+	
 }

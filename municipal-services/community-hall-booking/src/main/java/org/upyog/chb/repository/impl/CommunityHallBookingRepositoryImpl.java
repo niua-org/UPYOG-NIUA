@@ -404,6 +404,18 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	    return timerDetails;
 	}
 
+	@Override
+	public void updateBookingStatus(String bookingId, String uuid, String status) {
+
+		log.info("update Booking Status for booking id : {} by uuid : ", bookingId, uuid);
+
+		String lastUpdateBy = uuid;
+		long lastUpdatedTime = CommunityHallBookingUtil.getCurrentTimestamp();
+		jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS, status, lastUpdateBy,
+				lastUpdatedTime, bookingId);
+
+	}
+
 
 	
 }
