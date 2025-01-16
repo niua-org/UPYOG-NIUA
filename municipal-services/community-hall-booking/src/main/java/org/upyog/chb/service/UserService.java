@@ -3,21 +3,27 @@ package org.upyog.chb.service;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.upyog.chb.config.CommunityHallBookingConfiguration;
+import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.web.models.UserSearchRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 
 import digit.models.coremodels.UserDetailResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class UserService {
 
@@ -27,20 +33,44 @@ public class UserService {
 	@Autowired
 	private ServiceRequestRepository serviceRequestRepository;
 
-	@Value("${egov.user.host}")
-	private String userHost;
+	@Autowired
+	private CommunityHallBookingConfiguration config;
 
-	@Value("${egov.user.context.path}")
-	private String userContextPath;
+	/**
+	 * Fetches UUIDs of CITIZEN based on the phone number.
+	 *
+	 * @param mobileNumber - Mobile Numbers
+	 * @param requestInfo  - Request Information
+	 * @param tenantId     - Tenant Id
+	 * @return Returns List of MobileNumbers and UUIDs
+	 */
+	public Map<String, String> fetchUserUUIDs(String mobileNumber, RequestInfo requestInfo, String tenantId) {
+		Map<String, String> mapOfPhoneNoAndUUIDs = new HashMap<>();
+		StringBuilder uri = new StringBuilder();
+		uri.append(config.getUserHost()).append(config.getUserSearchEndpoint());
+		Map<String, Object> userSearchRequest = new HashMap<>();
+		userSearchRequest.put("RequestInfo", requestInfo);
+		userSearchRequest.put("tenantId", tenantId);
+		userSearchRequest.put("userType", CommunityHallBookingConstants.CITIZEN);
+		userSearchRequest.put("userName", mobileNumber);
+		try {
 
-	@Value("${egov.user.create.path}")
-	private String userCreateEndpoint;
+			Object user = serviceRequestRepository.fetchResult(uri, userSearchRequest);
+			log.info("User fetched in fetUserUUID method of CHB notfication consumer" + user.toString());
+//			if (null != user) {
+//				String uuid = JsonPath.read(user, "$.user[0].uuid");
+			if (user != null) {
+				String uuid = JsonPath.read(user, "$.user[0].uuid");
+				mapOfPhoneNoAndUUIDs.put(mobileNumber, uuid);
+				log.info("mapOfPhoneNoAndUUIDs : " + mapOfPhoneNoAndUUIDs);
+			}
+		} catch (Exception e) {
+			log.error("Exception while fetching user for username - " + mobileNumber);
+			log.error("Exception trace: ", e);
+		}
 
-	@Value("${egov.user.search.path}")
-	private String userSearchEndpoint;
-
-	@Value("${egov.user.update.path}")
-	private String userUpdateEndpoint;
+		return mapOfPhoneNoAndUUIDs;
+	}
 
 	/**
 	 * Returns user using user search based on ewaste ApplicationCriteria(user
@@ -51,13 +81,14 @@ public class UserService {
 	 */
 	public UserDetailResponse getUser(UserSearchRequest userSearchRequest) {
 
-		StringBuilder uri = new StringBuilder(userHost).append(userSearchEndpoint);
+		StringBuilder uri = new StringBuilder(config.getUserHost()).append(config.getUserSearchEndpoint());
 		UserDetailResponse userDetailResponse = userCall(userSearchRequest, uri);
 		return userDetailResponse;
 	}
 
 	/**
-	 * Returns UserDetailResponse by calling the user service with the given URI and object
+	 * Returns UserDetailResponse by calling the user service with the given URI and
+	 * object
 	 * 
 	 * @param userRequest Request object for the user service
 	 * @param url         The address of the endpoint
@@ -65,22 +96,23 @@ public class UserService {
 	 */
 	@SuppressWarnings("unchecked")
 	private UserDetailResponse userCall(Object userRequest, StringBuilder url) {
-	    String dobFormat = determineDobFormat(url.toString());
- 
-	    try {
-	        Object response = serviceRequestRepository.fetchResult(url, userRequest);
+		String dobFormat = determineDobFormat(url.toString());
 
-	        if (response instanceof LinkedHashMap) {
-	            LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) response;
+		try {
+			Object response = serviceRequestRepository.fetchResult(url, userRequest);
 
-	            parseResponse(responseMap, dobFormat);
+			if (response instanceof LinkedHashMap) {
+				LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) response;
 
-	            return mapper.convertValue(responseMap, UserDetailResponse.class);
-	        }
-	        return new UserDetailResponse();
-	    } catch (IllegalArgumentException e) {
-	        throw new CustomException("IllegalArgumentException", "ObjectMapper was not able to convert the value in userCall");
-	    }
+				parseResponse(responseMap, dobFormat);
+
+				return mapper.convertValue(responseMap, UserDetailResponse.class);
+			}
+			return new UserDetailResponse();
+		} catch (IllegalArgumentException e) {
+			throw new CustomException("IllegalArgumentException",
+					"ObjectMapper was not able to convert the value in userCall");
+		}
 	}
 
 	/**
@@ -90,14 +122,13 @@ public class UserService {
 	 * @return The appropriate date format
 	 */
 	private String determineDobFormat(String url) {
-	    if (url.contains(userSearchEndpoint) || url.contains(userUpdateEndpoint)) {
-	        return "yyyy-MM-dd";
-	    } else if (url.contains(userCreateEndpoint)) {
-	        return "dd/MM/yyyy";
-	    }
-	    return null;
+		if (url.contains(config.getUserSearchEndpoint()) || url.contains(config.getUserSearchEndpoint())) {
+			return "yyyy-MM-dd";
+		} else if (url.contains(config.getUserSearchEndpoint())) {
+			return "dd/MM/yyyy";
+		}
+		return null;
 	}
-
 
 	/**
 	 * Parses date formats to long for all users in responseMap

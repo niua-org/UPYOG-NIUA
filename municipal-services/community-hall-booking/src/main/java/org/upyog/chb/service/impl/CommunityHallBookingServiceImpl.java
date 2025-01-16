@@ -251,9 +251,6 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
-		if (communityHallsBookingRequest.getHallsBookingApplication().getWorkflow()!=null) {
-			workflowService.updateWorkflow(communityHallsBookingRequest);
-		}
 		CommunityHallBookingDetail bookingDetail = bookingDetails.get(0);
 		communityHallsBookingRequest.setHallsBookingApplication(bookingDetail);
 		bookingRepository.updateBookingSynchronously(bookingDetail.getBookingId(), communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid(), paymentDetail, status.toString());
@@ -416,17 +413,6 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 				.slotStaus(BookingStatusEnum.AVAILABLE.toString()).tenantId(criteria.getTenantId())
 				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(date, "dd-MM-yyyy")).build();
 		return availabiltityDetail;
-	}
-
-	@Override
-	public void updateBookingStatusWithWorkflow(CommunityHallBookingRequest communityHallsBookingRequest) {
-
-		State state = workflowService.updateWorkflow(communityHallsBookingRequest);
-		BookingStatusEnum status = BookingStatusEnum.valueOf(state.getApplicationStatus());
-		CommunityHallBookingDetail bookingDetail = communityHallsBookingRequest.getHallsBookingApplication();
-		bookingRepository.updateBookingStatus(bookingDetail.getBookingId(),
-				communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid(), status.toString());
-
 	}
 
 

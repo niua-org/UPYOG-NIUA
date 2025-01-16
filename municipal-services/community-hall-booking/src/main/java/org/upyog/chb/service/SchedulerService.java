@@ -6,7 +6,6 @@ import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_REFUND_M
 import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_STATUS_BOOKED;
 import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_TENANTID;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,15 +34,16 @@ public class SchedulerService {
 
 	@Autowired
 	private CommunityHallBookingService communityHallBookingService;
-	
+
 	@Autowired
 	private CommunityHallBookingRepository bookingRepository;
 
 	@Autowired
 	private UserService userService;
-	
+
 	@Autowired
 	private WorkflowService workflowService;
+
 	/*
 	 * This scheduler runs every 5 mins to delete the bookingId from the
 	 * paymentTimer table when the timer is expired or payment is failed
@@ -71,35 +71,49 @@ public class SchedulerService {
 //	@Scheduled(fixedRate = 10 * 60 * 1000)
 	@Scheduled(cron = "0 0 23 * * *")
 	public void updateWorkflowForBookedApplications() {
-		log.info("Scheduler - Updating Workflow of Booked applications...:::.....:::");
-		String formattedDate = CommunityHallBookingUtil.parseLocalDateToString(LocalDate.now(), "yyyy-MM-dd");
-		CommunityHallBookingSearchCriteria bookingSearchCriteria = CommunityHallBookingSearchCriteria.builder()
-				.toDate(formattedDate).status(CHB_STATUS_BOOKED).build();
-		List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
+		log.info("Scheduler - Updating Workflow of Booked applications...");
 
+		String formattedDate = CommunityHallBookingUtil.parseLocalDateToString(LocalDate.now(), "yyyy-MM-dd");
+
+		List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(
+				CommunityHallBookingSearchCriteria.builder().toDate(formattedDate).status(CHB_STATUS_BOOKED).build());
+
+		// Exit if no booking details are found
 		if (bookingDetails == null || bookingDetails.isEmpty()) {
-			return; // Exit if no booking details are found
+			log.info("No booked applications found for update.");
+			return;
 		}
 
 		UserDetailResponse userDetailResponse = userService.searchByUserName("9999009999", CHB_TENANTID);
 		if (userDetailResponse == null || userDetailResponse.getUser().isEmpty()) {
-			throw new IllegalStateException("SYSTEM user not found for tenant 'pg'.");
+			throw new IllegalStateException("SYSTEM user not found for tenant '" + CHB_TENANTID + "'.");
 		}
+
 		RequestInfo requestInfo = RequestInfo.builder().userInfo(userDetailResponse.getUser().get(0)).build();
 
 		ProcessInstance workflow = ProcessInstance.builder().action(CHB_ACTION_MOVETOEMPLOYEE)
 				.moduleName(CHB_REFUND_MODULENAME).tenantId(CHB_TENANTID).businessService(CHB_REFUND_BUSINESSSERVICE)
-				.comment(null).documents(null).build();
-		bookingDetails.forEach(bookingDetail -> {
-			log.info("Updating Workflow of booking id ::::: " + bookingDetail.getBookingNo());
-			bookingDetail.setWorkflow(workflow);
-			CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder()
-					.hallsBookingApplication(bookingDetail).requestInfo(requestInfo) // Include the request info here
-					.build();
+				.build();
 
-			communityHallBookingService.updateBookingStatusWithWorkflow(bookingRequest);
-
-		});
+		// Process each booking detail
+		bookingDetails.forEach(bookingDetail -> processBookingDetail(bookingDetail, workflow, requestInfo));
 	}
-	
+
+	private void processBookingDetail(CommunityHallBookingDetail bookingDetail, ProcessInstance workflow,
+			RequestInfo requestInfo) {
+		log.info("Updating Workflow and status for booking number: {}", bookingDetail.getBookingNo());
+
+		// Set workflow and build booking request
+		bookingDetail.setWorkflow(workflow);
+		CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder()
+				.hallsBookingApplication(bookingDetail).requestInfo(requestInfo).build();
+
+		// Update workflow and booking status
+		State state = workflowService.updateWorkflow(bookingRequest);
+		bookingDetail.setBookingStatus(state.getApplicationStatus());
+
+		// Persist updated booking
+		bookingRepository.updateBooking(bookingRequest);
+	}
+
 }
