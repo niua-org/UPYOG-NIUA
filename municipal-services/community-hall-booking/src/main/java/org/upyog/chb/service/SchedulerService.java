@@ -69,21 +69,26 @@ public class SchedulerService {
 	}
 
 //	@Scheduled(fixedRate = 10 * 60 * 1000)
-	@Scheduled(cron = "0 0 23 * * *")
+	@Scheduled(cron = "0 0 1 * * *")
 	public void updateWorkflowForBookedApplications() {
 		log.info("Scheduler - Updating Workflow of Booked applications...");
 
-		String formattedDate = CommunityHallBookingUtil.parseLocalDateToString(LocalDate.now(), "yyyy-MM-dd");
+		String formattedDate = CommunityHallBookingUtil.parseLocalDateToString(LocalDate.now().minusDays(1), "yyyy-MM-dd");
 
 		List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(
 				CommunityHallBookingSearchCriteria.builder().toDate(formattedDate).status(CHB_STATUS_BOOKED).build());
-
+		
+		
 		// Exit if no booking details are found
 		if (bookingDetails == null || bookingDetails.isEmpty()) {
 			log.info("No booked applications found for update.");
 			return;
+		}else {
+			String bookingNos = bookingDetails.stream()
+			        .map(CommunityHallBookingDetail::getBookingNo)
+			        .collect(Collectors.joining(", "));
+			    log.info("Booking Nos: " + bookingNos);
 		}
-
 		UserDetailResponse userDetailResponse = userService.searchByUserName("9999009999", CHB_TENANTID);
 		if (userDetailResponse == null || userDetailResponse.getUser().isEmpty()) {
 			throw new IllegalStateException("SYSTEM user not found for tenant '" + CHB_TENANTID + "'.");
