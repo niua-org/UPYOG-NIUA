@@ -68,7 +68,7 @@ public class WorkflowService {
 		processInstance.setBusinessId(bookingDetail.getBookingNo());
 		processInstance.setAction(workflow.getAction());
 		processInstance.setModuleName(workflow.getModuleName());
-		processInstance.setTenantId(workflow.getTenantId());// bookingDetail.getTenantId()
+		processInstance.setTenantId(bookingDetail.getTenantId());
 		processInstance.setBusinessService(workflow.getBusinessService());
 		processInstance.setDocuments(workflow.getDocuments());
 		processInstance.setComment(workflow.getComment());
