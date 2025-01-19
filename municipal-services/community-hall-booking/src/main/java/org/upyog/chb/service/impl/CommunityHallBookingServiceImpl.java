@@ -267,12 +267,16 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 				&& bookingDetailRequest.getPermissionLetterFilestoreId() != null) {
 			bookingDetailDB.setPermissionLetterFilestoreId(bookingDetailRequest.getPermissionLetterFilestoreId());
 		}
-
+ 
 		if (bookingDetailDB.getPaymentReceiptFilestoreId() == null
 				&& bookingDetailRequest.getPaymentReceiptFilestoreId() != null) {
 			bookingDetailDB.setPaymentReceiptFilestoreId(bookingDetailRequest.getPaymentReceiptFilestoreId());
 		}
+		if(bookingDetailRequest.getWorkflow()!=null) {
+			bookingDetailDB.setWorkflow(bookingDetailRequest.getWorkflow());
+		}
 		communityHallsBookingRequest.setHallsBookingApplication(bookingDetailDB);
+		
 	}
 
 	@Override
