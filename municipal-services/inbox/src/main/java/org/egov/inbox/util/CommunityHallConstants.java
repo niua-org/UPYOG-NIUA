@@ -12,9 +12,11 @@ public class CommunityHallConstants {
     public static final String NO_OF_RECORDS_PARAM = "noOfRecords";
     public static final String LIMIT_PARAM = "limit";
     public static final String BOOKING_NO_PARAM = "bookingNo";
+    public static final String CHB_HALL_NAME ="communityHallCode";
     public static final String REQUESTINFO_PARAM = "RequestInfo";
     public static final String SEARCH_CRITERIA_PARAM = "searchCriteria";
     public static final String USERID_PARAM = "userid";
     public static final String SORT_ORDER_PARAM = "sortOrder";
     public static final String DESC_PARAM = "DESC";
+    
 }
