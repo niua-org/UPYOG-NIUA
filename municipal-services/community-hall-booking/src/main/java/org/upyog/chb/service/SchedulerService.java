@@ -101,7 +101,13 @@ public class SchedulerService {
 				.build();
 
 		// Process each booking detail
-		bookingDetails.forEach(bookingDetail -> processBookingDetail(bookingDetail, workflow, requestInfo));
+		bookingDetails.forEach(bookingDetail -> {
+		    try {
+		        processBookingDetail(bookingDetail, workflow, requestInfo);
+		    } catch (Exception e) {
+		        log.error("Failed to process booking number: {}. Error: {}", bookingDetail.getBookingNo(), e.getMessage(), e);
+		    }
+		});
 	}
 
 	private void processBookingDetail(CommunityHallBookingDetail bookingDetail, ProcessInstance workflow,

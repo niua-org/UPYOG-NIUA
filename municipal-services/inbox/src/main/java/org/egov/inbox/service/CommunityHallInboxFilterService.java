@@ -92,6 +92,9 @@ public class CommunityHallInboxFilterService {
 			if (moduleSearchCriteria.containsKey(BOOKING_NO_PARAM)) {
 				searchCriteria.put(BOOKING_NO_PARAM, moduleSearchCriteria.get(BOOKING_NO_PARAM));
 			}
+			if (moduleSearchCriteria.containsKey(CHB_HALL_NAME)) {
+				searchCriteria.put(CHB_HALL_NAME, moduleSearchCriteria.get(CHB_HALL_NAME));
+			}
 
 			// Accomodating process search criteria in searcher request
 			if (!ObjectUtils.isEmpty(processCriteria.getAssignee())) {
