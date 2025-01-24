@@ -294,12 +294,14 @@ public class EdcrApplicationService {
         String newFile = edcrApplication.getDxfFile().getOriginalFilename().replace(".dxf", "_system_scrutinized.pdf");
 
         // Load the source CAD file
+        LOG.info("Loading source CAD file...");
         Image objImage = Image.load(filePath);
 
         // Create an instance of PdfOptions
         PdfOptions pdfOptions = new PdfOptions();
 
         // Create rasterization options and configure scaling
+        LOG.info("Configuring rasterization options...");
         CadRasterizationOptions rasterizationOptions = new CadRasterizationOptions();
         rasterizationOptions.setBackgroundColor(Color.getWhite()); // Set background color if needed
         rasterizationOptions.setDrawType(CadDrawTypeMode.UseObjectColor); // Ensure object colors are used
@@ -317,6 +319,7 @@ public class EdcrApplicationService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         // Export CAD to PDF
+        LOG.info("Exporting CAD to PDF...");
         objImage.save(outputStream, pdfOptions);
 
         byte[] pdfBytes = outputStream.toByteArray();
@@ -347,6 +350,7 @@ public class EdcrApplicationService {
             byte[] modifiedPdfBytes;
 
             // Create a new content stream to add the watermark
+            LOG.info("Adding timestamp ...");
             PDPageContentStream contentStream = new PDPageContentStream(document, page,
                     PDPageContentStream.AppendMode.APPEND, true, true);
 
@@ -392,6 +396,8 @@ public class EdcrApplicationService {
 
             // Close the content stream
             contentStream.close();
+            
+            LOG.info("Timestamp added successfully.");
 
             // Save the modified PDF
             ByteArrayOutputStream modifiedPdfStream = new ByteArrayOutputStream();
@@ -401,22 +407,24 @@ public class EdcrApplicationService {
             modifiedPdfBytes = modifiedPdfStream.toByteArray();
 
             File f = new File(newFile);
+            LOG.info("Saving the modified PDF to: {}", f.getAbsolutePath());
             try (FileOutputStream fos = new FileOutputStream(f)) {
                 if (!f.exists())
                     f.createNewFile();
                 fos.write(modifiedPdfBytes);
                 fos.flush();
+                LOG.info("Uploading the modified PDF...");
                 FileStoreMapper fileStoreMapper = fileStoreService.store(f, f.getName(),
                         edcrApplication.getDxfFile().getContentType(), FILESTORE_MODULECODE);
                 edcrApplication.getEdcrApplicationDetails().get(0).setScrutinizedDxfFileId(fileStoreMapper);
+                LOG.info("Modified PDF uploaded successfully. File ID: {}", fileStoreMapper.getFileStoreId());
             } catch (IOException e) {
                 LOG.error("Error occurred when reading file!!!!!", e);
             }
         } catch (IOException e) {
             LOG.error("Error occurred when processing PDF!!!!!", e);
         }
-    }
-
+    } 
 
         @Transactional
     public EdcrApplication createRestEdcr(final EdcrApplication edcrApplication){
