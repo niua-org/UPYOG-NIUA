@@ -1,0 +1,42 @@
+<!-- sidebar: style can be found in sidebar.less -->
+<section class="sidebar" th:fragment="sidebar">
+    <!-- Sidebar Menu -->
+    <ul class="sidebar-menu" data-widget="tree">
+        <!-- <li class="header"></li> -->
+        <li><a href="/"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
+        <li class="treeview">
+            <a href="#"><i class="fa fa-folder"></i> <span>User Registration</span>
+                <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+              </span>
+            </a>
+            <ul class="treeview-menu">
+                <li><a href="/customers"><i class="fa fa-circle-o"></i> List User</a></li>
+                <li><a href="/customers/add"><i class="fa fa-circle-o"></i> Add User</a></li>
+            </ul>
+        </li>
+        <li class="treeview">
+            <a href="#"><i class="fa fa-folder"></i> <span>Property Registration</span>
+                <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+              </span>
+            </a>
+            <ul class="treeview-menu">
+                <li><a href="/properties"><i class="fa fa-circle-o"></i> List Properties</a></li>
+                <li><a href="/properties/add"><i class="fa fa-circle-o"></i> Add Property</a></li>
+            </ul>
+        </li>
+        <li class="treeview">
+            <a href="#"><i class="fa fa-folder"></i> <span>Maps</span>
+                <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+              </span>
+            </a>
+            <ul class="treeview-menu">
+                <li><a href="/maps/view"><i class="fa fa-circle-o"></i> View Properties Map</a></li>
+            </ul>
+        </li>
+    </ul>
+    <!-- /.sidebar-menu -->
+</section>
+<!-- /.sidebar -->

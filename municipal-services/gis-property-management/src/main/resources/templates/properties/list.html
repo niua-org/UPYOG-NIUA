@@ -1,0 +1,86 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout">
+<head>
+    <title>Properties</title>
+</head>
+<body>
+<section layout:fragment="header">
+    <h1>Properties</h1>
+    <ol class="breadcrumb">
+        <li><a href="/"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li class="active">Properties</li>
+    </ol>
+</section>
+<div layout:fragment="content">
+    <div class="box" style="padding: 2rem;">
+        <div class="box-header with-border">
+            <h3 class="box-title">Lists</h3>
+            <div class="box-tools pull-right">
+                <a href="/properties/add" type="button" class="btn btn-box-tool"><i class="fa fa-plus"></i></a>
+                <br clear="all" />
+            </div>
+        </div>
+        <div class="box-body">
+            <form th:action="@{/properties/search}" method="get" style="display: flex; align-items: center; gap: 10px;">
+                <!-- Search Input and Search Button -->
+                <div class="input-group" style="flex: 1;">
+                    <input type="text" name="search" class="form-control" placeholder="Search by any parameter"
+                           th:value="${search}" style="width: 100%;" />
+                    <span class="input-group-btn">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </span>
+                </div>
+                <!-- Clear Search Button -->
+                <button type="submit" th:formaction="@{/properties}" class="btn btn-secondary">Clear</button>
+            </form>
+        </div>
+
+
+        <div class="box-body no-padding">
+            <div class="table-responsive">
+            <table class="table table-striped">
+                <tr>
+                    <th>ID</th>
+                    <th>GIS UID</th>
+                    <th>PID/HID</th>
+                    <th>Bungalow No</th>
+                    <th>Type</th>
+                    <th>Permanent Pool</th>
+                    <th>Allotment Pool</th>
+                    <th>Name</th>
+                    <th>Coordinates</th>
+                    <th>Action</th>
+                </tr>
+                <tr th:each="row : ${list}">
+                    <td th:text="${row.id}"></td>
+                    <td th:text="${row.gisUid}"></td>
+                    <td th:text="${row.PID + '/' + row.HID}"></td>
+                    <td th:text="${row.bungalowNo}"></td>
+                    <td th:text="${row.type}"></td>
+                    <td th:text="${row.permanentPool}"></td>
+                    <td th:text="${row.allotmentPool}"></td>
+                    <td th:text="${row.name}"></td>
+                    <td th:text="${row.latitude + '/' + row.longitude}"></td>
+                    <td>
+                        <a th:href="${'/properties/edit/' + row.id}">Edit</a> |
+                        <a th:href="${'/properties/delete/' + row.id}">Delete</a>
+                    </td>
+                </tr>
+            </table>
+            </div>
+        </div>
+        <div class="box-footer clearfix">
+            <ul class="pagination pagination-sm no-margin pull-right">
+                <li><a th:href="@{/properties/search(search=${search}, pageNumber=1)}">First</a></li>
+                <li th:each="p : ${#numbers.sequence(beginIndex, endIndex)}"
+                    th:class="${p == currentIndex} ? 'active' : ''">
+                    <a th:href="@{/properties/search(search=${search}, pageNumber=${p})}" th:text="${p}"></a>
+                </li>
+                <li><a th:href="@{/properties/search(search=${search}, pageNumber=${endIndex})}">Last</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>
