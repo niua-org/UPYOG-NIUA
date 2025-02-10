@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" th:href="@{https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css}" />
+    <!-- Latest jQuery 3.7.1 -->
+    <script th:src="@{https://code.jquery.com/jquery-3.7.1.min.js}"></script>
+
+    <!-- OpenLayers CSS -->
+    <link rel="stylesheet" th:href="@{/assets/v6.13.0-dist/ol.css}" />
+    <!-- OpenLayers JS -->
+    <script th:src="@{/assets/v6.13.0-dist/ol.js}"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/custom/css/style.css}" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" th:href="@{/assets/fontawesome/css/all.css}" />
+
+    <!-- OL-ext CSS & JS -->
+    <link rel="stylesheet" th:href="@{/assets/v6.13.0-dist/ol-ext.css}" />
+    <script th:src="@{/assets/v6.13.0-dist/ol-ext.js}"></script>
+
+    <!-- jQuery UI (Needed for .draggable()) -->
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <!-- jQuery UI CSS for Draggable -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+
+    <title>Survey App</title>
+</head>
+<body>
+<i id='currentLocation' class="fas fa-street-view fa-2x"></i>
+
+<!-- Navbar -->
+<nav class="navbar navbar-light bg-light">
+    <a class="navbar-brand" th:href="@{/}">
+        <i class="fas fa-house-user fa-2x"></i> Upyog (L&E GIS)
+    </a>
+    <div class="ml-auto">
+        <button onclick="wms_layers()" type="button" id="wms_layers_btn" class="btn btn-success btn-sm">Available WMS Layers</button>
+        <button onclick="show_hide_querypanel()" type="button" id="query_panel_btn" class="btn btn-success btn-sm">☰ Open Query Panel</button>
+<!--        <button onclick="info()" type="button" id="info_btn" class="btn btn-success btn-sm">☰ Activate GetInfo</button>-->
+    </div>
+</nav>
+
+<!-- Map Div -->
+<div class="map" id="mymap">
+    <button onclick="show_hide_legend()" type="button" id="legend_btn" class="btn btn-success btn-sm">☰ Show Legend</button>
+    <div id="legend"></div>
+</div>
+
+<!-- WMS Layers Modal -->
+<div class="modal fade" id="wms_layers_window" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Available WMS Layers</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table id="table_wms_layers" class="table table-hover" style="font-size:15px;"></table>
+            </div>
+            <div class="modal-footer">
+                <button onclick="close_wms_window()" type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                <button onclick="add_layer()" type="button" id="add_map_btn" class="btn btn-primary btn-sm">Add Layer to Map</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Draw Modal -->
+<div class="modal fade" id="startdrawModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Draw Type</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="row">
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Point</h5>
+                                <p class="card-text"><i class="fas fa-map-marker-alt fa-2x"></i></p>
+                                <a onclick="startDraw('Point')" class="btn btn-success">Add</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Line</h5>
+                                <p class="card-text"><i class="fas fa-road fa-2x"></i></p>
+                                <a onclick="startDraw('LineString')" class="btn btn-success">Add</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Polygon</h5>
+                                <p class="card-text"><i class="fas fa-draw-polygon fa-2x"></i></p>
+                                <a onclick="startDraw('Polygon')" class="btn btn-success">Add</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enter Information Modal -->
+<div class="modal fade" id="enterInformationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter Feature's Detail</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="form-group">
+                    <label for="typeofFeatures">Type of Feature</label>
+                    <select class="form-control" id="typeofFeatures"></select>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputtext1">Name</label>
+                    <input type="text" class="form-control" id="exampleInputtext1">
+                    <small class="form-text text-muted">Address, Name, etc.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="clearDrawSource()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="savetodb()">Save Features</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js}"></script>
+<script th:src="@{https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js}"></script>
+
+<!-- Custom JS -->
+<script th:src="@{/custom/js/main.js}"></script>
+
+</body>
+</html>
