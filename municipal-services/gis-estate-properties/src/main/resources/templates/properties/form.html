@@ -1,0 +1,339 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout">
+<head>
+    <title>Property Registration</title>
+</head>
+<body>
+<section layout:fragment="header">
+    <h1>Property Registration</h1>
+    <ol class="breadcrumb">
+        <li><a href="/"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li class="active">Property Registration</li>
+    </ol>
+</section>
+<div layout:fragment="content">
+    <div class="box" style="padding: 2rem;">
+        <div class="box-header with-border">
+            <h3 class="box-title">Form</h3>
+            <div class="box-tools pull-right">
+                <a href="/properties" type="button" class="btn btn-box-tool"><i class="fa fa-list-ul"></i></a>
+            </div>
+        </div>
+        <form class="property-form" data-toggle="validator" role="form" th:object="${property}" th:action="@{/properties/save}" method="post" enctype="multipart/form-data">
+            <div class="box-body">
+                <input type="hidden" th:field="*{id}"/>
+
+                <div class="form-group">
+                    <label for="gisUid">GIS UID</label>
+                    <input type="text" class="form-control" th:field="*{gisUid}" id="gisUid" />
+                </div>
+                <div class="form-group">
+                    <label for="PID">PID</label>
+                    <input type="text" class="form-control" th:field="*{PID}" id="PID" />
+                </div>
+                <div class="form-group">
+                    <label for="HID">HID</label>
+                    <input type="text" class="form-control" th:field="*{HID}" id="HID" />
+                </div>
+                <div class="form-group">
+                    <label for="roadName">Road Name</label>
+                    <select class="form-control select2" th:field="*{roadName}" id="roadName" style="width: 100%;">
+                        <option value="A.P.J. Abdul Kalam Road">A.P.J. Abdul Kalam Road</option>
+                        <option value="Akbar Road">Akbar Road</option>
+                        <option value="Ashoka Road">Ashoka Road</option>
+                        <option value="Atul Grove Road">Atul Grove Road</option>
+                        <option value="B.R. Mehta Lane (Curzon Lane)">B.R. Mehta Lane (Curzon Lane)</option>
+                        <option value="Copernicus (Lytton) Lane">Copernicus (Lytton) Lane</option>
+                        <option value="Dr. H C Mathur Lane">Dr. H C Mathur Lane</option>
+                        <option value="Dr. Rajendra Prasad Road">Dr. Rajendra Prasad Road</option>
+                        <option value="Dr. Z.H. Marg">Dr. Z.H. Marg</option>
+                        <option value="Ferozshah Road">Ferozshah Road</option>
+                        <option value="Gurudwara Rakab Ganj Road">Gurudwara Rakab Ganj Road</option>
+                        <option value="Humayun Road">Humayun Road</option>
+                        <option value="Janpath">Janpath</option>
+                        <option value="Jantar Mantar Road">Jantar Mantar Road</option>
+                        <option value="K. Kamraj Lane">K. Kamraj Lane</option>
+                        <option value="K. Kamraj Marg">K. Kamraj Marg</option>
+                        <option value="Krishna Menon Marg">Krishna Menon Marg</option>
+                        <option value="Kushak Road">Kushak Road</option>
+                        <option value="Lodhi Estate">Lodhi Estate</option>
+                        <option value="Lodhi Garden">Lodhi Garden</option>
+                        <option value="Lok Kalyan Marg">Lok Kalyan Marg</option>
+                        <option value="Mahadev Road">Mahadev Road</option>
+                        <option value="Mathura Road">Mathura Road</option>
+                        <option value="Maulana Azad Road">Maulana Azad Road</option>
+                        <option value="Meena Bagh">Meena Bagh</option>
+                        <option value="Mother Teresa Crescent">Mother Teresa Crescent</option>
+                        <option value="Moti Lal Nehru Marg">Moti Lal Nehru Marg</option>
+                        <option value="Moti Lal Nehru Place">Moti Lal Nehru Place</option>
+                        <option value="Pandara Park">Pandara Park</option>
+                        <option value="Pandara Road">Pandara Road</option>
+                        <option value="Pandit Pant Marg">Pandit Pant Marg</option>
+                        <option value="Pandit Uma Shankar Dixit Marg">Pandit Uma Shankar Dixit Marg</option>
+                        <option value="Park Lane">Park Lane</option>
+                        <option value="Prithviraj Road">Prithviraj Road</option>
+                        <option value="Pt. Ravi Shankar Shukla Lane">Pt. Ravi Shankar Shukla Lane</option>
+                        <option value="Purana Quila Road">Purana Quila Road</option>
+                        <option value="Raisina Road">Raisina Road</option>
+                        <option value="Rajaji Marg">Rajaji Marg</option>
+                        <option value="Safdarjang Road">Safdarjang Road</option>
+                        <option value="Safdarjung Lane">Safdarjung Lane</option>
+                        <option value="Shahjahan Road">Shahjahan Road</option>
+                        <option value="South Avenue Lane">South Avenue Lane</option>
+                        <option value="Sunehari Bagh Road">Sunehari Bagh Road</option>
+                        <option value="Talkatora Lane">Talkatora Lane</option>
+                        <option value="Talkatora Road">Talkatora Road</option>
+                        <option value="Teen Murti Lane">Teen Murti Lane</option>
+                        <option value="Teen Murti Marg">Teen Murti Marg</option>
+                        <option value="Tees January Marg">Tees January Marg</option>
+                        <option value="Telegraph Lane">Telegraph Lane</option>
+                        <option value="Thyagaraja Marg">Thyagaraja Marg</option>
+                        <option value="Tilak Lane">Tilak Lane</option>
+                        <option value="Tilak Marg">Tilak Marg</option>
+                        <option value="Tughlak Crescent">Tughlak Crescent</option>
+                        <option value="Tughlak Lane">Tughlak Lane</option>
+                        <option value="Tughlak Road">Tughlak Road</option>
+                        <option value="Windsor Place">Windsor Place</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="bungalowNo">Bungalow No</label>
+                    <input type="text" class="form-control" th:field="*{bungalowNo}" id="bungalowNo" />
+                </div>
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select class="form-control select2" th:field="*{type}" id="type" style="width: 100%;">
+                        <option value="Private">Private</option>
+                        <option value="VIII">VIII</option>
+                        <option value="VII">VII</option>
+                        <option value="5A">5A</option>
+                        <option value="6A">6A</option>
+                        <option value="5B">5B</option>
+                        <option value="Govt. Building">Govt. Building</option>
+                        <option value="6B">6B</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="permanentPool">Permanent Pool</label>
+                    <select class="form-control select2" th:field="*{permanentPool}" id="permanentPool" style="width: 100%;">
+                        <option value="Defence">Defence</option>
+                        <option value="DoE">DoE</option>
+                        <option value="High Court">High Court</option>
+                        <option value="Lok Sabha">Lok Sabha</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                        <option value="Private">Private</option>
+                        <option value="Rajya Sabha">Rajya Sabha</option>
+                        <option value="Supreme Court">Supreme Court</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="allotmentPool">Allotment Pool</label>
+                    <select class="form-control select2" th:field="*{allotmentPool}" id="allotmentPool" style="width: 100%;">
+                        <option value="DF (Departmental Pool)">DF (Departmental Pool)</option>
+                        <option value="DP- Delhi Govt.">DP- Delhi Govt.</option>
+                        <option value="EM (Emergency Pool)">EM (Emergency Pool)</option>
+                        <option value="Government Building">Government Building</option>
+                        <option value="GP (General Pool)">GP (General Pool)</option>
+                        <option value="Judge High Court">Judge High Court</option>
+                        <option value="Judge Supreme Court">Judge Supreme Court</option>
+                        <option value="LM (Local Municipal Pool)">LM (Local Municipal Pool)</option>
+                        <option value="Lok Sabha">Lok Sabha</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                        <option value="Private">Private</option>
+                        <option value="Rajya Sabha">Rajya Sabha</option>
+                        <option value="SG (Special Grade)">SG (Special Grade)</option>
+                        <option value="Sold House">Sold House</option>
+                        <option value="TP (Third Party)">TP (Third Party)</option>
+                        <option value="TR (Transport Pool)">TR (Transport Pool)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" th:field="*{name}" id="name" />
+                </div>
+                <div class="form-group">
+                    <label for="designation">Designation</label>
+                    <select class="form-control select2" th:field="*{designation}" id="designation" style="width: 100%;">
+                        <option value="ADDITIONAL DIRECTOR CBI">ADDITIONAL DIRECTOR CBI</option>
+                        <option value="ADDITIONAL DIRECTOR DoE">ADDITIONAL DIRECTOR DoE</option>
+                        <option value="ADDITIONAL SECRETARY">ADDITIONAL SECRETARY</option>
+                        <option value="ADDITIONAL SOLICITOR DoE">ADDITIONAL SOLICITOR DoE</option>
+                        <option value="ADDITIONAL SOLICITOR GENERAL Pool for India">ADDITIONAL SOLICITOR GENERAL Pool for India</option>
+                        <option value="AIR MARSHAL">AIR MARSHAL</option>
+                        <option value="AVM ACAS Ops Space">AVM ACAS Ops Space</option>
+                        <option value="AVM, ACAS EDN">AVM, ACAS EDN</option>
+                        <option value="Cabinet Minister of Communications and Minister of Development of North Eastern Region">
+                            Cabinet Minister of Communications and Minister of Development of North Eastern Region
+                        </option>
+                        <option value="Cabinet Minister of Health & Family Welfare, and Minister of Chemicals & Fertilizers">
+                            Cabinet Minister of Health & Family Welfare, and Minister of Chemicals & Fertilizers
+                        </option>
+                        <option value="Cabinet Minister of Labour and Employment; and Minister of Youth Affairs and Sports">
+                            Cabinet Minister of Labour and Employment; and Minister of Youth Affairs and Sports
+                        </option>
+                        <option value="Cabinet Minister of Road Transport and Highways">Cabinet Minister of Road Transport and Highways</option>
+                        <option value="CBI">CBI</option>
+                        <option value="Chairperson Appellate Tribunal for Electricity Core">Chairperson Appellate Tribunal for Electricity Core</option>
+                        <option value="Chairperson, Dept. of Legal Affairs">Chairperson, Dept. of Legal Affairs</option>
+                        <option value="Chairperson, National Commission for Backward Classes">Chairperson, National Commission for Backward Classes</option>
+                        <option value="Chief Medical Officer">Chief Medical Officer</option>
+                        <option value="Chief Minister Nagaland">Chief Minister Nagaland</option>
+                        <option value="Chief Minister of Telangana">Chief Minister of Telangana</option>
+                        <option value="Chief of Protocol, MEA">Chief of Protocol, MEA</option>
+                        <option value="CISC">CISC</option>
+                        <option value="Comptroller and Auditor DoE of India">Comptroller and Auditor DoE of India</option>
+                        <option value="Deputy Chief Executive Officer">Deputy Chief Executive Officer</option>
+                        <option value="Deputy Director DoE">Deputy Director DoE</option>
+                        <option value="Deputy Secretary">Deputy Secretary</option>
+                        <option value="Deputy Secretary NSC">Deputy Secretary NSC</option>
+                        <option value="Director">Director</option>
+                        <option value="Director DoE">Director DoE</option>
+                        <option value="Director of DoE of Audit">Director of DoE of Audit</option>
+                        <option value="Director General (Army Avn MOD)">Director General (Army Avn MOD)</option>
+                        <option value="Director General Pool, Cost Guard">Director General Pool, Cost Guard</option>
+                        <option value="Director General Signals">Director General Signals</option>
+                        <option value="Director Intelligence Bureau">Director Intelligence Bureau</option>
+                        <option value="DCOAS IS C">DCOAS IS C</option>
+                        <option value="DCOAS CDS">DCOAS CDS</option>
+                        <option value="DG ARMED CORPS">DG ARMED CORPS</option>
+                        <option value="DG AAD">DG AAD</option>
+                        <option value="DG ORG PERS">DG ORG PERS</option>
+                        <option value="DG TA">DG TA</option>
+                        <option value="DGHS AF">DGHS AF</option>
+                        <option value="DGDIA DCIDS INT">DGDIA DCIDS INT</option>
+                        <option value="DIG">DIG</option>
+                        <option value="DIG/IPS">DIG/IPS</option>
+                        <option value="Director General Signals">Director General Signals</option>
+                        <option value="E IN C">E IN C</option>
+                        <option value="Ex-MP">Ex-MP</option>
+                        <option value="Former CJI">Former CJI</option>
+                        <option value="Former Minister">Former Minister</option>
+                        <option value="Former MP">Former MP</option>
+                        <option value="Former President of India">Former President of India</option>
+                        <option value="General Pool Secretary">General Pool Secretary</option>
+                        <option value="General Secretary">General Secretary</option>
+                        <option value="HON'BLE JUDGE">HON'BLE JUDGE</option>
+                        <option value="Hon'ble CM of Bihar">Hon'ble CM of Bihar</option>
+                        <option value="Hon'ble CM, Assam">Hon'ble CM, Assam</option>
+                        <option value="Hon'ble Judge">Hon'ble Judge</option>
+                        <option value="Hon'ble Minister for Housing and Urban Affairs">Hon'ble Minister for Housing and Urban Affairs</option>
+                        <option value="Hon'ble MoS for Agriculture and Farmers Welfare">Hon'ble MoS for Agriculture and Farmers Welfare</option>
+                        <option value="Hon'ble MoS for Home Affairs">Hon'ble MoS for Home Affairs</option>
+                        <option value="Hon'ble MoS for Ministry of Finance">Hon'ble MoS for Ministry of Finance</option>
+                        <option value="Hon'ble MoS for Ministry of Power and MoS in the Ministry of New and Renewable Energy">
+                            Hon'ble MoS for Ministry of Power and MoS in the Ministry of New and Renewable Energy
+                        </option>
+                        <option value="Hon'ble Minister for Panchayati Raj and Fisheries, Animal Husbandry and Dairying">
+                            Hon'ble Minister for Panchayati Raj and Fisheries, Animal Husbandry and Dairying
+                        </option>
+                        <option value="Hon'ble Minister for Social Justice and Empowerment">
+                            Hon'ble Minister for Social Justice and Empowerment
+                        </option>
+                        <option value="Hotel Claridges">Hotel Claridges</option>
+                        <option value="Hydrabad House">Hydrabad House</option>
+                        <option value="Judge">Judge</option>
+                        <option value="Judge of High Court">Judge of High Court</option>
+                        <option value="Judge of Supreme Court of India">Judge of Supreme Court of India</option>
+                        <option value="Judge Delhi High Court">Judge Delhi High Court</option>
+                        <option value="Justice">Justice</option>
+                        <option value="Justice Member Judicial">Justice Member Judicial</option>
+                        <option value="Joint DD, MHA">Joint DD, MHA</option>
+                        <option value="Joint Director, IB">Joint Director, IB</option>
+                        <option value="Joint Secretary">Joint Secretary</option>
+                        <option value="JS, M/o Defence">JS, M/o Defence</option>
+                        <option value="JS&FA / IA&AS">JS&FA / IA&AS</option>
+                        <option value="Lt Gen">Lt Gen</option>
+                        <option value="Lt Gen, DG NCC">Lt Gen, DG NCC</option>
+                        <option value="Lt Gen PSO">Lt Gen PSO</option>
+                        <option value="Lt. Colonel, President Secretariat">Lt. Colonel, President Secretariat</option>
+                        <option value="Lt. Gen">Lt. Gen</option>
+                        <option value="Lt. Governor of J&K">Lt. Governor of J&K</option>
+                        <option value="Lt. Governor of Ladakh">Lt. Governor of Ladakh</option>
+                        <option value="Lal Bahadur Shastri Memorial">Lal Bahadur Shastri Memorial</option>
+                        <option value="Minister">Minister</option>
+                        <option value="Minister (M/o Home Affairs & M/o Cooperation)">
+                            Minister (M/o Home Affairs & M/o Cooperation)
+                        </option>
+                        <option value="Minister for Home Affairs">Minister for Home Affairs</option>
+                        <option value="Minister of Parliamentary Affairs and Ministry of Minority Affairs">
+                            Minister of Parliamentary Affairs and Ministry of Minority Affairs
+                        </option>
+                        <option value="Minister of State for Ministry of Power and MoS in the Ministry of New and Renewable Energy">
+                            Minister of State for Ministry of Power and MoS in the Ministry of New and Renewable Energy
+                        </option>
+                        <option value="Minister of State in the Ministry of Defence">Minister of State in the Ministry of Defence</option>
+                        <option value="Ministry of External Affairs">Ministry of External Affairs</option>
+                        <option value="MOS">MOS</option>
+                        <option value="MOS - Ministry of Finance">MOS - Ministry of Finance</option>
+                        <option value="MOS - Home Affairs">MOS - Home Affairs</option>
+                        <option value="MP (Rajya Sabha)">MP (Rajya Sabha)</option>
+                        <option value="MP">MP</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="plotArea">Plot Area</label>
+                    <input type="number" class="form-control" th:field="*{plotArea}" id="plotArea" />
+                </div>
+                <div class="form-group">
+                    <label for="plinthArea">Plinth Area</label>
+                    <input type="number" class="form-control" th:field="*{plinthArea}" id="plinthArea" />
+                </div>
+                <div class="form-group">
+                    <label for="latitude">Latitude</label>
+                    <input type="number" step="0.000001" class="form-control" th:field="*{latitude}" id="latitude" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude</label>
+                    <input type="number" step="0.000001" class="form-control" th:field="*{longitude}" id="longitude" readonly />
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" id="fetch-location">Get Current Location</button>
+                </div>
+                <div class="form-group">
+                    <label for="picture">Picture</label>
+                    <!-- File upload input -->
+                    <input type="file" class="form-control" id="picture" name="pictureFile" accept="image/*" capture="environment" />
+
+                    <!-- Display the uploaded image or preview -->
+                    <div>
+                        <!-- Image Preview -->
+                        <br>
+                        <img
+                                id="preview-img"
+                                th:src="${property.picture != null ? '/file/' + property.picture : '/dist/img/default-50x50.gif'}"
+                                onerror="this.onerror=null; this.src='/dist/img/default-50x50.gif';"
+                                alt="Property Image"
+                                style="max-width: 200px; max-height: 200px; cursor: pointer;"
+                                data-toggle="modal"
+                                data-target="#imageModal" />
+
+                        <!-- Zoom Modal -->
+                        <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageModalLabel">Property Image</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img id="modal-img" src="" alt="Zoomed Property Image" style="width: 100%; height: auto;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="box-footer">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
