@@ -37,24 +37,31 @@
 <!-- Navbar -->
 <nav class="navbar navbar-light bg-light">
     <a class="navbar-brand" th:href="@{/}">
-        <i class="fas fa-house-user fa-2x"></i> Upyog (L&E GIS)
+        <i class="fas fa-house-user fa-2x"></i> <b>UPYOG</b> (L&E GIS)
     </a>
-    <div class="ml-auto">
-        <button onclick="wms_layers()" type="button" id="wms_layers_btn" class="btn btn-success btn-sm">Available WMS Layers</button>
-        <button onclick="show_hide_querypanel()" type="button" id="query_panel_btn" class="btn btn-success btn-sm">☰ Open Query Panel</button>
+    <div class="ml-auto d-flex align-items-center">
+        <button onclick="wms_layers()" type="button" id="wms_layers_btn" class="btn btn-success btn-sm mr-2">☰ Available WMS Layers</button>
+        <button onclick="show_hide_querypanel()" type="button" id="query_panel_btn" class="btn btn-success btn-sm mr-2">Open Query Panel</button>
+        <select id="measuretype" class="form-control form-control-sm  ml-2 mr-2 w-auto">
+            <option value="select">Measurement Options</option>
+            <option value="length">Length (Line)</option>
+            <option value="area">Area (Polygon)</option>
+            <option value="clear">Clear</option>
+        </select>
+        <button onclick="show_hide_legend()" type="button" id="legend_btn" class="btn btn-success btn-sm mr-2">Show Legend</button>
+        <button onclick="clear_all()" type="button" id="clear_btn" class="btn btn-info btn-sm ml-2 mr-2">Clear</button>
 <!--        <button onclick="info()" type="button" id="info_btn" class="btn btn-success btn-sm">☰ Activate GetInfo</button>-->
     </div>
 </nav>
 
 <!-- Map Div -->
-<div class="map" id="mymap">
-    <button onclick="show_hide_legend()" type="button" id="legend_btn" class="btn btn-success btn-sm">☰ Show Legend</button>
-    <div id="legend"></div>
+<div class="map" id="map">
+        <div id="legend"></div>
 </div>
 
 <!-- WMS Layers Modal -->
 <div class="modal fade" id="wms_layers_window" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Available WMS Layers</h5>
@@ -86,7 +93,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Point</h5>
                                 <p class="card-text"><i class="fas fa-map-marker-alt fa-2x"></i></p>
-                                <a onclick="startDraw('Point')" class="btn btn-success">Add</a>
+                                <a onclick="startDraw('Point')" class="btn btn-success text-white">Add</a>
                             </div>
                         </div>
                     </div>
@@ -95,7 +102,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Line</h5>
                                 <p class="card-text"><i class="fas fa-road fa-2x"></i></p>
-                                <a onclick="startDraw('LineString')" class="btn btn-success">Add</a>
+                                <a onclick="startDraw('LineString')" class="btn btn-success text-white">Add</a>
                             </div>
                         </div>
                     </div>
@@ -104,7 +111,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Polygon</h5>
                                 <p class="card-text"><i class="fas fa-draw-polygon fa-2x"></i></p>
-                                <a onclick="startDraw('Polygon')" class="btn btn-success">Add</a>
+                                <a onclick="startDraw('Polygon')" class="btn btn-success text-white">Add</a>
                             </div>
                         </div>
                     </div>
@@ -144,12 +151,92 @@
     </div>
 </div>
 
+<div id="query_tab" class="query-panel">
+    <nav>
+        <div class="nav nav-tabs custom-nav-tabs" id="nav-tab" role="tablist">
+            <button class="nav-link active btn-secondary btn-sm" id="nav-attributes-tab" data-toggle="tab" data-target="#nav-attributes" type="button" role="tab" aria-controls="nav-attributes" aria-selected="true">
+                Select by Attributes
+            </button>
+            <button class="nav-link btn-sm" id="nav-draw-tab" data-toggle="tab" data-target="#nav-draw" type="button" role="tab" aria-controls="nav-draw" aria-selected="false">
+                Select by Draw
+            </button>
+        </div>
+    </nav>
+
+    <div class="tab-content p-3" id="nav-tabContent">
+        <!-- Select by Attributes -->
+        <div class="tab-pane fade show active" id="nav-attributes" role="tabpanel" aria-labelledby="nav-attributes-tab">
+            <div class="form-group">
+                <label for="layer" class="font-weight-bold">Select Layer</label>
+                <select id="layer" class="form-control form-control-sm">
+                    <option selected>Select Layer</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="attributes" class="font-weight-bold">Select Attribute</label>
+                <select id="attributes" class="form-control form-control-sm">
+                    <option selected>Select Attribute</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="operator" class="font-weight-bold">Select Operator</label>
+                <select id="operator" class="form-control form-control-sm">
+                    <option selected>Select Operator</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="value" class="font-weight-bold">Enter Value</label>
+                <input type="text" class="form-control form-control-sm" id="value" name="value" placeholder="Enter value">
+            </div>
+
+            <button onclick="query()" type="button" class="btn btn-danger btn-sm btn-block">Load Layer</button>
+        </div>
+
+        <!-- Select by Draw -->
+        <div class="tab-pane fade" id="nav-draw" role="tabpanel" aria-labelledby="nav-draw-tab">
+            <div class="form-group">
+                <label for="layer1" class="font-weight-bold">Select Layer</label>
+                <select id="layer1" class="form-control form-control-sm">
+                    <option selected>Select Layer</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="draw_type" class="font-weight-bold">Select Geometry Type</label>
+                <select id="draw_type" class="form-control form-control-sm">
+                    <option value="select">Select Shape</option>
+                    <option value="Square">Square</option>
+                    <option value="Box">Box</option>
+                    <option value="Polygon">Polygon</option>
+                    <option value="Star">Star</option>
+                    <option value="clear">Clear</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="table_data" style="font-size:15px;"></div>
 <!-- Bootstrap JS -->
 <script th:src="@{https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js}"></script>
 <script th:src="@{https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js}"></script>
 
 <!-- Custom JS -->
+<!--<script th:src="@{/custom/js/layers.js}"></script>-->
+<!--<script th:src="@{/custom/js/drawing.js}"></script>-->
+<!--<script th:src="@{/custom/js/popups.js}"></script>-->
+
+
 <script th:src="@{/custom/js/main.js}"></script>
+<script th:src="@{/custom/js/legend.js}"></script>
+<script th:src="@{/custom/js/measurements.js}"></script>
+<script th:src="@{/custom/js/querypanel.js}"></script>
+
+
 
 </body>
 </html>

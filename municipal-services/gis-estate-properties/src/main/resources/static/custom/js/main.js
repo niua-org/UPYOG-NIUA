@@ -9,6 +9,7 @@ var PolygonType = ['Parks', 'Office Spaces', 'Commercial Land', 'Residential Lan
 
 var selectedGeomType;  // Variable to store the selected geometry type
 
+
 // ===================== CUSTOM POPUP =====================
 // Define a popup overlay with custom styling and behavior
 var popup = new ol.Overlay.Popup({
@@ -108,14 +109,26 @@ var esriSatellite = new ol.layer.Tile({
     })
 });
 
-// Stamen Terrain (Free Terrain Map)
-var stamenTerrain = new ol.layer.Tile({
-    title: "Stamen Terrain",
-    type: "base",
+var googleSatellite = new ol.layer.Tile({
+    title: 'Google Satellite',
+    type: 'base',
     visible: false,
     source: new ol.source.XYZ({
-        url: "https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg"
+        url: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_API_KEY",
+        attributions: '&copy; Google Maps'
     })
+});
+
+// Stamen Terrain (Free Terrain Map)
+var stamenTerrain = new ol.layer.Tile({
+    title: 'Google Terrain',
+        type: 'base',
+        visible: false,
+        source: new ol.source.XYZ({
+            url: "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_API_KEY",
+            attributions: '&copy; Google Maps'
+        })
+
 });
 
 // ===================== GEOSERVER LAYER =====================
@@ -149,7 +162,7 @@ var drawLayer = new ol.layer.Vector({
 // Group Base Layers (Only one can be active at a time)
 var baseLayerGroup = new ol.layer.Group({
     title: "Base Layers (Select One)",
-    layers: [baseLayer, esriSatellite, stamenTerrain]
+    layers: [baseLayer, esriSatellite, stamenTerrain, googleSatellite]
 });
 
 // Group Overlays (Multiple can be active)
@@ -176,7 +189,7 @@ var map = new ol.Map({
     }).extend([
         new app.DrawingApp() // Add custom drawing button
     ]),
-    target: 'mymap', // The ID of the HTML element where the map will be rendered
+    target: 'map', // The ID of the HTML element where the map will be rendered
     view: myview, // Set the defined view
     layers: [baseLayerGroup, overlaysGroup], // Add layers to the map
     overlays: [popup] // Attach the popup overlay to the map
@@ -404,63 +417,6 @@ layerSwitcher = new ol.control.LayerSwitcher({
 map.addControl(layerSwitcher);
 
 
-// ===================== FUNCTION TO SHOW/HIDE LEGEND =====================
-/**
- * Toggles the visibility of the legend panel on the map.
- */
-function show_hide_legend() {
-    var legendDiv = document.getElementById("legend");  // Get the legend div
-    var legendBtn = document.getElementById("legend_btn");  // Get the legend button
-
-    if (legendDiv.style.display === "none" || legendDiv.style.display === "") {
-        legendBtn.innerHTML = "☰ Hide Legend";  // Update button text
-        legendBtn.setAttribute("class", "btn btn-danger btn-sm");  // Change button style to red
-
-        legendDiv.style.display = "block";  // Show legend
-        legendDiv.style.width = "15%";
-        legendDiv.style.height = "38%";
-    } else {
-        legendBtn.setAttribute("class", "btn btn-success btn-sm");  // Change button style to green
-        legendBtn.innerHTML = "☰ Show Legend";  // Update button text
-
-        legendDiv.style.display = "none";  // Hide legend
-        legendDiv.style.width = "0%";
-        legendDiv.style.height = "0%";
-    }
-}
-
-// ===================== FUNCTION TO CREATE LEGEND =====================
-/**
- * Dynamically generates a legend based on the available WMS layers.
- */
-function legend() {
-    $('#legend').empty();  // Clear the existing legend content
-    var no_layers = overlays.getLayers().get('length');  // Get the number of overlay layers
-
-    var head = document.createElement("h8");
-    var txt = document.createTextNode("Legend");
-    head.appendChild(txt);
-
-    var element = document.getElementById("legend");
-    element.appendChild(head);
-
-    // Iterate over each overlay layer and generate legend entries
-    overlays.getLayers().getArray().slice().forEach(layer => {
-        var head = document.createElement("p");
-        var txt = document.createTextNode(layer.get('title'));  // Get layer title
-        head.appendChild(txt);
-
-        var element = document.getElementById("legend");
-        element.appendChild(head);
-
-        var img = new Image();
-        img.src = "http://13.127.171.159:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + layer.get('title');
-        var src = document.getElementById("legend");
-        src.appendChild(img);
-    });
-}
-
-legend();  // Call the legend function to initialize the legend
 
 // ===================== FUNCTION TO GET FEATURE INFO ON CLICK =====================
 /**
@@ -563,7 +519,7 @@ function wms_layers() {
             dataType: "xml",
             success: function(xml) {
                 $('#table_wms_layers').empty();
-                $('<tr></tr>').html('<th>Name</th><th>Title</th><th>Abstract</th>').appendTo('#table_wms_layers');
+                $('<tr class="btn-success text-white"></tr>').html('<th>Name</th><th>Title</th><th>Abstract</th>').appendTo('#table_wms_layers');
 
                 // Parse XML to extract WMS layer information
                 $(xml).find('Layer').find('Layer').each(function() {
@@ -602,7 +558,7 @@ function wms_layers() {
 
                     $("#table_wms_layers td:nth-child(" + col_no + ")").each(function() {
                         if ($(this).text() == layer_name) {
-                            $(this).parent("tr").css("background-color", "grey"); // Highlight selected row
+                            $(this).parent("tr").css("background-color", "lightgrey"); // Highlight selected row
                         }
                     });
                 };
@@ -616,13 +572,11 @@ function wms_layers() {
  * Adds a selected WMS layer from the modal to the map.
  */
 function add_layer() {
-    if (!layer_name) {
+  if (!layer_name) {
         alert("No WMS layer selected.");
         return;
     }
-
     var name = layer_name.split(":")[1] || layer_name; // Extract layer name if namespace exists
-
     // Prevent duplicate layer addition
     var existingLayers = overlays.getLayers().getArray();
     for (var i = 0; i < existingLayers.length; i++) {
@@ -644,6 +598,34 @@ function add_layer() {
 
     overlays.getLayers().push(layer_wms);
     map.addLayer(layer_wms);
+
+    var url = 'http://13.127.171.159:8080/geoserver/wms?request=getCapabilities';
+        var parser = new ol.format.WMSCapabilities();
+        $.ajax(url).then(function(response) {
+            //window.alert("word");
+            var result = parser.read(response);
+            // console.log(result);
+            // window.alert(result);
+            var Layers = result.Capability.Layer.Layer;
+            var extent;
+            for (var i = 0, len = Layers.length; i < len; i++) {
+
+                var layerobj = Layers[i];
+                //  window.alert(layerobj.Name);
+
+                if (layerobj.Name == layer_name) {
+                    extent = layerobj.BoundingBox[0].extent;
+                    //alert(extent);
+                    map.getView().fit(
+                        extent, {
+                            duration: 1590,
+                            size: map.getSize()
+                        }
+                    );
+
+                }
+            }
+        });
     legend();  // Refresh legend after adding the layer
     // Store in localStorage to persist after refresh
     saveLayersToLocalStorage();
@@ -700,17 +682,40 @@ function close_wms_window() {
 }
 
 // refresh layers
-setTimeout(() => {
-    var existingLayers = map.getLayers().getArray();
-    var featureLayerExists = existingLayers.some(layer => layer.get('title') === 'Feature Map Layer');
+//setTimeout(() => {
+//    var existingLayers = map.getLayers().getArray();
+//    var featureLayerExists = existingLayers.some(layer => layer.get('title') === 'Feature Map Layer');
+//
+//    if (!featureLayerExists) {
+//        map.addLayer(featureLayer);
+//        console.log("Feature layer added to the map.");
+//    } else {
+//        console.log("Feature layer already exists, refreshing...");
+//        var params = featureLayer.getSource().getParams();
+//        params.t = new Date().getMilliseconds(); // Force refresh by adding timestamp
+//        featureLayer.getSource().updateParams(params);
+//    }
+//}, 2000);  // Delay for better initialization
 
-    if (!featureLayerExists) {
-        map.addLayer(featureLayer);
-        console.log("Feature layer added to the map.");
-    } else {
-        console.log("Feature layer already exists, refreshing...");
-        var params = featureLayer.getSource().getParams();
-        params.t = new Date().getMilliseconds(); // Force refresh by adding timestamp
-        featureLayer.getSource().updateParams(params);
-    }
-}, 2000);  // Delay for better initialization
+var mouse_position = new ol.control.MousePosition();
+map.addControl(mouse_position);
+var slider = new ol.control.ZoomSlider();
+map.addControl(slider);
+
+var zoom_ex = new ol.control.ZoomToExtent({
+    extent: [
+        65.90, 7.48,
+        98.96, 40.30
+    ]
+});
+map.addControl(zoom_ex);
+
+var scale_line = new ol.control.ScaleLine({
+    units: 'metric',
+    bar: true,
+    steps: 6,
+    text: true,
+    minWidth: 140,
+    target: 'scale_bar'
+});
+map.addControl(scale_line);
