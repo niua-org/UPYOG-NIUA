@@ -66,7 +66,7 @@ $(document).ready(function () {
     // Fetch property count
     async function fetchPropertyCount() {
         try {
-            const response = await fetch('/properties/count');
+            const response = await fetch('/property/properties/count');
             if (!response.ok) {
                 throw new Error('Failed to fetch property count');
             }

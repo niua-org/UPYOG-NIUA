@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -100,7 +100,7 @@
 <script th:src="@{/bower_components/bootstrap/dist/js/bootstrap.min.js}"></script>
 <!-- AdminLTE App -->
 <script th:src="@{/dist/js/adminlte.min.js}"></script>
-<script src="../../bower_components/select2/dist/js/select2.full.min.js"></script>
+<script th:src="@{/bower_components/select2/dist/js/select2.full.min.js}"></script>
 <script th:src="@{/custom/custom.js}"></script>
 <script th:src="@{/custom/openLayersMethods.js}"></script>
 <script layout:fragment="script" th:remove="tag"></script>

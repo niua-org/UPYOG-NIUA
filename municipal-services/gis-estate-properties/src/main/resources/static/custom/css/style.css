@@ -113,7 +113,7 @@
       left: 0%;
       right: 0%;
       height: 0%;
-      border: 1px solid #4CAF50;
+      border: 0px;
   }
 
   #table {
@@ -152,7 +152,7 @@
      height: 200px;
  }
 
- .fa-house-user {
-     color: #3c8dbc;  /* Default color */
- }
+// .fa-house-user {
+//     color: #3c8dbc;  /* Default color */
+//}
 

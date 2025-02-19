@@ -408,8 +408,8 @@ function query() {
 
 
 
-        document.getElementById('map').style.height = '71%';
-        document.getElementById('table_data').style.height = '29%';
+        document.getElementById('map').style.height = '66%';
+        document.getElementById('table_data').style.height = '28%';
         map.updateSize();
         addRowHandlers();
 
@@ -583,31 +583,6 @@ function addRowHandlers() {
         }(rows[i]);
     }
 }
-
-//function show_hide_querypanel() {
-//
-//    if (document.getElementById("query_tab").style.visibility == "hidden") {
-//        document.getElementById("query_panel_btn").innerHTML = "☰ Hide Query Panel";
-//        document.getElementById("query_panel_btn").setAttribute("class", "btn btn-danger btn-sm");
-//        document.getElementById("query_tab").style.visibility = "visible";
-//        document.getElementById("query_tab").style.width = "21%";
-//        document.getElementById("map").style.width = "79%";
-//        document.getElementById("map").style.left = "21%";
-//
-//        document.getElementById('table_data').style.left = '21%';
-//        map.updateSize();
-//    } else {
-//        document.getElementById("query_panel_btn").innerHTML = "Open Query Panel";
-//        document.getElementById("query_panel_btn").setAttribute("class", "btn btn-success btn-sm");
-//        document.getElementById("query_tab").style.width = "0%";
-//        document.getElementById("map").style.width = "100%";
-//        document.getElementById("map").style.left = "0%";
-//        document.getElementById("query_tab").style.visibility = "hidden";
-//        document.getElementById('table_data').style.left = '0%';
-//
-//        map.updateSize();
-//    }
-//}
 
 function show_hide_querypanel() {
     var queryTab = document.getElementById("query_tab");

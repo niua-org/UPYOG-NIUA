@@ -17,7 +17,7 @@
         <div class="box-header with-border">
             <h3 class="box-title">Form</h3>
             <div class="box-tools pull-right">
-                <a href="/customers" type="button" class="btn btn-box-tool"><i class="fa fa-list-ul"></i></a>
+                <a th:href="@{/customers}" type="button" class="btn btn-box-tool"><i class="fa fa-list-ul"></i></a>
             </div>
         </div>
         <form data-toggle="validator" role="form" th:object="${customer}" th:action="@{/customers/save}" method="post">
