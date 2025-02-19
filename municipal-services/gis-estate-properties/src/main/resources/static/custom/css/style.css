@@ -21,13 +21,12 @@
   }
 
 
-
-#legend_btn {
-    position: absolute;
-    z-index: 600;
-    bottom: 2%;
-    right: 0%;
-}
+//#legend_btn {
+//    position: absolute;
+//    z-index: 600;
+//   bottom: 2%;
+//    right: 0%;
+//}
 
 #legend {
     z-index: 11;
@@ -45,3 +44,115 @@
     visibility: visible;
 
 }
+
+.tooltip {
+     position: relative;
+     background: rgba(0, 0, 0, 0.5);
+     border-radius: 4px;
+     color: white;
+     padding: 4px 8px;
+     opacity: 0.7;
+     white-space: nowrap;
+ }
+
+ .tooltip-measure {
+     opacity: 1;
+     font-weight: bold;
+ }
+
+ .tooltip-static {
+     background-color: #ffcc33;
+     color: black;
+     border: 1px solid white;
+ }
+
+ .tooltip-measure:before,
+ .tooltip-static:before {
+     border-top: 6px solid rgba(0, 0, 0, 0.5);
+     border-right: 6px solid transparent;
+     border-left: 6px solid transparent;
+     content: "";
+     position: absolute;
+     bottom: -6px;
+     margin-left: -7px;
+     left: 50%;
+ }
+
+ .tooltip-static:before {
+     border-top-color: #ffcc33;
+ }
+ #map {
+     position: absolute;
+     left: 0%;
+     width: 100%;
+     height: 90%;
+     //  border-style: solid;
+     // border-color: black;
+     // border-width: thin;
+
+ }
+
+ #query_tab {
+       position: absolute;
+       padding: 0.5% 0%;
+       left: 0%;
+       width: 0%;
+       height: 100%;
+       //border-style: solid;
+       //border-color: black;
+       //border-width: thin;
+       visibility: hidden;
+       //overflow: scroll;
+
+ }
+
+  #table_data {
+      position: absolute;
+      bottom: 0%;
+      overflow: scroll;
+      left: 0%;
+      right: 0%;
+      height: 0%;
+      border: 0px;
+  }
+
+  #table {
+      white-space: nowrap;
+      grid-template-areas: "head-fixed""body-scrollable";
+  }
+
+
+  #table th {
+      position: -webkit-sticky;
+      /* for Safari */
+      position: sticky;
+      top: 0px;
+      background-color: #27A745;
+      color: white !important;
+  }
+
+ .ol-mouse-position {
+     top: 90%;
+     left: 0.5%;
+     position: absolute;
+     font-size: 14px;
+
+     font-weight: bold;
+ }
+
+.ol-zoom-extent button {
+    top: 1.5em;
+    position: absolute;
+}
+
+.ol-zoomslider {
+     top: 7.8em;
+     left: 0.5em;
+     position: absolute;
+     height: 200px;
+ }
+
+// .fa-house-user {
+//     color: #3c8dbc;  /* Default color */
+//}
+

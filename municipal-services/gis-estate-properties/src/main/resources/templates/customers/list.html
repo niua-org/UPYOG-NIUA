@@ -8,7 +8,7 @@
 <section layout:fragment="header">
     <h1>Users</h1>
 <ol class="breadcrumb">
-    <li><a href="/"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+    <a th:href="@{/dashboard}"><i class="fa fa-dashboard"></i> Dashboard</a>
     <li class="active">Clients</li>
 </ol>
 </section>
@@ -17,7 +17,7 @@
         <div class="box-header with-border">
             <h3 class="box-title">Lists</h3>
             <div class="box-tools pull-right">
-                <a href="/customers/add" type="button" class="btn btn-box-tool"><i class="fa fa-plus"></i></a>
+                <a th:href="@{/customers/add}" type="button" class="btn btn-box-tool"><i class="fa fa-plus"></i></a>
                 <br clear="all" />
             </div>
         </div>
@@ -36,19 +36,19 @@
                     <td th:text="${row.email}"></td>
                     <td th:text="${#dates.format(row.addedDate, 'dd/MM/yyyy')}"></td>
                     <td>
-                        <a th:href="${'/customers/edit/' + row.id}">Edit</a> |
-                        <a th:href="${'/customers/delete/' + row.id}">Delete</a>
+                        <a th:href="${'/property/customers/edit/' + row.id}">Edit</a> |
+                        <a th:href="${'/property/customers/delete/' + row.id}">Delete</a>
                     </td>
                 </tr>
             </table>
         </div>
         <div class="box-footer clearfix">
             <ul class="pagination pagination-sm no-margin pull-right">
-                <li><a href="/customers/1">First</a></li>
+                <li><a th:href="@{/customers/1}">First</a></li>
                 <li th:each="p : ${#numbers.sequence(1, endIndex/beginIndex)}" th:class="${p == currentIndex} ? 'active' : ''">
-                    <a th:href="${'/customers/' + p}" th:text="${p}"></a>
+                    <a th:href="${'/property/customers/' + p}" th:text="${p}"></a>
                 </li>
-                <li><a th:href="${'/customers/' + endIndex}">Last</a></li>
+                <li><a th:href="${'/property/customers/' + endIndex}">Last</a></li>
             </ul>
         </div>
     </div>

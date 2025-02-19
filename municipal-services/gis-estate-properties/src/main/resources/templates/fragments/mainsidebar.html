@@ -1,9 +1,9 @@
 <!-- sidebar: style can be found in sidebar.less -->
-<section class="sidebar" th:fragment="sidebar">
+<section class="sidebar" th:fragment="sidebar" xmlns:th="http://www.w3.org/1999/xhtml">
     <!-- Sidebar Menu -->
     <ul class="sidebar-menu" data-widget="tree">
         <!-- <li class="header"></li> -->
-        <li><a href="/"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
+        <li><a th:href="@{/}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
         <li class="treeview">
             <a href="#"><i class="fa fa-folder"></i> <span>User Registration</span>
                 <span class="pull-right-container">
@@ -11,8 +11,8 @@
               </span>
             </a>
             <ul class="treeview-menu">
-                <li><a href="/customers"><i class="fa fa-circle-o"></i> List User</a></li>
-                <li><a href="/customers/add"><i class="fa fa-circle-o"></i> Add User</a></li>
+                <li><a th:href="@{/customers}"><i class="fa fa-circle-o"></i> List User</a></li>
+                <li><a th:href="@{/customers/add}"><i class="fa fa-circle-o"></i> Add User</a></li>
             </ul>
         </li>
         <li class="treeview">
@@ -22,8 +22,8 @@
               </span>
             </a>
             <ul class="treeview-menu">
-                <li><a href="/properties"><i class="fa fa-circle-o"></i> List Properties</a></li>
-                <li><a href="/properties/add"><i class="fa fa-circle-o"></i> Add Property</a></li>
+                <li><a th:href="@{/properties}"><i class="fa fa-circle-o"></i> List Properties</a></li>
+                <li><a th:href="@{/properties/add}"><i class="fa fa-circle-o"></i> Add Property</a></li>
             </ul>
         </li>
         <li class="treeview">
@@ -33,7 +33,7 @@
               </span>
             </a>
             <ul class="treeview-menu">
-                <li><a href="/maps/view"><i class="fa fa-circle-o"></i> View Properties Map</a></li>
+                <li><a th:href="@{/maps/view}"><i class="fa fa-circle-o"></i> View Properties Map</a></li>
             </ul>
         </li>
     </ul>

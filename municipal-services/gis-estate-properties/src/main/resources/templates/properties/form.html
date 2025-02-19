@@ -8,7 +8,7 @@
 <section layout:fragment="header">
     <h1>Property Registration</h1>
     <ol class="breadcrumb">
-        <li><a href="/"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a th:href="@{/}"><i class="fa fa-dashboard"></i> Dashboard</a></li>
         <li class="active">Property Registration</li>
     </ol>
 </section>
@@ -17,7 +17,7 @@
         <div class="box-header with-border">
             <h3 class="box-title">Form</h3>
             <div class="box-tools pull-right">
-                <a href="/properties" type="button" class="btn btn-box-tool"><i class="fa fa-list-ul"></i></a>
+                <a th:href="@{/properties}" type="button" class="btn btn-box-tool"><i class="fa fa-list-ul"></i></a>
             </div>
         </div>
         <form class="property-form" data-toggle="validator" role="form" th:object="${property}" th:action="@{/properties/save}" method="post" enctype="multipart/form-data">

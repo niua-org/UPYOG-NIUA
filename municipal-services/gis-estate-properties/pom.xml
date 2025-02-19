@@ -6,7 +6,7 @@
     <groupId>com.gis</groupId>
     <artifactId>property</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>GIS Properties</name>
     <description>Spring boot GIS Properties</description>

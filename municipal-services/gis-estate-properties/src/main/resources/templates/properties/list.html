@@ -8,7 +8,7 @@
 <section layout:fragment="header">
     <h1>Properties</h1>
     <ol class="breadcrumb">
-        <li><a href="/"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a th:href="@{/}"><i class="fa fa-dashboard"></i> Dashboard</a></li>
         <li class="active">Properties</li>
     </ol>
 </section>
@@ -17,7 +17,7 @@
         <div class="box-header with-border">
             <h3 class="box-title">Lists</h3>
             <div class="box-tools pull-right">
-                <a href="/properties/add" type="button" class="btn btn-box-tool"><i class="fa fa-plus"></i></a>
+                <a th:href="@{/properties/add}" type="button" class="btn btn-box-tool"><i class="fa fa-plus"></i></a>
                 <br clear="all" />
             </div>
         </div>
@@ -63,8 +63,8 @@
                     <td th:text="${row.name}"></td>
                     <td th:text="${row.latitude + '/' + row.longitude}"></td>
                     <td>
-                        <a th:href="${'/properties/edit/' + row.id}">Edit</a> |
-                        <a th:href="${'/properties/delete/' + row.id}">Delete</a>
+                        <a th:href="${'/property/properties/edit/' + row.id}">Edit</a> |
+                        <a th:href="${'/property/properties/delete/' + row.id}">Delete</a>
                     </td>
                 </tr>
             </table>
