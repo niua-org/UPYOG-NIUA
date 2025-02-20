@@ -1,0 +1,4 @@
+com.example.webviewapp.test.app-androidTest-0 /Users/vimalkumar/Downloads/UpdatedGradleFiles/app/build/generated/res/resValues/androidTest/debug
+com.example.webviewapp.test.app-mergeDebugAndroidTestResources-1 /Users/vimalkumar/Downloads/UpdatedGradleFiles/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
+com.example.webviewapp.test.app-mergeDebugAndroidTestResources-2 /Users/vimalkumar/Downloads/UpdatedGradleFiles/app/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
+com.example.webviewapp.test.app-debugAndroidTest-3 /Users/vimalkumar/Downloads/UpdatedGradleFiles/app/build/intermediates/merged_res/debugAndroidTest/mergeDebugAndroidTestResources

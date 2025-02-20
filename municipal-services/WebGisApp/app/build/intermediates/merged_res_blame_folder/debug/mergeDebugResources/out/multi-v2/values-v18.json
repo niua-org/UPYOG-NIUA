@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.webviewapp-mergeDebugResources-26:/values-v18/values-v18.xml",
+            "map": [
+                {
+                    "source": "/Users/vimalkumar/.gradle/caches/8.10.2/transforms/3f5c227d4f2b56954934b3215d6e6f6e/transformed/appcompat-1.6.1/res/values-v18/values-v18.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "48",
+                        "endOffsets": "99"
+                    }
+                }
+            ]
+        }
+    ]
+}
