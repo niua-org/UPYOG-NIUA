@@ -24,18 +24,18 @@ const NewAssetApplication = () => {
     return new Date(year, month - 1, day).getTime();
   };
 
- 
-
   useEffect(() => {
     setMutationHappened(false);
     clearSuccessData();
   }, []);
 
-  
 
   const onFormValueChange = (setValue, formData, formState) => {
-    
-    setSubmitValve(!Object.keys(formState.errors).length); 
+    if (formData?.assigndetails?.[0]?.allocatedDepartment) {
+      setSubmitValve(true);  
+      } else {
+          setSubmitValve(false); // Ensure it's explicitly set to false when empty
+      }
   };
 
   const onSubmit = (data) => {
@@ -69,15 +69,9 @@ const NewAssetApplication = () => {
 
   };
     
+const configs = assignConfig;    
 
-   
-  
-
-  
-  const configs = assignConfig;    
-
-  
-  return (
+return (
     <FormComposer
       heading={t("AST_ASSIGN_ASSET")}
       isDisabled={!canSubmit}
