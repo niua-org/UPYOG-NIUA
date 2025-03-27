@@ -169,10 +169,10 @@ const OwnerForm = (_props) => {
                                 control={control}
                                 name={"assignedUser"}
                                 defaultValue={assigndetails?.assignedUser}
-                                rules={{
-                                    required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                                    validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                                }}
+                                // rules={{
+                                //     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
+                                //     validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
+                                // }}
                                 render={(props) => (
                                     <TextInput
                                         value={props.value}
@@ -198,13 +198,13 @@ const OwnerForm = (_props) => {
                                 control={control}
                                 name={"employeeCode"}
                                 defaultValue={assigndetails?.employeeCode}
-                                rules={{
-                                    required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                                    validate: {
-                                        pattern: (val) =>
-                                            /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
-                                    },
-                                }}
+                                // rules={{
+                                //     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
+                                //     validate: {
+                                //         pattern: (val) =>
+                                //             /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
+                                //     },
+                                // }}
                                 render={(props) => (
                                     <TextInput
                                         value={props.value}
@@ -249,12 +249,19 @@ const OwnerForm = (_props) => {
                     <CardLabelError style={errorStyle}>{localFormState.touched.designation ? errors?.designation?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
-                        <CardLabel className="card-label-smaller">{t("AST_ALLOCATED_DEPARTMENT")}</CardLabel>
+                        <CardLabel className="card-label-smaller">{t("AST_ALLOCATED_DEPARTMENT")} *</CardLabel>
                         <Controller
                             control={control}
                             name={"allocatedDepartment"}
                             defaultValue={assigndetails?.allocatedDepartment}
-
+                            rules={{
+                                    required: t("CORE_COMMON_REQUIRED_ERRMSG"),
+                                    validate: {
+                                        isValidSelection: (val) =>
+                                          val && (typeof val === "string" || typeof val === "object") ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG"),
+                                      },
+                                  
+                                }}
                             render={(props) => (
                                 <Dropdown
                                     className="form-field"

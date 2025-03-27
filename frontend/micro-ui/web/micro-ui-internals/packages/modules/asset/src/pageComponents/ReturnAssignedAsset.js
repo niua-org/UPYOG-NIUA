@@ -150,12 +150,18 @@ import {
                 </StatusTable>
                 <StatusTable>
                 <Row
+                    label={t("AST_ALLOCATED_DEPARTMENT")}
+                    text={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.assetAssignment?.department))}`}
+                />
+                </StatusTable>
+                <StatusTable>
+                <Row
                     label={t("AST_EMP_CODE")}
                     text={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.assetAssignment?.employeeCode))}`}
                 />
                 </StatusTable>
                 <LabelFieldPair>
-                    <CardLabel className="card-label-smaller">{t("AST_RETURN_DATE") }</CardLabel>
+                    <CardLabel className="card-label-smaller">{t("AST_RETURN_DATE")} *</CardLabel>
                     <div className="field">
                     <Controller
                         control={control}
