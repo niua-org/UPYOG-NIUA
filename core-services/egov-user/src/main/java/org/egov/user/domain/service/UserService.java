@@ -672,7 +672,7 @@ public class UserService {
         if (AddressType.PERMANENT == address.getType() || AddressType.CORRESPONDENCE == address.getType()) {
             AddressSearchCriteria addressSearchCriteria = AddressSearchCriteria.builder()
                     .userId(userId)
-                    .addressType(address.getType())
+                    .addressType(String.valueOf(address.getType()))
                     .status(UserConstants.ADDRESS_ACTIVE_STATUS)
                     .build();
             List<Address> existingAddresses = addressRepository.getAddressV2(addressSearchCriteria);
