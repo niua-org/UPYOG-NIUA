@@ -223,5 +223,8 @@ public class PGRConfiguration {
     @Value("${is.environment.central.instance}")
     private Boolean isEnvironmentCentralInstance;
 
+    // V3 Endpoint to create new pgr application - AI based
+    @Value("${pgr.kafka.createV3.topic}")
+    private String createTopicV3;
 
 }

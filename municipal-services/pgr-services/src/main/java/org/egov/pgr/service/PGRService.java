@@ -12,13 +12,17 @@ import org.egov.pgr.config.PGRConfiguration;
 import org.egov.pgr.producer.Producer;
 import org.egov.pgr.repository.PGRRepository;
 import org.egov.pgr.util.MDMSUtils;
+import org.egov.pgr.util.ServiceRequestConverter;
 import org.egov.pgr.validator.ServiceRequestValidator;
 import org.egov.pgr.web.models.RequestSearchCriteria;
 import org.egov.pgr.web.models.Service;
 import org.egov.pgr.web.models.ServiceRequest;
 import org.egov.pgr.web.models.ServiceWrapper;
+import org.egov.pgr.web.modelsV2.ServiceRequestV3;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+
+import javax.validation.Valid;
 
 @org.springframework.stereotype.Service
 public class PGRService {
@@ -201,4 +205,41 @@ public class PGRService {
 		
 		return Integer.valueOf(config.getComplaintTypes());
 	}
+
+
+    public ServiceRequestV3 createV3(@Valid ServiceRequestV3 requestV3) {
+
+        // Step 1: Extract tenantId & V3-only fields
+        String tenantId = requestV3.getService().getTenantId();
+        String serviceType = requestV3.getService().getServiceType();
+        String inputGrievance = requestV3.getService().getInputGrievance();
+
+        // Step 2: Convert V3 to V1 (legacy)
+        ServiceRequest requestV1 = ServiceRequest.builder()
+                .requestInfo(requestV3.getRequestInfo())
+                .service(ServiceRequestConverter.toService(requestV3.getService()))
+                .workflow(requestV3.getWorkflow())
+                .build();
+
+        // Step 3: Use existing create method
+        ServiceRequest processedRequest = create(requestV1);
+
+        // Step 4: Convert back to V3
+        ServiceRequestV3 processedV3 = ServiceRequestV3.builder()
+                .requestInfo(processedRequest.getRequestInfo())
+                .service(ServiceRequestConverter.toServiceV3(processedRequest.getService()))
+                .workflow(processedRequest.getWorkflow())
+                .build();
+
+        // Step 5: Restore V3-only fields
+        processedV3.getService().setServiceType(serviceType);
+        processedV3.getService().setInputGrievance(inputGrievance);
+
+        // Step 6: Push processed V3 object
+        producer.push(tenantId, config.getCreateTopicV3(), processedV3);
+
+        // Step 7: Return
+        return processedV3;
+    }
+
 }
