@@ -1,6 +1,7 @@
 package org.egov.pgr.web.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.egov.pgr.service.PGRService;
 import org.egov.pgr.util.ResponseInfoFactory;
 import org.egov.common.contract.response.ResponseInfo;
@@ -10,6 +11,7 @@ import org.egov.pgr.web.modelsV2.ServiceResponseV3;
 import org.egov.pgr.web.modelsV2.ServiceWrapperV3;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -17,17 +19,18 @@ import java.util.*;
 
 import javax.validation.Valid;
 
-public class PgrAiControllerV3 extends RequestsApiController{
-
-    private final ObjectMapper objectMapper;
+@Controller
+@RequestMapping("/v3")
+@Slf4j
+public class PgrAiControllerV3{
 
     private PGRService pgrService;
 
     private ResponseInfoFactory responseInfoFactory;
 
-    public PgrAiControllerV3(ObjectMapper objectMapper, PGRService pgrService, ResponseInfoFactory responseInfoFactory, ObjectMapper objectMapper1) {
-        super(objectMapper, pgrService, responseInfoFactory);
-        this.objectMapper = objectMapper1;
+    public PgrAiControllerV3(PGRService pgrService, ResponseInfoFactory responseInfoFactory) {
+        this.pgrService = pgrService;
+        this.responseInfoFactory = responseInfoFactory;
     }
     /**
      * Endpoint to create a PGR application (V3) by saving a citizen grievance.
@@ -37,7 +40,7 @@ public class PgrAiControllerV3 extends RequestsApiController{
      * @return a response containing the enriched grievance details
      * @throws IOException in case of any IO-related issues
      */
-    @RequestMapping(value="/request/v3/_create", method = RequestMethod.POST)
+    @RequestMapping(value="/request/_create", method = RequestMethod.POST)
     public ResponseEntity<ServiceResponseV3> requestsCreateV3(@Valid @RequestBody ServiceRequestV3 request) throws IOException {
         ServiceRequestV3 enrichedReq = pgrService.createV3(request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
