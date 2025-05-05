@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS ug_pgr_service_v3
     lastmodifiedtime bigint,
     active boolean DEFAULT true,
     serviceType character varying(256),
-    grievanceinput character varying(256),
+    inputgrievance character varying(256),
     CONSTRAINT pk_eg_pgr_servicereq_v2 PRIMARY KEY (tenantid, servicerequestid),
     CONSTRAINT uk_ug_pgr_service_v3 UNIQUE (id)
 )
