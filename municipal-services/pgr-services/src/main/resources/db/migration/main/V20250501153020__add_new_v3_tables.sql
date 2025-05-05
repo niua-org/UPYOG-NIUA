@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS ug_pgr_service_v3
     active boolean DEFAULT true,
     serviceType character varying(256),
     inputgrievance character varying(256),
-    CONSTRAINT pk_eg_pgr_servicereq_v2 PRIMARY KEY (tenantid, servicerequestid),
+    CONSTRAINT pk_ug_pgr_service_v3 PRIMARY KEY (tenantid, servicerequestid),
     CONSTRAINT uk_ug_pgr_service_v3 UNIQUE (id)
 );
 
@@ -68,8 +68,8 @@ CREATE TABLE IF NOT EXISTS ug_pgr_address_v3
     lastmodifiedby character varying(128),
     lastmodifiedtime bigint,
     additionaldetails jsonb,
-    CONSTRAINT pk_eg_pgr_address_v2 PRIMARY KEY (id),
-    CONSTRAINT fk_eg_pgr_address_v2 FOREIGN KEY (parentid)
+    CONSTRAINT pk_eg_pgr_address_v3 PRIMARY KEY (id),
+    CONSTRAINT fk_eg_pgr_address_v3 FOREIGN KEY (parentid)
         REFERENCES ug_pgr_service_v3 (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
