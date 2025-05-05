@@ -20,34 +20,27 @@ CREATE TABLE IF NOT EXISTS ug_pgr_service_v3
     inputgrievance character varying(256),
     CONSTRAINT pk_eg_pgr_servicereq_v2 PRIMARY KEY (tenantid, servicerequestid),
     CONSTRAINT uk_ug_pgr_service_v3 UNIQUE (id)
-)
-
-TABLESPACE pg_default;
+);
 
 CREATE INDEX IF NOT EXISTS index_ug_pgr_service_v3_accountid
     ON ug_pgr_service_v3 USING btree
-    (accountid ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (accountid ASC NULLS LAST);
 
 CREATE INDEX IF NOT EXISTS index_ug_pgr_service_v3_applicationstatus
     ON ug_pgr_service_v3 USING btree
-    (applicationstatus ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (applicationstatus ASC NULLS LAST);
 
 CREATE INDEX IF NOT EXISTS index_ug_pgr_service_v3_id
     ON ug_pgr_service_v3 USING btree
-    (id ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (id ASC NULLS LAST);
 
 CREATE INDEX IF NOT EXISTS index_ug_pgr_service_v3_servicecode
     ON ug_pgr_service_v3 USING btree
-    (grievanceType ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (servicecode ASC NULLS LAST);
 
 CREATE INDEX IF NOT EXISTS index_ug_pgr_service_v3_tenantid_servicerequestid
-    ON grievanceType USING btree
-    (tenantid ASC NULLS LAST, servicerequestid ASC NULLS LAST)
-    TABLESPACE pg_default;
+    ON ug_pgr_service_v3 USING btree
+    (tenantid ASC NULLS LAST, servicerequestid ASC NULLS LAST);
 
 
 
@@ -80,11 +73,8 @@ CREATE TABLE IF NOT EXISTS ug_pgr_address_v3
         REFERENCES ug_pgr_service_v3 (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
-)
-
-TABLESPACE pg_default;
+);
 
 CREATE INDEX IF NOT EXISTS index_ug_pgr_address_v3_locality
     ON ug_pgr_address_v3 USING btree
-    (locality ASC NULLS LAST)
-    TABLESPACE pg_default;
+    (locality ASC NULLS LAST);
