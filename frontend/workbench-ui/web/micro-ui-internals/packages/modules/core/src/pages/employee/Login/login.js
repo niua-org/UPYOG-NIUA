@@ -133,16 +133,16 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
         <Header />
       </FormComposerV2>
       {showToast && <Toast error={true} label={t(showToast)} onClose={closeToast} />}
-      <div className="employee-login-home-footer" style={{ backgroundColor: "unset" }}>
+      {/* <div className="employee-login-home-footer" style={{ backgroundColor: "unset" }}>
         <img
-          alt="Powered by DIGIT"
-          src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER_BW")}
+          alt="Powered by UPYOG"
+          // src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER_BW")}
           style={{ cursor: "pointer" }}
           onClick={() => {
             window.open(window?.globalConfigs?.getConfig?.("DIGIT_HOME_URL"), "_blank").focus();
           }}
         />{" "}
-      </div>
+      </div> */}
     </Background>
   );
 };

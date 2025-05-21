@@ -43,16 +43,16 @@ const LanguageSelection = () => {
         </div>
         <SubmitBar style={{ width: "100%" }} label={t(`CORE_COMMON_CONTINUE`)} onSubmit={handleSubmit} />
       </Card>
-      <div className="EmployeeLoginFooter">
+      {/* <div className="EmployeeLoginFooter">
         <img
-          alt="Powered by DIGIT"
+          alt="Powered by UPYOG"
           src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER_BW")}
           style={{ cursor: "pointer" }}
           onClick={() => {
             window.open(window?.globalConfigs?.getConfig?.("DIGIT_HOME_URL"), "_blank").focus();
           }}
         />{" "}
-      </div>
+      </div> */}
     </Background>
   );
 };

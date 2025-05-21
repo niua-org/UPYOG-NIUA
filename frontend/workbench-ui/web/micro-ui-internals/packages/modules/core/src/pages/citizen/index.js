@@ -210,16 +210,16 @@ const Home = ({
           </ErrorBoundary>
         </Switch>
       </div>
-      <div className="citizen-home-footer" style={window.location.href.includes("citizen/obps") ? { zIndex: "-1" } : {}}>
+      {/* <div className="citizen-home-footer" style={window.location.href.includes("citizen/obps") ? { zIndex: "-1" } : {}}>
         <img
-          alt="Powered by DIGIT"
+          alt="Powered by UPYOG"
           src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER")}
           style={{ height: "1.2em", cursor: "pointer" }}
           onClick={() => {
             window.open(window?.globalConfigs?.getConfig?.("DIGIT_HOME_URL"), "_blank").focus();
           }}
         />
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -55,7 +55,7 @@ const Profile = ({ info, stateName, t }) => {
 const PoweredBy = () => (
   <div className="digit-footer" style={{ marginBottom: 0 }}>
     <img
-      alt="Powered by DIGIT"
+      alt="Powered by UPYOG"
       src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER")}
       style={{ cursor: "pointer" }}
       onClick={() => {
@@ -238,7 +238,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
       profileItem={profileItem}
       onClose={closeSidebar}
       menuItems={menuItems}
-      Footer={<PoweredBy />}
+      // Footer={<PoweredBy />}
       isEmployee={isEmployee}
       search={search}
       setSearch={setSearch}

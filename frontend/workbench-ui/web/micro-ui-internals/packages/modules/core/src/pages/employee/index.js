@@ -114,16 +114,16 @@ const EmployeeApp = ({
                 <AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} />
               </ErrorBoundary>
             </div>
-            <div className="employee-home-footer">
+            {/* <div className="employee-home-footer">
               <img
-                alt="Powered by DIGIT"
+                alt="Powered by UPYOG"
                 src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER")}
                 style={{ height: "1.1em", cursor: "pointer" }}
                 onClick={() => {
                   window.open(window?.globalConfigs?.getConfig?.("DIGIT_HOME_URL"), "_blank").focus();
                 }}
               />
-            </div>
+            </div> */}
           </div>
         </Route>
         <Route>
