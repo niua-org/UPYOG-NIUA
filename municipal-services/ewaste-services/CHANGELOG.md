@@ -16,15 +16,15 @@ All notable changes to this module will be documented in this file.
 - Upgraded JSoup to version 1.17.2
 - Upgraded Lombok to version 1.18.32
 - Upgraded PostgreSQL driver to version 42.7.1
-- Migrated from javax.* to jakarta.* packages
-- Migrated javax.validation to jakarta.validation
-- Migrated javax.annotation to jakarta.annotation
+- Migrated from jakarta.* to jakarta.* packages
+- Migrated jakarta.validation to jakarta.validation
+- Migrated jakarta.annotation to jakarta.annotation
 - Updated SpringFox to SpringDoc OpenAPI for Spring Boot 3.x compatibility
 
 ### Fixed
 - Resolved circular dependency between EwasteService and EwasteRequestValidator
-- Fixed Jakarta EE migration issues (javax.servlet → jakarta.servlet)
-- Fixed javax.annotation → jakarta.annotation migration
+- Fixed Jakarta EE migration issues (jakarta.servlet → jakarta.servlet)
+- Fixed jakarta.annotation → jakarta.annotation migration
 - Resolved dependency conflicts and version mismatches
 - Fixed Maven compiler configuration for Java 17
 - Removed SafeHtml annotations for compilation compatibility

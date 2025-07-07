@@ -3,8 +3,8 @@ package org.egov.ewst.models.workflow;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 
 import org.egov.ewst.models.AuditDetails;
 import org.springframework.validation.annotation.Validated;

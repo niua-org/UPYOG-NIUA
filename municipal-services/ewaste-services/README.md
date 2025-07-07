@@ -15,7 +15,7 @@ This service has been upgraded from Java 8 to Java 17 with Spring Boot 3.2.2.
 
 ### Key Changes
 - **Spring Boot**: Upgraded to 3.2.2
-- **javax.* → jakarta.***: Servlet API, Validation API, Annotations
+- **jakarta.* → jakarta.***: Servlet API, Validation API, Annotations
 - **SpringFox → SpringDoc**: OpenAPI 2.3.0 for Swagger
 - **Dependencies Updated**: Hibernate Validator 8.0.1.Final, JSoup 1.17.2, Lombok 1.18.32
 - **Circular Dependency**: Fixed between EwasteService and EwasteRequestValidator
