@@ -1,6 +1,6 @@
 
 /*
- * eGov  SmartCity eGovernance suite aims to improve the internal efficiency,transparency,
+ * UPYOG  SmartCity eGovernance suite aims to improve the internal efficiency,transparency,
  * accountability and the service delivery of the government  organizations.
  *
  *  Copyright (C) <2019>  eGovernments Foundation
@@ -61,24 +61,28 @@ import static org.egov.edcr.utility.DcrConstants.FRONT_YARD_DESC;
 import static org.egov.edcr.utility.DcrConstants.OBJECTNOTDEFINED;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.egov.common.constants.MdmsFeatureConstants;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.Building;
+import org.egov.common.entity.edcr.MdmsFeatureRule;
 import org.egov.common.entity.edcr.Occupancy;
 import org.egov.common.entity.edcr.OccupancyTypeHelper;
 import org.egov.common.entity.edcr.Plan;
 import org.egov.common.entity.edcr.Plot;
 import org.egov.common.entity.edcr.Result;
+import org.egov.common.entity.edcr.RuleKey;
 import org.egov.common.entity.edcr.ScrutinyDetail;
 import org.egov.common.entity.edcr.SetBack;
 import org.egov.edcr.constants.DxfFileConstants;
-import org.egov.edcr.service.EdcrRestService;
+import org.egov.edcr.constants.EdcrRulesMdmsConstants;
+import org.egov.edcr.service.CacheManagerMdms;
 import org.egov.edcr.service.FetchEdcrRulesMdms;
 import org.egov.infra.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,9 +144,12 @@ public class FrontYardService extends GeneralRule {
 
 	public static final String BSMT_FRONT_YARD_DESC = "Basement Front Yard";
 	private static final int PLOTAREA_300 = 300;
-	
+
 	@Autowired
 	FetchEdcrRulesMdms fetchEdcrRulesMdms;
+	
+	@Autowired
+	CacheManagerMdms cache;
 
 	private class FrontYardResult {
 		String rule;
@@ -158,146 +165,24 @@ public class FrontYardService extends GeneralRule {
 		boolean status = false;
 	}
 
-	public void processFrontYard(Plan pl) {
-		Plot plot = pl.getPlot();
-		HashMap<String, String> errors = new HashMap<>();
-		if (plot == null)
-			return;
-		// each blockwise, check height , floor area, buildup area. check most restricve
-		// based on occupancy and front yard values
-		// of occupancies.
-		// If floor area less than 150 mt and occupancy type D, then consider as
-		// commercial building.
-		// In output show blockwise required and provided information.
 
-		validateFrontYard(pl);
+	/**
+	 * Validates the front yard setbacks based on occupancy type, plot details, and MDMS rules.
+	 *
+	 * @param pl                        The current Plan object being processed.
+	 * @param building                 The building object associated with the block.
+	 * @param blockName                The name of the block.
+	 * @param level                    The level/floor being validated.
+	 * @param plot                     The plot object from the plan.
+	 * @param frontYardFieldName       The descriptor for the front yard field (used in reporting).
+	 * @param min                      The minimum distance provided in the front yard.
+	 * @param mean                     The mean distance provided in the front yard.
+	 * @param mostRestrictiveOccupancy The most restrictive occupancy type applicable to this block.
+	 * @param frontYardResult          The result object to store front yard validation outcome.
+	 * @param errors                   A map to store error messages if any rule is violated.
+	 * @return                         True if the front yard is valid, false otherwise.
+	 */
 
-		if (plot != null && !pl.getBlocks().isEmpty()) {
-			for (Block block : pl.getBlocks()) { // for each block
-
-				ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
-				//scrutinyDetail.setKey("Block_" + block.getName() + "_" + "Basement Front Yard");
-				scrutinyDetail.addColumnHeading(1, RULE_NO);
-				scrutinyDetail.addColumnHeading(2, LEVEL);
-				scrutinyDetail.addColumnHeading(3, OCCUPANCY);
-				scrutinyDetail.addColumnHeading(4, FIELDVERIFIED);
-				scrutinyDetail.addColumnHeading(5, PERMISSIBLE);
-				scrutinyDetail.addColumnHeading(6, PROVIDED);
-				scrutinyDetail.addColumnHeading(7, STATUS);
-				scrutinyDetail.setHeading(FRONT_YARD_DESC);
-
-				FrontYardResult frontYardResult = new FrontYardResult();
-
-				for (SetBack setback : block.getSetBacks()) {
-					BigDecimal min;
-					BigDecimal mean;
-					// consider height,floor area,buildup area, different occupancies of block
-					// Get occupancies of perticular block and use the same.
-
-					if (setback.getFrontYard() != null) {
-						min = setback.getFrontYard().getMinimumDistance();
-						mean = setback.getFrontYard().getMean();
-
-						// if height defined at frontyard level, then use else use buidling height.
-						BigDecimal buildingHeight = setback.getFrontYard().getHeight() != null
-								&& setback.getFrontYard().getHeight().compareTo(BigDecimal.ZERO) > 0
-										? setback.getFrontYard().getHeight()
-										: block.getBuilding().getBuildingHeight();
-
-						if (buildingHeight != null && (min.doubleValue() > 0 || mean.doubleValue() > 0)) {
-							//for (final Occupancy occupancy : block.getBuilding().getTotalArea()) {
-							final Occupancy occupancy = block.getBuilding().getTotalArea().get(0);
-								scrutinyDetail.setKey("Block_" + block.getName() + "_" + FRONT_YARD_DESC);
-
-							//	if (setback.getLevel() < 0) {
-//									scrutinyDetail.setKey("Block_" + block.getName() + "_" + "Basement Front Yard");
-//									checkFrontYardBasement(pl, block.getBuilding(), block.getName(), setback.getLevel(),
-//											plot, BSMT_FRONT_YARD_DESC, min, mean, occupancy.getTypeHelper(),
-//											frontYardResult);
-//
-//								}
-
-								/*if ((occupancy.getTypeHelper().getSubtype() != null
-										&& (A_R.equalsIgnoreCase(occupancy.getTypeHelper().getSubtype().getCode())
-												|| A_AF.equalsIgnoreCase(
-														occupancy.getTypeHelper().getSubtype().getCode())
-												|| A_PO.equalsIgnoreCase(
-														occupancy.getTypeHelper().getSubtype().getCode()))
-										|| F.equalsIgnoreCase(occupancy.getTypeHelper().getType().getCode()))) {*/
-								// updated by Bimal 18-March-2924 type F condition is removed
-//								if ((occupancy.getTypeHelper().getSubtype() != null
-//										&& (A_R.equalsIgnoreCase(occupancy.getTypeHelper().getSubtype().getCode())
-//												|| A_AF.equalsIgnoreCase(occupancy.getTypeHelper().getSubtype().getCode())
-//												|| A_PO.equalsIgnoreCase(occupancy.getTypeHelper().getSubtype().getCode())))) {
-//									//Added by Bimal 18-March-2924 to check front yard based on plotarea not on height
-//									checkFrontYardResidentialCommon(pl, block.getBuilding(), block.getName(),
-//											setback.getLevel(), plot, FRONT_YARD_DESC, min, mean,
-//											occupancy.getTypeHelper(), frontYardResult, errors);
-//									// Commented by Bimal 18-March-2924 to check front yard based on plot are not on height
-									/*
-									 * if (buildingHeight.compareTo(BigDecimal.valueOf(10)) <= 0 &&
-									 * block.getBuilding() .getFloorsAboveGround().compareTo(BigDecimal.valueOf(3))
-									 * <= 0) { checkFrontYardUptoTenMts(pl, block.getBuilding(), block.getName(),
-									 * setback.getLevel(), plot, FRONT_YARD_DESC, min, mean,
-									 * occupancy.getTypeHelper(), frontYardResult, errors); } else if
-									 * (buildingHeight.compareTo(BigDecimal.valueOf(12)) <= 0 &&
-									 * block.getBuilding().getFloorsAboveGround() .compareTo(BigDecimal.valueOf(4))
-									 * <= 0) { checkFrontYardUptoTwelveMts(setback, block.getBuilding(), pl,
-									 * setback.getLevel(), block.getName(), plot, FRONT_YARD_DESC, min, mean,
-									 * occupancy.getTypeHelper(), frontYardResult, errors); } else if
-									 * (buildingHeight.compareTo(BigDecimal.valueOf(16)) <= 0) {
-									 * checkFrontYardUptoSixteenMts(setback, block.getBuilding(), buildingHeight,
-									 * pl, setback.getLevel(), block, plot, FRONT_YARD_DESC, min, mean,
-									 * occupancy.getTypeHelper(), frontYardResult, errors); } else if
-									 * (buildingHeight.compareTo(BigDecimal.valueOf(16)) > 0) {
-									 * checkFrontYardAboveSixteenMts(setback, block.getBuilding(), buildingHeight,
-									 * pl, setback.getLevel(), block.getName(), plot, FRONT_YARD_DESC, min, mean,
-									 * occupancy.getTypeHelper(), frontYardResult); }
-									 */
-								//} 	// Condition removed by Bimal 18-March-2924 type to calculate frontyard for residential occupancy only 
-									/*
-									 * else if (G.equalsIgnoreCase(occupancy.getTypeHelper().getType().getCode())) {
-									 * checkFrontYardForIndustrial(pl, block.getBuilding(), block.getName(),
-									 * setback.getLevel(), plot, FRONT_YARD_DESC, min, mean,
-									 * occupancy.getTypeHelper(), frontYardResult); }
-									 */
-									/*
-									 * else { checkFrontYardOtherOccupancies(pl, block.getBuilding(),
-									 * block.getName(), setback.getLevel(), plot, FRONT_YARD_DESC, min, mean,
-									 * occupancy.getTypeHelper(), frontYardResult); }
-									 */
-
-							//}
-								checkFrontYard(pl, block.getBuilding(), block.getName(), setback.getLevel(), plot,
-										FRONT_YARD_DESC, min, mean, occupancy.getTypeHelper(), frontYardResult, errors);
-
-
-							if (errors.isEmpty()) {
-								Map<String, String> details = new HashMap<>();
-								details.put(RULE_NO, frontYardResult.subRule);
-								details.put(LEVEL,
-										frontYardResult.level != null ? frontYardResult.level.toString() : "");
-								details.put(OCCUPANCY, frontYardResult.occupancy);
-								details.put(FIELDVERIFIED, MINIMUMLABEL);
-								details.put(PERMISSIBLE, frontYardResult.expectedmeanDistance.toString());
-								details.put(PROVIDED, frontYardResult.actualMinDistance.toString());
-
-								if (frontYardResult.status) {
-									details.put(STATUS, Result.Accepted.getResultVal());
-								} else {
-									details.put(STATUS, Result.Not_Accepted.getResultVal());
-								}
-								scrutinyDetail.getDetail().add(details);
-								pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
-							}
-
-						}
-					}
-				}
-			}
-		}
-	}
-	
 	private Boolean checkFrontYard(Plan pl, Building building, String blockName, Integer level, Plot plot,
 			String frontYardFieldName, BigDecimal min, BigDecimal mean, OccupancyTypeHelper mostRestrictiveOccupancy,
 			FrontYardResult frontYardResult, HashMap<String, String> errors) {
@@ -319,18 +204,18 @@ public class FrontYardService extends GeneralRule {
 					&& DxfFileConstants.COMMERCIAL.equalsIgnoreCase(pl.getPlanInformation().getLandUseZone())
 //					&& pl.getPlanInformation().getRoadWidth().compareTo(ROAD_WIDTH_TWELVE_POINTTWO) < 0
 			) {
-				occupancyName = "Commercial";
+				occupancyName = MdmsFeatureConstants.COMMERCIAL;
 				
 			} else {
-				occupancyName = "Residential";
+				occupancyName = MdmsFeatureConstants.RESIDENTIAL;
 				
 			}
 		} else if (F.equalsIgnoreCase(mostRestrictiveOccupancy.getType().getCode())) {
 			
-			occupancyName = "Commercial";
+			occupancyName = MdmsFeatureConstants.COMMERCIAL;
 		
 		} else if (G.equalsIgnoreCase(mostRestrictiveOccupancy.getType().getCode())) {
-			occupancyName = "Industrial";
+			occupancyName = MdmsFeatureConstants.INDUSTRIAL;
 			
 		}else {
 			 occupancyName = fetchEdcrRulesMdms.getOccupancyName(pl);
@@ -340,56 +225,175 @@ public class FrontYardService extends GeneralRule {
 //			   occupancyName = "Government/Semi Government";
 //		}
 		valid = processFrontYardService(blockName, level, min, mean, mostRestrictiveOccupancy, frontYardResult, valid,
-				subRule, rule, minVal, meanVal, depthOfPlot, errors, pl,  occupancyName, pl.getEdcrRulesFeatures()
+				subRule, rule, minVal, meanVal, depthOfPlot, errors, pl,  occupancyName
 				);
 		return valid;
 	}
+	
+	/**
+	 * Processes the front yard validation for each block in the plan.
+	 * Initiates validation and rule matching for the front yard setbacks.
+	 *
+	 * @param pl The Plan object containing plot and block information.
+	 */
+
+
+	public void processFrontYard(Plan pl) {
+	    if (pl == null || pl.getPlot() == null || pl.getBlocks().isEmpty()) return;
+
+	    validateFrontYard(pl);
+
+	    for (Block block : pl.getBlocks()) {
+	        processBlockFrontYard(pl, block);
+	    }
+	}
+	
+	/**
+	 * Processes front yard validation for a specific block.
+	 * Extracts setback values, height, occupancy, and initiates rule validation.
+	 *
+	 * @param pl    The complete Plan object.
+	 * @param block The specific block for which front yard is being validated.
+	 */
+
+	private void processBlockFrontYard(Plan pl, Block block) {
+	    ScrutinyDetail scrutinyDetail = createScrutinyDetail(block.getName());
+	    FrontYardResult frontYardResult = new FrontYardResult();
+	    HashMap<String, String> errors = new HashMap<>();
+
+	    for (SetBack setback : block.getSetBacks()) {
+	        if (setback.getFrontYard() == null) continue;
+
+	        BigDecimal min = setback.getFrontYard().getMinimumDistance();
+	        BigDecimal mean = setback.getFrontYard().getMean();
+
+	        if ((min == null || min.compareTo(BigDecimal.ZERO) <= 0) &&
+	            (mean == null || mean.compareTo(BigDecimal.ZERO) <= 0)) continue;
+
+	        BigDecimal buildingHeight = getBuildingHeight(block, setback);
+
+	        if (buildingHeight == null) continue;
+
+	        Occupancy occupancy = block.getBuilding().getTotalArea().get(0); // Only first occupancy considered
+	        checkFrontYard(pl, block.getBuilding(), block.getName(), setback.getLevel(), pl.getPlot(),
+	                FRONT_YARD_DESC, min, mean, occupancy.getTypeHelper(), frontYardResult, errors);
+
+	        if (errors.isEmpty()) {
+	            Map<String, String> details = buildScrutinyDetailMap(frontYardResult);
+	            scrutinyDetail.getDetail().add(details);
+	            pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
+	        }
+	    }
+	}
+	
+	/**
+	 * Creates a ScrutinyDetail object for recording front yard validation results.
+	 *
+	 * @param blockName The name of the block for which the scrutiny detail is being generated.
+	 * @return          A ScrutinyDetail object with initialized headings.
+	 */
+
+
+	private ScrutinyDetail createScrutinyDetail(String blockName) {
+	    ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
+	    scrutinyDetail.setKey("Block_" + blockName + "_" + FRONT_YARD_DESC);
+	    scrutinyDetail.setHeading(FRONT_YARD_DESC);
+	    scrutinyDetail.addColumnHeading(1, RULE_NO);
+	    scrutinyDetail.addColumnHeading(2, LEVEL);
+	    scrutinyDetail.addColumnHeading(3, OCCUPANCY);
+	    scrutinyDetail.addColumnHeading(4, FIELDVERIFIED);
+	    scrutinyDetail.addColumnHeading(5, PERMISSIBLE);
+	    scrutinyDetail.addColumnHeading(6, PROVIDED);
+	    scrutinyDetail.addColumnHeading(7, STATUS);
+	    return scrutinyDetail;
+	}
+
+	
+	/**
+	 * Determines the building height for validation.
+	 * Uses height from front yard if available; otherwise, uses building's total height.
+	 *
+	 * @param block   The block whose building height is being queried.
+	 * @param setback The setback object which may contain yard-specific height.
+	 * @return        The height to be used for validation.
+	 */
+
+	private BigDecimal getBuildingHeight(Block block, SetBack setback) {
+	    if (setback.getFrontYard().getHeight() != null && 
+	        setback.getFrontYard().getHeight().compareTo(BigDecimal.ZERO) > 0) {
+	        return setback.getFrontYard().getHeight();
+	    }
+	    return block.getBuilding().getBuildingHeight();
+	}
+
+	/**
+	 * Builds a map of scrutiny details for a single front yard validation.
+	 *
+	 * @param result The result object containing comparison values and status.
+	 * @return       A map with headings and values used in the scrutiny report.
+	 */
+
+	private Map<String, String> buildScrutinyDetailMap(FrontYardResult result) {
+	    Map<String, String> detailMap = new HashMap<>();
+	    detailMap.put(RULE_NO, result.subRule);
+	    detailMap.put(LEVEL, result.level != null ? result.level.toString() : "");
+	    detailMap.put(OCCUPANCY, result.occupancy);
+	    detailMap.put(FIELDVERIFIED, MINIMUMLABEL);
+	    detailMap.put(PERMISSIBLE, result.expectedmeanDistance.toString());
+	    detailMap.put(PROVIDED, result.actualMinDistance.toString());
+	    detailMap.put(STATUS, result.status ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
+	    return detailMap;
+	}
+
+	
+	/**
+	 * Processes front yard validation logic by fetching applicable MDMS rules
+	 * and comparing against provided values.
+	 *
+	 * @param blockName                Name of the block being processed.
+	 * @param level                    Level/floor of the block.
+	 * @param min                      Minimum distance from input/setback.
+	 * @param mean                     Mean distance from input/setback.
+	 * @param mostRestrictiveOccupancy The most restrictive occupancy type.
+	 * @param frontYardResult          Object that will store result of the comparison.
+	 * @param valid                    Initial validity flag, may be updated.
+	 * @param subRule                  Sub-rule identifier used in reporting.
+	 * @param rule                     Rule identifier used in reporting.
+	 * @param minVal                   Minimum permissible value from MDMS.
+	 * @param meanVal                  Mean permissible value from MDMS.
+	 * @param depthOfPlot              The depth of the plot from Plan.
+	 * @param errors                   A map to store any errors encountered.
+	 * @param pl                       The Plan object being processed.
+	 * @param occupancyName            The resolved occupancy name string.
+	 * @return                         True if validation passes, false otherwise.
+	 */
+
 	private Boolean processFrontYardService(String blockName, Integer level, BigDecimal min, BigDecimal mean,
 			OccupancyTypeHelper mostRestrictiveOccupancy, FrontYardResult frontYardResult, Boolean valid,
 			String subRule, String rule, BigDecimal minVal, BigDecimal meanVal, BigDecimal depthOfPlot,
-			HashMap<String, String> errors, Plan pl, String occupancyName, Map<String,List<Map<String,Object>>> edcrRuleList ) {
+			HashMap<String, String> errors, Plan pl, String occupancyName) {
 
-	   BigDecimal  plotArea = pl.getPlot().getArea();
-		System.out.println("plotarea" + plotArea);
-	
-		
-		String feature = "FrontSetBack";
-			
-		Map<String, Object> params = new HashMap<>();
-		
-		params.put("feature", feature);
-		
-		params.put("occupancy", occupancyName);
-		params.put("depthOfPlot", depthOfPlot);
-		params.put("plotArea", plotArea);
-		
-		if(occupancyName.equalsIgnoreCase("Industrial")) {
-		
-			
-			params.put("plotArea", plotArea);
+		BigDecimal plotArea = pl.getPlot().getArea();
+
+		// Fetch all rules for the given plan from the cache.
+		// Then, filter to find the first rule where the condition falls within the
+		// defined range.
+		// If a matching rule is found, proceed with its processing.
+
+		List<Object> rules = cache.getFeatureRules(pl, MdmsFeatureConstants.FRONT_SETBACK, true);
+		Optional<MdmsFeatureRule> matchedRule = rules.stream().map(obj -> (MdmsFeatureRule) obj)
+				.filter(ruleMdms -> plotArea.compareTo(ruleMdms.getFromPlotArea()) >= 0
+						&& plotArea.compareTo(ruleMdms.getToPlotArea()) < 0)
+				.findFirst();
+
+		if (matchedRule.isPresent()) {
+			MdmsFeatureRule mdmsRule = matchedRule.get();
+			meanVal = mdmsRule.getPermissible();
+		} else {
+			meanVal = BigDecimal.ZERO;
 		}
 
-		ArrayList<String> valueFromColumn = new ArrayList<>();
-		valueFromColumn.add("permissibleValue");
-
-		List<Map<String, Object>> permissibleValue = new ArrayList<>();
-
-		try {
-			permissibleValue = fetchEdcrRulesMdms.getPermissibleValue(edcrRuleList, params, valueFromColumn);
-			LOG.info("permissibleValue" + permissibleValue);
-		
-
-		} catch (NullPointerException e) {
-
-			LOG.error("Permissible Value for Front Yard service not found--------", e);
-			return null;
-		}
-
-		if (!permissibleValue.isEmpty() && permissibleValue.get(0).containsKey("permissibleValue")) {
-			meanVal = BigDecimal.valueOf(Double.valueOf(permissibleValue.get(0).get("permissibleValue").toString()));
-	
-		} 
-      System.out.println("meanVllll" + meanVal);
+		System.out.println("meanVllll" + meanVal);
 		/*
 		 * if (-1 == level) { rule = BSMT_FRONT_YARD_DESC; subRuleDesc =
 		 * SUB_RULE_24_12_DESCRIPTION; subRule = SUB_RULE_24_12; }

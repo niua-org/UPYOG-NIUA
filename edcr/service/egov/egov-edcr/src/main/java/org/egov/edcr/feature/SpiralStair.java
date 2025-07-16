@@ -1,5 +1,5 @@
 /*
- * eGov  SmartCity eGovernance suite aims to improve the internal efficiency,transparency,
+ * UPYOG  SmartCity eGovernance suite aims to improve the internal efficiency,transparency,
  * accountability and the service delivery of the government  organizations.
  *
  *  Copyright (C) <2019>  eGovernments Foundation
@@ -48,25 +48,27 @@
 package org.egov.edcr.feature;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.common.constants.MdmsFeatureConstants;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.Circle;
 import org.egov.common.entity.edcr.Floor;
+import org.egov.common.entity.edcr.MdmsFeatureRule;
 import org.egov.common.entity.edcr.Plan;
 import org.egov.common.entity.edcr.Result;
+import org.egov.common.entity.edcr.RuleKey;
 import org.egov.common.entity.edcr.ScrutinyDetail;
-import org.egov.edcr.constants.DxfFileConstants;
 import org.egov.edcr.constants.EdcrRulesMdmsConstants;
+import org.egov.edcr.service.CacheManagerMdms;
 import org.egov.edcr.service.FetchEdcrRulesMdms;
 import org.egov.edcr.utility.Util;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,142 +82,97 @@ public class SpiralStair extends FeatureProcess {
 	private static final String DIAMETER_DESCRIPTION = "Minimum diameter for spiral fire stair %s";
 
 	@Autowired
-	FetchEdcrRulesMdms fetchEdcrRulesMdms;
+	CacheManagerMdms cache;
 	
+
+	@Override
+	public Plan validate(Plan pl) {
+		return pl;
+	}
+
 	@Override
 	public Plan process(Plan plan) {
-    	// Initialize default values
-    	BigDecimal spiralStairExpectedDiameter = BigDecimal.ZERO;
-    	BigDecimal spiralStairRadius = BigDecimal.ZERO;
-    	BigDecimal spiralStairValue = BigDecimal.ZERO;
+	    BigDecimal expectedDiameter = BigDecimal.ZERO;
+	    BigDecimal radiusMultiplier = BigDecimal.ZERO;
+	    BigDecimal maxBuildingHeightForSpiral = BigDecimal.ZERO;
 
-    	String occupancyName = fetchEdcrRulesMdms.getOccupancyName(plan);
-		
-		// Set feature name
-		String feature = MdmsFeatureConstants.SPIRAL_STAIR;
-			
-		Map<String, Object> params = new HashMap<>();
-		
-		// Determine occupancy type (currently only "Residential" supported)
-		
-		params.put("feature", feature);
-		params.put("occupancy", occupancyName);
-			
-		Map<String,List<Map<String,Object>>> edcrRuleList = plan.getEdcrRulesFeatures();
-			
-		// MDMS columns to fetch
-		ArrayList<String> valueFromColumn = new ArrayList<>();
-		valueFromColumn.add(EdcrRulesMdmsConstants.SPIRAL_STAIR_EXPECTED_DIAMETER);
-		valueFromColumn.add(EdcrRulesMdmsConstants.SPIRAL_STAIR_RADIUS);
-		valueFromColumn.add(EdcrRulesMdmsConstants.SPIRAL_STAIR_VALUE);
+	    Optional<MdmsFeatureRule> matchedRule = cache.getFeatureRules(plan, MdmsFeatureConstants.SPIRAL_STAIR, false)
+	                                                 .stream()
+	                                                 .map(obj -> (MdmsFeatureRule) obj)
+	                                                 .findFirst();
 
-		List<Map<String, Object>> permissibleValue = new ArrayList<>();
-		
-		// Fetch values from MDMS
-		permissibleValue = fetchEdcrRulesMdms.getPermissibleValue(edcrRuleList, params, valueFromColumn);
-		LOG.info("permissibleValue" + permissibleValue);
+	    if (matchedRule.isPresent()) {
+	        MdmsFeatureRule rule = matchedRule.get();
+	        expectedDiameter = rule.getSpiralStairExpectedDiameter();
+	        radiusMultiplier = rule.getSpiralStairRadius();
+	        maxBuildingHeightForSpiral = rule.getSpiralStairValue();
+	    }
 
-		// Extract values if available
-		if (!permissibleValue.isEmpty() && permissibleValue.get(0).containsKey(EdcrRulesMdmsConstants.SPIRAL_STAIR_EXPECTED_DIAMETER)) {
-			spiralStairExpectedDiameter = BigDecimal.valueOf(Double.valueOf(permissibleValue.get(0).get(EdcrRulesMdmsConstants.SPIRAL_STAIR_EXPECTED_DIAMETER).toString()));
-			spiralStairRadius = BigDecimal.valueOf(Double.valueOf(permissibleValue.get(0).get(EdcrRulesMdmsConstants.SPIRAL_STAIR_RADIUS).toString()));
-			spiralStairValue = BigDecimal.valueOf(Double.valueOf(permissibleValue.get(0).get(EdcrRulesMdmsConstants.SPIRAL_STAIR_VALUE).toString()));
-		}
-		
-		// Iterate through all blocks
-		blk: for (Block block : plan.getBlocks()) {
-			if (block.getBuilding() != null && !block.getBuilding().getOccupancies().isEmpty()) {
+	    for (Block block : plan.getBlocks()) {
+	        if (block.getBuilding() == null || block.getBuilding().getOccupancies().isEmpty()) {
+	            continue;
+	        }
 
-				// Initialize scrutiny detail report
-				ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
-				scrutinyDetail.addColumnHeading(1, RULE_NO);
-				scrutinyDetail.addColumnHeading(2, FLOOR);
-				scrutinyDetail.addColumnHeading(3, DESCRIPTION);
-				scrutinyDetail.addColumnHeading(4, REQUIRED);
-				scrutinyDetail.addColumnHeading(5, PERMISSIBLE);
-				scrutinyDetail.addColumnHeading(6, STATUS);
-				scrutinyDetail.setKey("Block_" + block.getNumber() + "_" + "Spiral Fire Stair");
+	        ScrutinyDetail scrutinyDetail = initializeScrutinyDetailForSpiralStair(block);
 
-				List<Floor> floors = block.getBuilding().getFloors();
+	        for (Floor floor : block.getBuilding().getFloors()) {
+	            Map<String, Object> typicalFloorValues = Util.getTypicalFloorValues(block, floor, false);
+	            List<org.egov.common.entity.edcr.SpiralStair> spiralStairs = floor.getSpiralStairs();
 
-				// Process each floor
-				for (Floor floor : floors) {
-					boolean isTypicalRepititiveFloor = false;
+	            if (spiralStairs.isEmpty()) continue;
 
-					// Get typical floor values for reporting
-					Map<String, Object> typicalFloorValues = Util.getTypicalFloorValues(block, floor, isTypicalRepititiveFloor);
+	            boolean isTypicalFloor = (Boolean) typicalFloorValues.get("isTypicalRepititiveFloor");
+	            if (isTypicalFloor) continue;
 
-					List<org.egov.common.entity.edcr.SpiralStair> spiralStairs = floor.getSpiralStairs();
+	            String floorLabel = typicalFloorValues.get("typicalFloors") != null
+	                              ? (String) typicalFloorValues.get("typicalFloors")
+	                              : " floor " + floor.getNumber();
 
-					if (spiralStairs.size() != 0) {
-						boolean valid = false;
+	            for (org.egov.common.entity.edcr.SpiralStair stair : spiralStairs) {
+	                List<Circle> circles = stair.getCircles();
+	                if (circles.isEmpty()) continue;
 
-						// Check each spiral stair in this floor
-						for (org.egov.common.entity.edcr.SpiralStair spiralStair : spiralStairs) {
-							List<Circle> spiralPolyLines = spiralStair.getCircles();
+	                BigDecimal buildingHeight = Util.roundOffTwoDecimal(block.getBuilding().getBuildingHeight());
+	                if (buildingHeight.compareTo(Util.roundOffTwoDecimal(maxBuildingHeightForSpiral)) > 0) {
+	                    setReportOutputDetailsFloorStairWise(plan, RULE42_5_IV, floorLabel,
+	                            stair.getNumber(), "",
+	                            "spiral stair of fire stair not allowed for building with height > 9 for block "
+	                                    + block.getNumber() + " " + floorLabel,
+	                            Result.Not_Accepted.getResultVal(), scrutinyDetail);
+	                    continue;
+	                }
 
-							// Skip check for typical repetitive floor
-							if (!(Boolean) typicalFloorValues.get("isTypicalRepititiveFloor")) {
+	                Circle minCircle = circles.stream().min(Comparator.comparing(Circle::getRadius)).get();
+	                BigDecimal radius = Util.roundOffTwoDecimal(minCircle.getRadius());
+	                BigDecimal diameter = Util.roundOffTwoDecimal(radius.multiply(Util.roundOffTwoDecimal(radiusMultiplier)));
+	                BigDecimal minDiameter = Util.roundOffTwoDecimal(expectedDiameter);
 
-								// If building height exceeds limit, spiral stair is not valid
-								if (Util.roundOffTwoDecimal(block.getBuilding().getBuildingHeight())
-										.compareTo(Util.roundOffTwoDecimal(spiralStairValue)) > 0
-										&& !spiralPolyLines.isEmpty()) {
-									valid = true;
-								}
+	                String result = diameter.compareTo(minDiameter) >= 0
+	                        ? Result.Accepted.getResultVal()
+	                        : Result.Not_Accepted.getResultVal();
 
-								// Get floor label for reporting
-								String value = typicalFloorValues.get("typicalFloors") != null
-										? (String) typicalFloorValues.get("typicalFloors")
-										: " floor " + floor.getNumber();
+	                setReportOutputDetailsFloorStairWise(plan, RULE42_5_IV, floorLabel,
+	                        String.format(DIAMETER_DESCRIPTION, stair.getNumber()),
+	                        expectedDiameter.toString(), diameter.toString(),
+	                        result, scrutinyDetail);
+	            }
+	        }
+	    }
 
-								if (valid) {
-									// Report spiral stair as not allowed
-									setReportOutputDetailsFloorStairWise(plan, RULE42_5_IV, value,
-											spiralStair.getNumber(), "",
-											"spiral stair of fire stair not allowed for building with height > 9 for block "
-													+ block.getNumber() + " " + value,
-											Result.Not_Accepted.getResultVal(), scrutinyDetail);
-								} else {
-									// Check spiral stair diameter
-									if (!spiralPolyLines.isEmpty()) {
-										// Find spiral with minimum radius
-										Circle minSpiralStair = spiralPolyLines.stream()
-												.min(Comparator.comparing(Circle::getRadius)).get();
+	    return plan;
+	}
 
-										BigDecimal minRadius = minSpiralStair.getRadius();
-
-										BigDecimal radius = Util.roundOffTwoDecimal(minRadius);
-
-										// Diameter = radius * multiplier
-										BigDecimal diameter = Util.roundOffTwoDecimal(
-												radius.multiply(Util.roundOffTwoDecimal(spiralStairRadius)));
-
-										BigDecimal minDiameter = Util.roundOffTwoDecimal(spiralStairExpectedDiameter);
-
-										if (diameter.compareTo(minDiameter) >= 0) {
-											// Diameter is acceptable
-											setReportOutputDetailsFloorStairWise(plan, RULE42_5_IV, value,
-													String.format(DIAMETER_DESCRIPTION, spiralStair.getNumber()),
-													spiralStairExpectedDiameter.toString(), String.valueOf(diameter),
-													Result.Accepted.getResultVal(), scrutinyDetail);
-										} else {
-											// Diameter is not acceptable
-											setReportOutputDetailsFloorStairWise(plan, RULE42_5_IV, value,
-													String.format(DIAMETER_DESCRIPTION, spiralStair.getNumber()),
-													spiralStairExpectedDiameter.toString(), String.valueOf(diameter),
-													Result.Not_Accepted.getResultVal(), scrutinyDetail);
-										}
-									}
-								}
-
-							}
-						}
-					}
-				}
-			}
-		}
-		return plan;
+	
+	private ScrutinyDetail initializeScrutinyDetailForSpiralStair(Block block) {
+	    ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
+	    scrutinyDetail.addColumnHeading(1, RULE_NO);
+	    scrutinyDetail.addColumnHeading(2, FLOOR);
+	    scrutinyDetail.addColumnHeading(3, DESCRIPTION);
+	    scrutinyDetail.addColumnHeading(4, REQUIRED);
+	    scrutinyDetail.addColumnHeading(5, PERMISSIBLE);
+	    scrutinyDetail.addColumnHeading(6, STATUS);
+	    scrutinyDetail.setKey("Block_" + block.getNumber() + "_" + "Spiral Fire Stair");
+	    return scrutinyDetail;
 	}
 
 	// Method to add one entry in scrutiny detail
@@ -232,10 +189,6 @@ public class SpiralStair extends FeatureProcess {
 		pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
 	}
 
-	@Override
-	public Plan validate(Plan pl) {
-		return pl;
-	}
 
 	@Override
 	public Map<String, Date> getAmendments() {
