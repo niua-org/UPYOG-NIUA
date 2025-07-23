@@ -44,10 +44,10 @@ public class ADVEncryptionService {
 
 	public BookingDetail encryptObject(BookingRequest bookingRequest) {
 		ApplicantDetail applicantDetail = bookingRequest.getBookingApplication().getApplicantDetail();
-		log.info("Applicant detail before encyption : " + applicantDetail.getApplicantMobileNo());
+		log.info("Applicant mobile no before encyption : " + applicantDetail.getApplicantMobileNo());
 		applicantDetail = encryptionDecryptionUtil.encryptObject(applicantDetail,
 				BookingConstants.ADV_APPLICANT_DETAIL_ENCRYPTION_KEY, ApplicantDetail.class);
-		log.info("Applicant detail after encyption : " + applicantDetail.getApplicantMobileNo());
+		log.info("Applicant mobile no after encyption : " + applicantDetail.getApplicantMobileNo());
 		bookingRequest.getBookingApplication().setApplicantDetail(applicantDetail);
 		return bookingRequest.getBookingApplication();
 	}
