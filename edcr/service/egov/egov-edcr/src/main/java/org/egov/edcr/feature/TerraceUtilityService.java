@@ -1,5 +1,5 @@
 /*
- * eGov  SmartCity eGovernance suite aims to improve the internal efficiency,transparency
+ * UPYOG  SmartCity eGovernance suite aims to improve the internal efficiency,transparency
 ,
  * accountability and the service delivery of the government  organizations.
  *
@@ -49,22 +49,27 @@
 package org.egov.edcr.feature;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.common.constants.MdmsFeatureConstants;
 import org.egov.common.entity.edcr.Block;
+import org.egov.common.entity.edcr.FeatureEnum;
+import org.egov.common.entity.edcr.MdmsFeatureRule;
 import org.egov.common.entity.edcr.Plan;
 import org.egov.common.entity.edcr.Result;
+import org.egov.common.entity.edcr.FeatureRuleKey;
 import org.egov.common.entity.edcr.ScrutinyDetail;
+import org.egov.common.entity.edcr.StairCoverRequirement;
 import org.egov.common.entity.edcr.TerraceUtility;
-import org.egov.edcr.constants.DxfFileConstants;
+import org.egov.common.entity.edcr.TerraceUtilityServiceRequirement;
 import org.egov.edcr.constants.EdcrRulesMdmsConstants;
+import org.egov.edcr.service.MDMSCacheManager;
 import org.egov.edcr.service.FetchEdcrRulesMdms;
 import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
@@ -89,6 +94,9 @@ public class TerraceUtilityService extends FeatureProcess {
     // Autowired service to fetch rules from MDMS
     @Autowired
     FetchEdcrRulesMdms fetchEdcrRulesMdms;
+    
+    @Autowired
+	MDMSCacheManager cache;
 
     // No amendments defined for this rule
     @Override
@@ -102,94 +110,66 @@ public class TerraceUtilityService extends FeatureProcess {
         return pl;
     }
 
-    // Main logic for processing terrace utility service validations
     @Override
     public Plan process(Plan pl) {
 
-        // Default permissible value set to zero initially
-        BigDecimal terraceUtilityValue = BigDecimal.ZERO;
+        BigDecimal terraceUtilityValue = getTerraceUtilityPermissibleValue(pl);
 
-        String occupancyName = fetchEdcrRulesMdms.getOccupancyName(pl);
-
-        // Define the feature name for fetching rules
-        String feature = MdmsFeatureConstants.TERRACE_UTILITY_SERVICE;
-
-        // Prepare parameters for fetching MDMS rules
-        Map<String, Object> params = new HashMap<>();
-        
-        // If occupancy is residential, set the corresponding string
-       
-        params.put("feature", feature);
-        params.put("occupancy", occupancyName);
-
-        // Retrieve all EDCR rules from the plan
-        Map<String, List<Map<String, Object>>> edcrRuleList = pl.getEdcrRulesFeatures();
-
-        // Define the list of columns to retrieve from MDMS
-        ArrayList<String> valueFromColumn = new ArrayList<>();
-        valueFromColumn.add(EdcrRulesMdmsConstants.PERMISSIBLE_VALUE);
-
-        // Fetch permissible value from MDMS using occupancy and feature
-        List<Map<String, Object>> permissibleValue = new ArrayList<>();
-        permissibleValue = fetchEdcrRulesMdms.getPermissibleValue(edcrRuleList, params, valueFromColumn);
-        LOG.info("permissibleValue" + permissibleValue);
-
-        // If value is found, extract and convert it to BigDecimal
-        if (!permissibleValue.isEmpty() && permissibleValue.get(0).containsKey(EdcrRulesMdmsConstants.PERMISSIBLE_VALUE)) {
-            terraceUtilityValue = BigDecimal.valueOf(Double.valueOf(permissibleValue.get(0).get(EdcrRulesMdmsConstants.PERMISSIBLE_VALUE).toString()));
-        }
-
-        // Iterate through each block in the plan
         if (pl.getBlocks() != null) {
             for (Block block : pl.getBlocks()) {
-
-                // Create scrutiny detail object to hold validation report per block
-                ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
-                scrutinyDetail.setKey("Block_" + block.getNumber() + "_" + "Terrace Utility");
-
-                // Define column headers for scrutiny output
-                scrutinyDetail.addColumnHeading(1, RULE_NO);
-                scrutinyDetail.addColumnHeading(2, DESCRIPTION);
-                scrutinyDetail.addColumnHeading(3, PERMITTED);
-                scrutinyDetail.addColumnHeading(4, PROVIDED);
-                scrutinyDetail.addColumnHeading(5, STATUS);
-
-                // Iterate through terrace utilities for the block
-                for (TerraceUtility terraceUtility : block.getTerraceUtilities()) {
-
-                    // Prepare the result map for each utility
-                    Map<String, String> details = new HashMap<>();
-                    details.put(RULE_NO, RULE_34);
-
-                    // Get the minimum distance of the terrace utility from the edge
-                    BigDecimal minDistance = terraceUtility.getDistances().stream().reduce(BigDecimal::min).get();
-
-                    // Set utility name in description
-                    details.put(DESCRIPTION, terraceUtility.getName());
-
-                    // Compare provided distance with required distance and record results
-                    if (Util.roundOffTwoDecimal(minDistance).compareTo(terraceUtilityValue) >= 0) {
-                        details.put(PERMITTED, terraceUtilityValue + DcrConstants.IN_METER);
-                        details.put(PROVIDED, minDistance + DcrConstants.IN_METER);
-                        details.put(STATUS, Result.Accepted.getResultVal());
-                        scrutinyDetail.getDetail().add(details);
-                        pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
-                    } else {
-                        details.put(PERMITTED, terraceUtilityValue + DcrConstants.IN_METER);
-                        details.put(PROVIDED, minDistance + DcrConstants.IN_METER);
-                        details.put(STATUS, Result.Not_Accepted.getResultVal());
-                        scrutinyDetail.getDetail().add(details);
-                        pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
-                    }
-
-                }
-
+                ScrutinyDetail scrutinyDetail = createScrutinyDetailForBlock(block);
+                processTerraceUtilitiesForBlock(block, terraceUtilityValue, scrutinyDetail, pl);
             }
-
         }
 
-        // Return the updated plan after processing
         return pl;
     }
+
+    private BigDecimal getTerraceUtilityPermissibleValue(Plan pl) {
+    	List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.TERRACE_UTILITY_SERVICE.getValue(), false);
+        Optional<TerraceUtilityServiceRequirement> matchedRule = rules.stream()
+            .filter(TerraceUtilityServiceRequirement.class::isInstance)
+            .map(TerraceUtilityServiceRequirement.class::cast)
+            .findFirst();
+
+        return matchedRule.map(MdmsFeatureRule::getPermissible).orElse(BigDecimal.ZERO);
+    }
+
+    private ScrutinyDetail createScrutinyDetailForBlock(Block block) {
+        ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
+        scrutinyDetail.setKey("Block_" + block.getNumber() + "_Terrace Utility");
+        scrutinyDetail.addColumnHeading(1, RULE_NO);
+        scrutinyDetail.addColumnHeading(2, DESCRIPTION);
+        scrutinyDetail.addColumnHeading(3, PERMITTED);
+        scrutinyDetail.addColumnHeading(4, PROVIDED);
+        scrutinyDetail.addColumnHeading(5, STATUS);
+        return scrutinyDetail;
+    }
+
+    private void processTerraceUtilitiesForBlock(Block block, BigDecimal permissibleDistance,
+                                                 ScrutinyDetail scrutinyDetail, Plan pl) {
+        for (TerraceUtility terraceUtility : block.getTerraceUtilities()) {
+
+            Map<String, String> details = new HashMap<>();
+            details.put(RULE_NO, RULE_34);
+            details.put(DESCRIPTION, terraceUtility.getName());
+
+            BigDecimal minDistance = terraceUtility.getDistances().stream().reduce(BigDecimal::min).get();
+            BigDecimal roundedDistance = Util.roundOffTwoDecimal(minDistance);
+
+            details.put(PERMITTED, permissibleDistance + DcrConstants.IN_METER);
+            details.put(PROVIDED, roundedDistance + DcrConstants.IN_METER);
+
+            if (roundedDistance.compareTo(permissibleDistance) >= 0) {
+                details.put(STATUS, Result.Accepted.getResultVal());
+            } else {
+                details.put(STATUS, Result.Not_Accepted.getResultVal());
+            }
+
+            scrutinyDetail.getDetail().add(details);
+            pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
+        }
+    }
+
 }
 
