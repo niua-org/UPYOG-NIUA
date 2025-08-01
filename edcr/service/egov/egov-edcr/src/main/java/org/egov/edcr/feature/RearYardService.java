@@ -1,5 +1,5 @@
 /*
- * eGov  SmartCity eGovernance suite aims to improve the internal efficiency,transparency,
+ * UPYOG  SmartCity eGovernance suite aims to improve the internal efficiency,transparency,
  * accountability and the service delivery of the government  organizations.
  *
  *  Copyright (C) <2019>  eGovernments Foundation
@@ -47,6 +47,8 @@
 
 package org.egov.edcr.feature;
 
+import static org.egov.edcr.constants.CommonFeatureConstants.*;
+import static org.egov.edcr.constants.CommonKeyConstants.BLOCK;
 import static org.egov.edcr.constants.DxfFileConstants.A;
 import static org.egov.edcr.constants.DxfFileConstants.A_AF;
 import static org.egov.edcr.constants.DxfFileConstants.A_PO;
@@ -61,25 +63,30 @@ import static org.egov.edcr.utility.DcrConstants.REAR_YARD_DESC;
 import static org.egov.edcr.utility.DcrConstants.YES;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.egov.common.constants.MdmsFeatureConstants;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.Building;
+import org.egov.common.entity.edcr.FeatureEnum;
+import org.egov.common.entity.edcr.MdmsFeatureRule;
 import org.egov.common.entity.edcr.Occupancy;
 import org.egov.common.entity.edcr.OccupancyTypeHelper;
 import org.egov.common.entity.edcr.Plan;
 import org.egov.common.entity.edcr.Plot;
+import org.egov.common.entity.edcr.RearSetBackRequirement;
 import org.egov.common.entity.edcr.Result;
 import org.egov.common.entity.edcr.ScrutinyDetail;
 import org.egov.common.entity.edcr.SetBack;
 import org.egov.edcr.constants.DxfFileConstants;
-import org.egov.edcr.service.EdcrRestService;
+import org.egov.edcr.constants.EdcrRulesMdmsConstants;
 import org.egov.edcr.service.FetchEdcrRulesMdms;
+import org.egov.edcr.service.MDMSCacheManager;
 import org.egov.infra.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -148,6 +155,10 @@ public class RearYardService extends GeneralRule {
 
 	@Autowired
 	FetchEdcrRulesMdms fetchEdcrRulesMdms;
+	
+	 @Autowired
+	 MDMSCacheManager cache;
+	 
 	public void processRearYard(final Plan pl) {
 		HashMap<String, String> errors = new HashMap<>();
 		final Plot plot = pl.getPlot();
@@ -161,7 +172,7 @@ public class RearYardService extends GeneralRule {
 			for (Block block : pl.getBlocks()) { // for each block
 
 				scrutinyDetail = new ScrutinyDetail();
-				scrutinyDetail.setKey("Block_" + block.getName() + "_" + "Rear Setback");
+				scrutinyDetail.setKey(BLOCK + block.getName() + UNDERSCORE + REAR_SETBACK_SUFFIX);
 				scrutinyDetail.addColumnHeading(1, RULE_NO);
 				scrutinyDetail.addColumnHeading(2, LEVEL);
 				scrutinyDetail.addColumnHeading(3, OCCUPANCY);
@@ -310,48 +321,30 @@ public class RearYardService extends GeneralRule {
 		}
 
 	}
-	private Boolean processRearYard1(Block block, Integer level, final BigDecimal min, final BigDecimal mean,
+
+	private Boolean processRearYard1(Plan pl, Block block, Integer level, final BigDecimal min, final BigDecimal mean,
 			final OccupancyTypeHelper mostRestrictiveOccupancy, RearYardResult rearYardResult, String subRule,
 			String rule, BigDecimal minVal, BigDecimal meanVal, BigDecimal depthOfPlot, Boolean valid,
-			String occupancyName,  Map<String, List<Map<String, Object>>>   edcrRuleList) {
-		
-		System.out.println("000" + edcrRuleList);
+			String occupancyName) {
 
-		
-		String feature = "RearSetBack";
+	
+		BigDecimal plotArea = pl.getPlot().getArea();
 
-		Map<String, Object> params = new HashMap<>();
-		
-
-		params.put("feature", feature);
-		params.put("occupancy", occupancyName);
-		params.put("depthOfPlot", depthOfPlot);
-
-		ArrayList<String> valueFromColumn = new ArrayList<>();
-		valueFromColumn.add("permissibleValue");
-
-		List<Map<String, Object>> permissibleValue = new ArrayList<>();
-
-		try {
-			permissibleValue = fetchEdcrRulesMdms.getPermissibleValue(edcrRuleList, params, valueFromColumn);
-			LOG.info("permissibleValue" + permissibleValue);
-			System.out.println("permis___ for RearYard+++" + permissibleValue);
-
-		} catch (NullPointerException e) {
-
-			LOG.error("Permissible Value for Rear Yard service not found--------", e);
-			return null;
+	
+		List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.REAR_SET_BACK.getValue(), false);
+        Optional<RearSetBackRequirement> matchedRule = rules.stream()
+            .filter(RearSetBackRequirement.class::isInstance)
+            .map(RearSetBackRequirement.class::cast)
+            .filter(ruleFeature -> plotArea.compareTo(ruleFeature.getFromPlotArea()) >= 0 && plotArea.compareTo(ruleFeature.getToPlotArea()) < 0)
+            .findFirst();
+      
+		if (matchedRule.isPresent()) {
+			RearSetBackRequirement mdmsRule = matchedRule.get();
+			meanVal = mdmsRule.getPermissible();
+		} else {
+			meanVal = BigDecimal.ZERO;
 		}
 
-		if (!permissibleValue.isEmpty() && permissibleValue.get(0).containsKey("permissibleValue")) {
-			meanVal = BigDecimal.valueOf(Double.valueOf(permissibleValue.get(0).get("permissibleValue").toString()));
-
-		}
-		System.out.println("meanVllll" + meanVal);
-		/*
-		 * 
-		 * 
-		 */
 		valid = validateMinimumAndMeanValue(min, mean, minVal, meanVal);
 
 		/*
@@ -404,7 +397,7 @@ public class RearYardService extends GeneralRule {
 		// Set minVal based on plot area
 		if (plotArea.compareTo(MIN_PLOT_AREA) <= 0) {
 			// Plot area is less than zero
-			errors.put("Plot Area Error:", "Plot area cannot be less than " + MIN_PLOT_AREA);
+			errors.put(PLOT_AREA_ERROR, PLOT_AREA_CANNOT_BE_LESS_THAN + MIN_PLOT_AREA);
 		} else if (plotArea.compareTo(PLOT_AREA_100_SQM) <= 0) {
 			minVal = MIN_VAL_100_SQM;
 		} else if (plotArea.compareTo(PLOT_AREA_150_SQM) <= 0) {
@@ -430,8 +423,8 @@ public class RearYardService extends GeneralRule {
 //		    }
 		if (!valid) {
 			LOG.info("Rear Yard Service: min value validity False: " + minVal+"/"+min);
-			errors.put("Minimum and Mean Value Validation",
-					"Minimum value is less than the required minimum " + minVal+ "/"+min);
+			errors.put(MIN_AND_MEAN_VALUE_VALIDATION,
+					MIN_VALUE_LESS_THAN_REQUIRED_MIN + minVal+ SLASH +min);
 
 		} else {
 			LOG.info("Rear Yard Service: min value validity True: " + minVal+"/"+min);
@@ -617,8 +610,7 @@ public class RearYardService extends GeneralRule {
 			HashMap<String, String> errors, Plan pl) {
 
 		if (depthOfPlot.compareTo(BigDecimal.valueOf(10)) <= 0) {
-			errors.put("uptoTwelveHeightUptoTenDepthRearYard",
-					"No construction shall be permitted if depth of plot is less than 10 and building height less than 12 having floors upto G+2.");
+			errors.put(TWELVE_HEIGHT_TEN_DEPTH_REAR_YARD, NO_CONST_PERMIT_DEPTH_LESS_10_BUILDING_HEIGHT_12);
 			pl.addErrors(errors);
 		} else if (depthOfPlot.compareTo(BigDecimal.valueOf(10)) > 0
 				&& depthOfPlot.compareTo(BigDecimal.valueOf(15)) <= 0) {
@@ -736,8 +728,7 @@ public class RearYardService extends GeneralRule {
 			String rule, BigDecimal minVal, BigDecimal meanVal, BigDecimal depthOfPlot, Boolean valid,
 			HashMap<String, String> errors, Plan pl) {
 		if (depthOfPlot.compareTo(BigDecimal.valueOf(10)) <= 0) {
-			errors.put("uptoSixteenHeightUptoTenDepthRearYard",
-					"No construction shall be permitted if depth of plot is less than 10 and building height less than 16 having floors upto G+4.");
+			errors.put(SIXTEEN_HEIGHT_TEN_DEPTH_REAR_YARD, NO_CONST_PERMIT_DEPTH_10_BUILDING_HEIGHT_16);
 			pl.addErrors(errors);
 		} else if (depthOfPlot.compareTo(BigDecimal.valueOf(10)) > 0
 				&& depthOfPlot.compareTo(BigDecimal.valueOf(15)) <= 0) {
@@ -891,16 +882,16 @@ public class RearYardService extends GeneralRule {
 					&& DxfFileConstants.COMMERCIAL.equalsIgnoreCase(pl.getPlanInformation().getLandUseZone())
 //					&& pl.getPlanInformation().getRoadWidth().compareTo(ROAD_WIDTH_TWELVE_POINTTWO) < 0
 			) {
-				occupancyName = "Commercial";
+				occupancyName = EdcrRulesMdmsConstants.COMMERCIAL;
 			} else {
-				occupancyName = "Residential";
+				occupancyName = EdcrRulesMdmsConstants.RESIDENTIAL;
 			}
 
 		} else if (F.equalsIgnoreCase(mostRestrictiveOccupancy.getType().getCode())) {
 			
-			occupancyName = "Commercial";
+			occupancyName = EdcrRulesMdmsConstants.COMMERCIAL;
 		}else {
-			 occupancyName = fetchEdcrRulesMdms.getOccupancyName(pl);
+			 occupancyName = fetchEdcrRulesMdms.getOccupancyName(pl).toLowerCase();
 		}
 //		else if (G.equalsIgnoreCase(mostRestrictiveOccupancy.getType().getCode())) {
 //			occupancyName = "Industrial";
@@ -910,8 +901,8 @@ public class RearYardService extends GeneralRule {
 //				&& J.equalsIgnoreCase(mostRestrictiveOccupancy.getType().getCode())) {
 //			   occupancyName = "Government/Semi Government";
 //		}
-		valid = processRearYard1(block, level, min, mean, mostRestrictiveOccupancy, rearYardResult, subRule, rule, minVal,
-				meanVal, depthOfPlot, valid, occupancyName, pl.getEdcrRulesFeatures());
+		valid = processRearYard1(pl, block, level, min, mean, mostRestrictiveOccupancy, rearYardResult, subRule, rule, minVal,
+				meanVal, depthOfPlot, valid, occupancyName);
 		return valid;
 	}
 
@@ -992,7 +983,7 @@ public class RearYardService extends GeneralRule {
 				if (!rearYardDefined && !pl.getPlanInformation().getNocToAbutRearDesc().equalsIgnoreCase(YES)) {
 					HashMap<String, String> errors = new HashMap<>();
 					errors.put(REAR_YARD_DESC,
-							prepareMessage(OBJECTNOTDEFINED, REAR_YARD_DESC + " for Block " + block.getName()));
+							prepareMessage(OBJECTNOTDEFINED, REAR_YARD_DESC + FOR_BLOCK + block.getName()));
 					pl.addErrors(errors);
 				}
 			}
@@ -1011,9 +1002,9 @@ public class RearYardService extends GeneralRule {
 			occupancyName = mostRestrictiveOccupancy.getType().getName();
 		if (minVal.compareTo(rearYardResult.expectedminimumDistance) >= 0) {
 			if (minVal.compareTo(rearYardResult.expectedminimumDistance) == 0) {
-				rearYardResult.rule = rearYardResult.rule != null ? rearYardResult.rule + "," + rule : rule;
+				rearYardResult.rule = rearYardResult.rule != null ? rearYardResult.rule + COMMA + rule : rule;
 				rearYardResult.occupancy = rearYardResult.occupancy != null
-						? rearYardResult.occupancy + "," + occupancyName
+						? rearYardResult.occupancy + COMMA + occupancyName
 						: occupancyName;
 
 				if (meanVal.compareTo(rearYardResult.expectedmeanDistance) >= 0) {
