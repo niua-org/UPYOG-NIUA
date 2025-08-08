@@ -47,9 +47,31 @@
 
 package org.egov.edcr.feature;
 
+import static org.egov.edcr.constants.CommonFeatureConstants.AT_FLOOR;
+import static org.egov.edcr.constants.CommonFeatureConstants.BATH_VENTILATION;
+import static org.egov.edcr.constants.CommonFeatureConstants.COMMON_VENTILATION;
+import static org.egov.edcr.constants.CommonFeatureConstants.MINIMUM_PREFIX_1;
+import static org.egov.edcr.constants.CommonFeatureConstants.OF_CARPET_AREA;
+import static org.egov.edcr.constants.CommonFeatureConstants.TH_OF_FLOOR_AREA;
+import static org.egov.edcr.constants.CommonFeatureConstants.VENTILATION_AREA;
+import static org.egov.edcr.constants.EdcrReportConstants.AREA_UNIT_SQM;
+import static org.egov.edcr.constants.EdcrReportConstants.COMMON_ROOM_VENTILATION_DEFINED_PERCENT_MSG;
+import static org.egov.edcr.constants.EdcrReportConstants.COMMON_ROOM_VENTILATION_OPENING_DESC_PREFIX;
+import static org.egov.edcr.constants.EdcrReportConstants.LAUNDRY_VENTILATION_DESC;
+import static org.egov.edcr.constants.EdcrReportConstants.LIGHT_VENTILATION_DESCRIPTION;
+import static org.egov.edcr.constants.EdcrReportConstants.PARENTHESIS_END;
+import static org.egov.edcr.constants.EdcrReportConstants.PARENTHESIS_START;
+import static org.egov.edcr.constants.EdcrReportConstants.PERCENTAGE_SUFFIX;
+import static org.egov.edcr.constants.EdcrReportConstants.RULE_43;
+import static org.egov.edcr.constants.EdcrReportConstants.RULE_VENT_01;
+import static org.egov.edcr.constants.EdcrReportConstants.VENTILATION_DEFINED_PERCENT_MSG;
+import static org.egov.edcr.constants.EdcrReportConstants.VENTILATION_NOT_PROVIDED_AT_FLOOR;
+import static org.egov.edcr.constants.EdcrReportConstants.LAUNDRY_VENTILATION_OPENING_DESC_PREFIX;
+import static org.egov.edcr.service.FeatureUtil.addScrutinyDetailtoPlan;
+import static org.egov.edcr.service.FeatureUtil.mapReportDetails;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,21 +79,25 @@ import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.egov.common.entity.edcr.*;
+import org.egov.common.entity.edcr.Block;
+import org.egov.common.entity.edcr.FeatureEnum;
+import org.egov.common.entity.edcr.Floor;
+import org.egov.common.entity.edcr.Measurement;
+import org.egov.common.entity.edcr.MeasurementWithHeight;
+import org.egov.common.entity.edcr.Occupancy;
+import org.egov.common.entity.edcr.Plan;
+import org.egov.common.entity.edcr.ReportScrutinyDetail;
+import org.egov.common.entity.edcr.Result;
+import org.egov.common.entity.edcr.ScrutinyDetail;
+import org.egov.common.entity.edcr.VentilationRequirement;
 import org.egov.edcr.service.MDMSCacheManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static org.egov.edcr.constants.CommonFeatureConstants.*;
-import static org.egov.edcr.constants.CommonFeatureConstants.AT_FLOOR;
-import static org.egov.edcr.constants.EdcrReportConstants.*;
-import static org.egov.edcr.service.FeatureUtil.addScrutinyDetailtoPlan;
-import static org.egov.edcr.service.FeatureUtil.mapReportDetails;
-
 @Service
-public class Ventilation extends FeatureProcess {
+public class Ventilation_Assam extends Ventilation {
 
-	private static final Logger LOG = LogManager.getLogger(Ventilation.class);
+	private static final Logger LOG = LogManager.getLogger(Ventilation_Assam.class);
 
 	 @Autowired
 	 MDMSCacheManager cache;
@@ -106,7 +132,9 @@ public class Ventilation extends FeatureProcess {
 	        if (b.getBuilding() != null && b.getBuilding().getFloors() != null) {
 	            for (Floor f : b.getBuilding().getFloors()) {
 	                processGeneralVentilation(f, ventilationValues[0], generalScrutiny, pl);
-	                // processBathroomVentilation(f, ventilationValues[1], bathScrutiny, pl); // Uncomment if needed
+	                processLaundryRecreationVentilation(f, bathScrutiny, pl);
+	                processCommonRoomVentilation(f, bathScrutiny, pl);
+	              
 	            }
 	        }
 	    }
@@ -187,19 +215,119 @@ public class Ventilation extends FeatureProcess {
 				detail.setProvided(VENTILATION_AREA + totalVentilationArea + OF_CARPET_AREA + totalCarpetArea + AT_FLOOR + floor.getNumber());
 				detail.setStatus(totalVentilationArea.compareTo(requiredVentilation) >= 0 ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
 
-				Map<String, String> details = mapReportDetails(detail);
-				addScrutinyDetailtoPlan(scrutinyDetail, pl, details);
+				 Map<String, String> details = mapReportDetails(detail);
+			     addScrutinyDetailtoPlan(scrutinyDetail, pl, details);
+	            pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
 	        }
 	    }
 	}
 
 
-	/**
-	 * Returns amendment dates for ventilation rules.
-	 * Currently returns an empty map as no amendments are defined.
-	 *
-	 * @return Empty LinkedHashMap of amendment dates
-	 */
+	private void processLaundryRecreationVentilation(Floor floor, ScrutinyDetail scrutinyDetail, Plan pl) {
+	    MeasurementWithHeight laundryVent = floor.getLaundryOrRecreationalVentilation();
+	    if (laundryVent == null || laundryVent.getMeasurements() == null || laundryVent.getMeasurements().isEmpty()) {
+	        ReportScrutinyDetail detail = new ReportScrutinyDetail();
+	        detail.setRuleNo(RULE_VENT_01);
+	        detail.setDescription(LAUNDRY_VENTILATION_DESC);
+	        detail.setRequired(VENTILATION_DEFINED_PERCENT_MSG);
+	        detail.setProvided(VENTILATION_NOT_PROVIDED_AT_FLOOR + floor.getNumber());
+	        detail.setStatus(Result.Not_Accepted.getResultVal());
+
+	        scrutinyDetail.getDetail().add(mapReportDetails(detail));
+	        pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
+	        return;
+	    }
+
+
+	   
+	    BigDecimal ventilationPercent = BigDecimal.TEN;
+	    List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.VENTILATION.getValue(), false);
+
+	    Optional<VentilationRequirement> matchedRule = rules.stream()
+	        .filter(VentilationRequirement.class::isInstance)
+	        .map(VentilationRequirement.class::cast)
+	        .findFirst();
+
+	    if (matchedRule.isPresent()) {
+	        ventilationPercent = matchedRule.get().getLaundryRecreationPercent();
+	    }
+
+	    BigDecimal roomArea = floor.getArea(); // Floor area
+	    BigDecimal requiredVentArea = roomArea.multiply(ventilationPercent);
+
+	    BigDecimal providedVentArea = laundryVent.getMeasurements().stream()
+	        .map(Measurement::getArea)
+	        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+	    ReportScrutinyDetail detail = new ReportScrutinyDetail();
+	    detail.setRuleNo(RULE_VENT_01);
+	    detail.setDescription(LAUNDRY_VENTILATION_OPENING_DESC_PREFIX + ventilationPercent + PERCENTAGE_SUFFIX + "Floor Area");
+	    detail.setRequired(requiredVentArea + AREA_UNIT_SQM + PARENTHESIS_START + ventilationPercent + PERCENTAGE_SUFFIX + roomArea + PARENTHESIS_END);
+	    detail.setProvided(providedVentArea + AREA_UNIT_SQM + AT_FLOOR + floor.getNumber());
+	    detail.setStatus(providedVentArea.compareTo(requiredVentArea) >= 0
+	        ? Result.Accepted.getResultVal()
+	        : Result.Not_Accepted.getResultVal());
+
+	    scrutinyDetail.getDetail().add(mapReportDetails(detail));
+	    pl.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
+
+
+	}
+	
+	private void processCommonRoomVentilation(Floor floor, ScrutinyDetail scrutinyDetail, Plan pl) {
+	    if (floor.getCommonRoom() == null || floor.getCommonRoom().getCommonRoomVentialtion() == null
+	            || floor.getCommonRoom().getCommonRoomVentialtion().isEmpty()) {
+
+	    	ReportScrutinyDetail detail = new ReportScrutinyDetail();
+	    	
+	    	detail.setRuleNo(RULE_VENT_01);
+	    	detail.setDescription(COMMON_ROOM_VENTILATION_OPENING_DESC_PREFIX);
+	    	detail.setRequired(COMMON_ROOM_VENTILATION_DEFINED_PERCENT_MSG);
+	    	detail.setProvided(VENTILATION_NOT_PROVIDED_AT_FLOOR + floor.getNumber());
+	    	detail.setStatus(Result.Not_Accepted.getResultVal());
+
+	    	scrutinyDetail.getDetail().add(mapReportDetails(detail));
+	    	return;
+
+	    }
+
+	    List<Measurement> roomVent = floor.getCommonRoom().getCommonRoomVentialtion();
+	    BigDecimal ventilationPercent = BigDecimal.ZERO;
+
+	    List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.VENTILATION.getValue(), false);
+	    Optional<VentilationRequirement> matchedRule = rules.stream()
+	            .filter(VentilationRequirement.class::isInstance)
+	            .map(VentilationRequirement.class::cast)
+	            .findFirst();
+
+	    if (matchedRule.isPresent()) {
+	    	  ventilationPercent = matchedRule.get().getCommonRoomPercent();
+	    }
+	    
+	    List<Measurement> commonRoomMeasurements = floor.getCommonRoom().getRooms();
+
+	    BigDecimal roomArea = commonRoomMeasurements.stream()
+	    	    .map(Measurement::getArea)
+	    	    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+	    BigDecimal requiredVentArea = roomArea.multiply(ventilationPercent);
+	    BigDecimal providedVentArea = roomVent.stream()
+	            .map(Measurement::getArea)
+	            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+	    ReportScrutinyDetail detail = new ReportScrutinyDetail();
+	    detail.setRuleNo(RULE_VENT_01);
+	    detail.setDescription(COMMON_ROOM_VENTILATION_OPENING_DESC_PREFIX + ventilationPercent + PERCENTAGE_SUFFIX + "Floor Area");
+	    detail.setRequired(requiredVentArea + AREA_UNIT_SQM + PARENTHESIS_START + ventilationPercent + PERCENTAGE_SUFFIX + roomArea + PARENTHESIS_END);
+	    detail.setProvided(providedVentArea + AREA_UNIT_SQM + AT_FLOOR + floor.getNumber());
+	    detail.setStatus(providedVentArea.compareTo(requiredVentArea) >= 0
+	        ? Result.Accepted.getResultVal()
+	        : Result.Not_Accepted.getResultVal());
+
+	    scrutinyDetail.getDetail().add(mapReportDetails(detail));
+
+	}
+
 	@Override
 	public Map<String, Date> getAmendments() {
 		return new LinkedHashMap<>();

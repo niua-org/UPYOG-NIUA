@@ -253,9 +253,16 @@ public class PlanInformation implements Serializable {
 
     //YES/NO/NA.Extracted from Plan info. Rain water declared in plan.
     private transient String rwhDeclared = NA;
+	private String plotType;
+	
+	 private BigDecimal noOfRoom;
 
 
-    public Boolean getGovernmentOrAidedSchool() {
+    public void setNoOfRoom(BigDecimal noOfRoom) {
+		this.noOfRoom = noOfRoom;
+	}
+
+	public Boolean getGovernmentOrAidedSchool() {
         return governmentOrAidedSchool;
     }
 
@@ -711,4 +718,16 @@ public class PlanInformation implements Serializable {
         this.rwhDeclared = rwhDeclared;
     }
 
+    public String getPlotType() {
+       
+		return plotType;
+    }
+
+    public void setPlotType(String plotType) {
+        this.plotType = plotType;
+    }
+
+	public BigDecimal getNoOfRoom() {
+				return noOfRoom;
+	}
 }

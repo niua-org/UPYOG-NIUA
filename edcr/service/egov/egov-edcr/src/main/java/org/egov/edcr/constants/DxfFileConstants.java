@@ -16,6 +16,7 @@ public class DxfFileConstants {
     public static final String G = "G"; // Industrial
     public static final String H = "H"; // Storage
     public static final String I = "I"; // Hazardous
+    public static final String J = "J"; // Factories
 
     // sub occupancies code
     public static final String A2 = "A2";// Old Age Home
@@ -41,6 +42,7 @@ public class DxfFileConstants {
     public static final String D_A = "D-A"; // Religious
     public static final String D_AW = "D-AW";// Assembly Worship
     public static final String D_BT = "D-BT";// Bus Terminal
+    public static final String D_M = "D-M";// Multiplex
 
     public static final String E_PS = "E-PS";// Primary School
     public static final String E_SFMC = "E-SFMC";// School for Mentally Challenged
@@ -51,6 +53,8 @@ public class DxfFileConstants {
     public static final String E_SACA = "E-SACA";// Sports and Cultural Activities
 
     public static final String F_H = "F-H";// Hotels
+    public static final String F_HB = "F-H";// Hotels with banquet halls
+    public static final String F_HWB = "F-H";// Hotels without banquet halls
     public static final String F_K = "F-K";// Kiosk
     public static final String F_PA = "F-PA";// Parking Appurtenant
     public static final String F_PP = "F-PP";// Parking Plaza
@@ -58,6 +62,7 @@ public class DxfFileConstants {
     public static final String F_LD = "F-LD";// Lodges
     public static final String F_CB = "F-CB";// Commercial Building
     public static final String F_IT = "F-IT";// IT / ITES Buildings
+    public static final String F_PB = "F-PB";// Private business / business office
 
 
     public static final String G_LI = "G-LI";// Large Industrial

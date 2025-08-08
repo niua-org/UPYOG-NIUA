@@ -47,6 +47,7 @@
 
 package org.egov.common.entity.edcr;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,18 +62,37 @@ public class Room {
     private List<Measurement> rooms = new ArrayList<>();
 
     private MeasurementWithHeight lightAndVentilation = new MeasurementWithHeight();
-    private MeasurementWithHeight bathVentilation = new MeasurementWithHeight();
+    private List<Measurement> bathVentilation = new ArrayList<>();
 
     private List<Occupancy> mezzanineAreas = new ArrayList<>();
 
     private List<Measurement> waterClosetVentialtion = new ArrayList<>();
     
-    private List<Window> windows = new ArrayList<>();
+    private List<Measurement> commonRoomVentialtion = new ArrayList<>();
+    
+    public List<Measurement> getCommonRoomVentialtion() {
+		return commonRoomVentialtion;
+	}
+
+	public void setCommonRoomVentialtion(List<Measurement> commonRoomVentialtion) {
+		this.commonRoomVentialtion = commonRoomVentialtion;
+	}
+
+	private List<Window> windows = new ArrayList<>();
     
     private List<Door> doors = new ArrayList<>();
 
+    private BigDecimal hillyAreaRoomHeight;
 
-    public List<RoomHeight> getHeights() {
+    public BigDecimal getHillyAreaRoomHeight() {
+		return hillyAreaRoomHeight;
+	}
+
+	public void setHillyAreaRoomHeight(BigDecimal hillyAreaRoomHeight) {
+		this.hillyAreaRoomHeight = hillyAreaRoomHeight;
+	}
+
+	public List<RoomHeight> getHeights() {
         return heightOfRooms;
     }
 
@@ -122,19 +142,32 @@ public class Room {
         this.lightAndVentilation = lightAndVentilation;
     }
     
-    public MeasurementWithHeight getBathVentilation() {
-        return bathVentilation;
-    }
+  
+    public List<RoomHeight> getHeightOfRooms() {
+		return heightOfRooms;
+	}
 
-    /**
-     * @param lightAndVentilation the lightAndVentilation to set
-     */
-    public void setVentilation(MeasurementWithHeight bathVentilation) {
-        this.bathVentilation = bathVentilation;
-    }
+	public void setHeightOfRooms(List<RoomHeight> heightOfRooms) {
+		this.heightOfRooms = heightOfRooms;
+	}
 
-    
-    public List<Measurement> getWaterClosetVentilation() {
+	public List<Measurement> getBathVentilation() {
+		return bathVentilation;
+	}
+
+	public void setBathVentilation(List<Measurement> bathVentilation) {
+		this.bathVentilation = bathVentilation;
+	}
+
+	public List<Measurement> getWaterClosetVentialtion() {
+		return waterClosetVentialtion;
+	}
+
+	public void setWaterClosetVentialtion(List<Measurement> waterClosetVentialtion) {
+		this.waterClosetVentialtion = waterClosetVentialtion;
+	}
+
+	public List<Measurement> getWaterClosetVentilation() {
 		return waterClosetVentialtion;
 	}
 

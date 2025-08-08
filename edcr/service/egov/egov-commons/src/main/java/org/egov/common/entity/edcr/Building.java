@@ -96,8 +96,18 @@ public class Building extends Measurement {
     private List<Floor> floors = new ArrayList<>();
 
     private BigDecimal floorsAboveGround;
+    
+    private BigDecimal furthestCornerOfTheBuilding;
 
-    private List<BigDecimal> distanceFromBuildingFootPrintToRoadEnd = new ArrayList<>();
+    public BigDecimal getFurthestCornerOfTheBuilding() {
+		return furthestCornerOfTheBuilding;
+	}
+
+	public void setFurthestCornerOfTheBuilding(BigDecimal furthestCornerOfTheBuilding) {
+		this.furthestCornerOfTheBuilding = furthestCornerOfTheBuilding;
+	}
+
+	private List<BigDecimal> distanceFromBuildingFootPrintToRoadEnd = new ArrayList<>();
     private List<BigDecimal> distanceFromSetBackToBuildingLine = new ArrayList<>();
 
     private BigDecimal totalBuitUpArea;

@@ -34,20 +34,34 @@ public class WaterClosetsExtract extends FeatureExtract {
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
         List<DXFLWPolyline> rooms;
+        List<DXFLWPolyline> ventilationWC;
         List<Measurement> roomMeasurements;
+        List<Measurement> ventilationMeasurements;
         List<BigDecimal> roomHeights;
         List<RoomHeight> roomHeightsList;
         RoomHeight height;
         for (Block block : planDetail.getBlocks())
             if (block.getBuilding() != null && block.getBuilding().getFloors() != null)
                 for (Floor f : block.getBuilding().getFloors()) {
-                    String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_WC"), block.getNumber(),
-                            f.getNumber());
+//                    String layerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_WC"), block.getNumber(),
+//                            f.getNumber());
+                    String layerName = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + block.getNumber() + "_"
+                            + layerNames.getLayerName("LAYER_NAME_FLOOR_NAME_PREFIX") + f.getNumber() + "_"
+                            + layerNames.getLayerName("LAYER_NAME_WATER_CLOSET");
+                    String ventilationLayerName = layerNames.getLayerName("LAYER_NAME_BLOCK_NAME_PREFIX") + block.getNumber() + "_"
+                    		+ layerNames.getLayerName("LAYER_NAME_FLOOR_NAME_PREFIX") + f.getNumber() + "_"
+                    		+ layerNames.getLayerName("LAYER_NAME_WATER_CLOSET_VENTILATION");
                     rooms = Util.getPolyLinesByLayer(planDetail.getDoc(), layerName);
+                    ventilationWC = Util.getPolyLinesByLayer(planDetail.getDoc(), ventilationLayerName);
                     roomMeasurements = rooms.stream()
                             .map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
+                    ventilationMeasurements = ventilationWC.stream()
+                    		.map(flightPolyLine -> new MeasurementDetail(flightPolyLine, true)).collect(Collectors.toList());
                     f.setWaterClosets(new Room());
+                    
+//                    f.setVentilation(ventilationMeasurements);
                     f.getWaterClosets().setRooms(roomMeasurements);
+                    f.getWaterClosets().setWaterClosetVentilation(ventilationMeasurements);
                     roomHeights = Util.getListOfDimensionValueByLayer(planDetail,
                             String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_WC_HT"), block.getNumber(), f.getNumber()));
                     roomHeightsList = new ArrayList<>();

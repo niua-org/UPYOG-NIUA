@@ -117,5 +117,16 @@ public class Ramp extends Measurement {
     public void setNumber(Integer number) {
         this.number = number;
     }
+    
+    private BigDecimal minEntranceHeight;
+
+    public BigDecimal getMinEntranceHeight() {
+        return minEntranceHeight;
+    }
+
+    public void setMinEntranceHeight(BigDecimal minEntranceHeight) {
+        this.minEntranceHeight = minEntranceHeight;
+    }
+
 
 }

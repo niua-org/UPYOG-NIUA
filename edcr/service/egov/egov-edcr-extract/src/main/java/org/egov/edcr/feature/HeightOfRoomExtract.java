@@ -242,6 +242,35 @@ public class HeightOfRoomExtract extends FeatureExtract {
                                 }
                             }
                         }
+                        
+                     /* Extract hilly area room height */
+
+						String hillyAreaRoomHeightLayerName = String.format(layerNames.getLayerName("LAYER_NAME_HILLY_ROOM_HEIGHT"),
+								block.getNumber(), floor.getNumber(), "+\\d");
+
+						List<String> hillyHeightLayers = Util.getLayerNamesLike(pl.getDoc(), hillyAreaRoomHeightLayerName);
+
+						if (!hillyHeightLayers.isEmpty()) {
+
+							for (String hillyLayer : hillyHeightLayers) {
+								String hillyHeight = Util.getMtextByLayerName(pl.getDoc(), hillyLayer);
+
+								List<DXFDimension> dimensionList = Util.getDimensionsByLayer(pl.getDoc(), hillyLayer);
+								if (dimensionList != null && !dimensionList.isEmpty()) {
+									Room room = new Room();
+									BigDecimal hillyHeight1 = hillyHeight != null
+											? BigDecimal
+													.valueOf(Double.valueOf(hillyHeight.replaceAll("HILLY_ROOM_HT_M=", "")))
+											: BigDecimal.ZERO;
+									room.setHillyAreaRoomHeight(hillyHeight1);
+							
+									floor.addRegularRoom(room);
+								}
+								
+							}
+						}
+						
+                      
                     	// Code Added by Neha for Doors extract
 
 						String doorLayerName = String.format(layerNames.getLayerName("LAYER_NAME_DOOR"),

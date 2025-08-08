@@ -1,13 +1,16 @@
 package org.egov.edcr.feature;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.Floor;
 import org.egov.common.entity.edcr.Measurement;
+import org.egov.common.entity.edcr.MeasurementWithHeight;
 import org.egov.common.entity.edcr.Room;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
 import org.egov.edcr.entity.blackbox.PlanDetail;
@@ -100,12 +103,76 @@ public class VentilationExtract extends FeatureExtract {
 							}
 						}
 					}
+					
+					// Kitchen and dining ventilation handling via new method
+                    handleKitchenDiningVentilation(pl, b, f);
+
+                    // Laundry and recreation ventilation handling via new method
+                    handleLaundryRecreationVentilation(pl, b, f);
+					
+
 				}
 			}
 		}
 
 		return pl;
 	}
+	
+	private void handleKitchenDiningVentilation(PlanDetail pl, Block b, Floor f) {
+        Room kitchen = f.getKitchen();
+        if (kitchen != null) {
+            String kitchenAndDining = String.format(
+                    layerNames.getLayerName("LAYER_NAME_KITCHEN_DINING_VENTILATION"),
+                    b.getNumber(), f.getNumber(), "+\\d");
+
+            List<String> ventilationLayers = Util.getLayerNamesLike(pl.getDoc(), kitchenAndDining);
+            if (!ventilationLayers.isEmpty()) {
+                for (String ventLayer : ventilationLayers) {
+                    List<DXFLWPolyline> lightAndVentilations = Util.getPolyLinesByLayer(pl.getDoc(), ventLayer);
+                    if (!lightAndVentilations.isEmpty()) {
+                        List<Measurement> lightAndVentilationMeasurements = lightAndVentilations.stream()
+                            .map(polyline -> new MeasurementDetail(polyline, true))
+                            .collect(Collectors.toList());
+                        kitchen.getLightAndVentilation().setMeasurements(lightAndVentilationMeasurements);
+
+                        kitchen.getLightAndVentilation().setHeightOrDepth(
+                            Util.getListOfDimensionValueByLayer(pl, ventLayer));
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleLaundryRecreationVentilation(PlanDetail pl, Block b, Floor f) {
+        MeasurementWithHeight laundryVentilation = f.getLaundryOrRecreationalVentilation();
+        if (laundryVentilation != null) {
+            String laundryVentLayerPattern = String.format(
+                    layerNames.getLayerName("LAYER_NAME_LAUNDRY_RECREATION_VENTILATION"),
+                    b.getNumber(), f.getNumber(), "+\\d");
+
+            List<String> ventilationLayers = Util.getLayerNamesLike(pl.getDoc(), laundryVentLayerPattern);
+            if (!ventilationLayers.isEmpty()) {
+                List<Measurement> ventilationMeasurements = new ArrayList<>();
+                List<BigDecimal> heightsOrDepths = new ArrayList<>();
+
+                for (String ventLayer : ventilationLayers) {
+                    List<DXFLWPolyline> ventilations = Util.getPolyLinesByLayer(pl.getDoc(), ventLayer);
+                    if (!ventilations.isEmpty()) {
+                        List<Measurement> measurements = ventilations.stream()
+                            .map(polyline -> new MeasurementDetail(polyline, true))
+                            .collect(Collectors.toList());
+                        ventilationMeasurements.addAll(measurements);
+
+                        List<BigDecimal> dimensionValues = Util.getListOfDimensionValueByLayer(pl, ventLayer);
+                        heightsOrDepths.addAll(dimensionValues);
+                    }
+                }
+
+                laundryVentilation.setMeasurements(ventilationMeasurements);
+                laundryVentilation.setHeightOrDepth(heightsOrDepths);
+            }
+        }
+    }
 
 	@Override
 	public PlanDetail validate(PlanDetail pl) {

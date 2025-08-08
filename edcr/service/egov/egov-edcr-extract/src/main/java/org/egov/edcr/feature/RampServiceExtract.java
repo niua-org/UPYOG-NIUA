@@ -116,6 +116,9 @@ public class RampServiceExtract extends FeatureExtract {
                                             BigDecimal height = BigDecimal.valueOf(Double.parseDouble(floorHeight));
                                             ramp.setFloorHeight(height);
                                         }
+                                        BigDecimal minEntranceHeight = extractMinEntranceHeight(pl, rmpLayer);
+                                        ramp.setMinEntranceHeight(minEntranceHeight);
+
                                         floor.addRamps(ramp);
                                     }
                                 }
@@ -145,6 +148,24 @@ public class RampServiceExtract extends FeatureExtract {
 		}
 		return slope;
 	}
+	
+	private BigDecimal extractMinEntranceHeight(PlanDetail pl, String rampLayerName) {
+	    String text = Util.getMtextByLayerName(pl.getDoc(), rampLayerName, "ENT_HT");
+	    BigDecimal entranceHeight = BigDecimal.ZERO;
+	    if (text != null && !text.isEmpty()) {
+	        if (text.contains("=")) {
+	            text = text.split("=")[1] != null ? text.split("=")[1].replaceAll("[^\\d.]", "") : "";
+	        } else {
+	            text = text.replaceAll("[^\\d.]", "");
+	        }
+
+	        if (!isBlank(text)) {
+	            entranceHeight = new BigDecimal(text);
+	        }
+	    }
+	    return entranceHeight;
+	}
+
 
     @Override
     public PlanDetail validate(PlanDetail pl) {

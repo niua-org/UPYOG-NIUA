@@ -117,20 +117,6 @@ public class WaterClosets extends FeatureProcess {
 	            BigDecimal minWidth = getMinWidth(floor.getWaterClosets().getRooms());
 	            BigDecimal totalArea = getTotalArea(floor.getWaterClosets().getRooms());
 
-	            // Ventilation validation
-	            if (floor.getWaterClosetVentilation() != null
-	                    && floor.getWaterClosetVentilation().getMeasurements() != null
-	                    && !floor.getWaterClosetVentilation().getMeasurements().isEmpty()) {
-
-	                BigDecimal ventArea = floor.getWaterClosetVentilation().getMeasurements().stream()
-	                        .map(Measurement::getArea).reduce(BigDecimal.ZERO, BigDecimal::add);
-	                Map<String, String> ventDetails = buildVentilationDetails(
-	                	    wcRule.getWaterClosetsVentilationArea(), ventArea
-	                	);
-	                	ventScrutinyDetail.getDetail().add(ventDetails);
-
-	            }
-
 	            Map<String, String> dimDetails = buildDimensionDetails(
 	            	    wcRule.getWaterClosetsHeight(), wcRule.getWaterClosetsArea(), wcRule.getWaterClosetsWidth(),
 	            	    minHeight, totalArea, minWidth

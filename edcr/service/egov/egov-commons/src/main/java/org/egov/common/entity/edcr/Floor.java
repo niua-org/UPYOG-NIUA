@@ -93,7 +93,17 @@ public class Floor extends Measurement {
     private Room kitchen;
     private Room bathRoom;
     private Room waterClosets;
-    private List<Toilet> toilet;
+    private Room commonRoom;
+    public Room getCommonRoom() {
+		return commonRoom;
+	}
+
+	public void setCommonRoom(Room commonRoom) {
+		this.commonRoom = commonRoom;
+	}
+
+
+	private List<Toilet> toilet;
     private Room bathRoomWaterClosets;
     private List<BigDecimal> heightFromTheFloorToCeiling;
     private List<BigDecimal> heightOfTheCeilingOfUpperBasement;
@@ -101,9 +111,29 @@ public class Floor extends Measurement {
     private InteriorOpenSpace interiorOpenSpace = new InteriorOpenSpace();
     private MeasurementWithHeight verandah = new MeasurementWithHeight();
     private MeasurementWithHeight lightAndVentilation = new MeasurementWithHeight();
-    private MeasurementWithHeight bathVentilation = new MeasurementWithHeight();
-    private MeasurementWithHeight waterClosetVentilation = new MeasurementWithHeight();
-    private List<RoofArea> roofAreas = new ArrayList<>();
+   
+    private MeasurementWithHeight laundryOrRecreationalVentilation = new MeasurementWithHeight();
+    public MeasurementWithHeight getLaundryOrRecreationalVentilation() {
+		return laundryOrRecreationalVentilation;
+	}
+
+	public void setLaundryOrRecreationalVentilation(MeasurementWithHeight laundryOrRecreationalVentilation) {
+		this.laundryOrRecreationalVentilation = laundryOrRecreationalVentilation;
+	}
+
+
+	private List<RoofArea> roofAreas = new ArrayList<>();
+    
+    private List<BigDecimal> splitLevelBasementParkingHeights;
+
+    public List<BigDecimal> getSplitLevelBasementParkingHeights() {
+        return splitLevelBasementParkingHeights;
+    }
+
+    public void setSplitLevelBasementParkingHeights(List<BigDecimal> splitLevelBasementParkingHeights) {
+        this.splitLevelBasementParkingHeights = splitLevelBasementParkingHeights;
+    }
+
 
     private List<Balcony> balconies = new ArrayList<>();
     private Boolean isStiltFloor;
@@ -674,22 +704,6 @@ public class Floor extends Measurement {
         this.lightAndVentilation = lightAndVentilation;
     }
     
-    public MeasurementWithHeight getBathVentilaion() {
-        return bathVentilation;
-    }
-
-    public void setBathVentilation(MeasurementWithHeight bathVentilation) {
-        this.bathVentilation = bathVentilation;
-    }
-    
-    public MeasurementWithHeight getWaterClosetVentilation() {
-        return waterClosetVentilation;
-    }
-
-    public void setWaterClosetVentilation(MeasurementWithHeight waterClosetVentilation) {
-        this.waterClosetVentilation = waterClosetVentilation;
-    }
-
     public List<RoofArea> getRoofAreas() {
         return roofAreas;
     }

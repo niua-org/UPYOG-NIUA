@@ -56,6 +56,15 @@ public class BasementExtract extends FeatureExtract {
                                         b.getNumber()),
                                 basementFeaturesColor.get(layerNames.getLayerName(
                                         "LAYER_NAME_COLOUR_CODE_LEVEL_OF_BASEMENT_UNDER_GROUND"))));
+                        
+                        /*
+                         * Split Level Mechanised Basement Parking Height
+                         */
+                        f.setSplitLevelBasementParkingHeights(Util.getListOfDimensionByColourCode(pl,
+                                String.format(basementFootPrint, b.getNumber()),
+                                basementFeaturesColor.get(layerNames.getLayerName(
+                                        "LAYER_NAME_SPLIT_LEVEL_BASEMENT_PARKING_HEIGHT_COLOUR_CODE"))));
+
 
                     }
 

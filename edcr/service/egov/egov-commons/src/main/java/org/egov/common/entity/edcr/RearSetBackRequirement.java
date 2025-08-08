@@ -38,6 +38,51 @@ public class RearSetBackRequirement extends MdmsFeatureRule {
 	    
 	    @JsonProperty("permissibleFlattered")
 	    private BigDecimal permissibleFlattered;
+	    
+	    @JsonProperty("permissibleNursery")
+	    private BigDecimal permissibleNursery;
+	    
+	    @JsonProperty("permissiblePrimary")
+	    private BigDecimal permissiblePrimary;
+	    
+	    @JsonProperty("permissibleHighSchool")
+	    private BigDecimal permissibleHighSchool;
+	    
+	    @JsonProperty("permissibleCollege")
+	    private BigDecimal permissibleCollege;
+
+		public BigDecimal getPermissibleNursery() {
+			return permissibleNursery;
+		}
+
+		public void setPermissibleNursery(BigDecimal permissibleNursery) {
+			this.permissibleNursery = permissibleNursery;
+		}
+
+	
+		public BigDecimal getPermissiblePrimary() {
+			return permissiblePrimary;
+		}
+
+		public void setPermissiblePrimary(BigDecimal permissiblePrimary) {
+			this.permissiblePrimary = permissiblePrimary;
+		}
+
+		public BigDecimal getPermissibleHighSchool() {
+			return permissibleHighSchool;
+		}
+
+		public void setPermissibleHighSchool(BigDecimal permissibleHighSchool) {
+			this.permissibleHighSchool = permissibleHighSchool;
+		}
+
+		public BigDecimal getPermissibleCollege() {
+			return permissibleCollege;
+		}
+
+		public void setPermissibleCollege(BigDecimal permissibleCollege) {
+			this.permissibleCollege = permissibleCollege;
+		}
 
 		@Override
 		public String toString() {
