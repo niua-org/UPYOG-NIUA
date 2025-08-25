@@ -132,6 +132,7 @@
   max-width: 540px;
 
   .select {
+    border-radius: 10px !important;
     @apply relative block w-full h-10 border border-solid border-input-border;
 
     input[type="text"] {
@@ -156,6 +157,9 @@
   }
 
   .select-active {
+    border: 1px solid #8e1ad5 !important;
+    border-color: #8e1ad5 !important;
+    border-radius: 10px;
     @apply relative block w-full h-10 border-2 border-solid border-primary-main;
 
     input[type="text"] {

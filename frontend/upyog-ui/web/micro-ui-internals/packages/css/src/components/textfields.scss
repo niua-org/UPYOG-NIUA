@@ -7,6 +7,7 @@
 }
 
 .employee-card-input {
+  border-radius: 10px !important;
   @apply mb-lg pl-sm outline-none block border w-full h-10 border-input-border border-solid bg-white leading-10 text-form-field text-text-primary;
   margin-bottom: 16px !important;
   height: 40px !important;
@@ -65,6 +66,7 @@
   }
 
   .employee-card-input {
+    border-radius: 10px !important;
     @apply w-full;
   }
 
