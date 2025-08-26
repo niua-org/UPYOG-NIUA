@@ -435,6 +435,8 @@ input[type="number"] {
   @apply relative w-full;
   input {
     &:hover {
+      border: 1px solid #8e1ad5 !important;
+      border-color: #8e1ad5 !important;
       @apply border-2 border-solid border-primary-main;
     }
   }
