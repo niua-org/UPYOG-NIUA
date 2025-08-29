@@ -104,7 +104,7 @@ spring.datasource.password=postgres
 # Kafka Configuration
 kafka.config.bootstrap_server_config=localhost:9092
 
-# Services you have to port-forward while running thsi service locally
+# Services you have to port-forward while running this service locally check the port from application.properties
 egov.mdms.host=http://localhost:8094
 egov.user.host=http://localhost:6161
 egov.workflow.host=http://localhost:8280
@@ -154,15 +154,7 @@ egov.billingservice.host=http://localhost:8077
 
 5. **Access API Documentation**
    - Swagger UI: `http://localhost:8085/cnd-service/swagger-ui/index.html#/`
-   
-### Docker Support
-```bash
-# Build Docker image
-docker build -t cnd-service .
 
-# Run with Docker Compose
-docker-compose up -d
-```
 
 ## Development
 
@@ -179,15 +171,6 @@ src/main/java/org/upyog/cdwm/
 ├── util/           # Utility classes
 ├── validation/     # Input validation
 └── web/            # REST controllers and models
-```
-
-### Testing
-```bash
-# Run unit tests
-mvn test
-
-# Run with coverage
-mvn test jacoco:report
 ```
 
 ### Code Quality
