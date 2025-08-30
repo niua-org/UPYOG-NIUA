@@ -28,13 +28,13 @@ public class CreateApiControllerTest {
 
     @Test
     public void createPostSuccess() throws Exception {
-        mockMvc.perform(post("/sv/_create").contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/cnd-service/v1/_create").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void createPostFailure() throws Exception {
-        mockMvc.perform(post("/sv/_create").contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/cnd-service/v1/_create").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 }
