@@ -3,9 +3,9 @@ package org.upyog.adv.web.models.transaction;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import org.egov.common.contract.request.User;
 import org.upyog.adv.web.models.AuditDetails;
