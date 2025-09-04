@@ -20,14 +20,7 @@
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.32</lombok.version>
 	</properties>
-
-
-
-
-	<!--	Dependencies-->
 	<dependencies>
-
-		<!--		Spring Dependencies-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -41,28 +34,21 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.3.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
-
 		<!--		Db Dependencies-->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>42.7.2</version>
 		</dependency>
-
-
-		<!-- https://mvnrepository.com/artifact/org.javers/javers-core -->
 		<dependency>
 			<groupId>org.javers</groupId>
 			<artifactId>javers-core</artifactId>
@@ -92,8 +78,6 @@
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
-
-		<!--		Egov service-->
 		<dependency>
 			<groupId>org.egov.services</groupId>
 			<artifactId>digit-models</artifactId>
@@ -105,8 +89,6 @@
 			<version>2.9.0-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
-
-
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
@@ -117,21 +99,8 @@
 			<artifactId>owasp-java-html-sanitizer</artifactId>
 			<version>20240325.1</version>
 		</dependency>
-
 	</dependencies>
-
-
-
-
-
-
-	<!--	repository-->
 	<repositories>
-
-
-
-
-
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Releases Repository</name>
@@ -148,11 +117,6 @@
 			<name>eGov Public Repository Group</name>
 			<url>https://nexus-repo.egovernments.org/nexus/content/groups/public/</url>
 		</repository>
-
-
-
-
-
 	</repositories>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
@@ -180,7 +144,6 @@
 					</excludes>
 				</configuration>
 			</plugin>
-
 
 			<plugin>
 				<groupId>cz.habarta.typescript-generator</groupId>
