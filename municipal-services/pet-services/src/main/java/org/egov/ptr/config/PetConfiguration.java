@@ -1,7 +1,9 @@
 package org.egov.ptr.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.*;
+import java.math.BigDecimal;
+import java.util.TimeZone;
+import javax.annotation.PostConstruct;
 import org.egov.tracer.config.TracerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,10 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 
-import java.math.BigDecimal;
-import java.util.TimeZone;
 
 @Import({ TracerConfiguration.class })
 @Getter
@@ -210,4 +209,12 @@ public class PetConfiguration {
 	@Value("${egov.ptr.renewapplication.fee}")
 	private BigDecimal renewApplicationFee;
 	
+	@Value("${internal.microservice.user.username}")
+	private String internalMicroserviceUserName;
+
+	@Value("${internal.microservice.user.type}")
+	private String internalMicroserviceUserType;
+
+	@Value("${state.level.tenant.id}")
+	private String stateLevelTenantId;
 }
