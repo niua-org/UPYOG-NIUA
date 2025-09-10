@@ -153,6 +153,9 @@ public class InboxService {
 	private MTInboxFilterService mtInboxFilterService;
 
 	@Autowired
+	private TPInboxFilterService tpInboxFilterService;
+
+	@Autowired
 	private PGRAiInboxFilterService pgrAiInboxFilterService;
 
 	@Autowired
@@ -505,7 +508,8 @@ public class InboxService {
 			*/
 			if (!ObjectUtils.isEmpty(processCriteria.getModuleName())
 					&& processCriteria.getModuleName().equals(REQUEST_SERVICE_WATER_TANKER)) {
-
+				totalCount = WTInboxFilterService.fetchApplicationNumbersCountFromSearcher(criteria, StatusIdNameMap,
+						requestInfo);
 				List<String> applicationNumbers = WTInboxFilterService.fetchApplicationNumbersFromSearcher(criteria,
 						StatusIdNameMap, requestInfo);
 				if (!CollectionUtils.isEmpty(applicationNumbers)) {
@@ -532,7 +536,8 @@ public class InboxService {
 			*/
 			if (!ObjectUtils.isEmpty(processCriteria.getModuleName())
 					&& processCriteria.getModuleName().equals(REQUEST_SERVICE_MOBILE_TOILET)) {
-
+				totalCount = mtInboxFilterService.fetchApplicationNumbersCountFromSearcher(criteria, StatusIdNameMap,
+						requestInfo);
 				List<String> applicationNumbers = mtInboxFilterService.fetchApplicationNumbersFromSearcher(criteria,
 						StatusIdNameMap, requestInfo);
 				if (!CollectionUtils.isEmpty(applicationNumbers)) {
@@ -545,6 +550,35 @@ public class InboxService {
 					isSearchResultEmpty = true;
 				}
 			}
+
+			/*
+			   This block checks if the module name in processCriteria matches
+			   the REQUEST_SERVICE_TREE_PRUNING. If true, it fetches the list of
+			   application numbers using the tpInboxFilterService.
+
+			   - If application numbers exist:
+				 - They are added to moduleSearchCriteria and businessKeys.
+				 - LOCALITY_PARAM and OFFSET_PARAM are removed from moduleSearchCriteria.
+
+			   - If no application numbers are found, isSearchResultEmpty is set to true.
+			*/
+			if (!ObjectUtils.isEmpty(processCriteria.getModuleName())
+					&& processCriteria.getModuleName().equals(REQUEST_SERVICE_TREE_PRUNING)) {
+				totalCount = tpInboxFilterService.fetchApplicationNumbersCountFromSearcher(criteria, StatusIdNameMap,
+						requestInfo);
+				List<String> applicationNumbers = tpInboxFilterService.fetchApplicationNumbersFromSearcher(criteria,
+						StatusIdNameMap, requestInfo);
+				if (!CollectionUtils.isEmpty(applicationNumbers)) {
+					moduleSearchCriteria.put(BOOKING_NO_PARAM, applicationNumbers);
+					businessKeys.addAll(applicationNumbers);
+					moduleSearchCriteria.remove(LOCALITY_PARAM);
+					moduleSearchCriteria.remove(OFFSET_PARAM);
+					moduleSearchCriteria.remove(STATUS_PARAM);
+				} else {
+					isSearchResultEmpty = true;
+				}
+			}
+
 
 			// for CND service
 			if (!ObjectUtils.isEmpty(processCriteria.getModuleName()) && processCriteria.getModuleName().equals(CND)) {
