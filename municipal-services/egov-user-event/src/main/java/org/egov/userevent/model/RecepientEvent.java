@@ -1,6 +1,6 @@
 package org.egov.userevent.model;
 
-import org.hibernate.validator.constraints.SafeHtml;
+import org.egov.userevent.validation.SanitizeHtml;
 import org.springframework.validation.annotation.Validated;
 
 import lombok.AllArgsConstructor;
@@ -21,10 +21,10 @@ import lombok.ToString;
 @Builder
 public class RecepientEvent {
 
-	@SafeHtml
+	@SanitizeHtml
 	private String recepient;
 
-	@SafeHtml
+	@SanitizeHtml
 	private String eventId;
 
 }

@@ -1,8 +1,8 @@
 package org.egov.userevent.web.contract;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.validator.constraints.SafeHtml;
+import org.egov.userevent.validation.SanitizeHtml;
 import org.springframework.validation.annotation.Validated;
 
 import lombok.AllArgsConstructor;
@@ -24,11 +24,11 @@ import lombok.ToString;
 public class ActionItem {
 	
 	@NotNull
-	@SafeHtml
+	@SanitizeHtml
 	private String actionUrl;
-	
+
 	@NotNull
-	@SafeHtml
+	@SanitizeHtml
 	private String code;
 
 }
