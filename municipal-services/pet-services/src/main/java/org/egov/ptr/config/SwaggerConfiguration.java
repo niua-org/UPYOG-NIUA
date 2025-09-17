@@ -19,7 +19,7 @@ public class SwaggerConfiguration {
                         .description("API details of Pet Registration service")
                         .version("1.0"))
                 .servers(List.of(
-                        new Server().url("/").description("Default Server")
+                        new Server().url("/pet-services").description("Default Server")
                 ));
     }
 }
