@@ -159,6 +159,10 @@ The **Community Hall Booking (CHB)** module allows citizens to book community ha
 | Enable Decryption | `chb.decryption.abac.enabled=false` |
 
 
+# SpringDoc OpenAPI configuration
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+
 For further information, [click this link](https://docs.google.com/document/d/1J8IvWhz87b91tczWhn-qsetEOcEw0YunP9pAcqfgEkM/edit?tab=t.0).
 
 
