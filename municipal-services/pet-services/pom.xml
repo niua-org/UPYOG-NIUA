@@ -14,7 +14,7 @@
 	<version>2.0.0</version>
 	<name>egov-ptr-registry</name>
 	<properties>
-		<log4j2.version>2.17.1</log4j2.version>
+		<log4j2.version>2.21.1</log4j2.version>
 		<java.version>17</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
@@ -25,6 +25,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+<!--		Added this dependency for net.minidev.json.JSONArray import -->
+		<dependency>
+			<groupId>net.minidev</groupId>
+			<artifactId>json-smart</artifactId>
+			<version>2.4.8</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
@@ -78,11 +85,7 @@
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.egov.services</groupId>
-			<artifactId>digit-models</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.egov</groupId>
 			<artifactId>mdms-client</artifactId>

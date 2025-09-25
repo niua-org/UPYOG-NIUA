@@ -22,7 +22,6 @@
 		<project.reporting.outputEncoding>UTF-8
 		</project.reporting.outputEncoding>
 		<java.version>17</java.version>
-		<commons-lang3-version>3.14.0</commons-lang3-version>
 		<joda-time-version>2.12.5</joda-time-version>
 		<maven.version>3.3.9</maven.version>
 	</properties>
@@ -54,12 +53,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>${commons-lang3-version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
@@ -88,10 +81,6 @@
 			<version>2.10.1</version>
 		</dependency>
 
-		<dependency>
-			<groupId>jakarta.annotation</groupId>
-			<artifactId>jakarta.annotation-api</artifactId>
-		</dependency>
 
 		<dependency>
 			<groupId>com.googlecode.owasp-java-html-sanitizer</groupId>

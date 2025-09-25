@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://openjdk.java.net/projects/jdk/17/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.4-green.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-green.svg)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 The **Asset Service** is part of the UPYOG application, providing a comprehensive digital interface for employees to register, manage, assign, dispose, and maintain assets for Urban Local Bodies (ULBs). This service has been upgraded to support LTS (Long Term Support) with modern Java and Spring Boot versions.
@@ -49,7 +49,7 @@ The **UPYOG Asset Management Module** empowers employees to manage comprehensive
 ## 🏗️ Architecture
 
 ### Technology Stack
-- **Framework**: Spring Boot 3.4.4
+- **Framework**: Spring Boot 3.2.2
 - **Java Version**: 17 (LTS)
 - **Database**: PostgreSQL
 - **Message Queue**: Apache Kafka
