@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.egov.userevent.model.Document;
-import org.hibernate.validator.constraints.SafeHtml;
+import org.egov.userevent.validation.SanitizeHtml;
 import org.springframework.validation.annotation.Validated;
 
 import lombok.AllArgsConstructor;
@@ -26,13 +26,13 @@ import lombok.ToString;
 @Builder
 public class EventDetails {
 
-	@SafeHtml
+	@SanitizeHtml
 	private String id;
 
-	@SafeHtml
+	@SanitizeHtml
 	private String eventId;
 
-	@SafeHtml
+	@SanitizeHtml
 	private String organizer;
 
 	private Long fromDate;
@@ -43,7 +43,7 @@ public class EventDetails {
 	
 	private BigDecimal longitude;
 
-	@SafeHtml
+	@SanitizeHtml
 	private String address;
 	
 	private List<Document> documents;
