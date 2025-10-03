@@ -4,7 +4,7 @@ import {
   FormStep, TextInput, LocationIcon, InfoBannerIcon, Dropdown, CardHeader,
   CardLabel, UploadFile, Toast, LabelFieldPair
 } from "@upyog/digit-ui-react-components";
-import Timeline from "../components/ASTTimeline";
+// import Timeline from "../components/ASTTimeline";
 import { Controller, useForm } from "react-hook-form";
 import EXIF from 'exif-js';
 
@@ -37,6 +37,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const [assettype, setassettype] = useState(
     (formData.asset && formData.asset[index] && formData.asset[index].assettype) || formData?.asset?.assettype || ""
   );
+
   const [assetsubtype, setassetsubtype] = useState(
     (formData.asset && formData.asset[index] && formData.asset[index].assetsubtype) || formData?.asset?.assetsubtype || ""
   );
@@ -373,6 +374,17 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     });
   };
 
+      useEffect(() => {
+      if (assettype?.assetClassification && menu_Asset.length > 0) {
+        // Automatically set the filtered classification
+        setassetclassification(menu_Asset[0]);
+      } else if (!assettype) {
+        // Clear when no parent selected
+        setassetclassification("");
+      }
+    }, [assettype, menu_Asset.length]);
+
+
 
 
    //  Get location
@@ -444,7 +456,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
   return (
     <React.Fragment>
-      {<Timeline currentStep={1} />}
+      {/* {<Timeline currentStep={1} />} */}
 
       <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={!assettype || !assetsubtype || !BookPagereference || !assetDetails["marketRate"] || !assetDetails["purchaseCost"] || !assetDetails["acquisitionCost"] ||!assetDetails["bookValue"]|| !assetDetails["purchaseDate"] || !assetDetails["modeOfPossessionOrAcquisition"] || !assetDetails["purchaseOrderNumber"]}>
         <React.Fragment>
@@ -506,8 +518,8 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                 render={(props) => (
                   <Dropdown
-                    selected={menu_Asset[0]}
-                    select={(e) => {setassetclassification(e)}}
+                    selected={assetclassification}
+                    select={setassetclassification}
                     option={menu_Asset}
                     optionKey="i18nKey"
                     placeholder={"Select"}
@@ -1472,7 +1484,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         </React.Fragment>
 
         <React.Fragment>
-        <CardHeader>{t("AST_IMPROVEMENTS_O&M_DETAILS")}</CardHeader>
+        <CardHeader>{t("AST_IMPROVEMENTS_OM_DETAILS")}</CardHeader>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px',  border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
       {assettype?.code && formJson.filter((e) => e.group === "improvementsDetails")
       .map((row, index) => {
