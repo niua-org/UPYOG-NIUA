@@ -54,9 +54,6 @@ const NewResponse = ({ data, onSuccess }) => {
       let formdata = Assetdata(data)
       console.log("formdata in acknowejkfdlgi ::: ", formdata);
 
-      
-
-
       mutation.mutate(formdata, {
         onSuccess,
       });

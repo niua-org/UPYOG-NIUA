@@ -39,6 +39,11 @@ import EditGeneralDetails from "./pageComponents/EditGeneralDetails";
 import EditAssetDetails from "./pageComponents/EditAssetDetails";
 import EditResponse from "./pages/employee/EditResponse";
 import EditAssetMaintenance from "./pages/employee/EditAssetMaintenance";
+import AssetAllDetails from "./pageComponents/AssetAllDetails";
+
+
+
+// import MarkPropertyMap from "./pageComponents/MarkPropertyMap";
 
 
 
@@ -75,7 +80,9 @@ const componentsToRegister = {
   editAsset:EditAsset,
   EditGeneralDetails,
   EditAssetDetails,
-  editResponse:EditResponse
+  editResponse:EditResponse,
+  AssetAllDetails
+  // MarkPropertyMap
   
   
 };

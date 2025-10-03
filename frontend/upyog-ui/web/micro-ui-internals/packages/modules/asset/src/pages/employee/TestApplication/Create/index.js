@@ -3,7 +3,8 @@ import React ,{Fragment}from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "react-query";
 import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
-import { newAssetConfig } from "../../../../config/Create/newAssetConfig";
+// import { newAssetConfig } from "../../../../config/Create/newAssetConfig";
+import { assetAllDetailsConfig } from "../../../../config/Create/assetAllDetailsConfig";
 
 const ASSETCreate = ({ parentRoute }) => {
   const queryClient = useQueryClient();
@@ -73,19 +74,8 @@ const ASSETCreate = ({ parentRoute }) => {
   };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
-    if (key === "owners") {
-      let owners = params.owners || [];
-      owners[index] = data;
-      setParams({ ...params, ...{ [key]: [...owners] } });
-    } else if (key === "units") {
-      let units = params.units || [];
-      // if(index){units[index] = data;}else{
-      units = data;
-
-      setParams({ ...params, units });
-    } else {
-      setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
-    }
+    // setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
+    setParams({ ...params, [key]: data });
     goNext(skipStep, index, isAddMultiple, key);
   }
 
@@ -105,7 +95,7 @@ const ASSETCreate = ({ parentRoute }) => {
 
   // commonFields=newConfig;
   /* use newConfig instead of commonFields for local development in case needed */
- let commonFields = newAssetConfig;
+ let commonFields = assetAllDetailsConfig;
   commonFields.forEach((obj) => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });

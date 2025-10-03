@@ -155,18 +155,20 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
 
   Menu_Asset &&
     Menu_Asset.map((asset_mdms) => {
+      if(asset_mdms?.code===assettype?.assetClassification){
       menu_Asset.push({ i18nKey: `${asset_mdms.name}`, code: `${asset_mdms.code}`, value: `${asset_mdms.name}` });
+      
+      }
     });
 
   Asset_Type &&
     Asset_Type.map((asset_type_mdms) => {
-      if (asset_type_mdms.assetClassification == assetclassification?.code) {
         asset_type.push({
           i18nKey: `${asset_type_mdms.name}`,
           code: `${asset_type_mdms.code}`,
           value: `${asset_type_mdms.name}`,
+          assetClassification: `${asset_type_mdms.assetClassification}`,
         });
-      }
     });
 
   Asset_Sub_Type &&
@@ -307,7 +309,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
     
   return (
     <React.Fragment>
-      {window.location.href.includes("/employee") ? <Timeline currentStep={1} /> : null}
+      {/* {window.location.href.includes("/employee") ? <Timeline currentStep={1} /> : null} */}
 
       <FormStep
         config={config}
@@ -392,6 +394,25 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
             )}
           />
 
+          <div>{`${t("AST_PARENT_CATEGORY")}`} <span style={{ color: "red" }}>*</span></div>
+          <Controller
+            control={control}
+            name={"assettype"}
+            defaultValue={assettype}
+            rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+            render={(props) => (
+              <Dropdown
+                className="form-field"
+                selected={assettype}
+                select={setassettype}
+                option={asset_type}
+                optionKey="i18nKey"
+                placeholder={"Select"}
+                t={t}
+              />
+            )}
+          />
+
           <div>
             {t("AST_CATEGORY")} <span style={{ color: "red" }}>*</span>
             <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
@@ -419,33 +440,17 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
             render={(props) => (
               <Dropdown
                 className="form-field"
-                selected={assetclassification}
+                selected={menu_Asset[0]}
                 select={setassetclassification}
                 option={menu_Asset}
                 optionKey="i18nKey"
                 placeholder={"Select"}
                 t={t}
+                disable={true}
               />
             )}
           />
-          <div>{`${t("AST_PARENT_CATEGORY")}`} <span style={{ color: "red" }}>*</span></div>
-          <Controller
-            control={control}
-            name={"assettype"}
-            defaultValue={assettype}
-            rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
-              <Dropdown
-                className="form-field"
-                selected={assettype}
-                select={setassettype}
-                option={asset_type}
-                optionKey="i18nKey"
-                placeholder={"Select"}
-                t={t}
-              />
-            )}
-          />
+        
           <div>{`${t("AST_SUB_CATEGORY")}`} <span style={{ color: "red" }}>*</span></div>
           <Controller
             control={control}
