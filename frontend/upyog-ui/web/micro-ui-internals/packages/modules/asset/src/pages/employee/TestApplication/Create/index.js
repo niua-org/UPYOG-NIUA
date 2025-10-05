@@ -75,7 +75,7 @@ const ASSETCreate = ({ parentRoute }) => {
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     // setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
-    setParams({ ...params, [key]: data });
+    setParams({ ...params, ...data });
     goNext(skipStep, index, isAddMultiple, key);
   }
 
@@ -100,12 +100,11 @@ const ASSETCreate = ({ parentRoute }) => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
   
-  config.indexRoute = "info";
+  config.indexRoute = "assetDeatils";
 
   const CheckPage = Digit?.ComponentRegistryService?.getComponent("ASTCheckPage");
   const NewResponse = Digit?.ComponentRegistryService?.getComponent("NewResponse");
 
-  
   
   return (
     <Switch>

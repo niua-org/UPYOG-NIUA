@@ -15,15 +15,17 @@ const useAssetApplicationDetail = (t, tenantId, applicationNo, config = {}, user
   };
 
   
-    const { data: cityResponseObject} =  Digit.Hooks.useCustomMDMSV2(tenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
-      select: (data) => {
+    // const { data: cityResponseObject} =  Digit.Hooks.useCustomMDMS(tenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
+    //   select: (data) => {
         
-        const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
-        return formattedData;
-      },
-    });
+    //     const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
+    //     return formattedData;
+    //   },
+    // });
+
+    // console.log("cityResponseObjectcityResponseObject",cityResponseObject);
  
-    const {data: stateResponseObject} =  Digit.Hooks.useCustomMDMSV2(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
+    const {data: stateResponseObject} =  Digit.Hooks.useCustomMDMS(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
       select: (data) => {
         const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
         return formattedData;
@@ -33,18 +35,14 @@ const useAssetApplicationDetail = (t, tenantId, applicationNo, config = {}, user
     let combinedData;
 
     // if city level master is not available then fetch  from state-level
-    if (cityResponseObject) {
-      combinedData = cityResponseObject;
-    } else if (stateResponseObject) {
+    // if (cityResponseObject) {
+    //   combinedData = cityResponseObject;
+    // } else 
+      if (stateResponseObject) {
       combinedData = stateResponseObject;
     } else {
       combinedData = [];
     }
-
-  //   const processDepreciation = async(assetId) => {
-     
-   
-  // }
 
   return useQuery(
     ["APPLICATION_SEARCH", "ASSET_SEARCH", applicationNo, userType, combinedData,  args],

@@ -4,7 +4,7 @@ export const assetAllDetailsConfig =
     "head": "ES_TITILE_ASSET_DETAILS",
     "body": [
         {
-        "route": "info",
+        "route": "assetDeatils",
         "component": "AssetAllDetails",
         "withoutLabel": true,
         "key": "asset",
