@@ -5,6 +5,7 @@ import {
 } from "@upyog/digit-ui-react-components";
 import { Controller, useForm } from "react-hook-form";
 import EXIF from 'exif-js';
+import { assetStyles } from "../utils/assetStyles";
 
 const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const { control } = useForm();
@@ -443,24 +444,14 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
       {/* {<Timeline currentStep={1} />} */}
 
       <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={!assettype || !assetsubtype || !assetDetails["marketRate"] || !assetDetails["purchaseCost"] || !assetDetails["acquisitionCost"] ||!assetDetails["bookValue"]}>
-        <React.Fragment>
-          <CardHeader>{t("ASSET_GENERAL_DETAILS")}</CardHeader>
+        <div>
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "20px",
-              marginBottom: "30px",
-              border: "1px solid rgb(101 43 43)",
-              borderRadius: "8px",
-              padding: "16px",
-            }}
-          >
-
-            <div>
+            style={ assetStyles.formGridStyles}
+            >
+          <div>
               <div>
-                {t("AST_FINANCIAL_YEAR")}
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                {t("AST_FINANCIAL_YEAR")}<span style={{ color: "red" }}>*</span>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                   <InfoBannerIcon />
                   <span
                     className="tooltiptext"
@@ -487,11 +478,10 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 )}
               />
             </div>
-
             <div>
               <div>
                 {t("AST_DEPARTMENT")} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                   <InfoBannerIcon />
                   <span
                     className="tooltiptext"
@@ -525,6 +515,13 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 )}
               />
             </div>
+          </div>
+
+        </div>
+        <React.Fragment>
+          <CardHeader>{t("ASSET_GENERAL_DETAILS")}</CardHeader>
+          <div style={ assetStyles.formGridStyles}>
+
             <div>
               <div>
                 {`${t("AST_PARENT_CATEGORY")}`} <span style={{ color: "red" }}>*</span>
@@ -544,7 +541,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             {/* <div>
               <div>
                 {t("AST_CATEGORY")} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                   <InfoBannerIcon />
                   <span
                     className="tooltiptext"
@@ -663,9 +660,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           <div key={index}>
             <div>
               {`${t(row.code)}`} {row.isMandatory ? <span style={{ color: "red" }}>*</span> : null}
-              <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+              <div className="tooltip" style={ assetStyles.toolTip }>
                 <InfoBannerIcon />
-                <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                <span className="tooltiptext" style={ assetStyles.toolTipText }>
                   {`${t(row.code + "_INFO")} `}
                 </span>
               </div>
@@ -736,9 +733,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
                 <div>
                 {`${t("AST_PURCHASE_COST")}`} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                     <InfoBannerIcon />
-                    <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                    <span className="tooltiptext" style={ assetStyles.toolTipText }>
                     {`${t("ASSET_PURCHASE_COST")} `}
                     </span>
                 </div>
@@ -765,9 +762,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
                     <div>
                     {`${t("AST_ACQUISITION_COST")}`}<span style={{ color: "red" }}>*</span>
-                    <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                    <div className="tooltip" style={ assetStyles.toolTip }>
                         <InfoBannerIcon />
-                        <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                        <span className="tooltiptext" style={ assetStyles.toolTipText }>
                         {`${t("ASSET_ACQUISITION_COST")} `}
                         </span>
                     </div>
@@ -794,9 +791,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
                 <div>
                 {`${t("AST_BOOK_VALUE")}`} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={assetStyles.toolTip }>
                     <InfoBannerIcon />
-                    <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                    <span className="tooltiptext" style={ assetStyles.toolTipText }>
                     {`${t("ASSET_BOOK_VALUE")} `}
                     </span>
                 </div>
@@ -822,9 +819,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
                 <div>
                 {`${t("AST_MARKET_RATE")}`} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                     <InfoBannerIcon />
-                    <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                    <span className="tooltiptext" style={ assetStyles.toolTipText }>
                     {`${t("ASSET_MARKET_VALUE")} `}
                     </span>
                 </div>
@@ -851,9 +848,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
         <div>
             {`${t("AST_LOCATION_DETAILS")}`} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip" style={assetStyles.toolTip }>
             <InfoBannerIcon />
-            <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+            <span className="tooltiptext" style={ assetStyles.toolTipText }>
                 {`${t("ASSET_LOCATION_DETAILS")} `}
             </span>
             </div>
@@ -1079,13 +1076,13 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         <React.Fragment>
         <CardHeader>{t("AST_ACQUSTION_DETAILS")}</CardHeader>
         {assettype?.code && assettype?.code !== "LAND" && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+        <div style={ assetStyles.formGridStyles}>
             <div>
             <div>
                 {`${t("AST_INVOICE_DATE")}`} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                 <InfoBannerIcon />
-                <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                <span className="tooltiptext" style={ assetStyles.toolTipText }>
                     {`${t("ASSET_INVOICE_ISSUE_DATE")} `}
                 </span>
                 </div>
@@ -1116,9 +1113,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
             <div>
                 {`${t("AST_INVOICE_NUMBER")}`} <span style={{ color: "red" }}>*</span>
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                 <InfoBannerIcon />
-                <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                <span className="tooltiptext" style={ assetStyles.toolTipText }>
                     {`${t("ASSET_INVOICE_ISSUE_DATE")} `}
                 </span>
                 </div>
@@ -1143,16 +1140,16 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         </div>
         )}
      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px',  border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+      <div style={ assetStyles.formGridStyles}>
        
       {assetDetails?.modeOfPossessionOrAcquisition?.code==="PURCHASE" &&(
       <React.Fragment>
             <div>
                 <div>
                 {`${t("AST_PURCHASE_DATE")}`}
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                     <InfoBannerIcon />
-                    <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                    <span className="tooltiptext" style={ assetStyles.toolTipText }>
                     {`${t("ASSET_PURCHASE_DATE")}`}
                     </span>
                 </div>
@@ -1200,7 +1197,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             <div>
                 <div>
                 {t("AST_SOURCE_FINANCE")}
-                <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+                <div className="tooltip" style={ assetStyles.toolTip }>
                     <InfoBannerIcon />
                     <span
                     className="tooltiptext"
@@ -1250,9 +1247,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           <div key={index}>
             <div>
               {`${t(row.code)}`} {row.isMandatory ? <span style={{ color: "red" }}>*</span> : null}
-              <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+              <div className="tooltip" style={ assetStyles.toolTip }>
                 <InfoBannerIcon />
-                <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                <span className="tooltiptext" style={ assetStyles.toolTipText }>
                   {`${t(row.code + "_INFO")} `}
                 </span>
               </div>
@@ -1376,7 +1373,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
         <React.Fragment>
         <CardHeader>{t("AST_PHYSICAL_CHARACTERISTICS_DETAILS")}</CardHeader>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px',  border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+        <div style={ assetStyles.formGridStyles}>
       {assettype?.code && formJson.filter((e) => e.group === "physicialCharacteristics")
       .map((row, index) => {
         if (row.conditionalField) {
@@ -1390,9 +1387,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           <div key={index}>
             <div>
               {`${t(row.code)}`} {row.isMandatory ? <span style={{ color: "red" }}>*</span> : null}
-              <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+              <div className="tooltip" style={ assetStyles.toolTip }>
                 <InfoBannerIcon />
-                <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
+                <span className="tooltiptext" style={ assetStyles.toolTipText }>
                   {`${t(row.code + "_INFO")} `}
                 </span>
               </div>
@@ -1464,7 +1461,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 {/* NEW DOCUMENT UPLOAD SECTION */}
         <React.Fragment>
           <CardHeader>{t("AST_DOCUMENT_DETAILS")}</CardHeader>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px',  border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+        <div style={ assetStyles.formGridStyles}>
 
             {documentData?.ASSET?.Documents?.map((document, index) => (
               <DocumentUploadField
