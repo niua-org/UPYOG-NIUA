@@ -198,13 +198,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     },
   });
 
-  //  This call with tenantId (Get city-level data)
-    const cityResponseObject = Digit.Hooks.useCustomMDMS(tenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
-      select: (data) => {
-        const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
-        return formattedData;
-      },
-    });
   
     // This call with stateTenantId (Get state-level data)
     const stateResponseObject = Digit.Hooks.useEnabledMDMS(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
@@ -220,16 +213,14 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     useEffect(() => {
       let combinedData;
       // if city level master is not available then fetch  from state-level
-      if (cityResponseObject?.data) {
-        combinedData = cityResponseObject.data;
-      } else if (stateResponseObject?.data) {
+         if (stateResponseObject?.data) {
         combinedData = stateResponseObject.data;
       } else {
         combinedData = []; // Or an appropriate default value for empty data
         console.log("Both cityResponseObject and stateResponseObject data are unavailable.");
       }
       setCategoriesWiseData(combinedData);
-    }, [cityResponseObject, stateResponseObject]);
+    }, [stateResponseObject]);
 
     let formJson = [];
   if (Array.isArray(categoriesWiseData)) {
@@ -363,8 +354,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
       return updatedData;
     });
   };
-
-      useEffect(() => {
+   useEffect(() => {
       if (assettype?.assetClassification && menu_Asset.length > 0) {
         // Automatically set the filtered classification
         setassetclassification(menu_Asset[0]);
@@ -374,6 +364,8 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
       }
     }, [assettype, menu_Asset.length]);
 
+
+     
 
 
 
@@ -1287,11 +1279,13 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     optionKey="i18nKey"
                     placeholder={"Select"}
                     isMandatory={row.isMandatory}
+                    disable={row.disable}
                     t={t}
                   />
                 )}
               />
             ) : row.type === "num" ? (
+              
               <TextInput
                 t={t}
                 type={"number"}
@@ -1308,6 +1302,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 })}
                 style={{ width: "100%" }}
                 readOnly={row.isReadOnly}
+                disabled={row.disable}
               />
             ) : row.addCurrentLocationButton === true ? (
               <div style={{ position: "relative" }}>
