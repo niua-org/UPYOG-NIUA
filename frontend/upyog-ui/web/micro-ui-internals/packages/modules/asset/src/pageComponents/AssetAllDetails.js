@@ -11,9 +11,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const allCities = Digit.Hooks.asset.useTenants();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateTenantId = Digit.ULBService.getStateId();
-  let index = 0;
   let validation = {};
-  const convertToObject = (String) => String ? { i18nKey: String, code: String, value: String } : null;
   const calculateCurrentFinancialYear = () => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
@@ -37,9 +35,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
      formData?.asset?.assetsubtype || ""
   );
 
-  const [assetparentsubCategory, setassetparentsubCategory] = useState(
-     formData?.asset?.assetparentsubCategory || ""
-  );
+  // const [assetparentsubCategory, setassetparentsubCategory] = useState(
+  //    formData?.asset?.assetparentsubCategory || ""
+  // );
 
   const [BookPagereference, setBookPagereference] = useState(
      formData?.asset?.BookPagereference || ""
@@ -54,15 +52,15 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
      formData?.asset?.Department || ""
   );
 
-  const [assetsOfType, setAssetsOfType] = useState(
-     formData?.asset?.assetsOfType || ""
-  );
-  const [assetsUsage, setAssetsUsage] = useState(
-     formData?.asset?.assetsUsage || ""
-  );
-  const [assetAssignable, setAssetAssignable] = useState(
-     formData?.asset?.assetAssignable || ""
-  );
+  // const [assetsOfType, setAssetsOfType] = useState(
+  //    formData?.asset?.assetsOfType || ""
+  // );
+  // const [assetsUsage, setAssetsUsage] = useState(
+  //    formData?.asset?.assetsUsage || ""
+  // );
+  // const [assetAssignable, setAssetAssignable] = useState(
+  //    formData?.asset?.assetAssignable || ""
+  // );
 
   const [financialYear, setfinancialYear] = useState(
     formData?.asset?.financialYear || initialFinancialYear
@@ -72,8 +70,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   );
   const [address, setAddress] = useState(formData?.address);
 
-  const [city, setCity] = useState(convertToObject(formData?.city) || "");
-  const [locality, setLocality] = useState(convertToObject(formData?.locality) || "");
       // Document State - NEW
   const [documents, setDocuments] = useState(formData?.documents?.documents || []);
   const [documentError, setDocumentError] = useState(null);
@@ -90,7 +86,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           area: formData?.assetDetails?.area || null
          }
     );
-
 
     const { data: fetchedLocalities } = Digit.Hooks.useBoundaryLocalities(
     tenantId,
@@ -413,15 +408,15 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     financialYear, 
     sourceOfFinance, 
     assetclassification, 
-    assetparentsubCategory, 
+    // assetparentsubCategory, 
     assetsubtype, 
     assettype,
     BookPagereference,
     AssetName,
     Assetdescription,
     Department,
-    assetsUsage,
-    assetAssignable
+    // assetsUsage,
+    // assetAssignable
   };
 
   const assetDetailsData = { ...assetDetails };
