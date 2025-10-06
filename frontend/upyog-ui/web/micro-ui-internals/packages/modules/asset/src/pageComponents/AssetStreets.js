@@ -142,7 +142,7 @@ const setData=(config,data)=>{
   
   return (
     <React.Fragment>
-    {window.location.href.includes("/employee") ? <Timeline currentStep={3}/> : null}
+    {/* {window.location.href.includes("/employee") ? <Timeline currentStep={3}/> : null} */}
     <FormStep
       config={{ ...config }}
       onSelect={(data) => {setData(config.key,data)}}

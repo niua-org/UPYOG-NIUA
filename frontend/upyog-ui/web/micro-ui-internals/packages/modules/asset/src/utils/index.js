@@ -169,20 +169,21 @@ export const Assetdata = (data) => {
       businessService: "asset-create",
 
       addressDetails: {
-        addressLine1:data?.address?.addressLine1,
-        addressLine2:data?.address?.addressLine2,
+        addressLine1:data?.address?.addressLineOne,
+        addressLine2:data?.address?.addressLineTwo,
         buildingName:data?.address?.buildingName,
-        doorNo:data?.address?.doorNo,
+        doorNo:data?.address?.plotNumber,
         street:data?.address?.street,
         pincode:data?.address?.pincode,
         city:data?.address?.city?.name,
         locality: { code: data?.address?.locality?.code,
                     area: data?.address?.locality?.area,
+                    i18nKey:data?.address?.locality?.i18nKey,
                     latitude: data?.address?.latitude,
                     longitude: data?.address?.longitude },
 
       },
-      documents: data?.documents?.documents,
+      documents: data?.documents?.documents.length>0?data?.documents?.documents:null,
       workflow : {
         action: "INITIATE",
         businessService: "asset-create",

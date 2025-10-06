@@ -31,7 +31,7 @@ const NewDocument = ({ t, config, onSelect, formData }) => {
 
   return (
     <div>
-      <Timeline currentStep={4} />
+      {/* <Timeline currentStep={4} /> */}
       {!isLoading ? (
         <FormStep t={t} config={config} onSelect={handleSubmit} onSkip={onSkip} isDisabled={enableSubmit}>
           <CardLabelDesc>{t(`ASSET_UPLOAD_RESTRICTIONS_SIZE`)}</CardLabelDesc>

@@ -15,7 +15,6 @@ const convertTimestampToDate = (timestamp) => {
 };
 
 const getData = (res, combinedData) => {
-
   let formJson = combinedData
     .filter((category) => {
       const isMatch = category.assetParentCategory === res?.assetParentCategory || category.assetParentCategory === "COMMON";
@@ -27,23 +26,25 @@ const getData = (res, combinedData) => {
 
 
   let rows = []
-  formJson.map((row, index) => (
+  formJson.filter(row => row.isNeeded !== false)
+  .map((row, index) => (
     // rows.push({ title: row.code, value: res?.additionalDetails[row.name]) })
     rows.push({ title: row.code, value: extractValue(res?.additionalDetails[row.name]) })
   ));
 
   // Add more rows to the rows array for Static 
-  rows.push({ title: "AST_MODE_OF_POSSESSION_OR_ACQUISITION", value: res?.modeOfPossessionOrAcquisition });
-  rows.push({ title: "AST_INVOICE_DATE", value: convertTimestampToDate(res?.invoiceDate) });
-  rows.push({ title: "AST_INVOICE_NUMBER", value: res?.invoiceNumber });
+
+  // rows.push({ title: "AST_INVOICE_DATE", value: convertTimestampToDate(res?.invoiceDate) });
+  // rows.push({ title: "AST_INVOICE_NUMBER", value: res?.invoiceNumber });
   rows.push({ title: "AST_PURCHASE_DATE", value: convertTimestampToDate(res?.purchaseDate) });
   rows.push({ title: "AST_PURCHASE_ORDER", value: res?.purchaseOrderNumber });
-  rows.push({ title: "AST_LIFE", value: res?.lifeOfAsset });
-  rows.push({ title: "AST_LOCATION_DETAILS", value: res?.location });
-  rows.push({ title: "AST_PURCHASE_COST", value: res?.purchaseCost });
-  rows.push({ title: "AST_ACQUISITION_COST", value: res?.acquisitionCost });
-  rows.push({ title: "AST_BOOK_VALUE", value: res?.bookValue });
-  rows.push({ title: "AST_ORIGINAL_VALUE", value: res?.originalBookValue });
+
+  rows.push({ title: "AST_LOCATION_DETAILS", value: res?.location, isViewOnMap: false });
+  rows.push({ title: "AST_MARKET_RATE", value: "₹"+res?.additionalDetails?.marketRate });
+  rows.push({ title: "AST_PURCHASE_COST", value: "₹"+res?.purchaseCost });
+  rows.push({ title: "AST_ACQUISITION_COST", value: "₹"+res?.acquisitionCost });
+  rows.push({ title: "AST_BOOK_VALUE", value: "₹"+res?.bookValue });
+  rows.push({ title: "AST_ORIGINAL_VALUE", value: "₹"+res?.originalBookValue });
   return rows
 }
 const extractValue = (key) => {
@@ -66,7 +67,7 @@ export const ASSETSearch = {
     return response.Assets[0];
   },
   RegistrationDetails: ({ Assets: response, combinedData, t, applicationDetails, maintenanceList, disposalList, getAssignAsset }) => {
-
+console.log("resposnsenennenene",response);
     const formatDate = (epochTime) => {
       if (!epochTime) return '';
       const date = new Date(epochTime);
@@ -130,17 +131,12 @@ export const ASSETSearch = {
           { title: "AST_FINANCIAL_YEAR", value: response?.financialYear },
           { title: "AST_SOURCE_FINANCE", value: response?.sourceOfFinance },
           { title: "AST_APPLICATION_NUMBER", value: response?.applicationNo },
-          { title: "AST_BOOK_REF_SERIAL_NUM", value: response?.assetBookRefNo },
           { title: "AST_CATEGORY", value: response?.assetClassification },
           { title: "AST_PARENT_CATEGORY", value: response?.assetParentCategory },
           { title: "AST_SUB_CATEGORY", value: response?.assetCategory },
-          { title: "AST_CATEGORY_SUB_CATEGORY", value: response?.assetSubCategory },
           { title: "AST_NAME", value: response?.assetName },
-          { title: "ASSET_DESCRIPTION", value: response?.description },
           { title: "AST_DEPARTMENT", value: 'COMMON_MASTERS_DEPARTMENT_' + response?.department },
-          { title: "AST_USAGE", value: response?.assetUsage },
-          { title: "AST_STATUS_ASSIGNABLE", value: response?.assetAssignable },
-          { title: "AST_TYPE", value: response?.assetType },
+       
 
         ],
       },
@@ -148,7 +144,12 @@ export const ASSETSearch = {
         title: "AST_ADDRESS_DETAILS",
         asSectionHeader: true,
         values: [
+          { title: "AST_PLOT_NO", value: response?.addressDetails?.doorNo },
+          { title: "AST_ADDRESS_LINE_ONE", value: response?.addressDetails?.addressLine1},
+          { title: "AST_ADDRESS_LINE_TWO", value: response?.addressDetails?.addressLine2},
           { title: "MYCITY_CODE_LABEL", value: response?.addressDetails?.city },
+          { title: "ASSET_LOCALITY", value: response?.addressDetails?.label},
+          { title: "AST_PINCODE", value: response?.addressDetails?.pincode },
         ],
       },
       {
@@ -181,11 +182,8 @@ export const ASSETSearch = {
 
           documents: [
             {
-
               values: response?.documents
                 ?.map((document) => {
-                  // console.log("documnet", document);
-
                   return {
                     title: `ASSET_${document?.documentType}`,
                     documentType: document?.documentType,
@@ -311,7 +309,6 @@ export const ASSETSearch = {
       applicationDetails: ASSETSearch.RegistrationDetails({ Assets: response, combinedData, t, applicationDetails, maintenanceList, disposalList, getAssignAsset}),
       applicationData: response,
       transformToAppDetailsForEmployee: ASSETSearch.RegistrationDetails,
-
     };
   },
 };

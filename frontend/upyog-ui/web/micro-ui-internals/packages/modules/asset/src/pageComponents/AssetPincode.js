@@ -86,7 +86,7 @@ const AssetPincode = ({ t, config, onSelect, formData = {}, userType}) => {
   const onSkip = () => onSelect();
   return (
     <React.Fragment>
-    {window.location.href.includes("/employee") ? <Timeline currentStep={3}/> : null}
+    {/* {window.location.href.includes("/employee") ? <Timeline currentStep={3}/> : null} */}
     <FormStep
       t={t}
       config={{ ...config, inputs }}

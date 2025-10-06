@@ -176,7 +176,7 @@ const AssetAddress = ({ t, config, onSelect, userType, formData, formState }) =>
   }
   return (
     <React.Fragment>
-      {window.location.href.includes("/employee") ? <Timeline currentStep={3} /> : null}
+      {/* {window.location.href.includes("/employee") ? <Timeline currentStep={3} /> : null} */}
       <FormStep config={config} onSelect={onSubmit} t={t} isDisabled={selectedLocality ? false : true}>
         <div>
           <CardLabel>{`${t("MYCITY_CODE_LABEL")} `}</CardLabel>
