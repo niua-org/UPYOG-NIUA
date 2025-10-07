@@ -477,7 +477,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           !assetDetails["purchaseCost"] ||
           !assetDetails["acquisitionCost"] ||
           !assetDetails["bookValue"] ||
-          !address["plotNumber"] || !address["city"] || !address["locality"] || !address["addressLineOne"] || !address["addressLineTwo"]
+          !address?.plotNumber || !address?.city || !address?.locality || !address?.addressLineOne || !address?.addressLineTwo
         }
       >
         <div>
@@ -1313,7 +1313,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     value={assetDetails["invoiceDate"]}
                     onChange={handleInputChange}
                     style={{ width: "100%" }}
-                    min={assetDetails["purchaseDate"] || ""}
                     rules={{
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG"))
@@ -1341,7 +1340,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     value={assetDetails["invoiceNumber"]}
                     onChange={handleInputChange}
                     {...(validation = {
-                      isRequired: true,
+                      isRequired: false,
                       pattern: "^[a-zA-Z0-9/-]*$",
                       type: "text",
                       title: t("PT_NAME_ERROR_MESSAGE"),
