@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   FormStep,
   TextInput,
@@ -14,6 +14,7 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import EXIF from "exif-js";
 import { assetStyles } from "../utils/assetStyles";
+import { validateMandatoryFields } from "../utils";
 
 const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const { control } = useForm();
@@ -215,7 +216,12 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
       .map((category) => category.fields) // Extract the fields array
       .flat() // Flatten the fields array
       .filter((field) => field.active === true && field.isNeeded !== false); // Filter by active status
-  }
+  };
+
+  const isFormValid = useMemo(() => {
+    return validateMandatoryFields(formJson, assetDetails);
+  }, [formJson, assetDetails]); // Dependencies: recalculate when these change
+
 
   useEffect(() => {
     if (documentData?.ASSET?.Documents) {
@@ -304,19 +310,38 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     setAssetdescription(e.target.value);
   }
 
+
+  const negativeNumberValidation = (e) => {
+    if (e.key === "-" || e.key === "e") {
+      e.preventDefault();
+    }
+  };  
+
+  const specialCharacterValidation = (e) => {
+  // Allow letters, numbers, and space
+  if (/^[a-zA-Z0-9 -]$/.test(e.key)) {
+    return; // valid — do nothing
+  }
+
+  // Block only special characters
+  if (!/^[a-zA-Z0-9 ]$/.test(e.key)) {
+    e.preventDefault();
+  }
+};
+
+
+
   // Set State Dynamically!
   const handleInputChange = (e) => {
     // Get the name & value from the input and select field
     const { name, value } = e.target ? e.target : { name: e.name, value: e };
-    if (name === "area" && value.length > 5) {
+
+    if (name === "area" && value.length > 8) {
       // Validation for life of Asset
       setShowToast({ error: true, label: t("NUMBER_CANT_GO_MORE_THAN_THIS") });
       return false;
     }
-    if (name === "purchaseCost" && Number(value) < 0 ) {
-      setShowToast({ error: true, label: t("PURCHSE_CANT_NEGATIVE") });
-      return false;
-    }
+
     setAssetDetails((prevData) => {
       // Update the current field
       const updatedData = {
@@ -445,10 +470,14 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         isDisabled={
           !assettype ||
           !assetsubtype ||
+          !financialYear||
+          !Department||
+          !isFormValid ||
           !assetDetails["marketRate"] ||
           !assetDetails["purchaseCost"] ||
           !assetDetails["acquisitionCost"] ||
-          !assetDetails["bookValue"]
+          !assetDetails["bookValue"] ||
+          !address["plotNumber"] || !address["city"] || !address["locality"] || !address["addressLineOne"] || !address["addressLineTwo"]
         }
       >
         <div>
@@ -637,17 +666,18 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"text"}
                 isMandatory={false}
                 optionKey="i18nKey"
+                onKeyPress={specialCharacterValidation}
                 name="AssetName"
                 value={AssetName}
                 onChange={setassetname}
                 style={{ width: "100%" }}
                 ValidationRequired={true}
-                {...(validation = {
+                validation = {{
                   isRequired: true,
                   pattern: "^[a-zA-Z ]*$",
                   type: "text",
                   title: t("PT_NAME_ERROR_MESSAGE"),
-                })}
+                }}
               />
             </div>
 
@@ -679,6 +709,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           t={t}
                           type={"number"}
                           isMandatory={row.isMandatory}
+                          onKeyPress={negativeNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
                           value={assetDetails[row.name] || ""}
@@ -721,6 +752,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           isMandatory={row.isMandatory}
                           optionKey="i18nKey"
                           name={row.name}
+                          onKeyPress={specialCharacterValidation}
                           value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
                           {...(validation = {
@@ -750,19 +782,21 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
               <TextInput
                 t={t}
-                type={"number"}
+                // type={"number"}
+                onKeyPress={negativeNumberValidation}
                 isMandatory={false}
                 optionKey="i18nKey"
                 name="purchaseCost"
                 value={assetDetails["purchaseCost"]}
                 onChange={handleInputChange}
                 ValidationRequired={true}
-                {...(validation = {
+                validation = {{
                   isRequired: true,
-                  pattern: regexPattern("number"),
-                  type: "tel",
+                  // pattern: /^[0-9]*$/,
+                  type: "number",
                   title: t("PT_NAME_ERROR_MESSAGE"),
-                })}
+                  
+                }}
                 style={{ width: "100%" }}
               />
             </div>
@@ -782,6 +816,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 t={t}
                 type={"text"}
                 isMandatory={false}
+                onKeyPress={negativeNumberValidation}
                 optionKey="i18nKey"
                 name="acquisitionCost"
                 value={assetDetails["acquisitionCost"]}
@@ -789,7 +824,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 ValidationRequired={true}
                 {...(validation = {
                   isRequired: true,
-                  pattern: regexPattern("number"),
+                  pattern: /^[0-9]*$/,
                   type: "number",
                   title: t("PT_NAME_ERROR_MESSAGE"),
                 })}
@@ -809,16 +844,17 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
               <TextInput
                 t={t}
-                type={"text"}
+                type={"number"}
                 isMandatory={false}
                 optionKey="i18nKey"
+                onKeyPress={negativeNumberValidation}
                 name="bookValue"
                 value={assetDetails["bookValue"]}
                 onChange={handleInputChange}
                 {...(validation = {
                   isRequired: true,
-                  pattern: regexPattern("number"),
-                  type: "text",
+                  // pattern: /^[0-9]*$/,
+                  type: "number",
                   title: t("PT_NAME_ERROR_MESSAGE"),
                 })}
                 style={{ width: "100%" }}
@@ -839,6 +875,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 t={t}
                 type={"number"}
                 isMandatory={false}
+                onKeyPress={negativeNumberValidation}
                 optionKey="i18nKey"
                 name="marketRate"
                 value={assetDetails["marketRate"]}
@@ -846,7 +883,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 ValidationRequired={true}
                 {...(validation = {
                   isRequired: true,
-                  pattern: regexPattern("number"),
+                  // pattern: regexPattern("number"),
                   type: "number",
                   title: t("PT_NAME_ERROR_MESSAGE"),
                 })}
@@ -939,6 +976,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"tel"}
                 isMandatory={false}
                 optionKey="i18nKey"
+                onKeyPress={specialCharacterValidation}
                 name="plotNumber"
                 value={address?.plotNumber || ""}
                 onChange={(e) => {
@@ -964,6 +1002,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"text"}
                 isMandatory={false}
                 optionKey="i18nKey"
+                onKeyPress={specialCharacterValidation}
                 name="addressLineOne"
                 value={address?.addressLineOne || ""}
                 onChange={(e) => {
@@ -989,6 +1028,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"text"}
                 isMandatory={false}
                 optionKey="i18nKey"
+                onKeyPress={specialCharacterValidation}
                 name="addressLineTwo"
                 value={address?.addressLineTwo || ""}
                 onChange={(e) => {
@@ -1014,6 +1054,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"tel"}
                 isMandatory={false}
                 optionKey="i18nKey"
+                onKeyPress={negativeNumberValidation}
                 name="pincode"
                 value={address?.pincode || ""}
                 onChange={(e) => {
@@ -1122,6 +1163,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     type={"text"}
                     isMandatory={false}
                     optionKey="i18nKey"
+                    onKeyPress={specialCharacterValidation}
                     name="purchaseOrderNumber"
                     value={assetDetails["purchaseOrderNumber"]}
                     onChange={handleInputChange}
@@ -1198,6 +1240,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     type={"text"}
                     isMandatory={false}
                     optionKey="i18nKey"
+                    onKeyPress={negativeNumberValidation}
                     name="costOfCostruction"
                     value={assetDetails["costOfCostruction"]}
                     onChange={handleInputChange}
@@ -1263,7 +1306,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                   </div>
                   <TextInput
                     t={t}
-                    key={assetDetails["purchaseDate"] || "no-purchase"}
                     type={"date"}
                     isMandatory={false}
                     optionKey="i18nKey"
@@ -1272,14 +1314,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     onChange={handleInputChange}
                     style={{ width: "100%" }}
                     min={assetDetails["purchaseDate"] || ""}
-                    disabled={!assetDetails["purchaseDate"]}
                     rules={{
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
-                      validate: (val) => {
-                        if (!assetDetails["purchaseDate"]) return t("INVOICE_DATE_REQUIRES_PURCHASE_DATE");
-                        return true;
-                      },
+                      validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG"))
                     }}
                   />
                 </div>
@@ -1299,6 +1336,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     type={"text"}
                     isMandatory={false}
                     optionKey="i18nKey"
+                    onKeyPress={specialCharacterValidation}
                     name="invoiceNumber"
                     value={assetDetails["invoiceNumber"]}
                     onChange={handleInputChange}
@@ -1379,6 +1417,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           t={t}
                           type={"number"}
                           isMandatory={row.isMandatory}
+                          onKeyPress={negativeNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
                           value={assetDetails[row.name] || ""}
@@ -1400,6 +1439,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             type={row.type}
                             isMandatory={row.isMandatory}
                             optionKey="i18nKey"
+                            onKeyPress={specialCharacterValidation}
                             name={row.name}
                             value={assetDetails[row.name] || ""}
                             onChange={handleInputChange}
@@ -1516,12 +1556,33 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             />
                           )}
                         />
-                      ) : (
+                      ) : row.type === "num" ? (
+                        <TextInput
+                          t={t}
+                          type={"number"}
+                          isMandatory={row.isMandatory}
+                          onKeyPress={negativeNumberValidation}
+                          optionKey="i18nKey"
+                          name={row.name}
+                          value={assetDetails[row.name] || ""}
+                          onChange={handleInputChange}
+                          {...(validation = {
+                            isRequired: row.isMandatory,
+                            pattern: regexPattern(row.columnType),
+                            type: row.columnType,
+                            title: t("PT_NAME_ERROR_MESSAGE"),
+                          })}
+                          style={{ width: "100%" }}
+                          readOnly={row.isReadOnly}
+                          disabled={row.disable}
+                        />
+                      ):(
                         <TextInput
                           t={t}
                           type={row.type}
                           isMandatory={row.isMandatory}
                           optionKey="i18nKey"
+                          onKeyPress={row.columnType==="number"?negativeNumberValidation:specialCharacterValidation}
                           name={row.name}
                           value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
@@ -1687,38 +1748,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
     <div style={{ marginBottom: "24px" }}>
       {doc?.hasDropdown && (
         <LabelFieldPair>
-          {doc?.code === "OWNER.ASSETPHOTO" ? (
-            <div>
-              {`${t(doc.code.replaceAll(".", "_"))}`}
-              <div
-                className="tooltip"
-                style={{
-                  width: "12px",
-                  height: "5px",
-                  marginLeft: "10px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
-                <InfoBannerIcon />
-                <span
-                  className="tooltiptext"
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    fontSize: "small",
-                    wordWrap: "break-word",
-                    width: "300px",
-                    marginLeft: "15px",
-                    marginBottom: "-10px",
-                  }}
-                >
-                  {`${t(doc.code.replaceAll(".", "_") + "_INFO")}`}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <CardLabel className="card-label-smaller">{t(doc.code.replaceAll(".", "_"))}</CardLabel>
-          )}
+          <CardLabel className="card-label-smaller">{t(doc.code.replaceAll(".", "_"))}</CardLabel>
         </LabelFieldPair>
       )}
       <LabelFieldPair>
