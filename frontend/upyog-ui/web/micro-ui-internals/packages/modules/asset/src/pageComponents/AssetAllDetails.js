@@ -1582,7 +1582,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           type={row.type}
                           isMandatory={row.isMandatory}
                           optionKey="i18nKey"
-                          onKeyPress={row.columnType==="number"?negativeNumberValidation:specialCharacterValidation}
+                          onKeyPress={specialCharacterValidation}
                           name={row.name}
                           value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
