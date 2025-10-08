@@ -130,28 +130,28 @@ const CheckPage = ({ onSubmit, value = {} }) => {
 
             <Row
               label={t("AST_PURCHASE_COST")}
-              text={`${t(checkForNA(assetDetails?.purchaseCost))}`}
+              text={`${checkForNA(assetDetails?.purchaseCost)}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
             <Row
               label={t("AST_ACQUISITION_COST")}
-              text={`${t(checkForNA(assetDetails?.acquisitionCost))}`}
+              text={`${checkForNA(assetDetails?.acquisitionCost)}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
 
             <Row
               label={t("AST_BOOK_VALUE")}
-              text={`${t(checkForNA(assetDetails?.bookValue))}`}
+              text={`${checkForNA(assetDetails?.bookValue)}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
            <Row
               label={t("AST_MARKET_RATE_EVALUATION")}
-              text={`${t(checkForNA(assetDetails?.marketRateEvaluation))}`}
+              text={`${checkForNA(assetDetails?.marketRateEvaluation)}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
             <Row
               label={t("AST_MARKET_RATE_CIRCLE")}
-              text={`${t(checkForNA(assetDetails?.marketRateCircle))}`}
+              text={`${checkForNA(assetDetails?.marketRateCircle)}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
 
@@ -246,7 +246,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
               )}
             <Row
                 label={t("AST_SOURCE_FINANCE")}
-                text={`${checkForNA(asset?.sourceOfFinance?.code)}`}
+                text={`${checkForNA(asset?.sourceOfFinance?.value)}`}
                 //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/asset-deatils`} />}
               /> 
 
