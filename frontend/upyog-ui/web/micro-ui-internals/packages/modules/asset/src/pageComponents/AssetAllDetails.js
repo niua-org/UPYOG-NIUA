@@ -311,15 +311,15 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   }
 
 
-  const negativeNumberValidation = (e) => {
-    if (e.key === "-" || e.key === "e") {
+  const additionalNumberValidation = (e) => {
+    if (e.key === "-" || e.key === "e" || e.key === "E") {
       e.preventDefault();
     }
   };  
 
   const specialCharacterValidation = (e) => {
   // Allow letters, numbers, and space
-  if (/^[a-zA-Z0-9 -]$/.test(e.key)) {
+  if (/^[a-zA-Z0-9 -/]$/.test(e.key)) {
     return; // valid — do nothing
   }
 
@@ -457,6 +457,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   };
 
   const onSkip = () => onSelect();
+
 
   return (
     <React.Fragment>
@@ -674,7 +675,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 ValidationRequired={true}
                 validation = {{
                   isRequired: true,
-                  pattern: "^[a-zA-Z ]*$",
+                  // pattern: "^[a-zA-Z ]*$",
                   type: "text",
                   title: t("PT_NAME_ERROR_MESSAGE"),
                 }}
@@ -707,22 +708,22 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                       {row.type === "num" ? (
                         <TextInput
                           t={t}
-                          type={"number"}
-                          isMandatory={row.isMandatory}
-                          onKeyPress={negativeNumberValidation}
+                          onKeyPress={additionalNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
-                          value={assetDetails[row.name] || ""}
+                          value={assetDetails[row.name]}
                           onChange={handleInputChange}
-                          {...(validation = {
-                            isRequired: row.isMandatory,
-                            pattern: regexPattern(row.columnType),
-                            type: row.columnType,
+                          ValidationRequired={true}
+                          validation = {{
+                            isRequired: true,
+                            // pattern: /^[0-9]*$/,
+                            type: "number",
                             title: t("PT_NAME_ERROR_MESSAGE"),
-                          })}
+                            
+                          }}
                           style={{ width: "100%" }}
-                          readOnly={row.isReadOnly}
                         />
+                        
                       ) : row.type === "dropdown" ? (
                         <Controller
                           control={control}
@@ -783,7 +784,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               <TextInput
                 t={t}
                 // type={"number"}
-                onKeyPress={negativeNumberValidation}
+                onKeyPress={additionalNumberValidation}
                 isMandatory={false}
                 optionKey="i18nKey"
                 name="purchaseCost"
@@ -816,7 +817,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 t={t}
                 type={"text"}
                 isMandatory={false}
-                onKeyPress={negativeNumberValidation}
+                onKeyPress={additionalNumberValidation}
                 optionKey="i18nKey"
                 name="acquisitionCost"
                 value={assetDetails["acquisitionCost"]}
@@ -847,7 +848,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"number"}
                 isMandatory={false}
                 optionKey="i18nKey"
-                onKeyPress={negativeNumberValidation}
+                onKeyPress={additionalNumberValidation}
                 name="bookValue"
                 value={assetDetails["bookValue"]}
                 onChange={handleInputChange}
@@ -875,7 +876,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 t={t}
                 type={"number"}
                 isMandatory={false}
-                onKeyPress={negativeNumberValidation}
+                onKeyPress={additionalNumberValidation}
                 optionKey="i18nKey"
                 name="marketRate"
                 value={assetDetails["marketRate"]}
@@ -1054,7 +1055,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"tel"}
                 isMandatory={false}
                 optionKey="i18nKey"
-                onKeyPress={negativeNumberValidation}
+                onKeyPress={additionalNumberValidation}
                 name="pincode"
                 value={address?.pincode || ""}
                 onChange={(e) => {
@@ -1240,7 +1241,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     type={"text"}
                     isMandatory={false}
                     optionKey="i18nKey"
-                    onKeyPress={negativeNumberValidation}
+                    onKeyPress={additionalNumberValidation}
                     name="costOfCostruction"
                     value={assetDetails["costOfCostruction"]}
                     onChange={handleInputChange}
@@ -1416,7 +1417,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           t={t}
                           type={"number"}
                           isMandatory={row.isMandatory}
-                          onKeyPress={negativeNumberValidation}
+                          onKeyPress={additionalNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
                           value={assetDetails[row.name] || ""}
@@ -1474,6 +1475,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           type={row.type}
                           isMandatory={row.isMandatory}
                           optionKey="i18nKey"
+                          onKeyPress={specialCharacterValidation}
                           name={row.name}
                           value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
@@ -1560,7 +1562,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           t={t}
                           type={"number"}
                           isMandatory={row.isMandatory}
-                          onKeyPress={negativeNumberValidation}
+                          onKeyPress={additionalNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
                           value={assetDetails[row.name] || ""}
@@ -1581,7 +1583,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           type={row.type}
                           isMandatory={row.isMandatory}
                           optionKey="i18nKey"
-                          onKeyPress={specialCharacterValidation}
+                          onKeyPress={row.columnType==="number"?additionalNumberValidation:specialCharacterValidation}
                           name={row.name}
                           value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
