@@ -319,15 +319,20 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const specialCharacterValidation = (e) => {
   // Allow letters, numbers, and space
-  if (/^[a-zA-Z0-9 -/]$/.test(e.key)) {
-    return; // valid — do nothing
-  }
+    if (/^[a-zA-Z0-9 \-/]$/.test(e.key)) {
+      return; // valid — do nothing
+    }
 
-  // Block only special characters
-  if (!/^[a-zA-Z0-9 ]$/.test(e.key)) {
-    e.preventDefault();
-  }
-};
+    // Block only special characters
+    if (!/^[a-zA-Z0-9 ]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+
+
+  // below line will check if mode of Acquistion is any one of them, than it will return the boolena value
+  const isCostFieldsDisable = ["DONATED", "GIFTED"].includes(assetDetails?.modeOfPossessionOrAcquisition?.code);
 
 
 
@@ -461,7 +466,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
   return (
     <React.Fragment>
-      {/* {<Timeline currentStep={1} />} */}
 
       <FormStep
         config={config}
@@ -476,9 +480,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           !isFormValid ||
           !assetDetails["marketRateEvaluation"] ||
           !assetDetails["marketRateCircle"] ||
-          !assetDetails["purchaseCost"] ||
-          !assetDetails["acquisitionCost"] ||
-          !assetDetails["bookValue"] ||
+          (!isCostFieldsDisable && !assetDetails["purchaseCost"]) ||
+          (!isCostFieldsDisable && !assetDetails["acquisitionCost"]) ||
+          (!isCostFieldsDisable && !assetDetails["bookValue"]) ||
           !address?.plotNumber || !address?.city || !address?.locality || !address?.addressLineOne || !address?.addressLineTwo
         }
       >
@@ -800,6 +804,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                   
                 }}
                 style={{ width: "100%" }}
+                disabled={isCostFieldsDisable}
               />
             </div>
 
@@ -831,6 +836,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                   title: t("PT_NAME_ERROR_MESSAGE"),
                 })}
                 style={{ width: "100%" }}
+                disabled={isCostFieldsDisable}
               />
             </div>
 
@@ -860,6 +866,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                   title: t("PT_NAME_ERROR_MESSAGE"),
                 })}
                 style={{ width: "100%" }}
+                disabled={isCostFieldsDisable}
               />
             </div>
 
