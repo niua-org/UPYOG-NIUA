@@ -474,7 +474,8 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
           !financialYear||
           !Department||
           !isFormValid ||
-          !assetDetails["marketRate"] ||
+          !assetDetails["marketRateEvaluation"] ||
+          !assetDetails["marketRateCircle"] ||
           !assetDetails["purchaseCost"] ||
           !assetDetails["acquisitionCost"] ||
           !assetDetails["bookValue"] ||
@@ -711,7 +712,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           onKeyPress={additionalNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
-                          value={assetDetails[row.name] || ""}
+                          value={assetDetails[row.name]||""}
                           onChange={handleInputChange}
                           ValidationRequired={true}
                           validation = {{
@@ -864,7 +865,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
             <div>
               <div>
-                {`${t("AST_MARKET_RATE")}`} <span style={{ color: "red" }}>*</span>
+                {`${t("AST_MARKET_RATE_EVALUATION")}`} <span style={{ color: "red" }}>*</span>
                 <div className="tooltip" style={assetStyles.toolTip}>
                   <InfoBannerIcon />
                   <span className="tooltiptext" style={assetStyles.toolTipText}>
@@ -878,8 +879,38 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 isMandatory={false}
                 onKeyPress={additionalNumberValidation}
                 optionKey="i18nKey"
-                name="marketRate"
-                value={assetDetails["marketRate"]}
+                name="marketRateEvaluation"
+                value={assetDetails["marketRateEvaluation"]}
+                onChange={handleInputChange}
+                ValidationRequired={true}
+                {...(validation = {
+                  isRequired: true,
+                  // pattern: regexPattern("number"),
+                  type: "number",
+                  title: t("PT_NAME_ERROR_MESSAGE"),
+                })}
+                style={{ width: "100%" }}
+              />
+            </div>
+
+             <div>
+              <div>
+                {`${t("AST_MARKET_RATE_CIRCLE")}`} <span style={{ color: "red" }}>*</span>
+                <div className="tooltip" style={assetStyles.toolTip}>
+                  <InfoBannerIcon />
+                  <span className="tooltiptext" style={assetStyles.toolTipText}>
+                    {`${t("ASSET_MARKET_VALUE")} `}
+                  </span>
+                </div>
+              </div>
+              <TextInput
+                t={t}
+                type={"number"}
+                isMandatory={false}
+                onKeyPress={additionalNumberValidation}
+                optionKey="i18nKey"
+                name="marketRateCircle"
+                value={assetDetails["marketRateCircle"]}
                 onChange={handleInputChange}
                 ValidationRequired={true}
                 {...(validation = {
