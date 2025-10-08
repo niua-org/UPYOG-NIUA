@@ -711,7 +711,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           onKeyPress={additionalNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
-                          value={assetDetails[row.name]}
+                          value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
                           ValidationRequired={true}
                           validation = {{
@@ -1583,7 +1583,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           type={row.type}
                           isMandatory={row.isMandatory}
                           optionKey="i18nKey"
-                          onKeyPress={row.columnType==="number"?additionalNumberValidation:specialCharacterValidation}
+                          onKeyPress={specialCharacterValidation}
                           name={row.name}
                           value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
