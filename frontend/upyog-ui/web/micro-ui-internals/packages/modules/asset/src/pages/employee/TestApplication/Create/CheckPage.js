@@ -18,29 +18,21 @@ const ActionButton = ({ jumpTo }) => {
 
 const CheckPage = ({ onSubmit, value = {} }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+
   const [agree, setAgree] = useState(false);
   const [categoriesWiseData, setCategoriesWiseData] = useState();
   
-   //  * get @param city & state id
-   const tenantId = Digit.ULBService.getCurrentTenantId();
    const stateTenantId = Digit.ULBService.getStateId();
  
-   //  This call with tenantId (Get city-level data)
-   const cityResponseObject = Digit.Hooks.useCustomMDMS(tenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
-     select: (data) => {
-       const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
-       return formattedData;
-     },
-   });
  
    // This call with stateTenantId (Get state-level data)
-   const stateResponseObject = Digit.Hooks.useCustomMDMS(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
+   const stateResponseObject = Digit.Hooks.useEnabledMDMS(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
      select: (data) => {
        const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
        return formattedData;
      },
    });
+
 
   const { address, assetDetails, asset } = value;
 
@@ -52,15 +44,13 @@ const CheckPage = ({ onSubmit, value = {} }) => {
   useEffect(() => {
     let combinedData;
     // if city level master is not available then fetch  from state-level
-    if (cityResponseObject?.data) {
-      combinedData = cityResponseObject.data;
-    } else if (stateResponseObject?.data) {
+    if (stateResponseObject?.data) {
       combinedData = stateResponseObject.data;
     } else {
       combinedData = [];
     }
     setCategoriesWiseData(combinedData);
-  }, [cityResponseObject, stateResponseObject]);
+  }, [stateResponseObject]);
   
   let formJson = [];
   if (Array.isArray(categoriesWiseData)) {
@@ -78,7 +68,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
   function extractValue(key){
       var vl = assetDetails[key]
       if(typeof vl === 'object'){
-          return vl.code
+          return vl.value
       }
       return vl
   };
@@ -128,17 +118,11 @@ const CheckPage = ({ onSubmit, value = {} }) => {
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/asset-deatils`} />}
             />
 
-            <Row
-              label={t("AST_ID")}
-              text={`${t(checkForNA(assetDetails?.assetId))}`}
-              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-            />
-
             {formJson.filter(row => row.group === "generalDetails")
               .map((row, index) => (
                 <Row key= {index}
                   label={t(row.code)}
-                  text={`${extractValue(row.name)}`}
+                  text={`${checkForNA(extractValue(row.name))}`}
                   //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
                 />
                 
@@ -160,9 +144,14 @@ const CheckPage = ({ onSubmit, value = {} }) => {
               text={`${t(checkForNA(assetDetails?.bookValue))}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
+           <Row
+              label={t("AST_MARKET_RATE_EVALUATION")}
+              text={`${t(checkForNA(assetDetails?.marketRateEvaluation))}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
             <Row
-              label={t("AST_MARKET_RATE")}
-              text={`${t(checkForNA(assetDetails?.marketRate))}`}
+              label={t("AST_MARKET_RATE_CIRCLE")}
+              text={`${t(checkForNA(assetDetails?.marketRateCircle))}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
 
@@ -205,14 +194,13 @@ const CheckPage = ({ onSubmit, value = {} }) => {
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/address`} />}
             />
 
-
           </StatusTable>
           <br></br>
 
           <CardSubHeader>{t("AST_ACQUSTION_DETAILS")}</CardSubHeader>
           <StatusTable>
               <React.Fragment>
-             {asset?.assettype?.code!== "LAND" &&(
+             {asset?.assettype?.code=== "LAND" ?null:(
               <React.Fragment>
             <Row
               label={t("AST_INVOICE_DATE")}
@@ -231,29 +219,42 @@ const CheckPage = ({ onSubmit, value = {} }) => {
                 <React.Fragment>
                   <Row
                             label={t("AST_PURCHASE_DATE")}
-                            text={`${t(checkForNA(assetDetails?.purchaseDate))}`}
+                            text={`${checkForNA(assetDetails?.purchaseDate)}`}
                             //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
                           />
                           <Row
                             label={t("AST_PURCHASE_ORDER")}
-                            text={`${t(checkForNA(assetDetails?.purchaseOrderNumber))}`}
+                            text={`${checkForNA(assetDetails?.purchaseOrderNumber)}`}
                             //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-                          />
-
-                          <Row
-                            label={t("AST_SOURCE_FINANCE")}
-                            text={`${t(checkForNA(asset?.sourceOfFinance?.code))}`}
-                            //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/asset-deatils`} />}
-                          />  
-                </React.Fragment>
+                          /> 
+              </React.Fragment>
               )}
-            
+              {assetDetails?.modeOfPossessionOrAcquisition?.code==="CONSTRUCTED" && (
+                <React.Fragment>
+                  <Row
+                    label={t("AST_ESTIMATED_DATE_CONSTRUCTION")}
+                    text={`${checkForNA(assetDetails?.estimateConstructionDate)}`}
+                    //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+                  />
+                  <Row
+                    label={t("AST_ESTIMATED_DATE_CONSTRUCTION")}
+                    text={`${checkForNA(assetDetails?.dateOfConstruction)}`}
+                    //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+                  />
+
+              </React.Fragment>
+              )}
+            <Row
+                label={t("AST_SOURCE_FINANCE")}
+                text={`${checkForNA(asset?.sourceOfFinance?.code)}`}
+                //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/asset-deatils`} />}
+              /> 
 
               {formJson.filter(row => row.group === "acquistionDetails")
               .map((row, index) => (
                 <Row key= {index}
                   label={t(row.code)}
-                  text={`${extractValue(row.name)}`}
+                  text={`${checkForNA(extractValue(row.name))}`}
                   //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
                 />
                 
@@ -269,10 +270,9 @@ const CheckPage = ({ onSubmit, value = {} }) => {
               .map((row, index) => (
                 <Row key= {index}
                   label={t(row.code)}
-                  text={`${extractValue(row.name)}`}
-                />
-                
-              ))}
+                  text={`${checkForNA(extractValue(row.name))}`}
+                />       
+            ))}
             </React.Fragment>
           </StatusTable>
 

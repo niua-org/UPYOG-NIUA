@@ -40,7 +40,8 @@ const getData = (res, combinedData) => {
   rows.push({ title: "AST_PURCHASE_ORDER", value: res?.purchaseOrderNumber });
 
   rows.push({ title: "AST_LOCATION_DETAILS", value: res?.location, isViewOnMap: false });
-  rows.push({ title: "AST_MARKET_RATE", value: "₹"+res?.additionalDetails?.marketRate });
+  rows.push({ title: "AST_MARKET_RATE_EVALUATION", value: "₹"+res?.additionalDetails?.marketRateEvaluation });
+  rows.push({ title: "AST_MARKET_RATE_CIRCLE", value: "₹"+res?.additionalDetails?.marketRateCircle });
   rows.push({ title: "AST_PURCHASE_COST", value: "₹"+res?.purchaseCost });
   rows.push({ title: "AST_ACQUISITION_COST", value: "₹"+res?.acquisitionCost });
   rows.push({ title: "AST_BOOK_VALUE", value: "₹"+res?.bookValue });

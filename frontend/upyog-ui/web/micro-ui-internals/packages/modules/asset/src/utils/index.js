@@ -225,3 +225,34 @@ export const getWorkflow = (data = {}) => {
   };
 };
 
+
+/**
+ * Validates all mandatory fields dynamically based on configuration
+ * @param {Array} formJson - Array of field configurations
+ * @param {Object} formData - Object containing form field values
+ * @returns {boolean} - Returns true if all mandatory fields are filled
+ */
+export const validateMandatoryFields = (formJson, formData) => {
+  // Get all mandatory fields from formJson
+  const mandatoryFields = formJson.filter(
+    field => field.isMandatory === true && !field.disable && field.active !== false
+  );
+  
+  // Check if all mandatory fields have values
+  const allFieldsFilled = mandatoryFields.every(field => {
+    const fieldValue = formData[field.name];
+    
+    // Check based on field type
+    if (field.type === 'dropdown') {
+      // For dropdown, check if value exists and has content
+      return fieldValue && fieldValue !== '' && (typeof fieldValue === 'object' ? fieldValue.code : true);
+    } else if (field.type === 'text' || field.type === 'num' || field.type === 'number') {
+      return fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
+    }
+    
+    // Default check for other types
+    return fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
+  });
+  
+  return allFieldsFilled;
+};
