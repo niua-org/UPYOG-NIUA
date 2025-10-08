@@ -144,9 +144,14 @@ const CheckPage = ({ onSubmit, value = {} }) => {
               text={`${t(checkForNA(assetDetails?.bookValue))}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
+           <Row
+              label={t("AST_MARKET_RATE_EVALUATION")}
+              text={`${t(checkForNA(assetDetails?.marketRateEvaluation))}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
             <Row
-              label={t("AST_MARKET_RATE")}
-              text={`${t(checkForNA(assetDetails?.marketRate))}`}
+              label={t("AST_MARKET_RATE_CIRCLE")}
+              text={`${t(checkForNA(assetDetails?.marketRateCircle))}`}
               //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
             />
 
