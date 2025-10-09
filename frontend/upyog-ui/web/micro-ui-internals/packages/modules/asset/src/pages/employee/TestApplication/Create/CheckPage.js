@@ -128,33 +128,6 @@ const CheckPage = ({ onSubmit, value = {} }) => {
                 
               ))}
 
-            <Row
-              label={t("AST_PURCHASE_COST")}
-              text={`${checkForNA(assetDetails?.purchaseCost)}`}
-              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-            />
-            <Row
-              label={t("AST_ACQUISITION_COST")}
-              text={`${checkForNA(assetDetails?.acquisitionCost)}`}
-              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-            />
-
-            <Row
-              label={t("AST_BOOK_VALUE")}
-              text={`${checkForNA(assetDetails?.bookValue)}`}
-              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-            />
-           <Row
-              label={t("AST_MARKET_RATE_EVALUATION")}
-              text={`${checkForNA(assetDetails?.marketRateEvaluation)}`}
-              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-            />
-            <Row
-              label={t("AST_MARKET_RATE_CIRCLE")}
-              text={`${checkForNA(assetDetails?.marketRateCircle)}`}
-              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
-            />
-
 
             <Row
               label={t("AST_LOCATION_DETAILS")}
@@ -200,7 +173,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
           <CardSubHeader>{t("AST_ACQUSTION_DETAILS")}</CardSubHeader>
           <StatusTable>
               <React.Fragment>
-             {asset?.assettype?.code=== "LAND" ?null:(
+             {(asset?.assettype?.code=== "LAND" || asset?.assettype?.code=== "BUILDING") ?null:(
               <React.Fragment>
             <Row
               label={t("AST_INVOICE_DATE")}
@@ -249,6 +222,32 @@ const CheckPage = ({ onSubmit, value = {} }) => {
                 text={`${checkForNA(asset?.sourceOfFinance?.value)}`}
                 //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/asset-deatils`} />}
               /> 
+               <Row
+              label={t("AST_PURCHASE_COST")}
+              text={`${checkForNA(assetDetails?.purchaseCost)}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
+            <Row
+              label={t("AST_ACQUISITION_COST")}
+              text={`${checkForNA(assetDetails?.acquisitionCost)}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
+
+            <Row
+              label={t("AST_BOOK_VALUE")}
+              text={`${checkForNA(assetDetails?.bookValue)}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
+           <Row
+              label={t("AST_MARKET_RATE_EVALUATION")}
+              text={`${checkForNA(assetDetails?.marketRateEvaluation)}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
+            <Row
+              label={t("AST_MARKET_RATE_CIRCLE")}
+              text={`${checkForNA(assetDetails?.marketRateCircle)}`}
+              //actionButton={<ActionButton jumpTo={`/upyog-ui/employee/asset/assetservice/new-assets/assets`} />}
+            />
 
               {formJson.filter(row => row.group === "acquistionDetails")
               .map((row, index) => (
