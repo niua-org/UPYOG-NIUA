@@ -96,6 +96,14 @@ const inboxConfig = (tenantId, filters) => ({
       fetchFilters: filterFunctions.TP,
       _searchFn: () => TPService.search({ tenantId, filters }),
     },
+    EST: {
+    services: ["ewst"],
+    searchResponseKey: "EwasteApplication",
+    businessIdsParamForSearch: "requestId",
+    businessIdAliasForSearch: "requestId",
+    fetchFilters: filterFunctions.EW,
+    _searchFn: () => EwService.search({ tenantId, filters }),
+  },
     /**
  * PGRAI Workflow Module Configuration
  *
