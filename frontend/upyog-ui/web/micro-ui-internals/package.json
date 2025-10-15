@@ -14,7 +14,8 @@
     "packages/modules/ads",
     "packages/modules/engagement",
     "packages/modules/ew",
-    "packages/modules/ptr"
+    "packages/modules/ptr",
+    "packages/modules/est"
   ],
   "license": "MIT",
   "private": true,
@@ -57,6 +58,7 @@
     "dev:wt": "cd packages/modules/wt && yarn start",
     "dev:vendor": "cd packages/modules/vendor && yarn start",
     "dev:pgrai": "cd packages/modules/pgrai && yarn start",
+    "dev:est": "cd packages/modules/est && yarn start",
     "build": "run-p build:**",
     "build:libraries": "cd packages/libraries && yarn build",
     "buildD:asset": "cd packages/modules/asset && yarn build",
@@ -67,6 +69,7 @@
     "buildD:commonPt": "cd packages/modules/commonPt && yarn build",
     "build:core": "cd packages/modules/core && yarn build",
     "buildD:pgr": "cd packages/modules/pgr && yarn build",
+    "build:est": "cd packages/modules/est && yarn build",
     "buildD:fsm": "cd packages/modules/fsm && yarn build",
     "build:dss": "cd packages/modules/dss && yarn build",
     "buildD:mcollect": "cd packages/modules/mCollect && yarn build",

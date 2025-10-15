@@ -13,7 +13,8 @@
     "micro-ui-internals/packages/modules/ads",
     "micro-ui-internals/packages/modules/engagement",
     "micro-ui-internals/packages/modules/ew",
-    "micro-ui-internals/packages/modules/ptr"
+    "micro-ui-internals/packages/modules/ptr",
+    "micro-ui-internals/packages/modules/est"
   ],
   "engines": {
     "node": ">=14"
@@ -45,6 +46,7 @@
     "@upyog/upyog-ui-module-ptr": "3.10.1",
     "@upyog/upyog-ui-module-sv": "3.10.0",
     "@upyog/upyog-ui-module-wt":"3.10.0",
+    "@upyog/upyog-ui-module-est":"1.0.0",
     "@upyog/upyog-ui-module-vendor":"3.10.0",
     "@upyog/upyog-ui-module-pgrai":"3.10.0",
     "babel-loader": "8.1.0",
