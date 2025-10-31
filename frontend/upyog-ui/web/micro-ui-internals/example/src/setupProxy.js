@@ -116,6 +116,9 @@ module.exports = function (app) {
     "/pgr-ai-services/v1/request/_create",
     "/pgr-ai-services/v1/request/_search",
     "/pgr-ai-services/v1/request/_update",
+    "/gis-dx-service",
+    "/gis-dx-service/gis-dx/v1/_search/PT",
+    "/gis-dx-service/gis-dx/v1/_search/ASSET",
     "/individual/v1/_search",
     "/bpa-services/v1/preapprovedplan/_search",
     "/bpa-calculator/_estimate"

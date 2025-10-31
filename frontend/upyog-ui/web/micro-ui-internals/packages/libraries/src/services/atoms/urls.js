@@ -259,6 +259,11 @@ const Urls = {
     PGR_Update_AI:"/pgr-ai-services/v1/request/_update"
   },
 
+  gis: {
+        gis_dx_PT: "/gis-dx-service/gis-dx/v1/_search/PT",
+        gis_dx_ASSET: "/gis-dx-service/gis-dx/v1/_search/ASSET",
+   },
+
 digiLocker:{
   authorization:"/requester-services-dx/digilocker/authorization/url",
   register :"/requester-services-dx/digilocker/authorization/url/citizen",

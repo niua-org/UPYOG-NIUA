@@ -32,6 +32,7 @@
     "@upyog/upyog-ui-module-vendor": "3.10.0",
     "@upyog/upyog-ui-module-wt":"3.10.0",
     "@upyog/upyog-ui-module-pgrai":"3.10.0",
+    "@upyog/upyog-ui-module-gis": "1.0.0",
     "@upyog/digit-ui-module-core": "3.10.0",
     "@nudmcdgnpm/upyog-ui-module-asset-v2":"1.0.0",
     "http-proxy-middleware": "1.0.5",
