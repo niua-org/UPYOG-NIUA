@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -52,7 +53,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import com.ingestpipeline.controller.RestApiController;
 import com.ingestpipeline.service.IngestService;
@@ -243,41 +244,41 @@ public class ReadUtil {
 
 	private static List<Object> getRowRecord(Cell cell, List<Object> rowRecord) {
 		switch (cell.getCellType()) {
-		case STRING:
-			String str = cell.getRichStringCellValue().getString();
-			str = str.replaceAll("(\\n\\s)+|(\\r\\n\\s)+|(\\r\\s)+|(\\r)+|(\\n)+|(\\s)+", " ");
-			rowRecord.add(str);
-			break;
-		case NUMERIC:
-			if (DateUtil.isCellDateFormatted(cell)) {
-				rowRecord.add(cell.getDateCellValue());
+			case STRING:
+				String str = cell.getRichStringCellValue().getString();
+				str = str.replaceAll("(\\n\\s)+|(\\r\\n\\s)+|(\\r\\s)+|(\\r)+|(\\n)+|(\\s)+", " ");
+				rowRecord.add(str);
 				break;
-			} else {
-				Double d = cell.getNumericCellValue();
-				DecimalFormat numberFormat = new DecimalFormat("#.00");
-				rowRecord.add(Double.parseDouble(numberFormat.format(d)));
-			}
-			break;
-		case BOOLEAN:
-			rowRecord.add(cell.getBooleanCellValue());
-			break;
-		case FORMULA:
-			if (cell.getCachedFormulaResultType().equals(CellType.NUMERIC)) {
-				Double d = cell.getNumericCellValue() * 100;
-				DecimalFormat numberFormat = new DecimalFormat("#.00");
-				rowRecord.add(Double.parseDouble(numberFormat.format(d)));
+			case NUMERIC:
+				if (DateUtil.isCellDateFormatted(cell)) {
+					rowRecord.add(cell.getDateCellValue());
+					break;
+				} else {
+					Double d = cell.getNumericCellValue();
+					DecimalFormat numberFormat = new DecimalFormat("#.00");
+					rowRecord.add(Double.parseDouble(numberFormat.format(d)));
+				}
 				break;
-			} else if (cell.getCachedFormulaResultType().equals(CellType.STRING)) {
-				rowRecord.add(cell.getNumericCellValue());
+			case BOOLEAN:
+				rowRecord.add(cell.getBooleanCellValue());
 				break;
-			}
-			break;
-		case BLANK:
-			rowRecord.add("-");
-			break;
-		default:
-			rowRecord.add("no type match");
-			break;
+			case FORMULA:
+				if (cell.getCachedFormulaResultType().equals(CellType.NUMERIC)) {
+					Double d = cell.getNumericCellValue() * 100;
+					DecimalFormat numberFormat = new DecimalFormat("#.00");
+					rowRecord.add(Double.parseDouble(numberFormat.format(d)));
+					break;
+				} else if (cell.getCachedFormulaResultType().equals(CellType.STRING)) {
+					rowRecord.add(cell.getNumericCellValue());
+					break;
+				}
+				break;
+			case BLANK:
+				rowRecord.add("-");
+				break;
+			default:
+				rowRecord.add("no type match");
+				break;
 		}
 		return rowRecord;
 	}
@@ -325,42 +326,42 @@ public class ReadUtil {
 								Boolean booleanValue1 = false;
 								RichTextString formulaValue1 = null;
 								switch (cell.getCellType()) {
-								case STRING:
-									stringValue1 = sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn())
-											.getRichStringCellValue().getString();
-									sheet.getRow(j).getCell(k).setCellValue(stringValue1);
-									break;
-								case NUMERIC:
-									if (DateUtil.isCellDateFormatted(
-											sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn()))) {
-										dateValue1 = sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn())
-												.getDateCellValue();
-										sheet.getRow(j).getCell(k).setCellValue(dateValue1);
-									} else {
-										doubleValue1 = sheet.getRow(region.getFirstRow())
-												.getCell(region.getFirstColumn()).getNumericCellValue();
-										sheet.getRow(j).getCell(k).setCellValue(doubleValue1);
-									}
-									break;
-								case BOOLEAN:
-									booleanValue1 = sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn())
-											.getBooleanCellValue();
-									sheet.getRow(j).getCell(k).setCellValue(booleanValue1);
-									break;
-								case FORMULA:
-									if (cell.getCachedFormulaResultType().equals(CellType.NUMERIC)) {
-										doubleValue1 = cell.getNumericCellValue() * 100;
-										sheet.getRow(j).getCell(k).setCellValue(doubleValue1);
+									case STRING:
+										stringValue1 = sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn())
+												.getRichStringCellValue().getString();
+										sheet.getRow(j).getCell(k).setCellValue(stringValue1);
 										break;
-									} else if (cell.getCachedFormulaResultType().equals(CellType.STRING)) {
-										formulaValue1 = cell.getRichStringCellValue();
-										sheet.getRow(j).getCell(k).setCellValue(formulaValue1);
+									case NUMERIC:
+										if (DateUtil.isCellDateFormatted(
+												sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn()))) {
+											dateValue1 = sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn())
+													.getDateCellValue();
+											sheet.getRow(j).getCell(k).setCellValue(dateValue1);
+										} else {
+											doubleValue1 = sheet.getRow(region.getFirstRow())
+													.getCell(region.getFirstColumn()).getNumericCellValue();
+											sheet.getRow(j).getCell(k).setCellValue(doubleValue1);
+										}
 										break;
-									}
-									break;
-								case BLANK:
-									break;
-								default:
+									case BOOLEAN:
+										booleanValue1 = sheet.getRow(region.getFirstRow()).getCell(region.getFirstColumn())
+												.getBooleanCellValue();
+										sheet.getRow(j).getCell(k).setCellValue(booleanValue1);
+										break;
+									case FORMULA:
+										if (cell.getCachedFormulaResultType().equals(CellType.NUMERIC)) {
+											doubleValue1 = cell.getNumericCellValue() * 100;
+											sheet.getRow(j).getCell(k).setCellValue(doubleValue1);
+											break;
+										} else if (cell.getCachedFormulaResultType().equals(CellType.STRING)) {
+											formulaValue1 = cell.getRichStringCellValue();
+											sheet.getRow(j).getCell(k).setCellValue(formulaValue1);
+											break;
+										}
+										break;
+									case BLANK:
+										break;
+									default:
 								}
 							}
 						}
