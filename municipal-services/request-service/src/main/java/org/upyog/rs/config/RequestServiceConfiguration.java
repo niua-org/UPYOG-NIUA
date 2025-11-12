@@ -1,6 +1,6 @@
 package org.upyog.rs.config;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.egov.tracer.config.TracerConfiguration;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,6 +56,12 @@ public class RequestServiceConfiguration {
 	// Kafka topics for saving water tanker data
 	@Value("${persister.create.water-tanker.topic}")
 	private String waterTankerApplicationSaveTopic;
+
+	@Value("${persister.create.water-tanker.with.profile.topic}")
+	private String waterTankerApplicationWithProfileSaveTopic;
+
+	@Value("${persister.create.mobile-toilet.with.profile.topic}")
+	private String mobileToiletApplicationWithProfileSaveTopic;
 
 	// Kafka topics for saving Mobile Toilet data
 	@Value("${persister.create.mobile-toilet.topic}")
@@ -216,6 +222,9 @@ public class RequestServiceConfiguration {
 
 	@Value("${rs.module.name}")
 	private String moduleName;
+
+	@Value("${isUserProfileEnabled}")
+	private Boolean isUserProfileEnabled;
 
 	@Value("${rs.mt.module.name}")
 	private String mtModuleName;
