@@ -29,22 +29,22 @@ public class TargetData implements Serializable {
 
 	@Column(name = "ulbName", nullable = false)
 	private String ulbName;
-	
+
 	@Column(name = "actualCollectionForMunicipalCorporation", nullable = false)
 	private BigDecimal actualCollectionForMunicipalCorporation;
 
 	@Column(name = "budgetProposedForMunicipalCorporation", nullable = false)
 	private BigDecimal budgetProposedForMunicipalCorporation;
-	
+
 	@Column(name = "actualCollectionBudgetedForMunicipalCorporation", nullable = false)
 	private BigDecimal actualCollectionBudgetedForMunicipalCorporation;
-	
+
 	@Column(name = "financialYear", nullable = false)
 	private String financialYear;
-	
+
 	@Column(name = "Timestamp", nullable = false)
 	private String Timestamp;
-	
+
 	@Column(name = "businessService", nullable = false)
 	private String businessService;
 
@@ -52,7 +52,7 @@ public class TargetData implements Serializable {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	@JsonProperty("id")
 	public int getId() {
 		return id;
@@ -144,5 +144,5 @@ public class TargetData implements Serializable {
 				+ ", financialYear=" + financialYear + ", Timestamp=" + Timestamp + ", businessService="
 				+ businessService + "]";
 	}
-		
+
 }

@@ -49,10 +49,10 @@ public class IngestApp {
 		trustSelfSignedSSL();
 		SpringApplication.run(IngestApp.class, args);
 	}
-	
+
 	@Bean
 	public RestTemplate restTemplate() {
-	    return new RestTemplate();
+		return new RestTemplate();
 	}
 
 	@Bean

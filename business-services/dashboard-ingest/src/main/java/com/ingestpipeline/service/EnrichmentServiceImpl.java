@@ -37,7 +37,7 @@ import com.ingestpipeline.util.JSONUtil;
 /**
  * This is a Service Implementation for all the actions which are with respect
  * to Elastic Search
- * 
+ *
  * @author Darshan Nagesh
  *
  */
@@ -70,9 +70,9 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 
 	@Autowired
 	private CollectionDomainConfig collectionDomainConfig;
-	
-	@Autowired 
-	private DomainConfigFactory domainConfigFactory; 
+
+	@Autowired
+	private DomainConfigFactory domainConfigFactory;
 
 	@Autowired
 	private IESService elasticService;
@@ -82,15 +82,15 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 
 	@Autowired
 	private EnrichTransform enrichTransform;
-	
+
 	@Autowired
 	private JSONUtil util;
 
 	public EnrichmentServiceImpl(@Value("${services.esindexer.host}") String indexServiceHost,
-			@Value("${services.esindexer.username}") String userName,
-			@Value("${services.esindexer.password}") String password,
-			@Value("${es.index.name}") String elasticSearchIndexName,
-			@Value("${es.document.type}") String elasticSearchDocumentType, JSONUtil util) {
+								 @Value("${services.esindexer.username}") String userName,
+								 @Value("${services.esindexer.password}") String password,
+								 @Value("${es.index.name}") String elasticSearchIndexName,
+								 @Value("${es.document.type}") String elasticSearchDocumentType, JSONUtil util) {
 		this.indexServiceHost = indexServiceHost;
 		this.userName = userName;
 		this.password = password;
@@ -101,10 +101,10 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 
 	@Override
 	public Map enrichData(Map incomingData) {
-		
+
 		Map<String,Object> dataObject = new ObjectMapper().convertValue(incomingData.get(DATA_OBJECT), Map.class);
 		String tenantId = dataObject.get(TENANTID).toString();
-		
+
 		List<String> mCollectCategories = util.fetchMCollectCategories(tenantId);
 
 		DomainConfig domainConfig = domainConfigFactory.getConfiguration(incomingData.get(DATA_CONTEXT).toString());
@@ -115,7 +115,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 			ObjectNode incomingNode = new ObjectMapper().convertValue(incomingData.get(DATA_OBJECT), ObjectNode.class);
 			ObjectNode copyNode = incomingNode.deepCopy();
 			String businessTypeVal = copyNode.findValue(BUSINESS_SERVICE).asText();
-			
+
 			for(String category : mCollectCategories) {
 				if(category.equalsIgnoreCase(businessTypeVal)) {
 					businessTypeVal = MCOLLECT;
@@ -128,7 +128,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 			if(indexConfig != null){
 				String indexName = indexConfig.getIndexName();
 
-				String query = indexConfig.getQuery();					
+				String query = indexConfig.getQuery();
 
 				try {
 					ObjectNode queryNode = new ObjectMapper().readValue(query, ObjectNode.class);
@@ -140,7 +140,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 						String argVal = copyNode.findValue(arg).asText();
 						String[] values = argVal.split(ref.getSeperator());
 
-						String[] exps = ref.getExpression().split(ref.getSeperator());		
+						String[] exps = ref.getExpression().split(ref.getSeperator());
 
 						for(int i=0; i<exps.length; i++){
 							if(values[i] != null)
@@ -198,7 +198,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 				}
 
 			});
-		} 
+		}
 
 		return incomingData;
 	}
@@ -217,7 +217,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 	/**
 	 * A helper method to create the headers for Rest Connection with UserName and
 	 * Password
-	 * 
+	 *
 	 * @return HttpHeaders
 	 */
 	private HttpHeaders getHttpHeaders() {
@@ -230,7 +230,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 
 	/**
 	 * Helper Method to create the Base64Value for headers
-	 * 
+	 *
 	 * @param userName
 	 * @param password
 	 * @return
@@ -240,10 +240,10 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 		byte[] encodedAuthString = Base64.encodeBase64(authString.getBytes(Charset.forName(US_ASCII)));
 		return String.format(BASIC_AUTH, new String(encodedAuthString));
 	}
-	
+
 	/**
 	 * This method used to add the external index data into the es index
-	 * 
+	 *
 	 * @param incomingData
 	 * @return
 	 */
@@ -262,7 +262,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 			if(indexConfig != null){
 				String indexName = indexConfig.getIndexName();
 				String query = indexConfig.getQuery();
-							
+
 
 				try {
 					ObjectNode queryNode = new ObjectMapper().readValue(query, ObjectNode.class);
@@ -276,7 +276,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
 						String argVal = copyNode.findValue(arg).asText();
 						String[] values = argVal.split(ref.getSeperator());
 						String[] exps = ref.getExpression().split(ref.getSeperator());
-						
+
 						for(int i=0; i<exps.length; i++){
 							if(i < values.length && values[i] != null)
 								expValMap.put(exps[i], values[i]);
