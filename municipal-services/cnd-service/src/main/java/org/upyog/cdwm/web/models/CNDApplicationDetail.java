@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.upyog.cdwm.util.CNDServiceUtil;
 
@@ -83,6 +83,8 @@ public class CNDApplicationDetail {
     private String vehicleId;
 
     private String vendorId;
+
+    private String createdByUserType;
 
     @JsonFormat(pattern = CNDServiceUtil.DATE_FORMAT)
     private LocalDate pickupDate;
