@@ -2,9 +2,9 @@ package org.upyog.adv.service;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
 
 import org.springframework.stereotype.Service;
 import org.upyog.adv.validator.CreateApplicationGroup;

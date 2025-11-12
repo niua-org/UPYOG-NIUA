@@ -2,7 +2,7 @@ package org.upyog.adv.web.models;
 
 import java.util.List;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import org.upyog.adv.validator.ValidDate;
 
