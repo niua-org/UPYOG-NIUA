@@ -3,7 +3,7 @@ package org.upyog.cdwm.config;
 
 import lombok.Getter;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +44,12 @@ public class CNDConfiguration {
     @Value("${persister.create.cnd.service.topic}")
     private String cndApplicationSaveTopic;
     
+    @Value("${persister.create.cnd.service.with.profile.topic}")
+    private String cndApplicationWithProfileSaveTopic;
+
+    @Value("${isUserProfileEnabled}")
+    private Boolean isUserProfileEnabled;
+
     @Value("${persister.save.cnd.waste.document.topic}")
     private String saveWasteDocumentApplicationTopic;
    
