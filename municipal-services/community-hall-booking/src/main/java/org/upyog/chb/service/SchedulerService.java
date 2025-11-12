@@ -1,11 +1,5 @@
 package org.upyog.chb.service;
-
-import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_ACTION_MOVETOEMPLOYEE;
-import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_REFUND_WORKFLOW_BUSINESSSERVICE;
-import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_REFUND_WORKFLOW_MODULENAME;
-import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_STATUS_BOOKED;
-import static org.upyog.chb.constants.CommunityHallBookingConstants.CHB_TENANTID;
-import static org.upyog.chb.constants.CommunityHallBookingConstants.SYSTEM_CITIZEN_USERNAME;
+import static org.upyog.chb.constants.CommunityHallBookingConstants.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.BookingPaymentTimerDetails;
@@ -26,6 +21,7 @@ import org.upyog.chb.web.models.workflow.State;
 
 import digit.models.coremodels.UserDetailResponse;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 /**
  * This service class handles scheduled tasks for the Community Hall Booking module.
@@ -70,11 +66,20 @@ public class SchedulerService {
 	@Autowired
 	private WorkflowService workflowService;
 
+	@Autowired
+	private CommunityHallBookingConfiguration config;
+
 	/**
 	 * This scheduler runs every 5 mins to delete the bookingId from the
 	 * paymentTimer table when the timer is expired or payment is failed
+	 * Uses ShedLock to ensure only one instance runs this job across multiple service instances
 	 */
 	@Scheduled(fixedRate = 5 * 60 * 1000) // Runs every 5 minutes
+	@SchedulerLock(
+		name = "chbCleanupExpiredEntriesJob",
+		lockAtLeastFor = "PT1M",  // Hold the lock for at least 1 minute
+		lockAtMostFor = "PT10M"   // Auto-release after 10 minutes if job crashes
+	)
 	public void cleanupExpiredEntries() {
 		log.info("Delete Expired Booking task running...:::.....:::");
 		deleteExpiredBookings();
@@ -98,8 +103,14 @@ public class SchedulerService {
 	 * This scheduler runs everyday midnight(1 am) to call workflow for booking
 	 * applications of which booking date has crossed to initiate booking refund
 	 * process
+	 * Uses ShedLock to ensure only one instance runs this job across multiple service instances
 	 */
 	@Scheduled(cron = "0 0 1 * * *")
+	@SchedulerLock(
+		name = "chbUpdateWorkflowForBookedApplicationsJob",
+		lockAtLeastFor = "PT1M",  // Hold the lock for at least 1 minute
+		lockAtMostFor = "PT30M"   // Auto-release after 30 minutes if job crashes
+	)
 	public void updateWorkflowForBookedApplications() {
 		log.info("Scheduler - Updating Workflow of Booked applications...");
 
@@ -118,7 +129,7 @@ public class SchedulerService {
 					.collect(Collectors.joining(", "));
 			log.info("Booking Nos: " + bookingNos);
 		}
-		UserDetailResponse userDetailResponse = userService.searchByUserName(SYSTEM_CITIZEN_USERNAME, CHB_TENANTID);
+		UserDetailResponse userDetailResponse = userService.searchByUserName(config.getInternalMicroserviceUserName(), config.getStateLevelTenantId());
 		if (userDetailResponse == null || userDetailResponse.getUser().isEmpty()) {
 			throw new IllegalStateException("SYSTEM user not found for tenant '" + CHB_TENANTID + "'.");
 		}
