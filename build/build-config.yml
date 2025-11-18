@@ -922,3 +922,11 @@ config:
         dockerfile: 'build/maven/Dockerfile'
       - work-dir: "municipal-services/pgr-ai-services/src/main/resources/db"
         image-name: "pgr-ai-services-db"
+
+  - name: "builds/upyog/municipal-services/tp-services"
+    build:
+      - work-dir: "municipal-services/tp-services"
+        image-name: "tp-services"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "municipal-services/tp-services/src/main/resources/db"
+        image-name: "tp-services-db"      
