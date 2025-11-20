@@ -76,10 +76,7 @@ public class Noc {
 	  private AuditDetails auditDetails;
 
 	  @JsonProperty("additionalDetails")
-	  private Object additionalDetails;	
-	  
-	  @JsonProperty("edcrNumber")
-	  private String edcrNumber;
+	  private Object additionalDetails;		  
 		
 	  @JsonIgnore
 	  private ArrayList<String> docIds;

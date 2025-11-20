@@ -2,7 +2,7 @@ package org.egov.pt.calculator.web.models.property;
 
 import java.util.Objects;
 
-import jakarta.validation.constraints.Size;
+import javax.validation.constraints.Size;
 
 import org.springframework.validation.annotation.Validated;
 
@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Rebate
  */
 @Validated
-@jakarta.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-04T08:40:17.507Z")
+@javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2018-07-04T08:40:17.507Z")
 
 public class Rebate   {
   @JsonProperty("rate")

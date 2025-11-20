@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
-import jakarta.validation.Valid;
+import javax.persistence.*;
+import javax.validation.Valid;
 import java.util.List;
 
 @Entity

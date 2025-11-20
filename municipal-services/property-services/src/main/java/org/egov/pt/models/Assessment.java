@@ -10,7 +10,6 @@ import javax.validation.constraints.NotNull;
 import org.egov.pt.models.enums.Channel;
 import org.egov.pt.models.enums.Status;
 import org.egov.pt.models.workflow.ProcessInstance;
-import org.egov.tracer.annotations.CustomSafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Data
 @AllArgsConstructor
@@ -29,26 +29,26 @@ import lombok.NoArgsConstructor;
 public class Assessment {
 
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("id")
 	private String id ;
 
 	@JsonProperty("tenantId")
-	@CustomSafeHtml
+	@SafeHtml
 	@NotNull
 	private String tenantId ;
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("assessmentNumber")
 	private String assessmentNumber ;
 
 	@JsonProperty("financialYear")
-	@CustomSafeHtml
+	@SafeHtml
 	@NotNull
 	private String financialYear ;
 
 	@JsonProperty("propertyId")
-	@CustomSafeHtml
+	@SafeHtml
 	@NotNull
 	private String propertyId;
 

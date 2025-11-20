@@ -1,6 +1,6 @@
 package org.egov.pt.calculator.web.models.property;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

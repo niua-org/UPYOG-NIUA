@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
  * OwnerInfo
  */
 @Validated
-@jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2020-06-23T05:54:07.373Z[GMT]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2020-06-23T05:54:07.373Z[GMT]")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -285,7 +285,7 @@ public class OwnerInfo {
 	 * @return gender
 	 **/
 	@ApiModelProperty(required = true, value = "Gender of the owner.")
-	
+	@NotNull
 
 	@Size(max = 256)
 	public String getGender() {
@@ -307,7 +307,7 @@ public class OwnerInfo {
 	 * @return fatherOrHusbandName
 	 **/
 	@ApiModelProperty(required = true, value = "Father or Husband name of the owner.")
-	
+	@NotNull
 
 	@Size(max = 256)
 	public String getFatherOrHusbandName() {

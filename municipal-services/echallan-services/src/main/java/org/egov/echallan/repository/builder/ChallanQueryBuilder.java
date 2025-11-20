@@ -118,10 +118,9 @@ public class ChallanQueryBuilder {
             }
 
             if (criteria.getChallanNo() != null) {
-            	String challanPattern = "%" + criteria.getChallanNo().toLowerCase() + "%";
                 addClauseIfRequired(preparedStmtList, builder);
-                builder.append("  Lower(challan.challanno) LIKE  ? ");
-                preparedStmtList.add(challanPattern);
+                builder.append("  challan.challanno = ? ");
+                preparedStmtList.add(criteria.getChallanNo());
             }
             if (criteria.getStatus() != null) {
                 List<String> status = Arrays.asList(criteria.getStatus().split(","));
@@ -131,10 +130,10 @@ public class ChallanQueryBuilder {
             }
 
             if (criteria.getReceiptNumber() != null) {
-                String receiptNumbers = "%" + criteria.getReceiptNumber().toLowerCase() + "%";
+                List<String> receiptNumbers = Arrays.asList(criteria.getReceiptNumber().split(","));
                 addClauseIfRequired(preparedStmtList, builder);
-                builder.append(" LOWER(challan.receiptnumber) LIKE ? ");
-                preparedStmtList.add(receiptNumbers);
+                builder.append(" challan.receiptnumber IN (").append(createQuery(receiptNumbers)).append(")");
+                addToPreparedStatement(preparedStmtList, receiptNumbers);
             }
 
 

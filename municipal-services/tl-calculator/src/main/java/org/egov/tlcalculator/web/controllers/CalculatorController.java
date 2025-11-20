@@ -2,8 +2,7 @@ package org.egov.tlcalculator.web.controllers;
 
 
 import java.util.List;
-
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.egov.tlcalculator.service.BPACalculationService;
 import org.egov.tlcalculator.service.CalculationService;
@@ -23,7 +22,7 @@ import static org.egov.tlcalculator.utils.TLCalculatorConstants.businessService_
 import static org.egov.tlcalculator.utils.TLCalculatorConstants.businessService_TL;
 
 
-@jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-09-27T14:56:03.454+05:30")
+@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-09-27T14:56:03.454+05:30")
 
 @Controller
 @RequestMapping("/v1")

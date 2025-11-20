@@ -41,7 +41,7 @@ package org.egov.pt.calculator.web.models.demand;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import org.egov.pt.calculator.web.models.property.AuditDetails;
 

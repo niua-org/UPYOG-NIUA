@@ -2,12 +2,9 @@ package org.egov.bpa.service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import lombok.extern.slf4j.Slf4j;
 
 import org.egov.bpa.config.BPAConfiguration;
 import org.egov.bpa.repository.ServiceRequestRepository;
-import org.egov.bpa.util.BPAConstants;
 import org.egov.bpa.web.model.BPARequest;
 import org.egov.bpa.web.model.CalculationReq;
 import org.egov.bpa.web.model.CalulationCriteria;
@@ -15,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
 public class CalculationService {
 
 	private ServiceRequestRepository serviceRequestRepository;
@@ -50,17 +46,5 @@ public class CalculationService {
 
 		this.serviceRequestRepository.fetchResult(url, calulcationRequest);
 	}
-
-	/**
-	 * call bpa-calculator /_estimate API
-	 * @param bpaRequest
-	 */
-	public Object callBpaCalculatorEstimate(Object bpaRequest) { 
-		StringBuilder url = new StringBuilder();
-		url.append(this.config.getCalculatorHost());
-		url.append(this.config.getBpaCalculationEstimateEndpoint());
-		return this.serviceRequestRepository.fetchResult(url, bpaRequest);
-	}
-	
 
 }

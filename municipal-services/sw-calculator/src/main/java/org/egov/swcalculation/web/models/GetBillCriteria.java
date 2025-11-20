@@ -3,7 +3,7 @@ package org.egov.swcalculation.web.models;
 import java.math.BigDecimal;
 import java.util.List;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

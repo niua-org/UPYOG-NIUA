@@ -1,7 +1,6 @@
 package org.egov.inbox.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
@@ -25,14 +24,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import jakarta.annotation.PostConstruct;
+import javax.annotation.PostConstruct;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.util.Objects.isNull;
-import static jakarta.servlet.http.HttpServletRequest.BASIC_AUTH;
+import static javax.servlet.http.HttpServletRequest.BASIC_AUTH;
 import static org.apache.commons.codec.CharEncoding.US_ASCII;
 import static org.egov.inbox.util.DSSConstants.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;

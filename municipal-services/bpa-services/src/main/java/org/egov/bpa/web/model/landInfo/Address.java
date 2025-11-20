@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
  */
 @ApiModel(description = "Representation of a address. Indiavidual APIs may choose to extend from this using allOf if more details needed to be added in their case. ")
 @Validated
-@jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2020-06-23T05:54:07.373Z[GMT]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2020-06-23T05:54:07.373Z[GMT]")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -332,7 +332,7 @@ public class Address   {
   **/
   @ApiModelProperty(value = "Name of the building")
   
-  @Size(min=0,max=64)   public String getBuildingName() {
+  @Size(min=2,max=64)   public String getBuildingName() {
     return buildingName;
   }
 
@@ -351,7 +351,7 @@ public class Address   {
   **/
   @ApiModelProperty(value = "Street Name")
   
-  @Size(min=0,max=64)   public String getStreet() {
+  @Size(min=2,max=64)   public String getStreet() {
     return street;
   }
 

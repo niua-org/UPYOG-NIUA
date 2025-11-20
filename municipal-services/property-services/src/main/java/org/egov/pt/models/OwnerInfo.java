@@ -10,7 +10,7 @@ import org.egov.common.contract.request.Role;
 import org.egov.pt.models.enums.Relationship;
 import org.egov.pt.models.enums.Status;
 import org.egov.pt.models.user.User;
-import org.egov.tracer.annotations.CustomSafeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 import org.javers.core.metamodel.annotation.DiffIgnore;
 import org.springframework.util.CollectionUtils;
 
@@ -31,19 +31,19 @@ import lombok.Setter;
 public class OwnerInfo extends User {
 
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("ownerInfoUuid")
 	private String ownerInfoUuid;
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("gender")
 	private String gender;
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("fatherOrHusbandName")
 	private String fatherOrHusbandName;
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("correspondenceAddress")
 	private String correspondenceAddress;
 
@@ -54,11 +54,11 @@ public class OwnerInfo extends User {
 	private Double ownerShipPercentage;
 
 	@NotNull
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("ownerType")
 	private String ownerType;
 
-	@CustomSafeHtml
+	@SafeHtml
 	@JsonProperty("institutionId")
 	private String institutionId;
 

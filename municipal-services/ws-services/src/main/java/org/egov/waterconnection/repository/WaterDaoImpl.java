@@ -23,7 +23,6 @@ import org.egov.waterconnection.repository.builder.WsQueryBuilder;
 import org.egov.waterconnection.repository.rowmapper.WaterRowMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Repository;
@@ -41,7 +40,6 @@ public class WaterDaoImpl implements WaterDao {
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
-    @Lazy
     private WsQueryBuilder wsQueryBuilder;
 
     @Autowired

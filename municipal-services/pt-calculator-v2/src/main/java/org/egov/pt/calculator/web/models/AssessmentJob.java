@@ -1,6 +1,6 @@
 package org.egov.pt.calculator.web.models;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

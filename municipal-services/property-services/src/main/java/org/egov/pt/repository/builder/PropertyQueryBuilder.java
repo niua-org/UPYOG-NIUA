@@ -15,10 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Component
-@Slf4j
 public class PropertyQueryBuilder {
 
 	@Autowired
@@ -209,7 +206,6 @@ public class PropertyQueryBuilder {
 				&& null == criteria.getName()
 				&& null == criteria.getDoorNo()
 				&& null == criteria.getOldPropertyId()
-				&& null == criteria.getLocality()
 				&& (null == criteria.getFromDate() && null == criteria.getToDate())
 				&& CollectionUtils.isEmpty(criteria.getCreationReason());
 
@@ -305,36 +301,18 @@ public class PropertyQueryBuilder {
 		if (!CollectionUtils.isEmpty(propertyIds)) {
 
 			addClauseIfRequired(preparedStmtList,builder);
-			builder.append("(");
-			for(int i=0; i< propertyIds.size(); i++) {
-				builder.append("property.propertyid LIKE ?");
-				if(i<propertyIds.size()-1) {
-					builder.append(" OR ");
-				}
-		    }
-		 	builder.append(")");
-		 	for(String pId : propertyIds) {
-		 		preparedStmtList.add("%" + pId.trim() + "%"); 
-		 	}
-		 }
+			builder.append("property.propertyid IN (").append(createQuery(propertyIds)).append(")");
+			addToPreparedStatementWithUpperCase(preparedStmtList, propertyIds);
+		}
+
 		Set<String> acknowledgementIds = criteria.getAcknowledgementIds();
 		if (!CollectionUtils.isEmpty(acknowledgementIds)) {
-			addClauseIfRequired(preparedStmtList, builder);
-			builder.append("(");
-			for(int i=0; i< acknowledgementIds.size(); i++) {
-				builder.append("property.acknowldgementnumber LIKE ?");
-				if(i<acknowledgementIds.size()-1) {
-					builder.append(" OR ");
-				}
-				
-				
-			}
-			builder.append(")");
-			for(String ackId : acknowledgementIds) {
-				preparedStmtList.add("%" + ackId.trim() + "%"); 
-			}
-		}	
-		
+
+			addClauseIfRequired(preparedStmtList,builder);
+			builder.append("property.acknowldgementnumber IN (").append(createQuery(acknowledgementIds)).append(")");
+			addToPreparedStatementWithUpperCase(preparedStmtList, acknowledgementIds);
+		}
+
 		Set<String> uuids = criteria.getUuids();
 		if (!CollectionUtils.isEmpty(uuids)) {
 
@@ -362,9 +340,6 @@ public class PropertyQueryBuilder {
 
 
 		String withClauseQuery = WITH_CLAUSE_QUERY.replace(REPLACE_STRING, builder);
-		log.info("Query is: " +withClauseQuery);
-		log.info("Parameters are: " +preparedStmtList);
-
 		if (onlyIds || criteria.getIsRequestForCount())
 			return builder.toString();
 		else

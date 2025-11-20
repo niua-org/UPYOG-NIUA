@@ -1,11 +1,10 @@
 package org.egov.swcalculation.web.models;
 
 import java.util.ArrayList;
-
 import java.util.List;
 import java.util.Objects;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 import org.egov.common.contract.response.ResponseInfo;
 import org.springframework.validation.annotation.Validated;
@@ -25,7 +24,7 @@ import lombok.Setter;
  */
 @ApiModel(description = "Contains the ResponseHeader and the created/updated property")
 @Validated
-@jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2019-10-24T10:29:25.253+05:30[Asia/Kolkata]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2019-10-24T10:29:25.253+05:30[Asia/Kolkata]")
 
 @Getter
 @NoArgsConstructor

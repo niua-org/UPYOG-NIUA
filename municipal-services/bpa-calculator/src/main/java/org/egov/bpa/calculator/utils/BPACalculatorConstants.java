@@ -59,7 +59,5 @@ public class BPACalculatorConstants {
 	public static final String EDCR_ERROR = "EDCR_ERROR";
 	
 	public static final String CALCULATION_ERROR = "CALCULATION ERROR";
-
-	public static final String BUSINESSSERVICE_PREAPPROVEDPLAN = "BPA-PAP";
 	
 }

@@ -23,7 +23,6 @@ import org.egov.pt.web.contracts.AssessmentRequest;
 import org.egov.pt.web.contracts.EmailRequest;
 import org.egov.pt.web.contracts.SMSRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -40,7 +39,6 @@ public class AssessmentNotificationService {
 
     private NotificationUtil util;
 
-    @Lazy
     private PropertyService propertyService;
 
     private PropertyConfiguration config;

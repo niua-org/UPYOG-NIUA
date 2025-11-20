@@ -62,7 +62,6 @@ public class EnrichmentService {
 	private SewerageDaoImpl sewerageDao;
 
 	@Autowired
-	@Lazy
 	private UserService userService;
 
 	@Autowired

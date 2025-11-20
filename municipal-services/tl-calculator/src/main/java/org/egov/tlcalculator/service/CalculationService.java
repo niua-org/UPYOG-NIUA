@@ -21,7 +21,6 @@ import org.egov.tlcalculator.web.models.tradelicense.TradeUnit;
 import org.egov.tlcalculator.web.models.tradelicense.EstimatesAndSlabs;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -52,7 +51,6 @@ public class CalculationService {
     private CalculationUtils utils;
 
     @Autowired
-    @Lazy
     private DemandService demandService;
 
     @Autowired

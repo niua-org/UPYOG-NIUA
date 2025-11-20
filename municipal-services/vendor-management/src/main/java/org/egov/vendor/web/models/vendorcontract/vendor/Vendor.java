@@ -1,8 +1,10 @@
 package org.egov.vendor.web.models.vendorcontract.vendor;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
+import lombok.*;
 import org.egov.common.contract.request.User;
 import org.egov.vendor.web.models.AuditDetails;
 import org.egov.vendor.web.models.vendorcontract.driver.Driver;
@@ -10,28 +12,22 @@ import org.egov.vendor.web.models.vendorcontract.location.Address;
 import org.egov.vendor.web.models.vendorcontract.vehicle.Vehicle;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.validator.constraints.SafeHtml;
 import org.springframework.validation.annotation.Validated;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-
-import jakarta.persistence.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import javax.persistence.*;
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * Capture the vendor information in the system.
  */
 @Validated
-@jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2021-01-06T05:34:12.238Z[GMT]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2021-01-06T05:34:12.238Z[GMT]")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -43,17 +39,20 @@ import lombok.Setter;
 @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 public class Vendor {
 
+	@SafeHtml
 	@Id
 	@JsonProperty("id")
 	@Column(name = "id", nullable = false, length = 64)
 	private String id = null;
 
 	@JsonProperty("tenantId")
+	@SafeHtml
 	@Size(max=64)
 	@Column(name = "tenantid", length = 64)
 	private String tenantId = null;
 
 	@JsonProperty("name")
+	@SafeHtml
 	@Size(max=128)
 	@Column(name = "name", length = 128)
 	private String name = null;
@@ -84,24 +83,29 @@ public class Vendor {
 	@Column(columnDefinition = "jsonb", name = "additionalDetails")
 	private Object additionalDetails = null;
 
+	@SafeHtml
 	@JsonProperty("source")
 	@Column(name = "source", length = 256)
 	private String source = null;
 
+	@SafeHtml
 	@JsonProperty("description")
 	@Column(name = "description", length = 256)
 	private String description = null;
 	
 	@JsonProperty("ownerId")
+	@SafeHtml
 	@Size(max=64)
 	private String ownerId = null;
 
 	@JsonProperty("agencyType")
+	@SafeHtml
 	@Size(max=128)
 	@Column(name = "agencytype", length = 128, nullable = false)
 	private String agencyType = null;
 	
 	@JsonProperty("paymentPreference")
+	@SafeHtml
 	@Size(max=128)
 	@Column(name = "paymentpreference", length = 128, nullable = false)
 	private String paymentPreference = null;

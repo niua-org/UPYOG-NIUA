@@ -1,6 +1,6 @@
 package org.egov.swcalculation.web.models.Idgen;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

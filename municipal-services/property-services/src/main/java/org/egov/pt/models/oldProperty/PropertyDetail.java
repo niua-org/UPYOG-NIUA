@@ -13,6 +13,7 @@ import javax.validation.constraints.Size;
 
 import org.egov.pt.models.Institution;
 import org.egov.pt.models.OwnerInfo;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -32,7 +33,7 @@ import lombok.ToString;
  * PropertyDetail
  */
 @Validated
-@jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-05-11T14:12:44.497+05:30")
+@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-05-11T14:12:44.497+05:30")
 
 @Getter
 @Setter

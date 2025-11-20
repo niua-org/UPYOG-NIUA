@@ -107,7 +107,7 @@ public class PropertyRepository {
 		log.info("Query for Property search is " + query + " with parameters " +  preparedStmtList.toArray().toString());
 
 		if (isApiOpen)
-			return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
+			return jdbcTemplate.query(query, preparedStmtList.toArray(), openRowMapper);
 		if(criteria.getIsDefaulterNoticeSearch())
 			return jdbcTemplate.query(query, preparedStmtList.toArray(), rowSearchMapper);
 		else

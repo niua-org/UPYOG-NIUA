@@ -20,7 +20,6 @@ import org.egov.swcalculation.util.SWCalculationUtil;
 import org.egov.swcalculation.util.SewerageCessUtil;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -40,7 +39,6 @@ public class EstimationService {
 	private CalculatorUtils calculatorUtil;
 
 	@Autowired
-	@Lazy
 	private SewerageCessUtil sewerageCessUtil;
 
 	@Autowired

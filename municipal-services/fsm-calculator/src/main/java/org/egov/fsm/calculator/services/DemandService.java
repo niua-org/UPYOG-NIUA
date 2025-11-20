@@ -29,7 +29,6 @@ import org.egov.fsm.calculator.web.models.demand.DemandResponse;
 import org.egov.fsm.calculator.web.models.demand.TaxHeadEstimate;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -39,7 +38,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class DemandService {
 
 	@Autowired
-	@Lazy
 	private CalculationService calculationService;
 
 	@Autowired

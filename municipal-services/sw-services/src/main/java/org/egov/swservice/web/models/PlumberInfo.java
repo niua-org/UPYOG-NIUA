@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiModelProperty;
  * PlumberInfo
  */
 @Validated
-@jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2020-01-22T12:39:45.543+05:30[Asia/Kolkata]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2020-01-22T12:39:45.543+05:30[Asia/Kolkata]")
 public class PlumberInfo {
 	@SafeHtml
 	@JsonProperty("id")

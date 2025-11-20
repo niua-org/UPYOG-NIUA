@@ -19,7 +19,7 @@ public class FSMQueryBuilder {
 
 	private static final String QUERY = "select count(*) OVER() AS full_count,fsm.*,fsm_address.*,fsm_geo.*,fsm_pit.*,fsm.id as fsm_id, fsm.createdby as fsm_createdby,"
 			+ "  fsm.lastmodifiedby as fsm_lastmodifiedby, fsm.createdtime as fsm_createdtime, fsm.lastmodifiedtime as fsm_lastmodifiedtime,"
-			+ "	 fsm.additionaldetails,fsm_address.id as fsm_address_id,fsm_address.additionaldetails as addressAdditionalDetails,fsm_geo.id as fsm_geo_id,"
+			+ "	 fsm.additionaldetails,fsm_address.id as fsm_address_id, fsm_address.additionaldetails as addressAdditionalDetails, fsm_geo.id as fsm_geo_id,"
 			+ "	 fsm_pit.id as fsm_pit_id, fsm_pit.additionalDetails as fsm_pit_additionalDetails"
 			+ "	 FROM eg_fsm_application fsm"
 			+ "	 INNER JOIN   eg_fsm_address fsm_address on fsm_address.fsm_id = fsm.id"
@@ -36,6 +36,8 @@ public class FSMQueryBuilder {
 
 	public static final String GET_VEHICLE_TRIPS_LIST = "SELECT * FROM eg_vehicle_trip_detail WHERE referenceno= ? and status='ACTIVE' order by createdtime desc ";
 
+	public static final String GET_WAITING_FOR_DISPOSAL_VEHICLE_TRIPS_LIST = "SELECT * FROM eg_vehicle_trip_detail WHERE trip_id IN ( SELECT id FROM eg_vehicle_trip WHERE applicationstatus = 'WAITING_FOR_DISPOSAL')AND status = 'ACTIVE' AND referenceno = ? ORDER BY createdtime DESC ";
+
 	public String getFSMSearchQuery(FSMSearchCriteria criteria, String dsoId, List<Object> preparedStmtList) {
 
 		StringBuilder builder = new StringBuilder(QUERY);
@@ -50,25 +52,26 @@ public class FSMQueryBuilder {
 				preparedStmtList.add(criteria.getTenantId());
 			}
 		}
-
 		/*
 		 * Enable part search by application number of fsm application
 		 */
 		List<String> applicationNumber = criteria.getApplicationNos();
-		if (!CollectionUtils.isEmpty(applicationNumber)) {
+		if (!CollectionUtils.isEmpty(applicationNumber) && (applicationNumber.stream()
+				.filter(checkappnumber -> checkappnumber.length() > 0).findFirst().orElse(null) != null)) {
+			boolean flag = false;
 			addClauseIfRequired(preparedStmtList, builder);
-			StringBuilder likeConditions = new StringBuilder();
-			for(int i=0; i< applicationNumber.size();i++) {
-				if(i > 0) {
-					likeConditions.append(" OR ");
-				}
-				likeConditions.append("fsm.applicationNo LIKE ?");
+			builder.append(" ( ");
+			for (String applicationno : applicationNumber) {
+
+				if (flag)
+					builder.append(" OR ");
+				builder.append(" UPPER(fsm.applicationNo) like ?");
+				preparedStmtList.add('%' + org.apache.commons.lang3.StringUtils.upperCase(applicationno) + '%');
+				builder.append(" ESCAPE '_' ");
+				flag = true;
+
 			}
-			builder.append("(").append(likeConditions).append(")");
-			for(String appNumber : applicationNumber) {
-				preparedStmtList.add("%" + appNumber + "%"); 
-			}
-            
+			builder.append(" ) ");
 		}
 
 		List<String> applicationStatus = criteria.getApplicationStatus();
@@ -281,6 +284,17 @@ public class FSMQueryBuilder {
 
 	public String getTripDetailSarchQuery(String referenceNumber, int numOfRecords, List<Object> preparedStmtList) {
 		StringBuilder builder = new StringBuilder(GET_VEHICLE_TRIPS_LIST);
+		preparedStmtList.add(referenceNumber);
+		if (numOfRecords != 0) {
+			builder.append("fetch first ? rows only");
+			preparedStmtList.add(numOfRecords);
+		}
+		return builder.toString();
+	}
+
+	public String getTripDetailSarchQuery(String referenceNumber, int numOfRecords, List<Object> preparedStmtList,
+			Boolean waitingForDisposal) {
+		StringBuilder builder = new StringBuilder(GET_WAITING_FOR_DISPOSAL_VEHICLE_TRIPS_LIST);
 		preparedStmtList.add(referenceNumber);
 		if (numOfRecords != 0) {
 			builder.append("fetch first ? rows only");

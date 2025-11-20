@@ -1,6 +1,6 @@
 package org.egov.swcalculation.web.models;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 import org.egov.common.contract.request.RequestInfo;
 

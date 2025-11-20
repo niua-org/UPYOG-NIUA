@@ -1,10 +1,9 @@
 package org.egov.pt.calculator.web.models.demand;
 
 import java.util.HashSet;
-
 import java.util.Set;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
