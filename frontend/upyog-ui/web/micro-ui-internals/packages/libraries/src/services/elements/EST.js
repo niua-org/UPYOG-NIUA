@@ -26,29 +26,6 @@ export const ESTService = {
     auth: true,
   }),
 
-  search: ({ tenantId, filters, auth }) =>
-    Request({
-      url: Urls.est.search,
-      useCache: false,
-      data: filters,
-      method: "POST",
-      auth: auth === false ? auth : true,
-      userService: auth === false ? auth : true,
-      params: { tenantId },
-    }),
-    
-
-  update: (details, tenantId) =>
-    Request({
-      url: Urls.est.update,
-      data: details,
-      useCache: false,
-      setTimeParam: false,
-      userService: true,
-      method: "POST",
-      params: {},
-      auth: true,
-    }),
 
   assetSearch: ({ tenantId, filters }) =>
   Request({
@@ -61,28 +38,27 @@ export const ESTService = {
     data: filters,
   }),
 
-
-
-  applicationSearch: ({ tenantId, filters, auth }) =>
-    Request({
-      url: Urls.est.applicationSearch,
+  allotmentSearch:(details, tenantId) =>
+  Request({
+      url: Urls.est.allotmentSearch,
+      data: details,
       useCache: false,
+      setTimeParam: false,
+      userService: true,
       method: "POST",
-      auth: auth === false ? auth : true,
-      userService: auth === false ? auth : true,
-      params: { tenantId, ...filters },
+      params: {},
+      auth: true,
     }),
 
-    allotmentSearch: ({ tenantId, filters }) =>
+fetchBill: ({ tenantId, consumerCode, businessService }) =>
   Request({
-    url: Urls.est.allotmentSearch,
+    url: Urls.payment.fetch_bill,
     useCache: false,
     method: "POST",
     auth: true,
     userService: true,
-    params: { tenantId },
-    data: filters,
+    params: { tenantId, consumerCode, businessService },
+    data: {},
   }),
-    
- 
+
 };

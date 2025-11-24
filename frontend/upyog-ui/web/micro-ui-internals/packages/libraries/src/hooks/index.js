@@ -361,6 +361,7 @@ import useESTApplicationSearch from "./estate/useESTApplicationSearch";
 import useTenantsEST from "./estate/useTenants";
 import useESTAllotAsset from "./estate/useESTAllotAsset";
 import useESTAssetsAllotment from "./estate/useESTAssetsAllotment";
+import useESTBillSearch from "./estate/useESTBillSearch";
 
 
 const pgr = {
@@ -725,6 +726,7 @@ const estate = {
   useESTApplicationSearch,
   useESTAllotAsset,
   useESTAssetsAllotment,
+  useESTBillSearch,
   useTenants: useTenantsEST
 }
 

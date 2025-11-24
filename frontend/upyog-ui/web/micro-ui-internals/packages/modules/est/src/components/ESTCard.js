@@ -9,11 +9,6 @@ const ESTCard = () => {
 
   const EST_CEMP = Digit.UserService.hasAccess(["EST_CEMP"]) || false;
 
-  const handleNavigation = (path) => {
-    console.log("Navigating to:", path);
-    history.push(path);
-  };
-
   const links = [
     {
       label: t("INBOX"),

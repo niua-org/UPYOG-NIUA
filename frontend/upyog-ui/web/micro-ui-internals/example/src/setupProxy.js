@@ -119,12 +119,12 @@ module.exports = function (app) {
     "/individual/v1/_search",
     "/bpa-services/v1/preapprovedplan/_search",
     "/bpa-calculator/_estimate",
-    "/estate-management/estate/asset/v1/_create",
-    "/estate-management/estate/asset/v1/_search",
-    "/estate-management/estate/asset/v1/_update",
-    "/estate-management/estate/allotment/v1/_create",
-    "/estate-management/estate/allotment/v1/_search",
-    "/estate-management/estate/asset/allotment/v1/_update",
+    // "/estate-management/estate/asset/v1/_create",
+    // "/estate-management/estate/asset/v1/_search",
+    // "/estate-management/estate/asset/v1/_update",
+    // "/estate-management/estate/allotment/v1/_create",
+    // "/estate-management/estate/allotment/v1/_search",
+    // "/estate-management/estate/asset/allotment/v1/_update",
     "/estate-management/estate"
 
   ].forEach((location) => app.use(location, createProxy));

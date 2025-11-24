@@ -1,6 +1,10 @@
 import { MdmsService } from "../../services/elements/MDMS";
 import { useQuery } from "react-query";
 
+// Custom hook to fetch EST documents or multiple types from MDMS
+// This hook provides a query interface for retrieving EST-related documents
+// or other types of data based on the provided type parameter.
+
 const useESTDoc = (tenantId, moduleCode, type, config = {}) => {
   
   const useESTDocumentsRequiredScreen = () => {

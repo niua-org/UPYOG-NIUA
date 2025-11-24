@@ -29,6 +29,7 @@ const ESTSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
     }, 
   });
 
+
   useEffect(() => {
     register("offset", 0);
     register("limit", 10);
@@ -78,7 +79,7 @@ const ESTSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
       },
       {
         Header: "Locality",
-        Cell: ({ row }) => GetCell(row.original["locality"]),
+        Cell: ({ row }) => GetCell(t(row.original["locality"])),
         disableSortBy: true,
       },
       {

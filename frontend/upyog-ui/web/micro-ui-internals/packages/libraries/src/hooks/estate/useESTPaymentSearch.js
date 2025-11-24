@@ -1,5 +1,9 @@
 import { useQuery, useQueryClient } from "react-query";
 
+// Custom hook to search EST payments
+// This hook provides a query interface for searching EST payments
+// based on various filters, tenant ID, and authentication details.
+
 const useESTPaymentSearch = ({ tenantId, filters, auth, searchedFrom = "" }, config = {}) => {
   const client = useQueryClient();
   const args = tenantId ? { tenantId, filters, auth } : { filters, auth };

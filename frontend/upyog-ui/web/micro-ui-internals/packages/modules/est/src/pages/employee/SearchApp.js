@@ -9,6 +9,7 @@ const SearchApp = ({ path }) => {
     const [payload, setPayload] = useState({});
     const [showToast, setShowToast] = useState(null);
     const [hasSearched, setHasSearched] = useState(false);
+    
 
     function onSubmit(_data) {
         setHasSearched(true);
@@ -29,6 +30,10 @@ const SearchApp = ({ path }) => {
             setShowToast({ error: true, label: "Please enter search criteria" });
         }
     }
+
+    // Using a custom hook to fetch EST asset search results based on the payload
+    // and tenantId.
+    // The query is enabled only when there is a valid payload.
 
     const { isLoading, isSuccess, data, error } = Digit.Hooks.estate.useESTAssetSearch({
         tenantId,

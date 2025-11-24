@@ -27,6 +27,65 @@ const ManageProperties = ({ t }) => {
   const [filteredProperties, setFilteredProperties] = useState([]);
   const { register, handleSubmit, reset } = useForm();
 
+   const { data: assetStatusData } = Digit.Hooks.useCustomMDMS(
+    Digit.ULBService.getStateId(), 
+    "Estate", 
+    [{ name: "AssetStatus" }],
+    {
+      select: (data) => {
+        const formattedData = data?.["Estate"]?.["AssetStatus"];
+        return formattedData;
+      },
+    }
+  );
+
+    const { data: assetTypeData } = Digit.Hooks.useCustomMDMS(
+    Digit.ULBService.getStateId(), 
+    "Estate", 
+    [{ name: "AssetType" }],
+    {
+      select: (data) => {
+        const formattedData = data?.["Estate"]?.["AssetType"];
+        return formattedData;
+      },
+    }
+  );
+
+  let assetStatusOptions = [{ code: "", name: "All", i18nKey: "ES_COMMON_ALL" }];
+  if (assetStatusData && assetStatusData.length > 0) {
+    assetStatusData.forEach((status) => {
+      assetStatusOptions.push({ 
+        code: status.code, 
+        name: status.name, 
+        i18nKey: status.name 
+      });
+    });
+  } else {
+    assetStatusOptions = [
+      { code: "", name: "All", i18nKey: "ES_COMMON_ALL" },
+      { code: "Allotted", name: "Allotted", i18nKey: "EST_ALLOTTED" },
+      { code: "Available", name: "Available", i18nKey: "EST_AVAILABLE" }
+    ];
+  }
+  let assetTypeOptions = [{ code: "", name: "All", i18nKey: "ES_COMMON_ALL" }];
+  if (assetTypeData && assetTypeData.length > 0) {
+    assetTypeData.forEach((type) => {
+      assetTypeOptions.push({ 
+        code: type.code, 
+        name: type.name, 
+        i18nKey: type.name 
+      });
+    });
+  } else {
+    assetTypeOptions = [
+    { code: "", name: "All", i18nKey: "ES_COMMON_ALL" },
+    { code: "Commercial", name: "Commercial", i18nKey: "EST_COMMERCIAL" },
+    { code: "Residential", name: "Residential", i18nKey: "EST_RESIDENTIAL" }
+  ];
+}
+    
+
+
   useEffect(() => {
     if (isSuccess && apiData?.Assets) {
       const sortedAssets = apiData.Assets.sort((a, b) => {
@@ -38,18 +97,6 @@ const ManageProperties = ({ t }) => {
       setFilteredProperties(sortedAssets);
     }
   }, [isSuccess, apiData]);
-
-  const assetStatusOptions = [
-    { code: "", name: "All" },
-    { code: "Allotted", name: "Allotted" },
-    { code: "Available", name: "Available" }
-  ];
-
-  const assetTypeOptions = [
-    { code: "", name: "All" },
-    { code: "Commercial", name: "Commercial" },
-    { code: "Residential", name: "Residential" }
-  ];
 
   const onFilterSubmit = (data) => {
     let filtered = properties;
@@ -200,24 +247,26 @@ const ManageProperties = ({ t }) => {
 
         <SearchField>
           <label>{t("EST_ASSET_STATUS")}</label>
-          <Dropdown
-            name="assetStatus"
-            inputRef={register({})}
-            option={assetStatusOptions}
-            optionKey="name"
-            selected={{ name: "All" }}
-          />
+         <Dropdown
+  name="assetStatus"
+  inputRef={register({})}
+  option={assetStatusOptions}
+  optionKey="i18nKey"  // Changed from "name" to "i18nKey"
+  selected={{ i18nKey: "ES_COMMON_ALL" }}
+  t={t}  // Add translation function
+/>
         </SearchField>
 
         <SearchField>
           <label>{t("EST_ASSET_TYPE")}</label>
           <Dropdown
-            name="assetType"
-            inputRef={register({})}
-            option={assetTypeOptions}
-            optionKey="name"
-            selected={{ name: "All" }}
-          />
+  name="assetType"
+  inputRef={register({})}
+  option={assetTypeOptions}
+  optionKey="i18nKey"  // Changed from "name" to "i18nKey"
+  selected={{ i18nKey: "ES_COMMON_ALL" }}
+  t={t}  // Add translation function
+/>
         </SearchField>
 
         <SearchField className="submit">

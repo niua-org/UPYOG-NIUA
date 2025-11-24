@@ -132,7 +132,12 @@ const refObj = (tenantId, filters) => {
       searchFn: () => tpBookings(null, { ...filters, bookingNo: consumerCodes }),
       key: "bookingNo",
       label: "TP_BOOKING_NO",
-    }
+    },
+    est: {
+      searchFn: () => advtApplications(tenantId, filters),
+      key: "consumerCode",
+      label: "EST_ASSET_NO",
+    },
   };
 };
 
@@ -171,6 +176,9 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   if (window.location.href.includes("request-service.tree_pruning")) {
     _key = "tp"
   }
+  if (window.location.href.includes("est-services")) {
+    _key = "est"
+  } 
   
 
   /* key from application ie being used as consumer code in bill */

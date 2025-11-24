@@ -1,4 +1,4 @@
-import { CitizenHomeCard, PTIcon } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, PropertyHouse } from "@upyog/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useRouteMatch } from "react-router-dom";
@@ -21,7 +21,6 @@ import ESTAssignAssetCreate from "./pages/employee/Create/AssignAssetIndex";
 import ESTAssignAstRequiredDoc from "./PageComponents/ESTAssignAstRequiredDoc";
 import ESTAssignAssets from "./PageComponents/ESTAssignAssets";
 import ESTAssignAssetsCheckPage from "./pages/employee/Create/ESTAssignAssetsCheckPage";
-import ESTCitizenCard from "./components/ESTCitizenCard";
 
 const componentsToRegister = {
   MyApplications,
@@ -40,7 +39,6 @@ const componentsToRegister = {
   ESTAssignAstRequiredDoc,
   ESTAssignAssets,
   ESTAssignAssetsCheckPage,
-  ESTCitizenCard,
 };
 
 const addComponentsToRegistry = () => {
@@ -61,11 +59,31 @@ export const ESTModule = ({ stateCode, userType, tenants }) => {
   }
 };
 
-export const ESTLinks = ESTCard;
-export const ESTCitizenHome = ESTCitizenCard;
+export const ESTLinks = ({ matchPath, userType }) => {
+  const { t } = useTranslation();
+
+  const links = [
+    {
+      link: `${matchPath}/my-applications`,
+      i18nKey: t("EST_MY_APPLICATIONS"),
+    },
+    {
+      link: `${matchPath}/payment-history`,
+      i18nKey: t("EST_PAYMENT_HISTORY"),
+    },
+  ];
+
+  return (
+    <CitizenHomeCard
+      header={t("ESTATE_MANAGEMENT")}
+      links={links}
+      Icon={() => <PropertyHouse />}
+    />
+  );
+};
+
 export const ESTComponents = {
   ESTCard,
-  ESTCitizenCard,
   ESTModule,
   ESTLinks,
 };

@@ -37,12 +37,7 @@ const ESTPropertyAllotteeDetails = () => {
     const styleElement = document.createElement("style");
     styleElement.innerHTML = stickyTableStyle;
     document.head.appendChild(styleElement);
-     return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
-
-  useEffect(() => {
+     
     fetchAllotmentData();
     return () => {
       isMountedRef.current = false;

@@ -4,22 +4,11 @@ import { useTranslation } from "react-i18next";
 import { Switch, useLocation } from "react-router-dom";
 import { ESTLinks } from "../../Module";
 import SearchApp from "./SearchApp";
-import ManagePropertiesPage from "./ManagePropertiesPage";
-import NewRegistration from "../../PageComponents/ESTNEWRegistration";
-import ESTAcknowledgement from "./Create/ESTAcknowledgement";
 import ManageProperties from "../../components/ManageProperties";
-// import ESTManageProperties from "../../PageComponents/ESTManageProperties";
-import ESTPropertyAllotteeDetails from "../../PageComponents/ESTPropertyAllotteeDetails";
-import ESTDashboard from "../../PageComponents/ESTDashboard"; 
-import ESTAllotPropertySummary from "../../PageComponents/ESTAllotPropertySummary";
-import ESTEditAllotPropertySummary from "../../PageComponents/ESTEditAllotPropertySummary";
-import ESTRegCheckPage from "./Create/ESTRegCheckPage"; 
+import ESTPropertyAllotteeDetails from "../../PageComponents/ESTPropertyAllotteeDetails"; 
 import ESTRegCreate from "./Create";
 import ESTAssignAssetCreate from "./Create/AssignAssetIndex";
-import ESTAssignAssetsCheckPage from "./Create/ESTAssignAssetsCheckPage";
 import AllProperties  from "../../components/AllProperties";
-import AssignAssets from "../../PageComponents/ESTAssignAssets";
-import AllotteeDetails from "../../components/AllotteeDetails"
 import Inbox from "./Inbox";
 import ESTManageProperties from "../../PageComponents/ESTManageProperties";
 
@@ -102,9 +91,7 @@ const EmployeeApp = ({ path, url, userType }) => {
 )} /> 
             {/* Search Applications Route */}
             <PrivateRoute path={`${path}/search-applications`} component={(props) => <SearchApp {...props} parentRoute={path} />} />
-            
-            {/* Create Asset Route */}
-            {/* <PrivateRoute exact path={`${path}/create-asset/acknowledgement`} component={(props) => <ESTAcknowledgement {...props} parentRoute={path} />} /> */}
+         
             <PrivateRoute path={`${path}/create-asset`} component={(props) => <ESTRegCreate {...props} parentRoute={path} />} />
             {/* Manage Properties Route */}
             <PrivateRoute path={`${path}/manage-properties`} component={(props) => <ESTManageProperties {...props} parentRoute={path} />} />

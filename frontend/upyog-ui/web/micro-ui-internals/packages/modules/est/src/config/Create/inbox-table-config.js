@@ -1,4 +1,3 @@
-// Importing necessary components and hooks from external libraries
 import React from "react";
 import { Link } from "react-router-dom"; // Component for navigation links
 

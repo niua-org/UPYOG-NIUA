@@ -12,7 +12,7 @@ const CitizenApp = ({ path }) => {
       <Switch>
         <AppContainer>
           <BackButton>Back</BackButton>
-          <PrivateRoute path={`${path}/application/:allotmentId/:tenantId`} component={ESTApplicationDetails} />
+          <PrivateRoute path={`${path}/application/:assetNo/:tenantId`} component={ESTApplicationDetails} />
           <PrivateRoute path={`${path}/my-applications`} component={ESTMyApplications} />
           <PrivateRoute path={`${path}/payment-history`} component={ESTPaymentHistory} />
 

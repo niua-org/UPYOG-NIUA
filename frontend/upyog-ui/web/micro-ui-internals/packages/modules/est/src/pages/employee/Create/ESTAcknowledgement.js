@@ -10,10 +10,10 @@ const GetActionMessage = (props) => {
   if (props.isSuccess) {
     return window?.location?.href?.includes("edit") ? t("EST_UPDATE_SUCCESSFULL") : t("EST_SUBMIT_SUCCESSFULL");
   }
-  else if (props.isLoading) {
-    return t("EST_APPLICATION_PENDING");
-  }
-  else if (!props.isSuccess)
+  // else if (props.isLoading) {
+  //   return t("EST_APPLICATION_PENDING");
+  // }
+  else (!props.isSuccess)
     return t("EST_APPLICATION_FAILED");
 };
 
@@ -100,7 +100,7 @@ const ESTAcknowledgement = ({ data, onSuccess }) => {
           textStyle={{ whiteSpace: "pre", width: "60%" }}
         />
       </StatusTable>
-      {mutation.isSuccess && <SubmitBar label={t("EST_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />}
+      {/* {mutation.isSuccess && <SubmitBar label={t("EST_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />} */}
       {user?.type === "CITIZEN" ?
         <Link to={`/upyog-ui/citizen`}>
           <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />

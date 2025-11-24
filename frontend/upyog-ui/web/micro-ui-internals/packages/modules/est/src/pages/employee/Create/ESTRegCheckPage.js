@@ -38,9 +38,10 @@ const ESTRegCheckPage =  ({ onSubmit, editdata, value = {} }) => {
 
       <CardSubHeader>{t("EST_ASSET_DETAILS")}</CardSubHeader>
       <StatusTable>
-        <Row label={t("ASSETS_NO")} text={Assetdata.estateNo || t("NA")} 
-         actionButton={<ActionButton jumpTo={`/upyog-ui/employee/est/create/newRegistration`}/>} />
-        <Row label={t("BUILDING_NAME")} text={Assetdata.buildingName || t("NA")} />
+        {/* <Row label={t("ASSETS_NO")} text={Assetdata.estateNo || t("NA")} */}
+         
+        <Row label={t("BUILDING_NAME")} text={Assetdata.buildingName || t("NA")}
+        actionButton={<ActionButton jumpTo={`/upyog-ui/employee/est/create/newRegistration`}/>} />
         <Row label={t("BUILDING_NUMBER")} text={Assetdata.buildingNo || t("NA")} />
         <Row label={t("BUILDING_FLOOR")} text={Assetdata.buildingFloor || t("NA")} />
         <Row label={t("BUILDING_BLOCK")} text={Assetdata.buildingBlock || t("NA")} />

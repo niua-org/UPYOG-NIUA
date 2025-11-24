@@ -176,8 +176,7 @@ const mutation = Digit.Hooks.estate.useESTCreateAPI(tenantId);
         <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
             
-            {/* Asset Number */}
-            {/* <div>
+           {/* <div> 
               <RequiredLabel label="EST_ASSETS_NO" />
               <TextInput
                 placeholder={t("EST_ENTER_ASSET_NO")}

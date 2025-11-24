@@ -6,7 +6,7 @@ import { useHistory, useParams } from "react-router-dom";
 const ESTApplicationDetails = () => {
   const { t } = useTranslation();
   const history = useHistory();
-  const { allotmentId, tenantId } = useParams();
+  const { assetNo, tenantId } = useParams();
   
   const passedData = history.location?.state?.applicationData;
   const [data, setData] = useState(passedData || null);
@@ -19,18 +19,23 @@ const ESTApplicationDetails = () => {
       fetchAllotmentDetails();
     }
     fetchBillData();
-  }, [allotmentId, tenantId, passedData]);
+  }, [assetNo, tenantId, passedData]);
 
   const fetchAllotmentDetails = async () => {
     setIsLoading(true);
     try {
-      const response = await Digit.ESTService.allotmentSearch({
+      const response = await Digit.ESTService.assetSearch({
         tenantId,
-        filters: { allotmentId: allotmentId }
+        filters: {
+          AssetSearchCriteria: {
+            tenantId,
+            estateNo: assetNo
+          }
+        }
       });
-      setData(response?.Allotments?.[0] || null);
+      setData(response?.Assets?.[0] || null);
     } catch (error) {
-      console.error("Error fetching allotment details:", error);
+      console.error("Error fetching asset details:", error);
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +45,7 @@ const ESTApplicationDetails = () => {
     try {
       const result = await Digit.PaymentService.fetchBill(tenantId, { 
         businessService: "est-services", 
-        consumerCode: allotmentId 
+        consumerCode: assetNo 
       });
       setBillData(result);
       
@@ -57,12 +62,7 @@ const ESTApplicationDetails = () => {
 
   const handleMakePayment = () => {
     history.push({
-      pathname: `/upyog-ui/citizen/payment/my-bills/est-services/${allotmentId}`,
-      state: { 
-        tenantId: tenantId, 
-        allotmentId: allotmentId,
-        consumerCode: allotmentId
-      },
+      pathname: `/upyog-ui/citizen/payment/my-bills/est-services/${data?.estateNo}`,
     });
   };
 
@@ -81,13 +81,25 @@ const ESTApplicationDetails = () => {
           <Header styles={{ fontSize: "32px" }}>{t("EST_ALLOTMENT_DETAILS")}</Header>
         </div>
         <Card>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_BASIC_DETAILS")}</CardSubHeader>
           <StatusTable>
-            <Row className="border-none" label={t("EST_ALLOTMENT_ID")} text={data?.allotmentId} />
-            <Row className="border-none" label={t("EST_ASSET_NUMBER")} text={data?.assetNo} />
+            <Row className="border-none" label={t("EST_ASSET_ID")} text={data?.assetId} />
+            <Row className="border-none" label={t("EST_ESTATE_NUMBER")} text={data?.estateNo} />
+            <Row className="border-none" label={t("EST_ASSET_STATUS")} text={data?.assetStatus || "PENDING"} />
+          </StatusTable>
+
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_ASSET_DETAILS")}</CardSubHeader>
+          <StatusTable>
+            <Row className="border-none" label={t("EST_ASSET_NAME")} text={data?.assetName || t("CS_NA")} />
+            <Row className="border-none" label={t("EST_BUILDING_NAME")} text={data?.buildingName || t("CS_NA")} />
+            <Row className="border-none" label={t("EST_ASSET_TYPE")} text={data?.assetType || t("CS_NA")} />
+            <Row className="border-none" label={t("EST_LOCALITY")} text={data?.locality || t("CS_NA")} />
+            <Row className="border-none" label={t("EST_FLOOR")} text={data?.floor || t("CS_NA")} />
           </StatusTable>
 
           <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_PAYMENT_DETAILS")}</CardSubHeader>
           <StatusTable>
+            <Row className="border-none" label={t("EST_RATE")} text={`₹${data?.rate || 0}`} />
             <Row 
               className="border-none" 
               label={t("EST_TOTAL_AMOUNT")} 
@@ -107,34 +119,24 @@ const ESTApplicationDetails = () => {
                   : t("CS_NA")
               }
             />
-            <Row className="border-none" label={t("EST_MONTHLY_RENT")} text={`₹${data?.monthlyRent || 0}`} />
-            <Row className="border-none" label={t("EST_ADVANCE_PAYMENT")} text={`₹${data?.advancePayment || 0}`} />
           </StatusTable>
 
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_ALLOTTEE_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_ADDITIONAL_INFO")}</CardSubHeader>
           <StatusTable>
-            <Row className="border-none" label={t("EST_ALLOTTEE_NAME")} text={data?.alloteeName || t("CS_NA")} />
-            <Row className="border-none" label={t("EST_MOBILE_NUMBER")} text={data?.mobileNo || t("CS_NA")} />
-            <Row className="border-none" label={t("EST_ALT_MOBILE_NUMBER")} text={data?.alternateMobileNo || t("CS_NA")} />
-            <Row className="border-none" label={t("EST_EMAIL_ID")} text={data?.emailId || t("CS_NA")} />
+            <Row className="border-none" label={t("EST_AREA")} text={`${data?.additionalDetails?.area || 0} sq ft`} />
+            <Row className="border-none" label={t("EST_CREATED_DATE")} text={
+              data?.auditDetails?.createdTime 
+                ? new Date(data.auditDetails.createdTime).toLocaleDateString("en-GB")
+                : t("CS_NA")
+            } />
           </StatusTable>
 
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_ALLOTMENT_INFO")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("EST_STATUS")} text={data?.status || "PENDING"} />
-            <Row className="border-none" label={t("EST_DURATION")} text={`${data?.duration || 0} years`} />
-            <Row className="border-none" label={t("EST_RENT_RATE")} text={`₹${data?.rentRate || 0}`} />
-            <Row className="border-none" label={t("EST_EOFFICEFILE_NO")} text={data?.eofficeFileNo || t("CS_NA")} />
-          </StatusTable>
-
-          {(data?.status === "PENDING" || paymentStatus === "PENDING") && (
-            <div style={{ marginTop: "20px", textAlign: "center" }}>
-              <SubmitBar 
-                label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} 
-                onSubmit={handleMakePayment}
-              />
-            </div>
-          )}
+          <div style={{ marginTop: "20px", textAlign: "center" }}>
+            <SubmitBar 
+              label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} 
+              onSubmit={handleMakePayment}
+            />
+          </div>
         </Card>
       </div>
     </React.Fragment>

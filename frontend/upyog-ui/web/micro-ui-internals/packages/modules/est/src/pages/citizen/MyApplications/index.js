@@ -12,31 +12,58 @@ export const ESTMyApplications = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [status, setStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [allData, setAllData] = useState({ Allotments: [] });
+  const [data, setData] = useState({ Assets: [] });
 
-  useEffect(() => {
-    fetchAllotments();
-  }, []);
+  let filter = window.location.href.split("/").pop();
+  let t1;
+  let off;
+  if (!isNaN(parseInt(filter))) {
+    off = filter;
+    t1 = parseInt(filter) + 50;
+  } else {
+    t1 = 4;
+  }
 
-  const fetchAllotments = async () => {
+  const fetchAllotments = async (searchFilters = {}) => {
     setIsLoading(true);
     try {
-      const response = await Digit.ESTService.allotmentSearch({
+      const response = await Digit.ESTService.assetSearch({
         tenantId,
-        filters: { limit: "100", sortOrder: "ASC", sortBy: "createdTime", offset: "0", tenantId }
+        filters: {
+          AssetSearchCriteria: {
+            tenantId,
+            mobileNumber: user?.mobileNumber,
+            ...(searchFilters.estateNo && { estateNo: searchFilters.estateNo }),
+            ...(searchFilters.assetStatus && { assetStatus: searchFilters.assetStatus })
+          }
+        }
       });
-      setAllData(response || { Allotments: [] });
+      setData(response || { Assets: [] });
     } catch (error) {
-      console.error("Error fetching allotments:", error);
-      setAllData({ Allotments: [] });
+      console.error("Error fetching assets:", error);
+      setData({ Assets: [] });
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchAllotments();
+  }, []);
+
   const handleSearch = () => {
-    // Search logic will be handled in filteredApplications
+    const trimmedSearchTerm = searchTerm.trim();
+    const searchFilters = {
+      estateNo: trimmedSearchTerm || undefined,
+      assetStatus: status?.code || undefined,
+    };
+
+    fetchAllotments(searchFilters);
   };
+
+  if (isLoading) {
+    return <Loader />;
+  }
 
   const statusOptions = [
     { code: "ACTIVE", value: t("EST_ACTIVE") },
@@ -44,24 +71,7 @@ export const ESTMyApplications = () => {
     { code: "EXPIRED", value: t("EST_EXPIRED") },
   ];
 
-  // Filter applications on frontend
-  const filteredApplications = allData?.Allotments?.filter(application => {
-    // Filter by user's mobile number
-    const matchesMobile = application?.mobileNo === user?.mobileNumber;
-    
-    // Filter by search term (asset number)
-    const matchesSearch = !searchTerm.trim() || 
-      application?.assetNo?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Filter by status
-    const matchesStatus = !status?.code || application?.status === status?.code;
-    
-    return matchesMobile && matchesSearch && matchesStatus;
-  }) || [];
-
-  if (isLoading) {
-    return <Loader />;
-  }
+  const filteredApplications = data?.Assets || [];
 
   return (
     <React.Fragment>
@@ -70,40 +80,74 @@ export const ESTMyApplications = () => {
         <div style={{ marginLeft: "16px" }}>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "16px" }}>
             <div style={{ flex: 1 }}>
-              <CardLabel>{t("EST_ASSET_NUMBER")}</CardLabel>
-              <TextInput
-                placeholder={t("Enter Asset Number")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: "100%", padding: "8px" }}
-              />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <CardLabel>{t("EST_ASSET_NUMBER")}</CardLabel>
+                <TextInput
+                  placeholder={t("Enter Asset Number")}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ width: "100%", padding: "8px", height: "150%" }}
+                />
+              </div>
             </div>
             <div style={{ flex: 1 }}>
-              <CardLabel>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</CardLabel>
-              <Dropdown
-                selected={status}
-                select={setStatus}
-                option={statusOptions}
-                placeholder={t("Select Status")}
-                optionKey="value"
-                style={{ width: "100%" }}
-                t={t}
-              />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <CardLabel>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</CardLabel>
+                <Dropdown
+                  className="form-field"
+                  selected={status}
+                  select={setStatus}
+                  option={statusOptions}
+                  placeholder={t("Select Status")}
+                  optionKey="value"
+                  style={{ width: "100%" }}
+                  t={t}
+                />
+              </div>
             </div>
-            <div style={{ marginTop: "30px" }}>
-              <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
-              <p className="link" style={{ marginLeft: "30%", marginTop: "10px" }} onClick={() => { setSearchTerm(""); setStatus(""); }}>
-                {t("ES_COMMON_CLEAR_ALL")}
-              </p>
+            <div>
+              <div style={{ marginTop: "17%" }}>
+                <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
+                <p
+                  className="link"
+                  style={{ marginLeft: "30%", marginTop: "10px", display: "block" }}
+                  onClick={() => {
+                    setSearchTerm(""); 
+                    setStatus(null);
+                    fetchAllotments();
+                  }}
+                >
+                  {t(`ES_COMMON_CLEAR_ALL`)}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </Card>
       <div>
-        {filteredApplications.map((application, index) => (
-          <EstateApplication key={index} application={application} tenantId={tenantId} buttonLabel={t("EST_SUMMARY")} />
-        ))}
-        {filteredApplications.length === 0 && <p style={{ marginLeft: "16px", marginTop: "16px" }}>{t("EST_NO_APPLICATION_FOUND_MSG")}</p>}
+        {filteredApplications.length > 0 &&
+          filteredApplications.map((application, index) => (
+            <div key={application.assetId || index}>
+              <EstateApplication 
+                application={application} 
+                tenantId={tenantId} 
+                buttonLabel={t("EST_SUMMARY")}
+              />
+            </div>
+          ))}
+        {filteredApplications.length === 0 && !isLoading && (
+          <p style={{ marginLeft: "16px", marginTop: "16px" }}>{t("EST_NO_APPLICATION_FOUND_MSG")}</p>
+        )}
+
+        {filteredApplications.length !== 0 && data?.count > t1 && (
+          <div>
+            <p style={{ marginLeft: "16px", marginTop: "16px" }}>
+              <span className="link">
+                <Link to={`/upyog-ui/citizen/est/my-applications/${t1}`}>{t("EST_LOAD_MORE_MSG")}</Link>
+              </span>
+            </p>
+          </div>
+        )}
       </div>
     </React.Fragment>
   );
