@@ -23,9 +23,7 @@ const ESTAssignAssetsCheckPage =  ({ onSubmit, value = {} }) => {
    const { t } = useTranslation();
   const [agree, setAgree] = useState(false);
  const AssignAssetsData = value?.AssignAssetsData?.AllotmentData || {};
- console.log("✅ AssignAssets CheckPage AssignAssetsData:", AssignAssetsData);
- console.log("✅ Full asset data:", value?.assetData);
-console.log("✅ Available fields:", Object.keys(value?.assetData || {}));
+
 
 
   const handleFileOpen = (fileId) => {

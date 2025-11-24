@@ -5,4 +5,4 @@ const useESTAllotAsset = (tenantId) => {
   return useMutation((data) => ESTService.allotment(data, tenantId));
 };
 
-export default useESTAllotAsset;
+export default useESTAllotAsset;  // for allotment of the Asset to Citizen  

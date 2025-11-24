@@ -238,3 +238,21 @@ export const getWorkflow = (data = {}) => {
     moduleName: "estate-services",
   };
 };
+
+ // ✅ Duration calculation between startDate and endDate
+ // ✅ Duration calculation between startDate and endDate
+export const calculateDuration = (start, end) => {
+  if (!start || !end) return "";
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  let result = "";
+  if (years > 0) result += `${years} year${years > 1 ? "s" : ""}`;
+  if (months > 0) result += `${years > 0 ? " " : ""}${months} month${months > 1 ? "s" : ""}`;
+  return result || "0 months";
+};

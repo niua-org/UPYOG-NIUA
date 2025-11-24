@@ -13,10 +13,7 @@ const ESTAssignAstRequiredDoc = ({ t, config, onSelect, userType, formData }) =>
 
   // 🔹 Go Next Function
   function goNext() {
-  console.log("Next button clicked");
-  console.log("onSelect function:", onSelect);
-  console.log("config:", config);
-  onSelect("Documents", {});
+   onSelect("Documents", {});
 }
 
   return (

@@ -58,10 +58,7 @@ const ESTPropertyAllotteeDetails = () => {
     });
     if (!isMountedRef.current) return;
     
-    console.log("Full API Response:", response); // Debug full response
-    const allotments = response?.Allotments || [];
-    console.log("Allotments array:", allotments); // Debug allotments array
-    console.log("Number of records:", allotments.length); // Debug count
+     const allotments = response?.Allotments || [];
     
     setAllotteeDetails(allotments);
     setFilteredData(allotments);

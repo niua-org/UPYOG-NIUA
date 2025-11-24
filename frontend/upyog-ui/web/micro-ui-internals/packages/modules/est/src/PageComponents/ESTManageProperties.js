@@ -42,6 +42,7 @@ const ESTManageProperties = () => {
               {t("EST_MANAGE_PROPERTY")}
             </Link>
           </span>
+            
            {/* Manage Property Link */}
           <span className="link">
             <Link
@@ -56,22 +57,7 @@ const ESTManageProperties = () => {
               {t("EST_ALL_PROPERTIES")}
             </Link>
           </span>
-
-          {/* Assign Asset Link
-          <span className="link">
-            <Link
-             to="/upyog-ui/employee/est/assignassets/info"
-              style={{
-                textDecoration: "none",
-                color: "#8B0000",
-                fontWeight: "500",
-                fontSize: "16px",
-              }}
-            >
-              {t("EST_ASSIGN_ASSETS")}
-            </Link>
-          </span> */}
-
+      
           {/* Allotte Asset Link */}
           <span className="link">
             <Link

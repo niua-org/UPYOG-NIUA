@@ -8,9 +8,7 @@ import EmployeeApp from "./pages/employee";
 import MyApplications from "./pages/citizen/MyApplications";
 import { ESTPaymentHistory } from "./pages/citizen/PaymentHistory";
 import ESTManageProperties from "./PageComponents/ESTManageProperties";
-import ESTDashboard from "./PageComponents/ESTDashboard";
 import ESTAllotPropertySummary  from "./PageComponents/ESTAllotPropertySummary";
-import ESTEditAllotPropertySummary  from "./PageComponents/ESTEditAllotPropertySummary";
 import NewRegistration from "./PageComponents/ESTNEWRegistration";
 import ESTRequiredDoc  from "./PageComponents/ESTRequiredDoc";
 import ESTRegCheckPage from "./pages/employee/Create/ESTRegCheckPage";
@@ -27,9 +25,7 @@ const componentsToRegister = {
   ESTPaymentHistory,
   NewRegistration,
   ESTManageProperties,
-  ESTDashboard,
   ESTAllotPropertySummary,
-  ESTEditAllotPropertySummary,
   ESTRegCreate,
   ESTRegCheckPage,
   ESTRequiredDoc,

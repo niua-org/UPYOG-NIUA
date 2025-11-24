@@ -23,14 +23,9 @@ const ActionButton = ({ jumpTo }) => {
 const ESTRegCheckPage =  ({ onSubmit, editdata, value = {} }) => {
    const { t } = useTranslation();
    const [agree, setAgree] = useState(false);
-   console.log("Raw value received:", value);
-   console.log( "value.Assetdata:", value?.Assetdata );
-
+  
    const Assetdata = value?.Assetdata?.Assetdata || value?.Assetdata || {};
-   console.log("Final Assetdata:", Assetdata);
-
-
-
+ 
 
   return (
     <Card>
