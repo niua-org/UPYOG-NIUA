@@ -2,6 +2,7 @@ import { Card, CardSubHeader, Header, Loader, Row, StatusTable, SubmitBar } from
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHistory, useParams } from "react-router-dom";
+import ViewTimeline from "../../components/ViewTimeline";
 
 const ESTApplicationDetails = () => {
   const { t } = useTranslation();
@@ -74,12 +75,24 @@ const ESTApplicationDetails = () => {
     return <div>{t("EST_APPLICATION_NOT_FOUND")}</div>;
   }
 
+  // Create application object for ViewTimeline
+  const applicationForTimeline = {
+    tenantId: data?.tenantId || tenantId,
+    applicationNo: data?.estateNo,
+    workflow: {
+      businessService: "EST"
+    },
+    channel: "CITIZEN",
+    auditDetails: data?.auditDetails
+  };
+
   return (
     <React.Fragment>
       <div>
         <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
           <Header styles={{ fontSize: "32px" }}>{t("EST_ALLOTMENT_DETAILS")}</Header>
         </div>
+        
         <Card>
           <CardSubHeader style={{ fontSize: "24px" }}>{t("EST_BASIC_DETAILS")}</CardSubHeader>
           <StatusTable>
@@ -130,13 +143,16 @@ const ESTApplicationDetails = () => {
                 : t("CS_NA")
             } />
           </StatusTable>
+          
+        </Card>
 
-          <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <SubmitBar 
-              label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} 
-              onSubmit={handleMakePayment}
-            />
-          </div>
+        {/* ViewTimeline Component */}
+        <Card>
+          <ViewTimeline
+            application={applicationForTimeline}
+            id={data?.estateNo}
+            userType="citizen"
+          />
         </Card>
       </div>
     </React.Fragment>

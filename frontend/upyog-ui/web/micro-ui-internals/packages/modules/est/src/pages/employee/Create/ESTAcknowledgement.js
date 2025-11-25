@@ -11,10 +11,7 @@ import { Link } from "react-router-dom";
 import { estPayloadData } from "../../../utils";
 
 const GetActionMessage = ({ t, isSuccess, isLoading, isError }) => {
-  // if (isLoading) {
-  //   return t("EST_APPLICATION_PENDING");
-  // }
-  (isSuccess) {
+  if (isSuccess) {
     return window?.location?.href?.includes("edit")
       ? t("EST_UPDATE_SUCCESSFULL")
       : t("EST_SUBMIT_SUCCESSFULL");
@@ -24,8 +21,6 @@ const GetActionMessage = ({ t, isSuccess, isLoading, isError }) => {
   }
   return "";
 };
-
-
 
 const rowContainerStyle = {
   padding: "4px 0px",
@@ -91,7 +86,6 @@ const ESTAcknowledgement = ({ data, onSuccess }) => {
           if (onSuccess) onSuccess(responseData);
         },
         onError: (error) => {
-          // yahan se exact backend error dikhega
           console.error("EST Allotment API Error:", error);
           if (error?.response?.data) {
             console.error("Backend error body:", error.response.data);
@@ -110,12 +104,14 @@ const ESTAcknowledgement = ({ data, onSuccess }) => {
       const tenantInfo = tenants?.find(
         (tenant) => tenant.code === assetInfo.tenantId
       );
-      const pdfData = await getESTAcknowledgementData(
-        { ...assetInfo },
-        tenantInfo,
-        t
-      );
-      Digit.Utils.pdf.generate(pdfData);
+      // Remove this function call as it's not defined
+      // const pdfData = await getESTAcknowledgementData(
+      //   { ...assetInfo },
+      //   tenantInfo,
+      //   t
+      // );
+      // Digit.Utils.pdf.generate(pdfData);
+      console.log("PDF download functionality to be implemented");
     } catch (error) {
       console.error("PDF generation error:", error);
     }
@@ -137,8 +133,8 @@ const ESTAcknowledgement = ({ data, onSuccess }) => {
           textStyle={{ whiteSpace: "pre", width: "60%" }}
         />
       </StatusTable>
-      {/* {mutation.isSuccess && <SubmitBar label={t("EST_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />} */}
-      {user?.type === "CITIZEN" ?
+
+      {user?.type === "CITIZEN" ? (
         <Link to={`/upyog-ui/citizen`}>
           <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>

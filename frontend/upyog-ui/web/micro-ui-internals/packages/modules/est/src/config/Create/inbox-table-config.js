@@ -1,101 +1,66 @@
 import React from "react";
-import { Link } from "react-router-dom"; // Component for navigation links
+import { Link } from "react-router-dom";
 
-// Utility function to render a cell with text
+// applies a style to the inputs of cells
 const GetCell = (value) => <span className="cell-text">{value}</span>;
-
-// Utility function to render a cell with SLA (Service Level Agreement) status
-// const GetSlaCell = (value) => {
-//   if (isNaN(value)) return <span className="sla-cell-success">0</span>; // Render "0" if the value is not a number
-//   return value < 0 ? <span className="sla-cell-error">{value}</span> : <span className="sla-cell-success">{value}</span>; // Render SLA status based on the value
-// };
-
-// Utility function to render a cell for mobile view
 const GetMobCell = (value) => <span className="sla-cell">{value}</span>;
 
-// Configuration for the inbox table
+/**
+ * TableConfig component renders the table columns in inbox of Estate Management employee side
+ * @returns Returns columns for the inbox table
+ */
 export const TableConfig = (t) => ({
   EST: {
-    // Configuration for the columns in the inbox table
     inboxColumns: (props) => [
       {
-        Header: t("EST_ASSETS_NUMBER"), // Header for the "Request ID" column
-        // Cell: ({ row }) => {
-        //   return (
-        //     <div>
-        //       <span className="link">
-        //         {/* Link to the application details page */}
-        //         <Link to={`${props.parentRoute}/application-details/` + `${row?.original?.searchData?.["requestId"]}`}>
-        //           {row.original?.searchData?.["requestId"]}
-        //         </Link>
-        //       </span>
-        //     </div>
-        //   );
-        // },
-        // mobileCell: (original) => GetMobCell(original?.searchData?.["requestId"]), // Cell for mobile view
-      },
-      {
-      Header: t("EST_ASSETS_REF"), // Header for the "Request ID" column
-      // Cell: ({ row }) => {
-      //   return (
-      //     <div>
-      //       <span className="link">
-      //         {/* Link to the application details page */}
-      //         <Link to={`${props.parentRoute}/application-details/` + `${row?.original?.searchData?.["requestId"]}`}>
-      //           {row.original?.searchData?.["requestId"]}
-      //         </Link>
-      //       </span>
-      //     </div>
-      //   );
-      // },
-      // mobileCell: (original) => GetMobCell(original?.searchData?.["requestId"]), // Cell for mobile view
-    },
-      {
-        Header: t("EST_BUILDING_NAME"), // Header for the "Request ID" column
-        // Cell: ({ row }) => {
-        //   return (
-        //     <div>
-        //       <span className="link">
-        //         {/* Link to the application details page */}
-        //         <Link to={`${props.parentRoute}/application-details/` + `${row?.original?.searchData?.["requestId"]}`}>
-        //           {row.original?.searchData?.["requestId"]}
-        //         </Link>
-        //       </span>
-        //     </div>
-        //   );
-        // },
-        // mobileCell: (original) => GetMobCell(original?.searchData?.["requestId"]), // Cell for mobile view
+        Header: t("EST_ALLOTMENT_ID"),
+        Cell: ({ row }) => {
+          return (
+            <div>
+              <span className="link">
+                <Link to={`${props.parentRoute}/application-details/` + `${row?.original?.allotmentId}`}>
+                  {row.original?.allotmentId}
+                </Link>
+              </span>
+            </div>
+          );
+        },
+        mobileCell: (original) => GetMobCell(original?.allotmentId),
       },
 
-
+      {
+        Header: t("EST_ASSET_NUMBER"),
+        Cell: (row) => {
+          return GetCell(`${row?.cell?.row?.original?.assetNo}`)
+        },
+        mobileCell: (original) => GetMobCell(original?.assetNo),
+      }, 
 
       {
-        Header: t("EST_STATUS"), // Header for the "Applicant Name" column
-        // Cell: (row) => {
-        //   return GetCell(`${row?.cell?.row?.original?.searchData?.applicant?.["applicantName"]}`); // Render the applicant's name
-        // },
-        // mobileCell: (original) => GetMobCell(original?.["applicantName"]), // Cell for mobile view
+        Header: t("EST_ALLOTTEE_NAME"),
+        Cell: (row) => {
+          return GetCell(`${row?.cell?.row?.original?.alloteeName}`)
+        },
+        mobileCell: (original) => GetMobCell(original?.alloteeName),
       },
-
-      // {
-      //   Header: t("EW_OWNER_MOBILE_NUMBER"), // Header for the "Owner Mobile Number" column
-      //   Cell: ({ row }) => {
-      //     return GetCell(`${row.original?.searchData?.applicant?.["mobileNumber"]}`); // Render the owner's mobile number
-      //   },
-      //   mobileCell: (original) => GetMobCell(original?.searchData?.applicant?.["mobileNumber"]), // Cell for mobile view
-      // },
-
-      // {
-      //   Header: t("EW_STATUS"), // Header for the "Status" column
-      //   Cell: ({ row }) => {
-      //     return GetCell(`${row.original?.searchData?.["requestStatus"]}`); // Render the request status
-      //   },
-      //   mobileCell: (original) =>
-      //     GetMobCell(t(`ES_EW_COMMON_STATUS_${original?.workflowData?.state?.["applicationStatus"]}`)), // Cell for mobile view with translated status
-      // },
+      
+      {
+        Header: t("EST_MOBILE_NUMBER"),
+        Cell: (row) => {
+          return GetCell(`${row?.cell?.row?.original?.mobileNo}`)
+        },
+        mobileCell: (original) => GetMobCell(original?.mobileNo),
+      },
+      
+      {
+        Header: t("EST_STATUS"),
+        Cell: ({ row }) => {
+          return GetCell(`${row?.original?.status}`);
+        },
+        mobileCell: (original) => GetMobCell(original?.status),
+      },
+      
     ],
-
-    // Function to extract the unique service request ID from the data
-    serviceRequestIdKey: (original) => original?.[t("EW_INBOX_UNIQUE_APPLICATION_NUMBER")]?.props?.children,
+    serviceRequestIdKey: (original) => original?.[t("EST_INBOX_UNIQUE_APPLICATION_NUMBER")]?.props?.children,
   },
 });

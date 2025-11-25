@@ -534,4 +534,48 @@ export const filterFunctions = {
     return { searchFilters, workflowFilters, limit, offset, sortOrder };
 
 },
+
+
+EST: (filtersArg) => {
+    
+    console.log("filtersArgssIN NEWFILTERFN",filtersArg);
+        let { uuid } = Digit.UserService.getUser()?.info || {};
+    
+        const searchFilters = {};
+        const workflowFilters = {};
+    
+        const { assetNo, mobileNo, limit, offset, sortBy, sortOrder, applicationStatus, status } = filtersArg || {};
+
+        if (applicationStatus && applicationStatus?.[0]?.applicationStatus) {
+          workflowFilters.status = applicationStatus.map((status) => status.uuid);
+          if (applicationStatus?.some((e) => e.nonActionableRole)) {
+            searchFilters.fetchNonActionableRecords = true;
+          }
+        }
+        if (status && status?.[0]?.status) {
+          workflowFilters.status = status.map((status) => status.uuid);
+          if (status?.some((e) => e.nonActionableRole)) {
+            searchFilters.fetchNonActionableRecords = true;
+          }
+        }
+
+        if (filtersArg?.uuid && filtersArg?.uuid.code === "ASSIGNED_TO_ME") {
+          workflowFilters.assignee = uuid;
+        }
+        if (mobileNo) {
+          searchFilters.mobileNo = mobileNo;
+        }
+        if (status) {
+          searchFilters.status = status;
+        }
+        if (assetNo) {
+          searchFilters.assetNo = assetNo;
+        }
+      
+        searchFilters["isInboxSearch"] = true;
+        searchFilters["creationReason"] = [""];
+        workflowFilters["moduleName"] = "est-service";
+        
+        return { searchFilters, workflowFilters, limit, offset, sortBy, sortOrder };
+  },
 };

@@ -10,7 +10,6 @@ import {
 } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useHistory } from "react-router-dom";
-import { Config } from "../config/Create/config";
 
 const NewRegistration = ({ parentRoute, t: propT, onSelect, formData = {}, config }) => {
   const { t } = useTranslation();

@@ -8,7 +8,6 @@ import EmployeeApp from "./pages/employee";
 import MyApplications from "./pages/citizen/MyApplications";
 import { ESTPaymentHistory } from "./pages/citizen/PaymentHistory";
 import ESTManageProperties from "./PageComponents/ESTManageProperties";
-import ESTAllotPropertySummary  from "./PageComponents/ESTAllotPropertySummary";
 import NewRegistration from "./PageComponents/ESTNEWRegistration";
 import ESTRequiredDoc  from "./PageComponents/ESTRequiredDoc";
 import ESTRegCheckPage from "./pages/employee/Create/ESTRegCheckPage";
@@ -19,13 +18,15 @@ import ESTAssignAssetCreate from "./pages/employee/Create/AssignAssetIndex";
 import ESTAssignAstRequiredDoc from "./PageComponents/ESTAssignAstRequiredDoc";
 import ESTAssignAssets from "./PageComponents/ESTAssignAssets";
 import ESTAssignAssetsCheckPage from "./pages/employee/Create/ESTAssignAssetsCheckPage";
+import ESTDesktopInbox from "./components/ESTDesktopInbox";
+import { TableConfig } from "./config/Create/inbox-table-config";
+import InboxFilter from "./components/inbox/NewInboxFilter";
 
 const componentsToRegister = {
   MyApplications,
   ESTPaymentHistory,
   NewRegistration,
   ESTManageProperties,
-  ESTAllotPropertySummary,
   ESTRegCreate,
   ESTRegCheckPage,
   ESTRequiredDoc,
@@ -34,6 +35,8 @@ const componentsToRegister = {
   ESTAssignAssetCreate,
   ESTAssignAstRequiredDoc,
   ESTAssignAssets,
+  ESTDesktopInbox,
+  TableConfig,
   ESTAssignAssetsCheckPage,
 };
 
@@ -45,6 +48,13 @@ const addComponentsToRegistry = () => {
 
 export const ESTModule = ({ stateCode, userType, tenants }) => {
   const { path, url } = useRouteMatch();
+  const moduleCode = "EST";
+  const language = Digit.StoreData.getCurrentLanguage();
+  const { isLoading, data: store } = Digit.Services.useStore({
+    stateCode,
+    moduleCode,
+    language,
+  });
   addComponentsToRegistry();
   Digit.SessionStorage.set("EST_TENANTS", tenants);
 
@@ -82,4 +92,7 @@ export const ESTComponents = {
   ESTCard,
   ESTModule,
   ESTLinks,
+  // ESTDesktopInbox: ESTDesktopInbox,
+  EST_INBOX_FILTER: (props) => <InboxFilter {...props} />,
+  ESTInboxTableConfig: TableConfig,
 };

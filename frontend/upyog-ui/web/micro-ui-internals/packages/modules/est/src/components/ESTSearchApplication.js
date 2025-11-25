@@ -172,7 +172,7 @@ const ESTSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
               name="assetType"
               inputRef={register({})}
               option={[
-                { code: "", name: "All" },
+                { code: "All", name: "All" },
                 { code: "RESIDENTIAL", name: "Residential" },
                 { code: "COMMERCIAL", name: "Commercial" },
               ]}

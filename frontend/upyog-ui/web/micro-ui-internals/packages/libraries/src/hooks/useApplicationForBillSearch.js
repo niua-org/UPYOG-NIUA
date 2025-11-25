@@ -9,6 +9,7 @@ import { SVService } from "../services/elements/SV";
 import { WTService } from "../services/elements/WT";
 import { MTService } from "../services/elements/MT";
 import { TPService } from "../services/elements/TP";
+import ESTApplicationDetails from "../../../modules/est/src/pages/citizen/ESTApplicationDetails";
 
 const fsmApplications = async (tenantId, filters) => {
   return (await FSMService.search(tenantId, { ...filters, limit: 10000 })).fsm;
@@ -134,7 +135,7 @@ const refObj = (tenantId, filters) => {
       label: "TP_BOOKING_NO",
     },
     est: {
-      searchFn: () => advtApplications(tenantId, filters),
+      searchFn: () => ESTApplicationDetails(tenantId, filters),
       key: "consumerCode",
       label: "EST_ASSET_NO",
     },

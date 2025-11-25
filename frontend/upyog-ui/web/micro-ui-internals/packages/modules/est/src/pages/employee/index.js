@@ -9,12 +9,8 @@ import ESTPropertyAllotteeDetails from "../../PageComponents/ESTPropertyAllottee
 import ESTRegCreate from "./Create";
 import ESTAssignAssetCreate from "./Create/AssignAssetIndex";
 import AllProperties  from "../../components/AllProperties";
-import Inbox from "./Inbox";
+import ESTInbox from "./Inbox";
 import ESTManageProperties from "../../PageComponents/ESTManageProperties";
-
-
-
-const inboxInitialState = {};
 
 const EmployeeApp = ({ path, url, userType }) => {
   const { t } = useTranslation();
@@ -77,27 +73,24 @@ const EmployeeApp = ({ path, url, userType }) => {
               <ESTBreadCrumbs location={location} />
             </div>
 
-            {/* Main EST Dashboard */}
             <PrivateRoute exact path={`${path}/`} component={() => <ESTLinks matchPath={path} userType={userType} />} />
             <PrivateRoute path={`${path}/property-allottee-details`} component={(props) => <ESTPropertyAllotteeDetails {...props} t={t} parentRoute={path} />} />
             <PrivateRoute path={`${path}/assignassets`} component={(props) => <ESTAssignAssetCreate {...props} parentRoute={path} />} />
-            {/* Inbox Route */}
             <PrivateRoute path={`${path}/inbox`} component={() => (
-  <ESTInbox
-    parentRoute={path}
-    businessService="EST"
-    initialStates={inboxInitialState}
-  />
-)} /> 
-            {/* Search Applications Route */}
+              <ESTInbox
+                parentRoute={path}
+                businessService="EST"
+                initialStates={inboxInitialState}
+                isInbox={true}
+                filterComponent="EST_INBOX_FILTER"
+                useNewInboxAPI={true}
+              />
+            )} />
             <PrivateRoute path={`${path}/search-applications`} component={(props) => <SearchApp {...props} parentRoute={path} />} />
-         
             <PrivateRoute path={`${path}/create-asset`} component={(props) => <ESTRegCreate {...props} parentRoute={path} />} />
-            {/* Manage Properties Route */}
             <PrivateRoute path={`${path}/manage-properties`} component={(props) => <ESTManageProperties {...props} parentRoute={path} />} />
-             <PrivateRoute path={`${path}/all-properties`} component={(props) => <AllProperties {...props}  t={t}  parentRoute={path} />} />
+            <PrivateRoute path={`${path}/all-properties`} component={(props) => <AllProperties {...props}  t={t}  parentRoute={path} />} />
             <PrivateRoute path={`${path}/manage-properties-table`} component={(props) => <ManageProperties {...props} t={t} parentRoute={path} />} />
-            
           </div>
         </React.Fragment>
       </AppContainer>

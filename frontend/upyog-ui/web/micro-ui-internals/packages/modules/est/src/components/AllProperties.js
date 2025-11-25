@@ -39,13 +39,13 @@ const AllProperties = ({ t }) => {
   }, [isSuccess, apiData]);
 
   const assetStatusOptions = [
-    { code: "", name: "All" },
+    { code: "All", name: "All" },
     { code: "active", name: "Active" },
     { code: "inactive", name: "Inactive" }
   ];
 
   const assetTypeOptions = [
-    { code: "", name: "All" },
+    { code: "All", name: "All" },
     { code: "COMMERCIAL", name: "Commercial" },
     { code: "RESIDENTIAL", name: "Residential" }
   ];

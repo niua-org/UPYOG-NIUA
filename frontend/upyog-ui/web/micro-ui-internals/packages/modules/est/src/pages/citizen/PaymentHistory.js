@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Header, Loader, TextInput, SubmitBar, Card, Table } from "@upyog/digit-ui-react-components";
+import { Header, Loader, TextInput, SubmitBar, Card, Table, DatePicker } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 export const ESTPaymentHistory = () => {
@@ -9,7 +9,16 @@ export const ESTPaymentHistory = () => {
 
   const [paymentData, setPaymentData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Search form state
   const [searchTerm, setSearchTerm] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  
+  // Applied filters state
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  const [appliedFromDate, setAppliedFromDate] = useState("");
+  const [appliedToDate, setAppliedToDate] = useState("");
 
   useEffect(() => {
     fetchPaymentHistory();
@@ -27,6 +36,8 @@ export const ESTPaymentHistory = () => {
       });
       
       const allotments = response?.Allotments || [];
+
+      
       
       // Filter by user's mobile number
       const userAllotments = allotments.filter(allotment => 
@@ -49,7 +60,6 @@ export const ESTPaymentHistory = () => {
 
         return {
           assetNo: allotment?.assetNo || "N/A",
-          assetRefNo: allotment?.applicationNo || allotment?.refAssetNo || allotment?.id || "N/A",
           monthlyRent: allotment?.monthlyRent || 0,
           due: nextDue.toLocaleDateString("en-GB"),
           paymentDate: lastPayment.toLocaleDateString("en-GB"),
@@ -59,7 +69,8 @@ export const ESTPaymentHistory = () => {
           lateFee: 0,
           duePayment: allotment?.monthlyRent || 0,
           agreementStartDate: createdDate.toLocaleDateString("en-GB"),
-          paymentStatus: allotment?.status === "ACTIVE" ? "Paid" : "Pending"
+          paymentStatus: allotment?.status === "ACTIVE" ? "Paid" : "Pending",
+          createdTime: createdDate
         };
       });
 
@@ -73,8 +84,40 @@ export const ESTPaymentHistory = () => {
     }
   };
 
+  const filteredData = useMemo(() => {
+    return paymentData.filter(item => {
+      const matchesAssetNo = !appliedSearchTerm || item.assetNo.toLowerCase().includes(appliedSearchTerm.toLowerCase());
+      
+      let matchesDateRange = true;
+      if (appliedFromDate || appliedToDate) {
+        const itemDate = item.createdTime;
+        if (appliedFromDate) {
+          matchesDateRange = matchesDateRange && itemDate >= new Date(appliedFromDate);
+        }
+        if (appliedToDate) {
+          const toDateTime = new Date(appliedToDate);
+          toDateTime.setHours(23, 59, 59, 999);
+          matchesDateRange = matchesDateRange && itemDate <= toDateTime;
+        }
+      }
+      
+      return matchesAssetNo && matchesDateRange;
+    });
+  }, [paymentData, appliedSearchTerm, appliedFromDate, appliedToDate]);
+
   const handleSearch = () => {
-    fetchPaymentHistory();
+    setAppliedSearchTerm(searchTerm);
+    setAppliedFromDate(fromDate);
+    setAppliedToDate(toDate);
+  };
+
+  const clearAll = () => {
+    setSearchTerm("");
+    setFromDate("");
+    setToDate("");
+    setAppliedSearchTerm("");
+    setAppliedFromDate("");
+    setAppliedToDate("");
   };
 
   const columns = useMemo(() => [
@@ -83,21 +126,9 @@ export const ESTPaymentHistory = () => {
       accessor: "assetNo",
     },
     {
-      Header: "Asset\nRef. No.",
-      accessor: "assetRefNo",
-    },
-    {
       Header: "Monthly Rent\n(INR)",
       accessor: "monthlyRent",
       Cell: ({ row }) => `₹${row.original.monthlyRent}`,
-    },
-    {
-      Header: "Due",
-      accessor: "due",
-    },
-    {
-      Header: "Payment\nDate",
-      accessor: "paymentDate",
     },
     {
       Header: "Last Date\nof Payment",
@@ -122,10 +153,6 @@ export const ESTPaymentHistory = () => {
       Cell: ({ row }) => `₹${row.original.duePayment}`,
     },
     {
-      Header: "Agreement\nStart Date",
-      accessor: "agreementStartDate",
-    },
-    {
       Header: "Payment\nStatus",
       accessor: "paymentStatus",
       Cell: ({ row }) => (
@@ -139,7 +166,6 @@ export const ESTPaymentHistory = () => {
     },
   ], []);
 
-  // UPYOG Standard getCellProps function
   const getCellProps = (cellInfo) => {
     const columnWidth = {
       "Asset\nNumber": "150px",
@@ -163,36 +189,66 @@ export const ESTPaymentHistory = () => {
 
   return (
     <React.Fragment>
-      <div style={{ padding: "20px" }}>
-        <Header>EST Payment History ({paymentData.length})</Header>
+      <div style={{ padding: "20px"}}>
+        <Header>EST Payment History ({filteredData.length})</Header>
         
         <Card style={{ marginBottom: "20px" }}>
           <div style={{ 
-            display: "flex", 
+            display: "grid", 
+            gridTemplateColumns: "1fr 1fr 1fr auto auto",
             gap: "15px", 
-            alignItems: "flex-end",
+            alignItems: "end",
             padding: "10px"
           }}>
-            <div style={{ flex: "0 0 auto" }}>
-              <label style={{ display: "block", marginBottom: "5px" }}>Asset Number</label>
+            <div>
+              <label style={{ display: "block", marginBottom: "5px", fontSize: "14px", fontWeight: "500" }}>
+                Asset Number
+              </label>
               <TextInput
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter Asset Number"
+                style={{ width: "100%" }}
               />
             </div>
-            <div style={{ flex: "0 0 auto" }}>
-              <SubmitBar label="Search" onSubmit={handleSearch} />
+            
+            <div>
+              <label style={{ display: "block", marginBottom: "5px", fontSize: "14px", fontWeight: "500" }}>
+                From Date
+              </label>
+              <DatePicker
+                date={fromDate}
+                onChange={setFromDate}
+                style={{ width: "100%" }}
+              />
             </div>
-            <div style={{ flex: "0 0 auto" }}>
+            
+            <div>
+              <label style={{ display: "block", marginBottom: "5px", fontSize: "14px", fontWeight: "500" }}>
+                To Date
+              </label>
+              <DatePicker
+                date={toDate}
+                onChange={setToDate}
+                style={{ width: "100%" }}
+              />
+            </div>
+            
+            <div>
+              <SubmitBar label="Search" onSubmit={handleSearch} 
+              style={{ marginTop: "20px" }}/>
+            </div>
+            
+            <div>
               <p 
                 style={{ 
                   cursor: "pointer", 
                   margin: "0",
                   color: "#000000ff",
-                  textDecoration: "underline"
+                  textDecoration: "underline",
+                  fontSize: "14px"
                 }} 
-                onClick={() => setSearchTerm("")}
+                onClick={clearAll}
               >
                 Clear All
               </p>
@@ -203,17 +259,17 @@ export const ESTPaymentHistory = () => {
         <div style={{ 
           overflowX: "auto",
           width: "100%",
-          minWidth: "1600px"
+          minWidth: "1000px"
         }}>
           <Table
             t={t}
-            data={paymentData}
+            data={filteredData}
             columns={columns}
             getCellProps={getCellProps}
             disableSort={false}
             onSort={() => {}}
             isPaginationRequired={false}
-            totalRecords={paymentData.length}
+            totalRecords={filteredData.length}
           />
         </div>
       </div>

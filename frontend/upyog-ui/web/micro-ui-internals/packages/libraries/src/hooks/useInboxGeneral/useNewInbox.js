@@ -13,6 +13,8 @@ import { MTService } from "../../services/elements/MT";
 import { WTService } from "../../services/elements/WT";
 import { TPService } from "../../services/elements/TP";
 import { PGRAIService } from "../../services/elements/PGRAI";
+import {ESTService} from "../../services/elements/EST";
+
 
 const inboxConfig = (tenantId, filters) => ({
   PT: {
@@ -96,6 +98,14 @@ const inboxConfig = (tenantId, filters) => ({
       fetchFilters: filterFunctions.TP,
       _searchFn: () => TPService.search({ tenantId, filters }),
     },
+    EST: {
+    services: ["est-service"],
+    searchResponseKey: "Allotments",
+    businessIdsParamForSearch: "assetNo",
+    businessIdAliasForSearch: "assetNo",
+    fetchFilters: filterFunctions.EST,
+    _searchFn: () => ESTService.allotmentSearch({ tenantId, filters }),
+  },
     /**
  * PGRAI Workflow Module Configuration
  *
