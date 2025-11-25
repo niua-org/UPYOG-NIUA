@@ -9,7 +9,6 @@ import MyApplications from "./pages/citizen/MyApplications";
 import { ESTPaymentHistory } from "./pages/citizen/PaymentHistory";
 import ESTManageProperties from "./PageComponents/ESTManageProperties";
 import NewRegistration from "./PageComponents/ESTNEWRegistration";
-import ESTRequiredDoc  from "./PageComponents/ESTRequiredDoc";
 import ESTRegCheckPage from "./pages/employee/Create/ESTRegCheckPage";
 import ESTRegCreate from "./pages/employee/Create";
 import ESTAcknowledgement from "./pages/employee/Create/ESTAcknowledgement";
@@ -29,7 +28,6 @@ const componentsToRegister = {
   ESTManageProperties,
   ESTRegCreate,
   ESTRegCheckPage,
-  ESTRequiredDoc,
   ESTAcknowledgement,
   ESTAllotmentAcknowledgement,
   ESTAssignAssetCreate,
