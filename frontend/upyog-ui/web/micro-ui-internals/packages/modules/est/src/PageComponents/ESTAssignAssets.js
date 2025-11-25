@@ -120,6 +120,8 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
     pattern: "^[0-9]+(\\.[0-9]{1,2})?$",
     title: t("EST_INVALID_AMOUNT"),
   };
+  
+   //  numberValidation is used for validating fields that require numeric input such as rate, monthlyRent, and advancePayment.
 
   const isFormInvalid =
     !data.propertyType ||

@@ -25,7 +25,7 @@ const ESTAssignAssetsCheckPage =  ({ onSubmit, value = {} }) => {
  const AssignAssetsData = value?.AssignAssetsData?.AllotmentData || {};
 
 
-
+   // This code handles file opening logic//
   const handleFileOpen = (fileId) => {
   if (!fileId) return;
 
@@ -61,10 +61,10 @@ const ESTAssignAssetsCheckPage =  ({ onSubmit, value = {} }) => {
           actionButton={<ActionButton jumpTo={`/upyog-ui/employee/est/assignassets/assign-assets`} />}
         />
        <Row label={t("EST_BUILDING_NAME")} text={checkForNA(value?.assetData?.buildingName)} />
-<Row label={t("EST_LOCALITY")} text={checkForNA(value?.assetData?.locality)} />
-<Row label={t("EST_TOTAL_AREA")} text={checkForNA(value?.assetData?.totalFloorArea)} />
-<Row label={t("EST_FLOOR")} text={checkForNA(value?.assetData?.floorNo)} />
-<Row label={t("EST_RATE")} text={checkForNA(value?.assetData?.rate)} />
+      <Row label={t("EST_LOCALITY")} text={checkForNA(value?.assetData?.locality)} />
+      <Row label={t("EST_TOTAL_AREA")} text={checkForNA(value?.assetData?.totalFloorArea)} />
+      <Row label={t("EST_FLOOR")} text={checkForNA(value?.assetData?.floorNo)} />
+      <Row label={t("EST_RATE")} text={checkForNA(value?.assetData?.rate)} />
       </StatusTable>
 
       {/* ----------------- PERSONAL DETAILS ----------------- */}
