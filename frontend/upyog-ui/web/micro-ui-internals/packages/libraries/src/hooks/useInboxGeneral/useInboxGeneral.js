@@ -9,6 +9,7 @@ import { TLService } from "../../services/elements/TL";
 import { CHBServices } from "../../services/elements/CHB";
 import { SVService } from "../../services/elements/SV";
 import { EwService } from "../../services/elements/EW";
+import { ESTService } from "../../services/elements/EST";
 
 const inboxConfig = (tenantId, filters) => ({
   PT: {
@@ -74,6 +75,14 @@ const inboxConfig = (tenantId, filters) => ({
     businessIdAliasForSearch: "applicationNo",
     fetchFilters: filterFunctions.SV,
     _searchFn: () => SVService.search({ tenantId, filters }),
+  },
+  EST: {
+    services: ["est-service"],
+    searchResponseKey: "Allotments",
+    businessIdsParamForSearch: "assetNo",
+    businessIdAliasForSearch: "assetNo",
+    fetchFilters: filterFunctions.EST,
+    _searchFn: () => ESTService.allotmentSearch({ tenantId, filters }),
   }
 });
 

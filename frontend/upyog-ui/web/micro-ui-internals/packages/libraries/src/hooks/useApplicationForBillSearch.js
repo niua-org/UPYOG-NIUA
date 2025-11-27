@@ -9,6 +9,7 @@ import { SVService } from "../services/elements/SV";
 import { WTService } from "../services/elements/WT";
 import { MTService } from "../services/elements/MT";
 import { TPService } from "../services/elements/TP";
+import ESTApplicationDetails from "../../../modules/est/src/pages/citizen/ESTApplicationDetails";
 
 const fsmApplications = async (tenantId, filters) => {
   return (await FSMService.search(tenantId, { ...filters, limit: 10000 })).fsm;
@@ -132,7 +133,12 @@ const refObj = (tenantId, filters) => {
       searchFn: () => tpBookings(null, { ...filters, bookingNo: consumerCodes }),
       key: "bookingNo",
       label: "TP_BOOKING_NO",
-    }
+    },
+    est: {
+      searchFn: () => ESTApplicationDetails(tenantId, filters),
+      key: "consumerCode",
+      label: "EST_ASSET_NO",
+    },
   };
 };
 
@@ -171,6 +177,9 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   if (window.location.href.includes("request-service.tree_pruning")) {
     _key = "tp"
   }
+  if (window.location.href.includes("est-services")) {
+    _key = "est"
+  } 
   
 
   /* key from application ie being used as consumer code in bill */

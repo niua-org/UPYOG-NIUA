@@ -141,6 +141,27 @@ const inboxSearchFields = {
         },
       }
     ],
+    EST: [
+      {
+        label: "EST_APPLICATION_NUMBER",
+        name: "applicationNumber",
+        roles: [],
+      },
+      {
+        label: "EST_REGISTERED_MOB_NUMBER",
+        name: "mobileNumber",
+        type: "mobileNumber",
+        maxLength: 10,
+        minLength: 0,
+        roles: [],
+        pattern: "^$|[6-9][0-9]{9}",
+        errorMessages: {
+          pattern: "",
+          minLength: "",
+          maxLength: "",
+        },
+      }
+    ],
     WT: [
       {
         label: "WT_BOOKING_NO",

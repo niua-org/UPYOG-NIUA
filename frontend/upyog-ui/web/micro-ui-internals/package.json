@@ -12,7 +12,9 @@
     "packages/modules/hrms",
     "packages/modules/dss",
     "packages/modules/ads",
-    "packages/modules/engagement"
+    "packages/modules/engagement",
+    "packages/modules/est"
+
   ],
   "license": "MIT",
   "private": true,
@@ -24,7 +26,7 @@
     "sprint": "SKIP_PREFLIGHT_CHECK=true run-s start:script",
     "start:dev": "run-p dev:**",
     "start:script": "./scripts/create.sh",
-    "devD:css": "cd packages/css && yarn start",
+    "dev:css": "cd packages/css && yarn start",
     "publish:css": "cd packages/css && yarn publish --access public",
     "dev:libraries": "cd packages/libraries && yarn start",
     "dev:components": "cd packages/react-components && yarn start",
@@ -55,6 +57,7 @@
     "dev:wt": "cd packages/modules/wt && yarn start",
     "dev:vendor": "cd packages/modules/vendor && yarn start",
     "dev:pgrai": "cd packages/modules/pgrai && yarn start",
+    "dev:est": "cd packages/modules/est && yarn start",
     "build": "run-p build:**",
     "build:libraries": "cd packages/libraries && yarn build",
     "buildD:asset": "cd packages/modules/asset && yarn build",
@@ -65,7 +68,8 @@
     "buildD:commonPt": "cd packages/modules/commonPt && yarn build",
     "build:core": "cd packages/modules/core && yarn build",
     "buildD:pgr": "cd packages/modules/pgr && yarn build",
-    "buildD:fsm": "cd packages/modules/fsm && yarn build",
+    "build:est": "cd packages/modules/est && yarn build",
+    "build:fsm": "cd packages/modules/fsm && yarn build",
     "build:dss": "cd packages/modules/dss && yarn build",
     "buildD:mcollect": "cd packages/modules/mCollect && yarn build",
     "buildD:receipts": "cd packages/modules/receipts && yarn build",

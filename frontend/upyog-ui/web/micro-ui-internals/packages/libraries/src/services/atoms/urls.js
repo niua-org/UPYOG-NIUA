@@ -31,11 +31,11 @@ const Urls = {
 
   UserSearch: "/user/_search",
   UserLogout: "/user/_logout",
-  UserCreate:"/user/users/_createnovalidate",
-  UserUpdateAddressV2:"/user/_updateAddress",
-  UserSearchNewV2: "/user/users/v2/_search", 
+  UserCreate: "/user/users/_createnovalidate",
+  UserUpdateAddressV2: "/user/_updateAddress",
+  UserSearchNewV2: "/user/users/v2/_search",
   Shortener: "/egov-url-shortening/shortener",
-  UserCreateAddressV2: "/user/_createAddress", 
+  UserCreateAddressV2: "/user/_createAddress",
   employeeDashboardSearch: "/employee-dashboard/_search",
 
   fsm: {
@@ -83,26 +83,26 @@ const Urls = {
     update: "/property-services/property/_update",
     pt_calculation_estimate: "/pt-calculator-v2/propertytax/v2/_estimate",
     assessment_create: "/property-services/assessment/_create",
-    assessment_createUlb:"/pt-calculator-v2/assessment/_jobscheduler",
+    assessment_createUlb: "/pt-calculator-v2/assessment/_jobscheduler",
     assessment_search: "/property-services/assessment/_search",
     payment_search: "/collection-services/payments/PT/_search",
     pt_calculate_mutation: "/pt-calculator-v2/propertytax/mutation/_calculate",
     cfcreate: "/service-request/service/v1/_create",
     cfdefinitionsearch: "/service-request/service/definition/v1/_search",
     cfsearch: "/service-request/service/v1/_search",
-    defaulterNotice:"/egov-pdf/download/PT/ptdefaulternotice",
-    getDefaulterNoticeStatus:"/pdf-service/v1/_getBulkDefaulterNoticeRecordsDetails"
-    
+    defaulterNotice: "/egov-pdf/download/PT/ptdefaulternotice",
+    getDefaulterNoticeStatus: "/pdf-service/v1/_getBulkDefaulterNoticeRecordsDetails"
+
   },
 
-  ptr: {  
-    
-    create:"/pet-services/pet-registration/_create",
-    search:"/pet-services/pet-registration/_search",
-    update:"/pet-services/pet-registration/_update",
+  ptr: {
+
+    create: "/pet-services/pet-registration/_create",
+    search: "/pet-services/pet-registration/_search",
+    update: "/pet-services/pet-registration/_update",
     fetch_payment_details: "/billing-service/bill/v2/_fetchbill",
     payment_search: "/collection-services/payments/pet-services/_search",
-    
+
   },
   dss: {
     dashboardConfig: "/dashboard-analytics/dashboard/getDashboardConfig",
@@ -160,7 +160,7 @@ const Urls = {
     create: "/edcr/rest/dcr/scrutinize",
     anonymousCreate: "/edcr/rest/dcr/anonymousScrutinize"
   },
-  preApproved:{
+  preApproved: {
     search: "/bpa-services/v1/preapprovedplan/_search",
     estimate: "/bpa-calculator/_estimate",
   },
@@ -201,24 +201,24 @@ const Urls = {
     sewerage_applyAdhocTax: "/sw-calculator/sewerageCalculator/_applyAdhocTax",
     getSearchDetails: "/inbox/v1/dss/_search",
     disconnection_notice: "/pdf-service/v1/_createnosave",
-    meter_search:"/ws-calculator/meterConnection/_search"
+    meter_search: "/ws-calculator/meterConnection/_search"
   },
 
-   asset: {
+  asset: {
     create: "/asset-services/v1/assets/_create",
     search: "/asset-services/v1/assets/_search",
     update: "/asset-services/v1/assets/_update",
     assign: "/asset-services/v1/assets/assignment/_create",
-    depriciationProcess:"/asset-services/v1/assets/depreciation/_process",  
-    maintenance:"/asset-services/maintenance/v1/_create",  
-    edit_maintenance:"/asset-services/maintenance/v1/_update", 
-    assets_Reciept_Search: "/asset-services/v1/assets/_search",    
+    depriciationProcess: "/asset-services/v1/assets/depreciation/_process",
+    maintenance: "/asset-services/maintenance/v1/_create",
+    edit_maintenance: "/asset-services/maintenance/v1/_update",
+    assets_Reciept_Search: "/asset-services/v1/assets/_search",
     assetDisposedCreate: "/asset-services/v1/disposal/_create",
-    depriciationList:"/asset-services/v1/assets/depreciation/list",   
-    maintenanceList:"/asset-services/maintenance/v1/_search", 
-    return_asset: "/asset-services/v1/assets/assignment/_update",  
-    disposalList:"/asset-services/v1/disposal/_search",
-    assetAssignable:"/asset-services/v1/assets/assignment/_search",   
+    depriciationList: "/asset-services/v1/assets/depreciation/list",
+    maintenanceList: "/asset-services/maintenance/v1/_search",
+    return_asset: "/asset-services/v1/assets/assignment/_update",
+    disposalList: "/asset-services/v1/disposal/_search",
+    assetAssignable: "/asset-services/v1/assets/assignment/_search",
   },
   ew: {
     create: "/ewaste-services/ewaste-request/_create",
@@ -226,11 +226,11 @@ const Urls = {
     update: "/ewaste-services/ewaste-request/_update",
   },
 
-  sv:{
+  sv: {
     create: "/sv-services/street-vending/_create",
     search: "/sv-services/street-vending/_search",
     update: "/sv-services/street-vending/_update",
-    deleteDraft:"/sv-services/street-vending/_deletedraft",
+    deleteDraft: "/sv-services/street-vending/_deletedraft",
   },
 
   chb: {
@@ -252,24 +252,24 @@ const Urls = {
   cm: {
     search: "/verification-service/validity/_search"
   },
-   // urls for making api calls for pgr-ai module
-   pgrAi:{
-    PGR_Create_AI:"/pgr-ai-services/v1/request/_create",
+  // urls for making api calls for pgr-ai module
+  pgrAi: {
+    PGR_Create_AI: "/pgr-ai-services/v1/request/_create",
     PGR_Search_AI: "/pgr-ai-services/v1/request/_search",
-    PGR_Update_AI:"/pgr-ai-services/v1/request/_update"
+    PGR_Update_AI: "/pgr-ai-services/v1/request/_update"
   },
 
-digiLocker:{
-  authorization:"/requester-services-dx/digilocker/authorization/url",
-  register :"/requester-services-dx/digilocker/authorization/url/citizen",
-  token:"/requester-services-dx/digilocker/token/citizen",
-  issueDoc:"/requester-services-dx/digilocker/issuedfiles",
-  uri:"/requester-services-dx/digilocker/file",
-  oauth:"/user/digilocker/oauth/token"
-},
-eSign:{
-  pdfUrl:"/requester-services-dx/eSign/process",
-  fileStoreSearch:"/requester-services-dx/eSign/filestoreId/v1/_search"
+  digiLocker: {
+    authorization: "/requester-services-dx/digilocker/authorization/url",
+    register: "/requester-services-dx/digilocker/authorization/url/citizen",
+    token: "/requester-services-dx/digilocker/token/citizen",
+    issueDoc: "/requester-services-dx/digilocker/issuedfiles",
+    uri: "/requester-services-dx/digilocker/file",
+    oauth: "/user/digilocker/oauth/token"
+  },
+  eSign: {
+    pdfUrl: "/requester-services-dx/eSign/process",
+    fileStoreSearch: "/requester-services-dx/eSign/filestoreId/v1/_search"
   },
   engagement: {
     document: {
@@ -289,7 +289,7 @@ eSign:{
       cfdefinitionsearch: "/service-request/service/definition/v1/_search",
       submitSurveyResponse: "/service-request/service/v1/_create",
       selectedSurveySearch: "/service-request/service/v1/_search",
-      updateSurvey:"/service-request/service/definition/v1/_update",
+      updateSurvey: "/service-request/service/definition/v1/_update",
     },
   },
 
@@ -306,12 +306,12 @@ eSign:{
   billgenie: "/egov-searcher",
   audit: "/inbox/v1/elastic/_search",
 
-  wt:{
+  wt: {
     create: "/request-service/water-tanker/v1/_create",
     update: "/request-service/water-tanker/v1/_update",
     search: "/request-service/water-tanker/v1/_search",
   },
-  mt:{
+  mt: {
     create: "/request-service/mobile-toilet/v1/_create",
     update: "/request-service/mobile-toilet/v1/_update",
     search: "/request-service/mobile-toilet/v1/_search",
@@ -327,6 +327,13 @@ eSign:{
     search: "/vendor-services/vendor/_search",
     additionaldetailsCreate: "/vendor-management/api/v1/_create",
     vendorcommonSearch: "/vendor-management/api/v1/vendorPlusAdditional/_search"
+  },
+
+  est: {
+    create: "/estate-management/estate/asset/v1/_create",
+    search: "/estate-management/estate/asset/v1/_search",
+    allotment: "/estate-management/estate/allotment/v1/_create",
+    allotmentSearch: "/estate-management/estate/allotment/v1/_search",
   },
 };
 

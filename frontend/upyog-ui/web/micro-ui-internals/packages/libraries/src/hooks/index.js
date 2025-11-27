@@ -355,6 +355,15 @@ import useSelectedMDMS from "./useSelectedMDMS";
 import useRouteSubscription from "./useRouteSubscription";
 import { useCustomBackNavigation } from "./UseCustomBackNavigationProps";
 
+import useESTCreateAPI from "./estate/useESTCreateAPI";
+import useESTAssetSearch from "./estate/useESTAssetSearch";
+import useESTApplicationSearch from "./estate/useESTApplicationSearch";
+import useTenantsEST from "./estate/useTenants";
+import useESTAllotAsset from "./estate/useESTAllotAsset";
+import useESTAssetsAllotment from "./estate/useESTAssetsAllotment";
+import useESTBillSearch from "./estate/useESTBillSearch";
+
+
 const pgr = {
   useComplaintDetails,
   useComplaintsList,
@@ -711,6 +720,16 @@ const vendor = {
   useEmpvendorCommonSearch,
 };
 
+const estate = {
+  useESTCreateAPI,
+  useESTAssetSearch,
+  useESTApplicationSearch,
+  useESTAllotAsset,
+  useESTAssetsAllotment,
+  useESTBillSearch,
+  useTenants: useTenantsEST
+}
+
 const Hooks = {
   useSessionStorage,
   useQueryParams,
@@ -787,6 +806,7 @@ const Hooks = {
   cm,
   wt,
   vendor,
+  estate,
   useEnabledMDMS,
   useSelectedMDMS,
   useRouteSubscription,
