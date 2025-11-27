@@ -56,7 +56,7 @@ import { WTModule, WTLinks, WTComponents } from "@upyog/upyog-ui-module-wt";
 import { VENDORComponents, VENDORLinks, VENDORModule } from "@upyog/upyog-ui-module-vendor";
 import { PGRAIComponents, PGRAILinks, PGRAIModule } from "@upyog/upyog-ui-module-pgrai";
 // import { initReportsComponents } from "@upyog/digit-ui-module-reports";
-
+import { ESTComponents, ESTLinks, ESTModule } from "@upyog/upyog-ui-module-est";
 initLibraries();
 
 const enabledModules = [
@@ -93,7 +93,8 @@ const enabledModules = [
   "VENDOR",
   "MT",
   "PGRAI",
-  "TP"
+  "TP",
+  "EST"
 ];
 window.Digit.ComponentRegistryService.setupRegistry({
   ...paymentConfigs,
@@ -134,7 +135,10 @@ window.Digit.ComponentRegistryService.setupRegistry({
   ...VENDORComponents,
   PGRAIModule,
   PGRAILinks,
-  ...PGRAIComponents
+  ...PGRAIComponents,
+  ESTModule,
+    ESTLinks,
+    ...ESTComponents,
 });
 
 initPGRComponents();
