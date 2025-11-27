@@ -6,7 +6,7 @@
   "author": "Shivank Shukla",
   "description": "CSS for CND UI & SV UI",
   "engines": {
-    "node": ">=14"
+    "node": ">=16"
   },
   "cssConfig": {
     "prefix": ""
@@ -23,7 +23,7 @@
   ],
   "style": "./dist/index.css",
   "dependencies": {
-    "node-sass": "4.14.1",
+    "sass": "^1.62.1",
     "normalize.css": "8.0.1",
     "postcss-scss": "3.0.5",
     "tailwindcss": "1.9.6"
