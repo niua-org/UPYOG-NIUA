@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
 import { CardLabel, SubmitBar, Dropdown, BackButton } from '@upyog/digit-ui-react-components';
-import { financialYearOptions, MAP_TILE_URL, createMapIcons, LEAFLET_DEFAULT_ICON_OPTIONS } from '../utils';
+import { financialYearOptions, paymentStatusOptions, usageCategoryOptions, assetClassificationOptions, MAP_TILE_URL, createMapIcons, LEAFLET_DEFAULT_ICON_OPTIONS } from '../utils';
 
 /**
 This MapView defines the MapView component, which is responsible for rendering and managing the map interface in the GIS module.
@@ -19,9 +19,16 @@ const MapView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [selectedFinancialYear, setSelectedFinancialYear] = useState({ code: '2024-25', value: { fromDate: 1712006400000, toDate: 1743542399000 }, i18nKey: '2024-25' });
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
+  const [selectedUsageCategory, setSelectedUsageCategory] = useState({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
+  const [selectedAssetClassification, setSelectedAssetClassification] = useState({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
   const [geoJsonData, setGeoJsonData] = useState({ type: "FeatureCollection", features: [] });
   const { t } = useTranslation();
 
+  // Fetch GIS base layer link using custom MDMS hook
+  const { data: gisLink } = Digit.Hooks.useCustomMDMS("pg", "GIS", [{ name: "BaseLayer" }], {
+    select: (data) => data?.["GIS"]?.["BaseLayer"] || [],
+  });
   const getBusinessService = () => {
     const selectedServiceType = sessionStorage.getItem('selectedServiceType');
     if (selectedServiceType) {
@@ -52,7 +59,38 @@ const MapView = () => {
 
 
         if (response && response.geoJsonData) {
-          const validFeatures = response.geoJsonData.features.filter(features => {
+          let filteredFeatures = response.geoJsonData.features;
+          
+          // Apply filters sequentially for PT
+          if (businessService === "PT") {
+            // Apply payment status filter
+            if (selectedPaymentStatus.code !== 'ALL') {
+              filteredFeatures = filteredFeatures.filter(features => 
+                features.properties.paymentStatus === selectedPaymentStatus.code
+              );
+            }
+
+            // Apply usage category filter with prefix matching
+            if (selectedUsageCategory.code !== 'ALL') {
+              filteredFeatures = filteredFeatures.filter(features => {
+                const usageCategory = features.properties.usageCategory;
+                return usageCategory?.startsWith(selectedUsageCategory.code);
+              });
+            }
+          }
+
+          // Apply filters sequentially for ASSET
+          if (businessService !== "PT") {
+            // Apply asset classification filter
+            if (selectedAssetClassification.code !== 'ALL') {
+              filteredFeatures = filteredFeatures.filter(features => 
+                features.properties.assetClassification === selectedAssetClassification.code
+              );
+            }
+          }
+
+          // Filter valid coordinates after applying business filters
+          const validFeatures = filteredFeatures.filter(features => {
             const coords = features.geometry?.coordinates;
             return (
               Array.isArray(coords) &&
@@ -79,6 +117,7 @@ const MapView = () => {
                 assetName: features.properties.assetName,
                 assetDepartment: features.properties.department,
                 assetCategory: features.properties.assetCategory,
+                assetClassification: features.properties.assetClassification,
                 status: features.properties.status,
               }
             }))
@@ -92,7 +131,7 @@ const MapView = () => {
     };
 
     fetchGISData();
-  }, [selectedFinancialYear]);
+  }, [selectedFinancialYear, selectedPaymentStatus, selectedUsageCategory, selectedAssetClassification]);
 
 
   /**
@@ -173,7 +212,10 @@ const MapView = () => {
     }
 
     const map = window.L.map(mapRef.current).setView([userLocation.lat, userLocation.lng], 12);
-    window.L.tileLayer(MAP_TILE_URL).addTo(map);
+    
+    // Get tile URL from  hook
+    const tileUrl = gisLink[0]?.url;
+    window.L.tileLayer(tileUrl).addTo(map);
 
     // Fix Leaflet default marker icons
     delete window.L.Icon.Default.prototype._getIconUrl;
@@ -226,6 +268,7 @@ const MapView = () => {
             <b>Status:</b> ${props.status || "N/A"}<br>
             <b>Asset Category:</b> ${props.assetCategory || "N/A"}<br>
             <b>Asset Department:</b> ${props.assetDepartment || "N/A"}<br>
+            <b>Classification:</b> ${props.assetClassification || "N/A"}<br>
             <b>Distance:</b> ${distance.toFixed(1)} km<br>
           </div>
         </div>
@@ -252,21 +295,65 @@ const MapView = () => {
       <div style={{ marginLeft: "10px", marginRight: "10px" }}>
         <BackButton />
         <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", position: "relative", zIndex: 2000 }}>
-          <div style={{ width: "200px" }}>
-            <CardLabel>Financial Year</CardLabel>
-            <Dropdown
-              className="form-field"
-              selected={selectedFinancialYear}
-              select={setSelectedFinancialYear}
-              option={financialYearOptions}
-              placeholder={t("Select Financial Year")}
-              optionKey="i18nKey"
-              style={{ width: "100%", position: "relative", zIndex: 2002 }}
-            />
+          <div style={{ display: "flex", gap: "16px" }}>
+            <div style={{ width: "200px" }}>
+              <CardLabel>{t("Financial_Year")}</CardLabel>
+              <Dropdown
+                className="form-field"
+                selected={selectedFinancialYear}
+                select={setSelectedFinancialYear}
+                option={financialYearOptions}
+                placeholder={t("Select Financial Year")}
+                optionKey="i18nKey"
+                style={{ width: "100%", position: "relative", zIndex: 2002 }}
+              />
+            </div>
+            {getBusinessService() === "PT" && (
+              <React.Fragment>
+                <div style={{ width: "200px" }}>
+                  <CardLabel>{t("Payment_Status")}</CardLabel>
+                  <Dropdown
+                    className="form-field"
+                    selected={selectedPaymentStatus}
+                    select={setSelectedPaymentStatus}
+                    option={paymentStatusOptions}
+                    placeholder={t("Select Payment Status")}
+                    optionKey="i18nKey"
+                    style={{ width: "100%", position: "relative", zIndex: 2001 }}
+                  />
+                </div>
+                <div style={{ width: "200px" }}>
+                  <CardLabel>{t("Usage_Category")}</CardLabel>
+                  <Dropdown
+                    className="form-field"
+                    selected={selectedUsageCategory}
+                    select={setSelectedUsageCategory}
+                    option={usageCategoryOptions}
+                    placeholder={t("Select Usage Category")}
+                    optionKey="i18nKey"
+                    style={{ width: "100%", position: "relative", zIndex: 2000 }}
+                  />
+                </div>
+              </React.Fragment>
+            )}
+            {getBusinessService() !== "PT" && (
+              <div style={{ width: "200px" }}>
+                <CardLabel>{t("Asset_Classification")}</CardLabel>
+                <Dropdown
+                  className="form-field"
+                  selected={selectedAssetClassification}
+                  select={setSelectedAssetClassification}
+                  option={assetClassificationOptions}
+                  placeholder={t("Select Asset Classification")}
+                  optionKey="i18nKey"
+                  style={{ width: "100%", position: "relative", zIndex: 2001 }}
+                />
+              </div>
+            )}
           </div>
           <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
             <div style={{ width: "200px" }}>
-              <CardLabel>{t("GIS_PROPERTY_AVAILABLE")}</CardLabel>
+              <CardLabel>{getBusinessService() === "PT" ? t("SEARCH_BY_PROPERTYID") : t("SEARCH_BY_ASSETID")}</CardLabel>
               <Dropdown
                 className="form-field"
                 selected={inputValue}
@@ -280,12 +367,15 @@ const MapView = () => {
               />
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <CardLabel style={{ visibility: "hidden" }}>Actions</CardLabel>
+              <CardLabel style={{ visibility: "hidden" }}>{t("Actions")}</CardLabel>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
                 <p className="link" style={{ cursor: "pointer" }} onClick={() => {
                   setSearchTerm("");
                   setInputValue("");
+                  setSelectedPaymentStatus({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
+                  setSelectedUsageCategory({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
+                  setSelectedAssetClassification({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
                 }}>
                   {t("ES_COMMON_CLEAR_ALL")}
                 </p>
@@ -297,7 +387,9 @@ const MapView = () => {
         {geoJsonData.features.length > 0 ? (
           <div ref={mapRef} style={{ height: '86vh', width: '100%', border: '1px solid #ccc', marginTop: "0px" }} />
         ) : (
-          <p style={{ textAlign: "center", marginTop: "20px" }}>{t("Loading map data...")}</p>
+          <p style={{ textAlign: "center", marginTop: "20px" }}>
+            {getBusinessService() === "PT" ? t("NO_PROPERTY_FOUND") : t("NO_ASSET_FOUND")}
+          </p>
         )}
       </div>
     </div>

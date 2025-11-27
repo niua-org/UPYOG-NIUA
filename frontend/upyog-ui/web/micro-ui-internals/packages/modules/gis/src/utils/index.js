@@ -5,6 +5,25 @@ export const financialYearOptions = [
   { code: '2024-25', value: { fromDate: 1712006400000, toDate: 1743542399000 }, i18nKey: '2024-25' },
   { code: '2025-26', value: { fromDate: 1743542400000, toDate: 1775078399000 }, i18nKey: '2025-26' }
 ];
+  // Payment statuses
+export const paymentStatusOptions = [
+  { code: 'ALL', value: 'ALL', i18nKey: 'All' },
+  { code: 'PAID', value: 'PAID', i18nKey: 'Paid' },
+  { code: 'UNPAID', value: 'UNPAID', i18nKey: 'Unpaid' }
+];
+  // Usage categories
+export const usageCategoryOptions = [
+  { code: 'ALL', value: 'ALL', i18nKey: 'All' },
+  { code: 'RESIDENTIAL', value: 'RESIDENTIAL', i18nKey: 'Residential' },
+  { code: 'NONRESIDENTIAL.INSTITUTIONAL', value: 'NONRESIDENTIAL.INSTITUTIONAL', i18nKey: 'Institutional' },
+  { code: 'NONRESIDENTIAL.COMMERCIAL', value: 'NONRESIDENTIAL.COMMERCIAL', i18nKey: 'Commercial' }
+];
+ // Asset classifications
+export const assetClassificationOptions = [
+  { code: 'ALL', value: 'ALL', i18nKey: 'All' },
+  { code: 'MOVABLE', value: 'MOVABLE', i18nKey: 'Movable' },
+  { code: 'IMMOVABLE', value: 'IMMOVABLE', i18nKey: 'Immovable' }
+];
 
 export const MAP_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
