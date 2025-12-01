@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// ESTAssignAssetsCheckPage.jsx
+import React, { useEffect, useState,Fragment } from "react";
 import {
   Card,
   CardHeader,
@@ -12,41 +13,96 @@ import {
 } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useHistory } from "react-router-dom";
-import { checkForNA } from "../../../utils";
-import { APPLICATION_PATH } from "../../../../../est/src/utils";
+import { checkForNA, ESTDocumnetPreview, formatEpochDate } from "../../../utils"; // ensure path is correct
 
 const ActionButton = ({ jumpTo }) => {
   const history = useHistory();
   return <LinkButton label={<EditIcon />} onClick={() => history.push(jumpTo)} />;
 };
-const ESTAssignAssetsCheckPage =  ({ onSubmit, value = {} }) => {
-   const { t } = useTranslation();
+
+const ESTAssignAssetsCheckPage = ({ onSubmit, value = {} }) => {
+  const { t } = useTranslation();
   const [agree, setAgree] = useState(false);
- const AssignAssetsData = value?.AssignAssetsData?.AllotmentData || {};
+  const [previewDocs, setPreviewDocs] = useState([]); 
+  const [loadingDocs, setLoadingDocs] = useState(false);
 
+  const AssignAssetsData = value?.AssignAssetsData?.AllotmentData || {};
 
-   // This code handles file opening logic//
   const handleFileOpen = (fileId) => {
-  if (!fileId) return;
-
-  Digit.UploadServices.Filefetch([fileId], Digit.ULBService.getStateId())
-    .then((res) => {
-      const concatenatedUrls = res?.data?.fileStoreIds?.[0]?.url;
-      if (concatenatedUrls) {
-        const urlArray = concatenatedUrls.split(",");
-        const fileUrl = urlArray[0];
-        if (fileUrl) {
-          window.open(fileUrl, "_blank"); // open in new tab
-        } else {
-          console.error("No valid URL found!");
+    if (!fileId) return;
+    Digit.UploadServices.Filefetch([fileId], Digit.ULBService.getStateId())
+      .then((res) => {
+        const fileStoreIdsArray = res?.data?.fileStoreIds;
+        if (Array.isArray(fileStoreIdsArray) && fileStoreIdsArray.length > 0) {
+          const url = fileStoreIdsArray[0]?.url?.split(",")[0];
+          url ? window.open(url, "_blank") : console.error("No valid URL found!");
         }
-      } else {
-        console.error("No URL in response!");
-      }
-    })
-    .catch((err) => console.error("Error fetching file:", err));
-};
+      })
+      .catch((err) => console.error("Error fetching file:", err));
+  };
 
+  useEffect(() => {
+    let mounted = true;
+
+    const docFields = [
+      { key: "citizenLetter", label: t("EST_CITIZEN_REQUEST_LETTER") },
+      { key: "allotmentLetter", label: t("EST_ALLOTMENT_LETTER") },
+      { key: "signedDeed", label: t("EST_SIGNED_DEED") }
+    ];
+
+    const filestoreIds = [];
+    const idToLabelMap = {};
+
+    docFields.forEach((field) => {
+      const obj = AssignAssetsData?.[field.key];
+      if (obj?.filestoreId) {
+        filestoreIds.push(obj.filestoreId);
+        idToLabelMap[obj.filestoreId] = field.label;
+      }
+    });
+
+    if (filestoreIds.length === 0) {
+      if (mounted) setPreviewDocs([]);
+      return () => (mounted = false);
+    }
+
+    setLoadingDocs(true);
+
+    Digit.UploadServices.Filefetch(filestoreIds, Digit.ULBService.getStateId())
+      .then((res) => {
+        if (!mounted) return;
+
+        const arr = res?.data?.fileStoreIds;
+        const values = [];
+
+        if (Array.isArray(arr)) {
+          arr.forEach((fsObj) => {
+            const fsid = fsObj?.fileStoreId || fsObj?.id;
+            const url = fsObj?.url?.split(",")[0];
+            if (url) {
+              values.push({
+                url,
+                title: idToLabelMap[fsid] || t("DOCUMENT"),
+                documentType: fsid
+              });
+            }
+          });
+        }
+
+        const ordered = filestoreIds
+          .map((id) => values.find((v) => v.documentType === id))
+          .filter(Boolean);
+
+        if (mounted) setPreviewDocs(ordered.length ? [{ values: ordered }] : []);
+      })
+      .catch((err) => {
+        console.error("Error fetching files for preview:", err);
+        if (mounted) setPreviewDocs([]);
+      })
+      .finally(() => mounted && setLoadingDocs(false));
+
+    return () => (mounted = false);
+  }, [AssignAssetsData, t]);
 
   return (
     <Card>
@@ -60,11 +116,11 @@ const ESTAssignAssetsCheckPage =  ({ onSubmit, value = {} }) => {
           text={checkForNA(value?.assetData?.estateNo)}
           actionButton={<ActionButton jumpTo={`/upyog-ui/employee/est/assignassets/assign-assets`} />}
         />
-       <Row label={t("EST_BUILDING_NAME")} text={checkForNA(value?.assetData?.buildingName)} />
-      <Row label={t("EST_LOCALITY")} text={checkForNA(value?.assetData?.locality)} />
-      <Row label={t("EST_TOTAL_AREA")} text={checkForNA(value?.assetData?.totalFloorArea)} />
-      <Row label={t("EST_FLOOR")} text={checkForNA(value?.assetData?.floorNo)} />
-      <Row label={t("EST_RATE")} text={checkForNA(value?.assetData?.rate)} />
+        <Row label={t("EST_BUILDING_NAME")} text={checkForNA(value?.assetData?.buildingName)} />
+        <Row label={t("EST_LOCALITY")} text={checkForNA(value?.assetData?.locality)} />
+        <Row label={t("EST_TOTAL_AREA")} text={checkForNA(value?.assetData?.totalFloorArea)} />
+        <Row label={t("EST_FLOOR")} text={checkForNA(value?.assetData?.floor)} />
+        <Row label={t("EST_RATE")} text={checkForNA(value?.assetData?.rate)} />
       </StatusTable>
 
       {/* ----------------- PERSONAL DETAILS ----------------- */}
@@ -80,101 +136,62 @@ const ESTAssignAssetsCheckPage =  ({ onSubmit, value = {} }) => {
       {/* ----------------- AGREEMENT DETAILS ----------------- */}
       <CardSubHeader>{t("EST_AGREEMENT_DETAILS")}</CardSubHeader>
       <StatusTable>
-        <Row label={t("EST_AGREEMENT_START_DATE")} text={checkForNA(AssignAssetsData?.startDate)} />
-        <Row label={t("EST_AGREEMENT_END_DATE")} text={checkForNA(AssignAssetsData?.endDate)} />
+        <Row
+          label={t("EST_AGREEMENT_START_DATE")}
+          text={formatEpochDate(AssignAssetsData?.startDate)}
+        />
+        <Row
+          label={t("EST_AGREEMENT_END_DATE")}
+          text={formatEpochDate(AssignAssetsData?.endDate)}
+        />
         <Row label={t("EST_DURATION_IN_YEARS")} text={checkForNA(AssignAssetsData?.duration)} />
         <Row label={t("EST_RATE_PER_SQFT")} text={checkForNA(AssignAssetsData?.rate)} />
         <Row label={t("EST_MONTHLY_RENT_IN_INR")} text={checkForNA(AssignAssetsData?.monthlyRent)} />
         <Row label={t("EST_ADVANCE_PAYMENT_IN_INR")} text={checkForNA(AssignAssetsData?.advancePayment)} />
-        <Row label={t("EST_ADVANCE_PAYMENT_DATE")} text={checkForNA(AssignAssetsData?.advancePaymentDate)} />
+        <Row
+          label={t("EST_ADVANCE_PAYMENT_DATE")}
+          text={formatEpochDate(AssignAssetsData?.advancePaymentDate)}
+        />
+        <Row
+          label={t("EST_EOFFICE_FILE_NO")}
+          text={checkForNA(AssignAssetsData?.eOfficeFileNo)}
+        />
       </StatusTable>
 
-      {/* ----------------- DOCUMENT UPLOAD ----------------- */}
-      <CardSubHeader>{t("EST_DOCUMENT_UPLOAD")}</CardSubHeader>
-      <StatusTable>
-  <Row
-    label={t("EST_EOFFICE_FILE_NO")}
-    text={checkForNA(AssignAssetsData?.eOfficeFileNo)}
-  />
+      {/* ----------------- DOCUMENT PREVIEW ----------------- */}
+      <CardSubHeader>{t("EST_DOCUMENT_PREVIEW")}</CardSubHeader>
 
-  {/* CITIZEN REQUEST LETTER */}
-  <Row
-    label={t("EST_CITIZEN_REQUEST_LETTER")}
-    text={
-      AssignAssetsData?.citizenLetter?.filestoreId ? (
-        <span
-          onClick={() =>
-            handleFileOpen(AssignAssetsData?.citizenLetter?.filestoreId)
-          }
-          style={{
-            color: "blue",
-            textDecoration: "underline",
-            cursor: "pointer",
-          }}
-        >
-          {t("Click to View File")}
-        </span>
+      {loadingDocs ? (
+        <div style={{ padding: "12px 16px" }}>{t("CS_LOADING")}</div>
       ) : (
-        t("CS_FILE_NOT_UPLOADED")
-      )
-    }
-  />
-
-  {/* ALLOTMENT LETTER */}
-  <Row
-    label={t("EST_ALLOTMENT_LETTER")}
-    text={
-      AssignAssetsData?.allotmentLetter?.filestoreId ? (
-        <span
-          onClick={() =>
-            handleFileOpen(AssignAssetsData?.allotmentLetter?.filestoreId)
-          }
-          style={{
-            color: "blue",
-            textDecoration: "underline",
-            cursor: "pointer",
-          }}
-        >
-          {t("Click to View File")}
-        </span>
-      ) : (
-        t("CS_FILE_NOT_UPLOADED")
-      )
-    }
-  />
-
-  {/* SIGNED DEED */}
-  <Row
-    label={t("EST_SIGNED_DEED")}
-    text={
-      AssignAssetsData?.signedDeed?.filestoreId ? (
-        <span
-          onClick={() =>
-            handleFileOpen(AssignAssetsData?.signedDeed?.filestoreId)
-          }
-          style={{
-            color: "blue",
-            textDecoration: "underline",
-            cursor: "pointer",
-          }}
-        >
-          {t("Click to View File")}
-        </span>
-      ) : (
-        t("CS_FILE_NOT_UPLOADED")
-      )
-    }
-  />
-</StatusTable>
-
+        previewDocs.length > 0 ? (
+          <div style={{ paddingTop: 8 }}>
+            <ESTDocumnetPreview 
+              documents={previewDocs} 
+              titleStyles={{ fontSize: "14px" }} 
+              pdfSize={48}
+              labelWidth={220}
+            />
+          </div>
+        ) : (
+          <div style={{ padding: "8px 16px", color: "#666" }}>
+            {t("EST_NO_DOCUMENTS_UPLOADED_LABEL")}
+          </div>
+        )
+      )}
 
       {/* ----------------- DECLARATION + SUBMIT ----------------- */}
-      <CheckBox
-        label={t("EST_FINAL_DECLARATION_MESSAGE")}
-        onChange={() => setAgree(!agree)}
-        value={agree}
-      />
-      <SubmitBar label={t("EST_COMMON_SUBMIT")} onSubmit={onSubmit} disabled={!agree} />
+      <div style={{ marginTop: 16 }}>
+        <CheckBox
+          label={t("EST_FINAL_DECLARATION_MESSAGE")}
+          onChange={() => setAgree(!agree)}
+          value={agree}
+        />
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <SubmitBar label={t("EST_COMMON_SUBMIT")} onSubmit={onSubmit} disabled={!agree} />
+      </div>
     </Card>
   );
 };

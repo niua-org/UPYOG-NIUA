@@ -7,10 +7,11 @@ import {
   Dropdown,
   Toast,
   FormStep,
-  SubmitBar,          // 🔹 ADD THIS
+  SubmitBar,
 } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useHistory } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
 
 const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {}, config }) => {
   const { t: hookT } = useTranslation();
@@ -28,12 +29,8 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
     {}
   );
 
-  // 🔹 All Cities (hook may return array or { data: [] })
   const allCities = Digit.Hooks.estate.useTenants();
   const cityList = allCities?.data || allCities || [];
-
-  const [selectedCity, setSelectedCity] = useState(null);
-  const [showToast, setShowToast] = useState(false);
 
   const { data: Asset_Type } = Digit.Hooks.useEnabledMDMS(
     Digit.ULBService.getStateId(),
@@ -52,48 +49,23 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
     }
   );
 
-  // ------------------ FORM STATE ------------------
-  const [assetFormData, setAssetFormData] = useState({
-    buildingName: formData?.Assetdata?.buildingName || "",
-    buildingNo: formData?.Assetdata?.buildingNo || "",
-    buildingFloor: formData?.Assetdata?.buildingFloor || "",
-    buildingBlock: formData?.Assetdata?.buildingBlock || "",
-    city: formData?.Assetdata?.city || "",
-    serviceType: formData?.Assetdata?.serviceType || "",
-    totalFloorArea: formData?.Assetdata?.totalFloorArea || "",
-    dimensionLength: formData?.Assetdata?.dimensionLength || "",
-    dimensionWidth: formData?.Assetdata?.dimensionWidth || "",
-    rate: formData?.Assetdata?.rate || "",
-    assetRef: formData?.Assetdata?.assetRef || "",
-    assetType: formData?.Assetdata?.assetType || "",
-  });
+  const init = formData?.Assetdata || {};
 
-  // 🔹 simple handler like SVBankDetails
-  const handleInputChange = (field, value, maxLength = null, regex = null) => {
-    if (regex) value = value.replace(regex, "");
-    if (maxLength && value.length > maxLength) return;
-    setAssetFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const [buildingName, setBuildingName] = useState(init.buildingName || "");
+  const [buildingNo, setBuildingNo] = useState(init.buildingNo || "");
+  const [buildingFloor, setBuildingFloor] = useState(init.buildingFloor || "");
+  const [buildingBlock, setBuildingBlock] = useState(init.buildingBlock || "");
+  const [selectedCity, setSelectedCity] = useState(init.city ? cityList.find(c => c.code === init.city) : null);
+  const [serviceType, setServiceType] = useState(init.serviceType || "");
+  const [totalFloorArea, setTotalFloorArea] = useState(init.totalFloorArea || "");
+  const [dimensionLength, setDimensionLength] = useState(init.dimensionLength || "");
+  const [dimensionWidth, setDimensionWidth] = useState(init.dimensionWidth || "");
+  const [rate, setRate] = useState(init.rate || "");
+  const [assetRef, setAssetRef] = useState(init.assetRef || "");
+  const [assetType, setAssetType] = useState(init.assetType || "");
+  const [showToast, setShowToast] = useState(false);
 
-  // 🔹 Auto-select city based on tenantId
-  useEffect(() => {
-    if (Array.isArray(cityList) && tenantId) {
-      const matchedCity = cityList.find((city) => city.code === tenantId);
-      if (matchedCity) {
-        setSelectedCity(matchedCity);
-        setAssetFormData((prev) => ({
-          ...prev,
-          city: matchedCity.code,
-          serviceType: prev.city !== matchedCity.code ? "" : prev.serviceType,
-        }));
-      }
-    }
-  }, [cityList, tenantId, selectedCity?.code]);
-
-  useEffect(() => {
-    setMutationHappened(false);
-    clearSuccessData();
-  }, []);
+  const { control } = useForm();
 
   const { data: fetchedLocalities } = Digit.Hooks.useBoundaryLocalities(
     selectedCity?.code,
@@ -106,35 +78,84 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
     fetchedLocalities?.map((locality) => ({
       ...locality,
       i18nKey: `TENANT_TENANTS_${locality.code.toUpperCase()}`,
+      label: locality.name || locality.i18nkey || locality.label,
     })) || [];
 
-  // ------------------ VALIDATIONS + DISABLE LOGIC ------------------
-  const isFormInvalid =
-    !assetFormData.buildingName ||
-    !assetFormData.buildingNo ||
-    !assetFormData.buildingFloor ||
-    !assetFormData.buildingBlock ||
-    !selectedCity ||
-    !assetFormData.serviceType ||
-    !assetFormData.totalFloorArea ||
-    !assetFormData.dimensionLength ||
-    !assetFormData.dimensionWidth ||
-    !assetFormData.rate ||
-    !assetFormData.assetRef ||
-    !assetFormData.assetType;
+  useEffect(() => {
+    if (Array.isArray(cityList) && tenantId) {
+      const matchedCity = cityList.find((city) => city.code === tenantId);
+      if (matchedCity) {
+        setSelectedCity(matchedCity);
+        setServiceType((prev) => (prev && prev !== matchedCity.code ? "" : prev));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cityList, tenantId]);
 
-  // ------------------ goNext (like ESTAssignAssets) ------------------
+  const DEFAULT_ASSET_REF = "PG-1013-2025-I-001195";
+
+  const isFormInvalid =
+    !buildingName ||
+    !buildingNo ||
+    !buildingFloor ||
+    !buildingBlock ||
+    !selectedCity ||
+    !serviceType ||
+    !totalFloorArea ||
+    !dimensionLength ||
+    !dimensionWidth ||
+    !rate ||
+    !assetType;
+
+  const sanitizeAndSet = (value, setter, { maxLength = null, regex = null } = {}) => {
+    let v = value;
+    if (regex) v = v.replace(regex, "");
+    if (maxLength && v.length > maxLength) return;
+    setter(v);
+  };
+
   const goNext = () => {
-    if (isFormInvalid) return; // safety
-    onSelect && onSelect(config?.key, { Assetdata: assetFormData }, false);
+    if (isFormInvalid) return;
+
+    const payload = {
+      buildingName,
+      buildingNo,
+      buildingFloor,
+      buildingBlock,
+      city: selectedCity?.code || "",
+      serviceType,
+      totalFloorArea,
+      dimensionLength,
+      dimensionWidth,
+      rate,
+      assetRef: DEFAULT_ASSET_REF,
+      assetType,
+    };
+
+    try {
+      if (onSelect) {
+        onSelect(config?.key, { Assetdata: payload }, false);
+      } else {
+        console.warn("onSelect not provided. Payload:", payload);
+        setShowToast(true);
+      }
+    } catch (err) {
+      console.error("Submission failed:", err);
+      setShowToast(false);
+      return;
+    }
+
     setShowToast(true);
   };
 
-  const RequiredLabel = ({ label }) => (
+  const RequiredLabel = ({ label, unit }) => (
     <CardLabel>
-      {t(label)} <span style={{ color: "red" }}>*</span>
+      {t(label)} {unit && <span style={{ fontSize: "0.9em", marginLeft: "6px" }}>{unit}</span>} <span style={{ color: "red" }}>*</span>
     </CardLabel>
   );
+
+  // change here: inputs now 70% width
+  const fullWidthStyle = { width: "70%", marginBottom: "16px" };
 
   return (
     <FormStep
@@ -147,119 +168,107 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
       <Header>{t("EST_COMMON_NEW_REGISTRATION")}</Header>
 
       <Card style={{ padding: "16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-          {/* Building Name */}
-          <div>
-            <RequiredLabel label="EST_BUILDING_NAME" />
-            <TextInput
-              name="buildingName"
-              placeholder={t("EST_ENTER_BUILDING_NAME")}
-              value={assetFormData.buildingName}
-              onChange={(e) =>
-                handleInputChange(
-                  "buildingName",
-                  e.target.value,
-                  100,
-                  /[^a-zA-Z0-9\s]/g // only letters, numbers, space
-                )
-              }
-              pattern="^[a-zA-Z0-9\s]+$"
-              title={t("EST_INVALID_BUILDING_NAME")}
-              required
-            />
-          </div>
+        {/* Building Name */}
+        <RequiredLabel label="EST_BUILDING_NAME" />
+        <TextInput
+          name="buildingName"
+          placeholder={t("EST_ENTER_BUILDING_NAME")}
+          value={buildingName}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setBuildingName, {
+              maxLength: 100,
+              regex: /[^a-zA-Z0-9\s]/g,
+            })
+          }
+          pattern="^[a-zA-Z0-9\s]+$"
+          title={t("EST_INVALID_BUILDING_NAME")}
+          required
+          style={fullWidthStyle}
+        />
 
-          {/* Building Number */}
-          <div>
-            <RequiredLabel label="EST_BUILDING_NUMBER" />
-            <TextInput
-              name="buildingNo"
-              placeholder={t("EST_ENTER_BUILDING_NUMBER")}
-              value={assetFormData.buildingNo}
-              onChange={(e) =>
-                handleInputChange("buildingNo", e.target.value, 10, /\D/g) // digits only
-              }
-              pattern="^[0-9]+$"
-              title={t("EST_INVALID_BUILDING_NUMBER")}
-              required
-            />
-          </div>
+        {/* Building Number */}
+        <RequiredLabel label="EST_BUILDING_NUMBER" />
+        <TextInput
+          name="buildingNo"
+          placeholder={t("EST_ENTER_BUILDING_NUMBER")}
+          value={buildingNo}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setBuildingNo, { maxLength: 10, regex: /\D/g })
+          }
+          pattern="^[0-9]+$"
+          title={t("EST_INVALID_BUILDING_NUMBER")}
+          required
+          style={fullWidthStyle}
+        />
 
-          {/* Building Floor */}
-          <div>
-            <RequiredLabel label="EST_BUILDING_FLOOR" />
-            <TextInput
-              name="buildingFloor"
-              placeholder={t("EST_ENTER_BUILDING_FLOOR")}
-              value={assetFormData.buildingFloor}
-              onChange={(e) =>
-                handleInputChange("buildingFloor", e.target.value, 3, /\D/g)
-              }
-              pattern="^[0-9]+$"
-              title={t("EST_INVALID_BUILDING_FLOOR")}
-              required
-            />
-          </div>
+        {/* Building Floor */}
+        <RequiredLabel label="EST_BUILDING_FLOOR" />
+        <TextInput
+          name="buildingFloor"
+          placeholder={t("EST_ENTER_BUILDING_FLOOR")}
+          value={buildingFloor}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setBuildingFloor, { maxLength: 3, regex: /\D/g })
+          }
+          pattern="^[0-9]+$"
+          title={t("EST_INVALID_BUILDING_FLOOR")}
+          required
+          style={fullWidthStyle}
+        />
 
-          {/* Building Block */}
-          <div>
-            <RequiredLabel label="EST_BUILDING_BLOCK" />
-            <TextInput
-              name="buildingBlock"
-              placeholder={t("EST_ENTER_BUILDING_BLOCK")}
-              value={assetFormData.buildingBlock}
-              onChange={(e) =>
-                handleInputChange(
-                  "buildingBlock",
-                  e.target.value,
-                  50,
-                  /[^a-zA-Z0-9\s]/g
-                )
-              }
-              pattern="^[a-zA-Z0-9\s]+$"
-              title={t("EST_INVALID_BUILDING_BLOCK")}
-              required
-            />
-          </div>
+        {/* Building Block */}
+        <RequiredLabel label="EST_BUILDING_BLOCK" />
+        <TextInput
+          name="buildingBlock"
+          placeholder={t("EST_ENTER_BUILDING_BLOCK")}
+          value={buildingBlock}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setBuildingBlock, {
+              maxLength: 50,
+              regex: /[^a-zA-Z0-9\s]/g,
+            })
+          }
+          pattern="^[a-zA-Z0-9\s]+$"
+          title={t("EST_INVALID_BUILDING_BLOCK")}
+          required
+          style={fullWidthStyle}
+        />
 
-          {/* City */}
-          <div>
-            <RequiredLabel label="EST_CITY" />
+        {/* City */}
+        <RequiredLabel label="EST_CITY" />
+        <Controller
+          control={control}
+          name="city"
+          defaultValue={selectedCity}
+          render={() => (
             <Dropdown
               option={cityList}
               optionKey="i18nKey"
               selected={selectedCity}
               select={(city) => {
                 setSelectedCity(city);
-                setAssetFormData((prev) => ({
-                  ...prev,
-                  city: city?.code || "",
-                  serviceType: prev.city !== city?.code ? "" : prev.serviceType,
-                }));
+                setServiceType((prev) => (prev && prev !== city?.code ? "" : prev));
               }}
               placeholder={t("EST_SELECT_CITY")}
               t={t}
               required
+              style={fullWidthStyle}
             />
-          </div>
+          )}
+        />
 
-          {/* Locality */}
-          <div>
-            <RequiredLabel label="EST_LOCALITY" />
+        {/* Locality / Service Type */}
+        <RequiredLabel label="EST_LOCALITY" />
+        <Controller
+          control={control}
+          name="serviceType"
+          defaultValue={serviceType}
+          render={() => (
             <Dropdown
               option={structuredLocality}
               optionKey="i18nKey"
-              selected={
-                structuredLocality?.find(
-                  (loc) => loc.code === assetFormData.serviceType
-                ) || null
-              }
-              select={(loc) =>
-                setAssetFormData((prev) => ({
-                  ...prev,
-                  serviceType: loc.code,
-                }))
-              }
+              selected={structuredLocality?.find((loc) => loc.code === serviceType) || null}
+              select={(loc) => setServiceType(loc?.code)}
               placeholder={
                 !selectedCity
                   ? t("EST_SELECT_CITY_FIRST")
@@ -269,106 +278,107 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
               }
               t={t}
               required
+              optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
+              style={fullWidthStyle}
             />
-          </div>
+          )}
+        />
 
-          {/* Total Plot Area */}
-          <div>
-            <RequiredLabel label="EST_TOTAL_PLOT_AREA" />
+        {/* Total Plot Area */}
+        <RequiredLabel label="EST_TOTAL_PLOT_AREA" unit="( In sq.ft)" />
+        <TextInput
+          name="totalFloorArea"
+          placeholder={t("EST_ENTER_TOTAL_PLOT_AREA")}
+          value={totalFloorArea}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setTotalFloorArea, { maxLength: 10, regex: /\D/g })
+          }
+          pattern="^[0-9]+$"
+          title={t("EST_INVALID_TOTAL_PLOT_AREA")}
+          required
+          style={fullWidthStyle}
+        />
+
+        {/* Dimension */}
+        <RequiredLabel label="EST_DIMENSION" unit="( In sq.ft)" />
+        {/* container uses fullWidthStyle to keep 70% width */}
+        <div style={{ ...fullWidthStyle, display: "flex", gap: "16px", alignItems: "flex-start" }}>
+          {/* Length */}
+          <div style={{ flex: 1 }}>
+            <CardLabel>{t("EST_LENGTH")}</CardLabel>
             <TextInput
-              name="totalFloorArea"
-              placeholder={t("EST_ENTER_TOTAL_PLOT_AREA")}
-              value={assetFormData.totalFloorArea}
+              name="dimensionLength"
+              placeholder={t("EST_LENGTH")}
+              value={dimensionLength}
               onChange={(e) =>
-                handleInputChange("totalFloorArea", e.target.value, 10, /\D/g)
+                sanitizeAndSet(e.target.value, setDimensionLength, {
+                  maxLength: 6,
+                  regex: /\D/g,
+                })
               }
               pattern="^[0-9]+$"
-              title={t("EST_INVALID_TOTAL_PLOT_AREA")}
+              title={t("EST_INVALID_LENGTH")}
               required
+              style={{ width: "100%" }}
             />
           </div>
 
-          {/* Dimension (Length x Width) */}
-          <div>
-            <RequiredLabel label="EST_DIMENSION" />
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              <TextInput
-                name="dimensionLength"
-                placeholder={t("EST_LENGTH")}
-                value={assetFormData.dimensionLength}
-                onChange={(e) =>
-                  handleInputChange("dimensionLength", e.target.value, 6, /\D/g)
-                }
-                pattern="^[0-9]+$"
-                title={t("EST_INVALID_LENGTH")}
-                required
-              />
-              <span>X</span>
-              <TextInput
-                name="dimensionWidth"
-                placeholder={t("EST_WIDTH")}
-                value={assetFormData.dimensionWidth}
-                onChange={(e) =>
-                  handleInputChange("dimensionWidth", e.target.value, 6, /\D/g)
-                }
-                pattern="^[0-9]+$"
-                title={t("EST_INVALID_BREADTH")}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Rate */}
-          <div>
-            <RequiredLabel label="EST_RATES" />
+          {/* Width */}
+          <div style={{ flex: 1 }}>
+            <CardLabel>{t("EST_WIDTH")}</CardLabel>
             <TextInput
-              name="rate"
-              placeholder={t("EST_ENTER_RATE")}
-              value={assetFormData.rate}
-              onChange={(e) => handleInputChange("rate", e.target.value, 10, /\D/g)}
-              pattern="^[0-9]+$"
-              title={t("EST_INVALID_RATE")}
-              required
-            />
-          </div>
-
-          {/* Asset Reference */}
-          <div>
-            <RequiredLabel label="EST_ASSET_REFERENCE_NUMBER" />
-            <TextInput
-              name="assetRef"
-              placeholder={t("EST_ENTER_ASSET_REFERENCE_NUMBER")}
-              value={assetFormData.assetRef}
+              name="dimensionWidth"
+              placeholder={t("EST_WIDTH")}
+              value={dimensionWidth}
               onChange={(e) =>
-                handleInputChange(
-                  "assetRef",
-                  e.target.value,
-                  50,
-                  /[^a-zA-Z0-9\-\/\s]/g
-                )
+                sanitizeAndSet(e.target.value, setDimensionWidth, {
+                  maxLength: 6,
+                  regex: /\D/g,
+                })
               }
-              pattern="^[a-zA-Z0-9\-\/\s]+$"
-              title={t("EST_INVALID_ASSET_REFERENCE_NUMBER")}
+              pattern="^[0-9]+$"
+              title={t("EST_INVALID_BREADTH")}
               required
+              style={{ width: "100%" }}
             />
           </div>
+        </div>
 
-          {/* Asset Type */}
-          <div>
-            <RequiredLabel label="EST_ASSET_TYPE" />
+        {/* Rate */}
+        <RequiredLabel label="EST_RATES" unit="(Per sq ft)" />
+        <TextInput
+          name="rate"
+          placeholder={t("EST_ENTER_RATE")}
+          value={rate}
+          onChange={(e) => sanitizeAndSet(e.target.value, setRate, { maxLength: 10, regex: /\D/g })}
+          pattern="^[0-9]+$"
+          title={t("EST_INVALID_RATE")}
+          required
+          style={fullWidthStyle}
+        />
+
+        {/* Asset Reference */}
+        <CardLabel>{t("EST_ASSET_REFERENCE_NUMBER")}</CardLabel>
+        <TextInput
+          name="assetRef"
+          placeholder={t("EST_ENTER_ASSET_REFERENCE_NUMBER")}
+          value={assetRef}
+          onChange={(e) => sanitizeAndSet(e.target.value, setAssetRef, { maxLength: 50 })}
+          style={fullWidthStyle}
+        />
+
+        {/* Asset Type */}
+        <RequiredLabel label="EST_ASSET_TYPE" />
+        <Controller
+          control={control}
+          name="assetType"
+          defaultValue={assetType}
+          render={() => (
             <Dropdown
               option={Asset_Type || []}
               optionKey="label"
-              selected={
-                Asset_Type?.find((opt) => opt.code === assetFormData.assetType) ||
-                null
-              }
-              select={(opt) =>
-                setAssetFormData((prev) => ({
-                  ...prev,
-                  assetType: opt.code,
-                }))
-              }
+              selected={Asset_Type?.find((opt) => opt.code === assetType) || null}
+              select={(opt) => setAssetType(opt?.code)}
               placeholder={
                 Asset_Type?.length
                   ? t("EST_SELECT_ASSET_TYPE")
@@ -376,12 +386,13 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
               }
               t={t}
               required
+              style={fullWidthStyle}
             />
-          </div>
-        </div>
+          )}
+        />
 
-        {/* 🔹 CUSTOM SAVE & NEXT BUTTON */}
-        <div style={{ marginTop: "24px", textAlign: "center" }}>
+        {/* SAVE & NEXT BUTTON - left aligned now */}
+        <div style={{ marginTop: "24px", textAlign: "left" }}>
           <SubmitBar
             label={t("SAVE_&_NEXT")}
             onSubmit={goNext}

@@ -256,3 +256,128 @@ export const calculateDuration = (start, end) => {
   if (months > 0) result += `${years > 0 ? " " : ""}${months} month${months > 1 ? "s" : ""}`;
   return result || "0 months";
 };
+
+
+
+// utils.js
+import React from "react";
+import { useTranslation } from "react-i18next";
+
+/**
+ * Large PDF SVG used in previews
+ */
+const LargePdfSvg = ({ size = 48 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+    style={{ flexShrink: 0 }}
+  >
+    <rect width="24" height="24" rx="4" fill="#D32F2F" />
+    <text x="3" y="16" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" fill="#FFFFFF">PDF</text>
+  </svg>
+);
+
+/**
+ * Compact single document row: [LABEL] [ICON] [Click to View File]
+ * - labelWidth: controls label column width (px)
+ * - small gap between icon and link so they appear close
+ */
+function DocLink({ href, label, titleStyles = {}, pdfSize = 48, labelWidth = 220 }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        textDecoration: "none",
+        marginBottom: 12,
+        width: "100%",
+      }}
+    >
+      {/* label */}
+      <div style={{ minWidth: labelWidth, fontWeight: 700, color: "#111", ...titleStyles }}>
+        {label}
+      </div>
+
+      {/* icon */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <LargePdfSvg size={pdfSize} />
+        {/* Click text immediately after icon */}
+        <div style={{ color: "#0B5FFF", textDecoration: "none", fontWeight: 500 }}>
+          Click to View File
+        </div>
+      </div>
+    </a>
+  );
+}
+
+/**
+ * ESTDocumnetPreview
+ * - documents: Array of groups with `values: [{ url, title, documentType }]`
+ * Renders compact rows where icon and link are adjacent.
+ */
+export function ESTDocumnetPreview({ documents = [], titleStyles = {}, isHrLine = false, pdfSize = 48, labelWidth = 220 }) {
+  const { t } = useTranslation();
+
+  // flatten groups -> values
+  const flattened = (documents || []).flatMap((group) =>
+    (group.values || []).map((v) => ({
+      url: v.url,
+      title: t(v.title || v.documentType || "DOCUMENT"),
+      documentType: v.documentType,
+    }))
+  );
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {flattened.length > 0 ? (
+        flattened.map((val, idx) => (
+          <div key={`est-link-${idx}`}>
+            <DocLink
+              href={val.url}
+              label={val.title}
+              titleStyles={titleStyles}
+              pdfSize={pdfSize}
+              labelWidth={labelWidth}
+            />
+            {isHrLine && idx !== flattened.length - 1 ? (
+              <hr style={{ border: 0, height: 1, backgroundColor: "#E5E5E5", margin: "8px 0 12px" }} />
+            ) : null}
+          </div>
+        ))
+      ) : (
+        !(window.location.href.includes("citizen")) && <div style={{ color: "#666" }}>{t("EST_NO_DOCUMENTS_UPLOADED_LABEL")}</div>
+      )}
+    </div>
+  );
+}
+
+
+export const formatEpochDate = (value) => {
+  if (!value) return "N/A";
+
+  let num = Number(value);
+
+  // If epoch is in seconds (10 digits), convert to milliseconds
+  if (String(num).length === 10) {
+    num = num * 1000;
+  }
+
+  const date = new Date(num);
+
+  if (isNaN(date.getTime())) return "N/A";
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+};
+
