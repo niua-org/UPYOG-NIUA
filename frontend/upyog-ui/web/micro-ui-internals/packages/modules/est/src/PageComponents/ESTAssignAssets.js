@@ -9,6 +9,7 @@ import {
   UploadFile,
   DatePicker,
   FormStep,
+  SubmitBar,
 } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { calculateDuration } from "../utils";
@@ -24,7 +25,17 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
     return isNaN(d.getTime()) ? null : d.getTime();
   };
 
-  const [data, setFormData] = useState({
+  // helper to sanitize input (digits-only or general regex removal) and enforce max length
+  const sanitizeAndSet = (field, value, { maxLength = null, regex = null } = {}) => {
+    let v = value ?? "";
+    if (typeof v !== "string") v = String(v);
+    if (regex) v = v.replace(regex, "");
+    if (maxLength && v.length > maxLength) v = v.slice(0, maxLength);
+    setData((prev) => ({ ...prev, [field]: v }));
+  };
+
+  // state (kept key names similar to original)
+  const [data, setData] = useState({
     assetNo: formData?.assetData?.estateNo || "",
     assetRefNumber: formData?.assetData?.refAssetNo || "",
     propertyType: formData?.AllotmentData?.propertyType || "",
@@ -70,7 +81,7 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
   const [toastError, setToastError] = useState(false);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleFileUpload = async (file, fieldName) => {
@@ -120,8 +131,6 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
     pattern: "^[0-9]+(\\.[0-9]{1,2})?$",
     title: t("EST_INVALID_AMOUNT"),
   };
-  
-   //  numberValidation is used for validating fields that require numeric input such as rate, monthlyRent, and advancePayment.
 
   const isFormInvalid =
     !data.propertyType ||
@@ -152,281 +161,266 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
     setShowToast(true);
   };
 
+  // Reusable required label like in NewRegistration
+  const RequiredLabel = ({ label, unit }) => (
+    <CardLabel>
+      {t(label)} {unit && <span style={{ fontSize: "0.9em", marginLeft: "6px" }}>{unit}</span>}{" "}
+      <span style={{ color: "red" }}>*</span>
+    </CardLabel>
+  );
+
+  // inputs now 70% width (to match NewRegistration)
+  const fullWidthStyle = { width: "70%", marginBottom: "16px" };
+
   return (
     <FormStep t={t} config={config} onSelect={goNext} onSkip={onSkip} isDisabled={isFormInvalid}>
       <Header>{t("EST_COMMMON_ASSIGN_ASSETS")}</Header>
 
-      <Card style={{ padding: "24px 32px" }}>
-
+      <Card style={{ padding: "16px" }}>
         {/* ---------- Asset Info ---------- */}
-        <h1 style={{ color: "#333", marginBottom: "16px" }}>{t("EST_ASSET_DETAILS_")}</h1>
+        <h2 style={{ color: "#333", marginBottom: "16px", fontSize: "20px", fontWeight: "bold" }}>
+          {t("EST_ASSET_DETAILS_")}
+        </h2>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div>
-            <CardLabel>{t("EST_ASSET_NUMBER")}</CardLabel>
-            <TextInput t={t} value={data.assetNo} readOnly />
-          </div>
+        {/* Asset Number */}
+        <CardLabel>{t("EST_ASSET_NUMBER")}</CardLabel>
+        <TextInput t={t} value={data.assetNo} readOnly style={fullWidthStyle} />
 
-          <div>
-            <CardLabel>{t("EST_ASSET_REFERENCE_NUMBER")}</CardLabel>
-            <TextInput t={t} value={data.assetRefNumber} readOnly />
-          </div>
+        {/* Asset Reference Number */}
+        <CardLabel>{t("EST_ASSET_REFERENCE_NUMBER")}</CardLabel>
+        <TextInput t={t} value={data.assetRefNumber} readOnly style={fullWidthStyle} />
 
-          <div>
-            <CardLabel>{t("EST_BUILDING_NAME")}</CardLabel>
-            <TextInput t={t} value={formData?.assetData?.buildingName} readOnly />
-          </div>
+        {/* Building Name */}
+        <CardLabel>{t("EST_BUILDING_NAME")}</CardLabel>
+        <TextInput t={t} value={formData?.assetData?.buildingName} readOnly style={fullWidthStyle} />
 
-          <div>
-            <CardLabel>{t("EST_LOCALITY")}</CardLabel>
-            <TextInput t={t} value={formData?.assetData?.locality} readOnly />
-          </div>
+        {/* Locality */}
+        <CardLabel>{t("EST_LOCALITY")}</CardLabel>
+        <TextInput t={t} value={formData?.assetData?.locality} readOnly style={fullWidthStyle} />
 
-          <div>
-            <CardLabel>{t("EST_TOTAL_AREA")}</CardLabel>
-            <TextInput
-              t={t}
-              value={`${formData?.assetData?.totalFloorArea || ""} sq. ft.`}
-              readOnly
-            />
-          </div>
+        {/* Total Area */}
+        <CardLabel>{t("EST_TOTAL_AREA")}</CardLabel>
+        <TextInput
+          t={t}
+          value={`${formData?.assetData?.totalFloorArea || ""} sq. ft.`}
+          readOnly
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>{t("EST_FLOOR")}</CardLabel>
-            <TextInput t={t} value={formData?.assetData?.floor} readOnly />
-          </div>
+        {/* Floor */}
+        <CardLabel>{t("EST_FLOOR")}</CardLabel>
+        <TextInput t={t} value={formData?.assetData?.floor} readOnly style={fullWidthStyle} />
 
-          <div>
-            <CardLabel>{t("EST_RATE")}</CardLabel>
-            <TextInput
-              t={t}
-              value={`${formData?.assetData?.rate || ""}/ sq. ft.`}
-              readOnly
-            />
-          </div>
-        </div>
+        {/* Rate */}
+        <CardLabel>{t("EST_RATE")}</CardLabel>
+        <TextInput
+          t={t}
+          value={`${formData?.assetData?.rate || ""}/ sq. ft.`}
+          readOnly
+          style={fullWidthStyle}
+        />
 
         {/* ---------- Personal Details ---------- */}
-        <h1 style={{ marginTop: "20px", color: "#333", marginBottom: "16px" }}>
+        <h2 style={{ marginTop: "20px", color: "#333", marginBottom: "16px", fontSize: "20px", fontWeight: "bold" }}>
           {t("EST_PERSONAL_DETAILS_OF_ALLOTTEE")}
-        </h1>
+        </h2>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* Property Type */}
+        <RequiredLabel label="EST_PROPERTY_TYPE" />
+        <Dropdown
+          option={Asset_Type || []}
+          optionKey="label"
+          selected={Asset_Type?.find((o) => o.code === data.propertyType) || null}
+          select={(o) => handleChange("propertyType", o.code)}
+          placeholder={t("EST_SELECT_PROPERTY_TYPE")}
+          t={t}
+          style={fullWidthStyle}
+        />
 
-          {/* Property Type */}
-          <div>
-            <CardLabel>
-              {t("EST_PROPERTY_TYPE")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <Dropdown
-              option={Asset_Type || []}
-              optionKey="label"
-              selected={Asset_Type?.find((o) => o.code === data.propertyType) || null}
-              select={(o) => handleChange("propertyType", o.code)}
-              placeholder={t("EST_SELECT_PROPERTY_TYPE")}
-              t={t}
-            />
-          </div>
+        {/* Allottee Name */}
+        <RequiredLabel label="EST_ALLOTTEE_NAME" />
+      <TextInput
+        t={t}
+        placeholder={t("EST_ENTER_ALLOTTEE_NAME")}
+        value={data.allotteeName}
+        onChange={(e) =>
+          handleChange(
+            "allotteeName",
+            e.target.value.replace(/[^A-Za-z ]/g, "")   // 🔥 removes numbers & special chars live
+          )
+        }
+        required
+        minLength={3}
+        title={t("EST_INVALID_ALLOTTEE_NAME")}
+        style={fullWidthStyle}
+      />
 
-          {/* Allottee Name */}
-          <div>
-            <CardLabel>
-              {t("EST_ALLOTTEE_NAME")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <TextInput
-              t={t}
-              placeholder={t("EST_ENTER_ALLOTTEE_NAME")}
-              value={data.allotteeName}
-              onChange={(e) => handleChange("allotteeName", e.target.value)}
-              required
-              minLength={3}
-              pattern="^[a-zA-Z ]+$"
-              title={t("EST_INVALID_ALLOTTEE_NAME")}
-            />
-          </div>
+        {/* Phone (primary) - digits only, max 10 */}
+        <RequiredLabel label="EST_PHONE_NUMBER" />
+        <TextInput
+          t={t}
+          placeholder={t("EST_ENTER_PHONE_NUMBER")}
+          value={data.phoneNumber}
+          onChange={(e) =>
+            sanitizeAndSet("phoneNumber", e.target.value, { maxLength: 10, regex: /[^0-9]/g })
+          }
+          maxLength={10}
+          {...phoneValidation}
+          style={fullWidthStyle}
+        />
 
-          {/* Phone */}
-          <div>
-            <CardLabel>
-              {t("EST_PHONE_NUMBER")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <TextInput
-              t={t}
-              placeholder={t("EST_ENTER_PHONE_NUMBER")}
-              value={data.phoneNumber}
-              onChange={(e) => handleChange("phoneNumber", e.target.value)}
-              {...phoneValidation}
-            />
-          </div>
+        {/* Alternate Phone - digits only, max 10 */}
+        <CardLabel>{t("EST_ALTERNATE_PHONE_NUMBER")}</CardLabel>
+        <TextInput
+          t={t}
+          placeholder={t("EST_ENTER_ALTERNATE_PHONE_NUMBER")}
+          value={data.altPhoneNumber}
+          onChange={(e) =>
+            sanitizeAndSet("altPhoneNumber", e.target.value, { maxLength: 10, regex: /[^0-9]/g })
+          }
+          maxLength={10}
+          style={fullWidthStyle}
+        />
 
-          {/* Alternate Phone – NO * */}
-          <div>
-            <CardLabel>{t("EST_ALTERNATE_PHONE_NUMBER")}</CardLabel>
-            <TextInput
-              t={t}
-              placeholder={t("EST_ENTER_ALTERNATE_PHONE_NUMBER")}
-              value={data.altPhoneNumber}
-              onChange={(e) => handleChange("altPhoneNumber", e.target.value)}
-            />
-          </div>
-
-          {/* Email */}
-          <div style={{ gridColumn: "span 2" }}>
-            <CardLabel>
-              {t("EST_EMAIL_ID")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <TextInput
-              t={t}
-              placeholder={t("EST_ENTER_EMAIL_ID")}
-              value={data.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              {...emailValidation}
-            />
-          </div>
-        </div>
+        {/* Email */}
+        <RequiredLabel label="EST_EMAIL_ID" />
+        <TextInput
+          t={t}
+          placeholder={t("EST_ENTER_EMAIL_ID")}
+          value={data.email}
+          onChange={(e) => handleChange("email", e.target.value)}
+          {...emailValidation}
+          style={fullWidthStyle}
+        />
 
         {/* ---------- Allotment Details ---------- */}
-        <h1 style={{ marginTop: "24px", color: "#333", marginBottom: "16px" }}>
+        <h2 style={{ marginTop: "20px", color: "#333", marginBottom: "16px", fontSize: "20px", fontWeight: "bold" }}>
           {t("EST_ALLOTMENT_INVOICE_DETAILS")}
-        </h1>
+        </h2>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* Agreement Start Date */}
+        <RequiredLabel label="EST_AGREEMENT_START_DATE" />
+        <DatePicker
+          date={data.startDate}
+          onChange={(d) => {
+            handleChange("startDate", d);
+            handleChange("duration", calculateDuration(d, data.endDate));
+            // make sure duration string stored as well
+            const newDuration = calculateDuration(d, data.endDate);
+            handleChange("duration", newDuration);
+          }}
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>
-              {t("EST_AGREEMENT_START_DATE")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <DatePicker
-              date={data.startDate}
-              onChange={(d) => {
-                handleChange("startDate", d);
-                handleChange("duration", calculateDuration(d, data.endDate));
-              }}
-            />
-          </div>
+        {/* Agreement End Date */}
+        <RequiredLabel label="EST_AGREEMENT_END_DATE" />
+        <DatePicker
+          date={data.endDate}
+          onChange={(d) => {
+            handleChange("endDate", d);
+            handleChange("duration", calculateDuration(data.startDate, d));
+            const newDuration = calculateDuration(data.startDate, d);
+            handleChange("duration", newDuration);
+          }}
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>
-              {t("EST_AGREEMENT_END_DATE")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <DatePicker
-              date={data.endDate}
-              onChange={(d) => {
-                handleChange("endDate", d);
-                handleChange("duration", calculateDuration(data.startDate, d));
-              }}
-            />
-          </div>
+        {/* Duration - frozen, disabled, no cursor */}
+        <CardLabel>{t("EST_DURATION_IN_YEARS")}</CardLabel>
+        <TextInput
+          t={t}
+          value={data.duration}
+          readOnly
+          disabled
+          style={{ ...fullWidthStyle, pointerEvents: "none", cursor: "default", backgroundColor: "transparent" }}
+        />
 
-          <div>
-            <CardLabel>{t("EST_DURATION_IN_YEARS")}</CardLabel>
-            <TextInput t={t} value={data.duration} readOnly />
-          </div>
+        {/* Rate per sqft */}
+        <RequiredLabel label="EST_RATE_PER_SQFT" unit="(Per sq ft)" />
+        <TextInput
+          t={t}
+          value={data.rate}
+          onChange={(e) => sanitizeAndSet("rate", e.target.value, { maxLength: 12, regex: /[^0-9.]/g })}
+          {...numberValidation}
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>
-              {t("EST_RATE_PER_SQFT")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <TextInput
-              t={t}
-              value={data.rate}
-              onChange={(e) => handleChange("rate", e.target.value)}
-              {...numberValidation}
-            />
-          </div>
+        {/* Monthly Rent */}
+        <RequiredLabel label="EST_MONTHLY_RENT_IN_INR" />
+        <TextInput
+          t={t}
+          value={data.monthlyRent}
+          onChange={(e) => sanitizeAndSet("monthlyRent", e.target.value, { maxLength: 12, regex: /[^0-9.]/g })}
+          {...numberValidation}
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>
-              {t("EST_MONTHLY_RENT_IN_INR")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <TextInput
-              t={t}
-              value={data.monthlyRent}
-              onChange={(e) => handleChange("monthlyRent", e.target.value)}
-              {...numberValidation}
-            />
-          </div>
+        {/* Advance Payment */}
+        <RequiredLabel label="EST_ADVANCE_PAYMENT_IN_INR" />
+        <TextInput
+          t={t}
+          value={data.advancePayment}
+          onChange={(e) => sanitizeAndSet("advancePayment", e.target.value, { maxLength: 12, regex: /[^0-9.]/g })}
+          {...numberValidation}
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>
-              {t("EST_ADVANCE_PAYMENT_IN_INR")}
-              <span style={{ color: "red", marginLeft: 4 }}>*</span>
-            </CardLabel>
-            <TextInput
-              t={t}
-              value={data.advancePayment}
-              onChange={(e) => handleChange("advancePayment", e.target.value)}
-              {...numberValidation}
-            />
-          </div>
-
-          <div style={{ gridColumn: "span 2" }}>
-            <CardLabel>{t("EST_ADVANCE_PAYMENT_DATE")}</CardLabel>
-            <DatePicker
-              date={data.advancePaymentDate}
-              onChange={(d) => handleChange("advancePaymentDate", d)}
-            />
-          </div>
-        </div>
+        {/* Advance Payment Date */}
+        <CardLabel>{t("EST_ADVANCE_PAYMENT_DATE")}</CardLabel>
+        <DatePicker
+          date={data.advancePaymentDate}
+          onChange={(d) => handleChange("advancePaymentDate", d)}
+          style={fullWidthStyle}
+        />
 
         {/* ---------- Document Upload ---------- */}
-        <h1 style={{ marginTop: "24px", color: "#333", marginBottom: "16px" }}>
+        <h2 style={{ marginTop: "20px", color: "#333", marginBottom: "16px", fontSize: "20px", fontWeight: "bold" }}>
           {t("EST_DOCUMENT_UPLOAD")}
-        </h1>
+        </h2>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <CardLabel>{t("EST_EOFFICE_FILE_NO")}</CardLabel>
+        <TextInput
+          t={t}
+          placeholder={t("EST_ENTER_EOFFICE_FILE_NO")}
+          value={data.eOfficeFileNo}
+          onChange={(e) => handleChange("eOfficeFileNo", e.target.value)}
+          style={fullWidthStyle}
+        />
 
-          <div>
-            <CardLabel>{t("EST_EOFFICE_FILE_NO")}</CardLabel>
-            <TextInput
-              t={t}
-              placeholder={t("EST_ENTER_EOFFICE_FILE_NO")}
-              value={data.eOfficeFileNo}
-              onChange={(e) => handleChange("eOfficeFileNo", e.target.value)}
-            />
-          </div>
-
-          <div>
-            <CardLabel>{t("EST_CITIZEN_REQUEST_LETTER")}</CardLabel>
-            <UploadFile
-              onUpload={(e) => handleFileUpload(e.target.files[0], "citizenLetter")}
-              onDelete={() => handleFileDelete("citizenLetter")}
-              id="citizenLetter"
-              message={data.citizenLetter ? t("CS_ACTION_FILEUPLOADED") : t("CS_ACTION_NO_FILEUPLOADED")}
-              accept=".png,.jpg,.jpeg,.pdf"
-            />
-          </div>
-
-          <div>
-            <CardLabel>{t("EST_ALLOTMENT_LETTER")}</CardLabel>
-            <UploadFile
-              onUpload={(e) => handleFileUpload(e.target.files[0], "allotmentLetter")}
-              onDelete={() => handleFileDelete("allotmentLetter")}
-              id="allotmentLetter"
-              message={data.allotmentLetter ? t("CS_ACTION_FILEUPLOADED") : t("CS_ACTION_NO_FILEUPLOADED")}
-              accept=".png,.jpg,.jpeg,.pdf"
-            />
-          </div>
-
-          <div>
-            <CardLabel>{t("EST_SIGNED_DEED")}</CardLabel>
-            <UploadFile
-              onUpload={(e) => handleFileUpload(e.target.files[0], "signedDeed")}
-              onDelete={() => handleFileDelete("signedDeed")}
-              id="signedDeed"
-              message={data.signedDeed ? t("CS_ACTION_FILEUPLOADED") : t("CS_ACTION_NO_FILEUPLOADED")}
-              accept=".png,.jpg,.jpeg,.pdf"
-            />
-          </div>
+        <CardLabel>{t("EST_CITIZEN_REQUEST_LETTER")}</CardLabel>
+        <div style={fullWidthStyle}>
+          <UploadFile
+            onUpload={(e) => handleFileUpload(e.target.files[0], "citizenLetter")}
+            onDelete={() => handleFileDelete("citizenLetter")}
+            id="citizenLetter"
+            message={data.citizenLetter ? t("CS_ACTION_FILEUPLOADED") : t("CS_ACTION_NO_FILEUPLOADED")}
+            accept=".png,.jpg,.jpeg,.pdf"
+          />
         </div>
+
+        <CardLabel>{t("EST_ALLOTMENT_LETTER")}</CardLabel>
+        <div style={fullWidthStyle}>
+          <UploadFile
+            onUpload={(e) => handleFileUpload(e.target.files[0], "allotmentLetter")}
+            onDelete={() => handleFileDelete("allotmentLetter")}
+            id="allotmentLetter"
+            message={data.allotmentLetter ? t("CS_ACTION_FILEUPLOADED") : t("CS_ACTION_NO_FILEUPLOADED")}
+            accept=".png,.jpg,.jpeg,.pdf"
+          />
+        </div>
+
+        <CardLabel>{t("EST_SIGNED_DEED")}</CardLabel>
+        <div style={fullWidthStyle}>
+          <UploadFile
+            onUpload={(e) => handleFileUpload(e.target.files[0], "signedDeed")}
+            onDelete={() => handleFileDelete("signedDeed")}
+            id="signedDeed"
+            message={data.signedDeed ? t("CS_ACTION_FILEUPLOADED") : t("CS_ACTION_NO_FILEUPLOADED")}
+            accept=".png,.jpg,.jpeg,.pdf"
+          />
+        </div>
+
+       
       </Card>
 
       {showToast && (
