@@ -6,16 +6,16 @@
   "author": "Shivank Shukla",
   "description": "CSS for CND UI & SV UI",
   "engines": {
-    "node": ">=18"
+    "node": ">=16"
   },
   "cssConfig": {
     "prefix": ""
   },
   "scripts": {
-    "start": "NODE_OPTIONS=--openssl-legacy-provider gulp build",
-    "build:prod": "NODE_OPTIONS=--openssl-legacy-provider gulp build",
-    "prepublish": "NODE_OPTIONS=--openssl-legacy-provider yarn build:prod",
-    "deploy": "NODE_OPTIONS=--openssl-legacy-provider gulp && cp -R svg example && cp -R img example && gh-pages -d example"
+    "start": "gulp build",
+    "build:prod": "gulp build",
+    "prepublish": "yarn build:prod",
+    "deploy": "gulp && cp -R svg example && cp -R img example && gh-pages -d example"
   },
   "browserslist": [
     "> 3%",
