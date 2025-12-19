@@ -124,7 +124,7 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
 
     
        
-      {console.log("params in create", params)}
+     
       <Route path={`${match.path}/check`}>
         <ESTAssignAssetsCheckPage onSubmit={estcreate} value={params} />
       </Route>
@@ -134,7 +134,7 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
       <Route>
         <Redirect to={`${match.path}/${config.indexRoute}`} />  
       </Route>
-    </Switch>
+    </Switch>     
   );
 };
 

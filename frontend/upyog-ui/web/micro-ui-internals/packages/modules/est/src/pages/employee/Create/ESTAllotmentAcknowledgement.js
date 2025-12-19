@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+// ESTAllotmentAcknowledgement.js
+import React, { useEffect, useRef, useState } from "react";
 import {
   Banner,
   Card,
@@ -10,226 +11,191 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import getESTAllotmentAcknowledgementData from "../../../utils/getESTAllotmentAcknowledgementData";
-import { createAllotmentData } from "../../../utils";
-
-/**
- * Helper message shown in Banner
- */
-const GetActionMessage = ({ t, isSuccess }) => {
-  if (isSuccess) return t("EST_ALLOTED_SUCCESSFULL");
-  return t("EST_APPLICATION_FAILED");
-};
+import { createAllotmentData, estPayloadData } from "../../../utils";
 
 const rowContainerStyle = {
   padding: "4px 0px",
   justifyContent: "space-between",
 };
 
-/**
- * BannerPicker - decides banner content based on mutation state
- * NOTE: We will only render BannerPicker when isSuccess === true OR isError === true
- */
+/* ---------------- Banner ---------------- */
+
 const BannerPicker = ({ t, isSuccess, data }) => {
-  let message = "";
-  let info = "";
-  let successful = false;
-
-  if (isSuccess) {
-    message = t("EST_ALLOTED_SUCCESSFULL");
-    info = t("EST_APPLICATION_NO");
-    successful = true;
-  } else {
-    message = t("EST_APPLICATION_FAILED");
-    successful = false;
-  }
-
-  const applicationNumber =
-    (data && data?.Allotments && data.Allotments?.[0]?.assetNo) ||
-    (data && data?.AssignAssetsData?.assetNo) ||
-    "";
-
+  const applicationNumber = data?.Allotments?.[0]?.assetNo || "";
   return (
     <Banner
-      message={message}
+      message={
+        isSuccess ? t("EST_ALLOTED_SUCCESSFULL") : t("EST_APPLICATION_FAILED")
+      }
       applicationNumber={applicationNumber}
-      info={successful ? info : ""}
-      successful={successful}
+      info={isSuccess ? t("EST_APPLICATION_NO") : ""}
+      successful={isSuccess}
       style={{ width: "100%" }}
     />
   );
 };
 
-/**
- * Create a safe noop mutation to avoid runtime crashes when Digit hooks missing
- */
-const createNoopMutation = () => ({
-  mutate: (_payload, _callbacks) =>
-    console.warn("Mutation hook missing; mutate noop called"),
-  isLoading: false,
-  isSuccess: false,
-  isError: false,
-  data: null,
-  error: null,
-});
+/* ---------------- Main ---------------- */
 
-const ESTAllotmentAcknowledgement = ({ data, onSuccess }) => {
-  const hasRun = useRef(false);
+const ESTAllotmentAcknowledgement = ({ data = {}, onSuccess }) => {
   const { t } = useTranslation();
+  const hasRun = useRef(false);
 
-  // safe tenantId resolution
-  let tenantId;
-  try {
-    tenantId =
-      (typeof Digit !== "undefined" &&
-        (Digit.ULBService?.getCitizenCurrentTenant(true) ||
-          Digit.ULBService?.getCurrentTenantId())) ||
-      undefined;
-  } catch (err) {
-    tenantId = undefined;
-  }
+  const tenantId =
+    Digit.ULBService.getCitizenCurrentTenant(true) ||
+    Digit.ULBService.getCurrentTenantId();
 
-  // initialize mutation (or fallback to noop)
-  let mutation = createNoopMutation();
-  try {
-    if (
-      typeof Digit !== "undefined" &&
-      Digit.Hooks &&
-      Digit.Hooks.estate &&
-      typeof Digit.Hooks.estate.useESTAssetsAllotment === "function"
-    ) {
-      const raw = Digit.Hooks.estate.useESTAssetsAllotment(tenantId) || {};
-      mutation = {
-        mutate: raw?.mutate || createNoopMutation().mutate,
-        isLoading: Boolean(raw?.isLoading),
-        isSuccess: Boolean(raw?.isSuccess),
-        isError: Boolean(raw?.isError),
-        data: raw?.data ?? null,
-        error: raw?.error ?? null,
-      };
-    }
-  } catch (err) {
-    console.error("Error initializing mutation hook:", err);
-    mutation = createNoopMutation();
-  }
+  const user = Digit.UserService.getUser().info;
 
-  // store useful values
-  const user = (() => {
-    try {
-      return Digit.UserService.getUser().info;
-    } catch {
-      return {};
-    }
-  })();
+  const [finalMutation, setFinalMutation] = useState({
+    isLoading: true,
+    isSuccess: false,
+    data: null,
+  });
 
-  const { data: storeData } =
-    (Digit.Hooks && Digit.Hooks.useStore && Digit.Hooks.useStore.getInitData && Digit.Hooks.useStore.getInitData()) ||
-    {};
-  const tenants = (storeData && storeData.tenants) || [];
+  const allotmentMutation =
+    Digit.Hooks.estate.useESTAssetsAllotment(tenantId);
 
-  // ---- Allotment API call on first render ----
+  const { data: storeData } = Digit.Hooks.useStore.getInitData();
+  const tenants = storeData?.tenants || [];
+
+  /* ---------------- API CALL ---------------- */
+
   useEffect(() => {
-    // one-time submission
     if (hasRun.current) return;
-    if (!data?.AssignAssetsData) {
-      // nothing to submit; skip
-      return;
-    }
+    if (!data?.AssignAssetsData) return;
 
-    // mark run
     hasRun.current = true;
 
-    try {
-      const allotmentPayload = {
-        RequestInfo: {
-          apiId: "Rainmaker",
-          authToken: Digit.UserService.getUser()?.access_token,
-          userInfo: Digit.UserService.getUser()?.info,
+    // 1️⃣ Allotment payload
+    const allotmentPayload = createAllotmentData(data);
+
+    // 2️⃣ Assets payload (FRONTEND ONLY)
+    const assetsPayload = estPayloadData(data);
+
+    console.log("🟢 Allotment Payload:", allotmentPayload);
+    console.log("🟡 Assets Payload:", assetsPayload);
+
+    // ✅ REQUIRED RequestInfo (VERY IMPORTANT)
+    const requestInfo = {
+      apiId: "EST",
+      ver: "1.0",
+      ts: Date.now(),
+      action: "_create",
+      did: "1",
+      key: "",
+      msgId: Date.now().toString(),
+      authToken: Digit.UserService.getUser().access_token,
+    };
+
+    allotmentMutation.mutate(
+      {
+        RequestInfo: requestInfo,
+        ...allotmentPayload,
+      },
+      {
+        onSuccess: (allotmentRes) => {
+          console.log("✅ Allotment API Response:", allotmentRes);
+
+          // 🔥 SAFE MERGE (payload + response)
+          const payloadAllotment = allotmentPayload?.Allotments?.[0] || {};
+          const responseAllotment = allotmentRes?.Allotments?.[0] || {};
+
+          const mergedResponse = {
+            Allotments: [
+              {
+                ...responseAllotment,
+                // keep dates from payload if backend skips them
+                agreementStartDate: payloadAllotment.agreementStartDate,
+                agreementEndDate: payloadAllotment.agreementEndDate,
+                advancePaymentDate: payloadAllotment.advancePaymentDate,
+              },
+            ],
+            Assets: assetsPayload?.Assets || [],
+          };
+
+          console.log("🔥 FINAL mutation.data:", mergedResponse);
+
+          setFinalMutation({
+            isLoading: false,
+            isSuccess: true,
+            data: mergedResponse,
+          });
+
+          onSuccess && onSuccess(mergedResponse);
         },
-        ...createAllotmentData(data),
-      };
+        onError: (err) => {
+          console.error(
+            "❌ Allotment API Error:",
+            err?.response?.data || err
+          );
 
-      // call mutate
-      if (mutation && typeof mutation.mutate === "function") {
-        mutation.mutate(allotmentPayload, {
-          onSuccess: (responseData) => {
-            // call optional parent callback
-            try {
-              if (typeof onSuccess === "function") onSuccess(responseData);
-            } catch (err) {
-              console.error("onSuccess callback error:", err);
-            }
-          },
-          onError: (error) => {
-            console.error("Allotment API Error:", error);
-          },
-        });
-      } else {
-        console.warn("Mutation not available; skipping allotment call.");
+          setFinalMutation({
+            isLoading: false,
+            isSuccess: false,
+            data: null,
+          });
+        },
       }
-    } catch (err) {
-      console.error("Error building/submitting allotment payload:", err);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    );
+  }, [data, tenantId]);
 
-  // ---- PDF Download handler ----
+  /* ---------------- PDF ---------------- */
+
   const handleDownloadPdf = async () => {
     try {
-      const apiData = mutation?.data;
-      // fallback to provided data if mutation hasn't returned
-      const responseData = apiData || { Allotments: [{ assetNo: data?.AssignAssetsData?.assetNo, tenantId: data?.AssignAssetsData?.tenantId }] };
+      const allotment = finalMutation.data?.Allotments?.[0];
+      if (!allotment) return;
 
-      if (!responseData || !responseData.Allotments || !responseData.Allotments.length) {
-        console.error("No allotment data available for PDF.");
-        return;
-      }
+      const tenantInfo =
+        tenants.find((t) => t.code === allotment.tenantId) || {};
 
-      const firstAllotment = responseData.Allotments[0];
-      const tenantInfo = tenants?.find((tnt) => tnt.code === firstAllotment.tenantId) || {};
+      const pdfData = await getESTAllotmentAcknowledgementData(
+        finalMutation.data,
+        tenantInfo,
+        t
+      );
 
-      const pdfData = await getESTAllotmentAcknowledgementData(responseData, tenantInfo, t);
       Digit.Utils.pdf.generate(pdfData);
-    } catch (error) {
-      console.error("PDF generation error:", error);
+    } catch (err) {
+      console.error("PDF generation error:", err);
     }
   };
 
-  // determine user home link
-  const getUserHomeLink = () => {
-    try {
-      const type = Digit?.UserService?.getUser()?.info?.type;
-      return type === "CITIZEN" ? "/upyog-ui/citizen" : "/upyog-ui/employee";
-    } catch {
-      return "/upyog-ui/citizen";
-    }
-  };
+  /* ---------------- UI ---------------- */
 
-  const isSuccess = Boolean(mutation.isSuccess);
-  const isError = Boolean(mutation.isError);
-
-  // data to show in banner: prefer mutation response, fallback to original data
-  const bannerData = mutation.data || { Allotments: [{ assetNo: data?.AssignAssetsData?.assetNo, tenantId: data?.AssignAssetsData?.tenantId }] };
+  if (finalMutation.isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Card>
-      {/* Render Banner only when we have success or failed */}
-      {(isSuccess || isError) && (
-        <BannerPicker t={t} isSuccess={isSuccess} data={bannerData} />
-      )}
+      <BannerPicker
+        t={t}
+        isSuccess={finalMutation.isSuccess}
+        data={finalMutation.data}
+      />
 
       <StatusTable>
-        <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />
+        <Row rowContainerStyle={rowContainerStyle} last />
       </StatusTable>
 
-      {isSuccess && (
-        <SubmitBar label={t("EST_ALLOTMENT_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />
+      {finalMutation.isSuccess && (
+        <SubmitBar
+          label={t("EST_ALLOTMENT_ACKNOWLEDGEMENT")}
+          onSubmit={handleDownloadPdf}
+        />
       )}
 
-      <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-        <Link to={getUserHomeLink()}>
-          <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
-        </Link>
-      </div>
+      <Link
+        to={
+          user?.type === "CITIZEN"
+            ? "/upyog-ui/citizen"
+            : "/upyog-ui/employee"
+        }
+      >
+        <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
+      </Link>
     </Card>
   );
 };

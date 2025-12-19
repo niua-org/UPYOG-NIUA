@@ -1,36 +1,34 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Header,
   Card,
   CardLabel,
   TextInput,
   Dropdown,
-  Toast,
   FormStep,
   SubmitBar,
 } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 
 const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {}, config }) => {
   const { t: hookT } = useTranslation();
   const t = propT || hookT;
-  const history = useHistory();
 
+  const location = useLocation();
+  const editData = location.state?.assetData;
+  const isEditMode = location.state?.isEdit;
+ 
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [_formData, setFormData, _clear] = Digit.Hooks.useSessionStorage("EST_CREATE_DATA", null);
-  const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage(
-    "EST_MUTATION_HAPPENED",
-    false
-  );
-  const [successData, setSuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage(
-    "EST_MUTATION_SUCCESS_DATA",
-    {}
-  );
 
-  const allCities = Digit.Hooks.estate.useTenants();
-  const cityList = allCities?.data || allCities || [];
+  const isMounted = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const { data: Asset_Type } = Digit.Hooks.useEnabledMDMS(
     Digit.ULBService.getStateId(),
@@ -38,34 +36,35 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
     [{ name: "assetParentCategory" }],
     {
       select: (data) => {
-        const formattedData = data?.["ASSET"]?.["assetParentCategory"];
-        const activeData = formattedData?.filter((item) => item.active === true);
-        return activeData?.map((item) => ({
+        const formattedData = data?.ASSET?.assetParentCategory || [];
+        const activeData = formattedData.filter((item) => item.active === true);
+        return activeData.map((item) => ({
           i18nKey: `ASSET_TYPE_${item.code}`,
           code: item.code,
           label: item.name,
-        }));
+        }))
       },
     }
   );
 
-  const init = formData?.Assetdata || {};
+  const allCities = Digit.Hooks.estate.useTenants();
+  const cityList = allCities?.data || allCities || [];
 
-  const [buildingName, setBuildingName] = useState(init.buildingName || "");
-  const [buildingNo, setBuildingNo] = useState(init.buildingNo || "");
-  const [buildingFloor, setBuildingFloor] = useState(init.buildingFloor || "");
-  const [buildingBlock, setBuildingBlock] = useState(init.buildingBlock || "");
-  const [selectedCity, setSelectedCity] = useState(init.city ? cityList.find(c => c.code === init.city) : null);
-  const [serviceType, setServiceType] = useState(init.serviceType || "");
-  const [totalFloorArea, setTotalFloorArea] = useState(init.totalFloorArea || "");
-  const [dimensionLength, setDimensionLength] = useState(init.dimensionLength || "");
-  const [dimensionWidth, setDimensionWidth] = useState(init.dimensionWidth || "");
-  const [rate, setRate] = useState(init.rate || "");
-  const [assetRef, setAssetRef] = useState(init.assetRef || "");
-  const [assetType, setAssetType] = useState(init.assetType || "");
-  const [showToast, setShowToast] = useState(false);
 
-  const { control } = useForm();
+const [buildingName, setBuildingName] = useState("");
+const [buildingNo, setBuildingNo] = useState("");
+const [buildingFloor, setBuildingFloor] = useState("");
+const [buildingBlock, setBuildingBlock] = useState("");
+const [selectedCity, setSelectedCity] = useState(null);
+const [serviceType, setServiceType] = useState("");
+const [totalFloorArea, setTotalFloorArea] = useState("");
+const [dimensionLength, setDimensionLength] = useState("");
+const [dimensionWidth, setDimensionWidth] = useState("");
+const [rate, setRate] = useState("");
+const [assetRef, setAssetRef] = useState("");
+const [assetType, setAssetType] = useState("");
+
+const { control } = useForm();
 
   const { data: fetchedLocalities } = Digit.Hooks.useBoundaryLocalities(
     selectedCity?.code,
@@ -78,27 +77,66 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
     fetchedLocalities?.map((locality) => ({
       ...locality,
       i18nKey: `TENANT_TENANTS_${locality.code.toUpperCase()}`,
-      label: locality.name || locality.i18nkey || locality.label,
+      label: locality.name || locality.i18nKey || locality.label,
     })) || [];
 
-  useEffect(() => {
-    if (Array.isArray(cityList) && tenantId) {
-      const matchedCity = cityList.find((city) => city.code === tenantId);
-      if (matchedCity) {
-        setSelectedCity(matchedCity);
-        setServiceType((prev) => (prev && prev !== matchedCity.code ? "" : prev));
+useEffect(() => {
+  console.log("Edit Data:", editData); // Add this line to see what data is being passed
+  if (isEditMode && editData) {
+    setBuildingName(editData.buildingName || "");
+    setBuildingNo(editData.buildingNo || "");
+    setBuildingFloor(editData.floor || editData.buildingFloor || "");
+    setBuildingBlock(editData.buildingBlock || "");
+    setTotalFloorArea(editData.totalFloorArea || "");
+    setDimensionLength(editData.dimensionLength || "");
+    setDimensionWidth(editData.dimensionWidth || "");
+    setRate(editData.rate || "");
+    setAssetRef(editData.refAssetNo || editData.assetRef || "");
+    
+    const assetTypeCode = editData.assetType?.code || editData.assetType;
+    setAssetType(assetTypeCode || "");
+    
+    if (editData.locality && structuredLocality?.length > 0) {
+      const matchedLocality = structuredLocality.find(
+        loc => loc.label === editData.locality || loc.name === editData.locality
+      );
+      if (matchedLocality) {
+        setServiceType(matchedLocality.code);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cityList, tenantId]);
+  }
+}, [isEditMode, editData, structuredLocality]);
 
-  const DEFAULT_ASSET_REF = "PG-1013-2025-I-001195";
+// Add this new useEffect after the existing ones
+useEffect(() => {
+  if (isEditMode && editData && editData.locality && structuredLocality?.length > 0) {
+    const matchedLocality = structuredLocality.find(
+      loc => loc.label === editData.locality || loc.name === editData.locality
+    );
+    if (matchedLocality) {
+      setServiceType(matchedLocality.code);
+    }
+  }
+}, [isEditMode, editData, structuredLocality]);
+
+
+useEffect(() => {
+  if (Array.isArray(cityList) && tenantId) {
+    const matchedCity = cityList.find((city) => city.code === tenantId);
+    if (matchedCity) {
+      setSelectedCity(matchedCity);
+      if (!isEditMode) {
+       setServiceType((prev) => (prev && prev !== matchedCity?.code ? "" : prev));
+
+      }
+    }
+  }
+}, [cityList, tenantId, isEditMode]);
 
   const isFormInvalid =
     !buildingName ||
     !buildingNo ||
     !buildingFloor ||
-    !buildingBlock ||
     !selectedCity ||
     !serviceType ||
     !totalFloorArea ||
@@ -108,14 +146,17 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
     !assetType;
 
   const sanitizeAndSet = (value, setter, { maxLength = null, regex = null } = {}) => {
-    let v = value;
+    let v = value ?? "";
     if (regex) v = v.replace(regex, "");
-    if (maxLength && v.length > maxLength) return;
+    if (maxLength && v.length > maxLength) v = v.slice(0, maxLength);
     setter(v);
   };
 
   const goNext = () => {
     if (isFormInvalid) return;
+
+    const selectedLocality =
+      structuredLocality?.find((locality) => locality.code === serviceType) || null;
 
     const payload = {
       buildingName,
@@ -123,52 +164,54 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
       buildingFloor,
       buildingBlock,
       city: selectedCity?.code || "",
-      serviceType,
       totalFloorArea,
       dimensionLength,
       dimensionWidth,
       rate,
-      assetRef: DEFAULT_ASSET_REF,
+      locality: selectedLocality?.label || "",
+      localityCode: selectedLocality?.code || "",
+      localityName: selectedLocality?.label || "", 
+      assetRef: assetRef || "",
       assetType,
     };
 
-    try {
-      if (onSelect) {
-        onSelect(config?.key, { Assetdata: payload }, false);
-      } else {
-        console.warn("onSelect not provided. Payload:", payload);
-        setShowToast(true);
-      }
-    } catch (err) {
-      console.error("Submission failed:", err);
-      setShowToast(false);
-      return;
+    if (isEditMode) {
+      const updatePayload = {
+        Asset: {
+          ...payload,
+          id: editData.id,
+          estateNo: editData.estateNo,
+          tenantId: tenantId
+        }
+      };
+      updateMutation.mutate(updatePayload, {
+        onSuccess: () => {
+          console.log("Asset updated successfully");
+        },
+        onError: (error) => {
+          console.error("Update failed:", error);
+        }
+      });
+    } else {
+      onSelect(config?.key, { Assetdata: payload }, false);
     }
-
-    setShowToast(true);
   };
 
   const RequiredLabel = ({ label, unit }) => (
     <CardLabel>
-      {t(label)} {unit && <span style={{ fontSize: "0.9em", marginLeft: "6px" }}>{unit}</span>} <span style={{ color: "red" }}>*</span>
+      {t(label)}{" "}
+      {unit && <span style={{ fontSize: "0.9em", marginLeft: "6px" }}>{unit}</span>}{" "}
+      <span style={{ color: "red" }}>*</span>
     </CardLabel>
   );
 
-  // change here: inputs now 70% width
   const fullWidthStyle = { width: "70%", marginBottom: "16px" };
 
   return (
-    <FormStep
-      t={t}
-      config={config}
-      onSelect={goNext}
-      onSkip={onSkip}
-      isDisabled={isFormInvalid}
-    >
-      <Header>{t("EST_COMMON_NEW_REGISTRATION")}</Header>
+    <FormStep t={t} config={config} onSelect={goNext} onSkip={onSkip} isDisabled={isFormInvalid}>
+      <Header>{isEditMode ? t("EST_UPDATE_ASSET") : t("EST_COMMON_NEW_REGISTRATION")}</Header>
 
       <Card style={{ padding: "16px" }}>
-        {/* Building Name */}
         <RequiredLabel label="EST_BUILDING_NAME" />
         <TextInput
           name="buildingName"
@@ -186,7 +229,6 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           style={fullWidthStyle}
         />
 
-        {/* Building Number */}
         <RequiredLabel label="EST_BUILDING_NUMBER" />
         <TextInput
           name="buildingNo"
@@ -201,7 +243,6 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           style={fullWidthStyle}
         />
 
-        {/* Building Floor */}
         <RequiredLabel label="EST_BUILDING_FLOOR" />
         <TextInput
           name="buildingFloor"
@@ -216,8 +257,7 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           style={fullWidthStyle}
         />
 
-        {/* Building Block */}
-        <RequiredLabel label="EST_BUILDING_BLOCK" />
+        <CardLabel>{t("EST_BUILDING_BLOCK")}</CardLabel>
         <TextInput
           name="buildingBlock"
           placeholder={t("EST_ENTER_BUILDING_BLOCK")}
@@ -234,7 +274,6 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           style={fullWidthStyle}
         />
 
-        {/* City */}
         <RequiredLabel label="EST_CITY" />
         <Controller
           control={control}
@@ -257,7 +296,6 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           )}
         />
 
-        {/* Locality / Service Type */}
         <RequiredLabel label="EST_LOCALITY" />
         <Controller
           control={control}
@@ -267,7 +305,9 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
             <Dropdown
               option={structuredLocality}
               optionKey="i18nKey"
-              selected={structuredLocality?.find((loc) => loc.code === serviceType) || null}
+              selected={
+                structuredLocality?.find((loc) => loc.code === serviceType) || null
+              }
               select={(loc) => setServiceType(loc?.code)}
               placeholder={
                 !selectedCity
@@ -284,14 +324,16 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           )}
         />
 
-        {/* Total Plot Area */}
         <RequiredLabel label="EST_TOTAL_PLOT_AREA" unit="( In sq.ft)" />
         <TextInput
           name="totalFloorArea"
           placeholder={t("EST_ENTER_TOTAL_PLOT_AREA")}
           value={totalFloorArea}
           onChange={(e) =>
-            sanitizeAndSet(e.target.value, setTotalFloorArea, { maxLength: 10, regex: /\D/g })
+            sanitizeAndSet(e.target.value, setTotalFloorArea, {
+              maxLength: 10,
+              regex: /\D/g,
+            })
           }
           pattern="^[0-9]+$"
           title={t("EST_INVALID_TOTAL_PLOT_AREA")}
@@ -299,11 +341,15 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           style={fullWidthStyle}
         />
 
-        {/* Dimension */}
         <RequiredLabel label="EST_DIMENSION" unit="( In sq.ft)" />
-        {/* container uses fullWidthStyle to keep 70% width */}
-        <div style={{ ...fullWidthStyle, display: "flex", gap: "16px", alignItems: "flex-start" }}>
-          {/* Length */}
+        <div
+          style={{
+            ...fullWidthStyle,
+            display: "flex",
+            gap: "16px",
+            alignItems: "flex-start",
+          }}
+        >
           <div style={{ flex: 1 }}>
             <CardLabel>{t("EST_LENGTH")}</CardLabel>
             <TextInput
@@ -323,7 +369,6 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
             />
           </div>
 
-          {/* Width */}
           <div style={{ flex: 1 }}>
             <CardLabel>{t("EST_WIDTH")}</CardLabel>
             <TextInput
@@ -344,30 +389,34 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           </div>
         </div>
 
-        {/* Rate */}
         <RequiredLabel label="EST_RATES" unit="(Per sq ft)" />
         <TextInput
           name="rate"
           placeholder={t("EST_ENTER_RATE")}
           value={rate}
-          onChange={(e) => sanitizeAndSet(e.target.value, setRate, { maxLength: 10, regex: /\D/g })}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setRate, {
+              maxLength: 10,
+              regex: /\D/g,
+            })
+          }
           pattern="^[0-9]+$"
           title={t("EST_INVALID_RATE")}
           required
           style={fullWidthStyle}
         />
 
-        {/* Asset Reference */}
         <CardLabel>{t("EST_ASSET_REFERENCE_NUMBER")}</CardLabel>
         <TextInput
           name="assetRef"
           placeholder={t("EST_ENTER_ASSET_REFERENCE_NUMBER")}
           value={assetRef}
-          onChange={(e) => sanitizeAndSet(e.target.value, setAssetRef, { maxLength: 50 })}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setAssetRef, { maxLength: 50 })
+          }
           style={fullWidthStyle}
         />
 
-        {/* Asset Type */}
         <RequiredLabel label="EST_ASSET_TYPE" />
         <Controller
           control={control}
@@ -380,7 +429,7 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
               selected={Asset_Type?.find((opt) => opt.code === assetType) || null}
               select={(opt) => setAssetType(opt?.code)}
               placeholder={
-                Asset_Type?.length
+                Asset_Type && Asset_Type.length
                   ? t("EST_SELECT_ASSET_TYPE")
                   : t("EST_NO_ASSET_TYPE_FOUND")
               }
@@ -391,23 +440,14 @@ const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {
           )}
         />
 
-        {/* SAVE & NEXT BUTTON - left aligned now */}
         <div style={{ marginTop: "24px", textAlign: "left" }}>
           <SubmitBar
-            label={t("SAVE_&_NEXT")}
+            label={isEditMode ? t("UPDATE") : t("SAVE_&_NEXT")}
             onSubmit={goNext}
             disabled={isFormInvalid}
           />
         </div>
       </Card>
-
-      {showToast && (
-        <Toast
-          label={t("EST_FORM_SUBMIT_SUCCESS")}
-          onClose={() => setShowToast(false)}
-          type="success"
-        />
-      )}
     </FormStep>
   );
 };

@@ -1,219 +1,192 @@
-const capitalize = (text = "") =>
-  text.substr(0, 1).toUpperCase() + text.substr(1);
+// src/utils/getESTAllotmentAcknowledgementData.js
 
-const ulbCamel = (ulb = "") =>
-  ulb.toLowerCase().split(" ").map(capitalize).join(" ");
+/* -------------------- Utility helpers -------------------- */
+
+const pick = (...vals) =>
+  vals.find((v) => v !== undefined && v !== null && v !== "") || "";
+
+const filterEmpty = (arr = []) =>
+  arr.filter(
+    (i) =>
+      i &&
+      i.value !== undefined &&
+      i.value !== null &&
+      i.value !== ""
+  );
+
+/* -------------------- Date formatter -------------------- */
+/**
+ * Returns: DD/MM/YYYY
+ */
+const formatDate = (d) => {
+  if (!d) return "";
+  const date = d instanceof Date ? d : new Date(d);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-GB");
+};
+
+/* -------------------- Duration calculator -------------------- */
+/**
+ * Returns:
+ * 1 year 6 months
+ */
+const calculatemonths = (start, end) => {
+  if (!start || !end) return "";
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return "";
+
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  let result = "";
+
+  if (years > 0) {
+    result += `${years} year${years > 1 ? "s" : ""}`;
+  }
+
+  if (months > 0) {
+    result += `${result ? " " : ""}${months} month${months > 1 ? "s" : ""}`;
+  }
+
+  return result || "0 months";
+};
+
+/* -------------------- Duration formatter -------------------- */
+/**
+ * Final Output:
+ * 18 months (1 year 6 months)
+ */
+const formatDurationWithMonths = (allotment = {}) => {
+  const totalMonths = Number(allotment.duration || 0);
+  if (!totalMonths) return "";
+
+  const readable = calculatemonths(
+    allotment.agreementStartDate,
+    allotment.agreementEndDate
+  );
+
+  return readable
+    ? `${totalMonths} months (${readable})`
+    : `${totalMonths} months`;
+};
+
+/* -------------------- Main function -------------------- */
 
 const getESTAllotmentAcknowledgementData = async (
   application = {},
   tenantInfo = {},
-  t
+  t = (k) => k
 ) => {
-  // ---- NORMALISE INPUT ----
+  /* ---------------- Asset ---------------- */
+
+  const asset =
+    application?.Assets?.[0] ||
+    application?.assetData?.Assetdata ||
+    application?.Assetdata ||
+    {};
+
+  /* ---------------- Allotment ---------------- */
+
   const allotment =
-    application?.Allotments?.[0] || // case-1: apiData.Allotments[0]
-    application?.AssignAssetsData || // case-2: { AssignAssetsData: {...} }
-    application; // case-3: direct object
+    application?.Allotments?.[0] ||
+    application?.AssignAssetsData?.AllotmentData ||
+    {};
 
-  // ---- DOCUMENTS (if any) ----
-  const filesArray = allotment?.documents?.map((v) => v?.fileStoreId) || [];
-  let res = [];
-  try {
-    if (filesArray.length > 0) {
-      res = await Digit.UploadServices.Filefetch(
-        filesArray,
-        Digit.ULBService.getStateId()
-      );
-    }
-  } catch (e) {
-    console.log("File fetch ignored in ack pdf", e);
-  }
+  /* ---------------- Details ---------------- */
 
-  // helper: keep only non-empty values
-  const filterEmptyValues = (values) =>
-    values.filter(
-      (item) =>
-        item?.value !== undefined &&
-        item?.value !== null &&
-        item?.value !== ""
-    );
+  const details = [
+    {
+      title: t("EST_ASSET_DETAILS"),
+      asSectionHeader: true,
+      values: filterEmpty([
+        {
+          title: t("EST_ASSET_NUMBER"),
+          value: pick(allotment.assetNo, asset.estateNo),
+        },
+        { title: t("EST_BUILDING_NAME"), value: asset.buildingName },
+        { title: t("EST_BUILDING_NUMBER"), value: asset.buildingNo },
+        { title: t("EST_LOCALITY"), value: asset.locality },
+        { title: t("EST_TOTAL_AREA"), value: asset.totalFloorArea },
+        { title: t("EST_FLOOR"), value: asset.floor },
+        { title: t("EST_RATE"), value: pick(allotment.rate, asset.rate) },
+        { title: t("EST_ASSET_TYPE"), value: asset.assetType },
+      ]),
+    },
 
-  // ---- TENANT DISPLAY NAME ----
-  let ulbGradeKey = "";
-  try {
-    ulbGradeKey =
-      tenantInfo?.city?.ulbGrade &&
-      `ULBGRADE_${tenantInfo.city.ulbGrade
-        .toUpperCase()
-        .replace(" ", "_")
-        .replace(".", "_")}`;
-  } catch (e) {
-    ulbGradeKey = "";
-  }
+    {
+      title: t("EST_PERSONAL_DETAILS_OF_ALLOTTEE"),
+      asSectionHeader: true,
+      values: filterEmpty([
+        { title: t("EST_ALLOTTEE_NAME"), value: allotment.alloteeName },
+        { title: t("EST_PHONE_NUMBER"), value: allotment.mobileNo },
+        {
+          title: t("EST_ALTERNATE_PHONE_NUMBER"),
+          value: allotment.alternateMobileNo,
+        },
+        { title: t("EST_EMAIL_ID"), value: allotment.emailId },
+      ]),
+    },
 
-  const ulbName =
-    (tenantInfo?.i18nKey ? t(tenantInfo.i18nKey) : "") +
-    (ulbGradeKey ? " " + ulbCamel(t(ulbGradeKey)) : "");
+    {
+      title: t("EST_ALLOTMENT_INVOICE_DETAILS"),
+      asSectionHeader: true,
+      values: filterEmpty([
+        {
+          title: t("EST_AGREEMENT_START_DATE"),
+          value: formatDate(allotment.agreementStartDate),
+        },
+        {
+          title: t("EST_AGREEMENT_END_DATE"),
+          value: formatDate(allotment.agreementEndDate),
+        },
+        {
+          title: t("EST_DURATION_IN_YEARS"),
+          value: formatDurationWithMonths(allotment),
+        },
+        {
+          title: t("EST_MONTHLY_RENT_IN_INR"),
+          value: allotment.monthlyRent,
+        },
+        {
+          title: t("EST_ADVANCE_PAYMENT_IN_INR"),
+          value: allotment.advancePayment,
+        },
+        {
+          title: t("EST_ADVANCE_PAYMENT_DATE"),
+          value: formatDate(allotment.advancePaymentDate),
+        },
+        {
+          title: t("EST_EOFFICE_FILE_NO"),
+          value: allotment.eofficeFileNo,
+        },
+      ]),
+    },
+  ];
+
+  /* ---------------- Final output ---------------- */
 
   return {
-    t: t,
-    tenantId: tenantInfo?.code || "NA",
-    name: ulbName || "NA",
-    email: tenantInfo?.emailId || "NA",
-    phoneNumber: tenantInfo?.contactNumber || "NA",
-
-    // payload me applicationNo nahi hai isliye assetNo ko bhi try karo
-    applicationNumber:
-      allotment?.applicationNo ||
-      allotment?.assetNumber ||
-      allotment?.assetNo ||
-      "NA",
-
-    isTOCRequired: false,
     heading: t("EST_ACKNOWLEDGEMENT"),
+    applicationNumber: pick(allotment.assetNo, asset.estateNo),
+    tenantId: tenantInfo?.code,
+    name: tenantInfo?.name,
+    email: tenantInfo?.emailId,
+    phoneNumber: tenantInfo?.contactNumber,
+    details,
 
-    details: [
-      // ---------- 1. ASSET DETAILS ----------
-      {
-        title: t("EST_ASSET_DETAILS"),
-        asSectionHeader: true,
-        values: filterEmptyValues([
-          {
-            title: t("EST_ASSET_NUMBER"),
-            value: allotment?.assetNo || allotment?.assetNumber,
-          },
-          {
-            title: t("EST_ASSET_REFERENCE_NUMBER"),
-            value: allotment?.assetRefNo || allotment?.assetReferenceNumber,
-          },
-          {
-            title: t("EST_BUILDING_NAME"),
-            value: allotment?.buildingName,
-          },
-          {
-            title: t("EST_LOCALITY"),
-            value: allotment?.locality?.name || allotment?.locality,
-          },
-          {
-            title: t("EST_TOTAL_AREA"),
-            value: allotment?.totalFloorArea || allotment?.totalAreaSqFt,
-          },
-          {
-            title: t("EST_FLOOR"),
-            value: allotment?.floorNo || allotment?.floor,
-          },
-          {
-            title: t("EST_RATE"),
-            // payload me rentRate aa raha hai
-            value: allotment?.rate || allotment?.rentRate,
-          },
-        ]),
-      },
-
-      // ---------- 2. PERSONAL DETAILS OF ALLOTTEE ----------
-      {
-        title: t("EST_PERSONAL_DETAILS_OF_ALLOTTEE"),
-        asSectionHeader: true,
-        values: filterEmptyValues([
-          {
-            title: t("EST_PROPERTY_TYPE"),
-            value: allotment?.propertyType
-              ? t(
-                  `EST_PROPERTY_TYPE_${String(allotment.propertyType)
-                    .toUpperCase()
-                    .replace(" ", "_")}`
-                )
-              : "",
-          },
-          {
-            title: t("EST_ALLOTTEE_NAME"),
-            value: allotment?.allotteeName,
-          },
-          {
-            title: t("EST_PHONE_NUMBER"),
-            // payload: mobileNo
-            value: allotment?.phoneNumber || allotment?.mobileNo,
-          },
-          {
-            title: t("EST_ALTERNATE_PHONE_NUMBER"),
-            // payload: alternateMobileNo
-            value:
-              allotment?.altPhoneNumber ||
-              allotment?.alternatePhoneNumber ||
-              allotment?.alternateMobileNo,
-          },
-          {
-            title: t("EST_EMAIL_ID"),
-            value: allotment?.emailId,
-          },
-        ]),
-      },
-
-      // ---------- 3. ALLOTMENT / INVOICE DETAILS ----------
-      {
-        title: t("EST_ALLOTMENT_INVOICE_DETAILS"),
-        asSectionHeader: true,
-        values: filterEmptyValues([
-          {
-            title: t("EST_AGREEMENT_START_DATE"),
-            value: allotment?.agreementStartDate,
-          },
-          {
-            title: t("EST_AGREEMENT_END_DATE"),
-            value: allotment?.agreementEndDate,
-          },
-          {
-            title: t("EST_DURATION_IN_YEARS"),
-            // payload: duration
-            value: allotment?.durationInYears || allotment?.duration,
-          },
-          {
-            title: t("EST_RATE_PER_SQFT"),
-            // payload: rentRate
-            value: allotment?.ratePerSqft || allotment?.rentRate,
-          },
-          {
-            title: t("EST_MONTHLY_RENT_IN_INR"),
-            value: allotment?.monthlyRent,
-          },
-          {
-            title: t("EST_ADVANCE_PAYMENT_IN_INR"),
-            value: allotment?.advancePayment,
-          },
-          {
-            title: t("EST_ADVANCE_PAYMENT_DATE"),
-            value: allotment?.advancePaymentDate,
-          },
-        ]),
-      },
-
-      // ---------- 4. DOCUMENT UPLOAD ----------
-      {
-        title: t("EST_DOCUMENT_UPLOAD"),
-        asSectionHeader: true,
-        values: filterEmptyValues([
-          {
-            title: t("EST_EOFFICE_FILE_NO"),
-            // payload: eofficeFileNo (all small)
-            value: allotment?.eOfficeFileNo || allotment?.eofficeFileNo,
-          },
-          {
-            title: t("EST_CITIZEN_REQUEST_LETTER"),
-            value:
-              allotment?.citizenRequestLetterNo ||
-              allotment?.citizenRequestLetterFileId,
-          },
-          {
-            title: t("EST_ALLOTMENT_LETTER"),
-            value: allotment?.allotmentLetterFileId,
-          },
-          {
-            title: t("EST_SIGNED_DEED"),
-            value: allotment?.signedDeedFileId,
-          },
-        ]),
-      },
-    ],
+    Assets: [asset],
+    Allotments: [allotment],
+    asset,
+    allotment,
+    fullApplication: application,
   };
 };
 
