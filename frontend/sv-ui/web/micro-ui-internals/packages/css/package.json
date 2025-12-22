@@ -6,7 +6,7 @@
   "author": "Shivank Shukla",
   "description": "CSS for CND UI & SV UI",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "cssConfig": {
     "prefix": ""

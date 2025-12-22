@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 
 import { initLibraries } from "@nudmcdgnpm/digit-ui-libraries";
 import { PaymentModule } from "@upyog/digit-ui-module-common";
@@ -70,13 +70,13 @@ const initSVUI = () => {
   initTokens(stateCode);
 
   // const registry = window?.Digit.ComponentRegistryService.getRegistry();
-  ReactDOM.render(
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(
   <StreetVendingUI 
   stateCode={stateCode} 
   enabledModules={enabledModules} 
   moduleReducers={moduleReducers} 
-  />, 
-  document.getElementById("root"));
+  />);
 };
 
 initLibraries().then(() => {
