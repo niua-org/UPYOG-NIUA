@@ -1,9 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import { initLibraries } from "@nudmcdgnpm/digit-ui-libraries";
 // import "@upyog/sv-ui-css/dist/index.css";
 import "./index.css";
 import App from './App';
+
+// Suppress React 19 useEffect warnings for UPYOG libraries
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (args[0]?.includes?.('useEffect must not return anything')) {
+    return; // Ignore useEffect warnings
+  }
+  originalConsoleError.apply(console, args);
+};
 
 
 initLibraries();
@@ -52,10 +61,5 @@ if (!user || !user.access_token || !user.info) {
   // end
 }
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
-
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);

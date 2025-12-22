@@ -32,19 +32,29 @@ const defaultImage =
   "L+RGKCddCGmatiPyPB/+ekO/M/q/7uvbt22kTt3zEnXPzCV13T3Gel4/6NduDu66xRvlPNkM1RjjxUdv+4WhGx6TftD19Q/dfzpwcHO+rE3fAAAAAElFTkSuQmCC";
 const Profile = ({ info, stateName, t }) => {
   const [profilePic, setProfilePic] = React.useState(null);
-  React.useEffect(async () => {
+  React.useEffect(() => {
+  async function fetchUserProfile() {
     const tenant = Digit.ULBService.getCurrentTenantId();
     const uuid = info?.uuid;
-    if (uuid) {
-      const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: [uuid] }, {});
 
-      if (usersResponse && usersResponse.user && usersResponse.user.length) {
+    if (uuid) {
+      const usersResponse = await Digit.UserService.userSearch(
+        tenant,
+        { uuid: [uuid] },
+        {}
+      );
+
+      if (usersResponse?.user?.length) {
         const userDetails = usersResponse.user[0];
         const thumbs = userDetails?.photo?.split(",");
         setProfilePic(thumbs?.at(0));
       }
     }
-  }, [profilePic !== null]);
+  }
+
+  fetchUserProfile();
+}, [info?.uuid]);
+
   return (
     <div className="profile-section">
       <div className="imageloader imageloader-loaded">

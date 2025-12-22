@@ -64,16 +64,19 @@ const componentsToRegister = {
     const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
     addComponentsToRegistry();
     Digit.SessionStorage.set("SV_TENANTS", tenants);
-    useEffect(
-      () =>
-        userType === "employee" &&
-        Digit.LocalizationService.getLocale({
-          modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
-          locale: Digit.StoreData.getCurrentLanguage(),
-          tenantId: Digit.ULBService.getCurrentTenantId(),
-        }),
-      []
-    );
+    useEffect(() => {
+      async function loadLocale() {
+        if (userType === "employee") {
+          await Digit.LocalizationService.getLocale({
+            modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
+            locale: Digit.StoreData.getCurrentLanguage(),
+            tenantId: Digit.ULBService.getCurrentTenantId(),
+          });
+          }
+        }
+      loadLocale();
+      }, []);
+
   
     if (userType === "employee") {
       return <EmployeeApp path={path} url={url} userType={userType} />;
