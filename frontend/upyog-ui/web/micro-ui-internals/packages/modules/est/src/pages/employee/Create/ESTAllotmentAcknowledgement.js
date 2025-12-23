@@ -1,4 +1,3 @@
-// ESTAllotmentAcknowledgement.js
 import React, { useEffect, useRef, useState } from "react";
 import {
   Banner,
@@ -7,11 +6,14 @@ import {
   Row,
   StatusTable,
   SubmitBar,
+  Loader,
 } from "@upyog/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import getESTAllotmentAcknowledgementData from "../../../utils/getESTAllotmentAcknowledgementData";
 import { createAllotmentData, estPayloadData } from "../../../utils";
+
+/* ---------------- Styles ---------------- */
 
 const rowContainerStyle = {
   padding: "4px 0px",
@@ -22,10 +24,13 @@ const rowContainerStyle = {
 
 const BannerPicker = ({ t, isSuccess, data }) => {
   const applicationNumber = data?.Allotments?.[0]?.assetNo || "";
+
   return (
     <Banner
       message={
-        isSuccess ? t("EST_ALLOTED_SUCCESSFULL") : t("EST_APPLICATION_FAILED")
+        isSuccess
+          ? t("EST_ALLOTED_SUCCESSFULL")
+          : t("EST_APPLICATION_FAILED")
       }
       applicationNumber={applicationNumber}
       info={isSuccess ? t("EST_APPLICATION_NO") : ""}
@@ -35,7 +40,7 @@ const BannerPicker = ({ t, isSuccess, data }) => {
   );
 };
 
-/* ---------------- Main ---------------- */
+/* ---------------- Main Component ---------------- */
 
 const ESTAllotmentAcknowledgement = ({ data = {}, onSuccess }) => {
   const { t } = useTranslation();
@@ -59,7 +64,7 @@ const ESTAllotmentAcknowledgement = ({ data = {}, onSuccess }) => {
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const tenants = storeData?.tenants || [];
 
-  /* ---------------- API CALL ---------------- */
+  /* ---------------- API Call ---------------- */
 
   useEffect(() => {
     if (hasRun.current) return;
@@ -67,77 +72,49 @@ const ESTAllotmentAcknowledgement = ({ data = {}, onSuccess }) => {
 
     hasRun.current = true;
 
-    // 1️⃣ Allotment payload
     const allotmentPayload = createAllotmentData(data);
-
-    // 2️⃣ Assets payload (FRONTEND ONLY)
     const assetsPayload = estPayloadData(data);
 
-    console.log("🟢 Allotment Payload:", allotmentPayload);
-    console.log("🟡 Assets Payload:", assetsPayload);
+    allotmentMutation.mutate(allotmentPayload, {
+      onSuccess: (allotmentRes) => {
+        const payloadAllotment =
+          allotmentPayload?.Allotments?.[0] || {};
+        const responseAllotment =
+          allotmentRes?.Allotments?.[0] || {};
 
-    // ✅ REQUIRED RequestInfo (VERY IMPORTANT)
-    const requestInfo = {
-      apiId: "EST",
-      ver: "1.0",
-      ts: Date.now(),
-      action: "_create",
-      did: "1",
-      key: "",
-      msgId: Date.now().toString(),
-      authToken: Digit.UserService.getUser().access_token,
-    };
+        const mergedResponse = {
+          Allotments: [
+            {
+              ...responseAllotment,
+              agreementStartDate:
+                payloadAllotment.agreementStartDate,
+              agreementEndDate:
+                payloadAllotment.agreementEndDate,
+              advancePaymentDate:
+                payloadAllotment.advancePaymentDate,
+            },
+          ],
+          Assets: assetsPayload?.Assets || [],
+        };
 
-    allotmentMutation.mutate(
-      {
-        RequestInfo: requestInfo,
-        ...allotmentPayload,
+        setFinalMutation({
+          isLoading: false,
+          isSuccess: true,
+          data: mergedResponse,
+        });
+
+        onSuccess && onSuccess(mergedResponse);
       },
-      {
-        onSuccess: (allotmentRes) => {
-          console.log("✅ Allotment API Response:", allotmentRes);
+      onError: (err) => {
+        // console.error("❌ Allotment API Error:", err);
 
-          // 🔥 SAFE MERGE (payload + response)
-          const payloadAllotment = allotmentPayload?.Allotments?.[0] || {};
-          const responseAllotment = allotmentRes?.Allotments?.[0] || {};
-
-          const mergedResponse = {
-            Allotments: [
-              {
-                ...responseAllotment,
-                // keep dates from payload if backend skips them
-                agreementStartDate: payloadAllotment.agreementStartDate,
-                agreementEndDate: payloadAllotment.agreementEndDate,
-                advancePaymentDate: payloadAllotment.advancePaymentDate,
-              },
-            ],
-            Assets: assetsPayload?.Assets || [],
-          };
-
-          console.log("🔥 FINAL mutation.data:", mergedResponse);
-
-          setFinalMutation({
-            isLoading: false,
-            isSuccess: true,
-            data: mergedResponse,
-          });
-
-          onSuccess && onSuccess(mergedResponse);
-        },
-        onError: (err) => {
-          console.error(
-            "❌ Allotment API Error:",
-            err?.response?.data || err
-          );
-
-          setFinalMutation({
-            isLoading: false,
-            isSuccess: false,
-            data: null,
-          });
-        },
-      }
-    );
+        setFinalMutation({
+          isLoading: false,
+          isSuccess: false,
+          data: null,
+        });
+      },
+    });
   }, [data, tenantId]);
 
   /* ---------------- PDF ---------------- */
@@ -158,14 +135,14 @@ const ESTAllotmentAcknowledgement = ({ data = {}, onSuccess }) => {
 
       Digit.Utils.pdf.generate(pdfData);
     } catch (err) {
-      console.error("PDF generation error:", err);
+      // console.error("❌ PDF generation error:", err);
     }
   };
 
   /* ---------------- UI ---------------- */
 
   if (finalMutation.isLoading) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   return (
