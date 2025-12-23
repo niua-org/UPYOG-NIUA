@@ -59,18 +59,19 @@ const ViewOnMapAsset = ({ closeModal, applicationNumber }) => {
         const payload = {
           tenantId: "pg.citya",
           businessService: "ASSET",
-          filters: {
-            applicationNo: "PG-1013-2025-L-001295"
-          },
           fromDate: 1743445800000,
           geometryType: "polygon",
           includeBillData: false
         };
 
         const response = await Digit.GIS.searchAsset(payload);
-        
+
         if (response && response.geoJsonData) {
-          setGeoJsonData(response.geoJsonData);
+          // Filter only assets with "type": "Polygon"
+          const polygonAssets = response.geoJsonData.features.filter(
+            (feature) => feature.geometry.type === "Polygon"
+          );
+          setGeoJsonData({ ...response.geoJsonData, features: polygonAssets });
         }
       } catch (error) {
         console.error("Error fetching asset data:", error);
