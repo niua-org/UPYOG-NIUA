@@ -179,7 +179,7 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
       <Card style={{ padding: "16px" }}>
         {/* ---------- Asset Info ---------- */}
         <h2 style={{ color: "#333", marginBottom: "16px", fontSize: "20px", fontWeight: "bold" }}>
-          {t("EST_ASSET_DETAILS_")}
+          {t("EST_ASSET_DETAILS")}
         </h2>
 
         {/* Asset Number */}
@@ -326,7 +326,7 @@ const ESTAssignAssets = ({ t: propT, onSelect, onSkip, formData = {}, config }) 
         />
 
         {/* Duration - frozen, disabled, no cursor */}
-        <CardLabel>{t("EST_DURATION_IN_YEARS")}</CardLabel>
+        <CardLabel>{t("EST_DURATION_IN_MONTHS")}</CardLabel>
         <TextInput
           t={t}
           value={data.duration}

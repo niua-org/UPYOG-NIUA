@@ -88,13 +88,13 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
         );
       })}
 
-      {console.log("params in create", params)}
+      {/* {console.log("params in create1111", params)} */}
       <Route path={`${match.path}/check`}>
        <ESTAssignAssetsCheckPage onSubmit={estcreate} value={params} />
       </Route>
       <Route path={`${match.path}/acknowledgement`}>
-  <ESTAllotmentAcknowledgement data={params} onSuccess={onSuccess}/>
-</Route>
+       <ESTAllotmentAcknowledgement data={params} onSuccess={onSuccess}/>
+      </Route>
       <Route>
         <Redirect to={`${match.path}/${config.indexRoute}`} />  
       </Route>
