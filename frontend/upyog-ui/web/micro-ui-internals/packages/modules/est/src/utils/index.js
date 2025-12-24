@@ -381,3 +381,88 @@ export const formatEpochDate = (value) => {
   return `${day}/${month}/${year}`;
 };
 
+
+
+
+// src/utils/index.js
+
+/* -------------------- Utility helpers -------------------- */
+
+export const pick = (...vals) =>
+  vals.find((v) => v !== undefined && v !== null && v !== "") || "";
+
+export const filterEmpty = (arr = []) =>
+  arr.filter(
+    (i) =>
+      i &&
+      i.value !== undefined &&
+      i.value !== null &&
+      i.value !== ""
+  );
+
+/* -------------------- Date formatter -------------------- */
+/**
+ * Returns: DD/MM/YYYY
+ */
+export const formatDate = (d) => {
+  if (!d) return "";
+  const date = d instanceof Date ? d : new Date(d);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-GB");
+};
+
+/* -------------------- Duration calculator -------------------- */
+/**
+ * Returns:
+ * 1 year 6 months
+ */
+export const calculatemonths = (start, end) => {
+  if (!start || !end) return "";
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return "";
+
+  let years = endDate.getFullYear() - startDate.getFullYear();
+  let months = endDate.getMonth() - startDate.getMonth();
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  let result = "";
+
+  if (years > 0) {
+    result += `${years} year${years > 1 ? "s" : ""}`;
+  }
+
+  if (months > 0) {
+    result += `${result ? " " : ""}${months} month${months > 1 ? "s" : ""}`;
+  }
+
+  return result || "0 months";
+};
+
+/* -------------------- Duration formatter -------------------- */
+/**
+ * Final Output:
+ * 18 months (1 year 6 months)
+ */
+export const formatDurationWithMonths = (allotment = {}) => {
+  const totalMonths = Number(allotment.duration || 0);
+  if (!totalMonths) return "";
+
+  const readable = calculatemonths(
+    allotment.agreementStartDate,
+    allotment.agreementEndDate
+  );
+
+  return readable
+    ? `${totalMonths} months (${readable})`
+    : `${totalMonths} months`;
+};
+
+
+
