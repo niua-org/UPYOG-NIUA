@@ -13,26 +13,26 @@
   "license": "MIT",
   "private": true,
   "engines": {
-    "node": ">=14"
+    "node": ">=22"
   },
   "scripts": {
-    "start": "run-s build start:dev",
-    "sprint": "SKIP_PREFLIGHT_CHECK=true run-s start:script",
-    "start:dev": "run-p dev:**",
-    "start:script": "./scripts/create.sh",
-    "dev:libraries": "cd packages/libraries && yarn start",
-    "dev:common": "cd packages/modules/common && yarn start",
-    "dev:core": "cd packages/modules/core && yarn start",
-    "dev:engagement": "cd packages/modules/engagement && yarn start",
-    "dev:sv": "cd packages/modules/sv && yarn start",
-    "dev:example": "cd example && yarn start",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider run-s build start:dev",
+    "sprint": "NODE_OPTIONS=--openssl-legacy-provider SKIP_PREFLIGHT_CHECK=true run-s start:script",
+    "start:dev": "NODE_OPTIONS=--openssl-legacy-provider run-p dev:**",
+    "start:script": "NODE_OPTIONS=--openssl-legacy-provider ./scripts/create.sh",
+    "dev:libraries": "cd packages/libraries && NODE_OPTIONS=--openssl-legacy-provider yarn start",
+    "dev:common": "cd packages/modules/common && NODE_OPTIONS=--openssl-legacy-provider yarn start",
+    "dev:core": "cd packages/modules/core && NODE_OPTIONS=--openssl-legacy-provider yarn start",
+    "dev:engagement": "cd packages/modules/engagement && NODE_OPTIONS=--openssl-legacy-provider yarn start",
+    "dev:sv": "cd packages/modules/sv && NODE_OPTIONS=--openssl-legacy-provider yarn start",
+    "dev:example": "cd example && NODE_OPTIONS=--openssl-legacy-provider yarn start",
     "build": "run-p build:**",
     "build:libraries": "cd packages/libraries && yarn build",
     "build:common": "cd packages/modules/common && yarn build",
     "build:core": "cd packages/modules/core && yarn build",
     "build:engagement": "cd packages/modules/engagement && yarn build",
     "build:sv": "cd packages/modules/sv && yarn build",
-    "deploy:jenkins": "./scripts/jenkins.sh"
+    "deploy:jenkins": "NODE_OPTIONS=--openssl-legacy-provider ./scripts/jenkins.sh"
   },
   "devDependencies": {
     "husky": "7.0.4",
@@ -54,6 +54,9 @@
     "**/@babel/preset-env": "7.14.0",
     "**/@babel/plugin-transform-modules-commonjs": "7.14.0",
     "minimatch": "^3.1.2",
-    "glob":"7.2.3"
+    "glob":"7.2.3",
+    "node-sass": "npm:sass@^1.62.1",
+    "**/react": "^19.0.0",
+    "**/react-dom": "^19.0.0"
   }
 }
