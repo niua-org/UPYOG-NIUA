@@ -190,7 +190,7 @@ public class PropertyTaxCreate {
     private void InfoPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Mobile Toilet Info Page - Clicking Next");
+        System.out.println("Property Tax Info Page - Clicking Next");
         Thread.sleep(2000);
 
         // Try multiple Next button selectors for info page
@@ -737,7 +737,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
 
               /*
               =====================================================================
-              STEP 21: SPECIAL OWNER CATEGORY
+              STEP 21: FILL OWNER DETAILS
               =====================================================================
               */
 
@@ -802,7 +802,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Mobile Toilet Application - Summary Page");
+        System.out.println("Submitting Property Tax Application - Summary Page");
         Thread.sleep(3000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -827,7 +827,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Mobile Toilet application: Submit clicked");
+        System.out.println("Property tax application: Submit clicked");
 
         try {
             // Wait for Proceed button in popup

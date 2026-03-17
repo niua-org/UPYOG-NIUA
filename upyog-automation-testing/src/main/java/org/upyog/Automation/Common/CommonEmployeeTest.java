@@ -2,6 +2,7 @@ package org.upyog.Automation.Common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.upyog.Automation.Modules.Asset.AssetEmp;
 import org.upyog.Automation.Modules.Pet.PetApplicationEmp;
 import org.upyog.Automation.Modules.StreetVending.SvEmp;
 import org.upyog.Automation.Modules.TradeLicense.TradeLicenseEmp;
@@ -30,7 +31,12 @@ public class CommonEmployeeTest {
                 TradeLicenseEmp tlEmp = new TradeLicenseEmp();
                 tlEmp.tlInboxEmp(baseUrl, username, password, applicationNumber);
 
-            } else {
+            }
+            else if ("ASSET_MANAGEMENT_SYSTEM".equalsIgnoreCase(moduleName)) {
+                AssetEmp astEmp = new AssetEmp();
+                astEmp.assetInboxEmp(baseUrl, username, password, applicationNumber);
+
+            }else {
                 logger.error("Unknown module: {}", moduleName);
                 throw new RuntimeException("Unknown module: " + moduleName);
             }

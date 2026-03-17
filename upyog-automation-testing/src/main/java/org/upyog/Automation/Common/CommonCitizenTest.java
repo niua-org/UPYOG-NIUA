@@ -3,13 +3,17 @@ package org.upyog.Automation.Common;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.upyog.Automation.Modules.Adv.AdvBookingCreate;
+import org.upyog.Automation.Modules.CHB.chbCreate;
+import org.upyog.Automation.Modules.EWaste.EWasteCreate;
+import org.upyog.Automation.Modules.OBPAS.OBPASCreate;
 import org.upyog.Automation.Modules.Pet.PetCreateApplication;
+import org.upyog.Automation.Modules.PublicGrievanceRedressal.PgrCreate;
+import org.upyog.Automation.Modules.PropertyTax.PropertyTaxCreate;
 import org.upyog.Automation.Modules.StreetVending.CreateApplication;
 import org.upyog.Automation.Modules.TradeLicense.TradeLicenseCreate;
 import org.upyog.Automation.Modules.RequestService.TreePruningCitizen;
 import org.upyog.Automation.Modules.RequestService.WaterTankerCitizen;
 import org.upyog.Automation.Modules.RequestService.MobileToiletCitizen;
-
 /**
  * Common entry point for all citizen module tests
  * Routes to appropriate module based on moduleName
@@ -50,6 +54,26 @@ public class CommonCitizenTest {
             } else if ("MOBILE_TOILET".equalsIgnoreCase(moduleName)) {
                 MobileToiletCitizen mobileToiletApp = new MobileToiletCitizen();
                 mobileToiletApp.MobileToiletCreate(baseUrl, moduleName, mobileNumber, otp, cityName);
+            }
+            else if ("PROPERTY_TAX".equalsIgnoreCase(moduleName)) {
+                PropertyTaxCreate propertyTaxApp = new PropertyTaxCreate();
+                propertyTaxApp.NewPropertyReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+            }
+            else if ("PUBLIC_GRIEVANCE_REDRESSAL".equalsIgnoreCase(moduleName)) {
+                PgrCreate pgrApp = new PgrCreate();
+                pgrApp.PgrReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+            }
+            else if ("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM".equalsIgnoreCase(moduleName)) {
+                OBPASCreate obpasApp = new OBPASCreate();
+                obpasApp.OBPASReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+            }
+            else if ("EWASTE_MANAGEMENT_SYSTEM".equalsIgnoreCase(moduleName)) {
+                EWasteCreate eWasteApp = new EWasteCreate();
+                eWasteApp.EWasteReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+            }
+            else if ("COMMUNITY HALL BOOKING".equalsIgnoreCase(moduleName)) {
+                chbCreate chbApp = new chbCreate();
+                chbApp.chbReg(baseUrl, moduleName, mobileNumber, otp, cityName);
             }
             else {
                 logger.error("Unknown module: {}", moduleName);
