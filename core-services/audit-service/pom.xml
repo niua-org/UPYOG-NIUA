@@ -15,6 +15,8 @@
 	<description>Service to handle audit logs</description>
 	<properties>
 		<java.version>1.8</java.version>
+				<lombok.version>1.18.28</lombok.version>
+
 	</properties>
 	<dependencies>
 		<dependency>
@@ -80,12 +82,12 @@
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Releases Repository</name>
-			<url>https://nexus-repo.egovernments.org/nexus/content/repositories/releases/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/</url>
 		</repository>
 		<repository>
 			<id>repo.egovernments.org.snapshots</id>
 			<name>eGov ERP Releases Repository</name>
-			<url>https://nexus-repo.egovernments.org/nexus/content/repositories/snapshots/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/repositories/snapshots/</url>
 		</repository>
 	</repositories>
 

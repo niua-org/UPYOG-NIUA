@@ -1,10 +1,13 @@
-# ---------- Build Stage ----------
-# Use a public Maven + JDK 17 image for building
-FROM maven:3.9.9-eclipse-temurin-17-alpine AS build
-
-# Accept project directory as a build argument
+#FROM egovio/alpine-maven-builder-jdk-8:1-master-NA-6036091e AS build
+FROM egovio/amazoncorretto:17-alpine3.19 AS build
 ARG WORK_DIR
 WORKDIR /app
+
+# Install Maven
+RUN apk add --no-cache maven
+
+# Install Maven
+RUN apk add --no-cache maven
 
 # Copy Maven config and scripts
 COPY ${WORK_DIR}/pom.xml ./pom.xml
@@ -20,9 +23,10 @@ COPY ${WORK_DIR}/src ./src
 RUN mvn -B -f /app/pom.xml clean package -DskipTests
 
 
-# ---------- Runtime Stage ----------
-# Use a small, secure OpenJDK 17 runtime image
-FROM eclipse-temurin:17-jdk-alpine
+# Create runtime image
+#FROM egovio/8-openjdk-alpine
+FROM egovio/amazoncorretto:17-alpine3.19
+
 
 WORKDIR /opt/egov
 
@@ -34,3 +38,4 @@ RUN chmod +x /opt/egov/start.sh
 
 # Set the container startup command
 CMD ["/opt/egov/start.sh"]
+

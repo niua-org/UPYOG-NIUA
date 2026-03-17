@@ -1,6 +1,6 @@
 {
-    "name": "@nudmcdgnpm/upyog-ui-module-wt",
-    "version": "3.0.0",
+    "name": "@upyog/upyog-ui-module-wt",
+    "version": "3.10.1",
     "license": "MIT",
     "main": "dist/index.js",
     "module": "dist/index.modern.js",

@@ -31,12 +31,12 @@
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Releases Repository</name>
-			<url>http://repo.egovernments.org/nexus/content/repositories/releases/</url>
+			<url>https://nexus-repo.digit.org/nexus/content/repositories/releases/</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Snapshots Repository</name>
-			<url>http://repo.egovernments.org/nexus/content/repositories/snapshots/</url>
+			<url>https://nexus-repo.digit.org/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -44,7 +44,7 @@
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov Public Repository Group</name>
-			<url>http://repo.egovernments.org/nexus/content/groups/public/</url>
+			<url>https://nexus-repo.digit.org/nexus/content/groups/public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 				<updatePolicy>always</updatePolicy>
@@ -57,6 +57,11 @@
 			<id>JBoss Repository</id>
 			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
 		</repository>
+		<!--<repository>
+			<id>AsposeJavaAPI</id>
+			<name>Aspose Java API</name>
+			<url>https://repository.aspose.com/repo/</url>
+		</repository>-->
 		<repository>
 			<id>AsposeJavaAPI</id>
 			<name>Aspose Java API</name>
@@ -72,7 +77,7 @@
 		<pluginRepository>
 			<id>repo.egovernments.org</id>
 			<name>eGov Public Repository Group</name>
-			<url>http://repo.egovernments.org/nexus/content/groups/public/</url>
+			<url>https://nexus-repo.digit.org/nexus/content/groups/public/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -210,8 +215,6 @@
 				</exclusions>
 			</dependency>
 
-			<!--		Below dependency is commented out to avoid jenkinds build issue -->
-		
 			<dependency>
 				<groupId>org.egov.edcr</groupId>
 				<artifactId>egov-egi</artifactId>
