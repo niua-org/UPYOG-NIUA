@@ -9,8 +9,7 @@
     "packages/react-components",
     "packages/modules/common",
     "packages/modules/core",
-    "packages/modules/dss",
-    "packages/modules/wt"
+    "packages/modules/chb"
     ],
   
   "license": "MIT",
@@ -47,7 +46,7 @@
     "devD:bills": "cd packages/modules/bills && yarn start",
     "dev:reports": "cd packages/modules/reports && yarn start",
     "dev:example": "cd example && yarn start",
-    "devD:chb": "cd packages/modules/chb && yarn start",
+    "dev:chb": "cd packages/modules/chb && yarn start",
     "devD:ads": "cd packages/modules/ads && yarn start",
     "devD:ew": "cd packages/modules/ew && yarn start",
     "devD:sv": "cd packages/modules/sv && yarn start",
@@ -80,7 +79,7 @@
     "buildD:noc": "cd packages/modules/noc && yarn build",
     "buildD:ws": "cd packages/modules/ws && yarn build",
     "buildD:bills": "cd packages/modules/bills && yarn build",
-    "buildD:chb": "cd packages/modules/chb && yarn build",
+    "build:chb": "cd packages/modules/chb && yarn build",
     "buildD:ads": "cd packages/modules/ads && yarn build",
     "buildD:ew": "cd packages/modules/ew && yarn build",
     "buildD:sv": "cd packages/modules/sv && yarn build",
@@ -122,4 +121,3 @@
     "react-leaflet-draw": "0.19.0"
   }
 }
-
