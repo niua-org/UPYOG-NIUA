@@ -137,7 +137,7 @@
         <filter-name>springSessionRepositoryFilter</filter-name>
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>
-        <dispatcher>ERROR</dispatcher>
+        <dispatcher>ASYNC</dispatcher>
     </filter-mapping>
 
     <filter-mapping>
@@ -228,14 +228,14 @@
 
     <!-- Servlet Declaration Ends -->
 
-    <error-page>
-        <location>/error/500</location>
-    </error-page>
+<!--    <error-page>-->
+<!--        <location>/error/500</location>-->
+<!--    </error-page>-->
 
-    <error-page>
-        <error-code>404</error-code>
-        <location>/error/404</location>
-    </error-page>
+<!--    <error-page>-->
+<!--        <error-code>404</error-code>-->
+<!--        <location>/error/404</location>-->
+<!--    </error-page>-->
 
 <!--     <session-config>
         <cookie-config>
