@@ -156,6 +156,13 @@ public class ChallanQueryBuilder {
             preparedStmtList.add("%" + criteria.getOffenceSubCategoryName().trim() + "%");
         }
 
+        // Challan Status search
+        if (criteria.getChallanStatus() != null) {
+            addClauseIfRequired(preparedStmtList, builder);
+            builder.append(" echallan.challanStatus = ? ");
+            preparedStmtList.add(criteria.getChallanStatus().name());
+        }
+
         if(isCountQuery)
         {
             return builder.toString();

@@ -669,6 +669,16 @@ background-size: cover
   }
 }
 
+@media (max-width: 768px) {
+  .employee-main-application-details .employeeCard {
+    padding: 10px;
+  }
+ /* .cp {
+    width: 60px !important;
+
+  } */
+}
+
 .registryTable {
   tHead {
     tr {
@@ -684,4 +694,135 @@ background-size: cover
       }
     }
   }
+}
+
+.challan-doc-modal{
+  display: flex;
+  flex-wrap: wrap;
+}
+.challan-response-action-bar{
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 20px;
+}
+.challan-desktop-applicationtable{
+  padding: 20px 18px;
+  font-size: 16px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  width: 250px;
+}
+.card-label-error-challan{
+  width: 70%;
+  margin-left: 30%;
+  font-size: 12px;
+  margin-top: -21px;
+}
+.challan-stepper-parent-component {
+  width: 150%;
+  max-width: 600px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.custom-challan-card.card {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none; /* optional */
+}
+.custom-challan-card {
+  display: flex;
+  justify-content: center;   /* horizontal center */
+  align-items: center;       /* vertical center */
+  min-height: calc(100vh - 80px); /* adjust for topbar */
+  width: 100%;
+  background-color: #f9f9f9;
+}
+.challan-hr-linebreak{
+  width: 100%;
+  border: 1px solid #D6D5D4;
+  margin-top: 50px;
+  margin-bottom: 40px;
+}
+.challan-lat-long{
+  margin-top: 5px;
+  font-size: 14px;
+  color: #333;
+}
+.challan-note-green{
+  color: green !important;
+  font-size: 14px;
+}
+.challan-note-red{
+  color: red !important;
+  padding-right: 3px;
+}
+.challan-documents{
+  margin-bottom: 24px;
+}
+.challan-label-field{
+  display: inline;
+}
+.challan-card-label{
+  margin-bottom: 8px;
+  width: auto;
+}
+.challan-application-table{
+  min-width: 150px;
+  padding: 10px;
+  font-size: 16px;
+  padding-left: 20px;
+}
+
+.challan-custom-header{
+  font-size: 24px;
+  margin-top: 30px;
+}
+.challan-amount-field{
+  width: 50%;
+  margin-top: 20px;
+}
+.challan-bottom-style{
+  margin-bottom: 20px;
+}
+.mychallan-custom{
+  margin-top: 16px;
+}
+.challan-load-message{
+  margin-left: 16px;
+  margin-top: 16px;
+}
+.challan-application-details .cardHeaderWithOptions{
+margin-right: auto;
+max-width: 960px;
+}
+.challan-custom-header-font{
+  font-size: 32px;
+}
+.challan-custom-subheader-font{
+  font-size: 24px;
+
+}
+.challan-custom-card{
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+}
+.challan-emp-acknowledgement{
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+}
+.challan-link-href{
+  cursor: pointer;
+  color: #666;
+}
+.challan-search-table{
+  background-color: white;
+  margin-top: 200px;
+  margin-left: 2.5%;
+  width: 100%;
 }

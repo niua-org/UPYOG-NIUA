@@ -69,7 +69,7 @@ export const Request = async ({
   reqTimestamp = false,
   plainAccessRequest = null
 }) => {
-  if (method.toUpperCase() === "POST") {
+  if (method.toUpperCase() === "POST","PUT") {
     const ts = new Date().getTime();
     data.RequestInfo = {
       apiId: "Rainmaker",

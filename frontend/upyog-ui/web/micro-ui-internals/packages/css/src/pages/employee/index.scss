@@ -7,6 +7,7 @@
   .ground-container {
     margin-bottom: 56px;
     margin-left: 0px;
+    margin-top: 5rem !important;
     @apply flex flex-col;
   }
   .card-home {
@@ -543,6 +544,12 @@
     }
   }
  
+}
+
+@media only screen and (max-width: 639px) {
+  .employee .ground-container {
+    margin-top: 1rem;
+  }
 }
 
 @media only screen and (max-width:950px){

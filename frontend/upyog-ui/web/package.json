@@ -8,18 +8,15 @@
     "micro-ui-internals/packages/react-components",
     "micro-ui-internals/packages/modules/common",
     "micro-ui-internals/packages/modules/core",
+    "micro-ui-internals/packages/modules/challanGeneration",
     "micro-ui-internals/packages/modules/dss",
-    "micro-ui-internals/packages/modules/engagement",
-    "micro-ui-internals/packages/modules/pt",
-    "micro-ui-internals/packages/modules/obps",
-    "micro-ui-internals/packages/modules/fsm",
-    "micro-ui-internals/packages/modules/wt"
+    "micro-ui-internals/packages/modules/ndc"
   ],
   "engines": {
     "node": ">=14"
   },
   "dependencies": {
-    "@upyog-niua/upyog-css": "3.10.0",
+    "@nudmcdgnpm/upyog-css": "3.0.0",
     "@upyog/digit-ui-libraries": "3.10.0",
     "@upyog/digit-ui-module-bills": "3.10.0",
     "@upyog/digit-ui-module-common": "3.10.0",
@@ -32,6 +29,7 @@
     "@upyog/digit-ui-module-mcollect": "3.10.0",
     "@upyog/digit-ui-module-noc": "3.10.0",
     "@upyog/digit-ui-module-obps": "3.10.3",
+    "@upyog/digit-ui-module-challangeneration": "1.0.0",
     "@upyog/digit-ui-module-pgr": "3.10.0",
     "@upyog/digit-ui-module-pt": "3.10.1",
     "@upyog/digit-ui-module-receipts": "3.0.1",
@@ -50,6 +48,7 @@
     "@nudmcdgnpm/upyog-ui-module-asset-v2":"1.0.0",
     "@nudmcdgnpm/upyog-ui-module-gis": "1.0.4",
     "@nudmcdgnpm/upyog-ui-module-est":"1.0.0",
+    "@nudmcdgnpm/upyog-ui-module-ndc":"1.0.0",
     "babel-loader": "8.1.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",

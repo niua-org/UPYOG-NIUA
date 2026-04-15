@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
 
 /**
  * Custom hook to handle back button navigation
@@ -15,7 +14,7 @@ export const useCustomBackNavigation = ({
   enableConfirmation = false,
   confirmationMessage = 'Are you sure you want to leave this page?'
 }) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   useEffect(() => {
     // Add a new entry to browser's history stack
@@ -29,14 +28,14 @@ export const useCustomBackNavigation = ({
         // Show confirmation dialog if enabled
         const shouldRedirect = window.confirm(confirmationMessage);
         if (shouldRedirect) {
-          history.push(redirectPath);
+          navigate(redirectPath);
         } else {
           // If user cancels, push a new state to prevent back navigation
           window.history.pushState(null, '', window.location.pathname);
         }
       } else {
         // Directly redirect without confirmation
-        history.push(redirectPath);
+        navigate(redirectPath);
       }
     };
 
@@ -46,6 +45,6 @@ export const useCustomBackNavigation = ({
     // Cleanup function to remove event listener
     return () => {
       window.removeEventListener('popstate', handleBackButton);
-    };
-  }, [history, redirectPath, enableConfirmation, confirmationMessage]);
+    }; 
+  }, [navigate, redirectPath, enableConfirmation, confirmationMessage]);
 };

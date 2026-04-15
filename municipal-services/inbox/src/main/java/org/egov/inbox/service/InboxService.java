@@ -494,6 +494,7 @@ public class InboxService {
 					moduleSearchCriteria.put(applNosParam, applicationNumbers);
 					businessKeys.addAll(applicationNumbers);
 					moduleSearchCriteria.remove(srvMap.get("applsStatusParam"));
+					moduleSearchCriteria.remove(STATUS_PARAM);
 					moduleSearchCriteria.remove(LOCALITY_PARAM);
 					moduleSearchCriteria.remove(OFFSET_PARAM);
 				} else {

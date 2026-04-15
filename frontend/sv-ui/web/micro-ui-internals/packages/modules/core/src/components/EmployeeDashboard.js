@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from "react-i18next";
-import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/upyog-ui-react-components-lts";
 
 /**
  * @author - Shivank Shukla - NIUA
@@ -104,7 +104,7 @@ const EmployeeDashboard = ({modules}) => {
       }
     };
     fetchDashboardData();
-  }, [t]);
+  }, []);
 
   return (
     <React.Fragment>

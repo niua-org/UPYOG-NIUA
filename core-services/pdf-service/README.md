@@ -61,7 +61,7 @@ PDF generation service read these such files at start-up to support PDF generati
 
 - `QRCode mapping`: This mapping is used to draw QR codes in the PDFs. The text to be shown after scan can be combination of static text and variables from direct and externalApi mappings. 
 
-**The format config file contain the following aspect :**
+***The format config file contain the following aspect :***
 
 - `key`: The key for the pdf, it is used as a path parameter in URL to identify for which PDF has to  generate.
 

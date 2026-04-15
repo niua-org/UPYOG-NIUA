@@ -21,7 +21,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from "react";
-import { FormStep, TextInput, CardLabel, Toast } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormStep, TextInput, CardLabel, Toast } from "@nudmcdgnpm/upyog-ui-react-components-lts";
 import Timeline from "../components/Timeline";
 
 const SVBankDetails = ({ t, config, onSelect, userType, formData, editdata,previousData }) => {
@@ -312,8 +312,6 @@ const SVBankDetails = ({ t, config, onSelect, userType, formData, editdata,previ
       workflow: {
         action: "APPLY",
         comments: "",
-        businessService: "street-vending",
-        moduleName: "sv-services",
         businessService: "street-vending",
         moduleName: "sv-services",
         varificationDocuments: [

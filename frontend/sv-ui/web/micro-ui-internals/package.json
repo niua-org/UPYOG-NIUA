@@ -1,59 +1,41 @@
 {
   "name": "nudmcdg",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "workspaces": [
-    "packages/libraries",
-    "example",
-    "packages/modules/core",
-    "packages/modules/common",
-    "packages/modules/engagement",
-    "packages/modules/sv"
+    "packages/*",
+    "packages/modules/*",
+    "example"
   ],
   "license": "MIT",
-  "private": true,
   "engines": {
-    "node": ">=14"
+    "node": ">=22"
   },
   "scripts": {
-    "start": "run-s build start:dev",
-    "sprint": "SKIP_PREFLIGHT_CHECK=true run-s start:script",
-    "start:dev": "run-p dev:**",
-    "start:script": "./scripts/create.sh",
-    "dev:libraries": "cd packages/libraries && yarn start",
-    "dev:common": "cd packages/modules/common && yarn start",
-    "dev:core": "cd packages/modules/core && yarn start",
-    "dev:engagement": "cd packages/modules/engagement && yarn start",
-    "dev:sv": "cd packages/modules/sv && yarn start",
-    "dev:example": "cd example && yarn start",
-    "build": "run-p build:**",
-    "build:libraries": "cd packages/libraries && yarn build",
-    "build:common": "cd packages/modules/common && yarn build",
-    "build:core": "cd packages/modules/core && yarn build",
+    "start": "yarn start:dev",
+    "start:dev": "run-s build && run-p dev:**",
+
+    "dev:example":    "cd example && yarn start",
+    "dev:libraries":  "echo 'local source: libraries'",
+    "dev:react-components": "echo 'local source: react-components'",
+    "dev:common":     "echo 'local source: common'",
+    "dev:core":       "echo 'local source: core'",
+    "dev:sv":         "echo 'local source: sv'",
+    "dev:engagement": "echo 'local source: engagement'",
+    "devD:css":       "echo 'npm dist: css'",
+
+    "build": "run-s build:css build:libraries build:react-components build:common build:core build:sv build:engagement",
+    "build:css":        "cd packages/css && yarn build:prod",
+    "build:libraries":  "cd packages/libraries && yarn build",
+    "build:react-components": "cd packages/react-components && yarn build",
+    "build:common":     "cd packages/modules/common && yarn build",
+    "build:core":       "cd packages/modules/core && yarn build",
+    "build:sv":         "cd packages/modules/sv && yarn build",
     "build:engagement": "cd packages/modules/engagement && yarn build",
-    "build:sv": "cd packages/modules/sv && yarn build",
+
     "deploy:jenkins": "./scripts/jenkins.sh"
   },
   "devDependencies": {
-    "husky": "7.0.4",
-    "lint-staged": "12.3.7",
-    "npm-run-all": "4.1.5",
-    "prettier": "2.1.2"
-  },
-  "husky": {},
-  "lint-staged": {
-    "*.{js,css,md}": "prettier --write"
-  },
-  "dependencies": {
-    "lodash": "4.17.21",
-    "microbundle-crl": "^0.13.11"
-  },
-  "resolutions": {
-    "**/babel-loader": "8.2.2",
-    "**/@babel/core": "7.14.0",
-    "**/@babel/preset-env": "7.14.0",
-    "**/@babel/plugin-transform-modules-commonjs": "7.14.0",
-    "minimatch": "^3.1.2",
-    "glob":"7.2.3"
+    "npm-run-all": "4.1.5"
   }
 }

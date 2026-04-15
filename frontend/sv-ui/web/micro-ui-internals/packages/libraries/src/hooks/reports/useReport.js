@@ -1,5 +1,5 @@
 import { ReportsService } from "../../services/elements/Reports";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
 
 

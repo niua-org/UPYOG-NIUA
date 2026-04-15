@@ -122,6 +122,26 @@ const Urls = {
     bill_download: "/egov-pdf/download/BILL/consolidatedbill",
     count: "/echallan-services/eChallan/v1/_count",
   },
+
+  challangeneration: {
+    search: "/echallan-services/eChallan/v1/_search",
+    create: "/challan-services/Challan/v1/_create",
+    fetch_bill: "/billing-service/bill/v2/_fetchbill?",
+    search_bill: "/egov-searcher/bill-genie/mcollectbills/_get",
+    search_bill_pt: "/egov-searcher/bill-genie/billswithaddranduser/_get",
+    update: "/echallan-services/eChallan/v1/_update",
+    download_pdf: "/egov-pdf/download/UC/mcollect-challan",
+    receipt_download: "/egov-pdf/download/PAYMENT/consolidatedreceipt",
+    bill_download: "/egov-pdf/download/BILL/consolidatedbill",
+    count: "/echallan-services/eChallan/v1/_count",
+    reciept_search: "/collection-services/payments/:businessService/_search",
+    generate_pdf: "/pdf-service/v1/_create",
+    file_fetch: "/filestore/v1/files/url",
+    create_new: "/challan-generation/challan/_create",
+    search_new: "/challan-generation/challan/_search",
+    update_new: "/challan-generation/challan/_update",
+  },
+  
   hrms: {
     search: "/egov-hrms/employees/_search",
     count: "/egov-hrms/employees/_count",
@@ -342,6 +362,12 @@ eSign:{
     additionaldetailsCreate: "/vendor-management/api/v1/_create",
     vendorcommonSearch: "/vendor-management/api/v1/vendorPlusAdditional/_search"
   },
+  ndc: {
+    create: "/ndc-services/ndc/_create",
+    search: "/ndc-services/ndc/_search",
+    update: "/ndc-services/ndc/_update",
+    billingCalculate: "/ndc-calculator/v1/_calculate",
+  }
 };
 
 export default Urls;

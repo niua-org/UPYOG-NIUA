@@ -85,6 +85,8 @@ const iconSelector = (code) => {
       return <CHBIcon className="fill-path-primary-main" />;
     case "ADS":
       return <CHBIcon className="fill-path-primary-main" />;
+    case "NDC":
+      return <PTRIcon className="fill-path-primary-main" />
     default:
       return <PTIcon className="fill-path-primary-main" />;
   }

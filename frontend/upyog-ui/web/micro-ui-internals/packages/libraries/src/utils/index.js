@@ -183,6 +183,18 @@ const NOCAccess = () => {
 
   return NOC_ACCESS?.length > 0;
 };
+const NDCAccess = () => {
+  const userInfo = Digit.UserService.getUser();
+  const userRoles = userInfo?.info?.roles?.map((roleData) => roleData?.code);
+
+  const NDC_ROLES = [
+    "NDC_ADMIN","NDCADMIN","NDCCEMP","FIRE_NOC_APPROVER"
+]
+
+  const NDC_ACCESS = userRoles?.filter((role) => NDC_ROLES?.includes(role));
+
+  return NDC_ACCESS?.length > 0;
+};
 
 const BPAREGAccess = () => {
   const userInfo = Digit.UserService.getUser();
@@ -304,6 +316,16 @@ const mCollectAccess = () => {
   return MCOLLECT_ACCESS?.length > 0;
 };
 
+const challanAccess = () => {
+  const userInfo = Digit.UserService.getUser();
+  const userRoles = userInfo?.info?.roles?.map((roleData) => roleData?.code);
+  const challanRoles = ["CHALLAN_ADMIN"];
+
+  const CHALLAN_ACCESS = userRoles?.filter((role) => challanRoles?.includes(role));
+
+  return CHALLAN_ACCESS?.length > 0;
+};
+
 const receiptsAccess = () => {
   const userInfo = Digit.UserService.getUser();
   const userRoles = userInfo?.info?.roles.map((roleData) => roleData?.code);
@@ -398,6 +420,7 @@ export default {
   date,
   GetParamFromUrl,
   getStaticMapUrl,
+  challanAccess,
   detectDsoRoute,
   routeSubscription,
   pgrAccess,
@@ -410,6 +433,7 @@ export default {
   ptAccess,
   ptrAccess,
   NOCAccess,
+  NDCAccess,
   mCollectAccess,
   receiptsAccess,
   didEmployeeHasRole,

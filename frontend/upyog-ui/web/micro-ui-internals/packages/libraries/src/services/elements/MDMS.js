@@ -821,6 +821,22 @@ const getSVDocumentsCategory = (tenantId, moduleCode) => ({
     ],
   },
 });
+// for ndc document fetch hook
+const getNDCDocumentsCategory = (tenantId, moduleCode) => ({
+  details: {
+    tenantId: tenantId,
+    moduleDetails: [
+      {
+        moduleName: moduleCode,
+        masterDetails: [
+          {
+            name: "Documents",
+          },
+        ],
+      },
+    ],
+  },
+});
 const getADSDocumentsCategory = (tenantId, moduleCode) => ({
   details: {
     tenantId: tenantId,
@@ -1026,6 +1042,15 @@ const getChbPurpose = (MdmsRes) => {
 };   
 const getSVDocuments = (MdmsRes) => {
   MdmsRes["StreetVending"].Documents.filter((Documents) => Documents.active).map((dropdownData) => {
+    return {
+      ...Documents,
+      i18nKey: `${dropdownData.code}`,
+    };
+  });
+};
+// for ndc document fetch
+const getNDCDocuments = (MdmsRes) => {
+  MdmsRes["NDC"].Documents.filter((Documents) => Documents.active).map((dropdownData) => {
     return {
       ...Documents,
       i18nKey: `${dropdownData.code}`,
@@ -2093,6 +2118,8 @@ const transformResponse = (type, MdmsRes, moduleCode, moduleName, tenantId, mast
     case "Documents":
       return getSVDocuments(MdmsRes);
     case "Documents":
+      return getNDCDocuments(MdmsRes);
+    case "Documents":
       return getADSDocuments(MdmsRes);
     case "ProductName":
       return getProductPrice(MdmsRes);
@@ -2508,6 +2535,9 @@ export const MdmsService = {
   },
   getSVDocuments: (tenantId, moduleCode) => {
     return MdmsService.getDataByCriteria(tenantId, getSVDocumentsCategory(tenantId, moduleCode), moduleCode);
+  },
+  getNDCDocuments: (tenantId, moduleCode) => {
+    return MdmsService.getDataByCriteria(tenantId, getNDCDocumentsCategory(tenantId, moduleCode), moduleCode);
   },
   getADSDocuments: (tenantId, moduleCode) => {
     return MdmsService.getDataByCriteria(tenantId, getADSDocumentsCategory(tenantId, moduleCode), moduleCode);

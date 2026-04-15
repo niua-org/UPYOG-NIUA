@@ -8,7 +8,7 @@ export const NOCService = {
       useCache: false,
       method: "POST",
       auth: true,
-      userService: false,
+      userService: true,
       params: { tenantId, ...filters },
     }),
 }

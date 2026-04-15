@@ -9,6 +9,7 @@ import { SVService } from "../services/elements/SV";
 import { WTService } from "../services/elements/WT";
 import { MTService } from "../services/elements/MT";
 import { TPService } from "../services/elements/TP";
+import {NDCService} from "../services/elements/NDC";
 
 const fsmApplications = async (tenantId, filters) => {
   return (await FSMService.search(tenantId, { ...filters, limit: 10000 })).fsm;
@@ -51,6 +52,9 @@ const mtBookings = async (tenantId, filters) => {
 
 const tpBookings = async (tenantId, filters) => {
   return (await TPService.search({ tenantId, filters })).treePruningBookingDetails;
+};
+const ndcApplications = async (tenantId, filters) => {
+  return (await NDCService.search({ tenantId, filters })).Applications;
 };
 
 const refObj = (tenantId, filters) => {
@@ -132,6 +136,11 @@ const refObj = (tenantId, filters) => {
       searchFn: () => tpBookings(null, { ...filters, bookingNo: consumerCodes }),
       key: "bookingNo",
       label: "TP_BOOKING_NO",
+    },
+    ndc: {
+      searchFn: () => ndcApplications(null, { ...filters, applicationNo: consumerCodes }),
+      key: "applicationNo",
+      label: "NDC_APPLICATION_NO",
     }
   };
 };
@@ -170,6 +179,9 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   } 
   if (window.location.href.includes("request-service.tree_pruning")) {
     _key = "tp"
+  }
+  if (window.location.href.includes("ndc-services")) {
+    _key = "ndc"
   }
   
 

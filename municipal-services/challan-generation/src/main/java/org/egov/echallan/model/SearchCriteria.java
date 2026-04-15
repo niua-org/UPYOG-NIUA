@@ -3,6 +3,7 @@ package org.egov.echallan.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.egov.echallan.enums.ChallanStatusEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,6 +64,9 @@ public class SearchCriteria {
 	
 	@JsonProperty("offenceSubCategoryName")
 	private String offenceSubCategoryName;
+
+	@JsonProperty("challanStatus")
+	private ChallanStatusEnum challanStatus;
 	
 	public boolean isEmpty() {
         return (this.tenantId == null && this.ids == null  && this.mobileNumber == null 
