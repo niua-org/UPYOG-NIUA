@@ -48,7 +48,12 @@
 
 package org.egov.infra.web.filter;
 
-import java.io.IOException;
+import org.apache.log4j.Logger;
+import org.egov.infra.config.core.ApplicationThreadLocals;
+import org.egov.infra.config.core.EnvironmentSettings;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -56,14 +61,19 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import org.egov.infra.config.core.ApplicationThreadLocals;
-import org.egov.infra.config.core.EnvironmentSettings;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import java.io.IOException;
 
 import static org.egov.infra.utils.ApplicationConstant.MS_TENANTID_KEY;
 import static org.egov.infra.web.utils.WebUtils.extractRequestDomainURL;
 import static org.egov.infra.web.utils.WebUtils.extractRequestedDomainName;
+
+/*
+ * Tenant resolution is now based on the logged-in user's tenant ID instead of the request URL.
+ * The tenant ID is retrieved from the session and mapped to the corresponding schema.
+ * Example: "pg.citya" -> "citya".
+ * If no tenant ID is available, the default schema is used as fallback.
+ * This enables a single common URL for all ULBs and removes subdomain dependency.
+ */
 
 public class ApplicationTenantResolverFilter implements Filter {
     private static final Logger LOGGER = Logger.getLogger(ApplicationTenantResolverFilter.class);
@@ -89,7 +99,6 @@ public class ApplicationTenantResolverFilter implements Filter {
             userTenantId = (String) session.getAttribute(MS_TENANTID_KEY);
             LOGGER.info(" *** User Tenant ID from session: " + userTenantId);
         }
-
         // Determine schema based on user's tenant ID
         if (userTenantId != null && !userTenantId.isEmpty()) {
             // Extract city code from tenant ID (e.g., "pg.citya" -> "citya")
@@ -126,13 +135,11 @@ public class ApplicationTenantResolverFilter implements Filter {
         if (tenantId == null || tenantId.isEmpty()) {
             return null;
         }
-
-        // Split by dot and get the last part
         String[] parts = tenantId.split("\\.");
         if (parts.length > 1) {
             return parts[parts.length - 1]; // Return "citya" from "pg.citya"
         }
-        return tenantId; // Return as-is if no dot found
+        return tenantId;
     }
 
     @Override
