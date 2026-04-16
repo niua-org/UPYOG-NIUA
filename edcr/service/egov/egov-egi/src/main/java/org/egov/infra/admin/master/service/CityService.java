@@ -188,9 +188,28 @@ public class CityService implements ICityService
 
     public byte[] getCityLogoAsBytes() {
         byte[] cityLogo = (byte[]) cityLogoCache.get(cityLogoCacheKey(), CITY_LOGO_HASH_KEY);
+/*
         if (cityLogo == null || cityLogo.length < 1) {
             cityLogo = fileStoreUtils.fileAsByteArray(getCityLogoFileStoreId(), getCityCode());
             cityLogoCache.put(cityLogoCacheKey(), CITY_LOGO_HASH_KEY, cityLogo);
+        }
+*/
+        if (cityLogo == null || cityLogo.length < 1) {
+
+            String fileStoreId = getCityLogoFileStoreId();
+            String cityCode = getCityCode();
+
+            if (fileStoreId == null || cityCode == null) {
+                // log properly
+                System.out.println("City logo not configured. fileStoreId=" + fileStoreId + ", cityCode=" + cityCode);
+                return new byte[0]; // or return default image
+            }
+
+            cityLogo = fileStoreUtils.fileAsByteArray(fileStoreId, cityCode);
+
+            if (cityLogo != null) {
+                cityLogoCache.put(cityLogoCacheKey(), CITY_LOGO_HASH_KEY, cityLogo);
+            }
         }
         return cityLogo;
     }

@@ -55,6 +55,8 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <context:property-placeholder location="classpath:config/application-config.properties"/>
+    <!-- ERP-equivalent security beans (parent ContextLoader chain is not supplying them to this WAR) -->
+    <import resource="classpath*:config/spring/applicationContext-security.xml"/>
     <import resource="applicationSecurityContext-egi.xml"/>
 
     <context:component-scan base-package="org.egov">
@@ -62,6 +64,10 @@
         <context:exclude-filter type="regex" expression="org\.egov\.commons\..*"/>
         <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
+
+    <!-- web.xml must use DelegatingFilterProxy for these so @Autowired / @Resource are applied -->
+    <bean id="applicationCoreFilter" class="org.egov.infra.web.filter.ApplicationCoreFilter"/>
+    <bean id="applicationTenantResolverFilter" class="org.egov.infra.web.filter.ApplicationTenantResolverFilter"/>
 
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
         <property name="maxUploadSize" value="${max.file.upload.size}"/>
