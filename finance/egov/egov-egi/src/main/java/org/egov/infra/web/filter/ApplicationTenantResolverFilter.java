@@ -113,7 +113,6 @@ public class ApplicationTenantResolverFilter implements Filter {
 
         // Set tenant context in ThreadLocal
         ApplicationThreadLocals.setTenantID(schemaName);
-        ApplicationThreadLocals.setUserTenantId(userTenantId);
         ApplicationThreadLocals.setCollectionVersion(environmentSettings.collectionVersion());
         ApplicationThreadLocals.setDomainName(domainName);
         ApplicationThreadLocals.setDomainURL(domainURL);
