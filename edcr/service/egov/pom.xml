@@ -44,66 +44,66 @@
 
 	<repositories>
 
- <repository>
-        <id>jasperreports</id>
-        <url>https://jasperreports.sourceforge.net/maven2</url>
-    </repository>
-		<repository>
-			<id>repo.egovernments.org</id>
-			<name>eGov Public Repository Group</name>
-			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>JBoss Repository</id>
-			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
-		</repository>
-		<repository>
-			<id>AsposeJavaAPI</id>
-			<name>Aspose Java API</name>
-			<url>https://repository.aspose.com/repo/</url>
-		</repository>
-		<!--<repository>
-			<id>AsposeJavaAPI</id>
-			<name>Aspose Java API</name>
-			<url>https://upyog-nexus.niua.org/repo/</url>
-		</repository> -->
-		<repository>
-			<id>javaxt.com</id>
-			<url>https://upyog-nexus.niua.org/maven</url>
-		</repository>
-	</repositories>
+        <repository>
+            <id>jasperreports</id>
+            <url>https://jasperreports.sourceforge.net/maven2</url>
+        </repository>
+        <repository>
+            <id>repo.egovernments.org</id>
+            <name>eGov Public Repository Group</name>
+            <url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>JBoss Repository</id>
+            <url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
+        </repository>
+        <!--<repository>
+            <id>AsposeJavaAPI</id>
+            <name>Aspose Java API</name>
+            <url>https://repository.aspose.com/repo/</url>
+        </repository>-->
+        <repository>
+            <id>AsposeJavaAPI</id>
+            <name>Aspose Java API</name>
+            <url>https://upyog-nexus.niua.org/repo/</url>
+        </repository>
+        <repository>
+            <id>javaxt.com</id>
+            <url>https://upyog-nexus.niua.org/maven</url>
+        </repository>
+    </repositories>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>repo.egovernments.org</id>
-			<name>eGov Public Repository Group</name>
-			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>repo.egovernments.org</id>
+            <name>eGov Public Repository Group</name>
+            <url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
-	<modules>
-		<module>egov-config</module>
-		<module>egov-egi</module>
-		<module>egov-commons</module>
-		<module>egov-edcr-extract</module>
-		<module>egov-edcr</module>
-		<module>egov-egiweb</module>
-		<module>egov-edcrweb</module>
-		<module>egov-ear</module>
-	</modules>
+    <modules>
+        <module>egov-config</module>
+        <module>egov-egi</module>
+        <module>egov-commons</module>
+        <module>egov-edcr-extract</module>
+        <module>egov-edcr</module>
+        <module>egov-egiweb</module>
+        <module>egov-edcrweb</module>
+        <module>egov-ear</module>
+    </modules>
 
 	<properties>
 		<timestamp>${maven.build.timestamp}</timestamp>
@@ -130,12 +130,12 @@
 		<xerces-version>2.11.0.SP5</xerces-version>
 		<postgres-version>42.7.10</postgres-version>
 
-		<!-- Other application dependency versions -->
-		<!--<struts2-version>2.5.14.1</struts2-version>
-		<struts2-jquery-version>4.0.2</struts2-jquery-version>
-		<xstream-version>1.4.10</xstream-version>-->
-		<spring-version>5.3.31</spring-version>
-		<spring-session-version>2.7.4</spring-session-version>
+        <!-- Other application dependency versions -->
+        <!--<struts2-version>2.5.14.1</struts2-version>
+        <struts2-jquery-version>4.0.2</struts2-jquery-version>
+        <xstream-version>1.4.10</xstream-version>-->
+        <spring-version>5.3.31</spring-version>
+        <spring-session-version>2.7.4</spring-session-version>
         <spring-data-jpa-version>2.7.18</spring-data-jpa-version>
 		<spring-data-jpa-envers-version>2.7.18</spring-data-jpa-envers-version>
 		<spring-security-version>5.7.11</spring-security-version>
@@ -158,19 +158,19 @@
 		<itext-version>2.1.7</itext-version>
 		<commons-javaflow-version>20060411</commons-javaflow-version>
 		<jexcelapi-version>2.6.12</jexcelapi-version>
-		<commons-beanutils-version>1.9.3</commons-beanutils-version>
-		<commons-config-version>1.10</commons-config-version>
-		<commons-lang-version>2.6</commons-lang-version>
-		<commons-lang3-version>3.6</commons-lang3-version>
-		<commons-email-version>1.5</commons-email-version>
-		<commons-collections-version>3.2.2</commons-collections-version>
-		<commons-collections4-version>4.1</commons-collections4-version>
-		<commons.text.version>1.1</commons.text.version>
-		<commons-codec-version>1.11</commons-codec-version>
-		<commons-dbcp-version>1.4</commons-dbcp-version>
-		<commons-io-version>2.6</commons-io-version>
-		<commons-fileupload-version>1.3.3</commons-fileupload-version>
-		<commons.compress.version>1.16.1</commons.compress.version>
+        <commons-beanutils-version>1.11.0</commons-beanutils-version>
+        <commons-config2-version>2.13.0</commons-config2-version>
+        <!--		<commons-lang-version>2.6</commons-lang-version>-->
+        <commons-lang3-version>3.20.0</commons-lang3-version>
+        <commons-email-version>2.0.0-M1</commons-email-version>
+        <!--		<commons-collections-version>3.2.2</commons-collections-version>-->
+        <commons-collections4-version>4.5.0</commons-collections4-version>
+        <commons.text.version>1.15.0</commons.text.version>
+        <commons-codec-version>1.21.0</commons-codec-version>
+        <commons-dbcp-version>2.14.0</commons-dbcp-version>
+        <commons-io-version>2.21.0</commons-io-version>
+        <commons-fileupload2-version>2.0.0-M5</commons-fileupload2-version>
+        <commons.compress.version>1.28.0</commons.compress.version>
 		<httpclient-version>4.5.14</httpclient-version>
 		<sitemesh-version>2.5.0</sitemesh-version>
 		<ehcache-web-version>2.0.4</ehcache-web-version>
@@ -580,19 +580,19 @@
 			</dependency>
 			<!-- SECURITY END -->
 
-			<!-- EMBEDDED REDIS STARTS -->
-			<dependency>
-				<groupId>com.orange.redis-embedded</groupId>
-				<artifactId>embedded-redis</artifactId>
-				<version>${embedded-redis-version}</version>
-			</dependency>
-			<dependency>
-    <groupId>javax.persistence</groupId>
-    <artifactId>javax.persistence-api</artifactId>
-    <version>2.2</version>
-   
-</dependency>
-			<!-- EMBEDDED REDIS ENDS -->
+            <!-- EMBEDDED REDIS STARTS -->
+            <dependency>
+                <groupId>com.orange.redis-embedded</groupId>
+                <artifactId>embedded-redis</artifactId>
+                <version>${embedded-redis-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.persistence</groupId>
+                <artifactId>javax.persistence-api</artifactId>
+                <version>2.2</version>
+
+            </dependency>
+            <!-- EMBEDDED REDIS ENDS -->
 
 			<!-- QUARTZ START -->
 			<dependency>
@@ -701,15 +701,11 @@
 				<version>${commons-beanutils-version}</version>
 			</dependency>
 			<dependency>
-				<groupId>commons-configuration</groupId>
-				<artifactId>commons-configuration</artifactId>
-				<version>${commons-config-version}</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-configuration2</artifactId>
+				<version>${commons-config2-version}</version>
 			</dependency>
-			<dependency>
-				<groupId>commons-lang</groupId>
-				<artifactId>commons-lang</artifactId>
-				<version>${commons-lang-version}</version>
-			</dependency>
+
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
@@ -721,8 +717,8 @@
     <version>${jackson-version}</version>
 </dependency>
 			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-email</artifactId>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-email2-javax</artifactId>
 				<version>${commons-email-version}</version>
 				<exclusions>
 					<exclusion>
@@ -736,12 +732,6 @@
     <artifactId>woodstox-core</artifactId>
     <version>6.5.1</version>
 </dependency>
-			<dependency>
-				
-				<groupId>commons-collections</groupId>
-				<artifactId>commons-collections</artifactId>
-				<version>${commons-collections-version}</version>
-			</dependency>
 			<dependency>
 				<groupId>commons-codec</groupId>
 				<artifactId>commons-codec</artifactId>
@@ -758,8 +748,8 @@
 				</exclusions>
 			</dependency>
 			<dependency>
-				<groupId>commons-dbcp</groupId>
-				<artifactId>commons-dbcp</artifactId>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-dbcp2</artifactId>
 				<version>${commons-dbcp-version}</version>
 			</dependency>
 			<dependency>
@@ -768,9 +758,9 @@
 				<version>${commons-io-version}</version>
 			</dependency>
 			<dependency>
-				<groupId>commons-fileupload</groupId>
-				<artifactId>commons-fileupload</artifactId>
-				<version>${commons-fileupload-version}</version>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-fileupload2-javax</artifactId>
+				<version>${commons-fileupload2-version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -1182,34 +1172,34 @@
 		</dependency>
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES END -->
 
-		<!-- COMMONS START -->
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>commons-fileupload</groupId>
-			<artifactId>commons-fileupload</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-text</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-collections4</artifactId>
-		</dependency>
-		<!-- COMMONS END -->
+        <!-- COMMONS START -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-fileupload2-javax</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+        </dependency>
+        <!-- COMMONS END -->
 
 		<!-- SPRING DEPENDENCIES START -->
 		<dependency>
@@ -1575,5 +1565,11 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 	</build>
 </project>

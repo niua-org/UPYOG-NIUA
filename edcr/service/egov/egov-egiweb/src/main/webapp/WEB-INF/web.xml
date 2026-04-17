@@ -56,7 +56,10 @@
     <!-- Context Params Starts -->
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>classpath*:config/spring/applicationContext-egiweb.xml</param-value>
+        <param-value>
+            classpath*:config/spring/applicationContext-egiweb.xml,
+            classpath*:config/spring/applicationSecurityContext-egi.xml
+        </param-value>
     </context-param>
 
     <context-param>
