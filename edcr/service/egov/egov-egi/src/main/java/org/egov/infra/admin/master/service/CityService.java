@@ -67,6 +67,8 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.infra.admin.master.entity.City;
 import org.egov.infra.admin.master.repository.CityRepository;
 import org.egov.infra.utils.FileStoreUtils;
@@ -89,6 +91,8 @@ public class CityService implements ICityService
     public CityService() {
         this.cityRepository = null;
     }
+
+    private static final Logger LOG = LogManager.getLogger(CityService.class);
 
     @Autowired
     private TenantUtils tenantUtils;
@@ -200,8 +204,7 @@ public class CityService implements ICityService
             String cityCode = getCityCode();
 
             if (fileStoreId == null || cityCode == null) {
-                // log properly
-                System.out.println("City logo not configured. fileStoreId=" + fileStoreId + ", cityCode=" + cityCode);
+                LOG.info("City logo not configured. fileStoreId=" + fileStoreId + ", cityCode=" + cityCode);
                 return new byte[0]; // or return default image
             }
 
