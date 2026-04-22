@@ -48,7 +48,14 @@
 
 package org.egov.infra.config.core;
 
+import org.egov.infra.cache.impl.ApplicationCacheManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ApplicationThreadLocals {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationCacheManager.class);
+
 
     private static ThreadLocal<String> domainName = new ThreadLocal<>();
     private static ThreadLocal<Long> userId = new ThreadLocal<>();
@@ -83,6 +90,8 @@ public class ApplicationThreadLocals {
     }
 
     public static String getTenantID() {
+
+        LOGGER.info(" *** Tenant ID in ThreadLocal: " + tenantID.get());
         return tenantID.get();
     }
 
@@ -131,6 +140,7 @@ public class ApplicationThreadLocals {
     }
 
     public static String getUserTenantId(){
+        LOGGER.info("usertenant id from session ::::::" + getUserTenantId());
     	return userTenantId.get();
     }
     
