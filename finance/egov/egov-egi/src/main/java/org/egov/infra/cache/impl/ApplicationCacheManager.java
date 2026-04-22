@@ -64,6 +64,17 @@ public class ApplicationCacheManager {
 	@Autowired
 	private CacheManager cacheManager;
 
+	@Autowired
+   public void setCacheManager(CacheManager cacheManager) {
+       this.cacheManager = cacheManager;
+       LOGGER.info("========================================");
+       LOGGER.info("CacheManager Class: {}", cacheManager.getClass().getName());
+       LOGGER.info("CacheManager Instance: {}", cacheManager);
+       LOGGER.info("CacheManager toString: {}", cacheManager.toString());
+       LOGGER.info("Available Cache Names: {}", cacheManager.getCacheNames());
+      
+   }
+
 	public void put(Object key, Object value) {
 		cacheManager.getCache(ApplicationThreadLocals.getTenantID()).put(key, value);
 	}
