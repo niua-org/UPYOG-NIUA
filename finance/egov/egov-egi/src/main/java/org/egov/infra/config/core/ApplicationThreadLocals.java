@@ -140,7 +140,7 @@ public class ApplicationThreadLocals {
     }
 
     public static String getUserTenantId(){
-        LOGGER.info("usertenant id from session ::::::" + getUserTenantId());
+        LOGGER.info("usertenant id from session ::::::" + userTenantId.get());
     	return userTenantId.get();
     }
     
