@@ -151,7 +151,7 @@ public class ApplicationCoreFilter implements Filter {
 
     private void prepareUserSession(HttpServletRequest request,HttpServletResponse response,HttpSession session) {
 
-        LOGGER.info("[TENANTDBG][CoreFilter] prepareUserSession pre cityCode=" + session.getAttribute(CITY_CODE_KEY)
+        LOGGER.info("prepareUserSession cityCode=" + session.getAttribute(CITY_CODE_KEY)
                 + " tenantID=" + ApplicationThreadLocals.getTenantID()
                 + " userTenantId=" + ApplicationThreadLocals.getUserTenantId()
                 + " domainName=" + ApplicationThreadLocals.getDomainName());

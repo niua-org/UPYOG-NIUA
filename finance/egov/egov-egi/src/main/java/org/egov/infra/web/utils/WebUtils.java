@@ -108,9 +108,8 @@ public final class WebUtils {
         StringBuilder url = new StringBuilder(httpRequest.getRequestURL());
         String uri = httpRequest.getRequestURI();
 
-        LOGGER.info("url::::{}", url);
-        LOGGER.info("uri:::::::{}", url.toString());
-        LOGGER.info("WBCONTEXT::::::{}", uri);
+        LOGGER.info("url :{}", url);
+        LOGGER.info("uri :{}", uri);
 
         return withContext ? url.substring(0, url.length() - uri.length() + httpRequest.getContextPath().length()) + FORWARD_SLASH
                 : url.substring(0, url.length() - uri.length());
