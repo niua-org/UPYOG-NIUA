@@ -150,6 +150,12 @@ public class ApplicationCoreFilter implements Filter {
     }
 
     private void prepareUserSession(HttpServletRequest request,HttpServletResponse response,HttpSession session) {
+
+        LOGGER.info("[TENANTDBG][CoreFilter] prepareUserSession pre cityCode=" + session.getAttribute(CITY_CODE_KEY)
+                + " tenantID=" + ApplicationThreadLocals.getTenantID()
+                + " userTenantId=" + ApplicationThreadLocals.getUserTenantId()
+                + " domainName=" + ApplicationThreadLocals.getDomainName());
+
         if (session.getAttribute(CITY_CODE_KEY) == null)
             cityService.cityDataAsMap().forEach(session::setAttribute);
         if (session.getAttribute(APP_RELEASE_ATTRIB_NAME) == null)

@@ -49,12 +49,17 @@
 package org.egov.infra.cache.impl;
 
 import org.egov.infra.config.core.ApplicationThreadLocals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ApplicationCacheManager {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationCacheManager.class);
+
 
 	@Autowired
 	private CacheManager cacheManager;
@@ -75,5 +80,7 @@ public class ApplicationCacheManager {
 
 	public void remove(Object key) {
 		cacheManager.getCache(ApplicationThreadLocals.getTenantID()).evict(key);
+		LOGGER.info("Removed key: " + key + " from cache for tenant: " + ApplicationThreadLocals.getTenantID());
+
 	}
 }
