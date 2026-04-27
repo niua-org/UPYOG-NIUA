@@ -153,7 +153,7 @@ export const logout = () => {
     } catch (error) {
       console.error("Logout error:", error);
     }
-
+    // whatever happens the client should clear the user details
     clearUserDetails();
     window.location.replace(`${window.basename}/user/login`);
   };
