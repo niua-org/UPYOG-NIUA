@@ -83,9 +83,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.GeometryFactory;
 
 @Service
 @Transactional(readOnly = true)
@@ -268,8 +269,8 @@ public class BoundaryService {
                 final FeatureCollection<SimpleFeatureType, SimpleFeature> collection = dataStore
                         .getFeatureSource(dataStore.getTypeNames()[0]).getFeatures();
                 final Iterator<SimpleFeature> iterator = collection.iterator();
-                final Point point = JTSFactoryFinder.getGeometryFactory(null)
-                        .createPoint(new Coordinate(longitude, latitude));
+                GeometryFactory geometryFactory = new GeometryFactory();
+                Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
                 try {
                     while (iterator.hasNext()) {
                         final SimpleFeature feature = iterator.next();

@@ -91,7 +91,7 @@
 			<artifactId>hibernate-infinispan</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
 		<dependency>
@@ -259,6 +259,11 @@
 			<artifactId>geoapi</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+			<artifactId>owasp-java-html-sanitizer</artifactId>
+			<version>20240325.1</version>
+		</dependency>
+		<dependency>
 			<groupId>org.geotools</groupId>
 			<artifactId>gt-main</artifactId>
 		</dependency>
@@ -284,27 +289,32 @@
 			<artifactId>gt-shapefile-renderer</artifactId>
 		</dependency>
 		
+<!--		<dependency>-->
+<!--			<groupId>javax.media</groupId>-->
+<!--			<artifactId>jai_core</artifactId>-->
+<!--			<classifier>alpha</classifier>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>net.java.dev.jsr-275</groupId>-->
+<!--			<artifactId>jsr-275</artifactId>-->
+<!--		</dependency>-->
 		<dependency>
-			<groupId>javax.media</groupId>
-			<artifactId>jai_core</artifactId>
-			<classifier>alpha</classifier>
+			<groupId>org.locationtech.jts</groupId>
+			<artifactId>jts-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>net.java.dev.jsr-275</groupId>
-			<artifactId>jsr-275</artifactId>
+			<groupId>javax.measure</groupId>
+			<artifactId>unit-api</artifactId>
 		</dependency>
+
 		<dependency>
-			<groupId>com.vividsolutions</groupId>
-			<artifactId>jts</artifactId>
+			<groupId>tech.units</groupId>
+			<artifactId>indriya</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>units</groupId>
-			<artifactId>units</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>java3d</groupId>
-			<artifactId>vecmath</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>javax.vecmath</groupId>-->
+<!--			<artifactId>vecmath</artifactId>-->
+<!--		</dependency>-->
 
 		<!-- <dependency>
 			<groupId>org.apache.logging.log4j</groupId>
