@@ -136,23 +136,25 @@ export const logout = () => {
   return async () => {
     try {
       const authToken = getAccessToken();
+
       if (authToken) {
-        const response = await httpRequest(AUTH.LOGOUT.URL, AUTH.LOGOUT.ACTION, [], { "access_token" : authToken });
-      } else {
-        clearUserDetails();
-        process.env.REACT_APP_NAME === "Citizen"
-          ? window.location.replace(`${window.basename}/user/register`)
-          : window.location.replace(`${window.basename}/user/login`);
-        return;
+        const requestBody = {
+          RequestInfo: {
+            authToken: authToken
+          },
+          access_token: authToken
+        };
+
+        await Promise.allSettled([
+          httpRequest(AUTH.LOGOUT.URL, AUTH.LOGOUT.ACTION, [], requestBody),
+          httpRequest(AUTH.FINANCE_LOGOUT.URL, AUTH.FINANCE_LOGOUT.ACTION, [], requestBody)
+        ]);
       }
     } catch (error) {
-      clearUserDetails();
+      console.error("Logout error:", error);
     }
-    // whatever happens the client should clear the user details
-    // let userInfo=getUserInfo();
-    // let userRole=get(userInfo,"roles[0].code");
+
     clearUserDetails();
-    // window.location.replace(`${window.basename}/user/login`)
     window.location.replace(`${window.basename}/user/login`);
   };
 };

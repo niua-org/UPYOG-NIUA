@@ -37,6 +37,10 @@ export const AUTH = {
     URL: "/user/_logout",
     ACTION: "_logout",
   },
+  FINANCE_LOGOUT: {
+    URL: "/services/EGF/rest/logout",
+    ACTION: "_logout",
+  },
 };
 
 export const USER = {
