@@ -25,28 +25,48 @@ public class WebDriverFactory {
 
     public WebDriver createDriver() {
         try {
-            // Close any existing drivers before creating a new one
             closeAllDrivers();
 
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--remote-allow-origins=*");
             options.addArguments("--disable-blink-features=AutomationControlled");
             options.addArguments("--start-maximized");
+            options.addArguments("--incognito");
+
+            // safer for Docker only (not always needed locally)
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
 
             WebDriver driver;
-            if (gridEnabled) {
-                driver = new RemoteWebDriver(new URL(gridUrl), options);
+
+            // OVERRIDE from command line if provided
+            boolean isGrid = Boolean.parseBoolean(
+                    System.getProperty("selenium.grid.enabled", String.valueOf(gridEnabled))
+            );
+
+            String url = System.getProperty("selenium.grid.url", gridUrl);
+
+            if (isGrid) {
+
+                System.out.println("Running on GRID: " + url);
+
+                driver = new RemoteWebDriver(new URL(url), options);
+
+                // IMPORTANT (file upload support)
+                ((RemoteWebDriver) driver)
+                        .setFileDetector(new org.openqa.selenium.remote.LocalFileDetector());
+
             } else {
-                // Automatically download and setup the correct ChromeDriver version
+
+                System.out.println("Running on LOCAL Chrome");
+
                 WebDriverManager.chromedriver().setup();
                 driver = new ChromeDriver(options);
             }
 
-            // Track this driver
             activeDrivers.add(driver);
             return driver;
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to create WebDriver: " + e.getMessage(), e);
         }

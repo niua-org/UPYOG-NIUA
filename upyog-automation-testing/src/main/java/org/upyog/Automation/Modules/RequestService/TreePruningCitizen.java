@@ -9,6 +9,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
@@ -17,20 +19,22 @@ import org.upyog.Automation.config.WebDriverFactory;
 @Component
 public class TreePruningCitizen {
 
+    private static final Logger logger = LoggerFactory.getLogger(TreePruningCitizen.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void TreePruningCreate() {
-        TreePruningCreate(ConfigReader.get("citizen.base.url"),
+    public void treePruningCreate() {
+        treePruningCreate(ConfigReader.get("citizen.base.url"),
                 "Request Service",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
                 ConfigReader.get("test.city.name"));
     }
 
-    public void TreePruningCreate(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Tree Pruning Application by Citizen");
+    public void treePruningCreate(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Tree Pruning Application by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -68,14 +72,16 @@ public class TreePruningCitizen {
             // STEP 10: Submit Application
             submitApplication(driver, wait, js);
 
-            System.out.println("Tree Pruning Application completed successfully!");
+            logger.info("Tree Pruning Application completed successfully!");
             Thread.sleep(50000); // Keep browser open for observation
 
         } catch (Exception e) {
-            System.out.println("Exception in Tree Pruning: " + e.getMessage());
+            logger.info("Exception in Tree Pruning: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -87,7 +93,7 @@ public class TreePruningCitizen {
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -131,7 +137,7 @@ public class TreePruningCitizen {
     private void navigateToRequestService(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Request Service");
+        logger.info("Navigating to Request Service");
 
         // Sidebar Request Service link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -152,7 +158,7 @@ public class TreePruningCitizen {
     private void selectTreePruningService(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting Tree Pruning Service");
+        logger.info("Selecting Tree Pruning Service");
         Thread.sleep(1000);
 
         // Select Tree Pruning from dropdown (3rd option)
@@ -162,7 +168,7 @@ public class TreePruningCitizen {
 
         WebElement serviceTypeDropdown = dropdownSvgs.get(0);
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", serviceTypeDropdown);
-        Thread.sleep(500);
+        Thread.sleep(2000);
 
         try {
             serviceTypeDropdown.click();
@@ -186,7 +192,7 @@ public class TreePruningCitizen {
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", treePruningOption);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", treePruningOption);
-        System.out.println("Tree Pruning selected");
+        logger.info("Tree Pruning selected");
         Thread.sleep(1000);
 
         clickSaveAndNext(wait, js);
@@ -199,7 +205,7 @@ public class TreePruningCitizen {
     private void fillTreePruningDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Tree Pruning Info Page - Clicking Next");
+        logger.info("Tree Pruning Info Page - Clicking Next");
         Thread.sleep(2000);
 
         // Try multiple Next button selectors for info page
@@ -216,11 +222,11 @@ public class TreePruningCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on info page");
+                logger.info("Clicked Next on info page");
                 Thread.sleep(3000);
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
         
@@ -234,20 +240,20 @@ public class TreePruningCitizen {
     private void selectFillNewDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Handling Booking Popup");
+        logger.info("Handling Booking Popup");
 
-        // 🔥 Directly wait for button instead of popup container
+        // Directly wait for button instead of popup container
         WebElement fillNewDetailsBtn = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        By.xpath("//button[contains(.,'Fill New')]")
+                        By.xpath("//button[contains(.,'Fill New Details')]")
                 )
         );
 
-        System.out.println("Popup appeared (button detected)");
+        logger.info("Popup appeared (button detected)");
 
         js.executeScript("arguments[0].click();", fillNewDetailsBtn);
 
-        System.out.println("Clicked Fill New Details");
+        logger.info("Clicked Fill New Details");
 
         Thread.sleep(1000);
     }
@@ -259,7 +265,7 @@ public class TreePruningCitizen {
     private void fillApplicantDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Applicant Details");
+        logger.info("Filling Applicant Details");
 
         fillInput(wait, "applicantName", "Arpit Rao");
         fillInput(wait, "emailId", "arpit@gmail.com");
@@ -268,7 +274,7 @@ public class TreePruningCitizen {
         try {
             fillInput(wait, "mobileNumber", "9999999999");
         } catch (Exception e) {
-            System.out.println("Mobile number field not found or pre-filled");
+            logger.info("Mobile number field not found or pre-filled");
         }
 
         Thread.sleep(2000);
@@ -287,10 +293,10 @@ public class TreePruningCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on applicant details page");
+                logger.info("Clicked Next on applicant details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
         
@@ -304,15 +310,15 @@ public class TreePruningCitizen {
     private void fillAddressDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Address Details");
+        logger.info("Filling Address Details");
 
         // Select address type (Permanent/Current) - try index 0 first
         try {
             selectDropdownOption(driver, wait, js, 0);
             Thread.sleep(1000);
-            System.out.println("Selected address type");
+            logger.info("Selected address type");
         } catch (Exception e) {
-            System.out.println("Address type dropdown not found");
+            logger.info("Address type dropdown not found");
         }
 
         // Fill address fields
@@ -329,7 +335,7 @@ public class TreePruningCitizen {
                 try {
                     fillInputFast(driver, wait, "address1", "Address Line 1");
                 } catch (Exception e3) {
-                    System.out.println("Address line 1 field not found");
+                    logger.info("Address line 1 field not found");
                 }
             }
         }
@@ -344,7 +350,7 @@ public class TreePruningCitizen {
                 try {
                     fillInputFast(driver, wait, "address2", "Address Line 2");
                 } catch (Exception e3) {
-                    System.out.println("Address line 2 field not found");
+                    logger.info("Address line 2 field not found");
                 }
             }
         }
@@ -354,9 +360,9 @@ public class TreePruningCitizen {
         try {
             selectDropdownOption(driver, wait, js, 1);
             Thread.sleep(1000);
-            System.out.println("Selected city");
+            logger.info("Selected city");
         } catch (Exception e) {
-            System.out.println("City dropdown not found");
+            logger.info("City dropdown not found");
         }
 
         // Select locality dropdown after city selection loads more dropdowns
@@ -364,9 +370,9 @@ public class TreePruningCitizen {
         try {
             selectDropdownOption(driver, wait, js, 2);
             Thread.sleep(1000);
-            System.out.println("Selected locality");
+            logger.info("Selected locality");
         } catch (Exception e) {
-            System.out.println("Locality dropdown not found");
+            logger.info("Locality dropdown not found");
         }
 
         fillInput(wait, "pincode", "110011");
@@ -387,10 +393,10 @@ public class TreePruningCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on address details page");
+                logger.info("Clicked Next on address details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -404,16 +410,16 @@ public class TreePruningCitizen {
     private void fillTreePruningRequestDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Tree Pruning Request Details");
+        logger.info("Filling Tree Pruning Request Details");
         Thread.sleep(1000);
 
         // Select reason dropdown
         try {
             selectDropdownOption(driver, wait, js, 0);
             Thread.sleep(500);
-            System.out.println("Selected reason for pruning");
+            logger.info("Selected reason for pruning");
         } catch (Exception e) {
-            System.out.println("Reason dropdown not found");
+            logger.info("Reason dropdown not found");
         }
 
         // Click geo tag icon with timeout
@@ -441,20 +447,20 @@ public class TreePruningCitizen {
                 Thread.sleep(300);
                 js.executeScript("arguments[0].click();", geoTag);
                 Thread.sleep(1000);
-                System.out.println("Clicked geo tag icon");
+                logger.info("Clicked geo tag icon");
             } else {
-                System.out.println("Geo tag icon not found, skipping");
+                logger.info("Geo tag icon not found, skipping");
             }
         } catch (Exception e) {
-            System.out.println("Geo tag timeout, skipping: " + e.getMessage());
+            logger.info("Geo tag timeout, skipping: " + e.getMessage());
         }
 
         // Upload document
         try {
             uploadFile(driver, wait, js, 0, ConfigReader.get("document.site.proof"));
-            System.out.println("Uploaded supporting document");
+            logger.info("Uploaded supporting document");
         } catch (Exception e) {
-            System.out.println("Document upload failed");
+            logger.info("Document upload failed");
         }
 
         Thread.sleep(1000);
@@ -467,7 +473,7 @@ public class TreePruningCitizen {
     private void uploadDocuments(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
         Thread.sleep(2000);
 
         // Upload files
@@ -477,7 +483,7 @@ public class TreePruningCitizen {
         clickSaveAndNext(wait, js);
         Thread.sleep(1000);
 
-        System.out.println("Next button not found on documents page, continuing...");
+        logger.info("Next button not found on documents page, continuing...");
     }
 
     // =====================================================================
@@ -487,7 +493,7 @@ public class TreePruningCitizen {
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Tree Pruning Application - Summary Page");
+        logger.info("Submitting Tree Pruning Application - Summary Page");
         Thread.sleep(3000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -498,10 +504,10 @@ public class TreePruningCitizen {
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -512,7 +518,7 @@ public class TreePruningCitizen {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Tree Pruning application: Submit clicked");
+        logger.info("Tree Pruning application: Submit clicked");
     }
 
     // =====================================================================
@@ -538,10 +544,10 @@ public class TreePruningCitizen {
             if (input.isDisplayed() && input.isEnabled()) {
                 input.clear();
                 input.sendKeys(value);
-                System.out.println("Filled optional field: " + fieldName);
+                logger.info("Filled optional field: " + fieldName);
             }
         } catch (Exception e) {
-            System.out.println("Optional field " + fieldName + " not found, skipping");
+            logger.info("Optional field " + fieldName + " not found, skipping");
         }
     }
 
@@ -568,7 +574,7 @@ public class TreePruningCitizen {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
         Thread.sleep(200);
         nextButton.click();
-        System.out.println("Clicked Next");
+        logger.info("Clicked Next");
     }
 
     private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
@@ -602,7 +608,7 @@ public class TreePruningCitizen {
                         By.cssSelector("div.select svg.cp")));
 
         if (dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 
@@ -643,7 +649,7 @@ public class TreePruningCitizen {
                         By.cssSelector("input[type='file'].input-mirror-selector-button")));
 
         if (index >= fileInputs.size()) {
-            System.out.println("File input index " + index + " not found for path: " + filePath);
+            logger.info("File input index " + index + " not found for path: " + filePath);
             return;
         }
 
@@ -653,7 +659,7 @@ public class TreePruningCitizen {
         Thread.sleep(300);
 
         fileInput.sendKeys(filePath);
-        System.out.println("Uploaded file at index " + index + ": " + filePath);
+        logger.info("Uploaded file at index " + index + ": " + filePath);
         Thread.sleep(500);
     }
 }

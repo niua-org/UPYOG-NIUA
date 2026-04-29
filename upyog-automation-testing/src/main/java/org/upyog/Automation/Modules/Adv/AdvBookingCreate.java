@@ -17,6 +17,8 @@ import org.upyog.Automation.config.WebDriverFactory;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -34,6 +36,8 @@ import java.util.Set;
 @Component
 public class AdvBookingCreate {
 
+    private static final Logger logger = LoggerFactory.getLogger(AdvBookingCreate.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
@@ -42,16 +46,16 @@ public class AdvBookingCreate {
      * Uncomment @PostConstruct above to run automatically on context init.
      */
     //@PostConstruct
-    public void AdvBookingReg() {
-        AdvBookingReg(ConfigReader.get("citizen.base.url"),
+    public void advBookingReg() {
+        advBookingReg(ConfigReader.get("citizen.base.url"),
                      "Advertisement",
                      ConfigReader.get("citizen.mobile.number"),
                      ConfigReader.get("test.otp"),
                      ConfigReader.get("test.cityA.name"));
     }
 
-    public void AdvBookingReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Advertisement Booking by Citizen");
+    public void advBookingReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Advertisement Booking by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -89,26 +93,28 @@ public class AdvBookingCreate {
             // STEP 10: Submit Application
             submitApplication(driver, wait, js);
 
-            System.out.println("Advertisement Booking completed successfully!");
+            logger.info("Advertisement Booking completed successfully!");
             Thread.sleep(50000); // Keep browser open for observation
 
         } catch (Exception e) {
-            System.out.println("Exception in Advertisement Booking: " + e.getMessage());
+            logger.error("Exception in Advertisement Booking", e);
             e.printStackTrace();
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
     // =====================================================================
-    // STEP 1: CITIZEN LOGIN (same style as TradeLicenseCreate)
+    // STEP 1: CITIZEN LOGIN
     // =====================================================================
 
     private void performCitizenLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String mobileNumber, String otp, String cityName)
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -151,20 +157,20 @@ public class AdvBookingCreate {
     private void navigateToAdvertisement(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Advertisement Booking");
+        logger.info("Navigating to Advertisement Booking");
 
         // Sidebar Advertisement link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[@href='/upyog-ui/citizen/ads-home']"))));
 
         Thread.sleep(2000);
-        System.out.println("Reached Advertisement home page");
+        logger.info("Reached Advertisement home page");
 
         // "Advertisement Book" link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[@href='/upyog-ui/citizen/ads/bookad']"))));
 
-        System.out.println("Clicked Advertisement Book link");
+        logger.info("Clicked Advertisement Book link");
     }
 
     // =====================================================================
@@ -174,7 +180,7 @@ public class AdvBookingCreate {
     private void fillAdvertisementDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Advertisement Details");
+        logger.info("Filling Advertisement Details");
 
         // Example: 3 dropdowns – Category, Ad Type, Location (adjust as per UI)
         selectDropdownOption(driver, wait, js, 0);
@@ -184,40 +190,82 @@ public class AdvBookingCreate {
 
         // Date range (type="date" → yyyy-MM-dd) - Dynamic dates
         List<WebElement> dateInputs = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                By.cssSelector("input.employee-card-input[type='date']")));
+                By.cssSelector("input[type='date']")));
 
-        if (dateInputs.size() >= 2) {
+
             WebElement fromDate = dateInputs.get(0);
             WebElement toDate = dateInputs.get(1);
 
-            // Get current date and add days for future dates
-            LocalDate today = LocalDate.now();
-            LocalDate futureFromDate = today.plusDays(5);   // 5 days from today
-            LocalDate futureToDate = today.plusDays(55);    // 30 days from today
+        //  STEP 1: read min date from UI
+        String minDateStr = fromDate.getAttribute("min");   // e.g. 2026-04-07
+        LocalDate minDate = LocalDate.parse(minDateStr);
 
-            // Format dates as dd-MM-yyyy for Advertisement
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-            fromDate.clear();
-            fromDate.sendKeys(futureFromDate.format(formatter));
+        //  STEP 2: calculate dates based on min
+        LocalDate from = minDate.plusDays(1);
+        LocalDate to = minDate.plusDays(10);
 
-            toDate.clear();
-            toDate.sendKeys(futureToDate.format(formatter));
 
-            System.out.println("Advertisement From Date: " + futureFromDate.format(formatter));
-            System.out.println("Advertisement To Date: " + futureToDate.format(formatter));
-        } else {
-            System.out.println("Date inputs not found or less than 2");
-        }
+        //  format (ONLY valid for type=date)
+        // FORMAT
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+
+        String fromStr = from.format(formatter);
+        String toStr = to.format(formatter);
+
+// =========================
+// FROM DATE
+// =========================
+        js.executeScript(
+                "var input = arguments[0];" +
+                        "var lastValue = input.value;" +
+                        "input.value = arguments[1];" +
+
+
+                        "var event = new Event('input', { bubbles: true });" +
+                        "event.simulated = true;" +
+                        "var tracker = input._valueTracker;" +
+                        "if (tracker) { tracker.setValue(lastValue); }" +
+
+
+                        "input.dispatchEvent(event);" +
+                        "input.dispatchEvent(new Event('change', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('blur', { bubbles: true }));",
+                fromDate,
+                fromStr
+        );
+// =========================
+// TO DATE
+// =========================
+        js.executeScript(
+                "var input = arguments[0];" +
+                        "var lastValue = input.value;" +
+                        "input.value = arguments[1];" +
+
+
+                        "var event = new Event('input', { bubbles: true });" +
+                        "event.simulated = true;" +
+                        "var tracker = input._valueTracker;" +
+                        "if (tracker) { tracker.setValue(lastValue); }" +
+
+
+                        "input.dispatchEvent(event);" +
+                        "input.dispatchEvent(new Event('change', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('blur', { bubbles: true }));",
+                toDate,
+                toStr
+        );
+        logger.info("From Date: {}", fromStr);
+        logger.info("To Date: {}", toStr);
+        Thread.sleep(2000);
         Thread.sleep(1000);
-
 
         // Radio: Advertisement With Night Light? -> No
         selectRadioButtonByLabel(driver, "No");
 
         // Search
         clickButtonByHeader(driver, wait, "Search");
-        Thread.sleep(2000);
     }
 
     // =====================================================================
@@ -227,14 +275,14 @@ public class AdvBookingCreate {
     private void selectCheckboxesAndAddToCart(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting checkboxes and adding to cart");
+        logger.info("Selecting checkboxes and adding to cart");
 
         // Only checkboxes inside result table
         By resultCheckboxesLocator = By.cssSelector("table tbody input[type='checkbox']");
         List<WebElement> checkboxes = wait.until(
                 ExpectedConditions.visibilityOfAllElementsLocatedBy(resultCheckboxesLocator));
 
-        System.out.println("Found " + checkboxes.size() + " result checkboxes");
+        logger.info("Found {} result checkboxes", checkboxes.size());
 
         for (int i = 0; i < checkboxes.size(); i++) {
             try {
@@ -246,7 +294,7 @@ public class AdvBookingCreate {
                     Thread.sleep(200);
                 }
             } catch (Exception e) {
-                System.out.println("Error clicking checkbox " + i + ": " + e.getMessage());
+                logger.error("Error clicking checkbox {}: {}", i, e.getMessage());
             }
         }
 
@@ -256,7 +304,7 @@ public class AdvBookingCreate {
         js.executeScript("arguments[0].scrollIntoView(true);", addToCartBtn);
         Thread.sleep(300);
         js.executeScript("arguments[0].click();", addToCartBtn);
-        System.out.println("Clicked Add to Cart");
+        logger.info("Clicked Add to Cart");
         Thread.sleep(2000);
     }
 
@@ -267,14 +315,14 @@ public class AdvBookingCreate {
     private void viewCartAndBookNow(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Viewing cart and booking");
+        logger.info("Viewing cart and booking");
 
         WebElement viewCartBtn = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//button[contains(., 'View Cart')]")));
         js.executeScript("arguments[0].scrollIntoView(true);", viewCartBtn);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", viewCartBtn);
-        System.out.println("Clicked View Cart");
+        logger.info("Clicked View Cart");
 
         Thread.sleep(2000);
 
@@ -283,7 +331,7 @@ public class AdvBookingCreate {
         js.executeScript("arguments[0].scrollIntoView(true);", bookNowBtn);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", bookNowBtn);
-        System.out.println("Clicked Book Now");
+        logger.info("Clicked Book Now");
 
         Thread.sleep(2000);
     }
@@ -295,7 +343,7 @@ public class AdvBookingCreate {
     private void handleAddressDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Handling address details – Fill New Details");
+        logger.info("Handling address details – Fill New Details");
 
         // For automation stability we always choose "Fill New Details"
         WebElement fillNewBtn = wait.until(ExpectedConditions.elementToBeClickable(
@@ -314,7 +362,7 @@ public class AdvBookingCreate {
     private void fillApplicantDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Applicant Details");
+        logger.info("Filling Applicant Details");
 
         fillInput(wait, "applicantName", "Arpit Rao");
         fillInput(wait, "emailId", "arpit@gmail.com");
@@ -330,7 +378,7 @@ public class AdvBookingCreate {
     private void fillApplicantAddressDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Applicant Address Details");
+        logger.info("Filling Applicant Address Details");
 
         fillInput(wait, "houseNo", "A-12");
         fillInput(wait, "houseName", "Jagbir Bhawan");
@@ -357,7 +405,7 @@ public class AdvBookingCreate {
     private void uploadDocuments(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
 
         // 1) Select all three dropdowns (any valid option – first one is fine for automation)
         // Advertisement Sample Document
@@ -378,7 +426,7 @@ public class AdvBookingCreate {
 
         // 3) Click Next
         clickNextButton(driver, wait, js);
-        System.out.println("Finished Upload Documents step");
+        logger.info("Finished Upload Documents step");
     }
 
 
@@ -389,7 +437,7 @@ public class AdvBookingCreate {
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Advertisement Application");
+        logger.info("Submitting Advertisement Application");
 
         Thread.sleep(5000);
         // Declaration checkbox – assume last checkbox on page
@@ -401,10 +449,10 @@ public class AdvBookingCreate {
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -416,7 +464,7 @@ public class AdvBookingCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Advertisement application: Submit clicked");
+        logger.info("Advertisement application: Submit clicked");
 
         // Wait for success acknowledgement (green banner) and then handle payment
         try {
@@ -428,22 +476,22 @@ public class AdvBookingCreate {
                             "//*[contains(., 'Booking No') or contains(.,'Booking No.')]"))
             ));
 
-            System.out.println("Application submitted successfully (acknowledgement detected).");
+            logger.info("Application submitted successfully (acknowledgement detected).");
 
             // Call payment handler (STEP 11)
             handlePaymentFlow(driver, wait, js);
 
         } catch (Exception e) {
-            System.out.println("Post-submit: success acknowledgement NOT detected within timeout: " + e.getMessage());
+            logger.info("Post-submit: success acknowledgement NOT detected within timeout: " + e.getMessage());
             // still attempt payment step in case page navigated directly to bill
             try {
                 handlePaymentFlow(driver, wait, js);
             } catch (Exception ex) {
-                System.out.println("handlePaymentFlow also failed/skipped: " + ex.getMessage());
+                logger.info("handlePaymentFlow also failed/skipped: " + ex.getMessage());
             }
         }
 
-        System.out.println("Advertisement Booking completed successfully!");
+        logger.info("Advertisement Booking completed successfully!");
         Thread.sleep(50000);
     }
 
@@ -490,7 +538,7 @@ public class AdvBookingCreate {
                 WebElement el = localWait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(locator));
                 try {
                     el.click();
-                    System.out.println("Clicked element " + locator + " (attempt " + attempt + ")");
+                    logger.info("Clicked element " + locator + " (attempt " + attempt + ")");
                     return true;
                 } catch (Exception clickEx) {
                     // fallback to JS click
@@ -498,14 +546,14 @@ public class AdvBookingCreate {
                         js.executeScript("arguments[0].scrollIntoView({block:'center'});", el);
                         Thread.sleep(150);
                         js.executeScript("arguments[0].click();", el);
-                        System.out.println("JS-clicked element " + locator + " (attempt " + attempt + ")");
+                        logger.info("JS-clicked element " + locator + " (attempt " + attempt + ")");
                         return true;
                     } catch (Exception jsEx) {
-                        System.out.println("Click failed attempt " + attempt + " for " + locator + " : " + jsEx.getMessage());
+                        logger.info("Click failed attempt " + attempt + " for " + locator + " : " + jsEx.getMessage());
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Element not clickable yet (" + locator + ") attempt " + attempt + " : " + e.getMessage());
+                logger.info("Element not clickable yet (" + locator + ") attempt " + attempt + " : " + e.getMessage());
             }
             Thread.sleep(retryDelayMs);
         }
@@ -522,7 +570,7 @@ public class AdvBookingCreate {
      */
     private void handlePaymentFlow(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
-        System.out.println("Starting payment flow (Card → Pay Now → Success)...");
+        logger.info("Starting payment flow (Card → Pay Now → Success)...");
 
         // remember UPYOG window
         String mainHandle = driver.getWindowHandle();
@@ -535,13 +583,13 @@ public class AdvBookingCreate {
                     "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'make payment')]");
             boolean clicked = tryClickWithRetries(driver, wait, js, makePaymentSel, 25, 4, 700);
             if (clicked) {
-                System.out.println("Clicked 'Make Payment'");
+                logger.info("Clicked 'Make Payment'");
                 Thread.sleep(1000);
             } else {
-                System.out.println("'Make Payment' button not found or not clickable, continuing...");
+                logger.info("'Make Payment' button not found or not clickable, continuing...");
             }
         } catch (Exception e) {
-            System.out.println("'Make Payment' error: " + e.getMessage());
+            logger.info("'Make Payment' error: " + e.getMessage());
         }
 
         // -----------------------------
@@ -554,27 +602,27 @@ public class AdvBookingCreate {
                             " contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'pay'))]");
             boolean proceedClicked = tryClickWithRetries(driver, wait, js, proceedSel, 40, 5, 800);
             if (proceedClicked) {
-                System.out.println("Clicked 'Proceed To Pay'");
+                logger.info("Clicked 'Proceed To Pay'");
                 Thread.sleep(2000);
             } else {
-                System.out.println("'Proceed To Pay' not found or not clickable, continuing...");
+                logger.info("'Proceed To Pay' not found or not clickable, continuing...");
             }
         } catch (Exception e) {
-            System.out.println("'Proceed To Pay' error: " + e.getMessage());
+            logger.info("'Proceed To Pay' error: " + e.getMessage());
         }
 
         // -----------------------------
         // STEP 3: "Pay" on UPYOG payment-method page (PAYGOV)
         // -----------------------------
         try {
-            System.out.println("Clicking UPYOG Pay button (STRICT)...");
+            logger.info("Clicking UPYOG Pay button (STRICT)...");
 
             WebElement payBtn = wait.until(ExpectedConditions.visibilityOfElementLocated(
                     By.xpath("//button[contains(@class,'submit-bar') and .//header[normalize-space()='Pay']]")
             ));
-            System.out.println("==== DEBUG STEP 3 ====");
-            System.out.println("After Pay click URL: " + driver.getCurrentUrl());
-            System.out.println("Window handles count: " + driver.getWindowHandles().size());
+            logger.info("==== DEBUG STEP 3 ====");
+            logger.info("After Pay click URL: " + driver.getCurrentUrl());
+            logger.info("Window handles count: " + driver.getWindowHandles().size());
             js.executeScript("arguments[0].scrollIntoView({block:'center'});", payBtn);
             Thread.sleep(500);
 
@@ -585,15 +633,15 @@ public class AdvBookingCreate {
                     .click()
                     .perform();
 
-            System.out.println("UPYOG Pay clicked properly");
+            logger.info("UPYOG Pay clicked properly");
 
             // WAIT for gateway to initialize
             Thread.sleep(4000);
 
-            System.out.println("After Pay click URL: " + driver.getCurrentUrl());
+            logger.info("After Pay click URL: " + driver.getCurrentUrl());
 
         } catch (Exception e) {
-            System.out.println("Error in UPYOG Pay click: " + e.getMessage());
+            logger.info("Error in UPYOG Pay click: " + e.getMessage());
         }
 
         try {
@@ -605,11 +653,11 @@ public class AdvBookingCreate {
                 driver.switchTo().window(handle);
             }
 
-            System.out.println("Switched to payment window");
-            System.out.println("Current URL after switch: " + driver.getCurrentUrl());
+            logger.info("Switched to payment window");
+            logger.info("Current URL after switch: " + driver.getCurrentUrl());
 
         } catch (Exception e) {
-            System.out.println("Window switch failed: " + e.getMessage());
+            logger.info("Window switch failed: " + e.getMessage());
         }
         /* ------------------------------------------------------
        STEP 4 → CLICK "NET BANKING" TAB
@@ -632,22 +680,22 @@ public class AdvBookingCreate {
                 } catch (Exception ignored) {}
             }
             Thread.sleep(1000);
-            System.out.println("==== DEBUG STEP 4 ====");
-            System.out.println("Current URL before NetBanking: " + driver.getCurrentUrl());
-            System.out.println("Iframe count: " + driver.findElements(By.tagName("iframe")).size());
+            logger.info("==== DEBUG STEP 4 ====");
+            logger.info("Current URL before NetBanking: " + driver.getCurrentUrl());
+            logger.info("Iframe count: " + driver.findElements(By.tagName("iframe")).size());
             if (netBankingTab != null) {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", netBankingTab);
                 Thread.sleep(1000);
                 js.executeScript("arguments[0].click();", netBankingTab);
-                System.out.println("Clicked NET BANKING tab");
+                logger.info("Clicked NET BANKING tab");
             } else {
-                System.out.println(" Net Banking tab NOT FOUND — maybe gateway UI changed or hidden.");
+                logger.info(" Net Banking tab NOT FOUND — maybe gateway UI changed or hidden.");
             }
 
             Thread.sleep(1000);
 
         } catch (Exception e) {
-            System.out.println("Error clicking Net Banking tab: " + e.getMessage());
+            logger.info("Error clicking Net Banking tab: " + e.getMessage());
         }
 
         try {
@@ -657,11 +705,11 @@ public class AdvBookingCreate {
 
             if (!iframes.isEmpty()) {
                 driver.switchTo().frame(iframes.get(0));
-                System.out.println("Switched to payment iframe");
+                logger.info("Switched to payment iframe");
             }
 
         } catch (Exception e) {
-            System.out.println("Iframe switch failed: " + e.getMessage());
+            logger.info("Iframe switch failed: " + e.getMessage());
         }
 
     /* ------------------------------------------------------
@@ -669,9 +717,9 @@ public class AdvBookingCreate {
     ------------------------------------------------------ */
         try {
             Thread.sleep(1500);
-            System.out.println("==== DEBUG STEP 5 ====");
-            System.out.println("Trying to find ICICI...");
-            System.out.println("Page contains ICICI text: " + driver.getPageSource().toLowerCase().contains("icici"));
+            logger.info("==== DEBUG STEP 5 ====");
+            logger.info("Trying to find ICICI...");
+            logger.info("Page contains ICICI text: " + driver.getPageSource().toLowerCase().contains("icici"));
             java.util.List<WebElement> iciciOptions =
                     driver.findElements(By.xpath("//*[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'icici')]"));
 
@@ -685,9 +733,9 @@ public class AdvBookingCreate {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", icici);
                 Thread.sleep(200);
                 js.executeScript("arguments[0].click();", icici);
-                System.out.println("Selected ICICI Bank");
+                logger.info("Selected ICICI Bank");
             } else {
-                System.out.println("⚠ ICICI not found — clicking first available bank option");
+                logger.info("⚠ ICICI not found — clicking first available bank option");
 
                 java.util.List<WebElement> bankTiles =
                         driver.findElements(By.xpath("//div[contains(@class,'bank') or contains(@class,'tile')]"));
@@ -697,13 +745,13 @@ public class AdvBookingCreate {
                     js.executeScript("arguments[0].scrollIntoView({block:'center'});", first);
                     Thread.sleep(200);
                     js.executeScript("arguments[0].click();", first);
-                    System.out.println("Clicked fallback BANK tile.");
+                    logger.info("Clicked fallback BANK tile.");
                 }
             }
 
             Thread.sleep(1000);
         } catch (Exception e) {
-            System.out.println("Error selecting bank: " + e.getMessage());
+            logger.info("Error selecting bank: " + e.getMessage());
         }
 
     /* ------------------------------------------------------
@@ -718,15 +766,15 @@ public class AdvBookingCreate {
             boolean ok = tryClickWithRetries(driver, wait, js, payBtn, 30, 5, 600);
 
             if (ok) {
-                System.out.println("Clicked PAY button");
+                logger.info("Clicked PAY button");
             } else {
-                System.out.println("⚠ Pay button NOT FOUND on gateway.");
+                logger.info("⚠ Pay button NOT FOUND on gateway.");
             }
 
             Thread.sleep(1500);
 
         } catch (Exception e) {
-            System.out.println("Error clicking Pay button: " + e.getMessage());
+            logger.info("Error clicking Pay button: " + e.getMessage());
         }
 
     /* ------------------------------------------------------
@@ -745,11 +793,11 @@ public class AdvBookingCreate {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", successBtn);
                 Thread.sleep(2000);
                 js.executeScript("arguments[0].click();", successBtn);
-                System.out.println("Clicked SUCCESS on mock bank");
+                logger.info("Clicked SUCCESS on mock bank");
             }
 
         } catch (Exception e) {
-            System.out.println("Success button not found: " + e.getMessage());
+            logger.info("Success button not found: " + e.getMessage());
         }
         // -----------------------------
         // STEP 8: Switch back to UPYOG window
@@ -757,7 +805,7 @@ public class AdvBookingCreate {
         try {
             driver.switchTo().window(mainHandle);
         } catch (Exception e) {
-            System.out.println("Could not switch back to UPYOG handle directly: " + e.getMessage());
+            logger.info("Could not switch back to UPYOG handle directly: " + e.getMessage());
             // fallback: pick any window that has 'upyog' in URL
             try {
                 java.util.Set<String> handles = driver.getWindowHandles();
@@ -773,7 +821,7 @@ public class AdvBookingCreate {
             } catch (Exception ignored) {}
         }
 
-        System.out.println("Payment flow finished (Card route).");
+        logger.info("Payment flow finished (Card route).");
     }
 
 
@@ -801,12 +849,12 @@ public class AdvBookingCreate {
             if (input.isDisplayed() && input.isEnabled()) {
                 input.clear();
                 input.sendKeys(value);
-                System.out.println("Filled optional field: " + fieldName);
+                logger.info("Filled optional field: " + fieldName);
             } else {
-                System.out.println("Optional field " + fieldName + " not interactable, skipping");
+                logger.info("Optional field " + fieldName + " not interactable, skipping");
             }
         } catch (Exception e) {
-            System.out.println("Optional field " + fieldName + " not found, skipping");
+            logger.info("Optional field " + fieldName + " not found, skipping");
         }
     }
 
@@ -835,7 +883,7 @@ public class AdvBookingCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
         Thread.sleep(200);
         nextButton.click();
-        System.out.println("Clicked Next");
+        logger.info("Clicked Next");
     }
 
     private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
@@ -887,10 +935,10 @@ public class AdvBookingCreate {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
                 Thread.sleep(200);
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-                System.out.println("Selected radio button: " + labelText);
+                logger.info("Selected radio button: " + labelText);
             }
         } catch (Exception e) {
-            System.out.println("Error selecting radio button '" + labelText + "': " + e.getMessage());
+            logger.info("Error selecting radio button '" + labelText + "': " + e.getMessage());
             throw new RuntimeException("Failed to select radio button: " + labelText, e);
         }
     }
@@ -907,7 +955,7 @@ public class AdvBookingCreate {
         );
 
         if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 
@@ -921,7 +969,7 @@ public class AdvBookingCreate {
         try {
             svg.click();
         } catch (ElementClickInterceptedException e) {
-            System.out.println("Normal click intercepted on dropdown svg, using JS dispatch. Reason: " + e.getMessage());
+            logger.info("Normal click intercepted on dropdown svg, using JS dispatch. Reason: " + e.getMessage());
 
             // 2nd try: dispatch a click event manually (no arguments[0].click())
             js.executeScript(
@@ -958,7 +1006,7 @@ public class AdvBookingCreate {
                 );
             }
         } else {
-            System.out.println("No options found in dropdown for index " + dropdownIndex);
+            logger.info("No options found in dropdown for index " + dropdownIndex);
         }
     }
 
@@ -973,7 +1021,7 @@ public class AdvBookingCreate {
                                              int optionIndex) throws InterruptedException {
 
         if (dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " out of range");
+            logger.info("Dropdown index " + dropdownIndex + " out of range");
             return;
         }
 
@@ -999,15 +1047,15 @@ public class AdvBookingCreate {
             throws InterruptedException {
 
         if (index >= fileInputs.size()) {
-            System.out.println(" No file input at index " + index + " for " + filePath);
+            logger.info(" No file input at index " + index + " for " + filePath);
             return;
         }
 
         java.io.File f = new java.io.File(filePath);
-        System.out.println("Attempting upload from: " + f.getAbsolutePath() + "  exists? " + f.exists());
+        logger.info("Attempting upload from: " + f.getAbsolutePath() + "  exists? " + f.exists());
 
         if (!f.exists()) {
-            System.out.println("File does NOT exist on disk. Skipping this input.");
+            logger.info("File does NOT exist on disk. Skipping this input.");
             return;
         }
 
@@ -1019,7 +1067,7 @@ public class AdvBookingCreate {
         Thread.sleep(300);
 
         input.sendKeys(f.getAbsolutePath());
-        System.out.println("Uploaded document into input index " + index);
+        logger.info("Uploaded document into input index " + index);
     }
 
 
@@ -1033,7 +1081,7 @@ public class AdvBookingCreate {
         );
 
         if (index >= fileInputs.size()) {
-            System.out.println("File input index " + index + " not found for path: " + filePath);
+            logger.info("File input index " + index + " not found for path: " + filePath);
             return;
         }
 
@@ -1045,7 +1093,7 @@ public class AdvBookingCreate {
         Thread.sleep(300);
 
         fileInput.sendKeys(filePath);
-        System.out.println("Uploaded file at index " + index + ": " + filePath);
+        logger.info("Uploaded file at index " + index + ": " + filePath);
         Thread.sleep(500);
     }
 }

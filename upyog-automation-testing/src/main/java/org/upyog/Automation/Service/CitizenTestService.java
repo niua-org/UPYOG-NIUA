@@ -14,18 +14,15 @@ public class CitizenTestService {
     @Autowired
     private CommonCitizenTest commonCitizenTest;
 
-    public String runCitizenSideTest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+    public String runCitizenSideTest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String permitNumber) {
         logger.info("Starting {} citizen test", moduleName);
 
-        new Thread(() -> {
-            try {
-               // CommonCitizenTest test = new CommonCitizenTest();
-                commonCitizenTest.runCitizenTest(baseUrl, moduleName, mobileNumber, otp, cityName);
-            } catch (Exception e) {
-                logger.error("Error in citizen test: {}", e.getMessage());
-                e.printStackTrace();
-            }
-        }).start();
+        try {
+            commonCitizenTest.runCitizenTest(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber);
+        } catch (Exception e) {
+            logger.error("Error in citizen test: {}", e.getMessage());
+            e.printStackTrace();
+        }
 
         return moduleName + " test started successfully. Check browser for automation.";
     }

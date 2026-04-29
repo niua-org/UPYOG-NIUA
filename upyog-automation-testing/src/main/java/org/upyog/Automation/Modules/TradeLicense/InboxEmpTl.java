@@ -7,12 +7,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.upyog.Automation.config.WebDriverFactory;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -27,6 +27,8 @@ import java.util.List;
 //@Component
 public class InboxEmpTl {
 
+    private static final Logger logger = LoggerFactory.getLogger(InboxEmpTl.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
@@ -35,8 +37,8 @@ public class InboxEmpTl {
      * Runs automatically when Spring context is initialized
      */
     //@PostConstruct
-    public void InboxEmpTl() {
-        System.out.println("Trade License Employee Inbox Workflow");
+    public void inboxEmpTl() {
+        logger.info("Trade License Employee Inbox Workflow");
         
         // Initialize WebDriver using DriverFactory
         WebDriver driver = webDriverFactory.createDriver();
@@ -60,15 +62,16 @@ public class InboxEmpTl {
             // STEP 5: Collect Payment
             collectPayment(driver, wait);
             
-            System.out.println("Trade License Employee Workflow completed successfully!");
+            logger.info("Trade License Employee Workflow completed successfully!");
             Thread.sleep(50000); // Keep browser open for observation
             
         } catch (Exception e) {
-            System.out.println("Exception in Trade License Employee Workflow: " + e.getMessage());
+            logger.info("Exception in Trade License Employee Workflow: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // Uncomment to close browser after test
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -78,12 +81,12 @@ public class InboxEmpTl {
     private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
         driver.get(ConfigReader.get("employee.base.url"));
         driver.manage().window().maximize();
-        System.out.println("Open the Employee Login Portal");
+        logger.info("Open the Employee Login Portal");
 
         // Enter credentials from configuration
         fillInput(wait, "username", ConfigReader.get("tl.login.username"));
         fillInput(wait, "password", ConfigReader.get("tl.login.password"));
-        System.out.println("Filled username and password");
+        logger.info("Filled username and password");
 
         // Select city dropdown
         selectCityDropdown(driver, wait, actions);
@@ -99,7 +102,7 @@ public class InboxEmpTl {
      * Navigates to Trade License Inbox
      */
     private void navigateToInbox(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Navigating to Trade License Inbox");
+        logger.info("Navigating to Trade License Inbox");
         
         Thread.sleep(300);
         
@@ -108,14 +111,14 @@ public class InboxEmpTl {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", tlInbox);
         Thread.sleep(300);
         js.executeScript("arguments[0].click();", tlInbox);
-        System.out.println("Clicked Trade License Inbox");
+        logger.info("Clicked Trade License Inbox");
     }
 
     /**
      * Searches for and selects application
      */
     private void searchAndSelectApplication(WebDriver driver, WebDriverWait wait) throws InterruptedException {
-        System.out.println("Searching and selecting application");
+        logger.info("Searching and selecting application");
         
         Thread.sleep(1000);
         
@@ -135,28 +138,28 @@ public class InboxEmpTl {
         WebElement appLink = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.linkText(appNumber)));
         appLink.click();
-        System.out.println("Selected application: " + appNumber);
+        logger.info("Selected application: " + appNumber);
     }
 
     /**
      * Executes the complete workflow: Verify and Forward -> Approve -> Pay
      */
     private void runWorkflow(WebDriver driver, WebDriverWait wait) throws InterruptedException {
-        System.out.println("Executing complete workflow");
+        logger.info("Executing complete workflow");
         
         verifyAndForwardStep(driver, wait); // 1st Verify and Forward
         verifyAndForwardStep(driver, wait); // 2nd Verify and Forward
         approveStep(driver, wait);          // Approve
         payStep(driver, wait);              // Pay
         
-        System.out.println("Full workflow completed successfully!");
+        logger.info("Full workflow completed successfully!");
     }
 
     /**
      * Handles payment collection
      */
     private void collectPayment(WebDriver driver, WebDriverWait wait) {
-        System.out.println("Collecting payment");
+        logger.info("Collecting payment");
         
         // Enter mobile number for payment
         WebElement mobileInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("payerMobile")));
@@ -167,7 +170,7 @@ public class InboxEmpTl {
         WebElement collectPaymentButton = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//button[contains(@class, 'submit-bar') and .//header[normalize-space()='Collect Payment']]")));
         collectPaymentButton.click();
-        System.out.println("Payment collected");
+        logger.info("Payment collected");
     }
 
     // WORKFLOW STEP METHODS
@@ -198,7 +201,7 @@ public class InboxEmpTl {
     private void payStep(WebDriver driver, WebDriverWait wait) throws InterruptedException {
         clickTakeActionButton(driver, wait);
         selectMenuOption(driver, wait, "PAY");
-        System.out.println("Clicked PAY in workflow");
+        logger.info("Clicked PAY in workflow");
     }
 
     // UTILITY METHODS
@@ -235,7 +238,7 @@ public class InboxEmpTl {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", takeActionButton);
         Thread.sleep(300);
         takeActionButton.click();
-        System.out.println("Clicked TAKE ACTION button");
+        logger.info("Clicked TAKE ACTION button");
     }
 
     /**
@@ -251,7 +254,7 @@ public class InboxEmpTl {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", option);
                 Thread.sleep(200);
                 option.click();
-                System.out.println("Clicked menu option: " + optionText);
+                logger.info("Clicked menu option: " + optionText);
                 found = true;
                 break;
             }
@@ -266,7 +269,7 @@ public class InboxEmpTl {
         WebElement textarea = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("comments")));
         textarea.clear();
         textarea.sendKeys(comment);
-        System.out.println("Filled comments: " + comment);
+        logger.info("Filled comments: " + comment);
     }
 
     /**
@@ -283,6 +286,6 @@ public class InboxEmpTl {
         } catch (Exception e) {
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", btn);
         }
-        System.out.println("Clicked action button: " + btnText);
+        logger.info("Clicked action button: " + btnText);
     }
 }

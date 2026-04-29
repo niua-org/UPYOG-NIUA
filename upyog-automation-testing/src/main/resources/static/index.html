@@ -31,6 +31,7 @@
         <div class="tabs">
             <div class="tab active" onclick="switchTab('citizen')">Citizen Testing</div>
             <div class="tab" onclick="switchTab('employee')">Employee Testing</div>
+            <div class="tab" onclick="switchTab('vendor')">Vendor Testing</div>
         </div>
 
         <!-- Citizen Testing Form -->
@@ -39,7 +40,17 @@
             <form id="citizenForm">
                 <div class="form-group">
                     <label>Base URL *</label>
-                    <input type="text" name="baseUrl" placeholder="https://upyog-test.niua.org/upyog-ui/citizen/login" required>
+                    <select name="baseUrl" required>
+                        <option value="">Select Base URL</option>
+                        <option value="https://upyog-test.niua.org/upyog-ui/citizen/login">upyog-test.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/upyog-ui/citizen/login">upyog.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/upyog-ui/citizen/login">niuatt.niua.in/upyog-ui/citizen/login</option>
+                        <option value="http://localhost:8080/upyog-ui/citizen/login">localhost:8080/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/cnd-ui/citizen/login">upyog.niua.org/cnd-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/cnd-ui/citizen/login">niuatt.niua.in/cnd-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/sv-ui/citizen/login">upyog.niua.org/sv-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/sv-ui/citizen/login">niuatt.niua.in/sv-ui/citizen/login</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Module Name *</label>
@@ -51,10 +62,12 @@
                         <option value="ADVERTISEMENT">Advertisement</option>
                         <option value="TREE_PRUNING">Tree Pruning</option>
                         <option value="WATER_TANKER">Water Tanker</option>
+                        <option value="WATER_TANKER_VENDOR">Water Tanker Vendor</option>
                         <option value="MOBILE_TOILET">Mobile Toilet</option>
                         <option value="PROPERTY_TAX">Property Tax</option>
                         <option value="PUBLIC_GRIEVANCE_REDRESSAL">Public Grievance Redressal</option>
-                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM">Online Building Plan Approval System</option>
+                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM">Online Building Plan Approval System Create</option>
+                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC">Online Building Plan Approval System OC</option>
                         <option value="EWASTE_MANAGEMENT_SYSTEM">E-Waste</option>
                         <option value="COMMUNITY_HALL_BOOKING">Community Hall Booking</option>
                         <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition</option>
@@ -65,15 +78,33 @@
                 </div>
                 <div class="form-group">
                     <label>Mobile Number *</label>
-                    <input type="text" name="mobileNumber" placeholder="9999999999" required>
+                    <input type="text" name="mobileNumber" value="9999999999" required>
                 </div>
                 <div class="form-group">
                     <label>OTP *</label>
-                    <input type="text" name="otp" placeholder="123456" required>
+                    <input type="text" name="otp" value="123456" required>
                 </div>
                 <div class="form-group">
                     <label>City Name *</label>
-                    <input type="text" name="cityName" placeholder="City A Muncipal Corporation" required>
+                    <select name="cityName" required>
+                        <option value="">Select City</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Sankhali Municipal Council">Sankhali Municipal Council</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Nagpur">Nagpur</option>
+                        <option value="Noida">Noida</option>
+                        <option value="Dharamshala">Dharamshala</option>
+                        <option value="Kurali">Kurali</option>
+                        <option value="Mohali">Mohali</option>
+                        <option value="Patiala">Patiala</option>
+                        <option value="Shimla">Shimla</option>
+                        <option value="State">State</option>
+                        <option value="City A">City A</option>
+                        <option value="City B">City B</option>
+                        <option value="City C">City C</option>
+                        <option value="City D">City D</option>
+                        <option value="City E">City E</option>
+                    </select>
                 </div>
                 <button type="submit">Run Test</button>
             </form>
@@ -86,7 +117,17 @@
             <form id="employeeForm">
                 <div class="form-group">
                     <label>Base URL *</label>
-                    <input type="text" name="baseUrl" placeholder="https://upyog-test.niua.org/sv-ui/employee/user/login" required>
+                    <select name="baseUrl" required>
+                        <option value="">Select Base URL</option>
+                        <option value="https://upyog-test.niua.org/upyog-ui/employee/login">upyog-test.niua.org/upyog-ui/employee/login</option>
+                        <option value="https://upyog.niua.org/upyog-ui/employee/login">upyog.niua.org/upyog-ui/employee/login</option>
+                        <option value="https://niuatt.niua.in/upyog-ui/employee/login">niuatt.niua.in/upyog-ui/employee/login</option>
+                        <option value="http://localhost:8080/upyog-ui/employee/login">localhost:8080/upyog-ui/employee/login</option>
+                        <option value="https://upyog.niua.org/cnd-ui/employee/login">upyog.niua.org/cnd-ui/employee/login</option>
+                        <option value="https://niuatt.niua.in/cnd-ui/employee/login">niuatt.niua.in/cnd-ui/employee/login</option>
+                        <option value="https://upyog.niua.org/sv-ui/employee/login">upyog.niua.org/sv-ui/employee/login</option>
+                        <option value="https://niuatt.niua.in/sv-ui/employee/login">niuatt.niua.in/sv-ui/employee/login</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Module Name *</label>
@@ -97,17 +138,20 @@
                         <option value="TRADE_LICENSE">Trade License</option>
                         <option value="ADVERTISEMENT">Advertisement</option>
                         <option value="TREE_PRUNING">Tree Pruning</option>
+                        <option value="TREE_PRUNING_VERIFIER">Tree Pruning Verifier</option>
                         <option value="WATER_TANKER">Water Tanker</option>
                         <option value="MOBILE_TOILET">Mobile Toilet</option>
                         <option value="PROPERTY_TAX">Property Tax</option>
                         <option value="PUBLIC_GRIEVANCE_REDRESSAL">Public Grievance Redressal</option>
                         <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM">Online Building Plan Approval System</option>
+                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC">Online Building Plan Approval System OC</option>
                         <option value="EWASTE_MANAGEMENT_SYSTEM">E-Waste</option>
                         <option value="ASSET_MANAGEMENT_SYSTEM">Asset Management</option>
                         <option value="COMMUNITY_HALL_BOOKING">Community Hall Booking </option>
                         <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition </option>
                         <option value="DESLUDGING_SERVICE">Desludging Service </option>
-                        <option value="WATER_AND_SEWERAGE">Water And Sewerage Service</option>
+                        <option value="WATER_AND_SEWERAGE">Water Service</option>
+                        <option value="WATER_AND_SEWERAGE">Sewerage Service</option>
                         <option value="FIRE_NOC">Fire NOC</option>
                     </select>
                 </div>
@@ -127,6 +171,75 @@
             </form>
             <div id="employeeResult" class="result"></div>
         </div>
+
+        <!-- Vendor Testing Form -->
+        <div id="vendor" class="tab-content">
+            <h2>Vendor Application Testing</h2>
+            <form id="vendorForm">
+                <div class="form-group">
+                    <label>Base URL *</label>
+                    <select name="baseUrl" required>
+                        <option value="">Select Base URL</option>
+                        <option value="https://upyog-test.niua.org/upyog-ui/citizen/login">upyog-test.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/upyog-ui/citizen/login">upyog.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/upyog-ui/citizen/login">niuatt.niua.in/upyog-ui/citizen/login</option>
+                        <option value="http://localhost:8080/upyog-ui/citizen/login">localhost:8080/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/cnd-ui/citizen/login">upyog.niua.org/cnd-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/cnd-ui/citizen/login">niuatt.niua.in/cnd-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/sv-ui/citizen/login">upyog.niua.org/sv-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/sv-ui/citizen/login">niuatt.niua.in/sv-ui/citizen/login</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Module Name *</label>
+                    <select name="moduleName" required>
+
+
+                        <option value="WATER_TANKER_VENDOR">Water Tanker Vendor</option>
+                        <option value="MOBILE_TOILET_VENDOR">Mobile Toilet Vendor</option>
+                        <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition Vendor</option>
+
+
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input type="text" name="mobileNumber" placeholder="9999999999" required>
+                </div>
+                <div class="form-group">
+                    <label>OTP *</label>
+                    <input type="text" name="otp" value="123456" required>
+                </div>
+                <div class="form-group">
+                    <label>City Name *</label>
+                    <select name="cityName" required>
+                        <option value="">Select City</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Sankhali Municipal Council">Sankhali Municipal Council</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Nagpur">Nagpur</option>
+                        <option value="Noida">Noida</option>
+                        <option value="Dharamshala">Dharamshala</option>
+                        <option value="Kurali">Kurali</option>
+                        <option value="Mohali">Mohali</option>
+                        <option value="Patiala">Patiala</option>
+                        <option value="Shimla">Shimla</option>
+                        <option value="State">State</option>
+                        <option value="City A">City A</option>
+                        <option value="City B">City B</option>
+                        <option value="City C">City C</option>
+                        <option value="City D">City D</option>
+                        <option value="City E">City E</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Application Number</label>
+                    <input type="text" name="applicationNumber" placeholder="WT-1013-001139">
+                </div>
+                <button type="submit">Run Test</button>
+            </form>
+            <div id="vendorResult" class="result"></div>
+        </div>
     </div>
 
     <script>
@@ -136,6 +249,10 @@
             event.target.classList.add('active');
             document.getElementById(tab).classList.add('active');
         }
+
+         // =========================
+         // CITIZEN FORM SUBMIT
+         // =========================
 
         document.getElementById('citizenForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -148,7 +265,7 @@
             resultDiv.textContent = 'Running test...';
 
             try {
-                window.open('http://13.201.2.162:8000', '_blank');
+                window.open('http://65.0.8.57:8000', '_blank');
                 
                 const response = await fetch('/api/test/citizen', {
                     method: 'POST',
@@ -164,6 +281,10 @@
             }
         });
 
+       // =========================
+       // EMPLOYEE FORM SUBMIT
+       // =========================
+
         document.getElementById('employeeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -175,7 +296,7 @@
             resultDiv.textContent = 'Running test...';
 
             try {
-                window.open('http://13.201.2.162:8000', '_blank');
+                window.open('http://65.0.8.57:8080', '_blank');
                 
                 const response = await fetch('/api/test/employee', {
                     method: 'POST',
@@ -190,6 +311,81 @@
                 resultDiv.textContent = 'Error: ' + error.message;
             }
         });
+
+        // =========================
+       // VENDOR FORM SUBMIT
+       // =========================
+       document.getElementById('vendorForm').addEventListener('submit', async (e) => {
+           e.preventDefault();
+           const formData = new FormData(e.target);
+           const data = Object.fromEntries(formData);
+
+
+           const resultDiv = document.getElementById('vendorResult');
+           resultDiv.style.display = 'block';
+           resultDiv.className = 'result';
+           resultDiv.textContent = 'Running test...';
+
+
+           try {
+           window.open('http://65.0.8.57:8000', '_blank');
+               const response = await fetch('/api/test/vendor', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify(data)
+               });
+               const result = await response.text();
+               resultDiv.className = 'result success';
+               resultDiv.textContent = result;
+           } catch (error) {
+               resultDiv.className = 'result error';
+               resultDiv.textContent = 'Error: ' + error.message;
+           }
+       });
+       // =========================
+       // AUTO-FILL LOGIC (MODULE + BASE URL)
+       // =========================
+       document.querySelectorAll("select[name='moduleName']").forEach(select => {
+           select.addEventListener("change", function () {
+
+               const form = this.closest("form");
+
+
+               const mobileField = form.querySelector("input[name='mobileNumber']");
+               const otpField = form.querySelector("input[name='otp']");
+               const baseUrlField = form.querySelector("[name='baseUrl']");
+               if (!mobileField || !otpField) return;
+               let mobile = "9999999999";
+               let otp = "123456";
+               const baseUrl = baseUrlField ? baseUrlField.value : "";
+               switch (this.value) {
+                   case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
+                       //  Base URL based switch
+                       if (baseUrl.includes("niuatt.niua")) {
+                           mobile = "7272727216"; // Architect (NIUATT)
+                       } else if (baseUrl.includes("upyog.niua")) {
+                           mobile = "8888888881"; // Architect (UPYOG)
+                       }
+                       break;
+                   default:
+                       break;
+               }
+               switch (this.value) {
+                   case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
+                       //  Base URL based switch
+                       if (baseUrl.includes("niuatt.niua")) {
+                           mobile = "7272727216"; // Architect (NIUATT)
+                       } else if (baseUrl.includes("upyog.niua")) {
+                           mobile = "8888888881"; // Architect (UPYOG)
+                       }
+                       break;
+                   default:
+                       break;
+               }
+               mobileField.value = mobile;
+               otpField.value = otp;
+           });
+       });
     </script>
 </body>
 </html>

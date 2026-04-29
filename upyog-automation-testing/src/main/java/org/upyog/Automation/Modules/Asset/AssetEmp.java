@@ -9,25 +9,28 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.upyog.Automation.config.WebDriverFactory;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 
 @Component
 public class AssetEmp {
 
+    private static final Logger logger = LoggerFactory.getLogger(AssetEmp.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void AssetEmpReg() {
+    public void assetEmpReg() {
         assetInboxEmp(ConfigReader.get("employee.base.url"),
-                ConfigReader.get("app.login.username"),
-                ConfigReader.get("app.login.password"),
+                ConfigReader.get("ast.login.username"),
+                ConfigReader.get("ast.login.password"),
                 ConfigReader.get("ast.application.number"));
     }
     public void assetInboxEmp(String baseUrl, String username, String password, String applicationNumber) {
-        System.out.println("Trade License Employee Workflow");
+        logger.info("Trade License Employee Workflow");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -52,10 +55,12 @@ public class AssetEmp {
 
 
         } catch (Exception e) {
-            System.out.println("Exception in Asset Management Employee Workflow: " + e.getMessage());
+            logger.info("Exception in Asset Management Employee Workflow: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -66,11 +71,11 @@ public class AssetEmp {
     private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String username, String password) throws InterruptedException {
         driver.get(baseUrl);
         driver.manage().window().maximize();
-        System.out.println("Open the Employee Login Portal");
+        logger.info("Open the Employee Login Portal");
 
         fillInput(wait, "username", username);
         fillInput(wait, "password", password);
-        System.out.println("Filled username and password");
+        logger.info("Filled username and password");
 
         selectCityDropdown(driver, wait, actions);
         clickButton(wait, js, "//button[contains(@class, 'submit-bar') and .//header[text()='Continue']]");
@@ -85,7 +90,7 @@ public class AssetEmp {
                                        JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Clicking Register Asset under Asset MCD...");
+        logger.info("Clicking Register Asset under Asset MCD...");
 
         By registerAsset = By.xpath(
                 "//span[text()='Asset MCD']" +
@@ -102,7 +107,7 @@ public class AssetEmp {
         Thread.sleep(300);
         js.executeScript("arguments[0].click();", element);
 
-        System.out.println("Clicked Register Asset under Asset MCD");
+        logger.info("Clicked Register Asset under Asset MCD");
     }
 
 
@@ -113,7 +118,7 @@ public class AssetEmp {
     private void fillForm(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Start filling Asset Details form");
+        logger.info("Start filling Asset Details form");
 
         // TOP SECTION
         selectDropdownByIndex(driver, wait, js, 0, 0); // Financial Year
@@ -133,7 +138,7 @@ public class AssetEmp {
 // verify asset id
         WebElement assetIdField = driver.findElement(By.xpath("//input[@name='assetId']"));
         String assetId = assetIdField.getAttribute("value");
-        System.out.println("Generated Asset ID: " + assetId);
+        logger.info("Generated Asset ID: " + assetId);
 
 // next dropdown
         selectDropdownByIndex(driver, wait, js, 4, 0); // Acquisition Mode
@@ -192,7 +197,7 @@ public class AssetEmp {
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Asset Application - Summary Page");
+        logger.info("Submitting Asset Application - Summary Page");
         Thread.sleep(3000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -203,10 +208,10 @@ public class AssetEmp {
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -217,7 +222,7 @@ public class AssetEmp {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Asset Managenent application: Submit clicked");
+        logger.info("Asset Managenent application: Submit clicked");
 Thread.sleep(3000);
     }
 
@@ -265,7 +270,7 @@ Thread.sleep(3000);
         Thread.sleep(400);
 
         if(!input.isEnabled() || input.getAttribute("readonly") != null){
-            System.out.println("Skipping readonly field: " + labelText);
+            logger.info("Skipping readonly field: " + labelText);
             return;
         }
 
@@ -275,7 +280,7 @@ Thread.sleep(3000);
 
         Thread.sleep(500);
 
-        System.out.println("Filled " + labelText);
+        logger.info("Filled " + labelText);
     }
 
     private void fillDateByLabel(WebDriver driver,
@@ -325,7 +330,7 @@ Thread.sleep(3000);
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", takeActionButton);
             Thread.sleep(300);
             takeActionButton.click();
-            System.out.println("Clicked TAKE ACTION button");
+            logger.info("Clicked TAKE ACTION button");
         }
 
         private void handleTakeActionMenu(WebDriver driver, WebDriverWait wait) throws InterruptedException {
@@ -337,24 +342,24 @@ Thread.sleep(3000);
                     String text = option.getText().trim().toUpperCase();
                     if (text.equals("VERIFY")) {
                         option.click();
-                        System.out.println("Clicked VERIFY");
+                        logger.info("Clicked VERIFY");
                         handlePopupAndSubmit(driver, wait, "Automated verification comment.",
                                 ConfigReader.get("document.identity.proof"));
                         break;
                     } else if (text.equals("APPROVE")) {
                         option.click();
-                        System.out.println("Clicked APPROVE");
+                        logger.info("Clicked APPROVE");
                         handlePopupAndSubmit(driver, wait, "Automated approval comment.",
                                 ConfigReader.get("document.identity.proof"));
                         break;
                     } else if (text.equals("PAY")) {
                         option.click();
-                        System.out.println("Clicked PAY");
+                        logger.info("Clicked PAY");
                         break;
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Take Action Menu not found or no valid option present: " + e.getMessage());
+                logger.info("Take Action Menu not found or no valid option present: " + e.getMessage());
             }
         }
 
@@ -365,7 +370,7 @@ Thread.sleep(3000);
 
             WebElement fileInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("workflow-doc")));
             fileInput.sendKeys(filePath);
-            System.out.println("Document uploaded");
+            logger.info("Document uploaded");
 
             List<WebElement> verifyButtons = driver.findElements(By.xpath("//button[contains(@class, 'selector-button-primary') and .//h2[normalize-space()='Verify']]"));
             List<WebElement> approveButtons = driver.findElements(By.xpath("//button[contains(@class, 'selector-button-primary') and .//h2[normalize-space()='Approve']]"));
@@ -373,10 +378,10 @@ Thread.sleep(3000);
             WebElement actionButton = null;
             if (!verifyButtons.isEmpty()) {
                 actionButton = verifyButtons.get(0);
-                System.out.println("Clicking Verify button");
+                logger.info("Clicking Verify button");
             } else if (!approveButtons.isEmpty()) {
                 actionButton = approveButtons.get(0);
-                System.out.println("Clicking Approve button");
+                logger.info("Clicking Approve button");
             } else {
                 throw new RuntimeException("Neither Verify nor Approve button found!");
             }
@@ -394,7 +399,7 @@ Thread.sleep(3000);
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
         Thread.sleep(200);
         nextButton.click();
-        System.out.println("Clicked Next");
+        logger.info("Clicked Next");
     }
 
     private void selectDropdownByIndex(WebDriver driver,
@@ -437,7 +442,7 @@ Thread.sleep(3000);
 
             } catch (StaleElementReferenceException e) {
 
-                System.out.println("Retrying dropdown due to React re-render...");
+                logger.info("Retrying dropdown due to React re-render...");
                 Thread.sleep(500);
 
             }
@@ -461,11 +466,11 @@ Thread.sleep(3000);
         ((JavascriptExecutor) driver)
                 .executeScript("arguments[0].scrollIntoView({block:'center'});", input);
 
-        Thread.sleep(1000);  // 🔹 Pause before click (1 sec)
+        Thread.sleep(1000);  // Pause before click (1 sec)
 
         input.click();
 
-        Thread.sleep(2000);  // 🔹 Wait 2 sec after dropdown opens
+        Thread.sleep(2000);  // Wait 2 sec after dropdown opens
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector("div.options-card")
@@ -522,7 +527,7 @@ Thread.sleep(3000);
 
         Thread.sleep(500);
 
-        System.out.println("Uploaded file for " + labelText);
+        logger.info("Uploaded file for " + labelText);
     }
 
     private void selectDropdownOption(WebDriver driver,
@@ -537,7 +542,7 @@ Thread.sleep(3000);
         );
 
         if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 
@@ -551,7 +556,7 @@ Thread.sleep(3000);
         try {
             svg.click();
         } catch (ElementClickInterceptedException e) {
-            System.out.println("Normal click intercepted on dropdown svg, using JS dispatch. Reason: " + e.getMessage());
+            logger.info("Normal click intercepted on dropdown svg, using JS dispatch. Reason: " + e.getMessage());
 
             // 2nd try: dispatch a click event manually (no arguments[0].click())
             js.executeScript(
@@ -588,7 +593,7 @@ Thread.sleep(3000);
                 );
             }
         } else {
-            System.out.println("No options found in dropdown for index " + dropdownIndex);
+            logger.info("No options found in dropdown for index " + dropdownIndex);
         }
     }
 
@@ -640,7 +645,7 @@ Thread.sleep(3000);
                 }
 
             } catch (StaleElementReferenceException e) {
-                System.out.println("Stale detected. Retrying dropdown: " + labelText);
+                logger.info("Stale detected. Retrying dropdown: " + labelText);
                 Thread.sleep(500);
             }
         }
@@ -711,7 +716,7 @@ Thread.sleep(3000);
         Thread.sleep(400);
 
         if(!input.isEnabled() || input.getAttribute("readonly") != null){
-            System.out.println("Skipping readonly field index: " + index);
+            logger.info("Skipping readonly field index: " + index);
             return;
         }
 
@@ -732,7 +737,7 @@ Thread.sleep(3000);
         );
 
         if (index >= fileInputs.size()) {
-            System.out.println("File input index " + index + " not found for path: " + filePath);
+            logger.info("File input index " + index + " not found for path: " + filePath);
             return;
         }
 
@@ -744,7 +749,7 @@ Thread.sleep(3000);
         Thread.sleep(300);
 
         fileInput.sendKeys(filePath);
-        System.out.println("Uploaded file at index " + index + ": " + filePath);
+        logger.info("Uploaded file at index " + index + ": " + filePath);
         Thread.sleep(500);
     }
 }

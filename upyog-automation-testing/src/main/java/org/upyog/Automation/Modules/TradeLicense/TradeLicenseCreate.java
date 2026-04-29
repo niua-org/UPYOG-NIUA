@@ -9,6 +9,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
@@ -27,6 +29,8 @@ import java.time.Duration;
 @Component
 public class TradeLicenseCreate {
 
+    private static final Logger logger = LoggerFactory.getLogger(TradeLicenseCreate.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
@@ -35,16 +39,16 @@ public class TradeLicenseCreate {
      * Runs automatically when Spring context is initialized
      */
     //@PostConstruct
-    public void TradeLicenseReg() {
-        TradeLicenceCitizenReg(ConfigReader.get("citizen.base.url"),
+    public void tradeLicenseReg() {
+        tradeLicenceCitizenReg(ConfigReader.get("citizen.base.url"),
                                "Trade License",
                                ConfigReader.get("citizen.mobile.number"),
                                ConfigReader.get("test.otp"),
                                ConfigReader.get("test.city.name"));
     }
 
-    public void TradeLicenceCitizenReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Trade license by Citizen");
+    public void tradeLicenceCitizenReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Trade license by Citizen");
 
         // Initialize WebDriver using WebDriverFactory
         WebDriver driver = webDriverFactory.createDriver();
@@ -80,14 +84,16 @@ public class TradeLicenseCreate {
             // STEP 9: Submit Application
             submitApplication(driver, wait, js);
             
-            System.out.println("Trade License Registration completed successfully!");
+            logger.info("Trade License Registration completed successfully!");
             Thread.sleep(50000); // Keep browser open for observation
             
         } catch (Exception e) {
-            System.out.println("Exception in Trade License Registration: " + e.getMessage());
+            logger.info("Exception in Trade License Registration: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            // driver.quit(); // Commented out to keep browser open for observation
+        }finally {
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -96,7 +102,7 @@ public class TradeLicenseCreate {
      */
     private void performCitizenLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String mobileNumber, String otp, String cityName) throws InterruptedException {
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Enter mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -136,7 +142,7 @@ public class TradeLicenseCreate {
      * Navigates to Trade License application
      */
     private void navigateToTradeLicense(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Navigating to Trade License Application");
+        logger.info("Navigating to Trade License Application");
         
         // Click Trade License sidebar link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -158,7 +164,7 @@ public class TradeLicenseCreate {
      * Fills business details
      */
     private void fillBusinessDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Filling Business Details");
+        logger.info("Filling Business Details");
         
         // Business name
         fillInput(wait, "TradeName", "Institute");
@@ -185,7 +191,7 @@ public class TradeLicenseCreate {
      * Fills trade details
      */
     private void fillTradeDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Filling Trade Details");
+        logger.info("Filling Trade Details");
         
         // Select Goods
         selectRadioButtonByLabel(driver, "Goods");
@@ -220,7 +226,7 @@ public class TradeLicenseCreate {
      * Fills property details
      */
     private void fillPropertyDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Filling Property Details");
+        logger.info("Filling Property Details");
         
         // Select property type
         selectDropdownOption(driver, wait, 0);
@@ -279,7 +285,7 @@ public class TradeLicenseCreate {
      * Fills owner details
      */
     private void fillOwnerDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Filling Owner Details");
+        logger.info("Filling Owner Details");
         
         // Select ownership type
         selectRadioButtonByLabel(driver, "Institutional - Government");
@@ -290,7 +296,7 @@ public class TradeLicenseCreate {
      * Fills institutional details
      */
     private void fillInstitutionalDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Filling Institutional Details");
+        logger.info("Filling Institutional Details");
         
         // Fill institution name
         fillInput(wait, "institutionName", "kunal gaurav");
@@ -305,7 +311,7 @@ public class TradeLicenseCreate {
         
         clickButtonByHeader(driver, wait, "Next");
 
-        System.out.println("for checkbox");
+        logger.info("for checkbox");
         // Select same address checkbox
         Thread.sleep(3000);
         WebElement checkbox = driver.findElement(By.cssSelector("input[type='checkbox'][value=\"Same as Trade's Address\"]"));
@@ -313,7 +319,7 @@ public class TradeLicenseCreate {
             js.executeScript("arguments[0].scrollIntoView(true);", checkbox);
             Thread.sleep(500);
             js.executeScript("arguments[0].click();", checkbox);
-            System.out.println("Checkbox selected");
+            logger.info("Checkbox selected");
         }
         
         clickButtonByHeader(driver, wait, "Next");
@@ -323,7 +329,7 @@ public class TradeLicenseCreate {
      * Uploads required documents
      */
     private void uploadDocuments(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
         
         String filePath = ConfigReader.get("tl.document.identity.proof");
 
@@ -338,7 +344,7 @@ public class TradeLicenseCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", fileInput);
         Thread.sleep(200);
         fileInput.sendKeys(getAbsolutePath(filePathforimage));
-        System.out.println("Third document uploaded");
+        logger.info("Third document uploaded");
         
         clickButtonByHeader(driver, wait, "Next");
     }
@@ -347,7 +353,7 @@ public class TradeLicenseCreate {
      * Submits the application
      */
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Submitting Application");
+        logger.info("Submitting Application");
         
         WebElement submitButton = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit Application']]")));
@@ -356,7 +362,7 @@ public class TradeLicenseCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Application submitted successfully");
+        logger.info("Application submitted successfully");
     }
 
     // UTILITY METHODS
@@ -438,10 +444,10 @@ public class TradeLicenseCreate {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
                 Thread.sleep(200);
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-                System.out.println("Selected radio button: " + labelText);
+                logger.info("Selected radio button: " + labelText);
             }
         } catch (Exception e) {
-            System.out.println("Error selecting radio button '" + labelText + "': " + e.getMessage());
+            logger.info("Error selecting radio button '" + labelText + "': " + e.getMessage());
             throw new RuntimeException("Failed to select radio button: " + labelText, e);
         }
     }
@@ -451,13 +457,13 @@ public class TradeLicenseCreate {
      */
     private void debugRadioButtons(WebDriver driver) {
         try {
-            System.out.println("=== DEBUG: Available radio buttons ===");
+            logger.info("=== DEBUG: Available radio buttons ===");
             List<WebElement> radios = driver.findElements(By.xpath("//input[@type='radio']"));
             for (int i = 0; i < Math.min(radios.size(), 10); i++) {
                 WebElement radio = radios.get(i);
                 String value = radio.getAttribute("value");
                 String name = radio.getAttribute("name");
-                System.out.println("Radio " + (i+1) + ": value='" + value + "', name='" + name + "'");
+                logger.info("Radio " + (i+1) + ": value='" + value + "', name='" + name + "'");
             }
 
             List<WebElement> labels = driver.findElements(By.tagName("label"));
@@ -465,12 +471,12 @@ public class TradeLicenseCreate {
                 WebElement label = labels.get(i);
                 String text = label.getText().trim();
                 if (!text.isEmpty()) {
-                    System.out.println("Label " + (i+1) + ": '" + text + "'");
+                    logger.info("Label " + (i+1) + ": '" + text + "'");
                 }
             }
-            System.out.println("=== END DEBUG ===");
+            logger.info("=== END DEBUG ===");
         } catch (Exception e) {
-            System.out.println("Debug failed: " + e.getMessage());
+            logger.info("Debug failed: " + e.getMessage());
         }
     }
 
@@ -607,7 +613,7 @@ public class TradeLicenseCreate {
                 js.executeScript("arguments[0].scrollIntoView({block: 'center'});", option);
                 Thread.sleep(200);
                 js.executeScript("arguments[0].click();", option);
-                System.out.println("Selected " + cityName + " from dropdown");
+                logger.info("Selected " + cityName + " from dropdown");
                 break;
             }
         }
@@ -621,7 +627,7 @@ public class TradeLicenseCreate {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", fileInput);
         Thread.sleep(200);
         fileInput.sendKeys(getAbsolutePath(filePath));
-        System.out.println("Document uploaded: " + filePath);
+        logger.info("Document uploaded: " + filePath);
 
         WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//button[@class='submit-bar ' and @type='submit'][.//header[text()='Next']]")));

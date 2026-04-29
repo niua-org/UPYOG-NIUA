@@ -7,15 +7,24 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.upyog.Automation.Utils.DriverFactory;
+import org.upyog.Automation.config.WebDriverFactory;
 
 import java.io.File;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class DesludgingCreate {
+
+    private static final Logger logger= LoggerFactory.getLogger(DesludgingCreate.class);
+
+    @Autowired
+    private WebDriverFactory webDriverFactory;
     //@PostConstruct
 
     public void desludgingReg() {
@@ -27,9 +36,9 @@ public class DesludgingCreate {
     }
 
     public void desludgingReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Community Hall Booking by Citizen");
+        logger.info("Community Hall Booking by Citizen");
 
-        WebDriver driver = DriverFactory.createChromeDriver();
+        WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = DriverFactory.createWebDriverWait(driver);
         JavascriptExecutor js = (JavascriptExecutor) driver;
         Actions actions = new Actions(driver);
@@ -94,10 +103,12 @@ public class DesludgingCreate {
 
 
         } catch (Exception e) {
-            System.out.println("Exception in Desludging Service: " + e.getMessage());
+            logger.info("Exception in Desludging Service: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            // driver.quit();
+        }finally {
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -110,7 +121,7 @@ public class DesludgingCreate {
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -155,20 +166,20 @@ public class DesludgingCreate {
     private void navigateToCommunityHallBooking(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Community Hall Booking");
+        logger.info("Navigating to Community Hall Booking");
 
         // Sidebar Desludging Service link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[@href='/upyog-ui/citizen/fsm-home']"))));
 
         Thread.sleep(2000);
-        System.out.println("Reached Desludging Service home page");
+        logger.info("Reached Desludging Service home page");
 
         // "Apply for Emptying of Septic Tank / Pit" link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[@href='/upyog-ui/citizen/fsm/new-application']"))));
 
-        System.out.println("Clicked Apply for Emptying of Septic Tank / Pit link");
+        logger.info("Clicked Apply for Emptying of Septic Tank / Pit link");
     }
 
     // =====================================================================
@@ -176,9 +187,9 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void serviceRequest(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Selecting the service");
+        logger.info("Selecting the service");
         Thread.sleep(500);
 
         selectDropdownByIndex(driver, wait, js,0,1);
@@ -199,14 +210,14 @@ public class DesludgingCreate {
 
     private void searchProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
-        System.out.println("Search Property by Mobile Number");
+        logger.info("Search Property by Mobile Number");
 
         try {
             selectDropdownByIndex(driver, wait, js, 0, 0);
             Thread.sleep(1000);
-            System.out.println("Selected city");
+            logger.info("Selected city");
         } catch (Exception e) {
-            System.out.println("City dropdown not found: " + e.getMessage());
+            logger.info("City dropdown not found: " + e.getMessage());
         }
 
         Thread.sleep(1000);
@@ -241,7 +252,7 @@ public class DesludgingCreate {
 
         searchBtn.click();Thread.sleep(1000);
 
-        System.out.println("Clicked Search button");
+        logger.info("Clicked Search button");
     }
 
     // =====================================================================
@@ -252,7 +263,7 @@ public class DesludgingCreate {
     private void selectSearchedProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting Searched Property");
+        logger.info("Selecting Searched Property");
         WebElement selectBtn = wait.until(
                 ExpectedConditions.elementToBeClickable(
                         By.xpath("(//button[normalize-space()='Select'])[1]")
@@ -264,7 +275,7 @@ public class DesludgingCreate {
 
         js.executeScript("arguments[0].click();", selectBtn);
 
-        System.out.println("Clicked Select button");
+        logger.info("Clicked Select button");
     }
 
     // =====================================================================
@@ -272,9 +283,9 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void chooseType(WebDriver driver,WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Select Type of Property ");
+        logger.info("Select Type of Property ");
         Thread.sleep(500);
 
         selectRadioButtonByLabel(driver, "Residential");
@@ -282,7 +293,7 @@ public class DesludgingCreate {
 
         clickNextButton(driver, wait, js);
         Thread.sleep(500);
-        System.out.println("Type of Property Selected");
+        logger.info("Type of Property Selected");
     }
 
     // =====================================================================
@@ -292,7 +303,7 @@ public class DesludgingCreate {
     private void chooseSubType(WebDriver driver,WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
 
-        System.out.println("Select Sub Type of Property ");
+        logger.info("Select Sub Type of Property ");
         Thread.sleep(500);
 
         selectRadioButtonByLabel(driver, "Independent house");
@@ -300,7 +311,7 @@ public class DesludgingCreate {
 
         clickNextButton(driver, wait, js);
         Thread.sleep(500);
-        System.out.println("Type of Sub Property Selected");
+        logger.info("Type of Sub Property Selected");
     }
 
     // =====================================================================
@@ -310,7 +321,7 @@ public class DesludgingCreate {
     private void clickPinPropertyLocation(WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Clicking Skip and Continue");
+        logger.info("Clicking Skip and Continue");
 
         WebElement skipLink = wait.until(
                 ExpectedConditions.elementToBeClickable(
@@ -324,7 +335,7 @@ public class DesludgingCreate {
         js.executeScript("arguments[0].click();", skipLink);
 
         Thread.sleep(1000);
-        System.out.println("Skip and Continue clicked successfully");
+        logger.info("Skip and Continue clicked successfully");
     }
 
     // =====================================================================
@@ -334,7 +345,7 @@ public class DesludgingCreate {
     private void fillPincodeDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Pincode");
+        logger.info("Filling Pincode");
         Thread.sleep(1000);
 
         // Try multiple selectors for pincode input
@@ -350,7 +361,7 @@ public class DesludgingCreate {
                 pincodeInput = wait.until(ExpectedConditions.elementToBeClickable(selector));
                 break;
             } catch (Exception e) {
-                System.out.println("Pincode selector failed: " + selector);
+                logger.info("Pincode selector failed: " + selector);
             }
         }
 
@@ -361,7 +372,7 @@ public class DesludgingCreate {
             pincodeInput.sendKeys("143001");
 
         } else {
-            System.out.println("Pincode input not found");
+            logger.info("Pincode input not found");
         }
 
         clickNextButton(driver, wait, js);
@@ -374,7 +385,7 @@ public class DesludgingCreate {
 
     private void fillPropertyAddressDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
-        System.out.println("Selecting City and Locality");
+        logger.info("Selecting City and Locality");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "Within Ulb Limits");
@@ -394,9 +405,9 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void fillPropertyAddressDetail2(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Provide Property Details");
+        logger.info("Provide Property Details");
 
         selectDropdownByIndex(driver, wait, js,0,0);
         Thread.sleep(500);
@@ -410,10 +421,10 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void slumArea(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-         throws InterruptedException{
+            throws InterruptedException{
 
-             System.out.println("Selecting Slum Area or Not");
-             Thread.sleep(500);
+        logger.info("Selecting Slum Area or Not");
+        Thread.sleep(500);
 
         selectRadioButtonByLabel(driver, "NO");
         Thread.sleep(1000);
@@ -421,7 +432,7 @@ public class DesludgingCreate {
         clickNextButton(driver, wait, js);
         Thread.sleep(1000);
 
-        System.out.println("Selected Slum Or Not");
+        logger.info("Selected Slum Or Not");
 
     }
 
@@ -430,9 +441,9 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void providePropertyDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Filling Street name and House No.");
+        logger.info("Filling Street name and House No.");
         Thread.sleep(500);
 
         List<WebElement> inputs = wait.until(
@@ -443,7 +454,7 @@ public class DesludgingCreate {
 
         if (inputs.size() >= 2)
 
-        fillInputField(js, inputs.get(0), "Test Street");
+            fillInputField(js, inputs.get(0), "Test Street");
         Thread.sleep(500);
 
         fillInputField(js, inputs.get(1), "89");
@@ -461,7 +472,7 @@ public class DesludgingCreate {
     private void fillLandMarkDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Landmark");
+        logger.info("Filling Landmark");
 
         // textarea (NOT input)
         WebElement landmarkTextarea = wait.until(
@@ -485,7 +496,7 @@ public class DesludgingCreate {
 
         clickNextButton(driver, wait, js);
 
-        System.out.println("Landmark submitted successfully");
+        logger.info("Landmark submitted successfully");
     }
 
     // =====================================================================
@@ -493,9 +504,9 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void choosePitType(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Choose Septic Tank Type");
+        logger.info("Choose Septic Tank Type");
         Thread.sleep(500);
 
         selectRadioButtonByLabel(driver, "Conventional septic tank");
@@ -504,7 +515,7 @@ public class DesludgingCreate {
         clickNextButton(driver, wait, js);
         Thread.sleep(500);
 
-        System.out.println("Selected the Septic Tank Type");
+        logger.info("Selected the Septic Tank Type");
 
     }
 
@@ -513,9 +524,9 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void roadWidth(WebDriver driver,WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Filling Road Details");
+        logger.info("Filling Road Details");
         Thread.sleep(500);
 
         List<WebElement> inputs = wait.until(
@@ -544,10 +555,10 @@ public class DesludgingCreate {
     private void uploadComplaintPhoto(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Uploading complaint photo");
+        logger.info("Uploading complaint photo");
 
         String photoPath = ConfigReader.get("document.pitPhoto.proof");
-        System.out.println("PHOTO PATH: " + photoPath);
+        logger.info("PHOTO PATH: " + photoPath);
 
         File f = new File(photoPath);
         if (!f.exists()) {
@@ -570,7 +581,7 @@ public class DesludgingCreate {
 
         // Upload
         fileInput.sendKeys(f.getAbsolutePath());
-        System.out.println("Complaint photo uploaded");
+        logger.info("Complaint photo uploaded");
 
         Thread.sleep(2000);
 
@@ -584,7 +595,7 @@ public class DesludgingCreate {
     private void paymentDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Payment Details Page");
+        logger.info("Payment Details Page");
         Thread.sleep(1000);
 
         // Just ensure field visible (optional)
@@ -592,7 +603,7 @@ public class DesludgingCreate {
                 By.cssSelector("input[type='number']")
         ));
 
-        System.out.println("Amount auto-filled: " + amountInput.getAttribute("value"));
+        logger.info("Amount auto-filled: " + amountInput.getAttribute("value"));
 
         // ================================
         // CLICK NEXT
@@ -614,7 +625,7 @@ public class DesludgingCreate {
                 nextBtn
         );
 
-        System.out.println("Clicked Next on Payment Page");
+        logger.info("Clicked Next on Payment Page");
 
         Thread.sleep(1500);
     }
@@ -624,17 +635,18 @@ public class DesludgingCreate {
     //=====================================================================
 
     private void summaryPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-    WebElement submitButton = wait.until(ExpectedConditions.presenceOfElementLocated(
-            By.xpath("//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit']]")));
+        WebElement submitButton = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit']]")));
         js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
         Thread.sleep(300);
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Property tax application: Submit clicked");
-}
+        logger.info("Property tax application: Submit clicked");
+        Thread.sleep(5000);
+    }
 
  /*
              =====================================================================
@@ -642,358 +654,358 @@ public class DesludgingCreate {
              =====================================================================
             */
 
-private void fillInput(WebDriverWait wait, String fieldName, String value) {
-    WebElement input = wait.until(ExpectedConditions.elementToBeClickable(By.name(fieldName)));
-    input.clear();
-    input.sendKeys(value);
-}
-
-// optional field – do not fail if missing
-private void fillOptionalInput(WebDriver driver, WebDriverWait wait, String fieldName, String value) {
-    try {
-        WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(By.name(fieldName)));
-        if (input.isDisplayed() && input.isEnabled()) {
-            input.clear();
-            input.sendKeys(value);
-            System.out.println("Filled optional field: " + fieldName);
-        } else {
-            System.out.println("Optional field " + fieldName + " not interactable, skipping");
-        }
-    } catch (Exception e) {
-        System.out.println("Optional field " + fieldName + " not found, skipping");
+    private void fillInput(WebDriverWait wait, String fieldName, String value) {
+        WebElement input = wait.until(ExpectedConditions.elementToBeClickable(By.name(fieldName)));
+        input.clear();
+        input.sendKeys(value);
     }
-}
 
-private void fillInputField(JavascriptExecutor js, WebElement input, String value)
-        throws InterruptedException {
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", input);
-    input.click();
-    input.clear();
-    input.sendKeys(value);
-    js.executeScript("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", input);
-    Thread.sleep(200);
-}
-
-private void clickButton(WebDriverWait wait, JavascriptExecutor js, String xpath) throws InterruptedException {
-    WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath)));
-    js.executeScript("arguments[0].scrollIntoView(true);", button);
-    Thread.sleep(300);
-    button.click();
-}
-
-private void clickButtonByHeader(WebDriver driver, WebDriverWait wait, String headerText)
-        throws InterruptedException {
-
-    WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
-            By.xpath("//button[contains(@class, 'submit-bar') and .//header[contains(text(),'" + headerText + "')]]")));
-    ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", button);
-    ((JavascriptExecutor) driver).executeScript("arguments[0].click();", button);
-    Thread.sleep(500);
-}
-
-private void clickNextButton(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException {
-
-    WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(
-            By.xpath("//button[contains(@class,'submit-bar') and .//header[text()='Next']]")));
-    js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
-    Thread.sleep(200);
-    nextButton.click();
-    System.out.println("Clicked Next");
-}
-
-private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
-        throws InterruptedException {
-
-    wait.until(ExpectedConditions.visibilityOfElementLocated(
-            By.cssSelector("div.radio-wrap.reverse-radio-selection-wrapper")));
-
-    List<WebElement> cityOptions = driver.findElements(
-            By.cssSelector("div.radio-wrap.reverse-radio-selection-wrapper div"));
-
-    for (WebElement option : cityOptions) {
-        WebElement label = option.findElement(By.tagName("label"));
-        if (label.getText().trim().equals(cityName)) {
-            WebElement radioInput = option.findElement(By.cssSelector("input[type='radio']"));
-            if (!radioInput.isSelected()) {
-                js.executeScript("arguments[0].click();", radioInput);
-                Thread.sleep(1000);
-            }
-            return;
-        }
-    }
-    throw new RuntimeException("Failed to select city: " + cityName);
-}
-
-private boolean tryClickWithRetries(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, By locator,
-                                    int timeoutSeconds, int retries, long retryDelayMs)
-        throws InterruptedException {
-    WebDriverWait localWait = new WebDriverWait(driver, java.time.Duration.ofSeconds(timeoutSeconds));
-
-    for (int attempt = 1; attempt <= retries; attempt++) {
+    // optional field – do not fail if missing
+    private void fillOptionalInput(WebDriver driver, WebDriverWait wait, String fieldName, String value) {
         try {
-            waitForNoOverlay(driver, wait);
-            WebElement el = localWait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(locator));
-            try {
-                el.click();
-                System.out.println("Clicked element " + locator + " (attempt " + attempt + ")");
-                return true;
-            } catch (Exception clickEx) {
-                // fallback to JS click
-                try {
-                    js.executeScript("arguments[0].scrollIntoView({block:'center'});", el);
-                    Thread.sleep(150);
-                    js.executeScript("arguments[0].click();", el);
-                    System.out.println("JS-clicked element " + locator + " (attempt " + attempt + ")");
-                    return true;
-                } catch (Exception jsEx) {
-                    System.out.println("Click failed attempt " + attempt + " for " + locator + " : " + jsEx.getMessage());
-                }
+            WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(By.name(fieldName)));
+            if (input.isDisplayed() && input.isEnabled()) {
+                input.clear();
+                input.sendKeys(value);
+                logger.info("Filled optional field: " + fieldName);
+            } else {
+                logger.info("Optional field " + fieldName + " not interactable, skipping");
             }
         } catch (Exception e) {
-            System.out.println("Element not clickable yet (" + locator + ") attempt " + attempt + " : " + e.getMessage());
+            logger.info("Optional field " + fieldName + " not found, skipping");
         }
-        Thread.sleep(retryDelayMs);
     }
-    return false;
-}
 
-private void waitForNoOverlay(WebDriver driver, WebDriverWait wait) {
-    try {
-        java.util.List<By> loaderSelectors = java.util.Arrays.asList(
-                By.cssSelector(".loading"),
-                By.cssSelector(".overlay"),
-                By.cssSelector(".loader"),
-                By.cssSelector(".submit-bar-disabled"),
-                By.cssSelector(".is-loading"),
-                By.cssSelector(".ant-modal-root .ant-spin")
-        );
-        for (By sel : loaderSelectors) {
-            try {
-                wait.until(org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated(sel));
-            } catch (Exception ignored) {
-                // not present / timed out -> continue
+    private void fillInputField(JavascriptExecutor js, WebElement input, String value)
+            throws InterruptedException {
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", input);
+        input.click();
+        input.clear();
+        input.sendKeys(value);
+        js.executeScript("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", input);
+        Thread.sleep(200);
+    }
+
+    private void clickButton(WebDriverWait wait, JavascriptExecutor js, String xpath) throws InterruptedException {
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath)));
+        js.executeScript("arguments[0].scrollIntoView(true);", button);
+        Thread.sleep(300);
+        button.click();
+    }
+
+    private void clickButtonByHeader(WebDriver driver, WebDriverWait wait, String headerText)
+            throws InterruptedException {
+
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//button[contains(@class, 'submit-bar') and .//header[contains(text(),'" + headerText + "')]]")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", button);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", button);
+        Thread.sleep(500);
+    }
+
+    private void clickNextButton(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+            throws InterruptedException {
+
+        WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//button[contains(@class,'submit-bar') and .//header[text()='Next']]")));
+        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
+        Thread.sleep(200);
+        nextButton.click();
+        logger.info("Clicked Next");
+    }
+
+    private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
+            throws InterruptedException {
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.cssSelector("div.radio-wrap.reverse-radio-selection-wrapper")));
+
+        List<WebElement> cityOptions = driver.findElements(
+                By.cssSelector("div.radio-wrap.reverse-radio-selection-wrapper div"));
+
+        for (WebElement option : cityOptions) {
+            WebElement label = option.findElement(By.tagName("label"));
+            if (label.getText().trim().equals(cityName)) {
+                WebElement radioInput = option.findElement(By.cssSelector("input[type='radio']"));
+                if (!radioInput.isSelected()) {
+                    js.executeScript("arguments[0].click();", radioInput);
+                    Thread.sleep(1000);
+                }
+                return;
             }
         }
-    } catch (Exception ignored) {}
-}
+        throw new RuntimeException("Failed to select city: " + cityName);
+    }
 
-private void selectRadioButtonByLabel(WebDriver driver, String labelText) {
-    try {
-        WebElement radio = null;
+    private boolean tryClickWithRetries(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, By locator,
+                                        int timeoutSeconds, int retries, long retryDelayMs)
+            throws InterruptedException {
+        WebDriverWait localWait = new WebDriverWait(driver, java.time.Duration.ofSeconds(timeoutSeconds));
 
-        try {
-            radio = driver.findElement(By.xpath("//label[text()='" + labelText + "']/preceding-sibling::span/input"));
-        } catch (Exception e1) {
+        for (int attempt = 1; attempt <= retries; attempt++) {
             try {
-                radio = driver.findElement(By.xpath("//label[contains(text(),'" + labelText + "')]/preceding-sibling::input"));
-            } catch (Exception e2) {
+                waitForNoOverlay(driver, wait);
+                WebElement el = localWait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(locator));
                 try {
-                    radio = driver.findElement(By.xpath("//label[text()='" + labelText + "']/..//input[@type='radio']"));
-                } catch (Exception e3) {
+                    el.click();
+                    logger.info("Clicked element " + locator + " (attempt " + attempt + ")");
+                    return true;
+                } catch (Exception clickEx) {
+                    // fallback to JS click
                     try {
-                        radio = driver.findElement(By.xpath("//label[text()='" + labelText + "']/following-sibling::input[@type='radio']"));
-                    } catch (Exception e4) {
-                        radio = driver.findElement(By.xpath("//input[@type='radio'][@value='" + labelText + "']"));
+                        js.executeScript("arguments[0].scrollIntoView({block:'center'});", el);
+                        Thread.sleep(150);
+                        js.executeScript("arguments[0].click();", el);
+                        logger.info("JS-clicked element " + locator + " (attempt " + attempt + ")");
+                        return true;
+                    } catch (Exception jsEx) {
+                        logger.info("Click failed attempt " + attempt + " for " + locator + " : " + jsEx.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                logger.info("Element not clickable yet (" + locator + ") attempt " + attempt + " : " + e.getMessage());
+            }
+            Thread.sleep(retryDelayMs);
+        }
+        return false;
+    }
+
+    private void waitForNoOverlay(WebDriver driver, WebDriverWait wait) {
+        try {
+            java.util.List<By> loaderSelectors = java.util.Arrays.asList(
+                    By.cssSelector(".loading"),
+                    By.cssSelector(".overlay"),
+                    By.cssSelector(".loader"),
+                    By.cssSelector(".submit-bar-disabled"),
+                    By.cssSelector(".is-loading"),
+                    By.cssSelector(".ant-modal-root .ant-spin")
+            );
+            for (By sel : loaderSelectors) {
+                try {
+                    wait.until(org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated(sel));
+                } catch (Exception ignored) {
+                    // not present / timed out -> continue
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private void selectRadioButtonByLabel(WebDriver driver, String labelText) {
+        try {
+            WebElement radio = null;
+
+            try {
+                radio = driver.findElement(By.xpath("//label[text()='" + labelText + "']/preceding-sibling::span/input"));
+            } catch (Exception e1) {
+                try {
+                    radio = driver.findElement(By.xpath("//label[contains(text(),'" + labelText + "')]/preceding-sibling::input"));
+                } catch (Exception e2) {
+                    try {
+                        radio = driver.findElement(By.xpath("//label[text()='" + labelText + "']/..//input[@type='radio']"));
+                    } catch (Exception e3) {
+                        try {
+                            radio = driver.findElement(By.xpath("//label[text()='" + labelText + "']/following-sibling::input[@type='radio']"));
+                        } catch (Exception e4) {
+                            radio = driver.findElement(By.xpath("//input[@type='radio'][@value='" + labelText + "']"));
+                        }
                     }
                 }
             }
+
+            if (radio != null && !radio.isSelected()) {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
+                Thread.sleep(200);
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
+                logger.info("Selected radio button: " + labelText);
+            }
+        } catch (Exception e) {
+            logger.info("Error selecting radio button '" + labelText + "': " + e.getMessage());
+            throw new RuntimeException("Failed to select radio button: " + labelText, e);
         }
-
-        if (radio != null && !radio.isSelected()) {
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
-            Thread.sleep(200);
-            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-            System.out.println("Selected radio button: " + labelText);
-        }
-    } catch (Exception e) {
-        System.out.println("Error selecting radio button '" + labelText + "': " + e.getMessage());
-        throw new RuntimeException("Failed to select radio button: " + labelText, e);
-    }
-}
-
-private void selectDropdownOption(WebDriver driver,
-                                  WebDriverWait wait,
-                                  JavascriptExecutor js,
-                                  int dropdownIndex) throws InterruptedException {
-
-    // get all dropdown arrow svgs on the page
-    java.util.List<WebElement> dropdownSvgs = wait.until(
-            ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                    By.cssSelector("div.select svg.cp"))
-    );
-
-    if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
-        System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
-        return;
     }
 
-    WebElement svg = dropdownSvgs.get(dropdownIndex);
+    private void selectDropdownOption(WebDriver driver,
+                                      WebDriverWait wait,
+                                      JavascriptExecutor js,
+                                      int dropdownIndex) throws InterruptedException {
 
-    // scroll into view
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", svg);
-    Thread.sleep(200);
-}
-
-private void selectDropdownByIndex(WebDriver driver, WebDriverWait wait, JavascriptExecutor js,
-                                   int dropdownIndex,
-                                   int optionIndex)
-        throws InterruptedException {
-
-    List<WebElement> dropdowns = wait.until(
-            ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                    By.cssSelector("div.select svg.cp")
-            )
-    );
-
-    WebElement dropdown = dropdowns.get(dropdownIndex);
-
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", dropdown);
-    Thread.sleep(200);
-
-    try {
-        dropdown.click();
-        Thread.sleep(1000);
-    } catch (Exception e) {
-        js.executeScript(
-                "var ev = document.createEvent('MouseEvents');" +
-                        "ev.initEvent('click', true, true);" +
-                        "arguments[0].dispatchEvent(ev);",
-                dropdown
+        // get all dropdown arrow svgs on the page
+        java.util.List<WebElement> dropdownSvgs = wait.until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                        By.cssSelector("div.select svg.cp"))
         );
+
+        if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            return;
+        }
+
+        WebElement svg = dropdownSvgs.get(dropdownIndex);
+
+        // scroll into view
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", svg);
+        Thread.sleep(200);
     }
 
-    WebElement optionsContainer = wait.until(
-            ExpectedConditions.visibilityOfElementLocated(
-                    By.cssSelector("div.options-card")
-            )
-    );
+    private void selectDropdownByIndex(WebDriver driver, WebDriverWait wait, JavascriptExecutor js,
+                                       int dropdownIndex,
+                                       int optionIndex)
+            throws InterruptedException {
 
-    List<WebElement> options = optionsContainer.findElements(
-            By.cssSelector("div.profile-dropdown--item")
-    );
+        List<WebElement> dropdowns = wait.until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                        By.cssSelector("div.select svg.cp")
+                )
+        );
 
-    WebElement option = options.get(optionIndex);
+        WebElement dropdown = dropdowns.get(dropdownIndex);
 
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", option);
-    js.executeScript("arguments[0].click();", option);
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", dropdown);
+        Thread.sleep(200);
 
-    Thread.sleep(300);
-}
-private void uploadFile(WebDriver driver, WebDriverWait wait, JavascriptExecutor js,
-                        int index, String filePath) throws InterruptedException {
+        try {
+            dropdown.click();
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            js.executeScript(
+                    "var ev = document.createEvent('MouseEvents');" +
+                            "ev.initEvent('click', true, true);" +
+                            "arguments[0].dispatchEvent(ev);",
+                    dropdown
+            );
+        }
 
-    // All file inputs on the page – match your screenshot (hidden absolute-position input)
-    List<WebElement> fileInputs = wait.until(
-            ExpectedConditions.presenceOfAllElementsLocatedBy(
-                    By.cssSelector("input[type='file'].input-mirror-selector-button"))
-    );
+        WebElement optionsContainer = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.cssSelector("div.options-card")
+                )
+        );
 
-    if (index >= fileInputs.size()) {
-        System.out.println("File input index " + index + " not found for path: " + filePath);
-        return;
+        List<WebElement> options = optionsContainer.findElements(
+                By.cssSelector("div.profile-dropdown--item")
+        );
+
+        WebElement option = options.get(optionIndex);
+
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", option);
+        js.executeScript("arguments[0].click();", option);
+
+        Thread.sleep(300);
+    }
+    private void uploadFile(WebDriver driver, WebDriverWait wait, JavascriptExecutor js,
+                            int index, String filePath) throws InterruptedException {
+
+        // All file inputs on the page – match your screenshot (hidden absolute-position input)
+        List<WebElement> fileInputs = wait.until(
+                ExpectedConditions.presenceOfAllElementsLocatedBy(
+                        By.cssSelector("input[type='file'].input-mirror-selector-button"))
+        );
+
+        if (index >= fileInputs.size()) {
+            logger.info("File input index " + index + " not found for path: " + filePath);
+            return;
+        }
+
+        WebElement fileInput = fileInputs.get(index);
+
+        // Make sure Selenium can interact with the hidden input
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", fileInput);
+        js.executeScript("arguments[0].style.opacity='1'; arguments[0].style.display='block';", fileInput);
+        Thread.sleep(300);
+
+        fileInput.sendKeys(filePath);
+        logger.info("Uploaded file at index " + index + ": " + filePath);
+        Thread.sleep(500);
     }
 
-    WebElement fileInput = fileInputs.get(index);
+    private void selectRadioByLabel(WebDriver driver,
+                                    WebDriverWait wait,
+                                    JavascriptExecutor js,
+                                    String labelText)
+            throws InterruptedException {
 
-    // Make sure Selenium can interact with the hidden input
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", fileInput);
-    js.executeScript("arguments[0].style.opacity='1'; arguments[0].style.display='block';", fileInput);
-    Thread.sleep(300);
+        WebElement label = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.xpath("//label[normalize-space()='" + labelText + "']")
+                )
+        );
 
-    fileInput.sendKeys(filePath);
-    System.out.println("Uploaded file at index " + index + ": " + filePath);
-    Thread.sleep(500);
-}
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", label);
+        Thread.sleep(200);
 
-private void selectRadioByLabel(WebDriver driver,
-                                WebDriverWait wait,
-                                JavascriptExecutor js,
-                                String labelText)
-        throws InterruptedException {
+        try {
+            label.click();
+        } catch (Exception e) {
+            js.executeScript("arguments[0].click();", label);
+        }
 
-    WebElement label = wait.until(
-            ExpectedConditions.elementToBeClickable(
-                    By.xpath("//label[normalize-space()='" + labelText + "']")
-            )
-    );
-
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", label);
-    Thread.sleep(200);
-
-    try {
-        label.click();
-    } catch (Exception e) {
-        js.executeScript("arguments[0].click();", label);
+        Thread.sleep(400);
+        logger.info("Selected radio: " + labelText);
     }
 
-    Thread.sleep(400);
-    System.out.println("Selected radio: " + labelText);
-}
+    private void fillInputStable(JavascriptExecutor js, WebElement input, String value)
+            throws InterruptedException {
 
-private void fillInputStable(JavascriptExecutor js, WebElement input, String value)
-        throws InterruptedException {
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", input);
+        input.click();
+        input.clear();
 
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", input);
-    input.click();
-    input.clear();
+        for (char c : value.toCharArray()) {
+            input.sendKeys(String.valueOf(c));
+            Thread.sleep(80);
+        }
 
-    for (char c : value.toCharArray()) {
-        input.sendKeys(String.valueOf(c));
-        Thread.sleep(80);
+        js.executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}));", input);
+        js.executeScript("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", input);
+
+        Thread.sleep(300);
+    }
+    private void clickRadioByIndex(List<WebElement> radios,
+                                   int index,
+                                   JavascriptExecutor js)
+            throws InterruptedException {
+
+        WebElement radio = radios.get(index);
+
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", radio);
+        Thread.sleep(200);
+
+        // CLICK PARENT, NOT INPUT
+        WebElement clickable = radio.findElement(By.xpath(".."));
+        js.executeScript("arguments[0].click();", clickable);
+
+        logger.info("Selected radio index: " + index);
+        Thread.sleep(500);
     }
 
-    js.executeScript("arguments[0].dispatchEvent(new Event('input',{bubbles:true}));", input);
-    js.executeScript("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", input);
+    private void selectDateRange(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+            throws InterruptedException {
 
-    Thread.sleep(300);
-}
-private void clickRadioByIndex(List<WebElement> radios,
-                               int index,
-                               JavascriptExecutor js)
-        throws InterruptedException {
+        logger.info("Selecting Date Range via Calendar Icon");
 
-    WebElement radio = radios.get(index);
+        // CLICK CALENDAR ICON
+        WebElement calendarIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("svg.calendar-icon, svg.cursorPointer")
+        ));
 
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", radio);
-    Thread.sleep(200);
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", calendarIcon);
+        Thread.sleep(500);
 
-    // 🔥 CLICK PARENT, NOT INPUT
-    WebElement clickable = radio.findElement(By.xpath(".."));
-    js.executeScript("arguments[0].click();", clickable);
+        // React safe click
+        js.executeScript(
+                "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles:true}));",
+                calendarIcon
+        );
 
-    System.out.println("Selected radio index: " + index);
-    Thread.sleep(500);
-}
+        logger.info("Calendar icon clicked");
 
-private void selectDateRange(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException {
+        Thread.sleep(2000); // wait for calendar UI
 
-    System.out.println("Selecting Date Range via Calendar Icon");
+        WebElement threeDays = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.xpath("//*[text()='Three Days']")
+        ));
+        js.executeScript("arguments[0].click();", threeDays);
 
-    // CLICK CALENDAR ICON
-    WebElement calendarIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
-            By.cssSelector("svg.calendar-icon, svg.cursorPointer")
-    ));
-
-    js.executeScript("arguments[0].scrollIntoView({block:'center'});", calendarIcon);
-    Thread.sleep(500);
-
-    // React safe click
-    js.executeScript(
-            "arguments[0].dispatchEvent(new MouseEvent('click', {bubbles:true}));",
-            calendarIcon
-    );
-
-    System.out.println("Calendar icon clicked");
-
-    Thread.sleep(2000); // wait for calendar UI
-
-    WebElement threeDays = wait.until(ExpectedConditions.presenceOfElementLocated(
-            By.xpath("//*[text()='Three Days']")
-    ));
-    js.executeScript("arguments[0].click();", threeDays);
-
-    System.out.println("Three Days selected");
+        logger.info("Three Days selected");
     }
 }

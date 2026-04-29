@@ -19,23 +19,23 @@ import java.time.Duration;
 
 
 @Component
-public class CreateApplication {
+public class SvCreateApplication {
 
-    private static final Logger logger = LoggerFactory.getLogger(CreateApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(SvCreateApplication.class);
     
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void svCreateApplication() {
-        svCreateApplication(ConfigReader.get("citizen.base.url"),
+    public void svCreateReg() {
+        svCreateReg(ConfigReader.get("citizen.base.url"),
                            "Street Vending", 
                            ConfigReader.get("citizen.mobile.number"),
                            ConfigReader.get("test.otp"),
                            ConfigReader.get("test.city.name"));
     }
 
-    public void svCreateApplication(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+    public void svCreateReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
 
         logger.info("Street Vending Registration by Citizen");
 
@@ -62,7 +62,9 @@ public class CreateApplication {
             logger.error("Exception in Street Vending Registration: {}", e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit(); // Commented out to keep browser open for observation
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 

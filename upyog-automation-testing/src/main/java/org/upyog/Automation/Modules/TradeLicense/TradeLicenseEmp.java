@@ -1,5 +1,7 @@
 package org.upyog.Automation.Modules.TradeLicense;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,11 +19,13 @@ import org.upyog.Automation.config.WebDriverFactory;
 @Component
 public class TradeLicenseEmp {
 
+    private static final Logger logger = LoggerFactory.getLogger(TradeLicenseEmp.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void TradeLicenseEmpReg() {
+    public void tradeLicenseEmpReg() {
         tlInboxEmp(ConfigReader.get("employee.base.url"),
                    ConfigReader.get("app.login.username"),
                    ConfigReader.get("app.login.password"),
@@ -29,7 +33,7 @@ public class TradeLicenseEmp {
     }
 
     public void tlInboxEmp(String baseUrl, String username, String password, String applicationNumber) {
-        System.out.println("Trade License Employee Workflow");
+        logger.info("Trade License Employee Workflow");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -55,84 +59,86 @@ public class TradeLicenseEmp {
             // STEP 6: Download Receipts
             downloadReceipts(driver, wait, js);
             
-            System.out.println("Trade License Employee Workflow completed successfully!");
+            logger.info("Trade License Employee Workflow completed successfully!");
             Thread.sleep(50000);
             
         } catch (Exception e) {
-            System.out.println("Exception in Trade License Employee Workflow: " + e.getMessage());
+            logger.info("Exception in Trade License Employee Workflow: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
     private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String username, String password) throws InterruptedException {
         driver.get(baseUrl);
         driver.manage().window().maximize();
-        System.out.println("Open the Employee Login Portal");
+        logger.info("Open the Employee Login Portal");
 
         fillInput(wait, "username", username);
         fillInput(wait, "password", password);
-        System.out.println("Filled username and password");
+        logger.info("Filled username and password");
 
         selectCityDropdown(driver, wait, actions);
         clickButton(wait, js, "//button[contains(@class, 'submit-bar') and .//header[text()='Continue']]");
     }
 
     private void navigateToInbox(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Navigating to Trade License Inbox");
+        logger.info("Navigating to Trade License Inbox");
         Thread.sleep(2000);
         
         WebElement inboxLink = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[@href='/digit-ui/employee/tl/inbox' and contains(text(), 'Inbox')]")));
         js.executeScript("arguments[0].scrollIntoView(true);", inboxLink);
         inboxLink.click();
-        System.out.println("Clicked Inbox link");
+        logger.info("Clicked Inbox link");
     }
 
     private void searchApplication(WebDriver driver, WebDriverWait wait, String applicationNumber) throws InterruptedException {
-        System.out.println("Searching for application by number");
+        logger.info("Searching for application by number");
         
         WebElement applicationInput = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("input.employee-card-input")));
         applicationInput.clear();
         applicationInput.sendKeys(applicationNumber);
-        System.out.println("Entered application number: " + applicationNumber);
+        logger.info("Entered application number: " + applicationNumber);
         
         WebElement searchButton = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("button.submit-bar.submit-bar-search")));
         searchButton.click();
-        System.out.println("Clicked Search button");
+        logger.info("Clicked Search button");
         
         Thread.sleep(2000);
         
         WebElement appLink = wait.until(ExpectedConditions.elementToBeClickable(
                 By.linkText(applicationNumber)));
         appLink.click();
-        System.out.println("Selected application: " + applicationNumber);
+        logger.info("Selected application: " + applicationNumber);
     }
 
     private void processApplicationWorkflow(WebDriver driver, WebDriverWait wait) throws InterruptedException {
-        System.out.println("Processing application workflow");
+        logger.info("Processing application workflow");
         
         // Step 1: Verify
         clickTakeActionButton(driver, wait);
         handleTakeActionMenu(driver, wait);
-        System.out.println("Verification completed");
+        logger.info("Verification completed");
         
         // Step 2: Approve
         clickTakeActionButton(driver, wait);
         handleTakeActionMenu(driver, wait);
-        System.out.println("Approval completed");
+        logger.info("Approval completed");
         
         // Step 3: Pay
         clickTakeActionButton(driver, wait);
         handleTakeActionMenu(driver, wait);
-        System.out.println("Payment process initiated");
+        logger.info("Payment process initiated");
     }
 
     private void collectPayment(WebDriver driver, WebDriverWait wait) {
-        System.out.println("Collecting payment");
+        logger.info("Collecting payment");
         
         WebElement mobileInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("payerMobile")));
         mobileInput.clear();
@@ -141,11 +147,11 @@ public class TradeLicenseEmp {
         WebElement collectPaymentButton = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//button[contains(@class, 'submit-bar') and .//header[normalize-space()='Collect Payment']]")));
         collectPaymentButton.click();
-        System.out.println("Payment collected");
+        logger.info("Payment collected");
     }
 
     private void downloadReceipts(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Downloading receipts");
+        logger.info("Downloading receipts");
 
         List<WebElement> svgButtons = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
                 By.cssSelector("div.primary-label-btn.d-grid")));
@@ -155,10 +161,10 @@ public class TradeLicenseEmp {
             js.executeScript("arguments[0].scrollIntoView({block: 'center'});", svg);
             Thread.sleep(300);
             svg.click();
-            System.out.println("Downloaded: " + buttonContainer.getText().trim());
+            logger.info("Downloaded: " + buttonContainer.getText().trim());
             Thread.sleep(1000);
         }
-        System.out.println("All receipts downloaded");
+        logger.info("All receipts downloaded");
     }
 
     // UTILITY METHODS
@@ -192,7 +198,7 @@ public class TradeLicenseEmp {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", takeActionButton);
         Thread.sleep(300);
         takeActionButton.click();
-        System.out.println("Clicked TAKE ACTION button");
+        logger.info("Clicked TAKE ACTION button");
     }
 
     private void handleTakeActionMenu(WebDriver driver, WebDriverWait wait) throws InterruptedException {
@@ -204,24 +210,24 @@ public class TradeLicenseEmp {
                 String text = option.getText().trim().toUpperCase();
                 if (text.equals("VERIFY")) {
                     option.click();
-                    System.out.println("Clicked VERIFY");
+                    logger.info("Clicked VERIFY");
                     handlePopupAndSubmit(driver, wait, "Automated verification comment.", 
                             ConfigReader.get("document.identity.proof"));
                     break;
                 } else if (text.equals("APPROVE")) {
                     option.click();
-                    System.out.println("Clicked APPROVE");
+                    logger.info("Clicked APPROVE");
                     handlePopupAndSubmit(driver, wait, "Automated approval comment.", 
                             ConfigReader.get("document.identity.proof"));
                     break;
                 } else if (text.equals("PAY")) {
                     option.click();
-                    System.out.println("Clicked PAY");
+                    logger.info("Clicked PAY");
                     break;
                 }
             }
         } catch (Exception e) {
-            System.out.println("Take Action Menu not found or no valid option present: " + e.getMessage());
+            logger.info("Take Action Menu not found or no valid option present: " + e.getMessage());
         }
     }
 
@@ -232,7 +238,7 @@ public class TradeLicenseEmp {
 
         WebElement fileInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("workflow-doc")));
         fileInput.sendKeys(filePath);
-        System.out.println("Document uploaded");
+        logger.info("Document uploaded");
 
         List<WebElement> verifyButtons = driver.findElements(By.xpath("//button[contains(@class, 'selector-button-primary') and .//h2[normalize-space()='Verify']]"));
         List<WebElement> approveButtons = driver.findElements(By.xpath("//button[contains(@class, 'selector-button-primary') and .//h2[normalize-space()='Approve']]"));
@@ -240,10 +246,10 @@ public class TradeLicenseEmp {
         WebElement actionButton = null;
         if (!verifyButtons.isEmpty()) {
             actionButton = verifyButtons.get(0);
-            System.out.println("Clicking Verify button");
+            logger.info("Clicking Verify button");
         } else if (!approveButtons.isEmpty()) {
             actionButton = approveButtons.get(0);
-            System.out.println("Clicking Approve button");
+            logger.info("Clicking Approve button");
         } else {
             throw new RuntimeException("Neither Verify nor Approve button found!");
         }

@@ -1,6 +1,5 @@
 package org.upyog.Automation.Modules.StreetVending;
 
-import javax.annotation.PostConstruct;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -10,7 +9,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +24,14 @@ public class SvEmp {
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void InboxEmpSv() {
-        InboxEmpSv(ConfigReader.get("sv.employee.base.url"),
+    public void inboxEmpSv() {
+        inboxEmpSv(ConfigReader.get("sv.employee.base.url"),
                   ConfigReader.get("sv.login.username"),
                   ConfigReader.get("SV.login.password"),
                   ConfigReader.get("sv.application.number"));
     }
 
-    public void InboxEmpSv(String baseUrl, String username, String password, String applicationNumber) {
+    public void inboxEmpSv(String baseUrl, String username, String password, String applicationNumber) {
 
         logger.info("SV Employee Inbox Workflow");
 
@@ -63,8 +61,9 @@ public class SvEmp {
             logger.error("Exception in SV Employee Workflow: {}", e.getMessage());
             e.printStackTrace();
         } finally {
-            // Uncomment to close browser after test
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 

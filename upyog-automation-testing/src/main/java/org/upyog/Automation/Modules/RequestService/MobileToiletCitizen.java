@@ -9,6 +9,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +22,14 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class MobileToiletCitizen {
 
+    private static final Logger logger = LoggerFactory.getLogger(MobileToiletCitizen.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void MobileToiletCreate() {
-        MobileToiletCreate(ConfigReader.get("citizen.base.url"),
+    public void mobileToiletCreate() {
+        mobileToiletCreate(ConfigReader.get("citizen.base.url"),
                 "Request Service",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
@@ -33,8 +37,8 @@ public class MobileToiletCitizen {
 
     }
 
-    public void MobileToiletCreate(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Create Application by Citizen");
+    public void mobileToiletCreate(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Create Application by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -71,9 +75,11 @@ public class MobileToiletCitizen {
 
 
         } catch (Exception e) {
-            System.out.println("Exception in Mobile Toilet: " + e.getMessage());
+            logger.info("Exception in Mobile Toilet: " + e.getMessage());
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -85,7 +91,7 @@ public class MobileToiletCitizen {
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -129,7 +135,7 @@ public class MobileToiletCitizen {
     private void navigateToRequestService(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Request Service");
+        logger.info("Navigating to Request Service");
 
         // Sidebar Request Service link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -149,7 +155,7 @@ public class MobileToiletCitizen {
     private void selectMobileToiletService(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting Mobile Toilet Service");
+        logger.info("Selecting Mobile Toilet Service");
         Thread.sleep(1000);
 
         // Select Mobile Toilet from dropdown (1st option)
@@ -159,7 +165,7 @@ public class MobileToiletCitizen {
 
         WebElement serviceTypeDropdown = dropdownSvgs.get(0);
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", serviceTypeDropdown);
-        Thread.sleep(500);
+        Thread.sleep(2000);
 
         try {
             serviceTypeDropdown.click();
@@ -183,7 +189,7 @@ public class MobileToiletCitizen {
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", MobileToiletOption);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", MobileToiletOption);
-        System.out.println("Mobile Toilet Service selected");
+        logger.info("Mobile Toilet Service selected");
         Thread.sleep(1000);
 
         clickSaveAndNext(wait, js);
@@ -195,7 +201,7 @@ public class MobileToiletCitizen {
     private void fillMobileToiletDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Mobile Toilet Info Page - Clicking Next");
+        logger.info("Mobile Toilet Info Page - Clicking Next");
         Thread.sleep(2000);
 
         // Try multiple Next button selectors for info page
@@ -212,11 +218,11 @@ public class MobileToiletCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on info page");
+                logger.info("Clicked Next on info page");
                 Thread.sleep(3000);
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -230,20 +236,20 @@ public class MobileToiletCitizen {
     private void selectFillNewDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Handling Booking Popup");
+        logger.info("Handling Booking Popup");
 
-        // 🔥 Directly wait for button instead of popup container
+        // Directly wait for button instead of popup container
         WebElement fillNewDetailsBtn = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        By.xpath("//button[contains(.,'Fill New')]")
+                        By.xpath("//button[contains(.,'Fill New Details')]")
                 )
         );
 
-        System.out.println("Popup appeared (button detected)");
+        logger.info("Popup appeared (button detected)");
 
         js.executeScript("arguments[0].click();", fillNewDetailsBtn);
 
-        System.out.println("Clicked Fill New Details");
+        logger.info("Clicked Fill New Details");
 
         Thread.sleep(1000);
     }
@@ -255,7 +261,7 @@ public class MobileToiletCitizen {
     private void fillApplicantDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Applicant Details");
+        logger.info("Filling Applicant Details");
 
         fillInput(wait, "applicantName", "Arpit Rao");
         fillInput(wait, "emailId", "arpit@gmail.com");
@@ -264,7 +270,7 @@ public class MobileToiletCitizen {
         try {
             fillInput(wait, "mobileNumber", "9999999999");
         } catch (Exception e) {
-            System.out.println("Mobile number field not found or pre-filled");
+            logger.info("Mobile number field not found or pre-filled");
         }
 
         Thread.sleep(2000);
@@ -283,10 +289,10 @@ public class MobileToiletCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on applicant details page");
+                logger.info("Clicked Next on applicant details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -300,15 +306,15 @@ public class MobileToiletCitizen {
     private void fillAddressDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Address Details");
+        logger.info("Filling Address Details");
 
         // Select address type (Permanent/Current) - try index 0 first
         try {
             selectDropdownOption(driver, wait, js, 0);
             Thread.sleep(1000);
-            System.out.println("Selected address type");
+            logger.info("Selected address type");
         } catch (Exception e) {
-            System.out.println("Address type dropdown not found");
+            logger.info("Address type dropdown not found");
         }
 
         // Fill address fields
@@ -325,7 +331,7 @@ public class MobileToiletCitizen {
                 try {
                     fillInputFast(driver, wait, "address1", "Address Line 1");
                 } catch (Exception e3) {
-                    System.out.println("Address line 1 field not found");
+                    logger.info("Address line 1 field not found");
                 }
             }
         }
@@ -340,7 +346,7 @@ public class MobileToiletCitizen {
                 try {
                     fillInputFast(driver, wait, "address2", "Address Line 2");
                 } catch (Exception e3) {
-                    System.out.println("Address line 2 field not found");
+                    logger.info("Address line 2 field not found");
                 }
             }
         }
@@ -350,9 +356,9 @@ public class MobileToiletCitizen {
         try {
             selectDropdownOption(driver, wait, js, 1);
             Thread.sleep(1000);
-            System.out.println("Selected city");
+            logger.info("Selected city");
         } catch (Exception e) {
-            System.out.println("City dropdown not found");
+            logger.info("City dropdown not found");
         }
 
         // Select locality dropdown after city selection loads more dropdowns
@@ -360,9 +366,9 @@ public class MobileToiletCitizen {
         try {
             selectDropdownOption(driver, wait, js, 2);
             Thread.sleep(1000);
-            System.out.println("Selected locality");
+            logger.info("Selected locality");
         } catch (Exception e) {
-            System.out.println("Locality dropdown not found");
+            logger.info("Locality dropdown not found");
         }
 
         fillInput(wait, "pincode", "110011");
@@ -383,10 +389,10 @@ public class MobileToiletCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on address details page");
+                logger.info("Clicked Next on address details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -400,16 +406,16 @@ public class MobileToiletCitizen {
     private void fillMobileToiletRequestDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Mobile Toilet Request Details");
+        logger.info("Filling Mobile Toilet Request Details");
         Thread.sleep(1000);
 
         // Number of Mobile Toilets
         try {
             selectDropdownOption(driver, wait, js, 0);
             Thread.sleep(1000);
-            System.out.println("Selected Mobile Toilet Quantity");
+            logger.info("Selected Mobile Toilet Quantity");
         } catch (Exception e) {
-            System.out.println("Mobile Toilet Quantity dropdown failed: " + e.getMessage());
+            logger.info("Mobile Toilet Quantity dropdown failed: " + e.getMessage());
         }
 
         // Select Dates - From Date- To Date (Dynamic dates)
@@ -434,10 +440,10 @@ public class MobileToiletCitizen {
             toDate.clear();
             toDate.sendKeys(futureToDate.format(formatter));
 
-            System.out.println("From Date: " + futureFromDate.format(formatter));
-            System.out.println("To Date: " + futureToDate.format(formatter));
+            logger.info("From Date: " + futureFromDate.format(formatter));
+            logger.info("To Date: " + futureToDate.format(formatter));
         } else {
-            System.out.println("Date inputs not found or less than 2");
+            logger.info("Date inputs not found or less than 2");
         }
 
         // Special Request
@@ -448,9 +454,9 @@ public class MobileToiletCitizen {
             Thread.sleep(500);
             specialRequest.clear();
             specialRequest.sendKeys("Water tanker required for household use");
-            System.out.println("Filled description");
+            logger.info("Filled description");
         } catch (Exception e) {
-            System.out.println("Description textarea failed: " + e.getMessage());
+            logger.info("Description textarea failed: " + e.getMessage());
         }
 
         // Fill From Time separately
@@ -458,9 +464,9 @@ public class MobileToiletCitizen {
             WebElement fromTimeInput = wait.until(ExpectedConditions.elementToBeClickable(
                     By.xpath("(//input[@type='time'])[1]"))); // First time input
             fillTimeInput(fromTimeInput, "10:30AM", js);
-            System.out.println("Filled From Time");
+            logger.info("Filled From Time");
         } catch (Exception e) {
-            System.out.println("From Time input failed: " + e.getMessage());
+            logger.info("From Time input failed: " + e.getMessage());
         }
 
 // Fill To Time separately
@@ -468,9 +474,9 @@ public class MobileToiletCitizen {
             WebElement toTimeInput = wait.until(ExpectedConditions.elementToBeClickable(
                     By.xpath("(//input[@type='time'])[2]"))); // Second time input
             fillTimeInput(toTimeInput, "11:30PM", js); // 11:30 PM in 24-hour format
-            System.out.println("Filled To Time");
+            logger.info("Filled To Time");
         } catch (Exception e) {
-            System.out.println("To Time input failed: " + e.getMessage());
+            logger.info("To Time input failed: " + e.getMessage());
         }
 
         // After filling both time inputs
@@ -495,10 +501,10 @@ public class MobileToiletCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on address details page");
+                logger.info("Clicked Next on address details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -512,7 +518,7 @@ public class MobileToiletCitizen {
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Mobile Toilet Application - Summary Page");
+        logger.info("Submitting Mobile Toilet Application - Summary Page");
         Thread.sleep(3000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -523,10 +529,10 @@ public class MobileToiletCitizen {
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -537,7 +543,7 @@ public class MobileToiletCitizen {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Mobile Toilet application: Submit clicked");
+        logger.info("Mobile Toilet application: Submit clicked");
     }
 
     // =====================================================================
@@ -603,7 +609,7 @@ public class MobileToiletCitizen {
                         By.cssSelector("div.select svg.cp")));
 
         if (dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 

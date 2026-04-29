@@ -10,6 +10,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
@@ -20,6 +22,8 @@ import java.time.Duration;
 @Component
 public class PetCreateApplication {
 
+    private static final Logger logger = LoggerFactory.getLogger(PetCreateApplication.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
@@ -29,15 +33,15 @@ public class PetCreateApplication {
      */
     //@PostConstruct
     public void testingPetApp() {
-        PetApptest(ConfigReader.get("citizen.base.url"),
+        petApptest(ConfigReader.get("citizen.base.url"),
                    "Pet Registration",
                    ConfigReader.get("citizen.mobile.number"),
                    ConfigReader.get("test.otp"),
                    ConfigReader.get("test.city.name"));
     }
 
-    public void PetApptest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Pet Registration by Citizen");
+    public void petApptest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Pet Registration by Citizen");
 
         WebDriver driver = null;
         try {
@@ -244,7 +248,7 @@ public class PetCreateApplication {
             Thread.sleep(300);
             trackButton.click();
 
-            System.out.println("Test completed successfully!");
+            logger.info("Test completed successfully!");
             Thread.sleep(5000); // Brief pause to observe results
         } catch (Exception e) {
             System.err.println("Test failed with error: " + e.getMessage());
@@ -252,7 +256,7 @@ public class PetCreateApplication {
         } finally {
             if (driver != null) {
                 driver.quit();
-                System.out.println("WebDriver closed successfully");
+                logger.info("WebDriver closed successfully");
             }
         }
     }
@@ -271,7 +275,7 @@ public class PetCreateApplication {
             ((JavascriptExecutor) wait.until(d -> d)).executeScript("arguments[0].scrollIntoView(true);", input);
             input.clear();
             input.sendKeys(value);
-            System.out.println("Filled field '" + fieldName + "' with value: " + value);
+            logger.info("Filled field '" + fieldName + "' with value: " + value);
         } catch (Exception e) {
             System.err.println("Error filling field '" + fieldName + "': " + e.getMessage());
             throw new RuntimeException("Failed to fill input field: " + fieldName, e);
@@ -343,7 +347,7 @@ public class PetCreateApplication {
             WebElement cityOption = wait.until(ExpectedConditions.elementToBeClickable(
                     By.xpath("//div[@id='jk-dropdown-unique']//div[contains(@class,'profile-dropdown--item')][1]")));
             cityOption.click();
-            System.out.println("Selected first available city option");
+            logger.info("Selected first available city option");
             
             // Wait for city dropdown to close
             Thread.sleep(500);
@@ -366,16 +370,16 @@ public class PetCreateApplication {
                 WebElement localityOption = wait.until(ExpectedConditions.elementToBeClickable(
                         By.xpath("//div[@id='jk-dropdown-unique']//div[contains(@class,'profile-dropdown--item')][1]")));
                 localityOption.click();
-                System.out.println("Selected first available locality option");
+                logger.info("Selected first available locality option");
                 
                 // Wait for locality dropdown to close
                 wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("jk-dropdown-unique")));
             }
             
-            System.out.println("City and locality selections completed!");
+            logger.info("City and locality selections completed!");
             
         } catch (Exception e) {
-            System.out.println("Error in address city/locality selection: " + e.getMessage());
+            logger.info("Error in address city/locality selection: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -407,7 +411,7 @@ public class PetCreateApplication {
                 fileInput.sendKeys(getAbsolutePath(filePaths[i]));
                 Thread.sleep(100);
             } catch (Exception e) {
-                System.out.println("Error uploading file " + i + ": " + e.getMessage());
+                logger.info("Error uploading file " + i + ": " + e.getMessage());
             }
         }
 
@@ -419,7 +423,7 @@ public class PetCreateApplication {
             petPhotoInput.sendKeys(getAbsolutePath(ConfigReader.get("document.pet.photo")));
             Thread.sleep(100);
         } catch (Exception e) {
-            System.out.println("Error uploading pet photo: " + e.getMessage());
+            logger.info("Error uploading pet photo: " + e.getMessage());
         }
     }
 
@@ -450,7 +454,7 @@ public class PetCreateApplication {
             }
         }
         
-        System.out.println("Using file: " + file.getAbsolutePath());
+        logger.info("Using file: " + file.getAbsolutePath());
         return file.getAbsolutePath();
     }
 }

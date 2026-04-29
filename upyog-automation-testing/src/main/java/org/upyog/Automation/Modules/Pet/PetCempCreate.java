@@ -4,12 +4,12 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.upyog.Automation.config.WebDriverFactory;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -25,6 +25,8 @@ import java.util.List;
 //@Component
 public class PetCempCreate {
 
+    private static final Logger logger = LoggerFactory.getLogger(PetCempCreate.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
@@ -33,8 +35,8 @@ public class PetCempCreate {
      * Runs automatically when Spring context is initialized
      */
     //@PostConstruct
-    public void PetRegCemp() {
-        System.out.println("New Pet Registration by Employee");
+    public void petRegCemp() {
+        logger.info("New Pet Registration by Employee");
         
         // Initialize WebDriver using DriverFactory
         WebDriver driver = webDriverFactory.createDriver();
@@ -67,14 +69,15 @@ public class PetCempCreate {
             // STEP 8: Submit Application
             submitApplication(driver, wait, js);
             
-            System.out.println("Employee Pet Registration completed successfully!");
+            logger.info("Employee Pet Registration completed successfully!");
             
         } catch (Exception e) {
-            System.out.println("Exception in Pet Registration: " + e.getMessage());
+            logger.info("Exception in Pet Registration: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // Uncomment to close browser after test
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -84,12 +87,12 @@ public class PetCempCreate {
     private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
         driver.get(ConfigReader.get("employee.base.url"));
         driver.manage().window().maximize();
-        System.out.println("Open the Employee Login Portal");
+        logger.info("Open the Employee Login Portal");
 
         // Enter credentials
         fillInput(wait, "username", ConfigReader.get("app.login.username"));
         fillInput(wait, "password", ConfigReader.get("app.login.password"));
-        System.out.println("Filled username and password");
+        logger.info("Filled username and password");
 
         // Select city
         selectCityDropdown(driver, wait, actions);
@@ -102,7 +105,7 @@ public class PetCempCreate {
      * Navigates to New Pet Registration module
      */
     private void navigateToNewPetRegistration(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Navigating to New Pet Registration");
+        logger.info("Navigating to New Pet Registration");
         
         // Wait for page to load after login
         Thread.sleep(2000);
@@ -113,7 +116,7 @@ public class PetCempCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", newPetRegLink);
         Thread.sleep(300);
         js.executeScript("arguments[0].click();", newPetRegLink);
-        System.out.println("Clicked New Pet Registration link");
+        logger.info("Clicked New Pet Registration link");
 
         // Click Next on document requirements page
         clickButton(wait, js, "//button[contains(@class, 'submit-bar') and .//header[normalize-space()='Next']]");
@@ -123,7 +126,7 @@ public class PetCempCreate {
      * Fills owner details form
      */
     private void fillOwnerDetails(WebDriver driver, WebDriverWait wait) throws InterruptedException {
-        System.out.println("Filling Owner Details");
+        logger.info("Filling Owner Details");
         
         fillInput(wait, "applicantName", "Ramesh kumar");
         fillInput(wait, "mobileNumber", "8893445543");
@@ -137,7 +140,7 @@ public class PetCempCreate {
      * Fills pet details including dropdowns and form fields
      */
     private void fillPetDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Filling Pet Details");
+        logger.info("Filling Pet Details");
         Thread.sleep(300);
 
         try {
@@ -150,7 +153,7 @@ public class PetCempCreate {
             selectPetDropdownOption(allDropdowns, actions, wait, 3, "Tricolor or white", "Pet Colour");
 
         } catch (Exception e) {
-            System.out.println("Exception in PET DETAILS DROPDOWN: " + e.getMessage());
+            logger.info("Exception in PET DETAILS DROPDOWN: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -182,7 +185,7 @@ public class PetCempCreate {
      * Fills property details form
      */
     private void fillPropertyDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Filling Property Details");
+        logger.info("Filling Property Details");
         
         fillInput(wait, "propertyId", "435345");
         fillInput(wait, "buildingName", "gdfgdgdgdfg");
@@ -204,7 +207,7 @@ public class PetCempCreate {
      * Fills address details form
      */
     private void fillAddressDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Filling Address Details");
+        logger.info("Filling Address Details");
         
         fillInput(wait, "houseNo", "2342");
         fillInput(wait, "houseName", "My House");
@@ -225,7 +228,7 @@ public class PetCempCreate {
      * Selects identity proof and uploads documents
      */
     private void selectIdentityProofAndUploadDocuments(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        System.out.println("Selecting Identity Proof and Uploading Documents");
+        logger.info("Selecting Identity Proof and Uploading Documents");
         
         // Select identity proof
         selectIdentityProof(driver, wait, actions);
@@ -241,7 +244,7 @@ public class PetCempCreate {
      * Submits the application
      */
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Submitting Application");
+        logger.info("Submitting Application");
         
         // Check declaration checkbox
         WebElement declarationCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -251,7 +254,7 @@ public class PetCempCreate {
         
         if (!declarationCheckbox.isSelected()) {
             declarationCheckbox.click();
-            System.out.println("Declaration checkbox checked!");
+            logger.info("Declaration checkbox checked!");
         }
 
         // Submit application
@@ -260,7 +263,7 @@ public class PetCempCreate {
         js.executeScript("arguments[0].scrollIntoView(true);", submitButton);
         Thread.sleep(300);
         submitButton.click();
-        System.out.println("Application submitted successfully!");
+        logger.info("Application submitted successfully!");
 
         Thread.sleep(2000);
 
@@ -271,9 +274,9 @@ public class PetCempCreate {
             js.executeScript("arguments[0].scrollIntoView({block: 'center'});", goHomeLink);
             goHomeLink.click();
             wait.until(ExpectedConditions.urlContains("/digit-ui/employee"));
-            System.out.println("Navigated to home page successfully!");
+            logger.info("Navigated to home page successfully!");
         } catch (Exception e) {
-            System.out.println("Failed to navigate to home page: " + e.getMessage());
+            logger.info("Failed to navigate to home page: " + e.getMessage());
         }
     }
 
@@ -332,7 +335,7 @@ public class PetCempCreate {
         wait.until(ExpectedConditions.elementToBeClickable(dropdownButton));
         
         actions.moveToElement(dropdownButton).click().perform();
-        System.out.println("Clicked " + dropdownName + " dropdown");
+        logger.info("Clicked " + dropdownName + " dropdown");
         
         WebElement options = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.options-card")));
         List<WebElement> items = options.findElements(By.cssSelector(".profile-dropdown--item"));
@@ -347,7 +350,7 @@ public class PetCempCreate {
         }
         
         if (!selected) throw new RuntimeException(dropdownName + " '" + optionText + "' not found!");
-        System.out.println(dropdownName + " '" + optionText + "' selected!");
+        logger.info(dropdownName + " '" + optionText + "' selected!");
     }
 
     /**
@@ -386,7 +389,7 @@ public class PetCempCreate {
         int attempts = 0;
         while (attempts < 3) {
             try {
-                System.out.println("Attempt " + (attempts + 1) + ": Selecting Fire Station...");
+                logger.info("Attempt " + (attempts + 1) + ": Selecting Fire Station...");
                 WebElement dropdownContainer = driver.findElements(By.cssSelector("div.select.undefined")).get(2);
                 WebElement svgToggle = dropdownContainer.findElement(By.cssSelector("svg.cp"));
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", svgToggle);
@@ -399,7 +402,7 @@ public class PetCempCreate {
                 WebElement cityAOption = optionsContainer.findElement(
                         By.xpath(".//div[contains(@class,'profile-dropdown--item')][.//span[contains(normalize-space(.),'City A')]]"));
                 cityAOption.click();
-                System.out.println("Fire Station 'City A' selected successfully");
+                logger.info("Fire Station 'City A' selected successfully");
                 
                 wait.until(ExpectedConditions.invisibilityOf(optionsContainer));
                 Thread.sleep(500);
@@ -430,7 +433,7 @@ public class PetCempCreate {
         WebElement cityOption = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//div[@id='jk-dropdown-unique']//div[contains(@class,'profile-dropdown--item')][1]")));
         cityOption.click();
-        System.out.println("Selected first available city option");
+        logger.info("Selected first available city option");
 
         Thread.sleep(300);
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("jk-dropdown-unique")));
@@ -448,7 +451,7 @@ public class PetCempCreate {
         WebElement localityOption = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//div[@id='jk-dropdown-unique']//div[contains(@class,'profile-dropdown--item')][1]")));
         localityOption.click();
-        System.out.println("Selected first available locality option");
+        logger.info("Selected first available locality option");
 
         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("jk-dropdown-unique")));
         Thread.sleep(1000);
@@ -459,7 +462,7 @@ public class PetCempCreate {
      */
     private void selectIdentityProof(WebDriver driver, WebDriverWait wait, Actions actions) throws InterruptedException {
         try {
-            System.out.println("Selecting Identity Proof");
+            logger.info("Selecting Identity Proof");
             Actions actionsForIdentity = new Actions(driver);
             WebElement identityDropdownToggle = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.select svg.cp")));
             actionsForIdentity.moveToElement(identityDropdownToggle).click().perform();
@@ -470,12 +473,12 @@ public class PetCempCreate {
             
             String selectedOptionText = firstOption.getText().trim();
             firstOption.click();
-            System.out.println("Identity proof selected: " + selectedOptionText);
+            logger.info("Identity proof selected: " + selectedOptionText);
 
             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("jk-dropdown-unique")));
             Thread.sleep(2000);
         } catch (Exception e) {
-            System.out.println("Error during identity proof selection: " + e.getMessage());
+            logger.info("Error during identity proof selection: " + e.getMessage());
         }
     }
 
@@ -483,7 +486,7 @@ public class PetCempCreate {
      * Handles document upload for all required files
      */
     private void uploadDocuments(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) {
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
         
         // File paths from configuration
         String[] docFilePaths = {
@@ -496,7 +499,7 @@ public class PetCempCreate {
         List<WebElement> fileInputs = driver.findElements(By.cssSelector("input.input-mirror-selector-button[type='file']"));
         
         if (fileInputs.size() < 4) {
-            System.out.println("Error: Expected at least 4 file inputs, found " + fileInputs.size());
+            logger.info("Error: Expected at least 4 file inputs, found " + fileInputs.size());
             return;
         }
 
@@ -508,7 +511,7 @@ public class PetCempCreate {
         // Upload pet photo
         uploadPetPhoto(driver, wait, js);
         
-        System.out.println("All document uploads completed!");
+        logger.info("All document uploads completed!");
     }
 
     /**
@@ -520,7 +523,7 @@ public class PetCempCreate {
 
         for (int attempt = 1; attempt <= maxRetries && !uploadSuccessful; attempt++) {
             try {
-                System.out.println("Uploading file for field " + fieldNumber + " - Attempt: " + attempt);
+                logger.info("Uploading file for field " + fieldNumber + " - Attempt: " + attempt);
                 Thread.sleep(1000);
 
                 js.executeScript("arguments[0].scrollIntoView(true);", fileInput);
@@ -528,23 +531,23 @@ public class PetCempCreate {
 
                 try {
                     fileInput.sendKeys(filePath);
-                    System.out.println("File path sent using direct sendKeys");
+                    logger.info("File path sent using direct sendKeys");
                 } catch (Exception e1) {
-                    System.out.println("Direct sendKeys failed, trying JavaScript approach...");
+                    logger.info("Direct sendKeys failed, trying JavaScript approach...");
                     js.executeScript("arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible';", fileInput);
                     Thread.sleep(500);
                     fileInput.sendKeys(filePath);
-                    System.out.println("File path sent after making element visible");
+                    logger.info("File path sent after making element visible");
                 }
 
                 Thread.sleep(4000);
                 uploadSuccessful = true;
-                System.out.println("Upload for field " + fieldNumber + " completed successfully!");
+                logger.info("Upload for field " + fieldNumber + " completed successfully!");
                 
             } catch (Exception e) {
-                System.out.println("Error on attempt " + attempt + ": " + e.getMessage());
+                logger.info("Error on attempt " + attempt + ": " + e.getMessage());
                 if (attempt == maxRetries) {
-                    System.out.println("Upload for field " + fieldNumber + " completed with uncertainties");
+                    logger.info("Upload for field " + fieldNumber + " completed with uncertainties");
                     uploadSuccessful = true; // Assume success to continue
                 } else {
                     try { Thread.sleep(2000); } catch (InterruptedException ie) {}
@@ -562,30 +565,30 @@ public class PetCempCreate {
 
         for (int attempt = 1; attempt <= maxRetries && !petPhotoUploadSuccessful; attempt++) {
             try {
-                System.out.println("Uploading pet photo - Attempt: " + attempt);
+                logger.info("Uploading pet photo - Attempt: " + attempt);
                 WebElement petPhotoInput = driver.findElement(By.cssSelector("input[type='file']#upload"));
                 js.executeScript("arguments[0].scrollIntoView(true);", petPhotoInput);
                 Thread.sleep(500);
 
                 try {
                     petPhotoInput.sendKeys(ConfigReader.get("document.pet.photo"));
-                    System.out.println("Pet photo path sent using direct sendKeys");
+                    logger.info("Pet photo path sent using direct sendKeys");
                 } catch (Exception e1) {
-                    System.out.println("Direct sendKeys failed for pet photo, trying JavaScript approach...");
+                    logger.info("Direct sendKeys failed for pet photo, trying JavaScript approach...");
                     js.executeScript("arguments[0].style.display = 'block'; arguments[0].style.visibility = 'visible';", petPhotoInput);
                     Thread.sleep(500);
                     petPhotoInput.sendKeys(ConfigReader.get("document.pet.photo"));
-                    System.out.println("Pet photo path sent after making element visible");
+                    logger.info("Pet photo path sent after making element visible");
                 }
 
                 Thread.sleep(4000);
                 petPhotoUploadSuccessful = true;
-                System.out.println("Pet photo upload completed successfully!");
+                logger.info("Pet photo upload completed successfully!");
                 
             } catch (Exception e) {
-                System.out.println("Error on attempt " + attempt + ": " + e.getMessage());
+                logger.info("Error on attempt " + attempt + ": " + e.getMessage());
                 if (attempt == maxRetries) {
-                    System.out.println("Pet photo upload completed with uncertainties");
+                    logger.info("Pet photo upload completed with uncertainties");
                     petPhotoUploadSuccessful = true;
                 } else {
                     try { Thread.sleep(2000); } catch (InterruptedException ie) {}

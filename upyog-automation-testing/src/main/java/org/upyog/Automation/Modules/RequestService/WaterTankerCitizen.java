@@ -11,6 +11,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,20 +21,22 @@ import org.upyog.Automation.config.WebDriverFactory;
 @Component
 public class WaterTankerCitizen {
 
+    private static final Logger logger = LoggerFactory.getLogger(WaterTankerCitizen.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
-    public void WaterTankerCreate() {
-        WaterTankerCreate(ConfigReader.get("citizen.base.url"),
+    public void waterTankerCreate() {
+        waterTankerCreate(ConfigReader.get("citizen.base.url"),
                 "Request Service",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
                 ConfigReader.get("test.city.name"));
     }
 
-    public void WaterTankerCreate(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Water Tanker Create Application by Citizen");
+    public void waterTankerCreate(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Water Tanker Create Application by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -69,9 +73,11 @@ public class WaterTankerCitizen {
 
 
         } catch (Exception e) {
-            System.out.println("Exception in Water Tanker: " + e.getMessage());
+            logger.info("Exception in Water Tanker: " + e.getMessage());
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -83,7 +89,7 @@ public class WaterTankerCitizen {
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -127,7 +133,7 @@ public class WaterTankerCitizen {
     private void navigateToRequestService(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Request Service");
+        logger.info("Navigating to Request Service");
 
         // Sidebar Request Service link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -147,7 +153,7 @@ public class WaterTankerCitizen {
     private void selectWaterTankerService(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting Water Tanker Service");
+        logger.info("Selecting Water Tanker Service");
         Thread.sleep(1000);
 
         // Select Water Tanker from dropdown (1st option)
@@ -157,7 +163,7 @@ public class WaterTankerCitizen {
 
         WebElement serviceTypeDropdown = dropdownSvgs.get(0);
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", serviceTypeDropdown);
-        Thread.sleep(500);
+        Thread.sleep(2000);
 
         try {
             serviceTypeDropdown.click();
@@ -181,7 +187,7 @@ public class WaterTankerCitizen {
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", waterTankerOption);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", waterTankerOption);
-        System.out.println("Water Tanker Service selected");
+        logger.info("Water Tanker Service selected");
         Thread.sleep(1000);
 
         clickSaveAndNext(wait, js);
@@ -193,7 +199,7 @@ public class WaterTankerCitizen {
     private void fillWaterTankerDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Water Tanker Info Page - Clicking Next");
+        logger.info("Water Tanker Info Page - Clicking Next");
         Thread.sleep(2000);
 
         // Try multiple Next button selectors for info page
@@ -210,11 +216,11 @@ public class WaterTankerCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on info page");
+                logger.info("Clicked Next on info page");
                 Thread.sleep(3000);
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -228,20 +234,20 @@ public class WaterTankerCitizen {
     private void selectFillNewDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Handling Booking Popup");
+        logger.info("Handling Booking Popup");
 
-        // 🔥 Directly wait for button instead of popup container
+        // Directly wait for button instead of popup container
         WebElement fillNewDetailsBtn = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        By.xpath("//button[contains(.,'Fill New')]")
+                        By.xpath("//button[contains(.,'Fill New Details')]")
                 )
         );
 
-        System.out.println("Popup appeared (button detected)");
+        logger.info("Popup appeared (button detected)");
 
         js.executeScript("arguments[0].click();", fillNewDetailsBtn);
 
-        System.out.println("Clicked Fill New Details");
+        logger.info("Clicked Fill New Details");
 
         Thread.sleep(1000);
     }
@@ -253,7 +259,7 @@ public class WaterTankerCitizen {
     private void fillApplicantDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Applicant Details");
+        logger.info("Filling Applicant Details");
 
         fillInput(wait, "applicantName", "Arpit Rao");
         fillInput(wait, "emailId", "arpit@gmail.com");
@@ -262,7 +268,7 @@ public class WaterTankerCitizen {
         try {
             fillInput(wait, "mobileNumber", "9999999999");
         } catch (Exception e) {
-            System.out.println("Mobile number field not found or pre-filled");
+            logger.info("Mobile number field not found or pre-filled");
         }
 
         Thread.sleep(2000);
@@ -281,10 +287,10 @@ public class WaterTankerCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on applicant details page");
+                logger.info("Clicked Next on applicant details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -298,15 +304,15 @@ public class WaterTankerCitizen {
     private void fillAddressDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Address Details");
+        logger.info("Filling Address Details");
 
         // Select address type (Permanent/Current) - try index 0 first
         try {
             selectDropdownOption(driver, wait, js, 0);
             Thread.sleep(1000);
-            System.out.println("Selected address type");
+            logger.info("Selected address type");
         } catch (Exception e) {
-            System.out.println("Address type dropdown not found");
+            logger.info("Address type dropdown not found");
         }
 
         // Fill address fields
@@ -323,7 +329,7 @@ public class WaterTankerCitizen {
                 try {
                     fillInputFast(driver, wait, "address1", "Address Line 1");
                 } catch (Exception e3) {
-                    System.out.println("Address line 1 field not found");
+                    logger.info("Address line 1 field not found");
                 }
             }
         }
@@ -338,7 +344,7 @@ public class WaterTankerCitizen {
                 try {
                     fillInputFast(driver, wait, "address2", "Address Line 2");
                 } catch (Exception e3) {
-                    System.out.println("Address line 2 field not found");
+                    logger.info("Address line 2 field not found");
                 }
             }
         }
@@ -348,9 +354,9 @@ public class WaterTankerCitizen {
         try {
             selectDropdownOption(driver, wait, js, 1);
             Thread.sleep(1000);
-            System.out.println("Selected city");
+            logger.info("Selected city");
         } catch (Exception e) {
-            System.out.println("City dropdown not found");
+            logger.info("City dropdown not found");
         }
 
         // Select locality dropdown after city selection loads more dropdowns
@@ -358,9 +364,9 @@ public class WaterTankerCitizen {
         try {
             selectDropdownOption(driver, wait, js, 2);
             Thread.sleep(1000);
-            System.out.println("Selected locality");
+            logger.info("Selected locality");
         } catch (Exception e) {
-            System.out.println("Locality dropdown not found");
+            logger.info("Locality dropdown not found");
         }
 
         fillInput(wait, "pincode", "110011");
@@ -381,10 +387,10 @@ public class WaterTankerCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on address details page");
+                logger.info("Clicked Next on address details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -399,43 +405,43 @@ public class WaterTankerCitizen {
     private void fillWaterTankerRequestDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Water Tanker Request Details");
+        logger.info("Filling Water Tanker Request Details");
         Thread.sleep(1000);
 
         // Tanker Type - Tanker (radio) - MANDATORY
         try {
             selectRadioByLabel(driver, "Tanker");
-            System.out.println("Selected Tanker radio");
+            logger.info("Selected Tanker radio");
             Thread.sleep(500);
         } catch (Exception e) {
-            System.out.println("Tanker radio selection failed: " + e.getMessage());
+            logger.info("Tanker radio selection failed: " + e.getMessage());
         }
 
         // Use of Water (dropdown) - MANDATORY
         try {
             selectDropdownOption(driver, wait, js, 0);
             Thread.sleep(1000);
-            System.out.println("Selected Use of Water");
+            logger.info("Selected Use of Water");
         } catch (Exception e) {
-            System.out.println("Use of Water dropdown failed: " + e.getMessage());
+            logger.info("Use of Water dropdown failed: " + e.getMessage());
         }
 
         // Water Quantity (dropdown) - MANDATORY
         try {
             selectDropdownOption(driver, wait, js, 1);
             Thread.sleep(1000);
-            System.out.println("Selected Water Quantity");
+            logger.info("Selected Water Quantity");
         } catch (Exception e) {
-            System.out.println("Water Quantity dropdown failed: " + e.getMessage());
+            logger.info("Water Quantity dropdown failed: " + e.getMessage());
         }
 
         // Tanker Quantity (dropdown) - MANDATORY
         try {
             selectDropdownOption(driver, wait, js, 2);
             Thread.sleep(1000);
-            System.out.println("Selected Tanker Quantity");
+            logger.info("Selected Tanker Quantity");
         } catch (Exception e) {
-            System.out.println("Tanker Quantity dropdown failed: " + e.getMessage());
+            logger.info("Tanker Quantity dropdown failed: " + e.getMessage());
         }
 
         List<WebElement> dateInputs = wait.until(
@@ -457,10 +463,10 @@ public class WaterTankerCitizen {
             deliveryDate.clear();
             deliveryDate.sendKeys(futureDate.format(formatter));
 
-            System.out.println("Delivery Date: " + futureDate.format(formatter));
+            logger.info("Delivery Date: " + futureDate.format(formatter));
 
         } else {
-            System.out.println("Delivery Date input not found");
+            logger.info("Delivery Date input not found");
         }
 
         Thread.sleep(1000);
@@ -473,9 +479,9 @@ public class WaterTankerCitizen {
             Thread.sleep(500);
             description.clear();
             description.sendKeys("Water tanker required for household use");
-            System.out.println("Filled description");
+            logger.info("Filled description");
         } catch (Exception e) {
-            System.out.println("Description textarea failed: " + e.getMessage());
+            logger.info("Description textarea failed: " + e.getMessage());
         }
 
         // Declaration Checkbox - OPTIONAL (may not be on this page)
@@ -487,10 +493,10 @@ public class WaterTankerCitizen {
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -518,11 +524,11 @@ public class WaterTankerCitizen {
 
             // Verify the value was set
             String timeValue = (String) js.executeScript("return arguments[0].value;", timeInput);
-            System.out.println("Time value set to: " + timeValue);
+            logger.info("Time value set to: " + timeValue);
 
             Thread.sleep(1000);
         } catch (Exception e) {
-            System.out.println("Time input failed: " + e.getMessage());
+            logger.info("Time input failed: " + e.getMessage());
         }
 
 
@@ -539,10 +545,10 @@ public class WaterTankerCitizen {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on address details page");
+                logger.info("Clicked Next on address details page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -556,7 +562,7 @@ public class WaterTankerCitizen {
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Water Tanker Application - Summary Page");
+        logger.info("Submitting Water Tanker Application - Summary Page");
         Thread.sleep(3000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -567,10 +573,10 @@ public class WaterTankerCitizen {
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -581,7 +587,7 @@ public class WaterTankerCitizen {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Water Tanker application: Submit clicked");
+        logger.info("Water Tanker application: Submit clicked");
     }
 
     // =====================================================================
@@ -647,7 +653,7 @@ public class WaterTankerCitizen {
                         By.cssSelector("div.select svg.cp")));
 
         if (dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 

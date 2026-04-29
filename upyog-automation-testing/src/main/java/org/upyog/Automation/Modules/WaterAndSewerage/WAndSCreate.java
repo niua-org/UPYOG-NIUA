@@ -7,28 +7,37 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.upyog.Automation.Utils.DriverFactory;
+import org.upyog.Automation.config.WebDriverFactory;
 
 import java.util.List;
 
 @Component
 public class WAndSCreate {
+
+    private static final Logger logger = LoggerFactory.getLogger(WAndSCreate.class);
+
+    @Autowired
+    private WebDriverFactory webDriverFactory;
     //@PostConstruct
 
-    public void WandSReg() {
-        WandSReg(ConfigReader.get("citizen.base.url"),
+    public void wandSReg() {
+        wandSReg(ConfigReader.get("citizen.base.url"),
                 "Water And Sewerage",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
                 ConfigReader.get("test.city.name"));
     }
 
-    public void WandSReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Community Hall Booking by Citizen");
+    public void wandSReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Community Hall Booking by Citizen");
 
-        WebDriver driver = DriverFactory.createChromeDriver();
+        WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = DriverFactory.createWebDriverWait(driver);
         JavascriptExecutor js = (JavascriptExecutor) driver;
         Actions actions = new Actions(driver);
@@ -73,10 +82,12 @@ public class WAndSCreate {
 
 
         } catch (Exception e) {
-            System.out.println("Exception in Water and Sewerage Connection: " + e.getMessage());
+            logger.info("Exception in Water and Sewerage Connection: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -89,7 +100,7 @@ public class WAndSCreate {
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -134,19 +145,19 @@ public class WAndSCreate {
     private void navigateToWaterAndSewerage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Water And Sewerage");
+        logger.info("Navigating to Water And Sewerage");
 
         // Sidebar Water And Sewerage link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[@href='/upyog-ui/citizen/ws-home']"))));
 
         Thread.sleep(2000);
-        System.out.println("Reached Water And Sewerage home page");
+        logger.info("Reached Water And Sewerage home page");
 
         // "New Connection" link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[@href='/upyog-ui/citizen/ws/create-application/docs-required']"))));
-        System.out.println("Clicked New Connection link");
+        logger.info("Clicked New Connection link");
     }
 
     // =====================================================================
@@ -156,21 +167,21 @@ public class WAndSCreate {
 
     private void searchProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
-        System.out.println("Search Property by Mobile Number");
+        logger.info("Search Property by Mobile Number");
 
         try {
             selectDropdownByIndex(driver, wait, js, 0, 0);
             Thread.sleep(1000);
-            System.out.println("Selected city");
+            logger.info("Selected city");
         } catch (Exception e) {
-            System.out.println("City dropdown not found: " + e.getMessage());
+            logger.info("City dropdown not found: " + e.getMessage());
         }
 
         Thread.sleep(1000);
 
         WebElement mobileInput = wait.until(
                 ExpectedConditions.presenceOfElementLocated(
-                        By.xpath("//h2[contains(.,\"Owner's mobile number\")]/following::input[contains(@class,'employee-card-input')][1]")
+                        By.xpath("//h2[contains(.,\"Mobile number\")]/following::input[contains(@class,'employee-card-input')][1]")
                 )
         );
 
@@ -198,7 +209,7 @@ public class WAndSCreate {
 
         searchBtn.click();Thread.sleep(1000);
 
-        System.out.println("Clicked Search button");
+        logger.info("Clicked Search button");
     }
 
     // =====================================================================
@@ -209,7 +220,7 @@ public class WAndSCreate {
     private void selectSearchedProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting Searched Property");
+        logger.info("Selecting Searched Property");
         WebElement selectBtn = wait.until(
                 ExpectedConditions.elementToBeClickable(
                         By.xpath("(//button[normalize-space()='Select'])[1]")
@@ -221,7 +232,7 @@ public class WAndSCreate {
 
         js.executeScript("arguments[0].click();", selectBtn);
 
-        System.out.println("Clicked Select button");
+        logger.info("Clicked Select button");
     }
 
     // =====================================================================
@@ -232,7 +243,7 @@ public class WAndSCreate {
     private void infoPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Construction and Demolition Info Page - Clicking Next");
+        logger.info("Construction and Demolition Info Page - Clicking Next");
         Thread.sleep(2000);
 
         // Try multiple Next button selectors for info page
@@ -247,10 +258,10 @@ public class WAndSCreate {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on info page");
+                logger.info("Clicked Next on info page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -263,14 +274,14 @@ public class WAndSCreate {
     // =====================================================================
 
     private void propertyDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
-        System.out.println("Selecting Property");
+        logger.info("Selecting Property");
 
         clickNextButton(driver, wait, js);
         Thread.sleep(500);
 
-        System.out.println("Selected Property Details");
+        logger.info("Selected Property Details");
     }
 
     // =====================================================================
@@ -280,12 +291,12 @@ public class WAndSCreate {
     private void commonConnectionDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
 
-        System.out.println("Selecting Property");
+        logger.info("Selecting Property");
 
         clickNextButton(driver, wait, js);
         Thread.sleep(500);
 
-        System.out.println("Selected Property Details");
+        logger.info("Selected Property Details");
     }
 
     // =====================================================================
@@ -295,15 +306,15 @@ public class WAndSCreate {
     private void chooseServiceType(WebDriver driver,WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
 
-        System.out.println("Select Service Name ");
+        logger.info("Select Service Name ");
         Thread.sleep(500);
 
-        selectRadioButtonByLabel(driver, "WS_BOTH_WATER_AND_SEWERAGE");
+        selectRadioButtonByLabel(driver, "Both Water and Sewerage");
         Thread.sleep(1000);
 
         clickNextButton(driver, wait, js);
         Thread.sleep(500);
-        System.out.println("Selected Service Name");
+        logger.info("Selected Service Name");
     }
 
     // =====================================================================
@@ -313,7 +324,7 @@ public class WAndSCreate {
     private void connectionDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
 
-        System.out.println("Filling Connection Details");
+        logger.info("Filling Connection Details");
 
         List<WebElement> inputs = wait.until(
                 ExpectedConditions.visibilityOfAllElementsLocatedBy(
@@ -341,7 +352,7 @@ public class WAndSCreate {
     private void sewerageDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Sewerage Connection Details");
+        logger.info("Filling Sewerage Connection Details");
 
         List<WebElement> inputs = wait.until(
                 ExpectedConditions.visibilityOfAllElementsLocatedBy(
@@ -369,7 +380,7 @@ public class WAndSCreate {
     private void uploadDocumentPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
 
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
         Thread.sleep(2000);
 
         // Document 0: Identity proof
@@ -406,7 +417,7 @@ public class WAndSCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextBtn);
         Thread.sleep(500);
         js.executeScript("arguments[0].click();", nextBtn);
-        System.out.println("Clicked Next button");
+        logger.info("Clicked Next button");
         Thread.sleep(2000);
     }
 
@@ -417,7 +428,7 @@ public class WAndSCreate {
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Water And Sewerage Application - Summary Page");
+        logger.info("Submitting Water And Sewerage Application - Summary Page");
         Thread.sleep(3000);
 
 
@@ -428,7 +439,8 @@ public class WAndSCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Water And Sewerage application: Submit clicked");
+        logger.info("Water And Sewerage application: Submit clicked");
+        Thread.sleep(5000);
     }
 
     /*
@@ -450,12 +462,12 @@ public class WAndSCreate {
             if (input.isDisplayed() && input.isEnabled()) {
                 input.clear();
                 input.sendKeys(value);
-                System.out.println("Filled optional field: " + fieldName);
+                logger.info("Filled optional field: " + fieldName);
             } else {
-                System.out.println("Optional field " + fieldName + " not interactable, skipping");
+                logger.info("Optional field " + fieldName + " not interactable, skipping");
             }
         } catch (Exception e) {
-            System.out.println("Optional field " + fieldName + " not found, skipping");
+            logger.info("Optional field " + fieldName + " not found, skipping");
         }
     }
 
@@ -494,7 +506,7 @@ public class WAndSCreate {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
         Thread.sleep(200);
         nextButton.click();
-        System.out.println("Clicked Next");
+        logger.info("Clicked Next");
     }
 
     private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
@@ -531,7 +543,7 @@ public class WAndSCreate {
                 WebElement el = localWait.until(org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable(locator));
                 try {
                     el.click();
-                    System.out.println("Clicked element " + locator + " (attempt " + attempt + ")");
+                    logger.info("Clicked element " + locator + " (attempt " + attempt + ")");
                     return true;
                 } catch (Exception clickEx) {
                     // fallback to JS click
@@ -539,14 +551,14 @@ public class WAndSCreate {
                         js.executeScript("arguments[0].scrollIntoView({block:'center'});", el);
                         Thread.sleep(150);
                         js.executeScript("arguments[0].click();", el);
-                        System.out.println("JS-clicked element " + locator + " (attempt " + attempt + ")");
+                        logger.info("JS-clicked element " + locator + " (attempt " + attempt + ")");
                         return true;
                     } catch (Exception jsEx) {
-                        System.out.println("Click failed attempt " + attempt + " for " + locator + " : " + jsEx.getMessage());
+                        logger.info("Click failed attempt " + attempt + " for " + locator + " : " + jsEx.getMessage());
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Element not clickable yet (" + locator + ") attempt " + attempt + " : " + e.getMessage());
+                logger.info("Element not clickable yet (" + locator + ") attempt " + attempt + " : " + e.getMessage());
             }
             Thread.sleep(retryDelayMs);
         }
@@ -599,10 +611,10 @@ public class WAndSCreate {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
                 Thread.sleep(200);
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-                System.out.println("Selected radio button: " + labelText);
+                logger.info("Selected radio button: " + labelText);
             }
         } catch (Exception e) {
-            System.out.println("Error selecting radio button '" + labelText + "': " + e.getMessage());
+            logger.info("Error selecting radio button '" + labelText + "': " + e.getMessage());
             throw new RuntimeException("Failed to select radio button: " + labelText, e);
         }
     }
@@ -619,7 +631,7 @@ public class WAndSCreate {
         );
 
         if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 
@@ -685,7 +697,7 @@ public class WAndSCreate {
         );
 
         if (index >= fileInputs.size()) {
-            System.out.println("File input index " + index + " not found for path: " + filePath);
+            logger.info("File input index " + index + " not found for path: " + filePath);
             return;
         }
 
@@ -697,7 +709,7 @@ public class WAndSCreate {
         Thread.sleep(300);
 
         fileInput.sendKeys(filePath);
-        System.out.println("Uploaded file at index " + index + ": " + filePath);
+        logger.info("Uploaded file at index " + index + ": " + filePath);
         Thread.sleep(500);
     }
 
@@ -723,7 +735,7 @@ public class WAndSCreate {
         }
 
         Thread.sleep(400);
-        System.out.println("Selected radio: " + labelText);
+        logger.info("Selected radio: " + labelText);
     }
 
     private void fillInputStable(JavascriptExecutor js, WebElement input, String value)
@@ -757,14 +769,14 @@ public class WAndSCreate {
         WebElement clickable = radio.findElement(By.xpath(".."));
         js.executeScript("arguments[0].click();", clickable);
 
-        System.out.println("Selected radio index: " + index);
+        logger.info("Selected radio index: " + index);
         Thread.sleep(500);
     }
 
     private void selectDateRange(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Selecting Date Range via Calendar Icon");
+        logger.info("Selecting Date Range via Calendar Icon");
 
         // CLICK CALENDAR ICON
         WebElement calendarIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -780,7 +792,7 @@ public class WAndSCreate {
                 calendarIcon
         );
 
-        System.out.println("Calendar icon clicked");
+        logger.info("Calendar icon clicked");
 
         Thread.sleep(2000); // wait for calendar UI
 
@@ -789,6 +801,6 @@ public class WAndSCreate {
         ));
         js.executeScript("arguments[0].click();", threeDays);
 
-        System.out.println("Three Days selected");
+        logger.info("Three Days selected");
     }
 }

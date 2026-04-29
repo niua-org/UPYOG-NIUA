@@ -8,6 +8,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ import org.upyog.Automation.config.WebDriverFactory;
 
 @Component
 public class PetApplicationEmp {
+
+    private static final Logger logger = LoggerFactory.getLogger(PetApplicationEmp.class);
 
     @Autowired
     private WebDriverFactory webDriverFactory;
@@ -33,7 +37,7 @@ public class PetApplicationEmp {
     }
 
     public void petInboxEmp(String baseUrl, String username, String password, String applicationNumber) {
-        System.out.println("Pet Application Employee Workflow");
+        logger.info("Pet Application Employee Workflow");
         
         // Initialize WebDriver using DriverFactory
         WebDriver driver = webDriverFactory.createDriver();
@@ -60,15 +64,16 @@ public class PetApplicationEmp {
             // STEP 6: Download Receipts
             downloadReceipts(driver, wait, js);
             
-            System.out.println("Pet Application Employee Workflow completed successfully!");
+            logger.info("Pet Application Employee Workflow completed successfully!");
             Thread.sleep(50000); // Keep browser open for observation
             
         } catch (Exception e) {
-            System.out.println("Exception in Pet Application Employee Workflow: " + e.getMessage());
+            logger.info("Exception in Pet Application Employee Workflow: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // Uncomment to close browser after test
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -78,12 +83,12 @@ public class PetApplicationEmp {
     private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String username, String password) throws InterruptedException {
         driver.get(baseUrl);
         driver.manage().window().maximize();
-        System.out.println("Open the Employee Login Portal");
+        logger.info("Open the Employee Login Portal");
 
         // Enter credentials from configuration
         fillInput(wait, "username", username);
         fillInput(wait, "password", password);
-        System.out.println("Filled username and password");
+        logger.info("Filled username and password");
 
         // Select city dropdown
         selectCityDropdown(driver, wait, actions);
@@ -96,7 +101,7 @@ public class PetApplicationEmp {
      * Navigates to Pet Application Inbox
      */
     private void navigateToInbox(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Navigating to Pet Application Inbox");
+        logger.info("Navigating to Pet Application Inbox");
         
         // Wait for page to load after login
         Thread.sleep(2000);
@@ -106,14 +111,14 @@ public class PetApplicationEmp {
                 By.xpath("//a[@href='/upyog-ui/employee/ptr/petservice/inbox' and contains(text(), 'Inbox')]")));
         js.executeScript("arguments[0].scrollIntoView(true);", inboxLink);
         inboxLink.click();
-        System.out.println("Clicked Inbox link");
+        logger.info("Clicked Inbox link");
     }
 
     /**
      * Searches for application by application number
      */
     private void selectFirstApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String applicationNumber) throws InterruptedException {
-        System.out.println("Searching for application by number");
+        logger.info("Searching for application by number");
         
         // Wait for application number input field
         WebElement applicationInput = wait.until(ExpectedConditions.elementToBeClickable(
@@ -122,13 +127,13 @@ public class PetApplicationEmp {
         // Fill application number from configuration
         applicationInput.clear();
         applicationInput.sendKeys(applicationNumber);
-        System.out.println("Entered application number: " + applicationNumber);
+        logger.info("Entered application number: " + applicationNumber);
         
         // Click Search button
         WebElement searchButton = wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("button.submit-bar.submit-bar-search")));
         searchButton.click();
-        System.out.println("Clicked Search button");
+        logger.info("Clicked Search button");
         
         // Wait for search results to load
         Thread.sleep(2000);
@@ -137,36 +142,36 @@ public class PetApplicationEmp {
         WebElement appLink = wait.until(ExpectedConditions.elementToBeClickable(
                 By.linkText(applicationNumber)));
         appLink.click();
-        System.out.println("Selected application: " + applicationNumber);
+        logger.info("Selected application: " + applicationNumber);
     }
 
     /**
      * Processes the complete application workflow: Verify -> Approve -> Pay
      */
     private void processApplicationWorkflow(WebDriver driver, WebDriverWait wait) throws InterruptedException {
-        System.out.println("Processing application workflow");
+        logger.info("Processing application workflow");
         
         // Step 1: Verify
         clickTakeActionButton(driver, wait);
         handleTakeActionMenu(driver, wait);
-        System.out.println("Verification completed");
+        logger.info("Verification completed");
         
         // Step 2: Approve
         clickTakeActionButton(driver, wait);
         handleTakeActionMenu(driver, wait);
-        System.out.println("Approval completed");
+        logger.info("Approval completed");
         
         // Step 3: Pay
         clickTakeActionButton(driver, wait);
         handleTakeActionMenu(driver, wait);
-        System.out.println("Payment process initiated");
+        logger.info("Payment process initiated");
     }
 
     /**
      * Handles payment collection
      */
     private void collectPayment(WebDriver driver, WebDriverWait wait) {
-        System.out.println("Collecting payment");
+        logger.info("Collecting payment");
         
         // Enter mobile number for payment
         WebElement mobileInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("payerMobile")));
@@ -177,14 +182,14 @@ public class PetApplicationEmp {
         WebElement collectPaymentButton = wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//button[contains(@class, 'submit-bar') and .//header[normalize-space()='Collect Payment']]")));
         collectPaymentButton.click();
-        System.out.println("Payment collected");
+        logger.info("Payment collected");
     }
 
     /**
      * Downloads all available receipts
      */
     private void downloadReceipts(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Downloading receipts");
+        logger.info("Downloading receipts");
         
         List<WebElement> svgButtons = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
                 By.cssSelector("div.primary-label-btn.d-grid")));
@@ -194,10 +199,10 @@ public class PetApplicationEmp {
             js.executeScript("arguments[0].scrollIntoView({block: 'center'});", svg);
             Thread.sleep(300);
             svg.click();
-            System.out.println("Downloaded: " + buttonContainer.getText().trim());
+            logger.info("Downloaded: " + buttonContainer.getText().trim());
             Thread.sleep(1000);
         }
-        System.out.println("All receipts downloaded");
+        logger.info("All receipts downloaded");
     }
 
     // UTILITY METHODS
@@ -243,7 +248,7 @@ public class PetApplicationEmp {
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", takeActionButton);
         Thread.sleep(300);
         takeActionButton.click();
-        System.out.println("Clicked TAKE ACTION button");
+        logger.info("Clicked TAKE ACTION button");
     }
 
     /**
@@ -258,27 +263,27 @@ public class PetApplicationEmp {
                 String text = option.getText().trim().toUpperCase();
                 if (text.equals("VERIFY")) {
                     option.click();
-                    System.out.println("Clicked VERIFY");
+                    logger.info("Clicked VERIFY");
                     handlePopupAndSubmit(driver, wait, "Automated verification comment.", 
                             ConfigReader.get("document.identity.proof"));
                     break;
                 } else if (text.equals("APPROVE")) {
                     option.click();
-                    System.out.println("Clicked APPROVE");
+                    logger.info("Clicked APPROVE");
                     handlePopupAndSubmit(driver, wait, "Automated approval comment.", 
                             ConfigReader.get("document.identity.proof"));
                     break;
                 } else if (text.equals("PAY")) {
                     option.click();
-                    System.out.println("Clicked PAY");
+                    logger.info("Clicked PAY");
                     break;
                 } else if (text.equals("REJECT")) {
-                    System.out.println("Application Rejected");
+                    logger.info("Application Rejected");
                     break;
                 }
             }
         } catch (Exception e) {
-            System.out.println("Take Action Menu not found or no valid option present: " + e.getMessage());
+            logger.info("Take Action Menu not found or no valid option present: " + e.getMessage());
         }
     }
 
@@ -294,7 +299,7 @@ public class PetApplicationEmp {
         // Upload document
         WebElement fileInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("workflow-doc")));
         fileInput.sendKeys(filePath);
-        System.out.println("Document uploaded");
+        logger.info("Document uploaded");
 
         // Click Verify or Approve button
         List<WebElement> verifyButtons = driver.findElements(By.xpath("//button[contains(@class, 'selector-button-primary') and .//h2[normalize-space()='Verify']]"));
@@ -303,10 +308,10 @@ public class PetApplicationEmp {
         WebElement actionButton = null;
         if (!verifyButtons.isEmpty()) {
             actionButton = verifyButtons.get(0);
-            System.out.println("Clicking Verify button");
+            logger.info("Clicking Verify button");
         } else if (!approveButtons.isEmpty()) {
             actionButton = approveButtons.get(0);
-            System.out.println("Clicking Approve button");
+            logger.info("Clicking Approve button");
         } else {
             throw new RuntimeException("Neither Verify nor Approve button found!");
         }

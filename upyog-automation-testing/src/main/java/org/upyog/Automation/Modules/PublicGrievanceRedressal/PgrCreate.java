@@ -1,5 +1,7 @@
 package org.upyog.Automation.Modules.PublicGrievanceRedressal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,19 +21,21 @@ import java.io.File;
 @Component
 public class PgrCreate {
 
+    private static final Logger logger = LoggerFactory.getLogger(PgrCreate.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
-    public void PgrReg() {
-        PgrReg(ConfigReader.get("citizen.base.url"),
+    public void pgrReg() {
+        pgrReg(ConfigReader.get("citizen.base.url"),
                 "Pgr",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
                 ConfigReader.get("test.city.name"));
 }
 
-    public void PgrReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Public Grievance Redressal by Citizen");
+    public void pgrReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Public Grievance Redressal by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -68,10 +72,13 @@ public class PgrCreate {
 
 
         } catch (Exception e) {
-            System.out.println("Exception in Property Registration: " + e.getMessage());
+            logger.info("Exception in PGR Registration: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            // driver.quit();
+        }
+        finally {
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -85,7 +92,7 @@ private void performCitizenLogin(WebDriver driver, WebDriverWait wait, Javascrip
         throws InterruptedException {
 
     driver.get(baseUrl);
-    System.out.println("Open the Citizen Login Portal");
+    logger.info("Open the Citizen Login Portal");
 
     // Mobile number
     fillInput(wait, "mobileNumber", mobileNumber);
@@ -130,20 +137,20 @@ private void performCitizenLogin(WebDriver driver, WebDriverWait wait, Javascrip
 private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
         throws InterruptedException {
 
-    System.out.println("Navigating to Public Grievance Redressal");
+    logger.info("Navigating to Public Grievance Redressal");
 
     // Sidebar Public Grievance Redressal link
     js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
             By.xpath("//a[@href='/upyog-ui/citizen/pgr-home']"))));
 
     Thread.sleep(2000);
-    System.out.println("Reached Public Grievance Redressal home page");
+    logger.info("Reached Public Grievance Redressal home page");
 
     // "Public Grievance Redressal" link
     js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.elementToBeClickable(
             By.xpath("//a[@href='/upyog-ui/citizen/pgr/create-complaint/complaint-type']"))));
 
-    System.out.println("Clicked File a Complaint link");
+    logger.info("Clicked File a Complaint link");
 }
 
              /*
@@ -154,7 +161,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
 
     private void fileNewComplaint(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
         throws InterruptedException{
-        System.out.println("Filing New Grievance Complaint");
+        logger.info("Filing New Grievance Complaint");
         Thread.sleep(500);
 
         selectDropdownByIndex(driver, wait, js, 0,1);
@@ -180,7 +187,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
     private void pinComplaintLocation(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Clicking Skip and Continue");
+        logger.info("Clicking Skip and Continue");
 
         WebElement skipContainer = wait.until(
                 ExpectedConditions.presenceOfElementLocated(
@@ -200,7 +207,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
         // JS click (MANDATORY)
         js.executeScript("arguments[0].click();", skipContainer);
 
-        System.out.println("Skip and Continue clicked");
+        logger.info("Skip and Continue clicked");
         Thread.sleep(1000);
 
         clickNextButton(driver, wait, js);
@@ -217,7 +224,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
     private void fillPincodeDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Pincode");
+        logger.info("Filling Pincode");
         Thread.sleep(1000);
 
         // Try multiple selectors for pincode input
@@ -233,7 +240,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
                 pincodeInput = wait.until(ExpectedConditions.elementToBeClickable(selector));
                 break;
             } catch (Exception e) {
-                System.out.println("Pincode selector failed: " + selector);
+                logger.info("Pincode selector failed: " + selector);
             }
         }
 
@@ -244,7 +251,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
             pincodeInput.sendKeys("143001");
 
         } else {
-            System.out.println("Pincode input not found");
+            logger.info("Pincode input not found");
         }
         Thread.sleep(1000);
 
@@ -260,10 +267,10 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
 
     private void selectCityLocation(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
-        System.out.println("Selecting City and Locality");
+        logger.info("Selecting City and Locality");
         Thread.sleep(1000);
 
-        selectRadioButtonByLabel(driver, "City A");
+        selectRadioButtonByLabel(driver, "Delhi");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "Main Road Abadpura");
@@ -283,7 +290,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
     private void fillLandMarkDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Landmark");
+        logger.info("Filling Landmark");
 
         // textarea (NOT input)
         WebElement landmarkTextarea = wait.until(
@@ -308,7 +315,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
 
         clickNextButton(driver, wait, js);
 
-        System.out.println("Additional Detail submitted successfully");
+        logger.info("Additional Detail submitted successfully");
     }
 
 
@@ -321,10 +328,10 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
     private void uploadComplaintPhoto(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Uploading complaint photo");
+        logger.info("Uploading complaint photo");
 
         String photoPath = ConfigReader.get("document.complaint.proof");
-        System.out.println("PHOTO PATH: " + photoPath);
+        logger.info("PHOTO PATH: " + photoPath);
 
         File f = new File(photoPath);
         if (!f.exists()) {
@@ -347,7 +354,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
 
         // Upload
         fileInput.sendKeys(f.getAbsolutePath());
-        System.out.println("Complaint photo uploaded");
+        logger.info("Complaint photo uploaded");
 
         Thread.sleep(2000);
 
@@ -363,7 +370,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
     private void fillAdditionalDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Additional Details");
+        logger.info("Filling Additional Details");
 
         // textarea (NOT input)
         WebElement AdditionalDetailsTextarea = wait.until(
@@ -388,7 +395,7 @@ private void navigateToPgr(WebDriver driver, WebDriverWait wait, JavascriptExecu
 
         clickNextButton(driver, wait, js);
 
-        System.out.println("Landmark submitted successfully");
+        logger.info("Landmark submitted successfully");
     }
 
 
@@ -411,12 +418,12 @@ private void fillOptionalInput(WebDriver driver, WebDriverWait wait, String fiel
         if (input.isDisplayed() && input.isEnabled()) {
             input.clear();
             input.sendKeys(value);
-            System.out.println("Filled optional field: " + fieldName);
+            logger.info("Filled optional field: " + fieldName);
         } else {
-            System.out.println("Optional field " + fieldName + " not interactable, skipping");
+            logger.info("Optional field " + fieldName + " not interactable, skipping");
         }
     } catch (Exception e) {
-        System.out.println("Optional field " + fieldName + " not found, skipping");
+        logger.info("Optional field " + fieldName + " not found, skipping");
     }
 }
 
@@ -455,7 +462,7 @@ private void clickNextButton(WebDriver driver, WebDriverWait wait, JavascriptExe
     js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
     Thread.sleep(200);
     nextButton.click();
-    System.out.println("Clicked Next");
+    logger.info("Clicked Next");
 }
 
 private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
@@ -507,10 +514,10 @@ private void selectRadioButtonByLabel(WebDriver driver, String labelText) {
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
             Thread.sleep(200);
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-            System.out.println("Selected radio button: " + labelText);
+            logger.info("Selected radio button: " + labelText);
         }
     } catch (Exception e) {
-        System.out.println("Error selecting radio button '" + labelText + "': " + e.getMessage());
+        logger.info("Error selecting radio button '" + labelText + "': " + e.getMessage());
         throw new RuntimeException("Failed to select radio button: " + labelText, e);
     }
 }
@@ -527,7 +534,7 @@ private void selectDropdownOption(WebDriver driver,
     );
 
     if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
-        System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+        logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
         return;
     }
 
@@ -593,7 +600,7 @@ private void uploadFile(WebDriver driver, WebDriverWait wait, JavascriptExecutor
     );
 
     if (index >= fileInputs.size()) {
-        System.out.println("File input index " + index + " not found for path: " + filePath);
+        logger.info("File input index " + index + " not found for path: " + filePath);
         return;
     }
 
@@ -605,7 +612,7 @@ private void uploadFile(WebDriver driver, WebDriverWait wait, JavascriptExecutor
     Thread.sleep(300);
 
     fileInput.sendKeys(filePath);
-    System.out.println("Uploaded file at index " + index + ": " + filePath);
+    logger.info("Uploaded file at index " + index + ": " + filePath);
     Thread.sleep(500);
 }
 
@@ -631,7 +638,7 @@ private void selectRadioByLabel(WebDriver driver,
     }
 
     Thread.sleep(400);
-    System.out.println("Selected radio: " + labelText);
+    logger.info("Selected radio: " + labelText);
 }
 
 private void fillInputStable(JavascriptExecutor js, WebElement input, String value)
@@ -661,18 +668,18 @@ private void clickRadioByIndex(List<WebElement> radios,
     js.executeScript("arguments[0].scrollIntoView({block:'center'});", radio);
     Thread.sleep(200);
 
-    // 🔥 CLICK PARENT, NOT INPUT
+    // CLICK PARENT, NOT INPUT
     WebElement clickable = radio.findElement(By.xpath(".."));
     js.executeScript("arguments[0].click();", clickable);
 
-    System.out.println("Selected radio index: " + index);
+    logger.info("Selected radio index: " + index);
     Thread.sleep(500);
 }
 
     private void clickNextBottomRight(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Clicking Next (bottom right)");
+        logger.info("Clicking Next (bottom right)");
 
         WebElement nextBtn = wait.until(
                 ExpectedConditions.presenceOfElementLocated(
@@ -695,7 +702,7 @@ private void clickRadioByIndex(List<WebElement> radios,
         // JS click (ONLY reliable way)
         js.executeScript("arguments[0].click();", nextBtn);
 
-        System.out.println("Clicked Next");
+        logger.info("Clicked Next");
         Thread.sleep(800);
     }
 

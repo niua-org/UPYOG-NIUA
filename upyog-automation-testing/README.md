@@ -56,3 +56,12 @@ The test is configured as a Spring component with `@PostConstruct` annotation, w
   - JavaScript execution
   - Actions API for complex interactions
   - Multiple locator strategies (CSS, XPath)
+
+
+## Local Setup
+- application.properties
+  - selenium.grid.enabled=false
+  - Please update all document paths in application.properties based on your local machine.
+    For example:
+    /Users/niua-l1232/Documents/doc.pdf should be replaced with your own system path.
+  - Use IP- localhost:8080

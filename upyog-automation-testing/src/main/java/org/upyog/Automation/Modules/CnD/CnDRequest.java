@@ -4,9 +4,11 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.upyog.Automation.Utils.DriverFactory;
+import org.upyog.Automation.config.WebDriverFactory;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -16,20 +18,23 @@ import java.util.List;
 
 public class CnDRequest {
 
+    @Autowired
+    private WebDriverFactory webDriverFactory;
+
     //@PostConstruct
 
-    public void CndReg() {
-        CndReg(ConfigReader.get("citizen.base.url"),
+    public void cndReg() {
+        cndReg(ConfigReader.get("citizen.base.url"),
                 "CnD",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
                 ConfigReader.get("test.city.name"));
     }
 
-    public void CndReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+    public void cndReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
         System.out.println("Construction and Demolition Booking");
 
-        WebDriver driver = DriverFactory.createChromeDriver();
+        WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = DriverFactory.createWebDriverWait(driver);
         JavascriptExecutor js = (JavascriptExecutor) driver;
         Actions actions = new Actions(driver);
@@ -71,8 +76,9 @@ public class CnDRequest {
             System.out.println("Exception in Construction and Demolition Booking: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit();
-        }
+            if (driver != null) {
+                driver.quit();
+            }}
     }
 
     // =====================================================================
@@ -216,7 +222,7 @@ public class CnDRequest {
     // =====================================================================
 
     private void selectPickupAndProceed(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
         Thread.sleep(1000);
 
         System.out.println("Selecting Request for Pick-up");
@@ -268,7 +274,7 @@ public class CnDRequest {
     // =====================================================================
 
     private void fillPropertyNature(WebDriver driver,WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
         System.out.println("Filling Property Nature");
         Thread.sleep(1000);
@@ -276,37 +282,51 @@ public class CnDRequest {
         selectDropdownByIndex(driver, wait, js, 0,1);
         Thread.sleep(500);
 
-        fillInput(wait, "houseArea", "1800");
+        fillInput(wait, "houseArea", "1600");
 
-// Date Range
+// ===============================
+// TIME PERIOD DATE HANDLING
+// ===============================
 
-        List<WebElement> dateInputs = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
-                By.cssSelector("input.employee-card-input[type='date']")));
+// ===== FROM DATE (Fixed: 02/06/1996) =====
+        WebElement fromDate = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//label[contains(text(),'Time Period')]/following::input[1]")
+        ));
 
-        if (dateInputs.size() >= 2) {
-            WebElement fromDate = dateInputs.get(0);
-            WebElement toDate = dateInputs.get(1);
+        fromDate.click();
+        fromDate.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        fromDate.sendKeys("02/06/1996");
 
-            // Get current date and add days for future dates
-            LocalDate today = LocalDate.now();
-            LocalDate futureFromDate = today.plusDays(5);   // 5 days from today
-            LocalDate futureToDate = today.plusDays(30);    // 30 days from today
+// React trigger
+        js.executeScript(
+                "arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
+                fromDate
+        );
 
-            // Format dates as dd-MM-yyyy for Time Period of Construction
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-            fromDate.clear();
-            fromDate.sendKeys(futureFromDate.format(formatter));
+// ===== TO DATE (Current Date) =====
+        WebElement toDate = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//label[contains(text(),'Time Period')]/following::input[2]")
+        ));
 
-            toDate.clear();
-            toDate.sendKeys(futureToDate.format(formatter));
+// Get today's date
+        String todayDate = java.time.LocalDate.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
-            System.out.println("Construction From Date: " + futureFromDate.format(formatter));
-            System.out.println("Construction To Date: " + futureToDate.format(formatter));
-        } else {
-            System.out.println("Date inputs not found or less than 2");
-        }
-        Thread.sleep(1000);
+        toDate.click();
+        toDate.sendKeys(Keys.chord(Keys.CONTROL, "a"));
+        toDate.sendKeys(todayDate);
+
+// React trigger
+        js.executeScript(
+                "arguments[0].dispatchEvent(new Event('change', { bubbles: true }))",
+                toDate
+        );
+
+
+// ===== DEBUG (optional but useful) =====
+        System.out.println("From Date set: 02/06/1996");
+        System.out.println("To Date set: " + todayDate);
 
         selectDropdownByIndex(driver, wait, js, 1,3);
         Thread.sleep(500);
@@ -330,7 +350,7 @@ public class CnDRequest {
     // =====================================================================
 
     private void fillWasteType(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
 
         System.out.println("Filling Waste Type");
         Thread.sleep(1000);
@@ -394,9 +414,16 @@ public class CnDRequest {
 
         selectAddressCard(driver, wait, js);
 
-        Thread.sleep(1000);
-
         clickSaveNextButton(driver, wait, js);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("body")));
+
+        wait.until(ExpectedConditions.or(
+                ExpectedConditions.visibilityOfElementLocated(By.xpath("//header[contains(text(),'Summary')]")),
+                ExpectedConditions.visibilityOfElementLocated(By.xpath("//button//header[text()='Submit Application']"))
+        ));
+
+        System.out.println("Navigated to Summary Page");
     }
 
     // =====================================================================
@@ -407,35 +434,40 @@ public class CnDRequest {
             throws InterruptedException {
 
         System.out.println("Submitting Property Tax Application - Summary Page");
-        Thread.sleep(3000);
 
-        List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
-        if (!checkboxes.isEmpty()) {
-            WebElement lastCheckbox = checkboxes.get(checkboxes.size() - 1);
-            try {
-                if (!lastCheckbox.isSelected()) {
-                    js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
-                    Thread.sleep(300);
-                    js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
-                }
-            } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
-            }
+        // WAIT for checkbox
+        WebElement checkbox = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//input[@type='checkbox']")
+        ));
+
+        if (!checkbox.isSelected()) {
+            js.executeScript("arguments[0].scrollIntoView({block:'center'});", checkbox);
+            js.executeScript("arguments[0].click();", checkbox);
+            System.out.println("Checked declaration checkbox");
         }
 
-        WebElement submitButton = wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.xpath("//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit Application']]")));
-        js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
-        Thread.sleep(300);
-        js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
-        Thread.sleep(200);
-        submitButton.click();
+        // WAIT for submit button
+        WebElement submitButton = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//button[.//header[text()='Submit Application']]")
+        ));
+
+        // SCROLL BEFORE CLICK
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", submitButton);
+
+        // SINGLE CLICK ONLY
+        js.executeScript("arguments[0].click();", submitButton);
+
         System.out.println("Property tax application: Submit clicked");
+
+        // WAIT FOR NEXT STEP (VERY IMPORTANT)
+        wait.until(ExpectedConditions.or(
+                ExpectedConditions.urlContains("acknowledgement"),
+                ExpectedConditions.urlContains("payment"),
+                ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(),'Application Submitted')]"))
+        ));
+
+        System.out.println("Application submitted successfully");
     }
-
-
-
 
     // =====================================================================
     // UTILITY METHODS
@@ -447,7 +479,7 @@ public class CnDRequest {
         input.sendKeys(value);
     }
     private void fillInputClear(WebDriver driver, WebDriverWait wait, JavascriptExecutor js,
-                                    String nameAttr, String value) throws InterruptedException {
+                                String nameAttr, String value) throws InterruptedException {
 
         WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.name(nameAttr)

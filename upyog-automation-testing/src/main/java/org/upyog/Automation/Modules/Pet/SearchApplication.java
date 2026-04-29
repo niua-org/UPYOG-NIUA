@@ -7,12 +7,12 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.upyog.Automation.config.WebDriverFactory;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Automated test class for UPYOG Pet Application Search
@@ -21,8 +21,10 @@ import javax.annotation.PostConstruct;
  * - Navigation to Search Application module
  * - Mobile number search functionality
  */
-//@Component
+@Component
 public class SearchApplication {
+
+    private static final Logger logger = LoggerFactory.getLogger(SearchApplication.class);
 
     @Autowired
     private WebDriverFactory webDriverFactory;
@@ -33,7 +35,7 @@ public class SearchApplication {
      */
     //@PostConstruct
     public void searchApplication() {
-        System.out.println("Pet Application Search by Employee");
+        logger.info("Pet Application Search by Employee");
         
         // Initialize WebDriver using DriverFactory
         WebDriver driver = webDriverFactory.createDriver();
@@ -51,15 +53,16 @@ public class SearchApplication {
             // STEP 3: Search by Mobile Number
             searchByMobileNumber(driver, wait, js);
             
-            System.out.println("Pet Application Search completed successfully!");
+            logger.info("Pet Application Search completed successfully!");
             Thread.sleep(5000); // Keep browser open for observation
             
         } catch (Exception e) {
-            System.out.println("Exception in Pet Application Search: " + e.getMessage());
+            logger.info("Exception in Pet Application Search: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // Uncomment to close browser after test
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -69,12 +72,12 @@ public class SearchApplication {
     private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
         driver.get(ConfigReader.get("employee.base.url"));
         driver.manage().window().maximize();
-        System.out.println("Open the Employee Login Portal");
+        logger.info("Open the Employee Login Portal");
 
         // Enter credentials from configuration
         fillInput(wait, "username", ConfigReader.get("app.login.username"));
         fillInput(wait, "password", ConfigReader.get("app.login.password"));
-        System.out.println("Filled username and password");
+        logger.info("Filled username and password");
 
         // Select city dropdown
         selectCityDropdown(driver, wait, actions);
@@ -87,7 +90,7 @@ public class SearchApplication {
      * Navigates to Search Application module
      */
     private void navigateToSearchApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Navigating to Search Application");
+        logger.info("Navigating to Search Application");
         
         // Wait for page to load after login
         Thread.sleep(2000);
@@ -98,14 +101,14 @@ public class SearchApplication {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", searchAppLink);
         Thread.sleep(300);
         searchAppLink.click();
-        System.out.println("Clicked Search Application link");
+        logger.info("Clicked Search Application link");
     }
 
     /**
      * Performs mobile number search
      */
     private void searchByMobileNumber(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
-        System.out.println("Searching by mobile number");
+        logger.info("Searching by mobile number");
         
         // Fill mobile number with retry logic
         String mobileNumber = ConfigReader.get("citizen.mobile.number");
@@ -117,7 +120,7 @@ public class SearchApplication {
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", searchButton);
         Thread.sleep(300);
         searchButton.click();
-        System.out.println("Search completed");
+        logger.info("Search completed");
     }
 
     // UTILITY METHODS
@@ -163,7 +166,7 @@ public class SearchApplication {
         
         while (attempts < maxAttempts) {
             try {
-                System.out.println("Attempt " + (attempts + 1) + ": Entering mobile number...");
+                logger.info("Attempt " + (attempts + 1) + ": Entering mobile number...");
                 WebElement mobileInput = wait.until(ExpectedConditions.elementToBeClickable(
                         By.cssSelector("input.employee-card-input[name='mobileNumber']")));
                 
@@ -175,14 +178,14 @@ public class SearchApplication {
                     Thread.sleep(100);
                 }
                 
-                System.out.println("Mobile number entered successfully: " + mobileNumber);
+                logger.info("Mobile number entered successfully: " + mobileNumber);
                 break; // Success, exit loop
                 
             } catch (org.openqa.selenium.StaleElementReferenceException e) {
                 attempts++;
-                System.out.println("StaleElementReferenceException on attempt " + attempts + ". Retrying...");
+                logger.info("StaleElementReferenceException on attempt " + attempts + ". Retrying...");
                 if (attempts == maxAttempts) {
-                    System.out.println("Failed after " + maxAttempts + " attempts. Throwing exception.");
+                    logger.info("Failed after " + maxAttempts + " attempts. Throwing exception.");
                     throw e;
                 }
                 Thread.sleep(500);

@@ -14,19 +14,20 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
+import org.upyog.Automation.Utils.DriverFactory;
+import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.config.WebDriverFactory;
 
 @Component
-
-public class OBPASCreate {
+public class OBPASOcCreate {
 
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
 
-    public void obpasReg() {
-        obpasReg(ConfigReader.get("citizen.base.url"),
+    public void obpasOCReg() {
+        obpasOCReg(ConfigReader.get("citizen.base.url"),
                 "OBPAS",
                 ConfigReader.get("architect.mobile.number"),
                 ConfigReader.get("test.otp"),
@@ -34,11 +35,11 @@ public class OBPASCreate {
                 ConfigReader.get("permit.number"));
     }
 
-    public void obpasReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String permitNumber) {
+    public void obpasOCReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String permitNumber) {
         System.out.println("OBPAS Registration by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
-        WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
+        WebDriverWait wait = DriverFactory.createWebDriverWait(driver);
         JavascriptExecutor js = (JavascriptExecutor) driver;
         Actions actions = new Actions(driver);
 
@@ -49,79 +50,73 @@ public class OBPASCreate {
             // STEP 2: Navigate to OBPAS Module
             navigateToOBPAS(driver, wait, js);
 
-            // STEP 3: Building Approval Plan
-            NewBuildingPlanScrutiny(driver, wait, js);
-
-            // STEP 4: Apply for Building Plan Permit
-            clickApplyForBuildingPlanPermit(driver, wait, js);
-
-            // STEP 5: Info Page Details
+            // STEP 3: Info page
             InfoPage(driver, wait, js);
 
-            // STEP 6: Basic Details Page
-            BasicDetailPage(driver, wait, js);
+            // STEP 4: Permit Number
+            permitNumber(driver);
 
-            // STEP 7: Plot Details
+            // STEP 5: Upload DXF
+            uploadDxf(driver, wait, js);
+
+            // STEP 6: OC Building Permit
+            clickApplyForOcNewBuildingPermit(driver, wait, js);
+
+            // STEP 7: Info Page Details
+            infoPageDetails(driver,wait, js);
+
+            // STEP 8: Basic Details Page
+            basicDetailPage(driver, wait, js);
+
+            // STEP 9: Plot Details
             plotDetailPage(driver, wait, js);
 
-            // STEP 8: Scrutiny Details
+            // STEP 10: Scrutiny Details Page
             scrutinyDetailPage(driver, wait, js);
 
-            // STEP 9: Search Property
-            searchProperty(driver, wait, js);
-
-            // STEP 10: Select Searched City
-            selectSearchedProperty(driver, wait, js);
-
-            // STEP 11: Location Detail Page
-            locationDetailsPage(driver,wait,js);
-
-            // STEP 12: Owner Detail Page
-            ownerDetailPage(driver, wait, js);
-
-            // STEP 13: Upload Document Page
+            // STEP 11: Documents Details Page
             uploadDocumentPage(driver, wait, js);
 
-            // STEP 14: NOC Upload Page
+            // STEP 12: Noc Upload Page
             nocUploadPage(driver, wait, js);
 
-            // STEP 15: Summary Page
+            // STEP 13: Summary Page
             summaryPage(driver, wait, js);
 
-            // STEP 16: Logout
+            // STEP 14: Logout
             logout(driver, wait, js);
 
-            // STEP 17: Citizen Login
+            // STEP 15: Citizen Login
             performCitizenLogin(driver, wait, js, actions, baseUrl, mobileNumber, otp, cityName);
 
-            // STEP 18: Navigate to OBPAS Module
+            // STEP 16: Navigate to OBPAS Module
             navigateToOBPAS1(driver, wait, js);
 
-            // STEP 19: My Application
+            // STEP 17: My Application
             myApplications(driver, wait, js);
 
-            // STEP 20: Application Approval
+            // STEP 18: Application Approval
             citizenApproveFlow(driver, wait, js);
 
-            // STEP 21: Forward Popup
+            // STEP 19: Forward Popup
             applicationPopup(driver, wait, js);
 
-            // STEP 22: Logout Again
+            // STEP 20: Logout Again
             logoutAgain(driver, wait, js);
 
-            // STEP 23: Citizen Login Again
+            // STEP 21: Citizen Login Again
             performArchitectLoginAgain(driver, wait, js, actions, baseUrl, mobileNumber, otp, cityName);
 
-            // STEP 24: Architect Login Again
+            // STEP 22: Architect Login Again
             navigateToOBPAS2(driver, wait, js);
 
-            // STEP 25: Open Application
+            // STEP 23: Open Application
             openFirstApplication(driver, wait, js);
 
-            // STEP 26: Submit Application
+            // STEP 24: Submit Application
             submitApplication(driver, wait, js);
 
-            // STEP 27: Payment
+            // STEP 25: Payment
             handlePaymentFlow(driver, wait, js);
 
 
@@ -132,8 +127,8 @@ public class OBPASCreate {
         }
         finally {
             if (driver != null) {
-                driver.quit();
-            }
+               driver.quit();
+           }
         }
     }
 
@@ -194,7 +189,7 @@ public class OBPASCreate {
 
         System.out.println("Navigating to OBPAS");
 
-       // Sidebar Property Tax link
+        // Sidebar Property Tax link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[@href='/upyog-ui/citizen/obps-home']"))));
 
@@ -210,7 +205,7 @@ public class OBPASCreate {
         // "Plan scrutiny for new construction" link
         WebElement newConstruction = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        By.xpath("//*[contains(text(),'Plan scrutiny for new construction')]")
+                        By.xpath("//*[contains(text(),'OC Plan Scrutiny for new Construction')]")
                 )
         );
 
@@ -226,79 +221,7 @@ public class OBPASCreate {
 
             /*
              =====================================================================
-             STEP 3: NEW BUILDING PLAN SCRUTINY
-             =====================================================================
-            */
-
-    private void NewBuildingPlanScrutiny(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-            throws InterruptedException {
-
-        System.out.println("OBPAS Info Page - Clicking Next");
-        Thread.sleep(2000);
-
-        // Select city dropdown
-        try {
-            selectDropdownByIndex(driver, wait, js, 0, 0);
-            Thread.sleep(1000);
-            System.out.println("Selected city");
-        } catch (Exception e) {
-            System.out.println("City dropdown not found: " + e.getMessage());
-        }
-
-        Thread.sleep(1000);
-
-        System.out.println("Filling Applicant Details");
-        fillInput(wait, "applicantName", "Arpit Rao");
-        Thread.sleep(500);
-
-        System.out.println("Uploading the DXF file");
-        uploadDxf(driver, wait, js, 0, ConfigReader.get("document.drawing.dxf"));
-        Thread.sleep(3000);
-        System.out.println("Finished Upload Documents step");
-
-        WebElement submitBtn = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.xpath("//button[contains(@class,'submit-bar') and @type='submit']")
-                )
-        );
-
-        js.executeScript("arguments[0].scrollIntoView({block:'center'});", submitBtn);
-        Thread.sleep(300);
-
-        submitBtn.click();
-        Thread.sleep(10000);
-
-        System.out.println("Clicked SUBMIT button");
-    }
-
-            /*
-             =====================================================================
-             STEP 4: APPLY FOR BUILDING PLAN PERMIT
-             =====================================================================
-            */
-
-    private void clickApplyForBuildingPlanPermit(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-            throws InterruptedException {
-
-        WebElement applyBtn = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.xpath("//a[.//header[contains(text(),'Apply for Building Plan Permit')]]")
-                )
-        );
-
-        Thread.sleep(3000);
-
-        js.executeScript("arguments[0].scrollIntoView({block:'center'});", applyBtn);
-        Thread.sleep(300);
-
-        applyBtn.click();
-
-        System.out.println("Clicked Apply for Building Plan Permit");
-    }
-
-            /*
-             =====================================================================
-             STEP 5: INFO PAGE DETAILS
+             STEP 3: INFO PAGE DETAILS
              =====================================================================
             */
 
@@ -331,13 +254,224 @@ public class OBPASCreate {
 
     }
 
+             /*
+             =====================================================================
+             STEP 4: PERMIT NUMBER AND PERMIT DATE
+             =====================================================================
+             */
+
+    private void permitNumber(WebDriver driver) throws InterruptedException {
+
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+
+        String permitNumber = TestDataStore.PERMIT_NUMBER;
+        String permitDate   = TestDataStore.PERMIT_DATE;
+
+
+        System.out.println("Using Permit: " + permitNumber);
+        System.out.println("Using Date: " + permitDate);
+
+
+
+
+        // =============================
+        // STEP 1: PERMIT NUMBER
+        // =============================
+        WebElement permitInput = wait.until(
+                ExpectedConditions.presenceOfElementLocated(
+                        By.xpath("//input[@name='permitNumber']")
+                )
+        );
+
+
+        js.executeScript(
+                "const el = arguments[0];" +
+                        "const val = arguments[1];" +
+                        "const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;" +
+                        "setter.call(el,val);" +
+                        "el.dispatchEvent(new Event('input',{bubbles:true}));" +
+                        "el.dispatchEvent(new Event('change',{bubbles:true}));",
+                permitInput,
+                permitNumber
+        );
+
+
+
+
+        // =============================
+        // STEP 2: DATE (CRITICAL FIX)
+        // =============================
+        WebElement dateInput = wait.until(
+                ExpectedConditions.presenceOfElementLocated(
+                        By.xpath("//input[@type='date']")
+                )
+        );
+
+
+        js.executeScript(
+                "const el = arguments[0];" +
+                        "const val = arguments[1];" +
+                        "const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;" +
+                        "setter.call(el,val);" +
+                        "el.dispatchEvent(new Event('input',{bubbles:true}));" +
+                        "el.dispatchEvent(new Event('change',{bubbles:true}));" +
+                        "el.blur();",
+                dateInput,
+                permitDate
+        );
+
+
+        System.out.println("Set Date: " + dateInput.getAttribute("value"));
+
+
+
+
+        // WAIT FOR REACT VALIDATION
+        Thread.sleep(1000);
+
+
+
+
+
+
+        // STEP 3: SEARCH
+
+
+        WebElement searchBtn = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.xpath("//button[normalize-space()='Search']")
+                )
+        );
+
+
+        js.executeScript("arguments[0].click();", searchBtn);
+
+
+        System.out.println("Search clicked");
+        Thread.sleep(3000);
+
+
+
+
+
+
+        // STEP 4: NEXT BUTTON
+
+
+        WebElement proceedBtn = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.xpath("//button[normalize-space()='Proceed for OC Scrutiny']")
+                )
+        );
+        js.executeScript("arguments[0].click();", proceedBtn);
+
+
+        System.out.println("Proceed for OC Scrutiny clicked");
+    }
+
+
             /*
              =====================================================================
-             STEP 6: BASIC DETAILS PAGE
+             STEP 5: UPLOAD DXF
              =====================================================================
             */
 
-    private void BasicDetailPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+    private void uploadDxf(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+            throws InterruptedException {
+
+        System.out.println("Uploading DXF");
+        Thread.sleep(2000);
+
+        System.out.println("Uploading the DXF file");
+        uploadDxf(driver, wait, js, 0, ConfigReader.get("document.drawing.dxf"));
+        Thread.sleep(3000);
+        System.out.println("Finished Upload DXF Documents step");
+
+        WebElement submitBtn = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.xpath("//button[contains(@class,'submit-bar') and @type='submit']")
+                )
+        );
+
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", submitBtn);
+        Thread.sleep(300);
+
+        submitBtn.click();
+        Thread.sleep(10000);
+
+        System.out.println("Clicked SUBMIT button");
+    }
+
+    /*
+             =====================================================================
+             STEP 6: APPLY FOR OC NEW BUILDING PLAN PERMIT
+             =====================================================================
+            */
+
+    private void clickApplyForOcNewBuildingPermit(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+            throws InterruptedException {
+
+        WebElement applyBtn = wait.until(
+                ExpectedConditions.elementToBeClickable(
+                        By.xpath("//a[.//header[contains(text(),'Apply for OC for New Construction')]]")
+                )
+        );
+
+        Thread.sleep(3000);
+
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", applyBtn);
+        Thread.sleep(300);
+
+        applyBtn.click();
+
+        System.out.println("Clicked Apply for Building Plan Permit");
+    }
+
+    /*
+             =====================================================================
+             STEP 7: INFO PAGE DETAILS
+             =====================================================================
+            */
+
+    private void infoPageDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+            throws InterruptedException {
+
+        System.out.println("OBPAS Info Page - Clicking Next");
+        Thread.sleep(2000);
+
+        // Try multiple Next button selectors for info page
+        By[] nextSelectors = {
+                By.xpath("//button[contains(.,'Next')]"),
+
+        };
+
+        for (By selector : nextSelectors) {
+            try {
+                WebElement nextBtn = wait.until(ExpectedConditions.elementToBeClickable(selector));
+                js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
+                Thread.sleep(500);
+                js.executeScript("arguments[0].click();", nextBtn);
+                System.out.println("Clicked Next on info page");
+                return;
+            } catch (Exception e) {
+                System.out.println("Next selector failed: " + selector);
+            }
+        }
+
+        Thread.sleep(1000);
+
+    }
+
+    /*
+             =====================================================================
+             STEP 8: BASIC DETAILS PAGE
+             =====================================================================
+            */
+
+    private void basicDetailPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
         System.out.println("Basic Details Page - Clicking Next");
@@ -367,14 +501,14 @@ public class OBPASCreate {
 
     }
 
-            /*
+    /*
              =====================================================================
-             STEP 7: PLOT DETAILS PAGE
+             STEP 9: PLOT DETAILS PAGE
              =====================================================================
             */
 
     private void plotDetailPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-        throws InterruptedException{
+            throws InterruptedException{
         System.out.println("Fill Plot Details Page");
 
         fillInput(wait, "holdingNumber", "Test1234");
@@ -405,15 +539,15 @@ public class OBPASCreate {
 
     }
 
-            /*
+    /*
              =====================================================================
-             STEP 8: SCRUTINY DETAILS
+             STEP 10: SCRUTINY DETAILS
              =====================================================================
             */
 
     private void scrutinyDetailPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException{
-         System.out.println("Fill Scrutiny Details Page- Click Next Button");
+        System.out.println("Fill Scrutiny Details Page- Click Next Button");
 
         By[] nextSelectors = {
                 By.xpath("//button[contains(.,'Next')]"),
@@ -437,177 +571,9 @@ public class OBPASCreate {
 
     }
 
-            /*
-              =====================================================================
-              STEP 9: SEARCH PROPERTY
+    /*
              =====================================================================
-            */
-
-    private void searchProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-       throws InterruptedException{
-         System.out.println("Search Property by Mobile Number");
-
-        try {
-            selectDropdownByIndex(driver, wait, js, 0, 0);
-            Thread.sleep(1000);
-            System.out.println("Selected city");
-        } catch (Exception e) {
-            System.out.println("City dropdown not found: " + e.getMessage());
-        }
-
-        Thread.sleep(1000);
-
-        WebElement mobileInput = wait.until(
-                ExpectedConditions.presenceOfElementLocated(
-                        By.xpath("//h2[contains(.,\"Owner's mobile number\")]/following::input[contains(@class,'employee-card-input')][1]")
-                )
-        );
-
-        js.executeScript(
-                "let input = arguments[0];" +
-                        "let lastValue = input.value;" +
-                        "input.value = '9999999999';" +
-                        "let event = new Event('input', { bubbles: true });" +
-                        "event.simulated = true;" +
-                        "let tracker = input._valueTracker;" +
-                        "if (tracker) { tracker.setValue(lastValue); }" +
-                        "input.dispatchEvent(event);" +
-                        "input.dispatchEvent(new Event('change', { bubbles: true }));",
-                mobileInput
-        );
-
-        WebElement searchBtn = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.xpath("//button[contains(@class,'submit-bar') and @type='submit']")
-                )
-        );
-
-        js.executeScript("arguments[0].scrollIntoView({block:'center'});", searchBtn);
-        Thread.sleep(300);
-
-        searchBtn.click();Thread.sleep(1000);
-
-        System.out.println("Clicked Search button");
-    }
-
-            /*
-             =====================================================================
-             STEP 10: SELECT SEARCH PROPERTY
-             =====================================================================
-            */
-
-    private void selectSearchedProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-            throws InterruptedException {
-
-        System.out.println("Selecting Searched Property");
-        WebElement selectBtn = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.xpath("(//button[normalize-space()='Select'])[3]")
-                )
-        );
-
-        js.executeScript("arguments[0].scrollIntoView({block:'center'});", selectBtn);
-        Thread.sleep(300);
-
-        js.executeScript("arguments[0].click();", selectBtn);
-
-        System.out.println("Clicked Select button");
-    }
-
-            /*
-             =====================================================================
-             STEP 11: LOCATION DETAILS
-             =====================================================================
-            */
-
-    private void locationDetailsPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-            throws InterruptedException {
-
-        System.out.println("Location Details Page - Handling Next");
-
-        Thread.sleep(2000);
-
-        // STEP 1: Trigger React validation
-        try {
-            WebElement streetField = wait.until(
-                    ExpectedConditions.visibilityOfElementLocated(By.name("streetName"))
-            );
-
-            String val = streetField.getAttribute("value");
-
-            streetField.clear();
-            streetField.sendKeys(val + " ");
-
-            js.executeScript("arguments[0].dispatchEvent(new Event('change', {bubbles: true}));", streetField);
-
-            System.out.println("Triggered React validation");
-
-            Thread.sleep(1000);
-
-        } catch (Exception e) {
-            System.out.println("Validation trigger failed: " + e.getMessage());
-        }
-
-        // STEP 2: Try normal click
-        try {
-            WebElement nextBtn = wait.until(
-                    ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(.,'Next')]"))
-            );
-
-            js.executeScript("arguments[0].click();", nextBtn);
-            System.out.println("Clicked Next normally");
-            return;
-
-        } catch (Exception e) {
-            System.out.println("Normal click failed, trying force click");
-        }
-
-        // STEP 3: Force click fallback
-        WebElement nextBtn = driver.findElement(By.xpath("//button[contains(.,'Next')]"));
-
-        js.executeScript("arguments[0].removeAttribute('disabled');", nextBtn);
-        js.executeScript("arguments[0].click();", nextBtn);
-
-        System.out.println("Force clicked Next button");
-    }
-
-            /*
-             =====================================================================
-             STEP 12: OWNER DETAILS
-             =====================================================================
-            */
-
-    private void ownerDetailPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
-            throws InterruptedException{
-
-        System.out.println("Owner Details Page - Clicking Next");
-        Thread.sleep(2000);
-
-        // Try multiple Next button selectors for owner details page
-        By[] nextSelectors = {
-                By.xpath("//button[contains(.,'Next')]"),
-
-        };
-
-        for (By selector : nextSelectors) {
-            try {
-                WebElement nextBtn = wait.until(ExpectedConditions.elementToBeClickable(selector));
-                js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
-                Thread.sleep(500);
-                js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on Owner Details Page");
-                return;
-            } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
-            }
-        }
-
-        Thread.sleep(2000);
-
-    }
-     /*
-             =====================================================================
-             STEP 13: DOCUMENT DETAILS
+             STEP 11: DOCUMENT DETAILS
            =====================================================================
             */
 
@@ -712,10 +678,9 @@ public class OBPASCreate {
         Thread.sleep(2000);
     }
 
-
-            /*
+    /*
              =====================================================================
-             STEP 14: NOC DETAILS
+             STEP 12: NOC DETAILS
              =====================================================================
             */
 
@@ -740,7 +705,7 @@ public class OBPASCreate {
         };
 
         for (By selector : nextSelectors) {
-           try {               WebElement nextBtn = wait.until(ExpectedConditions.elementToBeClickable(selector));
+            try {               WebElement nextBtn = wait.until(ExpectedConditions.elementToBeClickable(selector));
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
@@ -757,7 +722,7 @@ public class OBPASCreate {
 
              /*
              =====================================================================
-             STEP 15: SUMMARY PAGE
+             STEP 13: SUMMARY PAGE
              =====================================================================
              */
 
@@ -792,7 +757,7 @@ public class OBPASCreate {
                 }
             } catch (Exception e) {
                 System.out.println("Button '" + buttonText + "' not found");
-           }
+            }
         }
 
         // If no specific button found, try generic submit button
@@ -807,7 +772,7 @@ public class OBPASCreate {
         }
     }
 
-             /*
+    /*
              =====================================================================
              STEP 16: LOGOUT
              =====================================================================
@@ -838,7 +803,7 @@ public class OBPASCreate {
             System.out.println("Go back to Home button not found (maybe already on home)");
         }
 
-      // sidebar logout
+        // sidebar logout
 
         WebElement logoutLink = wait.until(
                 ExpectedConditions.presenceOfElementLocated(
@@ -1094,7 +1059,7 @@ public class OBPASCreate {
 
         // Go back to Home
 
-       try {
+        try {
             WebElement homeBtn = wait.until(
                     ExpectedConditions.elementToBeClickable(
                             By.xpath("//a[contains(.,'Go back to home')]")
@@ -1111,7 +1076,7 @@ public class OBPASCreate {
             System.out.println("Go back to Home button not found (maybe already on home)");
         }
 
-      // sidebar logout
+        // sidebar logout
 
         WebElement logoutLink = wait.until(
                 ExpectedConditions.presenceOfElementLocated(
@@ -1137,13 +1102,13 @@ public class OBPASCreate {
 
         System.out.println("Confirmed Logout");
         Thread.sleep(2000);
-  }
+    }
 
-             /*
-             =====================================================================
-             STEP 23: ARCHITECT LOGIN
-             =====================================================================
-             */
+    /*
+    =====================================================================
+    STEP 23: ARCHITECT LOGIN
+    =====================================================================
+    */
     private void performArchitectLoginAgain(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String mobileNumber, String otp, String cityName)
             throws InterruptedException {
 
@@ -1313,7 +1278,7 @@ public class OBPASCreate {
         Thread.sleep(1500);
 
 
-     // HANDLE FORWARD APPLICATION POPUP
+        // HANDLE FORWARD APPLICATION POPUP
 
         System.out.println("Handling Forward Application popup");
 
@@ -1630,7 +1595,7 @@ public class OBPASCreate {
     }
 
 
-             /*
+     /*
              =====================================================================
              UTILITY METHODS
              =====================================================================
@@ -1938,7 +1903,7 @@ public class OBPASCreate {
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", radio);
         Thread.sleep(200);
 
-        // CLICK PARENT, NOT INPUT
+        // 🔥 CLICK PARENT, NOT INPUT
         WebElement clickable = radio.findElement(By.xpath(".."));
         js.executeScript("arguments[0].click();", clickable);
 

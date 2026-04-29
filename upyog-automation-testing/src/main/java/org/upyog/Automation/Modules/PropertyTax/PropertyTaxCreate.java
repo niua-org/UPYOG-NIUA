@@ -8,6 +8,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,21 +18,23 @@ import org.upyog.Automation.config.WebDriverFactory;
 @Component
 public class PropertyTaxCreate {
 
+    private static final Logger logger = LoggerFactory.getLogger(PropertyTaxCreate.class);
+
     @Autowired
     private WebDriverFactory webDriverFactory;
 
     //@PostConstruct
 
-    public void NewPropertyReg() {
-        NewPropertyReg(ConfigReader.get("citizen.base.url"),
+    public void newPropertyReg() {
+        newPropertyReg(ConfigReader.get("citizen.base.url"),
                 "Property Tax",
                 ConfigReader.get("citizen.mobile.number"),
                 ConfigReader.get("test.otp"),
                 ConfigReader.get("test.city.name"));
     }
 
-    public void NewPropertyReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
-        System.out.println("Property Registration by Citizen");
+    public void newPropertyReg(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName) {
+        logger.info("Property Registration by Citizen");
 
         WebDriver driver = webDriverFactory.createDriver();
         WebDriverWait wait = new WebDriverWait(driver, java.time.Duration.ofSeconds(30));
@@ -45,10 +49,10 @@ public class PropertyTaxCreate {
             navigateToPropertyTax(driver, wait, js);
 
             // STEP 3: Property Details Page
-            InfoPage(driver, wait, js);
+            infoPage(driver, wait, js);
 
             // STEP 4: Type of Property
-            SelectTypeOfProperty(driver, wait, js);
+            selectTypeOfProperty(driver, wait, js);
 
             // STEP 5: Electricity Number
             fillElectricityNo(driver, wait, js);
@@ -108,10 +112,12 @@ public class PropertyTaxCreate {
             submitApplication(driver, wait, js);
 
         } catch (Exception e) {
-            System.out.println("Exception in Property Registration: " + e.getMessage());
+            logger.info("Exception in Property Registration: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            // driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
     }
 
@@ -125,7 +131,7 @@ public class PropertyTaxCreate {
             throws InterruptedException {
 
         driver.get(baseUrl);
-        System.out.println("Open the Citizen Login Portal");
+        logger.info("Open the Citizen Login Portal");
 
         // Mobile number
         fillInput(wait, "mobileNumber", mobileNumber);
@@ -170,20 +176,20 @@ public class PropertyTaxCreate {
     private void navigateToPropertyTax(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Navigating to Property Tax");
+        logger.info("Navigating to Property Tax");
 
         // Sidebar Property Tax link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.xpath("//a[@href='/upyog-ui/citizen/pt-home']"))));
 
         Thread.sleep(2000);
-        System.out.println("Reached Property Tax home page");
+        logger.info("Reached Property Tax home page");
 
         // "Property Tax" link
         js.executeScript("arguments[0].click();", wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//a[@href='/upyog-ui/citizen/pt/property/new-application/info']"))));
 
-        System.out.println("Clicked Create Property link");
+        logger.info("Clicked Create Property link");
     }
 
             /*
@@ -192,10 +198,10 @@ public class PropertyTaxCreate {
              =====================================================================
             */
 
-    private void InfoPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+    private void infoPage(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Property Tax Info Page - Clicking Next");
+        logger.info("Property Tax Info Page - Clicking Next");
         Thread.sleep(2000);
 
         // Try multiple Next button selectors for info page
@@ -210,10 +216,10 @@ public class PropertyTaxCreate {
                 js.executeScript("arguments[0].scrollIntoView({block:'center'});", nextBtn);
                 Thread.sleep(500);
                 js.executeScript("arguments[0].click();", nextBtn);
-                System.out.println("Clicked Next on info page");
+                logger.info("Clicked Next on info page");
                 return;
             } catch (Exception e) {
-                System.out.println("Next selector failed: " + selector);
+                logger.info("Next selector failed: " + selector);
             }
         }
 
@@ -227,9 +233,9 @@ public class PropertyTaxCreate {
              =====================================================================
             */
 
-    private void SelectTypeOfProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
+    private void selectTypeOfProperty(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
-        System.out.println("Type of Property Selected");
+        logger.info("Type of Property Selected");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "Independent Building");
@@ -249,7 +255,7 @@ public class PropertyTaxCreate {
     private void fillElectricityNo(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Electricity Number");
+        logger.info("Filling Electricity Number");
 
         WebElement electricityInput = wait.until(
                 ExpectedConditions.elementToBeClickable(
@@ -281,14 +287,14 @@ public class PropertyTaxCreate {
     private void fillPropertyStructureDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Property Structure Details");
+        logger.info("Filling Property Structure Details");
         Thread.sleep(500);
 
         // -------------------------
         // Structure Type
         // -------------------------
         selectDropdownByIndex(driver, wait, js, 0, 0);
-        System.out.println("Selected Structure Type");
+        logger.info("Selected Structure Type");
 
         Thread.sleep(1000);
 
@@ -296,7 +302,7 @@ public class PropertyTaxCreate {
         // Age of Property
         // -------------------------
         selectDropdownByIndex(driver, wait, js, 1, 0);
-        System.out.println("Selected Age of Property");
+        logger.info("Selected Age of Property");
 
         Thread.sleep(1000);
 
@@ -313,7 +319,7 @@ public class PropertyTaxCreate {
     private void fillUniqueID(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Unique ID");
+        logger.info("Filling Unique ID");
 
         WebElement UniqueIDInput = wait.until(
                 ExpectedConditions.elementToBeClickable(
@@ -345,7 +351,7 @@ public class PropertyTaxCreate {
     private void fillLandAreaDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Land Area Details");
+        logger.info("Filling Land Area Details");
 
         WebElement areaInput = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("input.employee-card-input")));
@@ -364,7 +370,7 @@ public class PropertyTaxCreate {
         Thread.sleep(500);
 
         clickNextButton(driver, wait, js);
-        System.out.println("Land Area submitted successfully");
+        logger.info("Land Area submitted successfully");
     }
 
             /*
@@ -375,7 +381,7 @@ public class PropertyTaxCreate {
 
     private void fillBasementDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
-        System.out.println("Number of Basements Selected");
+        logger.info("Number of Basements Selected");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "No Basement");
@@ -394,7 +400,7 @@ public class PropertyTaxCreate {
 
     private void fillFloorDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
-        System.out.println("Number of Floors Selected");
+        logger.info("Number of Floors Selected");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "Ground Floor Only");
@@ -413,14 +419,14 @@ public class PropertyTaxCreate {
 
 private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
                 throws InterruptedException {
-        System.out.println("Ground Floor Details Selected");
+        logger.info("Ground Floor Details Selected");
         Thread.sleep(1000);
 
     // -------------------------
     // Unit Usage Type Occupancy
     // -------------------------
     selectDropdownByIndex(driver, wait, js, 0, 4);
-    System.out.println("Selected Unit Usage Type");
+    logger.info("Selected Unit Usage Type");
 
     Thread.sleep(500);
 
@@ -429,7 +435,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     // -------------------------
 
     selectDropdownByIndex(driver, wait, js, 1, 1);
-    System.out.println("Selected Unit Usage Type");
+    logger.info("Selected Unit Usage Type");
 
     Thread.sleep(500);
 
@@ -454,7 +460,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     Thread.sleep(500);
 
     clickNextButton(driver, wait, js);
-    System.out.println("Land Area submitted successfully");
+    logger.info("Land Area submitted successfully");
 
     }
 
@@ -467,7 +473,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void clickPinPropertyLocation(WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Clicking Skip and Continue");
+        logger.info("Clicking Skip and Continue");
 
         WebElement skipLink = wait.until(
                 ExpectedConditions.elementToBeClickable(
@@ -481,7 +487,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         js.executeScript("arguments[0].click();", skipLink);
 
         Thread.sleep(1000);
-        System.out.println("Skip and Continue clicked successfully");
+        logger.info("Skip and Continue clicked successfully");
     }
 
             /*
@@ -493,7 +499,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void fillPincodeDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Pincode");
+        logger.info("Filling Pincode");
         Thread.sleep(1000);
 
         // Try multiple selectors for pincode input
@@ -509,7 +515,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
                 pincodeInput = wait.until(ExpectedConditions.elementToBeClickable(selector));
                 break;
             } catch (Exception e) {
-                System.out.println("Pincode selector failed: " + selector);
+                logger.info("Pincode selector failed: " + selector);
             }
         }
 
@@ -520,7 +526,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
             pincodeInput.sendKeys("143001");
 
         } else {
-            System.out.println("Pincode input not found");
+            logger.info("Pincode input not found");
         }
 
         clickNextButton(driver, wait, js);
@@ -535,13 +541,29 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
 
     private void fillPropertyAddressDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
         throws InterruptedException {
-        System.out.println("Selecting City and Locality");
+        logger.info("Selecting City and Locality (Index Based)");
         Thread.sleep(1000);
 
-        selectRadioButtonByLabel(driver, "City A");
+        // GET ALL RADIOS (CITY LEVEL)
+
+
+        List<WebElement> cityRadios = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+                By.xpath("//input[@type='radio']")
+        ));
+
+
+        // City safe method for all environment
+        clickRadioByIndex(cityRadios, 0, js);
         Thread.sleep(1000);
 
-        selectRadioButtonByLabel(driver, "Main Road Abadpura");
+        // Locality safe method for all environment
+        List<WebElement> localityRadios = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+                By.xpath("//input[@type='radio']")
+        ));
+
+
+        // Locality
+        clickRadioByIndex(localityRadios, 1, js);
         Thread.sleep(1000);
 
         clickNextButton(driver, wait, js);
@@ -558,7 +580,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void fillPropertyAddressDetail2(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Property Address Details");
+        logger.info("Filling Property Address Details");
 
         // Get ALL text inputs on address card
         List<WebElement> inputs = wait.until(
@@ -609,7 +631,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void fillLandMarkDetail(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Landmark");
+        logger.info("Filling Landmark");
 
         // textarea (NOT input)
         WebElement landmarkTextarea = wait.until(
@@ -633,7 +655,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
 
         clickNextButton(driver, wait, js);
 
-        System.out.println("Landmark submitted successfully");
+        logger.info("Landmark submitted successfully");
     }
 
             /*
@@ -645,16 +667,16 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void selectProofOfIdentity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
         Thread.sleep(1000);
 
         selectDropdownByIndex(driver, wait, js, 0,0 );
         Thread.sleep(1000);
-        System.out.println("Selecting Electricity Bill");
+        logger.info("Selecting Electricity Bill");
 
         uploadFile(driver, wait, js, 0, ConfigReader.get("document.propertyidentity.proof"));
         Thread.sleep(1000);
-        System.out.println("Finished Upload Documents step");
+        logger.info("Finished Upload Documents step");
 
         clickNextButton(driver, wait, js);
     }
@@ -667,7 +689,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void provideOwnershipDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Providing the Ownership Details");
+        logger.info("Providing the Ownership Details");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "Single Owner");
@@ -687,7 +709,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void fillOwnerDetails(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Filling Owner Details");
+        logger.info("Filling Owner Details");
 
         List<WebElement> inputs = wait.until(
                 ExpectedConditions.visibilityOfAllElementsLocatedBy(
@@ -712,7 +734,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
             selectRadioButtonByLabel(driver, "Father");
             Thread.sleep(1000);
         } catch (Exception e) {
-            System.out.println("Radio button selection failed: " + e.getMessage());
+            logger.info("Radio button selection failed: " + e.getMessage());
         }
 
         clickNextButton(driver, wait, js);
@@ -729,7 +751,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void selectSpecialOwnerCategory(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
         throws InterruptedException {
 
-        System.out.println("Selecting Special Owner Category");
+        logger.info("Selecting Special Owner Category");
         Thread.sleep(1000);
 
         selectRadioButtonByLabel(driver, "Not Applicable");
@@ -750,7 +772,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void fillOwnerAddress(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
         throws InterruptedException {
 
-        System.out.println("Filling Owner Address");
+        logger.info("Filling Owner Address");
         Thread.sleep(1000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -761,10 +783,10 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -783,16 +805,16 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void uploadDocuments(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Uploading Documents");
+        logger.info("Uploading Documents");
         Thread.sleep(500);
 
         selectDropdownByIndex(driver, wait, js, 0,0 );
         Thread.sleep(500);
-        System.out.println("Selecting Electricity Bill");
+        logger.info("Selecting Electricity Bill");
 
         uploadFile(driver, wait, js, 0, ConfigReader.get("document.propertyaddress.proof"));
         Thread.sleep(3000);
-        System.out.println("Finished Upload Documents step");
+        logger.info("Finished Upload Documents step");
 
         clickNextButton(driver, wait, js);
     }
@@ -807,7 +829,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
     private void submitApplication(WebDriver driver, WebDriverWait wait, JavascriptExecutor js)
             throws InterruptedException {
 
-        System.out.println("Submitting Property Tax Application - Summary Page");
+        logger.info("Submitting Property Tax Application - Summary Page");
         Thread.sleep(3000);
 
         List<WebElement> checkboxes = driver.findElements(By.cssSelector("input[type='checkbox']"));
@@ -818,10 +840,10 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
                     js.executeScript("arguments[0].scrollIntoView(true);", lastCheckbox);
                     Thread.sleep(300);
                     js.executeScript("arguments[0].click();", lastCheckbox);
-                    System.out.println("Checked declaration checkbox");
+                    logger.info("Checked declaration checkbox");
                 }
             } catch (Exception ex) {
-                System.out.println("Could not click declaration checkbox: " + ex.getMessage());
+                logger.info("Could not click declaration checkbox: " + ex.getMessage());
             }
         }
 
@@ -832,7 +854,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
         Thread.sleep(200);
         submitButton.click();
-        System.out.println("Property tax application: Submit clicked");
+        logger.info("Property tax application: Submit clicked");
 
         try {
             // Wait for Proceed button in popup
@@ -843,11 +865,12 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
             Thread.sleep(300);
             js.executeScript("arguments[0].click();", proceedBtn);
 
-            System.out.println("Clicked Proceed on duplicate popup");
+            logger.info("Clicked Proceed on duplicate popup");
             Thread.sleep(1000);
 
         } catch (Exception e) {
-            System.out.println("No duplicate popup found - continuing");
+            logger.info("No duplicate popup found - continuing");
+            Thread.sleep(5000);
         }
     }
 
@@ -870,12 +893,12 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
             if (input.isDisplayed() && input.isEnabled()) {
                 input.clear();
                 input.sendKeys(value);
-                System.out.println("Filled optional field: " + fieldName);
+                logger.info("Filled optional field: " + fieldName);
             } else {
-                System.out.println("Optional field " + fieldName + " not interactable, skipping");
+                logger.info("Optional field " + fieldName + " not interactable, skipping");
             }
         } catch (Exception e) {
-            System.out.println("Optional field " + fieldName + " not found, skipping");
+            logger.info("Optional field " + fieldName + " not found, skipping");
         }
     }
 
@@ -914,7 +937,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         js.executeScript("arguments[0].scrollIntoView({block: 'center'});", nextButton);
         Thread.sleep(200);
         nextButton.click();
-        System.out.println("Clicked Next");
+        logger.info("Clicked Next");
     }
 
     private void selectCity(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String cityName)
@@ -966,10 +989,10 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", radio);
                 Thread.sleep(200);
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", radio);
-                System.out.println("Selected radio button: " + labelText);
+                logger.info("Selected radio button: " + labelText);
             }
         } catch (Exception e) {
-            System.out.println("Error selecting radio button '" + labelText + "': " + e.getMessage());
+            logger.info("Error selecting radio button '" + labelText + "': " + e.getMessage());
             throw new RuntimeException("Failed to select radio button: " + labelText, e);
         }
     }
@@ -986,7 +1009,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         );
 
         if (dropdownIndex < 0 || dropdownIndex >= dropdownSvgs.size()) {
-            System.out.println("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
+            logger.info("Dropdown index " + dropdownIndex + " not found. Total: " + dropdownSvgs.size());
             return;
         }
 
@@ -1052,7 +1075,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         );
 
         if (index >= fileInputs.size()) {
-            System.out.println("File input index " + index + " not found for path: " + filePath);
+            logger.info("File input index " + index + " not found for path: " + filePath);
             return;
         }
 
@@ -1064,7 +1087,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         Thread.sleep(300);
 
         fileInput.sendKeys(filePath);
-        System.out.println("Uploaded file at index " + index + ": " + filePath);
+        logger.info("Uploaded file at index " + index + ": " + filePath);
         Thread.sleep(500);
     }
 
@@ -1090,7 +1113,7 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         }
 
         Thread.sleep(400);
-        System.out.println("Selected radio: " + labelText);
+        logger.info("Selected radio: " + labelText);
     }
 
     private void fillInputStable(JavascriptExecutor js, WebElement input, String value)
@@ -1120,11 +1143,11 @@ private void fillGroundFloorDetails(WebDriver driver, WebDriverWait wait, Javasc
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", radio);
         Thread.sleep(200);
 
-        // 🔥 CLICK PARENT, NOT INPUT
+        // CLICK PARENT, NOT INPUT
         WebElement clickable = radio.findElement(By.xpath(".."));
         js.executeScript("arguments[0].click();", clickable);
 
-        System.out.println("Selected radio index: " + index);
+        logger.info("Selected radio index: " + index);
         Thread.sleep(500);
     }
 }
