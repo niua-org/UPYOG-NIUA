@@ -84,7 +84,7 @@ public class BookingTimerService {
 		
 	}
 	
-	public Long getTimerValue(BookingPaymentTimerDetails bookingPaymentTimerDetails) {
+	private Long getTimerValue(BookingPaymentTimerDetails bookingPaymentTimerDetails) {
 		long timerValue = CommunityHallBookingUtil.getSeconds(Integer.parseInt(bookingConfiguration.getBookingPaymentTimerValue()));
 		long currentTimestamp = CommunityHallBookingUtil.getCurrentTimestamp();
 		long timeSpentAfterCreation = CommunityHallBookingUtil.calculateDifferenceInSeconds(currentTimestamp, bookingPaymentTimerDetails.getCreatedTime());

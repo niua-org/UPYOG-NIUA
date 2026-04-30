@@ -104,7 +104,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	public CommunityHallBookingDetail createBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest) {
 		log.info("Create community hall booking for user : "
 				+ communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid());
-		// TODO move to util calss 
+		// TODO move to util calls and validate tenant id in the controller layer
 		String tenantId = communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.")[0];
 		if (communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.").length == 1) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_TENANT,
