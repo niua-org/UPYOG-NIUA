@@ -254,7 +254,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom", "i18next", "react-i18next"],
+      dedupe: ["react", "react-dom"],
     },
 
     esbuild: {
