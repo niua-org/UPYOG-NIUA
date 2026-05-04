@@ -6,7 +6,7 @@ import {
   LabelFieldPair,
   Loader,
   RadioButtons,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import  FormStep  from "../../../../react-components/src/molecules/FormStep";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";

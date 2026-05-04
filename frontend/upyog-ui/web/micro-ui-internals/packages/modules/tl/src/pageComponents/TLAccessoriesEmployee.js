@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import _ from "lodash";
@@ -299,20 +299,20 @@ const AccessoriersForm = (_props) => {
                             name={"accessoryCategory"}
                             defaultValue={accessor?.accessoryCategory}
                             // rules={{ required: "NAME_REQUIRED", validate: { pattern: (val) => (/^\w+( +\w+)*$/.test(val) ? true : t("INVALID_NAME")) } }}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
+                                    selected={field.value}
                                     select={(e) => {
                                         setValue("uom", e?.uom ? e?.uom : "");
                                         if (e?.uom !== accessor?.accessoryCategory?.uom) setValue("uomValue", "");
-                                        props.onChange(e);
+                                        field.onChange(e);
                                         setUomvalues(accessor?.accessoryCategory?.uom);
                                         setenableUOM(true);
                                         setValue("uomValue","");
                                         setValue("count","");
                                     }}
-                                    onBlur={props.onBlur}
+                                    onBlur={field.onBlur}
                                     option={sortDropdownNames(accessories,"i18nKey",t) || []}
                                     optionKey="i18nKey"
                                     t={t}
@@ -330,18 +330,18 @@ const AccessoriersForm = (_props) => {
                                 name={"uom"}
                                 defaultValue={accessor?.accessoryCategory?.uom}
                                 // rules={accessor?.accessoryCategory?.uom ? { required: "Required" } : {}}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
                                         value={getValues("uom")}
                                         // value={uomvalues}
                                         // value={accessor?.accessoryCategory?.uom || ""}
                                         autoFocus={focusIndex.index === accessor?.key && focusIndex.type === "uom"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: accessor.key, type: "uom" });
                                         }}
                                         disable={true}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         style={{ background: "#FAFAFA" }}
                                     />
                                 )}
@@ -357,19 +357,19 @@ const AccessoriersForm = (_props) => {
                                 name={"uomValue"}
                                 defaultValue={accessor?.uomValue}
                                 rules={accessor?.accessoryCategory?.uom && { required: t("REQUIRED_FIELD"), validate: (e) => (/*(e && getPattern("UOMValue").test(e))*/ e > 0 && e < 99999 ? (checkRangeForUomValue(e,accessor?.accessoryCategory?.fromUom,accessor?.accessoryCategory?.toUom) ? true : `${t("ERR_WRONG_UOM_VALUE")} ${accessor?.accessoryCategory?.fromUom} - ${accessor?.accessoryCategory?.toUom}`) : t("ERR_DEFAULT_INPUT_FIELD_MSG")) }}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
                                         value={getValues("uomValue")}
-                                        // value={accessor?.accessoryCategory?.uom ? props.value : ""}
+                                        // value={accessor?.accessoryCategory?.uom ? field.value : ""}
                                         autoFocus={focusIndex.index === accessor?.key && focusIndex.type === "uomValue"}
                                         errorStyle={(localFormState.touched.uomValue && errors?.uomValue?.message) ? true : false}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: accessor.key, type: "uomValue" });
                                         }}
                                        // disable={/*getValues("uomValue")?!(accessor?.accessoryCategory?.uom) || accessor?.id:*/!(accessor?.accessoryCategory?.uom) }
                                         disable={isRenewal ? !enableUOM : false}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         style={{ background: "#FAFAFA" }}
                                     />
                                 )}
@@ -386,16 +386,16 @@ const AccessoriersForm = (_props) => {
                                 defaultValue={accessor?.count}
                                 rules={accessor?.accessoryCategory?.code && { required: t("REQUIRED_FIELD"), validate: (e) => ((e && getPattern("NoOfEmp").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) }}
                                 // rules={accessor?.accessoryCategory?.code ? { required: "ERR_DEFAULT_INPUT_FIELD_MSG" } : {}}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === accessor?.key && focusIndex.type === "count"}
                                         errorStyle={(localFormState.touched.count && errors?.count?.message) ? true : false}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: accessor.key, type: "count" });
                                         }}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         disable={isRenewal ? !enableUOM : false}
                                         //disable={accessor?.id}
                                         style={{ background: "#FAFAFA" }}

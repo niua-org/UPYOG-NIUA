@@ -142,7 +142,7 @@ const OwnerCitizen = (props) => {
     if (!allowMultipleOwners && owners.length > 1) {
       setOwners([owners[0]]);
       onSelect(propsConfig.key, [owners[0]]);
-      navigate(`${path}/0/${config[0].route}`, { replace: true });
+      navigate(`/0/${config[0].route}`, { replace: true });
     }
   }, [allowMultipleOwners]);
 
@@ -165,7 +165,7 @@ const OwnerCitizen = (props) => {
   };
 
   useEffect(() => {
-    if (owners.length > prevOwnerLength) navigate(`${path}/${owners.length - 1}/${config[0].route}`);
+    if (owners.length > prevOwnerLength) navigate(`/${owners.length - 1}/${config[0].route}`);
   }, [owners]);
 
   const removeOwner = (owner) => {
@@ -182,7 +182,7 @@ const OwnerCitizen = (props) => {
           return (
             <Route
               key={owner.key}
-              path={`${path}/${index}/*`}
+               path={`${path}/${index}/*`}
               element={<OwnerSteps owner={owner} ownerIndex={index} {...commonProps} />}
             />
           );
@@ -190,14 +190,14 @@ const OwnerCitizen = (props) => {
         <Route
           path="*"
           element={
-            pathname != `${path}${lastPath}` && lastPath != "" ? (
-              <Navigate to={`${path}${lastPath}`} replace />
+            pathname != `${lastPath}` && lastPath != "" ? (
+              <Navigate to={`${lastPath}`} replace />
             ) : null
           }
         />
       </Routes>
       {/* <Route>
-        <Navigate to={`${path}/${lastPath ? lastPath : "0"}`} replace />
+        <Navigate to={`/${lastPath ? lastPath : "0"}`} replace />
      
       </Route> */}
     </React.Fragment>
@@ -255,7 +255,7 @@ const OwnerSteps = ({ owner, addNewOwner, removeOwner, setOwners, owners, ownerI
         return (
           <Route
             key={index}
-            path={`${path}/${routeObj.route}`}
+            path={`/${routeObj.route}`}
             element={
               <Component
                 config={routeObj}
@@ -271,7 +271,7 @@ const OwnerSteps = ({ owner, addNewOwner, removeOwner, setOwners, owners, ownerI
         );
       })}
       {/* <Route>
-        <Navigate to={`${path}/${config[0].route}`} replace />
+        <Navigate to={`/${config[0].route}`} replace />
       </Route> */}
     </Routes>
   );

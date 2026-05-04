@@ -1,11 +1,11 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React ,{Fragment}from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 import { citizenConfig } from "../../../config/Create/citizenconfig";
 import { data } from "jquery";
-
+import { CHBDataConvert } from "../../../utils";
 /**
  * CHBCreate Component
  * 
@@ -61,6 +61,8 @@ const CHBCreate = ({ parentRoute }) => {
   const stateId = Digit.ULBService.getStateId();
   let config = [];
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("CHB_CREATE", {});
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.chb.useChbCreateAPI(tenantId);
   const goNext = (skipStep, index, isAddMultiple, key) => {
 
     
@@ -117,8 +119,17 @@ const CHBCreate = ({ parentRoute }) => {
       queryClient.invalidateQueries("CHB_CREATE");
     }
 
-  const chbcreate = async () => {
-    navigate(`acknowledgement`);
+    const handleSubmit = () => {
+      console.log("params", params)
+    let formdata = CHBDataConvert(params);; 
+    formdata.hallsBookingApplication.tenantId = tenantId;
+    mutation.mutate(formdata, {
+      onSuccess: () => {
+        clearParams();
+        queryClient.invalidateQueries("CHB_CREATE");
+        navigate("acknowledgement", { replace: true });
+      },
+    });
   };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
@@ -174,8 +185,8 @@ const CHBCreate = ({ parentRoute }) => {
         );
       })}
 
-      <Route path={`check`} element={<CheckPage onSubmit={chbcreate} value={params} />} />
-      <Route path={`acknowledgement`} element={<CHBAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<CHBAcknowledgement mutation={mutation} />} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
   );

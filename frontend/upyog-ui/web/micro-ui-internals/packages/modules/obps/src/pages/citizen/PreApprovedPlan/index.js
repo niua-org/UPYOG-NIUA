@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Routes, Route, Navigate, useLocation, Link,  } from "react-router-dom";
-import { SubmitBar } from "@upyog/digit-ui-react-components";
+import { SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { newConfig as newPreApprovedConfig } from "../../../config/PreApprovedPlanConfig"
 import BuildingPlanScrutiny from "../../../pageComponents/BuildingPlanScrutiny";
@@ -23,9 +23,9 @@ const PreApprovedPlan=()=>{
     const { nextStep } = config.find((routeObj) => routeObj.route === currentPath);
     let redirectWithHistory = navigate;
     if (nextStep === null) {
-      return redirectWithHistory(`${path}/check`);
+      return redirectWithHistory(`/check`);
     }
-    redirectWithHistory(`${path}/${nextStep}`);
+    redirectWithHistory(`/${nextStep}`);
 
   }
   const onSuccess = () => {
@@ -33,7 +33,7 @@ const PreApprovedPlan=()=>{
     queryClient.invalidateQueries("PT_CREATE_PROPERTY");
   };
   const createApplication = async () => {
-    navigate(`${path}/acknowledgement`);
+    navigate(`/acknowledgement`);
   };
   const handleSelect = (key, data, skipStep, isFromCreateApi) => {
     console.log("dataaa", data)
@@ -69,7 +69,7 @@ const PreApprovedPlan=()=>{
             console.log("routeobj", routeObj.route)
             return (
               <Route
-                path={`${path}/${routeObj.route}`}
+                path={`/${routeObj.route}`}
                 key={index}
                 element={
                   <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} isShowToast={isShowToast} isSubmitBtnDisable={isSubmitBtnDisable} setIsShowToast={setIsShowToast}/>
@@ -77,9 +77,9 @@ const PreApprovedPlan=()=>{
               />
             );
           })}
-          <Route path={`${path}/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
-          <Route path={`${path}/acknowledgement`} element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
-          <Route path="*" element={<Navigate to={`${path}/${config.indexRoute}`} replace />} />
+          <Route path={`/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
+          <Route path={`/acknowledgement`} element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
+          <Route path="*" element={<Navigate to={`/${config.indexRoute}`} replace />} />
         </Routes>
 
         

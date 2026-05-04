@@ -35,7 +35,8 @@
     "packages/modules/gis",
     "packages/modules/est",
     "packages/modules/challanGeneration",
-    "packages/modules/ndc"
+    "packages/modules/ndc",
+    "packages/modules/gis"
   ],
   "license": "MIT",
   "private": true,

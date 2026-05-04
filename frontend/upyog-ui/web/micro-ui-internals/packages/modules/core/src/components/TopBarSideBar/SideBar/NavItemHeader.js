@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from "react-router-dom";
-import * as DigitComponents from "@upyog/digit-ui-react-components";
+import * as DigitComponents from "@nudmcdgnpm/digit-ui-react-components";
 import {
   ArrowForward,
   ArrowVectorDown,
@@ -17,7 +17,7 @@ import {
   CollectionsBookmarIcons,
   FinanceChartIcon,
   CollectionIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import ReactTooltip from "react-tooltip";
 import { useTranslation } from 'react-i18next';
 

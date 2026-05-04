@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@upyog/digit-ui-libraries": "3.10.0",
-    "@upyog/digit-ui-react-components": "3.10.0",
+    "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
     "@nudmcdgnpm/digit-ui-module-reports": "1.0.0",
     "exifr": "^7.1.3",
     "jspdf": "^2.5.1",

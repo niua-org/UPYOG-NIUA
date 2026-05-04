@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Header, Card } from "@upyog/digit-ui-react-components";
+import { Header, Card } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 const ESTManageProperties = () => {
   const { t } = useTranslation();

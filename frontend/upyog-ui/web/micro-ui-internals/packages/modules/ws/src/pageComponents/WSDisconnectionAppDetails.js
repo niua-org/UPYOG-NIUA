@@ -1,3 +1,4 @@
+
 import {
   CardLabel,
   DatePicker,
@@ -7,7 +8,8 @@ import {
   RadioButtons,
   TextArea,
   TextInput
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { stringReplaceAll } from "../utils";
 import { useForm, Controller } from "react-hook-form";
@@ -148,17 +150,17 @@ const PlumberDetails = (_props) => {
               defaultValue={disConnectionDetail?.consumerNumber}
               rules={{ required: t("REQUIRED_FIELD") }}
               isMandatory={true}
-              render={(props) => (
+              render={({ field }) => (
                 <TextInput
-                  value={props.value}
+                  value={field.value}
                   autoFocus={focusIndex.index === disConnectionDetail?.key && focusIndex.type === "consumerNumber"}
-                  errorStyle={(localFormState.touched.consumerNumber && errors?.consumerNumber?.message) ? true : false}
+                  errorStyle={(localFormState.touchedFields.consumerNumber && errors?.consumerNumber?.message) ? true : false}
                   onChange={(e) => {
-                    props.onChange(e.target.value);
+                    field.onChange(e.target.value);
                     setFocusIndex({ index: disConnectionDetail?.key, type: "consumerNumber" });
                   }}
                   labelStyle={{ marginTop: "unset" }}
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                   style={{ border: "none", color: "#0b0c0c !important", "pointerEvents": "none" }}
                 />
               )}
@@ -166,13 +168,13 @@ const PlumberDetails = (_props) => {
           </div>
         </LabelFieldPair>
         <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_DISCONNECTION_TYPE")}`}</CardLabel>
-        <Controller
+            <Controller
           control={control}
           name="disConnectionType"
           defaultValue={disConnectionDetail?.disConnectionType}
           rules={{ required: t("REQUIRED_FIELD") }}
           isMandatory={true}
-          render={(props) => (
+          render={({ field }) => (
             <RadioButtons
               t={t}
               options={disconnectionTypeList}
@@ -191,10 +193,10 @@ const PlumberDetails = (_props) => {
               }}
               // onSelect={(e) => onDisconnectionChange(e)}
               onSelect={(e) => {
-                props.onChange(e.code)
+                field.onChange(e.code)
               }}
               labelKey="WS_DISCONNECTIONTYPE"
-              errorStyle={localFormState.touched.disConnectionType && errors?.disConnectionType?.message ? true : false}
+              errorStyle={localFormState.touchedFields.disConnectionType && errors?.disConnectionType?.message ? true : false}
               autoFocus={focusIndex.index === disConnectionDetail?.key && focusIndex.type === "disConnectionType"}
               style={{ display: "flex", gap: "0px 3rem" }}
               isDependent={true}
@@ -210,11 +212,11 @@ const PlumberDetails = (_props) => {
               // isMandatory={true}
               defaultValue={disConnectionDetail?.disConnectionProposeDate}
               control={control}
-              render={(props) => (
+              render={({ field }) => (
                 <DatePicker
-                  date={props.value}
+                  date={field.value}
                   name="disConnectionProposeDate"
-                  onChange={props.onChange}
+                  onChange={field.onChange}
                 />
               )}
             />
@@ -229,20 +231,20 @@ const PlumberDetails = (_props) => {
               defaultValue={disConnectionDetail?.disConnectionReason}
               name={"disConnectionReason"}
               rules={{ required: t("REQUIRED_FIELD") }}
-              render={(props) => (
+              render={({ field }) => (
                 <TextArea
                   t={t}
                   type={"text"}
                   isMandatory={false}
                   name={"disConnectionReason"}
-                  value={props.value}
-                  errorStyle={localFormState.touched.disConnectionReason && errors?.disConnectionReason?.message ? true : false}
+                  value={field.value}
+                  errorStyle={localFormState.touchedFields.disConnectionReason && errors?.disConnectionReason?.message ? true : false}
                   autoFocus={focusIndex.index === disConnectionDetail?.key && focusIndex.type === "disConnectionReason"}
                   onChange={(e) => {
-                    props.onChange(e);
+                    field.onChange(e);
                     setFocusIndex({ index: disConnectionDetail.key, type: "disConnectionReason" });
                   }}
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                 />
               )}
             ></Controller>

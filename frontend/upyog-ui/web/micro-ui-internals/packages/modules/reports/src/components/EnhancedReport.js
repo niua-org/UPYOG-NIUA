@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from "react-router-dom";
-import { Loader, Card, Header } from "@upyog/digit-ui-react-components";
+import { Loader, Card, Header } from "@nudmcdgnpm/digit-ui-react-components";
 
 const getSearchParamsObj = (field, data, key, t) => {
   let obj = {}

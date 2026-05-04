@@ -15,7 +15,7 @@ import {
   Menu,
   Modal,
   Toast,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 
 import _ from "lodash";
 import React, { useState, useRef } from "react";

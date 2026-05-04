@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
     Card,
     Header,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 
 // EST Actions Component

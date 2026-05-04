@@ -13,7 +13,7 @@ import {
   RadioButtons,
   TextInput,
 
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import BookingPopup from "../components/BookingPopup";
 
 
@@ -463,7 +463,7 @@ const handleCloseCart = () => {
             name={"adsType"}
             defaultValue={adsType}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={adsType}
@@ -484,7 +484,7 @@ const handleCloseCart = () => {
             name={"selectedLocation"}
             defaultValue={selectedLocation}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={selectedLocation}
@@ -506,7 +506,7 @@ const handleCloseCart = () => {
               name={"adsType"}
               defaultValue={selectedFace}
               rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
                   selected={selectedFace}

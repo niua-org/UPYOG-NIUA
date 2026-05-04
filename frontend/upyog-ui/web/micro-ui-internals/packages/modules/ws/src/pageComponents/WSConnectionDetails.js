@@ -1,4 +1,4 @@
-import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError, CheckBox } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError, CheckBox } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { getPattern } from "../utils";
 import { useForm, Controller } from "react-hook-form";
@@ -190,21 +190,21 @@ const ConnectionDetails = (_props) => {
             name="water"
             defaultValue={connectionDetail?.water}
             isMandatory={true}
-            render={(props) => (
+                render={({ field }) => (
               <CheckBox
                 label={t("WATER_CONNECTION")}
                 name={"water"}
                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "water"}
-                errorStyle={(localFormState.touched.water && errors?.water?.message) ? true : false}
+                errorStyle={(localFormState.touchedFields.water && errors?.water?.message) ? true : false}
                 onChange={(e) => {
                   if (e.target.checked || connectionDetail?.sewerage) {
-                    props.onChange(e.target.checked);
+                    field.onChange(e.target.checked);
                     setFocusIndex({ index: connectionDetail?.key, type: "water" });
                   }
                 }}
                 checked={connectionDetail?.water}
                 style={{ paddingBottom: "10px", paddingTop: "3px" }}
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
               />
             )}
           />
@@ -214,23 +214,22 @@ const ConnectionDetails = (_props) => {
             defaultValue={connectionDetail?.sewerage}
             type="number"
             isMandatory={true}
-            render={(props) => (
+            render={({ field }) => (
               <CheckBox
                 label={t("SEWERAGE_CONNECTION")}
                 name={"sewerage"}
                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "sewerage"}
-                errorStyle={(localFormState.touched.sewerage && errors?.sewerage?.message) ? true : false}
+                errorStyle={(localFormState.touchedFields.sewerage && errors?.sewerage?.message) ? true : false}
                 onChange={(e) => {
                   if (e.target.checked || connectionDetail?.water) {
-                    props.onChange(e.target.checked);
+                    field.onChange(e.target.checked);
                     setFocusIndex({ index: connectionDetail?.key, type: "sewerage" });
                   }
                 }}
                 checked={connectionDetail?.sewerage}
                 style={{ paddingBottom: "10px", paddingTop: "3px" }}
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
               />
-
             )}
           />
 
@@ -252,7 +251,7 @@ const ConnectionDetails = (_props) => {
                       type="number"
                       value={props.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedTaps"}
-                      errorStyle={(localFormState.touched.proposedTaps && errors?.proposedTaps?.message) ? true : false}
+errorStyle={(localFormState.touchedFields.proposedTaps && errors?.proposedTaps?.message) ? true : false}
                       onChange={(e) => {
                         props.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedTaps" });
@@ -279,7 +278,7 @@ const ConnectionDetails = (_props) => {
                     selected={getValues("proposedPipeSize")}
                     disable={false}
                     option={pipeSizeList}
-                    errorStyle={(localFormState.touched.proposedPipeSize && errors?.proposedPipeSize?.message) ? true : false}
+errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPipeSize?.message) ? true : false}
                     select={(e) => {
                       props.onChange(e);
                     }}

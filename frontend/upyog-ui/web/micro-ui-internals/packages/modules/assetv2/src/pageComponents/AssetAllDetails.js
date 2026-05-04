@@ -11,7 +11,7 @@ import {
   Toast,
   LabelFieldPair,
   TextArea
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Controller, useForm } from "react-hook-form";
 import exifr from "exifr";
 import { assetStyles } from "../utils/assetStyles";

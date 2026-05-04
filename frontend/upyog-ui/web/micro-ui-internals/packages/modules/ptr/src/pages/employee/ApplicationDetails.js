@@ -28,7 +28,7 @@
  * @date 2025-03-31
  */
 
-import { Header, MultiLink, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Header, MultiLink, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

@@ -8,7 +8,7 @@ import {
   ViewReportIcon,
   InboxIcon,
   ULBHomeCard,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, Routes, Route } from "react-router-dom";
@@ -224,41 +224,41 @@ const EmployeeApp = ({ path, url, userType }) => {
           </div>
         )}
         <Routes>
-          <Route path={`${path}/`} element={<PrivateRoute><FSMLinks matchPath={path} userType={userType} /></PrivateRoute>} />
-          <Route path={`${path}/inbox`} element={<PrivateRoute><Inbox parentRoute={path} isInbox={true} /></PrivateRoute>} />
-          <Route path={`${path}/fstp-inbox`} element={<PrivateRoute><FstpInbox parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
-          <Route path={`${path}/modify-application/:id`} element={<PrivateRoute><EditApplication /></PrivateRoute>} />
+          <Route path={`*`} element={<PrivateRoute><FSMLinks matchPath={path} userType={userType} /></PrivateRoute>} />
+          <Route path={`/inbox`} element={<PrivateRoute><Inbox parentRoute={path} isInbox={true} /></PrivateRoute>} />
+          <Route path={`/fstp-inbox`} element={<PrivateRoute><FstpInbox parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
+          <Route path={`/modify-application/:id`} element={<PrivateRoute><EditApplication /></PrivateRoute>} />
           <Route
-            path={`${path}/application-details/:id`}
+            path={`/application-details/:id`}
             element={
               <PrivateRoute>
                 <EmployeeApplicationDetails parentRoute={path} userType="EMPLOYEE" />
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/fstp-operator-details/:id`} element={<PrivateRoute><FstpOperatorDetails /></PrivateRoute>} />
-          <Route path={`${path}/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/application-audit/:id`} element={<PrivateRoute><ApplicationAudit parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/search`} element={<PrivateRoute><Inbox parentRoute={path} isSearch={true} /></PrivateRoute>} />
-<Route path={`${path}/rate-view/:id`} element={<PrivateRoute><RateView parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/mark-for-disposal`} element={<PrivateRoute><div /></PrivateRoute>} />
-<Route path={`${path}/registry`} element={<PrivateRoute><FSMRegistry parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/vendor-details/:id`} element={<PrivateRoute><VendorDetails parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/new-vendor`} element={<PrivateRoute><AddVendor parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/modify-vendor/:id`} element={<PrivateRoute><EditVendor parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/vehicle-details/:id`} element={<PrivateRoute><VehicleDetails parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/new-vehicle`} element={<PrivateRoute><AddVehicle parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/modify-vehicle/:id`} element={<PrivateRoute><EditVehicle parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/driver-details/:id`} element={<PrivateRoute><DriverDetails parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/new-driver`} element={<PrivateRoute><AddDriver parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/registry/modify-driver/:id`} element={<PrivateRoute><EditDriver parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/fstp-operations`} element={<PrivateRoute><FstpOperations /></PrivateRoute>} />
-<Route path={`${path}/fstp-add-vehicle`} element={<PrivateRoute><FstpAddVehicle /></PrivateRoute>} />
-<Route path={`${path}/fstp-fsm-request/:id`} element={<PrivateRoute><FstpServiceRequest /></PrivateRoute>} />
-<Route path={`${path}/home`} element={<PrivateRoute><ULBHomeCard module={module} /></PrivateRoute>} />
-<Route path={`${path}/fstp/new-vehicle-entry`} element={<PrivateRoute><FstpOperatorDetails /></PrivateRoute>} />
-          <Route path={`${path}/fstp/new-vehicle-entry/:id`} element={<PrivateRoute><FstpOperatorDetails /></PrivateRoute>} />
+          <Route path={`/fstp-operator-details/:id`} element={<PrivateRoute><FstpOperatorDetails /></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
+<Route path={`/application-audit/:id`} element={<PrivateRoute><ApplicationAudit parentRoute={path} /></PrivateRoute>} />
+<Route path={`/search`} element={<PrivateRoute><Inbox parentRoute={path} isSearch={true} /></PrivateRoute>} />
+<Route path={`/rate-view/:id`} element={<PrivateRoute><RateView parentRoute={path} /></PrivateRoute>} />
+<Route path={`/mark-for-disposal`} element={<PrivateRoute><div /></PrivateRoute>} />
+<Route path={`/registry`} element={<PrivateRoute><FSMRegistry parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/vendor-details/:id`} element={<PrivateRoute><VendorDetails parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/new-vendor`} element={<PrivateRoute><AddVendor parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/modify-vendor/:id`} element={<PrivateRoute><EditVendor parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/vehicle-details/:id`} element={<PrivateRoute><VehicleDetails parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/new-vehicle`} element={<PrivateRoute><AddVehicle parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/modify-vehicle/:id`} element={<PrivateRoute><EditVehicle parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/driver-details/:id`} element={<PrivateRoute><DriverDetails parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/new-driver`} element={<PrivateRoute><AddDriver parentRoute={path} /></PrivateRoute>} />
+<Route path={`/registry/modify-driver/:id`} element={<PrivateRoute><EditDriver parentRoute={path} /></PrivateRoute>} />
+<Route path={`/fstp-operations`} element={<PrivateRoute><FstpOperations /></PrivateRoute>} />
+<Route path={`/fstp-add-vehicle`} element={<PrivateRoute><FstpAddVehicle /></PrivateRoute>} />
+<Route path={`/fstp-fsm-request/:id`} element={<PrivateRoute><FstpServiceRequest /></PrivateRoute>} />
+<Route path={`/home`} element={<PrivateRoute><ULBHomeCard module={module} /></PrivateRoute>} />
+<Route path={`/fstp/new-vehicle-entry`} element={<PrivateRoute><FstpOperatorDetails /></PrivateRoute>} />
+          <Route path={`/fstp/new-vehicle-entry/:id`} element={<PrivateRoute><FstpOperatorDetails /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

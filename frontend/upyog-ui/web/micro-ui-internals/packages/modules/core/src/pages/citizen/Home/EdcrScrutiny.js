@@ -1,4 +1,4 @@
-import { CardLabel, Dropdown, FormStep, Loader, TextInput, Toast, UploadFile } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, FormStep, Loader, TextInput, Toast, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState, useTransition } from "react";
 import { useLocation,  } from "react-router-dom";
 import { stringReplaceAll, sortDropdownNames } from "../../../../../obps/src/utils";

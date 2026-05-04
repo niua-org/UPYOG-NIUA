@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { Controller, useWatch } from "react-hook-form";
-import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, Loader, MobileNumber } from "@upyog/digit-ui-react-components";
+import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, Loader, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 
 const SearchFields = ({ register, control, reset, tenantId, t }) => {
   const propsForMobileNumber = {
@@ -21,26 +21,42 @@ const SearchFields = ({ register, control, reset, tenantId, t }) => {
         <label>{t("WS_MYCONNECTIONS_CONSUMER_NO")}</label>
         <TextInput 
           name="connectionNumber" 
-          inputRef={register({})} 
-          {...(validation = {
-            isRequired: false,
-            pattern: "^[a-zA-Z0-9\/-]*$",
-            type: "text",
-            title: t("ERR_INVALID_CONSUMER_NO"),
+          {...register("connectionNumber", {
+            required: false,
+            pattern: {
+              value: /^[a-zA-Z0-9\/-]*$/,
+              title: t("ERR_INVALID_CONSUMER_NO")
+            }
           })}
           />
       </SearchField>
       <SearchField>
         <label>{t("WS_SEARCH_CONNNECTION_OLD_CONSUMER_LABEL")}</label>
-        <TextInput name="oldConnectionNumber" inputRef={register({})} {...propsForOldConnectionNumberNpropertyId} />
+        <TextInput name="oldConnectionNumber" {...register("oldConnectionNumber", {
+            pattern: {
+              value: propsForOldConnectionNumberNpropertyId.pattern,
+              title: propsForOldConnectionNumberNpropertyId.title
+            }
+          })} />
       </SearchField>
       <SearchField>
         <label>{t("WS_PROPERTY_ID_LABEL")}</label>
-        <TextInput name="propertyId" inputRef={register({})} {...propsForOldConnectionNumberNpropertyId} />
+        <TextInput name="propertyId" {...register("propertyId", {
+            pattern: {
+              value: propsForOldConnectionNumberNpropertyId.pattern,
+              title: propsForOldConnectionNumberNpropertyId.title
+            }
+          })} />
       </SearchField>
       <SearchField>
         <label>{t("WS_HOME_SEARCH_RESULTS_OWN_MOB_LABEL")}</label>
-        <MobileNumber name="mobileNumber" inputRef={register({})} {...propsForMobileNumber} />
+        <MobileNumber name="mobileNumber" {...register("mobileNumber", {
+            validate: (value) => {
+              if (!value) return true;
+              if (!/^[6-9][0-9]{9}$/.test(value)) return t("ES_SEARCH_APPLICATION_MOBILE_INVALID");
+              return true;
+            }
+          })} {...propsForMobileNumber} />
       </SearchField>
       <SearchField className="submit">
         <SubmitBar label={t("WS_SEARCH_CONNECTION_SEARCH_BUTTON")} submit />

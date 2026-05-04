@@ -14,9 +14,9 @@
   },
 
   "dependencies": {
-    "@upyog/digit-ui-react-components": "3.10.0",
-    "react-hook-form": "6.15.8",
-    "react-i18next": "11.16.2",
+    "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
+    "react-hook-form": "^7.51.0",
+    "react-i18next": "14.0.0",
     "rooks": "^4.4.0"
   }
 }

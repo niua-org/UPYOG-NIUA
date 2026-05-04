@@ -23,7 +23,7 @@ const SearchTrade = () => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
+      <Route path={`*`} exact>
         <SearchTradeComponent config={params[0]} />
       </Route>
     </Routes>

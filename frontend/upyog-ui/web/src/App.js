@@ -28,11 +28,11 @@ import {
   TLLinks,
   initTLComponents,
 } from "@upyog/digit-ui-module-tl";
-import {
-  ChallanGenerationModule,
-  initChallanGenerationComponents,
-  ChallanReducers,
-} from "@upyog/digit-ui-module-challangeneration";
+// import {
+//   ChallanGenerationModule,
+//   initChallanGenerationComponents,
+//   ChallanReducers,
+// } from "@nudmcdgnpm/digit-ui-module-challangeneration";
 import { initReceiptsComponents, ReceiptsModule } from "@upyog/digit-ui-module-receipts";
 import { initOBPSComponents } from "@upyog/digit-ui-module-obps";
 import { initNOCComponents } from "@upyog/digit-ui-module-noc";
@@ -56,7 +56,7 @@ import {
 
 
 import {CHBModule,CHBLinks,CHBComponents} from "@upyog/upyog-ui-module-chb";
-import {ADSModule,ADSLinks,ADSComponents} from "@upyog/upyog-ui-module-ads";
+import {ADSModule,ADSLinks,ADSComponents} from "@nudmcdgnpm/upyog-ui-module-ads";
 import { WTModule, WTLinks, WTComponents } from "@upyog/upyog-ui-module-wt";
 import { VENDORComponents, VENDORLinks, VENDORModule } from "@upyog/upyog-ui-module-vendor";
 import { PGRAIComponents, PGRAILinks, PGRAIModule } from "@upyog/upyog-ui-module-pgrai";
@@ -120,7 +120,7 @@ window.Digit.ComponentRegistryService.setupRegistry({
   ...PTComponents,
   MCollectLinks,
   MCollectModule,
-  ChallanGenerationModule,
+  // ChallanGenerationModule,
   HRMSModule,
   TLModule,
   TLLinks,
@@ -164,7 +164,7 @@ initPGRComponents();
 initFSMComponents();
 initDSSComponents();
 initMCollectComponents();
-initChallanGenerationComponents();
+// initChallanGenerationComponents();
 initHRMSComponents();
 initTLComponents();
 initReceiptsComponents();
@@ -181,7 +181,7 @@ initNDCComponents();
 const moduleReducers = (initData) => ({
   pgr: PGRReducers(initData),
   ndc: NDCReducers(initData),
-  challan: ChallanReducers(initData),
+  // challan: ChallanReducers(initData),
 });
 
 function App() {

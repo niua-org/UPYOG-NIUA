@@ -1,10 +1,10 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Route, useLocation, Routes, Navigate } from "react-router-dom";
-
+import { ADSDataConvert } from "../../../utils";
 import { citizenConfig } from "../../../config/Create/citizenconfig";
 import { data } from "jquery";
 
@@ -23,6 +23,8 @@ const ADSCreate = ({ parentRoute }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
   let config = [];
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.ads.useADSCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("ADS_CREATE", {});
   let { data: commonFields, isLoading } = Digit.Hooks.pt.useMDMS(stateId, "PropertyTax", "CommonFieldsConfig"); // PROPERTY CONFIG HOOK , just for commkonfeild config
   const goNext = (skipStep, index, isAddMultiple, key) => {
@@ -68,9 +70,17 @@ const ADSCreate = ({ parentRoute }) => {
     redirectWithHistory(nextPage);
   };
 
-  const chbcreate = async () => {
-    navigate(`acknowledgement`);
-  };
+  const handleSubmit = () => {
+  const formdata = ADSDataConvert(params); 
+  formdata.bookingApplication.tenantId = tenantId;
+  mutation.mutate(formdata, {
+    onSuccess: () => {
+      clearParams();
+      queryClient.invalidateQueries("ADS_CREATE");
+      navigate("acknowledgement", { replace: true });
+    },
+  });
+};
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     if (key === "owners") {
       let owners = params.owners || [];
@@ -120,8 +130,8 @@ const ADSCreate = ({ parentRoute }) => {
         );
       })}
 
-      <Route path={`check`} element={<CheckPage onSubmit={chbcreate} value={params} />} />
-      <Route path={`acknowledgement`} element={<ADSAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<ADSAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation}/>} />
       <Route path="*" element={<Navigate to={config.indexRoute} replace />} />
     </Routes>
   );

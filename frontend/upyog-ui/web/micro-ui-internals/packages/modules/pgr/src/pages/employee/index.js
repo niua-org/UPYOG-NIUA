@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Route, useLocation, Routes } from "react-router-dom";
-import { ActionBar, Menu, SubmitBar, BreadCrumb } from "@upyog/digit-ui-react-components";
+import { ActionBar, Menu, SubmitBar, BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 // import { ComplaintDetails } from "./ComplaintDetails";
 // import { CreateComplaint } from "./CreateComplaint";
@@ -21,23 +21,23 @@ const Complaint = () => {
     },
     inbox: {
       content: t("CS_COMMON_INBOX"),
-      path: match.url + Employee.Inbox,
+      path:  Employee.Inbox,
     },
     createComplaint: {
       content: t("CS_PGR_CREATE_COMPLAINT"),
-      path: match.url + Employee.CreateComplaint,
+      path:  Employee.CreateComplaint,
     },
     complaintDetails: {
       content: t("CS_PGR_COMPLAINT_DETAILS"),
-      path: match.url + Employee.ComplaintDetails + ":id",
+      path:  Employee.ComplaintDetails + ":id",
     },
     response: {
       content: t("CS_PGR_RESPONSE"),
-      path: match.url + Employee.Response,
+      path:  Employee.Response,
     },
     editApplication: {
       content: t("CS_PGR_EDIT_APPLICATION"),
-      path: match.url + Employee.EditApplication,
+      path:  Employee.EditApplication,
     },    
   };
   function popupCall(option) {
@@ -58,33 +58,33 @@ const Complaint = () => {
         {!location.includes(Employee.Response) && (
           <Routes>
             <Route
-              path={match.url + Employee.CreateComplaint}
+              path={ Employee.CreateComplaint}
               element={<BreadCrumb crumbs={[breadcrumConfig.home, breadcrumConfig.createComplaint]}></BreadCrumb>}
             />
             <Route
-              path={match.url + Employee.ComplaintDetails + ":id"}
+              path={ Employee.ComplaintDetails + ":id"}
               element={<BreadCrumb crumbs={[breadcrumConfig.home, breadcrumConfig.inbox, breadcrumConfig.complaintDetails]}></BreadCrumb>}
             />
             <Route
-              path={match.url + Employee.Inbox}
+              path={ Employee.Inbox}
               element={<BreadCrumb crumbs={[breadcrumConfig.home, breadcrumConfig.inbox]}></BreadCrumb>}
             />
             <Route
-              path={match.url + Employee.Response}
+              path={ Employee.Response}
               element={<BreadCrumb crumbs={[breadcrumConfig.home, breadcrumConfig.response]}></BreadCrumb>}
             />
             <Route
-              path={match.url + Employee.EditApplication + ":id"}
+              path={ Employee.EditApplication + ":id"}
               element={<BreadCrumb crumbs={[breadcrumConfig.home, breadcrumConfig.editApplication]}></BreadCrumb>}
             />
           </Routes>
         )}
         <Routes>
-          <Route path={match.url + Employee.CreateComplaint} element={<CreateComplaint parentUrl={match.url} />} />
-          <Route path={match.url + Employee.ComplaintDetails + ":id/*"} element={<ComplaintDetails />} />
-          <Route path={match.url + Employee.Inbox} element={<Inbox />} />
-          <Route path={match.url + Employee.Response} element={<Response />} />
-          <Route path={match.url + Employee.EditApplication + ":id/*"} element={<EditApplication />} />
+          <Route path={ Employee.CreateComplaint} element={<CreateComplaint parentUrl={match.url} />} />
+          <Route path={ Employee.ComplaintDetails + ":id/*"} element={<ComplaintDetails />} />
+          <Route path={ Employee.Inbox} element={<Inbox />} />
+          <Route path={ Employee.Response} element={<Response />} />
+          <Route path={ Employee.EditApplication + ":id/*"} element={<EditApplication />} />
         </Routes>
       </div>
       {/* <ActionBar>

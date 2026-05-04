@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { APPLICATION_PATH } from "../../utils";
@@ -85,7 +85,7 @@ const App = () => {
                 <Navigate
                   to={{
                     pathname: `${APPLICATION_PATH}/citizen/login`,
-                    state: { from: `${path}/wt-Vendor`, role: "WT_VENDOR" },
+                    state: { from: `/wt-Vendor`, role: "WT_VENDOR" },
                   }}
                   replace
                 />
@@ -103,7 +103,7 @@ const App = () => {
                 <Navigate
                   to={{
                     pathname: `${APPLICATION_PATH}/citizen/login`,
-                    state: { from: `${path}/mt-Vendor`, role: "MT_VENDOR" },
+                    state: { from: `/mt-Vendor`, role: "MT_VENDOR" },
                   }}
                   replace
                 />

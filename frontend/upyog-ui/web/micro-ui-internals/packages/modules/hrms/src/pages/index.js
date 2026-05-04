@@ -1,4 +1,4 @@
-import { PrivateRoute } from "@upyog/digit-ui-react-components";
+import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -30,17 +30,17 @@ const EmployeeApp = ({ path, url, userType }) => {
         </p>
         <Routes>
           <Route
-            path={`${path}/inbox`}
+            path={`/inbox`}
             element={
               <PrivateRoute>
                 <Inbox parentRoute={path} businessService="hrms" filterComponent="HRMS_INBOX_FILTER" initialStates={inboxInitialState} isInbox={true} />
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/create`} element={<PrivateRoute><CreateEmployee /></PrivateRoute>} />
-          <Route path={`${path}/response`} element={<PrivateRoute><HRMSResponse parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/details/:tenantId/:id`} element={<PrivateRoute><HRMSDetails /></PrivateRoute>} />
-          <Route path={`${path}/edit/:tenantId/:id`} element={<PrivateRoute><EditEmpolyee /></PrivateRoute>} />
+          <Route path={`/create`} element={<PrivateRoute><CreateEmployee /></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><HRMSResponse parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/details/:tenantId/:id`} element={<PrivateRoute><HRMSDetails /></PrivateRoute>} />
+          <Route path={`/edit/:tenantId/:id`} element={<PrivateRoute><EditEmpolyee /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

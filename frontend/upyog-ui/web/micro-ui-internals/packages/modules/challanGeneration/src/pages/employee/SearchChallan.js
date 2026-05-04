@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Card, TextInput, Header, SubmitBar, Loader, Toast, Dropdown, Table } from "@upyog/digit-ui-react-components";
+import { Card, TextInput, Header, SubmitBar, Loader, Toast, Dropdown, Table } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, FormProvider, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";

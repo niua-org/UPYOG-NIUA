@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useEffect,useState } from "react"
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@upyog/digit-ui-react-components";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 import MobileSearchApplication from "./MobileSearchApplication";
 
@@ -16,10 +16,10 @@ const UlbAssesmentSearch = ({tenantId, isLoading, t, onSubmit, data, count, setS
         }
     })
     useEffect(() => {
-      register("offset", 0)
-      register("limit", 10)
-      register("sortBy", "commencementDate")
-      register("sortOrder", "DESC")
+      register("offset")
+      register("limit")
+      register("sortBy")
+      register("sortOrder")
     },[register])
 
     useEffect(() => {
@@ -130,11 +130,11 @@ const UlbAssesmentSearch = ({tenantId, isLoading, t, onSubmit, data, count, setS
                     <Controller
                             control={control}
                             name="creationReason"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={tenantType}
                                 optionKey="i18nKey"
                                 t={t}
@@ -148,11 +148,11 @@ const UlbAssesmentSearch = ({tenantId, isLoading, t, onSubmit, data, count, setS
                     <Controller
                             control={control}
                             name="status"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={financialYearDropdown}
                                 optionKey="i18nKey"
                                 t={t}

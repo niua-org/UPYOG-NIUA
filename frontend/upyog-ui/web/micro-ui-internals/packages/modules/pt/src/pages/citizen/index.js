@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { shouldHideBackButton } from "../../utils";
@@ -19,6 +19,8 @@ const App = () => {
     searchParams: {},
   };
 
+ 
+
   const CreateProperty = Digit?.ComponentRegistryService?.getComponent("PTCreateProperty");
   const EditProperty = Digit?.ComponentRegistryService?.getComponent("PTEditProperty");
   const SearchPropertyComponent = Digit?.ComponentRegistryService?.getComponent("PTSearchPropertyComponent");
@@ -30,26 +32,27 @@ const App = () => {
   const PropertyInformation = Digit?.ComponentRegistryService?.getComponent("PropertyInformation");
   const PropertyOwnerHistory = Digit?.ComponentRegistryService?.getComponent("PropertyOwnerHistory");
   const AssessmentDetails = Digit?.ComponentRegistryService?.getComponent("PTAssessmentDetails");
+  console.log("CreateProperty",CreateProperty)
   return (
     <span className={"pt-citizen"}style={{width:"100%"}}>
       <AppContainer>
         {!shouldHideBackButton(hideBackButtonConfig) ? <BackButton>Back</BackButton> : ""}
         <Routes>
-          <Route path={`${path}/property/new-application`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
-          <Route path={`${path}/property/edit-application`} element={<PrivateRoute><EditProperty /></PrivateRoute>} />
-          <Route path={`${path}/property/citizen-search`} element={<SearchPropertyComponent />} />
-          <Route path={`${path}/property/search-results`} element={<SearchResultsComponent />} />
-          <Route path={`${path}/property/application/:acknowledgementIds/:tenantId`} element={<PrivateRoute><PTApplicationDetails /></PrivateRoute>} />
-          <Route path={`${path}/property/my-applications`} element={<PrivateRoute><PTMyApplications /></PrivateRoute>} />
-          <Route path={`${path}/property/my-properties`} element={<PrivateRoute><MyProperties /></PrivateRoute>} />
-          <Route path={`${path}/property/my-payments`} element={<PrivateRoute><PTMyPayments /></PrivateRoute>} />
-          <Route path={`${path}/property/property-mutation`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
-          <Route path={`${path}/property/properties/:propertyIds`} element={<PrivateRoute><PropertyInformation /></PrivateRoute>} />
-          <Route path={`${path}/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/property/transfer-ownership`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
-          <Route path={`${path}/property/owner-history/:tenantId/:propertyIds`} element={<PrivateRoute><PropertyOwnerHistory /></PrivateRoute>} />
-          <Route path={`${path}/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/property/search`} element={<PrivateRoute><Search t={t} parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property/new-application/*`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
+          <Route path={`/property/edit-application`} element={<PrivateRoute><EditProperty /></PrivateRoute>} />
+          <Route path={`/property/citizen-search`} element={<SearchPropertyComponent />} />
+          <Route path={`/property/search-results`} element={<SearchResultsComponent />} />
+          <Route path={`/property/application/:acknowledgementIds/:tenantId`} element={<PrivateRoute><PTApplicationDetails /></PrivateRoute>} />
+          <Route path={`/property/my-applications`} element={<PrivateRoute><PTMyApplications /></PrivateRoute>} />
+          <Route path={`/property/my-properties`} element={<PrivateRoute><MyProperties /></PrivateRoute>} />
+          <Route path={`/property/my-payments`} element={<PrivateRoute><PTMyPayments /></PrivateRoute>} />
+          <Route path={`/property/property-mutation`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
+          <Route path={`/property/properties/:propertyIds`} element={<PrivateRoute><PropertyInformation /></PrivateRoute>} />
+          <Route path={`/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property/transfer-ownership`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
+          <Route path={`/property/owner-history/:tenantId/:propertyIds`} element={<PrivateRoute><PropertyOwnerHistory /></PrivateRoute>} />
+          <Route path={`/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property/search`} element={<PrivateRoute><Search t={t} parentRoute={path} /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

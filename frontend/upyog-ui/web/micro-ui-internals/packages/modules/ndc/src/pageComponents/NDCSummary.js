@@ -9,7 +9,7 @@ import {
   SubmitBar,
   Menu,
   CardSectionHeader,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setNDCStep } from "../redux/actions/NDCFormActions";

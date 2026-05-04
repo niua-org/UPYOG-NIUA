@@ -12,7 +12,7 @@ import {
   Toast,
   InfoIcon,
   Card
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { DateRange } from "react-date-range";
 import { addDays, format, differenceInCalendarDays } from 'date-fns';
 import ChbCommunityHallDetails from "../components/ChbCommunityHallDetails";
@@ -414,7 +414,7 @@ const handleBookClick = () => {
               name={"selectedHall"}
               defaultValue={selectedHall}
               rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
                   selected={selectedHall}
@@ -499,7 +499,7 @@ const handleBookClick = () => {
             name={"hallCode"}
             defaultValue={hallCode}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={hallCode}

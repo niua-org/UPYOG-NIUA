@@ -8,7 +8,7 @@ import {
   SubmitBar,
   Loader,
   Dropdown,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 

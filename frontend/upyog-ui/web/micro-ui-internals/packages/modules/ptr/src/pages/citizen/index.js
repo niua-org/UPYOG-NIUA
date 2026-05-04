@@ -18,7 +18,7 @@
 */
 
 
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { shouldHideBackButton } from "../../utils";
@@ -48,7 +48,7 @@ const App = () => {
           <Route path= "petservice/revised-application/*" element={<PrivateRoute><PTRCreate /></PrivateRoute>} />
           <Route path= "petservice/application/:acknowledgementIds/:tenantId" element={<PrivateRoute><PTRApplicationDetails /></PrivateRoute>} />
           <Route path= "petservice/my-applications/*" element={<PrivateRoute><PTRMyApplications /></PrivateRoute>} />
-          <Route path= "petservice/search/*" element={<PrivateRoute><SearchApp path={`${path}/petservice/search`} /></PrivateRoute>} />
+          <Route path= "petservice/search/*" element={<PrivateRoute><SearchApp path={`/petservice/search`} /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

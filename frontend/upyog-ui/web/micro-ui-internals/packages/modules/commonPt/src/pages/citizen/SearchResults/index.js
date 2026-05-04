@@ -28,21 +28,24 @@ const SearchResultsComponent = (props) => {
  
   return (
     <Routes>
-      <Route path={`${path}`} exact>
-        <PropertySearchResults
-          template={params[0].labels}
-          header={params[0].texts.header}
-          actionButtonLabel={params[0].texts.actionButtonLabel}
-          t={t}
-          isMutation={propConfig?.action === "MUTATION"}
-          onSelect={onSelect}
-          config={propConfig}
-          clearParams={clearParams}
-          stateCode= {stateCode}
-          redirectToUrl={redirectToUrl}
-          searchQuery={formData?.cptSearchQuery}
-        />
-      </Route>
+      <Route
+        path="*"
+        element={
+          <PropertySearchResults
+            template={params[0].labels}
+            header={params[0].texts.header}
+            actionButtonLabel={params[0].texts.actionButtonLabel}
+            t={t}
+            isMutation={propConfig?.action === "MUTATION"}
+            onSelect={onSelect}
+            config={propConfig}
+            clearParams={clearParams}
+            stateCode={stateCode}
+            redirectToUrl={redirectToUrl}
+            searchQuery={formData?.cptSearchQuery}
+          />
+        }
+      />
     </Routes>
   );
 };

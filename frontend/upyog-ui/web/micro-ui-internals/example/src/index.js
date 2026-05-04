@@ -28,7 +28,7 @@ import { initBillsComponents, BillsModule } from "@upyog/digit-ui-module-bills";
 // import {initCustomisationComponents} from "./customisations";
 
 // import { PGRModule, PGRLinks } from "@upyog/digit-ui-module-pgr";
-// import { Body, TopBar } from "@upyog/digit-ui-react-components";
+// import { Body, TopBar } from "@nudmcdgnpm/digit-ui-react-components";
 import "@nudmcdgnpm/upyog-css";
 
 import { PTRModule, PTRLinks, PTRComponents } from "@upyog/upyog-ui-module-ptr";
@@ -55,7 +55,7 @@ import { PGRAIComponents, PGRAILinks, PGRAIModule } from "@upyog/upyog-ui-module
 import { GISComponents, GISLinks, GISModule } from "@nudmcdgnpm/upyog-ui-module-gis";
 import { ESTComponents, ESTLinks, ESTModule } from "@nudmcdgnpm/upyog-ui-module-est";
 import { initNDCComponents, NDCReducers } from "@nudmcdgnpm/upyog-ui-module-ndc";
-// import * as comps from "@upyog/digit-ui-react-components";
+// import * as comps from "@nudmcdgnpm/digit-ui-react-components";
 
 // import { subFormRegistry } from "@upyog/digit-ui-libraries";
 

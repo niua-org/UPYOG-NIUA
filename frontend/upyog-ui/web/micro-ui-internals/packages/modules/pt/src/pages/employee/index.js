@@ -1,4 +1,4 @@
-import { PrivateRoute,BreadCrumb } from "@upyog/digit-ui-react-components";
+import { PrivateRoute,BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -169,9 +169,9 @@ const EmployeeApp = ({ path, url, userType }) => {
           </div>
         ) : null}
         <Routes>
-          <Route path={`${path}/`} element={<PrivateRoute><PTLinks matchPath={path} userType={userType} /></PrivateRoute>} />
+          <Route path={`*`} element={<PrivateRoute><PTLinks matchPath={path} userType={userType} /></PrivateRoute>} />
           <Route
-            path={`${path}/inbox`}
+            path={`/inbox`}
             element={
               <PrivateRoute>
                 <Inbox
@@ -185,22 +185,22 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
-          <Route path={`${path}/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/property-details/:id`} element={<PrivateRoute><PropertyDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/applicationsearch/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/ptsearch/property-details/:id`} element={<PrivateRoute><PropertyDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/ptsearch/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/ptsearch/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/modify-application/:id`} element={<PrivateRoute><EditApplication /></PrivateRoute>} />
-          <Route path={`${path}/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/property-mutate/:id`} element={<PrivateRoute><TransferOwnership parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/property-mutate-docs-required/:id`} element={<PrivateRoute><DocsRequired parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/search`} element={<PrivateRoute><Search t={t} parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
+          <Route path={`/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property-details/:id`} element={<PrivateRoute><PropertyDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/applicationsearch/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ptsearch/property-details/:id`} element={<PrivateRoute><PropertyDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ptsearch/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ptsearch/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/modify-application/:id`} element={<PrivateRoute><EditApplication /></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property-mutate/:id`} element={<PrivateRoute><TransferOwnership parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property-mutate-docs-required/:id`} element={<PrivateRoute><DocsRequired parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/search`} element={<PrivateRoute><Search t={t} parentRoute={path} /></PrivateRoute>} />
           <Route
-            path={`${path}/searchold`}
+            path={`/searchold`}
             element={
               <PrivateRoute>
                 <Inbox
@@ -214,14 +214,14 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/application-search`} element={<PrivateRoute><SearchApp parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/ulb-assesment`} element={<PrivateRoute><UlbAssesment parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/PTReceiptRegister`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTReceiptRegister" /></PrivateRoute>} />
-          <Route path={`${path}/PTCollectionReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCollectionReport" /></PrivateRoute>} />
-          <Route path={`${path}/DefaulterReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="DefaulterReport" /></PrivateRoute>} />
-          <Route path={`${path}/PTGrievances`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTGrievances" /></PrivateRoute>} />
-          <Route path={`${path}/PTCoverageReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCoverageReport" /></PrivateRoute>} />
-          <Route path={`${path}/PTTop20TaxPayers`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTTop20TaxPayers" /></PrivateRoute>} />
+          <Route path={`/application-search`} element={<PrivateRoute><SearchApp parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ulb-assesment`} element={<PrivateRoute><UlbAssesment parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/PTReceiptRegister`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTReceiptRegister" /></PrivateRoute>} />
+          <Route path={`/PTCollectionReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCollectionReport" /></PrivateRoute>} />
+          <Route path={`/DefaulterReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="DefaulterReport" /></PrivateRoute>} />
+          <Route path={`/PTGrievances`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTGrievances" /></PrivateRoute>} />
+          <Route path={`/PTCoverageReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCoverageReport" /></PrivateRoute>} />
+          <Route path={`/PTTop20TaxPayers`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTTop20TaxPayers" /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

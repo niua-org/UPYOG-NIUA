@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, MobileNumber } from "@upyog/digit-ui-react-components";
+import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 // import MobileNumber from "@upyog/digit-ui-react-components/src/atoms/MobileNumber";
 // import _ from "lodash";
@@ -134,8 +134,8 @@ const SearchLicenseApplication = ({ onSearch, type, onClose, searchFields, searc
                       <Label>{t(input.label)}</Label>
                       {!input.type ? (
                         <Controller
-                          render={(props) => {
-                            return <TextInput onChange={props.onChange} value={props.value} />;
+                          render={({ field }) => {
+                            return <TextInput onChange={field.onChange} value={field.value} />;
                           }}
                           name={input.name}
                           control={control}
@@ -143,9 +143,9 @@ const SearchLicenseApplication = ({ onSearch, type, onClose, searchFields, searc
                         />
                       ) : (
                         <Controller
-                          render={(props) => {
+                          render={({ field }) => {
                             const Comp = fieldComponents?.[input.type];
-                            return <Comp onChange={props.onChange} value={props.value} />;
+                            return <Comp onChange={field.onChange} value={field.value} />;
                           }}
                           name={input.name}
                           control={control}

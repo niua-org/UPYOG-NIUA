@@ -1,4 +1,4 @@
-import { PrivateRoute,BreadCrumb } from "@upyog/digit-ui-react-components";
+import { PrivateRoute,BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -87,7 +87,7 @@ const EmployeeApp = ({ path, url, userType }) => {
         </p>
         <Routes>
           <Route
-            path={`${path}/inbox`}
+            path={`/inbox`}
             element={
               <PrivateRoute>
                 <SearchApp parentRoute={path} filterComponent="BILLS_INBOX_FILTER" initialStates={inboxInitialState} isInbox={true} />
@@ -95,7 +95,7 @@ const EmployeeApp = ({ path, url, userType }) => {
             }
           />
           <Route
-            path={`${path}/group-bill`}
+            path={`/group-bill`}
             element={
               <PrivateRoute>
                 <GroupBill parentRoute={path} filterComponent="BILLS_INBOX_FILTER" initialStates={inboxInitialState} isInbox={true} />
@@ -103,7 +103,7 @@ const EmployeeApp = ({ path, url, userType }) => {
             }
           />
           <Route
-            path={`${path}/group-billold`}
+            path={`/group-billold`}
             element={
               <PrivateRoute>
                 <GroupBillInbox
@@ -117,7 +117,7 @@ const EmployeeApp = ({ path, url, userType }) => {
             }
           />
           <Route
-            path={`${path}/download-bill-pdf`}
+            path={`/download-bill-pdf`}
             element={
               <PrivateRoute>
                 <DownloadBillInbox
@@ -131,15 +131,15 @@ const EmployeeApp = ({ path, url, userType }) => {
             }
           />
           <Route
-            path={`${path}/cancel-bill`}
+            path={`/cancel-bill`}
             element={
               <PrivateRoute>
                 <CancelBill parentRoute={path} filterComponent="BILLS_INBOX_FILTER" initialStates={inboxInitialState} isInbox={true} />
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/response-cancelBill`} element={<PrivateRoute><ResponseCancelBill parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/bill-details`} element={<PrivateRoute><BillDetailsv1 parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/response-cancelBill`} element={<PrivateRoute><ResponseCancelBill parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/bill-details`} element={<PrivateRoute><BillDetailsv1 parentRoute={path} /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { Controller, useWatch } from "react-hook-form";
-import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, Loader, MobileNumber } from "@upyog/digit-ui-react-components";
+import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, Loader, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 
 const SearchFields = ({ register, control, reset, tenantId, t }) => {
   const propsForMobileNumber = {
@@ -21,7 +21,7 @@ const SearchFields = ({ register, control, reset, tenantId, t }) => {
     <>
       <SearchField style={{width:"100%"}}>
         <label>{t("WS_PROPERTY_ID_LABEL")}</label>
-        <TextInput name="propertyId" inputRef={register({})} />
+        <TextInput name="propertyId" {...register("propertyId")} />
       </SearchField>
 
       <SearchField className="submit">

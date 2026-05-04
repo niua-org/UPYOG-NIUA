@@ -1,4 +1,5 @@
-import { CardLabel, Dropdown, LabelFieldPair, TextInput, CardLabelError,WrapUnMaskComponent } from "@upyog/digit-ui-react-components";
+
+import { CardLabel, Dropdown, LabelFieldPair, TextInput, CardLabelError,WrapUnMaskComponent } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import * as func from "../utils";
 import { useForm, Controller } from "react-hook-form";
@@ -148,13 +149,13 @@ const PlumberDetails = (_props) => {
                             defaultValue={plumberDetail?.detailsProvidedBy}
                             rules={{ required: t("REQUIRED_FIELD") }}
                             isMandatory={true}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={getValues("detailsProvidedBy")}
+                                    selected={field.value}
                                     disable={false}
                                     option={options}
-                                    errorStyle={(localFormState.touched.detailsProvidedBy && errors?.detailsProvidedBy?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields.detailsProvidedBy && errors?.detailsProvidedBy?.message) ? true : false}
                                     select={(e) => {
                                         if (e.code == "ULB") {
                                             let obj = {
@@ -169,10 +170,10 @@ const PlumberDetails = (_props) => {
                                             let obj = { detailsProvidedBy: e }
                                             setPlumberDetails([obj])
                                         }
-                                        props.onChange(e);
+                                        field.onChange(e);
                                     }}
                                     optionKey="i18nKey"
-                                    onBlur={props.onBlur}
+                                    onBlur={field.onBlur}
                                     t={t}
                                 />
                             )}
@@ -191,17 +192,17 @@ const PlumberDetails = (_props) => {
                                         // rules={{ required: t("REQUIRED_FIELD") }}
                                         rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) , required: t("REQUIRED_FIELD")}}
                                         isMandatory={true}
-                                        render={(props) => (
+                                        render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 autoFocus={focusIndex.index === plumberDetail?.key && focusIndex.type === "plumberLicenseNo"}
-                                                errorStyle={(localFormState.touched.plumberLicenseNo && errors?.plumberLicenseNo?.message) ? true : false}
+                                                errorStyle={(localFormState.touchedFields.plumberLicenseNo && errors?.plumberLicenseNo?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: plumberDetail?.key, type: "plumberLicenseNo" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />
@@ -218,17 +219,17 @@ const PlumberDetails = (_props) => {
                                         // rules={{ required: t("REQUIRED_FIELD") }}
                                         rules={{ validate: (e) => ((e && getPattern("Name").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         isMandatory={true}
-                                        render={(props) => (
+                                        render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 autoFocus={focusIndex.index === plumberDetail?.key && focusIndex.type === "plumberName"}
-                                                errorStyle={(localFormState.touched.plumberName && errors?.plumberName?.message) ? true : false}
+                                                errorStyle={(localFormState.touchedFields.plumberName && errors?.plumberName?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: plumberDetail?.key, type: "plumberName" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />
@@ -246,28 +247,28 @@ const PlumberDetails = (_props) => {
                                         rules={{ validate: (e) => ((e && getPattern("MobileNoWithPrivacy").test(e)) || !e || e.includes("*") ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         type="mobileNumber"
                                         isMandatory={true}
-                                        render={(props) => (
+                                        render={({ field }) => (
                                             <div style={{display:"flex",alignItems:"baseline",marginRight: "unset"}}>
                                                 <div style={{ position: "relative", zIndex: "1", left: "35px", marginTop: "-24.5px",marginLeft:"-26px" }}>+91</div>
                                                 <TextInput
                                                     style={{ background: "#FAFAFA", padding: "0px 35px" }}
                                                     type="mobileNumber"
-                                                    value={props.value}
+                                                    value={field.value}
                                                     autoFocus={focusIndex.index === plumberDetail?.key && focusIndex.type === "plumberMobileNo"}
-                                                    errorStyle={(localFormState.touched.plumberMobileNo && errors?.plumberMobileNo?.message) ? true : false}
+                                                    errorStyle={(localFormState.touchedFields.plumberMobileNo && errors?.plumberMobileNo?.message) ? true : false}
                                                     onChange={(e) => {
-                                                        props.onChange(e.target.value);
+                                                        field.onChange(e.target.value);
                                                         setFocusIndex({ index: plumberDetail?.key, type: "plumberMobileNo" });
                                                     }}
                                                     labelStyle={{ marginTop: "unset" }}
-                                                    onBlur={props.onBlur}
+                                                    onBlur={field.onBlur}
                                                 />
                                                 <div style={isMobile && isEmployee ?{} : {marginRight:"-50px",marginLeft:"10px"}}>
                                            <WrapUnMaskComponent
                                             unmaskField={(e) => {
-                                                props.onChange(e);
+                                                field.onChange(e);
                                               }}
-                                              iseyevisible={props.value?.includes("*") ? true : false}
+                                              iseyevisible={field.value?.includes("*") ? true : false}
                                               privacy={{
                                                 uuid: plumberDetail?.applicationNo,
                                                 fieldName: "plumberInfoMobileNumber",

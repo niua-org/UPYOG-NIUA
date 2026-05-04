@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { Modal, Toast } from "@upyog/digit-ui-react-components";
+import { Modal, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import * as turf from "@turf/turf";
 import L from "leaflet";
 

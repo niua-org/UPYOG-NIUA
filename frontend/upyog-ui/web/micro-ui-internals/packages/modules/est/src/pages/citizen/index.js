@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import ESTApplicationDetails from "./ESTApplicationDetails";
 import { ESTPaymentHistory } from "./PaymentHistory";
 import ESTMyApplications from "./MyApplications";

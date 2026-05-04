@@ -1,4 +1,4 @@
-import { CardLabel, FormStep, Dropdown, TextInput, Toast, SearchIcon,  Row, ImageViewer, StatusTable, LinkButton, Header, SubmitBar, CardHeader } from "@upyog/digit-ui-react-components";
+import { CardLabel, FormStep, Dropdown, TextInput, Toast, SearchIcon,  Row, ImageViewer, StatusTable, LinkButton, Header, SubmitBar, CardHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import DisplayPhotos from "../../../../react-components/src/atoms/DisplayPhotos";
 import React, { useEffect, useState } from "react";
 import { PreApprovedPlanService } from "../../../../libraries/src/services/elements/PREAPPROVEDPLAN";

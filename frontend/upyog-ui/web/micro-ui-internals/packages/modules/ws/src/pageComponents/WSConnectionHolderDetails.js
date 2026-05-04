@@ -6,7 +6,7 @@ import {
   LabelFieldPair,
   TextInput,
   WrapUnMaskComponent,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -345,20 +345,20 @@ const ConnectionDetails = (_props) => {
           name="sameAsOwnerDetails"
           defaultValue={sameAsOwnerDetails}
           isMandatory={true}
-          render={(props) => (
+          render={({ field }) => (
             <CheckBox
               label={t("WS_SAME_AS_PROPERTY_OWNERS")}
               name={"sameAsOwnerDetails"}
               autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "sameAsOwnerDetails"}
-              errorStyle={localFormState.touched.sameAsOwnerDetails && errors?.sameAsOwnerDetails?.message ? true : false}
+              errorStyle={localFormState.touchedFields.sameAsOwnerDetails && errors?.sameAsOwnerDetails?.message ? true : false}
               onChange={(e) => {
                 setSameAsOwnerDetails(e.target.checked);
-                props.onChange(e.target.checked);
+                field.onChange(e.target.checked);
                 setFocusIndex({ index: connectionHolderDetail?.key, type: "sameAsOwnerDetails" });
               }}
               checked={sameAsOwnerDetails}
               style={{ paddingBottom: "10px", paddingTop: "3px" }}
-              onBlur={props.onBlur}
+              onBlur={field.onBlur}
             />
           )}
         />
@@ -378,21 +378,21 @@ const ConnectionDetails = (_props) => {
                   required: t("REQUIRED_FIELD"),
                 }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{ display: "flex", alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
                     <TextInput
-                      value={getValues("name")}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "name"}
-                      errorStyle={localFormState.touched.name && errors?.name?.message ? true : false}
+                      errorStyle={localFormState.touchedFields.name && errors?.name?.message ? true : false}
                       onChange={(e) => {
                         setName(e.target.value);
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionHolderDetail?.key, type: "name" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       style={
-                        checkifPrivacyValid() && !getValues("name")?.includes("*")
+                        checkifPrivacyValid() && !field.value?.includes("*")
                           ? !Digit.Utils.checkPrivacy(privacyData, { uuid: connectionHolderDetail?.uuid, fieldName: "name", model: "User" }) &&
                             !Digit.Utils.checkPrivacy(privacyData, { uuid: connectionHolderDetail?.uuid, fieldName: "mobileNumber", model: "User" })
                             ? ((isMobile && isEmployee) ? {} :{ width: "96%" })
@@ -405,9 +405,9 @@ const ConnectionDetails = (_props) => {
                         <WrapUnMaskComponent
                           unmaskField={(e) => {
                             setName(e);
-                            props.onChange(e);
+                            field.onChange(e);
                           }}
-                          iseyevisible={getValues("name")?.includes("*") ? true : false}
+                          iseyevisible={field.value?.includes("*") ? true : false}
                           privacy={{
                             uuid: connectionHolderDetail?.uuid,
                             fieldName: "name",

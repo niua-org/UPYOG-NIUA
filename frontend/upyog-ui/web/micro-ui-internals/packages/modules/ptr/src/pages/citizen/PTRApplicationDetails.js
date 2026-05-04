@@ -8,7 +8,7 @@ PTRApplicationDetails Component:
 - Uses MultiLink for download options and PTRWFApplicationTimeline for workflow details.
 - Implements loading states and handles errors with toasts.
 */
-import { Card, CardSubHeader, Header, LinkButton, Loader, Row, StatusTable, MultiLink, PopUp, Toast, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Card, CardSubHeader, Header, LinkButton, Loader, Row, StatusTable, MultiLink, PopUp, Toast, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams,  } from "react-router-dom";

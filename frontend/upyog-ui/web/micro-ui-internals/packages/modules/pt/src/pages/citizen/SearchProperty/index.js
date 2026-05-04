@@ -23,7 +23,7 @@ const SearchProperty = () => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
+      <Route path={`*`} exact>
         <SearchPropertyComponent config={params[0]} />
       </Route>
     </Routes>

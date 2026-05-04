@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import Stepper from "../../../../../../../react-components/src/customComponents/Stepper";
 import { config } from "../../../../config/citizen/CitizenNDCApplicationConfig";
 import { setNDCStep, updateNDCForm, resetNDCForm } from "../../../../redux/actions/NDCFormActions";
-import { CardHeader, Toast } from "@upyog/digit-ui-react-components";
+import { CardHeader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const createEmployeeConfig = [
   {

@@ -1,4 +1,4 @@
-import { PrivateRoute, BreadCrumb, BackButton } from "@upyog/digit-ui-react-components";
+import { PrivateRoute, BreadCrumb, BackButton } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -71,16 +71,16 @@ const EmployeeApp = ({ path }) => {
       {!isFromNoc && !isRes ? <div style={isLocation ? {marginLeft: "10px"} : {}}><OBPSBreadCrumbs location={location} /></div> : null}
       {isFromNoc ? <BackButton style={{ border: "none", margin: "0", padding: "0" }}>{t("CS_COMMON_BACK")}</BackButton>: null}
       <Routes>
-        <Route path={`${path}/stakeholder-inbox/stakeholder/:id`} element={<PrivateRoute><ApplicationDetail /></PrivateRoute>} />
-        <Route path={`${path}/search/application/stakeholder/:id`} element={<PrivateRoute><ApplicationDetail /></PrivateRoute>} />
-        <Route path={`${path}/search/application/bpa/:id`} element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
-<Route path={`${path}/search/application`} element={<PrivateRoute><Search  parentRoute={path} /></PrivateRoute>} />
-        <Route path={`${path}/inbox/bpa/:id`} element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
-<Route path={`${path}/inbox`} element={<PrivateRoute><Inbox  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/stakeholder-inbox`} element={<PrivateRoute><StakeholderInbox  parentRoute={path} /></PrivateRoute>} />
-        <Route path={`${path}/bpa/:id`} element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
-        <Route path={`${path}/response`} element={<PrivateRoute><OBPSResponse /></PrivateRoute>} />
-        <Route path={`${path}/stakeholder-response`} element={<PrivateRoute><StakeholderResponse /></PrivateRoute>} />
+        <Route path={`/stakeholder-inbox/stakeholder/:id`} element={<PrivateRoute><ApplicationDetail /></PrivateRoute>} />
+        <Route path={`/search/application/stakeholder/:id`} element={<PrivateRoute><ApplicationDetail /></PrivateRoute>} />
+        <Route path={`/search/application/bpa/:id`} element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
+<Route path={`/search/application`} element={<PrivateRoute><Search  parentRoute={path} /></PrivateRoute>} />
+        <Route path={`/inbox/bpa/:id`} element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
+<Route path={`/inbox`} element={<PrivateRoute><Inbox  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/stakeholder-inbox`} element={<PrivateRoute><StakeholderInbox  parentRoute={path} /></PrivateRoute>} />
+        <Route path={`/bpa/:id`} element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
+        <Route path={`/response`} element={<PrivateRoute><OBPSResponse /></PrivateRoute>} />
+        <Route path={`/stakeholder-response`} element={<PrivateRoute><StakeholderResponse /></PrivateRoute>} />
       </Routes>
     </Fragment>
   )

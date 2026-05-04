@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Inbox from "../../pages/citizen/SearchBill/Inbox";
@@ -16,7 +16,7 @@ const App = () => {
         <BackButton>Back</BackButton>
         <Routes>
           <Route
-            path={`${path}/billSearch`}
+            path={`/billSearch`}
             element={
               <PrivateRoute>
                 <Inbox filterComponent="CITIZEN_SEARCH_FILTER" initialStates={inboxInitialState} isInbox={true} />

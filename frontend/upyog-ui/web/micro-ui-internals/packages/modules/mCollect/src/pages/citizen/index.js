@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 // import SearchChallanComponent from "./SearchChallan";
@@ -18,9 +18,9 @@ const App = () => {
       <AppContainer>
         <BackButton style={{ top: "55px" }}>Back</BackButton>
         <Routes>
-          <Route path={`${path}/search`} element={<PrivateRoute><SearchChallanComponent /></PrivateRoute>} />
-          <Route path={`${path}/search-results`} element={<PrivateRoute><SearchResultsComponent /></PrivateRoute>} />
-          <Route path={`${path}/My-Challans`} element={<PrivateRoute><MyChallanResultsComponent /></PrivateRoute>} />
+          <Route path={`/search`} element={<PrivateRoute><SearchChallanComponent /></PrivateRoute>} />
+          <Route path={`/search-results`} element={<PrivateRoute><SearchResultsComponent /></PrivateRoute>} />
+          <Route path={`/My-Challans`} element={<PrivateRoute><MyChallanResultsComponent /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

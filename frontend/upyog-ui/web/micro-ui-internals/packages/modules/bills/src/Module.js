@@ -15,7 +15,7 @@ import SearchCitizenFilter from "./components/citizen/SearchCitizenFilter";
 import CitizenInbox from "./components/citizen/inbox";
 import CitizenMobileInbox from "./components/citizen/CitizenMobileInbox";
 import CitizenApp from "./pages/citizen";
-import { CitizenHomeCard, CollectionIcon } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, CollectionIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import CancelBills from "./components/CancelBill"; 
 import GroupBills from "./components/GroupBill"; 
 
@@ -39,7 +39,7 @@ export const BillsLinks = ({ matchPath }) => {
 
   const links = [
     {
-      link: `${matchPath}/billSearch`,
+      link: `/billSearch`,
       i18nKey: t("ABG_SEARCH_BILL_COMMON_HEADER"),
     },
   ];

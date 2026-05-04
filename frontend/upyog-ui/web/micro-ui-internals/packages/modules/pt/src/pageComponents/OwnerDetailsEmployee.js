@@ -7,7 +7,7 @@ import {
   MobileNumber,
   TextInput,
   Toast,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -288,19 +288,19 @@ const OwnerForm = (_props) => {
                         pattern: (v) => (/^[a-zA-Z_@./()#&+-\s]*$/.test(v) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                       },
                     }}
-                    render={(props) => (
+                    render={({ field }) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={isEditScreen}
                         name={"institution.name"}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "institution.name"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: owner.key, type: "institution.name" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
@@ -326,12 +326,12 @@ const OwnerForm = (_props) => {
                       : null
                   }
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                  render={(props) => (
+                  render={({ field }) => (
                     <Dropdown
                       className="form-field"
-                      selected={props.value}
-                      select={props.onChange}
-                      onBlur={props.onBlur}
+                      selected={field.value}
+                      select={field.onChange}
+                      onBlur={field.onBlur}
                       option={institutionTypeMenu}
                       optionKey="i18nKey"
                       disable={isEditScreen}
@@ -357,18 +357,18 @@ const OwnerForm = (_props) => {
                   required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                  
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={isEditScreen}
                     autoFocus={focusIndex.index === owner?.key && focusIndex.type === "name"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: owner.key, type: "name" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -386,19 +386,13 @@ const OwnerForm = (_props) => {
                   name={"gender"}
                   defaultValue={owner?.gender}
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                  render={(props) => (
+                  render={({ field }) => (
                     <Dropdown
                       className="form-field"
-                      selected={props.value}
-                      select={props.onChange}
+                      selected={field.value}
+                      select={field.onChange}
                       disable={isEditScreen}
-                      onBlur={props.onBlur}
-                      /*option={[
-                        { i18nKey: "PT_FORM3_MALE", code: "Male" },
-                        { i18nKey: "PT_FORM3_FEMALE", code: "Female" },
-                        { i18nKey: "PT_FORM3_TRANSGENDER", code: "Transgender" },
-                        { i18nKey: "COMMON_GENDER_OTHERS", code: "OTHERS" },
-                      ]}*/
+                      onBlur={field.onBlur}
                       option={menu}
                       optionKey="i18nKey"
                       t={t}
@@ -425,19 +419,19 @@ const OwnerForm = (_props) => {
                             validate: { pattern: (e) => (/^[0-9]{11}$/i.test(e) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                           }
                     }
-                    render={(props) => (
+                    render={({ field }) => (
                       <MobileNumber
-                        value={props.value}
+                        value={field.value}
                         hideSpan={true}
                         disable={isEditScreen}
                         maxLength={11}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "altContactNumber"}
                         onChange={(e) => {
-                          props.onChange(e);
+                          field.onChange(e);
                           setFocusIndex({ index: owner.key, type: "altContactNumber" });
                         }}
                         labelStyle={{ marginTop: "unset" }}
-                        onBlur={props.onBlur}
+                        onBlur={field.onBlur}
                       />
                     )}
                   />
@@ -457,17 +451,17 @@ const OwnerForm = (_props) => {
                   required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                   validate: (v) => (/^[6789]\d{9}$/.test(v) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <MobileNumber
-                    value={props.value}
+                    value={field.value}
                     disable={isEditScreen}
                     autoFocus={focusIndex.index === owner?.key && focusIndex.type === "mobileNumber"}
                     onChange={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                       setFocusIndex({ index: owner.key, type: "mobileNumber" });
                     }}
                     labelStyle={{ marginTop: "unset" }}
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                   />
                 )}
               />
@@ -487,16 +481,16 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: { pattern: (val) => (/^[a-zA-Z ]+$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                     }}
-                    render={(props) => (
+                    render={({ field }) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={isEditScreen}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "fatherOrHusbandName"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: owner.key, type: "fatherOrHusbandName" });
                         }}
-                        onBlur={props.onBlur}
+                        onBlur={field.onBlur}
                       />
                     )}
                   />
@@ -512,12 +506,12 @@ const OwnerForm = (_props) => {
                   name={"relationship"}
                   defaultValue={owner?.relationship}
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                  render={(props) => (
+                  render={({ field }) => (
                     <Dropdown
                       className="form-field"
-                      selected={props.value}
-                      select={props.onChange}
-                      onBlur={props.onBlur}
+                      selected={field.value}
+                      select={field.onChange}
+                      onBlur={field.onBlur}
                       disable={isEditScreen}
                       option={[
                         { i18nKey: "PT_FORM3_FATHER", code: "FATHER" },
@@ -537,12 +531,12 @@ const OwnerForm = (_props) => {
                   name={"ownerType"}
                   defaultValue={owner?.ownerType}
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                  render={(props) => (
+                  render={({ field }) => (
                     <Dropdown
                       className="form-field"
-                      selected={props.value}
-                      select={props.onChange}
-                      onBlur={props.onBlur}
+                      selected={field.value}
+                      select={field.onChange}
+                      onBlur={field.onBlur}
                       option={ownerTypesMenu}
                       disable={isEditScreen}
                       optionKey="i18nKey"
@@ -563,16 +557,16 @@ const OwnerForm = (_props) => {
                     name={"designation"}
                     defaultValue={isEditScreen ? ( institution?.designation || "") : null}
                     rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                    render={(props) => (
+                    render={({ field }) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={isEditScreen}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "designation"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: owner.key, type: "designation" });
                         }}
-                        onBlur={props.onBlur}
+                        onBlur={field.onBlur}
                       />
                     )}
                   />
@@ -591,13 +585,13 @@ const OwnerForm = (_props) => {
                   name={"documents.documentType"}
                   defaultValue={owner?.documents?.documentType}
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                  render={(props) => (
+                  render={({ field }) => (
                     <Dropdown
                       className="form-field"
-                      selected={props.value}
-                      select={props.onChange}
+                      selected={field.value}
+                      select={field.onChange}
                       disable={isEditScreen}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       option={specialDocsMenu}
                       optionKey="i18nKey"
                       t={t}
@@ -616,18 +610,18 @@ const OwnerForm = (_props) => {
                     name={"documents.documentUid"}
                     defaultValue={owner?.documents?.documentUid}
                     rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                    render={(props) => (
+                    render={({ field }) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={isEditScreen}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "documents.documentUid"}
                         onChange={(e) => {
                           setUuid(e.target.value);
-                          props.onChange(e);
+                          field.onChange(e);
                           setFocusIndex({ index: owner.key, type: "documents.documentUid" });
                         }}
                         labelStyle={{ marginTop: "unset" }}
-                        onBlur={props.onBlur}
+                        onBlur={field.onBlur}
                       />
                     )}
                   />
@@ -650,18 +644,18 @@ const OwnerForm = (_props) => {
                     if (!e) return true;
                     return /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(e) || t("CORE_INVALID_EMAIL_ID_PATTERN")}}
                 }
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={isEditScreen}
                     autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
                     errorStyle={localFormState.touched.emailId && errors?.emailId?.message ? true : false}
                     onChange={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                       setFocusIndex({ index: owner.key, type: "emailId" });
                     }}
                     labelStyle={{ marginTop: "unset" }}
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                   />
                 )}
               />
@@ -678,16 +672,16 @@ const OwnerForm = (_props) => {
                 name={"correspondenceAddress"}
                 defaultValue={owner?.correspondenceAddress}
                 rules={isIndividualTypeOwner ? {} : { required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={isEditScreen}
                     autoFocus={focusIndex.index === owner?.key && focusIndex.type === "correspondenceAddress"}
                     onChange={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                       setFocusIndex({ index: owner.key, type: "correspondenceAddress" });
                     }}
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                   />
                 )}
               />

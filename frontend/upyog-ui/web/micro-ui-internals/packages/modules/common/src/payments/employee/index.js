@@ -32,16 +32,16 @@ const EmployeePayment = ({ stateCode, cityCode, moduleCode }) => {
         {isFsm ? <Link to={`/upyog-ui/employee/fsm/inbox`}>/ {t("ES_TITLE_INBOX")}</Link> : null}/ {link}
       </p>
       <Routes>
-        <Route path={`${currentPath}/collect/:businessService/:consumerCode`}>
+        <Route path={`/collect/:businessService/:consumerCode`}>
           <CollectPayment {...commonProps} basePath={currentPath} />
         </Route>
-        <Route path={`${currentPath}/success/:businessService/:receiptNumber/:consumerCode`}>
+        <Route path={`/success/:businessService/:receiptNumber/:consumerCode`}>
           <SuccessfulPayment {...commonProps} />
         </Route>
-        <Route path={`${currentPath}/integration/:moduleName/:pageName`}>
+        <Route path={`/integration/:moduleName/:pageName`}>
           <IFrameInterface {...commonProps} />
         </Route>
-        <Route path={`${currentPath}/failure`}>
+        <Route path={`/failure`}>
           <FailedPayment {...commonProps} />
         </Route>
       </Routes>

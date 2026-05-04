@@ -1,7 +1,7 @@
 {
   "name": "@nudmcdgnpm/upyog-ui-module-est",
   "description": "Estate Managemnent Module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "main": "src/Module.js",
     "source": "src/Module.js",
@@ -16,7 +16,7 @@
 
   "dependencies": {
     "@upyog/digit-ui-libraries": "3.10.0",
-    "@upyog/digit-ui-react-components": "3.10.0",
+    "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
     "lodash.merge": "^4.6.2",
     "react-hook-form": "6.15.8",
     "react-i18next": "11.16.2",

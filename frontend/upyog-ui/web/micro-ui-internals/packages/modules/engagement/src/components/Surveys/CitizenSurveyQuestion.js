@@ -1,4 +1,4 @@
-import { Card, CardLabelError, CheckBox, RadioButtons, TextArea, TextInput } from "@upyog/digit-ui-react-components";
+import { Card, CardLabelError, CheckBox, RadioButtons, TextArea, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment } from "react";
 import { Controller } from "react-hook-form";
 
@@ -15,7 +15,7 @@ const CitizenSurveyQuestion = ({t, question, control, register, values, formStat
               name={question.uuid}
               disabled={formDisabled}
               type="text"
-              inputRef={register({
+              {...register(question.uuid, {
                 maxLength: {
                   value: 200,
                  message: t("EXCEEDS_200_CHAR_LIMIT"),
@@ -35,7 +35,7 @@ const CitizenSurveyQuestion = ({t, question, control, register, values, formStat
             <TextArea
               name={question.uuid}
               disabled={formDisabled}
-              inputRef={register({
+              {...register(question.uuid, {
                 maxLength: {
 
                   value: 500,
@@ -151,7 +151,7 @@ const CitizenSurveyQuestion = ({t, question, control, register, values, formStat
                 // validate: { isValidToDate }
               }}
 
-              render={({ onChange, value }) => <TextInput disabled={formDisabled} type="date"  onChange={onChange} defaultValue={value} />}
+              render={({ field }) => <TextInput disabled={formDisabled} type="date" onChange={field.onChange} defaultValue={field.value} />}
             />
             {formErrors && formErrors?.[question.uuid] && formErrors?.[question.uuid]?.type === "required" && (
               <CardLabelError>{t(`EVENTS_TO_DATE_ERROR_REQUIRED`)}</CardLabelError>
@@ -169,7 +169,7 @@ const CitizenSurveyQuestion = ({t, question, control, register, values, formStat
                 required: question.required,
                 // validate: { isValidToTime }
               }}
-              render={({ onChange, value }) => <TextInput type="time" disabled={formDisabled}  onChange={onChange} defaultValue={value} />}
+              render={({ field }) => <TextInput type="time" disabled={formDisabled} onChange={field.onChange} defaultValue={field.value} />}
             />
             {formErrors && formErrors?.[question.uuid] && formErrors?.[question.uuid]?.type === "required" && (
               <CardLabelError>{t(`EVENTS_TO_DATE_ERROR_REQUIRED`)}</CardLabelError>
@@ -183,7 +183,7 @@ const CitizenSurveyQuestion = ({t, question, control, register, values, formStat
             name={question.uuid}
             disabled={formDisabled}
             type="text"
-            inputRef={register({
+            {...register(question.uuid, {
               maxLength: {
                 value: 60,
                 message: t("EXCEEDS_60_CHAR_LIMIT"),

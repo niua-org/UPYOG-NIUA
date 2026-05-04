@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { TickMark } from "@upyog/digit-ui-react-components";
+import { TickMark } from "@nudmcdgnpm/digit-ui-react-components";
 
 const StepWrapper = ({ children, currentStep = 1, nextStep, prevStep, stepsList = [] }) => {
   const { t } = useTranslation();

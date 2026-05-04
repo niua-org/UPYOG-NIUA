@@ -35,7 +35,8 @@
     "micro-ui-internals/packages/modules/gis",
     "micro-ui-internals/packages/modules/challanGeneration",
     "micro-ui-internals/packages/modules/ndc",
-    "micro-ui-internals/packages/modules/est"
+    "micro-ui-internals/packages/modules/est",
+    "micro-ui-internals/packages/modules/gis"
   ],
   "engines": {
     "node": ">=22"
@@ -59,17 +60,18 @@
     "@upyog/digit-ui-module-receipts": "3.0.1",
     "@upyog/digit-ui-module-tl": "3.10.0",
     "@upyog/digit-ui-module-ws": "3.10.0",
+    "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
     "@upyog/digit-ui-react-components": "3.10.0",
-    "@upyog/upyog-ui-module-ads": "3.10.0",
+    "@nudmcdgnpm/upyog-ui-module-ads": "3.10.1",
     "@upyog/upyog-ui-module-asset": "3.10.0",
     "@upyog/upyog-ui-module-ew": "3.10.0",
     "@upyog/upyog-ui-module-pgrai": "3.10.0",
     "@upyog/upyog-ui-module-ptr": "3.10.0",
     "@upyog/upyog-ui-module-vendor": "3.10.0",
     "@upyog/upyog-ui-module-wt": "3.10.0",
-    "@upyog/digit-ui-module-challangeneration": "1.0.0",
-    "@nudmcdgnpm/upyog-ui-module-est":"1.0.0",
-    "@nudmcdgnpm/upyog-ui-module-ndc":"1.0.0",
+    
+    "@nudmcdgnpm/upyog-ui-module-est":"1.0.1",
+    "@nudmcdgnpm/upyog-ui-module-ndc":"1.0.1",
     "@nudmcdgnpm/digit-ui-module-reports": "1.0.0",
     "qrcode": "^1.5.4",
     "react": "19.2.0",

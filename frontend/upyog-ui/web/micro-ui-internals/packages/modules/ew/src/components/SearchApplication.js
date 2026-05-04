@@ -13,7 +13,7 @@ import {
   Loader,
   CardText,
   Header,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 
 /**
@@ -45,10 +45,10 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
    * Registers default form fields for pagination and sorting
    */
   useEffect(() => {
-    register("offset", 0);
-    register("limit", 10);
-    register("sortBy", "commencementDate");
-    register("sortOrder", "DESC");
+    register("offset");
+    register("limit");
+    register("sortBy");
+    register("sortOrder");
   }, [register]);
 
   const GetCell = (value) => <span className="cell-text">{value}</span>;
@@ -149,7 +149,7 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
           {/* Search field for Request ID */}
           <SearchField>
             <label>{t("EW_REQUEST_ID")}</label>
-            <TextInput name="requestId" inputRef={register({})} />
+            <TextInput name="requestId" {...register("requestId")} />
           </SearchField>
 
           {/* Search field for Mobile Number */}
@@ -157,7 +157,7 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
             <label>{t("EW_OWNER_MOBILE_NO")}</label>
             <MobileNumber
               name="mobileNumber"
-              inputRef={register({
+              {...register("mobileNumber", {
                 minLength: {
                   value: 10,
                   message: t("CORE_COMMON_MOBILE_ERROR"),
@@ -181,7 +181,7 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
           <SearchField>
             <label>{t("EW_FROM_DATE")}</label>
             <Controller
-              render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+              render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
               name="fromDate"
               control={control}
             />
@@ -191,7 +191,7 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
           <SearchField>
             <label>{t("EW_TO_DATE")}</label>
             <Controller
-              render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+              render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
               name="toDate"
               control={control}
             />

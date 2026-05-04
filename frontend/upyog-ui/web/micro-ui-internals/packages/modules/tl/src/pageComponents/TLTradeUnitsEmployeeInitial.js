@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import _ from "lodash";
@@ -268,16 +268,16 @@ function checkRangeForUomValue(e, fromUom, toUom){
                             name={"tradeCategory"}
                             defaultValue={unit?.tradeCategory}
                             rules={{ required: t("REQUIRED_FIELD") }}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
+                                    selected={field.value}
                                     disable={false}
                                     option={tradeCategoryValues}
-                                    errorStyle={(localFormState.touched.tradeCategory && errors?.tradeCategory?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields.tradeCategory && errors?.tradeCategory?.message) ? true : false}
                                     select={(e) => {
-                                        if (props?.value?.code == e?.code) return true;
-                                        if(e?.code != props?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
+                                        if (field?.value?.code == e?.code) return true;
+                                        if(e?.code != field?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
                                         let selectedOption = e?.code;
                                         if (tradeTypeMdmsData?.length > 0) {
                                             let tradeType = cloneDeep(tradeTypeMdmsData);
@@ -295,19 +295,19 @@ function checkRangeForUomValue(e, fromUom, toUom){
                                             setValue("uomValue", "");
                                             setTradeTypeOptionsList(filterTradeCategoryList);
                                         }
-                                        props.onChange(e);
+                                        field.onChange(e);
                                     }}
                                     optionKey="i18nKey"
                                     onBlur={(e) => {
                                         setFocusIndex({ index: -1 });
-                                        props.onBlur(e);
+                                        field.onBlur(e);
                                       }}
                                     t={t}
                                 />
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.tradeCategory ? errors?.tradeCategory?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields.tradeCategory ? errors?.tradeCategory?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TRADELICENSE_TRADETYPE_LABEL")} * `}</CardLabel>
                         <Controller
@@ -315,16 +315,16 @@ function checkRangeForUomValue(e, fromUom, toUom){
                             name={"tradeType"}
                             defaultValue={unit?.tradeType}
                             rules={{ required: t("REQUIRED_FIELD") }}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
                                     className="form-field"
                                     selected={getValues("tradeType")}
                                     disable={false}
                                     option={unit?.tradeCategory ? tradeTypeOptionsList : []}
-                                    errorStyle={(localFormState.touched.tradeType && errors?.tradeType?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields.tradeType && errors?.tradeType?.message) ? true : false}
                                     select={(e) => {
-                                        if (props?.value?.code == e?.code) return true;
-                                        if(e?.code != props?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
+                                        if (field?.value?.code == e?.code) return true;
+                                        if(e?.code != field?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
                                         let selectedOption = e?.code;
                                         if (tradeTypeMdmsData?.length > 0) {
                                             let tradeType = cloneDeep(tradeTypeMdmsData);
@@ -342,16 +342,16 @@ function checkRangeForUomValue(e, fromUom, toUom){
                                             setValue("uomValue", "");
                                             setTradeSubTypeOptionsList(filterTradeSubTypeList);
                                         }
-                                        props.onChange(e);
+                                        field.onChange(e);
                                     }}
                                     optionKey="i18nKey"
-                                    onBlur={props.onBlur}
+                                    onBlur={field.onBlur}
                                     t={t}
                                 />
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.tradeType ? errors?.tradeType?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields.tradeType ? errors?.tradeType?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TL_NEW_TRADE_SUB_TYPE_LABEL")} * `}</CardLabel>
                         <Controller
@@ -359,28 +359,28 @@ function checkRangeForUomValue(e, fromUom, toUom){
                             name={"tradeSubType"}
                             defaultValue={unit?.tradeSubType}
                             rules={{ required: t("REQUIRED_FIELD") }}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
                                     className="form-field"
                                     selected={getValues("tradeSubType")}
                                     disable={false}
                                     option={unit?.tradeType ? sortDropdownNames(tradeSubTypeOptionsList,"i18nKey",t) : []}
-                                    errorStyle={(localFormState.touched.tradeSubType && errors?.tradeSubType?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields.tradeSubType && errors?.tradeSubType?.message) ? true : false}
                                     select={(e) => {
-                                        if (props?.value?.code == e?.code) return true;
-                                        if(e?.code != props?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
+                                        if (field?.value?.code == e?.code) return true;
+                                        if(e?.code != field?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
                                         setValue("uom", e?.uom ? e?.uom : "");
                                         setValue("uomValue", "");
-                                        props.onChange(e);
+                                        field.onChange(e);
                                     }}
                                     optionKey="i18nKey"
-                                    onBlur={props.onBlur}
+                                    onBlur={field.onBlur}
                                     t={t}
                                 />
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}> {localFormState.touched.tradeSubType ? errors?.tradeSubType?.message : ""} </CardLabelError>
+                    <CardLabelError style={errorStyle}> {localFormState.touchedFields.tradeSubType ? errors?.tradeSubType?.message : ""} </CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{unit?.tradeSubType?.uom ? `${t("TL_NEW_TRADE_DETAILS_UOM_UOM_PLACEHOLDER")} * ` : `${t("TL_NEW_TRADE_DETAILS_UOM_UOM_PLACEHOLDER")}`}</CardLabel>
                         <div className="field">
@@ -389,25 +389,25 @@ function checkRangeForUomValue(e, fromUom, toUom){
                                 name={"uom"}
                                 defaultValue={unit?.tradeSubType?.uom}
                                 // rules={unit?.tradeSubType?.uom ? { required: "Required", validate: (v) => (/^(0)*[1-9][0-9]{0,5}$/.test(v) ? true : "ERR_DEFAULT_INPUT_FIELD_MSG") } : {}}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
                                         value={getValues("uom")}
                                         // value={unit?.tradeSubType?.uom || ""}
                                         autoFocus={focusIndex.index === unit?.key && focusIndex.type === "uom"}
-                                        errorStyle={(localFormState.touched.uom && errors?.uom?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.uom && errors?.uom?.message) ? true : false}
                                         onChange={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                             setFocusIndex({ index: unit.key, type: "uom" });
                                         }}
                                         disable={true}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         style={{ background: "#FAFAFA" }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.uom ? errors?.uom?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields.uom ? errors?.uom?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{unit?.tradeSubType?.uom ? `${t("TL_NEW_TRADE_DETAILS_UOM_VALUE_LABEL")} * ` : `${t("TL_NEW_TRADE_DETAILS_UOM_VALUE_LABEL")} `}</CardLabel>
                         <div className="field">
@@ -416,25 +416,25 @@ function checkRangeForUomValue(e, fromUom, toUom){
                                 name={"uomValue"}
                                 defaultValue={unit?.uomValue}
                                 rules={unit?.tradeSubType?.uom && { required: t("REQUIRED_FIELD"), validate: { pattern: (val) => (/*/^(0)*[1-9][0-9]{0,5}$/.test(val)*/ val > 0 && val < 99999 ?(checkRangeForUomValue(val,unit?.tradeSubType?.fromUom,unit?.tradeSubType?.toUom) ? true : `${t("ERR_WRONG_UOM_VALUE")} ${unit?.tradeSubType?.fromUom} - ${unit?.tradeSubType?.toUom}`) : t("ERR_DEFAULT_INPUT_FIELD_MSG")) } } }
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
                                         value={getValues("uomValue")}
                                         autoFocus={focusIndex.index === unit?.key && focusIndex.type === "uomValue"}
-                                        errorStyle={(localFormState.touched.uomValue && errors?.uomValue?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.uomValue && errors?.uomValue?.message) ? true : false}
                                         onChange={(e) => {
                                             if(e.target.value != unit?.uomValue && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
-                                            props.onChange(e);
+                                            field.onChange(e);
                                             setFocusIndex({ index: unit.key, type: "uomValue" });
                                         }}
                                         disable={!(unit?.tradeSubType?.uom)}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         style={{ background: "#FAFAFA" }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}> {localFormState.touched.uomValue ? errors?.uomValue?.message : ""} </CardLabelError>
+                    <CardLabelError style={errorStyle}> {localFormState.touchedFields.uomValue ? errors?.uomValue?.message : ""} </CardLabelError>
 
                 </div>
             </div>

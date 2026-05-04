@@ -1,7 +1,11 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
-import { useParams, useLocation,  } from "react-router-dom";
-import Routes from "./routes";
+import { useParams, useLocation,Route, Routes   } from "react-router-dom";
+// import Routes from "./routes";
+import BillList from "./routes/bill-details/bill-details";
+import BillDetails from "./routes/bill-details/bill-details";
+import { useTranslation } from "react-i18next";
+import { BackButton } from "@nudmcdgnpm/digit-ui-react-components";
 // import { myBillMap } from "./myBillsKeysMap";
 
 export const MyBills = ({ stateCode }) => {
@@ -58,7 +62,29 @@ export const MyBills = ({ stateCode }) => {
 
   return (
     <React.Fragment>
-      <Routes {...getProps()} />
+      <BackButton />
+      <Routes>
+        {/* index route = exactly /upyog-ui/citizen/payment/my-bills */}
+<Route
+  index
+  element={
+    <BillList
+      billsList={billsList}
+      paymentRules={getPaymentRestrictionDetails()}
+      businessService={businessService}
+    />
+  }
+/>
+<Route
+  path=":consumerCode"
+  element={
+    <BillDetails
+      paymentRules={getPaymentRestrictionDetails()}
+      businessService={businessService}
+    />
+  }
+/>
+      </Routes>
     </React.Fragment>
   );
 };
