@@ -41,6 +41,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-i18next": "11.16.2",
+    "i18next": "19.9.2",
+    "i18next-react-postprocessor": "3.0.7",
     "react-router-dom": "^6.23.0"
   },
   "browserslist": [

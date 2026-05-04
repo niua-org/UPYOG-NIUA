@@ -257,7 +257,7 @@ export default defineConfig(({ mode }) => {
     // dist/ exists because yarn build ran before this
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "i18next", "react-i18next"],
     },
 
     esbuild: {

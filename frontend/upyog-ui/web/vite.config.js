@@ -251,7 +251,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "i18next", "react-i18next"],
     },
 
     esbuild: {
@@ -294,7 +294,7 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ["react", "react-dom", "react-router-dom", "leaflet-draw"],
+      include: ["react", "react-dom", "react-router-dom", "i18next", "react-i18next", "leaflet-draw"],
       exclude: Object.keys(moduleAliases), // 👈 IMPORTANT: prevents double-bundling
       esbuildOptions: {
         loader: { ".js": "jsx" },
