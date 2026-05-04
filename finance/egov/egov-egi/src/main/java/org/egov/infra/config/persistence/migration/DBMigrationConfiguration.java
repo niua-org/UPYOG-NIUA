@@ -155,6 +155,20 @@ public class DBMigrationConfiguration {
 
         String configuredSchemas = environment.getProperty("tenant.schemas");
         if (configuredSchemas != null && !configuredSchemas.trim().isEmpty()) {
+            /*
+             * Earlier, tenant discovery depended on scanning all property
+             * sources for tenant.* entries such as tenant.citya.localhost=citya.
+             * That worked, but it tied migration to host-based mapping and
+             * required one property per city.
+             *
+             * The new tenant.schemas property makes the migration list explicit
+             * and predictable by accepting only the schema names that must be
+             * migrated at startup. eg: tenant.schemas=citya,cityb,cityc
+             * This keeps DB migration separate from host/domain mapping while
+             * preserving the old scan-based fallback for environments that
+             * still use the legacy format.
+             */
+
             LOGGER.info("======== LOADING TENANT SCHEMAS FROM tenant.schemas ========");
             Arrays.stream(configuredSchemas.split(","))
                     .map(String::trim)
