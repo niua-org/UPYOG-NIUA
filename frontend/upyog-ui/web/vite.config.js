@@ -196,7 +196,7 @@ export default defineConfig(({ mode }) => {
     "/bpa-calculator", "/request-service", "/challan-generation", "/ndc-services", "/estate-management"
   ];
 
-  const packagesRoot = path.resolve(__dirname, "../packages");
+  const packagesRoot = path.resolve(__dirname, "micro-ui-internals/packages");
 
   function getAliases() {
     const aliases = {};
@@ -246,18 +246,21 @@ export default defineConfig(({ mode }) => {
     base: isProd ? "/upyog-ui/" : "/",
 
     define: {
-      "process.env": JSON.stringify(env),
+      "process.env": JSON.stringify({
+        ...env,
+        NODE_ENV: mode,
+      }),
     },
 
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "i18next", "react-i18next"],
     },
 
     esbuild: {
       loader: "jsx",
       include: /.*\.js$/,
-      exclude: /node_modules/,
+      exclude: [],
     },
 
     server: {
@@ -294,8 +297,9 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ["react", "react-dom", "react-router-dom", "leaflet-draw"],
-      exclude: Object.keys(moduleAliases), // 👈 IMPORTANT: prevents double-bundling
+      include: ["react", "react-dom", "react-router-dom", "i18next", "react-i18next", "leaflet-draw"],
+      exclude: Object.keys(moduleAliases), // only exclude local workspace packages; published npm packages are NOT excluded
+      force: Object.keys(moduleAliases).length === 0, // force re-optimization when using published npm packages
       esbuildOptions: {
         loader: { ".js": "jsx" },
       },
