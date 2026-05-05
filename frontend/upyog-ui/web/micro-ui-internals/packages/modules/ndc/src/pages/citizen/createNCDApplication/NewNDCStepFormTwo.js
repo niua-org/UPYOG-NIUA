@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 //
 import { FormComposer, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { updateNDCForm } from "../../../redux/actions/NDCFormActions";
+import _ from "lodash";
 
 const NewNDCStepFormTwo = ({ config, onGoNext, onBackClick, t }) => {
   const currentStepData = useSelector((state) =>
