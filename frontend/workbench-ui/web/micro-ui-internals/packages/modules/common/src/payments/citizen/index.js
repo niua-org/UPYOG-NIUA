@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { PrivateRoute } from "@egovernments/digit-ui-react-components";
+import { PrivateRoute } from "@upyog/workbench-ui-react-components";
 import PayersDetails from "./payers-details";
 
 import { MyBills } from "./bills";

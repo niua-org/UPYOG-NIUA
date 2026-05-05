@@ -1,11 +1,11 @@
 import React,{useState} from 'react'
 import MDMSAdd from './MDMSAddV2'
-import { Loader,Toast } from '@egovernments/digit-ui-react-components';
+import { Loader,Toast } from '@upyog/workbench-ui-react-components';
 
 import { useTranslation } from "react-i18next";
 
 const MDMSView = ({...props}) => {
-  const navigate = useNavigate()
+  const navigate = Digit.Hooks.useNavigate();
   const { t } = useTranslation()
   const [showToast, setShowToast] = useState(false);
   let { moduleName, masterName, tenantId,uniqueIdentifier } = Digit.Hooks.useQueryParams();

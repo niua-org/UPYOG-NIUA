@@ -1,6 +1,6 @@
 import {
   Loader, NavBar
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SideBarMenu from "../../../config/sidebar-menu";

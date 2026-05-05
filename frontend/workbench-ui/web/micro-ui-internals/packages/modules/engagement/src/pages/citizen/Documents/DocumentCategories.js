@@ -1,4 +1,4 @@
-import { AppContainer, Card, CardCaption, Header, Loader, PrevIcon } from "@egovernments/digit-ui-react-components";
+import { AppContainer, Card, CardCaption, Header, Loader, PrevIcon } from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
 
 import Searchbar from "../../../components/Documents/Searchbar";

@@ -1,8 +1,8 @@
-import { TextInput, Dropdown, RemoveableTag, LinkButton,SearchField,SubmitBar } from '@egovernments/digit-ui-react-components'
+import { TextInput, Dropdown, RemoveableTag, LinkButton,SearchField,SubmitBar } from '@upyog/workbench-ui-react-components'
 import React,{useMemo} from 'react'
 
 const SurveyDetailsView = ({surveyTitle,surveyDesc,t,surveyId}) => {
-    const navigate = useNavigate()
+    const navigate = Digit.Hooks.useNavigate();
     const ulbs = Digit.SessionStorage.get("ENGAGEMENT_TENANTS");
     const tenantId = Digit.ULBService.getCurrentTenantId();
     const userInfo = Digit.UserService.getUser().info;

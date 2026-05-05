@@ -28,7 +28,7 @@ import {
   Loader,
   Modal,
   SectionalDropdown,
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 
 import { Close } from "../../Icons";
 import { useTranslation } from "react-i18next";

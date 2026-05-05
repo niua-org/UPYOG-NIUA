@@ -1,7 +1,10 @@
-import { useQuery } from "react-query";
+import { queryTemplate } from "../common/queryTemplate"; 
 
 const useGetDSSFAQsJSON = (tenantId) => {
-    return useQuery(["FAQS", tenantId], () => Digit.MDMSService.getDSSFAQsJSONData(tenantId));
-  };
+    return queryTemplate({
+        queryKey: ["FAQS", tenantId],
+        queryFn: () => Digit.MDMSService.getDSSFAQsJSONData(tenantId)
+    });
+};
 
 export default useGetDSSFAQsJSON;

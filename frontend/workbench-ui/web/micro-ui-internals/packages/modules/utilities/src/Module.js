@@ -1,4 +1,4 @@
-import { Loader, InboxSearchComposer, FormComposerV2 } from "@egovernments/digit-ui-react-components";
+import { Loader, InboxSearchComposer, FormComposerV2 } from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { default as EmployeeApp } from "./pages/employee";
 

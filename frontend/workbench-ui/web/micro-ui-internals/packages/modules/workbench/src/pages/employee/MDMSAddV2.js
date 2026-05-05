@@ -1,4 +1,4 @@
-import { Card, Loader, SVG } from "@egovernments/digit-ui-react-components";
+import { Card, Loader, SVG } from "@upyog/workbench-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 

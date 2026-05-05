@@ -1,6 +1,6 @@
 import {
   Calender, CardBasedOptions, CaseIcon, ComplaintIcon, DocumentIcon, HomeIcon, Loader, OBPSIcon, PTIcon, WhatsNewCard
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 

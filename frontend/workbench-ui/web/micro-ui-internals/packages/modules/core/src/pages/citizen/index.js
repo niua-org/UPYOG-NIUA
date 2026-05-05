@@ -1,4 +1,4 @@
-import { BackButton, CitizenHomeCard, CitizenInfoLabel } from "@egovernments/digit-ui-react-components";
+import { BackButton, CitizenHomeCard, CitizenInfoLabel } from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Route, Routes, useResolvedPath } from "react-router-dom";

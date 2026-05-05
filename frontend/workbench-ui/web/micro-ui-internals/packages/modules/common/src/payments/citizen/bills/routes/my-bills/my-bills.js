@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ArrowLeft, Header, Loader } from "@egovernments/digit-ui-react-components";
+import { ArrowLeft, Header, Loader } from "@upyog/workbench-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 

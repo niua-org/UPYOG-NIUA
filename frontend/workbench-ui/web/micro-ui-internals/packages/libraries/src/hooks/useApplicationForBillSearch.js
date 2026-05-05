@@ -1,5 +1,5 @@
 
-import { useQuery } from "react-query";
+import { queryTemplate } from "../common/queryTemplate";
 
 
 
@@ -26,12 +26,9 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   if (window.location.href.includes("BPA.")) {
     _key = "BPA"
   }
-
-  /* key from application ie being used as consumer code in bill */
+/* key from application ie being used as consumer code in bill */
   const { searchFn, key, label } = refObj(tenantId, filters)[_key];
-  const applications = useQuery(["applicationsForBillDetails", { tenantId, businessService, filters, searchFn }], searchFn, {
-    ...config,
-  });
+  const applications = queryTemplate({ queryKey: ["applicationsForBillDetails", { tenantId, businessService, filters, searchFn }], queryFn: searchFn, config });
 
   return { ...applications, key, label };
 };

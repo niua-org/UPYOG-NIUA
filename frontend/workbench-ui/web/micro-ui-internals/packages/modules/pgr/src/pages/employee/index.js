@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { ActionBar, Menu, SubmitBar, BreadCrumb } from "@egovernments/digit-ui-react-components";
+import { ActionBar, Menu, SubmitBar, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import { useTranslation } from "react-i18next";
 // import { ComplaintDetails } from "./ComplaintDetails";
 // import { CreateComplaint } from "./CreateComplaint";

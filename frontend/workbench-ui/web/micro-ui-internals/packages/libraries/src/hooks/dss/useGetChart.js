@@ -1,56 +1,73 @@
-import { useQuery } from "react-query";
-import { startOfMonth, endOfMonth, getTime } from "date-fns";
+import { queryTemplate } from "../../common/queryTemplate";
 import { DSSService } from "../../services/elements/DSS";
 
-const getRequest = (type, code, requestDate, filters, moduleLevel = "", addlFilter) => {
-  let newFilter = { ...{ ...filters, ...addlFilter } };
-  let updatedFilter = Object.keys(newFilter)
-    .filter((ele) => newFilter[ele].length > 0)
-    .reduce((acc, curr) => {
-      acc[curr] = newFilter[curr];
-      return acc;
-    }, {});
-  return {
-    aggregationRequestDto: {
-      visualizationType: type.toUpperCase(),
-      visualizationCode: code,
-      queryType: "",
-      filters: updatedFilter,
-      moduleLevel: moduleLevel,
-      aggregationFactors: null,
-      requestDate,
-    },
-  };
-};
-const defaultSelect = (data) => {
-  if (data?.responseData) {
+/**
+ * Fetch chart data for DSS dashboard.
+ */
+const useGetChart = (args) => {
+  const {
+    key,
+    type,
+    tenantId,
+    requestDate,
+    filters,
+    moduleLevel,
+    addlFilter,
+  } = args;
+
+  const indexKeyForEmptyModule = [
+    "nssPtCitizenFeedbackScore",
+    "nssPtCitizenServiceDeliveryIndex",
+    "sdssPtCitizenFeedbackScore",
+  ];
+
+  const queryKey = [
+    "DSS_CHART",
+    key,
+    tenantId,
+    JSON.stringify(requestDate),
+    JSON.stringify(filters),
+    moduleLevel,
+  ];
+
+  const queryFn = () =>
+    DSSService.getCharts({
+      ...getRequest(
+        type,
+        key,
+        requestDate,
+        filters,
+        moduleLevel,
+        addlFilter,
+        indexKeyForEmptyModule
+      ),
+      headers: { tenantId },
+    });
+
+  const select = (data) => {
     if (data?.responseData?.data) {
-      data.responseData.data = data?.responseData?.data?.filter((col) => col) || [];
-      data.responseData.data?.forEach((row) => {
+      data.responseData.data =
+        data.responseData.data.filter(Boolean);
+
+      data.responseData.data.forEach((row) => {
         if (row?.plots) {
-          row.plots = row?.plots.filter((col) => col) || [];
+          row.plots = row.plots.filter(Boolean);
         }
       });
     }
-  }
-  return data;
-};
+    return data;
+  };
 
-const useGetChart = (args) => {
-  const { key, type, tenantId, requestDate, filters, moduleLevel, addlFilter } = args;
-  return useQuery(
-    [args],
-    () =>
-      DSSService.getCharts({
-        ...getRequest(type, key, requestDate, filters, moduleLevel, addlFilter),
-        headers: {
-          tenantId,
-        },
-      }),
-    {
-      select: defaultSelect,
-    }
-  );
+  return queryTemplate({
+    queryKey,
+    queryFn,
+    select,
+    config: {
+      refetchOnMount: true,
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  });
 };
 
 export default useGetChart;

@@ -1,4 +1,4 @@
-import { FormComposer, Toast,Loader } from "@egovernments/digit-ui-react-components";
+import { FormComposer, Toast,Loader } from "@upyog/workbench-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 

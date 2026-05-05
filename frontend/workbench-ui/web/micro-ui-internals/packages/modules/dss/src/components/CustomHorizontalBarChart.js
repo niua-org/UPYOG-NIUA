@@ -1,4 +1,4 @@
-import { Loader } from "@egovernments/digit-ui-react-components";
+import { Loader } from "@upyog/workbench-ui-react-components";
 import React, { Fragment, useContext, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,LabelList } from "recharts";

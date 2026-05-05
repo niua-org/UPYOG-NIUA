@@ -2,7 +2,7 @@ import React from "react";
 import { Route, Routes, useResolvedPath } from "react-router-dom";
 import { BillList } from "./my-bills/my-bills";
 import BillDetails from "./bill-details/bill-details";
-import { BackButton } from "@egovernments/digit-ui-react-components";
+import { BackButton } from "@upyog/workbench-ui-react-components";
 
 const BillRoutes = ({ billsList, paymentRules, businessService }) => {
   const { pathname: currentPath } = useResolvedPath(); //  useRouteMatch → useResolvedPath

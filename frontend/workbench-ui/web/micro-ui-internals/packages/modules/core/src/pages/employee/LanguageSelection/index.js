@@ -1,4 +1,4 @@
-import { Card, CustomButton, SubmitBar } from "@egovernments/digit-ui-react-components";
+import { Card, CustomButton, SubmitBar } from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Background from "../../../components/Background";

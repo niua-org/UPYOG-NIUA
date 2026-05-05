@@ -1,11 +1,11 @@
-import { AddFilled, Button, Header, InboxSearchComposer, Loader, Dropdown,Toast,WorkflowModal,ActionBar,SubmitBar } from "@egovernments/digit-ui-react-components";
+import { AddFilled, Button, Header, InboxSearchComposer, Loader, Dropdown,Toast,WorkflowModal,ActionBar,SubmitBar } from "@upyog/workbench-ui-react-components";
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import _, { drop } from "lodash";
 import { Config } from "../../configs/LocalisationSearchConfig";
 import getEditModalConfig from "../../configs/EditModalConfig";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "../../../../../libraries/src/common/queryClientTemplate";
 
 const LocalisationSearch = () => {
   const { t } = useTranslation();

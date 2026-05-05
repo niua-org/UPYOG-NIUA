@@ -1,4 +1,4 @@
-import { Loader, BreadCrumb } from "@egovernments/digit-ui-react-components";
+import { Loader, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import React, {Fragment} from "react";
 import { useTranslation } from "react-i18next";
 import { Routes, useLocation, useResolvedPath, Route } from "react-router-dom";

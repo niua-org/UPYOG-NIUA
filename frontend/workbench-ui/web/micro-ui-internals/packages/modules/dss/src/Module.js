@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { BackButton, Loader, PrivateRoute, BreadCrumb } from "@egovernments/digit-ui-react-components";
+import { BackButton, Loader, PrivateRoute, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import DashBoard from "./pages";
 import Home from "./pages/Home";
 import { Route, Routes, useResolvedPath, useLocation } from "react-router-dom";

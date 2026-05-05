@@ -3,7 +3,7 @@ import {
     TextInput,
     SearchIconSvg,
 
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 
 const Searchbar = ({searchValue, onChange, handleKeyPress, handleSearch, t}) => {
  

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FormComposer, Header } from "@egovernments/digit-ui-react-components";
+import { FormComposer, Header } from "@upyog/workbench-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { documentsFormConfig } from "../../../config/doc-create";
 

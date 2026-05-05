@@ -1,4 +1,4 @@
-import { Header, Modal, Loader } from "@egovernments/digit-ui-react-components";
+import { Header, Modal, Loader } from "@upyog/workbench-ui-react-components";
 import React, { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams} from "react-router-dom";

@@ -1,4 +1,4 @@
-import { Loader } from "@egovernments/digit-ui-react-components";
+import { Loader } from "@upyog/workbench-ui-react-components";
 import React, { useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import Routes from "./routes";

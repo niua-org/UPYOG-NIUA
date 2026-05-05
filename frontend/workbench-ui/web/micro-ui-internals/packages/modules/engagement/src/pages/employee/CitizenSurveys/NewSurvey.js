@@ -1,4 +1,4 @@
-import { CloseSvg, FormComposer, Header } from "@egovernments/digit-ui-react-components";
+import { CloseSvg, FormComposer, Header } from "@upyog/workbench-ui-react-components";
 import React, { Fragment, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 

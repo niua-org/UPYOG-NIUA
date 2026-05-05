@@ -1,4 +1,4 @@
-import { Clock, Header, Loader, MapMarker, OnGroundEventCard } from "@egovernments/digit-ui-react-components";
+import { Clock, Header, Loader, MapMarker, OnGroundEventCard } from "@upyog/workbench-ui-react-components";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation, useParams } from "react-router-dom";

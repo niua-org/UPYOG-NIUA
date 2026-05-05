@@ -1,4 +1,4 @@
-import { PrivateRoute } from "@egovernments/digit-ui-react-components";
+import { PrivateRoute } from "@upyog/workbench-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Route, Routes, useLocation } from "react-router-dom";  // Route added

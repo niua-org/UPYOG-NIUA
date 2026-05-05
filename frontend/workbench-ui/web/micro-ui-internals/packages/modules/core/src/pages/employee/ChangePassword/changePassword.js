@@ -1,4 +1,4 @@
-import { BackButton, CardSubHeader, CardText, FormComposer, Toast } from "@egovernments/digit-ui-react-components";
+import { BackButton, CardSubHeader, CardText, FormComposer, Toast } from "@upyog/workbench-ui-react-components";
 import PropTypes from "prop-types";
 import React, { useEffect, useState } from "react";
 import Background from "../../../components/Background";

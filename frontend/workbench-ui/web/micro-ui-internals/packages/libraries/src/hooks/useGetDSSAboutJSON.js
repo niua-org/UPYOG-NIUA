@@ -1,7 +1,11 @@
-import { useQuery } from "react-query";
+import { queryTemplate } from "../common/queryTemplate";
+
 
 const useGetDSSAboutJSON = (tenantId) => {
-    return useQuery(["About", tenantId], () => Digit.MDMSService.getDSSAboutJSONData(tenantId));
-  };
+    return queryTemplate({
+        queryKey: ["ABOUT", tenantId],
+        queryFn: () => Digit.MDMSService.getDSSAboutJSONData(tenantId)
+    });
+};
 
 export default useGetDSSAboutJSON;

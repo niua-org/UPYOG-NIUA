@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { PrivateRoute, AppContainer, BreadCrumb } from "@egovernments/digit-ui-react-components";
+import { PrivateRoute, AppContainer, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import LocalisationSearch from "./LocalisationSearch";
 import ApplyWorkflow from "./ApplyWorkflow";
 import MDMSSearch from "./MDMSSearch";

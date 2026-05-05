@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Card, Header, Loader } from "@egovernments/digit-ui-react-components";
+import { Card, Header, Loader } from "@upyog/workbench-ui-react-components";
 import { LOCALE } from "../../constants/Localization";
 import Complaint from "../../components/Complaint";
 
