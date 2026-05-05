@@ -32,6 +32,7 @@ import org.egov.commons.mdms.validator.MDMSValidator;
 import org.egov.edcr.entity.PdfPageSize;
 import org.egov.edcr.entity.blackbox.PlanDetail;
 import org.egov.edcr.service.DcrSvgGenerator;
+import org.egov.edcr.service.DxfToPdfUnifiedConverter;
 import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
 import org.egov.infra.admin.master.entity.AppConfigValues;
@@ -95,6 +96,9 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
     @Autowired
     private ICityService cityService;
 
+    @Autowired
+    private DxfToPdfUnifiedConverter dxfToPdfUnifiedConverter;
+
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
 
@@ -152,7 +156,8 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 }
 
             }
-        } else {
+        }
+        else {
             List<AppConfigValues> dxfToPdfAppConfigEnabled = appConfigValueService
                     .getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.DXF_PDF_CONVERSION_ENABLED);
 
@@ -236,7 +241,8 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             enablePrintableLayers(edcrPdfDetail, planDetail.getDxfDocument());
             sanitize(fileName, planDetail.getDxfDocument(), edcrPdfDetail, planDetail);
 
-            File file = convertDxfToPdf(planDetail.getDxfDocument(), fileName, edcrPdfDetail.getLayer(), edcrPdfDetail);
+//            File file = convertDxfToPdf(planDetail.getDxfDocument(), fileName, edcrPdfDetail.getLayer(), edcrPdfDetail);
+            File file = convertDxfToPdf(planDetail, fileName, edcrPdfDetail.getLayer(), edcrPdfDetail);
             disablePrintableLayers(edcrPdfDetail, planDetail.getDxfDocument());
 
 
@@ -261,9 +267,9 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
 
             sanitize(fileName, planDetail.getDxfDocument(), printSingleSheetDetails, planDetail);
 
-            File file = convertDxfToPdf(planDetail.getDxfDocument(), fileName, printSingleSheetDetails.getLayer(),
-                    printSingleSheetDetails);
-
+//            File file = convertDxfToPdf(planDetail.getDxfDocument(), fileName, printSingleSheetDetails.getLayer(),
+//                    printSingleSheetDetails);
+            File file = convertDxfToPdf(planDetail, fileName, printSingleSheetDetails.getLayer(), printSingleSheetDetails);
             if (file != null) {
                 printSingleSheetDetails.setConvertedPdf(file);
             }
@@ -777,9 +783,12 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         }
     }
 
-    private File convertDxfToPdf(DXFDocument dxfDocument, String fileName, String layerName,
-            EdcrPdfDetail edcrPdfDetail) {
+    private File convertDxfToPdf(PlanDetail planDetail, String fileName, String layerName,
+                                 EdcrPdfDetail edcrPdfDetail) {
 
+        /*
+        private File convertDxfToPdf(DXFDocument dxfDocument, String fileName, String layerName,
+            EdcrPdfDetail edcrPdfDetail) {
         File fileOut = new File(layerName + ".pdf");
 
         if (fileOut != null) {
@@ -819,11 +828,16 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 return fileOut.length() > 0 ? fileOut : null;
             } catch (Exception ep) {
                 LOG.error("Pdf convertion failed for " + fileName + " - " + layerName + " due to " + ep.getMessage());
+                ep.printStackTrace();
                 edcrPdfDetail.setFailureReasons(ep.getMessage());
             }
         }
 
         return null;
+         */
+
+            return dxfToPdfUnifiedConverter.convert(planDetail.getDxfSourceFile(), planDetail.getDxfDocument(), fileName,
+                    layerName, edcrPdfDetail);
     }
 
     private List<String> checkNegetiveWidth(DXFLayer dxfLayer, EdcrPdfDetail pdfDetail) {

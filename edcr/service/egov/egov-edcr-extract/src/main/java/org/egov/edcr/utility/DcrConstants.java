@@ -196,4 +196,6 @@ public class DcrConstants {
     public static final String PORTICO_DISTANCETO_EXTERIORWALL = "Block %s Portico %s Portico distance to exteriorwall";
     public static final String PDF_EXT = "application/pdf";
 
+    /** App config value: {@code KABEJA} (default) or {@code ASPOSE} — see {@code DxfToPdfUnifiedConverter}. */
+    public static final String DXF_TO_PDF_ENGINE = "DXF_TO_PDF_ENGINE";
 }
