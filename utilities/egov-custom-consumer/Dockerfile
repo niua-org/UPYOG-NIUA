@@ -1,7 +1,5 @@
 FROM eclipse-temurin:17-jre-alpine
 
-MAINTAINER Sivaprakash<sivaprakash.ramasamy@tarento.com>
-
 
 # INSTRUCTIONS ON HOW TO BUILD JAR:
 # Move to the location where pom.xml is exist in project and build project using below command
