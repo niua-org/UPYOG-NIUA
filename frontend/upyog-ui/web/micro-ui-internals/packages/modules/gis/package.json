@@ -15,7 +15,7 @@
     "@upyog/digit-ui-libraries": "3.10.0",
     "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
     "lodash.merge": "^4.6.2",
-    "react-hook-form": "6.15.8",
+    "react-hook-form": "^7.51.0",
     "leaflet": "1.9.4",
     "leaflet-draw": "1.0.4",
     "react-leaflet": "^5.0.0", 

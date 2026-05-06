@@ -16,6 +16,6 @@
 
   "dependencies": {
     "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
-    "react-hook-form": "6.15.8"
+    "react-hook-form": "^7.51.0"
   }
 }
