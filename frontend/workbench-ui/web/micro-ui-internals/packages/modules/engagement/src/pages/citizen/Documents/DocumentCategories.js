@@ -1,6 +1,6 @@
 import { AppContainer, Card, CardCaption, Header, Loader, PrevIcon } from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
-
+import { useLocation } from "react-router-dom";
 import Searchbar from "../../../components/Documents/Searchbar";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { renderDocsList } from "./DocumentList";
@@ -23,6 +23,8 @@ const Accordion = ({ t, title, count, onClick, children }) => {
 
 const DocumentCategories = ({ t, parentRoute }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
+  const location = useLocation();
+
   const [searchValue, setSearchValue] = useState("");
   const tenantIds = Digit.ULBService.getCitizenCurrentTenant();
 
@@ -50,9 +52,9 @@ const DocumentCategories = ({ t, parentRoute }) => {
     }
   );
 
-  if (!Digit.UserService?.getUser()?.access_token) {
+ if (!Digit.UserService?.getUser()?.access_token) {
     return <Navigate to={{ pathname: `/${window?.contextPath}/citizen/login`, state: { from: location.pathname + location.search } }} />;
-  }
+}
 
   const showDocuments = (category, count) => {
     navigate(`documents/list/${category}/${count}`);

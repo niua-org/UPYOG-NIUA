@@ -23,16 +23,25 @@ const NotificationsAndWhatsNew = ({ variant, parentRoute }) => {
 
   const { mutate, isSuccess } = Digit.Hooks.useClearNotifications();
 
-  useEffect(() => {
-    isSuccess ? refetch() : false;
-  }, [isSuccess]);
+  // CORRECT Way to refetch on isSuccess change
+    useEffect(() => {
+      if (isSuccess) {
+        refetch();
+      }
+    }, [isSuccess]);
 
-  useEffect(() => (preVisitUnseenNotificationCount && tenantId ? mutate({ tenantId }) : null), [tenantId, preVisitUnseenNotificationCount]);
+// In useEffect, only return a cleanup function or nothing. Returning null or other values will cause errors in React 19.
+useEffect(() => {
+  if (preVisitUnseenNotificationCount && tenantId) {
+    mutate({ tenantId });
+  }
+}, [tenantId, preVisitUnseenNotificationCount]);
+
 
   const { data: EventsData, isLoading: EventsDataLoading } = Digit.Hooks.useEvents({ tenantId, variant });
 
   // if (!Digit.UserService?.getUser()?.access_token) {
-  //     return <Navigate to={{ pathname: `/${window?.contextPath}/citizen/login`, state: { from: location.pathname + location.search } }} />
+  //     return <Redirect to={{ pathname: `/upyog-ui/citizen/login`, state: { from: location.pathname + location.search } }} />
   // }
 
   if (EventsDataLoading) return <Loader />;
@@ -55,7 +64,9 @@ const NotificationsAndWhatsNew = ({ variant, parentRoute }) => {
         return <Header>{t("CS_HEADER_WHATSNEW")}</Header>;
 
       default:
-        return <Navigate to={{ pathname: `/${window?.contextPath}/citizen`, state: { from: location.pathname + location.search } }} />;
+     //old:   return <Redirect to={{ pathname: `/upyog-ui/citizen`, state: { from: location.pathname + location.search } }} />;
+     return <Navigate to="/upyog-ui/citizen" state={{ from: location.pathname + location.search }} replace />;
+
     }
   };
 
@@ -66,16 +77,24 @@ const NotificationsAndWhatsNew = ({ variant, parentRoute }) => {
   return (
     <div className="CitizenEngagementNotificationWrapper">
       <VariantWiseRender />
+      {/* The key prop was missing; it was optional in React 17 (warning only), but is required for proper list rendering in React 19 */}
       {EventsData?.length ? (
-        EventsData.map((DataParamsInEvent) =>
-          DataParamsInEvent?.eventType === "EVENTSONGROUND" ? (
-            <OnGroundEventCard onClick={onEventCardClick} {...DataParamsInEvent} />
-          ) : DataParamsInEvent?.eventType === "BROADCAST" ? (
-            <BroadcastWhatsNewCard {...DataParamsInEvent} />
-          ) : (
-            <WhatsNewCard {...DataParamsInEvent} />
-          )
-        )
+        EventsData.map((DataParamsInEvent, index) => {
+          const key = DataParamsInEvent.uuid || DataParamsInEvent.id || index;
+          if (DataParamsInEvent?.eventType === "EVENTSONGROUND") {
+            return (
+              <OnGroundEventCard 
+                key={key} 
+                onClick={onEventCardClick} 
+                {...DataParamsInEvent} 
+              />
+            );
+          } else if (DataParamsInEvent?.eventType === "BROADCAST") {
+            return <BroadcastWhatsNewCard key={key} {...DataParamsInEvent} />;
+          } else {
+            return <WhatsNewCard key={key} {...DataParamsInEvent} />;
+          }
+        })
       ) : (
         <Card>
           <CardCaption>{t("COMMON_INBOX_NO_DATA")}</CardCaption>

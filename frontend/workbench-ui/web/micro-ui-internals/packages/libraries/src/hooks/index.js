@@ -90,7 +90,8 @@ import useGetHowItWorksJSON from "./useHowItWorksJSON";
 import { usePrivacyContext } from "./usePrivacyContext";
 import useStaticData from "./useStaticData";
 import useCustomNavigate from "./useCustomNavigate";
-
+import useUpdateSurvey from "./surveys/useUpdate";
+import useServeyCreateDef from "./surveys/useCreateSurvey";
 
 const pgr = {
   useComplaintDetails,
@@ -154,6 +155,8 @@ const survey = {
   useSubmitResponse: useSurveySubmitResponse,
   useShowResults: useSurveyShowResults,
   useSurveyInbox,
+  useUpdateSurvey: useUpdateSurvey,
+  useServeyCreateDef: useServeyCreateDef
 };
 
 const Hooks = {

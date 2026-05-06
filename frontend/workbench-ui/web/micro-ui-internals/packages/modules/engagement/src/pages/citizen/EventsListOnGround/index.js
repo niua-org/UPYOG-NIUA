@@ -1,7 +1,7 @@
 import { Card, CardCaption, Header, Loader, OnGroundEventCard } from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const EventsListOnGround = ({ variant, parentRoute }) => {
   const { t } = useTranslation();
@@ -18,11 +18,12 @@ const EventsListOnGround = ({ variant, parentRoute }) => {
 
   const { data: EventsData, isLoading: EventsDataLoading } = Digit.Hooks.useEvents({ tenantId, variant });
 
-  if (!Digit.UserService?.getUser()?.access_token) {
-    localStorage.clear();
-    sessionStorage.clear();
+   if (!Digit.UserService?.getUser()?.access_token) {
+      localStorage.clear();
+      sessionStorage.clear();
     return <Navigate to={{ pathname: `/${window?.contextPath}/citizen/login`, state: { from: location.pathname + location.search } }} />;
-  }
+    }
+
 
   if (EventsDataLoading || !preVisitUnseenEventsCountLoaded) return <Loader />;
 
@@ -33,8 +34,15 @@ const EventsListOnGround = ({ variant, parentRoute }) => {
   return (
     <div className="CitizenEngagementNotificationWrapper">
       <Header>{`${t("EVENTS_EVENTS_HEADER")}(${EventsData?.length})`}</Header>
+      {/* The key prop was missing; it was optional in React 17 (warning only), but is required for proper list rendering in React 19 */}
       {EventsData.length ? (
-        EventsData.map((DataParamsInEvent) => <OnGroundEventCard onClick={onEventCardClick} {...DataParamsInEvent} />)
+        EventsData.map((DataParamsInEvent, index) => (
+          <OnGroundEventCard 
+            key={DataParamsInEvent.uuid || DataParamsInEvent.id || index} 
+            onClick={onEventCardClick} 
+            {...DataParamsInEvent} 
+          />
+        ))
       ) : (
         <Card>
           <CardCaption>{t("COMMON_INBOX_NO_DATA")}</CardCaption>

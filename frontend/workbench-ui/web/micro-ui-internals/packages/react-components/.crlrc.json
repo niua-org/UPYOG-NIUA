@@ -1,0 +1,10 @@
+{
+  "rollup": {
+    "commonjs": {
+      "namedExports": {
+        "react-is": ["isElement", "isValidElementType", "ForwardRef"],
+        "react-table": ["useTable", "useGlobalFilter", "useSortBy", "usePagination", "useRowSelect"]
+      }
+    }
+  }
+}

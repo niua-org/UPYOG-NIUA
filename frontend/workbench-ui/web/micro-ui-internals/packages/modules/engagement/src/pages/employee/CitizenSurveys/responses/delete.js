@@ -1,5 +1,5 @@
 import { Banner, Card, Loader, ActionBar, SubmitBar } from "@upyog/workbench-ui-react-components";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -34,7 +34,8 @@ const Response = (props) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.survey.useDelete();
+  // const mutation = Digit.Hooks.survey.useDelete();
+  const mutation = Digit.Hooks.survey.useUpdateSurvey();
   const { state } = props.location;
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Response = (props) => {
     }
   }, []);
 
-  if (mutation.isLoading || mutation.isIdle) {
+  if (mutation.isPending || mutation.isIdle) {
     return <Loader />;
   }
 

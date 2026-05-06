@@ -20,10 +20,10 @@ const Search = ({ onSearch, searchParams, searchFields, type, onClose, isInboxPa
         return (
           <Controller
           rules={{ required: true }}
-            render={props => (
+            render={({field}) => (
               <DropdownUlb
-                onAssignmentChange={props.onChange}
-                value={props.value}
+                onAssignmentChange={field.onChange}
+                value={field.value}
                 ulb={userUlbs}
                 t={t}
               />
@@ -36,7 +36,7 @@ const Search = ({ onSearch, searchParams, searchFields, type, onClose, isInboxPa
       default:
         return (
           <Controller
-            render={(props) => <TextInput onChange={props.onChange} value={props.value} />}
+            render={({field}) => <TextInput onChange={field.onChange} value={field.value} />}
             name={input.name}
             control={control}
             defaultValue={null}
@@ -82,7 +82,7 @@ const Search = ({ onSearch, searchParams, searchFields, type, onClose, isInboxPa
                 </span>
               </div>
             )}
-            <div className={"complaint-input-container for-pt " + (!isInboxPage ? "for-search" : "")} style={{ width: "100%" }}>
+            <div className={"complaint-input-container for-pt " + (!isInboxPage ? "for-search" : "")} style={{ width: "100%",display:"grid" }}>
               {searchFields
                 ?.map((input, index) => (
                   <div key={input.name} className="input-fields">

@@ -32,6 +32,7 @@ const EditMessage = () => {
   const onSubmit = (formData) => {
     const { fromDate, toDate, description, name, documents } = formData;
 
+
     const finalDocuments = isNestedArray(documents) ? reduceDocsArray(documents) : documents;
 
     const details = {

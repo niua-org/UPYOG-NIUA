@@ -30,7 +30,8 @@ const Acknowledgement = (props) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.survey.useSubmitResponse();
+  // const mutation = Digit.Hooks.survey.useSubmitResponse();
+  let mutation =  Digit.Hooks.survey.useSubmitSurveyResponse();
   const { state } = props.location;
   const surveyTitlev1 = state?.AnswerEntity?.surveyTitle;
   
@@ -43,7 +44,7 @@ const Acknowledgement = (props) => {
     });
   }, []);
 
-  if (mutation.isLoading && !mutation.isIdle) {
+  if (mutation.isPending && !mutation.isIdle) {
     return <Loader />;
   }
   

@@ -2,7 +2,7 @@ import { ActionBar, Banner, Card, CardText, Loader, SubmitBar } from "@upyog/wor
 import { format } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 const BannerPicker = (props) => {
@@ -94,7 +94,7 @@ const Response = (props) => {
     )
   }
 
-  if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
+  if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
     return <Loader />
   }
 
@@ -119,7 +119,7 @@ const Response = (props) => {
         }) : null}
       </CardText>
       <ActionBar>
-        <Link to={`/${window?.contextPath}/employee`}>
+        <Link to={"/upyog-ui/employee"}>
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>
       </ActionBar>

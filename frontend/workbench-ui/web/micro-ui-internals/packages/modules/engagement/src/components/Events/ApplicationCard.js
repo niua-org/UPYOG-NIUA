@@ -46,7 +46,7 @@ const ApplicationCard = ({
     );
   }
   else if (data && data?.length > 0) {
-    result = <DetailsCard data={data}  linkPrefix={`/${window?.contextPath}/employee/engagement/event/inbox/event-details/`} serviceRequestIdKey={serviceRequestIdKey}/>
+    result = <DetailsCard data={data}  linkPrefix={'/upyog-ui/employee/engagement/event/inbox/event-details/'} serviceRequestIdKey={serviceRequestIdKey}/>
   }
   return (
     <React.Fragment>

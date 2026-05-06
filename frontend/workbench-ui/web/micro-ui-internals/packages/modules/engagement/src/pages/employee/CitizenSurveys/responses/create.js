@@ -1,10 +1,10 @@
 import { Banner, Card, Loader, CardText, ActionBar, SubmitBar,Menu } from "@upyog/workbench-ui-react-components";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect,useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 const getMessage = (mutation) => {
-  if (mutation.isSuccess) return mutation.data?.Surveys?.[0]?.uuid;
+  if (mutation.isSuccess) return mutation.data?.ServiceDefinition?.[0]?.id;
   return "";
 };
 
@@ -24,7 +24,7 @@ const Acknowledgement = (props) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.survey.useCreate();
+  const mutation = Digit.Hooks.survey.useServeyCreateDef();
   const { state } = props.location;
   const navigate = Digit.Hooks.useCustomNavigate();
   const [isActionClicked,setIsActionClicked] = useState(false) 
@@ -40,9 +40,10 @@ const Acknowledgement = (props) => {
     };
   }, []);
 
-  if (mutation.isLoading && !mutation.isIdle) {
+  if (mutation.isPending && !mutation.isIdle) {
     return <Loader />;
   }
+
 
   const survey = mutation.data?.Surveys?.[0];
  
@@ -52,8 +53,8 @@ const Acknowledgement = (props) => {
     }))
   }
   // const actionClickHandler = (option) => {
-  //   if(option === "Go Back to home") navigate(`/${window?.contextPath}/employee`)
-  //   else if(option === "Create another survey") navigate(`/${window?.contextPath}/employee/engagement/surveys/create")
+  //   if(option === "Go Back to home") navigate("/upyog-ui/employee")
+  //   else if(option === "Create another survey") navigate("/upyog-ui/employee/engagement/surveys/create")
   // }
 
    const actionClickHandler = (option) => {
@@ -77,7 +78,7 @@ const Acknowledgement = (props) => {
       </CardText>
       
        {/* <ActionBar>
-        <Link to={`/${window?.contextPath}/employee`}>
+        <Link to={"/upyog-ui/employee"}>
           <SubmitBar label="Action" />
         </Link>
       </ActionBar> */}

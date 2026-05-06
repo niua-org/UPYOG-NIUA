@@ -30,9 +30,9 @@ const SelectCategory = ({ userType, t, setValue, onSelect, config, data, formDat
         <Controller
           name={config.key}
           control={control}
-          render={(props) => (
+          render={({field}) => (
             <div className="field">
-              <Dropdown option={categoryData} select={props.onChange} selected={props.value} t={t} optionKey="name" />
+              <Dropdown option={categoryData} select={field.onChange} selected={field.value} t={t} optionKey="name" />
             </div>
           )}
         />

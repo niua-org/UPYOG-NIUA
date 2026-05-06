@@ -8,15 +8,65 @@ import EditMessage from "./EditMessage"
 import MessageDetails from "./MessageDetails"
 import DocumentDetails from "../../../components/Messages/DocumentDetails"
 
-const Messages = ({match:{path} = {}, tenants, parentRoute}) => {
-    return <Routes>
-        <Route path={`${path}/create`} element={<NewMessage />} />
-        <Route path={`${path}/inbox/create`} element={<NewMessage />} />
-        <Route path={`${path}/inbox/details/:id`} element={<DocumentDetails />} />
-        <Route path={`${path}/inbox/edit/:id`} element={<EditMessage />} />
-        <Route path={`${path}/inbox`} element={<Inbox tenants={tenants} parentRoute={parentRoute} />} />
-        <Route path={`${path}/response`} element={<Response />} />
+const Messages = ({ match, tenants, parentRoute }) => { 
+    // match.path destructuring (not needed in v6)
+    return (
+        <Routes>
+        <Route 
+            path="create" 
+            element={
+            <PrivateRoute>
+                <NewMessage />
+            </PrivateRoute>
+            } 
+        />
+        
+        <Route 
+            path="inbox/create" 
+            element={
+            <PrivateRoute>
+                <NewMessage />
+            </PrivateRoute>
+            } 
+        />
+        
+        <Route 
+            path="inbox/details/:id" 
+            element={
+            <PrivateRoute>
+                <DocumentDetails />
+            </PrivateRoute>
+            } 
+        />
+        
+        <Route 
+            path="inbox/edit/:id" 
+            element={
+            <PrivateRoute>
+                <EditMessage />
+            </PrivateRoute>
+            } 
+        />
+        
+        <Route 
+            path="inbox" 
+            element={
+            <PrivateRoute>
+                <Inbox tenants={tenants} parentRoute={parentRoute} />
+            </PrivateRoute>
+            } 
+        />
+        
+        <Route 
+            path="response" 
+            element={
+            <PrivateRoute>
+                <Response />
+            </PrivateRoute>
+            } 
+        />
     </Routes>
+    )
 }
 
 export default Messages

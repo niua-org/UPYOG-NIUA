@@ -1,4 +1,4 @@
-import { Modal, Text } from "@upyog/workbench-ui-react-components";
+import { Modal } from "@upyog/workbench-ui-react-components";
 import React, { useState, useEffect } from "react";
 
 const Heading = ({ t, heading }) => {

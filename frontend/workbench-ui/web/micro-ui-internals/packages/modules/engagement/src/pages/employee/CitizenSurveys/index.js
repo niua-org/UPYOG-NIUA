@@ -10,21 +10,86 @@ import DeleteResponse from "./responses/delete"
 import SurveyDetails from "./SurveyDetails"
 import SurveyResults from "./SurveyResults"
 
-const Surveys = ({tenants, parentRoute}) => {
-    // match:{path} prop removed — In v6 routes not get props 
+const Surveys = ({ match, tenants, parentRoute }) => {
+// REMOVED: match.path destructuring (not needed in v6)
 
-    return <Routes>
-            {/* Route + element prop + relative paths */}
-            <Route path="inbox/create" element={<PrivateRoute element={<NewSurvey />} />} />
-            <Route path="create" element={<PrivateRoute element={<NewSurvey />} />} />
-            <Route path="inbox/details/:id" element={<PrivateRoute element={<SurveyDetails />} />} />
-            <Route path="inbox/results/:id" element={<PrivateRoute element={<SurveyResults />} />} />
-            <Route path="inbox" element={<PrivateRoute element={<Inbox tenants={tenants} parentRoute={parentRoute} />} />} />
-            <Route path="create-response" element={<PrivateRoute element={<CreateResponse />} />} />
-            <Route path="update-response" element={<PrivateRoute element={<UpdateResponse />} />} />
-            <Route path="delete-response" element={<PrivateRoute element={<DeleteResponse />} />} />
+    return (
+        <Routes>
+            <Route 
+                path="inbox/create"
+                element={
+                    <PrivateRoute>
+                        <NewSurvey />
+                    </PrivateRoute>
+                    }
+            />
+            <Route 
+                path="create" 
+                element={
+                    <PrivateRoute>
+                        <NewSurvey />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="inbox/details/:id" 
+                element={
+                    <PrivateRoute>
+                        <SurveyDetails />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="inbox/results/:id" 
+                element={
+                    <PrivateRoute>
+                        <SurveyResults />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="inbox" 
+                element={
+                    <PrivateRoute>
+                        <Inbox tenants={tenants} parentRoute={parentRoute} />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="create-response" 
+                element={
+                    <PrivateRoute>
+                        <CreateResponse />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="update-response" 
+                element={
+                    <PrivateRoute>
+                        <UpdateResponse />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="update-response" 
+                element={
+                    <PrivateRoute>
+                        <UpdateResponse />
+                    </PrivateRoute>
+                } 
+            />
+            <Route 
+                path="delete-response" 
+                element={
+                    <PrivateRoute>
+                        <DeleteResponse />
+                    </PrivateRoute>
+                } 
+            />
+        
         </Routes>
-
+    )
 }
 
 export default Surveys

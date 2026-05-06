@@ -1,4 +1,4 @@
-import { Header, ActionBar, SubmitBar, PDFSvg, Menu, GenericFileIcon, Loader } from '@upyog/workbench-ui-react-components';
+import { Header, ActionBar, SubmitBar, PDFSvg, Menu, GenericFileIcon, Loader } from "@upyog/workbench-ui-react-components";
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { useParams } from "react-router-dom";
@@ -43,7 +43,7 @@ const DocumentDetails = () => {
           },
         ],
       };
-      navigate(`/${window?.contextPath}/employee/engagement/event/response?delete=true`, details);
+      navigate("/upyog-ui/employee/engagement/event/response?delete=true", details);
   };
 
   function onModalCancel() {

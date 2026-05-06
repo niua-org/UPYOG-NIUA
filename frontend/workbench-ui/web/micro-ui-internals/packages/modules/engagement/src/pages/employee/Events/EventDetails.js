@@ -1,5 +1,5 @@
 import React, { Fragment, useState ,useEffect} from "react";
-import { useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Header, Card, CardSectionHeader, PDFSvg, Loader, StatusTable, Menu, ActionBar, SubmitBar, Modal, CardText } from "@upyog/workbench-ui-react-components";
 import ApplicationDetailsTemplate from "../../../../../templates/ApplicationDetails";

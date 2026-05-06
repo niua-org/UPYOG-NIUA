@@ -1,4 +1,4 @@
-import { Header, ActionBar, SubmitBar, PDFSvg, Menu, GenericFileIcon, Loader } from '@upyog/workbench-ui-react-components';
+import { Header, ActionBar, SubmitBar, PDFSvg, Menu, GenericFileIcon, Loader } from "@upyog/workbench-ui-react-components";
 import React, { useState ,useEffect} from 'react'
 import { useTranslation } from 'react-i18next';
 import { useParams } from "react-router-dom";
@@ -13,7 +13,7 @@ const renderMultipleDocuments = (documents) => {
   return (
     <div style={{ display: 'flex', flexDirection: isMobile ? 'column':'row', gap: isMobile ? '40px' : '100px'}}>
       {documents.map(({ fileStoreId, fileName }) => (
-        <div className="documentDetails_pdf">
+        <div className="documentDetails_pdf" key={fileStoreId}>
           <div style={{ width: '100px' }} onClick={() => openUploadedDocument(fileStoreId, fileName)}>
             <GenericFileIcon />
             <span className="cell-text">{fileName?.split(10)}</span>
@@ -54,7 +54,7 @@ const DocumentDetails = () => {
   function onActionSelect(action) {
     // setSelectedAction(action);
     if (action === "EDIT") {
-      navigate(`/${window?.contextPath}/employee/engagement/messages/inbox/edit/${id}`)
+      navigate(`/upyog-ui/employee/engagement/messages/inbox/edit/${id}`)
     }
     if (action === "DELETE") {
       setShowModal(true);
@@ -72,7 +72,7 @@ const DocumentDetails = () => {
         },
       ],
     };
-    navigate(`/${window?.contextPath}/employee/engagement/messages/response?delete=true`, details);
+    navigate("/upyog-ui/employee/engagement/messages/response?delete=true", details);
   };
 
   function onModalCancel() {

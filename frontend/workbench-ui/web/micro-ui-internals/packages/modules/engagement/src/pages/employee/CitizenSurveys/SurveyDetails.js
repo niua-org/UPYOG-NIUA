@@ -1,7 +1,7 @@
-import { Header, Modal, Loader } from "@upyog/workbench-ui-react-components";
+import { Header, Modal, Loader, Toast } from "@upyog/workbench-ui-react-components";
 import React, { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import EditSurveyForm from "../../../components/Surveys/EditSurveyForms";
 import { mapQuestions } from "./NewSurvey";
@@ -18,7 +18,7 @@ const filterQuestion = (question) => {
   // if (question.type !== "Multiple Choice" || question.type !== "Check Boxes") {
   //   delete question.options;
   // }
-  return { ...question, type: answerTypeEnum[question.type],options:question?.options };
+  return { ...question, type: question.type.includes("_") ? question.type : answerTypeEnum[question.type],options:question?.options, status:question.status ? question.status : "ACTIVE", qorder:question.qorder };
 };
 
 /**TODO : Think of better to do this possibly in service layer */
@@ -30,6 +30,30 @@ const TypeAnswerEnum = {
   DATE_ANSWER_TYPE: "Date",
   TIME_ANSWER_TYPE: "Time",
 };
+
+const isActive = (startDate, endDate) => {
+  const currentDate = new Date().getTime();
+  if (startDate < currentDate && currentDate <= endDate) {
+    return true;
+  }
+  return false;
+};
+
+const setSurveyQuestion = (surveyObj) =>{
+  let questions = [];
+  surveyObj.attributes.map((element)=>{
+    questions.push({
+      questionStatement : element.code,
+      type : element.additionalDetails.type,
+      required : element.required,
+      options : element.additionalDetails.options,
+      uuid : element.code,
+      surveyId : surveyObj.code,
+      status: "ACTIVE"
+    })
+  })
+  return questions;
+}
 
 const SurveyDetails = ({ location, match }) => {
   let isMobile = window.Digit.Utils.browser.isMobile();
@@ -43,34 +67,88 @@ const SurveyDetails = ({ location, match }) => {
   const [userAction, setUserAction] = useState(undefined);
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const tenantIdForInboxSearch = window?.Digit.SessionStorage?.get("CITIZENSURVEY.INBOX")?.searchForm?.tenantIds?.code || tenantId
-  const { isLoading, data: surveyData } = Digit.Hooks.survey.useSearch(
-    { tenantIds: tenantIdForInboxSearch, uuid: id },
-    {
-      select: (data) => {
-        const surveyObj = data?.Surveys?.[0];
-        return {
-          //tenantIds: { code: surveyObj.tenantId },
-          uuid: surveyObj.uuid,
-          title: surveyObj.title,
-          description: surveyObj.description,
-          collectCitizenInfo: { code: surveyObj.collectCitizenInfo },
-          fromDate: format(new Date(surveyObj.startDate), "yyyy-MM-dd"),
-          toDate: format(new Date(surveyObj.endDate), "yyyy-MM-dd"),
-          fromTime: format(new Date(surveyObj.startDate), "hh:mm"),
-          toTime: format(new Date(surveyObj.endDate), "hh:mm"),
-          questions: surveyObj.questions.map(({ questionStatement, type, required, options, uuid, surveyId }) => ({
-            questionStatement,
-            type: TypeAnswerEnum[type],
-            required,
-            options,
-            uuid,
-            surveyId
-          })),
-          status: surveyObj.status,
-        };
-      },
-    }
-  );
+  const [showToast, setShowToast] = useState(null);
+
+  const closeToast = () => {
+    setShowToast(null);
+  };
+  setTimeout(() => {
+    closeToast();
+  }, 10000);
+
+  function convertTime12To24(time) {
+    var hours   = Number(time.match(/^(\d+)/)[1]);
+    var minutes = Number(time.match(/:(\d+)/)[1]);
+    var AMPM    = time.match(/\s(.*)$/)[1];
+    if (AMPM === "PM" || AMPM === "pm"  && hours < 12) hours = hours + 12;
+    if (AMPM === "AM" || AMPM === "am" && hours === 12) hours = hours - 12;
+    var sHours   = hours.toString();
+    var sMinutes = minutes.toString();
+    if (hours < 10) sHours = "0" + sHours;
+    if (minutes < 10) sMinutes = "0" + sMinutes;
+    return (sHours + ":" + sMinutes);
+}
+
+  let ServiceDefinitionCriteria = {
+    tenantId: Digit.ULBService.getCurrentTenantId(),
+    code: [id],
+    // code:["test 2406231131"],
+    module: ["engagement"]
+  }
+
+  const { isLoading, data: surveyData } = Digit.Hooks.survey.useCfdefinitionsearchresult({ServiceDefinitionCriteria},{
+    select: (data) => {
+      const surveyObj = data?.ServiceDefinition?.[0];
+      return {
+        uuid: surveyObj.code,
+        title: surveyObj.code,
+        description: surveyObj.additionalDetails.description,
+        fromDate: format(new Date(surveyObj.additionalDetails.startDate), "yyyy-MM-dd"),
+        toDate: format(new Date(surveyObj.additionalDetails.endDate), "yyyy-MM-dd"),
+        fromTime: convertTime12To24(new Date(surveyObj.additionalDetails.startDate).toLocaleString("en-IN",{hour: "numeric", minute:"numeric",hour12:true})),
+        toTime: convertTime12To24(new Date(surveyObj.additionalDetails.endDate).toLocaleString("en-IN",{hour: "numeric", minute:"numeric",hour12:true})),
+        questions: setSurveyQuestion(surveyObj), 
+        status: isActive(surveyObj.additionalDetails.startDate,surveyObj.additionalDetails.endDate)?"ACTIVE":"INACTIVE",
+        tenantId: { code: surveyObj.tenantId },
+        additionalDetails: surveyObj.additionalDetails,
+        attributes: surveyObj.attributes,
+        clientId: surveyObj.clientId,
+        code: surveyObj.code,
+        id: surveyObj.id
+      };
+    },
+  })
+
+  // const { data: surveyData } = Digit.Hooks.survey.useSearch(
+  //   { tenantIds: tenantIdForInboxSearch, uuid: id },
+  //   {
+  //     select: (data) => {
+  //       const surveyObj = data?.Surveys?.[0];
+  //       return {
+  //         //tenantIds: { code: surveyObj.tenantId },
+  //         uuid: surveyObj.uuid,
+  //         title: surveyObj.title,
+  //         description: surveyObj.description,
+  //         fromDate: format(new Date(surveyObj.startDate), "yyyy-MM-dd"),
+  //         toDate: format(new Date(surveyObj.endDate), "yyyy-MM-dd"),
+  //         fromTime: convertTime12To24(new Date(surveyObj.startDate).toLocaleString("en-IN",{hour: "numeric", minute:"numeric",hour12:true})),
+  //         toTime: convertTime12To24(new Date(surveyObj.endDate).toLocaleString("en-IN",{hour: "numeric", minute:"numeric",hour12:true})),
+  //         questions: surveyObj.questions.map(({ questionStatement, type, required, options, uuid, surveyId, qorder, status }) => ({
+  //           questionStatement,
+  //           type: /*TypeAnswerEnum[type]*/type,
+  //           required,
+  //           options,
+  //           uuid,
+  //           surveyId,
+  //           qorder,
+  //           status
+  //         })),
+  //         status: surveyObj.status,
+  //         tenantId: { code: surveyObj.tenantId },
+  //       };
+  //     },
+  //   }
+  // );
 
   const isSurveyActive = useMemo(() => {
     const surveyStartTime = new Date(`${surveyData?.fromDate} ${surveyData?.fromTime}`).getTime();
@@ -108,33 +186,103 @@ const SurveyDetails = ({ location, match }) => {
 
   const onEdit = (data) => {
     const { collectCitizenInfo, title, description, tenantIds, fromDate, toDate, fromTime, toTime, questions } = data;
-    const mappedQuestions = mapQuestions(questions);
+    const mappedQuestions = mapQuestions(questions,surveyData);
+    let serveyMappedQuestions = [];
+    let userToken = window.localStorage.getItem("token")
+    questions && questions.length && questions.map((element,index)=>{
+      serveyMappedQuestions.push({
+        "tenantId": tenantIds?.[0]?.code,
+        "code": element.formConfig.questionStatement,
+        "dataType": "String",
+        "values": null,
+        "required": element.formConfig.required,
+        "isActive": true,
+        "reGex": null,
+        "order": index++,
+        "additionalDetails": {
+          type: element.formConfig.type.i18Key,
+          options: element.formConfig.options || ["NA"]
+        }
+      })
+    })
     const details = {
-      SurveyEntity: {
-        uuid: surveyData.uuid,
-        //tenantIds: tenantIds.map(({ code }) => code),
-        tenantId: tenantIds[0]?.code,
-        title,
-        description,
-        collectCitizenInfo: collectCitizenInfo.code,
-        startDate: new Date(`${fromDate} ${fromTime}`).getTime(),
-        endDate: new Date(`${toDate} ${toTime}`).getTime(),
-        questions: mappedQuestions,
-        status:isSurveyActive?"ACTIVE":"INACTIVE",
-        // active:true,
-        // answersCount:0,
-        // postedBy:"BPAREG Approver",
-        //lastmodifiedby:"BPAREG Approver",
-        //lastmodifiedtime:"1645074240234"
-        //These are not required to update, only status was required that we were not sending..
-      },
+      // SurveyEntity: {
+      //   uuid: surveyData.uuid,
+      //   //tenantIds: tenantIds.map(({ code }) => code),
+      //   tenantId: tenantIds[0]?.code ? tenantIds[0]?.code : surveyData.tenantId.code,
+      //   title,
+      //   description,
+      //   startDate: new Date(`${fromDate} ${fromTime}`).getTime(),
+      //   endDate: new Date(`${toDate} ${toTime}`).getTime(),
+      //   questions: mappedQuestions,
+      //   status:isSurveyActive?"ACTIVE":"INACTIVE",
+      //   // active:true,
+      //   // answersCount:0,
+      //   // postedBy:"BPAREG Approver",
+      //   //lastmodifiedby:"BPAREG Approver",
+      //   //lastmodifiedtime:"1645074240234"
+      //   //These are not required to update, only status was required that we were not sending..
+      // },
+      
+      ServiceDefinition: {
+        tenantId: surveyData.tenantId.code,
+        code: title,
+        module: "engagement",
+        isActive: true,
+        attributes:serveyMappedQuestions,
+        additionalDetails:{
+          title: title,
+          description: description,
+          startDate:  new Date(`${fromDate} ${fromTime}`).getTime(),
+          endDate: new Date(`${toDate} ${toTime}`).getTime(),
+          postedBy: surveyData.additionalDetails.postedBy
+        },
+        clientId: surveyData.clientId,
+        id: surveyData.id,
+      }
     };
-    navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
+
+    try{
+      let filters = {tenantIds : tenantIds[0]?.code ? tenantIds[0]?.code : surveyData.tenantId.code, title : title}
+      Digit.Surveys.search(filters).then((ob) => {
+        if(ob?.Surveys?.length>0 && data?.title !== surveyData?.title)
+        {
+          setShowToast({ key: true, label: "SURVEY_SAME_NAME_SURVEY_ALREADY_PRESENT" });
+        }
+        else
+        {
+          navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
+        }
+      })
+    }
+    catch(error)
+    {}
   };
 
   const handleDelete = () => {
+    // const details = {
+    //   SurveyEntity: { ...surveyData, tenantId: tenantId?.code ? tenantId?.code : tenantId },
+    // };
+    // navigate("/upyog-ui/employee/engagement/surveys/delete-response", details);
     const details = {
-      SurveyEntity: { ...surveyData, collectCitizenInfo: surveyData.collectCitizenInfo.code },
+      // SurveyEntity: { ...surveyData,
+      //   tenantId,
+      //   questions: surveyData.questions.map(filterQuestion), 
+      //   status: "INACTIVE", 
+      //    },
+      ServiceDefinition: {
+        tenantId: surveyData.tenantId.code,
+        code: surveyData.code,
+        module: "engagement",
+        isActive: false,
+        attributes: surveyData.attributes,
+        additionalDetails: {
+         ...surveyData.additionalDetails,
+        },
+        clientId: surveyData.clientId,
+        id: surveyData.id
+        
+      }
     };
     navigate(`/${window?.contextPath}/employee/engagement/surveys/delete-response`, details);
   };
@@ -143,27 +291,55 @@ const SurveyDetails = ({ location, match }) => {
   const handleMarkActive = (data) => {
     const { fromDate, toDate, fromTime, toTime } = data;
     const details = {
-      SurveyEntity: {
-        ...surveyData,
-        status: "ACTIVE",
-        startDate: new Date(`${fromDate} ${fromTime}`).getTime(),
-        endDate: new Date(`${toDate} ${toTime}`).getTime(),
-        collectCitizenInfo: surveyData.collectCitizenInfo.code,
-        questions: surveyData.questions.map(filterQuestion),
-        tenantId,
-      },
+      // SurveyEntity: {
+      //   ...surveyData,
+      //   status: "ACTIVE",
+      //   startDate: new Date(`${fromDate} ${fromTime}`).getTime(),
+      //   endDate: new Date(`${toDate} ${toTime}`).getTime(),
+      //   questions: surveyData.questions.map(filterQuestion),
+      //   tenantId,
+      // },
+      ServiceDefinition: {
+        tenantId: surveyData.tenantId.code,
+        code: surveyData.code,
+        module: "engagement",
+        isActive: true,
+        attributes: surveyData.attributes,
+        additionalDetails: {
+         ...surveyData.additionalDetails,
+          endDate: new Date(`${toDate} ${toTime}`).getTime(),
+          startDate:  new Date(`${fromDate} ${fromTime}`).getTime(),
+        },
+        clientId: surveyData.clientId,
+        id: surveyData.id,
+      }
+      
     };
     navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
   };
 
   const handleMarkInactive = () => {
     const details = {
-      SurveyEntity: { ...surveyData,
-        tenantId,
-        questions: surveyData.questions.map(filterQuestion), 
-        status: "INACTIVE", 
-        collectCitizenInfo: surveyData.collectCitizenInfo.code,
-         },
+      // SurveyEntity: { ...surveyData,
+      //   tenantId,
+      //   questions: surveyData.questions.map(filterQuestion), 
+      //   status: "INACTIVE", 
+      //    },
+      ServiceDefinition: {
+        tenantId: surveyData.tenantId.code,
+        code: surveyData.code,
+        module: "engagement",
+        isActive: true,
+        attributes: surveyData.attributes,
+        additionalDetails: {
+         ...surveyData.additionalDetails,
+         startDate:null,
+         endDate:null
+
+        },
+        clientId: surveyData.clientId,
+        id: surveyData.id,
+      }
     };
     navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
   };
@@ -236,6 +412,7 @@ const SurveyDetails = ({ location, match }) => {
           actionSaveOnSubmit={handleMarkInactive}
         />
       )}
+      {showToast && <Toast error={showToast.key} label={t(showToast.label)} onClose={closeToast} />}
     </Fragment>
   );
 };
