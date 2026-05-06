@@ -37,7 +37,7 @@
     "@upyog/digit-ui-module-core": "3.10.0",
     "@nudmcdgnpm/digit-ui-module-challangeneration": "1.0.1",
     "@nudmcdgnpm/upyog-ui-module-est":"1.0.0",
-    "@nudmcdgnpm/upyog-ui-module-ndc":"1.0.0",
+    "@nudmcdgnpm/upyog-ui-module-ndc":"1.1.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-i18next": "11.16.2",

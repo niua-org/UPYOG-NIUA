@@ -19,7 +19,6 @@
     "micro-ui-internals/packages/modules/vendor",
     "micro-ui-internals/packages/modules/wt",
     "micro-ui-internals/packages/modules/ew",
-    "micro-ui-internals/packages/modules/ads",
     "micro-ui-internals/packages/modules/asset",
     "micro-ui-internals/packages/modules/pgrai",
     "micro-ui-internals/packages/modules/commonPt",
@@ -36,7 +35,6 @@
     "micro-ui-internals/packages/modules/challanGeneration",
     "micro-ui-internals/packages/modules/ndc",
     "micro-ui-internals/packages/modules/est",
-    "micro-ui-internals/packages/modules/gis"
   ],
   "engines": {
     "node": ">=22"
@@ -69,9 +67,9 @@
     "@upyog/upyog-ui-module-ptr": "3.10.0",
     "@upyog/upyog-ui-module-vendor": "3.10.0",
     "@upyog/upyog-ui-module-wt": "3.10.0",
-    
+    "@nudmcdgnpm/digit-ui-module-challangeneration": "1.0.0",
     "@nudmcdgnpm/upyog-ui-module-est":"1.0.1",
-    "@nudmcdgnpm/upyog-ui-module-ndc":"1.0.1",
+    "@nudmcdgnpm/upyog-ui-module-ndc":"1.1.1",
     "@nudmcdgnpm/digit-ui-module-reports": "1.0.0",
     "qrcode": "^1.5.4",
     "react": "19.2.0",
@@ -90,7 +88,10 @@
     "start": "vite --config vite.config.js",
     "build": "vite build",
     "preview": "vite preview",
-    "build:prepare": "./build.sh"
+    "build:prepare": "./build.sh",
+    "packages:build": "node scripts/package-builder.mjs",
+    "packages:publish": "node scripts/package-publisher.mjs",
+    "packages:release": "node scripts/package-builder.mjs && node scripts/package-publisher.mjs"
   },
   "browserslist": [
     ">0.2%",

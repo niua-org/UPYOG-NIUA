@@ -28,11 +28,13 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
 
   const apiDataCheck = useSelector((state) => state.ndc.NDCForm?.formData?.responseData);
   const checkApiDataCheck = useSelector((state) => state.ndc.NDCForm?.formData?.apiData);
+  const cptFromRedux = useSelector((state) => state.ndc.NDCForm?.formData?.cpt);
   const [showToast, setShowToast] = useState(null);
   const [propertyLoader, setPropertyLoader] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedBillData, setSelectedBillData] = useState({});
-  const propertyId = formData?.cpt?.details?.propertyId;
+  const cpt = cptFromRedux || formData?.cpt;
+  const propertyId = cpt?.details?.propertyId;
   const [propertyDetails, setPropertyDetails] = useState(formData?.PropertyDetails || {});
   const [selectedRow, setSelectedRow] = useState(null);
 
@@ -91,8 +93,8 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
   ];
 
   useEffect(() => {
-    const owner = formData?.cpt?.details?.owners?.[0];
-    const ownerForName = formData?.cpt?.details?.owners || [];
+    const owner = cpt?.details?.owners?.[0];
+    const ownerForName = cpt?.details?.owners || [];
     const ownerNames = ownerForName
       ?.map((owner) => owner?.name)
       ?.filter(Boolean)
@@ -124,7 +126,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
         ...combinedObject,
       };
     });
-  }, [formData?.cpt?.details, apiDataCheck, selectedRow]);
+  }, [cpt?.details, apiDataCheck, selectedRow]);
 
   useEffect(() => {
     let waterConnection;
@@ -352,18 +354,16 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
   }, [showToast]);
 
   useEffect(() => {
-    // checkApiDataCheck?.Applications?.[0]
-    // setSelectedRow
-    if (checkApiDataCheck?.Applications?.[0] || apiDataCheck?.[0]) {
-      const checkOwners = checkApiDataCheck?.Applications?.[0]?.owners || apiDataCheck?.[0]?.owners;
+    if (!selectedRow && checkApiDataCheck?.Applications?.[0]) {
+      const checkOwners = checkApiDataCheck.Applications[0].owners;
       const filterRow = checkOwners?.find((owner) => owner?.isPrimaryOwner);
-      setSelectedRow(filterRow);
+      setSelectedRow(filterRow || null);
     }
-  }, [checkApiDataCheck, apiDataCheck]);
+  }, [checkApiDataCheck]);
 
   return (
     <div style={{ marginBottom: "16px" }}>
-      {(formData?.cpt?.details || apiDataCheck?.[0]?.NdcDetails) && (
+      {(cpt?.details || apiDataCheck?.[0]?.NdcDetails) && (
         <div>
           <LabelFieldPair style={{ marginTop: "40px" }}>
             <CardLabel className="card-label-smaller ndc_card_labels">{`${t("NDC_WATER_CONNECTION")}`}</CardLabel>
@@ -590,7 +590,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
             <Table
               className="customTable table-border-style"
               t={t}
-              data={formData?.cpt?.details?.owners || []}
+              data={cpt?.details?.owners || []}
               columns={applicationFeeColumns}
               getCellProps={() => ({ style: {} })}
               disableSort={true}
@@ -624,7 +624,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                           // setFocusIndex({ index: -1 });
                           props.onBlur(e);
                         }}
-                        disabled={formData?.cpt?.details?.owners?.[0]?.name?.split(" ")?.[0]?.length > 0}
+                        disabled={!cpt?.details?.owners?.[0]?.name?.split(" ")?.[0]?.length > 0}
                       />
                     )}
                   />
@@ -676,7 +676,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                           // setFocusIndex({ index: -1 });
                           props.onBlur(e);
                         }}
-                        disabled={formData?.cpt?.details?.owners?.[0]?.mobileNumber}
+                        disabled={cpt?.details?.owners?.[0]?.mobileNumber}
                       />
                     )}
                   />
@@ -702,7 +702,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                           // setFocusIndex({ index: -1 });
                           props.onBlur(e);
                         }}
-                        disabled={formData?.cpt?.details?.owners?.[0]?.permanentAddress?.length > 0}
+                        disabled={cpt?.details?.owners?.[0]?.permanentAddress?.length > 0}
                       />
                     )}
                   />

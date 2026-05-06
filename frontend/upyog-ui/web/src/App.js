@@ -28,11 +28,11 @@ import {
   TLLinks,
   initTLComponents,
 } from "@upyog/digit-ui-module-tl";
-// import {
-//   ChallanGenerationModule,
-//   initChallanGenerationComponents,
-//   ChallanReducers,
-// } from "@nudmcdgnpm/digit-ui-module-challangeneration";
+import {
+  ChallanGenerationModule,
+  initChallanGenerationComponents,
+  ChallanReducers,
+} from "@nudmcdgnpm/digit-ui-module-challangeneration";
 import { initReceiptsComponents, ReceiptsModule } from "@upyog/digit-ui-module-receipts";
 import { initOBPSComponents } from "@upyog/digit-ui-module-obps";
 import { initNOCComponents } from "@upyog/digit-ui-module-noc";
