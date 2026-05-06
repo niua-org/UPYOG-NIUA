@@ -24,7 +24,7 @@ const EmployeeChangePassword = () => {
 
   return (
     <Routes>
-      <Route path={`*`} exact>
+      <Route path={`*`}>
         <ChangePasswordComponent config={params[0]} t={t} />
       </Route>
     </Routes>

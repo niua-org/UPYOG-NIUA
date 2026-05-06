@@ -73,7 +73,7 @@ const PTSelectAddress = ({ t, config, onSelect, userType, formData, setError, cl
       if (filteredLocalityList.length === 1) {
         setSelectedLocality(filteredLocalityList[0]);
         if (userType === "employee") {
-          onSelect(config.key, { ...formData[config.key], locality: filteredLocalityList[0] });
+          onSelect(config.key, { ...formData?.[config.key], locality: filteredLocalityList[0] });
         }
       }
     }
@@ -91,7 +91,7 @@ const PTSelectAddress = ({ t, config, onSelect, userType, formData, setError, cl
     }
     setSelectedLocality(locality);
     if (userType === "employee") {
-      onSelect(config.key, { ...formData[config.key], locality: locality });
+      onSelect(config.key, { ...formData?.[config.key], locality: locality });
     }
   }
 
@@ -101,15 +101,15 @@ const PTSelectAddress = ({ t, config, onSelect, userType, formData, setError, cl
 
   const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue } = useForm();
   const formValue = watch();
-  const { errors } = localFormState;
+  const { errors, touchedFields } = localFormState;
   const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
 
   useEffect(() => {
     if (userType === "employee") {
       let keys = Object.keys(formValue);
       const part = {};
-      keys.forEach((key) => (part[key] = formData[config.key]?.[key]));
-      if (!_.isEqual(formValue, part)) onSelect(config.key, { ...formData[config.key], ...formValue });
+      keys.forEach((key) => (part[key] = formData?.[config.key]?.[key]));
+      if (!_.isEqual(formValue, part)) onSelect(config.key, { ...formData?.[config.key], ...formValue });
       for (let key in formValue) {
         if (!formValue[key] && !localFormState?.errors[key]) {
           setLocalError(key, { type: `${key.toUpperCase()}_REQUIRED`, message: t(`CORE_COMMON_REQUIRED_ERRMSG`) });
@@ -122,7 +122,7 @@ const PTSelectAddress = ({ t, config, onSelect, userType, formData, setError, cl
 
   useEffect(() => {
     if (userType === "employee") {
-      const errorsPresent = !!Object.keys(localFormState.errors).lengtha;
+      const errorsPresent = !!Object.keys(localFormState.errors).length;
       if (errorsPresent && !formState.errors?.[config.key]) setError(config.key, { type: "required" });
       else if (!errorsPresent && formState.errors?.[config.key]) clearErrors(config.key);
     }
@@ -151,7 +151,7 @@ const PTSelectAddress = ({ t, config, onSelect, userType, formData, setError, cl
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.city ? errors?.city?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{touchedFields?.city ? errors?.city?.message : ""}</CardLabelError>
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("PT_LOCALITY_LABEL")}<span className="check-page-link-button"> *</span></CardLabel>
           <Controller
@@ -172,7 +172,7 @@ const PTSelectAddress = ({ t, config, onSelect, userType, formData, setError, cl
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.locality ? errors?.locality?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{touchedFields?.locality ? errors?.locality?.message : ""}</CardLabelError>
       </div>
     );
   }

@@ -151,7 +151,7 @@ const SelectOwnerShipDetails = ({ t, config, onSelect, userType, formData, onBlu
             t={t}
           />
         </LabelFieldPair>
-        {formState.touched?.[config.key] ? (
+        {formState.touchedFields?.[config.key] ? (
           <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
             {formState.errors[config.key]?.message}
           </CardLabelError>

@@ -76,7 +76,7 @@ const FilterFormFieldsComponent = ({
         <Controller
           name="assignee"
           control={controlFilterForm}
-          render={(props) => {
+          render={({ field }) => {
             return (
               <RadioButtons
                 onSelect={(e) => {
@@ -143,9 +143,9 @@ const FilterFormFieldsComponent = ({
         <Controller
           name="applicationType"
           control={controlFilterForm}
-          render={(props) => {
+          render={({ field }) => {
             function changeItemCheckStatus(value) {
-              props.onChange(value);
+              field.onChange(value);
             }
             const renderStatusCheckBoxess = useMemo(
               () =>
@@ -180,9 +180,9 @@ const FilterFormFieldsComponent = ({
           <Controller
             name="applicationStatus"
             control={controlFilterForm}
-            render={(props) => {
+            render={({ field }) => {
               function changeItemCheckStatus(value) {
-                props.onChange(value);
+                field.onChange(value);
               }
               const renderStatusCheckBoxes = useMemo(
                 () =>
@@ -197,15 +197,15 @@ const FilterFormFieldsComponent = ({
                           key={index + 1}
                           onChange={(e) =>
                             e.target.checked
-                              ? changeItemCheckStatus([...props.value, status?.statusid])
-                              : changeItemCheckStatus(props.value?.filter((id) => id !== status?.statusid))
+                              ? changeItemCheckStatus([...field.value, status?.statusid])
+                              : changeItemCheckStatus(field.value?.filter((id) => id !== status?.statusid))
                           }
-                          checked={props.value?.includes(status?.statusid)}
+                          checked={field.value?.includes(status?.statusid)}
                           label={`${t(`WF_${status.businessservice.toUpperCase()}_${status.applicationstatus.split("_").pop()}`)} (${status.count})`}
                         />
                       );
                     }),
-                [props.value, statuses, selectedApplicationType]
+                [field.value, statuses, selectedApplicationType]
               );
               return (
                 <>

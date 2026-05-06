@@ -216,12 +216,12 @@ const EmployeeApp = ({ path, url, userType }) => {
           />
           <Route path={`/application-search`} element={<PrivateRoute><SearchApp parentRoute={path} /></PrivateRoute>} />
           <Route path={`/ulb-assesment`} element={<PrivateRoute><UlbAssesment parentRoute={path} /></PrivateRoute>} />
-          <Route path={`/PTReceiptRegister`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTReceiptRegister" /></PrivateRoute>} />
-          <Route path={`/PTCollectionReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCollectionReport" /></PrivateRoute>} />
-          <Route path={`/DefaulterReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="DefaulterReport" /></PrivateRoute>} />
-          <Route path={`/PTGrievances`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTGrievances" /></PrivateRoute>} />
-          <Route path={`/PTCoverageReport`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCoverageReport" /></PrivateRoute>} />
-          <Route path={`/PTTop20TaxPayers`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTTop20TaxPayers" /></PrivateRoute>} />
+          <Route path={`/PTReceiptRegister`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTReceiptRegister" /></PrivateRoute>} />
+          <Route path={`/PTCollectionReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTCollectionReport" /></PrivateRoute>} />
+          <Route path={`/DefaulterReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="DefaulterReport" /></PrivateRoute>} />
+          <Route path={`/PTGrievances`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTGrievances" /></PrivateRoute>} />
+          <Route path={`/PTCoverageReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTCoverageReport" /></PrivateRoute>} />
+          <Route path={`/PTTop20TaxPayers`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTTop20TaxPayers" /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

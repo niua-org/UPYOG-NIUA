@@ -23,9 +23,9 @@ const PreApprovedPlan=()=>{
     const { nextStep } = config.find((routeObj) => routeObj.route === currentPath);
     let redirectWithHistory = navigate;
     if (nextStep === null) {
-      return redirectWithHistory(`/check`);
+      return redirectWithHistory(`check`);
     }
-    redirectWithHistory(`/${nextStep}`);
+    redirectWithHistory(`${nextStep}`);
 
   }
   const onSuccess = () => {
@@ -33,7 +33,7 @@ const PreApprovedPlan=()=>{
     queryClient.invalidateQueries("PT_CREATE_PROPERTY");
   };
   const createApplication = async () => {
-    navigate(`/acknowledgement`);
+    navigate(`acknowledgement`);
   };
   const handleSelect = (key, data, skipStep, isFromCreateApi) => {
     console.log("dataaa", data)
@@ -62,14 +62,15 @@ const PreApprovedPlan=()=>{
     return (
       
          <Routes>
-{config.map((routeObj, index) => {
+          <Route index element={<Navigate to="documents-required" replace />} />
+          {config.map((routeObj, index) => {
             const { component, texts, inputs, key } = routeObj;
             const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
             console.log("componentttt", Component)
             console.log("routeobj", routeObj.route)
             return (
               <Route
-                path={`/${routeObj.route}`}
+                path={routeObj.route}
                 key={index}
                 element={
                   <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} isShowToast={isShowToast} isSubmitBtnDisable={isSubmitBtnDisable} setIsShowToast={setIsShowToast}/>
@@ -77,9 +78,8 @@ const PreApprovedPlan=()=>{
               />
             );
           })}
-          <Route path={`/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
-          <Route path={`/acknowledgement`} element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
-          <Route path="*" element={<Navigate to={`/${config.indexRoute}`} replace />} />
+          <Route path="check" element={<CheckPage onSubmit={createApplication} value={params} />} />
+          <Route path="acknowledgement" element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
         </Routes>
 
         

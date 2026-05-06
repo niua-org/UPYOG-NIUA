@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { scrutinyDetailsData } from "../utils";
 
 const BasicDetails = ({ formData, onSelect, config }) => {
+  console.log("formData in basic details", formData);
   const [showToast, setShowToast] = useState(null);
   const [basicData, setBasicData] = useState(formData?.selectedPlot||formData?.data?.edcrDetails);
   const checkingFlow = formData?.uiFlow?.flow ? formData?.uiFlow?.flow :formData?.selectedPlot ? "PRE_APPROVE":"";

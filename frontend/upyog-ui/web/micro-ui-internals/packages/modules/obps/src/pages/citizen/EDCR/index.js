@@ -95,6 +95,7 @@ const CreateEDCR = ({ parentRoute }) => {
 
   return (
     <Routes>
+      <Route index element={<Navigate to="home" replace />} />
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
@@ -118,8 +119,7 @@ const CreateEDCR = ({ parentRoute }) => {
           />
         );
       })}
-      <Route path={`acknowledgement`} element={<EDCRAcknowledgement data={params} onSuccess={onSuccess} />} />
-      <Route path="*" element={<Navigate to={`${config.indexRoute}`} />} />
+      <Route path={`/acknowledgement`} element={<EDCRAcknowledgement data={params} onSuccess={onSuccess} />} />
     </Routes>
   );
 };

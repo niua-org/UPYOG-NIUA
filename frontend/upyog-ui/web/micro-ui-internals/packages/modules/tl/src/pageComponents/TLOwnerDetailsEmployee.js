@@ -79,7 +79,7 @@ const OwnerForm = (_props) => {
       mdmsData?.PropertyTax?.OwnerType?.map?.((e) => ({
         i18nKey: `${e.code.replaceAll("PROPERTY", "COMMON_MASTERS").replaceAll(".", "_")}`,
         code: e.code,
-        name:e.name
+        name: e.name || e.code
       })) || [],
     [mdmsData]
   );
@@ -206,7 +206,7 @@ const OwnerForm = (_props) => {
                           value={field.value}
                           disable={isSameAsPropertyOwner}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "instituionName"}
-                          errorStyle={localFormState.touched.instituionName && errors?.instituionName?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.instituionName && errors?.instituionName?.message ? true : false}
                           onChange={(e)=>{
                             if (e != owner?.instituionName && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
                             field.onChange(e);
@@ -218,7 +218,7 @@ const OwnerForm = (_props) => {
                     ></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}> {localFormState.touched.instituionName ? errors?.instituionName?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}> {localFormState.touchedFields?.instituionName ? errors?.instituionName?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel>{`${t("TL_INSTITUTION_TYPE_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                   <div className="field">
@@ -230,7 +230,7 @@ const OwnerForm = (_props) => {
                         <Dropdown
                           t={t}
                           option={institutionOwnershipTypeOptions}
-                          errorStyle={localFormState.touched.subOwnerShipCategory && errors?.subOwnerShipCategory?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.subOwnerShipCategory && errors?.subOwnerShipCategory?.message ? true : false}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "subOwnerShipCategory"}
                           selected={field.value}
                           disable={isSameAsPropertyOwner}
@@ -247,7 +247,7 @@ const OwnerForm = (_props) => {
                     ></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.subOwnerShipCategory ? errors?.subOwnerShipCategory?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.subOwnerShipCategory ? errors?.subOwnerShipCategory?.message : ""}</CardLabelError>
                 <CardSectionHeader>{t("TL_AUTHORIZED_PERSON_DETAILS")}</CardSectionHeader>
                 <LabelFieldPair>
                   <CardLabel>{`${t("TL_NEW_OWNER_DETAILS_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
@@ -265,7 +265,7 @@ const OwnerForm = (_props) => {
                           name="name"
                           value={field.value}
                           disable={isSameAsPropertyOwner}
-                          errorStyle={localFormState.touched.name && errors?.name?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.name && errors?.name?.message ? true : false}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "name"}
                           onChange={(e)=>{
                             if (e != owner?.name && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -278,7 +278,7 @@ const OwnerForm = (_props) => {
                     ></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.name ? errors?.name?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.name ? errors?.name?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel>{`${t("TL_NEW_OWNER_DESIG_LABEL")}`}</CardLabel>
                   <div className="field">
@@ -295,7 +295,7 @@ const OwnerForm = (_props) => {
                           name="designation"
                           value={field.value}
                           disable={isSameAsPropertyOwner}
-                          errorStyle={localFormState.touched.designation && errors?.designation?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.designation && errors?.designation?.message ? true : false}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "designation"}
                           onChange={(e)=>{
                             if (e != owner?.designation && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -308,7 +308,7 @@ const OwnerForm = (_props) => {
                     ></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.designation ? errors?.designation?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.designation ? errors?.designation?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel>{`${t("TL_MOBILE_NUMBER_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                   <div className="field">
@@ -325,7 +325,7 @@ const OwnerForm = (_props) => {
                         name="mobileNumber"
                         value={field.value}
                         disable={isSameAsPropertyOwner}
-                        errorStyle={localFormState.touched.mobileNumber && errors?.mobileNumber?.message ? true : false}
+                        errorStyle={localFormState.touchedFields?.mobileNumber && errors?.mobileNumber?.message ? true : false}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "mobileNumber"}
                         onChange={(e)=>{
                           if (e != owner?.mobileNumber && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -338,7 +338,7 @@ const OwnerForm = (_props) => {
                     ></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel>{`${t("TL_TELEPHONE_NUMBER_LABEL")}`}</CardLabel>
                   <div className="field">
@@ -356,7 +356,7 @@ const OwnerForm = (_props) => {
                         name="altContactNumber"
                         value={owner.altContactNumber}
                         disable={isSameAsPropertyOwner}
-                        errorStyle={localFormState.touched.altContactNumber && errors?.altContactNumber?.message ? true : false}
+                        errorStyle={localFormState.touchedFields?.altContactNumber && errors?.altContactNumber?.message ? true : false}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "altContactNumber"}
                         onChange={(e)=>{
                           if (e != owner?.altContactNumber && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -368,7 +368,7 @@ const OwnerForm = (_props) => {
                      )}></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.altContactNumber ? errors?.altContactNumber?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.altContactNumber ? errors?.altContactNumber?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel>{`${t("NOC_APPLICANT_EMAIL_LABEL")}`}</CardLabel>
                   <div className="field">
@@ -385,7 +385,7 @@ const OwnerForm = (_props) => {
                         name={"emailId"}
                         value={field.value}
                         disable={isSameAsPropertyOwner}
-                        errorStyle={localFormState.touched.emailId && errors?.emailId?.message ? true : false}
+                        errorStyle={localFormState.touchedFields?.emailId && errors?.emailId?.message ? true : false}
                         autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
                         onChange={(e)=>{
                           if (e != owner?.emailId && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -398,7 +398,7 @@ const OwnerForm = (_props) => {
                     ></Controller>
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.emailId ? errors?.emailId?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.emailId ? errors?.emailId?.message : ""}</CardLabelError>
               </React.Fragment>
             )}
             {typeOfOwner !== "INSTITUTIONAL" && (
@@ -415,7 +415,7 @@ const OwnerForm = (_props) => {
                         <TextInput
                           value={field.value}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "name"}
-                          errorStyle={localFormState.touched.name && errors?.name?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.name && errors?.name?.message ? true : false}
                           onChange={(e) => {
                           const ownerNameValidation = e.target.value.replace(/[^A-Za-z ]/g, "");
                           if (ownerNameValidation !== owner?.name && isRenewal) {
@@ -436,7 +436,7 @@ const OwnerForm = (_props) => {
                     />
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.name ? errors?.name?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.name ? errors?.name?.message : ""}</CardLabelError>
                 {/* <LabelFieldPair>
                   <CardLabel>{`${t("TL_NEW_OWNER_DETAILS_NAME_LABEL")}`}</CardLabel>
                 </LabelFieldPair> */}
@@ -460,14 +460,14 @@ const OwnerForm = (_props) => {
                           labelStyle={{ marginTop: "unset", border: "1px solid #464646", borderRight: "none" }}
                           onBlur={field.onBlur}
                           disable={isSameAsPropertyOwner}
-                          errorStyle={localFormState.touched.mobileNumber && errors?.mobileNumber?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.mobileNumber && errors?.mobileNumber?.message ? true : false}
                           style={isMulitpleOwners ? { background: "#FAFAFA" } : ""}
                         />
                       )}
                     />
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel className="card-label-smaller">{`${t("TL_GUARDIAN_S_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                   <div className="field">
@@ -480,7 +480,7 @@ const OwnerForm = (_props) => {
                         <TextInput
                           value={field.value}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "fatherOrHusbandName"}
-                          errorStyle={localFormState.touched.fatherOrHusbandName && errors?.fatherOrHusbandName?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.fatherOrHusbandName && errors?.fatherOrHusbandName?.message ? true : false}
                           onChange={(e) => {
                           const guardianNameValidation = e.target.value.replace(/[^A-Za-z ]/g, "");
                           if (guardianNameValidation !== owner?.fatherOrHusbandName && isRenewal) {
@@ -498,7 +498,7 @@ const OwnerForm = (_props) => {
                   </div>
                 </LabelFieldPair>
                 <CardLabelError style={errorStyle}>
-                  {localFormState.touched.fatherOrHusbandName ? errors?.fatherOrHusbandName?.message : ""}{" "}
+                  {localFormState.touchedFields?.fatherOrHusbandName ? errors?.fatherOrHusbandName?.message : ""}{" "}
                 </CardLabelError>
                 <LabelFieldPair>
                   <CardLabel className="card-label-smaller">{`${t("TL_RELATIONSHIP_WITH_GUARDIAN_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
@@ -511,7 +511,7 @@ const OwnerForm = (_props) => {
                       <Dropdown
                         className="form-field"
                         selected={field.value}
-                        errorStyle={localFormState.touched.relationship && errors?.relationship?.message ? true : false}
+                        errorStyle={localFormState.touchedFields?.relationship && errors?.relationship?.message ? true : false}
                         select={(e) => {
                           if (e?.code != owner?.relationship?.code && isRenewal)
                             setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -529,7 +529,7 @@ const OwnerForm = (_props) => {
                     )}
                   />
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.relationship ? errors?.relationship?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.relationship ? errors?.relationship?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel className="card-label-smaller">{`${t("TL_NEW_OWNER_DETAILS_GENDER_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                   <Controller
@@ -542,7 +542,7 @@ const OwnerForm = (_props) => {
                         className="form-field"
                         selected={field.value}
                         disable={isSameAsPropertyOwner}
-                        errorStyle={localFormState.touched.gender && errors?.gender?.message ? true : false}
+                        errorStyle={localFormState.touchedFields?.gender && errors?.gender?.message ? true : false}
                         select={(e) => {
                           if (e?.code != owner?.gender?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
                           field.onChange(e);
@@ -555,7 +555,7 @@ const OwnerForm = (_props) => {
                     )}
                   />
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.gender ? errors?.gender?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.gender ? errors?.gender?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel className="card-label-smaller">{`${t("TL_NEW_OWNER_DETAILS_EMAIL_LABEL")} `}</CardLabel>
                   <div className="field">
@@ -572,7 +572,7 @@ const OwnerForm = (_props) => {
                         <TextInput
                           value={field.value}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
-                          errorStyle={localFormState.touched.emailId && errors?.emailId?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.emailId && errors?.emailId?.message ? true : false}
                           onChange={(e) => {
                             if (e.target.value != owner?.emailId && isRenewal)
                               setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -588,7 +588,7 @@ const OwnerForm = (_props) => {
                     />
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.emailId ? errors?.emailId?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.emailId ? errors?.emailId?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel className="card-label-smaller">{`${t("TL_OWNER_SPECIAL_CATEGORY")} `}</CardLabel>
                   <Controller
@@ -600,7 +600,7 @@ const OwnerForm = (_props) => {
                       <Dropdown
                         className="form-field"
                         selected={field.value}
-                        errorStyle={localFormState.touched.ownerType && errors?.ownerType?.message ? true : false}
+                        errorStyle={localFormState.touchedFields?.ownerType && errors?.ownerType?.message ? true : false}
                         select={(e) => {
                           if (e?.code != owner?.ownerType?.code && isRenewal)
                             setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -608,7 +608,7 @@ const OwnerForm = (_props) => {
                         }}
                         onBlur={field.onBlur}
                         disable={isSameAsPropertyOwner}
-                        option={ownerTypesMenu ? ownerTypesMenu.sort((a, b) => a.name.localeCompare(b.name)) : []}
+                        option={ownerTypesMenu ? ownerTypesMenu.sort((a, b) => (a.name || '').localeCompare(b.name || '')) : []}
 
                         optionKey="i18nKey"
                         t={t}
@@ -616,7 +616,7 @@ const OwnerForm = (_props) => {
                     )}
                   />
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.ownerType ? errors?.ownerType?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.ownerType ? errors?.ownerType?.message : ""}</CardLabelError>
                 <LabelFieldPair>
                   <CardLabel className="card-label-smaller">{`${t("TL_NEW_OWNER_DETAILS_ADDR_LABEL")} `}</CardLabel>
                   <div className="field">
@@ -628,7 +628,7 @@ const OwnerForm = (_props) => {
                         <TextInput
                           value={field.value}
                           autoFocus={focusIndex.index === owner?.key && focusIndex.type === "permanentAddress"}
-                          errorStyle={localFormState.touched.permanentAddress && errors?.permanentAddress?.message ? true : false}
+                          errorStyle={localFormState.touchedFields?.permanentAddress && errors?.permanentAddress?.message ? true : false}
                           onChange={(e) => {
                             if (e.target.value != owner?.permanentAddress && isRenewal)
                               setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true });
@@ -643,7 +643,7 @@ const OwnerForm = (_props) => {
                     />
                   </div>
                 </LabelFieldPair>
-                <CardLabelError style={errorStyle}>{localFormState.touched.permanentAddress ? errors?.permanentAddress?.message : ""}</CardLabelError>
+                <CardLabelError style={errorStyle}>{localFormState.touchedFields?.permanentAddress ? errors?.permanentAddress?.message : ""}</CardLabelError>
               </React.Fragment>
             )}
             </div>

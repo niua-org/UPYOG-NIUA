@@ -23,7 +23,52 @@ const NewApplication = () => {
 
   const unitValues=[];
   const onFormValueChange = (setValue, formData, formState) => {
-    console.log("formData, formState",formData, formState)
+    console.log("=== Form Value Change ===");
+    console.log("formData:", formData);
+    console.log("formState.errors:", formState.errors);
+    console.log("Number of errors:", Object.keys(formState.errors).length);
+    
+    // Check if all required fields have values
+    const hasAllRequiredFields = formData?.address?.city && formData?.address?.locality && 
+                                  formData?.usageCategoryMajor && formData?.PropertyType && 
+                                  formData?.landarea && formData?.electricity && formData?.uid &&
+                                  formData?.propertyStructureDetails && formData?.ownershipCategory && 
+                                  formData?.owners?.length > 0;
+    
+    console.log("hasAllRequiredFields:", hasAllRequiredFields);
+    
+    // Check for real validation errors (not just empty required fields)
+    let hasRealErrors = false;
+    
+    Object.keys(formState.errors).forEach(key => {
+      const error = formState.errors[key];
+      console.log(`Checking error for key: ${key}`, error);
+      
+      // If error.type is an object (nested errors from components)
+      if (error?.type && typeof error.type === 'object') {
+        const nestedErrors = Object.values(error.type);
+        console.log(`  Nested errors for ${key}:`, nestedErrors);
+        
+        // Check if any nested error is NOT just a required error on empty field
+        nestedErrors.forEach(nestedError => {
+          if (nestedError && typeof nestedError === 'object') {
+            // Check if this is a real validation error (has message and it's not just required)
+            if (nestedError.message && nestedError.type !== 'required') {
+              console.log(`  Found real error in ${key}:`, nestedError);
+              hasRealErrors = true;
+            }
+          }
+        });
+      } else if (error?.type && error.type !== 'required') {
+        // Simple error that's not a required error
+        console.log(`  Found simple real error for ${key}:`, error);
+        hasRealErrors = true;
+      }
+    });
+    
+    console.log("hasRealErrors:", hasRealErrors);
+    console.log("canSubmit will be:", hasAllRequiredFields && !hasRealErrors);
+    
     unitValues.length=0;
     if(formData?.units && formData?.units.length!==0 && Array.isArray(formData.units)){
         formData.units.forEach((unit)=>{
@@ -33,13 +78,12 @@ const NewApplication = () => {
                 floorNo: unit?.floorNo?.code || null,
 
             };
-            //if(unitDetails.RentedMonths!==null && unitDetails.NonRentedMonthsUsage!==null){
-                unitValues.push(unitDetails)
-            //}
-            
+            unitValues.push(unitDetails)
         })
     }
-    setSubmitValve(!Object.keys(formState.errors).length);
+    
+    setSubmitValve(hasAllRequiredFields && !hasRealErrors);
+    
     if (Object.keys(formState.errors).length === 1 && formState.errors?.units?.message === "arv") {
       setSubmitValve(!formData?.units.some((unit) => unit.occupancyType === "RENTED" && !unit.arv));
     }

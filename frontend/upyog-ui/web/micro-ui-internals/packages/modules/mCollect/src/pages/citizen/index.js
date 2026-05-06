@@ -7,6 +7,7 @@ import { Routes, Route } from "react-router-dom";
 //import BillInfo from "./SearchResults/BillInfo";
 
 const App = () => {
+  console.log("App rendered");
   const { path, url, ...match } = Digit.Hooks.useModuleBasePath();
 
   const SearchChallanComponent = Digit?.ComponentRegistryService?.getComponent("MCollectSearchChallanComponent");

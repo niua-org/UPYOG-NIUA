@@ -22,7 +22,6 @@ const DisconnectionApplication = () => {
     return <Loader />
   }
 
-  console.log("configconfig",config)
   return (
     <Routes>
       {config.map((routeObj, index) => {

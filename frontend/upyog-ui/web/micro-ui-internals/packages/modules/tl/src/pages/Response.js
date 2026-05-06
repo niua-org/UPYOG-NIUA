@@ -8,7 +8,7 @@ import * as func from "../utils";
 
 const Response = (props) => {
   const location = useLocation();
-  const { state } = props.location;
+  const { state } = location;
   const [params, setParams] = useState({});
   const { isEdit } = Digit.Hooks.useQueryParams();
   const { data: storeData } = Digit.Hooks.useStore.getInitData();

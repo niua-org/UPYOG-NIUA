@@ -575,7 +575,7 @@ function Unit({
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.floorNo ? errors?.floorNo?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.floorNo ? errors?.floorNo?.message : ""}</CardLabelError>
         </div>
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("PT_PROPERTY_DETAILS_USAGE_TYPE_HEADER") + " *"}</CardLabel>
@@ -611,7 +611,7 @@ function Unit({
           />
         </LabelFieldPair>
         {!["RESIDENTIAL"].includes(usageType?.code) ? (
-          <CardLabelError style={errorStyle}>{localFormState.touched.usageCategory ? errors?.usageCategory?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields?.usageCategory ? errors?.usageCategory?.message : ""}</CardLabelError>
         ) : null}
 
         <LabelFieldPair>
@@ -634,7 +634,7 @@ function Unit({
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.occupancyType ? errors?.occupancyType?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.occupancyType ? errors?.occupancyType?.message : ""}</CardLabelError>
         {formValue.occupancyType?.code === "RENTED" ? (
           <React.Fragment>
             <LabelFieldPair>
@@ -660,7 +660,7 @@ function Unit({
                 />
               </div>
             </LabelFieldPair>
-            <CardLabelError style={errorStyle}>{localFormState.touched.arv ? errors?.arv?.message : ""}</CardLabelError>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields?.arv ? errors?.arv?.message : ""}</CardLabelError>
             
           <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("PT_FORM2_RENTED_MONTHS") + " *"}</CardLabel>
@@ -682,7 +682,7 @@ function Unit({
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.Rentedmonths ? errors?.Rentedmonths?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.Rentedmonths ? errors?.Rentedmonths?.message : ""}</CardLabelError>
         {formValue?.RentedMonths?.code === "1" || formValue?.RentedMonths?.code === "2" || formValue?.RentedMonths?.code === "3" || formValue?.RentedMonths?.code === "4" || formValue?.RentedMonths?.code === "5" || formValue?.RentedMonths?.code === "6" || formValue?.RentedMonths?.code === "7" || formValue?.RentedMonths?.code === "8" || formValue?.RentedMonths?.code === "9" || formValue?.RentedMonths?.code === "10" || formValue?.RentedMonths?.code === "11" ? (
           <React.Fragment>
             <LabelFieldPair>
@@ -734,7 +734,7 @@ function Unit({
             />
           </div>
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.builtUpArea ? errors?.builtUpArea?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.builtUpArea ? errors?.builtUpArea?.message : ""}</CardLabelError>
       </div>
     </div>
   );

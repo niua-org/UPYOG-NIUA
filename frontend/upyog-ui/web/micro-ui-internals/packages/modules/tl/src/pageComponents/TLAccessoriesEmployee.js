@@ -356,13 +356,13 @@ const AccessoriersForm = (_props) => {
                                 control={control}
                                 name={"uomValue"}
                                 defaultValue={accessor?.uomValue}
-                                rules={accessor?.accessoryCategory?.uom && { required: t("REQUIRED_FIELD"), validate: (e) => (/*(e && getPattern("UOMValue").test(e))*/ e > 0 && e < 99999 ? (checkRangeForUomValue(e,accessor?.accessoryCategory?.fromUom,accessor?.accessoryCategory?.toUom) ? true : `${t("ERR_WRONG_UOM_VALUE")} ${accessor?.accessoryCategory?.fromUom} - ${accessor?.accessoryCategory?.toUom}`) : t("ERR_DEFAULT_INPUT_FIELD_MSG")) }}
+                                rules={accessor?.accessoryCategory?.uom && { required: t("REQUIRED_FIELD"), validate: (e) => (/*(e && getPattern("UOMValue").test(e))*/ e > 0 && e < 99999 ? (checkRangeForUomValue(e,accessor?.accessoryCategory?.fromUom,accessor?.accessoryCategory?.toUom) ? true : `${t("ERR_WRONG_UOM_VALUE")} ${accessor?.accessoryCategory?.fromUom || ''} - ${accessor?.accessoryCategory?.toUom || ''}`) : t("ERR_DEFAULT_INPUT_FIELD_MSG")) }}
                                 render={({ field }) => (
                                     <TextInput
                                         value={getValues("uomValue")}
                                         // value={accessor?.accessoryCategory?.uom ? field.value : ""}
                                         autoFocus={focusIndex.index === accessor?.key && focusIndex.type === "uomValue"}
-                                        errorStyle={(localFormState.touched.uomValue && errors?.uomValue?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields?.uomValue && errors?.uomValue?.message) ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                             setFocusIndex({ index: accessor.key, type: "uomValue" });
@@ -376,7 +376,7 @@ const AccessoriersForm = (_props) => {
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.uomValue ? errors?.uomValue?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields?.uomValue ? errors?.uomValue?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TL_ACCESSORY_COUNT_LABEL")}`}{accessor?.accessoryCategory?.code ?   <span className="check-page-link-button"> *</span>:""}</CardLabel>
                         <div className="field">
@@ -390,7 +390,7 @@ const AccessoriersForm = (_props) => {
                                     <TextInput
                                         value={field.value}
                                         autoFocus={focusIndex.index === accessor?.key && focusIndex.type === "count"}
-                                        errorStyle={(localFormState.touched.count && errors?.count?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields?.count && errors?.count?.message) ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e.target.value);
                                             setFocusIndex({ index: accessor.key, type: "count" });
@@ -404,7 +404,7 @@ const AccessoriersForm = (_props) => {
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.count ? errors?.count?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields?.count ? errors?.count?.message : ""}</CardLabelError>
                 </div>
             </div>
         </React.Fragment>

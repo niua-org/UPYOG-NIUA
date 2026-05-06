@@ -404,18 +404,18 @@ const ConnectionDetails = (_props) => {
                                         rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         type="number"
                                         isMandatory={true}
-                                        render={(props) => (
+                                        render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 type="number"
                                                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfToilets"}
                                                 errorStyle={(localFormState.touched.noOfToilets && errors?.noOfToilets?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: connectionDetail?.key, type: "noOfToilets" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />

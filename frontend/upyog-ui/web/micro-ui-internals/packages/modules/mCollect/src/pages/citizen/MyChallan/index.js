@@ -5,6 +5,7 @@ import { config } from "./config";
 import MyChallanResultsComponent from "./myChallan";
 
 const MyChallans = () => {
+  console.log("MyChallans rendered");
   const { t } = useTranslation();
   const { path } = Digit.Hooks.useModuleBasePath();
 
@@ -23,14 +24,17 @@ const MyChallans = () => {
 
   return (
     <Routes>
-      <Route path={`*`} exact>
-        <MyChallanResultsComponent
-          template={params[0].labels}
-          header={params[0].texts.header}
-          actionButtonLabel={params[0].texts.actionButtonLabel}
-          t={t}
-        />
-      </Route>
+      <Route
+        path="*"
+        element={
+          <MyChallanResultsComponent
+            template={params[0].labels}
+            header={params[0].texts.header}
+            actionButtonLabel={params[0].texts.actionButtonLabel}
+            t={t}
+          />
+        }
+      />
     </Routes>
   );
 };

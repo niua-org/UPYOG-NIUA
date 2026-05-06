@@ -116,12 +116,13 @@ const CreateOCEDCR = ({ parentRoute }) => {
 
   return (
     <Routes>
+      <Route index element={<Navigate to="docs-required" replace />} />
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`${routeObj.route}`}
+            path={routeObj.route}
             key={index}
             element={
               <Component
@@ -139,8 +140,7 @@ const CreateOCEDCR = ({ parentRoute }) => {
           />
         );
       })}
-      <Route path={`acknowledgement`} element={<EDCRAcknowledgement data={params} onSuccess={onSuccess} />} />
-      <Route path="*" element={<Navigate to={`${config.indexRoute}`} />} />
+      <Route path="acknowledgement" element={<EDCRAcknowledgement data={params} onSuccess={onSuccess} />} />
     </Routes>
   );
 };

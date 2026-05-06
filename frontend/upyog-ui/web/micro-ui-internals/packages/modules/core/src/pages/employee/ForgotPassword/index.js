@@ -24,7 +24,7 @@ const EmployeeForgotPassword = () => {
 
   return (
     <Routes>
-      <Route path={`*`} exact>
+      <Route path={`*`}>
         <ForgotPasswordComponent config={params[0]} t={t} />
       </Route>
     </Routes>

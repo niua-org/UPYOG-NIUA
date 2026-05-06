@@ -246,18 +246,18 @@ const ConnectionDetails = (_props) => {
                   rules={{ validate: (e) => ((parseInt(e)>0 && e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                   type="number"
                   isMandatory={true}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="number"
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedTaps"}
 errorStyle={(localFormState.touchedFields.proposedTaps && errors?.proposedTaps?.message) ? true : false}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedTaps" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />
@@ -272,7 +272,7 @@ errorStyle={(localFormState.touchedFields.proposedTaps && errors?.proposedTaps?.
                 defaultValue={connectionDetail?.proposedPipeSize}
                 rules={{ required: t("REQUIRED_FIELD") }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <Dropdown
                     className="form-field"
                     selected={getValues("proposedPipeSize")}
@@ -280,10 +280,10 @@ errorStyle={(localFormState.touchedFields.proposedTaps && errors?.proposedTaps?.
                     option={pipeSizeList}
 errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPipeSize?.message) ? true : false}
                     select={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                     }}
                     optionKey="i18nKey"
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                     t={t}
                   />
                 )}
@@ -304,18 +304,18 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                   rules={{ validate: (e) => ((parseInt(e)>0 && e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                   type="number"
                   isMandatory={true}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="number"
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedWaterClosets"}
                       errorStyle={(localFormState.touched.proposedWaterClosets && errors?.proposedWaterClosets?.message) ? true : false}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedWaterClosets" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />
@@ -332,18 +332,18 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                   rules={{ validate: (e) => ((parseInt(e)>0 && e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                   type="number"
                   isMandatory={true}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="number"
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedToilets"}
                       errorStyle={(localFormState.touched.proposedToilets && errors?.proposedToilets?.message) ? true : false}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedToilets" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />

@@ -133,19 +133,23 @@ const OwnerForm = (_props) => {
   const { institution = {} } = originalData;
   const [uuid, setUuid] = useState(null);
   const [showToast, setShowToast] = useState(null);
-  const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger } = useForm();
+  const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, unregister } = useForm();
   console.log("localstate", localFormState)
   const formValue = watch();
   const { errors } = localFormState;
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  owner["institution"] = { name: owner?.institution?.name ? formValue?.institution?.name : institution?.name };
-  owner["institution"].type = {
-    active: true,
-    code: formValue?.institution?.type?.code || institution?.type?.code,
-    i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(formValue?.institution?.type?.code || institution?.type || "")}`,
-    name: t(`COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(formValue?.institution?.type?.code || institution?.type || "")}`),
-  };
-  owner.designation = owner?.designation ? formValue?.designation : institution?.designation;
+  
+  // Only set institution fields for non-individual owners
+  if (!formData?.ownershipCategory?.code.includes("INDIVIDUAL")) {
+    owner["institution"] = { name: owner?.institution?.name ? formValue?.institution?.name : institution?.name };
+    owner["institution"].type = {
+      active: true,
+      code: formValue?.institution?.type?.code || institution?.type?.code,
+      i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(formValue?.institution?.type?.code || institution?.type || "")}`,
+      name: t(`COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(formValue?.institution?.type?.code || institution?.type || "")}`),
+    };
+    owner.designation = owner?.designation ? formValue?.designation : institution?.designation;
+  }
   const specialDocsMenu = useMemo(
     () =>
       mdmsData?.PropertyTax?.Documents?.filter((e) => e.code === "OWNER.SPECIALCATEGORYPROOF")?.[0]
@@ -196,9 +200,15 @@ const OwnerForm = (_props) => {
     if (!_.isEqual(part, formValue)) {
       setPart({ ...formValue });
       setOwners((prev) => prev.map((o) => (o.key && o.key === owner.key ? { ...o, ...formValue, ..._ownerType } : { ...o })));
-      trigger();
     }
   }, [formValue]);
+  
+  // Clear institution and designation errors for INDIVIDUAL owners
+  useEffect(() => {
+    if (isIndividualTypeOwner) {
+      unregister(['institution.name', 'institution.type', 'designation']);
+    }
+  }, [isIndividualTypeOwner]);
   // const validateEmail=(value)=>{
   //   console.log("valueeee", value)
   //   const emailPattern=/^[a-zA-Z0-9._%+-]+@gmail\.com$/
@@ -308,7 +318,7 @@ const OwnerForm = (_props) => {
                 </div>
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched?.institution?.name ? errors?.institution?.name?.message : ""}
+                {localFormState.touchedFields.institution?.name ? errors?.institution?.name?.message : ""}
               </CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_INSTITUTION_TYPE")}<span className="check-page-link-button"> *</span></CardLabel>
@@ -341,7 +351,7 @@ const OwnerForm = (_props) => {
                 />
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched?.institution?.type ? errors?.institution?.type?.message : ""}
+                {localFormState.touchedFields.institution?.type ? errors?.institution?.type?.message : ""}
               </CardLabelError>
             </React.Fragment>
           ) : null}
@@ -375,7 +385,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.name ? errors?.name?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields.name ? errors?.name?.message : ""}</CardLabelError>
 
           {isIndividualTypeOwner ? (
             <React.Fragment>
@@ -400,7 +410,7 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.gender ? errors?.gender?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.gender ? errors?.gender?.message : ""}</CardLabelError>
             </React.Fragment>
           ) : (
             <React.Fragment>
@@ -437,7 +447,7 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.altContactNumber ? errors?.altContactNumber?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.altContactNumber ? errors?.altContactNumber?.message : ""}</CardLabelError>
             </React.Fragment>
           )}
           <LabelFieldPair>
@@ -467,7 +477,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
           {isIndividualTypeOwner ? (
             <React.Fragment>
               <LabelFieldPair>
@@ -497,7 +507,7 @@ const OwnerForm = (_props) => {
                 </div>
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched.fatherOrHusbandName ? errors?.fatherOrHusbandName?.message : ""}
+                {localFormState.touchedFields.fatherOrHusbandName ? errors?.fatherOrHusbandName?.message : ""}
               </CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_FORM3_RELATIONSHIP")} <span className="check-page-link-button"> *</span> </CardLabel>
@@ -523,7 +533,7 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.relationship ? errors?.relationship?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.relationship ? errors?.relationship?.message : ""}</CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_FORM3_SPECIAL_CATEGORY")} <span className="check-page-link-button"> *</span> </CardLabel>
                 <Controller
@@ -545,7 +555,7 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.ownerType ? errors?.ownerType?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.ownerType ? errors?.ownerType?.message : ""}</CardLabelError>
             </React.Fragment>
           ) : (
             <React.Fragment>
@@ -572,7 +582,7 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.designation ? errors?.designation?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.designation ? errors?.designation?.message : ""}</CardLabelError>
             </React.Fragment>
           )}
 
@@ -600,7 +610,7 @@ const OwnerForm = (_props) => {
                 />
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched.documents?.documentType ? errors?.documents?.documentType?.message : ""}
+                {localFormState.touchedFields.documents?.documentType ? errors?.documents?.documentType?.message : ""}
               </CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_DOCUMENT_ID")} <span className="check-page-link-button"> *</span> </CardLabel>
@@ -628,7 +638,7 @@ const OwnerForm = (_props) => {
                 </div>
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched.documents?.documentUid ? errors?.documents?.documentUid?.message : ""}
+                {localFormState.touchedFields.documents?.documentUid ? errors?.documents?.documentUid?.message : ""}
               </CardLabelError>{" "}
             </React.Fragment>
           ) : null}
@@ -649,7 +659,7 @@ const OwnerForm = (_props) => {
                     value={field.value}
                     disable={isEditScreen}
                     autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
-                    errorStyle={localFormState.touched.emailId && errors?.emailId?.message ? true : false}
+                    errorStyle={localFormState.touchedFields.emailId && errors?.emailId?.message ? true : false}
                     onChange={(e) => {
                       field.onChange(e);
                       setFocusIndex({ index: owner.key, type: "emailId" });
@@ -661,7 +671,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.emailId ? errors?.emailId?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields.emailId ? errors?.emailId?.message : ""}</CardLabelError>
           </div>
 
           <LabelFieldPair>
@@ -688,7 +698,7 @@ const OwnerForm = (_props) => {
             </div>
           </LabelFieldPair>
           <CardLabelError style={errorStyle}>
-            {localFormState.touched.correspondenceAddress ? errors?.correspondenceAddress?.message : ""}
+            {localFormState.touchedFields.correspondenceAddress ? errors?.correspondenceAddress?.message : ""}
           </CardLabelError>
         </div>
       </div>

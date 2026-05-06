@@ -68,11 +68,11 @@ const WSCreate = () => {
 
   if (params && Object.keys(params).length > 0 && window.location.href.includes("/citizen/ws/create-application/search-property")) {
     clearParams();
-    queryClient.invalidateQueries("WS_CREATE");
+    queryClient.invalidateQueries({ queryKey: ["WS_CREATE"] });
   }
 
   const onSuccess = () => {
-    queryClient.invalidateQueries("WS_CREATE");
+    queryClient.invalidateQueries({ queryKey: ["WS_CREATE"] });
   };
   const createApplication = async () => {
     sessionStorage.setItem("isCreateEnabled", "true");
@@ -94,7 +94,7 @@ const WSCreate = () => {
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`${basePath}/${routeObj.route}`}
+            path={routeObj.route}
             key={index}
             element={
               <Component
@@ -109,9 +109,9 @@ const WSCreate = () => {
           />
         );
       })}
-      <Route path={`${basePath}/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
-      <Route path={`${basePath}/acknowledgement`} element={<Acknowledgement data={params} onSuccess={onSuccess} clearParams={clearParams} />} />
-      <Route path="*" element={<Navigate to={`${basePath}/${config.indexRoute}`} replace />} />
+      <Route path="check" element={<CheckPage onSubmit={createApplication} value={params} />} />
+      <Route path="acknowledgement" element={<Acknowledgement data={params} onSuccess={onSuccess} clearParams={clearParams} />} />
+      <Route path="*" element={<Navigate to={config.indexRoute} replace />} />
     </Routes>
   );
 };

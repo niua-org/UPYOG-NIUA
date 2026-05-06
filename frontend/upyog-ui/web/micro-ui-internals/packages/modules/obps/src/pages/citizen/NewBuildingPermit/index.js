@@ -87,14 +87,14 @@ const NewBuildingPermit = () => {
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`${basePath}/${routeObj.route}`}
+            path={routeObj.route}
             key={index}
             element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />}
           />
         );
       })}
-      <Route path={`${basePath}/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
-      <Route path={`${basePath}/acknowledgement`} element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="check" element={<CheckPage onSubmit={createApplication} value={params} />} />
+      <Route path="acknowledgement" element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
       <Route path="*" element={<Navigate to={`${basePath}/${config.indexRoute}`} replace />} />
     </Routes>
   );

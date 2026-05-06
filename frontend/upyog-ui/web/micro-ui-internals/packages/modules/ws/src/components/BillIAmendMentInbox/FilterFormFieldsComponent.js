@@ -115,9 +115,9 @@ const FilterFormFieldsComponent = ({
         <Controller
           name="applicationStatus"
           control={controlFilterForm}
-          render={(props) => {
+          render={({ field }) => {
             function changeItemCheckStatus(value) {
-              props.onChange(value);
+              field.onChange(value);
             }
             const renderStatusCheckBoxess = useMemo(
               () =>

@@ -88,7 +88,6 @@ function SelectDocument({
   config,
   formState,
   fromRawData,
-  key,
   id
 }) {
   const filteredDocument = documents?.filter((item) => item?.documentType);

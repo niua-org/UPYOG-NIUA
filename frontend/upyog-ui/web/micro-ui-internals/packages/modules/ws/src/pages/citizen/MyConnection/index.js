@@ -6,6 +6,7 @@ import WSConnection from "./WSConnection";
 import WSInfoLabel from "../../../pageComponents/WSInfoLabel";
 
 const MyConnections = ({ view }) => {
+  console.log("MyConnections rendered with view:");
   const { t } = useTranslation();
   const user = Digit.UserService.getUser();
   const tenantId = Digit.SessionStorage.get("CITIZEN.COMMON.HOME.CITY")?.code || user?.info?.permanentCity || Digit.ULBService.getCurrentTenantId();

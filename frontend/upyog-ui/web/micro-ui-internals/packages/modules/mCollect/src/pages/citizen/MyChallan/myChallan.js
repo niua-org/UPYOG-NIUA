@@ -10,11 +10,14 @@ const MyChallanResult = ({ template, header, actionButtonLabel }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const filters = {};
   const userInfo = Digit.UserService.getUser();
-  const tenantId = userInfo?.info?.tenantId;
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
   filters.mobileNumber = userInfo?.info?.mobileNumber;
 
-  const result = Digit.Hooks.mcollect.useMcollectSearchBill({ tenantId, filters });
+  const result = Digit.Hooks.mcollect.useMcollectSearchBill(
+    { tenantId, filters },
+    { enabled: !!(tenantId && filters.mobileNumber) }
+  );
 
   const onSubmit = (data) => {
    navigate(`/upyog-ui/citizen/payment/my-bills/${data?.businesService}/${data?.ChannelNo}?workflow=mcollect`);
@@ -62,6 +65,8 @@ const MyChallanResult = ({ template, header, actionButtonLabel }) => {
        ServiceCategory: bill.businessService ? t(bill.businessService.split(".")[bill.businessService.split(".").length - 1]) : t("CS_NA"),
     };
   });
+
+  if (result?.isLoading) return <Loader />;
 
   return (
     <div style={{ marginTop: "16px" }}>

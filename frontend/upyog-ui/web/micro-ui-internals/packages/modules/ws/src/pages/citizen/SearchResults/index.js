@@ -23,14 +23,17 @@ const CitizenSearchResults = () => {
 
   return (
     <Routes>
-      <Route path={`*`} exact>
-        <SearchResultsComponent
-          template={params[0].labels}
-          header={params[0].texts.header}
-          actionButtonLabel={params[0].texts.actionButtonLabel}
-          t={t}
-        />
-      </Route>
+      <Route
+        path="*"
+        element={
+          <SearchResultsComponent
+            template={params[0].labels}
+            header={params[0].texts.header}
+            actionButtonLabel={params[0].texts.actionButtonLabel}
+            t={t}
+          />
+        }
+      />
     </Routes>
   );
 };

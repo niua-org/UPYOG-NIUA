@@ -307,7 +307,7 @@ function checkBillingSlab(value){
                                     selected={field.value}
                                     disable={false}
                                     option={tradeCategoryValues}
-                                    errorStyle={(localFormState.touched.tradeCategory && errors?.tradeCategory?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields?.tradeCategory && errors?.tradeCategory?.message) ? true : false}
                                     select={(e) => {
                                         if (field?.value?.code == e?.code) return true;
                                         if(e?.code != field?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
@@ -340,7 +340,7 @@ function checkBillingSlab(value){
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.tradeCategory ? errors?.tradeCategory?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields?.tradeCategory ? errors?.tradeCategory?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TRADELICENSE_TRADETYPE_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                         <Controller
@@ -354,7 +354,7 @@ function checkBillingSlab(value){
                                     selected={getValues("tradeType")}
                                     disable={false}
                                     option={unit?.tradeCategory ? tradeTypeOptionsList : []}
-                                    errorStyle={(localFormState.touched.tradeType && errors?.tradeType?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields?.tradeType && errors?.tradeType?.message) ? true : false}
                                     select={(e) => {
                                         if (field?.value?.code == e?.code) return true;
                                         if(e?.code != field?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
@@ -384,7 +384,7 @@ function checkBillingSlab(value){
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.tradeType ? errors?.tradeType?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields?.tradeType ? errors?.tradeType?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TL_NEW_TRADE_SUB_TYPE_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                         <Controller
@@ -398,7 +398,7 @@ function checkBillingSlab(value){
                                     selected={getValues("tradeSubType")}
                                     disable={false}
                                     option={unit?.tradeType ? sortDropdownNames(tradeSubTypeOptionsList,"i18nKey",t) : []}
-                                    errorStyle={(localFormState.touched.tradeSubType && errors?.tradeSubType?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields?.tradeSubType && errors?.tradeSubType?.message) ? true : false}
                                     select={(e) => {
                                         if (field?.value?.code == e?.code) return true;
                                         if(e?.code != field?.value?.code && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
@@ -413,7 +413,7 @@ function checkBillingSlab(value){
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}> {localFormState.touched.tradeSubType || localFormState.touched.uomValue || (isRenewal && getValues("tradeSubType")) ? errors?.tradeSubType?.message : ""} </CardLabelError>
+                    <CardLabelError style={errorStyle}> {localFormState.touchedFields?.tradeSubType || localFormState.touchedFields?.uomValue || (isRenewal && getValues("tradeSubType")) ? errors?.tradeSubType?.message : ""} </CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TL_NEW_TRADE_DETAILS_UOM_UOM_PLACEHOLDER")}`}{unit?.tradeSubType?.uom ? <span className="check-page-link-button"> *</span>:""}</CardLabel>
                         <div className="field">
@@ -427,7 +427,7 @@ function checkBillingSlab(value){
                                         value={getValues("uom")}
                                         // value={unit?.tradeSubType?.uom || ""}
                                         autoFocus={focusIndex.index === unit?.key && focusIndex.type === "uom"}
-                                        errorStyle={(localFormState.touched.uom && errors?.uom?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields?.uom && errors?.uom?.message) ? true : false}
                                         onChange={(e) => {
                                             field.onChange(e);
                                             setFocusIndex({ index: unit.key, type: "uom" });
@@ -440,7 +440,7 @@ function checkBillingSlab(value){
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.uom ? errors?.uom?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields?.uom ? errors?.uom?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{`${t("TL_NEW_TRADE_DETAILS_UOM_VALUE_LABEL")}`}{unit?.tradeSubType?.uom ? <span className="check-page-link-button"> *</span> : ""}</CardLabel>
                         <div className="field">
@@ -453,7 +453,7 @@ function checkBillingSlab(value){
                                     <TextInput
                                         value={getValues("uomValue")}
                                         autoFocus={focusIndex.index === unit?.key && focusIndex.type === "uomValue"}
-                                        errorStyle={(localFormState.touched.uomValue && errors?.uomValue?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields?.uomValue && errors?.uomValue?.message) ? true : false}
                                         onChange={(e) => {
                                             if(e.target.value != unit?.uomValue && isRenewal) setPreviousLicenseDetails({ ...previousLicenseDetails, checkForRenewal: true});
                                             field.onChange(e);
@@ -467,7 +467,7 @@ function checkBillingSlab(value){
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}> {localFormState.touched.uomValue ? errors?.uomValue?.message : ""} </CardLabelError>
+                    <CardLabelError style={errorStyle}> {localFormState.touchedFields?.uomValue ? errors?.uomValue?.message : ""} </CardLabelError>
 
                 </div>
             </div>

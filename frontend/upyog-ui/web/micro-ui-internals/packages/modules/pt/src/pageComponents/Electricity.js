@@ -114,7 +114,7 @@ const Electricity = ({ t, config, onSelect, value, userType, formData, setError:
 
             </div>
           </LabelFieldPair>
-          {formState.touched[config.key] ? (
+          {formState.touchedFields?.[config.key] ? (
             <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
               {formState.errors?.[config.key]?.message}
             </CardLabelError>

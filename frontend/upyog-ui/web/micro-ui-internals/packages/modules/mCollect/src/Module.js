@@ -20,15 +20,16 @@ export const MCollectModule = ({ stateCode, userType, tenants }) => {
   const moduleCode = "UC";
   const language = Digit.StoreData.getCurrentLanguage();
   const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
+  const { path, url } = Digit.Hooks.useModuleBasePath();
   Digit.SessionStorage.set("MCollect_TENANTS", tenants);
+
   if (isLoading) {
     return <Loader />;
   }
-  const { path, url } = Digit.Hooks.useModuleBasePath();
-
   if (userType === "employee") {
     return <EmployeeApp path={path} url={url} userType={userType} />;
-  } else return <CitizenApp />;
+  }
+  return <CitizenApp />;
 };
 
 export const MCollectLinks = ({ matchPath, userType }) => {

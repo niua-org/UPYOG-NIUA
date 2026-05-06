@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
-import { Link,  } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import getPTAcknowledgementData from "../getPTAcknowledgementData";
@@ -48,7 +48,8 @@ const Response = (props) => {
   };
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const { state } = props.location;
+  const location = useLocation();
+  const { state } = location;
 
   const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, state.key !== "UPDATE");
   const mutation1 = Digit.Hooks.pt.usePropertyAPI(tenantId, false);

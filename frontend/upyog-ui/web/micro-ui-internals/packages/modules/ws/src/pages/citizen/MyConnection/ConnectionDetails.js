@@ -20,7 +20,7 @@ import {
 import _ from "lodash";
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 //import PropertyDocument from "../../pageComponents/PropertyDocument";
 import WSWFApplicationTimeline from "../../../pageComponents/WSWFApplicationTimeline";
 import WSDocument from "../../../pageComponents/WSDocument";
@@ -36,7 +36,15 @@ const ConnectionDetails = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.SessionStorage.get("CITIZEN.COMMON.HOME.CITY")?.code || user?.info?.permanentCity || Digit.ULBService.getCurrentTenantId();
   const [showOptions, setShowOptions] = useState(false);
-  const applicationNobyData = window.location.href.includes("SW_") ? window.location.href.substring(window.location.href.indexOf("SW_")) : window.location.href.substring(window.location.href.indexOf("WS_"));
+  const { acknowledgementIds } = useParams();
+  // Decode the URL-encoded application number (encodeURIComponent encodes slashes)
+  const applicationNobyData = acknowledgementIds ? decodeURIComponent(acknowledgementIds) : (
+    decodeURIComponent(
+      window.location.href.includes("SW_")
+        ? window.location.href.substring(window.location.href.indexOf("SW_"))
+        : window.location.href.substring(window.location.href.indexOf("WS_"))
+    ).split("?")[0]
+  );
   // window.location.href.substring(window.location.href.indexOf("WS_"));
   let { state = {} } = useLocation();
   const [showModal, setshowModal] = useState(false);
@@ -205,8 +213,6 @@ const ConnectionDetails = () => {
     
   };
   const getRestorationButton = () => {
-    console.log("getRestorationButton",data,!data?.checkWorkFlow)
-    console.log("Payment",paymentDetails)
     if (!data?.checkWorkFlow){
       setshowActionToast({
         key: "error",
@@ -218,7 +224,6 @@ const ConnectionDetails = () => {
     }
     else {
         if (paymentDetails?.data?.Bill?.length === 0 ) {
-          console.log("Payment",paymentDetails)
           let pathname = `/upyog-ui/citizen/ws/restoration-application`;
           Digit.SessionStorage.set("WS_DISCONNECTION", {...state, serviceType: isSW ? "SEWERAGE" : "WATER"});
           navigate(`${pathname}`);

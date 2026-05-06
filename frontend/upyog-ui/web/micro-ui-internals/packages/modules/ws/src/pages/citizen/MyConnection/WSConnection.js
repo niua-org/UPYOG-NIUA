@@ -7,7 +7,8 @@ import _ from "lodash";
 
 const WSConnection = ({ application }) => {
   const { t } = useTranslation();
-  let encodeApplicationNo = encodeURI(application.applicationNo);
+  // encodeURIComponent encodes slashes too, making the full app number a single path segment
+  let encodeApplicationNo = encodeURIComponent(application.applicationNo);
   return (
     <Card>
       <KeyNote keyValue={t("WS_MYCONNECTIONS_CONSUMER_NO")} note={application?.connectionNo} />
@@ -36,7 +37,7 @@ const WSConnection = ({ application }) => {
         },
        }}  />
       <KeyNote keyValue={t("WS_MYCONNECTIONS_STATUS")} note={t(application?.status)} />
-      <Link to={{ pathname: `/upyog-ui/citizen/ws/connection/details/${encodeApplicationNo}`, state: { ...application } }}>
+      <Link to={`/upyog-ui/citizen/ws/connection/details/${encodeApplicationNo}`} state={{ ...application }}>
         <SubmitBar label={t("WS_VIEW_DETAILS_LABEL")} />
       </Link>
     </Card>
