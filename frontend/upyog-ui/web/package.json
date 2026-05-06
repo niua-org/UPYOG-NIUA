@@ -31,10 +31,7 @@
     "micro-ui-internals/packages/modules/mCollect",
     "micro-ui-internals/packages/modules/chb",
     "micro-ui-internals/packages/modules/assetv2",
-    "micro-ui-internals/packages/modules/gis",
-    "micro-ui-internals/packages/modules/challanGeneration",
-    "micro-ui-internals/packages/modules/ndc",
-    "micro-ui-internals/packages/modules/est"
+    "micro-ui-internals/packages/modules/gis"
   ],
   "engines": {
     "node": ">=22"
@@ -74,7 +71,7 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-router-dom": "^6.23.0",
-    "react-i18next": "11.16.2",
+    "react-i18next": "14.0.0",
     "i18next": "19.9.2",
     "i18next-react-postprocessor": "3.0.7",
     "web-vitals": "^3.5.0",

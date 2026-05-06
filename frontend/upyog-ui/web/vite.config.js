@@ -254,13 +254,13 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom", "i18next", "react-i18next"],
+      dedupe: ["react", "react-dom", "@tanstack/react-query", "react-router-dom", "i18next", "react-i18next"],
     },
 
     esbuild: {
       loader: "jsx",
       include: /.*\.js$/,
-      exclude: [],
+      exclude: /node_modules/,
     },
 
     server: {
@@ -297,9 +297,8 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ["react", "react-dom", "react-router-dom", "i18next", "react-i18next", "leaflet-draw"],
-      exclude: Object.keys(moduleAliases), // only exclude local workspace packages; published npm packages are NOT excluded
-      force: Object.keys(moduleAliases).length === 0, // force re-optimization when using published npm packages
+      include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query", "i18next", "react-i18next"],
+      exclude: Object.keys(moduleAliases), // prevents double-bundling of local workspace packages
       esbuildOptions: {
         loader: { ".js": "jsx" },
       },

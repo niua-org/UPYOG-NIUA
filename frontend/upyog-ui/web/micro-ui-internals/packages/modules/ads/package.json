@@ -10,6 +10,7 @@
       "react": "19.2.0",
       "react-dom": "19.2.0",
       "@tanstack/react-query": "^5.0.0",
+      "react-i18next": "14.0.0",
       "react-router-dom": "^6.23.0"
     },
     "dependencies": {
@@ -18,7 +19,6 @@
       "@nudmcdgnpm/digit-ui-module-reports": "1.0.0",
       "lodash.merge": "^4.6.2",
       "react-hook-form": "^7.51.0",
-      "react-i18next": "14.0.0",
       "react-table": "7.7.0"
     }
   }
