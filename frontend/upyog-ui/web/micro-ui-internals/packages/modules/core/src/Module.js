@@ -4,7 +4,7 @@ import { QueryClient as TanstackQueryClient, QueryClientProvider as TanstackQuer
 import { Provider } from "react-redux";
 import { BrowserRouter as Router } from "react-router-dom";
 import { getI18n } from "react-i18next";
-import { Body, Loader } from "@upyog/digit-ui-react-components";
+import { Body, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { DigitApp } from "./App";
 import SelectOtp from "./pages/citizen/Login/SelectOtp";
 import AcknowledgementCF from "./components/AcknowledgementCF";

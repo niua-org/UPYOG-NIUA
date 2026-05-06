@@ -23,9 +23,10 @@ const SearchConnection = () => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
-        <SearchConnectionComponent config={params[0]} />
-      </Route>
+      <Route
+        path="*"
+        element={<SearchConnectionComponent config={params[0]} />}
+      />
     </Routes>
   );
 };

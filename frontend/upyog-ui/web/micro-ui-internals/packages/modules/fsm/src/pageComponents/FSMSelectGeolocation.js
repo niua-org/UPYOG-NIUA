@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LocationSearchCard } from "@upyog/digit-ui-react-components";
+import { LocationSearchCard } from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../components/TLTimelineInFSM";
 import { getDigiPin } from "../../../../libraries/src/utils/digipin";
 

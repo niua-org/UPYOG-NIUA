@@ -1,5 +1,5 @@
 import React from "react";
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Route, useLocation,  Routes } from "react-router-dom";
@@ -38,7 +38,7 @@ const NewApplication = ({ path }) => {
 
   return (
     <Routes>
-      <Route path={`${match.path}`} element={<CreatePropertyForm onSubmit={createProperty} value={params} redirectUrl={redirectUrl} userType={"employee"} />} />
+      <Route path="" element={<CreatePropertyForm onSubmit={createProperty} value={params} redirectUrl={redirectUrl} userType={"employee"} />} />
       <Route path={`save-property`} element={<PTAcknowledgement data={params} onSuccess={onSuccess} redirectUrl={redirectUrl} userType={"employee"} />} />
     </Routes>
   );

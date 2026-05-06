@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from "react-router-dom";
 import NavItemHeader from './NavItemHeader';
-import * as DigitComponents from "@upyog/digit-ui-react-components";
+import * as DigitComponents from "@nudmcdgnpm/digit-ui-react-components";
 import {
   HomeIcon,
   ComplaintIcon,
@@ -15,7 +15,7 @@ import {
   CollectionsBookmarIcons,
   FinanceChartIcon,
   CollectionIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import ReactTooltip from 'react-tooltip';
 import { useTranslation } from 'react-i18next';
 

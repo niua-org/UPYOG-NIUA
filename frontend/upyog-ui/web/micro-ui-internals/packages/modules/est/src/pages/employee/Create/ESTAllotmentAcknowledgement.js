@@ -7,7 +7,7 @@ import {
   StatusTable,
   SubmitBar,
   Loader,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import getESTAllotmentAcknowledgementData from "../../../utils/getESTAllotmentAcknowledgementData";

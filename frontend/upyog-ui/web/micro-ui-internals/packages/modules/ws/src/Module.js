@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Loader, CitizenHomeCard, WSICon } from "@upyog/digit-ui-react-components";
+import { Loader, CitizenHomeCard, WSICon } from "@nudmcdgnpm/digit-ui-react-components";
 import CitizenApp from "./pages/citizen";
 import EmployeeApp from "./pages/employee";
 import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
@@ -127,27 +127,27 @@ const WSLinks = ({ matchPath, userType }) => {
 
   const links = [
     {
-      link: `${matchPath}/my-bills`,
+      link: `/my-bills`,
       i18nKey: t("ACTION_TEST_WNS_MY_BILLS"),
     },
     {
-      link: `${matchPath}/my-payments`,
+      link: `/my-payments`,
       i18nKey: t("ACTION_TEST_MY_PAYMENTS"),
     },
     {
-      link: `${matchPath}/create-application`,
+      link: `/create-application`,
       i18nKey: t("ACTION_TEST_APPLY_NEW_CONNECTION"),
     },
     {
-      link: `${matchPath}/search`,
+      link: `/search`,
       i18nKey: t("ACTION_TEXT_WS_SEARCH_AND_PAY"),
     },
     {
-      link: `${matchPath}/my-applications`,
+      link: `/my-applications`,
       i18nKey: t("ACTION_TEXT_WS_MY_APPLICATION"),
     },
     {
-      link: `${matchPath}/my-connections`,
+      link: `/my-connections`,
       i18nKey: t("ACTION_TEXT_WS_MY_CONNECTION"),
     },
   ];

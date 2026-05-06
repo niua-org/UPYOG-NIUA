@@ -1,5 +1,5 @@
 import React, { Fragment, useMemo } from "react";
-import { FilterFormField, Loader, RadioButtons, RemoveableTag, CheckBox, MultiSelectDropdown } from "@upyog/digit-ui-react-components";
+import { FilterFormField, Loader, RadioButtons, RemoveableTag, CheckBox, MultiSelectDropdown } from "@nudmcdgnpm/digit-ui-react-components";
 import { Controller, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -76,13 +76,13 @@ const FilterFormFieldsComponent = ({
         <Controller
           name="assignee"
           control={controlFilterForm}
-          render={(props) => {
+          render={({ field }) => {
             return (
               <RadioButtons
                 onSelect={(e) => {
-                  props.onChange(e.code);
+                  field.onChange(e.code);
                 }}
-                selectedOption={availableOptions.filter((option) => option.code === props.value)[0]}
+                selectedOption={availableOptions.filter((option) => option.code === field.value)[0]}
                 optionsKey="name"
                 name="assignee"
                 options={availableOptions}
@@ -96,21 +96,21 @@ const FilterFormFieldsComponent = ({
         <Controller
           name="locality"
           control={controlFilterForm}
-          render={(props) => {
+          render={({ field }) => {
             const renderRemovableTokens = useMemo(
               () =>
-                props?.value?.map((locality, index) => {
+                field.value?.map((locality, index) => {
                   return (
                     <RemoveableTag
                       key={index}
                       text={locality.i18nkey}
                       onClick={() => {
-                        props.onChange(props?.value?.filter((loc) => loc.code !== locality.code));
+                        field.onChange(field.value?.filter((loc) => loc.code !== locality.code));
                       }}
                     />
                   );
                 }),
-              [props?.value]
+              [field.value]
             );
             return loadingLocalitiesForEmployeesCurrentTenant ? (
               <Loader />
@@ -120,10 +120,16 @@ const FilterFormFieldsComponent = ({
                 <MultiSelectDropdown
                   options={localitiesForEmployeesCurrentTenant ? localitiesForEmployeesCurrentTenant : []}
                   optionsKey="i18nkey"
-                  props={props}
+                  props={{ field }}
                   isPropsNeeded={true}
-                  onSelect={selectrole}
-                  selected={props?.value}
+                  onSelect={(listOfSelections) => {
+                    const res = listOfSelections.map((propsData) => {
+                      const data = propsData[1];
+                      return data;
+                    });
+                    field.onChange(res);
+                  }}
+                  selected={field.value}
                   defaultLabel={t("ES_WS_ALL_SELECTED")}
                   defaultUnit={t("WS_SELECTED_TEXT")}
                 />
@@ -137,9 +143,9 @@ const FilterFormFieldsComponent = ({
         <Controller
           name="applicationType"
           control={controlFilterForm}
-          render={(props) => {
+          render={({ field }) => {
             function changeItemCheckStatus(value) {
-              props.onChange(value);
+              field.onChange(value);
             }
             const renderStatusCheckBoxess = useMemo(
               () =>
@@ -148,17 +154,17 @@ const FilterFormFieldsComponent = ({
                     <CheckBox
                       onChange={(e) =>
                         e.target.checked
-                          ? changeItemCheckStatus([...props.value, status?.code])
-                          : changeItemCheckStatus(props.value?.filter((ele) => ele !== status?.code))
+                          ? changeItemCheckStatus([...field.value, status?.code])
+                          : changeItemCheckStatus(field.value?.filter((ele) => ele !== status?.code))
                       }
-                      checked={props.value?.includes(status?.code)}
+                      checked={field.value?.includes(status?.code)}
                       label={status?.name}
                       value={status.name}
                       key={index + 1}
                     />
                   );
                 }),
-              [props.value, statuses]
+              [field.value, statuses]
             );
             return (
               <>
@@ -174,9 +180,9 @@ const FilterFormFieldsComponent = ({
           <Controller
             name="applicationStatus"
             control={controlFilterForm}
-            render={(props) => {
+            render={({ field }) => {
               function changeItemCheckStatus(value) {
-                props.onChange(value);
+                field.onChange(value);
               }
               const renderStatusCheckBoxes = useMemo(
                 () =>
@@ -191,15 +197,15 @@ const FilterFormFieldsComponent = ({
                           key={index + 1}
                           onChange={(e) =>
                             e.target.checked
-                              ? changeItemCheckStatus([...props.value, status?.statusid])
-                              : changeItemCheckStatus(props.value?.filter((id) => id !== status?.statusid))
+                              ? changeItemCheckStatus([...field.value, status?.statusid])
+                              : changeItemCheckStatus(field.value?.filter((id) => id !== status?.statusid))
                           }
-                          checked={props.value?.includes(status?.statusid)}
+                          checked={field.value?.includes(status?.statusid)}
                           label={`${t(`WF_${status.businessservice.toUpperCase()}_${status.applicationstatus.split("_").pop()}`)} (${status.count})`}
                         />
                       );
                     }),
-                [props.value, statuses, selectedApplicationType]
+                [field.value, statuses, selectedApplicationType]
               );
               return (
                 <>

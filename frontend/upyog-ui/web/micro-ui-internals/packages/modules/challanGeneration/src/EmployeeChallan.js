@@ -10,7 +10,7 @@ import {
   Toast,
   MultiLink,
   DownloadBtnCommon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useMatch } from "react-router-dom";

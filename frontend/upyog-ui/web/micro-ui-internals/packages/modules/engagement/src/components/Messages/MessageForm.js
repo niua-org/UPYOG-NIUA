@@ -1,4 +1,4 @@
-import { TextInput, CardLabel, LabelFieldPair, Dropdown, Loader, LocationSearch, CardLabelError, TextArea, MultiUploadWrapper } from "@upyog/digit-ui-react-components";
+import { TextInput, CardLabel, LabelFieldPair, Dropdown, Loader, LocationSearch, CardLabelError, TextArea, MultiUploadWrapper } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Controller } from "react-hook-form";
@@ -98,7 +98,7 @@ const MessageForm = ({ onSelect, config, formData, register, control, errors, se
             control={control}
             // defaultValue={formData?.category ? data?.mseva?.EventCategories.filter(category => category.code === formData?.category)?.[0] : null}
             rules={{ required: false }}
-            render={({ onChange, ref, value = [] }) => {
+            render={({ field }) => {
               function getFileStoreData(filesData) {
                 const numberOfFiles = filesData.length
                 let finalDocumentData = []
@@ -111,7 +111,7 @@ const MessageForm = ({ onSelect, config, formData, register, control, errors, se
                     })
                   })
                 }
-                onChange(finalDocumentData)
+                field.onChange(finalDocumentData)
               }
               return <MultiUploadWrapper
                 t={t}
@@ -119,7 +119,7 @@ const MessageForm = ({ onSelect, config, formData, register, control, errors, se
                 tenantId={stateId}
                 getFormState={getFileStoreData}
                 showHintBelow={true}
-                setuploadedstate={value}
+                setuploadedstate={field.value}
                 allowedFileTypesRegex={allowedFileTypes}
                 allowedMaxSizeInMB={5}
                 hintText={t("DOCUMENTS_ATTACH_RESTRICTIONS_SIZE")}

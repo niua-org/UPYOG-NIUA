@@ -8,7 +8,7 @@ import {
   SubmitBar,
   SearchForm,
   Loader
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 

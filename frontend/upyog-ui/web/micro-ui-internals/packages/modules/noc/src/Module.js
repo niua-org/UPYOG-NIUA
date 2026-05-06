@@ -1,4 +1,4 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import EmployeeApp from "./pages/employee";
 import ApplicationOverview from "./pages/employee/ApplicationOverview";

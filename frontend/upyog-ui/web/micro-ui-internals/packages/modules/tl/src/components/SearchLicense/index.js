@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, Header, SearchField, Dropdown, Table, Card } from "@upyog/digit-ui-react-components";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, Header, SearchField, Dropdown, Table, Card } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 import { convertEpochToDateDMY, stringReplaceAll } from "../../utils";
 import SearchFields from "./SearchFields";
@@ -9,22 +9,29 @@ import MobileSearchApplication from "./MobileSearchApplication";
 const SearchLicense = ({tenantId, t, onSubmit, data, count }) => {
 
   const initialValues = Digit.SessionStorage.get("SEARCH_APPLICATION_DETAIL")|| {
+    licenseNumbers: "",
+    mobileNumber: "",
+    fromDate: null,   // ✅ safe default
+    toDate: null,     // ✅ safe default
+    tradeName: "",
     offset: 0,
     limit: 10,
     sortBy: "commencementDate",
-    sortOrder: "DESC"
+    sortOrder: "DESC",
+    status: "",
+    RenewalPending: true
 };
     const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
         defaultValues: initialValues
     })
-    useEffect(() => {
-      register("offset", 0)
-      register("limit", 10)
-      register("sortBy", "commencementDate")
-      register("sortOrder", "DESC")
-      register("status", "")
-      //register("RenewalPending", true)
-    },[register])
+    // useEffect(() => {
+    //   register("offset")
+    //   register("limit")
+    //   register("sortBy")
+    //   register("sortOrder")
+    //   register("status")
+    //   //register("RenewalPending")
+    // },[register])
 
     const onSort = useCallback((args) => {
       if (args.length === 0) return

@@ -1,4 +1,4 @@
-import { PrivateRoute,BreadCrumb } from "@upyog/digit-ui-react-components";
+import { PrivateRoute,BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, Routes, Route } from "react-router-dom";
@@ -96,7 +96,7 @@ const EmployeeApp = ({ path }) => {
           />
           <Route path="application-details/:id" element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
           <Route path="my-applications/applicationsearch/application-details/:id" element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path="search" element={<PrivateRoute><SearchApp path={`${path}/search`} /></PrivateRoute>} />
+          <Route path="search" element={<PrivateRoute><SearchApp path={`/search`} /></PrivateRoute>} />
           <Route
             path="searchold"
             element={
@@ -112,7 +112,7 @@ const EmployeeApp = ({ path }) => {
               </PrivateRoute>
             }
           />
-          <Route path="my-applications" element={<PrivateRoute><SearchApp path={`${path}/my-applications`} /></PrivateRoute>} />
+          <Route path="my-applications" element={<PrivateRoute><SearchApp path={`/my-applications`} /></PrivateRoute>} />
           <Route path="DemandCollectionBalancedRegister" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ws" reportName="DemandCollectionBalancedRegister" /></PrivateRoute>} />
         </Routes>
       </div>

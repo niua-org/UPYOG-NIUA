@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AppContainer, BackButton, Toast } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { Route, Routes, useLocation,  } from "react-router-dom";
 import { loginSteps } from "./config";
 import SelectMobileNumber from "./SelectMobileNumber";
@@ -93,8 +93,6 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
     )
   );
 
-  console.log("stepItemsstepItemsstepItems", stepItems);
-
   const getUserType = () => "citizen";
 
   const handleOtpChange = (otp) => {
@@ -106,11 +104,12 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
     setParmas({ ...params, mobileNumber: value });
   };
 
-  const selectMobileNumber = async (mobileNumber) => {
+  const selectMobileNumber = async (formData) => {
     setCanSubmitNo(false);
-    setParmas({ ...params, ...mobileNumber });
+    const mobileNumber = params.mobileNumber || formData?.mobileNumber;
+    setParmas({ ...params, mobileNumber });
     const data = {
-      ...mobileNumber,
+      mobileNumber,
       tenantId: stateCode,
       userType: "citizen",
     };
@@ -123,7 +122,7 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
       } else {
         setCanSubmitNo(true);
         if (!(location.state && location.state.role === "FSM_DSO")) {
-          navigate(`/upyog-ui/citizen/register/name`, { from: getFromLocation(location.state, searchParams), data: data });
+          navigate(`/upyog-ui/citizen/register/name`, { replace: true, state: { from: getFromLocation(location.state, searchParams), data: data } });
         }
       }
       if (location.state?.role) {
@@ -162,7 +161,6 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
       userType: getUserType(),
       ...name,
     };
-    console.log("name",name)
     if (selectCommencementDate(name.dob))
     {
       setError("Minimum age should be 18 years");

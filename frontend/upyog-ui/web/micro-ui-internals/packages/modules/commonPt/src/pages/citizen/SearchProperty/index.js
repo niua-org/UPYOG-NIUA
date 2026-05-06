@@ -26,9 +26,12 @@ const SearchProperty = ({ onSelect }) => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
-        <SearchPropertyComponent config={params[0]} onSelect={onSelect} redirectToUrl={redirectToUrl} />
-      </Route>
+      <Route
+        path="*"
+        element={
+          <SearchPropertyComponent config={params[0]} onSelect={onSelect} redirectToUrl={redirectToUrl} />
+        }
+      />
     </Routes>
   );
 };

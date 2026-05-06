@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { commonConfig } from "../../../config/config";
-import { Timeline } from "@upyog/digit-ui-react-components";
+import { Timeline } from "@nudmcdgnpm/digit-ui-react-components";
 
 
 const WTCreate = () => {

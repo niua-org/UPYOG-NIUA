@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { newConfig as newConfigTL } from "../../../config/config";
 // import CheckPage from "./CheckPage";
 // import TLAcknowledgement from "./TLAcknowledgement";
@@ -9,13 +9,13 @@ import { newConfig as newConfigTL } from "../../../config/config";
 const CreateTradeLicence = ({ parentRoute }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const match = useMatch();
   const { pathname } = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("TL_CREATE_TRADE", {});
   let isReneworEditTrade = window.location.href.includes("/renew-trade/") || window.location.href.includes("/edit-application/")
 
   const stateId = Digit.ULBService.getStateId();
+  let config = [];
   let { data: newConfig, isLoading } = Digit.Hooks.tl.useMDMS.getFormConfig(stateId, {});
 
   const goNext = (skipStep, index, isAddMultiple, key, isPTCreateSkip) => {
@@ -116,13 +116,13 @@ const CreateTradeLicence = ({ parentRoute }) => {
 
   const onSuccess = () => {
     sessionStorage.removeItem("CurrentFinancialYear");
-    queryClient.invalidateQueries("TL_CREATE_TRADE");
+    queryClient.invalidateQueries({ queryKey: ["TL_CREATE_TRADE"] });
   };
 
   const onUpdateSuccess = () => {
     sessionStorage.removeItem("CurrentFinancialYear");
     clearParams();
-    queryClient.invalidateQueries("TL_CREATE_TRADE");
+    queryClient.invalidateQueries({ queryKey: ["TL_CREATE_TRADE"] });
   };
   newConfig = newConfig ? newConfig : newConfigTL;
   newConfig?.forEach((obj) => {
@@ -132,7 +132,6 @@ const CreateTradeLicence = ({ parentRoute }) => {
   let skipenabled = skipenanbledOb?.body?.filter((ob) => ob?.component === "CPTCreateProperty")?.[0]?.isSkipEnabled;
   sessionStorage.setItem("skipenabled",skipenabled);
   config.indexRoute = "info";
-
   const CheckPage = Digit?.ComponentRegistryService?.getComponent("TLCheckPage");
   const TLAcknowledgement = Digit?.ComponentRegistryService?.getComponent("TLAcknowledgement");
   return (

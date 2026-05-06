@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useCallback, useMemo } from "react";
-import { SearchForm, Table, Card, Loader, Header } from "@upyog/digit-ui-react-components";
+import { SearchForm, Table, Card, Loader, Header } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import SearchFields from "./SearchFields";
 import { useTranslation } from "react-i18next";
@@ -26,14 +26,7 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
     },
   });
 
-  useEffect(() => {
-    register("offset", 0);
-    register("limit", 10);
-    register("sortBy", "commencementDate");
-    register("sortOrder", "DESC");
-    register("sortOrder", "DESC");
-    register("isConnectionSearch", true);
-  }, [register]);
+
 
   useEffect(() => {
     clearSessionFormData();

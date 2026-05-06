@@ -23,7 +23,7 @@ const SearchChallan = () => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
+      <Route path={`*`}>
         <SearchChallanComponent config={params[0]} />
       </Route>
     </Routes>

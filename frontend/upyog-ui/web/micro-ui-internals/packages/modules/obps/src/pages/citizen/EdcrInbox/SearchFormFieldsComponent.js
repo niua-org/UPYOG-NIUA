@@ -1,4 +1,4 @@
-import { SearchField, TextInput } from "@upyog/digit-ui-react-components";
+import { SearchField, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -13,11 +13,11 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
           <div className="complaint-input-container" style={{ textAlign: "start" }}>
             <SearchField>
               <label>{t("BPA_APPLICATION_NUMBER_LABEL")}</label>
-              <TextInput name="applicationNumber" inputRef={registerRef({})} />
+              <TextInput {...registerRef("applicationNumber")} />
             </SearchField>
             <SearchField>
               <label>{t("BPA_EDCR_NO_LABEL")}</label>
-              <TextInput name="edcrNumber" inputRef={registerRef({})} />
+              <TextInput {...registerRef("edcrNumber")} />
             </SearchField>
             <div className="search-action-wrapper" style={{ width: "100%" }}>
               {searchFieldComponents}
@@ -32,11 +32,11 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
     <>
       <SearchField>
         <label>{t("BPA_APPLICATION_NUMBER_LABEL")}</label>
-        <TextInput name="applicationNumber" inputRef={registerRef({})} />
+        <TextInput {...registerRef("applicationNumber")} />
       </SearchField>
       <SearchField>
         <label>{t("BPA_EDCR_NO_LABEL")}</label>
-        <TextInput name="edcrNumber" inputRef={registerRef({})} />
+        <TextInput {...registerRef("edcrNumber")} />
       </SearchField>
     </>
   );

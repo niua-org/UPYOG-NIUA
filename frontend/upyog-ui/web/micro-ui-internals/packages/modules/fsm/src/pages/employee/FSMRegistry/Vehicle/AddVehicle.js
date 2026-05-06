@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FormComposer, Toast, Header, InfoIcon } from "@upyog/digit-ui-react-components";
+import { FormComposer, Toast, Header, InfoIcon } from "@nudmcdgnpm/digit-ui-react-components";
 
 import VehicleConfig from "../../configs/VehicleConfig";
 import { useQueryClient } from "@tanstack/react-query";

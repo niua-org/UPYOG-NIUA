@@ -1,5 +1,5 @@
 import React, {Fragment} from "react"
-import { CardLabelError, SearchField, TextInput, MobileNumber } from "@upyog/digit-ui-react-components";
+import { CardLabelError, SearchField, TextInput, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 const SearchFormFieldsComponents = ({registerRef, searchFormState, searchFieldComponents}) => {
@@ -17,11 +17,11 @@ const SearchFormFieldsComponents = ({registerRef, searchFormState, searchFieldCo
                     <div className="complaint-input-container" style={window.location.href.includes("/citizen") ? gridStyles() : { textAlign: "start" }}>
                         <SearchField>
                             <label>{t("BPA_APPLICATION_NUMBER_LABEL")}</label>
-                            <TextInput name="applicationNo" inputRef={registerRef({})} />
+                            <TextInput {...registerRef("applicationNo")} />
                         </SearchField>
                         {!window.location.href.includes("/citizen") ? <SearchField>
                             <label>{t("CORE_COMMON_MOBILE_NUMBER")}</label>
-                            <MobileNumber name="mobileNumber" type="number" inputRef={registerRef({
+                            <MobileNumber type="number" {...registerRef("mobileNumber", {
                                 minLength: {
                                     value: 10,
                                     message: t("CORE_COMMON_MOBILE_ERROR")
@@ -50,11 +50,11 @@ const SearchFormFieldsComponents = ({registerRef, searchFormState, searchFieldCo
     return <>
         <SearchField>
             <label>{t("BPA_APPLICATION_NUMBER_LABEL")}</label>
-            <TextInput name="applicationNo" inputRef={registerRef({})} />
+            <TextInput {...registerRef("applicationNo")} />
         </SearchField>
         {!window.location.href.includes("/citizen") ? <SearchField>
             <label>{t("CORE_COMMON_MOBILE_NUMBER")}</label>
-            <MobileNumber name="mobileNumber" type="number" inputRef={registerRef({
+            <MobileNumber type="number" {...registerRef("mobileNumber", {
                 minLength: {
                     value: 10,
                     message: t("CORE_COMMON_MOBILE_ERROR")

@@ -1,4 +1,4 @@
-import { Header, CitizenHomeCard, CHBIcon } from "@upyog/digit-ui-react-components";
+import { Header, CitizenHomeCard, CHBIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import CHBSlotDetails from "./pageComponents/CHBSlotDetails";
@@ -130,12 +130,12 @@ export const CHBLinks = ({ matchPath, userType }) => {
   const links = [
 
     {
-      link: `${matchPath}chb/bookHall`,
+      link: `chb/bookHall`,
       i18nKey: t("CHB_SEARCH_HALL_HEADER"),
     },
 
     {
-      link: `${matchPath}/chb/myBookings`,
+      link: `/chb/myBookings`,
       i18nKey: t("CHB_MY_APPLICATIONS_HEADER"),
     },
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Modal } from "@upyog/digit-ui-react-components";
+import { Modal } from "@nudmcdgnpm/digit-ui-react-components";
 
 /**
  * Close icon SVG component for the modal

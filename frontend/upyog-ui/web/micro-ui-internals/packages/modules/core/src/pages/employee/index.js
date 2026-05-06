@@ -10,7 +10,7 @@ import LanguageSelection from "./LanguageSelection";
 import EmployeeLogin from "./Login";
 import UserProfile from "../citizen/Home/UserProfile";
 import ErrorComponent from "../../components/ErrorComponent";
-import { PrivateRoute } from "@upyog/digit-ui-react-components";
+import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import EmployeeDashboard from "../../components/EmployeeDashboard";
 
 const userScreensExempted = ["user/profile", "user/error"];
@@ -124,7 +124,7 @@ const EmployeeApp = ({
                       }
                     />
                     <Route path="language-selection" element={<LanguageSelection />} />
-                    <Route path="*" element={<Navigate to={`${path}/user/language-selection`} replace />} />
+                    <Route path="*" element={<Navigate to={`/user/language-selection`} replace />} />
                   </Routes>
                 </div>
               </div>

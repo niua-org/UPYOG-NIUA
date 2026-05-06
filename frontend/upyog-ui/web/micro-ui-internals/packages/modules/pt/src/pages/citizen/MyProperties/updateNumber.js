@@ -9,7 +9,7 @@ import {
   StatusTable,
   SubmitBar,
   Toast
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useCallback, useReducer } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -175,7 +175,7 @@ const UpdateNumber = ({ showPopup, t, onValidation, mobileNumber, name, UpdateNu
           <MobileNumber
             className="field pt-update-no-field"
             name="mobileNumber"
-            inputRef={register({
+          {...register("mobileNumber", {
               value: getValues("mobileNumber"),
               shouldUnregister: true,
               ...{
@@ -208,17 +208,17 @@ const UpdateNumber = ({ showPopup, t, onValidation, mobileNumber, name, UpdateNu
                   message: "CORE_COMMON_OTP_ERROR",
                 },
               }}
-              render={(props, customProps) => (
+              render={({ field }, customProps) => (
                 <SelectOtp
                   userType="employee"
                   config={{ header: "OTPVERIFICATION", cardText: "ENTEROTP", nextText: "Next", submitBarLabel: "Next" }}
                   onOtpChange={(d) => {
-                    props.onChange(d);
+                    field.onChange(d);
                   }}
                   onResend={resendOtp}
                   error={!compState.invalid}
                   t={t}
-                  otp={props.value}
+                  otp={field.value}
                 />
               )}
             />

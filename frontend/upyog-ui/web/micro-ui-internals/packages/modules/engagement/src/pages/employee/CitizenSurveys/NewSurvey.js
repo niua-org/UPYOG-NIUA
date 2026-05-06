@@ -1,4 +1,4 @@
-import { CloseSvg, FormComposer, Header, Toast } from "@upyog/digit-ui-react-components";
+import { CloseSvg, FormComposer, Header, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CreateNewSurvey from "../../../components/Surveys/SurveyForms";

@@ -1,4 +1,4 @@
-import { CitizenHomeCard, PropertyHouse } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, PropertyHouse } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import CitizenApp from "./pages/citizen";
@@ -70,11 +70,11 @@ export const ESTLinks = ({ matchPath, userType }) => {
 
   const links = [
     {
-      link: `${matchPath}/my-applications`,
+      link: `/my-applications`,
       i18nKey: t("EST_MY_APPLICATIONS"),
     },
     {
-      link: `${matchPath}/payment-history`,
+      link: `/payment-history`,
       i18nKey: t("EST_PAYMENT_HISTORY"),
     },
   ];

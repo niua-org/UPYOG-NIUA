@@ -18,7 +18,7 @@ import {
   TextArea,
   ActionBar,
   SubmitBar,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Loader } from "../../components/Loader";
 import { SET_ChallanApplication_STEP } from "../../../redux/action/ChallanApplicationActions";
 import SelectNDCDocuments from "../ChallanDocuments";

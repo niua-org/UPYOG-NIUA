@@ -25,9 +25,9 @@ const StakeholderRegistration = () => {
     const { nextStep } = config.find((routeObj) => routeObj.route === currentPath);
     let redirectWithHistory = navigate;
     if (nextStep === null) {
-      return redirectWithHistory(`${path}/check`);
+      return redirectWithHistory(`/check`);
     }
-    redirectWithHistory(`${path}/${nextStep}`);
+    redirectWithHistory(`/${nextStep}`);
 
   }
 
@@ -36,7 +36,7 @@ const StakeholderRegistration = () => {
     queryClient.invalidateQueries("PT_CREATE_PROPERTY");
   };
   const createApplication = async () => {
-    navigate(`${path}/acknowledgement`);
+    navigate(`/acknowledgement`);
   };
 
   const handleSelect = (key, data, skipStep, isFromCreateApi) => {
@@ -73,15 +73,15 @@ const StakeholderRegistration = () => {
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`${path}/${routeObj.route}`}
+            path={`/${routeObj.route}`}
             key={index}
             element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />}
           />
         );
       })}
-      <Route path={`${path}/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
-      <Route path={`${path}/acknowledgement`} element={<StakeholderAcknowledgement data={params} onSuccess={onSuccess} />} />
-      <Route path="*" element={<Navigate to={`${path}/${config.indexRoute}`} replace />} />
+      <Route path={`/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
+      <Route path={`/acknowledgement`} element={<StakeholderAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="*" element={<Navigate to={`/${config.indexRoute}`} replace />} />
     </Routes>
   );
 };

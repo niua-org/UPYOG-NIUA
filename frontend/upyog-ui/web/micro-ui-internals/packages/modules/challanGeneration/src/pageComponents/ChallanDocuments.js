@@ -1,5 +1,5 @@
 import React, { use, useEffect, useState } from "react";
-import { CardLabel, Dropdown, UploadFile, Toast, FormStep, LabelFieldPair, ActionBar } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, UploadFile, Toast, FormStep, LabelFieldPair, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { Loader } from "../components/Loader";
 import exifr from "exifr";
 

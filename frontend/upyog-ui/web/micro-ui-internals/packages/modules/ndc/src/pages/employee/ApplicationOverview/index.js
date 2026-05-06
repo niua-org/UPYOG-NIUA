@@ -13,7 +13,7 @@ import {
   TextInput,
   LinkButton,
   MultiLink,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Controller, useForm } from "react-hook-form";
 import React, { Fragment, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";

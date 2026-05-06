@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from "react";
-import { Modal, Card,SubmitBar, CheckBox} from "@upyog/digit-ui-react-components";
+import { Modal, Card,SubmitBar, CheckBox} from "@nudmcdgnpm/digit-ui-react-components";
 
 // import { demandPayloadData } from "../utils";
 

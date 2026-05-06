@@ -2,7 +2,7 @@ import React from "react";
 import { ChallanGenerationModule } from "../../Module";
 import Inbox from "./Inbox";
 import { Routes, Route, Link } from "react-router-dom";
-import { PrivateRoute } from "@upyog/digit-ui-react-components";
+import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 const EmployeeApp = ({ path, url, userType }) => {

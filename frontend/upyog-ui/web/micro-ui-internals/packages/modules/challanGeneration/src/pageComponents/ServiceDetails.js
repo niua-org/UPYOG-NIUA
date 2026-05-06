@@ -1,5 +1,5 @@
 import React, { useState, useEffect, } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, DatePicker, CardSectionHeader,TextArea } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, DatePicker, CardSectionHeader,TextArea } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { sortDropdownNames } from "../pages/employee/Utils/Sortbyname";
 import { useTranslation } from "react-i18next";

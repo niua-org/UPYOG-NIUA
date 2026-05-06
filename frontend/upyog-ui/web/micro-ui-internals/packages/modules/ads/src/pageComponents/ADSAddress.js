@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from "react";
-import { FormStep, TextInput, CardLabel,CardSubHeader, Dropdown, TextArea,Card } from "@upyog/digit-ui-react-components";
+import { FormStep, TextInput, CardLabel,CardSubHeader, Dropdown, TextArea,Card } from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import Timeline from "../components/ADSTimeline";
@@ -264,7 +264,7 @@ const ADSAddress = ({ t, config, onSelect, userType, formData, value=formData.ad
             name={"city"}
             defaultValue={city}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={city}
@@ -282,7 +282,7 @@ const ADSAddress = ({ t, config, onSelect, userType, formData, value=formData.ad
             name={"locality"}
             defaultValue={locality}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={locality}

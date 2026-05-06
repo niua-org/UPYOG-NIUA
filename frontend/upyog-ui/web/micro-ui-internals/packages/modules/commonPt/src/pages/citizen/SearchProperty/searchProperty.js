@@ -1,4 +1,4 @@
-import { Dropdown, FormComposer, InfoBannerIcon, Loader, Localities, RadioButtons, Toast } from "@upyog/digit-ui-react-components";
+import { Dropdown, FormComposer, InfoBannerIcon, Loader, Localities, RadioButtons, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import PropTypes from "prop-types";
 import React, { useEffect, useLayoutEffect, useState } from "react";
@@ -540,7 +540,6 @@ const SearchProperty = ({ config: propsConfig, onSelect, redirectToUrl }) => {
     const oldPropId = data?.[oldProperty.name];
     const propId = data?.[property.name];
     const city = data?.city || allCities[0];
-console.log("citycity",city)
 setCityCode(city.code);
     // if ((city!=null && Object.keys(city).length !=0) && !(mobileNumberLength > 0 || oldPropId!="" || propId!="")){
     //   setShowToast({ warning: true, label: "ERR_PT_FILL_VALID_FIELDS" });

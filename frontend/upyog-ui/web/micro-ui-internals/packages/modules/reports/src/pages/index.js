@@ -1,4 +1,4 @@
-import { PrivateRoute } from "@upyog/digit-ui-react-components";
+import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -18,7 +18,7 @@ const EmployeeApp = ({ path, url, userType }) => {
                     / <span>{t("reports")}</span>
                 </p>
                 <Routes>
-                    <Route path={`${path}/search/:moduleName/:reportName`} element={<PrivateRoute><Report /></PrivateRoute>} />
+                    <Route path={`/search/:moduleName/:reportName`} element={<PrivateRoute><Report /></PrivateRoute>} />
                 </Routes>
             </div>
         </React.Fragment>

@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 // import TradeLicense from "../../pageComponents/TradeLicense";
@@ -11,7 +11,7 @@ import { Route, Routes } from "react-router-dom";
 // import SearchTradeComponent from "./SearchTrade";
 
 const App = () => {
-  const { path, url, ...match } = Digit.Hooks.useModuleBasePath();
+  const { path } = Digit.Hooks.useModuleBasePath();
   let isSuccessScreen = window.location.href.includes("acknowledgement");
   let isCommonPTPropertyScreen = window.location.href.includes("/tl/tradelicence/new-application/property-details");
 
@@ -44,15 +44,15 @@ const App = () => {
           </BackButton>
         )}
         <Routes>
-          <Route path={`${path}/tradelicence/new-application/*`} element={<PrivateRoute><CreateTradeLicence /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/edit-application/:id/:tenantId/*`} element={<PrivateRoute><EditTrade /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/renew-trade/:id/:tenantId/*`} element={<PrivateRoute><RenewTrade /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/my-application`} element={<PrivateRoute><TLMyApplications /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/my-bills`} element={<PrivateRoute><TLMyApplications view="bills" /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/tl-info`} element={<PrivateRoute><TradeLicense /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/application/:id/:tenantId`} element={<PrivateRoute><ApplicationDetails /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/renewal-list`} element={<PrivateRoute><TLList /></PrivateRoute>} />
-          <Route path={`${path}/tradelicence/trade-search`} element={<PrivateRoute><SearchTradeComponent /></PrivateRoute>} />
+          <Route path={`/tradelicence/new-application/*`} element={<PrivateRoute><CreateTradeLicence path={path} /></PrivateRoute>} />
+          <Route path={`/tradelicence/edit-application/:id/:tenantId/*`} element={<PrivateRoute><EditTrade /></PrivateRoute>} />
+          <Route path={`/tradelicence/renew-trade/:id/:tenantId/*`} element={<PrivateRoute><RenewTrade /></PrivateRoute>} />
+          <Route path={`/tradelicence/my-application`} element={<PrivateRoute><TLMyApplications /></PrivateRoute>} />
+          <Route path={`/tradelicence/my-bills`} element={<PrivateRoute><TLMyApplications view="bills" /></PrivateRoute>} />
+          <Route path={`/tradelicence/tl-info`} element={<PrivateRoute><TradeLicense /></PrivateRoute>} />
+          <Route path={`/tradelicence/application/:id/:tenantId`} element={<PrivateRoute><ApplicationDetails /></PrivateRoute>} />
+          <Route path={`/tradelicence/renewal-list`} element={<PrivateRoute><TLList /></PrivateRoute>} />
+          <Route path={`/tradelicence/trade-search`} element={<PrivateRoute><SearchTradeComponent /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

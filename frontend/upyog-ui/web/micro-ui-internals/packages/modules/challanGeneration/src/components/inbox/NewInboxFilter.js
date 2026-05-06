@@ -9,7 +9,7 @@ import {
   Localities,
   SubmitBar,
   RefreshSVG,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import Status from "./Status";
 import ServiceCategory from "./ServiceCategory";

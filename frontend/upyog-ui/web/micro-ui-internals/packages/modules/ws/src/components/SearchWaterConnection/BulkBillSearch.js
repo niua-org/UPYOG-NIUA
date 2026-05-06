@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useEffect, useCallback, useMemo } from "react";
-import { SearchForm, Table, Card, CardText, Loader, Header, Toast, DownloadBtnCommon, UploadFile, SubmitBar, Modal} from "@upyog/digit-ui-react-components";
+import { SearchForm, Table, Card, CardText, Loader, Header, Toast, DownloadBtnCommon, UploadFile, SubmitBar, Modal} from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import BulkBillSearchFields from "./BulkBillSearchFields";
 import { useTranslation } from "react-i18next";
@@ -165,15 +165,7 @@ const BulkBillSearch = ({ tenantId, onSubmit, data, count, resultOk, businessSer
       </div>
     );
   };
-  useEffect(() => {
-    register("offset", 0);
-    register("limit", 10);
-    register("sortBy", "commencementDate");
-    register("searchType", "CONNECTION");
-    register("sortOrder", "DESC");
-    register("locality", "");
-    register("tenantId", "");
-  }, [register]);
+  // Removed v6 useEffect register calls - use defaultValues in useForm instead
 
   const onSort = useCallback((args) => {
     if (args.length === 0) return;

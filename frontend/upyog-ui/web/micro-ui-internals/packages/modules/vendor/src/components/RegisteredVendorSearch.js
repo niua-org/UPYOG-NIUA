@@ -11,7 +11,7 @@ import {
   CardLabelError,
   Menu,
   AddIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import DropdownStatus from "./inbox/DropdownStatus";
 import { useTranslation } from "react-i18next";
 
@@ -92,7 +92,7 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
       case "date":
         return (
           <Controller
-            render={(props) => <DatePicker date={props.value} onChange={props.onChange} />}
+            render={({ field }) => <DatePicker date={field.value} onChange={field.onChange} />}
             name={input.name}
             control={control}
             defaultValue={null}
@@ -101,10 +101,10 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
       case "status":
         return (
           <Controller
-            render={(props) => (
+            render={({ field }) => (
               <DropdownStatus
-                onAssignmentChange={props.onChange}
-                value={props.value}
+                onAssignmentChange={field.onChange}
+                value={field.value}
                 applicationStatuses={applicationStatuses}
                 areApplicationStatus={areApplicationStatus}
               />

@@ -1,4 +1,4 @@
-import { CitizenHomeCard, PTIcon,ApplicantDetails, AddressDetails } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, PTIcon,ApplicantDetails, AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import WTCreate from "./pages/citizen/Create";
@@ -99,11 +99,11 @@ const componentsToRegister = {
     const links = [ // need to check the links, will be removed later if not needed
       
       {
-        link: `${matchPath}/wt`,
+        link: `/wt`,
         i18nKey: t("WT_REAQUEST_TANKER"),
       },
       {
-        link: `${matchPath}/wt/status`,
+        link: `/wt/status`,
         i18nKey: t("WT_VIEW_APPLICATIONS"),
       },
     ];

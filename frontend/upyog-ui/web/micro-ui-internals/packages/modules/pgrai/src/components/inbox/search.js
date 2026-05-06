@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg } from "@upyog/digit-ui-react-components";
+import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg } from "@nudmcdgnpm/digit-ui-react-components";
 
 /**
  * SearchComplaint Component
@@ -14,7 +14,7 @@ import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg } from "@up
 const SearchComplaint = ({ onSearch, type, onClose, searchParams }) => {
   const [complaintNo, setComplaintNo] = useState(searchParams?.search?.serviceRequestId || "");
   const [mobileNo, setMobileNo] = useState(searchParams?.search?.mobileNumber || "");
-  const { register, errors, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const { t } = useTranslation();
 
   const onSubmitInput = (data) => {
@@ -76,7 +76,7 @@ const SearchComplaint = ({ onSearch, type, onClose, searchParams }) => {
                   name="serviceRequestId"
                   value={complaintNo}
                   onChange={setComplaint}
-                  inputRef={register({
+                  {...register("serviceRequestId", {
                     pattern: /(?!^$)([^\s])/,
                   })}
                   style={{ marginBottom: "8px" }}
@@ -88,7 +88,7 @@ const SearchComplaint = ({ onSearch, type, onClose, searchParams }) => {
                   name="mobileNumber"
                   value={mobileNo}
                   onChange={setMobile}
-                  inputRef={register({
+                  {...register("mobileNumber", {
                     pattern: /^[6-9]\d{9}$/,
                   })}
                 ></TextInput>

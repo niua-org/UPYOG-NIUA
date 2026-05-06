@@ -1,4 +1,4 @@
-import { BackButton, WhatsappIcon, Card, CitizenHomeCard, CitizenInfoLabel, PrivateRoute, AdvertisementModuleCard } from "@upyog/digit-ui-react-components";
+import { BackButton, WhatsappIcon, Card, CitizenHomeCard, CitizenInfoLabel, PrivateRoute, AdvertisementModuleCard } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Route, Routes,  Link } from "react-router-dom";
@@ -226,26 +226,26 @@ const Home = (props) => {
         <Routes>
           {/* <Route path={path} element={<CitizenHome />} />
 
-          <Route path={`${path}/feedback`} element={<PrivateRoute><CitizenFeedback /></PrivateRoute>} />
-          <Route path={`${path}/feedback-acknowledgement`} element={<PrivateRoute><AcknowledgementCF /></PrivateRoute>} />
+          <Route path={`/feedback`} element={<PrivateRoute><CitizenFeedback /></PrivateRoute>} />
+          <Route path={`/feedback-acknowledgement`} element={<PrivateRoute><AcknowledgementCF /></PrivateRoute>} />
 
-          <Route path={`${path}/select-language`} element={<LanguageSelection />} />
-          <Route path={`${path}/select-location`} element={<LocationSelection />} />
+          <Route path={`/select-language`} element={<LanguageSelection />} />
+          <Route path={`/select-location`} element={<LocationSelection />} />
 
-          <Route path={`${path}/error`} element={<ErrorComponent initData={initData} />} />
+          <Route path={`/error`} element={<ErrorComponent initData={initData} />} />
 
-          <Route path={`${path}/all-services`} element={<AppHome />} />
+          <Route path={`/all-services`} element={<AppHome />} />
 
-          <Route path={`${path}/login/*`} element={<Login stateCode={stateCode} />} />
-          <Route path={`${path}/register/*`} element={<Login stateCode={stateCode} isUserRegistered={false} />} />
+          <Route path={`/login/*`} element={<Login stateCode={stateCode} />} />
+          <Route path={`/register/*`} element={<Login stateCode={stateCode} isUserRegistered={false} />} />
 
 
-          <Route path={`${path}/user/profile`} element={<PrivateRoute><UserProfile /></PrivateRoute>} />
+          <Route path={`/user/profile`} element={<PrivateRoute><UserProfile /></PrivateRoute>} />
 
-          <Route path={`${path}/Audit`} element={<Search />} />
-          <Route path={`${path}/payment/verification`} element={<QRCode />} /> */}
+          <Route path={`/Audit`} element={<Search />} />
+          <Route path={`/payment/verification`} element={<QRCode />} /> */}
 
-          <Route path="/" element={<CitizenHome />} />
+          <Route path="*" element={<CitizenHome />} />
           <Route path="login/*" element={<Login stateCode={stateCode} />} />
           <Route path="register/*" element={<Login stateCode={stateCode} isUserRegistered={false} />} />
           <Route path="select-language" element={<LanguageSelection />} />
