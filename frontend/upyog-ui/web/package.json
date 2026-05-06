@@ -34,7 +34,7 @@
     "micro-ui-internals/packages/modules/gis",
     "micro-ui-internals/packages/modules/challanGeneration",
     "micro-ui-internals/packages/modules/ndc",
-    "micro-ui-internals/packages/modules/est",
+    "micro-ui-internals/packages/modules/est"
   ],
   "engines": {
     "node": ">=22"

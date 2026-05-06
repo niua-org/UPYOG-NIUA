@@ -19,7 +19,6 @@
     "packages/modules/vendor",
     "packages/modules/wt",
     "packages/modules/ew",
-    "packages/modules/ads",
     "packages/modules/asset",
     "packages/modules/pgrai",
     "packages/modules/commonPt",
@@ -32,10 +31,6 @@
     "packages/modules/reports",
     "packages/modules/chb",
     "packages/modules/assetv2",
-    "packages/modules/gis",
-    "packages/modules/est",
-    "packages/modules/challanGeneration",
-    "packages/modules/ndc",
     "packages/modules/gis"
   ],
   "license": "MIT",
