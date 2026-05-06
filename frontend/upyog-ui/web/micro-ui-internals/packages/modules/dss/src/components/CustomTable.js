@@ -1,4 +1,4 @@
-import { DownwardArrow, Loader, Rating, RemoveableTag,  UpwardArrow, Table } from "@upyog/digit-ui-react-components";
+import { DownwardArrow, Loader, Rating, RemoveableTag,  UpwardArrow, Table } from "@nudmcdgnpm/digit-ui-react-components";
 import { differenceInCalendarDays, subYears } from "date-fns";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";

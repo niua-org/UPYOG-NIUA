@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { PrivateRoute, BreadCrumb } from "@upyog/digit-ui-react-components";
+import { PrivateRoute, BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 
 
 import WSResponse from "./WSResponse";
@@ -291,69 +291,69 @@ const App = ({ path }) => {
         <BILLSBreadCrumbs location={location} />
       </div>
       <Routes>
-          <Route path={`${path}/create-application`} element={<PrivateRoute><WSDocsRequired /></PrivateRoute>} />
-          <Route path={`${path}/new-application`} element={<PrivateRoute><WSNewApplication /></PrivateRoute>} />
-          <Route path={`${path}/edit-application`} element={<PrivateRoute><WSEditApplication /></PrivateRoute>} />
-          <Route path={`${path}/edit-disconnection-application`} element={<PrivateRoute><WSEditDisconnectionApplication /></PrivateRoute>} />
-          <Route path={`${path}/resubmit-disconnection-application`} element={<PrivateRoute><WSResubmitDisconnection /></PrivateRoute>} />
-          <Route path={`${path}/config-by-disconnection-application`} element={<PrivateRoute><WSEditDisconnectionByConfig /></PrivateRoute>} />
-          <Route path={`${path}/application-details`} element={<PrivateRoute><WSApplicationDetails /></PrivateRoute>} />
-          <Route path={`${path}/modify-details`} element={<PrivateRoute><WSModifyApplicationDetails /></PrivateRoute>} />
-          <Route path={`${path}/connection-details`} element={<PrivateRoute><WSGetConnectionDetails /></PrivateRoute>} />
-<Route path={`${path}/bill-amendment`} element={<PrivateRoute><WSApplicationBillAmendment {...{ path }} /></PrivateRoute>} />
-<Route path={`${path}/generate-note-bill-amendment`} element={<PrivateRoute><WSApplicationDetailsBillAmendment {...{ path }} /></PrivateRoute>} />
-<Route path={`${path}/response`} element={<PrivateRoute><Response {...{ path }} /></PrivateRoute>} />
-<Route path={`${path}/response-bill-amend`} element={<PrivateRoute><ResponseBillAmend {...{ path }} /></PrivateRoute>} />
-<Route path={`${path}/required-documents`} element={<PrivateRoute><WSRequiredDocuments {...{ path }} /></PrivateRoute>} />
-          <Route path={`${path}/activate-connection`} element={<PrivateRoute><WSActivateConnection /></PrivateRoute>} />
-<Route path={`${path}/water/search-application`} element={<PrivateRoute><WSSearch  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/sewerage/search-application`} element={<PrivateRoute><WSSearch  parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/ws-response`} element={<PrivateRoute><WSResponse /></PrivateRoute>} />
-          <Route path={`${path}/ws-disconnection-response`} element={<PrivateRoute><WSDisconnectionResponse /></PrivateRoute>} />
-          <Route path={`${path}/ws-restoration-response`} element={<PrivateRoute><WSRestorationResponse /></PrivateRoute>} />
-<Route path={`${path}/water/search-connection`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/sewerage/search-connection`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/water/search-demand`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/sewerage/search-demand`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/consumption-details`} element={<PrivateRoute><WSConsumptionDetails /></PrivateRoute>} />
-          <Route path={`${path}/modify-application`} element={<PrivateRoute><WSModifyApplication /></PrivateRoute>} />
-          <Route path={`${path}/modify-application-edit`} element={<PrivateRoute><WSEditModifyApplication /></PrivateRoute>} />
-          <Route path={`${path}/disconnection-application`} element={<PrivateRoute><WSDisconnectionDocsRequired /></PrivateRoute>} />
-          <Route path={`${path}/new-disconnection`} element={<PrivateRoute><WSDisconnectionApplication /></PrivateRoute>} />
-          <Route path={`${path}/new-restoration`} element={<PrivateRoute><WSRestorationApplication /></PrivateRoute>} />
-<Route path={`${path}/bill-amend/inbox`} element={<PrivateRoute><WSBillIAmendMentInbox  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/water/inbox`} element={<PrivateRoute><WSInbox  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/sewerage/inbox`} element={<PrivateRoute><WSInbox  parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/edit-application-by-config`} element={<PrivateRoute><WSEditApplicationByConfig /></PrivateRoute>} />
-          <Route path={`${path}/disconnection-details`} element={<PrivateRoute><WSGetDisconnectionDetails /></PrivateRoute>} />
-<Route path={`${path}/water/bill-amendment/inbox`} element={<PrivateRoute><WSBillIAmendMentInbox  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/sewerage/bill-amendment/inbox`} element={<PrivateRoute><WSBillIAmendMentInbox  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/water/wns-search`} element={<PrivateRoute><WSSearchIntegrated  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/water/bulk-bill`} element={<PrivateRoute><WSBulkBillGeneration  parentRoute={path} /></PrivateRoute>} />
-<Route path={`${path}/ReceiptRegisterSW`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptRegisterSW" /></PrivateRoute>} />
-<Route path={`${path}/ReceiptRegisterSW_OLD`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptRegisterSW_OLD" /></PrivateRoute>} />
-<Route path={`${path}/ReceiptRegisterReportSW`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptRegisterReportSW" /></PrivateRoute>} />
-<Route path={`${path}/BaseRegisterReportWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="BaseRegisterReportWS" /></PrivateRoute>} />
-<Route path={`${path}/FieldCollectionSearchReportWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="FieldCollectionSearchReportWS" /></PrivateRoute>} />
-<Route path={`${path}/FieldCollectionSearchReceiptWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="FieldCollectionSearchReceiptWS" /></PrivateRoute>} />
-<Route path={`${path}/ChequeCollectionReportWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ChequeCollectionReportWS" /></PrivateRoute>} />
-<Route path={`${path}/SearchOnlineReceiptsWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="SearchOnlineReceiptsWS" /></PrivateRoute>} />
-<Route path={`${path}/ReceiptCollections`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptCollections" /></PrivateRoute>} />
-<Route path={`${path}/JE_PendencyReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="JE_PendencyReport" /></PrivateRoute>} />
-<Route path={`${path}/CashCollectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="CashCollectionReport" /></PrivateRoute>} />
-<Route path={`${path}/CollectionsSummaryHeadwiseReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="CollectionsSummaryHeadwiseReport" /></PrivateRoute>} />
-<Route path={`${path}/ArrearReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ArrearReport" /></PrivateRoute>} />
-<Route path={`${path}/SearchWaterChargeReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="SearchWaterChargeReport" /></PrivateRoute>} />
-<Route path={`${path}/SearchSewerageChargeReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="SearchSewerageChargeReport" /></PrivateRoute>} />
-<Route path={`${path}/WSApplicationStatusReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="WSApplicationStatusReport" /></PrivateRoute>} />
-<Route path={`${path}/WaterDisconnectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="WaterDisconnectionReport" /></PrivateRoute>} />
-<Route path={`${path}/WaterConnectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parent Route={path} moduleName="rainmaker-ws" reportName="WaterConnectionReport" /></PrivateRoute>} />
-<Route path={`${path}/SewerageConnectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parent Route={path} moduleName="rainmaker-ws" reportName="SewerageConnectionReport" /></PrivateRoute>} />
-<Route path={`${path}/SewerageDisconnection Report`} element={< PrivateRoute>< EnhancedReport  {...props} parent Route={path} moduleName="rainmaker-ws" reportName="SewerageDisconnectionReport" /></PrivateRoute>} />
-<Route path={`${path}/DemandCollectionBalancedRegister`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="DemandCollectionBalancedRegister" /></PrivateRoute>} />
+          <Route path={`/create-application`} element={<PrivateRoute><WSDocsRequired /></PrivateRoute>} />
+          <Route path={`/new-application`} element={<PrivateRoute><WSNewApplication /></PrivateRoute>} />
+          <Route path={`/edit-application`} element={<PrivateRoute><WSEditApplication /></PrivateRoute>} />
+          <Route path={`/edit-disconnection-application`} element={<PrivateRoute><WSEditDisconnectionApplication /></PrivateRoute>} />
+          <Route path={`/resubmit-disconnection-application`} element={<PrivateRoute><WSResubmitDisconnection /></PrivateRoute>} />
+          <Route path={`/config-by-disconnection-application`} element={<PrivateRoute><WSEditDisconnectionByConfig /></PrivateRoute>} />
+          <Route path={`/application-details`} element={<PrivateRoute><WSApplicationDetails /></PrivateRoute>} />
+          <Route path={`/modify-details`} element={<PrivateRoute><WSModifyApplicationDetails /></PrivateRoute>} />
+          <Route path={`/connection-details`} element={<PrivateRoute><WSGetConnectionDetails /></PrivateRoute>} />
+<Route path={`/bill-amendment`} element={<PrivateRoute><WSApplicationBillAmendment {...{ path }} /></PrivateRoute>} />
+<Route path={`/generate-note-bill-amendment`} element={<PrivateRoute><WSApplicationDetailsBillAmendment {...{ path }} /></PrivateRoute>} />
+<Route path={`/response`} element={<PrivateRoute><Response {...{ path }} /></PrivateRoute>} />
+<Route path={`/response-bill-amend`} element={<PrivateRoute><ResponseBillAmend {...{ path }} /></PrivateRoute>} />
+<Route path={`/required-documents`} element={<PrivateRoute><WSRequiredDocuments {...{ path }} /></PrivateRoute>} />
+          <Route path={`/activate-connection`} element={<PrivateRoute><WSActivateConnection /></PrivateRoute>} />
+<Route path={`/water/search-application`} element={<PrivateRoute><WSSearch  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/sewerage/search-application`} element={<PrivateRoute><WSSearch  parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ws-response`} element={<PrivateRoute><WSResponse /></PrivateRoute>} />
+          <Route path={`/ws-disconnection-response`} element={<PrivateRoute><WSDisconnectionResponse /></PrivateRoute>} />
+          <Route path={`/ws-restoration-response`} element={<PrivateRoute><WSRestorationResponse /></PrivateRoute>} />
+<Route path={`/water/search-connection`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/sewerage/search-connection`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/water/search-demand`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/sewerage/search-demand`} element={<PrivateRoute><WSSearchWater  parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/consumption-details`} element={<PrivateRoute><WSConsumptionDetails /></PrivateRoute>} />
+          <Route path={`/modify-application`} element={<PrivateRoute><WSModifyApplication /></PrivateRoute>} />
+          <Route path={`/modify-application-edit`} element={<PrivateRoute><WSEditModifyApplication /></PrivateRoute>} />
+          <Route path={`/disconnection-application`} element={<PrivateRoute><WSDisconnectionDocsRequired /></PrivateRoute>} />
+          <Route path={`/new-disconnection`} element={<PrivateRoute><WSDisconnectionApplication /></PrivateRoute>} />
+          <Route path={`/new-restoration`} element={<PrivateRoute><WSRestorationApplication /></PrivateRoute>} />
+<Route path={`/bill-amend/inbox`} element={<PrivateRoute><WSBillIAmendMentInbox  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/water/inbox`} element={<PrivateRoute><WSInbox  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/sewerage/inbox`} element={<PrivateRoute><WSInbox  parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/edit-application-by-config`} element={<PrivateRoute><WSEditApplicationByConfig /></PrivateRoute>} />
+          <Route path={`/disconnection-details`} element={<PrivateRoute><WSGetDisconnectionDetails /></PrivateRoute>} />
+<Route path={`/water/bill-amendment/inbox`} element={<PrivateRoute><WSBillIAmendMentInbox  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/sewerage/bill-amendment/inbox`} element={<PrivateRoute><WSBillIAmendMentInbox  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/water/wns-search`} element={<PrivateRoute><WSSearchIntegrated  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/water/bulk-bill`} element={<PrivateRoute><WSBulkBillGeneration  parentRoute={path} /></PrivateRoute>} />
+<Route path={`/ReceiptRegisterSW`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptRegisterSW" /></PrivateRoute>} />
+<Route path={`/ReceiptRegisterSW_OLD`} element={<PrivateRoute><EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptRegisterSW_OLD" /></PrivateRoute>} />
+<Route path={`/ReceiptRegisterReportSW`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptRegisterReportSW" /></PrivateRoute>} />
+<Route path={`/BaseRegisterReportWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="BaseRegisterReportWS" /></PrivateRoute>} />
+<Route path={`/FieldCollectionSearchReportWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="FieldCollectionSearchReportWS" /></PrivateRoute>} />
+<Route path={`/FieldCollectionSearchReceiptWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="FieldCollectionSearchReceiptWS" /></PrivateRoute>} />
+<Route path={`/ChequeCollectionReportWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ChequeCollectionReportWS" /></PrivateRoute>} />
+<Route path={`/SearchOnlineReceiptsWS`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="SearchOnlineReceiptsWS" /></PrivateRoute>} />
+<Route path={`/ReceiptCollections`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ReceiptCollections" /></PrivateRoute>} />
+<Route path={`/JE_PendencyReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="JE_PendencyReport" /></PrivateRoute>} />
+<Route path={`/CashCollectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="CashCollectionReport" /></PrivateRoute>} />
+<Route path={`/CollectionsSummaryHeadwiseReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="CollectionsSummaryHeadwiseReport" /></PrivateRoute>} />
+<Route path={`/ArrearReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="ArrearReport" /></PrivateRoute>} />
+<Route path={`/SearchWaterChargeReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="SearchWaterChargeReport" /></PrivateRoute>} />
+<Route path={`/SearchSewerageChargeReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="SearchSewerageChargeReport" /></PrivateRoute>} />
+<Route path={`/WSApplicationStatusReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="WSApplicationStatusReport" /></PrivateRoute>} />
+<Route path={`/WaterDisconnectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="WaterDisconnectionReport" /></PrivateRoute>} />
+<Route path={`/WaterConnectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parent Route={path} moduleName="rainmaker-ws" reportName="WaterConnectionReport" /></PrivateRoute>} />
+<Route path={`/SewerageConnectionReport`} element={<PrivateRoute><EnhancedReport  {...props} parent Route={path} moduleName="rainmaker-ws" reportName="SewerageConnectionReport" /></PrivateRoute>} />
+<Route path={`/SewerageDisconnection Report`} element={< PrivateRoute>< EnhancedReport  {...props} parent Route={path} moduleName="rainmaker-ws" reportName="SewerageDisconnectionReport" /></PrivateRoute>} />
+<Route path={`/DemandCollectionBalancedRegister`} element={<PrivateRoute><EnhancedReport  {...props} parentRoute={path} moduleName="rainmaker-ws" reportName="DemandCollectionBalancedRegister" /></PrivateRoute>} />
           
-          {/* <Route path={`${path}/search`} component={SearchConnectionComponent} />
-          <Route path={`${path}/search-results`} component={SearchResultsComponent} /> */}
+          {/* <Route path={`/search`} component={SearchConnectionComponent} />
+          <Route path={`/search-results`} component={SearchResultsComponent} /> */}
       </Routes>
     </div>
   );

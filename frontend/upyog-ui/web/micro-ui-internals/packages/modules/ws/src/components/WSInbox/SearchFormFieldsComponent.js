@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-import { CardLabelError, SearchField, TextInput, MobileNumber } from "@upyog/digit-ui-react-components";
+import { CardLabelError, SearchField, TextInput, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 const SearchFormFieldsComponents = ({ registerRef, searchFormState }) => {
@@ -17,7 +17,7 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState }) => {
         <label>{t("WS_ACK_COMMON_APP_NO_LABEL")}</label>
         <TextInput 
           name="applicationNumber" 
-          inputRef={registerRef({})} 
+          {...registerRef("applicationNumber")} 
           {...(validation = {
             isRequired: false,
             pattern: "^[a-zA-Z0-9-_\/]*$",
@@ -29,7 +29,7 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState }) => {
         <label>{t("WS_MYCONNECTIONS_CONSUMER_NO")}</label>
         <TextInput 
           name="consumerNo" 
-          inputRef={registerRef({})} 
+          {...registerRef("consumerNo")} 
           {...(validation = {
             isRequired: false,
             pattern: "^[a-zA-Z0-9\/-]*$",
@@ -40,7 +40,7 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState }) => {
       </SearchField>
       <SearchField className="wns-search-field">
         <label>{t("CORE_COMMON_MOBILE_NUMBER")}</label>
-        <MobileNumber name="mobileNumber" type="number" inputRef={registerRef({})} {...propsForMobileNumber} />
+        <MobileNumber name="mobileNumber" type="number" {...registerRef("mobileNumber")} {...propsForMobileNumber} />
         {searchFormState?.errors?.["mobileNumber"]?.message ? (
           <CardLabelError>{searchFormState?.errors?.["mobileNumber"]?.message}</CardLabelError>
         ) : null}

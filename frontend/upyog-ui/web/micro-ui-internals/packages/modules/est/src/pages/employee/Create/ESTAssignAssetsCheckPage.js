@@ -9,7 +9,7 @@ import {
   SubmitBar,
   CheckBox,
   EditIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { checkForNA, ESTDocumnetPreview, formatEpochDate } from "../../../utils"; // ensure path is correct
 

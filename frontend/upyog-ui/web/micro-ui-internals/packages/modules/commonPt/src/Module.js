@@ -1,4 +1,4 @@
-import { CitizenHomeCard, PTIcon } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -66,12 +66,12 @@ export const CommonPTLinks = ({ matchPath, userType }) => {
 
   const links = [
     {
-      link: `${matchPath}/property/citizen-search`,
+      link: `/property/citizen-search`,
       i18nKey: t("PT_SEARCH_AND_PAY"),
     },
 
     {
-      link: `${matchPath}/property/new-application`,
+      link: `/property/new-application`,
       i18nKey: t("PT_CREATE_PROPERTY"),
     },
   ];

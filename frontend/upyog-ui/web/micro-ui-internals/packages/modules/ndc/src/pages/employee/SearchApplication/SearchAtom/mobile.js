@@ -10,7 +10,7 @@ import {
   DetailsCard,
   Loader,
   Toast,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 // This component renders the mobile view for searching NDC applications. It includes a search button that opens a popup with search fields, and displays either a message or a list of applications based on the search results.

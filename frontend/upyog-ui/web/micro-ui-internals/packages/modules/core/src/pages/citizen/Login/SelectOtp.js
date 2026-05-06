@@ -1,5 +1,5 @@
 import React, { useState, Fragment, useEffect } from "react";
-import { ButtonSelector, CardText, FormStep, LinkButton, OTPInput, CardLabelError } from "@upyog/digit-ui-react-components";
+import { ButtonSelector, CardText, FormStep, LinkButton, OTPInput, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import useInterval from "../../../hooks/useInterval";
 
 const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, userType = "citizen", canSubmit }) => {
@@ -85,7 +85,7 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
       console.log("datadatadata",data,sessionStorage.getItem("userName"))
       const [res, err] = await sendOtp({ otp: { ...data, ...TYPE_REGISTER } });
       if (!err) {
-        navigate(`${path}/otp`, { replace: true, state: { from: getFromLocation(location.state, searchParams) } });
+        navigate(`/otp`, { replace: true, state: { from: getFromLocation(location.state, searchParams) } });
         return;
       }
       else {

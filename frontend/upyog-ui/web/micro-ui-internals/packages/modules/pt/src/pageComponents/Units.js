@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, Loader, DeleteIcon } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, Loader, DeleteIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { stringReplaceAll } from "../utils";
 import { useForm, Controller } from "react-hook-form";
 import _ from "lodash";
@@ -561,21 +561,21 @@ function Unit({
             name="floorNo"
             defaultValue={unit.floorNo}
             control={control}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
-                selected={props.value}
+                selected={field.value}
                 disable={false}
                 option={getfloorlistdata(floorlist) || []}
-                select={props.onChange}
+                select={field.onChange}
                 optionKey="i18nKey"
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
                 t={t}
               />
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.floorNo ? errors?.floorNo?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.floorNo ? errors?.floorNo?.message : ""}</CardLabelError>
         </div>
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("PT_PROPERTY_DETAILS_USAGE_TYPE_HEADER") + " *"}</CardLabel>
@@ -596,22 +596,22 @@ function Unit({
             name="usageCategory"
             defaultValue={subUsageCategoryMenu(usageType)?.filter((e) => e?.code === unit.existingUsageCategory)[0]}
             control={control}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
-                selected={props.value}
+                selected={field.value}
                 disable={!usageType?.code}
                 option={subUsageCategoryMenu(usageType)}
-                select={props.onChange}
+                select={field.onChange}
                 optionKey="i18nKey"
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
                 t={t}
               />
             )}
           />
         </LabelFieldPair>
         {!["RESIDENTIAL"].includes(usageType?.code) ? (
-          <CardLabelError style={errorStyle}>{localFormState.touched.usageCategory ? errors?.usageCategory?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields?.usageCategory ? errors?.usageCategory?.message : ""}</CardLabelError>
         ) : null}
 
         <LabelFieldPair>
@@ -620,22 +620,21 @@ function Unit({
             name="occupancyType"
             defaultValue={unit?.occupancyType}
             control={control}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
-                selected={props.value}
+                selected={field.value}
                 disable={occupencyOptions?.length === 1}
                 option={occupencyOptions}
-                // select={selectSelfOccupied}
-                select={props.onChange}
+                select={field.onChange}
                 optionKey="i18nKey"
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
                 t={t}
               />
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.occupancyType ? errors?.occupancyType?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.occupancyType ? errors?.occupancyType?.message : ""}</CardLabelError>
         {formValue.occupancyType?.code === "RENTED" ? (
           <React.Fragment>
             <LabelFieldPair>
@@ -645,23 +644,23 @@ function Unit({
                   name="arv"
                   defaultValue={unit.arv}
                   control={control}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="text"
                       name="unit-area"
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index, type: "arv" });
                       }}
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === index && focusIndex.type === "arv"}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />
               </div>
             </LabelFieldPair>
-            <CardLabelError style={errorStyle}>{localFormState.touched.arv ? errors?.arv?.message : ""}</CardLabelError>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields?.arv ? errors?.arv?.message : ""}</CardLabelError>
             
           <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("PT_FORM2_RENTED_MONTHS") + " *"}</CardLabel>
@@ -669,21 +668,21 @@ function Unit({
             name="RentedMonths"
             defaultValue={unit.RentedMonths}
             control={control}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
-                selected={props.value}
+                selected={field.value}
                 disable={rentedmonths?.length === 1}
                 option={rentedmonths}
-                select={props.onChange}
+                select={field.onChange}
                 optionKey="i18nKey"
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
                 t={t}
               />
             )}
           />
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.Rentedmonths ? errors?.Rentedmonths?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.Rentedmonths ? errors?.Rentedmonths?.message : ""}</CardLabelError>
         {formValue?.RentedMonths?.code === "1" || formValue?.RentedMonths?.code === "2" || formValue?.RentedMonths?.code === "3" || formValue?.RentedMonths?.code === "4" || formValue?.RentedMonths?.code === "5" || formValue?.RentedMonths?.code === "6" || formValue?.RentedMonths?.code === "7" || formValue?.RentedMonths?.code === "8" || formValue?.RentedMonths?.code === "9" || formValue?.RentedMonths?.code === "10" || formValue?.RentedMonths?.code === "11" ? (
           <React.Fragment>
             <LabelFieldPair>
@@ -692,15 +691,15 @@ function Unit({
               name="NonRentedMonthsUsage"
               defaultValue={unit.NonRentedMonthsUsage}
               control={control}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
+                  selected={field.value}
                   disable={nonrentedusage?.length === 1}
                   option={nonrentedusage}
-                  select={props.onChange}
+                  select={field.onChange}
                   optionKey="i18nKey"
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                   t={t}
                 />
               )}
@@ -719,23 +718,23 @@ function Unit({
               defaultValue={unit?.builtUpArea}
               // rules={}
               control={control}
-              render={(props) => (
+              render={({ field }) => (
                 <TextInput
                   type="text"
                   name="unit-area"
                   onChange={(e) => {
-                    props.onChange(e.target.value);
+                    field.onChange(e.target.value);
                     setFocusIndex({ index, type: "builtUpArea" });
                   }}
-                  value={props.value}
+                  value={field.value}
                   autoFocus={focusIndex.index === index && focusIndex.type === "builtUpArea"}
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                 />
               )}
             />
           </div>
         </LabelFieldPair>
-        <CardLabelError style={errorStyle}>{localFormState.touched.builtUpArea ? errors?.builtUpArea?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touchedFields?.builtUpArea ? errors?.builtUpArea?.message : ""}</CardLabelError>
       </div>
     </div>
   );

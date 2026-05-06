@@ -1,4 +1,4 @@
-import { CitizenHomeCard, Loader, PTIcon } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, Loader, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import InboxFilter from "./components/inbox/NewInboxFilter";
 import ChallanGenerationCard from "./components/ChallanGenerationCard";

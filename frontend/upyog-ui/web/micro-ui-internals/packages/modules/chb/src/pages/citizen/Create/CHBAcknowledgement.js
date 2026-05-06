@@ -1,4 +1,4 @@
-import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar,Toast } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, {useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  } from "react-router-dom";
@@ -123,15 +123,15 @@ const CHBAcknowledgement = ({ data, onSuccess }) => {
     setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
   }
   };
-  useEffect(() => {
-    try {
-      data.tenantId = tenantId;
-      let formdata = CHBDataConvert(data);
-      mutation.mutate(formdata, {
-        onSuccess,
-      });
-    } catch (err) {}
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     data.tenantId = tenantId;
+  //     let formdata = CHBDataConvert(data);
+  //     mutation.mutate(formdata, {
+  //       onSuccess,
+  //     });
+  //   } catch (err) {}
+  // }, []);
 
   useEffect(() => {
       if (showToast) {

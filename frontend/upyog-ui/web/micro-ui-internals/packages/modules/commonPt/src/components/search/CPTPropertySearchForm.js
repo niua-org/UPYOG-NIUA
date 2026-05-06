@@ -1,4 +1,4 @@
-import { CardLabelError, SearchField, SearchForm, SubmitBar, TextInput,Localities } from "@upyog/digit-ui-react-components";
+import { CardLabelError, SearchField, SearchForm, SubmitBar, TextInput,Localities } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -51,10 +51,10 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 defaultValue={formValue?.[key]}
                 rules= {field.validation}
                 control={control}
-                render={(props, customProps) => (
+                render={({ field }, customProps) => (
                   <field.customComponent
                     selectLocality={(d) => {
-                      props.onChange(d);
+                      field.onChange(d);
                     }}
                     tenantId={tenantId}
                     selected={formValue?.[key]}
@@ -72,7 +72,7 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 <TextInput
                   name={key}
                   type={field?.type}
-                  inputRef={register({
+                  {...register(key, {
                     value: getValues(key),
                     shouldUnregister: true,
                     ...validation,

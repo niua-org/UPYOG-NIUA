@@ -1,4 +1,4 @@
-import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError, CheckBox } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError, CheckBox } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { getPattern } from "../utils";
 import { useForm, Controller } from "react-hook-form";
@@ -190,21 +190,21 @@ const ConnectionDetails = (_props) => {
             name="water"
             defaultValue={connectionDetail?.water}
             isMandatory={true}
-            render={(props) => (
+                render={({ field }) => (
               <CheckBox
                 label={t("WATER_CONNECTION")}
                 name={"water"}
                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "water"}
-                errorStyle={(localFormState.touched.water && errors?.water?.message) ? true : false}
+                errorStyle={(localFormState.touchedFields.water && errors?.water?.message) ? true : false}
                 onChange={(e) => {
                   if (e.target.checked || connectionDetail?.sewerage) {
-                    props.onChange(e.target.checked);
+                    field.onChange(e.target.checked);
                     setFocusIndex({ index: connectionDetail?.key, type: "water" });
                   }
                 }}
                 checked={connectionDetail?.water}
                 style={{ paddingBottom: "10px", paddingTop: "3px" }}
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
               />
             )}
           />
@@ -214,23 +214,22 @@ const ConnectionDetails = (_props) => {
             defaultValue={connectionDetail?.sewerage}
             type="number"
             isMandatory={true}
-            render={(props) => (
+            render={({ field }) => (
               <CheckBox
                 label={t("SEWERAGE_CONNECTION")}
                 name={"sewerage"}
                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "sewerage"}
-                errorStyle={(localFormState.touched.sewerage && errors?.sewerage?.message) ? true : false}
+                errorStyle={(localFormState.touchedFields.sewerage && errors?.sewerage?.message) ? true : false}
                 onChange={(e) => {
                   if (e.target.checked || connectionDetail?.water) {
-                    props.onChange(e.target.checked);
+                    field.onChange(e.target.checked);
                     setFocusIndex({ index: connectionDetail?.key, type: "sewerage" });
                   }
                 }}
                 checked={connectionDetail?.sewerage}
                 style={{ paddingBottom: "10px", paddingTop: "3px" }}
-                onBlur={props.onBlur}
+                onBlur={field.onBlur}
               />
-
             )}
           />
 
@@ -247,18 +246,18 @@ const ConnectionDetails = (_props) => {
                   rules={{ validate: (e) => ((parseInt(e)>0 && e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                   type="number"
                   isMandatory={true}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="number"
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedTaps"}
-                      errorStyle={(localFormState.touched.proposedTaps && errors?.proposedTaps?.message) ? true : false}
+errorStyle={(localFormState.touchedFields.proposedTaps && errors?.proposedTaps?.message) ? true : false}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedTaps" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />
@@ -273,18 +272,18 @@ const ConnectionDetails = (_props) => {
                 defaultValue={connectionDetail?.proposedPipeSize}
                 rules={{ required: t("REQUIRED_FIELD") }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <Dropdown
                     className="form-field"
                     selected={getValues("proposedPipeSize")}
                     disable={false}
                     option={pipeSizeList}
-                    errorStyle={(localFormState.touched.proposedPipeSize && errors?.proposedPipeSize?.message) ? true : false}
+errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPipeSize?.message) ? true : false}
                     select={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                     }}
                     optionKey="i18nKey"
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                     t={t}
                   />
                 )}
@@ -305,18 +304,18 @@ const ConnectionDetails = (_props) => {
                   rules={{ validate: (e) => ((parseInt(e)>0 && e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                   type="number"
                   isMandatory={true}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="number"
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedWaterClosets"}
                       errorStyle={(localFormState.touched.proposedWaterClosets && errors?.proposedWaterClosets?.message) ? true : false}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedWaterClosets" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />
@@ -333,18 +332,18 @@ const ConnectionDetails = (_props) => {
                   rules={{ validate: (e) => ((parseInt(e)>0 && e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                   type="number"
                   isMandatory={true}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
                       type="number"
-                      value={props.value}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedToilets"}
                       errorStyle={(localFormState.touched.proposedToilets && errors?.proposedToilets?.message) ? true : false}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedToilets" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                     />
                   )}
                 />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { CardLabel, LabelFieldPair, TextInput, Toast } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, TextInput, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import _ from "lodash";

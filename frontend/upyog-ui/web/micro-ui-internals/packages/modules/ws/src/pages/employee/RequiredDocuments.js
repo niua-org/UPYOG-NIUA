@@ -1,4 +1,4 @@
-import { ActionBar, Card, CardHeader, CardLabel, CardLabelDesc, CardText, DownloadIcon, Header, Loader, MultiLink, ShareIcon, SubmitBar } from "@upyog/digit-ui-react-components"
+import { ActionBar, Card, CardHeader, CardLabel, CardLabelDesc, CardText, DownloadIcon, Header, Loader, MultiLink, ShareIcon, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components"
 import React, {Fragment, useRef} from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useParams,  } from "react-router-dom"
@@ -17,7 +17,7 @@ const RequiredDocuments = ({path}) => {
 		tenantId: stateId
 	});
 	const redirectToBillAmdmentPage = () => {
-		navigate(`${path}/bill-amendment${search}`, JSON.stringify({ data: state?.data }));
+		navigate(`/bill-amendment${search}`, JSON.stringify({ data: state?.data }));
 	}
 	const handlePrint = () => Digit.Download.PDF(fullPageRef, t("ES_COMMON_WS_DOCUMENTS_REQUIRED"));
 

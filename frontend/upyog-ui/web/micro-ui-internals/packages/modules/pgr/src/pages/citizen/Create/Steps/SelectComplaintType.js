@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { TypeSelectCard } from "@upyog/digit-ui-react-components";
-import { Dropdown } from "@upyog/digit-ui-react-components";
+import { TypeSelectCard } from "@nudmcdgnpm/digit-ui-react-components";
+import { Dropdown } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { FormComposer } from "../../../../components/FormComposer";

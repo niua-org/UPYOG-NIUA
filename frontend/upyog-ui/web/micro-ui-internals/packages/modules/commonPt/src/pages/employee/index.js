@@ -1,4 +1,4 @@
-import { BreadCrumb, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { BreadCrumb, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -76,10 +76,10 @@ const EmployeeApp = ({ path, url, userType }) => {
           <BreadCrumb crumbs={crumbs} />
         </div>
         <Routes>
-          <Route path={`${path}/`} element={<PrivateRoute><CommonPTLinks matchPath={path} userType={userType} /></PrivateRoute>} />
-          <Route path={`${path}/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
-          <Route path={`${path}/search`} element={<PrivateRoute><Search /></PrivateRoute>} />
-          <Route path={`${path}/view-property`} element={<PrivateRoute><ViewProperty /></PrivateRoute>} />
+          <Route path={`*`} element={<PrivateRoute><CommonPTLinks matchPath={path} userType={userType} /></PrivateRoute>} />
+          <Route path={`/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
+          <Route path={`/search`} element={<PrivateRoute><Search /></PrivateRoute>} />
+          <Route path={`/view-property`} element={<PrivateRoute><ViewProperty /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

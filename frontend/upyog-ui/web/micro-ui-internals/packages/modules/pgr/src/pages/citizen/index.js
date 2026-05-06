@@ -3,7 +3,7 @@ import { ReopenComplaint } from "./ReopenComplaint/index";
 import SelectRating from "./Rating/SelectRating";
 import { PgrRoutes, getRoute } from "../../constants/Routes";
 import { useLocation, Route, Routes } from "react-router-dom";
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { CreateComplaint } from "./Create";
 import { ComplaintsList } from "./ComplaintsList";
@@ -27,19 +27,19 @@ const App = () => {
       <div className="pgr-citizen-wrapper">
         {!location.pathname.includes("/response") && <BackButton>{t("CS_COMMON_BACK")}</BackButton>}
         <Routes>
-          <Route path={`${path}/create-complaint/*`} element={<PrivateRoute><CreateComplaint /></PrivateRoute>} />
-          <Route path={`${path}/complaints`} element={<PrivateRoute><ComplaintsList /></PrivateRoute>} />
-          <Route path={`${path}/complaints/:id/*`} element={<PrivateRoute><ComplaintDetailsPage /></PrivateRoute>} />
+          <Route path={`/create-complaint/*`} element={<PrivateRoute><CreateComplaint /></PrivateRoute>} />
+          <Route path={`/complaints`} element={<PrivateRoute><ComplaintsList /></PrivateRoute>} />
+          <Route path={`/complaints/:id/*`} element={<PrivateRoute><ComplaintDetailsPage /></PrivateRoute>} />
           <Route
-            path={`${path}/reopen/*`}
+            path={`/reopen/*`}
             element={
               <PrivateRoute>
-                <ReopenComplaint match={{ ...match, url, path: `${path}/reopen` }} parentRoute={path} />
+                <ReopenComplaint match={{ ...match, url, path: `/reopen` }} parentRoute={path} />
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/rate/:id/*`} element={<PrivateRoute><SelectRating parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/response`} element={<PrivateRoute><Response match={{ ...match, url, path }} /></PrivateRoute>} />
+          <Route path={`/rate/:id/*`} element={<PrivateRoute><SelectRating parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><Response match={{ ...match, url, path }} /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

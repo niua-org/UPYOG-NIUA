@@ -12,20 +12,19 @@ import {
   ActionBar,
   SubmitBar,
   LabelFieldPair,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 export const FormComposer = (props) => {
-  const { register, handleSubmit, errors, control,
+  const { register, handleSubmit, control,
     setValue,
     getValues,
     reset,
     watch,
- 
     setError,
     clearErrors,
- 
     formState,
+    formState: { errors },
    } = useForm();
   const { t } = useTranslation();
   const formData = watch();
@@ -46,11 +45,11 @@ export const FormComposer = (props) => {
         return (
           <div className="field-container">
             {populators.componentInFront ? populators.componentInFront : null}
-            <TextInput className="field desktop-w-full" {...populators} inputRef={register(populators.validation)} value={value}/>
+            <TextInput className="field desktop-w-full" {...populators} {...register(populators.name, populators.validation)} value={value}/>
           </div>
         );
       case "textarea":
-        return <TextArea className="field desktop-w-full" value={value} name={populators.name || ""} {...populators} inputRef={register(populators.validation)} />;
+        return <TextArea className="field desktop-w-full" value={value} name={populators.name || ""} {...populators} {...register(populators.name || "", populators.validation)} />;
       case "component":
         {
           
@@ -58,7 +57,7 @@ export const FormComposer = (props) => {
           {
             return (
               <Controller
-                render={(props) => (
+                render={({ field }) => (
                   <Component
                     userType={"employee"}
                     t={t}
@@ -69,11 +68,11 @@ export const FormComposer = (props) => {
                     formData={formData}
                     register={register}
                     errors={errors}
-                    props={props}
+                    props={field}
                     setError={setError}
                     clearErrors={clearErrors}
                     formState={formState}
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                   />
                 )}
                 name={config.key}

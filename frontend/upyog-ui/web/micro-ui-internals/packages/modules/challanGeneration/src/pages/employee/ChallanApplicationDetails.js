@@ -13,7 +13,7 @@ import {
   Menu,
   SubmitBar,
   Toast,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { Loader } from "../../components/Loader";

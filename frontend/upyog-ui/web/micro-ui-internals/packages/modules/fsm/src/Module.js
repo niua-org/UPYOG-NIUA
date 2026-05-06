@@ -1,4 +1,4 @@
-import { CitizenHomeCard, CitizenTruck, Loader } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, CitizenTruck, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -105,11 +105,11 @@ const FSMLinks = ({ matchPath, userType }) => {
   if (userType === "citizen") {
     const links = [
       {
-        link: `${matchPath}/new-application`,
+        link: `/new-application`,
         i18nKey: t("CS_HOME_APPLY_FOR_DESLUDGING"),
       },
       {
-        link: `${matchPath}/my-applications`,
+        link: `/my-applications`,
         i18nKey: t("CS_HOME_MY_APPLICATIONS"),
       },
     ];
@@ -149,10 +149,10 @@ const FSMLinks = ({ matchPath, userType }) => {
               </div>
               <div className="body">
                 <span className="link">
-                  <Link to={`${matchPath}/inbox`}>{t("ES_TITLE_INBOX")}</Link>
+                  <Link to={`/inbox`}>{t("ES_TITLE_INBOX")}</Link>
                 </span>
                 <span className="link">
-                  <Link to={`${matchPath}/new-application/`}>{t("ES_TITLE_NEW_DESULDGING_APPLICATION")}</Link>
+                  <Link to={`/new-application/`}>{t("ES_TITLE_NEW_DESULDGING_APPLICATION")}</Link>
                 </span>
               </div>
             </div>

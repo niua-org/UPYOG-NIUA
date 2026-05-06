@@ -1,4 +1,4 @@
-import { Banner, Card, CardText, ActionBar, SubmitBar, Toast } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, ActionBar, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, Fragment, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ChallanData, getLocationName } from "../utils";

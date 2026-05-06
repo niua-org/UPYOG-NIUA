@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Loader, CitizenHomeCard, OBPSIcon, CitizenInfoLabel } from "@upyog/digit-ui-react-components";
+import { Loader, CitizenHomeCard, OBPSIcon, CitizenInfoLabel } from "@nudmcdgnpm/digit-ui-react-components";
 import CitizenApp from "./pages/citizen";
 import Inbox from "./pages/employee/Inbox";
 import stakeholderInbox from "./pages/employee/stakeholderInbox";
@@ -85,11 +85,11 @@ const OBPSLinks = ({ matchPath, userType }) => {
   const links = [
     
     {
-      link: `${matchPath}/stakeholder/apply/stakeholder-docs-required`,
+      link: `/stakeholder/apply/stakeholder-docs-required`,
       i18nKey: t("BPA_CITIZEN_HOME_STAKEHOLDER_LOGIN_LABEL"),
     },
     {
-      link: `${matchPath}/home`,
+      link: `/home`,
       i18nKey: t("BPA_CITIZEN_HOME_ARCHITECT_LOGIN_LABEL"),
     },
   ];

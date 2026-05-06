@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FormStep, CardLabel, TextInput,Dropdown, TextArea,Card,CardSubHeader} from "@upyog/digit-ui-react-components";
+import { FormStep, CardLabel, TextInput,Dropdown, TextArea,Card,CardSubHeader} from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/CHBTimeline";
 import { Controller, useForm } from "react-hook-form";
@@ -161,9 +161,8 @@ const CHBSlotDetails
               name={"specialCategory"}
               defaultValue={specialCategory}
               rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
-
                   className="form-field"
                   selected={specialCategory}
                   select={setspecialcategory}
@@ -172,7 +171,6 @@ const CHBSlotDetails
                   optionKey="i18nKey"
                   t={t}
                 />
-
               )}
 
             />
@@ -183,9 +181,8 @@ const CHBSlotDetails
               name={"purpose"}
               defaultValue={purpose}
               rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
-
                   className="form-field"
                   selected={purpose}
                   placeholder={"Select Purpose"}
@@ -194,7 +191,6 @@ const CHBSlotDetails
                   optionKey="i18nKey"
                   t={t}
                 />
-
               )}
                 />
 

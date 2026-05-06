@@ -1,4 +1,4 @@
-import { CardLabel, FormStep, Dropdown, TextInput, Toast, SearchIcon,  Row, ImageViewer, StatusTable, LinkButton, Header, SubmitBar, CardHeader } from "@upyog/digit-ui-react-components";
+import { CardLabel, FormStep, Dropdown, TextInput, Toast, SearchIcon,  Row, ImageViewer, StatusTable, LinkButton, Header, SubmitBar, CardHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import DisplayPhotos from "../../../../react-components/src/atoms/DisplayPhotos";
 import React, { useEffect, useState } from "react";
 import { PreApprovedPlanService } from "../../../../libraries/src/services/elements/PREAPPROVEDPLAN";
@@ -61,17 +61,20 @@ const BuildingPlanScrutiny = ({ t, config, onSelect, formData, isShowToast, isSu
         setMandatoryFiledsError("");
     }
   };
-  useEffect(async () => {
-    if (preApprovedResponse?.data!==undefined) {
-      const fileStoreIds = preApprovedResponse?.data.flatMap(item =>
-        item.documents
-          .filter(doc => doc?.additionalDetails?.fileName?.includes(".jpg"))
-          .map(doc => doc?.fileStoreId)
-      );
-       const thumbnails = fileStoreIds ? await getThumbnails(fileStoreIds, tenantId) : null;
-       
-      setImagesToShowBelowComplaintDetails(thumbnails);
-    }
+  useEffect(() => {
+    const fetchThumbnails = async () => {
+      if (preApprovedResponse?.data!==undefined) {
+        const fileStoreIds = preApprovedResponse?.data.flatMap(item =>
+          item.documents
+            .filter(doc => doc?.additionalDetails?.fileName?.includes(".jpg"))
+            .map(doc => doc?.fileStoreId)
+        );
+         const thumbnails = fileStoreIds ? await getThumbnails(fileStoreIds, tenantId) : null;
+         
+        setImagesToShowBelowComplaintDetails(thumbnails);
+      }
+    };
+    fetchThumbnails();
   }, [preApprovedResponse]);
 
   const clearForm = () => {
@@ -324,7 +327,7 @@ const getDetailsRow = (estimateDetails) => {
           {imagesToShowBelowComplaintDetails?.thumbs ? (
             <div>
               <CardLabel style={{ marginTop: '18px', fontWeight: 'bolder', marginBottom: "15px" }}>{t("")}</CardLabel>
-              <DisplayPhotos srcs={imagesToShowBelowComplaintDetails} onClick={(source, index) => zoomImageWrapper(source, index)} />
+              <DisplayPhotos srcs={imagesToShowBelowComplaintDetails.thumbs} drawingNos={imagesToShowBelowComplaintDetails.drawingNo} onClick={(source, index) => zoomImageWrapper(source, index)} />
             </div>
           ) : null}
           {preApprovedResponse?.data && preApprovedResponse?.data.length===0 ? (

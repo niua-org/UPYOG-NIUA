@@ -13,7 +13,7 @@ import {
   DeleteIcon,
   Table,
   RadioOrSelect,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";

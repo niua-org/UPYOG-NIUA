@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FormComposer, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { updateNDCForm } from "../../../../redux/actions/NDCFormActions";
 import { useState } from "react";
 import { Loader } from "../../../../components/Loader";

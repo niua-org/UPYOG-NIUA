@@ -1,4 +1,4 @@
-import { PrivateRoute } from "@upyog/digit-ui-react-components";
+import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -32,7 +32,7 @@ const EmployeeApp = ({ path, url, userType }) => {
         </p>
         <Routes>
           <Route
-            path={`${path}/inbox`}
+            path={`/inbox`}
             element={
               <PrivateRoute>
                 <ReceiptInbox
@@ -45,9 +45,9 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
-          <Route path={`${path}/inprogress`} element={<PrivateRoute><h2>{t("CR_RECEIPTS_SCREENS_UNDER_CONSTRUCTION")}</h2></PrivateRoute>} />
-          <Route path={`${path}/response`} element={<PrivateRoute><ReceiptAcknowledgement parentRoute={path} /></PrivateRoute>} />
-          <Route path={`${path}/details/:service/:id`} element={<PrivateRoute><ReceiptDetails /></PrivateRoute>} />
+          <Route path={`/inprogress`} element={<PrivateRoute><h2>{t("CR_RECEIPTS_SCREENS_UNDER_CONSTRUCTION")}</h2></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><ReceiptAcknowledgement parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/details/:service/:id`} element={<PrivateRoute><ReceiptDetails /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

@@ -23,7 +23,7 @@ const CitizenSearchResults = () => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
+      <Route path={`*`}>
         <SearchResultsComponent
           template={params[0].labels}
           header={params[0].texts.header}

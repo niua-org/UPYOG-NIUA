@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 // UI components
-import { Card, TextInput, Header, ActionBar, SubmitBar, Loader, InfoIcon, Toast, Dropdown, Table } from "@upyog/digit-ui-react-components";
+import { Card, TextInput, Header, ActionBar, SubmitBar, Loader, InfoIcon, Toast, Dropdown, Table } from "@nudmcdgnpm/digit-ui-react-components";
 
 // React Hook Form for form handling
 import { useForm, FormProvider, Controller } from "react-hook-form";

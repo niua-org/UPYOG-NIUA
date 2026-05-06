@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Header, Loader, TextInput, SubmitBar, Card, Table, DatePicker } from "@upyog/digit-ui-react-components";
+import { Header, Loader, TextInput, SubmitBar, Card, Table, DatePicker } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 // EST Payment History Component

@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { BackButton, Loader, PrivateRoute, BreadCrumb } from "@upyog/digit-ui-react-components";
+import { BackButton, Loader, PrivateRoute, BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import DashBoard from "./pages";
 import NewDashBoard from "./pages/NewDashboard";
 import Home from "./pages/Home";
@@ -57,7 +57,7 @@ const Routes = ({ path, stateCode }) => {
 
   const handClick =(e,module)=>{
     e.stopPropagation() 
-    module === "home"?window.location.href=`${path}/landing/NURT_DASHBOARD`:window.location.href=`${path}/dashboard/${module}`
+    module === "home"?window.location.href=`/landing/NURT_DASHBOARD`:window.location.href=`/dashboard/${module}`
   }
   return (
     <div style={{display:"flex"}}>
@@ -80,12 +80,12 @@ Desludging Service</div>
       <div className="chart-wrapper" style={isMobile ? {marginTop:"unset"} : {width:"100%"}}>
       <DssBreadCrumb location={location} />
       <RouterRoutes>
-        <Route path={`${path}/landing/:moduleCode`} element={<PrivateRoute><Home stateCode={stateCode} /></PrivateRoute>} />
-        <Route path={`${path}/dashboard/:moduleCode`} element={<PrivateRoute><DashBoard stateCode={stateCode} /></PrivateRoute>} />
-        <Route path={`${path}/main-dashboard-landing`} element={<PrivateRoute><NewDashBoard stateCode={stateCode} /></PrivateRoute>} />
-        <Route path={`${path}/drilldown`} element={<PrivateRoute><DrillDown stateCode={stateCode} /></PrivateRoute>} />
-        <Route key={"national-faq"} path={`${path}/national-faqs`} element={<FAQsSection />} />
-        <Route key={"national-about"} path={`${path}/national-about`} element={<About />} />
+        <Route path={`/landing/:moduleCode`} element={<PrivateRoute><Home stateCode={stateCode} /></PrivateRoute>} />
+        <Route path={`/dashboard/:moduleCode`} element={<PrivateRoute><DashBoard stateCode={stateCode} /></PrivateRoute>} />
+        <Route path={`/main-dashboard-landing`} element={<PrivateRoute><NewDashBoard stateCode={stateCode} /></PrivateRoute>} />
+        <Route path={`/drilldown`} element={<PrivateRoute><DrillDown stateCode={stateCode} /></PrivateRoute>} />
+        <Route key={"national-faq"} path={`/national-faqs`} element={<FAQsSection />} />
+        <Route key={"national-about"} path={`/national-about`} element={<About />} />
       </RouterRoutes>
     </div>
     </div>

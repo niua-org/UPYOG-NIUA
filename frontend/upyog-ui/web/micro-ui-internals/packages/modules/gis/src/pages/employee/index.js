@@ -1,4 +1,4 @@
-import { AppContainer, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import MapView from "../../components/MapView";

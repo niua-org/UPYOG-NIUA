@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import CreateProperty from "./Create";
@@ -15,12 +15,12 @@ const App = ({ stateCode }) => {
       <AppContainer>
         <BackButton>Back</BackButton>
         <Routes>
-          <Route path={`${path}/property/citizen-search`} element={<SearchPropertyComponent />} />
-          <Route path={`${path}/property/search-results`} element={<SearchResultsComponent stateCode={stateCode} />} />
-          <Route path={`${path}/property/citizen-otp`} element={<CitizenOtp stateCode={stateCode} />} />
-          <Route path={`${path}/property/link-success/:propertyIds`} element={<PrivateRoute><PropertyLinkSuccess /></PrivateRoute>} />
-          <Route path={`${path}/property/new-application`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
-          <Route path={`${path}/view-property`} element={<PrivateRoute><ViewProperty /></PrivateRoute>} />
+          <Route path={`/property/citizen-search`} element={<SearchPropertyComponent />} />
+          <Route path={`/property/search-results`} element={<SearchResultsComponent stateCode={stateCode} />} />
+          <Route path={`/property/citizen-otp`} element={<CitizenOtp stateCode={stateCode} />} />
+          <Route path={`/property/link-success/:propertyIds`} element={<PrivateRoute><PropertyLinkSuccess /></PrivateRoute>} />
+          <Route path={`/property/new-application`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
+          <Route path={`/view-property`} element={<PrivateRoute><ViewProperty /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

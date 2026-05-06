@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AppContainer } from "@upyog/digit-ui-react-components";
+import { AppContainer } from "@nudmcdgnpm/digit-ui-react-components";
 import { Route, Routes } from "react-router-dom";
 import { loginConfig } from "./config";
 import ForgotPasswordComponent from "./forgotPassword";
@@ -24,7 +24,7 @@ const EmployeeForgotPassword = () => {
 
   return (
     <Routes>
-      <Route path={`${path}`} exact>
+      <Route path={`*`}>
         <ForgotPasswordComponent config={params[0]} t={t} />
       </Route>
     </Routes>

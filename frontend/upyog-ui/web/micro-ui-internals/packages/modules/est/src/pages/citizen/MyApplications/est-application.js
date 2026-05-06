@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, KeyNote, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 // Estate Application Component

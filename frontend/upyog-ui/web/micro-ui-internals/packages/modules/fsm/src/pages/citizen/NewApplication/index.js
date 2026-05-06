@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
-import { TypeSelectCard, Loader } from "@upyog/digit-ui-react-components";
+import { TypeSelectCard, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { newConfig } from "../../../config/NewApplication/config";
 import CheckPage from "./CheckPage";
 import Response from "./Response";

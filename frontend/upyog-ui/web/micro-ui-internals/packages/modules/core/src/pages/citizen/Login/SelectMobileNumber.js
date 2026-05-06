@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CardText, FormStep, CitizenConsentForm, Loader, CheckBox,Modal,Card ,CardHeader} from "@upyog/digit-ui-react-components";
+import { CardText, FormStep, CitizenConsentForm, Loader, CheckBox,Modal,Card ,CardHeader} from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 
 const SelectMobileNumber = ({ t, onSelect, showRegisterLink, mobileNumber, onMobileChange, config, canSubmit }) => {

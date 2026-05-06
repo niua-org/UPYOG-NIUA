@@ -1,5 +1,5 @@
 import React, { useState, useEffect} from "react";
-import { Modal, AddressDetails } from "@upyog/digit-ui-react-components";
+import { Modal, AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 

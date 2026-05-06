@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
-import { Dropdown, Loader } from "@upyog/digit-ui-react-components";
+import { Dropdown, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { useQueryClient } from "@tanstack/react-query";
 
