@@ -1,7 +1,7 @@
 {
   "name": "@nudmcdgnpm/upyog-ui-module-est",
   "description": "Estate Managemnent Module",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "license": "MIT",
   "main": "src/Module.js",
     "source": "src/Module.js",
