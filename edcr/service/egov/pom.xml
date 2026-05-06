@@ -74,10 +74,10 @@
             <name>Aspose Java API</name>
             <url>https://upyog-nexus.niua.org/repo/</url>
         </repository>
-		<repository>
-				<id>aspose</id>
-				<url>https://repository.aspose.com/repo/</url>
-		</repository>
+<!--		<repository>-->
+<!--				<id>aspose</id>-->
+<!--				<url>https://repository.aspose.com/repo/</url>-->
+<!--		</repository>-->
         <repository>
             <id>javaxt.com</id>
             <url>https://upyog-nexus.niua.org/maven</url>
@@ -123,8 +123,8 @@
 		<!-- Application server provided dependency versions -->
 		<hibernate-version>5.6.15.Final</hibernate-version>
 		<hibernate-search-version>5.5.8.Final</hibernate-search-version>
-		<hibernate-validator-version>6.2.5.Final</hibernate-validator-version>
-		<javax-validation-version>2.0.1.Final</javax-validation-version>
+		<hibernate-validator-version>9.1.0.Final</hibernate-validator-version>
+		<jakarta-validation-version>3.1.1</jakarta-validation-version>
 		<javax-servlet-api-version>1.0.0.Final</javax-servlet-api-version>
 		<javax-servlet-jstl-version>1.2.7</javax-servlet-jstl-version>
 <!--		<javax-servlet-jsp-version>2.3.0.Final</javax-servlet-jsp-version>-->
@@ -302,16 +302,13 @@
 				<groupId>org.hibernate.validator</groupId>
 				<artifactId>hibernate-validator</artifactId>
 				<version>${hibernate-validator-version}</version>
-				
-				
 			</dependency>
 			<dependency>
-				<groupId>javax.validation</groupId>
-				<artifactId>validation-api</artifactId>
-				<version>${javax-validation-version}</version>
+				<groupId>jakarta.validation</groupId>
+				<artifactId>jakarta.validation-api </artifactId>
+				<version>${jakarta-validation-version}</version>
 			
-				
-				
+
 			</dependency>
 			<!-- <dependency> <groupId>org.jadira.usertype</groupId> <artifactId>usertype.core</artifactId> 
 				<version>4.0.0.GA</version> </dependency> <dependency> <groupId>org.jadira.usertype</groupId> 
@@ -1146,7 +1143,7 @@
 			<dependency>
                             <groupId>com.aspose</groupId>
                             <artifactId>aspose-cad</artifactId>
-                            <version>25.6</version>
+                            <version>20.10</version>
                         </dependency>
 
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES START -->
@@ -1577,5 +1574,11 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<resources>
+		<resource>
+			<directory>src/main/resources</directory>
+			<filtering>true</filtering>
+		</resource>
+	</resources>
 	</build>
 </project>
