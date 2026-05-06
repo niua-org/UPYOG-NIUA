@@ -196,7 +196,7 @@ export default defineConfig(({ mode }) => {
     "/bpa-calculator", "/request-service", "/challan-generation", "/ndc-services", "/estate-management"
   ];
 
-  const packagesRoot = path.resolve(__dirname, "../packages");
+  const packagesRoot = path.resolve(__dirname, "micro-ui-internals/packages");
 
   function getAliases() {
     const aliases = {};
@@ -241,17 +241,20 @@ export default defineConfig(({ mode }) => {
 
     root: __dirname,
 
-    cacheDir: path.resolve(__dirname, "../node_modules/.vite"),
+    cacheDir: path.resolve(__dirname, "node_modules/.vite"),
 
     base: isProd ? "/upyog-ui/" : "/",
 
     define: {
-      "process.env": JSON.stringify(env),
+      "process.env": JSON.stringify({
+        ...env,
+        NODE_ENV: mode,
+      }),
     },
 
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "@tanstack/react-query", "react-router-dom", "i18next", "react-i18next"],
     },
 
     esbuild: {
@@ -294,8 +297,8 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ["react", "react-dom", "react-router-dom", "leaflet-draw"],
-      exclude: Object.keys(moduleAliases), // 👈 IMPORTANT: prevents double-bundling
+      include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query", "i18next", "react-i18next"],
+      exclude: Object.keys(moduleAliases), // prevents double-bundling of local workspace packages
       esbuildOptions: {
         loader: { ".js": "jsx" },
       },
