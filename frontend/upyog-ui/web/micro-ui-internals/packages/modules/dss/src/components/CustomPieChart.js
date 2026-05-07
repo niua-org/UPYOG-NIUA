@@ -27,7 +27,6 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
 
   const chartData = useMemo(() => {
     if (!response) return null;
-    setChartDenomination(response?.responseData?.data?.[0]?.headerSymbol);
     const compareFn = (a, b) => b.value - a.value;
     return drillDownId === "deathByCategoryDrilldownAge" || response?.responseData?.visualizationCode === "nssNumberOfDeathsByAge" // || drillDownId === "nssDeathByCategoryDrillDownAge")
       ? response?.responseData?.data?.[0]?.plots.reduce((acc, plot, index) => {
@@ -42,7 +41,13 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
           acc = acc.concat(plot);
           return acc;
         }, []);
-  }, [response]);
+  }, [response, drillDownId]);
+
+  useEffect(() => {
+    if (chartData && response?.responseData?.data?.[0]?.headerSymbol) {
+      setChartDenomination(response.responseData.data[0].headerSymbol);
+    }
+  }, [chartData, response, setChartDenomination]);
   const totalValue= useMemo(()=>{
     if(chartData){
       return chartData.reduce((total, entry)=> total+entry.value,0);

@@ -465,8 +465,8 @@ const DashBoard = ({ stateCode }) => {
           {tabArray && tabArray?.length > 1 && (
             <div className="dss-switch-tabs chart-row">
               <div className="dss-switch-tab-wrapper">
-                {tabArray?.map((key) => (
-                  <div className={tabState === key ? "dss-switch-tab-selected" : "dss-switch-tab-unselected"} onClick={() => setTabState(key)}>
+                {tabArray?.map((key, index) => (
+                  <div key={index} className={tabState === key ? "dss-switch-tab-selected" : "dss-switch-tab-unselected"} onClick={() => setTabState(key)}>
                     {t(key)}
                   </div>
                 ))}

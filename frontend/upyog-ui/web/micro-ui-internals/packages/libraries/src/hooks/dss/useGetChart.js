@@ -2,6 +2,36 @@ import { queryTemplate } from "../../common/queryTemplate";
 import { DSSService } from "../../services/elements/DSS";
 
 /**
+ * Build request payload for DSS chart API
+ */
+const getRequest = (
+  type,
+  key,
+  requestDate,
+  filters = {},
+  moduleLevel,
+  addlFilter = {},
+  indexKeyForEmptyModule = []
+) => {
+  const aggregationRequestDto = {
+    visualizationType: type,
+    visualizationCode: key,
+    queryType: "",
+    filters: filters || {},
+    moduleLevel: moduleLevel || "",
+    aggregationFactors: addlFilter || {},
+    requestDate: requestDate || {},
+  };
+
+  // Handle empty module for specific keys
+  if (indexKeyForEmptyModule.includes(key)) {
+    aggregationRequestDto.moduleLevel = "";
+  }
+
+  return { aggregationRequestDto };
+};
+
+/**
  * Fetch chart data for DSS dashboard.
  */
 const useGetChart = (args) => {
