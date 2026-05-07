@@ -1,41 +1,27 @@
-"use strict";
-import http from "http";
-import request from "request";
+// Before: Babel-based ES6, mixed require/import, unused imports (request,  1234
+// , Recoverable, http, set)
+// Change: pure ESM, removed unused imports, fixed uuid/pdfmake/jsonpath imports, added .js extensions
+// __dirname not available in ESM, recreated using import.meta.url
+
 import express from "express";
-import logger from "./config/logger";
+import logger from "./config/logger.js";
 import path from "path";
-import fs, {
-  exists
-} from "fs";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import axios from "axios";
 import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
 import asyncHandler from "express-async-handler";
-import * as pdfmake from "pdfmake/build/pdfmake";
-import * as pdfFonts from "pdfmake/build/vfs_fonts";
-import get from "lodash/get";
-import set from "lodash/set";
-import {
-  strict
-} from "assert";
-import {
-  Recoverable
-} from "repl";
-import {
-  fileStoreAPICall
-} from "./utils/fileStoreAPICall";
-import {
-  directMapping
-} from "./utils/directMapping";
-import {
-  externalAPIMapping
-} from "./utils/externalAPIMapping";
-import envVariables from "./EnvironmentVariables";
+import pdfMake from "pdfmake/build/pdfmake.js";
+import pdfFonts from "pdfmake/build/vfs_fonts.js";
+import get from "lodash.get";
+import { fileStoreAPICall } from "./utils/fileStoreAPICall.js";
+import { directMapping } from "./utils/directMapping.js";
+import { externalAPIMapping } from "./utils/externalAPIMapping.js";
+import envVariables from "./EnvironmentVariables.js";
 import QRCode from "qrcode";
-import {
-  getValue
-} from "./utils/commons";
+import { getValue } from "./utils/commons.js";
 import {
   getFileStoreIds,
   insertStoreIds,
@@ -46,18 +32,27 @@ import {
   getBulkPdfRecordsDetails,
   getDefaulterPdfRecordsDetails,
   cancelBulkPdfProcess
-} from "./queries";
-import {
-  listenConsumer
-} from "./kafka/consumer";
+} from "./queries.js";
+import { listenConsumer} from "./kafka/consumer.js";
 import {
   convertFooterStringtoFunctionIfExist,
   findLocalisation,
   getDateInRequiredFormat
-} from "./utils/commons";
+} from "./utils/commons.js";
+import v8 from "v8";
+import jp from "jsonpath";
+import { v4 as uuidv4 } from "uuid";
+import mustache from "mustache";
+import { createRequire } from "module";
+import { connectProducer } from "./kafka/producer.js";
+
+const require = createRequire(import.meta.url);
+const pdfMakePrinter = require("pdfmake/src/printer");
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
-let v8 = require("v8");
 let egov_host = envVariables.EGOV_HOST;
 //let egov_host='https://upyog-test.niua.org';
 let totalHeapSizeInGB = (((v8.getHeapStatistics().total_available_size) / 1024 / 1024 / 1024).toFixed(2));
@@ -67,10 +62,8 @@ console.log(`*******************************************`);
 
 
 
-var jp = require("jsonpath");
 //create binary
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
-var pdfMakePrinter = require("pdfmake/src/printer");
+pdfMake.vfs = pdfFonts.vfs;
 
 let app = express();
 app.use(express.static(path.join(__dirname, "public")));
@@ -95,7 +88,6 @@ let formatConfigMap = {};
 
 let topicKeyMap = {};
 var topic = [];
-var datafileLength = dataConfigUrls.split(",").length;
 let unregisteredLocalisationCodes = [];
 
 var fontDescriptors = {
@@ -131,9 +123,7 @@ var defaultFontMapping = {
 }
 
 const printer = new pdfMakePrinter(fontDescriptors);
-const uuidv4 = require("uuid/v4");
 
-let mustache = require("mustache");
 mustache.escape = function (text) {
   return text;
 };
@@ -188,6 +178,7 @@ const createPdfBinary = async (
       var dbInsertBulkRecords = [];
       // instead of awaiting the promise, use process.nextTick to asynchronously upload the receipt
       //
+        //logger.info('In PDF Generate');
       process.nextTick(function () {
         uploadFiles(
             dbInsertSingleRecords,
@@ -281,6 +272,8 @@ const uploadFiles = async (
     objectCopy.footer = convertFooterStringtoFunctionIfExist(
       formatconfig.footer
     );
+
+     //logger.info('In PDF Next Generate');
     const doc = printer.createPdfKitDocument(objectCopy);
     let fileNameAppend = "-" + new Date().getTime();
     // let filename="src/pdfs/"+key+" "+fileNameAppend+".pdf"
@@ -300,6 +293,7 @@ const uploadFiles = async (
       var data = Buffer.concat(chunks);
       fileStoreAPICall(filename, tenantId, data)
         .then((result) => {
+          //logger.info('In Filestore call response');
           listOfFilestoreIds.push(result);
           if (!isconsolidated) {
             dbInsertSingleRecords.push({
@@ -386,8 +380,7 @@ app.post(
         res,
         (response) => {
           // doc successfully created
-          res.status(201);
-          res.json({
+          return res.status(201).json({
             ResponseInfo: requestInfo,
             message: response.message,
             filestoreIds: response.filestoreIds,
@@ -402,9 +395,7 @@ app.post(
           });
         },
         (error) => {
-          res.status(400);
-          // doc creation error
-          res.json({
+          return res.status(400).json({
             ResponseInfo: requestInfo,
             message: "error in createPdfBinary " + error.message,
           });
@@ -413,8 +404,7 @@ app.post(
       //
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "some unknown error while creating: " + error.message,
       });
@@ -478,8 +468,7 @@ app.post(
       }
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         message: "some unknown error while creating: " + error.message,
       });
     }
@@ -500,8 +489,7 @@ app.post(
         (jobid == undefined || jobid.trim() == "") &&
         (entityid == undefined || entityid.trim() == "")
       ) {
-        res.status(400);
-        res.json({
+        return res.status(400).json({
           ResponseInfo: requestInfo,
           message: "jobid and entityid both can not be empty",
         });
@@ -523,7 +511,7 @@ app.post(
             // doc successfully created
             res.status(responseBody.status);
             delete responseBody.status;
-            res.json({
+            return res.json({
               ResponseInfo: requestInfo,
               ...responseBody
             });
@@ -532,8 +520,7 @@ app.post(
       }
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "some unknown error while searching: " + error.message,
       });
@@ -547,15 +534,13 @@ app.post(
     let requestInfo;
     try {
       requestInfo = get(req.body, "RequestInfo");
-      res.status(200);
-      res.json({
+      return res.status(200).json({
           ResponseInfo: requestInfo,
           unregisteredLocalisationCodes: unregisteredLocalisationCodes,
         });
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "Error while retreving the codes",
       });
@@ -583,15 +568,13 @@ app.post(
           unregisteredLocalisationCodes.splice(index, 1);
         }
       });
-      res.status(200);
-      res.json({
+      return res.status(200).json({
           ResponseInfo: requestInfo,
           unregisteredLocalisationCodes: unregisteredLocalisationCodes,
         });
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "Error while retreving the codes",
       });
@@ -613,15 +596,13 @@ app.post(
 
       let data = await getBulkPdfRecordsDetails(uuid, offset, limit, jobId);
       if(data.length<=0){
-        res.status(400);
-        res.json({
+        return res.status(400).json({
             ResponseInfo: requestInfo,
             message: `Group bill pdf records details are not present for the employee ${requestInfo.userInfo.name} .Please trigger a bulk bill creation process`,
           });
       }
       else{
-        res.status(200);
-        res.json({
+        return res.status(200).json({
             ResponseInfo: requestInfo,
             groupBillrecords: data,
           });
@@ -630,8 +611,7 @@ app.post(
       
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "Error while retreving the details",
       });
@@ -665,15 +645,13 @@ app.post(
         }
       }
       
-      res.status(200);
-      res.json({
+     return res.status(200).json({
             ResponseInfo: requestInfo,
             Message: "Bulk PDF records details are clear",
       });
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "Error while clearing the Bulk PDF records details",
       });
@@ -691,8 +669,7 @@ app.post(
     try {
 
       if( !jobId || !uuid){
-        res.status(400);
-        res.json({
+        return res.status(400).json({
           ResponseInfo: requestInfo,
           message: "jobid or userid can not be empty",
         });
@@ -700,15 +677,13 @@ app.post(
       else{
         let errorMap = await cancelBulkPdfProcess(requestInfo, jobId, uuid);
         if(errorMap != undefined && errorMap.length>=1){
-          res.status(400);
-          res.json({
+          return res.status(400).json({
               ResponseInfo: requestInfo,
               errorMessage: errorMap,
         });
         }
         else{
-          res.status(200);
-          res.json({
+          return res.status(200).json({
                 ResponseInfo: requestInfo,
                 Message: `Bulk PDF process with job id: ${jobId} is cancel`,
           });
@@ -717,8 +692,7 @@ app.post(
       }
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "Error while clearing the Bulk PDF records details",
       });
@@ -740,15 +714,13 @@ app.post(
 
       let data = await getDefaulterPdfRecordsDetails(uuid, offset, limit, jobId);
       if(data.length<=0){
-        res.status(400);
-        res.json({
+       return res.status(400).json({
             ResponseInfo: requestInfo,
             message: `Defaulter Notice pdf records details are not present for the employee ${requestInfo.userInfo.name} .Please trigger a bulk bill creation process`,
           });
       }
       else{
-        res.status(200);
-        res.json({
+        return res.status(200).json({
             ResponseInfo: requestInfo,
             groupBillrecords: data,
           });
@@ -757,8 +729,7 @@ app.post(
       
     } catch (error) {
       logger.error(error.stack || error);
-      res.status(400);
-      res.json({
+      return res.status(400).json({
         ResponseInfo: requestInfo,
         message: "Error while retreving the details",
       });
@@ -847,13 +818,14 @@ formatConfigUrls &&
       })();
     }
   });
-
-app.listen(serverport, () => {
-  logger.info(`Server running at http:${serverport}/`);
-});
-
-topic.push(envVariables.KAFKA_RECEIVE_CREATE_JOB_TOPIC)
-listenConsumer(topic);
+ // Before: listenConsumer and connectProducer were called outside app.listen without await, causing unordered startup and silent errors
+// Change: moved inside app.listen callback with await to ensure server is ready before Kafka connects
+  app.listen(serverport, async () => {
+    logger.info(`Server running at http:${serverport}/`);
+    topic.push(envVariables.KAFKA_RECEIVE_CREATE_JOB_TOPIC);
+    await listenConsumer(topic);
+    await connectProducer();
+  });
 
 /**
  *
@@ -931,6 +903,7 @@ export const createAndSave = async (
       moduleName
     ).catch((err) => {
       logger.error(err.stack || err);
+      logger.info('In Created PDF Binay Error');
       errorCallback({
         message: "error occurred in createPdfBinary call: " + (typeof err === "string") ?
           err :
@@ -1122,7 +1095,8 @@ const generateQRCodes = async (
     'cnd-service',
     'request-service.water_tanker-receipt',
     'request-service.mobile_toilet-receipt',
-    'chbpermissionletter'
+    'chbpermissionletter',
+    'advpermissionletter'
   ];
 
   for (var i = 0, len = qrcodeMappings.length; i < len; i++) {
@@ -1197,8 +1171,7 @@ const validateRequest = (req, res, key, tenantId, requestInfo) => {
     errorMessage += ` no config found for key ${key}`;
   }
   if (res && errorMessage !== "") {
-    res.status(400);
-    res.json({
+    return res.status(400).json({
       message: errorMessage,
       ResponseInfo: requestInfo,
     });

@@ -1,12 +1,14 @@
-const { Pool } = require('pg');
-import logger from "./config/logger";
-import producer from "./kafka/producer";
-import envVariables from "./EnvironmentVariables";
+// Before: mixed require() and import, uuid v3 subpath import, missing .js extensions
+// Change: replaced require() with ESM imports, fixed uuid to v9 API, added .js extensions
+
+import { Pool } from 'pg';
+import logger from "./config/logger.js";
+import producer from "./kafka/producer.js";
+import envVariables from "./EnvironmentVariables.js";
 import PDFMerger from 'pdf-merger-js';
-import { fileStoreAPICall, getFilestoreUrl } from "./utils/fileStoreAPICall";
-import fs, {
-  exists
-} from "fs";
+import { fileStoreAPICall, getFilestoreUrl } from "./utils/fileStoreAPICall.js";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 
 const pool = new Pool({
   user: envVariables.DB_USER,
@@ -17,7 +19,6 @@ const pool = new Pool({
 })
 
 let createJobKafkaTopic = envVariables.KAFKA_CREATE_JOB_TOPIC;
-const uuidv4 = require("uuid/v4");
 
 export const getFileStoreIds = (
   jobid,
@@ -91,7 +92,7 @@ export const getFileStoreIds = (
   });
 };
 
-export const insertStoreIds = (
+export const insertStoreIds = async (
   dbInsertRecords,
   jobid,
   filestoreids,
@@ -104,24 +105,19 @@ export const insertStoreIds = (
   documentType,
   moduleName
 ) => {
-  var payloads = [];
   var endtime = new Date().getTime();
-  var id = uuidv4();
-  payloads.push({
-    topic: createJobKafkaTopic,
-    messages: JSON.stringify({ jobs: dbInsertRecords })
-  });
-  producer.send(payloads, function(err, data) {
-    if (err) {
-      logger.error(err.stack || err);
-      errorCallback({
-        message: `error while publishing to kafka: ${err.message}`
-      });
-    } else {
-      logger.info("jobid: " + jobid + ": published to kafka successfully");
-      successCallback({
-        message: "Success",
-        jobid: jobid,
+
+  // Before: kafka-node producer.send used callback style
+  // Change: kafkajs producer.send is async/await
+  try {
+    await producer.send({
+      topic: createJobKafkaTopic,
+      messages: [{ value: JSON.stringify({ jobs: dbInsertRecords }) }]
+    });
+    logger.info("jobid: " + jobid + ": published to kafka successfully");
+    successCallback({
+      message: "Success",
+        jobid,
         filestoreIds: filestoreids,
         tenantid: tenantId,
         starttime,
@@ -131,9 +127,13 @@ export const insertStoreIds = (
         documentType,
         moduleName
       });
+    } catch (err) {
+      logger.error(err.stack || err);
+      errorCallback({
+        message: `error while publishing to kafka: ${err.message}`
+      });
     }
-  });
-};
+  };
 
 export async function insertRecords(bulkPdfJobId, totalPdfRecords, currentPdfRecords, userid, tenantId, locality, bussinessService, consumerCode, isConsolidated) {
   try {
@@ -179,7 +179,7 @@ export async function mergePdf(bulkPdfJobId, tenantId, userid, numberOfFiles, mo
           try {
             for (let i = 0; i < fileNames.length; i++){
               logger.info(baseFolder+fileNames[i]);
-              merger.add(baseFolder+fileNames[i]);            //merge all pages. parameter is the path to file and filename.
+              await merger.add(baseFolder+fileNames[i]);  //merge all pages. parameter is the path to file and filename.
             }
             await merger.save(baseFolder+'/output.pdf');        //save under given name and reset the internal document
           } catch (err) {
@@ -213,24 +213,19 @@ export async function mergePdf(bulkPdfJobId, tenantId, userid, numberOfFiles, mo
           }
         } catch (error) {
           logger.error(error.stack || error);
-          var errorPlayloads = [];
-          
-          errorPlayloads.push({
-            topic: envVariables.KAFKA_PDF_ERROR_TOPIC,
-            messages: error
-          });
-          producer.send(errorPlayloads, function(err, data) {
-            if (err) {
-              logger.error(err.stack || err);
-              errorCallback({
-                message: `error while publishing to kafka: ${err.message}`
-              });
+          try {
+            await producer.send({
+              topic: envVariables.KAFKA_PDF_ERROR_TOPIC,
+              messages: [{ value: JSON.stringify(error) }]
+            });
+          } catch (kafkaErr) {
+            logger.error("error while publishing to kafka: " + kafkaErr.message);
+            logger.error(kafkaErr.stack || kafkaErr);
             } 
-          });
-        }
-        
-
-      })();
+          }
+          
+        })();        
+      
     }
   } catch (err) {
     logger.error(err.stack || err);
@@ -244,19 +239,16 @@ export async function sendNoitification(filestoreid, mobileNumber, tenantId){
   let smsRequest = {};
   smsRequest['mobileNumber'] = mobileNumber;
   smsRequest['message'] = "Your download is ready. It will expire in 24 hours. Please click on the link below to download the pdf.\n"+pdfLink;
-  let payloads = [];
-  payloads.push({
-    topic,
-    messages: JSON.stringify(smsRequest)
-  });
+  
 
-  producer.send(payloads, function(err, data) {
-    if (!err) {
-      console.log(data);
-    } else {
-      console.log(err);
-    }
-  });
+  try {
+    await producer.send({
+      topic,
+      messages: [{ value: JSON.stringify(smsRequest) }]
+    });
+  } catch (err) {
+    logger.error(err);  
+}
 }
 
 
@@ -439,7 +431,7 @@ export async function mergePdfForDN(bulkPdfJobId, tenantId, userid, numberOfFile
           try {
             for (let i = 0; i < fileNames.length; i++){
               logger.info(baseFolder+fileNames[i]);
-              merger.add(baseFolder+fileNames[i]);            //merge all pages. parameter is the path to file and filename.
+              await merger.add(baseFolder+fileNames[i]);            //merge all pages. parameter is the path to file and filename.
             }
             await merger.save(baseFolder+'/output.pdf');        //save under given name and reset the internal document
           } catch (err) {
@@ -473,27 +465,19 @@ export async function mergePdfForDN(bulkPdfJobId, tenantId, userid, numberOfFile
           }
         } catch (error) {
           logger.error(error.stack || error);
-          var errorPlayloads = [];
-          
-          errorPlayloads.push({
-            topic: envVariables.KAFKA_PDF_ERROR_TOPIC,
-            messages: error
-          });
-          producer.send(errorPlayloads, function(err, data) {
-            if (err) {
-              logger.error(err.stack || err);
-              errorCallback({
-                message: `error while publishing to kafka: ${err.message}`
-              });
-            } 
-          });
+          try {
+            await producer.send({
+              topic: envVariables.KAFKA_PDF_ERROR_TOPIC,
+              messages: [{ value: JSON.stringify(error) }]
+            });
+          } catch (kafkaErr) {
+            logger.error(kafkaErr.stack || kafkaErr);
+          }
         }
-        
 
       })();
     }
   } catch (err) {
     logger.error(err.stack || err);
   }
-  
 }

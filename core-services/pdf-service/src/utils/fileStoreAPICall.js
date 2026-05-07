@@ -1,9 +1,13 @@
-import request from "request";
+// Before: imported unused request, named { post } from axios (removed in 1.x), 
+//         used require() for form-data, missing .js extensions on local imports
+// Change: removed request and { post }, replaced require() with import, added .js extensions
+
 import fs from "fs";
-import get from "lodash/get";
-import axios, { post } from "axios";
-var FormData = require("form-data");
-import envVariables from "../EnvironmentVariables";
+import get from "lodash.get";
+import axios from "axios";
+import FormData from "form-data";
+import logger from "../config/logger.js";
+import envVariables from "../EnvironmentVariables.js";
 
 let egovFileHost = envVariables.EGOV_FILESTORE_SERVICE_HOST;
 let externalHost = envVariables.EGOV_EXTERNAL_HOST;
@@ -14,20 +18,36 @@ let externalHost = envVariables.EGOV_EXTERNAL_HOST;
  * @param {*} tenantId - tenantID
  */
 export const fileStoreAPICall = async function(filename, tenantId, fileData) {
-  var url = `${egovFileHost}/filestore/v1/files?tenantId=${tenantId}&module=pdfgen&tag=00040-2017-QR`;
-  var form = new FormData();
-  form.append("file", fileData, {
+   const url = `${egovFileHost}filestore/v1/files?tenantId=${tenantId}&module=pdfgen&tag=00040-2017-QR`;
+
+  // Prepare form data
+  const form = new FormData();
+  form.append('file', fileData, {
     filename: filename,
-    contentType: "application/pdf"
+    contentType: 'application/pdf',
   });
-  let response = await axios.post(url, form, {
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity,
-    headers: {
-      ...form.getHeaders()
-    }
-  });
-  return get(response.data, "files[0].fileStoreId");
+
+  let response = null;
+  
+  try {
+    // Sending the file to Filestore API
+    response = await axios.post(url, form, {
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      headers: {
+        ...form.getHeaders(),
+      },
+    });
+
+    return get(response.data, 'files[0].fileStoreId');
+
+  } catch (error) {
+    // Log the error to help debugging
+    logger.error('Axios error:', error);
+
+    // Throw the error back so it can be handled in the calling function
+    throw new Error('Something went wrong with the external Filestore API request');
+  }
 };
 
 export async function getFilestoreUrl(filestoreid, tenantId){

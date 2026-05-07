@@ -1,27 +1,21 @@
-import logger from "../config/logger";
-var kafka = require("kafka-node");
-import envVariables from "../EnvironmentVariables";
+// Before: used kafka-node which is abandoned and incompatible with Node 22
+// Change: replaced kafka-node with kafkajs, updated producer API to kafkajs style
 
-const Producer = kafka.Producer;
-let client;
-// if (process.env.NODE_ENV === "development") {
-// client = new kafka.Client();
-client = new kafka.KafkaClient({ kafkaHost: envVariables.KAFKA_BROKER_HOST, connectRetryOptions: {retries: 1} });
-//   console.log("local - ");
-// } else {
-//   client = new kafka.KafkaClient({ kafkaHost: envVariables.KAFKA_BROKER_HOST });
-//   console.log("cloud - ");
-// }
+import { Kafka } from "kafkajs";
+import logger from "../config/logger.js";
+import envVariables from "../EnvironmentVariables.js";
 
-const producer = new Producer(client);
+const kafka = new Kafka({
+  brokers: envVariables.KAFKA_BROKER_HOST.split(",").map(b => b.trim())});
 
-producer.on("ready", function() {
-  logger.info("Producer is ready");
-});
+const producer = kafka.producer();
 
-producer.on("error", function(err) {
-  logger.error("Producer is in error state");
-  logger.error(err.stack || err);
-});
+// await producer.connect();
+export const connectProducer = async () => {
+  await producer.connect();
+};
+
+producer.on(producer.events.CONNECT, () => logger.info("Producer is ready"));
+producer.on(producer.events.DISCONNECT, () => logger.error("Producer disconnected"));
 
 export default producer;
