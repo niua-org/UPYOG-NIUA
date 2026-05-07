@@ -126,7 +126,7 @@ const NewSurveys = () => {
         }
         else
         {
-          navigate(`/${window?.contextPath}/employee/engagement/surveys/create-response`, details)
+          navigate(`/workbench-ui/employee/engagement/surveys/create-response`, details)
         }
       })
     }

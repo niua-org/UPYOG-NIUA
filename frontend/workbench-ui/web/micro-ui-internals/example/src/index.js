@@ -1,15 +1,15 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 
-import { initLibraries } from "@egovernments/digit-ui-libraries";
-// import { paymentConfigs, PaymentLinks, PaymentModule } from "@egovernments/digit-ui-module-common";
-import { DigitUI } from "@egovernments/digit-ui-module-core";
-import { initDSSComponents } from "@egovernments/digit-ui-module-dss";
-import { initEngagementComponents } from "@egovernments/digit-ui-module-engagement";
-import { initHRMSComponents } from "@egovernments/digit-ui-module-hrms";
-// import { initUtilitiesComponents } from  "@egovernments/digit-ui-module-utilities";
+import { initLibraries } from "@upyog/workbench-ui-libraries";
+// import { paymentConfigs, PaymentLinks, PaymentModule } from "@upyog/workbench-ui-module-common";
+import { DigitUI } from "@upyog/workbench-ui-module-core";
+import { initDSSComponents } from "@upyog/workbench-ui-module-dss";
+import { initEngagementComponents } from "@upyog/workbench-ui-module-engagement";
+import { initHRMSComponents } from "@upyog/workbench-ui-module-hrms";
+// import { initUtilitiesComponents } from  "@upyog/workbench-ui-module-utilities";
 import { initWorkbenchComponents } from "@nudmcdgnpm/digit-ui-module-workbench";
-import { PGRReducers, initPGRComponents } from "@egovernments/digit-ui-module-pgr";
+import { PGRReducers, initPGRComponents } from "@upyog/workbench-ui-module-pgr";
 
 // import "@egovernments/digit-ui-css/example/index.css";
 

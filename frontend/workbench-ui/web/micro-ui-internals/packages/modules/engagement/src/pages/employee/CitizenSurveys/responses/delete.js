@@ -60,7 +60,7 @@ const Response = (props) => {
         <BannerPicker t={t} data={mutation.data} mutation={mutation} uuid={state?.DocumentEntity?.uuid} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
       </Card>
       <ActionBar>
-        <Link to={`/${window?.contextPath}/employee`}>
+        <Link to={`/workbench-ui/employee`}>
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>
       </ActionBar>

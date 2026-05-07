@@ -49,7 +49,7 @@ const Response = (props) => {
     <Card>
       {appState.complaints.response && <BannerPicker response={appState} />}
       {appState.complaints.response && <TextPicker response={appState} />}
-      <Link to={`/${window?.contextPath}/citizen`}>
+      <Link to={`/workbench-ui/citizen`}>
         <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
       </Link>
     </Card>

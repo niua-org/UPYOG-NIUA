@@ -251,7 +251,7 @@ const SurveyDetails = ({ location, match }) => {
         }
         else
         {
-          navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
+          navigate(`/workbench-ui/employee/engagement/surveys/update-response`, details);
         }
       })
     }
@@ -263,7 +263,7 @@ const SurveyDetails = ({ location, match }) => {
     // const details = {
     //   SurveyEntity: { ...surveyData, tenantId: tenantId?.code ? tenantId?.code : tenantId },
     // };
-    // navigate("/upyog-ui/employee/engagement/surveys/delete-response", details);
+    // navigate("/workbench-ui/employee/engagement/surveys/delete-response", details);
     const details = {
       // SurveyEntity: { ...surveyData,
       //   tenantId,
@@ -284,7 +284,7 @@ const SurveyDetails = ({ location, match }) => {
         
       }
     };
-    navigate(`/${window?.contextPath}/employee/engagement/surveys/delete-response`, details);
+    navigate("/workbench-ui/employee/engagement/surveys/delete-response", details);
   };
 
   //if we don't send tenantId it violates the not null constraint in the backend...
@@ -315,7 +315,7 @@ const SurveyDetails = ({ location, match }) => {
       }
       
     };
-    navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
+    navigate(`/workbench-ui/employee/engagement/surveys/update-response`, details);
   };
 
   const handleMarkInactive = () => {
@@ -341,7 +341,7 @@ const SurveyDetails = ({ location, match }) => {
         id: surveyData.id,
       }
     };
-    navigate(`/${window?.contextPath}/employee/engagement/surveys/update-response`, details);
+    navigate(`/workbench-ui/employee/engagement/surveys/update-response`, details);
   };
 
   const actionMenuOptions = useMemo(() => {

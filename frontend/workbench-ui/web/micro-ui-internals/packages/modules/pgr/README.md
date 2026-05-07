@@ -4,7 +4,7 @@
 ## Install
 
 ```bash
-npm install --save @egovernments/digit-ui-module-pgr
+npm install --save @upyog/workbench-ui-module-pgr
 ```
 
 ## Limitation
@@ -22,7 +22,7 @@ frontend/micro-ui/web/package.json
 ```
 
 ```json
-"@egovernments/digit-ui-module-pgr":"1.7.6",
+"@upyog/workbench-ui-module-pgr":"1.7.6",
 ```
 
 then navigate to App.js
@@ -35,7 +35,7 @@ then navigate to App.js
 ```jsx
 /** add this import **/
 
-import { initPGRComponents } from "@egovernments/digit-ui-module-pgr";
+import { initPGRComponents } from "@upyog/workbench-ui-module-pgr";
 
 /** inside enabledModules add this new module key **/
 

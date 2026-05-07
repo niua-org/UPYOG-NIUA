@@ -25,7 +25,6 @@ export function Icon(type, iconColor)
         case 'dss_fsm':
             return <div style={{background: iconColor, width: "60 px" , height: "52px"}}><FSM></FSM></div>
         case 'obps dashboard':
-        case 'obps dashboard':
             return <div style={{background: iconColor, width: "60 px" , height: "52px"}}><OBPS></OBPS></div>
         case 'online building plan approval system':
         case 'dss_obps_overview':

@@ -119,7 +119,7 @@ const LocalisationSearch = () => {
             variation="secondary"
             icon={<AddFilled style={{ height: "20px", width: "20px" }} />}
             onButtonClick={() => {
-              navigate(`/${window?.contextPath}/employee/${Config?.actionLink}`);
+              navigate(`/workbench-ui/employee/${Config?.actionLink}`);
             }}
             type="button"
             className={'header-btn'}
@@ -129,7 +129,7 @@ const LocalisationSearch = () => {
         Config && Digit.Utils.didEmployeeHasRole(Config?.actionRole) &&
         <ActionBar >
           <SubmitBar disabled={false} onSubmit={() => {
-              navigate(`/${window?.contextPath}/employee/${Config?.actionLink}`);
+              navigate(`/workbench-ui/employee/${Config?.actionLink}`);
             }} label={t("WBH_ADD_LOCALISATION")} />
         </ActionBar>
       }

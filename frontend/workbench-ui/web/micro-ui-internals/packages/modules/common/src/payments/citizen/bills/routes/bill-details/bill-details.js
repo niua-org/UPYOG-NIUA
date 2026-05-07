@@ -111,7 +111,7 @@ const BillDetails = ({ paymentRules, businessService }) => {
   if (authorization === "true" && !userInfo?.access_token) {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = `/${window?.contextPath}/citizen/login?from=${encodeURIComponent(pathname + search)}`;
+    window.location.href = `/workbench-ui/citizen/login?from=${encodeURIComponent(pathname + search)}`;
   }
   useEffect(() => {
     window.scroll({ top: 0, behavior: "smooth" });
@@ -151,14 +151,14 @@ const BillDetails = ({ paymentRules, businessService }) => {
         ? application?.pdfData?.advanceAmount
         : amount;
     if (window.location.href.includes("mcollect")) {
-      navigate(`/${window?.contextPath}/citizen/payment/collect/${businessService}/${consumerCode}?workflow=mcollect`, {
+      navigate(`/workbench-ui/citizen/payment/collect/${businessService}/${consumerCode}?workflow=mcollect`, {
         state: {                          // state object ke andar
           paymentAmount,
           tenantId: billDetails.tenantId,
         }
       });
     } else if (wrkflow === "WNS") {
-      navigate(`/${window?.contextPath}/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}?workflow=WNS&ConsumerName=${ConsumerName}`, {
+      navigate(`/workbench-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}?workflow=WNS&ConsumerName=${ConsumerName}`, {
         state: {                          //  state object ke andar
           paymentAmount,
           tenantId: billDetails.tenantId,
@@ -169,14 +169,14 @@ const BillDetails = ({ paymentRules, businessService }) => {
         }
       });
     } else if (businessService === "PT") {
-      navigate(`/${window?.contextPath}/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
+      navigate(`/workbench-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
         state: {                          // state object ke andar
           paymentAmount,
           tenantId: billDetails.tenantId,
         }
       });
     } else if (businessService === "PT") {
-      navigate(`/${window?.contextPath}/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
+      navigate(`/workbench-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
         state: {                          // state object ke andar
           paymentAmount,
           tenantId: billDetails.tenantId,
@@ -185,7 +185,7 @@ const BillDetails = ({ paymentRules, businessService }) => {
         }
       });
     } else {
-      navigate(`/${window?.contextPath}/citizen/payment/collect/${businessService}/${consumerCode}`, { 
+      navigate(`/workbench-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { 
         state: {                          // state object ke andar
           paymentAmount,
           tenantId: billDetails.tenantId,

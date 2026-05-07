@@ -3,26 +3,20 @@ import { Request, ServiceRequest } from "../../atoms/Utils/Request";
 import { Storage } from "../../atoms/Utils/Storage";
 
 export const UserService = {
-  authenticate: async (details) => {
+  authenticate: (details) => {
     const data = new URLSearchParams();
     Object.entries(details).forEach(([key, value]) => data.append(key, value));
     data.append("scope", "read");
     data.append("grant_type", "password");
-
-    let authResponse = await ServiceRequest({
+    return ServiceRequest({
       serviceName: "authenticate",
       url: Urls.Authenticate,
       data,
       headers: {
-        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN") || "ZWdvdi11c2VyLWNsaWVudDo="}`,
+        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN")||"ZWdvdi11c2VyLWNsaWVudDo="}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
-    const invalidRoles = window?.globalConfigs?.getConfig("INVALIDROLES") || [];
-    if (invalidRoles && invalidRoles.length > 0 && authResponse && authResponse?.UserRequest?.roles?.some((role) => invalidRoles.includes(role.code))) {
-      throw new Error("ES_ERROR_USER_NOT_PERMITTED");
-    }
-    return authResponse;
   },
   logoutUser: () => {
     let user = UserService.getUser();
@@ -56,9 +50,9 @@ export const UserService = {
       window.localStorage.clear();
       window.sessionStorage.clear();
       if (userType === "citizen") {
-        window.location.replace(`/${window?.contextPath}/citizen`);
+        window.location.replace("/workbench-ui/citizen");
       } else {
-        window.location.replace(`/${window?.contextPath}/employee/user/language-selection`);
+        window.location.replace("/workbench-ui/employee/user/language-selection");
       }
     }
   },
@@ -99,6 +93,19 @@ export const UserService = {
       },
       params: { tenantId: stateCode },
     }),
+   
+    //create address for user
+      createAddressV2: async (details, stateCode, userUuid) =>
+        ServiceRequest({
+          serviceName: "createAddress",
+          url: Urls.UserCreateAddressV2,
+          auth: true,
+          data: {
+            address: details,
+            userUuid: userUuid,
+          },
+          params: { tenantId: stateCode },
+        }),
   hasAccess: (accessTo) => {
     const user = Digit.UserService.getUser();
     if (!user || !user.info) return false;
@@ -125,15 +132,45 @@ export const UserService = {
     });
   },
   userSearch: async (tenantId, data, filters) => {
-
-    return ServiceRequest({
+    return Request({
       url: Urls.UserSearch,
       params: { ...filters },
       method: "POST",
       auth: true,
-      useCache: true,
       userService: true,
       data: data.pageSize ? { tenantId, ...data } : { tenantId, ...data, pageSize: "100" },
     });
   },
+  userCreate: async (tenantId, user, filters) => {
+    return Request({
+      url: Urls.UserCreate,
+      params: { ...filters },
+      method: "POST",
+      auth: false,
+      userService: false,
+      data: { user: {tenantId, ...user} } ,
+    });
+  },
+  // user search for user profile
+  userSearchNewV2: async (tenantId, data, filters) => {
+    return Request({
+      url: Urls.UserSearchNewV2,
+      params: { ...filters },
+      method: "POST",
+      auth: true,
+      userService: true,
+      data: data.pageSize ? { tenantId, ...data } : { tenantId, ...data, pageSize: "100" },
+    });
+  },
+  //update address for user
+  updateAddressV2: async (details, stateCode) =>
+    ServiceRequest({
+      serviceName: "updateAddress",
+      url: Urls.UserUpdateAddressV2,
+      auth: true,
+      data: {
+        address: details
+      },
+      params: { tenantId: stateCode },
+    })
 };

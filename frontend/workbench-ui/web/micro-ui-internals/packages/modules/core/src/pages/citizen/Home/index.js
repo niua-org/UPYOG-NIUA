@@ -26,7 +26,7 @@ const Home = () => {
   });
 
   if (!tenantId) {
-    navigate(`/${window?.contextPath}/citizen/select-language`);
+    navigate(`/workbench-ui/citizen/select-language`);
   }
 
   const appBannerWebObj = uiHomePage?.appBannerDesktop;
@@ -39,11 +39,11 @@ const Home = () => {
   const redirectURL = uiHomePage?.redirectURL;
   /* configure redirect URL only if it is required to overide the default citizen home screen */
   if (redirectURL) {
-    history.push(`/${window?.contextPath}/citizen/${redirectURL}`);
+    history.push(`/workbench-ui/citizen/${redirectURL}`);
   }
   /* fix for sanitation ui */
   if (window?.location?.href?.includes?.("sanitation-ui")) {
-    history.push(`/${window?.contextPath}/citizen/all-services`);
+    history.push(`/workbench-ui/citizen/all-services`);
   }
 
   const handleClickOnWhatsAppBanner = (obj) => {
@@ -75,7 +75,7 @@ const Home = () => {
       // {
       //     name: t("ACTION_TEST_WATER_AND_SEWERAGE"),
       //     Icon: <DropIcon/>,
-      //     onClick: () => history.push(`/${window?.contextPath}/citizen`)
+      //     onClick: () => history.push(`/workbench-ui/citizen`)
       // },
       {
         name: t(citizenServicesObj?.props?.[3]?.label),

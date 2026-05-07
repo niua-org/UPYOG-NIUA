@@ -46,7 +46,7 @@ const DynamicSearchComponent = () => {
             variation="secondary"
             icon={<AddFilled style={{ height: "20px", width: "20px" }} />}
             onButtonClick={() => {
-              navigate(`/${window?.contextPath}/employee/${updatedConfig?.actionLink}`);
+              navigate(`/workbench-ui/employee/${updatedConfig?.actionLink}`);
             }}
             type="button"
           />

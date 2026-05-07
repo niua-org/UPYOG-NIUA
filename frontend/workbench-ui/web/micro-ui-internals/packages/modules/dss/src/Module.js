@@ -16,32 +16,32 @@ const DssBreadCrumb = ({ location }) => {
   const landingPageHiddenIn=["works-ui","sanitation-ui"];
   const crumbs = [
     {
-      path: `/${window?.contextPath}/employee`,
+      path: `/workbench-ui/employee`,
       content: t("ES_COMMON_HOME"),
       show: true,
     },
     {
-      path: checkCurrentScreen() || window.location.href.includes("NURT_DASHBOARD") ? `/${window?.contextPath}/employee/dss/landing/NURT_DASHBOARD` : `/${window?.contextPath}/employee/dss/landing/home`,
+      path: checkCurrentScreen() || window.location.href.includes("NURT_DASHBOARD") ? `/workbench-ui/employee/dss/landing/NURT_DASHBOARD` : `/workbench-ui/employee/dss/landing/home`,
       content: t("ES_LANDING_PAGE"),
       show: landingPageHiddenIn?.includes(window?.contextPath)?false:true,
     },
     {
-      path: fromModule?`/${window?.contextPath}/employee/dss/dashboard/${fromModule}`:`/${window?.contextPath}/employee/dss/dashboard/${Digit.Utils.dss.getCurrentModuleName()}`,
+      path: fromModule?`/workbench-ui/employee/dss/dashboard/${fromModule}`:`/workbench-ui/employee/dss/dashboard/${Digit.Utils.dss.getCurrentModuleName()}`,
       content: t(`ES_COMMON_DSS_${Digit.Utils.locale.getTransformedLocale(fromModule?fromModule:moduleName)}`),
       show: location.pathname.includes("dashboard") ? true : false,
     },
     {
-      path: `/${window?.contextPath}/employee/dss/drilldown`,
+      path: `/workbench-ui/employee/dss/drilldown`,
       content:location.pathname.includes("drilldown")?t(title): t("ES_COMMON_DSS_DRILL"),
       show: location.pathname.includes("drilldown") ? true : false,
     },
     {
-      path: `/${window?.contextPath}/employee/dss/national-faqs`,
+      path: `/workbench-ui/employee/dss/national-faqs`,
       content: t("ES_COMMON_DSS_FAQS"),
       show: location.pathname.includes("national-faqs") ? true : false,
     } ,
     {
-      path: `/${window?.contextPath}/employee/dss/national-about`,
+      path: `/workbench-ui/employee/dss/national-about`,
       content: t("ES_COMMON_DSS_ABOUT"),
       show: location.pathname.includes("national-about") ? true : false,
     } 

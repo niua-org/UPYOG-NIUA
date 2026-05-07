@@ -132,7 +132,7 @@ const CreateEmployee = () => {
   };
 
   const navigateToAcknowledgement = (Employees) => {
-    navigate(`/${window?.contextPath}/employee/hrms/response`, { state: { Employees, key: "CREATE", action: "CREATE" } });
+    navigate(`/workbench-ui/employee/hrms/response`, { state: { Employees, key: "CREATE", action: "CREATE" } });
   }
 
   

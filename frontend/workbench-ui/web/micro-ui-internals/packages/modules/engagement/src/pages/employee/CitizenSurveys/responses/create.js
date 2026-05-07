@@ -53,13 +53,13 @@ const Acknowledgement = (props) => {
     }))
   }
   // const actionClickHandler = (option) => {
-  //   if(option === "Go Back to home") navigate("/upyog-ui/employee")
-  //   else if(option === "Create another survey") navigate("/upyog-ui/employee/engagement/surveys/create")
+  //   if(option === "Go Back to home") navigate("/workbench-ui/employee")
+  //   else if(option === "Create another survey") navigate("/workbench-ui/employee/engagement/surveys/create")
   // }
 
    const actionClickHandler = (option) => {
-    if(option === t("GO_BACK_TO_HOME")) navigate(`/${window?.contextPath}/employee`)
-    else if(option === t("CREATE_ANOTHER_SURVEY")) navigate(`/${window?.contextPath}/employee/engagement/surveys/create`)
+    if(option === t("GO_BACK_TO_HOME")) navigate(`/workbench-ui/employee`)
+    else if(option === t("CREATE_ANOTHER_SURVEY")) navigate(`/workbench-ui/employee/engagement/surveys/create`)
   }
   return (
     <Card>
@@ -78,7 +78,7 @@ const Acknowledgement = (props) => {
       </CardText>
       
        {/* <ActionBar>
-        <Link to={"/upyog-ui/employee"}>
+        <Link to={"/workbench-ui/employee"}>
           <SubmitBar label="Action" />
         </Link>
       </ActionBar> */}

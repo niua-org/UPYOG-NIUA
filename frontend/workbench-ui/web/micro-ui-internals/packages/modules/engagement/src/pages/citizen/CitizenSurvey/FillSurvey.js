@@ -99,7 +99,7 @@ const FillSurvey = ({ location }) => {
         }
       };
   
-      navigate("/upyog-ui/citizen/engagement/surveys/submit-response", details);
+      navigate("/workbench-ui/citizen/engagement/surveys/submit-response", details);
     }
 
     

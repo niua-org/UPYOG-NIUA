@@ -16,7 +16,7 @@ const EventDetails = () => {
    if (!Digit.UserService?.getUser()?.access_token) {
     localStorage.clear();
     sessionStorage.clear();
-    return <Navigate to={{ pathname: `/${window?.contextPath}/citizen/login`, state: { from: location.pathname + location.search } }} />;
+    return <Navigate to={{ pathname: `/workbench-ui/citizen/login`, state: { from: location.pathname + location.search } }} />;
   }
 
   function onGroundEventCardPropsForEventDetails(DataParamsInEvent) {

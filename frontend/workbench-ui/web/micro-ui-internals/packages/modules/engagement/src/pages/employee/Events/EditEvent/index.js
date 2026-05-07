@@ -55,7 +55,7 @@ const EditEvents = () => {
         }
       ]
     }
-    navigate(`/${window?.contextPath}/employee/engagement/event/response?update=true`, { state: { ...details } })
+    navigate(`/workbench-ui/employee/engagement/event/response?update=true`, { state: { ...details } })
   }
 
   if (isLoading) {

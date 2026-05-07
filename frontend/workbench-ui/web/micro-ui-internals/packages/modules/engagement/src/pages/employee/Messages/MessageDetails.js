@@ -83,7 +83,7 @@ const MessageDetails = () => {
   function onActionSelect(action) {
     // setSelectedAction(action);
     if (action === "EDIT") {
-      navigate(`/${window?.contextPath}/employee/engagement/messages/inbox/edit/${id}`)
+      navigate(`/workbench-ui/employee/engagement/messages/inbox/edit/${id}`)
     }
     if (action === "DELETE") {
       setShowModal(true);
@@ -101,7 +101,7 @@ const MessageDetails = () => {
         },
       ],
     };
-    navigate(`/${window?.contextPath}/employee/engagement/messages/response?delete=true`, { state: { ...details } });
+    navigate(`/workbench-ui/employee/engagement/messages/response?delete=true`, { state: { ...details } });
   };
 
   return (

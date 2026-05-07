@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from  "@tanstack/react-query";
 import { format } from "date-fns";
 
 import { Loader } from "@upyog/workbench-ui-react-components";
@@ -242,19 +242,19 @@ const ApplicationDetails = (props) => {
           }
           if (isOBPS?.bpa) {
             data.selectedAction = selectedAction;
-            navigate(`/${window?.contextPath}/employee/obps/response`, { data: data });
+            navigate(`/workbench-ui/employee/obps/response`, { data: data });
           }
           if (isOBPS?.isStakeholder) {
             data.selectedAction = selectedAction;
-            navigate(`/${window?.contextPath}/employee/obps/stakeholder-response`, { data: data });
+            navigate(`/workbench-ui/employee/obps/stakeholder-response`, { data: data });
           }
           if (isOBPS?.isNoc) {
-            navigate(`/${window?.contextPath}/employee/noc/response`, { data: data });
+            navigate(`/workbench-ui/employee/noc/response`, { data: data });
           }
           if (data?.Amendments?.length > 0 ){
             //RAIN-6981 instead just show a toast here with appropriate message
           //show toast here and return 
-            //navigate("/${window?.contextPath}/employee/ws/response-bill-amend", { status: true, state: data?.Amendments?.[0] })
+            //navigate("/workbench-ui/employee/ws/response-bill-amend", { status: true, state: data?.Amendments?.[0] })
             
             if(variables?.AmendmentUpdate?.workflow?.action.includes("SEND_BACK")){
               setShowToast({ key: "success", label: t("ES_MODIFYSWCONNECTION_SEND_BACK_UPDATE_SUCCESS")})

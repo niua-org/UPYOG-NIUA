@@ -32,7 +32,7 @@ const TopBarSideBar = ({
     setShowDialog(false);
   }
   const userProfile = () => {
-    navigate(`/${window?.contextPath}/employee/user/profile`);
+    navigate(`/workbench-ui/employee/user/profile`);
   };
   const userOptions = [
     { name: t("EDIT_PROFILE"), icon: <EditPencilIcon className="icon" />, func: userProfile },

@@ -31,7 +31,7 @@ const NewEvents = () => {
         }
       ]
     }
-    navigate(`/${window?.contextPath}/employee/engagement/event/response`, { state: { ...details } })
+    navigate(`/workbench-ui/employee/engagement/event/response`, { state: { ...details } })
   }
 
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_EVENT_MUTATION_HAPPENED", false);

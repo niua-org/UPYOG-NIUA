@@ -33,7 +33,7 @@ const Documents = () => {
       tenantIds: data.ULB.map((e) => e.code),
     };
 
-    navigate(`/${window?.contextPath}/employee/engagement/documents/response`, { DocumentEntity });
+    navigate(`/workbench-ui/employee/engagement/documents/response`, { DocumentEntity });
   };
 
   return (

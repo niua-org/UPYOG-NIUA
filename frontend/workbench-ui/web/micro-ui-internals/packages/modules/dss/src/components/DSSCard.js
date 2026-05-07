@@ -15,6 +15,7 @@ const nationalScreenURLs = {
   bnd: {key:"nss-birth-death",stateKey:"birth-death",label:"BIRTH_AND_DEATH",active:true,nActive:true},
   faqs: {key:"national-faqs",stateKey:"national-faqs",label:"DSS_FAQS",active:false,nActive:true,others:true},
   finance: {key:"national-finance",stateKey:"finance",label:"DSS_FINANCE",active:true,nActive:false},
+  sv: {key:"national-sv",stateKey:"streetVending",label:"DSS_STREET_VENDING",active:true,nActive:false},
   about: {key:"national-about",stateKey:"national-about",label:"DSS_ABOUT_DASHBOARD",active:false,nActive:true,others:true},
 };
 
@@ -36,16 +37,15 @@ const NDSSCard = () => {
     .filter((ele) => ele["nActive"] === true)
     .map((obj) => ({
       label: t(obj?.label),
-      link: `/${window?.contextPath}/employee/dss/dashboard/${obj?.key}`,
-      link: obj?.others?`/${window?.contextPath}/employee/dss/${obj?.key}`:`/${window?.contextPath}/employee/dss/dashboard/${obj?.key}`,
+      link: obj?.others?`/workbench-ui/employee/dss/${obj?.key}`:`/workbench-ui/employee/dss/dashboard/${obj?.key}`,
     }));
 
   const propsForModuleCard = {
     headerStyle: { border: "none", height: "48px" },
     moduleName: t("ACTION_TEST_NATDASHBOARD"),
     subHeader: t("ACTION_TEST_NATDASHBOARD"),
-    // subHeaderLink: `/digit-ui/employee/payment/integration/dss/NURT_DASHBOARD`,
-    subHeaderLink: `/${window?.contextPath}/employee/dss/landing/NURT_DASHBOARD`,
+    // subHeaderLink: `/workbench-ui/employee/payment/integration/dss/NURT_DASHBOARD`,
+    subHeaderLink: `/workbench-ui/employee/dss/landing/NURT_DASHBOARD`,
     className: "employeeCard customEmployeeCard card-home full-width-card full-employee-card-height",
     links: [...links],
   };
@@ -64,15 +64,15 @@ const DSSCard = () => {
     .filter((ele) => ele["active"] === true)
     .map((obj) => ({
       label: t(obj?.label),
-      link: obj.active?`/${window?.contextPath}/employee/dss/dashboard/${obj?.stateKey}`:`/employee/integration/dss/${obj?.stateKey}`,
+      link: obj.active?`/workbench-ui/employee/dss/dashboard/${obj?.stateKey}`:`/employee/integration/dss/${obj?.stateKey}`,
     }));
 
   const propsForModuleCard = {
     headerStyle: { border: "none", height: "48px" },
     moduleName: t("ES_TITLE_DSS"),
     subHeader: t("ACTION_TEST_SURE_DASHBOARD"),
-    // subHeaderLink: `/digit-ui/employee/payment/integration/dss/home`,
-    subHeaderLink: `/${window?.contextPath}/employee/dss/landing/home`,
+    // subHeaderLink: `/workbench-ui/employee/payment/integration/dss/home`,
+    subHeaderLink: `/workbench-ui/employee/dss/landing/home`,
     className: "employeeCard card-home customEmployeeCard full-width-card full-employee-card-height",
     links: [...links],
   };

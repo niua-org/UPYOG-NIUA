@@ -36,7 +36,7 @@ const ApplicationCard = ({
 
     const details = responseData?.find((item) => (areEqual(item?.user?.name, data["Posted By"]) && areEqual(item.name, data["Title"])));
     if (details) {
-      navigate(`/${window?.contextPath}/employee/engagement/messages/inbox/details/${details?.id  }`,)}
+      navigate(`/workbench-ui/employee/engagement/messages/inbox/details/${details?.id  }`,)}
   }
 
   let result;

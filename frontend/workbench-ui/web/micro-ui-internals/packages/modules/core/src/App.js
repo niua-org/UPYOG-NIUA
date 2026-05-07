@@ -29,11 +29,11 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData ,de
     if (!pathname?.includes("dss")) {
       Digit.SessionStorage.del("DSS_FILTERS");
     }
-    if (pathname?.toString() === `/${window?.contextPath}/employee`) {
+    if (pathname?.toString() === `/workbench-ui/employee`) {
       Digit.SessionStorage.del("SEARCH_APPLICATION_DETAIL");
       Digit.SessionStorage.del("WS_EDIT_APPLICATION_DETAILS");
     }
-    if (pathname?.toString() === `/${window?.contextPath}/citizen` || pathname?.toString() === `/${window?.contextPath}/employee`) {
+    if (pathname?.toString() === `/workbench-ui/citizen` || pathname?.toString() === `/workbench-ui/employee`) {
       Digit.SessionStorage.del("WS_DISCONNECTION");
     }
   }, [pathname]);
@@ -68,10 +68,10 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData ,de
   return (
     <Routes>
       /* children → element prop, /* added for nested routes */
-      <Route path={`/${window?.contextPath}/employee/*`} element={<EmployeeApp {...commonProps} />} />
-      <Route path={`/${window?.contextPath}/citizen/*`} element={<CitizenApp {...commonProps} />} />
+      <Route path={`/workbench-ui/employee/*`} element={<EmployeeApp {...commonProps} />} />
+      <Route path={`/workbench-ui/citizen/*`} element={<CitizenApp {...commonProps} />} />
       /* Redirect → Navigate */
-      <Route path="*" element={<Navigate to={`/${window?.contextPath}/${defaultLanding}`} replace />} />
+      <Route path="*" element={<Navigate to={`/workbench-ui/${defaultLanding}`} replace />} />
     </Routes>
 
   );

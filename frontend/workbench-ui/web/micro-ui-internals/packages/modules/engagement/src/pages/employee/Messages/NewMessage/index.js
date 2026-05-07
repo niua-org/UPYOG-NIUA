@@ -37,7 +37,7 @@ const NewEvents = () => {
         }
       ]
     }
-    navigate(`/${window?.contextPath}/employee/engagement/messages/response`, { state: { ...details } })
+    navigate(`/workbench-ui/employee/engagement/messages/response`, { state: { ...details } })
   }
 
   return (

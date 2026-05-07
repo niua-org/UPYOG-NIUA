@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-npm install --save @egovernments/digit-ui-module-hrms
+npm install --save @upyog/workbench-ui-module-hrms
 ```
 
 ## Limitation
@@ -23,7 +23,7 @@ frontend/micro-ui/web/package.json
 ```
 
 ```json
-"@egovernments/digit-ui-module-hrms":"^1.5.0",
+"@upyog/workbench-ui-module-hrms":"^1.5.0",
 ```
 
 then navigate to App.js
@@ -36,7 +36,7 @@ then navigate to App.js
 ```jsx
 /** add this import **/
 
-import { initHRMSComponents } from "@egovernments/digit-ui-module-hrms";
+import { initHRMSComponents } from "@upyog/workbench-ui-module-hrms";
 
 /** inside enabledModules add this new module key **/
 

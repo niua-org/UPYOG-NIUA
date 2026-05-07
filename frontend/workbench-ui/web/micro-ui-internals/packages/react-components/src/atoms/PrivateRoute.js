@@ -10,10 +10,10 @@ export const PrivateRoute = ({ component: Component, roles, ...rest }) => {
         const userType = Digit.UserService.getType();
         function getLoginRedirectionLink (){
           if(userType === "employee"){
-            return `/${window?.contextPath}/employee/user/language-selection`
+            return `/workbench-ui/employee/user/language-selection`
           }
           else{
-            return `/${window?.contextPath}/citizen/login`
+            return `/workbench-ui/citizen/login`
           }
         }
         if (!user || !user.access_token) {

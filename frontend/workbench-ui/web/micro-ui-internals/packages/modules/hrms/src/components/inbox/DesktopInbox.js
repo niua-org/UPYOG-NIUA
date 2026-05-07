@@ -25,7 +25,7 @@ const DesktopInbox = ({ tableConfig, filterComponent, ...props }) => {
         Cell: ({ row }) => {
           return (
             <span className="link">
-              <Link to={ `/${window?.contextPath}/employee/hrms/details/${row.original.tenantId}/${row.original.code}`}>{row.original.code}</Link>
+              <Link to={ `/workbench-ui/employee/hrms/details/${row.original.tenantId}/${row.original.code}`}>{row.original.code}</Link>
             </span>
           );
         },
@@ -124,7 +124,6 @@ const DesktopInbox = ({ tableConfig, filterComponent, ...props }) => {
             },
           };
         }}
-        onPageSizeChange={props.onPageSizeChange}
         currentPage={props.currentPage}
         onNextPage={props.onNextPage}
         onPrevPage={props.onPrevPage}
@@ -147,7 +146,7 @@ const DesktopInbox = ({ tableConfig, filterComponent, ...props }) => {
             allLinks={[
               {
                 text: "HR_COMMON_CREATE_EMPLOYEE_HEADER",
-                link:  `/${window?.contextPath}/employee/hrms/create`,
+                link:  `/workbench-ui/employee/hrms/create`,
                 businessService: "hrms",
                 roles: ["HRMS_ADMIN"],
               },

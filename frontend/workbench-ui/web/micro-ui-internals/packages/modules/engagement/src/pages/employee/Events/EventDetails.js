@@ -45,7 +45,7 @@ const EventDetails = () => {
   function onActionSelect(action) {
     // setSelectedAction(action);
     if (action === "EDIT") {
-      navigate(`/${window?.contextPath}/employee/engagement/event/edit-event/${id}`)
+      navigate(`/workbench-ui/employee/engagement/event/edit-event/${id}`)
     }
     if (action === "DELETE") {
       setShowModal(true);
@@ -62,7 +62,7 @@ const EventDetails = () => {
         },
       ],
     };
-    navigate(`/${window?.contextPath}/employee/engagement/event/response?delete=true`, details);
+    navigate(`/workbench-ui/employee/engagement/event/response?delete=true`, details);
   };
 
   return (

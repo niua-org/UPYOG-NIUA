@@ -10,12 +10,12 @@ const ProjectBreadCrumb = ({ location }) => {
   const { t } = useTranslation();
   const crumbs = [
     {
-      path: `/${window?.contextPath}/employee`,
+      path: `/workbench-ui/employee`,
       content: t("HOME"),
       show: true,
     },
     {
-      path: `/${window?.contextPath}/employee`,
+      path: `/workbench-ui/employee`,
       content: t(location.pathname.split("/").pop()),
       show: true,
     },

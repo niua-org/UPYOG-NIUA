@@ -63,7 +63,7 @@ const SubMenu = ({ item }) => {
             <span style={{ marginLeft: "0px" }} onClick={() => navigate(`${item.navigationURL}`)}>
               {leftIcon}
             </span>
-            {item.navigationURL?.indexOf(`/${window?.contextPath}`) === -1 ? (
+            {item.navigationURL?.indexOf(`/workbench-ui`) === -1 ? (
               <a
                 data-tip="React-tooltip"
                 data-for={`jk-side-${getModuleName}`}
@@ -141,7 +141,7 @@ const SubMenu = ({ item }) => {
               const appendTranslate = t(`ACTION_TEST_${getChildName}`);
               const trimModuleName = t(appendTranslate?.length > 20 ? appendTranslate.substring(0, 20) + "..." : appendTranslate);
 
-              if (item.navigationURL.indexOf(`/${window?.contextPath}`) === -1) {
+              if (item.navigationURL.indexOf(`/workbench-ui`) === -1) {
                 const getOrigin = window.location.origin;
                 return (
                   <a

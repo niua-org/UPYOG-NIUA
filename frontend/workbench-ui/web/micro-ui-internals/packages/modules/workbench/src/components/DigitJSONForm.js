@@ -42,15 +42,10 @@ const uiSchema = {
   "ui:submitButtonOptions": {
     props: {
       disabled: false,
-      className: "btn btn-info",
+      className: "btn btn-info object-jk",
     },
     norender: true,
     submitText: "Submit",
-  },
-  "ui:submitButtonOptions": {
-    props: {
-      className: "object-jk",
-    },
   },
 };
 

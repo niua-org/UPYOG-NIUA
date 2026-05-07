@@ -26,7 +26,7 @@ const DocumentDetails = () => {
   function onActionSelect(action) {
     // setSelectedAction(action);
     if (action === "EDIT") {
-      navigate(`/${window?.contextPath}/employee/engagement/event/edit-event/${id}`)
+      navigate(`/workbench-ui/employee/engagement/event/edit-event/${id}`)
     }
     if (action === "DELETE") {
       setShowModal(true);
@@ -43,7 +43,7 @@ const DocumentDetails = () => {
           },
         ],
       };
-      navigate("/upyog-ui/employee/engagement/event/response?delete=true", details);
+      navigate("/workbench-ui/employee/engagement/event/response?delete=true", details);
   };
 
   function onModalCancel() {

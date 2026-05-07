@@ -158,7 +158,7 @@ const MDMSSearchv2 = () => {
     if(modulee&&master){
       actionLink= `workbench/mdms-add-v2?moduleName=${master}&masterName=${modulee}`
     }
-    navigate(`/${window?.contextPath}/employee/${actionLink}`);
+    navigate(`/workbench-ui/employee/${actionLink}`);
   }
 
   const onClickRow = ({original:row}) => {
@@ -214,7 +214,7 @@ const MDMSSearchv2 = () => {
               if(modulee&&master){
                 actionLink= `workbench/mdms-add-v2?moduleName=${master}&masterName=${modulee}`
               }
-              navigate(`/${window?.contextPath}/employee/${actionLink}`);
+              navigate(`/workbench-ui/employee/${actionLink}`);
             }}
             type="button"
           />

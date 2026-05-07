@@ -8,7 +8,7 @@ import Response from "./Response";
 
 import { config as defaultConfig } from "./defaultConfig";
 import { Navigate, Route, Routes, useResolvedPath, useLocation } from "react-router-dom";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const CreateComplaint = () => {
   const ComponentProvider = Digit.Contexts.ComponentProvider;

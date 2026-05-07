@@ -22,7 +22,7 @@ const WorkbenchBreadCrumb = ({ location, defaultPath }) => {
 
   const crumbs = [
     {
-      path: `/${window?.contextPath}/employee`,
+      path: `/workbench-ui/employee`,
       content: t("WORKBENCH_HOME"),
       show: true,
     },

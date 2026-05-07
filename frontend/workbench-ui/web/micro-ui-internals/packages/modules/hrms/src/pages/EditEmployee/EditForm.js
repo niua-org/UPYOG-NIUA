@@ -197,7 +197,7 @@ const EditForm = ({ tenantId, data }) => {
     /* use customiseUpdateFormData hook to make some chnages to the Employee object */
     Employees=Digit?.Customizations?.HRMS?.customiseUpdateFormData?Digit.Customizations.HRMS.customiseUpdateFormData(data,Employees):Employees;
 
-    navigate(`/${window?.contextPath}/employee/hrms/response`, { state: { Employees, key: "UPDATE", action: "UPDATE" } });
+    navigate(`/workbench-ui/employee/hrms/response`, { state: { Employees, key: "UPDATE", action: "UPDATE" } });
   };
   if (isLoading) {
     return <Loader />;

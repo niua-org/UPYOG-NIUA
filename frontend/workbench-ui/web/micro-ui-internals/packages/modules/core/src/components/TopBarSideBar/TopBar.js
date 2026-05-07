@@ -72,13 +72,13 @@ const TopBar = ({
   };
 
   function onNotificationIconClick() {
-    navigate(`/${window?.contextPath}/citizen/engagement/notifications`);
+    navigate(`/workbench-ui/citizen/engagement/notifications`);
   }
 
   const urlsToDisableNotificationIcon = (pathname) =>
     !!Digit.UserService?.getUser()?.access_token
       ? false
-      : [`/${window?.contextPath}/citizen/select-language`, `/${window?.contextPath}/citizen/select-location`].includes(pathname);
+      : [`/workbench-ui/citizen/select-language`, `/workbench-ui/citizen/select-location`].includes(pathname);
 
   if (CITIZEN) {
     return (

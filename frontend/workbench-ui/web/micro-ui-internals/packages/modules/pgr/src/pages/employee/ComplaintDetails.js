@@ -32,7 +32,7 @@ import {
 
 import { Close } from "../../Icons";
 import { useTranslation } from "react-i18next";
-import { isError, useQueryClient } from "react-query";
+import { isError, useQueryClient } from "@tanstack/react-query";
 import StarRated from "../../components/timelineInstances/StarRated";
 
 const MapView = (props) => {

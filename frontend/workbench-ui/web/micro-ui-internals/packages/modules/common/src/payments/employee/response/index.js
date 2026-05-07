@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Banner, Card, CardText, SubmitBar, ActionBar, DownloadPrefixIcon, Loader, Menu } from "@upyog/workbench-ui-react-components";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const SuccessfulPayment = (props) => {
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -42,9 +42,9 @@ export const SuccessfulPayment = (props) => {
   useEffect(() => {
     switch (selectedAction) {
       case "GO_TO_HOME":
-        return navigate(`/${window?.contextPath}/employee`);
+        return navigate(`/workbench-ui/employee`);
       case "ASSIGN_TO_DSO":
-        return navigate(`/${window?.contextPath}/employee/fsm/application-details/${consumerCode}`);
+        return navigate(`/workbench-ui/employee/fsm/application-details/${consumerCode}`);
       default:
         return null;
     }
@@ -246,7 +246,7 @@ export const SuccessfulPayment = (props) => {
         </ActionBar>
       ) : (
         <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
-          <Link to={`/${window?.contextPath}/employee`}>
+          <Link to={`/workbench-ui/employee`}>
             <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
           </Link>
         </ActionBar>
@@ -269,7 +269,7 @@ export const FailedPayment = (props) => {
         <CardText>{t("ES_PAYMENT_FAILED_DETAILS")}</CardText>
       </Card>
       <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
-        <Link to={`/${window?.contextPath}/employee`}>
+        <Link to={`/workbench-ui/employee`}>
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>
       </ActionBar>

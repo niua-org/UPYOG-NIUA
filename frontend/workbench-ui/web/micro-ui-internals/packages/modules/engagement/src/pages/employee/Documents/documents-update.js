@@ -43,7 +43,7 @@ const Documents = (props) => {
     delete DocumentEntity.ULB;
     delete DocumentEntity.docCategory;
     delete DocumentEntity.documentName;
-    navigate(`/${window?.contextPath}/employee/engagement/documents/update-response`, { DocumentEntity });
+    navigate(`/workbench-ui/employee/engagement/documents/update-response`, { DocumentEntity });
   };
   return (
     <React.Fragment>

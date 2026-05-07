@@ -21,27 +21,27 @@ const WorkbenchCard = () => {
   let links = [
     {
       label: t("ACTION_TEST_MDMS"),
-      link: `/${window?.contextPath}/employee/workbench/manage-master-data`,
+      link: `/workbench-ui/employee/workbench/manage-master-data`,
       roles: ROLES.MDMS,
     },
     {
       label: t("ACTION_TEST_LOCALISATION"),
-      link: `/${window?.contextPath}/employee/workbench/localisation-search`,
+      link: `/workbench-ui/employee/workbench/localisation-search`,
       roles: ROLES.LOCALISATION,
     },
     {
       label: t("ACTION_TEST_APPLY_WORKFLOW"),
-      link: `/${window?.contextPath}/employee/workbench/apply-workflow`,
+      link: `/workbench-ui/employee/workbench/apply-workflow`,
       roles: ROLES.WORKFLOW,
     }
     // {
     //   label: t("Sample Create master"),
-    //   link: `/${window?.contextPath}/employee/workbench/mdms-add-v2?moduleName=common-masters&masterName=Sample`,
+    //   link: `/workbench-ui/employee/workbench/mdms-add-v2?moduleName=common-masters&masterName=Sample`,
     //   roles: ROLES.MDMS,
     // },
     // {
     //   label: t("Sample Search master"),
-    //   link: `/${window?.contextPath}/employee/workbench/mdms-search-v2?masterName=common-masters&moduleName=Sample`,
+    //   link: `/workbench-ui/employee/workbench/mdms-search-v2?masterName=common-masters&moduleName=Sample`,
     //   roles: ROLES.MDMS,
     // },
   ];

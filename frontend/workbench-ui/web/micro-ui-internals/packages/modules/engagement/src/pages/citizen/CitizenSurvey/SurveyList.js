@@ -152,16 +152,16 @@ const SurveyList = () => {
 
 
   // const handleCardClick = (details) => {
-  //     navigate("/upyog-ui/citizen/engagement/surveys/fill-survey", details);
+  //     navigate("/workbench-ui/citizen/engagement/surveys/fill-survey", details);
   // };
 
   //trying to implement like this-> If user already responded then open ShowSurvey
   const handleCardClick = (details) => {
     
     if (!details.hasResponded) {
-      navigate(`/${window?.contextPath}/citizen/engagement/surveys/fill-survey?applicationNumber=${details?.uuid}&tenantId=${details?.tenantId}`, details);
+      navigate(`/workbench-ui/citizen/engagement/surveys/fill-survey?applicationNumber=${details?.uuid}&tenantId=${details?.tenantId}`, details);
     } else {
-      navigate(`/${window?.contextPath}/citizen/engagement/surveys/show-survey`, details);
+      navigate(`/workbench-ui/citizen/engagement/surveys/show-survey`, details);
     }
   };
 

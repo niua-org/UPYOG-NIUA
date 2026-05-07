@@ -22,7 +22,7 @@ export const MyBills = ({ stateCode }) => {
   const { tenantId } = Digit.UserService.getUser()?.info || location?.state || { tenantId: _tenantId } || {};
 
   if (!tenantId && !location?.state?.fromSearchResults) {
-    navigate(`/${window?.contextPath}/citizen/login`, { state: { from: url } }); // Changed 'from' to state object
+    navigate(`/workbench-ui/citizen/login`, { state: { from: url } }); // Changed 'from' to state object
   }
 
   const { isLoading, data } = Digit.Hooks.useFetchCitizenBillsForBuissnessService(

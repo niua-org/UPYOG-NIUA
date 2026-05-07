@@ -61,7 +61,7 @@ const MDMSEdit = ({...props}) => {
   const gotoView = () => { 
     setTimeout(() => {
       setRenderLoader(true)
-      navigate(`/${window?.contextPath}/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${uniqueIdentifier}`)
+      navigate(`/workbench-ui/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${uniqueIdentifier}`)
     }, 2000);
   }
 

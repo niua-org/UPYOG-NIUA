@@ -53,7 +53,7 @@ const EditMessage = () => {
         }
       ]
     }
-    navigate(`/${window?.contextPath}/employee/engagement/messages/response?update=true`, { state: { ...details } })
+    navigate(`/workbench-ui/employee/engagement/messages/response?update=true`, { state: { ...details } })
   }
 
   const defaultValues = useMemo(() => {

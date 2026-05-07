@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-npm install --save @egovernments/digit-ui-module-common
+npm install --save @upyog/workbench-ui-module-common
 ```
 
 ## Limitation
@@ -23,7 +23,7 @@ frontend/micro-ui/web/package.json
 ```
 
 ```json
-"@egovernments/digit-ui-module-common":"^1.5.0",
+"@upyog/workbench-ui-module-common":"^1.5.0",
 ```
 
 then navigate to App.js
@@ -36,7 +36,7 @@ then navigate to App.js
 ```jsx
 /** add this import **/
 
-import { paymentConfigs, PaymentLinks, PaymentModule } from "@egovernments/digit-ui-module-common";
+import { paymentConfigs, PaymentLinks, PaymentModule } from "@upyog/workbench-ui-module-common";
 
 /** inside enabledModules add this new module key **/
 

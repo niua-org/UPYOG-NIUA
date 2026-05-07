@@ -74,7 +74,7 @@ const CustomHorizontalBarChart = ({
   };
 
   const goToDrillDownCharts = () => {
-    navigate(`/${window?.contextPath}/employee/dss/drilldown?chart=${response?.responseData?.drillDownChartId}&ulb=${value?.filters?.tenantId}&title=${title}`);
+    navigate(`/workbench-ui/employee/dss/drilldown?chart=${response?.responseData?.drillDownChartId}&ulb=${value?.filters?.tenantId}&title=${title}`);
   };
 
   const tooltipFormatter = (value, name) => {

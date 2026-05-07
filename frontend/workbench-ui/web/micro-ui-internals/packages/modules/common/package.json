@@ -1,28 +1,20 @@
 {
-  "name": "@egovernments/digit-ui-module-common",
+  "name": "@upyog/workbench-ui-module-common",
   "version": "1.8.0",
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/index.modern.js",
+  "main": "src/Module.js",
   "source": "src/Module.js",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "start": "microbundle-crl watch --no-compress --format modern,cjs",
-    "build": "microbundle-crl --compress --no-sourcemap --format cjs",
-    "prepublish": "yarn build"
+  "peerDependencies": {
+  "react": "^19.0.0",
+  "react-router-dom": "6.28.0",
+  "@tanstack/react-query": "^5.0.0",
+  "react-dom": "^19.0.0"
   },
   "dependencies": {
     "@upyog/workbench-ui-react-components": "1.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "react-hook-form": "6.15.8",
-    "react-i18next": "11.16.2",
-    "@tanstack/react-query": "^5.0.0",
-    "react-router-dom": "6.28.0"
+    "react-i18next": "11.16.2"
   },
-  "author": "JaganKumar <jagan.kumar@egov.org.in>",
   "keywords": [
     "digit",
     "egov",

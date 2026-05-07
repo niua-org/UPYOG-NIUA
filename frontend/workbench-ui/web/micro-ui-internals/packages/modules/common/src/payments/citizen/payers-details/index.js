@@ -144,7 +144,7 @@ const SelectPaymentType = (props) => {
   const onSubmit = () => {
     if(wrkflow === "WNS")
     {
-      navigate(`/${window?.contextPath}/citizen/payment/collect/${businessService}/${consumerCode}?workflow=WNS&consumerCode=${stringReplaceAll(consumerCode, "+", "/")}`, {
+      navigate(`/workbench-ui/citizen/payment/collect/${businessService}/${consumerCode}?workflow=WNS&consumerCode=${stringReplaceAll(consumerCode, "+", "/")}`, {
         state: {
           paymentAmount: paymentAmt,
           tenantId: billDetails.tenantId,
@@ -154,7 +154,7 @@ const SelectPaymentType = (props) => {
       });
     }
     else{
-    navigate(`/${window?.contextPath}/citizen/payment/collect/${businessService}/${consumerCode}`, {
+    navigate(`/workbench-ui/citizen/payment/collect/${businessService}/${consumerCode}`, {
       state: {
         paymentAmount: paymentAmt,
         tenantId: billDetails.tenantId,

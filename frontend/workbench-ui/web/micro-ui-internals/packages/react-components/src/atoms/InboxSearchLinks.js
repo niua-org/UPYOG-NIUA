@@ -30,7 +30,7 @@ const InboxSearchLinks = ({headerText, links, businessService, customClass="", l
                 {linksToShow.map(({ url, text, hyperlink = false}, index) => {
                     return (
                     <span className="link" key={index}>
-                        {hyperlink ? <a href={`/${window?.contextPath}${url}`}>{t(text)}</a> : <Link to={`/${window?.contextPath}${url}`}>{t(text)}</Link>}
+                        {hyperlink ? <a href={`/workbench-ui${url}`}>{t(text)}</a> : <Link to={`/workbench-ui${url}`}>{t(text)}</Link>}
                     </span>
                     );
                 })}

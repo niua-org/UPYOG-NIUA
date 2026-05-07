@@ -6,18 +6,26 @@
     "packages/libraries",
     "example",
     "packages/react-components",
-    "packages/modules/*"
+    "packages/svg-components",
+    "packages/modules/common",
+    "packages/modules/core",
+    "packages/modules/dss",
+    "packages/modules/engagement",
+    "packages/modules/hrms",
+    "packages/modules/pgr",
+    "packages/modules/utilities",
+    "packages/modules/workbench"
   ],
-  "author": "JaganKumar <jagan.kumar@egov.org.in>",
+  "author": "Internal Tech Team, NIUA",
   "license": "MIT",
   "private": true,
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "start": "SKIP_PREFLIGHT_CHECK=true run-s build start:dev",
+    "start": "vite --config example/vite.config.js",
     "sprint": "SKIP_PREFLIGHT_CHECK=true run-s start:script",
-    "start:dev": "run-p dev:**",
+    "dev": "vite",
     "start:script": "./scripts/create.sh",
     "dev:libraries": "cd packages/libraries && yarn start",
     "dev:components": "cd packages/react-components && yarn start",
@@ -45,21 +53,11 @@
     "deploy:jenkins": "./scripts/jenkins.sh",
     "clean": "rm -rf node_modules"
   },
-  "resolutions": {
-    "**/@babel/runtime": "7.20.1",
-    "**/babel-preset-react-app": "10.0.0",
-    "**/styled-components": "6.1.14",
-    "fast-uri":"2.1.0",
-    "**/babel-loader": "8.2.2",
-    "@noble/hashes": "1.3.2",
-    "**/@noble/hashes": "1.3.2"
-    
-  },
   "devDependencies": {
-    "husky": "7.0.4",
     "lint-staged": "12.3.7",
     "npm-run-all": "4.1.5",
-    "prettier": "2.1.2"
+    "prettier": "2.1.2",
+    "vite-plugin-svgr": "^5.2.0"
   },
   "husky": {},
   "lint-staged": {

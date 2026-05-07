@@ -36,11 +36,11 @@ const SurveyDetailsView = ({surveyTitle,surveyDesc,t,surveyId}) => {
         {/* <button
           type={"button"}
           style={{ border: "2px solid #a82227", backgroundColor: "white", padding: "8px 8px",width:"200px",marginLeft:"50px",marginTop:"-45px" }}
-          onClick={() => history.push(`/upyog-ui/employee/engagement/surveys/inbox/details/${surveyId}`)}
+          onClick={() => history.push(`/workbench-ui/employee/engagement/surveys/inbox/details/${surveyId}`)}
         >
           <header style={{ color:"#a82227"}}>{t("SURVEY_QUESTIONS")}</header>
         </button> */}
-        <LinkLabel  onClick={() => navigate(`/upyog-ui/employee/engagement/surveys/inbox/details/${surveyTitle}`)}>
+        <LinkLabel  onClick={() => navigate(`/workbench-ui/employee/engagement/surveys/inbox/details/${surveyTitle}`)}>
         {t("VIEW_SURVEY_QUESTIONS")}
         </LinkLabel>
         

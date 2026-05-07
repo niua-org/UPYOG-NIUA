@@ -16,7 +16,7 @@ const LanguageSelection = () => {
   };
 
   const handleSubmit = (event) => {
-    navigate(`/${window?.contextPath}/employee/user/login`);
+    navigate(`/workbench-ui/employee/user/login`);
   };
 
   if (isLoading) return null;

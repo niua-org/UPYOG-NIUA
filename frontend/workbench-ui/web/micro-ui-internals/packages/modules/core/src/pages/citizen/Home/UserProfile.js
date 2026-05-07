@@ -320,12 +320,12 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
           <BreadCrumb
             crumbs={[
               {
-                path: `/${window?.contextPath}/employee`,
+                path: `/workbench-ui/employee`,
                 content: t("ES_COMMON_HOME"),
                 show: true,
               },
               {
-                path: `/${window?.contextPath}/employee/user/profile`,
+                path: `/workbench-ui/employee/user/profile`,
                 content: t("ES_COMMON_PAGE_1"),
                 show: url.includes("/user/profile"),
               },
@@ -581,7 +581,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
 
               <LabelFieldPair>
                 <div>
-                  <a style={{ color: "orange", cursor: "default", marginBottom: "5", cursor: "pointer" }} onClick={TogleforPassword}>
+                  <a style={{ color: "orange", marginBottom: "5", cursor: "pointer" }} onClick={TogleforPassword}>
                     {t("CORE_COMMON_CHANGE_PASSWORD")}
                   </a>
                   {changepassword ? (

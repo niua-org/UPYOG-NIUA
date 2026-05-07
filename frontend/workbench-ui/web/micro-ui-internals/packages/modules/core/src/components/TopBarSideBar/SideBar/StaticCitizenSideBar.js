@@ -103,10 +103,10 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    navigate(`/${window?.contextPath}/citizen/login`);
+    navigate(`/workbench-ui/citizen/login`);
   };
   const showProfilePage = () => {
-    navigate(`/${window?.contextPath}/citizen/user/profile`);
+    navigate(`/workbench-ui/citizen/user/profile`);
   };
 
   let menuItems = [...SideBarMenu(t, showProfilePage, redirectToLoginPage, isEmployee)];

@@ -80,7 +80,7 @@ const MDMSSearch = () => {
             variation="secondary"
             icon={<AddFilled style={{ height: "20px", width: "20px" }} />}
             onButtonClick={() => {
-              navigate(`/${window?.contextPath}/employee/${updatedConfig?.actionLink}` + "?moduleName=common-masters&masterName=StateInfo1");
+              navigate(`/workbench-ui/employee/${updatedConfig?.actionLink}` + "?moduleName=common-masters&masterName=StateInfo1");
             }}
             type="button"
           />

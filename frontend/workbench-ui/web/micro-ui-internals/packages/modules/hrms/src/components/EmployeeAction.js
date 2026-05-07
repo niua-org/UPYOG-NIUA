@@ -129,7 +129,7 @@ const EmployeeAction = ({ t, action, tenantId, closeModal, submitAction, applica
       set(Employees[0], 'deactivationDetails[0].remarks', data?.remarks);
 
       Employees[0].isActive = false;
-      navigate( `/${window?.contextPath}/employee/hrms/response`, { state: { Employees, key: "UPDATE", action: "DEACTIVATION" } });
+      navigate( `/workbench-ui/employee/hrms/response`, { state: { Employees, key: "UPDATE", action: "DEACTIVATION" } });
     } else {
       if (file) {
         let documents = {
@@ -146,7 +146,7 @@ const EmployeeAction = ({ t, action, tenantId, closeModal, submitAction, applica
       set(Employees[0], 'reactivationDetails[0].remarks', data?.remarks);
       Employees[0].isActive = true;
 
-      navigate( `/${window?.contextPath}/employee/hrms/response`, { state: { Employees, key: "UPDATE", action: "ACTIVATION" } });
+      navigate( `/workbench-ui/employee/hrms/response`, { state: { Employees, key: "UPDATE", action: "ACTIVATION" } });
     }
   }
 
