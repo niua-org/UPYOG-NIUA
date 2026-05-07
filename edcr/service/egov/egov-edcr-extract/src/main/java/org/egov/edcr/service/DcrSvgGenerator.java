@@ -15,7 +15,9 @@ import org.kabeja.dxf.DXFConstants;
 import org.kabeja.dxf.DXFEntity;
 import org.kabeja.dxf.DXFLayer;
 import org.kabeja.dxf.DXFLineType;
+import org.kabeja.dxf.DXFMText;
 import org.kabeja.dxf.DXFStyle;
+import org.kabeja.dxf.DXFText;
 import org.kabeja.dxf.DXFVariable;
 import org.kabeja.dxf.objects.DXFDictionary;
 import org.kabeja.dxf.objects.DXFLayout;
@@ -67,6 +69,11 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    public final static String PROPERTY_WIDTH = "width";
    public final static String PROPERTY_HEIGHT = "height";
    public final static String PROPERTY_OVERFLOW = "svg-overflow";
+   /**
+    * Map key from {@link DxfToPdfUnifiedConverter} when {@link org.egov.common.entity.edcr.EdcrPdfDetail}
+    * {@code directSinglePdfKabejaRendering} is true. Legacy conversions must not set this property.
+    */
+   public static final String PROPERTY_DIRECT_SINGLE_PDF = "egov.direct-single-pdf";
    public static final double DEFAULT_MARGIN_PERCENT = 0.0;
    public final static String SUPPORTED_SVG_VERSION = "1.1"; // we say we produce version 1.1 to fool svgo
    private boolean overflow = true;
@@ -76,6 +83,8 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    private String marginSettings;
    private String outputStyleName = DXFConstants.LAYOUT_DEFAULT_NAME;
    protected SVGSAXGeneratorManager manager;
+   /** Mirrors {@link #PROPERTY_DIRECT_SINGLE_PDF} after {@link #setupProperties()}. */
+   private boolean directSinglePdfMode;
 
    protected void generate() throws SAXException {
        this.setupProperties();
@@ -161,6 +170,15 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
 
        if (this.manager == null) {
            this.manager = new SVGSAXGeneratorManager();
+       }
+
+       // Propagate direct-PDF mode into SVG context so DcrSvgStyleGenerator can branch without extra parameters.
+       String directPdf = this.properties.containsKey(PROPERTY_DIRECT_SINGLE_PDF)
+               ? String.valueOf(this.properties.get(PROPERTY_DIRECT_SINGLE_PDF)).trim()
+               : "";
+       this.directSinglePdfMode = "true".equalsIgnoreCase(directPdf);
+       if (this.directSinglePdfMode) {
+           this.context.put("egov.direct-single-pdf", Boolean.TRUE);
        }
 
        this.context.put(SVGContext.SVGSAXGENERATOR_MANAGER, manager);
@@ -268,6 +286,17 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            }
 
            SVGUtils.startElement(this.handler, SVGConstants.SVG_ROOT, attr);
+
+           // Direct PDF only: dimension/label text often inherits layer stroke:fill:none and becomes unreadable blobs.
+           if (this.directSinglePdfMode) {
+               AttributesImpl styleAttr = new AttributesImpl();
+               SVGUtils.addAttribute(styleAttr, "type", "text/css");
+               SVGUtils.startElement(handler, "style", styleAttr);
+               String css = "text,tspan{stroke:none !important;fill:currentColor !important;font-weight:normal;}";
+               char[] cssChars = css.toCharArray();
+               handler.characters(cssChars, 0, cssChars.length);
+               SVGUtils.endElement(handler, "style");
+           }
 
            // the blocks as symbol in the defs-section of SVG
            attr = new AttributesImpl();
@@ -547,6 +576,14 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            }
        }
 
+       // Direct PDF only: geometric bounds can include far-away junk → tiny drawing; prefer header extents then.
+       if (this.directSinglePdfMode) {
+           Bounds headerBounds = getHeaderModelSpaceBounds();
+           if (isSaneBounds(headerBounds) && isLikelyOutlierBounds(bounds, headerBounds)) {
+               bounds = headerBounds;
+           }
+       }
+
        // set a margin
        double[] margin = this.getMargin(bounds);
        bounds.setMinimumX(bounds.getMinimumX() - margin[3]);
@@ -555,6 +592,46 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        bounds.setMaximumY(bounds.getMaximumY() + margin[0]);
 
        return bounds;
+   }
+
+   /** DXF $EXTMIN/$EXTMAX (else $LIMMIN/$LIMMAX) for comparing against bloated geometry bounds. */
+   private Bounds getHeaderModelSpaceBounds() {
+       Bounds headerBounds = new Bounds();
+       if (this.doc.getDXFHeader().hasVariable(DXFConstants.HEADER_VARIABLE_EXTMIN)
+               && this.doc.getDXFHeader().hasVariable(DXFConstants.HEADER_VARIABLE_EXTMAX)) {
+           DXFVariable min = this.doc.getDXFHeader().getVariable(DXFConstants.HEADER_VARIABLE_EXTMIN);
+           DXFVariable max = this.doc.getDXFHeader().getVariable(DXFConstants.HEADER_VARIABLE_EXTMAX);
+           headerBounds.setMinimumX(min.getDoubleValue("10"));
+           headerBounds.setMinimumY(min.getDoubleValue("20"));
+           headerBounds.setMaximumX(max.getDoubleValue("10"));
+           headerBounds.setMaximumY(max.getDoubleValue("20"));
+       } else if (this.doc.getDXFHeader().hasVariable(DXFConstants.HEADER_VARIABLE_LIMMIN)
+               && this.doc.getDXFHeader().hasVariable(DXFConstants.HEADER_VARIABLE_LIMMAX)) {
+           DXFVariable min = this.doc.getDXFHeader().getVariable(DXFConstants.HEADER_VARIABLE_LIMMIN);
+           DXFVariable max = this.doc.getDXFHeader().getVariable(DXFConstants.HEADER_VARIABLE_LIMMAX);
+           headerBounds.setMinimumX(min.getDoubleValue("10"));
+           headerBounds.setMinimumY(min.getDoubleValue("20"));
+           headerBounds.setMaximumX(max.getDoubleValue("10"));
+           headerBounds.setMaximumY(max.getDoubleValue("20"));
+       }
+       return headerBounds;
+   }
+
+   private static boolean isSaneBounds(Bounds b) {
+       return b != null && b.isValid() && b.getWidth() > 0 && b.getHeight() > 0;
+   }
+
+   /** Heuristic: computed view is orders of magnitude larger than header → likely outlier-driven bounds. */
+   private static boolean isLikelyOutlierBounds(Bounds computedBounds, Bounds headerBounds) {
+       if (!isSaneBounds(computedBounds) || !isSaneBounds(headerBounds)) {
+           return false;
+       }
+       double computedArea = computedBounds.getWidth() * computedBounds.getHeight();
+       double headerArea = headerBounds.getWidth() * headerBounds.getHeight();
+       if (headerArea <= 0) {
+           return false;
+       }
+       return computedArea / headerArea > 1000d;
    }
 
    public void setSVGSAXGeneratorManager(SVGSAXGeneratorManager manager) {
@@ -616,6 +693,17 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        while (types.hasNext()) {
            String type = (String) types.next();
            ArrayList list = (ArrayList) layer.getDXFEntities(type);
+           // Direct PDF only: isolate text from layer stroke so glyphs are not outlined as thick shapes.
+           boolean isTextType = this.directSinglePdfMode
+                   && (DXFConstants.ENTITY_TYPE_TEXT.equals(type) || DXFConstants.ENTITY_TYPE_MTEXT.equals(type));
+           if (isTextType) {
+               AttributesImpl textAttr = new AttributesImpl();
+               SVGUtils.addAttribute(textAttr, SVGConstants.SVG_ATTRIBUTE_FILL, "currentColor");
+               SVGUtils.addAttribute(textAttr, SVGConstants.SVG_ATTRIBUTE_STROKE, "none");
+               SVGUtils.addAttribute(textAttr, SVGConstants.SVG_ATTRIBUTE_STROKE_WITDH, "0");
+               SVGUtils.addAttribute(textAttr, "font-weight", "normal");
+               SVGUtils.startElement(handler, SVGConstants.SVG_GROUP, textAttr);
+           }
 
            try {
                SVGSAXGenerator gen = this.manager.getSVGGenerator(type);
@@ -624,6 +712,15 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
 
                while (i.hasNext()) {
                    DXFEntity entity = (DXFEntity) i.next();
+                   if (isTextType) {
+                       // Drop aggressive text lineweight/thickness before Kabeja serializes to SVG paths.
+                       entity.setLineWeight(-1);
+                       if (entity instanceof DXFText) {
+                           ((DXFText) entity).setThickness(0d);
+                       } else if (entity instanceof DXFMText) {
+                           ((DXFMText) entity).setThickness(0d);
+                       }
+                   }
                    boolean v = entity.isVisibile();
                    entity.setVisibile(!layer.isFrozen());
 
@@ -641,6 +738,9 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
                }
            } catch (SVGGenerationException e) {
                e.printStackTrace();
+           }
+           if (isTextType) {
+               SVGUtils.endElement(handler, SVGConstants.SVG_GROUP);
            }
        }
 

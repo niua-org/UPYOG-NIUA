@@ -179,6 +179,13 @@ public class DcrConstants {
     public static final String EDCR_DXF_PDF = "EDCR_DXF_PDF";
     public static final String DXF_PDF_CONVERSION_ENABLED = "DXF_PDF_CONVERSION_ENABLED";
 
+    /**
+     * When {@code YES}, use MDMS {@code DxfToPdfLayerConfig} / app {@link #EDCR_DXF_PDF} for multiple per-sheet PDFs,
+     * sanitization, and layer visibility rules. When unset or not {@code YES}, the extract emits one full-drawing PDF
+     * (no sheet configs, no {@code sanitize}), similar to loading the whole DXF in Aspose.
+     */
+    public static final String DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS = "DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS";
+
     public static final String EXISTING = "Existing";
     public static final String PROPOSED = "Proposed";
 

@@ -30,6 +30,9 @@ import com.itextpdf.text.Rectangle;
  * {@link DcrConstants#DXF_TO_PDF_ENGINE}: {@code KABEJA} (default) or {@code ASPOSE}.
  * Aspose reads the original DXF file from disk ({@code dxfSourceFile}); in-memory layer tweaks
  * from the extract step apply only to the Kabeja path.
+ * <p>
+ * For Kabeja, {@link EdcrPdfDetail#getDirectSinglePdfKabejaRendering()} drives optional SVG/PDF tuning
+ * (bounds, stroke, text) for the direct single-PDF flow only; legacy sheet configs leave it unset.
  */
 @Service
 public class DxfToPdfUnifiedConverter {
@@ -95,9 +98,25 @@ public class DxfToPdfUnifiedConverter {
                     map.put("width", String.valueOf(rectangle.getHeight() * edcrPdfDetail.getPageSize().getEnlarge()));
                     map.put("height", String.valueOf(rectangle.getWidth() * edcrPdfDetail.getPageSize().getEnlarge()));
                 }
-                map.put("margin", String.valueOf(0.5));
-                if (edcrPdfDetail.getPageSize().getRemoveHatch()) {
-                    map.put("stroke.width", new Double(0));
+                // Direct single-PDF: tighter viewBox + thinner strokes (legacy keeps original margin / behaviour).
+                boolean directSinglePdf = Boolean.TRUE.equals(edcrPdfDetail.getDirectSinglePdfKabejaRendering());
+                if (directSinglePdf) {
+                    // Signals DcrSvgGenerator / DcrSvgStyleGenerator to apply direct-only rendering fixes.
+                    map.put(DcrSvgGenerator.PROPERTY_DIRECT_SINGLE_PDF, "true");
+                    // Use header model limits so stray geometry does not shrink the drawing to a corner.
+                    map.put("bounds-rule", "Modelspace-Limits");
+                    map.put("margin", String.valueOf(0));
+                    // Uniform thin linework (dimension ticks, etc.); avoids heavy DXF lineweights in PDF.
+                    map.put("stroke-width", String.valueOf(0.12));
+                    if (Boolean.TRUE.equals(edcrPdfDetail.getPageSize().getRemoveHatch())) {
+                        map.put("stroke.width", Double.valueOf(0));
+                    }
+                } else {
+                    // Legacy per-sheet path: unchanged from historical Kabeja integration.
+                    map.put("margin", String.valueOf(0.5));
+                    if (edcrPdfDetail.getPageSize().getRemoveHatch()) {
+                        map.put("stroke.width", Double.valueOf(0));
+                    }
                 }
                 generator.generate(dxfDocument, out, map);
                 fout.flush();

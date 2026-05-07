@@ -88,7 +88,14 @@ public class EdcrPdfDetail implements Serializable {
     private Map<String, Integer> colorOverrides = new HashMap<>();
     @Transient
     private Map<String, Integer> thicknessOverrides = new HashMap<>();
-    
+
+    /**
+     * When true, Kabeja→PDF uses tighter bounds, stroke, and text styling intended for the
+     * direct single-sheet path only; legacy MDMS/app-config PDFs must leave this unset/false.
+     */
+    @Transient
+    private Boolean directSinglePdfKabejaRendering;
+
     private String downloadURL;
 
     public String getLayer() {
@@ -185,6 +192,16 @@ public class EdcrPdfDetail implements Serializable {
 
     public void setThicknessOverrides(Map<String, Integer> thicknessOverrides) {
         this.thicknessOverrides = thicknessOverrides;
+    }
+
+    /** Whether this row requests direct single-PDF Kabeja rendering tweaks (see field javadoc). */
+    public Boolean getDirectSinglePdfKabejaRendering() {
+        return directSinglePdfKabejaRendering;
+    }
+
+    /** Set only by {@code DxfToPdfConverterExtract} for the direct full-DXF PDF path. */
+    public void setDirectSinglePdfKabejaRendering(Boolean directSinglePdfKabejaRendering) {
+        this.directSinglePdfKabejaRendering = directSinglePdfKabejaRendering;
     }
 
     public String getDownloadURL() {

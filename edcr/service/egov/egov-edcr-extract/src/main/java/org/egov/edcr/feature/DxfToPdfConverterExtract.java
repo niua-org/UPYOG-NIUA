@@ -31,7 +31,6 @@ import org.egov.commons.mdms.model.MdmsEdcrResponse;
 import org.egov.commons.mdms.validator.MDMSValidator;
 import org.egov.edcr.entity.PdfPageSize;
 import org.egov.edcr.entity.blackbox.PlanDetail;
-import org.egov.edcr.service.DcrSvgGenerator;
 import org.egov.edcr.service.DxfToPdfUnifiedConverter;
 import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
@@ -101,10 +100,13 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
+        // YES = old MDMS + EDCR_DXF_PDF multi-sheet flow; otherwise one full-DXF PDF (no sheet regex configs).
+        boolean legacyLayerSheets = useLegacyLayerSheetPdfMode();
 
         Boolean mdmsEnabled = mdmsConfiguration.getMdmsEnabled();
         boolean mdmsDxfToPdfEnabled = false;
-        if (mdmsEnabled != null && mdmsEnabled) {
+        // Legacy only: build sheet list from MDMS DxfToPdfLayerConfig when MDMS is on.
+        if (legacyLayerSheets && mdmsEnabled != null && mdmsEnabled) {
             City stateCity = cityService.fetchStateCityDetails();
             String tenantID = ApplicationThreadLocals.getTenantID();
             Object mdmsData = edcrMdmsUtil.mDMSCall(new RequestInfo(),
@@ -156,8 +158,8 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 }
 
             }
-        }
-        else {
+        } else if (mdmsEnabled == null || !mdmsEnabled) {
+            // Non-MDMS tenants: honour global disable for DXF→PDF (applies to direct path too).
             List<AppConfigValues> dxfToPdfAppConfigEnabled = appConfigValueService
                     .getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.DXF_PDF_CONVERSION_ENABLED);
 
@@ -165,7 +167,8 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 return planDetail;
         }
 
-        if (!mdmsDxfToPdfEnabled) {
+        // Legacy only: fall back to EG_APPCONFIG EDCR_DXF_PDF when MDMS did not supply sheet configs.
+        if (legacyLayerSheets && !mdmsDxfToPdfEnabled) {
             List<AppConfigValues> appConfigValues = appConfigValueService
                     .getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.EDCR_DXF_PDF);
             for (AppConfigValues appConfigValue : appConfigValues) {
@@ -187,6 +190,12 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             }
         }
 
+        // Direct path: skip MDMS/EDCR_DXF_PDF sheet definitions; one synthetic EdcrPdfDetail for whole drawing.
+        if (!legacyLayerSheets) {
+            planDetail.setEdcrPdfDetails(Collections.singletonList(
+                    buildDirectEdcrPdfDetail(planDetail, planDetail.getDxfFileName())));
+        }
+
         validate(planDetail);
 
         String fileName = planDetail.getDxfFileName();
@@ -194,7 +203,17 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             LOG.debug("*************** Converting " + fileName + " to pdf ***************" + "\n");
         // DXFDocument dxfDocument = planDetail.getDxfDocument();
 
+        // Direct path: single Kabeja/Aspose Conversion
+        if (!legacyLayerSheets) {
+            return convertDirectFullDxfToSinglePdf(planDetail, fileName);
+        }
+
         List<EdcrPdfDetail> edcrPdfDetails = planDetail.getEdcrPdfDetails();
+        // Legacy: nothing to convert if MDMS/app config produced no sheet rows.
+        if (edcrPdfDetails == null || edcrPdfDetails.isEmpty()) {
+            return planDetail;
+        }
+
         Boolean printSingleSheet = false;
         EdcrPdfDetail printSingleSheetDetails = null;
 
@@ -597,6 +616,65 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 dxfLayer.setFlags(1);
             }
 
+    }
+
+    /** @see DcrConstants#DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS */
+    private boolean useLegacyLayerSheetPdfMode() {
+        List<AppConfigValues> vals = appConfigValueService.getConfigValuesByModuleAndKey(
+                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS);
+        return vals != null && !vals.isEmpty() && "YES".equalsIgnoreCase(vals.get(0).getValue().trim());
+    }
+
+    /**
+     * Builds the single-sheet {@link EdcrPdfDetail} for direct full-DXF PDF: default page size, all DXF layers,
+     * no {@code sanitize(...)} and no per-sheet MDMS/app rules.
+     * {@link EdcrPdfDetail#setDirectSinglePdfKabejaRendering(Boolean)} enables Kabeja-only rendering tweaks downstream.
+     */
+    private EdcrPdfDetail buildDirectEdcrPdfDetail(PlanDetail planDetail, String fileName) {
+        LOG.info("Single pdf generating for dxf file...");
+        EdcrPdfDetail detail = new EdcrPdfDetail();
+        PdfPageSize pageSize = new PdfPageSize();
+        pageSize.setSize("A0");
+        pageSize.setOrientation(Orientation.LANDSCAPE);
+        pageSize.setEnlarge(2);
+        pageSize.setRemoveHatch(Boolean.FALSE);
+        detail.setPageSize(pageSize);
+        detail.setLayer(dxfBaseNameForPdf(fileName));
+        List<String> layers = new ArrayList<>();
+        Iterator<?> layerIterator = planDetail.getDxfDocument().getDXFLayerIterator();
+        while (layerIterator.hasNext()) {
+            layers.add(((DXFLayer) layerIterator.next()).getName());
+        }
+        detail.setLayers(layers);
+        // Tells DxfToPdfUnifiedConverter + DcrSvg* to tune output only for this path (legacy PDFs stay unchanged).
+        detail.setDirectSinglePdfKabejaRendering(Boolean.TRUE);
+        return detail;
+    }
+
+    /** All layers visible (flags 0), one {@link #convertDxfToPdf} call, no legacy enable/disable cycle. */
+    private PlanDetail convertDirectFullDxfToSinglePdf(PlanDetail planDetail, String fileName) {
+        EdcrPdfDetail detail = planDetail.getEdcrPdfDetails().get(0);
+        Iterator<?> layerIterator = planDetail.getDxfDocument().getDXFLayerIterator();
+        while (layerIterator.hasNext()) {
+            ((DXFLayer) layerIterator.next()).setFlags(0);
+        }
+        File pdf = convertDxfToPdf(planDetail, fileName, detail.getLayer(), detail);
+        if (pdf != null) {
+            detail.setConvertedPdf(pdf);
+        }
+        return planDetail;
+    }
+
+    /** Output PDF basename matches DXF file name (e.g. plan.dxf → plan.pdf via layer name in converter). */
+    private static String dxfBaseNameForPdf(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return "plan";
+        }
+        int dot = fileName.lastIndexOf('.');
+        if (dot > 0) {
+            return fileName.substring(0, dot);
+        }
+        return fileName;
     }
 
     private void addPolygonMeasurement(DXFLayer dxfLayer, DXFEntity e, EdcrPdfDetail detail, PlanDetail pl) {
