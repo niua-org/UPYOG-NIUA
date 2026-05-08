@@ -11,7 +11,6 @@ public interface WorkflowMapper {
 
     // Mapping BusinessService to workflow.BusinessService
     @Mapping(target = "uuid", ignore = true) // Preserve the target's existing uuid
-    @Mapping(target = "businessServiceId", ignore = true)
     @Mapping(target = "auditDetails", ignore = true)
     void updateBusinessService(
             org.egov.applyworkflow.web.model.BusinessService source,
