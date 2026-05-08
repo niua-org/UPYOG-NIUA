@@ -94,57 +94,60 @@ const Home = ({
       /> ) : null;
   });
 
-  const ModuleLevelLinkHomePages = modules.map(({ code, bannerImage }, index) => {
-    let Links = Digit.ComponentRegistryService.getComponent(`${code}Links`) || (() => <React.Fragment />);
-    let mdmsDataObj = isLinkDataFetched ? processLinkData(linkData, code, t) : undefined;
 
-    if (mdmsDataObj?.header === "ACTION_TEST_WS") {
-      mdmsDataObj?.links.sort((a, b) => {
-        return b.orderNumber - a.orderNumber;
-      });
-    }
-    return (
-      <React.Fragment>
-        <Route key={index} path={`${path}/${code.toLowerCase()}-home`}>
-          <div className="moduleLinkHomePage">
-            <img src={bannerImage || stateInfo?.bannerUrl} alt="noimagefound" />
-            <BackButton className="moduleLinkHomePageBackButton" />
-            <h1>{t("MODULE_" + code.toUpperCase())}</h1>
-            <div className="moduleLinkHomePageModuleLinks">
-              {mdmsDataObj && (
-                <CitizenHomeCard
-                  header={t(mdmsDataObj?.header)}
-                  links={mdmsDataObj?.links}
-                  Icon={() => <span />}
-                  Info={
-                    code === "OBPS"
-                      ? () => (
-                          <CitizenInfoLabel
-                            style={{ margin: "0px", padding: "10px" }}
-                            info={t("CS_FILE_APPLICATION_INFO_LABEL")}
-                            text={t(`BPA_CITIZEN_HOME_STAKEHOLDER_INCLUDES_INFO_LABEL`)}
-                          />
-                        )
-                      : null
-                  }
-                  isInfo={code === "OBPS" ? true : false}
-                />
-              )}
-              {/* <Links key={index} matchPath={`/digit-ui/citizen/${code.toLowerCase()}`} userType={"citizen"} /> */}
-            </div>
-            <StaticDynamicCard moduleCode={code?.toUpperCase()} />
+const ModuleLevelLinkHomePages = modules.flatMap(({ code, bannerImage }, index) => {
+  let mdmsDataObj = isLinkDataFetched ? processLinkData(linkData, code, t) : undefined;
+
+  if (mdmsDataObj?.header === "ACTION_TEST_WS") {
+    mdmsDataObj?.links.sort((a, b) => b.orderNumber - a.orderNumber);
+  }
+
+  return [
+    <Route
+      key={index}
+      path={`${code.toLowerCase()}-home`}           // relative path
+      element={
+        <div className="moduleLinkHomePage">
+          <img src={bannerImage || stateInfo?.bannerUrl} alt="noimagefound" />
+          <BackButton className="moduleLinkHomePageBackButton" />
+          <h1>{t("MODULE_" + code.toUpperCase())}</h1>
+          <div className="moduleLinkHomePageModuleLinks">
+            {mdmsDataObj && (
+              <CitizenHomeCard
+                header={t(mdmsDataObj?.header)}
+                links={mdmsDataObj?.links}
+                Icon={() => <span />}
+                Info={
+                  code === "OBPS"
+                    ? () => (
+                        <CitizenInfoLabel
+                          style={{ margin: "0px", padding: "10px" }}
+                          info={t("CS_FILE_APPLICATION_INFO_LABEL")}
+                          text={t(`BPA_CITIZEN_HOME_STAKEHOLDER_INCLUDES_INFO_LABEL`)}
+                        />
+                      )
+                    : null
+                }
+                isInfo={code === "OBPS" ? true : false}
+              />
+            )}
           </div>
-        </Route>
-        <Route key={"faq" + index} path={`${path}/${code.toLowerCase()}-faq`}>
-          <FAQsSection module={code?.toUpperCase()} />
-        </Route>
-        <Route key={"hiw" + index} path={`${path}/${code.toLowerCase()}-how-it-works`}>
-          <HowItWorks module={code?.toUpperCase()} />
-        </Route>
-      </React.Fragment>
-    );
-  });
-
+          <StaticDynamicCard moduleCode={code?.toUpperCase()} />
+        </div>
+      }
+    />,
+    <Route
+      key={"faq" + index}
+      path={`${code.toLowerCase()}-faq`}            // relative path
+      element={<FAQsSection module={code?.toUpperCase()} />}
+    />,
+    <Route
+      key={"hiw" + index}
+      path={`${code.toLowerCase()}-how-it-works`}   // relative path
+      element={<HowItWorks module={code?.toUpperCase()} />}
+    />,
+  ];
+});
   return (
     <div className={classname}>
       <TopBarSideBar
@@ -167,28 +170,22 @@ const Home = ({
             <StaticCitizenSideBar linkData={linkData} islinkDataLoading={islinkDataLoading} />
           </div>
         )}
-        /*  ErrorBoundary out of Routes  — Routes only Route allowed */
-      <ErrorBoundary initData={initData}>
+        <ErrorBoundary initData={initData}>
         <Routes>
-          <Route exact path={path}>
-            <CitizenHome />
-          </Route>
+          <Route index element={<CitizenHome />} />
 
-          <Route exact path={`${path}/select-language`}>
-            <LanguageSelection />
-          </Route>
+          <Route path="select-language" element={<LanguageSelection />} />
 
-          <Route exact path={`${path}/select-location`}>
-            <LocationSelection />
-          </Route>
-          <Route path={`${path}/error`}>
+          <Route path="select-location" element={<LocationSelection />} />
+          
+          <Route path="error" element={
             <ErrorComponent
               initData={initData}
               goToHome={() => {
                 navigate(`/workbench-ui/${Digit?.UserService?.getType?.()}`);
               }}
             />
-          </Route>
+          } />
           <Route
               path="all-services"
               element={

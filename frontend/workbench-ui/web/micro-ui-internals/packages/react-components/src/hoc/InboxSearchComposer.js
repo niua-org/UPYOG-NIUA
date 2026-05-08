@@ -111,13 +111,9 @@ const InboxSearchComposer = ({configs,headerLabel,additionalConfig,onFormValueCh
     
     const updatedReqCriteria = Digit?.Customizations?.[apiDetails?.masterName]?.[apiDetails?.moduleName]?.preProcess ? Digit?.Customizations?.[apiDetails?.masterName]?.[apiDetails?.moduleName]?.preProcess(requestCriteria,configs.additionalDetails) : requestCriteria 
     
-    if(configs.customHookName){
-        var { isLoading, data, revalidate,isFetching,refetch,error } = eval(`Digit.Hooks.${configs.customHookName}(updatedReqCriteria)`);
-    }
-    else {
-       var { isLoading, data, revalidate,isFetching,error } = Digit.Hooks.useCustomAPIHook(updatedReqCriteria);
-        
-    }
+    const hookName = configs.customHookName;
+    const customHook = hookName ? Digit.Hooks[hookName] : Digit.Hooks.useCustomAPIHook;
+    const { isLoading, data, revalidate, isFetching, refetch, error } = customHook(updatedReqCriteria);
 
     const closeToast = () => {
         setTimeout(() => {

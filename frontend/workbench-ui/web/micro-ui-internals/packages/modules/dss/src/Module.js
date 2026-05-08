@@ -2,8 +2,9 @@ import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { BackButton, Loader, PrivateRoute, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import DashBoard from "./pages";
+import NewDashBoard from "./pages/NewDashboard";
 import Home from "./pages/Home";
-import { Route, Routes, useResolvedPath, useLocation } from "react-router-dom";
+import { Route, Routes as RouterRoutes, useLocation } from "react-router-dom";
 import Overview from "./pages/Overview";
 import {checkCurrentScreen, DSSCard,NDSSCard} from "./components/DSSCard";
 import DrillDown from "./pages/DrillDown";
@@ -31,17 +32,17 @@ const DssBreadCrumb = ({ location }) => {
       show: location.pathname.includes("dashboard") ? true : false,
     },
     {
-      path: `/workbench-ui/employee/dss/drilldown`,
+      path: "/workbench-ui/employee/dss/drilldown",
       content:location.pathname.includes("drilldown")?t(title): t("ES_COMMON_DSS_DRILL"),
       show: location.pathname.includes("drilldown") ? true : false,
     },
     {
-      path: `/workbench-ui/employee/dss/national-faqs`,
+      path: "/workbench-ui/employee/dss/national-faqs",
       content: t("ES_COMMON_DSS_FAQS"),
       show: location.pathname.includes("national-faqs") ? true : false,
     } ,
     {
-      path: `/workbench-ui/employee/dss/national-about`,
+      path: "/workbench-ui/employee/dss/national-about",
       content: t("ES_COMMON_DSS_ABOUT"),
       show: location.pathname.includes("national-about") ? true : false,
     } 
@@ -49,38 +50,54 @@ const DssBreadCrumb = ({ location }) => {
 
   return <BreadCrumb crumbs={crumbs?.filter(ele=>ele.show)} />;
 };
-// Renamed Routes → DSSRoutes (For conflict avoid with react-router-dom v6 Routes)
 
-const DSSRoutes = ({ path, stateCode }) => {
+const Routes = ({ path, stateCode }) => {
   const location = useLocation();
   const isMobile = window.Digit.Utils.browser.isMobile();
+
+  const handClick =(e,module)=>{
+    e.stopPropagation() 
+    module === "home"?window.location.href=`${path}/landing/NURT_DASHBOARD`:window.location.href=`${path}/dashboard/${module}`
+  }
   return (
-    <div className="chart-wrapper" style={isMobile ? {marginTop:"unset"} : {}}>
+    <div style={{display:"flex"}}>
+      <div className="chart-sidebar" style={{width:"300px",marginLeft:"-80px", backgroundImage:"url(https://in-egov-assets.s3.ap-south-1.amazonaws.com/images/top-green-card.png), url(https://in-egov-assets.s3.ap-south-1.amazonaws.com/images/top-red-card.png)", backgroundSize:"cover",backgroundBlendMode:"lighten",display:window.location.href.includes("main-dashboard-landing")?"":"none"}}>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",lineHeight:"3",cursor:"pointer",marginTop:"10%"}}  onClick = {(e)=>handClick(e,"home")}className="dashBoard">View dashboard</div>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",cursor:"pointer"}} className="dashBoard" onClick = {(e)=>handClick(e,"national-propertytax")}>
+Property Tax Assessment and Payment</div>
+        <div  style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",cursor:"pointer"}}className="dashBoard"  onClick = {(e)=>handClick(e,"national-tradelicense")}>Trade License Issuance and Payment</div>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",lineHeight:"3",cursor:"pointer"}} className="dashBoard" onClick = {(e)=>handClick(e,"national-pgr")}>Public Grievance Redressal</div>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",cursor:"pointer"}} className="dashBoard" onClick = {(e)=>handClick(e,"national-firenoc")}>No-Objection Certificate Issuance</div>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",cursor:"pointer"}} className="dashBoard" onClick = {(e)=>handClick(e,"national-ws")}>Water and Sewerage Connection Management</div>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",lineHeight:"3",cursor:"pointer"}} className="dashBoard" onClick = {(e)=>handClick(e,"nss-obps")}>Building Plan Approval</div>
+        <div style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",lineHeight:"3",cursor:"pointer"}} className="dashBoard" onClick = {(e)=>handClick(e,"national-mcollect")}>
+Miscellaneous Collections</div>
+        <div  style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",lineHeight:"3",cursor:"pointer"}}className="dashBoard" onClick = {(e)=>handClick(e,"national-fssm")}>
+Desludging Service</div>
+<div  style={{width:"90%",margin:"5%",backgroundColor:"white",fontWeight:"700",textAlign:"center",height:"50px",lineHeight:"3",cursor:"pointer"}}className="dashBoard" onClick = {(e)=>handClick(e,"national-sv")}>Street Vending</div>
+      
+      </div>
+      <div className="chart-wrapper" style={isMobile ? {marginTop:"unset"} : {width:"100%"}}>
       <DssBreadCrumb location={location} />
-      //Switch → Routes
-      <Routes>                                         
-        // rivateRoute element prop + relative paths 
-        <Route path="landing/:moduleCode" element={<PrivateRoute element={<Home stateCode={stateCode} />} />} />
-        <Route path="dashboard/:moduleCode" element={<PrivateRoute element={<DashBoard stateCode={stateCode} />} />} />
-        <Route path="drilldown" element={<PrivateRoute element={<DrillDown stateCode={stateCode} />} />} />
-        // children → element prop 
-        <Route path="national-faqs" element={<FAQsSection />} />
-        <Route path="national-about" element={<About />} />
-      </Routes>
+      <RouterRoutes>
+        <Route path={`${path}/landing/:moduleCode`} element={<PrivateRoute><Home stateCode={stateCode} /></PrivateRoute>} />
+        <Route path={`${path}/dashboard/:moduleCode`} element={<PrivateRoute><DashBoard stateCode={stateCode} /></PrivateRoute>} />
+        <Route path={`${path}/main-dashboard-landing`} element={<PrivateRoute><NewDashBoard stateCode={stateCode} /></PrivateRoute>} />
+        <Route path={`${path}/drilldown`} element={<PrivateRoute><DrillDown stateCode={stateCode} /></PrivateRoute>} />
+        <Route key={"national-faq"} path={`${path}/national-faqs`} element={<FAQsSection />} />
+        <Route key={"national-about"} path={`${path}/national-about`} element={<About />} />
+      </RouterRoutes>
     </div>
+    </div>
+   
   );
 };
 
 const DSSModule = ({ stateCode, userType, tenants }) => {
-  const { pathname: path } = useResolvedPath(".");        //useRouteMatch → useResolvedPath
+  const moduleCode = "DSS";
+  const { path, url } = Digit.Hooks.useModuleBasePath();
   const language = Digit.StoreData.getCurrentLanguage();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
-  const moduleCode = ["DSS","common-masters",tenantId];
-  const { isLoading, data: store } = Digit.Services.useStore({
-      stateCode,
-      moduleCode,
-      language,
-  });
+  const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
 
   if (isLoading) {
     return <Loader />;
@@ -89,7 +106,7 @@ const DSSModule = ({ stateCode, userType, tenants }) => {
   Digit.SessionStorage.set("DSS_TENANTS", tenants);
 
   if (userType !== "citizen") {
-    return <DSSRoutes stateCode={stateCode} />;      // path prop removed from DSSRoutes as useResolvedPath is used inside it to get the path
+    return <Routes path={path} stateCode={stateCode} />;
   }
 };
 

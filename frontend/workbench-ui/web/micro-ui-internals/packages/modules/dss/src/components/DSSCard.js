@@ -7,7 +7,7 @@ const nationalScreenURLs = {
   propertytax: { key: "national-propertytax", stateKey: "propertytax", label: "NURT_PROPERTY_TAX", active: true, nActive: true },
   tradelicense: { key: "national-tradelicense", stateKey: "tradelicense", label: "NURT_TRADE_LICENCE", active: true, nActive: true },
   pgr: { key: "national-pgr", stateKey: "pgr", label: "NURT_COMPLAINS", active: true, nActive: true },
-  fsm: { key: "fsm", stateKey: "fsm", label: "CS_HOME_FSM_SERVICES", active: true, nActive: false },
+  fsm: { key: "national-fssm", stateKey: "fsm", label: "CS_HOME_FSM_SERVICES", active: true, nActive: true },
   mCollect: { key: "national-mcollect", stateKey: "mCollect", label: "NURT_MCOLLECT", active: true, nActive: true },
   ws: { key: "national-ws", stateKey: "ws", label: "NURT_WATER_SEWERAGE", active: true, nActive: true },
   obps: { key: "nss-obps", stateKey: "obps", label: "DSS_BUILDING_PERMISSION", active: true, nActive: true },
@@ -37,15 +37,15 @@ const NDSSCard = () => {
     .filter((ele) => ele["nActive"] === true)
     .map((obj) => ({
       label: t(obj?.label),
-      link: obj?.others?`/workbench-ui/employee/dss/${obj?.key}`:`/workbench-ui/employee/dss/dashboard/${obj?.key}`,
+      link: obj?.others?`/upyog-ui/employee/dss/${obj?.key}`:`/upyog-ui/employee/dss/dashboard/${obj?.key}`,
     }));
 
   const propsForModuleCard = {
     headerStyle: { border: "none", height: "48px" },
     moduleName: t("ACTION_TEST_NATDASHBOARD"),
     subHeader: t("ACTION_TEST_NATDASHBOARD"),
-    // subHeaderLink: `/workbench-ui/employee/payment/integration/dss/NURT_DASHBOARD`,
-    subHeaderLink: `/workbench-ui/employee/dss/landing/NURT_DASHBOARD`,
+    // subHeaderLink: `/upyog-ui/employee/payment/integration/dss/NURT_DASHBOARD`,
+    subHeaderLink: `/upyog-ui/employee/dss/landing/NURT_DASHBOARD`,
     className: "employeeCard customEmployeeCard card-home full-width-card full-employee-card-height",
     links: [...links],
   };
@@ -64,15 +64,15 @@ const DSSCard = () => {
     .filter((ele) => ele["active"] === true)
     .map((obj) => ({
       label: t(obj?.label),
-      link: obj.active?`/workbench-ui/employee/dss/dashboard/${obj?.stateKey}`:`/employee/integration/dss/${obj?.stateKey}`,
+      link: obj.active?`/upyog-ui/employee/dss/dashboard/${obj?.stateKey}`:`/employee/integration/dss/${obj?.stateKey}`,
     }));
 
   const propsForModuleCard = {
     headerStyle: { border: "none", height: "48px" },
     moduleName: t("ES_TITLE_DSS"),
     subHeader: t("ACTION_TEST_SURE_DASHBOARD"),
-    // subHeaderLink: `/workbench-ui/employee/payment/integration/dss/home`,
-    subHeaderLink: `/workbench-ui/employee/dss/landing/home`,
+    // subHeaderLink: `/upyog-ui/employee/payment/integration/dss/home`,
+    subHeaderLink: `/upyog-ui/employee/dss/landing/home`,
     className: "employeeCard card-home customEmployeeCard full-width-card full-employee-card-height",
     links: [...links],
   };

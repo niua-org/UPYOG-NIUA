@@ -3,6 +3,7 @@ import {
 } from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import SideBarMenu from "../../../config/sidebar-menu";
 import ChangeCity from "../../ChangeCity";
 import { defaultImage } from "../../utils";
@@ -77,6 +78,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
 
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
+  const location = useLocation();
   const closeSidebar = () => {
     Digit.clikOusideFired = true;
     toggleSidebar(false);
@@ -228,7 +230,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   }
 
   /*  URL with openlink wont have sidebar and actions    */
-  if (navigate.location.pathname.includes("/openlink")) {
+  if (location.pathname.includes("/openlink")) {
     profileItem = <span></span>;
     menuItems = menuItems.filter((ele) => ele.element === "LANGUAGE");
   }

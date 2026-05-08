@@ -42,6 +42,7 @@ const DrillDown = ({ stateCode }) => {
       },
     };
   });
+  let title1=title
   const [showFilters, setShowFilters] = useState(false);
 
   const handleFilters = (data) => {
@@ -119,9 +120,17 @@ const DrillDown = ({ stateCode }) => {
     return <Loader />;
   }
 
+if(title1.includes("DSS_TOP_3"))
+{
+  title1 ="NATIONAL_DSS_TOP_PERFORMING_STATES_REVENUE_POPULATION"
+}
+else if(title1.includes("DSS_BOTTOM_3"))
+{
+  title1 ="NATIONAL_DSS_BOTTOM_PERFORMING_STATES_REVENUE_POPULATION"
+}
   return (
     <FilterContext.Provider value={provided}>
-      <Header>{t(title)}</Header>
+      <Header>{t(title1)}</Header>
       {isNational ? (
         <FiltersNational t={t} ulbTenants={nationalInfo} isNational={isNational} />
       ) : (

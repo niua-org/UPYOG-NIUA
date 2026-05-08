@@ -16,6 +16,10 @@ import { PGRReducers, initPGRComponents } from "@upyog/workbench-ui-module-pgr";
 import { pgrCustomizations } from "./pgr";
 import { UICustomizations } from "./UICustomizations";
 
+var Digit = window.Digit || {};
+
+const container = document.getElementById("root");
+  const root = createRoot(container);
 const enabledModules = [ "DSS", 
   //"HRMS",
 "Workbench"
@@ -53,7 +57,7 @@ const initTokens = (stateCode) => {
 };
 
 const initDigitUI = () => {
-  window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH") || "digit-ui";
+  window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH") || "workbench-ui";
   window.Digit.Customizations = {
     PGR: pgrCustomizations,
     commonUiConfig: UICustomizations

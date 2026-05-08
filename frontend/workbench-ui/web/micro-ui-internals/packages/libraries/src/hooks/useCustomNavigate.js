@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 
 /**
  * Custom navigation hook that wraps react-router-dom's useNavigate
@@ -10,7 +11,7 @@
  * navigate(-1); // go back
  */
 const useCustomNavigate = () => {
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const navigate = useNavigate();
   
   return (to, options = {}) => {
     try {

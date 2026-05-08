@@ -31,7 +31,7 @@ const enabledModules = [
 ];
 
 const moduleReducers = (initData) => ({
-  initData, pgr: PGRReducers(initData),
+  pgr: PGRReducers(initData),
 });
 
 const initDigitUI = () => {

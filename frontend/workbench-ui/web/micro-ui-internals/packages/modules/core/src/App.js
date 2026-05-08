@@ -67,12 +67,9 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData ,de
   };
   return (
     <Routes>
-      /* children → element prop, /* added for nested routes */
       <Route path={`/workbench-ui/employee/*`} element={<EmployeeApp {...commonProps} />} />
       <Route path={`/workbench-ui/citizen/*`} element={<CitizenApp {...commonProps} />} />
-      /* Redirect → Navigate */
       <Route path="*" element={<Navigate to={`/workbench-ui/${defaultLanding}`} replace />} />
     </Routes>
-
   );
 };

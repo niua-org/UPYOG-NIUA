@@ -20,10 +20,16 @@ const About = () => {
       <Header styles={{ marginLeft: "15px", paddingTop: "10px", fontSize: "36px" }}>{t("DSS_ABOUT_DASHBOARD")}</Header>
       <Card>{moduleAbout.map((obj) => (
         <div>
-          <CardSubHeader style={{ fontSize: "24px", marginBottom:"10px"}} >{t(obj?.titleHeader)}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" , marginBottom:"10px"}} >{t(obj?.titleHeader)}</CardSubHeader>
           <div style={{ fontSize: "16px" ,marginBottom:"20px"}}>{definitionlist(obj?.define)}</div>
-          {obj?.definePoints ?
-            <div>
+          {obj?.definePoints && obj?.titleHeader === "KEY_TERMS"  ?
+             <div>
+              {obj?.definePoints?.map((about, i) => (
+                <div style={{ fontSize: "16px", marginLeft: "15px",marginBottom:"20px" }}>{"•"}<div style={{ marginTop: "-25px", marginLeft:"15px"}}><b>{t(`${about?.point}_HEADER`)}</b> - {t(`${about?.point}_MSG`)}</div></div>
+              ))}
+            </div> : null}
+            {obj?.definePoints && obj?.titleHeader !== "KEY_TERMS"  ?
+             <div>
               {obj?.definePoints?.map((about, i) => (
                 <div style={{ fontSize: "16px", marginLeft: "15px",marginBottom:"20px" }}>{"•"}<div style={{ marginTop: "-25px", marginLeft:"15px"}}>{t(about?.point)}</div></div>
               ))}

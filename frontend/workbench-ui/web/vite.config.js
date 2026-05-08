@@ -164,7 +164,6 @@
 
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import svgr from "vite-plugin-svgr";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -237,7 +236,6 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      svgr(),
       react(),
     ],
 
@@ -296,7 +294,7 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      include: ["react", "react-dom", "react-router-dom", "leaflet-draw"],
+      include: ["react", "react-dom", "react-router-dom"],
       exclude: Object.keys(moduleAliases), // 👈 IMPORTANT: prevents double-bundling
       esbuildOptions: {
         loader: { ".js": "jsx" },

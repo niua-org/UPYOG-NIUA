@@ -1,6 +1,6 @@
 <!-- TODO: update this -->
 
-# digit-ui-module-dss
+# workbench-ui-module-dss
 
 ## Install
 
@@ -11,7 +11,7 @@ npm install --save @upyog/workbench-ui-module-dss
 ## Limitation
 
 ```bash
-This Package is more specific to DIGIT-UI's can be used across mission's
+This Package is more specific to WORKBENCH-UI's can be used across mission's
 ```
 
 ## Usage
@@ -52,7 +52,7 @@ const initDigitUI = () => {
 ## Dynamic filter Usage
 DSS UI
 
-Digit-UI has a DSS module that displays multiple types of charts, and tables based on the configuration. In DSS there are some filters that are fixed for all the pages, they should be based on the configuration. 
+WORKBENCH-UI has a DSS module that displays multiple types of charts, and tables based on the configuration. In DSS there are some filters that are fixed for all the pages, they should be based on the configuration. 
 
 Example config
 
