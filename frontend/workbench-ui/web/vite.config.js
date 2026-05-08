@@ -251,7 +251,7 @@ export default defineConfig(({ mode }) => {
 
     resolve: {
       alias: moduleAliases,
-      dedupe: ["react", "react-dom"],
+      dedupe: ["react", "react-dom", "@tanstack/react-query", "react-router-dom", "i18next", "react-i18next"],
     },
 
     esbuild: {
@@ -287,14 +287,14 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ["react", "react-dom", "react-router-dom"],
+            vendor: ["react", "react-dom", "@tanstack/react-query", "react-router-dom", "i18next", "react-i18next"],
           },
         },
       },
     },
 
     optimizeDeps: {
-      include: ["react", "react-dom", "react-router-dom"],
+      include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query", "i18next", "react-i18next"],
       exclude: Object.keys(moduleAliases), // 👈 IMPORTANT: prevents double-bundling
       esbuildOptions: {
         loader: { ".js": "jsx" },

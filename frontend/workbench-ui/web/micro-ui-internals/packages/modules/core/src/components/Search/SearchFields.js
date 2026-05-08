@@ -10,11 +10,11 @@ const SearchFields = ({ register, control, reset, tenantId, t, previousPage, for
     <>
       <SearchField className="pt-form-field">
         <label>{t("AUDIT_FROM_DATE_LABEL")}</label>
-        <Controller render={(props) => <DatePicker date={props.value} onChange={props.onChange} />} name="fromDate" control={control} />
+        <Controller render={({ field }) => <DatePicker date={field.value} onChange={field.onChange} />} name="fromDate" control={control} />
       </SearchField>
       <SearchField className="pt-form-field">
         <label>{t("AUDIT_TO_DATE_LABEL")}</label>
-        <Controller render={(props) => <DatePicker date={props.value} onChange={props.onChange} />} name="toDate" control={control} />
+        <Controller render={({ field }) => <DatePicker date={field.value} onChange={field.onChange} />} name="toDate" control={control} />
       </SearchField>
       <SearchField className="pt-search-action-submit">
         <SubmitBar

@@ -56,10 +56,10 @@ export const SubformComposer = ({ _key, ...props }) => {
                 {label && <div className="w-half">{label}</div>}
                 <div className={label && "w-half"}>
                   <Controller
-                    defaultValue={_defaultValue}
                     name={name}
                     control={control}
-                    render={(props) => component({ ...props, setState: _setState, setValue, setError, state, getValues }, _customProps)}
+                    defaultValue={_defaultValue}
+                    render={({ field }) => component({ ...field, setState: _setState, setValue, setError, state, getValues }, _customProps)}
                   />
                 </div>
               </div>

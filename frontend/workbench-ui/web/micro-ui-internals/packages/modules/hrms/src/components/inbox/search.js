@@ -74,7 +74,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                         </div>
                       ) : (
                         <Controller
-                          render={(props) => <DatePicker date={props.value} onChange={props.onChange} />}
+                          render={({ field }) => <DatePicker date={field.value} onChange={field.onChange} />}
                           name={input.name}
                           control={control}
                           defaultValue={null}

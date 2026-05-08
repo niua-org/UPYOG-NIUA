@@ -32,7 +32,11 @@ export const SelectPaymentType = (props) => {
   const tenantId = state?.tenantId || __tenantId || Digit.ULBService.getCurrentTenantId();
   const propertyId = state?.propertyId;
   const stateTenant = Digit.ULBService.getStateId();
-  const { control, handleSubmit } = useForm();
+  const { control, handleSubmit } = useForm({
+    defaultValues: {
+      paymentType: menu?.[0]
+    }
+  });
   const { data: menu, isLoading } = Digit.Hooks.useCommonMDMS(stateTenant, "DIGIT-UI", "PaymentGateway");
   const { data: paymentdetails, isLoading: paymentLoading } = Digit.Hooks.useFetchPayment(
     { tenantId: tenantId, consumerCode: wrkflow === "WNS" ? connectionNo : consumerCode, businessService },
@@ -121,9 +125,8 @@ export const SelectPaymentType = (props) => {
           {menu?.length && (
             <Controller
               name="paymentType"
-              defaultValue={menu[0]}
               control={control}
-              render={(props) => <RadioButtons selectedOption={props.value} options={menu} onSelect={props.onChange} />}
+              render={({ field }) => <RadioButtons selectedOption={field.value} options={menu} onSelect={field.onChange} />}
             />
           )}
           {!showToast && <SubmitBar label={t("PAYMENT_CS_BUTTON_LABEL")} submit={true} />}

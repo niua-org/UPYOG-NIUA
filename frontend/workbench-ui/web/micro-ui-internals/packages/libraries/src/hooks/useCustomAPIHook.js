@@ -14,19 +14,19 @@ import { CustomService } from "../services/elements/CustomService";
  *
  * @returns {Object} Returns the object which contains privacy value and updatePrivacy method
  */
-const useCustomAPIHook = (url, params, body, plainAccessRequest, options = {}) => {
+const useCustomAPIHook = ({ url, params = {}, body = {}, plainAccessRequest = {}, config = {} } = {}) => {
   const client = useQueryClient();
   //api name, querystr, reqbody
   const { isLoading, data } = queryTemplate({
-    queryKey: ["CUSTOM", { ...params, ...body, ...plainAccessRequest }].filter((e) => e),
-    queryFn: () => CustomService.getResponse({ url, params, ...body, plainAccessRequest }),
-    config: options,
+    queryKey: ["CUSTOM", url, params, body, plainAccessRequest].filter((e) => e),
+    queryFn: () => CustomService.getResponse({ url, params, body, plainAccessRequest }),
+    config: config,
   });
   return {
     isLoading,
     data,
     revalidate: () => {
-      data && client.invalidateQueries({ queryKey: ["CUSTOM", { ...params, ...body, ...plainAccessRequest }] });
+      data && client.invalidateQueries({ queryKey: ["CUSTOM", url, params, body, plainAccessRequest] });
     },
   };
 };

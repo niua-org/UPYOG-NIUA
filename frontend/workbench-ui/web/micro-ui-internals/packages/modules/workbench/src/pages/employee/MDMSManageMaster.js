@@ -26,6 +26,7 @@ const MDMSManageMaster = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
   
   let {masterName:modulee,moduleName:master,tenantId} = Digit.Hooks.useQueryParams()
+
   
   const [availableSchemas, setAvailableSchemas] = useState([]);
   const [currentSchema, setCurrentSchema] = useState(null);
@@ -53,9 +54,7 @@ const MDMSManageMaster = () => {
 
   const { isLoading, data: dropdownData } = Digit.Hooks.useCustomAPIHook({
     url: `/${Digit.Hooks.workbench.getMDMSContextPath()}/schema/v1/_search`,
-    params: {
-      
-    },
+    params: {},
     body: {
       SchemaDefCriteria
     },
@@ -65,16 +64,13 @@ const MDMSManageMaster = () => {
           return array.indexOf(value) === index;
         }
         
-        //when api is working fine change here(thsese are all schemas available in a tenant)
-        // const schemas = sampleSchemaResponse.SchemaDefinitions;
-        const schemas = data?.SchemaDefinitions
-        setAvailableSchemas(schemas);
-        if(schemas?.length===1) setCurrentSchema(schemas?.[0])
-        //now extract moduleNames and master names from this schema
+        const schemas = data?.SchemaDefinitions;
         const obj = {
           mastersAvailable: [],
+          schemas: schemas || [],
         };
-        schemas.forEach((schema, idx) => {
+        
+        schemas?.forEach((schema, idx) => {
           const { code } = schema;
           const splittedString = code.split(".");
           const [master, mod] = splittedString;
@@ -82,15 +78,15 @@ const MDMSManageMaster = () => {
           obj.mastersAvailable.push(master);
         });
         
-        obj.mastersAvailable = obj.mastersAvailable.filter(onlyUnique)
+        obj.mastersAvailable = obj.mastersAvailable.filter(onlyUnique);
         obj.mastersAvailable = obj.mastersAvailable.map((mas) => toDropdownObj(mas));
-        //sorting based on localised value
-        obj.mastersAvailable = sortByKey(obj.mastersAvailable,'translatedValue')
+        obj.mastersAvailable = sortByKey(obj.mastersAvailable,'translatedValue');
         return obj;
       },
     },
   });
 
+  console.log(dropdownData, "dropdownData");
   useEffect(() => {
     setMasterOptions(dropdownData?.mastersAvailable)
   }, [dropdownData])
