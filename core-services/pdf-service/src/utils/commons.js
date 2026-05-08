@@ -74,8 +74,7 @@ export const getTransformedLocale = (label) => {
       }
     };
   
-    console.log("moduleList:", moduleList);
-    console.log("codeList:", codeList);
+    
     request.messageSearchCriteria.module = moduleList.toString();
     request.messageSearchCriteria.codes = codeList.toString().split(",");
   
@@ -85,19 +84,6 @@ export const getTransformedLocale = (label) => {
         accept: "application/json, text/plain, */*"
       }
     };
-  
-    // let responseBody = await axios.post(url,request,headers)
-    // .then(function (response) {
-    //   return response;
-    // })
-    // .catch((error) => {
-    //   throw error
-    //  });
-
-    console.log("----LOCALISATION API DEBUG----");
-    console.log("URL:", url);
-    console.log("Request Payload:", JSON.stringify(request, null, 2));
-    console.log("Headers:", headers);
 
     let responseBody = await axios.post(url, request, headers)
     .then(function (response) {

@@ -466,6 +466,7 @@ export async function mergePdfForDN(bulkPdfJobId, tenantId, userid, numberOfFile
         } catch (error) {
           logger.error(error.stack || error);
           try {
+  // Refactored Kafka error publishing to use async/await, simplified payload structure, and added try/catch handling for producer send failures.
             await producer.send({
               topic: envVariables.KAFKA_PDF_ERROR_TOPIC,
               messages: [{ value: JSON.stringify(error) }]

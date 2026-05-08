@@ -16,7 +16,9 @@ let externalHost = envVariables.EGOV_EXTERNAL_HOST;
  *
  * @param {*} filename -name of localy stored temporary file
  * @param {*} tenantId - tenantID
+ * 
  */
+// Refactored variable declarations to use const, fixed malformed URL issue, and added robust error handling for filestore API failures.
 export const fileStoreAPICall = async function(filename, tenantId, fileData) {
    const url = `${egovFileHost}filestore/v1/files?tenantId=${tenantId}&module=pdfgen&tag=00040-2017-QR`;
 

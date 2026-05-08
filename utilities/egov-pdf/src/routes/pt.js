@@ -354,6 +354,7 @@ router.post(
       //create_defaulter_notice_pdf_pt(kafkaData);
 
       try {
+   // Refactored Kafka publish flow from callback-based producer.send() to async/await with structured message format and centralized error handling.
         var records = properties.length;
         logger.info("::Pushing data to kafka::");
         try {

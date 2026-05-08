@@ -823,7 +823,7 @@ async function create_bulk_pdf(kafkaData){
               consumerCode: consumerCode
             };
           var pdfData = Object.assign({RequestInfo:requestinfo.RequestInfo}, billArray);
-           
+ // Refactored bulk Kafka publishing from inline callback-based producer.send() to reusable async/await sendToKafka() utility with improved error handling and cleaner batch processing.
           try {
               await sendToKafka(
                 config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
@@ -1239,7 +1239,7 @@ async function create_defaulter_notice_pdf_pt(kafkaData){
           var pdfData = Object.assign({RequestInfo:requestinfo}, propertyArray);
 
           logger.info("about to call PDF service");
-
+// Refactored bulk Kafka publishing from inline callback-based producer.send() to reusable async/await sendToKafka() utility with improved error handling and cleaner batch processing.
           try {
 
             await sendToKafka(

@@ -8,7 +8,8 @@ const listenConsumer = async () => {
     brokers: [config.KAFKA_BROKER_HOST],
     retry: { retries: 1 },
   });
-
+// Migrated Kafka consumer implementation from kafka-node ConsumerGroup to KafkaJS with async/await processing, 
+// improved connection handling, and crash event monitoring.
   const consumer = kafka.consumer({
     groupId: "egov-pdf-group",
     sessionTimeout: 15000,

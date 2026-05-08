@@ -6,7 +6,7 @@ const kafka = new Kafka({
   brokers: [config.KAFKA_BROKER_HOST],
   retry: { retries: 1 },
 });
-
+// Migrated Kafka producer from kafka-node to KafkaJS with explicit async connection management, retry configuration, and disconnect event handling.
 const producer = kafka.producer({
   allowAutoTopicCreation: true,
   createPartitioner: Partitioners.LegacyPartitioner,

@@ -19,6 +19,7 @@ app.disable('x-powered-by');
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
+// Updated template engine configuration from deprecated Jade to maintained Pug view engine.
 app.set("view engine", "pug");
 
 app.use(logger("dev"));
