@@ -31,7 +31,7 @@ import com.itextpdf.text.Rectangle;
  * Aspose reads the original DXF file from disk ({@code dxfSourceFile}); in-memory layer tweaks
  * from the extract step apply only to the Kabeja path.
  * <p>
- * For Kabeja, {@link EdcrPdfDetail#getDirectSinglePdfKabejaRendering()} drives optional SVG/PDF tuning
+ * For Kabeja, {@link EdcrPdfDetail#getKabejaSinglePageDXFToPdf()} drives optional SVG/PDF tuning
  * (bounds, stroke, text) for the direct single-PDF flow only; legacy sheet configs leave it unset.
  */
 @Service
@@ -98,11 +98,11 @@ public class DxfToPdfUnifiedConverter {
                     map.put("width", String.valueOf(rectangle.getHeight() * edcrPdfDetail.getPageSize().getEnlarge()));
                     map.put("height", String.valueOf(rectangle.getWidth() * edcrPdfDetail.getPageSize().getEnlarge()));
                 }
-                // Direct single-PDF: tighter viewBox + thinner strokes (legacy keeps original margin / behaviour).
-                boolean directSinglePdf = Boolean.TRUE.equals(edcrPdfDetail.getDirectSinglePdfKabejaRendering());
+                // Single-PDF: tighter viewBox + thinner strokes (legacy keeps original margin / behaviour).
+                boolean directSinglePdf = Boolean.TRUE.equals(edcrPdfDetail.getKabejaSinglePageDXFToPdf());
                 if (directSinglePdf) {
                     // Signals DcrSvgGenerator / DcrSvgStyleGenerator to apply direct-only rendering fixes.
-                    map.put(DcrSvgGenerator.PROPERTY_DIRECT_SINGLE_PDF, "true");
+                    map.put(DcrSvgGenerator.PROPERTY_SINGLE_PDF, "true");
                     // Use header model limits so stray geometry does not shrink the drawing to a corner.
                     map.put("bounds-rule", "Modelspace-Limits");
                     map.put("margin", String.valueOf(0));

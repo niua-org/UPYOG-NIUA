@@ -94,8 +94,8 @@
             <artifactId>sitemesh</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.ehcache</groupId>
-            <artifactId>ehcache</artifactId>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache-web</artifactId>
         </dependency>
         <!-- MISC END -->
         <!-- VIEWS RELATED END -->

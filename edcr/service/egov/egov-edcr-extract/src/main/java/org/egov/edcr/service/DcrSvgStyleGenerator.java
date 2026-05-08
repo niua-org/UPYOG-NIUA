@@ -17,7 +17,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * Emits SVG {@code font-face} definitions from DXF styles. Two behaviours:
  * <ul>
  *   <li><b>Legacy</b> — original Times New Roman mapping (used when MDMS / {@code EDCR_DXF_PDF} sheet path runs).</li>
- *   <li><b>Direct single PDF</b> — when {@code svgContext} contains {@code egov.direct-single-pdf=true}, uses
+ *   <li><b>Direct single PDF</b> — when {@code svgContext} contains {@code egov.singlePdfUsingKabeja=true}, uses
  *       installed TTF fallbacks and style aliases so Kabeja text stays readable on typical Linux servers.</li>
  * </ul>
  */
@@ -36,7 +36,7 @@ public class DcrSvgStyleGenerator {
 
     public static void toSAX(ContentHandler handler, Map svgContext, DXFStyle style) throws SAXException {
         // Set by DcrSvgGenerator.setupProperties when PROPERTY_DIRECT_SINGLE_PDF is in the generator map.
-        if (Boolean.TRUE.equals(svgContext.get("egov.direct-single-pdf"))) {
+        if (Boolean.TRUE.equals(svgContext.get("egov.singlePdfUsingKabeja"))) {
             toSaxDirectSinglePdf(handler, style);
         } else {
             toSaxLegacy(handler, style);

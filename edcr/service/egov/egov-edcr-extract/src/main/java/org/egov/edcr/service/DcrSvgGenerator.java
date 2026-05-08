@@ -73,7 +73,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
     * Map key from {@link DxfToPdfUnifiedConverter} when {@link org.egov.common.entity.edcr.EdcrPdfDetail}
     * {@code directSinglePdfKabejaRendering} is true. Legacy conversions must not set this property.
     */
-   public static final String PROPERTY_DIRECT_SINGLE_PDF = "egov.direct-single-pdf";
+   public static final String PROPERTY_SINGLE_PDF = "egov.singlePdfUsingKabeja";
    public static final double DEFAULT_MARGIN_PERCENT = 0.0;
    public final static String SUPPORTED_SVG_VERSION = "1.1"; // we say we produce version 1.1 to fool svgo
    private boolean overflow = true;
@@ -83,8 +83,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    private String marginSettings;
    private String outputStyleName = DXFConstants.LAYOUT_DEFAULT_NAME;
    protected SVGSAXGeneratorManager manager;
-   /** Mirrors {@link #PROPERTY_DIRECT_SINGLE_PDF} after {@link #setupProperties()}. */
-   private boolean directSinglePdfMode;
+   private boolean singlePdfMode;
 
    protected void generate() throws SAXException {
        this.setupProperties();
@@ -172,13 +171,13 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            this.manager = new SVGSAXGeneratorManager();
        }
 
-       // Propagate direct-PDF mode into SVG context so DcrSvgStyleGenerator can branch without extra parameters.
-       String directPdf = this.properties.containsKey(PROPERTY_DIRECT_SINGLE_PDF)
-               ? String.valueOf(this.properties.get(PROPERTY_DIRECT_SINGLE_PDF)).trim()
+       // Propagate Single-PDF mode into SVG context so DcrSvgStyleGenerator can branch without extra parameters.
+       String singlePdf = this.properties.containsKey(PROPERTY_SINGLE_PDF)
+               ? String.valueOf(this.properties.get(PROPERTY_SINGLE_PDF)).trim()
                : "";
-       this.directSinglePdfMode = "true".equalsIgnoreCase(directPdf);
-       if (this.directSinglePdfMode) {
-           this.context.put("egov.direct-single-pdf", Boolean.TRUE);
+       this.singlePdfMode = "true".equalsIgnoreCase(singlePdf);
+       if (this.singlePdfMode) {
+           this.context.put("egov.singlePdfUsingKabeja", Boolean.TRUE);
        }
 
        this.context.put(SVGContext.SVGSAXGENERATOR_MANAGER, manager);
@@ -287,15 +286,9 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
 
            SVGUtils.startElement(this.handler, SVGConstants.SVG_ROOT, attr);
 
-           // Direct PDF only: dimension/label text often inherits layer stroke:fill:none and becomes unreadable blobs.
-           if (this.directSinglePdfMode) {
-               AttributesImpl styleAttr = new AttributesImpl();
-               SVGUtils.addAttribute(styleAttr, "type", "text/css");
-               SVGUtils.startElement(handler, "style", styleAttr);
-               String css = "text,tspan{stroke:none !important;fill:currentColor !important;font-weight:normal;}";
-               char[] cssChars = css.toCharArray();
-               handler.characters(cssChars, 0, cssChars.length);
-               SVGUtils.endElement(handler, "style");
+           // Single DXF to PDF only
+           if (this.singlePdfMode) {
+                singlePdfConfigurations();
            }
 
            // the blocks as symbol in the defs-section of SVG
@@ -409,6 +402,17 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        }
 
        SVGUtils.endElement(handler, SVGConstants.SVG_GROUP);
+   }
+
+   // Configurations for the single pdf
+   public void singlePdfConfigurations() throws SAXException {
+       AttributesImpl styleAttr = new AttributesImpl();
+       SVGUtils.addAttribute(styleAttr, "type", "text/css");
+       SVGUtils.startElement(handler, "style", styleAttr);
+       String css = "text,tspan{stroke:none !important;fill:currentColor !important;font-weight:normal;}";
+       char[] cssChars = css.toCharArray();
+       handler.characters(cssChars, 0, cssChars.length);
+       SVGUtils.endElement(handler, "style");
    }
 
    /**
@@ -576,8 +580,8 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            }
        }
 
-       // Direct PDF only: geometric bounds can include far-away junk → tiny drawing; prefer header extents then.
-       if (this.directSinglePdfMode) {
+       // Single DXF to PDF mode only
+       if (this.singlePdfMode) {
            Bounds headerBounds = getHeaderModelSpaceBounds();
            if (isSaneBounds(headerBounds) && isLikelyOutlierBounds(bounds, headerBounds)) {
                bounds = headerBounds;
@@ -594,8 +598,30 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        return bounds;
    }
 
-   /** DXF $EXTMIN/$EXTMAX (else $LIMMIN/$LIMMAX) for comparing against bloated geometry bounds. */
-   private Bounds getHeaderModelSpaceBounds() {
+    /*
+     * Retrieves the drawing bounds from the DXF header.
+     *
+     * The method first attempts to read the EXTMIN and EXTMAX header variables,
+     * which represent the actual drawing extents (minimum and maximum coordinates)
+     * of the model space.
+     *
+     * If EXTMIN/EXTMAX are not available, it falls back to LIMMIN/LIMMAX,
+     * which represent the drawing limits configured in the DXF.
+     *
+     * These bounds are used for:
+     * - determining drawing size
+     * - scaling during DXF to PDF conversion
+     * - viewport/page fitting
+     * - rendering calculations
+     *
+     * DXF coordinate mapping:
+     * - Group code "10" -> X coordinate
+     * - Group code "20" -> Y coordinate
+     *
+     * Returns:
+     * A Bounds object containing minimum and maximum X/Y coordinates.
+     */
+    private Bounds getHeaderModelSpaceBounds() {
        Bounds headerBounds = new Bounds();
        if (this.doc.getDXFHeader().hasVariable(DXFConstants.HEADER_VARIABLE_EXTMIN)
                && this.doc.getDXFHeader().hasVariable(DXFConstants.HEADER_VARIABLE_EXTMAX)) {
@@ -621,7 +647,30 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        return b != null && b.isValid() && b.getWidth() > 0 && b.getHeight() > 0;
    }
 
-   /** Heuristic: computed view is orders of magnitude larger than header → likely outlier-driven bounds. */
+    /*
+     * Checks whether the computed drawing bounds appear to be an abnormal outlier
+     * when compared against the DXF header bounds.
+     *
+     * The method is used to detect invalid or corrupted geometry that can produce
+     * extremely large rendering areas during DXF to PDF conversion.
+     *
+     * Logic:
+     * - Validate that both computed and header bounds are sane/valid.
+     * - Calculate the area of both bounds.
+     * - Ignore invalid header areas (<= 0).
+     * - Treat the computed bounds as suspicious if its area is more than
+     *   1000 times larger than the header-defined bounds.
+     *
+     * This helps prevent issues such as:
+     * - malformed entities with huge coordinates
+     * - incorrect scaling
+     * - oversized PDF generation
+     * - rendering crashes or memory issues
+     *
+     * Returns:
+     * true  -> computed bounds are likely abnormal/outliers
+     * false -> bounds appear reasonable
+     */
    private static boolean isLikelyOutlierBounds(Bounds computedBounds, Bounds headerBounds) {
        if (!isSaneBounds(computedBounds) || !isSaneBounds(headerBounds)) {
            return false;
@@ -694,7 +743,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            String type = (String) types.next();
            ArrayList list = (ArrayList) layer.getDXFEntities(type);
            // Direct PDF only: isolate text from layer stroke so glyphs are not outlined as thick shapes.
-           boolean isTextType = this.directSinglePdfMode
+           boolean isTextType = this.singlePdfMode
                    && (DXFConstants.ENTITY_TYPE_TEXT.equals(type) || DXFConstants.ENTITY_TYPE_MTEXT.equals(type));
            if (isTextType) {
                AttributesImpl textAttr = new AttributesImpl();

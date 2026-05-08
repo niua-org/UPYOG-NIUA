@@ -172,7 +172,7 @@
         <commons.compress.version>1.28.0</commons.compress.version>
 		<httpclient-version>4.5.14</httpclient-version>
 		<sitemesh-version>2.5.0</sitemesh-version>
-		<ehcache-web-version>3.10.8</ehcache-web-version>
+		<ehcache-web-version>2.0.4</ehcache-web-version>
 		<joda-time-version>2.12.7</joda-time-version>
 		<joda-time-jsptag-version>1.1.1</joda-time-jsptag-version>
 		<jsoup-version>1.17.2</jsoup-version>
@@ -800,20 +800,9 @@
 				<version>${sitemesh-version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.ehcache</groupId>
-				<artifactId>ehcache</artifactId>
+				<groupId>net.sf.ehcache</groupId>
+				<artifactId>ehcache-web</artifactId>
 				<version>${ehcache-web-version}</version>
-
-				<exclusions>
-					<exclusion>
-						<groupId>javax.xml.bind</groupId>
-						<artifactId>jaxb-api</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.glassfish.jaxb</groupId>
-						<artifactId>jaxb-runtime</artifactId>
-					</exclusion>
-				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>joda-time</groupId>

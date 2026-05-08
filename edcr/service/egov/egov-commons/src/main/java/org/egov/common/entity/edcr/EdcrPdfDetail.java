@@ -94,7 +94,7 @@ public class EdcrPdfDetail implements Serializable {
      * direct single-sheet path only; legacy MDMS/app-config PDFs must leave this unset/false.
      */
     @Transient
-    private Boolean directSinglePdfKabejaRendering;
+    private Boolean kabejaSinglePageDXFToPdf;
 
     private String downloadURL;
 
@@ -195,13 +195,13 @@ public class EdcrPdfDetail implements Serializable {
     }
 
     /** Whether this row requests direct single-PDF Kabeja rendering tweaks (see field javadoc). */
-    public Boolean getDirectSinglePdfKabejaRendering() {
-        return directSinglePdfKabejaRendering;
+    public Boolean getKabejaSinglePageDXFToPdf() {
+        return kabejaSinglePageDXFToPdf;
     }
 
     /** Set only by {@code DxfToPdfConverterExtract} for the direct full-DXF PDF path. */
-    public void setDirectSinglePdfKabejaRendering(Boolean directSinglePdfKabejaRendering) {
-        this.directSinglePdfKabejaRendering = directSinglePdfKabejaRendering;
+    public void setKabejaSinglePageDXFToPdf(Boolean kabejaSinglePageDXFToPdf) {
+        this.kabejaSinglePageDXFToPdf = kabejaSinglePageDXFToPdf;
     }
 
     public String getDownloadURL() {

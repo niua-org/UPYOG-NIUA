@@ -25,6 +25,7 @@ import org.egov.common.entity.dcr.helper.PlanPdfLayerConfig;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.EdcrPdfDetail;
 import org.egov.common.entity.edcr.Floor;
+import org.egov.common.entity.edcr.Plan;
 import org.egov.commons.mdms.EDCRMdmsUtil;
 import org.egov.commons.mdms.config.MdmsConfiguration;
 import org.egov.commons.mdms.model.MdmsEdcrResponse;
@@ -100,64 +101,15 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
-        // YES = old MDMS + EDCR_DXF_PDF multi-sheet flow; otherwise one full-DXF PDF (no sheet regex configs).
+        // If YES, the legacy code will run else the new single dxf to pdf will execute.
         boolean legacyLayerSheets = useLegacyLayerSheetPdfMode();
 
         Boolean mdmsEnabled = mdmsConfiguration.getMdmsEnabled();
         boolean mdmsDxfToPdfEnabled = false;
         // Legacy only: build sheet list from MDMS DxfToPdfLayerConfig when MDMS is on.
         if (legacyLayerSheets && mdmsEnabled != null && mdmsEnabled) {
-            City stateCity = cityService.fetchStateCityDetails();
-            String tenantID = ApplicationThreadLocals.getTenantID();
-            Object mdmsData = edcrMdmsUtil.mDMSCall(new RequestInfo(),
-                    new StringBuilder().append(stateCity.getCode()).append(".").append(tenantID).toString());
+            mdmsDxfToPdfEnabled = mdmsDxftoPdfConfigDetails(planDetail, mdmsDxfToPdfEnabled);
 
-            if (mdmsData == null) {
-                tenantID = stateCity.getCode();
-                mdmsData = edcrMdmsUtil.mDMSCall(new RequestInfo(), tenantID);
-            }
-            if (mdmsData != null) {
-                Map<String, List<Object>> edcrMdmsConfig = mdmsValidator.getAttributeValues(mdmsData,
-                        DcrConstants.MDMS_EDCR_MODULE);
-                MdmsEdcrResponse mdmsEdcrResponse = null;
-                try {
-                    List<Object> dxfToPdfMdmsEnabled = edcrMdmsConfig.get("DxfToPdfConfig");
-
-                    String jsonStr = new JSONObject((LinkedHashMap<?, ?>) dxfToPdfMdmsEnabled.get(0)).toString();
-                    ObjectMapper mapper = new ObjectMapper();
-                    mdmsEdcrResponse = mapper.readValue(jsonStr, MdmsEdcrResponse.class);
-                } catch (IOException e) {
-                    LOG.error("Error occured while reading mdms data", e);
-                }
-                if (mdmsEdcrResponse != null && mdmsEdcrResponse.getEnabled().equals("true")) {
-                    mdmsDxfToPdfEnabled = true;
-                    List<Object> dxfToPdfConfig = edcrMdmsConfig.get("DxfToPdfLayerConfig");
-                    for (Object obj : dxfToPdfConfig) {
-                        try {
-                            String jsonString = new JSONObject((LinkedHashMap<?, ?>) obj).toString();
-                            ObjectMapper mapper1 = new ObjectMapper();
-                            DxfToPdfLayerConfig config = mapper1.readValue(jsonString, DxfToPdfLayerConfig.class);
-                            List<EdcrPdfDetail> layerNameList = getPdfLayerNames(planDetail, config);
-                            for (EdcrPdfDetail d : layerNameList) {
-                                if (LOG.isDebugEnabled())
-                                    LOG.debug("\t\t\tSheetName : " + d.getLayer() + " , list of layers :\n" + d.getLayers());
-                            }
-                            // get a particular layer from the document and enable the layer
-                            if (layerNameList != null && !layerNameList.isEmpty()) {
-
-                                if (planDetail.getEdcrPdfDetails() == null)
-                                    planDetail.setEdcrPdfDetails(layerNameList);
-                                else
-                                    planDetail.getEdcrPdfDetails().addAll(layerNameList);
-                            }
-                        } catch (IOException e) {
-                            LOG.error("Error occured while reading mdms data", e);
-                        }
-
-                    }
-                }
-
-            }
         } else if (mdmsEnabled == null || !mdmsEnabled) {
             // Non-MDMS tenants: honour global disable for DXF→PDF (applies to direct path too).
             List<AppConfigValues> dxfToPdfAppConfigEnabled = appConfigValueService
@@ -169,28 +121,10 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
 
         // Legacy only: fall back to EG_APPCONFIG EDCR_DXF_PDF when MDMS did not supply sheet configs.
         if (legacyLayerSheets && !mdmsDxfToPdfEnabled) {
-            List<AppConfigValues> appConfigValues = appConfigValueService
-                    .getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.EDCR_DXF_PDF);
-            for (AppConfigValues appConfigValue : appConfigValues) {
-                if (LOG.isDebugEnabled())
-                    LOG.debug("App Config value :" + appConfigValue.getValue());
-                List<EdcrPdfDetail> layerNameList = getPdfLayerNames(planDetail, appConfigValue.getValue());
-                for (EdcrPdfDetail d : layerNameList) {
-                    if (LOG.isDebugEnabled())
-                        LOG.debug("\t\t\tSheetName : " + d.getLayer() + " , list of layers :\n" + d.getLayers());
-                }
-                // get a particular layer from the document and enable the layer
-                if (layerNameList != null && !layerNameList.isEmpty()) {
-
-                    if (planDetail.getEdcrPdfDetails() == null)
-                        planDetail.setEdcrPdfDetails(layerNameList);
-                    else
-                        planDetail.getEdcrPdfDetails().addAll(layerNameList);
-                }
-            }
+            appConfigDxftoPdfConfigDetails(planDetail);
         }
 
-        // Direct path: skip MDMS/EDCR_DXF_PDF sheet definitions; one synthetic EdcrPdfDetail for whole drawing.
+        // Skip MDMS/EDCR_DXF_PDF sheet definitions; one synthetic EdcrPdfDetail for whole drawing.
         if (!legacyLayerSheets) {
             planDetail.setEdcrPdfDetails(Collections.singletonList(
                     buildDirectEdcrPdfDetail(planDetail, planDetail.getDxfFileName())));
@@ -203,7 +137,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             LOG.debug("*************** Converting " + fileName + " to pdf ***************" + "\n");
         // DXFDocument dxfDocument = planDetail.getDxfDocument();
 
-        // Direct path: single Kabeja/Aspose Conversion
+        // Single Kabeja/Aspose Conversion
         if (!legacyLayerSheets) {
             return convertDirectFullDxfToSinglePdf(planDetail, fileName);
         }
@@ -216,29 +150,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
 
         Boolean printSingleSheet = false;
         EdcrPdfDetail printSingleSheetDetails = null;
-
-        Iterator dxfBlockIterator = planDetail.getDxfDocument().getDXFBlockIterator();
-        while (dxfBlockIterator.hasNext()) {
-            DXFBlock block = (DXFBlock) dxfBlockIterator.next();
-            Iterator dxfEntitiesIterator = block.getDXFEntitiesIterator();
-            while (dxfEntitiesIterator.hasNext()) {
-                DXFEntity e = (DXFEntity) dxfEntitiesIterator.next();
-                e.setLineWeight(-1);
-
-            }
-        }
-        Iterator dxfStyleIterator = planDetail.getDxfDocument().getDXFStyleIterator();
-
-        while (dxfStyleIterator.hasNext()) {
-            DXFStyle style = (DXFStyle) dxfStyleIterator.next();
-
-            LOG.debug(",,DXF style,,,,,    " + style.getName() + "    " + style.getFontFile() + ""
-                    + style.getWidthFactor());
-            style.setWidthFactor(-1);
-            style.setFontFile("romans");
-            style.setBigFontFile("romans");
-            style.setName("romans");
-        }
+        dxftoPdfConfigurations(planDetail);
 
         Iterator layerIterator = planDetail.getDxfDocument().getDXFLayerIterator();
         while (layerIterator.hasNext()) {
@@ -247,7 +159,6 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         }
 
         for (EdcrPdfDetail edcrPdfDetail : edcrPdfDetails) {
-
             if (edcrPdfDetail.getLayers() == null || edcrPdfDetail.getLayers().isEmpty())
                 continue;
 
@@ -264,11 +175,9 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             File file = convertDxfToPdf(planDetail, fileName, edcrPdfDetail.getLayer(), edcrPdfDetail);
             disablePrintableLayers(edcrPdfDetail, planDetail.getDxfDocument());
 
-
             if (file != null) {
                 edcrPdfDetail.setConvertedPdf(file);
             }
-
         }
 
         // enable all layers back
@@ -278,12 +187,10 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             layer.setFlags(0);
             if (printSingleSheet && !layer.getName().equalsIgnoreCase("0")) {
                 printSingleSheetDetails.getMeasurementLayers().add(layer.getName());
-
             }
         }
 
         if (printSingleSheet) {
-
             sanitize(fileName, planDetail.getDxfDocument(), printSingleSheetDetails, planDetail);
 
 //            File file = convertDxfToPdf(planDetail.getDxfDocument(), fileName, printSingleSheetDetails.getLayer(),
@@ -292,11 +199,9 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             if (file != null) {
                 printSingleSheetDetails.setConvertedPdf(file);
             }
-
         }
 
         return planDetail;
-
     }
 
     @Override
@@ -322,6 +227,109 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             }
 
         return planDetail;
+    }
+
+    public void dxftoPdfConfigurations(PlanDetail planDetail){
+        Iterator dxfBlockIterator = planDetail.getDxfDocument().getDXFBlockIterator();
+        while (dxfBlockIterator.hasNext()) {
+            DXFBlock block = (DXFBlock) dxfBlockIterator.next();
+            Iterator dxfEntitiesIterator = block.getDXFEntitiesIterator();
+            while (dxfEntitiesIterator.hasNext()) {
+                DXFEntity e = (DXFEntity) dxfEntitiesIterator.next();
+                e.setLineWeight(-1);
+            }
+        }
+
+        Iterator dxfStyleIterator = planDetail.getDxfDocument().getDXFStyleIterator();
+        while (dxfStyleIterator.hasNext()) {
+            DXFStyle style = (DXFStyle) dxfStyleIterator.next();
+
+            LOG.debug("DXF style:::: " + style.getName() + " Font File:: " + style.getFontFile() + "" + style.getWidthFactor());
+            style.setWidthFactor(-1);
+            style.setFontFile("romans");
+            style.setBigFontFile("romans");
+            style.setName("romans");
+        }
+    }
+
+    // Setting the dxf to pdf conversion configurations if using mdms
+    public boolean mdmsDxftoPdfConfigDetails(PlanDetail planDetail, boolean mdmsDxfToPdfEnabled) {
+        City stateCity = cityService.fetchStateCityDetails();
+        String tenantID = ApplicationThreadLocals.getTenantID();
+        Object mdmsData = edcrMdmsUtil.mDMSCall(new RequestInfo(),
+                new StringBuilder().append(stateCity.getCode()).append(".").append(tenantID).toString());
+
+        if (mdmsData == null) {
+            tenantID = stateCity.getCode();
+            mdmsData = edcrMdmsUtil.mDMSCall(new RequestInfo(), tenantID);
+        }
+        if (mdmsData != null) {
+            Map<String, List<Object>> edcrMdmsConfig = mdmsValidator.getAttributeValues(mdmsData,
+                    DcrConstants.MDMS_EDCR_MODULE);
+            MdmsEdcrResponse mdmsEdcrResponse = null;
+            try {
+                List<Object> dxfToPdfMdmsEnabled = edcrMdmsConfig.get("DxfToPdfConfig");
+
+                String jsonStr = new JSONObject((LinkedHashMap<?, ?>) dxfToPdfMdmsEnabled.get(0)).toString();
+                ObjectMapper mapper = new ObjectMapper();
+                mdmsEdcrResponse = mapper.readValue(jsonStr, MdmsEdcrResponse.class);
+            } catch (IOException e) {
+                LOG.error("Error occured while reading mdms data", e);
+            }
+            if (mdmsEdcrResponse != null && mdmsEdcrResponse.getEnabled().equals("true")) {
+                mdmsDxfToPdfEnabled = true;
+                List<Object> dxfToPdfConfig = edcrMdmsConfig.get("DxfToPdfLayerConfig");
+                for (Object obj : dxfToPdfConfig) {
+                    try {
+                        String jsonString = new JSONObject((LinkedHashMap<?, ?>) obj).toString();
+                        ObjectMapper mapper1 = new ObjectMapper();
+                        DxfToPdfLayerConfig config = mapper1.readValue(jsonString, DxfToPdfLayerConfig.class);
+                        List<EdcrPdfDetail> layerNameList = getPdfLayerNames(planDetail, config);
+                        for (EdcrPdfDetail d : layerNameList) {
+                            if (LOG.isDebugEnabled())
+                                LOG.debug("\t\t\tSheetName : " + d.getLayer() + " , list of layers :\n" + d.getLayers());
+                        }
+                        // get a particular layer from the document and enable the layer
+                        if (layerNameList != null && !layerNameList.isEmpty()) {
+
+                            if (planDetail.getEdcrPdfDetails() == null)
+                                planDetail.setEdcrPdfDetails(layerNameList);
+                            else
+                                planDetail.getEdcrPdfDetails().addAll(layerNameList);
+                        }
+                    } catch (IOException e) {
+                        LOG.error("Error occured while reading mdms data", e);
+                    }
+
+                }
+            }
+
+        }
+
+        return mdmsDxfToPdfEnabled;
+    }
+
+    // Setting the dxf to pdf conversion configurations if using app_config
+    public void appConfigDxftoPdfConfigDetails(PlanDetail planDetail){
+        List<AppConfigValues> appConfigValues = appConfigValueService
+                .getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.EDCR_DXF_PDF);
+        for (AppConfigValues appConfigValue : appConfigValues) {
+            if (LOG.isDebugEnabled())
+                LOG.debug("App Config value :" + appConfigValue.getValue());
+            List<EdcrPdfDetail> layerNameList = getPdfLayerNames(planDetail, appConfigValue.getValue());
+            for (EdcrPdfDetail d : layerNameList) {
+                if (LOG.isDebugEnabled())
+                    LOG.debug("\t\t\tSheetName : " + d.getLayer() + " , list of layers :\n" + d.getLayers());
+            }
+            // get a particular layer from the document and enable the layer
+            if (layerNameList != null && !layerNameList.isEmpty()) {
+
+                if (planDetail.getEdcrPdfDetails() == null)
+                    planDetail.setEdcrPdfDetails(layerNameList);
+                else
+                    planDetail.getEdcrPdfDetails().addAll(layerNameList);
+            }
+        }
     }
 
     private void sanitize2(String fileName, DXFDocument dxfDocument, EdcrPdfDetail edcrPdfDetail, PlanDetail pl) {
@@ -628,7 +636,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
     /**
      * Builds the single-sheet {@link EdcrPdfDetail} for direct full-DXF PDF: default page size, all DXF layers,
      * no {@code sanitize(...)} and no per-sheet MDMS/app rules.
-     * {@link EdcrPdfDetail#setDirectSinglePdfKabejaRendering(Boolean)} enables Kabeja-only rendering tweaks downstream.
+     * {@link EdcrPdfDetail#setKabejaSinglePageDXFToPdf(Boolean)}  enables Kabeja-only rendering tweaks downstream.
      */
     private EdcrPdfDetail buildDirectEdcrPdfDetail(PlanDetail planDetail, String fileName) {
         LOG.info("Single pdf generating for dxf file...");
@@ -647,7 +655,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         }
         detail.setLayers(layers);
         // Tells DxfToPdfUnifiedConverter + DcrSvg* to tune output only for this path (legacy PDFs stay unchanged).
-        detail.setDirectSinglePdfKabejaRendering(Boolean.TRUE);
+        detail.setKabejaSinglePageDXFToPdf(Boolean.TRUE);
         return detail;
     }
 
