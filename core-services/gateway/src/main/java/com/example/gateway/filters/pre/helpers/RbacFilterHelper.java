@@ -56,7 +56,7 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
     public Publisher<Map> apply(ServerWebExchange serverWebExchange, Map map) {
 
         isIncomingURIInAuthorizedActionList(serverWebExchange,map);
-        return Mono.just(map);
+        serverWebExchange.getAttributes().put(CURRENT_REQUEST_SANITIZED_BODY, map);  // Preserve request body in exchange attributes for post-processing filters
     }
 
     private void isIncomingURIInAuthorizedActionList(ServerWebExchange exchange, Map map) {
