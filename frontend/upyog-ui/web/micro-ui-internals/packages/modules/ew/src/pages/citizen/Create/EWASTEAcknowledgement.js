@@ -59,12 +59,11 @@ const BannerPicker = (props) => {
  * @param {Function} props.onSuccess Callback function for successful submission
  * @returns {JSX.Element} Acknowledgement page with status and actions
  */
-const EWASTEAcknowledgement = ({ data, onSuccess }) => {
+const EWASTEAcknowledgement = ({ data, onSuccess, mutation }) => {
   const { t } = useTranslation();
   const [hasSubmitted, setHasSubmitted] = useState(false);
   
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.ew.useEWCreateAPI(data?.address?.city?.code);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
 
@@ -83,22 +82,22 @@ const EWASTEAcknowledgement = ({ data, onSuccess }) => {
     setErrorToast(error?.response?.data?.Errors?.[0]?.message || t("CS_EWASTE_APPLICATION_FAILED"));
   }, [t]);
 
-  useEffect(() => {
-    if (!hasSubmitted && data) {
-      try {
-        const formData = { ...data, tenantId };
-        const convertedData = EWDataConvert(formData);
+  // useEffect(() => {
+  //   if (!hasSubmitted && data) {
+  //     try {
+  //       const formData = { ...data, tenantId };
+  //       const convertedData = EWDataConvert(formData);
         
-        mutation.mutate(convertedData, {
-          onSuccess: handleSuccess,
-          onError: handleError
-        });
-      } catch (err) {
-        console.error('EW Data Conversion Error:', err);
-        setHasSubmitted(true);
-      }
-    }
-  }, [data ,hasSubmitted]);
+  //       mutation.mutate(convertedData, {
+  //         onSuccess: handleSuccess,
+  //         onError: handleError
+  //       });
+  //     } catch (err) {
+  //       console.error('EW Data Conversion Error:', err);
+  //       setHasSubmitted(true);
+  //     }
+  //   }
+  // }, [data ,hasSubmitted]);
 
   /**
    * Generates and downloads acknowledgement PDF

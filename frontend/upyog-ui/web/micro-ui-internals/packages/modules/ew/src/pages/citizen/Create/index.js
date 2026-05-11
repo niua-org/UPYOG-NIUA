@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 import { citizenConfig } from "../../../config/Create/citizenconfig";
+import { EWDataConvert } from "../../../utils";
 
 /**
  * Main component for E-Waste creation workflow.
@@ -22,6 +23,8 @@ const EWCreate = ({ parentRoute }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
   let config = [];
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const mutation = Digit.Hooks.ew.useEWCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("EWASTE_CREATE", {});
   let { data: commonFields, isLoading } = Digit.Hooks.pt.useMDMS(stateId, "PropertyTax", "CommonFieldsConfig");
 
@@ -89,6 +92,19 @@ const EWCreate = ({ parentRoute }) => {
    * @param {number} index Current step index
    * @param {boolean} isAddMultiple Whether adding multiple items
    */
+
+  const handleSubmit = () => {
+    const formdata = EWDataConvert(params);
+    formdata.EwasteApplication[0].tenantId = tenantId;
+    mutation.mutate(formdata, {
+      onSuccess: () => {
+        clearParams();
+        queryClient.invalidateQueries("EWASTE_CREATE");
+        navigate("acknowledgement", { replace: true });
+      },
+    });
+  };
+
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     if (key === "owners") {
       let owners = params.owners || [];
@@ -154,8 +170,8 @@ const EWCreate = ({ parentRoute }) => {
         );
       })}
 
-      <Route path={`check`} element={<CheckPage onSubmit={ewasteCreate} value={params} />} />
-      <Route path={`acknowledgement`} element={<EWASTEAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<EWASTEAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation} />} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
   );

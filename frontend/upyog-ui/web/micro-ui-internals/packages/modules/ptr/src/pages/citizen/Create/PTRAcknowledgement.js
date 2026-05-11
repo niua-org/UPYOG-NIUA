@@ -66,22 +66,21 @@ const BannerPicker = (props) => {
  * 
  * Handles the display of the application acknowledgment, including the download option and navigation buttons.
  */
-const PTRAcknowledgement = ({ data, onSuccess }) => {
+const PTRAcknowledgement = ({ data, onSuccess, mutation }) => {
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const user = Digit.UserService.getUser().info;
-  const mutation = Digit.Hooks.ptr.usePTRCreateAPI(data.address?.city?.code); 
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
 
-  useEffect(() => {
-    try {
-      data.tenantId = tenantId;
-      let formdata = PetDataConvert(data)
-      mutation.mutate(formdata, {onSuccess});
-    } catch (err) {
-    }
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     data.tenantId = tenantId;
+  //     let formdata = PetDataConvert(data)
+  //     mutation.mutate(formdata, {onSuccess});
+  //   } catch (err) {
+  //   }
+  // }, []);
 
   
 /**
