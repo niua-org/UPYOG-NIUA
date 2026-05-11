@@ -7,25 +7,28 @@ const { Pool } = require('pg');
 const { log } = require("console");
 
 
-// const pool = new Pool({
-//   user: config.DB_USER,
-//   host: config.DB_HOST,
-//   database: config.DB_NAME,
-//   password: config.DB_PASSWORD,
-//   port: config.DB_PORT,
-// });
 const pool = new Pool({
   user: config.DB_USER,
   host: config.DB_HOST,
   database: config.DB_NAME,
   password: config.DB_PASSWORD,
   port: config.DB_PORT,
-  ssl: {
-    rejectUnauthorized: false
-  }
 });
 
 auth_token = config.auth_token;
+// sendToKafka function to publish messages to Kafka topic
+async function sendToKafka(topic, message, jobid) {
+  try {
+    await producer.send({
+      topic: topic,
+      messages: [{ value: message }],
+    });
+    logger.info("jobid: " + jobid + ": published to kafka successfully");
+  } catch (err) {
+    logger.error(err.stack || err);
+    throw new Error(`error while publishing to kafka: ${err.message}`);
+  }
+}
 
 async function search_user(uuid, tenantId, requestinfo) {
   return await axios({
@@ -63,8 +66,11 @@ async function search_property(
   }
   var params = {
     tenantId: tenantId,
-    uuids: uuid,
+    uuids: uuid, 
+    //  Avoid using `uuids` here because PT receipt flow passes citizen UUID, which filters out property results.
+    // to run it locally comment the uuids
   };
+
   if (
     checkIfCitizen(requestinfo) &&
     allowCitizenTOSearchOthersRecords != true
@@ -132,7 +138,7 @@ async function search_payment(consumerCodes, tenantId, requestinfo, bussinessSer
       receiptNumbers: receiptNumbers,
     };
   }
-
+// comment the below code to run locally
   var searchEndpoint = config.paths.payment_search;
   searchEndpoint = searchEndpoint.replace(/\$module/g, bussinessService);
   // if (checkIfCitizen(requestinfo)) {
@@ -147,6 +153,20 @@ async function search_payment(consumerCodes, tenantId, requestinfo, bussinessSer
     params,
   });
 }
+/*
+return await axios({
+  method: "post",
+  url: url.resolve(
+    config.host.payments,
+    `/collection-services/payments/${bussinessService}/_search`
+  ),
+  data: requestinfo,
+  params,
+});
+*/
+
+// Using module-specific payment search endpoint (`/payments/PT/_search`)
+// because generic `/payments/_search` was not resolving correctly.
 
 async function search_bill(consumerCode, tenantId, requestinfo) {
   return await axios({
@@ -785,40 +805,43 @@ async function create_bulk_pdf(kafkaData){
           );*/
           var batchSize = config.PDF_BATCH_SIZE;
           var size = consolidatedResult.Bill.length;
-          var numberOfFiles = (size%batchSize) == 0 ? (size/batchSize) : (~~(size/batchSize) +1);
-          for(var i = 0;i<size;i+=batchSize){
-            var payloads = [];
-            var billData = consolidatedResult.Bill.slice(i,i+batchSize);
-            var billArray = { 
-                Bill: billData,
-                isBulkPdf: true,
-                pdfJobId: jobid,
-                pdfKey: pdfkey,
-                totalPdfRecords:size,
-                currentPdfRecords: billData.length,
-                tenantId: tenantId,
-                numberOfFiles:numberOfFiles,
-                locality: locality,
-                service: bussinessService,
-                isConsolidated: isConsolidated,
-                consumerCode: consumerCode
+          var numberOfFiles = (size % batchSize) == 0 ? (size / batchSize) : (~~(size / batchSize) + 1);
+          for (var i = 0; i < size; i += batchSize) {
+            var billData = consolidatedResult.Bill.slice(i, i + batchSize);
+            var billArray = {
+              Bill: billData,
+              isBulkPdf: true,
+              pdfJobId: jobid,
+              pdfKey: pdfkey,
+              totalPdfRecords: size,
+              currentPdfRecords: billData.length,
+              tenantId: tenantId,
+              numberOfFiles: numberOfFiles,
+              locality: locality,
+              service: bussinessService,
+              isConsolidated: isConsolidated,
+              consumerCode: consumerCode
             };
-            var pdfData = Object.assign({RequestInfo:requestinfo.RequestInfo}, billArray)
-            payloads.push({
-              topic: config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
-              messages: JSON.stringify(pdfData)
-            });
-            producer.send(payloads, function(err, data) {
-              if (err) {
-                logger.error(err.stack || err);
-                errorCallback({
-                  message: `error while publishing to kafka: ${err.message}`
-                });
-              } else {
-                logger.info("jobid: " + jobid + ": published to kafka successfully");
-              }
-            });
-
+          var pdfData = Object.assign({RequestInfo:requestinfo.RequestInfo}, billArray);
+ // Refactored bulk Kafka publishing from inline callback-based producer.send() to reusable async/await sendToKafka() utility with improved error handling and cleaner batch processing.
+          try {
+              await sendToKafka(
+                config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
+                JSON.stringify(pdfData),
+                jobid
+              );
+              logger.info(
+                "jobid: " + jobid + ": published to kafka successfully"
+              );
+            
+            } catch (err) {
+            
+              logger.error(err.stack || err);
+            
+              errorCallback({
+                message: `error while publishing to kafka: ${err.message}`
+              });
+            }
           }
 
           try {
@@ -1128,21 +1151,28 @@ async function create_bulk_pdf_pt(kafkaData){
               isConsolidated: isConsolidated,
               consumerCode: consumerCode
           };
-          var pdfData = Object.assign({RequestInfo:requestinfo.RequestInfo}, billArray)
-          payloads.push({
-            topic: config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
-            messages: JSON.stringify(pdfData)
-          });
-          producer.send(payloads, function(err, data) {
-            if (err) {
-              logger.error(err.stack || err);
-              errorCallback({
-                message: `error while publishing to kafka: ${err.message}`
-              });
-            } else {
-              logger.info("jobid: " + jobid + ": published to kafka successfully");
-            }
-          });
+          var pdfData = Object.assign({ RequestInfo: requestinfo.RequestInfo }, billArray);
+
+try {
+
+  await sendToKafka(
+    config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
+    JSON.stringify(pdfData),
+    jobid
+  );
+
+  logger.info(
+    "jobid: " + jobid + ": published to kafka successfully"
+  );
+
+} catch (err) {
+
+  logger.error(err.stack || err);
+
+  errorCallback({
+    message: `error while publishing to kafka: ${err.message}`
+  });
+}
 
         }
 
@@ -1191,9 +1221,8 @@ async function create_defaulter_notice_pdf_pt(kafkaData){
         var size = properties.length;
         var numberOfFiles = (size%batchSize) == 0 ? (size/batchSize) : (~~(size/batchSize) +1);
         for(var i = 0;i<size;i+=batchSize){
-          var payloads = [];
           var propertyData = properties.slice(i,i+batchSize);
-          var propertyArray = { 
+              var propertyArray = {
               Bill: propertyData,
               isBulkPdf: true,
               pdfJobId: jobid,
@@ -1207,23 +1236,30 @@ async function create_defaulter_notice_pdf_pt(kafkaData){
               propertytype:propertytype
           };
           logger.info("In Create Defaulter PDF consumer");
-          var pdfData = Object.assign({RequestInfo:requestinfo}, propertyArray)
-          payloads.push({
-            topic: config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
-            messages: JSON.stringify(pdfData)
-          });
-          logger.info("about to call PDF service" + payloads);
+          var pdfData = Object.assign({RequestInfo:requestinfo}, propertyArray);
 
-          producer.send(payloads, function(err, data) {
-            if (err) {
-              logger.error(err.stack || err);
-              errorCallback({
-                message: `error while publishing to kafka: ${err.message}`
-              });
-            } else {
-              logger.info("jobid: " + jobid + ": published to kafka successfully");
-            }
-          });
+          logger.info("about to call PDF service");
+// Refactored bulk Kafka publishing from inline callback-based producer.send() to reusable async/await sendToKafka() utility with improved error handling and cleaner batch processing.
+          try {
+
+            await sendToKafka(
+              config.KAFKA_RECEIVE_CREATE_JOB_TOPIC,
+              JSON.stringify(pdfData),
+              jobid
+            );
+
+            logger.info(
+              "jobid: " + jobid + ": published to kafka successfully"
+            );
+
+          } catch (err) {
+
+            logger.error(err.stack || err);
+
+            errorCallback({
+              message: `error while publishing to kafka: ${err.message}`
+            });
+          }
 
         }
 
