@@ -1,8 +1,11 @@
+// Before: used require() for node-cache and moment-timezone - CommonJS style
+// Change: replaced require() with ESM imports - native ESM for Node 22
+
 import axios from "axios";
-import envVariables from "../EnvironmentVariables";
-import get from "lodash/get";
-const NodeCache = require("node-cache");
-var moment = require("moment-timezone");
+import envVariables from "../EnvironmentVariables.js";
+import get from "lodash.get";
+import NodeCache from "node-cache";
+import moment from "moment-timezone";
 
 const cache = new NodeCache({ stdTTL: 300 });
 
@@ -71,8 +74,7 @@ export const getTransformedLocale = (label) => {
       }
     };
   
-    console.log("moduleList:", moduleList);
-    console.log("codeList:", codeList);
+    
     request.messageSearchCriteria.module = moduleList.toString();
     request.messageSearchCriteria.codes = codeList.toString().split(",");
   
@@ -82,19 +84,6 @@ export const getTransformedLocale = (label) => {
         accept: "application/json, text/plain, */*"
       }
     };
-  
-    // let responseBody = await axios.post(url,request,headers)
-    // .then(function (response) {
-    //   return response;
-    // })
-    // .catch((error) => {
-    //   throw error
-    //  });
-
-    console.log("----LOCALISATION API DEBUG----");
-    console.log("URL:", url);
-    console.log("Request Payload:", JSON.stringify(request, null, 2));
-    console.log("Headers:", headers);
 
     let responseBody = await axios.post(url, request, headers)
     .then(function (response) {
