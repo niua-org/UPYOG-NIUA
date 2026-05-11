@@ -70,6 +70,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Rectangle;
 
+/*
+ * NOTE (this Spring bean):
+ * Feature extract that turns a parsed PlanDetail into PDF attachments. Actual export is done by
+ * DxfToPdfUnifiedConverter. Whether you get many sheet-based PDFs or one full-drawing PDF is controlled only by
+ * the Digit DCR app key DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS (constant on DcrConstants).
+ */
 @Service
 public class DxfToPdfConverterExtract extends FeatureExtract {
 
@@ -99,6 +105,28 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
     @Autowired
     private DxfToPdfUnifiedConverter dxfToPdfUnifiedConverter;
 
+    /*
+     * NOTE (overall DXF to PDF extract behaviour):
+     *
+     * Purpose:
+     * - Produce zero or more EdcrPdfDetail rows, each optionally holding a generated PDF file, for plan scrutiny.
+     *
+     * Two modes (app key DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS on DcrConstants):
+     *
+     * 1) Legacy (value YES):
+     *    - Sheet rules from MDMS (DxfToPdfConfig master switch and DxfToPdfLayerConfig) when MDMS is on, otherwise
+     *      from EDCR_DXF_PDF in app config.
+     *    - For each sheet: toggle layer visibility, run sanitize, then convertDxfToPdf — may create many PDFs.
+     *    - Runs dxftoPdfConfigurations before the loop (block and style prep for Kabeja).
+     *
+     * 2) Direct single PDF (default when legacy is not YES):
+     *    - Skips building the sheet list from MDMS or EDCR_DXF_PDF.
+     *    - buildDirectEdcrPdfDetail builds one EdcrPdfDetail (all layers, default page size, kabejaSinglePageDXFToPdf true).
+     *    - No sanitize and no per-sheet layer toggling; convertDirectFullDxfToSinglePdf runs a single conversion.
+     *
+     * Early exit:
+     *    - If MDMS is off and DXF_PDF_CONVERSION_ENABLED is NO, skip all PDF work for both modes.
+     */
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
         // If YES, the legacy code will run else the new single dxf to pdf will execute.
@@ -229,6 +257,35 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         return planDetail;
     }
 
+    /*
+     * Applies common DXF preprocessing and rendering configurations
+     * before starting DXF to PDF conversion.
+     *
+     * This method normalizes DXF entities and text styles to improve
+     * compatibility and avoid rendering issues during PDF generation.
+     *
+     * Processing performed:
+     *
+     * 1. Reset entity line weights
+     *    - Iterates through all DXF blocks and entities.
+     *    - Sets line weight to -1 (default line weight).
+     *    - Prevents inconsistent or unsupported line thickness in PDF output.
+     *
+     * 2. Normalize DXF text styles/fonts
+     *    - Iterates through all DXF styles.
+     *    - Logs existing style/font information for debugging purposes.
+     *    - Resets width factor to default (-1).
+     *    - Forces font, big font, and style name to "romans".
+     *
+     * The font normalization is mainly done to:
+     * - avoid unsupported/custom font issues
+     * - improve rendering stability in Kabeja PDF generation
+     * - ensure consistent text rendering across environments
+     *
+     * Note:
+     * Forcing all styles to "romans" may alter the original
+     * appearance of text in the drawing.
+     */
     public void dxftoPdfConfigurations(PlanDetail planDetail){
         Iterator dxfBlockIterator = planDetail.getDxfDocument().getDXFBlockIterator();
         while (dxfBlockIterator.hasNext()) {
@@ -252,7 +309,13 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         }
     }
 
-    // Setting the dxf to pdf conversion configurations if using mdms
+    /*
+     * NOTE:
+     * Called only from extract when legacy mode is on and MDMS is enabled.
+     * Loads EDCR module data, reads DxfToPdfConfig (master switch) and DxfToPdfLayerConfig (per-sheet rules),
+     * and appends EdcrPdfDetail rows onto planDetail.
+     * Return value tells whether MDMS had DXF-to-PDF enabled so extract can skip appConfigDxftoPdfConfigDetails.
+     */
     public boolean mdmsDxftoPdfConfigDetails(PlanDetail planDetail, boolean mdmsDxfToPdfEnabled) {
         City stateCity = cityService.fetchStateCityDetails();
         String tenantID = ApplicationThreadLocals.getTenantID();
@@ -309,7 +372,12 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         return mdmsDxfToPdfEnabled;
     }
 
-    // Setting the dxf to pdf conversion configurations if using app_config
+    /*
+     * NOTE:
+     * Called only from extract when legacy mode is on and MDMS did not enable DxfToPdf.
+     * Reads every EDCR_DXF_PDF app-config row (regex and sheet definitions) and merges EdcrPdfDetail lists onto
+     * planDetail. This is the older behaviour from before MDMS-driven PDF rules.
+     */
     public void appConfigDxftoPdfConfigDetails(PlanDetail planDetail){
         List<AppConfigValues> appConfigValues = appConfigValueService
                 .getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.EDCR_DXF_PDF);
@@ -626,17 +694,25 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
 
     }
 
-    /** @see DcrConstants#DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS */
+    /*
+     * NOTE:
+     * Reads DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS in the Digit DCR module. If the value is YES (any case),
+     * use the old multi-PDF pipeline; otherwise use direct single full-DXF PDF.
+     */
     private boolean useLegacyLayerSheetPdfMode() {
         List<AppConfigValues> vals = appConfigValueService.getConfigValuesByModuleAndKey(
                 DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS);
         return vals != null && !vals.isEmpty() && "YES".equalsIgnoreCase(vals.get(0).getValue().trim());
     }
 
-    /**
-     * Builds the single-sheet {@link EdcrPdfDetail} for direct full-DXF PDF: default page size, all DXF layers,
-     * no {@code sanitize(...)} and no per-sheet MDMS/app rules.
-     * {@link EdcrPdfDetail#setKabejaSinglePageDXFToPdf(Boolean)}  enables Kabeja-only rendering tweaks downstream.
+    /*
+     * NOTE:
+     * Builds the single EdcrPdfDetail used in direct mode (not used in legacy mode).
+     *
+     * pageSize: fixed A0 landscape, enlarge 2, hatches kept by default (change if product needs differ).
+     * layer: DXF file name without extension; DxfToPdfUnifiedConverter uses it as the PDF file name stem.
+     * layers: every DXF layer so config does not hide layers; visibility still follows DXF flags.
+     * kabejaSinglePageDXFToPdf true: required so Kabeja gets the extra property map and SVG adjustments.
      */
     private EdcrPdfDetail buildDirectEdcrPdfDetail(PlanDetail planDetail, String fileName) {
         LOG.info("Single pdf generating for dxf file...");
@@ -654,12 +730,16 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             layers.add(((DXFLayer) layerIterator.next()).getName());
         }
         detail.setLayers(layers);
-        // Tells DxfToPdfUnifiedConverter + DcrSvg* to tune output only for this path (legacy PDFs stay unchanged).
         detail.setKabejaSinglePageDXFToPdf(Boolean.TRUE);
         return detail;
     }
 
-    /** All layers visible (flags 0), one {@link #convertDxfToPdf} call, no legacy enable/disable cycle. */
+    /*
+     * NOTE:
+     * Last step in direct mode after buildDirectEdcrPdfDetail. Makes every DXF layer printable (flag 0),
+     * calls convertDxfToPdf once, stores the file on the single detail row. Does not call dxftoPdfConfigurations or
+     * sanitize so the drawing in memory stays closer to the parsed DXF (same idea as opening the whole file in Aspose).
+     */
     private PlanDetail convertDirectFullDxfToSinglePdf(PlanDetail planDetail, String fileName) {
         EdcrPdfDetail detail = planDetail.getEdcrPdfDetails().get(0);
         Iterator<?> layerIterator = planDetail.getDxfDocument().getDXFLayerIterator();
@@ -673,7 +753,11 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         return planDetail;
     }
 
-    /** Output PDF basename matches DXF file name (e.g. plan.dxf → plan.pdf via layer name in converter). */
+    /*
+     * NOTE:
+     * Removes the file extension from the DXF name so the converter writes a PDF named like the drawing (base.pdf).
+     * If the name is missing, returns "plan" so the output file name is never empty.
+     */
     private static String dxfBaseNameForPdf(String fileName) {
         if (fileName == null || fileName.isEmpty()) {
             return "plan";
@@ -869,6 +953,13 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
         }
     }
 
+    /*
+     * NOTE:
+     * Delegates to DxfToPdfUnifiedConverter.convert. Passes the DXF file on disk (for Aspose), the in-memory
+     * Kabeja document (for Kabeja), the output sheet or layer name, and the same EdcrPdfDetail the extract filled in
+     * (including kabejaSinglePageDXFToPdf when using direct mode). The big commented block below is the old inline
+     * Kabeja code kept only for history.
+     */
     private File convertDxfToPdf(PlanDetail planDetail, String fileName, String layerName,
                                  EdcrPdfDetail edcrPdfDetail) {
 

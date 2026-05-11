@@ -13,17 +13,24 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-/**
- * Emits SVG {@code font-face} definitions from DXF styles. Two behaviours:
- * <ul>
- *   <li><b>Legacy</b> — original Times New Roman mapping (used when MDMS / {@code EDCR_DXF_PDF} sheet path runs).</li>
- *   <li><b>Direct single PDF</b> — when {@code svgContext} contains {@code egov.singlePdfUsingKabeja=true}, uses
- *       installed TTF fallbacks and style aliases so Kabeja text stays readable on typical Linux servers.</li>
- * </ul>
+/*
+ * NOTE:
+ * Called from DcrSvgGenerator while writing SVG defs for each DXFStyle in the drawing.
+ *
+ * Two paths, chosen only by the context flag (no extra Spring beans):
+ *
+ * 1) Legacy when egov.singlePdfUsingKabeja is missing or false:
+ *    Same as before: every style points at the hard-coded Times New Roman file URL.
+ *    Keeps old multi-sheet PDFs stable for tenants still on MDMS / EDCR_DXF_PDF rules.
+ *
+ * 2) Direct single PDF when egov.singlePdfUsingKabeja is Boolean.TRUE:
+ *    Picks a real font file on disk (Kabeja FontManager first, then FONT_FALLBACK_PATHS).
+ *    Writes several font-face entries with aliases so whatever font-family Kabeja emits still matches a TTF
+ *    when MS Core Fonts are not installed (typical on Linux).
  */
 public class DcrSvgStyleGenerator {
 
-    /** Ordered list: first existing file wins when Kabeja has no font mapping (direct path only). */
+    /** Ordered list: first existing file runs when Kabeja has no font mapping (direct path only). */
     private static final String[] FONT_FALLBACK_PATHS = new String[] {
             "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -34,10 +41,13 @@ public class DcrSvgStyleGenerator {
     public DcrSvgStyleGenerator() {
     }
 
+    /*
+     * Kabeja calls this with the same svgContext map DcrSvgGenerator fills in setupProperties. The flag alone
+     * switches legacy vs direct behaviour so we do not thread new parameters through Kabeja.
+     */
     public static void toSAX(ContentHandler handler, Map svgContext, DXFStyle style) throws SAXException {
-        // Set by DcrSvgGenerator.setupProperties when PROPERTY_DIRECT_SINGLE_PDF is in the generator map.
         if (Boolean.TRUE.equals(svgContext.get("egov.singlePdfUsingKabeja"))) {
-            toSaxDirectSinglePdf(handler, style);
+            toSaxSinglePdf(handler, style);
         } else {
             toSaxLegacy(handler, style);
         }
@@ -53,7 +63,10 @@ public class DcrSvgStyleGenerator {
         }
     }
 
-    /** Historical font-face output (single hardcoded TTF path). Preserves legacy PDF appearance. */
+    /*
+     * Legacy font-face: lower-case family, strip .shx from the name, xlink always targets Times_New_Roman.ttf under
+     * msttcorefonts. Only used from toSaxLegacy.
+     */
     private static void generateSaxFontDescriptionLegacy(ContentHandler handler, String font) throws SAXException {
         String fontFamily = font.toLowerCase();
         if (fontFamily.endsWith(".shx")) {
@@ -76,8 +89,11 @@ public class DcrSvgStyleGenerator {
         SVGUtils.endElement(handler, "font-face");
     }
 
-    /** Direct path: map DXF style names and .shx references to a real TTF on disk. */
-    private static void toSaxDirectSinglePdf(ContentHandler handler, DXFStyle style) throws SAXException {
+    /*
+     * Direct path: pick primary font the same order as legacy (big font, then regular, else style name), gather aliases,
+     * then generateSaxFontDescriptionDirect emits one font-face per distinct family string.
+     */
+    private static void toSaxSinglePdf(ContentHandler handler, DXFStyle style) throws SAXException {
         FontManager manager = FontManager.getInstance();
         Set<String> aliases = new LinkedHashSet<>();
         addAlias(aliases, style.getName());
@@ -93,7 +109,10 @@ public class DcrSvgStyleGenerator {
         }
     }
 
-    /** One font-face per alias family string so SVG text {@code font-family} lookups resolve. */
+    /*
+     * One SVG font-face per family string (primary, lower-case, and aliases). All point at the same resolved TTF so
+     * Batik can load glyphs no matter which alias appears in the drawing text.
+     */
     private static void generateSaxFontDescriptionDirect(ContentHandler handler, String font, Set<String> aliases)
             throws SAXException {
         String primaryFamily = normalizeFamily(font);
@@ -128,7 +147,10 @@ public class DcrSvgStyleGenerator {
         }
     }
 
-    /** Kabeja mapping first, then common Linux font packages. */
+    /*
+     * Absolute path to a TTF: Kabeja mapping for the family name if present, else first existing FONT_FALLBACK_PATHS
+     * entry, else the first list path even if missing (last resort).
+     */
     private static String resolveFontPath(String fontFamily) {
         String fromKabeja = FontManager.getInstance().getFontDescription(fontFamily);
         if (fromKabeja != null && !fromKabeja.trim().isEmpty()) {
@@ -142,6 +164,10 @@ public class DcrSvgStyleGenerator {
         return FONT_FALLBACK_PATHS[0];
     }
 
+    /*
+     * Pushes the raw font string and the SHX-stripped basename into aliases so style names and file names map to one font
+     * in generateSaxFontDescriptionDirect.
+     */
     private static void addAlias(Set<String> aliases, String fontRef) {
         if (fontRef == null || fontRef.trim().isEmpty()) {
             return;
@@ -153,7 +179,9 @@ public class DcrSvgStyleGenerator {
         }
     }
 
-    /** Strip path and .shx so e.g. {@code txt.shx} and {@code txt} share one face. */
+    /*
+     * Turn a DXF font reference (paths, drives, .shx) into a bare name for SVG font-family matching, e.g. C:\fonts\romans.shx → romans.
+     */
     private static String stripShx(String fontRef) {
         if (fontRef == null) {
             return "";
@@ -170,6 +198,9 @@ public class DcrSvgStyleGenerator {
         return value;
     }
 
+    /*
+     * Non-empty family string for SVG; uses "romans" when nothing usable remains after stripping path and .shx.
+     */
     private static String normalizeFamily(String font) {
         String normalized = stripShx(font);
         return normalized.isEmpty() ? "romans" : normalized;

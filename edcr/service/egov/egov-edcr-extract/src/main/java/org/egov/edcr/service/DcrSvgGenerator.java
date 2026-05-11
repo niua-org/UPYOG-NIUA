@@ -33,7 +33,12 @@ import org.kabeja.xml.AbstractSAXGenerator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-
+/*
+ * NOTE (Kabeja to SVG bridge):
+ * Extends Kabeja's AbstractSAXGenerator and streams a DXF document out as SVG SAX events.
+ * EDCR adds an optional mode for one full-drawing PDF: when the generator map contains PROPERTY_SINGLE_PDF (set from
+ * DxfToPdfUnifiedConverter), extra tuning runs. Legacy multi-sheet runs never pass that key.
+ */
 public class DcrSvgGenerator extends AbstractSAXGenerator {
    public final static String PROPERTY_MARGIN = "margin";
    public final static String PROPERTY_STROKE_WIDTH = "stroke-width";
@@ -69,9 +74,11 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    public final static String PROPERTY_WIDTH = "width";
    public final static String PROPERTY_HEIGHT = "height";
    public final static String PROPERTY_OVERFLOW = "svg-overflow";
-   /**
-    * Map key from {@link DxfToPdfUnifiedConverter} when {@link org.egov.common.entity.edcr.EdcrPdfDetail}
-    * {@code directSinglePdfKabejaRendering} is true. Legacy conversions must not set this property.
+   /*
+    * NOTE:
+    * Map key DxfToPdfUnifiedConverter sets only when EdcrPdfDetail.getKabejaSinglePageDXFToPdf() is true.
+    * Pass the string "true" as the value. setupProperties copies intent into the shared context as the Boolean
+    * egov.singlePdfUsingKabeja so DcrSvgStyleGenerator can pick the direct font path.
     */
    public static final String PROPERTY_SINGLE_PDF = "egov.singlePdfUsingKabeja";
    public static final double DEFAULT_MARGIN_PERCENT = 0.0;
@@ -83,6 +90,10 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    private String marginSettings;
    private String outputStyleName = DXFConstants.LAYOUT_DEFAULT_NAME;
    protected SVGSAXGeneratorManager manager;
+   /*
+    * When true: extra SVG/CSS and per-entity handling for one full-drawing PDF (setupProperties, getBounds, layerToSAX,
+    * singlePdfConfigurations). When false: same behaviour as the original Kabeja-only path for legacy multi-sheet PDFs.
+    */
    private boolean singlePdfMode;
 
    protected void generate() throws SAXException {
@@ -171,7 +182,10 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            this.manager = new SVGSAXGeneratorManager();
        }
 
-       // Propagate Single-PDF mode into SVG context so DcrSvgStyleGenerator can branch without extra parameters.
+       /*
+        * Copy single-PDF intent into Kabeja's shared context map so DcrSvgStyleGenerator.toSAX can branch without
+        * changing Kabeja's public APIs.
+        */
        String singlePdf = this.properties.containsKey(PROPERTY_SINGLE_PDF)
                ? String.valueOf(this.properties.get(PROPERTY_SINGLE_PDF)).trim()
                : "";
@@ -286,7 +300,10 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
 
            SVGUtils.startElement(this.handler, SVGConstants.SVG_ROOT, attr);
 
-           // Single DXF to PDF only
+           /*
+            * Inject global CSS for text nodes so dimension labels inherit fill/stroke suitable for legible glyphs
+            * (layer groups often set stroke-only drawing style which makes plain text unreadable).
+            */
            if (this.singlePdfMode) {
                 singlePdfConfigurations();
            }
@@ -404,7 +421,36 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        SVGUtils.endElement(handler, SVGConstants.SVG_GROUP);
    }
 
-   // Configurations for the single pdf
+    /*
+     * Adds SVG style configuration for single PDF generation.
+     *
+     * This method injects a CSS <style> block into the generated SVG output
+     * before it is converted into PDF.
+     *
+     * Applied CSS rules:
+     * - Removes stroke/border rendering from text elements.
+     * - Forces text fill color to use the current drawing color.
+     * - Normalizes font weight to avoid bold rendering issues.
+     *
+     * Affects:
+     * - <text> elements
+     * - <tspan> elements
+     *
+     * This configuration helps:
+     * - improve text readability in generated PDFs
+     * - avoid incorrect text outlines/strokes
+     * - maintain consistent font rendering across PDF viewers
+     *
+     * The generated CSS:
+     * text,tspan{
+     *     stroke:none !important;
+     *     fill:currentColor !important;
+     *     font-weight:normal;
+     * }
+     *
+     * Throws:
+     * SAXException - if an error occurs while writing SVG SAX events.
+     */
    public void singlePdfConfigurations() throws SAXException {
        AttributesImpl styleAttr = new AttributesImpl();
        SVGUtils.addAttribute(styleAttr, "type", "text/css");
@@ -742,7 +788,10 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        while (types.hasNext()) {
            String type = (String) types.next();
            ArrayList list = (ArrayList) layer.getDXFEntities(type);
-           // Direct PDF only: isolate text from layer stroke so glyphs are not outlined as thick shapes.
+           /*
+            * Wrap TEXT/MTEXT in an inner group with fill/stroke overrides and reset entity lineweight/thickness
+            * only when single-PDF mode is active; legacy sheet PDFs rely on original Kabeja text rendering.
+            */
            boolean isTextType = this.singlePdfMode
                    && (DXFConstants.ENTITY_TYPE_TEXT.equals(type) || DXFConstants.ENTITY_TYPE_MTEXT.equals(type));
            if (isTextType) {
@@ -788,6 +837,10 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            } catch (SVGGenerationException e) {
                e.printStackTrace();
            }
+           /*
+              Close the SVG group wrapper created for text-based entities
+              after completing text element rendering.
+            */
            if (isTextType) {
                SVGUtils.endElement(handler, SVGConstants.SVG_GROUP);
            }
