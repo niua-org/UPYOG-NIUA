@@ -1,18 +1,18 @@
 import {
     Card, CardHeader, CardSubHeader, CardText,
     CitizenInfoLabel, LinkButton, Row, StatusTable, SubmitBar, EditIcon, Header, CardSectionHeader, Loader
-  } from "@upyog/digit-ui-react-components";
+  } from "@nudmcdgnpm/digit-ui-react-components";
   import React, { useState } from "react";
   import { useTranslation } from "react-i18next";
-  import { useHistory, useRouteMatch, Link } from "react-router-dom";
+  import { Link,  } from "react-router-dom";
   import DisconnectTimeline from "../../../components/DisconnectTimeline";
   import WSDocument from "../../../pageComponents/WSDocument";
 import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSDisconnection, updatePayloadOfWSDisconnection } from "../../../utils";
   
   const CheckPage = () => {
     const { t } = useTranslation();
-    const history = useHistory();
-    const match = useRouteMatch();
+    const navigate = Digit.Hooks.useCustomNavigate();
+    const match = Digit.Hooks.useModuleBasePath();
     const value = Digit.SessionStorage.get("WS_DISCONNECTION");
     const [documents, setDocuments] = useState( value.WSDisconnectionForm.documents || []);
     let routeLink = `/upyog-ui/citizen/ws/disconnect-application`;
@@ -83,7 +83,7 @@ import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSDisconnection,
                 },
                 onSuccess: (data, variables) => {
                   Digit.SessionStorage.set("WS_DISCONNECTION", {...value, DisconnectionResponse: data?.WaterConnection?.[0]});
-                  history.push(`/upyog-ui/citizen/ws/disconnect-acknowledge`);
+                  navigate(`/upyog-ui/citizen/ws/disconnect-acknowledge`);
                 },
               })
             },
@@ -112,7 +112,7 @@ import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSDisconnection,
                 },
                 onSuccess: (data, variables) => {
                   Digit.SessionStorage.set("WS_DISCONNECTION", {...value, DisconnectionResponse: data?.SewerageConnections?.[0]});
-                  history.push(`/upyog-ui/citizen/ws/disconnect-acknowledge`);
+                  navigate(`/upyog-ui/citizen/ws/disconnect-acknowledge`);
                 },
               })
             },

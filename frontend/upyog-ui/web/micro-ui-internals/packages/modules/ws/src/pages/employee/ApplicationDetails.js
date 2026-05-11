@@ -13,8 +13,8 @@ import {
   MultiLink,
   LinkButton,
   Toast
-} from "@upyog/digit-ui-react-components";
-import { useParams, useHistory } from "react-router-dom";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import { useParams,  } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
 import get from "lodash/get";
@@ -37,7 +37,7 @@ const ApplicationDetails = () => {
   const [showWaringToast, setShowWaringToast] = useState(null);
   const [canSubmit, setSubmitValve] = useState(false);
   const defaultValues = {};
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
   const isMobile = window.Digit.Utils.browser.isMobile();
   const [showOptions, setShowOptions] = useState(false);

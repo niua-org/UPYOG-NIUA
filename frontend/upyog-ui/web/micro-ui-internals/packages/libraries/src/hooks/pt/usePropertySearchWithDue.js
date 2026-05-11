@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from "react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "../../common/queryClientTemplate";
 
 const usePropertySearchWithDue = ({ tenantId, filters, auth = true, configs }) => {
   const client = useQueryClient();
@@ -34,29 +35,30 @@ const usePropertySearchWithDue = ({ tenantId, filters, auth = true, configs }) =
     return data;
   };
 
-  const { isLoading, error, data } = useQuery(
-    ["propertySearchList", tenantId, filters, auth],
-    () => configs.enabled && Digit.PTService.search({ tenantId, filters, auth: auth }),
-    {...configs,
-      select: defaultSelect,
-    }
-  );
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["propertySearchList", tenantId, filters, auth],
+    queryFn: () => configs.enabled && Digit.PTService.search({ tenantId, filters, auth }),
+    select: defaultSelect,
+    ...configs,
+  });
+
   let consumerCodes = data?.ConsumerCodes?.join(",") || "";
-  const { isLoading: billLoading, data: billData, isSuccess } = useQuery(
-    ["propertySearchBillList", tenantId, filters, data, auth, consumerCodes],
-    () => configs.enabled && data && Digit.PTService.fetchPaymentDetails({ tenantId, consumerCodes, auth: auth }),
-    {...configs,
-      select: (billResp) => {
-        data["Bill"] =
-          billResp?.Bill?.reduce((curr, acc) => {
-            curr[acc?.consumerCode] = acc?.totalAmount;
-            data["FormattedData"][acc?.consumerCode]["due"] = acc?.totalAmount;
-            return curr;
-          }, {}) || {};
-        return billResp;
-      },
-    }
-  );
+
+  const { isLoading: billLoading, data: billData, isSuccess } = useQuery({
+    queryKey: ["propertySearchBillList", tenantId, filters, data, auth, consumerCodes],
+    queryFn: () => configs.enabled && data && Digit.PTService.fetchPaymentDetails({ tenantId, consumerCodes, auth }),
+    select: (billResp) => {
+      data["Bill"] =
+        billResp?.Bill?.reduce((curr, acc) => {
+          curr[acc?.consumerCode] = acc?.totalAmount;
+          data["FormattedData"][acc?.consumerCode]["due"] = acc?.totalAmount;
+          return curr;
+        }, {}) || {};
+      return billResp;
+    },
+    ...configs,
+  });
+
   return {
     isLoading: isLoading || billLoading,
     error,
@@ -64,8 +66,8 @@ const usePropertySearchWithDue = ({ tenantId, filters, auth = true, configs }) =
     billData,
     isSuccess,
     revalidate: () => {
-      client.invalidateQueries(["propertySearchBillList", tenantId, filters, auth]);
-      client.invalidateQueries(["propertySearchList", tenantId, filters, auth]);
+      client.invalidateQueries({ queryKey: ["propertySearchBillList", tenantId, filters, auth] });
+      client.invalidateQueries({ queryKey: ["propertySearchList", tenantId, filters, auth] });
     },
   };
 };

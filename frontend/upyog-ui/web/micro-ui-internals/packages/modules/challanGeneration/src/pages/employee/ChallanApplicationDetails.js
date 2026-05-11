@@ -13,9 +13,9 @@ import {
   Menu,
   SubmitBar,
   Toast,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Loader } from "../../components/Loader";
 import { ChallanData, getLocationName } from "../../utils/index";
 import NDCModal from "../../pageComponents/NDCModal";
@@ -67,7 +67,7 @@ const getTimelineCaptions = (checkpoint, index, arr, t) => {
 
 const ChallanApplicationDetails = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { acknowledgementIds, tenantId } = useParams();
   const [showOptions, setShowOptions] = useState(false);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
@@ -232,7 +232,7 @@ const ChallanApplicationDetails = () => {
     };
     if (action.action == "PAY") {
       const code = getChallanData?.challanNo;
-      history.push(`/upyog-ui/employee/payment/collect/Challan_Generation/${code}/${tenantId}?tenantId=${tenantId}`);
+      navigate(`/upyog-ui/employee/payment/collect/Challan_Generation/${code}/${tenantId}?tenantId=${tenantId}`);
     } else if (action.action == "PAY_LATER") {
       payLater();
     } else if (action.action == "SETTLED") {
@@ -242,6 +242,12 @@ const ChallanApplicationDetails = () => {
   }
 
   const payLater = async () => {
+    // Prevent API call if data not ready
+    if (!getChallanData || !getChallanData.challanNo) {
+      console.warn("Challan data not loaded yet");
+      return;
+    }
+
     setLoader(true);
 
     const payload = {
@@ -255,19 +261,20 @@ const ChallanApplicationDetails = () => {
 
     try {
       const response = await Digit.ChallanGenerationService.update(payload);
+
       setLoader(false);
 
-      // ✅ Show success first
       setLable("Challan set to pay later.");
       setError(false);
       setShowToast(true);
 
-      // ✅ Delay navigation so toast shows
       setTimeout(() => {
-        history.push("/upyog-ui/employee/challangeneration/inbox");
+        navigate("/upyog-ui/employee/challangeneration/inbox");
         window.location.reload();
       }, 2000);
+
     } catch (error) {
+      console.error("PAY_LATER failed:", error);
       setLoader(false);
     }
   };
@@ -296,7 +303,7 @@ const ChallanApplicationDetails = () => {
             feeWaiver: modalData?.amount,
           },
         };
-        
+
         try {
           const response = await Digit.ChallanGenerationService.update(payload);
           setLoader(false);
@@ -308,7 +315,7 @@ const ChallanApplicationDetails = () => {
 
           // ✅ Delay navigation so toast shows
           setTimeout(() => {
-            history.push("/upyog-ui/employee/challangeneration/inbox");
+            navigate("/upyog-ui/employee/challangeneration/inbox");
             window.location.reload();
           }, 2000);
         } catch (error) {

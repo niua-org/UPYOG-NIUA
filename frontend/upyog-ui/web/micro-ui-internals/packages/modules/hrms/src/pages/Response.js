@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, ActionBar } from "@upyog/digit-ui-react-components";
+import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -79,7 +79,7 @@ const Response = (props) => {
       return state.key === "CREATE"?"HRMS_CREATE_EMPLOYEE_INFO" :"";
     }
   };
-    if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
+    if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
     return <Loader />;
   }
   return (

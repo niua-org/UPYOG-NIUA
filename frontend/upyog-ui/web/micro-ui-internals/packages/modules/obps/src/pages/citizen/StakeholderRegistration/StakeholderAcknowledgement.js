@@ -1,8 +1,8 @@
-import { BackButton, Banner, Card, CardText, LinkButton, Loader, SubmitBar } from "@upyog/digit-ui-react-components";
+import { BackButton, Banner, Card, CardText, LinkButton, Loader, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { Link, useHistory } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 import { convertToStakeholderObject } from "../../../utils/index";
 import getAcknowledgementData from "../../../../getAcknowlegment";
 const GetActionMessage = ( props) => {
@@ -77,7 +77,7 @@ const StakeholderAcknowledgement = ({ data, onSuccess }) => {
     
   };
 
-  return mutation.isLoading || mutation.isIdle ? (
+  return mutation.isPending || mutation.isIdle ? (
     <Loader />
   ) : (
     <div>

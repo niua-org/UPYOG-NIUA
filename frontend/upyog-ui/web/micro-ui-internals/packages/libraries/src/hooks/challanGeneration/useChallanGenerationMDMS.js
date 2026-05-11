@@ -1,6 +1,3 @@
-import { useQuery } from "react-query";
-import { MdmsService } from "../../services/elements/MDMS";
-
 /**
  * Fetches MDMS data for challan generation based on type.
  *
@@ -19,22 +16,46 @@ import { MdmsService } from "../../services/elements/MDMS";
  * @returns {Object|null} Query result or null if type is unsupported
  */
 
-const useChallanGenerationMDMS = (tenantId, moduleCode, type, filter, config = {}) => {
-  const useChallanGenerationBillingService = () => {
-    return useQuery("CHALLANGENERATION_BILLING_SERVICE", () => MdmsService.getChallanGenerationBillingService(tenantId, moduleCode, type, filter), config);
-  };
-  const useChallanGenerationApplcationStatus = () => {
-    return useQuery("CHALLANGENERATION_APPLICATION_STATUS", () => MdmsService.getChallanGenerationApplcationStatus(tenantId, moduleCode, type, filter), config);
-  };
+import { queryTemplate } from "../../common/queryTemplate";
+import { MdmsService } from "../../services/elements/MDMS";
 
-  switch (type) {
-    case "BusinessService":
-      return useChallanGenerationBillingService();
-    case "applicationStatus":
-      return useChallanGenerationApplcationStatus();
-    default:
-      return null;
-  }
+const useChallanGenerationMDMS = (
+  tenantId,
+  moduleCode,
+  type,
+  filter,
+  config = {}
+) => {
+  const isBusiness = type === "BusinessService";
+
+  return queryTemplate({
+    queryKey: [
+      isBusiness
+        ? "CHALLANGENERATION_BILLING_SERVICE"
+        : "CHALLANGENERATION_APPLICATION_STATUS",
+      tenantId,
+      moduleCode,
+      filter,
+    ],
+
+    queryFn: () =>
+      isBusiness
+        ? MdmsService.getChallanGenerationBillingService(
+            tenantId,
+            moduleCode,
+            type,
+            filter
+          )
+        : MdmsService.getChallanGenerationApplcationStatus(
+            tenantId,
+            moduleCode,
+            type,
+            filter
+          ),
+
+    enabled: !!type,
+    config,
+  });
 };
 
 export default useChallanGenerationMDMS;

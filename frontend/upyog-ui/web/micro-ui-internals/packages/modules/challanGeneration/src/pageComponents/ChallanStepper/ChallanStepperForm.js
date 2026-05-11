@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 // documentsData → stores uploaded documents data
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import {
   Dropdown,
@@ -19,7 +18,7 @@ import {
   TextArea,
   ActionBar,
   SubmitBar,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Loader } from "../../components/Loader";
 import { SET_ChallanApplication_STEP } from "../../../redux/action/ChallanApplicationActions";
 import SelectNDCDocuments from "../ChallanDocuments";
@@ -36,7 +35,7 @@ import SelectNDCDocuments from "../ChallanDocuments";
 // - Navigation after successful submission
 
 const ChallanStepperForm = () => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [showToast, setShowToast] = useState(null);
@@ -163,7 +162,7 @@ const getActs = (offenceType, offenceActData) =>
       const response = await Digit.ChallanGenerationService.create({ Challan: Challan });
       setLoader(false);
       const id = response?.challans?.[0]?.challanNo;
-      history.push("/upyog-ui/employee/challangeneration/response/" + `${id}`);
+      navigate("/upyog-ui/employee/challangeneration/response/" + `${id}`);
     } catch (error) {
       setLoader(false);
     }

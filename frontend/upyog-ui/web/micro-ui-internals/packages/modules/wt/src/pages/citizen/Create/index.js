@@ -1,17 +1,16 @@
-import React, { use } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { commonConfig } from "../../../config/config";
-import { Timeline } from "@upyog/digit-ui-react-components";
+import { Timeline } from "@nudmcdgnpm/digit-ui-react-components";
 
 
 const WTCreate = () => {
   const queryClient = useQueryClient();
-  const match = useRouteMatch();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   let config = [];
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("WT_Create", {});
@@ -74,9 +73,9 @@ const WTCreate = () => {
     }
     let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
 
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
     if (skipStep) {
-      redirectWithHistory = history.replace;
+      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
     }
     if (isAddMultiple) {
       nextStep = key;
@@ -91,13 +90,13 @@ const WTCreate = () => {
         }
     } 
     if (nextStep === null) {
-      return redirectWithHistory(`${match.path}/check`);
+      return redirectWithHistory(`check`);
     }
     if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${match.path}/${nextStep}`;
+      nextPage = `${nextStep}`;
     }
     else {
-      nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
+      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
@@ -105,22 +104,20 @@ const WTCreate = () => {
 
  
 
-  if(params && Object.keys(params).length>0 && window.location.href.includes("/service-type") && sessionStorage.getItem("docReqScreenByBack") !== "true")
-    {
-      clearParams();
-      queryClient.invalidateQueries("WT_Create");
-    }
+  if (params && Object.keys(params).length>0 && window.location.href.includes("/service-type") && sessionStorage.getItem("docReqScreenByBack") !== "true") {
+    clearParams();
+    queryClient.invalidateQueries("WT_Create");
+  }
 
   const wt_create = async () => {
-
-    if(params?.serviceType?.serviceType?.code === "WT"){
-      history.push(`${match.path}/wt-acknowledgement`);
+    if (params?.serviceType?.serviceType?.code === "WT") {
+      navigate(`wt-acknowledgement`);
     }
-    if(params?.serviceType?.serviceType?.code === "MobileToilet"){
-      history.push(`${match.path}/mt-acknowledgement`);
+    if (params?.serviceType?.serviceType?.code === "MobileToilet") {
+      navigate(`mt-acknowledgement`);
     }
-    if(params?.serviceType?.serviceType?.code === "TREE_PRUNING"){
-      history.push(`${match.path}/tp-acknowledgement`);
+    if (params?.serviceType?.serviceType?.code === "TREE_PRUNING") {
+      navigate(`tp-acknowledgement`);
     }
   };
 
@@ -159,38 +156,27 @@ const WTCreate = () => {
   const MTAcknowledgement = Digit?.ComponentRegistryService?.getComponent("MTAcknowledgement");
   const TPAcknowledgement = Digit?.ComponentRegistryService?.getComponent("TPAcknowledgement");
 
-
-
-
   return (
     <React.Fragment>
-    <Timeline config={config}/>
-    <Switch>
-      {config.map((routeObj, index) => {
-        const { component, texts, inputs, key,additionaFields } = routeObj;
-        const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
-        return (
-          <Route path={`${match.path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key,additionaFields }} onSelect={handleSelect} t={t} formData={params}/>
-          </Route>
-        );
-      })}
-      <Route path={`${match.path}/check`}>
-        <CheckPage onSubmit={wt_create} value={params} />
-      </Route>
-      <Route path={`${match.path}/wt-acknowledgement`}>
-        <WTAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
-      <Route path={`${match.path}/mt-acknowledgement`}>
-        <MTAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
-       <Route path={`${match.path}/tp-acknowledgement`}>
-        <TPAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
-      <Route>
-        <Redirect to={`${match.path}/${config.indexRoute}`} />
-      </Route>
-    </Switch>
+      <Timeline config={config} />
+      <Routes>
+        {config.map((routeObj, index) => {
+          const { component, texts, inputs, key, additionaFields } = routeObj;
+          const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
+          return (
+            <Route
+              path={`${routeObj.route}`}
+              key={index}
+              element={<Component config={{ texts, inputs, key, additionaFields }} onSelect={handleSelect} t={t} formData={params} />}
+            />
+          );
+        })}
+        <Route path="check/*" element={<CheckPage onSubmit={wt_create} value={params} />} />
+        <Route path="wt-acknowledgement/*" element={<WTAcknowledgement data={params} onSuccess={onSuccess} />} />
+        <Route path="mt-acknowledgement/*" element={<MTAcknowledgement data={params} onSuccess={onSuccess} />} />
+        <Route path="tp-acknowledgement/*" element={<TPAcknowledgement data={params} onSuccess={onSuccess} />} />
+        <Route path="/*" element={<Navigate to={`${config.indexRoute}`} />} />
+      </Routes>
     </React.Fragment>
   );
 };

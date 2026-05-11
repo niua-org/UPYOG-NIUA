@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect, useState, useRef } from "react"
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, SubmitBar, ActionBar, DatePicker, SearchForm, Dropdown, SearchField, Table, Card, Loader, Header,Toast } from "@upyog/digit-ui-react-components";
-import { useRouteMatch, Link, useHistory } from "react-router-dom";
+import { TextInput, SubmitBar, ActionBar, DatePicker, SearchForm, Dropdown, SearchField, Table, Card, Loader, Header,Toast } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link,  } from "react-router-dom";
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
@@ -11,7 +11,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
   const isMobile = window.Digit.Utils.browser.isMobile();
   const todaydate = new Date();
   const today = todaydate.toISOString().split("T")[0];
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   // Calculate the date 7 days ago
   const fromDate = new Date(todaydate);
   fromDate.setDate(todaydate.getDate() - 7);  // Subtract 7 days from today
@@ -115,7 +115,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
         }
       });
       if(applicationDetails)
-      history.replace("/upyog-ui/employee/asset/assetservice/asset-process-depreciation-response", { ProcessDepreciation: applicationDetails,  applicationNo});
+      navigate("/upyog-ui/employee/asset/assetservice/asset-process-depreciation-response", { replace: true, state: { ProcessDepreciation: applicationDetails,  applicationNo} });
     } catch (error) {
       setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
     }

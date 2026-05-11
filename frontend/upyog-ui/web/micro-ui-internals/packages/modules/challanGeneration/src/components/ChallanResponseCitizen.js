@@ -1,9 +1,9 @@
-import { Banner, Card, CardText, ActionBar, SubmitBar, Toast } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, ActionBar, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, Fragment, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { ChallanData, getLocationName } from "../utils";
 import { Loader } from "./Loader";
+import { useLocation } from "react-router-dom";
 
 /**
  * ChallanResponseCitizen component:
@@ -13,9 +13,10 @@ import { Loader } from "./Loader";
  */
 
 const ChallanResponseCitizen = (props) => {
-  const { state } = props.location;
+  const location = useLocation();
+  const state = location?.state;
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const nocData = state?.data?.Noc?.[0];
   const isCitizen = window.location.href.includes("citizen");
   const [chbPermissionLoading, setChbPermissionLoading] = useState(false);
@@ -29,7 +30,7 @@ const ChallanResponseCitizen = (props) => {
     ? window.localStorage.getItem("CITIZEN.CITY")
     : window.localStorage.getItem("Employee.tenant-id");
 
-  const pathname = history?.location?.pathname || "";
+  const pathname = navigate?.location?.pathname || "";
   const ndcCode = pathname.split("/").pop(); // ✅ Extracts the last segment
 
   let challanEmpData = ChallanData(tenantId, ndcCode);
@@ -58,11 +59,17 @@ const ChallanResponseCitizen = (props) => {
   }, []);
 
   const onSubmit = () => {
-    if (isCitizen) history.push(`/upyog-ui/citizen`);
-    else history.push(`/upyog-ui/employee`);
+    if (isCitizen) navigate(`/upyog-ui/citizen`);
+    else navigate(`/upyog-ui/employee`);
   };
 
   const payLater = async () => {
+    // ✅ wait until data is ready
+    if (!getChallanData || !getChallanData.challanNo) {
+      console.warn("Challan data not loaded yet");
+      return;
+    }
+
     setLoader(true);
 
     const payload = {
@@ -76,6 +83,7 @@ const ChallanResponseCitizen = (props) => {
 
     try {
       const response = await Digit.ChallanGenerationService.update(payload);
+
       setLoader(false);
 
       // ✅ Show success first
@@ -85,7 +93,7 @@ const ChallanResponseCitizen = (props) => {
 
       // ✅ Delay navigation so toast shows
       setTimeout(() => {
-        history.push("/upyog-ui/employee/challangeneration/inbox");
+        navigate("/upyog-ui/employee/challangeneration/inbox");
         window.location.reload();
       }, 2000);
 
@@ -99,7 +107,7 @@ const ChallanResponseCitizen = (props) => {
     setChbPermissionLoading(true);
     try {
       const applicationDetails = await Digit.ChallanGenerationService.search({ tenantId, filters: { challanNo: ndcCode } });
-      const location = await getLocationName(applicationDetails?.challans?.[0]?.additionalDetail?.latitude,applicationDetails?.challans?.[0]?.additionalDetail?.longitude)
+      const location = await getLocationName(applicationDetails?.challans?.[0]?.additionalDetail?.latitude, applicationDetails?.challans?.[0]?.additionalDetail?.longitude)
       const challan = {
         ...applicationDetails,
         ...challanEmpData,
@@ -107,7 +115,7 @@ const ChallanResponseCitizen = (props) => {
       let application = challan;
       let fileStoreId = applicationDetails?.Applications?.[0]?.paymentReceiptFilestoreId;
       if (!fileStoreId) {
-        let response = await Digit.PaymentService.generatePdf(tenantId, { challan: { ...application,location } }, "challan-notice");
+        let response = await Digit.PaymentService.generatePdf(tenantId, { challan: { ...application, location } }, "challan-notice");
         fileStoreId = response?.filestoreIds[0];
       }
       const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: fileStoreId });
@@ -118,7 +126,7 @@ const ChallanResponseCitizen = (props) => {
   };
 
   const handlePayment = () => {
-    history.push(`/upyog-ui/employee/payment/collect/Challan_Generation/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
+    navigate(`/upyog-ui/employee/payment/collect/Challan_Generation/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
   };
 
   return (
@@ -132,7 +140,7 @@ const ChallanResponseCitizen = (props) => {
           style={{ padding: "10px" }}
           headerStyles={{ fontSize: "32px", wordBreak: "break-word" }}
         />
-        
+
         <div className="primary-label-btn d-grid" onClick={chbPermissionLoading ? undefined : printChallanNotice}>
           {chbPermissionLoading ? (
             <Loader />

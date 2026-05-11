@@ -1,11 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Header, Card } from "@upyog/digit-ui-react-components";
+import { Header, Card } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 const ESTManageProperties = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   
 //  This is for the page to navigate to different sections related to property management in the EST module.

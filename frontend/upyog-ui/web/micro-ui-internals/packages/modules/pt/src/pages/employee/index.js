@@ -1,7 +1,7 @@
-import { PrivateRoute,BreadCrumb } from "@upyog/digit-ui-react-components";
+import { PrivateRoute,BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Link, Switch, useLocation } from "react-router-dom";
+import { Link, useLocation, Routes, Route } from "react-router-dom";
 import { PTLinks } from "../../Module";
 import Inbox from "./Inbox";
 import PaymentDetails from "./PaymentDetails";
@@ -48,7 +48,6 @@ const EmployeeApp = ({ path, url, userType }) => {
   };
 
   const searchMW = [{ combineTaxDueInSearchData }];
-  
 
   const breadcrumbObj = {
     ["/upyog-ui/employee/pt/inbox"]: "ES_TITLE_INBOX",
@@ -162,71 +161,70 @@ const EmployeeApp = ({ path, url, userType }) => {
   const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
   const isNewRegistration = window.location.href.includes("new-application") || window.location.href.includes("modify-application") || window.location.href.includes("pt/application-details");
   return (
-    <Switch>
-      <React.Fragment>
-        <div className="ground-container">
-          {/* <p className="breadcrumb" style={{ marginLeft: mobileView ? "2vw" : "revert" }}>
-            <Link to="/upyog-ui/employee" style={{ cursor: "pointer", color: "#666" }}>
-              {t("ES_COMMON_HOME")}
-            </Link>{" "}
-            / <span>{getBreadCrumb()}</span>
-          </p>} */}
-          {!isRes ? <div style={isNewRegistration ? {marginLeft: "12px" } : {marginLeft:"-4px"}}><PTBreadCrumbs location={location} /></div> : null}
-          <PrivateRoute exact path={`${path}/`} component={() => <PTLinks matchPath={path} userType={userType} />} />
-          <PrivateRoute
-            path={`${path}/inbox`}
-            component={() => (
-              <Inbox
-                useNewInboxAPI={true}
-                parentRoute={path}
-                businessService="PT"
-                filterComponent="PT_INBOX_FILTER"
-                initialStates={inboxInitialState}
-                isInbox={true}
-              />
-            )}
+    <React.Fragment>
+      <div className="ground-container">
+        {!isRes ? (
+          <div style={isNewRegistration ? { marginLeft: "12px" } : { marginLeft: "-4px" }}>
+            <PTBreadCrumbs location={location} />
+          </div>
+        ) : null}
+        <Routes>
+          <Route path={`*`} element={<PrivateRoute><PTLinks matchPath={path} userType={userType} /></PrivateRoute>} />
+          <Route
+            path={`/inbox`}
+            element={
+              <PrivateRoute>
+                <Inbox
+                  useNewInboxAPI={true}
+                  parentRoute={path}
+                  businessService="PT"
+                  filterComponent="PT_INBOX_FILTER"
+                  initialStates={inboxInitialState}
+                  isInbox={true}
+                />
+              </PrivateRoute>
+            }
           />
-          <PrivateRoute path={`${path}/new-application`} component={() => <NewApplication parentUrl={url} />} />
-          <PrivateRoute path={`${path}/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/property-details/:id`} component={() => <PropertyDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/applicationsearch/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/ptsearch/property-details/:id`} component={() => <PropertyDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/payment-details/:id`} component={() => <PaymentDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/ptsearch/payment-details/:id`} component={() => <PaymentDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assessment-details/:id`} component={() => <AssessmentDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/ptsearch/assessment-details/:id`} component={() => <AssessmentDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/modify-application/:id`} component={() => <EditApplication />} />
-          {/**/}
-          <PrivateRoute path={`${path}/response`} component={(props) => <Response {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/property-mutate/:id`} component={() => <TransferOwnership parentRoute={path} />} />
-          <PrivateRoute path={`${path}/property-mutate-docs-required/:id`} component={() => <DocsRequired parentRoute={path} />} />
-          <PrivateRoute path={`${path}/search`} component={(props) => <Search {...props} t={t} parentRoute={path} />} />
-          <PrivateRoute
-            path={`${path}/searchold`}
-            component={() => (
-              <Inbox
-                parentRoute={path}
-                businessService="PT"
-                middlewareSearch={searchMW}
-                initialStates={inboxInitialState}
-                isInbox={false}
-                EmptyResultInboxComp={"PTEmptyResultInbox"}
-              />
-            )}
+          <Route path={`/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
+          <Route path={`/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property-details/:id`} element={<PrivateRoute><PropertyDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/applicationsearch/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ptsearch/property-details/:id`} element={<PrivateRoute><PropertyDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ptsearch/payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ptsearch/assessment-details/:id`} element={<PrivateRoute><AssessmentDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/modify-application/:id`} element={<PrivateRoute><EditApplication /></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property-mutate/:id`} element={<PrivateRoute><TransferOwnership parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/property-mutate-docs-required/:id`} element={<PrivateRoute><DocsRequired parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/search`} element={<PrivateRoute><Search t={t} parentRoute={path} /></PrivateRoute>} />
+          <Route
+            path={`/searchold`}
+            element={
+              <PrivateRoute>
+                <Inbox
+                  parentRoute={path}
+                  businessService="PT"
+                  middlewareSearch={searchMW}
+                  initialStates={inboxInitialState}
+                  isInbox={false}
+                  EmptyResultInboxComp={"PTEmptyResultInbox"}
+                />
+              </PrivateRoute>
+            }
           />
-          <PrivateRoute path={`${path}/application-search`} component={(props) => <SearchApp {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/ulb-assesment`} component={(props) => <UlbAssesment {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/PTReceiptRegister`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTReceiptRegister" />} />
-          <PrivateRoute path={`${path}/PTCollectionReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCollectionReport" />} />
-          <PrivateRoute path={`${path}/DefaulterReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="DefaulterReport" />} />
-          <PrivateRoute path={`${path}/PTGrievances`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTGrievances" />} />
-          <PrivateRoute path={`${path}/PTCoverageReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTCoverageReport" />} />
-          <PrivateRoute path={`${path}/PTTop20TaxPayers`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="pt-reports" reportName="PTTop20TaxPayers" />} />
-
-           
-        </div>
-      </React.Fragment>
-    </Switch>
+          <Route path={`/application-search`} element={<PrivateRoute><SearchApp parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/ulb-assesment`} element={<PrivateRoute><UlbAssesment parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/PTReceiptRegister`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTReceiptRegister" /></PrivateRoute>} />
+          <Route path={`/PTCollectionReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTCollectionReport" /></PrivateRoute>} />
+          <Route path={`/DefaulterReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="DefaulterReport" /></PrivateRoute>} />
+          <Route path={`/PTGrievances`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTGrievances" /></PrivateRoute>} />
+          <Route path={`/PTCoverageReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTCoverageReport" /></PrivateRoute>} />
+          <Route path={`/PTTop20TaxPayers`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="pt-reports" reportName="PTTop20TaxPayers" /></PrivateRoute>} />
+        </Routes>
+      </div>
+    </React.Fragment>
   );
 };
 

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams } from "react-router-dom";
 //
 import Stepper from "../../../../../../../react-components/src/customComponents/Stepper";
 import { config } from "../../../../config/citizen/CitizenNDCApplicationConfig";
 import { setNDCStep, updateNDCForm, resetNDCForm } from "../../../../redux/actions/NDCFormActions";
-import { CardHeader, Toast } from "@upyog/digit-ui-react-components";
+import { CardHeader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const createEmployeeConfig = [
   {
@@ -56,7 +56,7 @@ const updatedCreateEmployeeconfig = createEmployeeConfig.map((item) => {
 
 
 export const NewNDCStepForm = () => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   // const { id } = useParams();
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -83,7 +83,7 @@ console.log("formData in step form", formData);
   const handleSubmit = () => {};
 
   useEffect(() => {
-    const unlisten = history.listen(() => {
+    const unlisten = navigate(() => {
       // route changed
       dispatch(resetNDCForm());
       // dispatch(updateNDCForm("reset", {}));
@@ -91,7 +91,7 @@ console.log("formData in step form", formData);
     });
 
     return () => unlisten();
-  }, [history, dispatch]);
+  }, [navigate, dispatch]);
 
   return (
     <div className="card">

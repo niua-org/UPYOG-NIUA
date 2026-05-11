@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-import { Route, Switch, useRouteMatch } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 // import UserOnboarding from "../UserOnboarding/index";
 import { PgrRoutes, getRoute } from "../../../constants/Routes";
 import ReasonPage from "./Reason";
@@ -16,12 +16,12 @@ const ReopenComplaint = ({ match, history, parentRoute }) => {
 
   const complaintDetails = Digit.Hooks.pgr.useComplaintDetails({ tenantId: tenantId, id: id }).complaintDetails;
   return (
-    <Switch>
-      <Route exact path={getRoute(match, PgrRoutes.ReasonPage)} component={() => <ReasonPage match={match} {...{complaintDetails}} />} />
-      <Route path={getRoute(match, PgrRoutes.UploadPhoto)} component={() => <UploadPhoto match={match} skip={true} {...{complaintDetails}} />} />
-      <Route path={getRoute(match, PgrRoutes.AddtionalDetails)} component={() => <AddtionalDetails match={match} parentRoute={parentRoute} {...{complaintDetails}} />} />
-      <Route path={getRoute(match, PgrRoutes.Response)} component={() => <Response match={match} />} />
-    </Switch>
+    <Routes>
+      <Route path={getRoute(match, PgrRoutes.ReasonPage)} element={<ReasonPage match={match} {...{ complaintDetails }} />} />
+      <Route path={getRoute(match, PgrRoutes.UploadPhoto)} element={<UploadPhoto match={match} skip={true} {...{ complaintDetails }} />} />
+      <Route path={getRoute(match, PgrRoutes.AddtionalDetails)} element={<AddtionalDetails match={match} parentRoute={parentRoute} {...{ complaintDetails }} />} />
+      <Route path={getRoute(match, PgrRoutes.Response)} element={<Response match={match} />} />
+    </Routes>
   );
 };
 

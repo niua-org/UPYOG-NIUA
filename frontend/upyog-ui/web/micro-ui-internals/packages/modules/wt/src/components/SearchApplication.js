@@ -1,7 +1,7 @@
-  import React, { useCallback, useMemo, useEffect} from "react"
+import React, { useCallback, useMemo } from "react"
   import { useForm, Controller } from "react-hook-form";
-  import { TextInput, SubmitBar, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, Header } from "@upyog/digit-ui-react-components";
-  import { Link} from "react-router-dom";
+  import { TextInput, SubmitBar, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, Header } from "@nudmcdgnpm/digit-ui-react-components";
+  import { Link } from "react-router-dom";
   import { APPLICATION_PATH} from "../utils";
 
   /**
@@ -33,12 +33,6 @@
               sortOrder: "DESC",
           }
       })
-      useEffect(() => {
-        register("offset", 0)
-        register("limit", 10)
-        register("sortBy", "commencementDate")
-        register("sortOrder", "DESC")
-      },[register])
       const user = Digit.UserService.getUser().info;
       const GetCell = (value) => <span className="cell-text">{value}</span>;
     
@@ -165,18 +159,18 @@
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
                       <label>{t("WT_BOOKING_NO")}</label>
-                      <TextInput name="bookingNo" inputRef={register({})} />
+                      <TextInput name="bookingNo" {...register("bookingNo")} />
                   </SearchField>
                   <SearchField>
                       <label>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</label>
                       <Controller
                               control={control}
                               name="status"
-                              render={(props) => (
+                              render={({ field }) => (
                                   <Dropdown
-                                  selected={props.value}
-                                  select={props.onChange}
-                                  onBlur={props.onBlur}
+                                  selected={field.value}
+                                  select={field.onChange}
+                                  onBlur={field.onBlur}
                                   option={moduleCode==="TP"? statusOptionForTreePruning : statusOptions}
                                   optionKey="i18nKey"
                                   t={t}
@@ -189,32 +183,32 @@
                   <SearchField>
                   <label>{t("WT_MOBILE_NUMBER")}</label>
                   <MobileNumber
+                      {...register("mobileNumber", {
+                        minLength: {
+                          value: 10,
+                          message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                          value: 10,
+                          message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                          value: /[6789][0-9]{9}/,
+                          //type: "tel",
+                          message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                      })}
                       name="mobileNumber"
-                      inputRef={register({
-                      minLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      maxLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      pattern: {
-                      value: /[6789][0-9]{9}/,
-                      //type: "tel",
-                      message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                  })}
-                  type="number"
-                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                  maxlength={10}
+                      type="number"
+                      componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+                      maxlength={10}
                   />
                   <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                   </SearchField> 
                   <SearchField>
                       <label>{t("FROM_DATE")}</label>
                       <Controller
-                          render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange}  max={new Date().toISOString().split('T')[0]}/>}
+                          render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange}  max={new Date().toISOString().split('T')[0]}/>}
                           name="fromDate"
                           control={control}
                           />
@@ -222,7 +216,7 @@
                   <SearchField>
                       <label>{t("TO_DATE")}</label>
                       <Controller
-                          render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                          render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
                           name="toDate"
                           control={control}
                           />

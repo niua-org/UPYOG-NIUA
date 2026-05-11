@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar, Menu } from "@upyog/digit-ui-react-components";
-import { Link, useHistory } from "react-router-dom";
+import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar, Menu } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link,  } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import getPDFData from "../getPDFData";
 import { getVehicleType } from "../utils";
 
@@ -46,7 +46,7 @@ const BannerPicker = (props) => {
 };
 
 const Response = (props) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [showToast, setShowToast] = useState(null);
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -120,7 +120,7 @@ const Response = (props) => {
         closeToast();
       }, 5000);
     } else {
-      history.push(`/upyog-ui/employee/payment/collect/FSM.TRIP_CHARGES/${state?.applicationData?.applicationNo || Data?.fsm?.[0].applicationNo}`);
+      navigate(`/upyog-ui/employee/payment/collect/FSM.TRIP_CHARGES/${state?.applicationData?.applicationNo || Data?.fsm?.[0].applicationNo}`);
     }
   };
 
@@ -180,15 +180,15 @@ const Response = (props) => {
   useEffect(() => {
     switch (selectedAction) {
       case "GO_TO_HOME":
-        return isCitizen ? history.push("/upyog-ui/citizen") : history.push("/upyog-ui/employee");
+        return isCitizen ? navigate("/upyog-ui/citizen") : navigate("/upyog-ui/employee");
       case "ASSIGN_TO_DSO":
-        return history.push(`/upyog-ui/employee/fsm/application-details/${getApplicationNo}`);
+        return navigate(`/upyog-ui/employee/fsm/application-details/${getApplicationNo}`);
       case "PAY":
         return handleResponse();
     }
   }, [selectedAction]);
 
-  if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
+  if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
     return <Loader />;
   }
   let ACTIONS = ["GO_TO_HOME"];

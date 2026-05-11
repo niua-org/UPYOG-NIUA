@@ -1,6 +1,6 @@
 import React,{ useState }  from "react";
-import { Card, Banner, CardText, SubmitBar } from "@upyog/digit-ui-react-components";
-import { Link, useRouteMatch } from "react-router-dom";
+import { Card, Banner, CardText, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { PgrRoutes, getRoute } from "../../constants/Routes";
 import { useTranslation } from "react-i18next";
@@ -38,7 +38,7 @@ const BannerPicker = ({ response }) => {
 
 const Response = (props) => {
   const { t } = useTranslation();
-  const { match } = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const appState = useSelector((state) => state)["pgr"];
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};

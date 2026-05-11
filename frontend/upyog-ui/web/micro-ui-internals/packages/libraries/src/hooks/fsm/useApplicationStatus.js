@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "react-query";
+import { queryTemplate } from "../../common/queryTemplate";
 
 const useApplicationStatus = (select, isEnabled = true, statusMap=[]) => {
   const { t } = useTranslation();

@@ -1,14 +1,14 @@
-import { Card, KeyNote, SubmitBar, Toast } from "@upyog/digit-ui-react-components";
+import { Card, KeyNote, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import { convertEpochToDateCitizen, getvalidfromdate } from "../../../utils/index";
 import {TLSearch} from "../../../../../../libraries/src/services/molecules/TL/Search";
 import cloneDeep from "lodash/cloneDeep";
 
 const TradeLicenseList = ({ application }) => {
   sessionStorage.setItem("isDirectRenewal", true);
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const owners = application?.tradeLicenseDetail?.owners;
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -36,7 +36,7 @@ const TradeLicenseList = ({ application }) => {
     if (isrenewalspresent && Licenses) {
       alert(t("TL_RENEWAL_PRESENT_ERROR"));
     } else if (Licenses) {
-      history.push(`/upyog-ui/citizen/tl/tradelicence/edit-application/action-edit/${application.applicationNumber}`);
+      navigate(`/upyog-ui/citizen/tl/tradelicence/edit-application/action-edit/${application.applicationNumber}`);
     }
   }
 
@@ -134,7 +134,7 @@ useEffect(async ()=>{
     if(isrenewalspresent || allowedToNextYear == false || application?.status === "CANCELLED" || (application?.status === "MANUALEXPIRED" /* && latestRenewalYearofAPP */))
     getToastMessages();
     else
-    history.push(`/upyog-ui/citizen/tl/tradelicence/renew-trade/${application.licenseNumber}/${application.tenantId}`);
+    navigate(`/upyog-ui/citizen/tl/tradelicence/renew-trade/${application.licenseNumber}/${application.tenantId}`);
   };
   const ownersSequences=owners?.additionalDetails!==null ? owners.sort((a,b)=>a?.additionalDetails?.ownerSequence-b?.additionalDetails?.ownerSequence): owners
   return (

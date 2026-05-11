@@ -1,7 +1,27 @@
 import React from "react";
 import { ArrowLeft, ArrowLeftWhite } from "./svgindex";
-import { withRouter } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useLocation, useParams } from "react-router-dom";
+
+// Create withRouter HOC directly in this file to avoid circular dependency
+const withRouter = (Component) => {
+  return (props) => {
+  const navigate = Digit.Hooks.useCustomNavigate();
+    const location = useLocation();
+    const params = useParams();
+    
+    const history = {
+      push: (path, state) => navigate(path, { state }),
+      replace: (path, state) => navigate(path, { replace: true, state }),
+      go: (n) => navigate(n),
+      goBack: () => navigate(-1),
+      goForward: () => navigate(1),
+      location,
+    };
+    
+    return <Component {...props} history={history} location={location} match={{ params }} />;
+  };
+};
 
 const BackButton = ({ history, style, isSuccessScreen, isCommonPTPropertyScreen, getBackPageNumber, className = "", variant = "black" }) => {
   const { t } = useTranslation();

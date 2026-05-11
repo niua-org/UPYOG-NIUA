@@ -1,4 +1,4 @@
-import { Modal, FormComposer, Toast } from "@upyog/digit-ui-react-components";
+import { Modal, FormComposer, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { Loader } from "../components/Loader";
 

@@ -1,8 +1,8 @@
-import { Card, KeyNote, SubmitBar,Toast,CardSubHeader } from "@upyog/digit-ui-react-components";
+import { Card, KeyNote, SubmitBar,Toast,CardSubHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 
 import { useTranslation } from "react-i18next";
-import { Link,useHistory } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 
 
 /**
@@ -40,7 +40,7 @@ import { Link,useHistory } from "react-router-dom";
  */
 const ChbApplication = ({ application, tenantId, buttonLabel }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [showToast, setShowToast] = useState(null);
 
   const { data: slotSearchData, refetch } = Digit.Hooks.chb.useChbSlotSearch({
@@ -114,7 +114,7 @@ const ChbApplication = ({ application, tenantId, buttonLabel }) => {
     if (isSlotBooked) {
       setShowToast({ error: true, label: t("CHB_COMMUNITY_HALL_ALREADY_BOOKED") });
     } else {
-      history.push({
+      navigate({
         pathname: `/upyog-ui/citizen/payment/my-bills/${"chb-services"}/${application?.bookingNo}`,
         state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo,timerValue:result?.data.timerValue ,SlotSearchData:SlotSearchData },
       });

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <link rel="icon" href="https://cdn.jsdelivr.net/npm/@egovernments/digit-ui-css/img/browser-icon.png"/>
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nudmcdgnpm/upyog-css@2.1.0/dist/index.css"/> -->
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@upyog-niua/upyog-css@1.8.11/dist/index.css"/>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="theme-color" content="#00bcd1"/>
+    <title>UPYOG</title>
+    <!--
+      globalConfigs.js loaded from S3 — provides runtime config like STATE_LEVEL_TENANT_ID
+      This was previously handled via %REACT_APP_GLOBAL% template variable in CRA
+      In Vite we load it directly since we control index.html
+    -->
+    <script src="https://s3.ap-south-1.amazonaws.com/in-egov-assets/globalConfigs.js"></script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!-- Vite entry point — replaces CRA's automatic script injection -->
+    <script type="module" src="/src/index.js"></script>
+  </body>
+</html>

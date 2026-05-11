@@ -1,20 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Redirect, Route, BrowserRouter as Router, Switch, useHistory, useRouteMatch, useLocation } from "react-router-dom";
-import { TypeSelectCard, Loader } from "@upyog/digit-ui-react-components";
+import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
+import { TypeSelectCard, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { newConfig } from "../../../config/NewApplication/config";
 import CheckPage from "./CheckPage";
 import Response from "./Response";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 const FileComplaint = ({ parentRoute }) => {
   const queryClient = useQueryClient();
-  const match = useRouteMatch();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
+  const match = useMatch();
   let config = [];
   let configs = []
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("FSM_CITIZEN_FILE_PROPERTY", {});
@@ -25,7 +25,7 @@ const FileComplaint = ({ parentRoute }) => {
   const [successData, setsuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage("FSM_MUTATION_SUCCESS_DATA", false);
 
   useEffect(() => {
-    if (!pathname?.includes('new-application/response')) {
+    if (!pathname?.includes("new-application/response")) {
       setMutationHappened(false);
       clearSuccessData();
       clearError();
@@ -35,18 +35,18 @@ const FileComplaint = ({ parentRoute }) => {
   const goNext = (skipStep) => {
     const currentPath = pathname.split("/").pop();
     const { nextStep } = configs.find((routeObj) => routeObj.route === currentPath);
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
     if (skipStep) {
-      redirectWithHistory = history.replace;
+      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
     }
     if (nextStep === null) {
       return redirectWithHistory(`${parentRoute}/new-application/check`);
     }
-    redirectWithHistory(`${match.path}/${nextStep}`);
+    redirectWithHistory(`${nextStep}`);
   };
 
   const submitComplaint = async () => {
-    history.push(`${parentRoute}/new-application/response`);
+    navigate(`${parentRoute}/new-application/response`);
   };
 
   function handleSelect(key, data, skipStep) {
@@ -54,7 +54,7 @@ const FileComplaint = ({ parentRoute }) => {
     goNext(skipStep);
   }
 
-  const handleSkip = () => { };
+  const handleSkip = () => {};
 
   const handleSUccess = () => {
     clearParams();
@@ -74,26 +74,22 @@ const FileComplaint = ({ parentRoute }) => {
   configs.indexRoute = "select-trip-number";
 
   return (
-    <Switch>
+    <Routes>
       {configs.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
-          <Route path={`${match.path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />
-          </Route>
+          <Route
+            path={`${routeObj.route}`}
+            key={index}
+            element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />}
+          />
         );
       })}
-      <Route path={`${match.path}/check`}>
-        <CheckPage onSubmit={submitComplaint} value={params} />
-      </Route>
-      <Route path={`${match.path}/response`}>
-        <Response data={params} onSuccess={handleSUccess} />
-      </Route>
-      <Route>
-        <Redirect to={`${match.path}/${configs.indexRoute}`} />
-      </Route>
-    </Switch>
+      <Route path={`check`} element={<CheckPage onSubmit={submitComplaint} value={params} />} />
+      <Route path={`response`} element={<Response data={params} onSuccess={handleSUccess} />} />
+      <Route path="*" element={<Navigate to={`${configs.indexRoute}`} />} />
+    </Routes>
   );
 };
 

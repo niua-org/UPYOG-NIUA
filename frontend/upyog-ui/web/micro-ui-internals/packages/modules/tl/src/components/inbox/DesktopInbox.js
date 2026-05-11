@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Loader } from "@upyog/digit-ui-react-components";
+import { Card, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import InboxLinks from "./ApplicationLinks";
 import ApplicationTable from "./ApplicationTable";
 import SearchLicenseApplication from "./search";
 import { Link } from "react-router-dom";
 import { convertEpochToDateDMY } from "../../utils";
-// import { getActionButton } from "../../utils";
+// 
 
 const DesktopInbox = ({ tableConfig, filterComponent,columns, isLoading, setSearchFieldsBackToOriginalState, setSetSearchFieldsBackToOriginalState, ...props }) => {
   const { data } = props;

@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { Link, useParams,  } from "react-router-dom";
 import {
   Header,
   ActionLinks,
@@ -13,7 +13,7 @@ import {
   LinkButton,
   Loader,
   Rating,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import TLCaption from "./TLCaption";
 

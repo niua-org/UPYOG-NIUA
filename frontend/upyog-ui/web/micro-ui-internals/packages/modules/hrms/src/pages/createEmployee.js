@@ -1,7 +1,7 @@
-import { FormComposer, Toast ,Loader, Header} from "@upyog/digit-ui-react-components";
+import { FormComposer, Toast ,Loader, Header} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import { newConfig } from "../components/config/config";
 
 const CreateEmployee = () => {
@@ -12,7 +12,7 @@ const CreateEmployee = () => {
   const [phonecheck, setPhonecheck] = useState(false);
   const [checkfield, setcheck] = useState(false)
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const isMobile = window.Digit.Utils.browser.isMobile();
 
  const { data: mdmsData,isLoading } = Digit.Hooks.useCommonMDMS(Digit.ULBService.getStateId(), "egov-hrms", ["CommonFieldsConfig"], {
@@ -124,7 +124,7 @@ const CreateEmployee = () => {
   };
 
   const navigateToAcknowledgement = (Employees) => {
-    history.replace("/upyog-ui/employee/hrms/response", { Employees, key: "CREATE", action: "CREATE" });
+    navigate("/upyog-ui/employee/hrms/response", { replace: true, state: { Employees, key: "CREATE", action: "CREATE" } });
   }
 
 

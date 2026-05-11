@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Switch, useLocation, Link } from "react-router-dom";
-import { PrivateRoute, BreadCrumb } from "@upyog/digit-ui-react-components";
+import { useLocation, Routes, Route } from "react-router-dom";
+import { PrivateRoute, BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import Inbox from "./Inbox";
+import CommonRedirect from "../../pageComponents/CommonRedirect"
 // import NewApplication from "./NewApplication";
 // import Search from "./Search";
 // import Response from "../Response";
@@ -21,7 +22,6 @@ const TLBreadCrumb = ({ location }) => {
   const isNewApplication = location?.pathname?.includes("tl/new-application");
   const isResponse = location?.pathname?.includes("tl/response");
   const isMobile = window.Digit.Utils.browser.isMobile();
-  const CommonRedirect = Digit?.ComponentRegistryService?.getComponent('CommonRedirect')
   const [search, setSearch] = useState(false);
 
   const locationsForTLEmployee = window.location.href;
@@ -160,60 +160,43 @@ const EmployeeApp = ({ path, url, userType }) => {
   
 
   return (
-    <Switch>
-      <React.Fragment>
-      <div className="ground-container" style={locationCheck ? {width: "100%", marginLeft: "0px"} : {marginLeft: "0px"}}>
-          <div style={locationCheck ? {marginLeft: "15px"} : {}}>
-            <TLBreadCrumb location={location} />
-          </div>
-          {/* <p className="breadcrumb" style={{ marginLeft: mobileView ? "2vw" : !locationCheck ? "revert": "15px" }}>
-            <Link to="/upyog-ui/employee" style={{ cursor: "pointer", color: "#666" }}>
-              {t("ES_COMMON_HOME")}
-            </Link>{" "}
-            / 
-            {location.pathname === "/upyog-ui/employee/tl/inbox" ? 
-              <span>{location.pathname === "/upyog-ui/employee/tl/inbox" ? t("ES_COMMON_INBOX") : ""}</span>
-              : 
-              <Link to="/upyog-ui/employee/tl/inbox" style={{ cursor: "pointer", color: "#666" }}>
-                {location.pathname.includes("/upyog-ui/employee/tl/") ? t("ES_COMMON_INBOX") : ""}
-              </Link>}
-            <span>{location.pathname.includes("/upyog-ui/employee/tl/search/application") ? `/ ${t("ES_COMMON_SEARCH_APPLICATION") }`  : null}</span>
-            <span>{location.pathname.includes("/upyog-ui/employee/tl/search/license") ? `/ ${t("TL_SEARCH_TRADE_HEADER") }`  : null}</span>
-            <span>{location.pathname.includes("/upyog-ui/employee/tl/application-details") ? `/ ${t("TL_DETAILS_HEADER_LABEL") }`  : null}</span>
-            <span>{location.pathname.includes("/upyog-ui/employee/tl/new-application") ? `/ ${t("TL_HOME_SEARCH_RESULTS_NEW_APP_BUTTON") }`  : null}</span>
-            <span>{location.pathname.includes("/upyog-ui/employee/tl/renew-application-details") ? `/ ${t("ES_TITLE_RENEW_TRADE_LICESE_APPLICATION") }`  : null}</span>
-            <span>{location.pathname.includes("/upyog-ui/employee/tl/edit-application-details") ? `/ ${t("ES_TITLE_RE_NEW_TRADE_LICESE_APPLICATION") }`  : null}</span>
-          </p> */}
-          <PrivateRoute
-            path={`${path}/inbox`}
-            component={() => (
-              <Inbox parentRoute={path} businessService="TL" filterComponent="TL_INBOX_FILTER" initialStates={{}} isInbox={true} />
-            )}
-          />
-            <PrivateRoute path={`${path}/common/:filestore`} component={() => <CommonRedirect parentUrl={url} />} />
-          <PrivateRoute path={`${path}/new-application`} component={() => <NewApplication parentUrl={url} />} />
-          <PrivateRoute path={`${path}/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/renew-application-details/:id`} component={(props) => <ReNewApplication {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/edit-application-details/:id`} component={(props) => <ReNewApplication {...props} header={t("TL_ACTION_RESUBMIT")} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/response`} component={(props) => <Response {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/search/:variant`} component={(props) => <Search {...props} parentRoute={path} />} />
-
-        <PrivateRoute path={`${path}/TLRegistryReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TLRegistryReport" />} />
-        <PrivateRoute path={`${path}/StateTradeLicenseCancelledRegistryReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="StateTradeLicenseCancelledRegistryReport" />} />
-        <PrivateRoute path={`${path}/TradeLicenseCancelledRegistryReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseCancelledRegistryReport" />} />
-        <PrivateRoute path={`${path}/TradeWiseCollectionReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TradeWiseCollectionReport" />} />
-        <PrivateRoute path={`${path}/TradeLicenseApplicationStatusReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseApplicationStatusReport" />} />
-        <PrivateRoute path={`${path}/TradeLicenseULBWiseApplicationStatusReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseULBWiseApplicationStatusReport" />} />
-        <PrivateRoute path={`${path}/StateLevelStatus`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="StateLevelStatus" />} />
-        <PrivateRoute path={`${path}/StateLevelTradeWiseCollectionReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="StateLevelTradeWiseCollectionReport" />} />
-        <PrivateRoute path={`${path}/StateLevelTradeLicenseRegistryReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="StateLevelTradeLicenseRegistryReport" />} />
-        <PrivateRoute path={`${path}/TradeLicenseDailyCollectionReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseDailyCollectionReport" />} />
-        <PrivateRoute path={`${path}/TLApplicationStatusReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TLApplicationStatusReport" />} />
-        <PrivateRoute path={`${path}/TLRenewalPendingReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TLRenewalPendingReport" />} />
-        <PrivateRoute path={`${path}/TradeLicenseDefaulterReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseDefaulterReport" />} />
+    <React.Fragment>
+      <div className="ground-container" style={locationCheck ? { width: "100%", marginLeft: "0px" } : { marginLeft: "0px" }}>
+        <div style={locationCheck ? { marginLeft: "15px" } : {}}>
+          <TLBreadCrumb location={location} />
         </div>
-      </React.Fragment>
-    </Switch>
+        <Routes>
+          <Route
+            path="*"
+            element={
+              <PrivateRoute>
+                <Inbox parentRoute={path} businessService="TL" filterComponent="TL_INBOX_FILTER" initialStates={{}} isInbox={true} />
+              </PrivateRoute>
+            }
+          />
+          <Route path={`/common/:filestore`} element={<PrivateRoute><CommonRedirect parentUrl={url} /></PrivateRoute>} />
+          <Route path={`new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
+          <Route path={`/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/renew-application-details/:id`} element={<PrivateRoute><ReNewApplication parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/edit-application-details/:id`} element={<PrivateRoute><ReNewApplication header={t("TL_ACTION_RESUBMIT")} parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/search/:variant`} element={<PrivateRoute><Search parentRoute={path} /></PrivateRoute>} />
+          <Route path={`/TLRegistryReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TLRegistryReport" /></PrivateRoute>} />
+          <Route path={`/StateTradeLicenseCancelledRegistryReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="StateTradeLicenseCancelledRegistryReport" /></PrivateRoute>} />
+          <Route path={`/TradeLicenseCancelledRegistryReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseCancelledRegistryReport" /></PrivateRoute>} />
+          <Route path={`/TradeWiseCollectionReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TradeWiseCollectionReport" /></PrivateRoute>} />
+          <Route path={`/TradeLicenseApplicationStatusReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseApplicationStatusReport" /></PrivateRoute>} />
+          <Route path={`/TradeLicenseULBWiseApplicationStatusReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseULBWiseApplicationStatusReport" /></PrivateRoute>} />
+          <Route path={`/StateLevelStatus`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="StateLevelStatus" /></PrivateRoute>} />
+          <Route path={`/StateLevelTradeWiseCollectionReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="StateLevelTradeWiseCollectionReport" /></PrivateRoute>} />
+          <Route path={`/StateLevelTradeLicenseRegistryReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="StateLevelTradeLicenseRegistryReport" /></PrivateRoute>} />
+          <Route path={`/TradeLicenseDailyCollectionReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseDailyCollectionReport" /></PrivateRoute>} />
+          <Route path={`/TLApplicationStatusReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TLApplicationStatusReport" /></PrivateRoute>} />
+          <Route path={`/TLRenewalPendingReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TLRenewalPendingReport" /></PrivateRoute>} />
+          <Route path={`/TradeLicenseDefaulterReport`} element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-tl" reportName="TradeLicenseDefaulterReport" /></PrivateRoute>} />
+        </Routes>
+      </div>
+    </React.Fragment>
   );
 };
 

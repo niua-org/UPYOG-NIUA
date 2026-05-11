@@ -1,35 +1,59 @@
 import { ASSETSearch } from "../../services/molecules/ASSET/Search";
-import { useQuery } from "react-query";
+import { queryTemplate } from "../../common/queryTemplate";
 
-const useAssetApplicationDetail = (t, tenantId, applicationNo, config = {}, userType, args) => {
+const useAssetApplicationDetail = (
+  t,
+  tenantId,
+  applicationNo,
+  config = {},
+  userType,
+  args
+) => {
   const stateTenantId = Digit.ULBService.getStateId();
-  const defaultSelect = (data) => {
-     let applicationDetails = data.applicationDetails;
-    return {
-      applicationData : data,
-      applicationDetails
-    }
-  };
 
-  
-    const { data: cityResponseObject} =  Digit.Hooks.useEnabledMDMS(stateTenantId, "ASSETV2", [{ name: "AssetParentCategoryFields" }], {
-      select: (data) => {
-        
-        const formattedData = data?.["ASSETV2"]?.["AssetParentCategoryFields"];
-        return formattedData;
-      },
-    });
- 
-  
-    let combinedData = cityResponseObject?cityResponseObject:[];
+  const { data: cityResponseObject } =
+    Digit.Hooks.useEnabledMDMS(
+      stateTenantId,
+      "ASSETV2",
+      [{ name: "AssetParentCategoryFields" }],
+      {
+        select: (data) =>
+          data?.["ASSETV2"]?.["AssetParentCategoryFields"],
+      }
+    );
 
+  const combinedData = cityResponseObject || [];
 
-  return useQuery(
-    ["APPLICATION_SEARCH", "ASSET_SEARCH", applicationNo, userType, combinedData,  args],
-    () => ASSETSearch.applicationDetails(t, tenantId, applicationNo, userType, combinedData,  args),
-    { select: defaultSelect, ...config }
- 
-  );
+  const queryKey = [
+    "ASSET_APPLICATION_DETAIL",
+    tenantId,
+    applicationNo,
+    userType,
+    JSON.stringify(combinedData),
+    JSON.stringify(args),
+  ];
+
+  const queryFn = () =>
+    ASSETSearch.applicationDetails(
+      t,
+      tenantId,
+      applicationNo,
+      userType,
+      combinedData,
+      args
+    );
+
+  const select = (data) => ({
+    applicationData: data,
+    applicationDetails: data?.applicationDetails,
+  });
+
+  return queryTemplate({
+    queryKey,
+    queryFn,
+    select,
+    config,
+  });
 };
 
 export default useAssetApplicationDetail;

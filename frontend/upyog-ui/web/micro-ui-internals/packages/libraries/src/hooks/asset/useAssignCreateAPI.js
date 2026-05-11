@@ -1,15 +1,14 @@
-import { useQuery, useMutation } from "react-query";
+import { mutationTemplate } from "../../common/mutationTemplate";
 import { ASSETService } from"../../services/elements/ASSET"
 
 
-
 export const useAssignCreateAPI = (tenantId, type = true) => {
-  if (type) {
-    return useMutation((data) => ASSETService.assign(data, tenantId));
-  } 
-  else {
-    return useMutation((data) => ASSETService.update(data, tenantId));
-  }
+  const mutationFn = (data) =>
+    type
+      ? ASSETService.assign(data, tenantId)
+      : ASSETService.update(data, tenantId);
+
+  return mutationTemplate({ mutationFn });
 };
 
 export default useAssignCreateAPI;

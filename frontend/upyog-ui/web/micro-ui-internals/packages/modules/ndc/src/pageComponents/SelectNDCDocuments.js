@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, UploadFile, Toast } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, UploadFile, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useSelector } from "react-redux";
 import { Loader } from "../components/Loader";
 import Timeline from "../components/NDCTimeline";

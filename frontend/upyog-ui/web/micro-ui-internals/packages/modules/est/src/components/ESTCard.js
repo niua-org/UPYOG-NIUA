@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { EmployeeModuleCard, PropertyHouse } from "@upyog/digit-ui-react-components";
-import { useHistory } from "react-router-dom";
+import { EmployeeModuleCard, PropertyHouse } from "@nudmcdgnpm/digit-ui-react-components";
 
 // EST Card Component
 // This component renders a module card for Estate Management with navigation links to various EST functionalities.
 
 const ESTCard = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {

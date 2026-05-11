@@ -10,10 +10,10 @@ import {
     StatusTable,
     SubmitBar,
     DeleteIcon
-  } from "@upyog/digit-ui-react-components";
+  } from "@nudmcdgnpm/digit-ui-react-components";
   import React, { useState } from "react";
   import { useTranslation } from "react-i18next";
-  import { useHistory } from "react-router-dom";
+  
   import {
     checkForNA
   } from "../../../utils";
@@ -32,9 +32,9 @@ import {
 
   const ActionButton = ({ jumpTo }) => {
     const { t } = useTranslation();
-    const history = useHistory();
+    const navigate = Digit.Hooks.useCustomNavigate();
     function routeTo() {
-      history.push(jumpTo);
+      navigate(jumpTo);
     }
   
     return <LinkButton label={t("CS_COMMON_EDIT")} className="check-page-link-button" onClick={routeTo} />;
@@ -42,7 +42,7 @@ import {
   
   const CheckPage = ({ onSubmit, value = {} }) => {
     const { t } = useTranslation();
-    const history = useHistory();
+    const navigate = Digit.Hooks.useCustomNavigate();
     const [params, setParams] = Digit.Hooks.useSessionStorage("ADS_CREATE", {});
     const {
       applicant,
@@ -90,14 +90,12 @@ import {
       // Update the state with the modified params
       setParams(updatedParams);
     };
-    const adslistRows =  params?.adslist?.cartDetails.map((slot) => (
-      {
-        addType: slot.addType,
-        faceArea:slot.faceArea,
-        nightLight:slot.nightLight,
-        bookingDate:slot.bookingDate,
-      }
-    )) || [];
+    const adslistRows = params?.adslist?.cartDetails?.map((slot) => ({
+      addType: slot.addType,
+      faceArea: slot.faceArea,
+      nightLight: slot.nightLight,
+      bookingDate: slot.bookingDate,
+    })) || [];
     const [agree, setAgree] = useState(false);
     const setdeclarationhandler = () => {
       setAgree(!agree);
@@ -216,12 +214,12 @@ import {
                   },
                 })}
                 isPaginationRequired={false}
-                totalRecords={ params?.adslist?.cartDetails.length}
+                totalRecords={params?.adslist?.cartDetails?.length || 0}
               />
           <CardSubHeader style={{ fontSize: "24px" }}>{t("ADS_DOCUMENTS_DETAILS")}</CardSubHeader>
           <StatusTable>
           <Card>
-            {documents && documents?.documents.map((doc, index) => (
+            {documents?.documents?.map((doc, index) => (
                   <ADSDocument value={value} Code={doc?.documentType} index={index} />
             ))}
           </Card>

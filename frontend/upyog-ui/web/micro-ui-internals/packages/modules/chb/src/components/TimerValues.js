@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Toast } from "@upyog/digit-ui-react-components";
+import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 /**
  * TimerValues Component

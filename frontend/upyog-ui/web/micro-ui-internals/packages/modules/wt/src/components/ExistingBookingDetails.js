@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Loader, Card, KeyNote } from "@upyog/digit-ui-react-components";
+import { Loader, Card, KeyNote } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import {useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,moduleKey }) => {
   const { t } = useTranslation();

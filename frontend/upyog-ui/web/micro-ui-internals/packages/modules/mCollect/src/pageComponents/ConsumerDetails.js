@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, CardSectionHeader } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, CardSectionHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import * as func from "../pages/employee/Utils/Category";
 import { sortDropdownNames } from "../pages/employee/Utils/Sortbyname";
 import { useTranslation } from "react-i18next";
 import _ from "lodash";
 import { useLocation } from "react-router-dom";
-import { getUniqueItemsFromArray, commonTransform, stringReplaceAll,getPattern, convertEpochToDate } from "../utils";
+import { stringReplaceAll, convertEpochToDate } from "../utils";
 
 const createConsumerDetails = () => ({
   ConsumerName: "",
@@ -155,18 +155,18 @@ const OwnerForm1 = (_props) => {
                 name={"ConsumerName"}
                 defaultValue={consumerdetail?.ConsumerName}
                 rules={{ required: t("REQUIRED_FIELD"), validate: { pattern: (val) => (/^[a-zA-Z ]*$/.test(val) ? true : t("CS_ADDCOMPLAINT_NAME_ERROR")) } }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
                     errorStyle={(localFormState.touched.ConsumerName && errors?.ConsumerName?.message) ? true : false}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       //setFocusIndex({ index: consumerdetail.key, type: "ConsumerName" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                     disable={isEdit}
                   />
@@ -183,16 +183,16 @@ const OwnerForm1 = (_props) => {
                 name={"mobileNumber"}
                 defaultValue={consumerdetail?.mobileNumber}
                 rules={{ required: t("REQUIRED_FIELD"), validate: (v) => (/^[6789]\d{9}$/.test(v) ? true : t("CORE_COMMON_MOBILE_ERROR")) }}
-                render={(props) => (
+                render={({ field }) => (
                   <MobileNumber
-                    value={props.value}
+                    value={field.value}
                     autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "mobileNumber"}
                     onChange={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                       setFocusIndex({ index: consumerdetail.key, type: "mobileNumber" });
                     }}
                     labelStyle={{ marginTop: "unset", border: "1px solid #464646", borderRight: "none" }}
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                     errorStyle={(localFormState.touched.mobileNumber && errors?.mobileNumber?.message) ? true : false}
                     disable={isEdit}
                     //style={ isMulitpleOwners ? { background: "#FAFAFA" }: ""}
@@ -211,13 +211,13 @@ const OwnerForm1 = (_props) => {
           name="emailId"
           defaultValue={consumerdetail?.emailId}
           rules={{  validate: { pattern: (val) => (/^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(val) ? true : t("CS_ADDCOMPLAINT_EMAIL_ERROR")) } }}
-          render={(props) => (
+          render={({ field }) => (
             <TextInput
               t={t}
               isMandatory={false}
-              value={props.value}
+              value={field.value}
                             onChange={(e) => {
-                props.onChange(e.target.value)
+                field.onChange(e.target.value)
               }}
               disable={isEdit}
             />

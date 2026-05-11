@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 // import { useTranslation } from "react-i18next";
-import { useRouteMatch, Switch, Route, Link } from "react-router-dom";
+import { Route, Link, Routes } from "react-router-dom";
 import { CollectPayment } from "./payment-collect";
 import { SuccessfulPayment, FailedPayment } from "./response";
 // import { SubformComposer } from "../../hoc";
@@ -14,7 +14,7 @@ subFormRegistry?.addSubForm("testForm", testForm);
 
 const EmployeePayment = ({ stateCode, cityCode, moduleCode }) => {
   const userType = "employee";
-  const { path: currentPath } = useRouteMatch();
+  const { path: currentPath } = Digit.Hooks.useModuleBasePath();
 
   const { t } = useTranslation();
 
@@ -31,20 +31,20 @@ const EmployeePayment = ({ stateCode, cityCode, moduleCode }) => {
         {isFsm ? <Link to={`/upyog-ui/employee/fsm/home`}>/ {t("ES_TITLE_FSM")} </Link> : null}
         {isFsm ? <Link to={`/upyog-ui/employee/fsm/inbox`}>/ {t("ES_TITLE_INBOX")}</Link> : null}/ {link}
       </p>
-      <Switch>
-        <Route path={`${currentPath}/collect/:businessService/:consumerCode`}>
+      <Routes>
+        <Route path={`/collect/:businessService/:consumerCode`}>
           <CollectPayment {...commonProps} basePath={currentPath} />
         </Route>
-        <Route path={`${currentPath}/success/:businessService/:receiptNumber/:consumerCode`}>
+        <Route path={`/success/:businessService/:receiptNumber/:consumerCode`}>
           <SuccessfulPayment {...commonProps} />
         </Route>
-        <Route path={`${currentPath}/integration/:moduleName/:pageName`}>
+        <Route path={`/integration/:moduleName/:pageName`}>
           <IFrameInterface {...commonProps} />
         </Route>
-        <Route path={`${currentPath}/failure`}>
+        <Route path={`/failure`}>
           <FailedPayment {...commonProps} />
         </Route>
-      </Switch>
+      </Routes>
     </React.Fragment>
   );
 };

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Card, Banner, CardText, SubmitBar, LinkButton } from "@upyog/digit-ui-react-components";
+import { Card, Banner, CardText, SubmitBar, LinkButton } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import getPDFData from "../../../getPDFData";
 
 const GetActionMessage = () => {
@@ -132,7 +132,6 @@ const Response = ({ data, onSuccess }) => {
             additionalDetails: {
               totalAmount: amount,
               tripAmount: typeof amountPerTrip === "number" ? JSON.stringify(amountPerTrip) : amountPerTrip,
-              propertyID : propertyID?.propertyID,
               distancefromroad : data?.roadWidth?.distancefromroad,
               roadWidth: data?.roadWidth?.roadWidth,
               propertyID : data?.cptId?.id
@@ -165,7 +164,7 @@ const Response = ({ data, onSuccess }) => {
   };
   const isSuccess = !successData ? mutation?.isSuccess : true;
 
-  return mutation.isLoading || (mutation.isIdle && !mutationHappened) ? (
+  return mutation.isPending || (mutation.isIdle && !mutationHappened) ? (
     <Loader />
   ) : (
     <Card>

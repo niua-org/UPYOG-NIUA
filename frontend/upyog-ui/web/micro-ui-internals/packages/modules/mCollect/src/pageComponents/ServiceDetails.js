@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, CardSectionHeader } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, CardSectionHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import * as func from "../pages/employee/Utils/Category";
 import { sortDropdownNames } from "../pages/employee/Utils/Sortbyname";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import _ from "lodash";
-import { getUniqueItemsFromArray, commonTransform, stringReplaceAll,getPattern, convertEpochToDate } from "../utils";
+import { stringReplaceAll, convertEpochToDate } from "../utils";
 
 const createConsumerDetails = (getCities) => ({
    city: getCities()[0] ? getCities()[0] : "",
@@ -256,20 +256,17 @@ const OwnerForm1 = (_props) => {
               rules={{ required: t("REQUIRED_FIELD") }}
               defaultValue={consumerdetail?.city}
               control={control}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
+                  selected={field.value}
                   id="city"
                   freeze={true}
                   disable={true}
-                  //errorStyle={(localFormState.touched.financialYear && errors?.financialYear?.message) ? true : false}
-                  // disable={financialYearOptions?.length === 1}
                   option={getCities()}
-                  select={props.onChange}
+                  select={field.onChange}
                   optionKey="i18nKey"
-                  onBlur={props.onBlur}
-                  //disable={isRenewal}
+                  onBlur={field.onBlur}
                   t={t}
                 />
               )}
@@ -282,20 +279,17 @@ const OwnerForm1 = (_props) => {
               rules={{ required: t("REQUIRED_FIELD") }}
               defaultValue={consumerdetail?.category}
               control={control}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   isMandatory
                   className="form-field"
-                  selected={props.value}
+                  selected={field.value}
                   optionCardStyles={{maxHeight:"960%"}}
-                  //errorStyle={(localFormState.touched.financialYear && errors?.financialYear?.message) ? true : false}
-                  // disable={financialYearOptions?.length === 1}
                   id="businessService"
                   option={sortDropdownNames(categoires, "code", t)}
-                  //option={categoires}
-                  select={props.onChange}
+                  select={field.onChange}
                   optionKey="i18nkey"
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                   disable={isEdit}
                   t={t}
                 />
@@ -309,19 +303,16 @@ const OwnerForm1 = (_props) => {
               rules={{ required: t("REQUIRED_FIELD") }}
               defaultValue={consumerdetail?.categoryType}
               control={control}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   isMandatory
                   className="form-field"
-                  selected={props.value}
-                  //errorStyle={(localFormState.touched.financialYear && errors?.financialYear?.message) ? true : false}
-                  // disable={financialYearOptions?.length === 1}
+                  selected={field.value}
                   id="businessService"
                   option={sortDropdownNames(categoiresType, "code", t)}
-                  //option={categoires}
-                  select={props.onChange}
+                  select={field.onChange}
                   optionKey="i18nkey"
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                   disable={isEdit}
                   t={t}
                 />
@@ -337,13 +328,11 @@ const OwnerForm1 = (_props) => {
                 isMandatory={true}
                 defaultValue={consumerdetail?.fromDate}
                 control={control}
-                render={(props) => (
+                render={({ field }) => (
                   <DatePicker
-                    date={props.value}
-                    // date={CommencementDate} 
+                    date={field.value}
                     name="fromDate"
-                    onChange={props.onChange}
-                    //disabled={isRenewal}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -358,13 +347,11 @@ const OwnerForm1 = (_props) => {
                 isMandatory={true}
                 defaultValue={consumerdetail?.toDate}
                 control={control}
-                render={(props) => (
+                render={({ field }) => (
                   <DatePicker
-                    date={props.value}
-                    // date={CommencementDate} 
+                    date={field.value}
                     name="toDate"
-                    onChange={props.onChange}
-                    //disabled={isRenewal}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -382,24 +369,21 @@ const OwnerForm1 = (_props) => {
                 isMandatory={tax.isRequired}
                 componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
                 rules={tax.isRequired?{ required: t("REQUIRED_FIELD")}:"" }
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{display:"flex"}}>
                   <div className="employee-card-input employee-card-input--front">₹</div>
                   <TextInput
-                    value={props.value}
-                    //className="employee-card-input employee-card-input--front"
+                    value={field.value}
                     componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
                     autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                    //errorStyle={(localFormState.touched.tradeName && errors?.tradeName?.message) ? true : false}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: consumerdetail.key, type: tax?.code });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
-                    //disable={isRenewal}
                   />
                   </div>
                 )}

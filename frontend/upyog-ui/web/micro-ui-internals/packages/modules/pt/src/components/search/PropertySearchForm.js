@@ -1,4 +1,4 @@
-import { CardLabelError, SearchField, SearchForm, SubmitBar, TextInput,Localities,MobileNumber, Dropdown } from "@upyog/digit-ui-react-components";
+import { CardLabelError, SearchField, SearchForm, SubmitBar, TextInput,Localities,MobileNumber, Dropdown } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -105,10 +105,10 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 defaultValue={formValue?.[key]}
                 rules= {field.validation}
                 control={control}
-                render={(props, customProps) => (
+                render={({ field }, customProps) => (
                   <field.customComponent
                     selectLocality={(d) => {
-                      props.onChange(d);
+                      field.onChange(d);
                     }}
                     tenantId={tenantId}
                     selected={formValue?.[key]}
@@ -120,7 +120,7 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
             <div>
             <MobileNumber
               name="mobileNumber"
-              inputRef={register({
+              {...register(key, {
                 value: getValues(key),
                 shouldUnregister: true,
                 ...validation,
@@ -140,7 +140,7 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
           name={key}
           option={usageCategoryMajorMenu()}
           select={(e) => setProptype(e)}
-          inputRef={register({
+          {...register(key, {
             value: getValues(key),
             shouldUnregister: true,
           })}
@@ -153,11 +153,11 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
             <TextInput
                   name={key}
                   type={field?.type}
-                  inputRef={register({
-                    value: getValues(key),
-                    shouldUnregister: true,
-                    ...validation,
-                  })}
+                  {...register(key, {
+                  value: getValues(key),
+                  shouldUnregister: true,
+                  ...validation,
+                })}
                 />}
                 <CardLabelError style={{ marginTop: "-10px", marginBottom: "-10px" }}>{t(formState?.errors?.[key]?.message)}</CardLabelError>
               </SearchField>

@@ -1,4 +1,4 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { pdfDocumentName, pdfDownloadLink } from "../utils";
@@ -29,7 +29,7 @@ function NDCDocument({ value = {} }) {
       <React.Fragment>
         <div className="document-grid">
           {documents?.map((document, index) => {
-            let documentLink = pdfDownloadLink(data.pdfFiles, document?.uuid);
+            let documentLink = pdfDownloadLink(data?.pdfFiles, document?.uuid);
             return (
               <a target="_blank" rel="noopener noreferrer" href={documentLink} className="document-link" key={index}>
                 <div className="document-card">

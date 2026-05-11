@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Toast } from "@upyog/digit-ui-react-components";
-import { useParams } from "react-router-dom";
+import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import EWSearchApplication from "../../components/SearchApplication";
 

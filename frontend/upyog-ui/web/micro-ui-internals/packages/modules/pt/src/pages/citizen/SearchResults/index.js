@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Route, Switch, useRouteMatch } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { config as defaultConfig } from "./config";
 import SearchResultsComponent from "./searchResults";
 
 const CitizenSearchResults = (props) => {
   const { config: propConfig, onSelect, clearParams } = props;
   const { t } = useTranslation();
-  const { path } = useRouteMatch();
+  const { path } = Digit.Hooks.useModuleBasePath();
   let config = propConfig ? [propConfig] : defaultConfig;
 
   const params = useMemo(() => {
@@ -21,8 +21,8 @@ const CitizenSearchResults = (props) => {
   }, [config]);
 
   return (
-    <Switch>
-      <Route path={`${path}`} exact>
+    <Routes>
+      <Route path={`*`}>
         <SearchResultsComponent
           template={params[0].labels}
           header={params[0].texts.header}
@@ -34,7 +34,7 @@ const CitizenSearchResults = (props) => {
           clearParams={clearParams}
         />
       </Route>
-    </Switch>
+    </Routes>
   );
 };
 

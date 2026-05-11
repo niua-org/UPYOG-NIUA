@@ -1,8 +1,8 @@
 import React from "react";
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Route, useLocation,  Routes } from "react-router-dom";
 
 import CreatePropertyForm from '../../pageComponents/createForm';
 import PTAcknowledgement from '../../pageComponents/PTAcknowledgement';
@@ -12,9 +12,9 @@ const NewApplication = ({ path }) => {
   const { t } = useTranslation();
   
   const queryClient = useQueryClient();
-  const match = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("PT_CREATE_PROPERTY", {});
@@ -24,7 +24,7 @@ const NewApplication = ({ path }) => {
   const redirectUrl = new URLSearchParams(search).get('redirectToUrl');
 
   const createProperty = async () => {
-    history.push(`${match.path}/acknowledgement`);
+    navigate(`acknowledgement`);
   };
 
   const onSuccess = () => {
@@ -37,14 +37,10 @@ const NewApplication = ({ path }) => {
   }
 
   return (
-    <Switch>
-      <Route exact path={`${match.path}`}>
-        <CreatePropertyForm onSubmit={createProperty} value={params} redirectUrl={redirectUrl} userType={"employee"} />
-      </Route>
-      <Route exact path={`${match.path}/save-property`}>
-        <PTAcknowledgement data={params} onSuccess={onSuccess} redirectUrl={redirectUrl} userType={"employee"} />
-      </Route>
-    </Switch>
+    <Routes>
+      <Route path="" element={<CreatePropertyForm onSubmit={createProperty} value={params} redirectUrl={redirectUrl} userType={"employee"} />} />
+      <Route path={`save-property`} element={<PTAcknowledgement data={params} onSuccess={onSuccess} redirectUrl={redirectUrl} userType={"employee"} />} />
+    </Routes>
   );
 };
 

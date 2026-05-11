@@ -1,4 +1,4 @@
-import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { stringReplaceAll, getPattern } from "../utils";
 import cloneDeep from "lodash/cloneDeep";
@@ -231,18 +231,18 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.connectionType}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("connectionType")}
                                         disable={false}
                                         option={connectionTypeList}
-                                        errorStyle={(localFormState.touched.connectionType && errors?.connectionType?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.connectionType && errors?.connectionType?.message) ? true : false}
                                         select={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
@@ -257,13 +257,13 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.waterSource}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("waterSource")}
                                         disable={false}
                                         option={waterSourceList}
-                                        errorStyle={(localFormState.touched.waterSource && errors?.waterSource?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.waterSource && errors?.waterSource?.message) ? true : false}
                                         select={(e) => {
 
 
@@ -274,10 +274,10 @@ const ConnectionDetails = (_props) => {
                                             const listOfSubSource = waterSubSourceData?.filter(data => e?.code?.split(".")[0] == data?.code?.split(".")[0]);
                                             setWaterSubSourceList(listOfSubSource);
 
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
@@ -292,18 +292,18 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.sourceSubData}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("sourceSubData")}
                                         disable={false}
                                         option={waterSubSourceList}
-                                        errorStyle={(localFormState.touched.sourceSubData && errors?.sourceSubData?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.sourceSubData && errors?.sourceSubData?.message) ? true : false}
                                         select={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
@@ -318,18 +318,18 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.pipeSize}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("pipeSize")}
                                         disable={false}
                                         option={pipeSizeList}
-                                        errorStyle={(localFormState.touched.pipeSize && errors?.pipeSize?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.pipeSize && errors?.pipeSize?.message) ? true : false}
                                         select={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
@@ -346,18 +346,18 @@ const ConnectionDetails = (_props) => {
                                     rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                     type="number"
                                     isMandatory={true}
-                                    render={(props) => (
+                                    render={({ field }) => (
                                         <TextInput
                                             type="number"
-                                            value={props.value}
+                                            value={field.value}
                                             autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfTaps"}
-                                            errorStyle={(localFormState.touched.noOfTaps && errors?.noOfTaps?.message) ? true : false}
+                                            errorStyle={(localFormState.touchedFields.noOfTaps && errors?.noOfTaps?.message) ? true : false}
                                             onChange={(e) => {
-                                                props.onChange(e.target.value);
+                                                field.onChange(e.target.value);
                                                 setFocusIndex({ index: connectionDetail?.key, type: "noOfTaps" });
                                             }}
                                             labelStyle={{ marginTop: "unset" }}
-                                            onBlur={props.onBlur}
+                                            onBlur={field.onBlur}
                                         />
                                     )}
                                 />
@@ -376,18 +376,18 @@ const ConnectionDetails = (_props) => {
                                         rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         type="number"
                                         isMandatory={true}
-                                        render={(props) => (
+                                    render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 type="number"
                                                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfWaterClosets"}
-                                                errorStyle={(localFormState.touched.noOfWaterClosets && errors?.noOfWaterClosets?.message) ? true : false}
+                                                errorStyle={(localFormState.touchedFields.noOfWaterClosets && errors?.noOfWaterClosets?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: connectionDetail?.key, type: "noOfWaterClosets" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />
@@ -404,18 +404,18 @@ const ConnectionDetails = (_props) => {
                                         rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         type="number"
                                         isMandatory={true}
-                                        render={(props) => (
+                                        render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 type="number"
                                                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfToilets"}
                                                 errorStyle={(localFormState.touched.noOfToilets && errors?.noOfToilets?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: connectionDetail?.key, type: "noOfToilets" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />

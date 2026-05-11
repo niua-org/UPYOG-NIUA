@@ -1,8 +1,8 @@
-import { Banner, Card, Loader, CardText, ActionBar, SubmitBar,Menu } from "@upyog/digit-ui-react-components";
-import { useQueryClient } from "react-query";
+import { Banner, Card, Loader, CardText, ActionBar, SubmitBar,Menu } from "@nudmcdgnpm/digit-ui-react-components";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect,useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link,useHistory } from "react-router-dom";
+import { Link } from "react-router-dom";
 const getMessage = (mutation) => {
   if (mutation.isSuccess) return mutation.data?.ServiceDefinition?.[0]?.id;
   return "";
@@ -26,7 +26,7 @@ const Acknowledgement = (props) => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const mutation = Digit.Hooks.survey.useServeyCreateDef();
   const { state } = props.location;
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [isActionClicked,setIsActionClicked] = useState(false) 
   useEffect(() => {
     const onSuccess = () => {
@@ -40,7 +40,7 @@ const Acknowledgement = (props) => {
     };
   }, []);
 
-  if (mutation.isLoading && !mutation.isIdle) {
+  if (mutation.isPending && !mutation.isIdle) {
     return <Loader />;
   }
 
@@ -53,13 +53,13 @@ const Acknowledgement = (props) => {
     }))
   }
   // const actionClickHandler = (option) => {
-  //   if(option === "Go Back to home") history.push("/upyog-ui/employee")
-  //   else if(option === "Create another survey") history.push("/upyog-ui/employee/engagement/surveys/create")
+  //   if(option === "Go Back to home") navigate("/upyog-ui/employee")
+  //   else if(option === "Create another survey") navigate("/upyog-ui/employee/engagement/surveys/create")
   // }
 
    const actionClickHandler = (option) => {
-    if(option === t("GO_BACK_TO_HOME")) history.push("/upyog-ui/employee")
-    else if(option === t("CREATE_ANOTHER_SURVEY")) history.push("/upyog-ui/employee/engagement/surveys/create")
+    if(option === t("GO_BACK_TO_HOME")) navigate("/upyog-ui/employee")
+    else if(option === t("CREATE_ANOTHER_SURVEY")) navigate("/upyog-ui/employee/engagement/surveys/create")
   }
   return (
     <Card>

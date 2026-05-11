@@ -1,7 +1,7 @@
-import { FormComposer, Loader } from "@upyog/digit-ui-react-components";
+import { FormComposer, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import { useParams } from "react-router-dom";
 import { assignConfig } from "../../../config/Create/assignConfig";
 
@@ -10,7 +10,7 @@ const NewAssetApplication = () => {
   const { t } = useTranslation();
   const [canSubmit, setSubmitValve] = useState(false);
   const defaultValues = {};
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { id: applicationNo } = useParams();
   const { data: applicationDetails } = Digit.Hooks.asset.useAssetApplicationDetail(t, tenantId, applicationNo);
   
@@ -64,7 +64,7 @@ const NewAssetApplication = () => {
       },   
     };
 
-    history.replace("/upyog-ui/employee/asset/assetservice/assign-response", { Assets: formData }); 
+    navigate("/upyog-ui/employee/asset/assetservice/assign-response", { replace: true, state: { Assets: formData } }); 
     
 
   };

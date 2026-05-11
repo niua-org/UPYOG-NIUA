@@ -1,26 +1,15 @@
 import {
-  CardSectionHeader,
-  Header,
-  MultiUploadWrapper,
-  PDFSvg,
   Row,
   StatusTable,
-  LabelFieldPair,
-  CardLabel,
   Card,
   CardSubHeader,
   ActionBar,
   SubmitBar,
-  Menu,
-  LinkButton,
-  TLTimeLine,
-  DisplayPhotos,
-  StarRated,
   MultiLink
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { businessServiceList, convertEpochToDate, stringReplaceAll } from "../../../utils";
 import { format } from "date-fns";
 import NDCDocument from "../../../pageComponents/NDCDocument";
@@ -38,7 +27,7 @@ import { Loader } from "../../../components/Loader";
 const CitizenApplicationOverview = () => {
   const { id } = useParams();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   // const tenantId = Digit.ULBService.getCurrentTenantId();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const state = tenantId?.split(".")[0];
@@ -291,7 +280,7 @@ const CitizenApplicationOverview = () => {
               label={t("COMMON_EDIT")}
               onSubmit={() => {
                 const id = applicationDetails?.Applications?.[0]?.applicationNo;
-                history.push(`/upyog-ui/citizen/ndc/new-application/${id}`);
+                navigate(`/upyog-ui/citizen/ndc/new-application/${id}`);
               }}
             />
           </ActionBar>

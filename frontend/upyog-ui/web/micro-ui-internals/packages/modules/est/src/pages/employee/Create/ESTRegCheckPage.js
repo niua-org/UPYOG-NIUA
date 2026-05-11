@@ -9,9 +9,8 @@ import {
   SubmitBar,
   CheckBox,
   EditIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 
 /**
  * ActionButton
@@ -21,7 +20,7 @@ import { useHistory } from "react-router-dom";
  */
 
 const ActionButton = ({ jumpTo }) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   return (
     <LinkButton
       label={

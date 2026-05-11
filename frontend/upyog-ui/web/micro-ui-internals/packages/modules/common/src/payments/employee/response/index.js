@@ -1,8 +1,8 @@
-import React, { useEffect, useState, Fragment } from "react";
-import { Banner, Card, CardText, SubmitBar, ActionBar, DownloadPrefixIcon, Loader, Menu } from "@upyog/digit-ui-react-components";
-import { useHistory, useParams, Link, LinkLabel } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Banner, Card, CardText, SubmitBar, ActionBar, DownloadPrefixIcon, Loader, Menu, LinkLabel } from "@nudmcdgnpm/digit-ui-react-components";
+import { useParams, Link,  } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const convertEpochToDate = (dateEpoch) => {
   // Returning NA in else case because new Date(null) returns Current date from calender
@@ -19,7 +19,7 @@ export const convertEpochToDate = (dateEpoch) => {
   }
 };
 export const SuccessfulPayment = (props) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { addParams, clearParams } = props;
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -27,7 +27,6 @@ export const SuccessfulPayment = (props) => {
   const { IsDisconnectionFlow } = Digit.Hooks.useQueryParams();
   const [displayMenu, setDisplayMenu] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
-  const [printing, setPrinting] = useState(false);
   const isFSMResponse = location?.pathname?.includes("payment/success/FSM.TRIP_CHARGES");
   const combineResponseFSM = isFSMResponse ? `${t("PAYMENT_COLLECT_LABEL")} / ${t("PAYMENT_COLLECT")}` : t("PAYMENT_LOCALIZATION_RESPONSE");
   const mutation = Digit.Hooks.chb.useChbCreateAPI(tenantId, false);
@@ -73,9 +72,9 @@ export const SuccessfulPayment = (props) => {
   useEffect(() => {
     switch (selectedAction) {
       case "GO_TO_HOME":
-        return history.push("/upyog-ui/employee");
+        return navigate("/upyog-ui/employee");
       case "ASSIGN_TO_DSO":
-        return history.push(`/upyog-ui/employee/fsm/application-details/${consumerCode}`);
+        return navigate(`/upyog-ui/employee/fsm/application-details/${consumerCode}`);
       default:
         return null;
     }
@@ -490,34 +489,7 @@ export const SuccessfulPayment = (props) => {
   };
   if (businessService?.includes("BPA") && isBpaSearchLoading) return <Loader />;
 
-  // Functions for printing NDC receipt.
-  const printNDCReceipt = async () => {
-    if (printing) return;
-    setPrinting(true);
-    try {
-      console.log("consumerCode for ndc", consumerCode);
-      console.log("tenantId for ndc", tenantId);
-      const applicationDetails = await Digit.NDCService.NDCsearch({
-        tenantId,
-        filters: { applicationNo: consumerCode }
-      });
-      let application = applicationDetails?.Applications?.[0];
-      let fileStoreId = applicationDetails?.Applications?.[0]?.paymentReceiptFilestoreId;
-      if (!fileStoreId) {
-        const payments = await Digit.PaymentService.getReciept(tenantId, businessService, { receiptNumbers: receiptNumber });
-        let response = await Digit.PaymentService.generatePdf(
-          tenantId,
-          { Payments: [{ ...(payments?.Payments?.[0] || {}), ...application }] },
-          "ndc-receipt"
-        );
-        fileStoreId = response?.filestoreIds[0];
-      }
-      const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: fileStoreId });
-      window.open(fileStore[fileStoreId], "_blank");
-    } finally {
-      setPrinting(false);
-    }
-  };
+
 
   const svCertificate = async () => {
     //const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -729,23 +701,6 @@ export const SuccessfulPayment = (props) => {
               >
                 <DownloadPrefixIcon />
                 {t("BPA_OC_CERTIFICATE")}
-              </div>
-            ) : null}
-            {businessService == "NDC" ? (
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "20px", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
-                <div className="primary-label-btn d-grid" onClick={printing ? undefined : printNDCReceipt}>
-                  {printing ? (
-                    <Loader />
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
-                        <path d="M0 0h24v24H0z" fill="none" />
-                        <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
-                      </svg>
-                      {t("NDC_FEE_RECEIPT")}
-                    </>
-                  )}
-                </div>
               </div>
             ) : null}
             {businessService == "sv-services" ? (

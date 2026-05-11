@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, useHistory, Redirect } from "react-router-dom";
+import { useParams,  Navigate } from "react-router-dom";
 
-import { BackButton, Card, CardHeader, CardText, TextArea, SubmitBar,Toast } from "@upyog/digit-ui-react-components";
+import { BackButton, Card, CardHeader, CardText, TextArea, SubmitBar,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { updateComplaints } from "../../../redux/actions/index";
 import { LOCALIZATION_KEY } from "../../../constants/Localization";
 
 const AddtionalDetails = (props) => {
   // const [details, setDetails] = useState(null);
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   let { id } = useParams();
   const dispatch = useDispatch();
   const appState = useSelector((state) => state)["common"];
@@ -22,16 +22,16 @@ const AddtionalDetails = (props) => {
     if (appState.complaints) {
       const { response } = appState.complaints;
       if (response && response.responseInfo.status === "successful") {
-        history.push(`${props.match.path}/response/:${id}`);
+        navigate(`${props.parentRoute}/response/${id}`);
       }
     }
-  }, [appState.complaints, props.history]);
+  }, [appState.complaints, props.parentRoute, id, navigate]);
 
   const updateComplaint = useCallback(
     async (complaintDetails) => {
       try{
         await dispatch(updateComplaints(complaintDetails));
-        history.push(`${props.match.path}/response/${id}`);
+        navigate(`${props.parentRoute}/response/${id}`);
       }
       catch(e)
       {
@@ -74,11 +74,12 @@ const AddtionalDetails = (props) => {
       updateComplaint({ service: complaintDetails.service, workflow: complaintDetails.workflow });
     }
     return (
-      <Redirect
+      <Navigate
         to={{
           pathname: `${props.parentRoute}/response`,
           state: { complaintDetails },
         }}
+        replace
       />
     );
   }

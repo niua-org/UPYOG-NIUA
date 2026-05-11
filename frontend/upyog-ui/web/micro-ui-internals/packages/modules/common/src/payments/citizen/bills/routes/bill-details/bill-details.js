@@ -1,7 +1,7 @@
-import { Card, CardSubHeader, Header, KeyNote, Loader, RadioButtons, SubmitBar, TextInput } from "@upyog/digit-ui-react-components";
+import { Card, CardSubHeader, Header, KeyNote, Loader, RadioButtons, SubmitBar, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useLocation, useParams, Redirect } from "react-router-dom";
+import { useLocation, useParams,  Navigate } from "react-router-dom";
 import ArrearSummary from "./arrear-summary";
 import BillSumary from "./bill-summary";
 import { stringReplaceAll } from "./utils";
@@ -10,7 +10,7 @@ import { timerEnabledForBusinessService } from "./utils";
 
 const BillDetails = ({ paymentRules, businessService }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { state, pathname, search } = useLocation();
   const userInfo = Digit.UserService.getUser();
   let { consumerCode } = useParams();
@@ -152,26 +152,26 @@ const BillDetails = ({ paymentRules, businessService }) => {
         ? application?.pdfData?.advanceAmount
         : amount;
     if (window.location.href.includes("mcollect")) {
-      history.push(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}?workflow=mcollect`, {
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}?workflow=mcollect`, {
         paymentAmount,
         tenantId: billDetails.tenantId,
       });
     } else if (wrkflow === "WNS") {
-      history.push(`/upyog-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}?workflow=WNS&ConsumerName=${ConsumerName}`, {
+      navigate(`/upyog-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}?workflow=WNS&ConsumerName=${ConsumerName}`, {
         paymentAmount,
         tenantId: billDetails.tenantId,
         name: bill.payerName,
         mobileNumber: bill.mobileNumber && bill.mobileNumber?.includes("*") ? userData?.user?.[0]?.mobileNumber : bill.mobileNumber,
       });
     } else if (businessService === "PT") {
-      history.push(`/upyog-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
+      navigate(`/upyog-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
         paymentAmount,
         tenantId: billDetails.tenantId,
         name: bill.payerName,
         mobileNumber: bill.mobileNumber && bill.mobileNumber?.includes("*") ? userData?.user?.[0]?.mobileNumber : bill.mobileNumber,      });
     } 
     else if (timerEnabledForBusinessService(businessService)) {
-      history.push(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, {
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, {
         paymentAmount, 
         tenantId: billDetails.tenantId, 
         propertyId: propertyId ,
@@ -180,7 +180,7 @@ const BillDetails = ({ paymentRules, businessService }) => {
       });
       } 
     else {
-      history.push(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId });
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId });
     }
   };
   
@@ -274,7 +274,7 @@ const BillDetails = ({ paymentRules, businessService }) => {
                 <TextInput className="text-indent-xl" onChange={(e) => onChangeAmount(e.target.value)} value={amount} disable={getTotal() === 0} />
               )
             ) : businessService === "FSM.TRIP_CHARGES" ? (
-              <TextInput className="text-indent-xl" value={application?.pdfData?.advanceAmount !== 0 ? application?.pdfData?.advanceAmount:application?.pdfData?.totalAmount} onChange={() => {}} disable={true} />
+              <TextInput className="text-indent-xl" value={application?.pdfData?.advanceAmount} onChange={() => {}} disable={true} />
             ):((
               <TextInput className="text-indent-xl" value={getTotal()} onChange={() => {}} disable={true} />
             ))}

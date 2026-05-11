@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CardLabel, CardLabelDesc, CardSubHeader, Modal,CardText,DeleteIcon } from "@upyog/digit-ui-react-components";
+import { CardLabel, CardLabelDesc, CardSubHeader, Modal,CardText,DeleteIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import ApplicationTable from "./ApplicationTable";
 
@@ -81,7 +81,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
     },
     // { Header: t("TOTAL_PRICE"), accessor: "price" },
   ];
-  let cartDetails = params?.adslist?.cartDetails.map((details) => {
+  let cartDetails = params?.adslist?.cartDetails?.map((details) => {
     return { 
       addType:details.addTypeCode,
       faceArea:details.faceAreaCode,
@@ -100,10 +100,12 @@ const ADSCartAndCancellationPolicyDetails = () => {
   };
   let mutation = Digit.Hooks.ads.useADSDemandEstimation();
 
-  if (showdemandEstimation === false) {
-    mutation.mutate(formdata);
-    setShowDemandEstimation(true);
-  }
+  React.useEffect(() => {
+    if (showdemandEstimation === false && cartDetails?.length > 0) {
+      mutation.mutate(formdata);
+      setShowDemandEstimation(true);
+    }
+  }, [showdemandEstimation]);
 
   const handleCartClick = () => {
     setShowViewCart((prev) => !prev);
@@ -172,7 +174,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
                   height:"30px",
                   textAlign:"center"
               }}>
-              <div> {params?.adslist?.cartDetails.length}</div>
+              <div> {params?.adslist?.cartDetails?.length}</div>
 
               </div>
             </div>
@@ -211,7 +213,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
           }}
           children={
             <div>
-              {cancelpolicyData.length > 0 ? (
+              {cancelpolicyData?.length > 0 ? (
                 renderCancellationPolicy(cancelpolicyData[0].termsAndCondition)
               ) : (
                 <CardLabel style={{ fontSize: "20px" }}>Loading...</CardLabel>
@@ -260,7 +262,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
               },
             })}
             isPaginationRequired={false}
-            totalRecords={params?.adslist?.cartDetails.length}
+            totalRecords={params?.adslist?.cartDetails?.length || 0}
           />
         </Modal>
       )}

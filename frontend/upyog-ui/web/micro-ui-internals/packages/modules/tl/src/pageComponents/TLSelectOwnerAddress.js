@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TextInput, CheckBox, CardLabel, LabelFieldPair, TextArea, CitizenInfoLabel } from "@upyog/digit-ui-react-components";
+import { TextInput, CheckBox, CardLabel, LabelFieldPair, TextArea, CitizenInfoLabel } from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 import FormStep from "../../../../react-components/src/molecules/FormStep"

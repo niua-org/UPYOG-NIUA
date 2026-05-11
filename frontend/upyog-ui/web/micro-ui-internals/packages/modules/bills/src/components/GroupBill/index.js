@@ -1,17 +1,17 @@
 import React, { Fragment, useEffect, useCallback, useMemo, useState } from "react";
-import { SearchForm, Table, Card, Loader, Header, DownloadBtnCommon, DownloadIcon,MultiLink,Toast } from "@upyog/digit-ui-react-components";
+import { SearchForm, Table, Card, Loader, Header, DownloadBtnCommon, DownloadIcon,MultiLink,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import SearchFields from "./SearchFields";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { useHistory } from "react-router-dom";
+
 import { join } from "lodash";
 //import MobileCancelBill from "../CancelBill/MobileCancelBill";
 import MobileGroupBill from "../GroupBill/MobileGroupBill";
 import { getBillNumber } from "../../utils";
 const GroupBills = ({ tenantId, onSubmit, data, count, isLoading, resultOk,serviceType,locality }) => {
     
-    const history = useHistory()
+    const navigate = Digit.Hooks.useCustomNavigate();
     const convertEpochToDate = (dateEpoch) => {
         if (dateEpoch == null || dateEpoch == undefined || dateEpoch == "") {
             return "NA";
@@ -39,7 +39,7 @@ const GroupBills = ({ tenantId, onSubmit, data, count, isLoading, resultOk,servi
 
 
     const handleBillLinkClick = (row) => {
-        history.push(`/upyog-ui/employee/bills/bill-details?connectionNumber=${row?.consumerCode}&tenantId=${tenantId}&service=${row?.businessService}&from=ABG_CANCEL_BILL`, row)
+        navigate(`/upyog-ui/employee/bills/bill-details?connectionNumber=${row?.consumerCode}&tenantId=${tenantId}&service=${row?.businessService}&from=ABG_CANCEL_BILL`, row)
     }
 
     const getBillLink = (row) => {
@@ -135,7 +135,7 @@ const GroupBills = ({ tenantId, onSubmit, data, count, isLoading, resultOk,servi
             }
         }
         //here do history.push to the response page and send filters there
-        history.push("/upyog-ui/employee/bills/response-cancelBill", { filters, currentBill });
+        navigate("/upyog-ui/employee/bills/response-cancelBill", { filters, currentBill });
         //call the cancel bill api from response page and show appropriate response
     }
 

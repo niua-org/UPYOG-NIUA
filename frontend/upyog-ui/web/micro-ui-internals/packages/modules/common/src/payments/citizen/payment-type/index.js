@@ -13,10 +13,10 @@ import {
   Toast,
   CardText,
   CardSubHeader,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
-import { useParams, useHistory, useLocation, Redirect } from "react-router-dom";
+import { useParams, useLocation,  Navigate } from "react-router-dom";
 import { stringReplaceAll } from "../bills/routes/bill-details/utils";
 import $ from "jquery";
 import { makePayment } from "./payGov";
@@ -30,7 +30,7 @@ export const SelectPaymentType = (props) => {
   const { tenantId: __tenantId, authorization, workflow: wrkflow , consumerCode : connectionNo } = Digit.Hooks.useQueryParams();
   const paymentAmount = state?.paymentAmount;
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { pathname, search } = useLocation();
   // const menu = ["AXIS"];
   let { consumerCode, businessService } = useParams();
@@ -217,7 +217,7 @@ export const SelectPaymentType = (props) => {
           )}
           <div className="payment-amount-info" style={{ marginBottom: "26px" }}>
             <CardLabel className="dark">{t("PAYMENT_CS_TOTAL_AMOUNT_DUE")}</CardLabel>
-            <CardSectionHeader> ₹ { paymentAmount !== undefined && paymentAmount !== 0 ? Number(paymentAmount).toFixed(2) : Number(billDetails?.totalAmount).toFixed(2)}</CardSectionHeader>
+            <CardSectionHeader> ₹ { paymentAmount !== undefined ? Number(paymentAmount).toFixed(2) : Number(billDetails?.totalAmount).toFixed(2)}</CardSectionHeader>
           </div>
           <CardLabel>{t("PAYMENT_CS_SELECT_METHOD")}</CardLabel>
           {menu?.length && (
@@ -225,7 +225,7 @@ export const SelectPaymentType = (props) => {
               name="paymentType"
               defaultValue={menu[0]}
               control={control}
-              render={(props) => <RadioButtons selectedOption={props.value} options={menu} onSelect={props.onChange} />}
+              render={({ field }) => <RadioButtons selectedOption={field.value} options={menu} onSelect={field.onChange} />}
             />
           )}
           {!showToast && <SubmitBar label={t("PAYMENT_CS_BUTTON_LABEL")} submit={true} disabled={timerEnabledForBusinessService(businessService)? Time ===0:null} />}       

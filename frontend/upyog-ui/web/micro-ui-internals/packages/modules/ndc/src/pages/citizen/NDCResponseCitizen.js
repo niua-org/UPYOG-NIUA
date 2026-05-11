@@ -1,7 +1,6 @@
-import { Banner, Card, CardText, ActionBar, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, ActionBar, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { stringReplaceAll } from "../../utils";
 
 //NDCResponseCitizen is a component that displays the response after a citizen submits an NDC application.
@@ -10,22 +9,22 @@ import { stringReplaceAll } from "../../utils";
 const NDCResponseCitizen = (props) => {
   const { state } = props.location;
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const nocData = state?.data?.Noc?.[0];
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
-  const pathname = history?.location?.pathname || "";
+  const pathname = navigate?.location?.pathname || "";
   const ndcCode = pathname.split("/").pop(); 
   const onSubmit = () => {
-    history.push(`/upyog-ui/citizen`);
+    navigate.push(`/upyog-ui/citizen`);
   };
 
   const onGoToNDC = () => {
-    history.push(`/upyog-ui/citizen/ndc-home`);
+    navigate.push(`/upyog-ui/citizen/ndc-home`);
   };
 
   const handlePayment = () => {
-    history.push(`/upyog-ui/citizen/payment/collect/NDC/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
+    navigate.push(`/upyog-ui/citizen/payment/collect/NDC/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
     // pathname: `/digit-ui/citizen/payment/collect/${application?.businessService}/${application?.applicationNumber}`,
   };
 

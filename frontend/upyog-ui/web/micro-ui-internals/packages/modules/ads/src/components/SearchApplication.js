@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect,useRef,useState } from "react"
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@upyog/digit-ui-react-components";
-import { Link,useHistory} from "react-router-dom";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link  } from "react-router-dom";
 import ADSCancelBooking from "./ADSCancelBooking";
 
 /** 
@@ -24,10 +24,10 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
         }
     })
     useEffect(() => {
-      register("offset", 0)
-      register("limit", 10)
-      register("sortBy", "commencementDate")
-      register("sortOrder", "DESC")
+      register("offset")
+      register("limit")
+      register("sortBy")
+      register("sortOrder")
       handleSubmit(onSubmit)();
     },[register])
     const [bookingDetails,setBookingDetails]=useState("");
@@ -115,7 +115,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
             Cell: ({ row }) => {
               const [isMenuOpen, setIsMenuOpen] = useState(false);
               const menuRef = useRef();
-              const history = useHistory(); // Initialize history
+              const navigate = Digit.Hooks.useCustomNavigate(); // Initialize history
 
               const toggleMenu = () => {
                 setIsMenuOpen(!isMenuOpen);
@@ -142,7 +142,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
               };
                 const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
                 let formdata = {
-                  advertisementSlotSearchCriteria:application?.cartDetails.map((item) => ({
+                  advertisementSlotSearchCriteria:application?.cartDetails?.map((item) => ({
                     bookingId: application?.bookingId,
                     addType: item?.addType,
                     bookingStartDate: item?.bookingDate,
@@ -168,7 +168,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                     if (isSlotBooked) {
                       setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
                     } else {
-                      history.push({
+                      navigate({
                         pathname: `/upyog-ui/employee/payment/collect/${"adv-services"}/${application?.bookingNo}`,
                         state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData },
                       });
@@ -276,22 +276,22 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("ADS_BOOKING_NO")}</label>
-                    <TextInput name="bookingNo" inputRef={register({})} />
+                    <TextInput name="bookingNo" {...register("bookingNo")} />
                 </SearchField>
                 <SearchField>
                     <label>{t("ADS_APPLICANT_NAME")}</label>
-                    <TextInput  name="applicantName" inputRef={register({})} />
+                    <TextInput  name="applicantName" {...register("applicantName")} />
                 </SearchField>
                 <SearchField>
                     <label>{t("ADS_FACE_AREA")}</label>
                     <Controller
                             control={control}
                             name="faceArea"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={face}
                                 optionKey="i18nKey"
                                 t={t}
@@ -306,11 +306,11 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                     <Controller
                             control={control}
                             name="status"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={statusOptions}
                                 optionKey="i18nKey"
                                 t={t}
@@ -324,7 +324,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <label>{t("ADS_MOBILE_NUMBER")}</label>
                 <MobileNumber
                     name="mobileNumber"
-                    inputRef={register({
+                    {...register("mobileNumber", {
                     minLength: {
                         value: 10,
                         message: t("CORE_COMMON_MOBILE_ERROR"),
@@ -348,7 +348,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchField>
                     <label>{t("FROM_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange}  max={new Date().toISOString().split('T')[0]}/>}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange}  max={new Date().toISOString().split('T')[0]}/>}
                         name="fromDate"
                         control={control}
                         />
@@ -356,7 +356,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchField>
                     <label>{t("TO_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
                         name="toDate"
                         control={control}
                         />

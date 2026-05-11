@@ -10,17 +10,17 @@ import {
   RemoveableTag,
   Toast,
   Loader,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState, useMemo } from "react";
 import { render } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { Link, useParams,  } from "react-router-dom";
 import Timeline from "../components/Timeline";
 import { stringReplaceAll } from "../utils";
 
 const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [subOccupancy, setsubOccupancy] = useState([]);
   const [subOccupancyObject, setsubOccupancyObject] = useState(formData?.subOccupancy || formData?.landInfo?.unit || {});
   const [subOccupancyOption, setsubOccupancyOption] = useState([]);
@@ -65,7 +65,7 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
 
   const ActionButton = ({ label, jumpTo }) => {
     const { t } = useTranslation();
-    const history = useHistory();
+    const navigate = Digit.Hooks.useCustomNavigate();
     function routeTo() {
       location.href = jumpTo;
     }

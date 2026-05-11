@@ -11,7 +11,7 @@ import {
   CardText,
   CardHeader,
   SubmitBar,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -209,7 +209,6 @@ const WSApplicationDetails = () => {
       break;
     case "PENDING_FOR_DISCONNECTION_EXECUTION":
     case "DISCONNECTION_EXECUTED":
-    case "PENDING_FOR_PAYMENT":
       if(data?.WaterConnection?.[0].applicationType?.includes("DISCONNECT") || data?.SewerageConnections?.[0].applicationType?.includes("DISCONNECT") ){
         downloadOptions = disconnectionNoticeNApplicationFormOptions
       }

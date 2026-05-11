@@ -1,4 +1,4 @@
-import { CardLabel, Dropdown, LabelFieldPair, LinkButton, TextInput, CardLabelError, DeleteIcon } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, LabelFieldPair, LinkButton, TextInput, CardLabelError, DeleteIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import _, { filter } from "lodash";
 import React, { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -155,16 +155,16 @@ const RoadCuttForm = (_props) => {
                 defaultValue={roadCutt?.roadType}
                 rules={{ required: t("REQUIRED_FIELD") }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                     <Dropdown
                         className="form-field"
-                        selected={getValues("roadType")}
-                        errorStyle={(localFormState.touched.roadType && errors?.roadType?.message) ? true : false}
+                        selected={field.value}
+                        errorStyle={(localFormState.touchedFields.roadType && errors?.roadType?.message) ? true : false}
                         select={(e) => {
-                          props.onChange(e);
+                          field.onChange(e);
                         }}
                         option={roadCuttingTypeMenu}
-                        onBlur={props.onBlur}
+                        onBlur={field.onBlur}
                         optionKey="i18nKey"
                         disable={false}
                         t={t}
@@ -188,18 +188,18 @@ const RoadCuttForm = (_props) => {
                       pattern: (e) => (/^[0-9]{1,10}$/i.test(e) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                     },
                   }}
-                  render={(props) => (
+                  render={({ field }) => (
                     <TextInput
-                      value={props.value}
+                      value={field.value}
                       disable={isEditScreen}
                       autoFocus={focusIndex.index === roadCutt.key && focusIndex.type === "area"}
                       onChange={(e) => {
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: roadCutt.key, type: "area"});
                       }}
                       onBlur={(e) => {
                         setFocusIndex({ index: -1 });
-                        props.onBlur(e);
+                        field.onBlur(e);
                       }}
                     />
                   )}

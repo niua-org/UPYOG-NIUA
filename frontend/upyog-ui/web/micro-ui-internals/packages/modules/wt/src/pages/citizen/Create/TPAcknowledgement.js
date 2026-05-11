@@ -1,5 +1,5 @@
-import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar } from "@upyog/digit-ui-react-components";
-import React, { useEffect } from "react";
+import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { treePruningPayload, APPLICATION_PATH } from "../../../utils";
@@ -55,21 +55,51 @@ const BannerPicker = (props) => {
 
 const TPAcknowledgement = ({ data, onSuccess }) => {
   const { t } = useTranslation();
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [errorToast, setErrorToast] = useState(null);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.wt.useTreePruningCreateAPI(tenantId); 
+  const mutation = Digit.Hooks.wt.useTreePruningCreateAPI(tenantId);
   const user = Digit.UserService.getUser().info;
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
- 
+
+  const handleSuccess = useCallback(
+    (response) => {
+      setHasSubmitted(true);
+      if (onSuccess) {
+        onSuccess(response);
+      }
+    },
+    [onSuccess]
+  );
+
+  const handleError = useCallback(
+    (error) => {
+      console.error("TP Create API Error:", error);
+      setHasSubmitted(true);
+      setErrorToast(
+        error?.response?.data?.Errors?.[0]?.message ||
+          t("TP_APPLICATION_FAILED")
+      );
+    },
+    [t]
+  );
   useEffect(() => {
-    try {
-      data.tenantId = tenantId;
-      // if()
-      let formdata = treePruningPayload(data);
-      mutation.mutate(formdata, {onSuccess});
-    } catch (err) {
+    if (!hasSubmitted && data) {
+      try {
+        const formData = { ...data, tenantId };
+        const convertedData = treePruningPayload(formData);
+
+        mutation.mutate(convertedData, {
+          onSuccess: handleSuccess,
+          onError: handleError,
+        });
+      } catch (err) {
+        console.error("TP Payload Error:", err);
+        setHasSubmitted(true);
+      }
     }
-  }, []);
+  }, [data, hasSubmitted]);
 
   /*custom hook to prevent going back in Acknowledgement /success response page
   * if you click Back then it will redirect you to Home page 
@@ -94,13 +124,15 @@ const TPAcknowledgement = ({ data, onSuccess }) => {
     Digit.Utils.pdf.generate(data);
   };
 
-  return mutation.isLoading || mutation.isIdle ? (
+  const isLoading = mutation.isPending || (!hasSubmitted && data);
+  const isSuccess = mutation.isSuccess && hasSubmitted;
+  return isLoading ? (
     <Loader />
   ) : (
     <Card>
-      <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
+      <BannerPicker t={t} data={mutation.data} isSuccess={isSuccess} isLoading={isLoading} />
       <StatusTable>
-        {mutation.isSuccess && (
+        {isSuccess && (
           <Row
             rowContainerStyle={rowContainerStyle}
             last       
@@ -108,7 +140,8 @@ const TPAcknowledgement = ({ data, onSuccess }) => {
           />
         )}
       </StatusTable>
-      {mutation.isSuccess && <SubmitBar label={t("TP_DOWNLOAD_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />}
+      {isSuccess && (<SubmitBar label={t("TP_DOWNLOAD_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf}/> )}
+      {errorToast && (<Toasterror label={errorToast} onClose={() => setErrorToast(null)} /> )}
       {user?.type==="CITIZEN"?
       <Link to={`${APPLICATION_PATH}/citizen`}>
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />

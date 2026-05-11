@@ -6,7 +6,7 @@ import {
   LabelFieldPair,
   TextInput,
   WrapUnMaskComponent,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -150,7 +150,6 @@ const WSConnectionHolderDetails = ({ config, onSelect, userType, formData, setEr
 
   const commonProps = {
     focusIndex,
-    connectionHolderDetails,
     setFocusIndex,
     formData,
     formState,
@@ -346,20 +345,20 @@ const ConnectionDetails = (_props) => {
           name="sameAsOwnerDetails"
           defaultValue={sameAsOwnerDetails}
           isMandatory={true}
-          render={(props) => (
+          render={({ field }) => (
             <CheckBox
               label={t("WS_SAME_AS_PROPERTY_OWNERS")}
               name={"sameAsOwnerDetails"}
               autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "sameAsOwnerDetails"}
-              errorStyle={localFormState.touched.sameAsOwnerDetails && errors?.sameAsOwnerDetails?.message ? true : false}
+              errorStyle={localFormState.touchedFields.sameAsOwnerDetails && errors?.sameAsOwnerDetails?.message ? true : false}
               onChange={(e) => {
                 setSameAsOwnerDetails(e.target.checked);
-                props.onChange(e.target.checked);
+                field.onChange(e.target.checked);
                 setFocusIndex({ index: connectionHolderDetail?.key, type: "sameAsOwnerDetails" });
               }}
               checked={sameAsOwnerDetails}
               style={{ paddingBottom: "10px", paddingTop: "3px" }}
-              onBlur={props.onBlur}
+              onBlur={field.onBlur}
             />
           )}
         />
@@ -379,21 +378,21 @@ const ConnectionDetails = (_props) => {
                   required: t("REQUIRED_FIELD"),
                 }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{ display: "flex", alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
                     <TextInput
-                      value={getValues("name")}
+                      value={field.value}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "name"}
-                      errorStyle={localFormState.touched.name && errors?.name?.message ? true : false}
+                      errorStyle={localFormState.touchedFields.name && errors?.name?.message ? true : false}
                       onChange={(e) => {
                         setName(e.target.value);
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionHolderDetail?.key, type: "name" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       style={
-                        checkifPrivacyValid() && !getValues("name")?.includes("*")
+                        checkifPrivacyValid() && !field.value?.includes("*")
                           ? !Digit.Utils.checkPrivacy(privacyData, { uuid: connectionHolderDetail?.uuid, fieldName: "name", model: "User" }) &&
                             !Digit.Utils.checkPrivacy(privacyData, { uuid: connectionHolderDetail?.uuid, fieldName: "mobileNumber", model: "User" })
                             ? ((isMobile && isEmployee) ? {} :{ width: "96%" })
@@ -406,9 +405,9 @@ const ConnectionDetails = (_props) => {
                         <WrapUnMaskComponent
                           unmaskField={(e) => {
                             setName(e);
-                            props.onChange(e);
+                            field.onChange(e);
                           }}
-                          iseyevisible={getValues("name")?.includes("*") ? true : false}
+                          iseyevisible={field.value?.includes("*") ? true : false}
                           privacy={{
                             uuid: connectionHolderDetail?.uuid,
                             fieldName: "name",
@@ -446,7 +445,7 @@ const ConnectionDetails = (_props) => {
                 defaultValue={connectionHolderDetail?.gender}
                 rules={{ required: t("REQUIRED_FIELD") }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div
                     style={{
                       display: "flex",
@@ -456,17 +455,16 @@ const ConnectionDetails = (_props) => {
                   >
                     <Dropdown
                       className="form-field"
-                     // style={checkifPrivacyValid() ? (sessionStorage.getItem("isPrivacyEnabled") !== "true" ? { width: "51.5%" } : {}) : {}}
                       selected={getValues("gender")}
                       disable={false}
                       option={menu}
                       errorStyle={localFormState.touched.gender && errors?.gender?.message ? true : false}
                       select={(e) => {
                         setGender(e);
-                        props.onChange(e);
+                        field.onChange(e);
                       }}
                       optionKey="i18nKey"
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       t={t}
                     />
                     {checkifPrivacyValid() && (
@@ -475,7 +473,7 @@ const ConnectionDetails = (_props) => {
                           unmaskField={(e) => {
                             const r = { code: e, i18nKey: `COMMON_GENDER_${e}`, name: e };
                             setGender(r);
-                            props.onChange(r);
+                            field.onChange(r);
                           }}
                           iseyevisible={gender["i18nKey"]?.includes("*") ? true : false}
                           privacy={{
@@ -520,24 +518,24 @@ const ConnectionDetails = (_props) => {
                 }}
                 //type="number"
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{ display: "flex", alignItems: "baseline", marginRight: isEmployee && isMobile ? "" : (getValues("mobileNumber")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
                     <div className="employee-card-input employee-card-input--front" style={{ position: "relative", marginTop: "4px" }}>
                       +91
                     </div>
                     <TextInput
                       //type="number"
-                      //value={props.value}
+                      //value={field.value}
                       value={getValues("mobileNumber")}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "mobileNumber"}
                       errorStyle={localFormState.touched.mobileNumber && errors?.mobileNumber?.message ? true : false}
                       onChange={(e) => {
                         setMobileNumber(e.target.value);
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionHolderDetail?.key, type: "mobileNumber" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       style={
                         checkifPrivacyValid() && !getValues("mobileNumber")?.includes("*")
                           ? !Digit.Utils.checkPrivacy(privacyData, {
@@ -556,7 +554,7 @@ const ConnectionDetails = (_props) => {
                         <WrapUnMaskComponent
                           unmaskField={(e) => {
                             setMobileNumber(e);
-                            props.onChange(e);
+                            field.onChange(e);
                           }}
                           iseyevisible={getValues("mobileNumber")?.includes("*") ? true : false}
                           privacy={{
@@ -599,7 +597,7 @@ const ConnectionDetails = (_props) => {
                   required: t("REQUIRED_FIELD"),
                 }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{ display: "flex", alignItems: "baseline", marginRight: isEmployee && isMobile ? "" :(getValues("guardian")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
                     <TextInput
                       value={getValues("guardian")}
@@ -607,11 +605,11 @@ const ConnectionDetails = (_props) => {
                       errorStyle={localFormState.touched.guardian && errors?.guardian?.message ? true : false}
                       onChange={(e) => {
                         setGuardian(e.target.value);
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionHolderDetail?.key, type: "guardian" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       style={
                         checkifPrivacyValid() && !getValues("guardian")?.includes("*")
                           ? !Digit.Utils.checkPrivacy(privacyData, {
@@ -630,7 +628,7 @@ const ConnectionDetails = (_props) => {
                         <WrapUnMaskComponent
                           unmaskField={(e) => {
                             setGuardian(e);
-                            props.onChange(e);
+                            field.onChange(e);
                           }}
                           iseyevisible={getValues("guardian")?.includes("*") ? true : false}
                           privacy={{
@@ -670,7 +668,7 @@ const ConnectionDetails = (_props) => {
                 defaultValue={connectionHolderDetail?.relationship}
                 rules={{ required: t("REQUIRED_FIELD") }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div
                     style={{
                       display: "flex",
@@ -687,10 +685,10 @@ const ConnectionDetails = (_props) => {
                       errorStyle={localFormState.touched.relationship && errors?.relationship?.message ? true : false}
                       select={(e) => {
                         setRelationship(e);
-                        props.onChange(e);
+                        field.onChange(e);
                       }}
                       optionKey="i18nKey"
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       t={t}
                     />
                     {checkifPrivacyValid() && (
@@ -699,7 +697,7 @@ const ConnectionDetails = (_props) => {
                           unmaskField={(e) => {
                             const r = { code: e, i18nKey: `COMMON_MASTERS_OWNERTYPE_${e}`, name: e };
                             setRelationship(r);
-                            props.onChange(r);
+                            field.onChange(r);
                           }}
                           iseyevisible={relationship?.i18nKey?.includes("*") ? true : false}
                           privacy={{
@@ -742,7 +740,7 @@ const ConnectionDetails = (_props) => {
                   required: t("REQUIRED_FIELD"),
                 }}
                 isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{ display: "flex", alignItems: "baseline", marginRight: isEmployee && isMobile ? "" : (getValues("address")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
                     <TextInput
                       value={getValues("address")}
@@ -750,11 +748,11 @@ const ConnectionDetails = (_props) => {
                       errorStyle={localFormState.touched.address && errors?.address?.message ? true : false}
                       onChange={(e) => {
                         setAddress(e.target.value);
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         setFocusIndex({ index: connectionHolderDetail?.key, type: "address" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       style={
                         checkifPrivacyValid() && !getValues("address")?.includes("*")
                           ? !Digit.Utils.checkPrivacy(privacyData, {
@@ -773,7 +771,7 @@ const ConnectionDetails = (_props) => {
                         <WrapUnMaskComponent
                           unmaskField={(e) => {
                             setAddress(e);
-                            props.onChange(e);
+                            field.onChange(e);
                           }}
                           iseyevisible={getValues("address")?.includes("*") ? true : false}
                           privacy={{
@@ -813,7 +811,7 @@ const ConnectionDetails = (_props) => {
                 defaultValue={connectionHolderDetail?.ownerType}
                 rules={{ required: t("REQUIRED_FIELD") }}
                 //isMandatory={true}
-                render={(props) => (
+                render={({ field }) => (
                   <div
                     style={{
                       display: "flex",
@@ -830,10 +828,10 @@ const ConnectionDetails = (_props) => {
                       errorStyle={localFormState.touched.ownerType && errors?.ownerType?.message ? true : false}
                       select={(e) => {
                         setOwnerType(e);
-                        props.onChange(e);
+                        field.onChange(e);
                       }}
                       optionKey="i18nKey"
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       t={t}
                     />
                     {checkifPrivacyValid() && (
@@ -842,7 +840,7 @@ const ConnectionDetails = (_props) => {
                           unmaskField={(e) => {
                             const r = { code: e, i18nKey: `COMMON_MASTERS_OWNERTYPE_${e}`, name: e };
                             setOwnerType(r);
-                            props.onChange(r);
+                            field.onChange(r);
                           }}
                           iseyevisible={ownerType?.i18nKey?.includes("*") ? true : false}
                           privacy={{
@@ -882,7 +880,7 @@ const ConnectionDetails = (_props) => {
                  validate: (e) => ((e && getPattern("Email").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                 }}
                 isMandatory={false}
-                render={(props) => (
+                render={({ field }) => (
                   <div style={{ display: "flex", alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
                     <TextInput
                       value={getValues("emailId")}
@@ -890,12 +888,12 @@ const ConnectionDetails = (_props) => {
                       errorStyle={localFormState.touched.emailId && errors?.emailId?.message ? true : false}
                       onChange={(e) => {
                         setEmailId(e.target.value);
-                        props.onChange(e.target.value);
+                        field.onChange(e.target.value);
                         validateEmail(e.target.value);
                         setFocusIndex({ index: connectionHolderDetail?.key, type: "emailId" });
                       }}
                       labelStyle={{ marginTop: "unset" }}
-                      onBlur={props.onBlur}
+                      onBlur={field.onBlur}
                       style={
                         checkifPrivacyValid() && !getValues("emailId")?.includes("*")
                           ? !Digit.Utils.checkPrivacy(privacyData, { uuid: connectionHolderDetail?.uuid, fieldName: "name", model: "User" }) &&
@@ -910,7 +908,7 @@ const ConnectionDetails = (_props) => {
                         <WrapUnMaskComponent
                           unmaskField={(e) => {
                             setEmailId(e);
-                            props.onChange(e);
+                            field.onChange(e);
                           }}
                           iseyevisible={getValues("emailId")?.includes("*") ? true : false}
                           privacy={{

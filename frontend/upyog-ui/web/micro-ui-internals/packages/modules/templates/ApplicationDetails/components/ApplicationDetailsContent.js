@@ -13,7 +13,7 @@ import {
   EditIcon,
   ViewsIcon,
   DeleteIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { values } from "lodash";
 import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -350,7 +350,7 @@ function ApplicationDetailsContent({
 
             {detail?.isTable && (
               <table
-                style={{ tableLayout: "fixed", width: "100%", borderCollapse: "collapse", borderCollapse: "collapse", border: "1px solid black" }}
+                style={{ tableLayout: "fixed", width: "100%", borderCollapse: "collapse", border: "1px solid black" }}
               >
                 <tr style={{ textAlign: "left" }}>
                   {detail?.headers.map((header) => (

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FormComposer, Toast, Header, Loader } from "@upyog/digit-ui-react-components";
+import { FormComposer, Toast, Header, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { newConfig as newConfigMcollect } from "../../../config/config";
-import { useHistory, useRouteMatch } from "react-router-dom";
+
 import { stringReplaceAll } from "../../../utils";
 //import { convertDateToEpoch } from "../../../utils";
 
@@ -48,14 +48,14 @@ const getformDataforEdit = (ChallanData,fetchBillData) => {
 const NewChallan = ({ChallanData}) => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const { t } = useTranslation();
-  const { url } = useRouteMatch();
+  const { url } = Digit.Hooks.useModuleBasePath();
   let isEdit = false;
   if (url.includes("modify-challan")) {
     isEdit = true;
   }
   const [canSubmit, setSubmitValve] = useState(false);
   const defaultValues = {};
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   // delete
   const [_formData, setFormData, _clear] = Digit.Hooks.useSessionStorage("store-data", null);
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_HAPPENED", false);
@@ -175,7 +175,7 @@ const NewChallan = ({ChallanData}) => {
             let LastModifiedTime = Digit.SessionStorage.set("isMcollectAppChanged", challan.auditDetails.lastModifiedTime);
             Digit.MCollectService.generateBill(challan.challanNo, tenantId, challan.businessService, "challan").then((response) => {
               if (response.Bill && response.Bill.length > 0) {
-                history.push(
+                navigate(
                   `/upyog-ui/employee/mcollect/acknowledgement?purpose=challan&status=success&tenantId=${tenantId}&billNumber=${
                     response.Bill[0].billNumber
                   }&serviceCategory=${response.Bill[0].businessService}&challanNumber=${response.Bill[0].consumerCode}&isEdit=${true}`,
@@ -194,7 +194,7 @@ const NewChallan = ({ChallanData}) => {
             sessionStorage.removeItem("mcollectFormData");
             Digit.MCollectService.generateBill(challan.challanNo, tenantId, challan.businessService, "challan").then((response) => {
               if (response.Bill && response.Bill.length > 0) {
-                history.push(
+                navigate(
                   `/upyog-ui/employee/mcollect/acknowledgement?purpose=challan&status=success&tenantId=${tenantId}&billNumber=${response.Bill[0].billNumber}&serviceCategory=${response.Bill[0].businessService}&challanNumber=${response.Bill[0].consumerCode}`,
                   { from: url }
                 );

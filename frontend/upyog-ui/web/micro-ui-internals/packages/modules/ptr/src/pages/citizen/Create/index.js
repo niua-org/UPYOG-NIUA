@@ -14,21 +14,21 @@
  * - Handles multi-step form submissions and navigates to acknowledgment or summary pages.
  */
 
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 import { citizenConfig } from "../../../config/Create/citizenconfig";
 
 
 const PTRCreate = ({ parentRoute }) => {
 
   const queryClient = useQueryClient();
-  const match = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
 
   let config = [];
@@ -94,21 +94,21 @@ const PTRCreate = ({ parentRoute }) => {
 
 
 
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
     if (skipStep) {
-      redirectWithHistory = history.replace;
+      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
     }
     if (isAddMultiple) {
       nextStep = key;
     }
     if (nextStep === null) {
-      return redirectWithHistory(`${match.path}/check`);
+      return redirectWithHistory(`check`);
     }
     if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${match.path}/${nextStep}`;
+      nextPage = `${nextStep}`;
     }
     else {
-      nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
+      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
@@ -124,7 +124,7 @@ const PTRCreate = ({ parentRoute }) => {
     }
  // Navigates to the acknowledgment page
   const ptrcreate = async () => {
-    history.push(`${match.path}/acknowledgement`);
+    navigate(`acknowledgement`);
   };
 
  /**
@@ -182,28 +182,25 @@ const PTRCreate = ({ parentRoute }) => {
 
 
   return (
-    <Switch>
+    <Routes>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
-          <Route path={`${match.path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} renewApplication={pathname.includes("new-application") ? {} : dataComingfromAPI} />
-          </Route>
+          <Route
+            path={`${routeObj.route}`}
+            key={index}
+            element={
+              <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} renewApplication={pathname.includes("new-application") ? {} : dataComingfromAPI} />
+            }
+          />
         );
       })}
 
-
-      <Route path={`${match.path}/check`}>
-        <CheckPage onSubmit={ptrcreate} value={params} />
-      </Route>
-      <Route path={`${match.path}/acknowledgement`}>
-        <PTRAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
-      <Route>
-        <Redirect to={`${match.path}/${config.indexRoute}`} />
-      </Route>
-    </Switch>
+      <Route path={`check`} element={<CheckPage onSubmit={ptrcreate} value={params} />} />
+      <Route path={`acknowledgement`} element={<PTRAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
+    </Routes>
   );
 };
 
