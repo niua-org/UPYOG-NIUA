@@ -136,7 +136,7 @@ const EWCreate = ({ parentRoute }) => {
   }
 
   const ewasteCreate = async () => {
-    history.push(`${match.path}/acknowledgement`);
+    navigate("acknowledgement");
   };
   return (
     <Routes>
