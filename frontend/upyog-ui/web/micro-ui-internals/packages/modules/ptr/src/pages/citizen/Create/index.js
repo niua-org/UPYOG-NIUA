@@ -18,6 +18,7 @@ import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
+import { PetDataConvert } from "../../../utils";
 import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 import { citizenConfig } from "../../../config/Create/citizenconfig";
 
@@ -32,6 +33,8 @@ const PTRCreate = ({ parentRoute }) => {
   const stateId = Digit.ULBService.getStateId();
 
   let config = [];
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const mutation = Digit.Hooks.ptr.usePTRCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("PTR_CREATE_PET", {});
 
   // Fetches common field configurations from MDMS
@@ -46,7 +49,7 @@ const PTRCreate = ({ parentRoute }) => {
     // Fetching application ID from session storage
   const applicationId = sessionStorage.getItem("petId") ?sessionStorage.getItem("petId") : null
   sessionStorage.setItem("applicationType",pathname.includes("new-application") ? "NEWAPPLICATION":"RENEWAPPLICATION")
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+
 
   // Fetching application data by ID
   const { isError, error, data: ApplicationData } = Digit.Hooks.ptr.usePTRSearch(
@@ -136,6 +139,18 @@ const PTRCreate = ({ parentRoute }) => {
    * @param {boolean} isAddMultiple - Whether multiple steps are added
    */
 
+ const handleSubmit = () => {
+  const formdata = PetDataConvert(params);
+  formdata.PetRegistrationApplications[0].tenantId = tenantId;
+  mutation.mutate(formdata, {
+    onSuccess: () => {
+      clearParams();
+      queryClient.invalidateQueries("PTR_CREATE_PET");
+      navigate("acknowledgement", { replace: true });
+    },
+  });
+};
+
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     if (key === "owners") {
       let owners = params.owners || [];
@@ -197,8 +212,8 @@ const PTRCreate = ({ parentRoute }) => {
         );
       })}
 
-      <Route path={`check`} element={<CheckPage onSubmit={ptrcreate} value={params} />} />
-      <Route path={`acknowledgement`} element={<PTRAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<PTRAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation}/>} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
   );
