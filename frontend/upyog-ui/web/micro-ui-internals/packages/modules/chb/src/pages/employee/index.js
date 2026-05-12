@@ -1,7 +1,7 @@
 import {AppContainer, BackButton, PrivateRoute,BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {useLocation } from "react-router-dom";
+import {useLocation, Routes, Route } from "react-router-dom";
 import { CHBLinks } from "../../Module";
 import Inbox from "./Inbox";
 // import PaymentDetails from "./PaymentDetails";

@@ -67,11 +67,10 @@ const BannerPicker = (props) => {
   );
 };
 
-const CHBAcknowledgement = ({ data, onSuccess }) => {
+const CHBAcknowledgement = ({ data, onSuccess, mutation }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.chb.useChbCreateAPI(tenantId);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const match = Digit.Hooks.useModuleBasePath();
   const { tenants } = storeData || {};
@@ -147,7 +146,7 @@ const CHBAcknowledgement = ({ data, onSuccess }) => {
     <Loader />
   ) : (
     <Card>
-      <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
+      <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isPending} />
       <StatusTable>
         {mutation.isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />}
       </StatusTable>

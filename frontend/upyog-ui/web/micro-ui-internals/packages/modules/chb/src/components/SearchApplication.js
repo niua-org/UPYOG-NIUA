@@ -307,8 +307,10 @@
           setValue("offset", getValues("offset") + getValues("limit"))
           handleSubmit(onSubmit)()
       }
-      function previousPage () {
-          setValue("offset", getValues("offset") - getValues("limit") )
+     function previousPage () {
+          const currentOffset = getValues("offset");
+          const limit = getValues("limit");
+          setValue("offset", Math.max(0, currentOffset - limit)); // Prevent negative
           handleSubmit(onSubmit)()
       }
       let validation={}
@@ -331,7 +333,6 @@
                               control={control}
                               name="communityHallCode"
                               render={({ field }) => (
-
                                   <Dropdown
                                   selected={field.value}
                                   select={field.onChange}

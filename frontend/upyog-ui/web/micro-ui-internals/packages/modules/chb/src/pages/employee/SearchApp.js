@@ -52,12 +52,12 @@ const SearchApp = ({path}) => {
     const [showToast, setShowToast] = useState(null);
 
     function onSubmit (_data) {
-        var fromDate=_data?.fromDate
-        var toDate=_data?.toDate
-        // var fromDate = new Date(_data?.fromDate)
-        // fromDate?.setSeconds(fromDate?.getSeconds() - 19800 )
-        // var toDate = new Date(_data?.toDate)
-        // toDate?.setSeconds(toDate?.getSeconds() + 86399 - 19800)
+        // var fromDate=_data?.fromDate
+        // var toDate=_data?.toDate
+        var fromDate = new Date(_data?.fromDate)
+        fromDate?.setSeconds(fromDate?.getSeconds() - 19800 )
+        var toDate = new Date(_data?.toDate)
+        toDate?.setSeconds(toDate?.getSeconds() + 86399 - 19800)
         const data = {
             ..._data,
             ...(_data.toDate ? {toDate:toDate} : {}),

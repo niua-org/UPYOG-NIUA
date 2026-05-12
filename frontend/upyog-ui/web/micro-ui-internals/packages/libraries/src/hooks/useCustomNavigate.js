@@ -11,19 +11,17 @@ import { useNavigate } from "react-router-dom";
  * navigate(-1); // go back
  */
 const useCustomNavigate = () => {
-  const navigate = useNavigate();
-  
-  return (to, options = {}) => {
-    try {
-      navigate(to, options);
-    } catch (error) {
-      console.error("Navigation error:", error);
-      // Fallback for navigation failures
+  try {
+    const navigate = useNavigate(); // This will throw if outside Router
+    return navigate;
+  } catch (error) {
+    // Return fallback when outside Router context
+    return (to) => {
       if (typeof to === "string") {
         window.location.href = to;
       }
-    }
-  };
+    };
+  }
 };
 
 export default useCustomNavigate;
