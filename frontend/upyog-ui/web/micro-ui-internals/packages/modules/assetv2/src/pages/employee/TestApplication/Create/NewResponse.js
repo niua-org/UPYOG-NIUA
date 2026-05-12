@@ -34,32 +34,32 @@ const BannerPicker = (props) => {
   );
 };
 
-const NewResponse = ({ data, onSuccess }) => {
+const NewResponse = ({ data, onSuccess, mutation }) => {
 
 
   
   const { t } = useTranslation();
   
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.asset.useAssetCreateAPI(data?.address?.city?.code); 
+  // const mutation = Digit.Hooks.asset.useAssetCreateAPI(data?.address?.city?.code); 
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const match = Digit.Hooks.useModuleBasePath();
   const { tenants } = storeData || {};
 
 
-  useEffect(() => {
-    try {
+  // useEffect(() => {
+  //   try {
       
-      data.tenantId = data.address?.city?.code;
-      let formdata = Assetdata(data)
-      console.log("formdata in acknowejkfdlgi ::: ", formdata);
+  //     data.tenantId = data.address?.city?.code;
+  //     let formdata = Assetdata(data)
+  //     console.log("formdata in acknowejkfdlgi ::: ", formdata);
 
-      mutation.mutate(formdata, {
-        onSuccess,
-      });
-    } catch (err) {
-    }
-  }, []);
+  //     mutation.mutate(formdata, {
+  //       onSuccess,
+  //     });
+  //   } catch (err) {
+  //   }
+  // }, []);
 
   
 

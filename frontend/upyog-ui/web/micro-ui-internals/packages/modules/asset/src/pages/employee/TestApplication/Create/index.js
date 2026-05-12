@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 import { newAssetConfig } from "../../../../config/Create/newAssetConfig";
+import { Assetdata } from "../../../../utils";
 
 const ASSETCreate = ({ parentRoute }) => {
   const queryClient = useQueryClient();
@@ -12,8 +13,10 @@ const ASSETCreate = ({ parentRoute }) => {
   const { pathname } = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
+  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.asset.useAssetCreateAPI(tenantId);
   let config = [];
-  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("Asset_Test", {});
+  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("AST_CREATE", {});
 
   const goNext = (skipStep, index, isAddMultiple, key) => {    
     let currentPath = pathname.split("/").pop(),
@@ -68,8 +71,17 @@ const ASSETCreate = ({ parentRoute }) => {
       queryClient.invalidateQueries("AST_CREATE");
     }
 
-  const astcreate = async () => {
-    navigate(`acknowledgement`);
+
+   const handleSubmit = () => {
+    const formdata = Assetdata(params); 
+    formdata.Asset.tenantId = tenantId;
+    mutation.mutate(formdata, {
+      onSuccess: () => {
+        clearParams();
+        queryClient.invalidateQueries("AST_CREATE");
+        navigate("acknowledgement", { replace: true });
+      },
+    });
   };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
@@ -96,12 +108,6 @@ const ASSETCreate = ({ parentRoute }) => {
     clearParams();
     queryClient.invalidateQueries("AST_CREATE");
   };
-
-  let isLoading
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   // commonFields=newConfig;
   /* use newConfig instead of commonFields for local development in case needed */
@@ -133,8 +139,8 @@ const ASSETCreate = ({ parentRoute }) => {
         );
       })}
 
-      <Route path={`check`} element={<CheckPage onSubmit={astcreate} value={params} />} />
-      <Route path={`acknowledgement`} element={<NewResponse data={params} onSuccess={onSuccess} />} />
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<NewResponse data={params} onSuccess={onSuccess} mutation={mutation} />} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
   );

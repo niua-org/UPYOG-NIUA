@@ -4,7 +4,7 @@ import ApplicationUpdateActionsASSET from "../../services/molecules/ASSET/Applic
 const useASSETApplicationAction = (tenantId) => {
   const mutationFn = (applicationData) => ApplicationUpdateActionsASSET(applicationData, tenantId);
 
-  return mutationTemplate(mutationFn);
+  return mutationTemplate({mutationFn});
   
   // return useMutation((applicationData) =>{
   //   ApplicationUpdateActionsASSET(applicationData, tenantId)} );
