@@ -89,24 +89,12 @@ public class EdcrPdfDetail implements Serializable {
     @Transient
     private Map<String, Integer> thicknessOverrides = new HashMap<>();
 
-    /*
-     * NOTE (DXF to single PDF versus legacy multi-sheet):
-     *
-     * Purpose:
-     * - Marks one EdcrPdfDetail row as the "whole drawing, one PDF" Kabeja path. Tenants get that when they do not
-     *   turn on legacy sheet mode (app key DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS on DcrConstants).
-     *
-     * When true (only set from DxfToPdfConverterExtract for that one synthetic row):
-     * - DxfToPdfUnifiedConverter passes extra generator settings (bounds, margin, stroke width) and the
-     *   DcrSvgGenerator.PROPERTY_SINGLE_PDF flag so SVG and PDF are tuned for one full drawing: readable text,
-     *   thinner dimensions, a stable view box.
-     *
-     * When null or false (normal MDMS or EDCR_DXF_PDF sheet rows):
-     * - Kabeja uses the old property map only, so many-sheet PDF behaviour and look stay unchanged.
-     *
-     * Usage:
-     * - Read through getKabejaSinglePageDXFToPdf inside DxfToPdfUnifiedConverter when running Kabeja.
-     * - Do not set true on rows built from MDMS DxfToPdfLayerConfig or from EDCR_DXF_PDF app config.
+    /**
+     * When true, this row is the single full-drawing PDF path for Kabeja (set only on the synthetic row from
+     * DxfToPdfConverterExtract when legacy sheet mode is off; see DcrConstants.DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS).
+     * DxfToPdfUnifiedConverter then applies extra generator options and DcrSvgGenerator.PROPERTY_SINGLE_PDF for
+     * bounds, margins, stroke, text, and fonts. When null or false, Kabeja uses the legacy multi-sheet property map.
+     * Do not set true for rows built from MDMS DxfToPdfLayerConfig or EDCR_DXF_PDF app config.
      */
     @Transient
     private Boolean kabejaSinglePageDXFToPdf;

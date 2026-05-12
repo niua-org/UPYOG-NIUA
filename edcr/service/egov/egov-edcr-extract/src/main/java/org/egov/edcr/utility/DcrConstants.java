@@ -107,8 +107,9 @@ public class DcrConstants {
     public static final String SHORTESTDISTANCETOROAD = "Minimum distance from accessory block to road";
     public static final String ACCESSORRY_BLK_DIST_FRM_PLOT_BNDRY = "Accessory block %s distance from plot boundary";
 
-    // ----- names
-
+    /**
+     * EDCR string constants: layer tokens, plan-type keys, validation messages, and related labels.
+     */
     public static Integer FLOOR_COLOUR_CODE = 10;
 
     public static final int DECIMALDIGITS = 10;
@@ -179,7 +180,7 @@ public class DcrConstants {
     public static final String EDCR_DXF_PDF = "EDCR_DXF_PDF";
     public static final String DXF_PDF_CONVERSION_ENABLED = "DXF_PDF_CONVERSION_ENABLED";
 
-    /*
+    /**
      * NOTE (app-config key for how DXF is turned into PDF during extract):
      *
      * Stored in Digit DCR app config (same tables as other EG_APPCONFIG values).

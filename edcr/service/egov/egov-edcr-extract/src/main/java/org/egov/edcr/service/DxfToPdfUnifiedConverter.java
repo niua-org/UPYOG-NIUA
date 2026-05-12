@@ -23,20 +23,14 @@ import com.aspose.cad.imageoptions.CadRasterizationOptions;
 import com.aspose.cad.imageoptions.PdfOptions;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Rectangle;
+
 /**
- * Single place that turns a DXF into a PDF using either Kabeja or Aspose, never both at once.
- *
- * Engine is chosen from Digit DCR app config: module type on DcrConstants.APPLICATION_MODULE_TYPE,
- * key DXF_TO_PDF_ENGINE. Value ASPOSE selects Aspose; anything else (including missing) selects Kabeja.
- *
- * Aspose reads the file from disk (dxfSourceFile argument). Kabeja uses the in-memory document; any layer edits
- * from the extract step apply only on the Kabeja path.
- *
- * For Kabeja only, EdcrPdfDetail.getKabejaSinglePageDXFToPdf() turns on extra SVG and PDF tuning for the
- * one-full-drawing flow; legacy multi-sheet rows leave that flag unset.
- *
- * This class exists so DxfToPdfConverterExtract does not duplicate engine logic. The same EdcrPdfDetail instance
- * the extract built is passed through; that boolean is the only switch between legacy-style and single-full-DXF output.
+ * Single entry point for DXF to PDF: runs either the Kabeja pipeline or Aspose CAD, never both.
+ * <p>
+ * Configure via app config module {@link DcrConstants#APPLICATION_MODULE_TYPE}, key
+ * {@link DcrConstants#DXF_TO_PDF_ENGINE}: {@code KABEJA} (default) or {@code ASPOSE}.
+ * Aspose reads the original DXF file from disk ({@code dxfSourceFile}); in-memory layer tweaks
+ * from the extract step apply only to the Kabeja path.
  */
 @Service
 public class DxfToPdfUnifiedConverter {
@@ -50,14 +44,27 @@ public class DxfToPdfUnifiedConverter {
     @Autowired
     private AppConfigValueService appConfigValueService;
 
-    /*
-     * NOTE:
-     * Main entry: called from DxfToPdfConverterExtract (or others) after the extract filled edcrPdfDetail
-     * (page size, output name / layer name, and optionally kabejaSinglePageDXFToPdf).
+    /**
+     * Converts a DXF to a PDF using the configured engine.
+     * <p>
+     * Call from DxfToPdfConverterExtract (or similar) after the extract has populated the
+     * <code>edcrPdfDetail</code> argument (page size, output layer or sheet name, and optionally
+     * <code>kabejaSinglePageDXFToPdf</code>).
+     * <ul>
+     *   <li><b>Aspose</b> &mdash; requires <code>dxfSourceFile</code> on disk; loads the full drawing and does not use
+     *       in-memory DXF mutations.</li>
+     *   <li><b>Kabeja</b> &mdash; uses the in-memory <code>dxfDocument</code>; when <code>kabejaSinglePageDXFToPdf</code>
+     *       is true, <code>convertWithKabeja</code> adds extra entries to the Kabeja generator map.</li>
+     *   <li><b>Fallback</b> &mdash; if Aspose is selected but the file is missing or conversion throws, Kabeja is used
+     *       so a PDF is still produced when possible.</li>
+     * </ul>
      *
-     * Aspose needs the DXF file on disk and loads the full drawing; it does not use in-memory DXF edits.
-     * Kabeja uses the in-memory DXF document and reads kabejaSinglePageDXFToPdf for extra generator map entries.
-     * If Aspose throws or the file is missing, we fall back to Kabeja so the user still gets a PDF when possible.
+     * @param dxfSourceFile DXF on disk for Aspose (may be null when only Kabeja is used)
+     * @param dxfDocument   parsed DXF for Kabeja
+     * @param fileName      logical drawing name for logging
+     * @param layerName     stem for the output PDF file (for example basename without extension in direct mode)
+     * @param edcrPdfDetail settings built by extract (page size, hatch removal, single-PDF flag)
+     * @return generated PDF file, or <code>null</code> on failure
      */
     public File convert(File dxfSourceFile, DXFDocument dxfDocument, String fileName, String layerName,
                         EdcrPdfDetail edcrPdfDetail) {
@@ -77,7 +84,7 @@ public class DxfToPdfUnifiedConverter {
         return convertWithKabeja(dxfDocument, fileName, layerName, edcrPdfDetail);
     }
 
-    /*
+    /**
      * Reads DXF_TO_PDF_ENGINE from Digit DCR app config. Any value other than ASPOSE (case-insensitive) means Kabeja,
      * including when the setting is missing.
      */
@@ -93,20 +100,30 @@ public class DxfToPdfUnifiedConverter {
         return Engine.KABEJA;
     }
 
-    /*
-     * NOTE (Kabeja generator map has two shapes):
+    /**
+     * Runs Kabeja SVG-to-PDF with a property map whose shape depends on legacy vs single full-DXF mode.
+     * <p>
+     * <b>Legacy multi-sheet PDFs</b> (EdcrPdfDetail.getKabejaSinglePageDXFToPdf() not true):
+     * <ul>
+     *   <li>Margin <code>0.5</code> and optional hatch stripping only (historical behaviour).</li>
+     * </ul>
+     * <p>
+     * <b>Direct single full-DXF PDF</b> (getKabejaSinglePageDXFToPdf() true):
+     * <ul>
+     *   <li><code>DcrSvgGenerator.PROPERTY_SINGLE_PDF</code> &mdash; enables DcrSvgGenerator and DcrSvgStyleGenerator
+     *       tuning for text, bounds, and fonts without affecting legacy runs.</li>
+     *   <li><code>bounds-rule</code> = <code>Modelspace-Limits</code> &mdash; viewport from DXF header so the plan is not a speck.</li>
+     *   <li><code>margin</code> = <code>0</code> &mdash; avoids shrinking usable area in this mode.</li>
+     *   <li><code>stroke-width</code> = <code>0.12</code> &mdash; thin strokes so dimensions do not render as thick bars.</li>
+     * </ul>
+     * <p>
+     * The output file is <code>layerName + ".pdf"</code>; in direct mode <code>layerName</code> is typically the DXF basename.
      *
-     * Legacy multi-sheet PDFs:
-     * - Margin 0.5 and optional hatch stripping only, same as before.
-     *
-     * Direct single full-DXF PDF when EdcrPdfDetail.getKabejaSinglePageDXFToPdf() is true:
-     * - Sets DcrSvgGenerator.PROPERTY_SINGLE_PDF so DcrSvgGenerator and DcrSvgStyleGenerator adjust text, bounds,
-     *   and fonts without touching legacy runs.
-     * - bounds-rule Modelspace-Limits: viewport from DXF header so the drawing is not a tiny dot on the page.
-     * - margin 0: do not shrink the usable area for that mode.
-     * - stroke-width 0.12: thin lines so dimensions do not look like thick bars.
-     *
-     * Output file name is layerName plus ".pdf"; in direct mode layerName is the DXF file name without extension.
+     * @param dxfDocument     in-memory DXF for Kabeja
+     * @param fileName        used in log messages
+     * @param layerName       PDF filename stem
+     * @param edcrPdfDetail   page size, hatch flag, and kabejaSinglePageDXFToPdf gate
+     * @return written PDF file if non-empty, otherwise <code>null</code>
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private File convertWithKabeja(DXFDocument dxfDocument, String fileName, String layerName,
@@ -163,7 +180,7 @@ public class DxfToPdfUnifiedConverter {
         return null;
     }
 
-    /*
+    /**
      * Aspose path: reads the DXF from disk and exports to PDF. Page size comes from edcrPdfDetail.getPageSize().
      * kabejaSinglePageDXFToPdf is not used here; Aspose behaves the same for legacy and direct extract rows.
      */

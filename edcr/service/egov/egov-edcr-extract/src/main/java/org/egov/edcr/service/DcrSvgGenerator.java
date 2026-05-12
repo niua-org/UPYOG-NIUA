@@ -33,8 +33,7 @@ import org.kabeja.xml.AbstractSAXGenerator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-/*
- * NOTE (Kabeja to SVG bridge):
+/**
  * Extends Kabeja's AbstractSAXGenerator and streams a DXF document out as SVG SAX events.
  * EDCR adds an optional mode for one full-drawing PDF: when the generator map contains PROPERTY_SINGLE_PDF (set from
  * DxfToPdfUnifiedConverter), extra tuning runs. Legacy multi-sheet runs never pass that key.
@@ -74,8 +73,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    public final static String PROPERTY_WIDTH = "width";
    public final static String PROPERTY_HEIGHT = "height";
    public final static String PROPERTY_OVERFLOW = "svg-overflow";
-   /*
-    * NOTE:
+   /**
     * Map key DxfToPdfUnifiedConverter sets only when EdcrPdfDetail.getKabejaSinglePageDXFToPdf() is true.
     * Pass the string "true" as the value. setupProperties copies intent into the shared context as the Boolean
     * egov.singlePdfUsingKabeja so DcrSvgStyleGenerator can pick the direct font path.
@@ -90,7 +88,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    private String marginSettings;
    private String outputStyleName = DXFConstants.LAYOUT_DEFAULT_NAME;
    protected SVGSAXGeneratorManager manager;
-   /*
+   /**
     * When true: extra SVG/CSS and per-entity handling for one full-drawing PDF (setupProperties, getBounds, layerToSAX,
     * singlePdfConfigurations). When false: same behaviour as the original Kabeja-only path for legacy multi-sheet PDFs.
     */
@@ -182,7 +180,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
            this.manager = new SVGSAXGeneratorManager();
        }
 
-       /*
+       /**
         * Copy single-PDF intent into Kabeja's shared context map so DcrSvgStyleGenerator.toSAX can branch without
         * changing Kabeja's public APIs.
         */
@@ -644,28 +642,32 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        return bounds;
    }
 
-    /*
-     * Retrieves the drawing bounds from the DXF header.
+    /**
+     * Retrieves the model space bounds from the DXF header information.
      *
-     * The method first attempts to read the EXTMIN and EXTMAX header variables,
-     * which represent the actual drawing extents (minimum and maximum coordinates)
-     * of the model space.
+     * <p>The method first checks for the presence of EXTMIN and EXTMAX
+     * header variables, which represent the actual extents of the drawing
+     * in model space.</p>
      *
-     * If EXTMIN/EXTMAX are not available, it falls back to LIMMIN/LIMMAX,
-     * which represent the drawing limits configured in the DXF.
+     * <p>If EXTMIN and EXTMAX are not available, the method falls back to
+     * LIMMIN and LIMMAX, which represent the configured drawing limits.</p>
      *
-     * These bounds are used for:
-     * - determining drawing size
-     * - scaling during DXF to PDF conversion
-     * - viewport/page fitting
-     * - rendering calculations
+     * <p>The extracted bounds are used during DXF processing for:</p>
+     * <ul>
+     *     <li>Determining drawing dimensions</li>
+     *     <li>Scaling and fitting content into PDF pages</li>
+     *     <li>Viewport calculations</li>
+     *     <li>Rendering and layout validation</li>
+     * </ul>
      *
-     * DXF coordinate mapping:
-     * - Group code "10" -> X coordinate
-     * - Group code "20" -> Y coordinate
+     * <p>DXF coordinate group codes used:</p>
+     * <ul>
+     *     <li>"10" - X coordinate</li>
+     *     <li>"20" - Y coordinate</li>
+     * </ul>
      *
-     * Returns:
-     * A Bounds object containing minimum and maximum X/Y coordinates.
+     * @return a {@link Bounds} object containing the minimum and maximum
+     *         X/Y coordinates extracted from the DXF header
      */
     private Bounds getHeaderModelSpaceBounds() {
        Bounds headerBounds = new Bounds();
@@ -689,33 +691,38 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        return headerBounds;
    }
 
+   /**
+    * True when bounds exist, are valid, and have positive width and height.
+    */
    private static boolean isSaneBounds(Bounds b) {
        return b != null && b.isValid() && b.getWidth() > 0 && b.getHeight() > 0;
    }
 
-    /*
-     * Checks whether the computed drawing bounds appear to be an abnormal outlier
-     * when compared against the DXF header bounds.
+    /**
+     * Determines whether the computed drawing bounds are likely abnormal
+     * when compared against the bounds defined in the DXF header.
      *
-     * The method is used to detect invalid or corrupted geometry that can produce
-     * extremely large rendering areas during DXF to PDF conversion.
+     * <p>The method validates both computed and header bounds before
+     * calculating their respective areas.</p>
      *
-     * Logic:
-     * - Validate that both computed and header bounds are sane/valid.
-     * - Calculate the area of both bounds.
-     * - Ignore invalid header areas (<= 0).
-     * - Treat the computed bounds as suspicious if its area is more than
-     *   1000 times larger than the header-defined bounds.
+     * <p>If the computed bounds area is significantly larger than the
+     * header bounds area (greater than 1000 times), the bounds are
+     * treated as suspicious or outliers.</p>
      *
-     * This helps prevent issues such as:
-     * - malformed entities with huge coordinates
-     * - incorrect scaling
-     * - oversized PDF generation
-     * - rendering crashes or memory issues
+     * <p>This validation helps detect malformed or corrupted DXF entities
+     * that may produce extremely large coordinates and cause issues during
+     * DXF to PDF rendering, such as:</p>
+     * <ul>
+     *     <li>Incorrect scaling</li>
+     *     <li>Oversized page generation</li>
+     *     <li>Rendering failures</li>
+     *     <li>Memory/performance problems</li>
+     * </ul>
      *
-     * Returns:
-     * true  -> computed bounds are likely abnormal/outliers
-     * false -> bounds appear reasonable
+     * @param computedBounds the bounds calculated from DXF entities
+     * @param headerBounds the bounds extracted from the DXF header
+     * @return {@code true} if the computed bounds appear to be abnormal
+     *         outliers compared to the header bounds; otherwise {@code false}
      */
    private static boolean isLikelyOutlierBounds(Bounds computedBounds, Bounds headerBounds) {
        if (!isSaneBounds(computedBounds) || !isSaneBounds(headerBounds)) {
