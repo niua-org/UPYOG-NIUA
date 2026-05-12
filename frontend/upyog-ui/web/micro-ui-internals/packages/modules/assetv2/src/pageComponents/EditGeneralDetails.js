@@ -266,12 +266,12 @@ const OwnerForm = (_props) => {
               control={control}
               name={"financialYear"}
               defaultValue={convertToObject(comingDataFromAPI?.financialYear)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={false}
                   option={financal}
                   optionKey="i18nKey"
@@ -280,19 +280,19 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.financialYear ? errors?.financialYear?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.financialYear ? errors?.financialYear?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_SOURCE_FINANCE")}</CardLabel>
             <Controller
               control={control}
               name={"sourceOfFinance"}
               defaultValue={convertToObject(comingDataFromAPI?.sourceOfFinance)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   option={sourcefinance}
                   optionKey="i18nKey"
                   t={t}
@@ -300,19 +300,19 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.sourceOfFinance ? errors?.sourceOfFinance?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.sourceOfFinance ? errors?.sourceOfFinance?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_CATEGORY")}</CardLabel>
             <Controller
               control={control}
               name={"assetclassification"}
               defaultValue={convertToObject(comingDataFromAPI?.assetClassification)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={isEdit}
                   option={menu_Asset}
                   optionKey="i18nKey"
@@ -321,19 +321,19 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.assetclassification ? errors?.assetclassification?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetclassification ? errors?.assetclassification?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PARENT_CATEGORY")}</CardLabel>
             <Controller
               control={control}
               name={"assettype"}
               defaultValue={convertToObject(comingDataFromAPI?.assetParentCategory)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={isEdit}
                   option={asset_type}
                   optionKey="i18nKey"
@@ -342,7 +342,7 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.assettype ? errors?.assettype?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.assettype ? errors?.assettype?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_SUB_CATEGORY")}</CardLabel>
@@ -350,12 +350,12 @@ const OwnerForm = (_props) => {
               control={control}
               name={"assetsubtype"}
               defaultValue={convertToObject(comingDataFromAPI?.assetCategory)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={false}
                   option={asset_sub_type}
                   optionKey="i18nKey"
@@ -364,7 +364,7 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.assetsubtype ? errors?.assetsubtype?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetsubtype ? errors?.assetsubtype?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_CATEGORY_SUB_CATEGORY")}</CardLabel>
@@ -372,12 +372,12 @@ const OwnerForm = (_props) => {
               control={control}
               name={"assetparentsubCategory"}
               defaultValue={convertToObject(comingDataFromAPI?.assetSubCategory)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={false}
                   option={asset_parent_sub_category}
                   optionKey="i18nKey"
@@ -387,7 +387,7 @@ const OwnerForm = (_props) => {
             />
           </LabelFieldPair>
           <CardLabelError style={errorStyle}>
-            {localFormState.touched.assetparentsubCategory ? errors?.assetparentsubCategory?.message : ""}
+            {localFormState?.touched?.assetparentsubCategory ? errors?.assetparentsubCategory?.message : ""}
           </CardLabelError>
 
           <LabelFieldPair>
@@ -401,25 +401,25 @@ const OwnerForm = (_props) => {
                   required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                   validate: { pattern: (val) => (/^[a-zA-Z0-9/-\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "BookPagereference"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "BookPagereference" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.BookPagereference ? errors?.BookPagereference?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.BookPagereference ? errors?.BookPagereference?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_NAME")}</CardLabel>
@@ -434,25 +434,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "AssetName"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "AssetName" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.AssetName ? errors?.AssetName?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.AssetName ? errors?.AssetName?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("ASSET_DESCRIPTION")}</CardLabel>
@@ -467,25 +467,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextArea
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "Assetdescription"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "Assetdescription" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_DEPARTMENT")}</CardLabel>
@@ -493,13 +493,13 @@ const OwnerForm = (_props) => {
               control={control}
               name={"Department"}
               defaultValue={convertToObject("COMMON_MASTERS_DEPARTMENT_" + comingDataFromAPI?.department)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
+                  selected={field.value}
                   disable={false}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   option={departNamefromMDMS}
                   optionKey="i18nKey"
                   t={t}
@@ -507,7 +507,7 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.Department ? errors?.Department?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.Department ? errors?.Department?.message : ""}</CardLabelError>
           <br />
           <CardCaption>Asset Common Details </CardCaption>
           <br />
@@ -518,12 +518,12 @@ const OwnerForm = (_props) => {
               control={control}
               name={"assetType"}
               defaultValue={convertToObject(comingDataFromAPI?.assetType)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={false}
                   option={assetType}
                   optionKey="i18nKey"
@@ -532,7 +532,7 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.assetType ? errors?.assetType?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetType ? errors?.assetType?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_USAGE")}</CardLabel>
@@ -540,12 +540,12 @@ const OwnerForm = (_props) => {
               control={control}
               name={"assetUsage"}
               defaultValue={convertToObject(comingDataFromAPI?.assetUsage)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
-                  onBlur={props.onBlur}
+                  selected={field.value}
+                  select={field.onChange}
+                  onBlur={field.onBlur}
                   disable={false}
                   option={assetCurrentUsage}
                   optionKey="i18nKey"
@@ -554,7 +554,7 @@ const OwnerForm = (_props) => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.assetUsage ? errors?.assetUsage?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetUsage ? errors?.assetUsage?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_MODE_OF_POSSESSION_OR_ACQUISITION")}</CardLabel>
@@ -562,13 +562,13 @@ const OwnerForm = (_props) => {
               control={control}
               name={"modeOfPossessionOrAcquisition"}
               defaultValue={convertToObject(comingDataFromAPI?.modeOfPossessionOrAcquisition)}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
-                  selected={props.value}
-                  select={props.onChange}
+                  selected={field.value}
+                  select={field.onChange}
                   disable={false}
-                  onBlur={props.onBlur}
+                  onBlur={field.onBlur}
                   option={modeOfAcquisition}
                   optionKey="i18nKey"
                   t={t}
@@ -577,7 +577,7 @@ const OwnerForm = (_props) => {
             />
           </LabelFieldPair>
           <CardLabelError style={errorStyle}>
-            {localFormState.touched.modeOfPossessionOrAcquisition ? errors?.modeOfPossessionOrAcquisition?.message : ""}
+            {localFormState?.touched?.modeOfPossessionOrAcquisition ? errors?.modeOfPossessionOrAcquisition?.message : ""}
           </CardLabelError>
 
           <LabelFieldPair>
@@ -593,26 +593,26 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     type={"date"}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "invoiceDate"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "invoiceDate" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState?.touched?.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_INVOICE_NUMBER")}</CardLabel>
@@ -627,25 +627,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "invoiceNumber"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "invoiceNumber" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.invoiceNumber ? errors?.invoiceNumber?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.invoiceNumber ? errors?.invoiceNumber?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PURCHASE_DATE")}</CardLabel>
@@ -660,26 +660,26 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     type={"date"}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "purchaseDate"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "purchaseDate" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PURCHASE_ORDER")}</CardLabel>
@@ -694,25 +694,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "purchaseOrderNumber"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "purchaseOrderNumber" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_LIFE")}</CardLabel>
@@ -727,19 +727,19 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "lifeOfAsset"}
                     onChange={(e) => {
                       if((e.target.value).length > 3) { alert('Maximum limit is 3 digits only!'); return false }
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "lifeOfAsset" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -760,25 +760,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "location"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "location" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.location ? errors?.location?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.location ? errors?.location?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PURCHASE_COST")}</CardLabel>
@@ -793,25 +793,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "purchaseCost"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "purchaseCost" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_ACQUISITION_COST")}</CardLabel>
@@ -826,25 +826,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "acquisitionCost"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "acquisitionCost" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.acquisitionCost ? errors?.acquisitionCost?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.acquisitionCost ? errors?.acquisitionCost?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_BOOK_VALUE")}</CardLabel>
@@ -859,25 +859,25 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === editAssignDetails?.key && focusIndex.type === "bookValue"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: editAssignDetails.key, type: "bookValue" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState.touched.bookValue ? errors?.bookValue?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.bookValue ? errors?.bookValue?.message : ""}</CardLabelError> */}
         </div>
       </div>
       {showToast?.label && (
