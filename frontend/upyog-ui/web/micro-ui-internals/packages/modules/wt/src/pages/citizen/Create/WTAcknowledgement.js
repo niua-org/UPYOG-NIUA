@@ -56,12 +56,11 @@ const BannerPicker = (props) => {
   );
 };
 
-const WTAcknowledgement = ({ data, onSuccess }) => {
+const WTAcknowledgement = ({ data, onSuccess, mutation}) => {
   const { t } = useTranslation();
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [errorToast, setErrorToast] = useState(null);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.wt.useTankerCreateAPI(tenantId);
   const user = Digit.UserService.getUser().info;
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
@@ -88,21 +87,21 @@ const WTAcknowledgement = ({ data, onSuccess }) => {
     [t]
   );
 
-  useEffect(() => {
-    if (!hasSubmitted && data) {
-      try {
-        const formData = { ...data, tenantId };
-        const convertedData = waterTankerPayload(formData);
-        mutation.mutate(convertedData, {
-          onSuccess: handleSuccess,
-          onError: handleError,
-        });
-      } catch (err) {
-        console.error("WT Payload Error:", err);
-        setHasSubmitted(true);
-      }
-    }
-  }, [data, hasSubmitted]);
+  // useEffect(() => {
+  //   if (!hasSubmitted && data) {
+  //     try {
+  //       const formData = { ...data, tenantId };
+  //       const convertedData = waterTankerPayload(formData);
+  //       mutation.mutate(convertedData, {
+  //         onSuccess: handleSuccess,
+  //         onError: handleError,
+  //       });
+  //     } catch (err) {
+  //       console.error("WT Payload Error:", err);
+  //       setHasSubmitted(true);
+  //     }
+  //   }
+  // }, [data, hasSubmitted]);
 
   /*custom hook to prevent going back in Acknowledgement /success response page
   * if you click Back then it will redirect you to Home page 
@@ -127,8 +126,8 @@ const WTAcknowledgement = ({ data, onSuccess }) => {
     Digit.Utils.pdf.generate(data);
   };
 
-  const isLoading = mutation.isPending || (!hasSubmitted && data);
-  const isSuccess = mutation.isSuccess && hasSubmitted;
+  const isLoading = mutation.isPending;
+  const isSuccess = mutation.isSuccess;
   return isLoading ? (
     <Loader />
   ) : (

@@ -3,7 +3,13 @@ import { WTService } from "../../services/elements/WT";
 
 export const useTankerCreateAPI = (tenantId, type = true) => {
   if (type) {
-    return mutationTemplate({ mutationFn: (data) => WTService.create(data, tenantId) });
+    return mutationTemplate({
+      mutationFn: (data) => {
+        if (data.mobileToiletBookingDetail) return WTService.createMT(data, tenantId);
+        if (data.treePruningBookingDetail) return WTService.createTP(data, tenantId);
+        return WTService.create(data, tenantId);
+      },
+    });
   } else {
     return mutationTemplate({ mutationFn: (data) => WTService.update(data, tenantId) });
   }

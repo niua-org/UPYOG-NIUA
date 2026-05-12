@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { commonConfig } from "../../../config/config";
 import { Timeline } from "@nudmcdgnpm/digit-ui-react-components";
+import { waterTankerPayload , mobileToiletPayload, treePruningPayload} from "../../../utils";
 
 
 const WTCreate = () => {
@@ -13,6 +14,8 @@ const WTCreate = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
 
   let config = [];
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const mutation = Digit.Hooks.wt.useTankerCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("WT_Create", {});
 
   // Sets the serviceType in case of employee side for WT, MT, and TP
@@ -121,6 +124,30 @@ const WTCreate = () => {
     }
   };
 
+  const handleSubmit = () => {
+  const code = params?.serviceType?.serviceType?.code;
+  let formdata;
+  
+  if (code === "MobileToilet") {
+    formdata = mobileToiletPayload({ ...params, tenantId });
+  } else if (code === "TREE_PRUNING") {
+    formdata = treePruningPayload({ ...params, tenantId });
+  } else {
+    formdata = waterTankerPayload({ ...params, tenantId });
+  }
+  
+  mutation.mutate(formdata, {
+    onSuccess: () => {
+      clearParams();
+      queryClient.invalidateQueries("WT_Create");
+      const dest = code === "MobileToilet" ? "mt-acknowledgement" : code === "TREE_PRUNING" ? "tp-acknowledgement" : "wt-acknowledgement";
+      navigate(dest, { replace: true });
+    },
+  });
+};
+
+
+
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     if (key === "owners") {
       let owners = params.owners || [];
@@ -171,11 +198,11 @@ const WTCreate = () => {
             />
           );
         })}
-        <Route path="check/*" element={<CheckPage onSubmit={wt_create} value={params} />} />
-        <Route path="wt-acknowledgement/*" element={<WTAcknowledgement data={params} onSuccess={onSuccess} />} />
-        <Route path="mt-acknowledgement/*" element={<MTAcknowledgement data={params} onSuccess={onSuccess} />} />
-        <Route path="tp-acknowledgement/*" element={<TPAcknowledgement data={params} onSuccess={onSuccess} />} />
-        <Route path="/*" element={<Navigate to={`${config.indexRoute}`} />} />
+        <Route path="check/*" element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+        <Route path="wt-acknowledgement/*" element={<WTAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation} />} />
+        <Route path="mt-acknowledgement/*" element={<MTAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation}/>} />
+        <Route path="tp-acknowledgement/*" element={<TPAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation} />} />
+        <Route path="*" element={<Navigate to={`${config.indexRoute}`} />} />
       </Routes>
     </React.Fragment>
   );

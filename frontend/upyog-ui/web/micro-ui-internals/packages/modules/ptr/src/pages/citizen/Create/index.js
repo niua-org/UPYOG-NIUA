@@ -33,7 +33,7 @@ const PTRCreate = ({ parentRoute }) => {
   const stateId = Digit.ULBService.getStateId();
 
   let config = [];
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();; 
   const mutation = Digit.Hooks.ptr.usePTRCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("PTR_CREATE_PET", {});
 

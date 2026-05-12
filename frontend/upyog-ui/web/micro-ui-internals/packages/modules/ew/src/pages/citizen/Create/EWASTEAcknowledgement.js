@@ -112,8 +112,8 @@ const EWASTEAcknowledgement = ({ data, onSuccess, mutation }) => {
     Digit.Utils.pdf.generateTable(data);
   };
 
-  const isLoading = mutation.isPending || (!hasSubmitted && data);
-  const isSuccess = mutation.isSuccess && hasSubmitted;
+  const isLoading = mutation.isPending;
+  const isSuccess = mutation.isSuccess;
 
   return isLoading ? (
     <Loader />

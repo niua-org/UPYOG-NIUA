@@ -120,7 +120,7 @@ window.Digit.ComponentRegistryService.setupRegistry({
   ...PTComponents,
   MCollectLinks,
   MCollectModule,
-  // ChallanGenerationModule,
+  ChallanGenerationModule,
   HRMSModule,
   TLModule,
   TLLinks,
@@ -164,7 +164,7 @@ initPGRComponents();
 initFSMComponents();
 initDSSComponents();
 initMCollectComponents();
-// initChallanGenerationComponents();
+initChallanGenerationComponents();
 initHRMSComponents();
 initTLComponents();
 initReceiptsComponents();
@@ -181,7 +181,7 @@ initNDCComponents();
 const moduleReducers = (initData) => ({
   pgr: PGRReducers(initData),
   ndc: NDCReducers(initData),
-  // challan: ChallanReducers(initData),
+  challan: ChallanReducers(initData),
 });
 
 function App() {

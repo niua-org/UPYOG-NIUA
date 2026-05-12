@@ -74,7 +74,7 @@ const EmployeeApp = ({ path, url, userType }) => {
     return <BreadCrumb style={isMobile?{display:"flex"}:{}}  spanStyle={{maxWidth:"min-content"}} crumbs={crumbs} />;
   }
 
-  const NewApplication = Digit?.ComponentRegistryService?.getComponent("PTRNewApplication");
+  const NewApplication = Digit?.ComponentRegistryService?.getComponent("PTRCreatePet");
   const ApplicationDetails = Digit?.ComponentRegistryService?.getComponent("ApplicationDetails");
   const isRes = window.location.href.includes("ptr/response");
   const isNewRegistration = window.location.href.includes("new-application") || window.location.href.includes("modify-application") || window.location.href.includes("ptr/application-details");

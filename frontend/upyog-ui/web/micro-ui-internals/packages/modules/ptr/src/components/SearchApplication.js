@@ -34,6 +34,12 @@
       const isMobile = window.Digit.Utils.browser.isMobile();
       const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
           defaultValues: {
+              applicationNumber: "",
+              petType: undefined,
+              applicationType: undefined,
+              mobileNumber: "",
+              fromDate: undefined,
+              toDate: undefined,
               offset: 0,
               limit: !isMobile && 10,
               sortBy: "commencementDate",
@@ -161,7 +167,19 @@
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
                       <label>{t("PTR_APPLICATION_NO_LABEL")}</label>
-                      <TextInput name="applicationNumber" {...register("applicationNumber")} />
+                      <Controller
+                          control={control}
+                          name="applicationNumber"
+                          render={({ field }) => (
+                              <TextInput
+                                  name={field.name}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  inputRef={field.ref}
+                              />
+                          )}
+                      />
                   </SearchField>
                   <SearchField>
                       <label>{t("PTR_SEARCH_PET_TYPE")}</label>
@@ -203,26 +221,32 @@
                   </SearchField>
                   <SearchField>
                   <label>{t("PTR_OWNER_MOBILE_NO")}</label>
-                  <MobileNumber
+                  <Controller
+                      control={control}
                       name="mobileNumber"
-                      {...register("mobileNumber", {
-                      minLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      maxLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      pattern: {
-                      value: /[6789][0-9]{9}/,
-                      //type: "tel",
-                      message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                  })}
-                  type="number"
-                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                  //maxlength={10}
+                      rules={{
+                          minLength: {
+                              value: 10,
+                              message: t("CORE_COMMON_MOBILE_ERROR"),
+                          },
+                          maxLength: {
+                              value: 10,
+                              message: t("CORE_COMMON_MOBILE_ERROR"),
+                          },
+                          pattern: {
+                              value: /[6789][0-9]{9}/,
+                              message: t("CORE_COMMON_MOBILE_ERROR"),
+                          },
+                      }}
+                      render={({ field }) => (
+                          <MobileNumber
+                              name={field.name}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              inputRef={field.ref}
+                          />
+                      )}
                   />
                   <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                   </SearchField> 

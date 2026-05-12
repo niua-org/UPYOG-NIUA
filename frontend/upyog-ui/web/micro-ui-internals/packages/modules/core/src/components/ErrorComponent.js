@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 const ErrorConfig = {
   error: {
@@ -23,15 +24,23 @@ const ErrorComponent = (props) => {
   const { type = "error" } = Digit.Hooks.useQueryParams();
   const config = ErrorConfig[type];
   const { t } = useTranslation();
-  const navigate = Digit.Hooks.useCustomNavigate();
+  
+  let navigate = null;
+  try {
+    navigate = useNavigate();
+  } catch (e) {
+    // Not in Router context, will use window.location instead
+  }
 
   const stateInfo = props.stateInfo;
 
   const handleGoHome = () => {
     if (props.goToHome && typeof props.goToHome === 'function') {
       props.goToHome();
-    } else {
+    } else if (navigate) {
       navigate("/upyog-ui/employee");
+    } else {
+      window.location.href = "/upyog-ui/employee";
     }
   };
 

@@ -15,7 +15,29 @@ export const WTService = {
       params: {},
       auth: true,
     }),
-    update: (details, tenantId) =>
+  createMT: (details, tenantId) =>
+    Request({
+      url: Urls.mt.create,
+      data: details,
+      useCache: false,
+      setTimeParam: false,
+      userService: true,
+      method: "POST",
+      params: {},
+      auth: true,
+    }),
+  createTP: (details, tenantId) =>
+    Request({
+      url: Urls.tp.create,
+      data: details,
+      useCache: false,
+      setTimeParam: false,
+      userService: true,
+      method: "POST",
+      params: {},
+      auth: true,
+    }),
+  update: (details, tenantId) =>
       Request({
         url: Urls.wt.update,
         data: details,

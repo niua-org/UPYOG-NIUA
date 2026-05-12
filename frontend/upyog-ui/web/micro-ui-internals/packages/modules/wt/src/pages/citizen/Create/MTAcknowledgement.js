@@ -54,12 +54,11 @@ const BannerPicker = (props) => {
   );
 };
 
-const MTAcknowledgement = ({ data, onSuccess }) => {
+const MTAcknowledgement = ({ data, onSuccess, mutation }) => {
   const { t } = useTranslation();
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [errorToast, setErrorToast] = useState(null);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.wt.useMobileToiletCreateAPI(tenantId);
   const user = Digit.UserService.getUser().info;
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
@@ -86,21 +85,21 @@ const MTAcknowledgement = ({ data, onSuccess }) => {
     [t]
   );
 
-  useEffect(() => {
-    if (!hasSubmitted && data) {
-      try {
-        const formData = { ...data, tenantId };
-        const convertedData = mobileToiletPayload(formData);
-        mutation.mutate(convertedData, {
-          onSuccess: handleSuccess,
-          onError: handleError,
-        });
-      } catch (err) {
-        console.error("MT Payload Error:", err);
-        setHasSubmitted(true);
-      }
-    }
-  }, [data, hasSubmitted]);
+  // useEffect(() => {
+  //   if (!hasSubmitted && data) {
+  //     try {
+  //       const formData = { ...data, tenantId };
+  //       const convertedData = mobileToiletPayload(formData);
+  //       mutation.mutate(convertedData, {
+  //         onSuccess: handleSuccess,
+  //         onError: handleError,
+  //       });
+  //     } catch (err) {
+  //       console.error("MT Payload Error:", err);
+  //       setHasSubmitted(true);
+  //     }
+  //   }
+  // }, [data, hasSubmitted]);
 
   /*custom hook to prevent going back in Acknowledgement /success response page
   * if you click Back then it will redirect you to Home page 
@@ -125,8 +124,8 @@ const MTAcknowledgement = ({ data, onSuccess }) => {
     Digit.Utils.pdf.generate(data);
   };
 
-  const isLoading = mutation.isPending || (!hasSubmitted && data);
-  const isSuccess = mutation.isSuccess && hasSubmitted;
+  const isLoading = mutation.isPending;
+  const isSuccess = mutation.isSuccess;
   return isLoading ? (
     <Loader />
   ) : (

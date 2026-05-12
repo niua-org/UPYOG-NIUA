@@ -30,8 +30,8 @@ const ChallanResponseCitizen = (props) => {
     ? window.localStorage.getItem("CITIZEN.CITY")
     : window.localStorage.getItem("Employee.tenant-id");
 
-  const pathname = navigate?.location?.pathname || "";
-  const ndcCode = pathname.split("/").pop(); // ✅ Extracts the last segment
+  const { pathname } = useLocation();
+  const ndcCode = pathname.split("/").pop();
 
   let challanEmpData = ChallanData(tenantId, ndcCode);
 
@@ -126,7 +126,7 @@ const ChallanResponseCitizen = (props) => {
   };
 
   const handlePayment = () => {
-    navigate(`/upyog-ui/employee/payment/collect/Challan_Generation/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
+    navigate(`/upyog-ui/employee/payment/collect/Challan_Generation/${ndcCode}?tenantId=${tenantId}`);
   };
 
   return (
