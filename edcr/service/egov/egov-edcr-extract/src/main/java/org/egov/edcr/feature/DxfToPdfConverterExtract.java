@@ -1007,7 +1007,6 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 return fileOut.length() > 0 ? fileOut : null;
             } catch (Exception ep) {
                 LOG.error("Pdf convertion failed for " + fileName + " - " + layerName + " due to " + ep.getMessage());
-                ep.printStackTrace();
                 edcrPdfDetail.setFailureReasons(ep.getMessage());
             }
         }
