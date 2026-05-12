@@ -129,7 +129,7 @@
 		<javax-servlet-jstl-version>1.2.7</javax-servlet-jstl-version>
 <!--		<javax-servlet-jsp-version>2.3.0.Final</javax-servlet-jsp-version>-->
 		<javax-jms-version>2.0.0.Final</javax-jms-version>
-		<javax-mail-version>1.5.6</javax-mail-version>
+<!--		<javax-mail-version>1.5.6</javax-mail-version>-->
 		<javax-el-version>3.0.1-b11</javax-el-version>
 		<xerces-version>2.11.0.SP5</xerces-version>
 		<postgres-version>42.7.10</postgres-version>
@@ -147,7 +147,7 @@
 		<spring-data-elasticsearch>2.0.6.RELEASE</spring-data-elasticsearch>
 		<elastic-search-version>2.4.6</elastic-search-version>
 		<apache-tiles-version>3.0.7</apache-tiles-version>
-		<embedded-redis-version>0.6</embedded-redis-version>
+		<embedded-redis-version>0.7.3</embedded-redis-version>
 		<quartz-version>2.3.2</quartz-version>
 		<jasper-report-version>6.20.0</jasper-report-version>
 		<json-simple-version>1.1.1</json-simple-version>
@@ -160,7 +160,6 @@
 		<jfreechart-version>1.0.19</jfreechart-version>
 		<groovy-all-version>2.4.12</groovy-all-version>
 		<itext-version>2.1.7</itext-version>
-		<commons-javaflow-version>20060411</commons-javaflow-version>
 <!--		<jexcelapi-version>2.6.12</jexcelapi-version>-->
         <commons-beanutils-version>1.11.0</commons-beanutils-version>
         <commons-config2-version>2.13.0</commons-config2-version>
@@ -368,12 +367,12 @@
 				<version>${javax-el-version}</version>
 				<scope>provided</scope>
 			</dependency>-->
-			<dependency>
-				<groupId>javax.mail</groupId>
-				<artifactId>javax.mail-api</artifactId>
-				<version>${javax-mail-version}</version>
-				<scope>provided</scope>
-			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>javax.mail</groupId>-->
+<!--				<artifactId>javax.mail-api</artifactId>-->
+<!--				<version>${javax-mail-version}</version>-->
+<!--				<scope>provided</scope>-->
+<!--			</dependency>-->
 			<!-- SERVLET SPEC JBOSS DEPENDENCIES END -->
 
 			<!-- STRUTS2 DEPENDENCIES START -->
@@ -580,19 +579,19 @@
 			</dependency>
 			<!-- SECURITY END -->
 
-			<!-- EMBEDDED REDIS STARTS -->
-			<dependency>
-				<groupId>com.orange.redis-embedded</groupId>
-				<artifactId>embedded-redis</artifactId>
-				<version>${embedded-redis-version}</version>
-			</dependency>
-			<dependency>
-    <groupId>javax.persistence</groupId>
-    <artifactId>javax.persistence-api</artifactId>
-    <version>2.2</version>
-   
-</dependency>
-			<!-- EMBEDDED REDIS ENDS -->
+            <!-- EMBEDDED REDIS STARTS -->
+            <dependency>
+                <groupId>it.ozimov</groupId>
+                <artifactId>embedded-redis</artifactId>
+                <version>${embedded-redis-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.persistence</groupId>
+                <artifactId>javax.persistence-api</artifactId>
+                <version>2.2</version>
+
+            </dependency>
+            <!-- EMBEDDED REDIS ENDS -->
 
 			<!-- QUARTZ START -->
 			<dependency>
@@ -1142,7 +1141,7 @@
                             <groupId>com.aspose</groupId>
                             <artifactId>aspose-cad</artifactId>
                             <version>20.10</version>
-                        </dependency>
+			</dependency>
 
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES START -->
 		<dependency>
@@ -1173,10 +1172,10 @@
 			<groupId>org.glassfish</groupId>
 			<artifactId>javax.el</artifactId>
 		</dependency>-->
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>javax.mail-api</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>javax.mail</groupId>-->
+<!--			<artifactId>javax.mail-api</artifactId>-->
+<!--		</dependency>-->
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES END -->
 
         <!-- COMMONS START -->
@@ -1283,7 +1282,7 @@
 		<!-- EMBEDDED REDIS SERVER START -->
 		<!-- ADD this to dependencyManagement imports -->
 		<dependency>
-			<groupId>com.orange.redis-embedded</groupId>
+			<groupId>it.ozimov</groupId>
 			<artifactId>embedded-redis</artifactId>
 		</dependency>
 		<!-- EMBEDDED REDIS SERVER END -->
