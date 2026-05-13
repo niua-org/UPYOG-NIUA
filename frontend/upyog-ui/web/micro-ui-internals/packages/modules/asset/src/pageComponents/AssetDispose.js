@@ -235,7 +235,7 @@ const OwnerForm = (_props) => {
             // Set the file if validation passes
             setFile(selectedFile);
             setUploadError(""); // Clear any previous errors
-            // Optionally, you can call props.onChange(selectedFile) if needed
+            // Optionally, you can call field.onChange(selectedFile) if needed
         }
     };
 
@@ -362,12 +362,12 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         type="date"
-                                        value={props.value}
+                                        value={field.value}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                         }}
                                         max={new Date().toISOString().split('T')[0]}
                                     />
@@ -377,7 +377,7 @@ const OwnerForm = (_props) => {
                     </LabelFieldPair>
 
 
-                    <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
 
 
 
@@ -393,12 +393,12 @@ const OwnerForm = (_props) => {
                             control={control}
                             name={"reasonForDisposal"}
                             defaultValue={disposeDetails?.reasonForDisposal}
-                            render={(props) => (
+                            render={({field}) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
-                                    select={props.onChange}
-                                    onBlur={props.onBlur}
+                                    selected={field.value}
+                                    select={field.onChange}
+                                    onBlur={field.onBlur}
                                     option={reasonDisposal}
                                     optionKey="i18nKey"
                                     t={t}
@@ -406,7 +406,7 @@ const OwnerForm = (_props) => {
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.designation ? errors?.designation?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.designation ? errors?.designation?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_ADD_COMMENTS")}</CardLabel>
                         <div className="field">
@@ -418,25 +418,25 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextArea
                                         type={"textarea"}
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === disposeDetails?.key && focusIndex.type === "comments"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: disposeDetails.key, type: "comments" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.assignedUser ? errors?.assignedUser?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.assignedUser ? errors?.assignedUser?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_AMOUNT_RECEIVED_DISPOSAL")}</CardLabel>
                         <div className="field">
@@ -451,25 +451,25 @@ const OwnerForm = (_props) => {
                                             /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                     },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
-                                        value={props.value}
+                                        value={field.value}
                                         // disable={isEditScreen}
                                         autoFocus={focusIndex.index === disposeDetails?.key && focusIndex.type === "amountReceived"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: disposeDetails.key, type: "amountReceived" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_DISPOSAL_CODE")}
@@ -487,19 +487,19 @@ const OwnerForm = (_props) => {
                                             /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                     },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <CheckBox
                                         label={t(" If disposed in facility, amount received will become zero")}
                                         onChange={toggleDisposed}
                                         styles={{ height: "auto" }}
-                                        value={props.value}
+                                        value={field.value}
                                         checked={!isDisposed}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_DISPOSE_RECIPT")}
@@ -509,13 +509,13 @@ const OwnerForm = (_props) => {
                             <Controller
                                 control={control}
                                 name={"disposalFile"}
-                                render={(props) => (
+                                render={({field}) => (
                                     <UploadFile
                                         id={"disposalFile"}
                                         onUpload={selectFile}
                                         onDelete={() => {
                                             setFile(null);
-                                            props.onChange(null); // Clear the file in form state
+                                            field.onChange(null); // Clear the file in form state
                                         }}
                                         message={file ? `1 ${t(`CS_ACTION_FILEUPLOADED`)}` : t(`CS_ACTION_NO_FILEUPLOADED`)}
                                         accept="image/*, .pdf, .png, .jpeg, .jpg"
@@ -543,25 +543,25 @@ const OwnerForm = (_props) => {
                                                     /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                             },
                                         }}
-                                        render={(props) => (
+                                        render={({field}) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 // disable={isEditScreen}
                                                 autoFocus={focusIndex.index === disposeDetails?.key && focusIndex.type === "purchaserName"}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: disposeDetails.key, type: "purchaserName" });
                                                 }}
                                                 onBlur={(e) => {
                                                     setFocusIndex({ index: -1 });
-                                                    props.onBlur(e);
+                                                    field.onBlur(e);
                                                 }}
                                             />
                                         )}
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
                             <LabelFieldPair>
                                 <CardLabel className="card-label-smaller">{t("AST_PAYMENT_MODE")}</CardLabel>
                                 <div className="field">
@@ -576,25 +576,25 @@ const OwnerForm = (_props) => {
                                                     /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                             },
                                         }}
-                                        render={(props) => (
+                                        render={({field}) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 // disable={isEditScreen}
                                                 autoFocus={focusIndex.index === disposeDetails?.key && focusIndex.type === "paymentMode"}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: disposeDetails.key, type: "paymentMode" });
                                                 }}
                                                 onBlur={(e) => {
                                                     setFocusIndex({ index: -1 });
-                                                    props.onBlur(e);
+                                                    field.onBlur(e);
                                                 }}
                                             />
                                         )}
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
                             <LabelFieldPair>
                                 <CardLabel className="card-label-smaller">{t("AST_RECEIPT")}</CardLabel>
                                 <div className="field">
@@ -609,25 +609,25 @@ const OwnerForm = (_props) => {
                                                     /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                             },
                                         }}
-                                        render={(props) => (
+                                        render={({field}) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 // disable={isEditScreen}
                                                 autoFocus={focusIndex.index === disposeDetails?.key && focusIndex.type === "receiptNumber"}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: disposeDetails.key, type: "receiptNumber" });
                                                 }}
                                                 onBlur={(e) => {
                                                     setFocusIndex({ index: -1 });
-                                                    props.onBlur(e);
+                                                    field.onBlur(e);
                                                 }}
                                             />
                                         )}
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
                         </div>
                     }
                 </div>
