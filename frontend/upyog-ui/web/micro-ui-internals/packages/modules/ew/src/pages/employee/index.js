@@ -104,7 +104,6 @@ const EmployeeApp = ({ path }) => {
                 <Inbox
                   parentRoute={path}
                   businessService="ewst"
-                  middlewareSearch={searchMW}
                   initialStates={inboxInitialState}
                   isInbox={false}
                   EmptyResultInboxComp={"PTEmptyResultInbox"}
