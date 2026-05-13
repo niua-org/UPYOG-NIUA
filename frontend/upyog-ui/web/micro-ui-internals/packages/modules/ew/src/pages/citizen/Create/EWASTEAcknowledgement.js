@@ -1,7 +1,7 @@
 import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import getEwAcknowledgementData from "../../../utils/getEwAcknowledgementData";
 import { EWDataConvert } from "../../../utils";
 
@@ -59,51 +59,20 @@ const BannerPicker = (props) => {
  * @param {Function} props.onSuccess Callback function for successful submission
  * @returns {JSX.Element} Acknowledgement page with status and actions
  */
-const EWASTEAcknowledgement = ({ data, onSuccess, mutation }) => {
+const EWASTEAcknowledgement = () => {
   const { t } = useTranslation();
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+  const {state} = useLocation();
+  const [errorToast, setErrorToast] = useState(null);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
 
-  const handleSuccess = useCallback((response) => {
-    setHasSubmitted(true);
-    if (onSuccess) {
-      onSuccess(response);
-    }
-  }, [onSuccess]);
-
-  const [errorToast, setErrorToast] = useState(null);
-
-  const handleError = useCallback((error) => {
-    console.error('EW Create API Error:', error);
-    setHasSubmitted(true);
-    setErrorToast(error?.response?.data?.Errors?.[0]?.message || t("CS_EWASTE_APPLICATION_FAILED"));
-  }, [t]);
-
-  // useEffect(() => {
-  //   if (!hasSubmitted && data) {
-  //     try {
-  //       const formData = { ...data, tenantId };
-  //       const convertedData = EWDataConvert(formData);
-        
-  //       mutation.mutate(convertedData, {
-  //         onSuccess: handleSuccess,
-  //         onError: handleError
-  //       });
-  //     } catch (err) {
-  //       console.error('EW Data Conversion Error:', err);
-  //       setHasSubmitted(true);
-  //     }
-  //   }
-  // }, [data ,hasSubmitted]);
+  const application = state?.data;
 
   /**
    * Generates and downloads acknowledgement PDF
    */
   const handleDownloadPdf = async () => {
-    const { EwasteApplication = [] } = mutation.data || {};
+    const { EwasteApplication = [] } = state.data || {};
     let EW = (EwasteApplication && EwasteApplication[0]) || {};
     const tenantInfo = tenants.find((tenant) => tenant.code === EW.tenantId);
     let tenantId = EW.tenantId || tenantId;
@@ -112,15 +81,19 @@ const EWASTEAcknowledgement = ({ data, onSuccess, mutation }) => {
     Digit.Utils.pdf.generateTable(data);
   };
 
-  const isLoading = mutation.isPending;
-  const isSuccess = mutation.isSuccess;
+   const isLoading = !state;
+   const isSuccess = state?.isSuccess;
+ 
+   if (!state) {
+     return <Loader />;
+   }
 
   return isLoading ? (
     <Loader />
   ) : 
   (
     <Card>
-      <BannerPicker t={t} data={mutation.data} isSuccess={isSuccess} isLoading={isLoading} />
+      <BannerPicker t={t} data={application} isSuccess={isSuccess}  isLoading={isLoading}/>
       <StatusTable>
         {isSuccess && (
           <Row
