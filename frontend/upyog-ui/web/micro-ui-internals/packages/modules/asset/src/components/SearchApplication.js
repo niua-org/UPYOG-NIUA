@@ -56,6 +56,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
   })
 
 
+
   const { data: actionDetail } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "ASSET", [{ name: "ActionOption" }], {
     select: (data) => {
       const formattedData = data?.["ASSET"]?.["ActionOption"];
@@ -63,6 +64,8 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
       return activeData;
     },
   });
+
+  console.log("actionDetailactionDetail",actionDetail);
 
  
 
@@ -79,7 +82,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
 
   const collectAction = (row) => {
     const actionMdms = [];
-
+console.log("Action actionDetail:", actionDetail);
     actionDetail &&
       actionDetail.map((opt) => {
 
@@ -102,6 +105,8 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
           });
         }
       });
+
+      console.log("Action Options:", actionMdms);
 
     return actionMdms;
   };
