@@ -9,18 +9,22 @@ import ADSCancelBooking from "./ADSCancelBooking";
  * It provides search filters like booking number,status, mobile number, and date range.
  * The component also includes ability to view details or cancel bookings.
  */
-const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
   
     const isMobile = window.Digit.Utils.browser.isMobile();
     const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
         defaultValues: {
+            bookingNo: "",
+            applicantName: "",
+            faceArea: undefined,
+            status: undefined,
+            mobileNumber: "",
+            fromDate: "",
+            toDate: "",
             offset: 0,
             limit: !isMobile && 10,
             sortBy: "commencementDate",
-            sortOrder: "DESC",
-            fromDate: new Date().toISOString().split('T')[0], // Default to today's date
-            toDate: new Date().toISOString().split('T')[0], // Default to today's date
-            status: { i18nKey: "Booked", code: "BOOKED", value: t("CHB_BOOKED") }
+            sortOrder: "DESC"
         }
     })
     useEffect(() => {
@@ -28,7 +32,6 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
       register("limit")
       register("sortBy")
       register("sortOrder")
-      handleSubmit(onSubmit)();
     },[register])
     const [bookingDetails,setBookingDetails]=useState("");
     const [showModal,setShowModal] = useState(false)
@@ -276,11 +279,35 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("ADS_BOOKING_NO")}</label>
-                    <TextInput name="bookingNo" {...register("bookingNo")} />
+                    <Controller
+                        control={control}
+                        name="bookingNo"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                     <label>{t("ADS_APPLICANT_NAME")}</label>
-                    <TextInput  name="applicantName" {...register("applicantName")} />
+                    <Controller
+                        control={control}
+                        name="applicantName"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                     <label>{t("ADS_FACE_AREA")}</label>
@@ -322,26 +349,32 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 </SearchField>
                 <SearchField>
                 <label>{t("ADS_MOBILE_NUMBER")}</label>
-                <MobileNumber
+                <Controller
+                    control={control}
                     name="mobileNumber"
-                    {...register("mobileNumber", {
-                    minLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    maxLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    pattern: {
-                    value: /[6789][0-9]{9}/,
-                    //type: "tel",
-                    message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                })}
-                type="number"
-                componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                //maxlength={10}
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
                 />
                 <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                 </SearchField> 
@@ -380,7 +413,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                             sortOrder: "DESC"
                         });
                         setShowToast(null);
-                        previousPage();
+                        onClear();
                     }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>

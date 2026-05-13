@@ -29,7 +29,7 @@
   import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
   import { Link } from "react-router-dom";
 
-  const PTRSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+  const PTRSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
     
       const isMobile = window.Digit.Utils.browser.isMobile();
       const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
@@ -284,7 +284,7 @@
                               sortOrder: "DESC"
                           });
                           setShowToast(null);
-                          previousPage();
+                          onClear();
                       }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                   </SearchField>
               </SearchForm>

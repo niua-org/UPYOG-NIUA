@@ -14,7 +14,7 @@ const WTCreate = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
 
   let config = [];
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const wtMutation = Digit.Hooks.wt.useTankerCreateAPI(tenantId);
   const mtMutation = Digit.Hooks.wt.useMobileToiletCreateAPI(tenantId);
   const tpMutation = Digit.Hooks.wt.useTreePruningCreateAPI(tenantId);
