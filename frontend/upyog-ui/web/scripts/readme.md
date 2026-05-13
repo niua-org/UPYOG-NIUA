@@ -20,7 +20,7 @@ After the Vite upgrade, all individual module build scripts were removed because
  
 This pipeline was built to solve that — a single centralized system that any developer can use to build and publish any module to NPM without touching individual `package.json` files, without breaking local development, and without any manual steps.
 
-![Architecture Diagram](./image.png)
+![Architecture Diagram](./image.svg)
 
 
 ---

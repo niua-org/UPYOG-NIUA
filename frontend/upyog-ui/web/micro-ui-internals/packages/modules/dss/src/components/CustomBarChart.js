@@ -1,5 +1,5 @@
 import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { Fragment, useContext, useMemo, useState } from "react";
+import React, { Fragment, useContext, useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
@@ -168,7 +168,6 @@ const CustomBarChart = ({
     if (!response) return null;
     let possibleValues = ["pttopPerformingStatesRevenue","ptbottomPerformingStatesRevenue","tltopPerformingStatesRevenue","tlbottomPerformingStatesRevenue","obpstopPerformingStatesRevenue","obpsbottomPerformingStatesRevenue","noctopPerformingStatesRevenue","nocbottomPerformingStatesRevenue","wstopPerformingStatesRevenue","wsbottomPerformingStatesRevenue","OverviewtopPerformingStates","OverviewbottomPerformingStates"]
    
-    setChartDenomination("number");
     const dd = response?.responseData?.data?.map((bar) => {
       let plotValue = bar?.plots?.[0].value || 0;
       let type =""
@@ -207,7 +206,11 @@ const CustomBarChart = ({
     });
     setMaxValue(newObj);
     return newReturn;
-  }, [response]);
+  }, [response, data, t]);
+
+  useEffect(() => {
+    setChartDenomination("number");
+  }, [setChartDenomination]);
 
   const goToDrillDownCharts = () => {
     navigate(

@@ -347,7 +347,6 @@ const Home = ({ stateCode }) => {
   const handlePrint = () => Digit.Download.PDF(fullPageRef, t(dashboardConfig?.[0]?.name));
 
   const dashboardConfig = response?.responseData;
-  console.log("dashboardConfig",dashboardConfig)
   const shareOptions = navigator.share
     ? [
         {
