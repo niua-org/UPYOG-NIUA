@@ -35,11 +35,11 @@
       const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
           defaultValues: {
               applicationNumber: "",
-              petType: undefined,
-              applicationType: undefined,
+              petType: "",
+              applicationType: "",
               mobileNumber: "",
-              fromDate: undefined,
-              toDate: undefined,
+              fromDate: "",
+              toDate: "",
               offset: 0,
               limit: !isMobile && 10,
               sortBy: "commencementDate",

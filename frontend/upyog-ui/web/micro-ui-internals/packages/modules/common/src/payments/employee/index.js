@@ -27,23 +27,15 @@ const EmployeePayment = ({ stateCode, cityCode, moduleCode }) => {
   return (
     <React.Fragment>
       <p className="breadcrumb" style={{ marginLeft: "15px" }}>
-        <Link to={`/upyog-ui/employee`}>{t("ES_COMMON_HOME")}</Link>
-        {isFsm ? <Link to={`/upyog-ui/employee/fsm/home`}>/ {t("ES_TITLE_FSM")} </Link> : null}
-        {isFsm ? <Link to={`/upyog-ui/employee/fsm/inbox`}>/ {t("ES_TITLE_INBOX")}</Link> : null}/ {link}
+        <Link to={"/upyog-ui/employee"}>{t("ES_COMMON_HOME")}</Link>
+        {isFsm ? <Link to={"/upyog-ui/employee/fsm/home"}>/ {t("ES_TITLE_FSM")} </Link> : null}
+        {isFsm ? <Link to={"/upyog-ui/employee/fsm/inbox"}>/ {t("ES_TITLE_INBOX")}</Link> : null}/ {link}
       </p>
       <Routes>
-        <Route path={`/collect/:businessService/:consumerCode`}>
-          <CollectPayment {...commonProps} basePath={currentPath} />
-        </Route>
-        <Route path={`/success/:businessService/:receiptNumber/:consumerCode`}>
-          <SuccessfulPayment {...commonProps} />
-        </Route>
-        <Route path={`/integration/:moduleName/:pageName`}>
-          <IFrameInterface {...commonProps} />
-        </Route>
-        <Route path={`/failure`}>
-          <FailedPayment {...commonProps} />
-        </Route>
+        <Route path="collect/:businessService/:consumerCode/*" element={<CollectPayment {...commonProps} basePath={currentPath} />} />
+        <Route path="success/:businessService/:receiptNumber/:consumerCode/*" element={<SuccessfulPayment {...commonProps} />} />
+        <Route path="integration/:moduleName/:pageName" element={<IFrameInterface {...commonProps} />} />
+        <Route path="failure" element={<FailedPayment {...commonProps} />} />
       </Routes>
     </React.Fragment>
   );

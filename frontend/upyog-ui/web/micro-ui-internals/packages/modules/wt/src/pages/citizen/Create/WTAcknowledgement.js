@@ -1,8 +1,8 @@
 import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import { waterTankerPayload, APPLICATION_PATH } from "../../../utils";
+import { Link, useLocation } from "react-router-dom";
+import { APPLICATION_PATH } from "../../../utils";
 import getWTAcknowledgementData from "../../../utils/getWTAcknowledgementData";
 
 
@@ -24,18 +24,15 @@ import getWTAcknowledgementData from "../../../utils/getWTAcknowledgementData";
 */
 
 
-
 const GetActionMessage = (props) => {
-    const { t } = useTranslation();
-    if (props.isSuccess) {
-      return t("WT_SUBMIT_SUCCESSFULL");
-    }
-    else if (props.isLoading){
-      return t("WT_APPLICATION_PENDING");
-    }
-    else if (!props.isSuccess)
-    return t("WT_APPLICATION_FAILED");
-  };
+  const { t } = useTranslation();
+
+  if (props?.isSuccess) {
+    return t("WT_SUBMIT_SUCCESSFULL");
+  }
+
+  return t("WT_APPLICATION_FAILED");
+};
 
 
 //style object to pass inside row container which shows the application ID and status of application of banner image
@@ -48,67 +45,26 @@ const BannerPicker = (props) => {
   return (
     <Banner
       message={GetActionMessage(props)}
-      applicationNumber={props.data?.waterTankerBookingDetail?.bookingNo}
-      info={props.isSuccess ? props.t("WT_BOOKING_NO") : ""}
-      successful={props.isSuccess}
-      style={{width: "100%"}}
+      applicationNumber={props?.data?.waterTankerBookingDetail?.bookingNo}
+      info={props?.isSuccess ? props.t("WT_BOOKING_NO") : ""}
+      successful={props?.isSuccess}
+      style={{ width: "100%" }}
     />
   );
 };
 
-const WTAcknowledgement = ({ data, onSuccess, mutation}) => {
+const WTAcknowledgement = () => {
   const { t } = useTranslation();
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const { state } = useLocation();
+  console.log("dtat", state);
+
   const [errorToast, setErrorToast] = useState(null);
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+
   const user = Digit.UserService.getUser().info;
+
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
+
   const { tenants } = storeData || {};
-
-  const handleSuccess = useCallback(
-    (response) => {
-      setHasSubmitted(true);
-      if (onSuccess) {
-        onSuccess(response);
-      }
-    },
-    [onSuccess]
-  );
-
-  const handleError = useCallback(
-    (error) => {
-      console.error("WT Create API Error:", error);
-      setHasSubmitted(true);
-      setErrorToast(
-        error?.response?.data?.Errors?.[0]?.message ||
-          t("WT_APPLICATION_FAILED")
-      );
-    },
-    [t]
-  );
-
-  // useEffect(() => {
-  //   if (!hasSubmitted && data) {
-  //     try {
-  //       const formData = { ...data, tenantId };
-  //       const convertedData = waterTankerPayload(formData);
-  //       mutation.mutate(convertedData, {
-  //         onSuccess: handleSuccess,
-  //         onError: handleError,
-  //       });
-  //     } catch (err) {
-  //       console.error("WT Payload Error:", err);
-  //       setHasSubmitted(true);
-  //     }
-  //   }
-  // }, [data, hasSubmitted]);
-
-  /*custom hook to prevent going back in Acknowledgement /success response page
-  * if you click Back then it will redirect you to Home page 
-  */
-  Digit.Hooks.useCustomBackNavigation({
-    redirectPath: '${APPLICATION_PATH}/citizen'
-  })
 
   /**
    * Handles the generation and download of the Water Tanker Acknowledgement PDF.
@@ -119,39 +75,65 @@ const WTAcknowledgement = ({ data, onSuccess, mutation}) => {
    * - Generates and downloads the PDF using the prepared data.
    */
   const handleDownloadPdf = async () => {
-    let waterTankerDetail = mutation.data?.waterTankerBookingDetail;
-    const tenantInfo = tenants.find((tenant) => tenant.code === waterTankerDetail.tenantId);
-    let tenantId = waterTankerDetail.tenantId || tenantId;
-    const data = await getWTAcknowledgementData({...waterTankerDetail }, tenantInfo, t);
+    let waterTankerDetail = state?.data?.waterTankerBookingDetail;
+
+    const tenantInfo = tenants.find(
+      (tenant) => tenant.code === waterTankerDetail?.tenantId
+    );
+
+    const data = await getWTAcknowledgementData(
+      { ...waterTankerDetail },
+      tenantInfo,
+      t
+    );
+
     Digit.Utils.pdf.generate(data);
   };
 
-  const isLoading = mutation.isPending;
-  const isSuccess = mutation.isSuccess;
+  const isLoading = !state;
+  const isSuccess = state?.isSuccess;
+
+  if (!state) {
+    return <Loader />;
+  }
+
   return isLoading ? (
     <Loader />
   ) : (
     <Card>
-      <BannerPicker t={t} data={mutation.data} isSuccess={isSuccess} isLoading={isLoading} />
+      <BannerPicker
+        t={t}
+        data={state?.data}
+        isSuccess={isSuccess}
+        isLoading={isLoading}
+      />
+
       <StatusTable>
         {isSuccess && (
           <Row
             rowContainerStyle={rowContainerStyle}
-            last       
+            last
             textStyle={{ whiteSpace: "pre", width: "60%" }}
           />
         )}
       </StatusTable>
-      {isSuccess && <SubmitBar label={t("WT_DOWNLOAD_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />}
-      {errorToast && <Toasterror label={errorToast} onClose={() => setErrorToast(null)} />}
-      {user?.type==="CITIZEN"?
-      <Link to={`${APPLICATION_PATH}/citizen`}>
-        <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
-      </Link>
-      :
-      <Link to={`${APPLICATION_PATH}/employee`}>
-        <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
-      </Link>}
+
+      {isSuccess && (
+        <SubmitBar
+          label={t("WT_DOWNLOAD_ACKNOWLEDGEMENT")}
+          onSubmit={handleDownloadPdf}
+        />
+      )}
+      
+      {user?.type === "CITIZEN" ? (
+        <Link to={`${APPLICATION_PATH}/citizen`}>
+          <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
+        </Link>
+      ) : (
+        <Link to={`${APPLICATION_PATH}/employee`}>
+          <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
+        </Link>
+      )}
     </Card>
   );
 };
