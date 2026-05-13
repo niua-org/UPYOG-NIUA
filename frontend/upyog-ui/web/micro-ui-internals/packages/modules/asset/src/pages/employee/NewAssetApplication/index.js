@@ -1,7 +1,7 @@
 import { FormComposer, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { assignConfig } from "../../../config/Create/assignConfig";
 
@@ -11,10 +11,10 @@ const NewAssetApplication = () => {
   const [canSubmit, setSubmitValve] = useState(false);
   const defaultValues = {};
   const navigate = Digit.Hooks.useCustomNavigate();
+  const queryClient = useQueryClient();
   const { id: applicationNo } = useParams();
   const { data: applicationDetails } = Digit.Hooks.asset.useAssetApplicationDetail(t, tenantId, applicationNo);
-  
-   const [_formData, setFormData,_clear] = Digit.Hooks.useSessionStorage("store-data",null);
+    const mutation = Digit.Hooks.asset.useAssignCreateAPI(tenantId);
    const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_HAPPENED", false);
   const [successData, setsuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_SUCCESS_DATA", { });
 
@@ -34,8 +34,38 @@ const NewAssetApplication = () => {
   
 
   const onFormValueChange = (setValue, formData, formState) => {
-    
     setSubmitValve(!Object.keys(formState.errors).length); 
+  };
+
+  const handleSubmit = (formData) => {
+    mutation.mutate(
+      {
+        Asset: formData,
+      },
+      {
+        onSuccess: (response) => {
+          queryClient.clear();
+          navigate("/upyog-ui/employee/asset/assetservice/assign-response", { 
+            replace: true, 
+            state: { 
+              Assets: formData,
+              isSuccess: true,
+              response: response
+            } 
+          });
+        },
+        onError: (error) => {
+          navigate("/upyog-ui/employee/asset/assetservice/assign-response", { 
+            replace: true, 
+            state: { 
+              Assets: formData,
+              isSuccess: false,
+              error: error
+            } 
+          });
+        }
+      }
+    );
   };
 
   const onSubmit = (data) => {
@@ -64,7 +94,7 @@ const NewAssetApplication = () => {
       },   
     };
 
-    navigate("/upyog-ui/employee/asset/assetservice/assign-response", { replace: true, state: { Assets: formData } }); 
+   handleSubmit(formData);
     
 
   };
@@ -80,7 +110,7 @@ const NewAssetApplication = () => {
   return (
     <FormComposer
       heading={t("AST_ASSIGN_ASSET")}
-      isDisabled={!canSubmit}
+      // isDisabled={!canSubmit}
       label={t("ES_COMMON_APPLICATION_SUBMIT")}
       config={configs.map((config) => {
        

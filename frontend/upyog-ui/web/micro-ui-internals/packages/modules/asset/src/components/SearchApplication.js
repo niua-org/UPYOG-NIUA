@@ -81,35 +81,38 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
   };
 
   const collectAction = (row) => {
-    const actionMdms = [];
-console.log("Action actionDetail:", actionDetail);
-    actionDetail &&
-      actionDetail.map((opt) => {
+  if (!actionDetail) {
+    console.log("actionDetail not loaded yet");
+    return [];
+  }
 
-        // this condition use for if asset asign then show return asset if asset not assign then show asset Assign
-        if (
-          (row?.original?.assetAssignment?.isAssigned && opt.code === "AST_RETURN") ||
-          (!row?.original?.assetAssignment?.isAssigned && opt.code === "AST_ASSIGN")
-        ) {
-          actionMdms.push({
-            label: t(opt.code),
-            link: `${opt.url}${row?.original?.["applicationNo"]}`,
-            code: opt.code
-          });
-        } else if ( opt.code !== "AST_RETURN" && opt.code !== "AST_ASSIGN") {
-          // Push other options unconditionally
-          actionMdms.push({
-            label: t(opt.code),
-            link: `${opt.url}${row?.original?.["applicationNo"]}`,
-            code: opt.code
-          });
-        }
+  console.log("Action actionDetail:", actionDetail);
+
+  const actionMdms = [];
+
+  actionDetail.map((opt) => {
+    if (
+      (row?.original?.assetAssignment?.isAssigned && opt.code === "AST_RETURN") ||
+      (!row?.original?.assetAssignment?.isAssigned && opt.code === "AST_ASSIGN")
+    ) {
+      actionMdms.push({
+        label: t(opt.code),
+        link: `${opt.url}${row?.original?.["applicationNo"]}`,
+        code: opt.code
       });
+    } else if (opt.code !== "AST_RETURN" && opt.code !== "AST_ASSIGN") {
+      actionMdms.push({
+        label: t(opt.code),
+        link: `${opt.url}${row?.original?.["applicationNo"]}`,
+        code: opt.code
+      });
+    }
+  });
 
-      console.log("Action Options:", actionMdms);
+  console.log("Action Options:", actionMdms);
 
-    return actionMdms;
-  };
+  return actionMdms;
+};
 
   const processDepreciation = async (applicationNo, assetId) => {
     try {
@@ -303,7 +306,7 @@ console.log("Action actionDetail:", actionDetail);
       },
       mobileCell: (original) => GetMobCell(original?.searchData?.["applicationNo"]),
     },
-  ]), [])
+  ]), [actionDetail])
 
   const onSort = useCallback((args) => {
     if (args.length === 0) return
