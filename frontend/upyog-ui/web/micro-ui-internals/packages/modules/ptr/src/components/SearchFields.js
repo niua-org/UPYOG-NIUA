@@ -36,28 +36,24 @@ const SearchFields = ({register, control, reset, tenantId, t, formState, setShow
                 
                 <SearchField>
                 <label>{t("PTR_OWNER_MOBILE_NO")}</label>
-                <MobileNumber
+                <Controller
+                    control={control}
                     name="mobileNumber"
-                    {...register("mobileNumber", {
-                    minLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    maxLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    pattern: {
-                    value: /[6789][0-9]{9}/,
-                    //type: "tel",
-                    message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                })}
-                type="number"
-                componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                //maxlength={10}
+                    rules={{
+                        minLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
+                        maxLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
+                        pattern: { value: /[6789][0-9]{9}/, message: t("CORE_COMMON_MOBILE_ERROR") },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            value={field.value}
+                            onChange={field.onChange}
+                            type="number"
+                            componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+                        />
+                    )}
                 />
-                 <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
+                <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                 </SearchField>
                 
                 <SearchField>

@@ -155,24 +155,22 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
           {/* Search field for Mobile Number */}
           <SearchField>
             <label>{t("EW_OWNER_MOBILE_NO")}</label>
-            <MobileNumber
+            <Controller
+              control={control}
               name="mobileNumber"
-              {...register("mobileNumber", {
-                minLength: {
-                  value: 10,
-                  message: t("CORE_COMMON_MOBILE_ERROR"),
-                },
-                maxLength: {
-                  value: 10,
-                  message: t("CORE_COMMON_MOBILE_ERROR"),
-                },
-                pattern: {
-                  value: /[6789][0-9]{9}/,
-                  message: t("CORE_COMMON_MOBILE_ERROR"),
-                },
-              })}
-              type="number"
-              componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+              rules={{
+                minLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
+                maxLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
+                pattern: { value: /[6789][0-9]{9}/, message: t("CORE_COMMON_MOBILE_ERROR") },
+              }}
+              render={({ field }) => (
+                <MobileNumber
+                  value={field.value}
+                  onChange={field.onChange}
+                  type="number"
+                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+                />
+              )}
             />
             <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
           </SearchField>

@@ -21,7 +21,6 @@ import PTRCard from "./components/PTRCard";
 import InboxFilter from "./components/inbox/NewInboxFilter";
 import { TableConfig } from "./config/inbox-table-config";
 import ApplicationDetails from "./pages/employee/ApplicationDetails";
-import NewApplication from "./pages/employee/NewApplication";
 
 
 // Registering all components to be used in the module
@@ -29,7 +28,6 @@ const componentsToRegister = {
   PTRCheckPage,
   PTRAcknowledgement,
   PTRWFCaption,
-  PTRNewApplication: NewApplication,
   ApplicationDetails: ApplicationDetails,
   PTRMyApplications: PTRMyApplications,
   PTRApplicationDetails: PTRApplicationDetails,

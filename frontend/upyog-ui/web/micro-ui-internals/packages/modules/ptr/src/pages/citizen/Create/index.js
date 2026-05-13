@@ -33,7 +33,7 @@ const PTRCreate = ({ parentRoute }) => {
   const stateId = Digit.ULBService.getStateId();
 
   let config = [];
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();; 
   const mutation = Digit.Hooks.ptr.usePTRCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("PTR_CREATE_PET", {});
 
@@ -139,14 +139,36 @@ const PTRCreate = ({ parentRoute }) => {
    * @param {boolean} isAddMultiple - Whether multiple steps are added
    */
 
+ const clearSession = () => {
+    clearParams();
+    queryClient.invalidateQueries("PTR_CREATE_PET");
+    sessionStorage.removeItem(["applicationType","petId"]);
+    sessionStorage.removeItem("petToken");
+  };
+
  const handleSubmit = () => {
   const formdata = PetDataConvert(params);
   formdata.PetRegistrationApplications[0].tenantId = tenantId;
   mutation.mutate(formdata, {
-    onSuccess: () => {
-      clearParams();
-      queryClient.invalidateQueries("PTR_CREATE_PET");
-      navigate("acknowledgement", { replace: true });
+    onSuccess: (response) => {
+      clearSession();
+      navigate("acknowledgement", {
+        state: {
+          data: response,
+          isSuccess: true,
+        },
+      });
+    },
+
+    onError: (error) => {
+      console.log("error");
+      navigate("acknowledgement", {
+        state: {
+          data: null,
+          isSuccess: false,
+           error:error
+        },
+      });
     },
   });
 };
@@ -172,12 +194,6 @@ const PTRCreate = ({ parentRoute }) => {
   const handleMultiple = () => { };
 
   // Clears params and cache on success
-  const onSuccess = () => {
-    clearParams();
-    queryClient.invalidateQueries("PTR_CREATE_PET");
-    sessionStorage.removeItem(["applicationType","petId"]);
-    sessionStorage.removeItem("petToken");
-  };
   if (isLoading) {
     return <Loader />;
   }
@@ -213,7 +229,7 @@ const PTRCreate = ({ parentRoute }) => {
       })}
 
       <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
-      <Route path={`acknowledgement`} element={<PTRAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation}/>} />
+      <Route path={`acknowledgement`} element={<PTRAcknowledgement/>} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
   );

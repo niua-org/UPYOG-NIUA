@@ -209,20 +209,19 @@ const getActs = (offenceType, offenceActData) =>
                     message: "Enter a valid 10-digit mobile number",
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <MobileNumber
-                    value={props.value}
+                    value={field.value}
                     maxlength={10}
                     onChange={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                       setValue("name", "");
                       setValue("address", "");
-                      // ✅ updates react-hook-form
                       if (e.length == 10) {
-                        handleMobileChange(e); // 🔥 only then fire API
+                        handleMobileChange(e);
                       }
                     }}
-                    onBlur={props.onBlur}
+                    onBlur={field.onBlur}
                     t={t}
                   />
                 )}
@@ -241,16 +240,12 @@ const getActs = (offenceType, offenceActData) =>
                   required: "Name is required",
                   minLength: { value: 2, message: "Name must be at least 2 characters" },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     error={errors?.name?.message}
-                    onChange={(e) => {
-                      props.onChange(e.target.value);
-                    }}
-                    onBlur={(e) => {
-                      props.onBlur(e);
-                    }}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
                     t={t}
                   />
                 )}
@@ -270,16 +265,12 @@ const getActs = (offenceType, offenceActData) =>
                   required: "Address is required",
                   minLength: { value: 5, message: "Address must be at least 5 characters" },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextArea
                     name="address"
-                    value={props.value}
-                    onChange={(e) => {
-                      props.onChange(e.target.value);
-                    }}
-                    onBlur={(e) => {
-                      props.onBlur(e);
-                    }}
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
                     t={t}
                   />
                 )}
@@ -297,11 +288,11 @@ const getActs = (offenceType, offenceActData) =>
                 name={"offenceCategory"}
                 defaultValue={null}
                 rules={{ required: t("CHALLAN_OFFENCE_CATEGORY_REQUIRED") }}
-                render={(props) => (
+                render={({ field }) => (
                   <Dropdown
                     className="form-field"
-                    select={props.onChange}
-                    selected={props.value}
+                    select={field.onChange}
+                    selected={field.value}
                     option={categoryData?.Challan?.Category}
                     optionKey="name"
                     t={t}
@@ -321,13 +312,11 @@ const getActs = (offenceType, offenceActData) =>
                 name={"offenceSubCategory"}
                 defaultValue={null}
                 rules={{ required: t("CHALLAN_OFFENCE_SUB_CATEGORY_REQUIRED") }}
-                render={(props) => (
+                render={({ field }) => (
                   <Dropdown
                     className="form-field"
-                    select={(e) => {
-                      props.onChange(e);
-                    }}
-                    selected={props.value}
+                    select={field.onChange}
+                    selected={field.value}
                     option={subCategoryData?.Challan?.SubCategory}
                     optionKey="name"
                     t={t}
@@ -347,15 +336,14 @@ const getActs = (offenceType, offenceActData) =>
                 name={"offenceType"}
                 defaultValue={null}
                 rules={{ required: t("CHALLAN_TYPE_OFFENCE_REQUIRED") }}
-                render={(props) => (
+                render={({ field }) => (
                   <Dropdown
                     className="form-field"
-                    // select={props.onChange}
                     select={(e) => {
-                      props.onChange(e);
+                      field.onChange(e);
                       handleRates(e);
                     }}
-                    selected={props.value}
+                    selected={field.value}
                     option={OffenceTypeData?.Challan?.OffenceType}
                     optionKey="name"
                     t={t}
@@ -371,18 +359,14 @@ const getActs = (offenceType, offenceActData) =>
               <Controller
                 control={control}
                 name="amount"
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
                     type="number"
-                    value={props.value}
+                    value={field.value}
                     error={errors?.name?.message}
                     disable={true}
-                    onChange={(e) => {
-                      props.onChange(e.target.value);
-                    }}
-                    onBlur={(e) => {
-                      props.onBlur(e);
-                    }}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    onBlur={field.onBlur}
                     t={t}
                   />
                 )}

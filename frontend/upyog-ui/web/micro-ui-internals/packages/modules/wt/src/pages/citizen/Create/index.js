@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useMatch } from "react-router-dom";
 import { commonConfig } from "../../../config/config";
 import { Timeline } from "@nudmcdgnpm/digit-ui-react-components";
+import { treePruningPayload, waterTankerPayload, mobileToiletPayload } from "../../../utils";
 
 
 const WTCreate = () => {
@@ -13,6 +14,10 @@ const WTCreate = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
 
   let config = [];
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
+  const wtMutation = Digit.Hooks.wt.useTankerCreateAPI(tenantId);
+  const mtMutation = Digit.Hooks.wt.useMobileToiletCreateAPI(tenantId);
+  const tpMutation = Digit.Hooks.wt.useTreePruningCreateAPI(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("WT_Create", {});
 
   // Sets the serviceType in case of employee side for WT, MT, and TP
@@ -109,15 +114,87 @@ const WTCreate = () => {
     queryClient.invalidateQueries("WT_Create");
   }
 
-  const wt_create = async () => {
+   const clearSession = () => {
+    clearParams();
+    queryClient.invalidateQueries("WT_Create");
+  };
+
+  const handleSubmit = async () => {
     if (params?.serviceType?.serviceType?.code === "WT") {
-      navigate(`wt-acknowledgement`);
+      const formdata = waterTankerPayload(params);
+      formdata.waterTankerBookingDetail.tenantId = tenantId;
+            
+          wtMutation.mutate(formdata, {
+            onSuccess: (response) => {
+              clearSession();
+              navigate("wt-acknowledgement", {
+                state: {
+                  data: response,
+                  isSuccess: true,
+                },
+              });
+            },
+        
+            onError: (error) => {
+              navigate("wt-acknowledgement", {
+                state: {
+                  data: null,
+                  isSuccess: false,
+                  error:error
+                },
+              });
+            },
+          });
     }
     if (params?.serviceType?.serviceType?.code === "MobileToilet") {
-      navigate(`mt-acknowledgement`);
+      const formdata = mobileToiletPayload(params);
+      formdata.mobileToiletBookingDetail.tenantId = tenantId;
+          mtMutation.mutate(formdata, {
+            onSuccess: (response) => {
+              clearSession();
+              navigate("mt-acknowledgement", {
+                state: {
+                  data: response,
+                  isSuccess: true,
+                },
+              });
+            },
+        
+            onError: (error) => {
+              navigate("mt-acknowledgement", {
+                state: {
+                  data: null,
+                  isSuccess: false,
+                  error:error
+                },
+              });
+            },
+          });
     }
     if (params?.serviceType?.serviceType?.code === "TREE_PRUNING") {
-      navigate(`tp-acknowledgement`);
+         const formdata = treePruningPayload(params);
+         formdata.treePruningBookingDetail.tenantId = tenantId;  
+          tpMutation.mutate(formdata, {
+            onSuccess: (response) => {
+              clearSession();
+              navigate("tp-acknowledgement", {
+                state: {
+                  data: response,
+                  isSuccess: true,
+                },
+              });
+            },
+        
+            onError: (error) => {
+              navigate("tp-acknowledgement", {
+                state: {
+                  data: null,
+                  isSuccess: false,
+                  error:error
+                },
+              });
+            },
+          });
     }
   };
 
@@ -137,11 +214,6 @@ const WTCreate = () => {
     }
     goNext(skipStep, index, isAddMultiple, key);
   }
-
-  const onSuccess = () => {
-    clearParams();
-    queryClient.invalidateQueries("WT_Create");
-  };
 
   let commonFields = commonConfig;
   commonFields.forEach((obj) => {
@@ -171,10 +243,10 @@ const WTCreate = () => {
             />
           );
         })}
-        <Route path="check/*" element={<CheckPage onSubmit={wt_create} value={params} />} />
-        <Route path="wt-acknowledgement/*" element={<WTAcknowledgement data={params} onSuccess={onSuccess} />} />
-        <Route path="mt-acknowledgement/*" element={<MTAcknowledgement data={params} onSuccess={onSuccess} />} />
-        <Route path="tp-acknowledgement/*" element={<TPAcknowledgement data={params} onSuccess={onSuccess} />} />
+        <Route path="check/*" element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+        <Route path="wt-acknowledgement/*" element={<WTAcknowledgement />} />
+        <Route path="mt-acknowledgement/*" element={<MTAcknowledgement />} />
+        <Route path="tp-acknowledgement/*" element={<TPAcknowledgement />} />
         <Route path="/*" element={<Navigate to={`${config.indexRoute}`} />} />
       </Routes>
     </React.Fragment>
