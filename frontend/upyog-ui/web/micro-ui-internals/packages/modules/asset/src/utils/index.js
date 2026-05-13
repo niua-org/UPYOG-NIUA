@@ -225,3 +225,14 @@ export const getWorkflow = (data = {}) => {
   };
 };
 
+
+
+export const toDateString = (val) => {
+  if (!val) return "";
+  if (val instanceof Date) return val.toISOString().split("T")[0];
+  if (typeof val === "string") return val;
+  // DatePicker sometimes returns a timestamp number
+  if (typeof val === "number") return new Date(val).toISOString().split("T")[0];
+  return "";
+};
+
