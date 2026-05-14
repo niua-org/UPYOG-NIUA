@@ -1,5 +1,6 @@
 import { queryTemplate } from "../../common/queryTemplate";
 import { useQueryClient } from "@tanstack/react-query";
+import { transformDetails as transformComplaintDetails } from "../pgr/useComplaintDetails";
 
 const getThumbnails = async (ids, tenantId) => {
   const res = await Digit.UploadServices.Filefetch(ids, tenantId);
@@ -40,12 +41,13 @@ const fetchComplaintDetails = async (tenantId, id) => {
     ? await getThumbnails(ids, service.tenantId)
     : null;
 
-  return {
+  return transformComplaintDetails({
+    id,
     service,
     workflow,
     thumbnails,
     complaintType,
-  };
+  });
 };
 
 const useApplicationDetails = ({ tenantId, id }) => {

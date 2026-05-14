@@ -38,7 +38,7 @@ const getDetailsRow = ({ id, service, complaintType }) => ({
 const isEmpty = (obj) =>
   obj === undefined || obj === null || Object.keys(obj).length === 0;
 
-const transformDetails = ({ id, service, workflow, thumbnails, complaintType }) => {
+export const transformDetails = ({ id, service, workflow, thumbnails, complaintType }) => {
   const { Customizations, SessionStorage } = window.Digit;
   const role = (SessionStorage.get("user_type") || "CITIZEN").toUpperCase();
 
