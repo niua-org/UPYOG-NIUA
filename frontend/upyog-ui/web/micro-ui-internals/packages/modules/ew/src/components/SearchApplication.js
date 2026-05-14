@@ -30,10 +30,14 @@ import { Link } from "react-router-dom";
  * @param {Function} props.setShowToast Toast notification handler
  * @returns {JSX.Element} Search interface with form and results table
  */
-const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
   const isMobile = window.Digit.Utils.browser.isMobile();
   const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
     defaultValues: {
+      requestId: "",
+      mobileNumber: "",
+      fromDate: "",
+      toDate: "",
       offset: 0,
       limit: !isMobile && 10,
       sortBy: "commencementDate",
@@ -149,29 +153,52 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
           {/* Search field for Request ID */}
           <SearchField>
             <label>{t("EW_REQUEST_ID")}</label>
-            <TextInput name="requestId" {...register("requestId")} />
+             <Controller
+                        control={control}
+                        name="requestId"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
+            <CardLabelError>{formState?.errors?.["requestId"]?.message}</CardLabelError>
           </SearchField>
 
           {/* Search field for Mobile Number */}
           <SearchField>
             <label>{t("EW_OWNER_MOBILE_NO")}</label>
             <Controller
-              control={control}
-              name="mobileNumber"
-              rules={{
-                minLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
-                maxLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
-                pattern: { value: /[6789][0-9]{9}/, message: t("CORE_COMMON_MOBILE_ERROR") },
-              }}
-              render={({ field }) => (
-                <MobileNumber
-                  value={field.value}
-                  onChange={field.onChange}
-                  type="number"
-                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+                    control={control}
+                    name="mobileNumber"
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
                 />
-              )}
-            />
             <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
           </SearchField>
 
@@ -213,7 +240,7 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, se
                   sortOrder: "DESC",
                 });
                 setShowToast(null);
-                previousPage();
+                onClear();
               }}
             >
               {t(`ES_COMMON_CLEAR_ALL`)}

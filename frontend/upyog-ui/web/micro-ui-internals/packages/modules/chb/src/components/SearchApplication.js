@@ -46,18 +46,21 @@
  * - Displays search results in a table format with pagination and sorting options.
  * - Includes a modal for viewing or managing booking details.
  */
-  const CHBSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+  const CHBSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
     
       const isMobile = window.Digit.Utils.browser.isMobile();
       const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
           defaultValues: {
+              bookingNo: "",
+              communityHallCode: "",
+              status: undefined,
+              mobileNumber: "",
+              fromDate: "",
+              toDate: "",
               offset: 0,
               limit: !isMobile && 10,
               sortBy: "commencementDate",
-              sortOrder: "DESC",
-              fromDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], // Default to one month ago
-              toDate: new Date().toISOString().split('T')[0], // Default to today's date
-              status: { i18nKey: "Booked", code: "BOOKED", value: t("CHB_BOOKED") }
+              sortOrder: "DESC"
           }
       })
       useEffect(() => {
@@ -65,7 +68,6 @@
         register("limit")
         register("sortBy")
         register("sortOrder")
-        handleSubmit(onSubmit)();
       },[register])
       const [bookingDetails,setBookingDetails]=useState("");
       const [showModal,setShowModal] = useState(false)
@@ -325,7 +327,19 @@
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
                       <label>{t("CHB_BOOKING_NO")}</label>
-                      <TextInput name="bookingNo" {...register("bookingNo")} />
+                      <Controller
+                        control={control}
+                        name="bookingNo"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                   </SearchField>
                   <SearchField>
                       <label>{t("CHB_COMMUNITY_HALL_NAME")}</label>
@@ -367,27 +381,33 @@
                   </SearchField>
                   <SearchField>
                   <label>{t("CHB_MOBILE_NUMBER")}</label>
-                  <MobileNumber
-                      name="mobileNumber"
-                      {...register("mobileNumber", {
-                      minLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      maxLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      pattern: {
-                      value: /[6789][0-9]{9}/,
-                      //type: "tel",
-                      message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                  })}
-                  type="number"
-                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                  //maxlength={10}
-                  />
+                  <Controller
+                    control={control}
+                    name="mobileNumber"
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
+                />
                   <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                   </SearchField> 
                   <SearchField>
@@ -424,7 +444,7 @@
                               sortOrder: "DESC"
                           });
                           setShowToast(null);
-                          previousPage();
+                          onClear();
                       }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                   </SearchField>
               </SearchForm>
