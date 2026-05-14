@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import _ from "lodash";
 import { resetNDCForm, updateNDCForm } from "../redux/actions/NDCFormActions";
-import { useLocation } from "react-router-dom";
+import { useLocation,Link } from "react-router-dom";
 import { Loader } from "../components/Loader";
 
 const getAddress = (address, t) => {
@@ -283,16 +283,15 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
             {getPayDuesButton && <div className="ndc-pay-due-button">Rs. {formData?.cpt?.dues?.totalAmount} </div>}
 
             {getPayDuesButton && (
-              <button
-                className="submit-bar"
-                type="button"
-                onClick={() => {
-                  setPayDuesButton(false);
-                }}
-              >
-                {`${t("PAY_DUES")} `}
-              </button>
-            )}
+  <Link to={`/upyog-ui/citizen/payment/my-bills/PT/${propertyId}`}>
+    <button
+      className="submit-bar"
+      type="button"
+    >
+      {`${t("PAY_DUES")}`}
+    </button>
+  </Link>
+)}
             {getNoDue && <div className="ndc-no-due-button">{t("NO_DUES_FOUND_FOR_PROPERTY")}</div>}
           </div>
         </LabelFieldPair>

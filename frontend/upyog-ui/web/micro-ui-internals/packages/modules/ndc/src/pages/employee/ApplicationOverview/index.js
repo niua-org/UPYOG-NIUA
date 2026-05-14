@@ -385,10 +385,9 @@ const ApplicationOverview = () => {
       setShowErrorToastt(true);
 
       return;
-    } else if (!filtData?.comment) {
+    } else if (!String(filtData?.comment || "").trim()) {
       setErrorOne("Comment is Mandatory");
       setShowErrorToastt(true);
-
       return;
     }
 
@@ -689,7 +688,7 @@ const ApplicationOverview = () => {
         <ActionBar>
           {displayMenu && (workflowDetails?.data?.actionState?.nextActions || workflowDetails?.data?.nextActions) ? (
             <Menu
-              localeKeyPrefix={`WF_EDITRENEWAL`}
+              localeKeyPrefix={`WF_EDdcddcdITRENEWAL`}
               options={actions}
               optionKey={"action"}
               t={t}

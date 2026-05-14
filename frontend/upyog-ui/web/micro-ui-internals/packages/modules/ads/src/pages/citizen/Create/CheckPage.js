@@ -220,7 +220,7 @@ import {
           <StatusTable>
           <Card>
             {documents?.documents?.map((doc, index) => (
-                  <ADSDocument value={value} Code={doc?.documentType} index={index} />
+            <ADSDocument value={value} Code={doc?.documentType} index={index}  key={doc?.documentType || index} />
             ))}
           </Card>
           </StatusTable>

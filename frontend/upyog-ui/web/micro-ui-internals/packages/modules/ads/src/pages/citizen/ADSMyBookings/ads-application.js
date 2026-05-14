@@ -84,10 +84,10 @@ const formatTime = (seconds) => {
           if (isSlotBooked) {
             setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
           } else {
-            navigate({
-              pathname: `/upyog-ui/citizen/payment/my-bills/${"adv-services"}/${application?.bookingNo}`,
-              state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData },
-            });
+            navigate(
+              `/upyog-ui/citizen/payment/my-bills/${"adv-services"}/${application?.bookingNo}`,
+              { state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData } }
+            );
           }
       } catch (error) {
         setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });

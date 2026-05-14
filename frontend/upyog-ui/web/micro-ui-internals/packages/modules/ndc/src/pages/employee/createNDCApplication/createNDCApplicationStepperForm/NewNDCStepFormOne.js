@@ -4,6 +4,7 @@ import { FormComposer, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { updateNDCForm } from "../../../../redux/actions/NDCFormActions";
 import { useState } from "react";
 import { Loader } from "../../../../components/Loader";
+import _ from "lodash";
 
 export const NewNDCStepFormOne = ({ config, onGoNext, onBackClick, t }) => {
   const dispatch = useDispatch();

@@ -45,12 +45,14 @@ const ADSRequiredDoc = ({ t, config, onSelect, userType, formData,value=formData
             {Array.isArray(docs)
               ? 
                 docs.map(({ code, dropdownData }, index) => ( 
-                    <div key={index}>
+                    <div key={code}>
                       <CardSubHeader>
                         {index + 1}. {t("ADS_" + stringReplaceAll(code, ".", "_"))}
                       </CardSubHeader>
                       {dropdownData.map((dropdownData, dropdownIndex) => (
-                        <CardText className={"primaryColor"}>
+                        <CardText 
+                        key={dropdownData?.code || dropdownIndex}
+                        className={"primaryColor"}>
                           {`${dropdownIndex + 1}`}. {t("ADS_" + stringReplaceAll(dropdownData?.code, ".", "_"))}
                         </CardText>
                       ))}

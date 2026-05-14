@@ -2,12 +2,15 @@ import { Banner, Card, CardText, ActionBar, SubmitBar } from "@nudmcdgnpm/digit-
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { stringReplaceAll } from "../../utils";
+import { useLocation } from "react-router-dom";
+
 
 //NDCResponseCitizen is a component that displays the response after a citizen submits an NDC application.
 //  It shows a banner with the application status and provides options to go back to the home page, go to the NDC home page, or make a payment if the application is approved.
 //  The content of the banner and the available actions are based on the application status.
 const NDCResponseCitizen = (props) => {
-  const { state } = props.location;
+  const location = useLocation();
+  const state = location?.state;
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const nocData = state?.data?.Noc?.[0];
@@ -16,15 +19,15 @@ const NDCResponseCitizen = (props) => {
   const pathname = navigate?.location?.pathname || "";
   const ndcCode = pathname.split("/").pop(); 
   const onSubmit = () => {
-    navigate.push(`/upyog-ui/citizen`);
+    navigate(`/upyog-ui/citizen`);
   };
 
   const onGoToNDC = () => {
-    navigate.push(`/upyog-ui/citizen/ndc-home`);
+    navigate(`/upyog-ui/citizen/ndc-home`);
   };
 
   const handlePayment = () => {
-    navigate.push(`/upyog-ui/citizen/payment/collect/NDC/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
+    navigate(`/upyog-ui/citizen/payment/collect/NDC/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
     // pathname: `/digit-ui/citizen/payment/collect/${application?.businessService}/${application?.applicationNumber}`,
   };
 

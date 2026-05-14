@@ -16,11 +16,11 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
             <div className="complaint-input-container ndc-complaint-input-container" >
               <SearchField>
                 <label>{t("NOC_HOME_SEARCH_RESULTS_APP_NO_LABEL")}</label>
-                <TextInput name="applicationNo" inputRef={registerRef({})} />
+                <TextInput name="applicationNo" inputRef={registerRef("applicationNo")} />
               </SearchField>
               <SearchField>
                 <label>{t("CORE_COMMON_PHONE_NUMBER")}</label>
-                <TextInput name="mobileNumber" inputRef={registerRef({})} />
+                <TextInput name="mobileNumber" inputRef={registerRef("mobileNumbder")} />
               </SearchField>
               <div className="search-action-wrapper ndc-search-action-wrapper" >
                 {searchFieldComponents}
@@ -36,11 +36,11 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
     <>
       <SearchField>
         <label>{t("NOC_HOME_SEARCH_RESULTS_APP_NO_LABEL")}</label>
-        <TextInput name="applicationNo" inputRef={registerRef({})} />
+        <TextInput name="applicationNo" inputRef={registerRef("applicationNo")} />
       </SearchField>
       <SearchField>
         <label>{t("CORE_COMMON_PHONE_NUMBER")}</label>
-        <TextInput name="mobileNumber" inputRef={registerRef({})} />
+        <TextInput name="mobileNumber" inputRef={registerRef("mobileNumber")} />
       </SearchField>
     </>
   );
