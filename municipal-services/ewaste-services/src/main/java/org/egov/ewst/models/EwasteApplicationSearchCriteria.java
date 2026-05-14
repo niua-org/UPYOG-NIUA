@@ -33,9 +33,11 @@ public class EwasteApplicationSearchCriteria {
 	@JsonProperty("ids")
 	private List<String> ids;
 
+	// filter based on single requestId
 	@JsonProperty("requestId")
 	private String requestId;
 
+	// filter based on multiple requestIds
 	@JsonProperty("listOfRequestIds")
 	private List<String> listOfRequestIds;
 
