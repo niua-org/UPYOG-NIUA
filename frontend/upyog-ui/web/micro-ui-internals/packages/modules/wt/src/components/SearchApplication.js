@@ -22,15 +22,20 @@ import React, { useCallback, useMemo } from "react"
  * @param {Function} props.setShowToast - Function to control toast messages.
  */
 
-  const WTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast, moduleCode }) => {
+  const WTSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast, moduleCode }) => {
     
       const isMobile = window.Digit.Utils.browser.isMobile();
       const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
           defaultValues: {
+              bookingNo: "",
+              status: undefined,
+              mobileNumber: "",
+              fromDate: "",
+              toDate: "",
               offset: 0,
               limit: !isMobile && 10,
               sortBy: "commencementDate",
-              sortOrder: "DESC",
+              sortOrder: "DESC"
           }
       })
       const user = Digit.UserService.getUser().info;
@@ -88,10 +93,16 @@ import React, { useCallback, useMemo } from "react"
             },
             
         ]), [] )
-        const statusOptions = [
+        const statusOptionForWaterTanker = [
           { i18nKey: "Booking Created", code: "BOOKING_CREATED", value: t("WT_BOOKING_CREATED") },
           { i18nKey: "Booking Approved", code: "APPROVED", value: t("WT_BOOKING_APPROVED") },
           { i18nKey: "Tanker Delivered", code: "TANKER_DELIVERED", value: t("WT_TANKER_DELIVERED") },
+        ];
+
+        const statusOptionForMobileToilet = [
+          { i18nKey: "Booking Created", code: "BOOKING_CREATED", value: t("WT_BOOKING_CREATED") },
+          { i18nKey: "Booking Approved", code: "APPROVED", value: t("WT_BOOKING_APPROVED") },
+          { i18nKey: "Mobile Toilet Delivered", code: "MOBILE_TOILET_DELIVERED", value: t("MT_MOBILE_TOILET_DELIVERED") },
         ];
 
         const statusOptionForTreePruning = [
@@ -159,7 +170,19 @@ import React, { useCallback, useMemo } from "react"
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
                       <label>{t("WT_BOOKING_NO")}</label>
-                      <TextInput name="bookingNo" {...register("bookingNo")} />
+                      <Controller
+                        control={control}
+                        name="bookingNo"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                   </SearchField>
                   <SearchField>
                       <label>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</label>
@@ -171,7 +194,15 @@ import React, { useCallback, useMemo } from "react"
                                   selected={field.value}
                                   select={field.onChange}
                                   onBlur={field.onBlur}
-                                  option={moduleCode==="TP"? statusOptionForTreePruning : statusOptions}
+                                  option={
+                                    moduleCode === "TP"
+                                      ? statusOptionForTreePruning
+                                      : moduleCode === "WT"
+                                      ? statusOptionForWaterTanker
+                                      : moduleCode === "MT"
+                                      ? statusOptionForMobileToilet
+                                      : []
+                                  }
                                   optionKey="i18nKey"
                                   t={t}
                                   disable={false}
@@ -182,27 +213,33 @@ import React, { useCallback, useMemo } from "react"
                   </SearchField>
                   <SearchField>
                   <label>{t("WT_MOBILE_NUMBER")}</label>
-                  <MobileNumber
-                      {...register("mobileNumber", {
+                  <Controller
+                    control={control}
+                    name="mobileNumber"
+                    rules={{
                         minLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
                         },
                         maxLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
                         },
                         pattern: {
-                          value: /[6789][0-9]{9}/,
-                          //type: "tel",
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
                         },
-                      })}
-                      name="mobileNumber"
-                      type="number"
-                      componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                      maxlength={10}
-                  />
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
+                />
                   <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                   </SearchField> 
                   <SearchField>
@@ -228,7 +265,6 @@ import React, { useCallback, useMemo } from "react"
                       onClick={() => {
                           reset({ 
                               bookingNo: "", 
-                              communityHallCode: "",
                               fromDate: "", 
                               toDate: "",
                               mobileNumber:"",
@@ -239,7 +275,7 @@ import React, { useCallback, useMemo } from "react"
                               sortOrder: "DESC"
                           });
                           setShowToast(null);
-                          previousPage();
+                          onClear();
                       }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                   </SearchField>
               </SearchForm>

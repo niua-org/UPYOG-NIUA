@@ -14,7 +14,7 @@ const Complaint = ({ data, path }) => {
   const { t } = useTranslation();
 
   const handleClick = () => {
-    navigate(`/${serviceRequestId}`);
+    navigate(serviceRequestId);
   };
 
   const closedStatus = ["RESOLVED", "REJECTED", "CLOSEDAFTERREJECTION", "CLOSEDAFTERRESOLUTION"];
