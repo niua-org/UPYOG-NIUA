@@ -54,7 +54,7 @@ export const SelectPaymentType = (props) => {
   useEffect(() => {
     localStorage.setItem("BillPaymentEnabled", "true");
   }, []);
-  const { name, mobileNumber } = state;
+  const { name, mobileNumber } = state || {};
 
   const billDetails = paymentdetails?.Bill ? paymentdetails?.Bill[0] : {};
   sessionStorage.setItem("payerName", billDetails?.payerName)

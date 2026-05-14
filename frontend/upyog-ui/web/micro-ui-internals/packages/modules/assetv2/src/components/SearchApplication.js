@@ -3,8 +3,9 @@ import { useForm, Controller } from "react-hook-form";
 import { TextInput, SubmitBar, ActionBar, DatePicker, SearchForm, Dropdown, SearchField, Table, Card, Loader, Header,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link,  } from "react-router-dom";
 import jsPDF from 'jspdf';
-import QRCode from 'qrcode/lib/browser';
+import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
+import { toDateString } from "../utils";
 
 
 const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowToast, ActionBarStyle = {}, MenuStyle = {}, parentRoute, tenantId }) => {
@@ -400,11 +401,11 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
           <Controller
             control={control}
             name="status"
-            render={(props) => (
+            render={({field}) => (
               <Dropdown
-                selected={props.value}
-                select={props.onChange}
-                onBlur={props.onBlur}
+                selected={field.value}
+                select={field.onChange}
+                onBlur={field.onBlur}
                 option={action}
                 optionKey="i18nKey"
                 t={t}
@@ -415,13 +416,13 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
         </SearchField>
         <SearchField>
           <label>{t("AST_APPLICATION_ID")}</label>
-          <TextInput name="applicationNo" inputRef={register({})} />
-        </SearchField>
+          <TextInput name="applicationNo" {...register("applicationNo")} />
+          </SearchField>
 
         <SearchField>
           <label>{t("AST_FROM_DATE")}</label>
           <Controller
-            render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
+            render={({field}) => <DatePicker date={toDateString(field.value)} disabled={false} onChange={(val) => field.onChange(toDateString(val))} max={today} />}
             name="fromDate"
             control={control}
           />
@@ -429,7 +430,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
         <SearchField>
           <label>{t("AST_TO_DATE")}</label>
           <Controller
-            render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
+            render={({field}) => <DatePicker date={toDateString(field.value)} disabled={false} onChange={(val) => field.onChange(toDateString(val))} max={today} />}
             name="toDate"
             control={control}
           />

@@ -97,10 +97,25 @@ const EWCreate = ({ parentRoute }) => {
     const formdata = EWDataConvert(params);
     formdata.EwasteApplication[0].tenantId = tenantId;
     mutation.mutate(formdata, {
-      onSuccess: () => {
+      onSuccess: (response) => {
         clearParams();
         queryClient.invalidateQueries("EWASTE_CREATE");
-        navigate("acknowledgement", { replace: true });
+        navigate("acknowledgement", {
+          state: {
+            data: response,
+            isSuccess: true,
+          },
+        });
+      },
+  
+      onError: (error) => {
+        navigate("acknowledgement", {
+          state: {
+            data: null,
+            isSuccess: false,
+            error:error
+          },
+        });
       },
     });
   };
@@ -151,9 +166,6 @@ const EWCreate = ({ parentRoute }) => {
     queryClient.invalidateQueries("EWASTE_CREATE");
   }
 
-  const ewasteCreate = async () => {
-    navigate("acknowledgement");
-  };
   return (
     <Routes>
       {config.map((routeObj, index) => {
@@ -171,7 +183,7 @@ const EWCreate = ({ parentRoute }) => {
       })}
 
       <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
-      <Route path={`acknowledgement`} element={<EWASTEAcknowledgement data={params} onSuccess={onSuccess} mutation={mutation} />} />
+      <Route path={`acknowledgement`} element={<EWASTEAcknowledgement/>} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
   );

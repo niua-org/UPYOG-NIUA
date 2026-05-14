@@ -5,6 +5,7 @@ import { Link,  } from "react-router-dom";
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
+import { toDateString } from "../utils";
 
 
 const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowToast, ActionBarStyle = {}, MenuStyle = {}, parentRoute, tenantId }) => {
@@ -55,6 +56,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
   })
 
 
+
   const { data: actionDetail } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "ASSET", [{ name: "ActionOption" }], {
     select: (data) => {
       const formattedData = data?.["ASSET"]?.["ActionOption"];
@@ -62,6 +64,8 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
       return activeData;
     },
   });
+
+  console.log("actionDetailactionDetail",actionDetail);
 
  
 
@@ -77,33 +81,38 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
   };
 
   const collectAction = (row) => {
-    const actionMdms = [];
+  if (!actionDetail) {
+    console.log("actionDetail not loaded yet");
+    return [];
+  }
 
-    actionDetail &&
-      actionDetail.map((opt) => {
+  console.log("Action actionDetail:", actionDetail);
 
-        // this condition use for if asset asign then show return asset if asset not assign then show asset Assign
-        if (
-          (row?.original?.assetAssignment?.isAssigned && opt.code === "AST_RETURN") ||
-          (!row?.original?.assetAssignment?.isAssigned && opt.code === "AST_ASSIGN")
-        ) {
-          actionMdms.push({
-            label: t(opt.code),
-            link: `${opt.url}${row?.original?.["applicationNo"]}`,
-            code: opt.code
-          });
-        } else if ( opt.code !== "AST_RETURN" && opt.code !== "AST_ASSIGN") {
-          // Push other options unconditionally
-          actionMdms.push({
-            label: t(opt.code),
-            link: `${opt.url}${row?.original?.["applicationNo"]}`,
-            code: opt.code
-          });
-        }
+  const actionMdms = [];
+
+  actionDetail.map((opt) => {
+    if (
+      (row?.original?.assetAssignment?.isAssigned && opt.code === "AST_RETURN") ||
+      (!row?.original?.assetAssignment?.isAssigned && opt.code === "AST_ASSIGN")
+    ) {
+      actionMdms.push({
+        label: t(opt.code),
+        link: `${opt.url}${row?.original?.["applicationNo"]}`,
+        code: opt.code
       });
+    } else if (opt.code !== "AST_RETURN" && opt.code !== "AST_ASSIGN") {
+      actionMdms.push({
+        label: t(opt.code),
+        link: `${opt.url}${row?.original?.["applicationNo"]}`,
+        code: opt.code
+      });
+    }
+  });
 
-    return actionMdms;
-  };
+  console.log("Action Options:", actionMdms);
+
+  return actionMdms;
+};
 
   const processDepreciation = async (applicationNo, assetId) => {
     try {
@@ -297,7 +306,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
       },
       mobileCell: (original) => GetMobCell(original?.searchData?.["applicationNo"]),
     },
-  ]), [])
+  ]), [actionDetail])
 
   const onSort = useCallback((args) => {
     if (args.length === 0) return
@@ -400,11 +409,11 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
           <Controller
             control={control}
             name="status"
-            render={(props) => (
+            render={({field}) => (
               <Dropdown
-                selected={props.value}
-                select={props.onChange}
-                onBlur={props.onBlur}
+                selected={field.value}
+                select={field.onChange}
+                onBlur={field.onBlur}
                 option={action}
                 optionKey="i18nKey"
                 t={t}
@@ -415,13 +424,13 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
         </SearchField>
         <SearchField>
           <label>{t("AST_APPLICATION_ID")}</label>
-          <TextInput name="applicationNo" inputRef={register({})} />
-        </SearchField>
+          <TextInput name="applicationNo" {...register("applicationNo")} />
+          </SearchField>
 
         <SearchField>
           <label>{t("AST_FROM_DATE")}</label>
           <Controller
-            render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
+            render={({field}) => <DatePicker date={toDateString(field.value)} disabled={false} onChange={(val) => field.onChange(toDateString(val))} max={today} />}
             name="fromDate"
             control={control}
           />
@@ -429,7 +438,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
         <SearchField>
           <label>{t("AST_TO_DATE")}</label>
           <Controller
-            render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
+            render={({field}) => <DatePicker date={toDateString(field.value)} disabled={false} onChange={(val) => field.onChange(toDateString(val))} max={today} />}
             name="toDate"
             control={control}
           />

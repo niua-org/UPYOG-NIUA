@@ -3,10 +3,7 @@ import { ASSETService } from"../../services/elements/ASSET"
 
 
 export const useAssignCreateAPI = (tenantId, type = true) => {
-  const mutationFn = (data) =>
-    type
-      ? ASSETService.assign(data, tenantId)
-      : ASSETService.update(data, tenantId);
+  const mutationFn = (data) => ASSETService.assign(data, tenantId);
 
   return mutationTemplate({ mutationFn });
 };

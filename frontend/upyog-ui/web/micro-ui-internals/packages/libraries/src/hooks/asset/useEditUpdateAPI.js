@@ -4,10 +4,7 @@ import { ASSETService } from "../../services/elements/ASSET"
 
 
 export const useEditUpdateAPI = (tenantId, type = true) => {
-  const mutationFn = (data) =>
-    type
-      ? ASSETService.update(data, tenantId)
-      : ASSETService.create(data, tenantId);
+  const mutationFn = (data) => ASSETService.update(data, tenantId)
 
   return mutationTemplate({ mutationFn });
 };

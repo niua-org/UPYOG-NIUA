@@ -24,18 +24,19 @@ const EditAssetDetails = ({ config, onSelect, formData, setError, clearErrors })
     onSelect(config?.key, editNewAssetDetails);
   }, [editNewAssetDetails]);
 
-  const { data: warrantyperiod } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "ASSET", [{ name: "Warranty" }], {
-    select: (data) => {
-      const formattedData = data?.["ASSET"]?.["Warranty"];
-      return formattedData;
-    },
-  });
-  let warrantyTime = [];
+  // const { data: warrantyperiod } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "ASSET", [{ name: "Warranty" }], {
+  //   select: (data) => {
+  //     const formattedData = data?.["ASSET"]?.["Warranty"];
+  //     return formattedData;
+  //   },
+  // });
 
-  warrantyperiod &&
-    warrantyperiod.map((warrantytime) => {
-      warrantyTime.push({ i18nKey: `${warrantytime.name}`, code: `${warrantytime.code}`, value: `${warrantytime.name}` });
-    });
+  // let warrantyTime = [];
+
+  // warrantyperiod &&
+  //   warrantyperiod.map((warrantytime) => {
+  //     warrantyTime.push({ i18nKey: `${warrantytime.name}`, code: `${warrantytime.code}`, value: `${warrantytime.name}` });
+  //   });
 
   const commonProps = {
     focusIndex,
@@ -48,7 +49,7 @@ const EditAssetDetails = ({ config, onSelect, formData, setError, clearErrors })
     clearErrors,
     config,
     comingDataFromAPI,
-    warrantyTime
+    // warrantyTime
   };
   return (
     <React.Fragment>
@@ -71,21 +72,12 @@ const OwnerForm = (_props) => {
     clearErrors,
     setFocusIndex,
     comingDataFromAPI,
-    warrantyTime
+    // warrantyTime
   } = _props;
   let formJson = []
 
   //  const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateTenantId = Digit.ULBService.getStateId();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
-
-  //  This call with tenantId (Get city-level data)
-  const cityResponseObject = Digit.Hooks.useEnabledMDMS(tenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
-    select: (data) => {
-      const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
-      return formattedData;
-    },
-  });
 
   // This call with stateTenantId (Get state-level data)
   const stateResponseObject = Digit.Hooks.useEnabledMDMS(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
@@ -96,10 +88,10 @@ const OwnerForm = (_props) => {
   });
   let combinedData;
 
+
+
   // if city level master is not available then fetch  from state-level
-  if (cityResponseObject) {
-    combinedData = cityResponseObject;
-  } else if (stateResponseObject) {
+   if (stateResponseObject) {
     combinedData = stateResponseObject;
   } else {
     combinedData = [];
@@ -107,12 +99,13 @@ const OwnerForm = (_props) => {
   if (Array.isArray(combinedData?.data) && combinedData.data.length > 0) {
     formJson = combinedData.data
       .filter((category) => {
+        console.log("category", category);
         const isMatch = category.assetParentCategory === comingDataFromAPI?.assetParentCategory || category.assetParentCategory === "COMMON";
         return isMatch;
       })
       .map((category) => category.fields) // Extract the fields array
       .flat() // Flatten the fields array
-      .filter((field) => field.active === true); // Filter by active status
+      // .filter(({field}) => field?.active === true); // Filter by active status
   } else {
     console.log("combinedData.data is not an array or is empty.");
   }
@@ -178,7 +171,7 @@ const OwnerForm = (_props) => {
 
           <React.Fragment>
             {
-              formJson.map((row, index) => (
+              formJson?.map((row, index) => (
                 <div key={index}>
                   {row.type === "date" ?
                     (
@@ -194,26 +187,28 @@ const OwnerForm = (_props) => {
                                 required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                 validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                               }}
-                              render={(props) => (
+                              render={({field}) => (
                                 <TextInput
-                                  value={props.value}
+                                  value={field.value}
                                   type={"date"}
                                   max={new Date().toISOString().split("T")[0]}
                                   autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === row.name}
                                   onChange={(e) => {
-                                    props.onChange(e.target.value);
+                                    field.onChange(e.target.value);
                                     setFocusIndex({ index: editNewAssetDetails.key, type: row.name });
                                   }}
                                   onBlur={(e) => {
                                     setFocusIndex({ index: -1 });
-                                    props.onBlur(e);
+                                    field.onBlur(e);
                                   }}
                                 />
                               )}
                             />
                           </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched[row.name] ? errors[row.name]?.message : ""}</CardLabelError>
+                        {/* <CardLabelError style={errorStyle}>
+                          {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
+                        </CardLabelError> */}
                       </div>
                     )
                     : row.type == "dropdown" ?
@@ -225,12 +220,12 @@ const OwnerForm = (_props) => {
                               control={control}
                               name={row.name}
                               defaultValue={comingDataFromAPI?.additionalDetails[row.name] || ""}
-                              render={(props) => (
+                              render={({field}) => (
                                 <Dropdown
                                   className="form-field"
-                                  selected={props.value}
-                                  select={props.onChange}
-                                  onBlur={props.onBlur}
+                                  selected={field.value}
+                                  select={field.onChange}
+                                  onBlur={field.onBlur}
                                   option={row.options}
                                   optionKey="i18nKey"
                                   t={t}
@@ -239,7 +234,9 @@ const OwnerForm = (_props) => {
                             />
 
                           </LabelFieldPair>
-                          <CardLabelError style={errorStyle}>{localFormState.touched[row.name] ? errors[row.name]?.message : ""}</CardLabelError>
+                          {/* <CardLabelError style={errorStyle}>
+  {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
+</CardLabelError> */}
                         </div>
                       ) : row.addCurrentLocationButton === true ?
                         (
@@ -255,18 +252,18 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                                   }}
-                                  render={(props) => (
+                                  render={({field}) => (
                                     <TextInput
-                                      value={props.value}
+                                      value={field.value}
                                       type={row.type}
                                       autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === row.name}
                                       onChange={(e) => {
-                                        props.onChange(e.target.value);
+                                        field.onChange(e.target.value);
                                         setFocusIndex({ index: editNewAssetDetails.key, type: row.name });
                                       }}
                                       onBlur={(e) => {
                                         setFocusIndex({ index: -1 });
-                                        props.onBlur(e);
+                                        field.onBlur(e);
                                       }}
                                       onClick={() => {
                                         fetchCurrentLocation(row.name);
@@ -277,7 +274,9 @@ const OwnerForm = (_props) => {
                                 />
                               </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched[row.name] ? errors[row.name]?.message : ""}</CardLabelError>
+                            {/* <CardLabelError style={errorStyle}>
+  {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
+</CardLabelError> */}
                           </div>
                         ) :
                         (
@@ -293,25 +292,27 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                                   }}
-                                  render={(props) => (
+                                  render={({field}) => (
                                     <TextInput
-                                      value={props.value}
+                                      value={field.value}
                                       type={row.type}
                                       autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === row.name}
                                       onChange={(e) => {
-                                        props.onChange(e.target.value);
+                                        field.onChange(e.target.value);
                                         setFocusIndex({ index: editNewAssetDetails.key, type: row.name });
                                       }}
                                       onBlur={(e) => {
                                         setFocusIndex({ index: -1 });
-                                        props.onBlur(e);
+                                        field.onBlur(e);
                                       }}
                                     />
                                   )}
                                 />
                               </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched[row.name] ? errors[row.name]?.message : ""}</CardLabelError>
+                            {/* <CardLabelError style={errorStyle}>
+  {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
+</CardLabelError> */}
                           </div>
                         )
                   }
@@ -329,12 +330,12 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
                         type="date"
-                        value={props.value}
+                        value={field.value}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                         }}
                         max={new Date().toISOString().split("T")[0]}
                       />
@@ -342,7 +343,7 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.invoiceDate ? errors?.invoiceDate?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.invoiceDate ? errors?.invoiceDate?.message : ""}</CardLabelError>
 
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_MANUFACTURER")}</CardLabel>
@@ -355,25 +356,25 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: { pattern: (val) => (/^[a-zA-Z/-]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={false}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "manufacturer"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "manufacturer" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.manufacturer ? errors?.manufacturer?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.manufacturer ? errors?.manufacturer?.message : ""}</CardLabelError>
 
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_PURCHASE_COST")}</CardLabel>
@@ -386,25 +387,25 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: { pattern: (val) => (/^[0-9]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={false}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "purchaseCost"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "purchaseCost" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError>
 
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_PURCHASE_ORDER")}</CardLabel>
@@ -417,18 +418,18 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: { pattern: (val) => (/^[a-zA-Z0-9/-]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={false}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "purchaseOrderNumber"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "purchaseOrderNumber" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
@@ -436,7 +437,7 @@ const OwnerForm = (_props) => {
                 </div>
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
+                {localFormState?.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
               </CardLabelError>
 
               <LabelFieldPair>
@@ -450,12 +451,12 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
                         type="date"
-                        value={props.value}
+                        value={field.value}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                         }}
                         max={new Date().toISOString().split("T")[0]}
                       />
@@ -463,7 +464,7 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError>
 
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_CURRENT_LOCATION")}</CardLabel>
@@ -476,18 +477,18 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: { pattern: (val) => (/^[0-9]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={true}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "currentLocation"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "currentLocation" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
@@ -495,7 +496,7 @@ const OwnerForm = (_props) => {
                 </div>
               </LabelFieldPair>
               <CardLabelError style={errorStyle}>
-                {localFormState.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
+                {localFormState?.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
               </CardLabelError>
 
               <LabelFieldPair>
@@ -505,25 +506,25 @@ const OwnerForm = (_props) => {
                     control={control}
                     name={"assetAge"}
                     defaultValue={comingDataFromAPI?.additionalDetails?.assetAge}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={false}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "assetAge"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "assetAge" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.assetAge ? errors?.assetAge?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.assetAge ? errors?.assetAge?.message : ""}</CardLabelError>
 
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_WARRANTY")}</CardLabel>
@@ -531,12 +532,12 @@ const OwnerForm = (_props) => {
                   control={control}
                   name={"warranty"}
                   defaultValue={comingDataFromAPI?.additionalDetails?.warranty}
-                  render={(props) => (
+                  render={({field}) => (
                     <Dropdown
                       className="form-field"
-                      selected={props.value}
-                      select={props.onChange}
-                      onBlur={props.onBlur}
+                      selected={field.value}
+                      select={field.onChange}
+                      onBlur={field.onBlur}
                       disable={isEdit}
                       option={warrantyTime}
                       optionKey="i18nKey"
@@ -545,7 +546,7 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.assettype ? errors?.assettype?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.assettype ? errors?.assettype?.message : ""}</CardLabelError>
 
               <br></br>
               <LabelFieldPair>
@@ -555,25 +556,25 @@ const OwnerForm = (_props) => {
                     control={control}
                     name={"pincode"}
                     defaultValue={comingDataFromAPI?.addressDetails?.pincode}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={true}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "pincode"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "pincode" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.pincode ? errors?.pincode?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState?.touched.pincode ? errors?.pincode?.message : ""}</CardLabelError>
 
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("MYCITY_CODE_LABEL")}</CardLabel>
@@ -586,25 +587,25 @@ const OwnerForm = (_props) => {
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: { pattern: (val) => (/^[a-zA-Z/-]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                     }}
-                    render={(props) => (
+                    render={({field}) => (
                       <TextInput
-                        value={props.value}
+                        value={field.value}
                         disable={true}
                         autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "city"}
                         onChange={(e) => {
-                          props.onChange(e.target.value);
+                          field.onChange(e.target.value);
                           setFocusIndex({ index: editNewAssetDetails.key, type: "city" });
                         }}
                         onBlur={(e) => {
                           setFocusIndex({ index: -1 });
-                          props.onBlur(e);
+                          field.onBlur(e);
                         }}
                       />
                     )}
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState.touched.city ? errors?.city?.message : ""}</CardLabelError> */}
+              <CardLabelError style={errorStyle}>{localFormState?.touched.city ? errors?.city?.message : ""}</CardLabelError> */}
           </React.Fragment>
 
         </div>
