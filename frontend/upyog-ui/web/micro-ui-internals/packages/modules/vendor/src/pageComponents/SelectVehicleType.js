@@ -7,7 +7,7 @@ const SelectVehicleType = ({ t, config, onSelect, formData, setValue }) => {
 
   // Fetch Vehicle Data
   const { data: vehicleData, isLoading: vehicleLoading } = Digit.Hooks.fsm.useMDMS(stateId, "Vehicle", "VehicleMakeModel");
-
+console.log("vehicleDatavehicleData",vehicleData);
   // Fetch Service Type Data
   const { data: serviceTypeData, isLoading: serviceLoading } = Digit.Hooks.useCustomMDMS(tenantId, "tenant", [{ name: "citymodule" }], {
     select: (data) => data?.tenant?.citymodule,

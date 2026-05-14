@@ -76,7 +76,7 @@ const FSMCard = () => {
       const total = inbox?.totalCount || 0;
       setTotal(total);
     }
-  }, [inbox]);
+  }, [inbox?.totalCount]);
 
   const moduleForSomeFSMAdmin = FSM_ADMIN
     ? [

@@ -56,7 +56,7 @@ const DriverDetails = (props) => {
   const [showModal, setShowModal] = useState(false);
   const [showToast, setShowToast] = useState(null);
   const [vendors, setVendors] = useState([]);
-
+console.log('modify-drivermodify-driver',dsoId);
   const [selectedOption, setSelectedOption] = useState({});
 
   const { data: driverData, isLoading: isLoading, isSuccess: isDsoSuccess, error: dsoError, refetch } = Digit.Hooks.fsm.useDriverDetails(

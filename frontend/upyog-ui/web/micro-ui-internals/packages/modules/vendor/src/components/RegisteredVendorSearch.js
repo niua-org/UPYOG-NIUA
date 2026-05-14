@@ -118,7 +118,6 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
         return (
           <TextInput
             {...input}
-            inputRef={register}
             {...register(input.name, {
               validate: searchValidation,
             })}

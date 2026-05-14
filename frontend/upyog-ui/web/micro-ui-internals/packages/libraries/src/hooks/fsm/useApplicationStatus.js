@@ -74,11 +74,12 @@ const useApplicationStatus = (select, isEnabled = true, statusMap=[]) => {
 
     return DSO ? allowedStatusForDSO.map((item) => applicationStatus.filter((status) => status.code === item)[0]) : applicationStatus;
   };
-  return useQuery(
-    ["APPLICATION_STATUS", isEnabled],
-    () => fetch(),
-    select ? { select: roleWiseSelect, enabled: isEnabled } : { select: defaultSelect, enabled: isEnabled }
-  );
+  return queryTemplate({
+  queryKey: ["APPLICATION_STATUS", isEnabled],
+  queryFn: () => fetch(),
+  select: select ? roleWiseSelect : defaultSelect,
+  enabled: isEnabled
+});
 };
 
 export default useApplicationStatus;
