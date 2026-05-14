@@ -167,14 +167,15 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
                       cartDetails:application?.cartDetails,
                     };
                     const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-                    const timerValue=result?.advertisementSlotAvailabiltityDetails[0].timerValue;
+                    const timerValue=result?.advertisementSlotAvailabiltityDetails[0]?.timerValue;
+
                     if (isSlotBooked) {
                       setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
                     } else {
-                      navigate({
-                        pathname: `/upyog-ui/employee/payment/collect/${"adv-services"}/${application?.bookingNo}`,
-                        state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData },
-                      });
+                      navigate(
+                        `/upyog-ui/employee/payment/collect/${"adv-services"}/${application?.bookingNo}`,
+                        { state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData } }
+                      );
                     }
                 } catch (error) {
                   setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
@@ -264,10 +265,13 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
         handleSubmit(onSubmit)()
     }
     function previousPage () {
-        setValue("offset", getValues("offset") - getValues("limit") )
-        handleSubmit(onSubmit)()
-    }
-    let validation={}
+          setValue(
+            "offset",
+            Math.max(0, getValues("offset") - getValues("limit"))
+          );
+          handleSubmit(onSubmit)();
+        }
+        let validation = {}
 
     return <React.Fragment>
                 

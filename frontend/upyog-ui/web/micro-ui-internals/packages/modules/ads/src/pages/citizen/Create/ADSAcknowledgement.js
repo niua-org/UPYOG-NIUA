@@ -37,11 +37,11 @@ const BannerPicker = (props) => {
  * success or failure messages.The component handles the mutation of 
  * booking data and manages loading states effectively.
  */
-const ADSAcknowledgement = ({ data, onSuccess }) => {
+const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
   const { t } = useTranslation();
 
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.ads.useADSCreateAPI(tenantId);
+  // const mutation = Digit.Hooks.ads.useADSCreateAPI(tenantId);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const match = Digit.Hooks.useModuleBasePath();
   const { tenants } = storeData || {};
@@ -74,18 +74,19 @@ const ADSAcknowledgement = ({ data, onSuccess }) => {
         };
         const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
         const timerValue=result?.advertisementSlotAvailabiltityDetails[0].timerValue;
+        console.log("Slot Search Result:", result);
         if (isSlotBooked) {
           setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
         }else if(user.type==="CITIZEN") {
-          navigate({
-            pathname: `/upyog-ui/citizen/payment/my-bills/${"adv-services"}/${ mutation.data?.bookingApplication[0]?.bookingNo}`,
-            state: { tenantId:tenantId, bookingNo: mutation.data?.bookingApplication[0]?.bookingNo, timerValue:timerValue , SlotSearchData:SlotSearchData},
+          navigate(
+            `/upyog-ui/citizen/payment/my-bills/${"adv-services"}/${ mutation.data?.bookingApplication[0]?.bookingNo}`,
+            {state: { tenantId:tenantId, bookingNo: mutation.data?.bookingApplication[0]?.bookingNo, timerValue:timerValue , SlotSearchData:SlotSearchData},
           });
         }
           else if(user.type==="EMPLOYEE") {
-            navigate({
-              pathname: `/upyog-ui/employee/payment/collect/${"adv-services"}/${mutation.data?.bookingApplication[0]?.bookingNo}`,
-              state: { tenantId:tenantId, bookingNo: mutation.data?.bookingApplication[0]?.bookingNo, timerValue:timerValue , SlotSearchData:SlotSearchData},
+            navigate(
+             `/upyog-ui/employee/payment/collect/${"adv-services"}/${mutation.data?.bookingApplication[0]?.bookingNo}`,
+              {state: { tenantId:tenantId, bookingNo: mutation.data?.bookingApplication[0]?.bookingNo, timerValue:timerValue , SlotSearchData:SlotSearchData},
             });
           }
     } catch (error) {

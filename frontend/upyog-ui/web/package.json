@@ -31,8 +31,7 @@
     "micro-ui-internals/packages/modules/mCollect",
     "micro-ui-internals/packages/modules/chb",
     "micro-ui-internals/packages/modules/assetv2",
-    "micro-ui-internals/packages/modules/gis",
-    "micro-ui-internals/packages/modules/challengeGeneration"
+    "micro-ui-internals/packages/modules/gis"
   ],
   "engines": {
     "node": ">=22"

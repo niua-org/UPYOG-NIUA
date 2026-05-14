@@ -50,7 +50,11 @@ const FilterFormFieldsComponent = ({ statuses, controlFilterForm, applicationTyp
               onSelect={(e) => {
                 props.onChange(e.code);
               }}
-              selectedOption={availableOptions.filter((option) => option.code === props.value)[0]}
+          selectedOption={
+            availableOptions.filter(
+              (option) => option.code === props.value
+            )[0]
+          }
               optionsKey="name"
               options={availableOptions}
             />
@@ -64,12 +68,23 @@ const FilterFormFieldsComponent = ({ statuses, controlFilterForm, applicationTyp
           control={controlFilterForm}
           defaultValue={[]}
           render={(props) => {
-            const toggleStatus = (statusCode) => {
-              console.log(statusCode, "statusCode");
-              if (props.value.includes(statusCode)) {
-                props.onChange(props.value.filter((code) => code !== statusCode));
-              } else {
-                props.onChange([...props.value, statusCode]);
+        // Safe fallback if value is undefined
+        const selectedValues = props.value || [];
+
+        const toggleStatus = (statusCode) => {
+          console.log(statusCode, "statusCode");
+
+          if (selectedValues.includes(statusCode)) {
+            props.onChange(
+              selectedValues.filter(
+                (code) => code !== statusCode
+              )
+            );
+          } else {
+               props.onChange([
+              ...selectedValues,
+              statusCode,
+            ]);
               }
             };
 
@@ -80,8 +95,12 @@ const FilterFormFieldsComponent = ({ statuses, controlFilterForm, applicationTyp
                     key={status.applicationstatus}
                     label={`${t(status.applicationstatus)} - ${status.count}`}
                     value={status.applicationstatus}
-                    checked={props.value.includes(status.applicationstatus)}
-                    onChange={() => toggleStatus(status.applicationstatus)}
+                    checked={selectedValues.includes(
+                  status.applicationstatus
+                )}
+                onChange={() =>
+                  toggleStatus(status.applicationstatus)
+                }
                     index={index}
                   />
                 ))}

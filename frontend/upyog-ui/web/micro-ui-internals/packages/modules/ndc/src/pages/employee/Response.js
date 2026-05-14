@@ -5,13 +5,13 @@ import { stringReplaceAll } from "../../utils";
 
 // This component is the response page for the NDC application. It displays the status of the application and provides options to go back to home, go to NDC home, or make payment if the application is approved. The content of the banner and the available actions are based on the application status.
 const Response = (props) => {
-  const { state } = props.location;
+  const state= props?.location?.state || {};
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const nocData = state?.data?.Noc?.[0];
   const tenantId = window.localStorage.getItem("Employee.tenant-id");
 
-  const pathname = navigate?.location?.pathname || "";
+  const pathname = window.location.pathname || "";
   const ndcCode = pathname.split("/").pop();
 
   const onSubmit = () => {
@@ -23,8 +23,9 @@ const Response = (props) => {
   };
 
   const handlePayment = () => {
-    navigate(`/upyog-ui/employee/payment/collect/NDC/${ndcCode}/${tenantId}?tenantId=${tenantId}`);
-    // pathname: `/upyog-ui/citizen/payment/collect/${application?.businessService}/${application?.applicationNumber}`,
+    navigate(
+      `/upyog-ui/employee/payment/collect/NDC/${ndcCode}/${tenantId}?tenantId=${tenantId}`
+    );
   };
 
 

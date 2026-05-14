@@ -156,7 +156,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
               marginBottom: "10px", // Space below "View Cart"
             }}
           >
-            <div class="container" style={{
+            <div className="container" style={{
               width:"1px",
             }}>            <div style={{
               width:"20px",
