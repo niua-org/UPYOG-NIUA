@@ -11,7 +11,7 @@ import static org.egov.inbox.util.BpaConstants.STATUS_PARAM;
 import static org.egov.inbox.util.BpaConstants.ASSIGNEE_PARAM;
 import static org.egov.inbox.util.ChallanConstants.CHALLAN_GENERATION;
 import static org.egov.inbox.util.DSSConstants.*;
-import static org.egov.inbox.util.EwasteConstants.REQUEST_ID;
+import static org.egov.inbox.util.EwasteConstants.*;
 import static org.egov.inbox.util.FSMConstants.APPLICATIONSTATUS;
 import static org.egov.inbox.util.FSMConstants.CITIZEN_FEEDBACK_PENDING_STATE;
 import static org.egov.inbox.util.FSMConstants.COMPLETED_STATE;
@@ -39,7 +39,6 @@ import static org.egov.inbox.util.BSConstants.*;
 import static org.egov.inbox.util.WSConstants.WS;
 import static org.egov.inbox.util.PTRConstants.PTR;
 import static org.egov.inbox.util.AssetConstants.ASSET;
-import static org.egov.inbox.util.EwasteConstants.EWASTE;
 import static org.egov.inbox.util.CommunityHallConstants.CHB;
 import static org.egov.inbox.util.CommunityHallConstants.CHB_BOOKING_NO_PARAM;
 import static org.egov.inbox.util.CNDServiceConstants.CND;
@@ -448,7 +447,7 @@ public class InboxService {
 				List<String> applicationNumbers = ewasteInboxFilterService.fetchApplicationNumbersFromSearcher(criteria,
 						StatusIdNameMap, requestInfo);
 				if (!CollectionUtils.isEmpty(applicationNumbers)) {
-					moduleSearchCriteria.put(REQUEST_ID, applicationNumbers);
+					moduleSearchCriteria.put(REQUEST_IDS, applicationNumbers);
 					businessKeys.addAll(applicationNumbers);
 					moduleSearchCriteria.remove(STATUS_PARAM);
 					moduleSearchCriteria.remove(LOCALITY_PARAM);

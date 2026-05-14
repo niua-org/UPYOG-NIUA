@@ -36,6 +36,9 @@ public class EwasteApplicationSearchCriteria {
 	@JsonProperty("requestId")
 	private String requestId;
 
+	@JsonProperty("listOfRequestIds")
+	private List<String> listOfRequestIds;
+
 	@JsonProperty("mobileNumber")
 	private String mobileNumber;
 
