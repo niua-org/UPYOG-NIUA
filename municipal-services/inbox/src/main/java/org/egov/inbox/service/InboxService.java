@@ -11,6 +11,7 @@ import static org.egov.inbox.util.BpaConstants.STATUS_PARAM;
 import static org.egov.inbox.util.BpaConstants.ASSIGNEE_PARAM;
 import static org.egov.inbox.util.ChallanConstants.CHALLAN_GENERATION;
 import static org.egov.inbox.util.DSSConstants.*;
+import static org.egov.inbox.util.EwasteConstants.REQUEST_ID;
 import static org.egov.inbox.util.FSMConstants.APPLICATIONSTATUS;
 import static org.egov.inbox.util.FSMConstants.CITIZEN_FEEDBACK_PENDING_STATE;
 import static org.egov.inbox.util.FSMConstants.COMPLETED_STATE;
@@ -447,7 +448,7 @@ public class InboxService {
 				List<String> applicationNumbers = ewasteInboxFilterService.fetchApplicationNumbersFromSearcher(criteria,
 						StatusIdNameMap, requestInfo);
 				if (!CollectionUtils.isEmpty(applicationNumbers)) {
-					moduleSearchCriteria.put(ACKNOWLEDGEMENT_IDS_PARAM, applicationNumbers);
+					moduleSearchCriteria.put(REQUEST_ID, applicationNumbers);
 					businessKeys.addAll(applicationNumbers);
 					moduleSearchCriteria.remove(STATUS_PARAM);
 					moduleSearchCriteria.remove(LOCALITY_PARAM);

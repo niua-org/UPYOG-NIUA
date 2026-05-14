@@ -1,5 +1,6 @@
 package org.egov.ewst.repository.builder;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.egov.ewst.models.EwasteApplicationSearchCriteria;
@@ -73,9 +74,25 @@ public class EwasteApplicationQueryBuilder {
 			preparedStmtList.add(criteria.getMobileNumber());
 		}
 		if (!ObjectUtils.isEmpty(criteria.getRequestId())) {
+
+			List<String> requestIds = Arrays.asList(criteria.getRequestId().split(","));
+
 			addClauseIfRequired(query, preparedStmtList);
-			query.append(" rq.requestid = ? ");
-			preparedStmtList.add(criteria.getRequestId());
+
+			query.append("(");
+
+			for (int i = 0; i < requestIds.size(); i++) {
+
+				query.append(" rq.requestid = ? ");
+
+				preparedStmtList.add(requestIds.get(i).trim());
+
+				if (i < requestIds.size() - 1) {
+					query.append(" OR ");
+				}
+			}
+
+			query.append(")");
 		}
 		if (!ObjectUtils.isEmpty(criteria.getRequestStatus())) {
 			addClauseIfRequired(query, preparedStmtList);
