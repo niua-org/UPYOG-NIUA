@@ -447,6 +447,9 @@ public class InboxService {
 				List<String> applicationNumbers = ewasteInboxFilterService.fetchApplicationNumbersFromSearcher(criteria,
 						StatusIdNameMap, requestInfo);
 				if (!CollectionUtils.isEmpty(applicationNumbers)) {
+					/* The AcknowledgementIds params is not present in Ewaste. Previously, the incorrect AcknowledgementIds parameter was used causing the service to ignore search criteria and return all application numbers for the tenant.
+					   The requestIds params which is present in Ewaste service so replaced the AcknowledgementIds with requestIds to fetch the correct application numbers based on search criteria.
+					*/
 					moduleSearchCriteria.put(REQUEST_IDS, applicationNumbers);
 					businessKeys.addAll(applicationNumbers);
 					moduleSearchCriteria.remove(STATUS_PARAM);
