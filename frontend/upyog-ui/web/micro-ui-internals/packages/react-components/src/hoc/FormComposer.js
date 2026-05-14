@@ -99,8 +99,21 @@ const FormComposer = (props) => {
       case "textarea":
         // if (populators.defaultValue) setTimeout(setValue(populators?.name, populators.defaultValue));
         return (
-          <TextArea className="field" name={populators?.name || ""} {...populators} inputRef={register(populators?.name || "", populators.validation).ref} disable={disable} />
-        );
+        <Controller
+          name={populators?.name || ""}
+          control={control}
+          defaultValue={populators?.defaultValue || ""}
+          rules={populators?.validation}
+          render={({ field }) => (
+            <TextArea
+              className="field"
+              {...populators}
+              {...field}
+              inputRef={field.ref}
+              disable={disable}
+            />
+          )}
+        />         );
       case "mobileNumber":
         return (
           <Controller
