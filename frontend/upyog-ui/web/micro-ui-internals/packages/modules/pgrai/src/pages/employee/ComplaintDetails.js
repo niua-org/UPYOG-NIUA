@@ -461,14 +461,14 @@ export const ComplaintDetails = (props) => {
         ) : (
           <StatusTable>
             {complaintDetails &&
-              Object.keys(complaintDetails?.details).map((k, i, arr) => (
+              Object.keys(complaintDetails?.details || {}).map((k, i, arr) => (
                 <Row
                   key={k}
                   label={t(k)}
                   text={
-                    Array.isArray(complaintDetails?.details[k])
+                    Array.isArray(complaintDetails?.details?.[k])
                       ? complaintDetails?.details[k].map((val) => (typeof val === "object" ? t(val?.code) : t(val)))
-                      : t(complaintDetails?.details[k]) || "N/A"
+                      : t(complaintDetails?.details?.[k]) || "N/A"
                   }
                   last={arr.length - 1 === i}
                 />
