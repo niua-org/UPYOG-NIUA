@@ -1,0 +1,460 @@
+{
+  "moduleName":"pet_create_module",
+  "description":"Pet registration creation flow",
+
+  "baseUrl":"${employee.base.url}",
+
+  "instructions":[
+
+
+    {
+      "stepName":"Username",
+      "locatorStrategy":"NAME",
+      "locatorValue":"username",
+      "action":"TYPE",
+      "inputValue":"${app.login.username}"
+    },
+
+    {
+      "stepName":"Password",
+      "locatorStrategy":"NAME",
+      "locatorValue":"password",
+      "action":"TYPE",
+      "inputValue":"${app.login.password}"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Continue Login",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[text()='Continue']]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Open New Pet Registration",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[contains(@href,'/upyog-ui/employee/ptr/petservice/new-application')]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Next Requirements",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Next']]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Applicant Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"applicantName",
+      "action":"TYPE",
+      "inputValue":"Ramesh kumar"
+    },
+
+    {
+      "stepName":"Owner Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"8893445543"
+    },
+
+    {
+      "stepName":"Father Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"fatherName",
+      "action":"TYPE",
+      "inputValue":"amit kumar"
+    },
+
+    {
+      "stepName":"Owner Email",
+      "locatorStrategy":"NAME",
+      "locatorValue":"emailId",
+      "action":"TYPE",
+      "inputValue":"ramesh@gmail.com"
+    },
+
+    {
+      "stepName":"Owner Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Next']]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Pet Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Breed Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Pet Sex",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:0"
+    },
+
+    {
+      "stepName":"Pet Colour",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"3:0"
+    },
+
+    {
+      "stepName":"Birth Adoption Radio",
+      "locatorStrategy":"NAME",
+      "locatorValue":"selectBirthAdoption",
+      "action":"CLICK_FIRST_RADIO"
+    },
+
+    {
+      "stepName":"Birth Date",
+      "locatorStrategy":"NAME",
+      "locatorValue":"birthDate",
+      "action":"TYPE",
+      "inputValue":"20-05-2025"
+    },
+
+    {
+      "stepName":"Pet Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"petName",
+      "action":"TYPE",
+      "inputValue":"Cherry"
+    },
+
+    {
+      "stepName":"Identification Mark",
+      "locatorStrategy":"NAME",
+      "locatorValue":"identificationMark",
+      "action":"TYPE",
+      "inputValue":"black color"
+    },
+
+    {
+      "stepName":"Pet Age",
+      "locatorStrategy":"NAME",
+      "locatorValue":"petAge",
+      "action":"TYPE",
+      "inputValue":"5"
+    },
+
+    {
+      "stepName":"Doctor Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"doctorName",
+      "action":"TYPE",
+      "inputValue":"Doctor Test"
+    },
+
+    {
+      "stepName":"Clinic Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"clinicName",
+      "action":"TYPE",
+      "inputValue":"Clinic Test"
+    },
+
+    {
+      "stepName":"Vaccination Date",
+      "locatorStrategy":"NAME",
+      "locatorValue":"lastVaccineDate",
+      "action":"TYPE",
+      "inputValue":"20-05-2025"
+    },
+
+    {
+      "stepName":"Vaccination Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"vaccinationNumber",
+      "action":"TYPE",
+      "inputValue":"34545645"
+    },
+
+    {
+      "stepName":"Pet Next",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button[type='submit']",
+      "action":"CLICK"
+    },
+
+
+
+
+    {
+      "stepName":"Property ID",
+      "locatorStrategy":"NAME",
+      "locatorValue":"propertyId",
+      "action":"TYPE",
+      "inputValue":"435345"
+    },
+
+    {
+      "stepName":"Building Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"buildingName",
+      "action":"TYPE",
+      "inputValue":"Building Test"
+    },
+
+    {
+      "stepName":"Door Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"doorNo",
+      "action":"TYPE",
+      "inputValue":"4534"
+    },
+
+    {
+      "stepName":"Property City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Street",
+      "locatorStrategy":"NAME",
+      "locatorValue":"street",
+      "action":"TYPE",
+      "inputValue":"Lajpat"
+    },
+
+    {
+      "stepName":"Mohalla",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Property Pincode",
+      "locatorStrategy":"NAME",
+      "locatorValue":"pincode",
+      "action":"TYPE",
+      "inputValue":"110011"
+    },
+
+    {
+      "stepName":"Fire Station",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:0"
+    },
+
+    {
+      "stepName":"GIS Code",
+      "locatorStrategy":"NAME",
+      "locatorValue":"gisCode",
+      "action":"TYPE",
+      "inputValue":"2343453"
+    },
+
+    {
+      "stepName":"Property Next",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button[type='submit']",
+      "action":"CLICK"
+    },
+
+
+
+
+    {
+      "stepName":"House Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"houseNo",
+      "action":"TYPE",
+      "inputValue":"2342"
+    },
+
+    {
+      "stepName":"House Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"houseName",
+      "action":"TYPE",
+      "inputValue":"My House"
+    },
+
+    {
+      "stepName":"Street Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"streetName",
+      "action":"TYPE",
+      "inputValue":"Main Street"
+    },
+
+    {
+      "stepName":"Address Line 1",
+      "locatorStrategy":"NAME",
+      "locatorValue":"addressline1",
+      "action":"TYPE",
+      "inputValue":"123 Main Street"
+    },
+
+    {
+      "stepName":"Address Line 2",
+      "locatorStrategy":"NAME",
+      "locatorValue":"addressline2",
+      "action":"TYPE",
+      "inputValue":"Near Park"
+    },
+
+    {
+      "stepName":"Landmark",
+      "locatorStrategy":"NAME",
+      "locatorValue":"landmark",
+      "action":"TYPE",
+      "inputValue":"Opp Mall"
+    },
+
+    {
+      "stepName":"Address City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Locality",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Address Pincode",
+      "locatorStrategy":"NAME",
+      "locatorValue":"pincode",
+      "action":"TYPE",
+      "inputValue":"112233"
+    },
+
+    {
+      "stepName":"Address Next",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button[type='submit']",
+      "action":"CLICK"
+    },
+
+
+
+
+    {
+      "stepName":"Identity Proof Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Upload Identity Proof",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.identity.proof}"
+    },
+
+    {
+      "stepName":"Upload Owner Proof",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"1:${document.owner.proof}"
+    },
+
+    {
+      "stepName":"Upload Vaccination Certificate",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"2:${document.vaccination.cert}"
+    },
+
+    {
+      "stepName":"Upload Fitness Certificate",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"3:${document.fitness.cert}"
+    },
+
+    {
+      "stepName":"Upload Pet Photo",
+      "locatorStrategy":"ID",
+      "locatorValue":"upload",
+      "action":"UPLOAD_FILE",
+      "inputValue":"${document.pet.photo}"
+    },
+
+    {
+      "stepName":"Documents Next",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button[type='submit']",
+      "action":"CLICK"
+    },
+
+
+
+
+    {
+      "stepName":"Declaration Checkbox",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'][value^='I declare']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Submit Application",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Submit']]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Go Back Home",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[contains(@href,'/digit-ui/employee')]",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}
