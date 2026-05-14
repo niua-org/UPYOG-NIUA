@@ -237,11 +237,10 @@ config.indexRoute = "info";
     <Routes>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key, isMandatory } = routeObj;
-        //  console.log("routeObj",routeObj)
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`${routeObj.route}`}
+            path={`${routeObj.route}/*`}
             key={index}
             element={
               <Component config={{ texts, inputs, key, isMandatory }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
@@ -249,8 +248,8 @@ config.indexRoute = "info";
           />
         );
       })}
-      <Route path={`check`} element={<CheckPage onSubmit={createProperty} value={params} />} />
-      <Route path={`acknowledgement`} element={<PTAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`check/*`} element={<CheckPage onSubmit={createProperty} value={params} />} />
+      <Route path={`acknowledgement/*`} element={<PTAcknowledgement data={params} onSuccess={onSuccess} />} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
     </div>
