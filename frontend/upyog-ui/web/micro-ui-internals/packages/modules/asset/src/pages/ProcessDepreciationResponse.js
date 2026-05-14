@@ -73,7 +73,7 @@ const ProcessDepreciationResponse = (props) => {
       )}
 
       <ActionBar>
-        <Link to={`${props.parentRoute.includes("employee") ? "/upyog-ui/employee" : "/upyog-ui/citizen"}`}>
+        <Link to={"/upyog-ui/employee"}>
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>
       </ActionBar>

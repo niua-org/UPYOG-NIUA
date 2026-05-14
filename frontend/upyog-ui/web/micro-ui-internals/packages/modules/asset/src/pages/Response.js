@@ -39,7 +39,7 @@ const Response = (props) => {
     const { state } = location;
   
     // Safe check for parentRoute
-    const isEmployee = true;
+    const isEmployee =  Digit.UserService.getUser()?.info?.type || true;
     
     // Extract data from navigation state
     const isSuccess = state?.isSuccess ?? true; // Default to true if not specified

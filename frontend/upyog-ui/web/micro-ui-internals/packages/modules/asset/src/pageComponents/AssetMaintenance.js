@@ -702,10 +702,10 @@ const OwnerForm = (_props) => {
                                     selected={field.value}
                                     select={(value) => {
                                         field.onChange(value);
-                                        const date = control.getValues("assetMaintenanceDate");
+                                        const date = getValues("assetMaintenanceDate");
                                         if (date) {
                                             const nextDate = calculateNextDate(date, value);
-                                            control.setValue("assetNextMaintenanceDate", nextDate);
+                                            setValue("assetNextMaintenanceDate", nextDate);
                                         }
                                     }}
                                     onBlur={field.onBlur}
