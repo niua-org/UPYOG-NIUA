@@ -1,0 +1,357 @@
+{
+  "moduleName":"obpas_oc_create",
+
+  "instructions":[
+
+    {
+      "stepName":"Architect Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"${architect.mobile.number}"
+    },
+
+    {
+      "stepName":"Terms Checkbox",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"OBPAS Home",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/obps-home']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Architect Login",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[contains(text(),'Registered Architect Login')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"OC New Construction",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'OC Plan Scrutiny for new Construction')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Info Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Permit Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"permitNumber",
+      "action":"TYPE_DYNAMIC",
+      "inputValue":"${permit.number}"
+    },
+
+
+
+    {
+      "stepName":"Permit Date",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[@type='date']",
+      "action":"TYPE_DYNAMIC",
+      "inputValue":"${permit.date}"
+    },
+
+
+
+    {
+      "stepName":"Search Permit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Search']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Proceed For OC",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Proceed for OC Scrutiny')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Upload DXF",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.drawing.dxf}"
+    },
+
+
+
+    {
+      "stepName":"Submit DXF",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Apply OC",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'Apply for OC for New Construction')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Info Next Again",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Basic Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Holding Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"holdingNumber",
+      "action":"TYPE",
+      "inputValue":"TEST123"
+    },
+
+
+
+    {
+      "stepName":"Land Registration",
+      "locatorStrategy":"CSS",
+      "locatorValue":"textarea",
+      "action":"TYPE",
+      "inputValue":"Test Land Registration"
+    },
+
+
+
+    {
+      "stepName":"Plot Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Scrutiny Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Document 1",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.identity.proof}"
+    },
+
+    {
+      "stepName":"Document 2",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"1:${document.address.proof}"
+    },
+
+    {
+      "stepName":"Document 3",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"2:${document.landTax.proof}"
+    },
+
+
+
+    {
+      "stepName":"Documents Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Airport NOC",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.identity.proof}"
+    },
+
+
+
+    {
+      "stepName":"Fire NOC",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"2:${document.landTax.proof}"
+    },
+
+
+
+    {
+      "stepName":"NOC Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Summary Submit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Submit')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Citizen Approval",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'APPROVE')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Architect Submit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Submit')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Make Payment",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'Pay')]",
+      "action":"PAYMENT_FLOW"
+    },
+    {
+      "stepName":"Click Make Payment",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'pay')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
+    },
+
+    {
+      "stepName":"Click Proceed To Pay",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'proceed')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
+    },
+
+    {
+      "stepName":"Click UPYOG Pay",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Pay']]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 4000
+    },
+
+    {
+      "stepName":"Switch Payment Window",
+      "locatorStrategy":"TAGNAME",
+      "locatorValue":"body",
+      "action":"SWITCH_WINDOW",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Select Net Banking",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'Net Banking')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Select ICICI Bank",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'icici')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Click Gateway Pay",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'pay')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
+    },
+
+    {
+      "stepName":"Click Success",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Success')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
+    },
+
+    {
+      "stepName":"Switch Back To UPYOG",
+      "locatorStrategy":"TAGNAME",
+      "locatorValue":"body",
+      "action":"SWITCH_WINDOW",
+      "dynamicSleep": 2000
+    }
+  ]
+}

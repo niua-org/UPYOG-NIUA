@@ -1,0 +1,144 @@
+{
+  "moduleName":"pgr_employee_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Employee Username",
+      "locatorStrategy":"NAME",
+      "locatorValue":"username",
+      "action":"TYPE",
+      "inputValue":"${pgr.login.username}"
+    },
+
+    {
+      "stepName":"Employee Password",
+      "locatorStrategy":"NAME",
+      "locatorValue":"password",
+      "action":"TYPE",
+      "inputValue":"${pgr.login.password}"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Continue Login",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[text()='Continue']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open Grievance Inbox",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//span[text()='Grievances']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Inbox']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Assigned To All",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Assigned to All",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Enter Grievance ID",
+      "locatorStrategy":"NAME",
+      "locatorValue":"serviceRequestId",
+      "action":"TYPE",
+      "inputValue":"${pgr.application.number}"
+    },
+
+    {
+      "stepName":"Search Complaint",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Search']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Open Complaint",
+      "locatorStrategy":"LINKTEXT",
+      "locatorValue":"${pgr.application.number}",
+      "action":"CLICK"
+    },
+
+
+
+    {
+      "stepName":"Take Action Assign",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='TAKE ACTION']]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Assign Grievance",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Assign Grievance']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Assign Comment",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//textarea[@name='comment']",
+      "action":"TYPE",
+      "inputValue":"Assigned"
+    },
+
+    {
+      "stepName":"Submit Assign",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Assign']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Resolve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='TAKE ACTION']]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Resolve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Resolve']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Resolve Comment",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//textarea[@name='comment']",
+      "action":"TYPE",
+      "inputValue":"Resolved"
+    },
+
+    {
+      "stepName":"Submit Resolve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Resolve']",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}

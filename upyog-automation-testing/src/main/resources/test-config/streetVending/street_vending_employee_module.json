@@ -1,0 +1,211 @@
+{
+  "moduleName":"street_vending_employee_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Employee Username",
+      "locatorStrategy":"NAME",
+      "locatorValue":"username",
+      "action":"TYPE",
+      "inputValue":"${sv.login.username}"
+    },
+
+    {
+      "stepName":"Employee Password",
+      "locatorStrategy":"NAME",
+      "locatorValue":"password",
+      "action":"TYPE",
+      "inputValue":"${SV.login.password}"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Continue Login",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[text()='Continue']]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open SV Inbox",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[contains(@href, '/sv-ui/employee/sv/inbox')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Enter Application Number",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE",
+      "inputValue":"${sv.application.number}"
+    },
+
+    {
+      "stepName":"Search Application",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button.submit-bar-search",
+      "action":"CLICK"
+    },
+
+    {
+      "stepName":"Open Application",
+      "locatorStrategy":"LINKTEXT",
+      "locatorValue":"${sv.application.number}",
+      "action":"CLICK"
+    },
+
+
+
+    {
+      "stepName":"Take Action Forward 1",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]//header[normalize-space()='TAKE ACTION']/..",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Forward 1",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//div/p[text()='Forward']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select Employee 1",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.employee-select-wrap svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Forward Comment 1",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Forward"
+    },
+
+    {
+      "stepName":"Submit Forward 1",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit'][@form='modal-action']//h2[text()='Forward']/..",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Forward 2",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]//header[normalize-space()='TAKE ACTION']/..",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Forward 2",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//div/p[text()='Forward']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select Employee 2",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.employee-select-wrap svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Forward Comment 2",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Forward"
+    },
+
+    {
+      "stepName":"Submit Forward 2",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit'][@form='modal-action']//h2[text()='Forward']/..",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Approve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]//header[normalize-space()='TAKE ACTION']/..",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Approve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//div/p[text()='Approve']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Approve Comment",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Approved"
+    },
+
+    {
+      "stepName":"Submit Approve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit'][@form='modal-action']//h2[text()='Approve']/..",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Collect Fees",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]//header[normalize-space()='TAKE ACTION']/..",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Collect Fees",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//div/p[text()='Collect Fees']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Payer Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"payerMobile",
+      "action":"TYPE",
+      "inputValue":"9999999999"
+    },
+
+    {
+      "stepName":"Collect Payment",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']//header[text()='Collect Payment']/..",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}

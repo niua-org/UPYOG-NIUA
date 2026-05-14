@@ -6,24 +6,72 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.Automation.Common.CommonCitizenTest;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class CitizenTestService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CitizenTestService.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(CitizenTestService.class);
 
     @Autowired
     private CommonCitizenTest commonCitizenTest;
 
-    public String runCitizenSideTest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String permitNumber) {
-        logger.info("Starting {} citizen test", moduleName);
+
+    public String runCitizenSideTest(String baseUrl,
+                                     String moduleName,
+                                     String mobileNumber,
+                                     String otp,
+                                     String cityName,
+                                     String permitNumber) {
+
+        logger.info("Starting citizen test for modules: {}", moduleName);
 
         try {
-            commonCitizenTest.runCitizenTest(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber);
+
+            // Multiple modules selected
+            if (moduleName.contains(",")) {
+
+                List<String> selectedModules =
+                        Arrays.stream(moduleName.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toList());
+
+                commonCitizenTest.runMultipleModules(
+                        baseUrl,
+                        selectedModules,
+                        mobileNumber,
+                        otp,
+                        cityName,
+                        permitNumber
+                );
+
+                return "Multiple modules executed successfully.";
+            }
+
+            // Single module selected
+            else {
+
+                commonCitizenTest.runCitizenTest(
+                        baseUrl,
+                        moduleName,
+                        mobileNumber,
+                        otp,
+                        cityName,
+                        permitNumber
+                );
+
+                return moduleName + " executed successfully.";
+            }
+
         } catch (Exception e) {
+
             logger.error("Error in citizen test: {}", e.getMessage());
             e.printStackTrace();
-        }
 
-        return moduleName + " test started successfully. Check browser for automation.";
+            return "Execution failed: " + e.getMessage();
+        }
     }
 }

@@ -1,40 +1,64 @@
 {
-  "moduleName":"pet_create_module",
-  "description":"Pet registration creation flow",
-
-  "baseUrl":"${employee.base.url}",
+  "moduleName":"pet_citizen_module",
 
   "instructions":[
 
 
     {
-      "stepName":"Username",
+      "stepName":"Enter Mobile Number",
       "locatorStrategy":"NAME",
-      "locatorValue":"username",
+      "locatorValue":"mobileNumber",
       "action":"TYPE",
-      "inputValue":"${app.login.username}"
+      "inputValue":"${citizen.mobile.number}"
     },
 
     {
-      "stepName":"Password",
-      "locatorStrategy":"NAME",
-      "locatorValue":"password",
-      "action":"TYPE",
-      "inputValue":"${app.login.password}"
+      "stepName":"Accept Terms",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'].form-field",
+      "action":"CLICK_JS"
     },
+
+    {
+      "stepName":"Click Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Enter OTP",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.input-otp",
+      "action":"TYPE_OTP",
+      "inputValue":"${test.otp}"
+    },
+
+    {
+      "stepName":"Submit OTP",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+
+
 
     {
       "stepName":"Select City",
       "locatorStrategy":"CSS",
-      "locatorValue":"div.select svg",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action":"SELECT_RADIO_BY_TEXT",
+      "inputValue":"${test.city.name}"
     },
 
     {
-      "stepName":"Continue Login",
+      "stepName":"Continue",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[text()='Continue']]",
+      "locatorValue":"//button[contains(.,'Continue')]",
       "action":"CLICK_JS"
     },
 
@@ -42,48 +66,39 @@
 
 
     {
-      "stepName":"Open New Pet Registration",
+      "stepName":"Open Pet Module",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//a[contains(@href,'/upyog-ui/employee/ptr/petservice/new-application')]",
+      "locatorValue":"//a[@href='/digit-ui/citizen/ptr-home']",
       "action":"CLICK_JS"
     },
 
     {
-      "stepName":"Click Next Requirements",
+      "stepName":"Click Register Pet",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Next']]",
+      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='Register Pet']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Requirements Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS"
     },
 
 
 
-
-    {
-      "stepName":"Applicant Name",
-      "locatorStrategy":"NAME",
-      "locatorValue":"applicantName",
-      "action":"TYPE",
-      "inputValue":"Ramesh kumar"
-    },
-
-    {
-      "stepName":"Owner Mobile",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue":"8893445543"
-    },
 
     {
       "stepName":"Father Name",
       "locatorStrategy":"NAME",
       "locatorValue":"fatherName",
       "action":"TYPE",
-      "inputValue":"amit kumar"
+      "inputValue":"Ramesh Singh"
     },
 
     {
-      "stepName":"Owner Email",
+      "stepName":"Email",
       "locatorStrategy":"NAME",
       "locatorValue":"emailId",
       "action":"TYPE",
@@ -93,7 +108,7 @@
     {
       "stepName":"Owner Next",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Next']]",
+      "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS"
     },
 
@@ -109,7 +124,7 @@
     },
 
     {
-      "stepName":"Breed Type",
+      "stepName":"Breed",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select",
       "action":"SELECT_DROPDOWN_BY_INDEX",
@@ -117,7 +132,7 @@
     },
 
     {
-      "stepName":"Pet Sex",
+      "stepName":"Gender",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select",
       "action":"SELECT_DROPDOWN_BY_INDEX",
@@ -125,7 +140,7 @@
     },
 
     {
-      "stepName":"Pet Colour",
+      "stepName":"Color",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select",
       "action":"SELECT_DROPDOWN_BY_INDEX",
@@ -133,7 +148,7 @@
     },
 
     {
-      "stepName":"Birth Adoption Radio",
+      "stepName":"Birth Radio",
       "locatorStrategy":"NAME",
       "locatorValue":"selectBirthAdoption",
       "action":"CLICK_FIRST_RADIO"
@@ -152,7 +167,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"petName",
       "action":"TYPE",
-      "inputValue":"Cherry"
+      "inputValue":"cherry"
     },
 
     {
@@ -238,14 +253,6 @@
     },
 
     {
-      "stepName":"Property City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
-    },
-
-    {
       "stepName":"Street",
       "locatorStrategy":"NAME",
       "locatorValue":"street",
@@ -254,27 +261,11 @@
     },
 
     {
-      "stepName":"Mohalla",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
-    },
-
-    {
-      "stepName":"Property Pincode",
+      "stepName":"Pincode",
       "locatorStrategy":"NAME",
       "locatorValue":"pincode",
       "action":"TYPE",
       "inputValue":"110011"
-    },
-
-    {
-      "stepName":"Fire Station",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"2:0"
     },
 
     {
@@ -344,30 +335,6 @@
     },
 
     {
-      "stepName":"Address City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
-    },
-
-    {
-      "stepName":"Locality",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
-    },
-
-    {
-      "stepName":"Address Pincode",
-      "locatorStrategy":"NAME",
-      "locatorValue":"pincode",
-      "action":"TYPE",
-      "inputValue":"112233"
-    },
-
-    {
       "stepName":"Address Next",
       "locatorStrategy":"CSS",
       "locatorValue":"button[type='submit']",
@@ -402,7 +369,7 @@
     },
 
     {
-      "stepName":"Upload Vaccination Certificate",
+      "stepName":"Upload Vaccination",
       "locatorStrategy":"CSS",
       "locatorValue":"input[type='file']",
       "action":"UPLOAD_FILE_BY_INDEX",
@@ -410,7 +377,7 @@
     },
 
     {
-      "stepName":"Upload Fitness Certificate",
+      "stepName":"Upload Fitness",
       "locatorStrategy":"CSS",
       "locatorValue":"input[type='file']",
       "action":"UPLOAD_FILE_BY_INDEX",
@@ -436,7 +403,7 @@
 
 
     {
-      "stepName":"Declaration Checkbox",
+      "stepName":"Accept Declaration",
       "locatorStrategy":"CSS",
       "locatorValue":"input[type='checkbox'][value^='I declare']",
       "action":"CLICK_JS"
@@ -445,14 +412,38 @@
     {
       "stepName":"Submit Application",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='Submit']]",
+      "locatorValue":"//button[contains(.,'Submit')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Go Home",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/digit-ui/citizen']",
       "action":"CLICK_JS"
     },
 
     {
-      "stepName":"Go Back Home",
+      "stepName":"Open Pet Module Again",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//a[contains(@href,'/digit-ui/employee')]",
+      "locatorValue":"//a[@href='/digit-ui/citizen/ptr-home']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"My Applications",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='My Applications']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Track Application",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Track')]",
       "action":"CLICK_JS"
     }
 

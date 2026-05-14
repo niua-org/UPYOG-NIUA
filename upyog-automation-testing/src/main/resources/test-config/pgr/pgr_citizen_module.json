@@ -1,0 +1,219 @@
+{
+  "moduleName":"pgr_citizen_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Enter Mobile Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"${citizen.mobile.number}"
+    },
+
+    {
+      "stepName":"Accept Terms",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'].form-field",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Enter OTP",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.input-otp",
+      "action":"TYPE_OTP",
+      "inputValue":"${test.otp}"
+    },
+
+    {
+      "stepName":"Submit OTP",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action":"SELECT_RADIO_BY_TEXT",
+      "inputValue":"${test.city.name}"
+    },
+
+    {
+      "stepName":"Continue",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Continue')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open PGR Module",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pgr-home']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"File New Complaint",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pgr/create-complaint/complaint-type']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Select Service Category",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:1"
+    },
+
+    {
+      "stepName":"Select Complaint Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Select Complaint Subtype",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:1"
+    },
+
+    {
+      "stepName":"Complaint Type Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Skip Pin Location",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//span[normalize-space()='Skip and Continue']/parent::*",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Location Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Enter Pincode",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[contains(@name,'pincode')]",
+      "action":"TYPE",
+      "inputValue":"143001"
+    },
+
+    {
+      "stepName":"Pincode Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Select City Address",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Delhi",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Select Locality",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Main Road Abadpura",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Address Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Enter Landmark",
+      "locatorStrategy":"CSS",
+      "locatorValue":"textarea.card-textarea",
+      "action":"TYPE",
+      "inputValue":"Park is dirty, needs cleaning"
+    },
+
+    {
+      "stepName":"Landmark Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Upload Complaint Photo",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[@type='file']",
+      "action":"UPLOAD_FILE",
+      "inputValue":"${document.complaint.proof}"
+    },
+
+    {
+      "stepName":"Upload Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Additional Details",
+      "locatorStrategy":"CSS",
+      "locatorValue":"textarea.card-textarea",
+      "action":"TYPE",
+      "inputValue":"The park is dirty and needs to be cleaned soon."
+    },
+
+    {
+      "stepName":"Submit Complaint",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}

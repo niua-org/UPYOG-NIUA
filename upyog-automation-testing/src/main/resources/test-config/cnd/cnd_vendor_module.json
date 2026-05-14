@@ -1,0 +1,228 @@
+{
+  "moduleName": "cnd_vendor_module",
+  "description": "CnD vendor full workflow",
+
+  "baseUrl": "${selected.url}",
+
+  "instructions": [
+
+    {
+      "stepName": "Enter Mobile",
+      "locatorStrategy": "NAME",
+      "locatorValue": "mobileNumber",
+      "action": "TYPE",
+      "inputValue": "${cnd.mobile.number}",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Accept Terms",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='checkbox'].form-field",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 500
+    },
+
+    {
+      "stepName": "Click Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Enter OTP",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input.input-otp",
+      "action": "TYPE_OTP",
+      "inputValue": "${selected.otp}",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Submit OTP",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName": "Select City",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action": "SELECT_RADIO_BY_TEXT",
+      "inputValue": "${selected.city}",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Continue",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Continue')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
+    },
+
+
+
+
+
+    {
+      "stepName": "Open CnD Module",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[@href='/cnd-ui/citizen/cnd-home']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName": "Open Vendor Module",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[@href='/cnd-ui/citizen/cnd/cnd-vendor']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName": "Open Inbox",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[contains(@href,'/cnd/inbox')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
+    },
+
+
+
+
+
+    {
+      "stepName": "Enter Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='text'])[1]",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "application.number",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Click Search",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[normalize-space()='Search']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName": "Open Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//table//a[1]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
+    },
+
+
+
+
+
+    {
+      "stepName": "Take Action First",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[.//header[normalize-space()='TAKE ACTION']]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Assign Vehicle First",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//p[normalize-space()='Assign Vehicle']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Cancel Popup",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'selector-button-border')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+
+
+
+
+
+    {
+      "stepName": "Take Action Second",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[.//header[normalize-space()='TAKE ACTION']]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Assign Vehicle Second",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//p[normalize-space()='Assign Vehicle']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+
+
+
+
+
+    {
+      "stepName": "Select Vehicle",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.select svg.cp",
+      "action": "SELECT_DROPDOWN_BY_INDEX",
+      "inputValue": "0:0",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Enter Vehicle Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//input[@type='text']",
+      "action": "TYPE",
+      "inputValue": "PN 45 HU 8485",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Enter Comment",
+      "locatorStrategy": "NAME",
+      "locatorValue": "comments",
+      "action": "TYPE",
+      "inputValue": "Assigned",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Submit Vehicle Assignment",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[normalize-space()='SUBMIT']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 5000
+    }
+
+  ]
+}

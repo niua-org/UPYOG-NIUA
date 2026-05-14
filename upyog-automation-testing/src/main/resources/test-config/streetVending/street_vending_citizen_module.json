@@ -1,0 +1,423 @@
+{
+  "moduleName":"street_vending_citizen_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Citizen Mobile Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"${citizen.mobile.number}"
+    },
+
+    {
+      "stepName":"Accept Terms",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'].form-field",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Enter OTP",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.input-otp",
+      "action":"TYPE_OTP",
+      "inputValue":"${test.otp}"
+    },
+
+    {
+      "stepName":"Submit OTP",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action":"SELECT_RADIO_BY_TEXT",
+      "inputValue":"${test.city.name}"
+    },
+
+    {
+      "stepName":"Continue",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Continue')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open Street Vending Module",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/sv-ui/citizen/sv-home']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Apply For Street Vending License",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/sv-ui/citizen/sv/apply']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Info Page Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]//header[normalize-space()='Next']/..",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Select Category",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Date Of Birth",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='date']",
+      "action":"SET_DATE_FIXED",
+      "inputValue":"1990-05-20"
+    },
+
+    {
+      "stepName":"Gender",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Male",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Father Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"fatherName",
+      "action":"TYPE",
+      "inputValue":"Father Name"
+    },
+
+    {
+      "stepName":"Personal Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Vending Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Locality",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_TEXT",
+      "inputValue":"1:Patiala"
+    },
+
+    {
+      "stepName":"Vending Zone",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:0"
+    },
+
+    {
+      "stepName":"Business Checkbox",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.SVCheckbox[type='checkbox']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Authority Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"nameOfAuthority",
+      "action":"TYPE",
+      "inputValue":"Local Authority"
+    },
+
+    {
+      "stepName":"Payment Cycle",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"3:0"
+    },
+
+    {
+      "stepName":"Vending License",
+      "locatorStrategy":"NAME",
+      "locatorValue":"vendingLiscence",
+      "action":"TYPE",
+      "inputValue":"VL123456"
+    },
+
+    {
+      "stepName":"Business Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"House Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"houseNo",
+      "action":"TYPE",
+      "inputValue":"123"
+    },
+
+    {
+      "stepName":"Address Line 1",
+      "locatorStrategy":"NAME",
+      "locatorValue":"addressline1",
+      "action":"TYPE",
+      "inputValue":"Main Street"
+    },
+
+    {
+      "stepName":"Address Line 2",
+      "locatorStrategy":"NAME",
+      "locatorValue":"addressline2",
+      "action":"TYPE",
+      "inputValue":"Near Park"
+    },
+
+    {
+      "stepName":"Landmark",
+      "locatorStrategy":"NAME",
+      "locatorValue":"landmark",
+      "action":"TYPE",
+      "inputValue":"City Mall"
+    },
+
+    {
+      "stepName":"City Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Locality Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Pincode",
+      "locatorStrategy":"NAME",
+      "locatorValue":"pincode",
+      "action":"TYPE",
+      "inputValue":"147001"
+    },
+
+    {
+      "stepName":"Address Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Same As Permanent Address",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'][value='Same as Permanent Address']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Correspondence Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Account Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"accountNumber",
+      "action":"TYPE",
+      "inputValue":"123456789012"
+    },
+
+    {
+      "stepName":"Confirm Account Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"confirmAccountNumber",
+      "action":"TYPE",
+      "inputValue":"123456789012"
+    },
+
+    {
+      "stepName":"IFSC Code",
+      "locatorStrategy":"NAME",
+      "locatorValue":"ifscCode",
+      "action":"TYPE",
+      "inputValue":"SBIN0003453"
+    },
+
+    {
+      "stepName":"Account Holder Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"accountHolderName",
+      "action":"TYPE",
+      "inputValue":"John Doe"
+    },
+
+    {
+      "stepName":"Bank Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Document 1 Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Document 1 Upload",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${sv.document.identity.proof}"
+    },
+
+    {
+      "stepName":"Document 2 Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Document 2 Upload",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"1:${sv.document.address.proof}"
+    },
+
+    {
+      "stepName":"Document 3 Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:0"
+    },
+
+    {
+      "stepName":"Document 3 Upload",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"2:${sv.document.business.proof}"
+    },
+
+    {
+      "stepName":"Document 4 Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"3:0"
+    },
+
+    {
+      "stepName":"Document 4 Upload",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"3:${sv.document.business.proof}"
+    },
+
+    {
+      "stepName":"Documents Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Owner Category",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//div[contains(@class,'select')]",
+      "action":"SELECT_DROPDOWN_BY_TEXT",
+      "inputValue":"None of the above"
+    },
+
+    {
+      "stepName":"Owner Save Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Save & Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Accept Declaration",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'][value*='I hereby declare']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Submit Application",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Submit Application",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Download Acknowledgement",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Download Acknowledgement",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}

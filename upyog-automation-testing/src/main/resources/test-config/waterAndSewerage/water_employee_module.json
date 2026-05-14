@@ -1,0 +1,575 @@
+{
+  "moduleName":"water_employee_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Employee Username",
+      "locatorStrategy":"NAME",
+      "locatorValue":"username",
+      "action":"TYPE",
+      "inputValue":"${wns.login.username}"
+    },
+
+    {
+      "stepName":"Employee Password",
+      "locatorStrategy":"NAME",
+      "locatorValue":"password",
+      "action":"TYPE",
+      "inputValue":"${wns.login.password}"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Continue Login",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Continue",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open Water Inbox",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//span[text()='Water']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Inbox']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Enter Application Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"applicationNumber",
+      "action":"TYPE",
+      "inputValue":"${water.application.number}"
+    },
+
+    {
+      "stepName":"Search Application",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Search']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Open Application",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//table//tbody//tr//a",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Verify And Forward 1",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Verify And Forward 1",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Verify and Forward",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+    {
+      "stepName":"Comment 1",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Verified and Okay to forward"
+    },
+
+    {
+      "stepName":"Submit Verify And Forward 1",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Verify and Forward']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Verify And Forward 2",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Verify And Forward 2",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Verify and Forward",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+    {
+      "stepName":"Comment 2",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Verified and Okay to forward"
+    },
+
+    {
+      "stepName":"Submit Verify And Forward 2",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Verify and Forward']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Edit",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Edit",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Edit",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+
+
+    {
+      "stepName":"Number Of Taps",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Number of Taps",
+      "action":"TYPE_BY_H2",
+      "inputValue":"8"
+    },
+
+    {
+      "stepName":"Connection Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Connection Category",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Pipe Size",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:0"
+    },
+
+    {
+      "stepName":"Meter Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"3:1"
+    },
+
+    {
+      "stepName":"Number Of Taps Again",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Number Of taps",
+      "action":"TYPE_BY_H2",
+      "inputValue":"8"
+    },
+
+
+
+    {
+      "stepName":"Plumber Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"5:0"
+    },
+
+    {
+      "stepName":"Plumber License",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Plumber License Number",
+      "action":"TYPE_BY_H2",
+      "inputValue":"7898765"
+    },
+
+    {
+      "stepName":"Plumber Name",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Plumber Name",
+      "action":"TYPE_BY_H2",
+      "inputValue":"Amit Kumar"
+    },
+
+    {
+      "stepName":"Plumber Mobile",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Plumber Mobile Number",
+      "action":"TYPE_BY_H2",
+      "inputValue":"9876543210"
+    },
+
+
+
+    {
+      "stepName":"Road Cutting",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"6:0"
+    },
+
+    {
+      "stepName":"Area Of Plot",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Area of Plot",
+      "action":"TYPE_BY_H2",
+      "inputValue":"1200"
+    },
+
+
+
+    {
+      "stepName":"Evidence Type 1",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"7:0"
+    },
+
+    {
+      "stepName":"Upload Evidence 1",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.identity1.proof}"
+    },
+
+
+
+    {
+      "stepName":"Evidence Type 2",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"8:0"
+    },
+
+    {
+      "stepName":"Upload Evidence 2",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"1:${document.identity1.proof}"
+    },
+
+
+
+    {
+      "stepName":"Evidence Type 3",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"9:0"
+    },
+
+    {
+      "stepName":"Upload Evidence 3",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"2:${document.identity1.proof}"
+    },
+
+
+
+    {
+      "stepName":"Evidence Type 4",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"10:0"
+    },
+
+    {
+      "stepName":"Upload Evidence 4",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"3:${document.identity1.proof}"
+    },
+
+
+
+    {
+      "stepName":"Edit Submit",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"SUBMIT",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Verify And Forward 3",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Verify And Forward 3",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Verify and Forward",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+    {
+      "stepName":"Comment 3",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Verified and Okay to forward"
+    },
+
+    {
+      "stepName":"Submit Verify And Forward 3",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Verify and Forward']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Approve",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Approve Connection",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Approve Connection",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+    {
+      "stepName":"Approve Comment",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Approved"
+    },
+
+    {
+      "stepName":"Submit Approve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Approve Connection']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Collect",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Collect",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Collect",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+
+
+    {
+      "stepName":"Payer Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"payerMobile",
+      "action":"TYPE",
+      "inputValue":"9999999999"
+    },
+
+    {
+      "stepName":"Receipt Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"instrumentNumber",
+      "action":"TYPE",
+      "inputValue":"GEN123456"
+    },
+
+    {
+      "stepName":"Receipt Date",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[@type='date']",
+      "action":"SET_DATE_TODAY"
+    },
+
+    {
+      "stepName":"Collect Payment",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Collect Payment",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Go Back Home",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Go back to home page",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open Water Inbox Again",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//span[text()='Water']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Inbox']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Search Again",
+      "locatorStrategy":"NAME",
+      "locatorValue":"applicationNumber",
+      "action":"TYPE",
+      "inputValue":"${water.application.number}"
+    },
+
+    {
+      "stepName":"Click Search Again",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Search']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Open Application Again",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//table//tbody//tr//a",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Activate Connection",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"TAKE ACTION",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Activate Connection",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Activate Connection",
+      "action":"CLICK_ACTION_MENU"
+    },
+
+
+
+    {
+      "stepName":"Plumber Dropdown Again",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"4:0"
+    },
+
+    {
+      "stepName":"Plumber License Again",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Plumber License Number",
+      "action":"TYPE_BY_H2",
+      "inputValue":"7898765"
+    },
+
+    {
+      "stepName":"Plumber Name Again",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Plumber Name",
+      "action":"TYPE_BY_H2",
+      "inputValue":"Amit Kumar"
+    },
+
+    {
+      "stepName":"Plumber Mobile Again",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Plumber Mobile Number",
+      "action":"TYPE_BY_H2",
+      "inputValue":"9876543210"
+    },
+
+
+
+    {
+      "stepName":"Meter ID",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Meter ID",
+      "action":"TYPE_BY_H2",
+      "inputValue":"87655446"
+    },
+
+    {
+      "stepName":"Initial Meter Reading",
+      "locatorStrategy":"H2LABEL",
+      "locatorValue":"Initial Meter Reading",
+      "action":"TYPE_BY_H2",
+      "inputValue":"78987655446"
+    },
+
+
+
+    {
+      "stepName":"Installation Date",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Meter Installation Date')]/following::input[1]",
+      "action":"SET_TEXT_DATE_TODAY"
+    },
+
+    {
+      "stepName":"Connection Date",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Connection Date')]/following::input[1]",
+      "action":"SET_TEXT_DATE_TODAY"
+    },
+
+
+
+    {
+      "stepName":"Activate Connection Submit",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Activate Connection",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}

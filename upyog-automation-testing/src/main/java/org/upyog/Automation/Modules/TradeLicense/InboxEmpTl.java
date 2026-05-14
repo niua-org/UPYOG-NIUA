@@ -9,6 +9,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.upyog.Automation.config.WebDriverFactory;
@@ -24,7 +25,7 @@ import java.util.List;
  * - Complete workflow: Verify and Forward -> Approve -> Pay
  * - Payment collection
  */
-//@Component
+@Component
 public class InboxEmpTl {
 
     private static final Logger logger = LoggerFactory.getLogger(InboxEmpTl.class);
@@ -37,7 +38,14 @@ public class InboxEmpTl {
      * Runs automatically when Spring context is initialized
      */
     //@PostConstruct
+
     public void inboxEmpTl() {
+        inboxEmpTl(ConfigReader.get("employee.base.url"),
+                ConfigReader.get("app.login.username"),
+                ConfigReader.get("app.login.password"),
+                ConfigReader.get("tl.application.number"));
+    }
+    public void inboxEmpTl(String baseUrl, String username, String password, String applicationNumber) {
         logger.info("Trade License Employee Inbox Workflow");
         
         // Initialize WebDriver using DriverFactory
@@ -48,7 +56,7 @@ public class InboxEmpTl {
 
         try {
             // STEP 1: Employee Login
-            performEmployeeLogin(driver, wait, js, actions);
+            performEmployeeLogin(driver, wait, js, actions, baseUrl, username, password);
             
             // STEP 2: Navigate to Trade License Inbox
             navigateToInbox(driver, wait, js);
@@ -78,14 +86,14 @@ public class InboxEmpTl {
     /**
      * Handles employee login process
      */
-    private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions) throws InterruptedException {
-        driver.get(ConfigReader.get("employee.base.url"));
+    private void performEmployeeLogin(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, Actions actions, String baseUrl, String username, String password) throws InterruptedException {
+        driver.get(baseUrl);
         driver.manage().window().maximize();
         logger.info("Open the Employee Login Portal");
 
         // Enter credentials from configuration
-        fillInput(wait, "username", ConfigReader.get("tl.login.username"));
-        fillInput(wait, "password", ConfigReader.get("tl.login.password"));
+        fillInput(wait, "username", username);
+        fillInput(wait, "password", password);
         logger.info("Filled username and password");
 
         // Select city dropdown
@@ -104,7 +112,7 @@ public class InboxEmpTl {
     private void navigateToInbox(WebDriver driver, WebDriverWait wait, JavascriptExecutor js) throws InterruptedException {
         logger.info("Navigating to Trade License Inbox");
         
-        Thread.sleep(300);
+        Thread.sleep(2000);
         
         WebElement tlInbox = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.xpath("//a[contains(@href, '/upyog-ui/employee/tl/inbox') and contains(normalize-space(.), 'Inbox')]")));

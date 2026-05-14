@@ -1,0 +1,530 @@
+{
+  "moduleName":"property_tax_citizen_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Enter Mobile Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"${citizen.mobile.number}"
+    },
+
+    {
+      "stepName":"Accept Terms",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'].form-field",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Enter OTP",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.input-otp",
+      "action":"TYPE_OTP",
+      "inputValue":"${test.otp}"
+    },
+
+    {
+      "stepName":"Submit OTP",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action":"SELECT_RADIO_BY_TEXT",
+      "inputValue":"${test.city.name}"
+    },
+
+    {
+      "stepName":"Continue",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Continue')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Open Property Tax Module",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pt-home']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Open Create Property",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pt/property/new-application/info']",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Info Page Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Property Type",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Independent Building",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Property Type Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Electricity Number",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[contains(@placeholder,'electricity')]",
+      "action":"TYPE",
+      "inputValue":"1234567890"
+    },
+
+    {
+      "stepName":"Electricity Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Structure Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Age Of Property",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"Structure Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Unique ID",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[contains(@placeholder,'UID')]",
+      "action":"TYPE",
+      "inputValue":"ABCD1234567890E"
+    },
+
+    {
+      "stepName":"UID Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Land Area",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE",
+      "inputValue":"1200"
+    },
+
+    {
+      "stepName":"Land Area Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"No Basement",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"No Basement",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Basement Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Ground Floor Only",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Ground Floor Only",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Floor Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Ground Floor Usage",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:4"
+    },
+
+    {
+      "stepName":"Occupancy",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:1"
+    },
+
+    {
+      "stepName":"Built Up Area",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE",
+      "inputValue":"1100"
+    },
+
+    {
+      "stepName":"Ground Floor Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Skip Pin Location",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//span[contains(.,'Skip and continue')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Pincode",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[contains(@name,'pincode')]",
+      "action":"TYPE",
+      "inputValue":"143001"
+    },
+
+    {
+      "stepName":"Pincode Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"City Radio",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='radio'])[1]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Locality Radio",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='radio'])[2]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Address Select Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Street Name",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE_BY_INDEX",
+      "inputValue":"0:Test Street"
+    },
+
+    {
+      "stepName":"House Number",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE_BY_INDEX",
+      "inputValue":"1:89"
+    },
+
+    {
+      "stepName":"Address Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Landmark",
+      "locatorStrategy":"CSS",
+      "locatorValue":"textarea.card-textarea",
+      "action":"TYPE",
+      "inputValue":"Test landmark near main road"
+    },
+
+    {
+      "stepName":"Landmark Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Address Proof Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Upload Address Proof",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.propertyaddress.proof}"
+    },
+
+    {
+      "stepName":"Documents Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Single Owner",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Single Owner",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Ownership Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Owner Name",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE_BY_INDEX",
+      "inputValue":"0:Test Owner"
+    },
+
+    {
+      "stepName":"Owner Mobile",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE_BY_INDEX",
+      "inputValue":"1:9999999999"
+    },
+
+    {
+      "stepName":"Guardian Name",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE_BY_INDEX",
+      "inputValue":"2:Test Guardian"
+    },
+
+    {
+      "stepName":"Owner Email",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.employee-card-input",
+      "action":"TYPE_BY_INDEX",
+      "inputValue":"3:test@gmail.com"
+    },
+
+    {
+      "stepName":"Gender",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Male",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Relation",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Father",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Owner Details Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Not Applicable",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Not Applicable",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Special Category Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Owner Address Declaration",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox']",
+      "action":"CHECK_LAST_CHECKBOX"
+    },
+
+    {
+      "stepName":"Owner Address Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Identity Proof Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Upload Identity Proof",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='file']",
+      "action":"UPLOAD_FILE_BY_INDEX",
+      "inputValue":"0:${document.propertyidentity.proof}"
+    },
+
+    {
+      "stepName":"Identity Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+
+    {
+      "stepName":"Summary Declaration",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox']",
+      "action":"CHECK_LAST_CHECKBOX"
+    },
+
+    {
+      "stepName":"Submit Application",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Submit')]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Proceed Duplicate Popup",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Proceed')]",
+      "action":"OPTIONAL_CLICK"
+    }
+
+  ]
+}

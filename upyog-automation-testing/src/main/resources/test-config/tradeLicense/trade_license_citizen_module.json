@@ -1,0 +1,533 @@
+{
+  "moduleName":"trade_license_citizen_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Citizen Mobile Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"${citizen.mobile.number}"
+    },
+
+    {
+      "stepName":"Accept Terms",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'].form-field",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Enter OTP",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.input-otp",
+      "action":"TYPE_OTP",
+      "inputValue":"${test.otp}"
+    },
+
+    {
+      "stepName":"Submit OTP",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action":"SELECT_RADIO_BY_TEXT",
+      "inputValue":"${test.city.name}"
+    },
+
+    {
+      "stepName":"Continue",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Continue",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open Trade License",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/tl-home']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Apply Trade License",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[text()='Apply for Trade License']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Info Page Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Trade Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"TradeName",
+      "action":"TYPE",
+      "inputValue":"Institute"
+    },
+
+    {
+      "stepName":"Business Name Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Business Question Yes",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Yes",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Business Question Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select Kutcha",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Kutcha",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Kutcha Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Establishment Date",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='date']",
+      "action":"SET_DATE_FIXED",
+      "inputValue":"2025-05-20"
+    },
+
+    {
+      "stepName":"Date Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Trade Type Goods",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Goods",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Category Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Sub Category Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"UOM Value",
+      "locatorStrategy":"NAME",
+      "locatorValue":"UomValue",
+      "action":"TYPE",
+      "inputValue":"6"
+    },
+
+    {
+      "stepName":"Trade Category Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Additional Question No",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"No",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Additional Question Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"GST Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"TradeGSTNumber",
+      "action":"TYPE",
+      "inputValue":"10SEIJI3622O0Z4"
+    },
+
+    {
+      "stepName":"Operational Area",
+      "locatorStrategy":"NAME",
+      "locatorValue":"OperationalSqFtArea",
+      "action":"TYPE",
+      "inputValue":"454"
+    },
+
+    {
+      "stepName":"Employees Count",
+      "locatorStrategy":"NAME",
+      "locatorValue":"NumberOfEmployees",
+      "action":"TYPE",
+      "inputValue":"10"
+    },
+
+    {
+      "stepName":"GST Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Hazardous No",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"No",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Hazardous Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Property Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Total Land Area",
+      "locatorStrategy":"NAME",
+      "locatorValue":"totLandArea",
+      "action":"TYPE",
+      "inputValue":"345"
+    },
+
+    {
+      "stepName":"Construction Area",
+      "locatorStrategy":"NAME",
+      "locatorValue":"totConstructionArea",
+      "action":"TYPE",
+      "inputValue":"87"
+    },
+
+    {
+      "stepName":"Usage Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0"
+    },
+
+    {
+      "stepName":"City Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_TEXT",
+      "inputValue":"2:Delhi"
+    },
+
+    {
+      "stepName":"Locality Dropdown",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"3:0"
+    },
+
+    {
+      "stepName":"House Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"houseDoorNo",
+      "action":"TYPE",
+      "inputValue":"445"
+    },
+
+    {
+      "stepName":"Colony Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"buildingColonyName",
+      "action":"TYPE",
+      "inputValue":"church street"
+    },
+
+    {
+      "stepName":"Landmark",
+      "locatorStrategy":"NAME",
+      "locatorValue":"landmarkName",
+      "action":"TYPE",
+      "inputValue":"circle point"
+    },
+
+    {
+      "stepName":"Ownership Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"4:3"
+    },
+
+    {
+      "stepName":"Owner Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber0",
+      "action":"TYPE",
+      "inputValue":"9494848897"
+    },
+
+    {
+      "stepName":"Owner Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"name0",
+      "action":"TYPE",
+      "inputValue":"atul"
+    },
+
+    {
+      "stepName":"Gender",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Male",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Father Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"fatherOrHusbandName0",
+      "action":"TYPE",
+      "inputValue":"father"
+    },
+
+    {
+      "stepName":"Relationship",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Husband",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Category",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_TEXT",
+      "inputValue":"5:BPL"
+    },
+
+    {
+      "stepName":"Owner Address",
+      "locatorStrategy":"NAME",
+      "locatorValue":"address0",
+      "action":"TYPE",
+      "inputValue":"owner address"
+    },
+
+    {
+      "stepName":"Property Submit",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button.submit-bar[type='submit']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Property Proceed",
+      "locatorStrategy":"CSS",
+      "locatorValue":"button.submit-bar[type='button']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Property Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Institutional Government",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"Institutional - Government",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Owner Type Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Institution Name",
+      "locatorStrategy":"NAME",
+      "locatorValue":"institutionName",
+      "action":"TYPE",
+      "inputValue":"Government Office"
+    },
+
+    {
+      "stepName":"Government Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_TEXT",
+      "inputValue":"0:Central Government"
+    },
+
+    {
+      "stepName":"Contact Person",
+      "locatorStrategy":"NAME",
+      "locatorValue":"name",
+      "action":"TYPE",
+      "inputValue":"Officer"
+    },
+
+    {
+      "stepName":"Designation",
+      "locatorStrategy":"NAME",
+      "locatorValue":"designation",
+      "action":"TYPE",
+      "inputValue":"Officer"
+    },
+
+    {
+      "stepName":"Contact Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobilenumber",
+      "action":"TYPE",
+      "inputValue":"8474857362"
+    },
+
+    {
+      "stepName":"Institution Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Same Address Checkbox",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'][value=\"Same as Trade's Address\"]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Address Confirm Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Upload Document 1",
+      "locatorStrategy":"ID",
+      "locatorValue":"tl-doc",
+      "action":"UPLOAD_FILE",
+      "inputValue":"${tl.document.identity.proof}"
+    },
+
+    {
+      "stepName":"Document 1 Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Upload Document 2",
+      "locatorStrategy":"ID",
+      "locatorValue":"tl-doc",
+      "action":"UPLOAD_FILE",
+      "inputValue":"${tl.document.identity.proof}"
+    },
+
+    {
+      "stepName":"Document 2 Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Upload Image",
+      "locatorStrategy":"ID",
+      "locatorValue":"tl-doc",
+      "action":"UPLOAD_FILE",
+      "inputValue":"${tl.document.image}"
+    },
+
+    {
+      "stepName":"Image Next",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Next",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Submit Application",
+      "locatorStrategy":"HEADERBUTTON",
+      "locatorValue":"Submit Application",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}

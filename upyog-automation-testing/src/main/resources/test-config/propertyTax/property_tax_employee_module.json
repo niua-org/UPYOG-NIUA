@@ -1,0 +1,242 @@
+{
+  "moduleName":"property_tax_employee_module",
+
+  "instructions":[
+
+    {
+      "stepName":"Employee Username",
+      "locatorStrategy":"NAME",
+      "locatorValue":"username",
+      "action":"TYPE",
+      "inputValue":"${property.login.username}"
+    },
+
+    {
+      "stepName":"Employee Password",
+      "locatorStrategy":"NAME",
+      "locatorValue":"password",
+      "action":"TYPE",
+      "inputValue":"${property.login.password}"
+    },
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:0"
+    },
+
+    {
+      "stepName":"Continue Login",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Continue')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Open Property Tax Inbox",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[normalize-space()='Inbox']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Enter Property ID",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='text'])[2]",
+      "action":"TYPE",
+      "inputValue":"${propertyTax.application.number}"
+    },
+
+    {
+      "stepName":"Search Application",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Search']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Open Application",
+      "locatorStrategy":"LINKTEXT",
+      "locatorValue":"${propertyTax.application.number}",
+      "action":"CLICK"
+    },
+
+
+
+    {
+      "stepName":"Take Action Verify",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click VERIFY",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='VERIFY']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Verify Comment",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"verified"
+    },
+
+    {
+      "stepName":"Verify Popup Submit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Verify']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Forward",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click FORWARD",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='FORWARD']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Forward Comment",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Forwarded"
+    },
+
+    {
+      "stepName":"Forward Popup Submit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Forward']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Approve",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click APPROVE",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='APPROVE']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Approve Comment",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Approved"
+    },
+
+    {
+      "stepName":"Approve Popup Submit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Approve']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"View Details",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='VIEW DETAILS']",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Take Action Assess Property",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Click Assess Property",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Assess Property']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Select Financial Year",
+      "locatorStrategy":"LABELTEXT",
+      "locatorValue":"2025-26",
+      "action":"CLICK_RADIO_BY_LABEL"
+    },
+
+    {
+      "stepName":"Assess Property Popup",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[normalize-space()='Assess Property']",
+      "action":"CLICK_JS"
+    },
+
+    {
+      "stepName":"Assess Property Final Button",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Assess Property')]",
+      "action":"CLICK_JS"
+    },
+
+
+
+    {
+      "stepName":"Payer Mobile",
+      "locatorStrategy":"NAME",
+      "locatorValue":"payerMobile",
+      "action":"TYPE",
+      "inputValue":"9999999999"
+    },
+
+    {
+      "stepName":"Receipt Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"instrumentNumber",
+      "action":"TYPE",
+      "inputValue":"GEN123456"
+    },
+
+    {
+      "stepName":"Receipt Date",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[@type='date']",
+      "action":"SET_DATE_TODAY"
+    },
+
+    {
+      "stepName":"Collect Payment",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Collect Payment')]",
+      "action":"CLICK_JS"
+    }
+
+  ]
+}
