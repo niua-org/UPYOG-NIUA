@@ -120,7 +120,7 @@ const CreateProperty = ({ parentRoute }) => {
     if (!isNaN(nextStep.split("/").pop())) {
       nextPage = `${nextStep}`;
     } else {
-      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
+      nextPage = isMultiple && nextStep !== "map" && nextStep !== "pincode" ? `${nextStep}/${index}` : `${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
