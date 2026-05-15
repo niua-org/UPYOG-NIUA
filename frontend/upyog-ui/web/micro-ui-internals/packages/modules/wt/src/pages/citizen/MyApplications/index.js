@@ -119,10 +119,18 @@ export const WTMyApplications = () => {
     { label: t("TREE_PRUNING"), code: "treePruning" }
   ];
 
-  const statusOptions = [
+  const statusOptionForWaterTanker = [
     { i18nKey: "Booking Created", code: "BOOKING_CREATED", value: t("WT_BOOKING_CREATED") },
     { i18nKey: "Booking Approved", code: "APPROVED", value: t("WT_BOOKING_APPROVED") },
     { i18nKey: "Tanker Delivered", code: "TANKER_DELIVERED", value: t("WT_TANKER_DELIVERED") },
+    { i18nKey: "Vendor Assigned", code: "ASSIGN_VENDOR", value: t("WT_ASSIGN_VENDOR") },
+    { i18nKey: "Rejected", code: "REJECT", value: t("WT_BOOKING_REJECTED") }
+  ];
+
+  const statusOptionForMobileToilet = [
+    { i18nKey: "Booking Created", code: "BOOKING_CREATED", value: t("WT_BOOKING_CREATED") },
+    { i18nKey: "Booking Approved", code: "APPROVED", value: t("WT_BOOKING_APPROVED") },
+    { i18nKey: "Mobile Toilet Delivered", code: "MOBILE_TOILET_DELIVERED", value: t("MOBILE_TOILET_DELIVERED") },
     { i18nKey: "Vendor Assigned", code: "ASSIGN_VENDOR", value: t("WT_ASSIGN_VENDOR") },
     { i18nKey: "Rejected", code: "REJECT", value: t("WT_BOOKING_REJECTED") }
   ];
@@ -195,7 +203,15 @@ export const WTMyApplications = () => {
                   className="form-field"
                   selected={status}
                   select={setStatus}
-                  option={tempServiceType === 'treePruning' ? statusOptionForTreePruning : statusOptions}
+                  option={
+                    tempServiceType === 'treePruning'
+                      ? statusOptionForTreePruning
+                      : tempServiceType === 'watertanker'
+                      ? statusOptionForWaterTanker
+                      : tempServiceType === 'mobileToilet'
+                      ? statusOptionForMobileToilet
+                      : []
+                  }
                   placeholder={t("Select Status")}
                   optionKey="value"
                   style={{ width: "100%" }}
