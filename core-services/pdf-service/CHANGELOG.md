@@ -2,7 +2,7 @@
 All notable changes to this module will be documented in this file.
 
 ## 2.0.0 - 2025-05-05
-- Upgraded Node.js runtime to v22 LTS
+- Upgraded Node.js from Node 10 to v22 LTS
 - Removed Babel transpilation layer — service now runs natively on Node 22 with ES Modules
 - Replaced `kafka-node` (abandoned) with `kafkajs ^2.2.4`
 - Removed deprecated `request` library — all HTTP calls use `axios`

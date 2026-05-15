@@ -2,7 +2,7 @@
 // ConsumerGroup replaced with kafkajs consumer API
 // async.queue retained for sequential processing
 
-import { Kafka } from "kafkajs";
+import { Kafka, PartitionAssigners } from "kafkajs";
 import logger from "../config/logger.js";
 import envVariables from "../EnvironmentVariables.js";
 import { createNoSave } from "../index.js";
@@ -15,7 +15,15 @@ export const listenConsumer = async (topics) => {
     brokers: envVariables.KAFKA_BROKER_HOST.split(",").map(b=> b.trim()),
   });
 
-  const consumer = kafka.consumer({ groupId: "bulk-pdf" });
+  const consumer = kafka.consumer({
+    groupId: "bulk-pdf",
+    // autoCommit: true — matches old kafka-node autoCommit: true behavior
+    autoCommit: true,
+    // partitionAssigners: roundRobin — matches old kafka-node protocol: ["roundrobin"]
+    partitionAssigners: [PartitionAssigners.roundRobin],
+    // fromOffset: "latest" is handled via fromBeginning: false in subscribe() below
+    // outOfRangeOffset: "earliest" — not supported at consumer level in KafkaJS, broker-side config only
+  });
 
   // Handle consumer crash events — logs error if Kafka connection crashes
   consumer.on(consumer.events.CRASH, (event) => {
@@ -35,16 +43,21 @@ export const listenConsumer = async (topics) => {
     if (topic) await consumer.subscribe({ topic, fromBeginning: false });
   }
 
+// async.queue with concurrency 1 ensures messages are processed sequentially (one at a time)
+// This replaces the old kafka-node pattern of consumerGroup.pause() on message and
+// consumerGroup.resume() on q.drain() — KafkaJS handles backpressure differently,
+// so the queue acts as the sequential gate instead
 const q = async.queue(async (data) => {
   try {
- // Trigger PDF generation for the received data
+    // Trigger PDF generation for the received Kafka message data
+    // createNoSave generates the PDF and saves it to disk without persisting to DB
     await createNoSave(data, null, () => {}, () => {});
   } catch (err) {
-// Log any errors that occur during PDF generation
+    // Log any errors that occur during PDF generation without crashing the consumer
     logger.error("Queue worker error: " + err.message);
     logger.error(err.stack || err);
   }
-}, 1);
+}, 1 /* concurrency: 1 ensures sequential processing — prevents parallel PDF generation which is memory intensive */);
 
 // Start consuming messages from subscribed topics
   await consumer.run({
