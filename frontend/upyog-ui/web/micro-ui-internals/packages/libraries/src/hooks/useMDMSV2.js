@@ -1,4 +1,6 @@
 import { queryTemplate } from "../common/queryTemplate";
+import { MdmsServiceV2 } from "../services/elements/MDMSV2";
+
 
 const useMDMS = (tenantId, moduleCode, type, config = {}) => {
   const usePaymentGateway = () => {
