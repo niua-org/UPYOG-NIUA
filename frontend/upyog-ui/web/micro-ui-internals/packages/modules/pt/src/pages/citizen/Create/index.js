@@ -75,9 +75,9 @@ const CreateProperty = ({ parentRoute }) => {
       } else {
         const resolvedNext = nextStep[sessionStorage.getItem("noOofBasements")];
         if (resolvedNext) {
-          // noOofBasements routes (units) don't need an index suffix
+          // noOofBasements routes (units) should preserve the index suffix
           nextStep = resolvedNext;
-          isMultiple = false;
+          isMultiple = true;
         } else {
           const fallback = Object.values(nextStep)[0];
           nextStep = fallback || nextStep;

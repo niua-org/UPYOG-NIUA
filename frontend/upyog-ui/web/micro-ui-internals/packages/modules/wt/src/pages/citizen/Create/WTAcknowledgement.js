@@ -56,7 +56,6 @@ const BannerPicker = (props) => {
 const WTAcknowledgement = () => {
   const { t } = useTranslation();
   const { state } = useLocation();
-  console.log("dtat", state);
 
   const [errorToast, setErrorToast] = useState(null);
 

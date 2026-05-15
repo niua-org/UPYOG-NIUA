@@ -23,7 +23,6 @@ const WTCreate = () => {
   // Sets the serviceType in case of employee side for WT, MT, and TP
   if ((!params.serviceType || Object.keys(params.serviceType).length === 0) && pathname.includes("employee")) {
     if (pathname.includes("mt")) {
-      console.log("MT Create");
       setParams({
         "serviceType": {
           "serviceType": {

@@ -11,18 +11,20 @@ import { CheckBox } from "@nudmcdgnpm/digit-ui-react-components";
 const StatusCount = ({ status, searchParams, onAssignmentChange, businessServices, clearCheck, setclearCheck, setSearchParams, _searchParams }) => {
   const { t } = useTranslation();
 
+  React.useEffect(() => {
+    if (clearCheck) {
+      setclearCheck(false);
+    }
+  }, [clearCheck]);
 
   return (
     <CheckBox
       onChange={(e) => onAssignmentChange(e, status)}
-      checked={(() => {
-        //IIFE
-        if (!clearCheck) return _searchParams?.status?.some((e) => e === status.code);
-        else {
-          setclearCheck(false);
-          return false;
-        }
-      })()}
+      checked={
+        !clearCheck
+          ? _searchParams?.status?.some((e) => e === status.code)
+          : false
+      }
       label={`${t(status.name)}`}
     />
   );
