@@ -4,10 +4,17 @@ import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardL
 import { Link } from "react-router-dom";
 import MobileSearchApplication from "./MobileSearchApplication";
 
-const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
     const isMobile = window.Digit.Utils.browser.isMobile();
     const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
         defaultValues: {
+            acknowledgementIds: "", 
+            fromDate: "", 
+            toDate: "",
+            propertyIds: "",
+            mobileNumber:"",
+            status: "",
+            creationReason: "",
             offset: 0,
             limit: !isMobile && 10,
             sortBy: "commencementDate",
@@ -134,34 +141,64 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                 <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("PT_APPLICATION_NO_LABEL")}</label>
-                    <TextInput name="acknowledgementIds" {...register("acknowledgementIds")} />
+                    <Controller
+                        control={control}
+                        name="acknowledgementIds"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                     <label>{t("PT_SEARCHPROPERTY_TABEL_PID")}</label>
-                    <TextInput name="propertyIds" {...register("propertyIds")} />
+                    <Controller
+                        control={control}
+                        name="propertyIds"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                 <label>{t("PT_OWNER_MOBILE_NO")}</label>
-                <MobileNumber
+                <Controller
+                    control={control}
                     name="mobileNumber"
-                    {...register("mobileNumber", {
-                    minLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    maxLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    pattern: {
-                    value: /[6789][0-9]{9}/,
-                    //type: "tel",
-                    message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                })}
-                type="number"
-                componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                //maxlength={10}
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
                 />
                  <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                 </SearchField>
@@ -235,7 +272,7 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                             sortOrder: "DESC"
                         });
                         setShowToast(null);
-                        previousPage();
+                        onClear();
                     }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>

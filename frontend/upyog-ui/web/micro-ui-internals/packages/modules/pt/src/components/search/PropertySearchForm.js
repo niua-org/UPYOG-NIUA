@@ -101,20 +101,24 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 <label>{t(field?.label)}{`${field?.validation?.required?"*":""}`}</label>
                 {field?.type==="custom"? 
                 <Controller
-                 name= {key}
-                defaultValue={formValue?.[key]}
-                rules= {field.validation}
-                control={control}
-                render={({ field }, customProps) => (
-                  <field.customComponent
-                    selectLocality={(d) => {
-                      field.onChange(d);
-                    }}
-                    tenantId={tenantId}
-                    selected={formValue?.[key]}
-                    {...field.customCompProps}
-                  />
-                )}
+                  name={key}
+                  defaultValue={formValue?.[key]}
+                  rules={field.validation}
+                  control={control}
+                  render={({ field }, customProps) => {
+                    const CustomComponent = field?.customComponent;
+
+                    return CustomComponent ? (
+                      <CustomComponent
+                        selectLocality={(d) => {
+                          field.onChange(d);
+                        }}
+                        tenantId={tenantId}
+                        selected={formValue?.[key]}
+                        {...field.customCompProps}
+                      />
+                    ) : null;
+                  }}
                 />
             :field?.type === "number"?
             <div>
