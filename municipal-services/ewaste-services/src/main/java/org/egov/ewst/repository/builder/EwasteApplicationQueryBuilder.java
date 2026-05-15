@@ -1,5 +1,6 @@
 package org.egov.ewst.repository.builder;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.egov.ewst.models.EwasteApplicationSearchCriteria;
@@ -77,6 +78,16 @@ public class EwasteApplicationQueryBuilder {
 			query.append(" rq.requestid = ? ");
 			preparedStmtList.add(criteria.getRequestId());
 		}
+
+		if (!ObjectUtils.isEmpty(criteria.getListOfRequestIds())) {
+			List<String> requestIds = criteria.getListOfRequestIds();
+			addClauseIfRequired(query,preparedStmtList);
+			query.append(" rq.requestid IN (")
+					.append(createQueryParams(requestIds))
+					.append(")");
+			addToPreparedStatement(preparedStmtList, requestIds);
+		}
+
 		if (!ObjectUtils.isEmpty(criteria.getRequestStatus())) {
 			addClauseIfRequired(query, preparedStmtList);
 			query.append(" rq.requeststatus = ? ");
@@ -109,6 +120,23 @@ public class EwasteApplicationQueryBuilder {
 		} else {
 			query.append(" AND ");
 		}
+	}
+
+	/**
+	 * produce a query input for the multiple values
+	 *
+	 * @param requestIds
+	 * @return
+	 */
+	private Object createQueryParams(List<String> requestIds) {
+		StringBuilder builder = new StringBuilder();
+		int length = requestIds.size();
+		for (int i = 0; i < length; i++) {
+			builder.append(" ?");
+			if (i != length - 1)
+				builder.append(",");
+		}
+		return builder.toString();
 	}
 
 	/**
