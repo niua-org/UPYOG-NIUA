@@ -13,8 +13,8 @@ import {
   InfoIcon,
   Card
 } from "@nudmcdgnpm/digit-ui-react-components";
-import { DateRange } from "react-date-range";
-import { addDays, format, differenceInCalendarDays } from 'date-fns';
+import { DateRangePicker, createStaticRanges } from "react-date-range";
+import { addDays, startOfDay, endOfDay, format, differenceInCalendarDays } from 'date-fns';
 import ChbCommunityHallDetails from "../components/ChbCommunityHallDetails";
 import BookingPopup from "../components/BookingPopup";
 
@@ -79,10 +79,11 @@ const CommunityHallSearch = ({ t, onSelect, config, userType, formData }) => {
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [dateRange, setDateRange] = useState([{
-  startDate: null,
-  endDate: null,
-  key: "selection"
-}]);
+    startDate: null,
+    endDate: null,
+    key: 'selection'
+  }]);
+
 
   const { data: hallList } = Digit.Hooks.useEnabledMDMS(tenantId, "CHB", [{ name: "CommunityHalls" }],
     {
@@ -174,7 +175,7 @@ const CommunityHallSearch = ({ t, onSelect, config, userType, formData }) => {
     }
   }, [slotSearchData, Searchdata]);
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState("");
   const [showTable, setShowTable] = useState(false); // State to control table visibility
   const [isCheckboxSelected, setIsCheckboxSelected] = useState(false);
 
@@ -266,7 +267,29 @@ const CommunityHallSearch = ({ t, onSelect, config, userType, formData }) => {
   };
 
   const enhancedColumns = [checkboxColumn, ...columns];
-
+  const staticRanges = createStaticRanges([
+    {
+      label: 'One Day',
+      range: () => ({
+        startDate: startOfDay(addDays(new Date(), 1)),
+        endDate: endOfDay(addDays(new Date(), 1))
+      })
+    },
+    {
+      label: 'Two Days',
+      range: () => ({
+        startDate: startOfDay(addDays(new Date(), 1)),
+        endDate: endOfDay(addDays(new Date(), 2))
+      })
+    },
+    {
+      label: 'Three Days',
+      range: () => ({
+        startDate: startOfDay(addDays(new Date(), 1)),
+        endDate: endOfDay(addDays(new Date(), 3))
+      })
+    },
+  ]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dateRangePickerRef.current && !dateRangePickerRef.current.contains(event.target) && !event.target.closest('.calendar-icon')) {
@@ -279,26 +302,17 @@ const CommunityHallSearch = ({ t, onSelect, config, userType, formData }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  const handleDateRangeChange = (ranges) => {
-    const selection = ranges?.selection;
-    if (!selection) return;
+  const handleDateRangeChange = (item) => {
+    const { startDate, endDate } = item.selection;
+    const dayDifference = differenceInCalendarDays(endDate, startDate);
 
-    const { startDate, endDate } = selection;
-
-    // Always update selected range
-    setDateRange([selection]);
-
-    // If end date selected (second click)
-    if (startDate && endDate && startDate.getTime() !== endDate.getTime()) {
-      const diff = differenceInCalendarDays(endDate, startDate);
-
-      if (diff > 2) {
-        setShowToast({ error: true, label: t("CHB_DATE_RANGE_LIMIT") });
-        return;
+    if (dayDifference < 3) { // Limit the date range to 3 days
+      setDateRange([item.selection]);
+      if (startDate && endDate) {
+        setShowDateRangePicker(false); // Close date range picker when both dates are selected
       }
-
-      // Close calendar popup
-      setShowDateRangePicker(false);
+    } else {
+      setShowToast({ error: true, label: t("CHB_DATE_RANGE_LIMIT") });
     }
   };
 
@@ -384,18 +398,6 @@ const handleBookClick = () => {
         setIsCheckboxSelected(false);
       }
     }, [Searchdata]);
-
-    const disabledDay = (date) => {
-      const start = dateRange[0]?.startDate;
-
-      if (!start) return false;
-
-      const diff = differenceInCalendarDays(date, start);
-
-      // disable past dates or more than 3 days
-      return diff < 0 || diff > 2;
-    };
-
   return (
     <React.Fragment>
       {window.location.href.includes("/citizen")}
@@ -437,22 +439,15 @@ const handleBookClick = () => {
               )}
           </div>
           <div className="filter-label"><CardLabel>{`${t("CHB_SELECT_DATE")}`} <span className="check-page-link-button">*</span></CardLabel></div>
-          <div
-            className="employee-select-wrap"
-            style={{ width: "50%", position: "relative" }}
-          >
+          <div className="employee-select-wrap" style={{ width: "50%" }}>
             <div className="select">
               <input
                 className="employee-select-wrap--elipses"
                 type="text"
-                placeholder={"Select Start Date"}
+                placeholder={"Select Date"}
                 value={
-                  dateRange[0]?.startDate
-                    ? `${format(dateRange[0].startDate, 'dd/MM/yyyy')} - ${
-                        dateRange[0]?.endDate
-                          ? format(dateRange[0].endDate, 'dd/MM/yyyy')
-                          : "Select End Date"
-                      }`
+                  dateRange[0].startDate && dateRange[0].endDate
+                    ? `${format(dateRange[0].startDate, 'dd/MM/yyyy')} - ${format(dateRange[0].endDate, 'dd/MM/yyyy')}`
                     : ""
                 }
                 readOnly
@@ -460,35 +455,24 @@ const handleBookClick = () => {
              <Calender
               className="cursorPointer calendar-icon"
               onClick={(e) => {
-                e.stopPropagation();
-                setShowDateRangePicker((prev) => !prev);
+                e.stopPropagation();  // Prevent the event from bubbling up to the document
+                setShowDateRangePicker((prevState) => !prevState);
               }}
             />
             </div>
             {showDateRangePicker && (
-              <div
-                ref={dateRangePickerRef}
-                className="date-range-picker-wrapper"
-                style={{
-                  position: "absolute",
-                  zIndex: 999,
-                  background: "#fff",
-                  boxShadow: "0px 4px 20px rgba(0,0,0,0.15)",
-                  borderRadius: "8px",
-                  marginTop: "5px"
-                }}
-              >
-                <DateRange
+              <div ref={dateRangePickerRef} className="date-range-picker-wrapper">
+                <DateRangePicker
                   className="pickerShadow"
                   ranges={dateRange}
                   onChange={handleDateRangeChange}
                   showSelectionPreview={true}
-                  moveRangeOnFirstSelection={false}
-                  months={1}
-                  direction="horizontal"
                   rangeColors={["#9E9E9E"]}
-                  minDate={addDays(new Date(), 1)}
-                  disabledDay={disabledDay}
+                  moveRangeOnFirstSelection={false}
+                  staticRanges={staticRanges}
+                  inputRanges={[]}
+                  placeholder={"Select Community Hall"}
+                  minDate={addDays(new Date(), 1)}  // This sets the minimum date to tomorrow
                 />
               </div>
             )}
