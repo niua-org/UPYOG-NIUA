@@ -78,6 +78,7 @@ public class RedirectController {
 
         log.info("returnUrl in redirect::::"+returnURL);
         log.info("txn Id"+txnId);
+        log.info("originalreturnurl::::"+originalReturnUrlParam);
         /*
          * From redirect URL get transaction id.
          * And using transaction id fetch transaction details.
@@ -109,28 +110,34 @@ public class RedirectController {
                 returnURL=returnURL + "&eg_pg_txnid="+txnId;
             formData.remove(returnUrlKey);
             formData.add("eg_pg_txnid", txnId);
+            log.info("returnUrl in PAYGOV redirect::::"+redirectURL);
+            log.info("returnUrl in PAYGOV redirect::::"+redirectURL.toString());
             httpHeaders.setLocation(UriComponentsBuilder.fromHttpUrl(redirectURL.toString())
                     .queryParams(formData).build().encode().toUri());
         }
         else if(gateway != null && gateway.equalsIgnoreCase("NTTDATA")) {
             if(returnURL != null) {
                 returnURL=returnURL + "&eg_pg_txnid="+txnId;
+                log.info("Modified returnURL with txnId in NTTDATA redirect: {}", returnURL);
+                log.info("returnUrl in NTTDATA redirect::::"+redirectURL);
                 redirectURL.append(returnURL);
             } else {
                 // Fallback to default URL if returnURL is null
+                log.info("returnUrl in NTTDATA redirect::::"+defaultURL);
                 redirectURL.append(defaultURL);
             }
             formData.remove(returnUrlKey);
             formData.remove("encData");
             formData.remove("merchId");
             formData.remove(PgConstants.PG_TXN_IN_LABEL_NTTDATA);
-
+            log.info("NTTDATA redirect before making Call::::"+redirectURL);
             httpHeaders.setLocation(UriComponentsBuilder.fromHttpUrl(redirectURL.toString())
                     .queryParams(formData).build().encode().toUri());
         }else {
             // Use returnURL if available, otherwise fall back to formData, then defaultURL
             String fallbackUrl = returnURL != null ? returnURL :
                                 (formData.get(returnUrlKey) != null ? formData.get(returnUrlKey).get(0) : defaultURL);
+            log.info("Fallback URL in redirect::::"+fallbackUrl);
             httpHeaders.setLocation(UriComponentsBuilder.fromHttpUrl(fallbackUrl)
                     .queryParams(formData).build().encode().toUri());
         }
