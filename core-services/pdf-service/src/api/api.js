@@ -1,11 +1,17 @@
 import axios from 'axios';
-import logger from "../config/logger";
+import logger from "../config/logger.js";
 // const instance = axios.create({
 //     endPoint: "https://egov-micro-dev.egovernments.org/",
 //     headers: {
 //       "Content-Type": "application/json",
 //     }
 //   });
+
+// Moved above httpRequest to fix used-before-declaration issue in ESM strict mode
+const defaultheader = {
+  "content-type": "application/json;charset=UTF-8",
+  "accept": "application/json, text/plain, */*"
+};
 
 export const httpRequest= async(
     endPoint,    
@@ -37,11 +43,3 @@ try {
 }
     
 }
-
-
-  const defaultheader={
-    "content-type": "application/json;charset=UTF-8",
-    "accept":"application/json, text/plain, */*" 
-   }
-
-

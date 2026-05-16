@@ -1,5 +1,5 @@
 import resource from 'resource-router-middleware';
-import facets from '../models/facets';
+import facets from '../models/facets.js';
 
 export default ({ config, db }) => resource({
 
