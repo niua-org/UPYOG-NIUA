@@ -19,5 +19,6 @@ public class FSMConstants {
 	public static final String STATUSID = "statusid";
 	public static final String COMPLETED_STATE = "COMPLETED";
 	public static final String VEHICLE_LOG = "vehicleLog";
+	public static final String BUSINESS_SERVICE_PARAM = "businessservice";
 
 }
