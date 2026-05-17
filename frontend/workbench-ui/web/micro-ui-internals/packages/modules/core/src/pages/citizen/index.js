@@ -51,7 +51,7 @@ const Home = ({
     [
       {
         name: "actions-test",
-        filter: `[?(@.url == '${window.contextPath}-card')]`,
+        filter: `[?(@.url == '${"workbench-ui"}-card')]`,
       },
     ],
     {

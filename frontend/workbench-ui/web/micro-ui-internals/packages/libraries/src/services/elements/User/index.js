@@ -2,6 +2,7 @@ import Urls from "../../atoms/urls";
 import { Request, ServiceRequest } from "../../atoms/Utils/Request";
 import { Storage } from "../../atoms/Utils/Storage";
 
+// REMOVED: INVALIDROLES check - Not needed in workbench as it's an internal tool with backend RBAC
 export const UserService = {
   authenticate: (details) => {
     const data = new URLSearchParams();
@@ -71,7 +72,7 @@ export const UserService = {
     const userDetails = Digit.SessionStorage.get("User");
     return Digit.SessionStorage.set("User", { ...userDetails, extraRoleInfo: data });
   },
-  getExtraRoleDetails: () => {
+  getExtraRoleDetails: () => {     
     return Digit.SessionStorage.get("User")?.extraRoleInfo;
   },
   registerUser: (details, stateCode) =>

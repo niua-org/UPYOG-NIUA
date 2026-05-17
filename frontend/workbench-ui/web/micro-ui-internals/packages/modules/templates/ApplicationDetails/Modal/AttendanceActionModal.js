@@ -26,15 +26,13 @@ const CloseBtn = (props) => {
 const AttendanceActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction, actionData, applicationData, businessService, moduleCode,applicationDetails,workflowDetails, saveAttendanceState}) => {
   const [config, setConfig] = useState({});
 
-  const userUuid = Digit.UserService.getUser()?.info.uuid;
-  const { isLoading, data:employeeData } = Digit.Hooks.hrms.useHRMSSearch(
-    { uuids : userUuid }, tenantId
-  );
-
-  const empData =  employeeData?.Employees[0]
-  const empDepartment = empData?.assignments?.[0].department
-  const empDesignation = empData?.assignments?.[0].designation
-  const empName = empData?.user?.name
+  // HRMS module removed - employee data disabled
+  const isLoading = false;
+  const employeeData = { Employees: [] };
+  const empData = null;
+  const empDepartment = null;
+  const empDesignation = null;
+  const empName = null;
 
   useEffect(() => {
     const selectedAction = action?.action

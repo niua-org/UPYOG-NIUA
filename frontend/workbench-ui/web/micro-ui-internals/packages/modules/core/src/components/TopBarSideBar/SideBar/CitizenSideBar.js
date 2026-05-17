@@ -129,20 +129,18 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
           <React.Fragment>
             {t("CS_COMMON_HELPLINE")}
             <div className="telephone" style={{ marginTop: "-10%" }}>
-              {storeData?.tenants.map((i) => {
-                i.code === tenantId ? (
-                  <div className="link">
-                    <a href={`tel:${storeData?.tenants[i].contactNumber}`}>{storeData?.tenants[i].contactNumber}</a>
+              {storeData?.tenants?.map((tenant, idx) => {
+                return tenant?.code === tenantId ? (
+                  <div className="link" key={idx}>
+                    <a href={`tel:${tenant?.contactNumber}`}>{tenant?.contactNumber}</a>
                   </div>
-                ) : (
-                  <div className="link">
-                    <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
-                  </div>
-                );
+                ) : null;
               })}
-              <div className="link">
-                <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
-              </div>
+              {!storeData?.tenants?.some(t => t?.code === tenantId) && storeData?.tenants?.[0]?.contactNumber && (
+                <div className="link">
+                  <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
+                </div>
+              )}
             </div>
           </React.Fragment>
         ),

@@ -8,12 +8,8 @@
     "micro-ui-internals/packages/libraries",
     "micro-ui-internals/packages/react-components",
     "micro-ui-internals/packages/svg-components",
-    "micro-ui-internals/packages/modules/common",
     "micro-ui-internals/packages/modules/core",
-    "micro-ui-internals/packages/modules/dss",
     "micro-ui-internals/packages/modules/engagement",
-    "micro-ui-internals/packages/modules/hrms",
-    "micro-ui-internals/packages/modules/pgr",
     "micro-ui-internals/packages/modules/utilities",
     "micro-ui-internals/packages/modules/workbench"
   ],
@@ -22,12 +18,8 @@
   },
   "dependencies": {
     "@upyog/workbench-ui-libraries": "1.8.1",
-    "@upyog/workbench-ui-module-common": "1.8.0",
     "@upyog/workbench-ui-module-core": "1.8.2",
-    "@upyog/workbench-ui-module-dss": "1.8.0",
     "@upyog/workbench-ui-module-engagement": "1.8.0",
-    "@upyog/workbench-ui-module-hrms": "1.8.0",
-    "@upyog/workbench-ui-module-pgr": "1.8.0",
     "@upyog/workbench-ui-module-utilities": "1.0.0",
     "@upyog/workbench-ui-react-components": "1.0.0",
     "@nudmcdgnpm/digit-ui-module-workbench": "^1.0.0",
@@ -52,13 +44,13 @@
     "vite-plugin-commonjs": "^0.10.4"
   },
   "scripts": {
-  "start": "vite --config vite.config.js",
-  "build": "vite build",
-  "preview": "vite preview",
-  "build:prepare": "./build.sh",
-  "packages:build": "node scripts/package-builder.mjs",
-  "packages:publish": "node scripts/package-publisher.mjs",
-  "packages:release": "node scripts/package-builder.mjs && node scripts/package-publisher.mjs"
+    "start": "vite --config vite.config.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:prepare": "./build.sh",
+    "packages:build": "node scripts/package-builder.mjs",
+    "packages:publish": "node scripts/package-publisher.mjs",
+    "packages:release": "node scripts/package-builder.mjs && node scripts/package-publisher.mjs"
   },
   "eslintConfig": {
     "extends": [

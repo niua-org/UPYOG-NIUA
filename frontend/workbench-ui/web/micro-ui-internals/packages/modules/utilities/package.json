@@ -17,13 +17,13 @@
     "react-hook-form": "^7.51.0",
     "react-i18next": "14.0.0"
   },
-  "author": "Jagankumar <jagan.kumar@egov.org.in>",
+  "author": "Internal Tech Team, NIUA",
   "license": "MIT",
   "keywords": [
-    "digit",
-    "egov",
-    "dpg",
-    "digit-ui",
+    "upyog",
+    "nudm",
+    "niua",   
+    "workbench-ui",
     "utilities"
   ]
 }

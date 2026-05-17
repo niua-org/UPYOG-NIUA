@@ -41,9 +41,7 @@ const MDMSSearchv2 = () => {
   }
   const { isLoading, data: dropdownData } = Digit.Hooks.useCustomAPIHook({
     url: `/${Digit.Hooks.workbench.getMDMSContextPath()}/schema/v1/_search`,
-    params: {
-      
-    },
+    params: {},
     body: {
       SchemaDefCriteria
     },
@@ -56,12 +54,13 @@ const MDMSSearchv2 = () => {
         //when api is working fine change here(thsese are all schemas available in a tenant)
         // const schemas = sampleSchemaResponse.SchemaDefinitions;
         const schemas = data?.SchemaDefinitions
-        setAvailableSchemas(schemas);
-        if(schemas?.length===1) setCurrentSchema(schemas?.[0])
-        //now extract moduleNames and master names from this schema
+       
+      
         const obj = {
           mastersAvailable: [],
+          schemas: schemas,  // also retun schemas
         };
+
         schemas.forEach((schema, idx) => {
           const { code } = schema;
           const splittedString = code.split(".");
@@ -76,6 +75,15 @@ const MDMSSearchv2 = () => {
       },
     },
   });
+
+  useEffect(() => {
+    if (dropdownData?.schemas) {
+      setAvailableSchemas(dropdownData.schemas);
+      if (dropdownData.schemas?.length === 1) {
+        setCurrentSchema(dropdownData.schemas?.[0]);
+      }
+    }
+  }, [dropdownData]);
 
   useEffect(() => {
     setMasterOptions(dropdownData?.mastersAvailable)
@@ -102,7 +110,6 @@ const MDMSSearchv2 = () => {
       Object.keys(properties)?.forEach((key) => {
         if (properties[key].type === "string" && !properties[key].format) {
           dropDownOptions.push({
-            // name: key,
             name:key,
             code: key,
             i18nKey:Digit.Utils.locale.getTransformedLocale(`${currentSchema.code}_${key}`)
@@ -110,30 +117,16 @@ const MDMSSearchv2 = () => {
         }
       });
 
-      Config.sections.search.uiConfig.fields[0].populators.options = dropDownOptions;
-      Config.actionLink=Config.actionLink+`?moduleName=${masterName?.name}&masterName=${moduleName?.name}`;
-      // Config.apiDetails.serviceName = `/mdms-v2/v2/_search/${currentSchema.code}`
+      const [schemaModule, schemaMaster] = currentSchema.code.split('.');
+      const newConfig = _.cloneDeep(Config);
+      newConfig.sections.search.uiConfig.fields[0].populators.options = dropDownOptions;
+      newConfig.actionLink=`workbench/mdms-add-v2?moduleName=${schemaModule}&masterName=${schemaMaster}`;
       
-      
-      Config.additionalDetails = {
+      newConfig.additionalDetails = {
         currentSchemaCode:currentSchema.code
       }
-      //set the column config
-      
-      // Config.sections.searchResult.uiConfig.columns = [{
-      //   label: "WBH_UNIQUE_IDENTIFIER",
-      //   jsonPath: "uniqueIdentifier",
-      //   additionalCustomization:true
-      // },...dropDownOptions.map(option => {
-      //   return {
-      //     label:option.i18nKey,
-      //     i18nKey:option.i18nKey,
-      //     jsonPath:`data.${option.code}`,
-      //     dontShowNA:true
-      //   }
-      // })]
     
-      Config.sections.searchResult.uiConfig.columns = [...dropDownOptions.map(option => {
+      newConfig.sections.searchResult.uiConfig.columns = [...dropDownOptions.map(option => {
         return {
           label:option.i18nKey,
           i18nKey:option.i18nKey,
@@ -145,25 +138,24 @@ const MDMSSearchv2 = () => {
         i18nKey:"WBH_ISACTIVE",
         jsonPath:`isActive`,
         additionalCustomization:true
-        // dontShowNA:true
       }]
-      Config.apiDetails.serviceName=`/${Digit.Hooks.workbench.getMDMSContextPath()}/v2/_search`;
-        
-      setUpdatedConfig(Config)
+      newConfig.apiDetails.serviceName=`/${Digit.Hooks.workbench.getMDMSContextPath()}/v2/_search`;
+      
+      console.log('Updated Config with schemaCode:', newConfig.additionalDetails?.currentSchemaCode);
+      setUpdatedConfig(newConfig)
     }
   }, [currentSchema]);
 
   const handleAddMasterData = () => {
-    let actionLink=updatedConfig?.actionLink
-    if(modulee&&master){
-      actionLink= `workbench/mdms-add-v2?moduleName=${master}&masterName=${modulee}`
+    const [schemaModule, schemaMaster] = currentSchema?.code?.split('.') || [];
+    if (schemaModule && schemaMaster) {
+      navigate(`/workbench-ui/employee/workbench/mdms-add-v2?moduleName=${schemaModule}&masterName=${schemaMaster}`);
     }
-    navigate(`/workbench-ui/employee/${actionLink}`);
   }
 
   const onClickRow = ({original:row}) => {
     const [moduleName,masterName] = row.schemaCode.split(".")
-    navigate(`/${window.contextPath}/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${row.uniqueIdentifier}`)
+    navigate(`/workbench-ui/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${row.uniqueIdentifier}`)
   }
 
   if (isLoading) return <Loader />;

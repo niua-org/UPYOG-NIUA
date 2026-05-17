@@ -12,7 +12,7 @@ const IFrameInterface = (props) => {
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
 
-  const { data, isLoading } = Digit.Hooks.dss.useMDMS(stateCode, "common-masters", ["uiCommonConstants"], {
+  const { data, isLoading } = Digit.Hooks.useCustomMDMS(stateCode, "common-masters", [{name: "uiCommonConstants"}], {
     select: (data) => {
       let formattedResponse = data?.["common-masters"]?.["uiCommonConstants"]?.[0] || {};
       return formattedResponse;

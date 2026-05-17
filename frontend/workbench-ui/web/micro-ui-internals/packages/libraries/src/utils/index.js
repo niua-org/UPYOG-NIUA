@@ -1,6 +1,5 @@
 import BrowserUtil from "./browser";
 import * as date from "./date";
-import * as dss from "./dss";
 import * as locale from "./locale";
 import * as obps from "./obps";
 import * as pt from "./pt";
@@ -354,7 +353,6 @@ export default {
   fsmAccess,
   BPAREGAccess,
   BPAAccess,
-  dss,
   obps,
   pt,
   ptAccess,

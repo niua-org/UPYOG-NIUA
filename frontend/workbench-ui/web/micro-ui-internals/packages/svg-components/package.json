@@ -15,8 +15,7 @@
   },
   "devDependencies": {
     "lint-staged": "12.3.7",
-    "microbundle-crl": "0.13.11",
-    "react-scripts": "^4.0.1"
+    "microbundle-crl": "0.13.11"
   },
  
   "browserslist": {
@@ -32,10 +31,13 @@
     ]
   },
   "keywords": [
-    "digit",
+    "upyog",
+    "nudm",
+    "niua",
+    "workbench-ui",
     "svg",
     "components",
     "egov",
-    "DPG"
+    "niua"
   ]
 }

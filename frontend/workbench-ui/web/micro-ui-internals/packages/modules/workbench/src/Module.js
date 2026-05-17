@@ -3,7 +3,6 @@ import React from "react";
 import EmployeeApp from "./pages/employee";
 import { CustomisedHooks } from "./hooks";
 import { UICustomizations } from "./configs/UICustomizations";
-import HRMSCard from "./components/HRMSCard";
 import WorkbenchCard from "./components/WorkbenchCard";
 import DigitJSONForm from "./components/DigitJSONForm";
 import * as parsingUtils from "../src/utils/ParsingUtils"
@@ -27,9 +26,7 @@ const WorkbenchModule = ({ stateCode, userType, tenants }) => {
 const componentsToRegister = {
   WorkbenchModule,
   WorkbenchCard,
-  DigitJSONForm,
-  DSSCard: null, // TO HIDE THE DSS CARD IN HOME SCREEN as per workbench
-  // HRMSCard // Overridden the HRMS card as per workbench
+  DigitJSONForm
 };
 
 const overrideHooks = () => {
@@ -65,12 +62,17 @@ const setupHooks = (HookName, HookFunction, method, isHook = true) => {
 const setupLibraries = (Library, service, method) => {
   window.Digit = window.Digit || {};
   window.Digit[Library] = window.Digit[Library] || {};
-  window.Digit[Library][service] = method;
+  if (Library === "Customizations" && service === "commonUiConfig") {
+    // Merge UICustomizations directly into Digit.Customizations
+    window.Digit[Library] = { ...window.Digit[Library], ...method };
+  } else {
+    window.Digit[Library][service] = method;
+  }
 };
 
 /* To Overide any existing config/middlewares  we need to use similar method */
 const updateCustomConfigs = () => {
-  setupLibraries("Customizations", "commonUiConfig", { ...window?.Digit?.Customizations?.commonUiConfig, ...UICustomizations });
+  setupLibraries("Customizations", "commonUiConfig", UICustomizations);
   setupLibraries("Utils","parsingUtils",{...window?.Digit?.Utils?.parsingUtils,...parsingUtils})
 };
 

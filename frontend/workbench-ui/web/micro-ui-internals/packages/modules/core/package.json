@@ -4,7 +4,8 @@
   "license": "MIT",
   "main": "src/Module.js",
   "source": "src/Module.js",
-   "peerDependencies": {
+
+  "peerDependencies": {
     "react": "^19.0.0",
     "react-router-dom": "6.28.0",
     "@tanstack/react-query": "^5.0.0",
@@ -20,10 +21,10 @@
   },
   "author": "Internal Tech Team, NIUA",
   "keywords": [
-    "digit",
-    "egov",
-    "dpg",
-    "digit-ui",
+    "upyog",
+    "nudm",
+    "niua",
+    "workbench-ui",
     "core"
   ]
 }

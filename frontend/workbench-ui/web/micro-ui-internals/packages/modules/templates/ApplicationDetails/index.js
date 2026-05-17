@@ -190,7 +190,7 @@ const ApplicationDetails = (props) => {
               links: [
                 {
                   name: t("WORKS_CREATE_NEW_LOI"),
-                  redirectUrl: `/${window.contextPath}/employee/works/create-loi`,
+                  redirectUrl: `/${"workbench-ui"}/employee/works/create-loi`,
                   code: "",
                   svg: "CreateEstimateIcon",
                   isVisible:false,
@@ -198,7 +198,7 @@ const ApplicationDetails = (props) => {
                 },
                 {
                   name: t("WORKS_GOTO_LOI_INBOX"),
-                  redirectUrl: `/${window.contextPath}/employee/works/LOIInbox`,
+                  redirectUrl: `/${"workbench-ui"}/employee/works/LOIInbox`,
                   code: "",
                   svg: "CreateEstimateIcon",
                   isVisible:true,
@@ -208,7 +208,7 @@ const ApplicationDetails = (props) => {
               responseData:data,
               requestData:variables
             }
-            navigate(`/${window.contextPath}/employee/works/response`, { state });
+            navigate(`/${"workbench-ui"}/employee/works/response`, { state });
           }
           if(data?.estimates?.[0]){
             const updatedEstimate = data?.estimates?.[0]
@@ -220,7 +220,7 @@ const ApplicationDetails = (props) => {
               links: [
                 {
                   name: t("WORKS_CREATE_ESTIMATE"),
-                  redirectUrl: `/${window.contextPath}/employee/works/create-estimate`,
+                  redirectUrl: `/${"workbench-ui"}/employee/works/create-estimate`,
                   code: "",
                   svg: "CreateEstimateIcon",
                   isVisible:false,
@@ -228,7 +228,7 @@ const ApplicationDetails = (props) => {
                 },
                 {
                   name: t("WORKS_GOTO_ESTIMATE_INBOX"),
-                  redirectUrl: `/${window.contextPath}/employee/works/inbox`,
+                  redirectUrl: `/${"workbench-ui"}/employee/works/inbox`,
                   code: "",
                   svg: "RefreshIcon",
                   isVisible:true,
@@ -238,7 +238,7 @@ const ApplicationDetails = (props) => {
               responseData:data,
               requestData:variables
             }
-            navigate(`/${window.contextPath}/employee/works/response`, { state })
+            navigate(`/${"workbench-ui"}/employee/works/response`, { state })
           }
           if (isOBPS?.bpa) {
             data.selectedAction = selectedAction;
@@ -277,7 +277,7 @@ const ApplicationDetails = (props) => {
               info: t("ATM_REGISTER_ID_WEEK"),
               id: `${musterRoll.registerId} | ${format(new Date(musterRoll.startDate), "dd/MM/yyyy")} - ${format(new Date(musterRoll.endDate), "dd/MM/yyyy")}`,
             }
-            navigate(`/${window.contextPath}/employee/attendencemgmt/response`, { state })
+            navigate(`/${"workbench-ui"}/employee/attendencemgmt/response`, { state })
           }
           setShowToast({ key: "success", action: selectedAction });
           clearDataDetails && setTimeout(clearDataDetails, 3000);

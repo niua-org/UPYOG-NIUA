@@ -38,7 +38,7 @@ const createProjectsArray = (t, project, searchParams, headerLocale) => {
       {
         title: "PROJECT_ESTIMATED_COST",
         value: currentProject?.additionalDetails?.estimatedCostInRs
-          ? `₹ ${Digit.Utils.dss.formatterWithoutRound(currentProject?.additionalDetails?.estimatedCostInRs, "number")}`
+          ? `₹ ${Number(currentProject?.additionalDetails?.estimatedCostInRs).toLocaleString('en-IN')}`
           : "NA",
       },
     ],
