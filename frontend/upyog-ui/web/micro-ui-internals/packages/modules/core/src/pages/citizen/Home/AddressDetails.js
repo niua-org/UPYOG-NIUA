@@ -10,6 +10,7 @@ const Heading = ({t}) => <h1 className="heading-m">{t("FILL_ADDRESS_DETAILS")}</
  * Using the `AddressDetails` component to handle all address-related input fields such as pincode, city, locality, street name, house number, landmark, and address lines.
  * - Displaying success or error toasts based on the response.
  */
+// Trigger parent address refresh after successful address update/create
 const Address = ({ address, actionCancelOnSubmit, isEdit, refreshAddresses}) => {
   const { t } = useTranslation();
   const { data: allCities } = Digit.Hooks.useTenants();
