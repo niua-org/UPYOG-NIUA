@@ -203,14 +203,6 @@ config:
         image-name: "egov-persister"
         dockerfile: "build/maven/Dockerfile"
 
-  - name: "builds/upyog/core-services/egov-pg-service"
-    build:
-      - work-dir: "core-services/egov-pg-service"
-        image-name: "egov-pg-service"
-        dockerfile: "build/maven/Dockerfile"
-      - work-dir: "core-services/egov-pg-service/src/main/resources/db"
-        image-name: "egov-pg-service-db"
-
   - name: "builds/upyog/core-services/egov-searcher"
     build:
       - work-dir: "core-services/egov-searcher"
