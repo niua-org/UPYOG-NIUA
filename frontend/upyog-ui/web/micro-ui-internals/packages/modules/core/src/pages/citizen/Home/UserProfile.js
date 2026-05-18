@@ -652,8 +652,13 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                     {t("ADD_NEW_ADDRESS")}
                   </button>
                 </div>
-
-                {showModal && <Address actionCancelOnSubmit={() => setShowModal(false)} />}
+// Passing refresh callback to re-fetch updated addresses after add/edit
+                {showModal && (
+                  <Address
+                    refreshAddresses={userSearchNewV2}
+                    actionCancelOnSubmit={() => setShowModal(false)}
+                  />
+                )}
               </React.Fragment>
             ) : null
           ) : (
@@ -888,7 +893,12 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                   <Address
                     isEdit={isEdit}
                     address={selectedAddress}
-                    actionCancelOnSubmit={() => setShowModal(false)}
+                    refreshAddresses={userSearchNewV2}
+                    actionCancelOnSubmit={() => {
+                      setShowModal(false);
+                      setSelectedAddress(null);
+                      setisEdit(false);
+                    }}
                   />
                 )}
              </React.Fragment>
