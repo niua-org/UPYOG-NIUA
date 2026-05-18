@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -94,8 +94,17 @@ const Address = ({ address, actionCancelOnSubmit, isEdit }) => {
         streetName: formData.streetName,
         landmark: formData.landmark,
         pinCode: formData.pincode,
-        city: formData.city?.city?.name,
-        locality: formData.locality?.i18nKey,
+
+        city:
+          typeof formData.city === "string"
+            ? formData.city
+            : formData.city?.city?.name || formData.city?.code,
+
+        locality:
+          typeof formData.locality === "string"
+            ? formData.locality
+            : formData.locality?.i18nKey || formData.locality?.code,
+
         addressType: formData.addressType?.code,
         type: formData.addressType?.code,
         id: address?.id,
