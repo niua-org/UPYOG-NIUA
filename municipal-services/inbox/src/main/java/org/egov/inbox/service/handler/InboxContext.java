@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 // Holds all request-scoped data that flows through the inbox pipeline.
-// Passed between InboxOrchestrator, ModuleHandlers, InboxAssembler and StatusCountService.
+// Passed between InboxService, ModuleHandlers and InboxAssembler.
 @Data
 @Builder
 public class InboxContext {
@@ -30,6 +30,10 @@ public class InboxContext {
     // set to true when searcher returns no results, InboxAssembler returns empty list immediately
     @Builder.Default
     private Boolean searchResultEmpty = Boolean.FALSE;
+
+    // bsFlag: 0 = not billing, 1 = WS billing, 2 = SW billing (set by WSModuleHandler)
+    @Builder.Default
+    private int bsFlag = 0;
 
     // total application count, set by module handler or ElasticSearch
     private Integer totalCount;

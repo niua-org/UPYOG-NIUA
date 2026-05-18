@@ -15,6 +15,7 @@ import org.egov.inbox.web.model.InboxSearchCriteria;
 import org.egov.inbox.web.model.workflow.ProcessInstance;
 import org.egov.inbox.web.model.workflow.ProcessInstanceResponse;
 import org.egov.inbox.web.model.workflow.ProcessInstanceSearchCriteria;
+import org.egov.inbox.service.handler.impl.WSModuleHandler;
 import org.egov.tracer.model.CustomException;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -45,9 +46,8 @@ public class InboxAssembler {
     @Autowired
     private ObjectMapper mapper;
 
-    @Lazy
-    @Autowired
-    private InboxService inboxService;
+    @Lazy @Autowired private InboxService inboxService;
+    @Autowired private WSModuleHandler wsModuleHandler;
 
     /*
      Main assemble method
@@ -61,8 +61,6 @@ public class InboxAssembler {
             Map<String, Long> businessServiceSlaMap,
             Map<String, List<String>> tenantAndApplnNumbersMap,
             List<String> roles,
-            int bsFlag,
-            Integer totalCount,
             RequestInfo requestInfo,
             WorkflowService workflowService) {
 
@@ -128,14 +126,15 @@ public class InboxAssembler {
          WS / SW Amendment — service search objects
          */
 
+        int bsFlag = ctx.getBsFlag();
+
         Map<String, Object> serviceSearchMap = fetchServiceSearchMap(
                 businessObjects,
                 businessServiceName,
                 moduleSearchCriteria,
                 criteria,
                 requestInfo,
-                moduleName,
-                bsFlag);
+                moduleName);
 
         /*
          Fetch process instances
@@ -322,8 +321,7 @@ public class InboxAssembler {
             HashMap<String, Object> moduleSearchCriteria,
             InboxSearchCriteria criteria,
             RequestInfo requestInfo,
-            String moduleName,
-            int bsFlag) {
+            String moduleName) {
 
         Map<String, Object> serviceSearchMap = new LinkedHashMap<>();
 
@@ -349,8 +347,7 @@ public class InboxAssembler {
          */
 
         Map<String, String> srvSearchMap =
-                inboxService.fetchAppropriateServiceMapPublic(
-                        List.of(businessService), moduleName);
+                wsModuleHandler.fetchServiceSearchMap(businessService);
 
         if (srvSearchMap == null || srvSearchMap.isEmpty()) {
             return serviceSearchMap;

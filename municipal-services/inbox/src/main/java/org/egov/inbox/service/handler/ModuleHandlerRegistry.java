@@ -42,33 +42,33 @@ public class ModuleHandlerRegistry {
      * @return Optional containing the matching handler, or empty if none found
      */
     public Optional<ModuleInboxHandler> getHandler(String moduleName) {
+        if (moduleName == null) return Optional.empty();
+        return handlers.stream().filter(h -> h.supports(moduleName)).findFirst();
+    }
 
-        if (moduleName == null) {
-            return Optional.empty();
-        }
-
-        Optional<ModuleInboxHandler> handler = handlers.stream()
-                .filter(h -> h.supports(moduleName))
-                .findFirst();
-
-        if (handler.isEmpty()) {
-            log.debug("No handler found for module: {}", moduleName);
-        } else {
-            log.debug("Handler found for module {}: {}",
-                    moduleName,
-                    handler.get().getClass().getSimpleName());
-        }
-
-        return handler;
+    public boolean hasHandler(String moduleName) {
+        return getHandler(moduleName).isPresent();
     }
 
     /**
-     * Check if a handler exists for the given module name.
-     *
-     * @param moduleName  module name to check
-     * @return true if a handler is registered, false otherwise
+     * If a handler supports the given moduleName and provides a remapped
+     * internal name (e.g. bsWs-service → WS), returns the remapped name.
+     * Otherwise returns the original moduleName unchanged.
      */
-    public boolean hasHandler(String moduleName) {
-        return getHandler(moduleName).isPresent();
+    public String resolveModuleName(String moduleName) {
+        if (moduleName == null) return null;
+        return handlers.stream()
+                .filter(h -> h.supports(moduleName))
+                .findFirst()
+                .map(h -> h.resolveInternalModuleName(moduleName))
+                .orElse(moduleName);
+    }
+
+    public boolean workflowTotalCount(String moduleName) {
+        return getHandler(moduleName).map(ModuleInboxHandler::workflowTotalCount).orElse(true);
+    }
+
+    public boolean workflowNearingSlaCount(String moduleName) {
+        return getHandler(moduleName).map(ModuleInboxHandler::workflowNearingSlaCount).orElse(true);
     }
 }
