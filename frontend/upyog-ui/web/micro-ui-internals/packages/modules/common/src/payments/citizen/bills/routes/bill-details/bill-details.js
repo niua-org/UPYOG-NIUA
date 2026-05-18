@@ -182,7 +182,11 @@ const BillDetails = ({ paymentRules, businessService }) => {
       });
       } 
     else {
-      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId });
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { 
+        state: {
+        paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId 
+        }
+      });
     }
   };
   
