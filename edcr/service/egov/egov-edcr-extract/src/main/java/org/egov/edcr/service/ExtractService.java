@@ -67,6 +67,7 @@ public class ExtractService {
         DXFDocument doc = getDxfDocument(dxfFile);
         PlanDetail planDetail = new PlanDetail();
         planDetail.setDoc(doc);
+        planDetail.setDxfSourceFile(dxfFile);
         planDetail.setPlanInformation(pi);
         planDetail.setApplicationDate(scrutinyDate);
         Map<String, String> cityDetails = specificRuleService.getCityDetails();
