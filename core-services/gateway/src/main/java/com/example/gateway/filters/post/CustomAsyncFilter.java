@@ -3,34 +3,20 @@ package com.example.gateway.filters.post;
 import com.example.gateway.model.CustomAsyncRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.cloud.gateway.filter.WebClientWriteResponseFilter;
-import org.springframework.cloud.gateway.filter.factory.rewrite.ModifyRequestBodyGatewayFilterFactory;
-import org.springframework.cloud.gateway.filter.factory.rewrite.ModifyResponseBodyGatewayFilterFactory;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Component
@@ -43,6 +29,9 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
     private String topic;
 
     @Autowired
+    private  ObjectMapper objectMapper;
+
+    @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
@@ -53,13 +42,26 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
 
             // TODO: Enrich Request and Response body
 
+//            Fetch request body from exchange attributes for Kafka publishing
+//            Retrieve original request body stored in exchange attributes by RequestEnrichmentFilterHelper
+//            to ensure complete payload is available for async processing via Kafka
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> requestBody = (Map<String, Object>) exchange.getAttributes()
+                    .get("ORIGINAL_REQUEST_BODY");  // Store original request body for CustomAsyncFilter to access in post-processing
+
             CustomAsyncRequest customAsyncRequest = CustomAsyncRequest.builder()
                     .sourceUri(exchange.getRequest().getURI().toString())
                     .queryParamMap(exchange.getRequest().getQueryParams())
+                    .request(requestBody)  // Attach request body to async message for finance logout processing
                     .build();
 
+
             log.info("CustomAsyncFilter Topic:" + topic);
-//            kafkaTemplate.send(topic, customAsyncRequest);
+            log.info("customAsyncRequest body:" + customAsyncRequest);
+
+            String jsonMessage = objectMapper.writeValueAsString(customAsyncRequest);
+            kafkaTemplate.send(topic, jsonMessage);
 
 
         } catch (Exception ex) {
@@ -87,4 +89,3 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
         return Ordered.LOWEST_PRECEDENCE-2;
     }
 }
-
