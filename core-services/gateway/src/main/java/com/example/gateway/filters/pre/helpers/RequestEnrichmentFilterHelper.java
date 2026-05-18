@@ -3,6 +3,9 @@ package com.example.gateway.filters.pre.helpers;
 import com.example.gateway.utils.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
@@ -11,17 +14,11 @@ import org.egov.tracer.model.CustomException;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.factory.rewrite.RewriteFunction;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 import static com.example.gateway.constants.GatewayConstants.*;
 import static com.example.gateway.utils.CommonUtils.isRequestBodyCompatible;
@@ -62,6 +59,11 @@ public class RequestEnrichmentFilterHelper implements RewriteFunction<Map,Map> {
 
         // Add User_Info and Correlation Id in the header
         addRequestHeaders(exchange , body);
+
+        // Store request body for CustomAsyncFilter
+        if (body != null) {
+            exchange.getAttributes().put("ORIGINAL_REQUEST_BODY", body);  // Store original request body for CustomAsyncFilter to access in post-processing
+        }
         if(Objects.isNull(body)){
             return Mono.empty();
         }

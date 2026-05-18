@@ -5,6 +5,9 @@ import com.example.gateway.model.AuthorizationRequest;
 import com.example.gateway.model.AuthorizationRequestWrapper;
 import com.example.gateway.utils.CommonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
@@ -24,9 +27,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import static com.example.gateway.constants.GatewayConstants.*;
 
@@ -56,6 +56,7 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
     public Publisher<Map> apply(ServerWebExchange serverWebExchange, Map map) {
 
         isIncomingURIInAuthorizedActionList(serverWebExchange,map);
+        serverWebExchange.getAttributes().put(CURRENT_REQUEST_SANITIZED_BODY, map);  // Preserve request body in exchange attributes for post-processing filters
         return Mono.just(map);
     }
 
