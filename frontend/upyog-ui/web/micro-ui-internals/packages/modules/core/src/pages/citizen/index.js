@@ -261,7 +261,7 @@ const Home = (props) => {
               />} />
           <Route path="feedback" element={<PrivateRoute><CitizenFeedback /></PrivateRoute>} />
           <Route path="feedback-acknowledgement" element={<PrivateRoute><AcknowledgementCF /></PrivateRoute>} />
-          <Route path="user/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
+          <Route path="user/profile" element={<PrivateRoute><UserProfile stateCode={stateCode} userType={"citizen"} cityDetails={cityDetails} /></PrivateRoute>} />
           <Route path="Audit" element={<Search />} />
           <Route path="payment/verification" element={<QRCode />} />
 

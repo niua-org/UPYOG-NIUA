@@ -40,9 +40,9 @@ const FormStep = ({
   };
 
   const isDisable =
-    isDisabled ? true : config.canDisable && Object.keys(errors).length;
+    isDisabled ? true : config?.canDisable && Object.keys(errors).length;
 
-  const inputs = config.inputs?.map((input, index) => {
+  const inputs = config?.inputs?.map((input, index) => {
     if (input.type === "text") {
       const { ref, onChange: rhfOnChange, ...registerRest } = register(input.name, input.validation);
       return (
@@ -121,7 +121,7 @@ const FormStep = ({
     return null;
   });
 
-  const { key, ...inputCardProps } = config;
+  const { key, ...inputCardProps } = config || {};
 
   return (
     <form onSubmit={handleSubmit(goNext)}>
