@@ -46,7 +46,6 @@
  *
  */
 package org.egov.edcr.security.oauth2.utils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.AuthorizationServerTokenServices;

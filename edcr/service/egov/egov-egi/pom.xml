@@ -254,10 +254,10 @@
 
 		<!-- GIS START -->
 
-		<dependency>
-			<groupId>org.opengis</groupId>
-			<artifactId>geoapi</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.opengis</groupId>-->
+<!--			<artifactId>geoapi</artifactId>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
 			<artifactId>owasp-java-html-sanitizer</artifactId>
@@ -284,9 +284,8 @@
 			<artifactId>gt-shapefile</artifactId>
 		</dependency>
 		<dependency>
-			
 			<groupId>org.geotools</groupId>
-			<artifactId>gt-shapefile-renderer</artifactId>
+			<artifactId>gt-render</artifactId>
 		</dependency>
 		
 <!--		<dependency>-->
@@ -303,6 +302,8 @@
 			<artifactId>jts-core</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.locationtech.jts</groupId>
+			<artifactId>jts-core</artifactId>
 			<groupId>javax.measure</groupId>
 			<artifactId>unit-api</artifactId>
 		</dependency>

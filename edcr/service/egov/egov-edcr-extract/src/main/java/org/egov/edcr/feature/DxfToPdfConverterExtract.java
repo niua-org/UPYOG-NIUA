@@ -198,6 +198,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
             File file = convertDxfToPdf(planDetail, fileName, edcrPdfDetail.getLayer(), edcrPdfDetail);
             disablePrintableLayers(edcrPdfDetail, planDetail.getDxfDocument());
 
+
             if (file != null) {
                 edcrPdfDetail.setConvertedPdf(file);
             }
