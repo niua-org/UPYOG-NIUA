@@ -116,7 +116,12 @@ const InboxSearchComposer = ({configs,headerLabel,additionalConfig,onFormValueCh
     console.log('InboxSearchComposer - updatedReqCriteria:', updatedReqCriteria);
     
     const hookName = configs.customHookName;
-    const customHook = hookName ? Digit.Hooks[hookName] : Digit.Hooks.useCustomAPIHook;
+    // Support nested hook paths like "workbench.useLocalisationSearch"
+    const customHook = hookName ? (
+        hookName.includes('.') 
+            ? hookName.split('.').reduce((obj, key) => obj?.[key], Digit.Hooks)
+            : Digit.Hooks[hookName]
+    ) : Digit.Hooks.useCustomAPIHook;
     const { isLoading, data, revalidate, isFetching, refetch, error } = customHook(updatedReqCriteria);
 
     const closeToast = () => {

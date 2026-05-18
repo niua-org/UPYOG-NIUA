@@ -76,7 +76,7 @@ const navigateToRespectiveURL = (navigate = {}, url = "") => {
     const updatedURL = DIGIT_UI_CONTEXTS?.every(
       (e) => url?.indexOf(`/${e}`) === -1
     )
-      ? hostUrl + "/digit-ui/employee/" + url
+      ? hostUrl + "/workbench-ui/employee/" + url
       : hostUrl + url;
     window.location.href = updatedURL;
   } else {
