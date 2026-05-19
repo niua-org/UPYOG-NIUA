@@ -47,20 +47,16 @@ public class InboxService {
         this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
-    // ── Main API entry point ──────────────────────────────────────────────────
-
     public InboxResponse fetchInboxData(InboxSearchCriteria criteria, RequestInfo requestInfo) {
 
         ProcessInstanceSearchCriteria processCriteria = criteria.getProcessSearchCriteria();
         processCriteria.setTenantId(criteria.getTenantId());
 
-        // Remap alias module names (e.g. bsWs-service → WS) via registry
         processCriteria.setModuleName(registry.resolveModuleName(processCriteria.getModuleName()));
 
         String moduleName = processCriteria.getModuleName();
         log.info("fetchInboxData moduleName: {}", moduleName);
 
-        // ── Total count ───────────────────────────────────────────────────────
         Integer totalCount = 0;
         if (registry.workflowTotalCount(moduleName))
             totalCount = workflowService.getProcessCount(criteria.getTenantId(), requestInfo, processCriteria);
@@ -177,11 +173,9 @@ public class InboxService {
             if (!ObjectUtils.isEmpty(moduleName) && registry.hasHandler(moduleName)) {
                 ModuleInboxHandler handler = registry.getHandler(moduleName).get();
 
-                // pre-fetch: BPA citizen/locality status count, etc.
                 statusCountMap = handler.enrichStatusCountPreFetch(
                         ctx, statusCountMap, tenantAndApplnNumbersMap, roles, inputStatuses);
 
-                // fetch application IDs
                 int handlerCount = handler.fetchCount(ctx);
                 if (handlerCount >= 0) totalCount = handlerCount;
                 handler.fetchApplicationIds(ctx);
@@ -193,7 +187,6 @@ public class InboxService {
 
             if (ctx.getTotalCount() != null) totalCount = ctx.getTotalCount();
 
-            // post-assembly: FSM vehicle enrichment, etc.
             if (!ObjectUtils.isEmpty(moduleName) && registry.hasHandler(moduleName)) {
                 ModuleInboxHandler.PostAssembleResult result = registry.getHandler(moduleName).get()
                         .enrichStatusCountPostAssemble(ctx, statusCountMap, inputStatuses, inboxes, totalCount);
@@ -210,8 +203,6 @@ public class InboxService {
         response.setItems(inboxes);
         return response;
     }
-
-    // ── Shared: service map & module search (used by all handlers) ────────────
 
     public Map<String, String> fetchAppropriateServiceMapPublic(
             List<String> businessServiceName, String moduleName) {
@@ -257,8 +248,6 @@ public class InboxService {
     }
 
 
-    // ── Shared: JSON helpers ──────────────────────────────────────────────────
-
     public static Map<String, Object> toMap(JSONObject object) throws JSONException {
         Map<String, Object> map = new HashMap<>();
         if (object == null) return map;
@@ -283,8 +272,6 @@ public class InboxService {
         }
         return list;
     }
-
-    // ── Private: module search helpers ───────────────────────────────────────
 
     private JSONArray fetchModuleObjects(
             HashMap<String, Object> moduleSearchCriteria,

@@ -63,9 +63,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         Integer count = fsmService.fetchApplicationCountFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo(), dsoId);
         ctx.setTotalCount(count);
-
-        // FSM application IDs are resolved later during status enrichment via vehicle trip logic;
-        // no pre-fetch of IDs needed here — leave businessKeys empty so assembler uses workflow order.
     }
 
     @Override
@@ -99,8 +96,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return new PostAssembleResult(enriched, updatedCount);
     }
 
-    // ── FSM post-assembly: enrich status count map and inbox with vehicle trips ──
-
     public List<HashMap<String, Object>> enrichStatusCount(
             InboxContext ctx,
             List<HashMap<String, Object>> statusCountMap,
@@ -113,7 +108,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
 
         List<String> appStatus = Arrays.asList(WAITING_FOR_DISPOSAL_STATE, DISPOSED_STATE);
 
-        // ── vehicle trip status counts ────────────────────────────────────────
         List<Map<String, Object>> vehicleResponse =
                 fetchVehicleTripResponse(criteria, ctx.getRequestInfo(), appStatus);
 
@@ -122,7 +116,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
 
         populateStatusCountMap(statusCountMap, vehicleResponse, businessService);
 
-        // ── enrich inboxes with vehicle trip details ──────────────────────────
         List<String> requiredApps = inboxes.stream()
                 .filter(inbox -> inbox.getProcessInstance() != null
                         && inbox.getProcessInstance().getState() != null)
@@ -148,7 +141,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
             }
         });
 
-        // ── FSM vehicle-only inbox ────────────────────────────────────────────
         if (CollectionUtils.isEmpty(inboxes) && !moduleSearchCriteria.containsKey("applicationNos")) {
 
             List<String> fsmApplications = fetchVehicleStateMap(
@@ -209,7 +201,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return current + extra;
     }
 
-    // ── private: FSM vehicle service calls ───────────────────────────────────
 
     private List<Map<String, Object>> fetchVehicleTripResponse(
             InboxSearchCriteria criteria, RequestInfo requestInfo, List<String> applicationStatus) {

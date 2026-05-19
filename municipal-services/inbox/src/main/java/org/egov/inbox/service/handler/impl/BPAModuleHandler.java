@@ -60,8 +60,6 @@ public class BPAModuleHandler implements ModuleInboxHandler {
         return List.of(STATUS_PARAM, MOBILE_NUMBER_PARAM, LOCALITY_PARAM, OFFSET_PARAM);
     }
 
-    // ── Pre-fetch: BPA citizen multi-tenant + locality status count ───────────
-
     @Override
     public List<HashMap<String, Object>> enrichStatusCountPreFetch(
             InboxContext ctx,
@@ -79,8 +77,6 @@ public class BPAModuleHandler implements ModuleInboxHandler {
         return statusCountMap;
     }
 
-    // ── No post-assembly enrichment needed for BPA ────────────────────────────
-
     @Override
     public PostAssembleResult enrichStatusCountPostAssemble(
             InboxContext ctx,
@@ -90,8 +86,6 @@ public class BPAModuleHandler implements ModuleInboxHandler {
             Integer totalCount) {
         return new PostAssembleResult(statusCountMap, totalCount);
     }
-
-    // ── BPA Citizen — multi-tenant status count ───────────────────────────────
 
     private List<HashMap<String, Object>> handleBpaCitizenStatusCount(
             InboxContext ctx,
@@ -165,8 +159,6 @@ public class BPAModuleHandler implements ModuleInboxHandler {
 
         return bpaCitizenMap.isEmpty() ? statusCountMap : bpaCitizenMap;
     }
-
-    // ── BPA Locality — locality-based status count filter ────────────────────
 
     private List<HashMap<String, Object>> handleBpaLocalityStatusCount(
             InboxContext ctx,

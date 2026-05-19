@@ -49,9 +49,6 @@ public class InboxAssembler {
     @Lazy @Autowired private InboxService inboxService;
     @Autowired private WSModuleHandler wsModuleHandler;
 
-    /*
-     Main assemble method
-     */
 
     public List<Inbox> assemble(
             InboxContext ctx,
@@ -73,9 +70,6 @@ public class InboxAssembler {
         String businessIdParam         = srvMap.get("businessIdProperty");
         List<String> businessKeys      = ctx.getBusinessKeys();
 
-        /*
-         WS / SW — ElasticSearch path
-         */
 
         if (WS.equals(moduleName) || SW.equals(moduleName)) {
 
@@ -104,10 +98,6 @@ public class InboxAssembler {
             return inboxes;
         }
 
-        /*
-         Fetch business objects from module search API
-         */
-
         JSONArray businessObjects = inboxService.fetchModuleObjectsPublic(
                 moduleSearchCriteria,
                 businessServiceName,
@@ -122,10 +112,6 @@ public class InboxAssembler {
         processCriteria.setBusinessIds((List) businessIds);
         processCriteria.setIsProcessCountCall(false);
 
-        /*
-         WS / SW Amendment — service search objects
-         */
-
         int bsFlag = ctx.getBsFlag();
 
         Map<String, Object> serviceSearchMap = fetchServiceSearchMap(
@@ -136,9 +122,6 @@ public class InboxAssembler {
                 requestInfo,
                 moduleName);
 
-        /*
-         Fetch process instances
-         */
 
         ProcessInstanceResponse processResponse = getProcessInstances(
                 processCriteria,
@@ -163,7 +146,6 @@ public class InboxAssembler {
                                 ProcessInstance::getBusinessId,
                                 Function.identity()));
 
-        // combine business objects and process instances into inbox items
         buildInboxes(
                 inboxes,
                 businessKeys,
@@ -172,17 +154,12 @@ public class InboxAssembler {
                 serviceSearchMap,
                 moduleName);
 
-        // Update totalCount in ctx for billing modules
         if (isBillingModule(moduleName)) {
             ctx.setTotalCount(processMap.size());
         }
 
         return inboxes;
     }
-
-    /*
-     Inbox Builder
-     */
 
     private void buildInboxes(
             List<Inbox> inboxes,
@@ -196,10 +173,6 @@ public class InboxAssembler {
 
         if (CollectionUtils.isEmpty(businessKeys)) {
 
-            /*
-             No explicit key order — iterate businessMap keys
-             */
-
             businessMap.keySet().forEach(key -> {
 
                 ProcessInstance processInstance = processMap.get(key);
@@ -212,10 +185,6 @@ public class InboxAssembler {
             });
 
         } else {
-
-            /*
-             Maintain order of businessKeys
-             */
 
             businessKeys.forEach(key -> {
 
@@ -264,18 +233,10 @@ public class InboxAssembler {
         return inbox;
     }
 
-    /*
-     Business Object Map Builder
-     */
-
     private Map<String, Object> buildBusinessMap(
             JSONArray businessObjects,
             List<String> businessServiceName,
             String businessIdParam) {
-
-        /*
-         PGR AI has different response structure
-         */
 
         if (businessServiceName.contains(PGRAiConstants.PGR_SERVICE)) {
             return StreamSupport.stream(
@@ -301,20 +262,11 @@ public class InboxAssembler {
                         LinkedHashMap::new));
     }
 
-    /*
-     Billing module helpers
-     */
-
     private boolean isBillingModule(String moduleName) {
         return BS_WS_MODULENAME.equalsIgnoreCase(moduleName)
                 || BS_SW_MODULENAME.equalsIgnoreCase(moduleName);
     }
 
-    /**
-     * For WS/SW billing amendment — fetches the underlying connection objects
-     * so they can be set as serviceObject on the Inbox.
-     * Returns empty map for all other modules.
-     */
     private Map<String, Object> fetchServiceSearchMap(
             JSONArray businessObjects,
             List<String> businessServiceName,
@@ -330,10 +282,6 @@ public class InboxAssembler {
             return serviceSearchMap;
         }
 
-        /*
-         Determine which business service (WS or SW)
-         */
-
         String businessService = moduleSearchCriteria
                 .getOrDefault(BS_BUSINESS_SERVICE_PARAM, "")
                 .toString();
@@ -342,10 +290,6 @@ public class InboxAssembler {
             return serviceSearchMap;
         }
 
-        /*
-         Fetch the service search map config for WS or SW
-         */
-
         Map<String, String> srvSearchMap =
                 wsModuleHandler.fetchServiceSearchMap(businessService);
 
@@ -353,9 +297,6 @@ public class InboxAssembler {
             return serviceSearchMap;
         }
 
-        /*
-         Build search criteria for connection search
-         */
 
         HashMap<String, Object> serviceSearchCriteria =
                 new HashMap<>(moduleSearchCriteria);
@@ -392,10 +333,6 @@ public class InboxAssembler {
                         LinkedHashMap::new));
     }
 
-    /*
-     Workflow process instance fetch
-     */
-
     private ProcessInstanceResponse getProcessInstances(
             ProcessInstanceSearchCriteria processCriteria,
             RequestInfo requestInfo,
@@ -405,9 +342,6 @@ public class InboxAssembler {
             List<Object> businessIds,
             WorkflowService workflowService) {
 
-        /*
-         BPA citizen — multi-tenant process instance fetch
-         */
 
         if (!ObjectUtils.isEmpty(moduleName)
                 && moduleName.equals(BpaConstants.BPA)
@@ -475,9 +409,6 @@ public class InboxAssembler {
         return mergedResponse;
     }
 
-    /*
-     ElasticSearch fetch for WS / SW
-     */
 
     private List<Map<String, Object>> fetchFromElasticSearch(
             InboxSearchCriteria criteria,
@@ -495,10 +426,6 @@ public class InboxAssembler {
             JsonNode output = responseNode
                     .get(DSSConstants.ELASTICSEARCH_HIT_KEY)
                     .get(DSSConstants.ELASTICSEARCH_HIT_KEY);
-
-            /*
-             Update totalCount from ES response
-             */
 
             ctx.setTotalCount(
                     responseNode

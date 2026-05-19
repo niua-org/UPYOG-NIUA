@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Holds all request-scoped data that flows through the inbox pipeline.
-// Passed between InboxService, ModuleHandlers and InboxAssembler.
 @Data
 @Builder
 public class InboxContext {
@@ -20,22 +18,17 @@ public class InboxContext {
     private RequestInfo requestInfo;
     private HashMap<String, String> statusIdNameMap;
 
-    // service config map for the current business service
     private Map<String, String> srvMap;
 
-    // application IDs fetched by the module handler, used to maintain order in InboxAssembler
     @Builder.Default
     private List<String> businessKeys = new ArrayList<>();
 
-    // set to true when searcher returns no results, InboxAssembler returns empty list immediately
     @Builder.Default
     private Boolean searchResultEmpty = Boolean.FALSE;
 
-    // bsFlag: 0 = not billing, 1 = WS billing, 2 = SW billing (set by WSModuleHandler)
     @Builder.Default
     private int bsFlag = 0;
 
-    // total application count, set by module handler or ElasticSearch
     private Integer totalCount;
 
     public boolean isSearchResultEmpty() {

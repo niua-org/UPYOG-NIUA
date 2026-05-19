@@ -18,17 +18,6 @@ import java.util.Map;
 
 import static org.egov.inbox.util.BSConstants.*;
 
-/**
- * Handles WS billing amendment (bsWs-service) and SW billing amendment (bsSw-service).
- *
- * bsFlag convention (mirrors the original InboxOrchestrator logic):
- *   0 = not a billing module
- *   1 = WS billing  (bsWs-service  → internal moduleName WS)
- *   2 = SW billing  (bsSw-service  → internal moduleName SW)
- *
- * bsFlag is stored in InboxContext so InboxAssembler can read it if needed.
- */
-
 @Slf4j
 @Service
 public class WSModuleHandler implements ModuleInboxHandler {
@@ -39,7 +28,6 @@ public class WSModuleHandler implements ModuleInboxHandler {
     @Autowired
     private InboxConfiguration config;
 
-    // bsFlag: 1 = WS billing, 2 = SW billing (matches original InboxOrchestrator convention)
     public static final int BS_FLAG_WS = 1;
     public static final int BS_FLAG_SW = 2;
 
@@ -53,32 +41,18 @@ public class WSModuleHandler implements ModuleInboxHandler {
         return false;
     }
 
-    /**
-     * Returns bsFlag for the given raw module name.
-     *   bsWs-service → 1 (BS_FLAG_WS)
-     *   bsSw-service → 2 (BS_FLAG_SW)
-     *   anything else → 0
-     */
     public int resolveBsFlag(String moduleName) {
         if (BS_WS.equalsIgnoreCase(moduleName)) return BS_FLAG_WS;
         if (BS_SW.equalsIgnoreCase(moduleName)) return BS_FLAG_SW;
         return 0;
     }
 
-    /**
-     * Remaps bsWs-service → WS  /  bsSw-service → SW.
-     */
     public String resolveInternalModuleName(String moduleName) {
         if (BS_WS.equalsIgnoreCase(moduleName)) return BS_WS_MODULENAME;
         if (BS_SW.equalsIgnoreCase(moduleName)) return BS_SW_MODULENAME;
         return moduleName;
     }
 
-    /**
-     * Reverse map: WS → bsWs-service  /  SW → bsSw-service.
-     * Used to temporarily restore processCriteria.moduleName before
-     * calling the billing searcher (which checks equalsIgnoreCase(BS_WS)).
-     */
     public String resolveOriginalModuleName(String internalModuleName) {
         if (BS_WS_MODULENAME.equals(internalModuleName)) return BS_WS;
         if (BS_SW_MODULENAME.equals(internalModuleName)) return BS_SW;
@@ -109,7 +83,6 @@ public class WSModuleHandler implements ModuleInboxHandler {
 
         String saved = processCriteria.getModuleName();
 
-        // Set bsFlag on context so InboxAssembler knows WS(1) vs SW(2)
         ctx.setBsFlag(resolveBsFlag(resolveOriginalModuleName(saved)));
 
         processCriteria.setModuleName(resolveOriginalModuleName(saved));
@@ -144,10 +117,9 @@ public class WSModuleHandler implements ModuleInboxHandler {
 
     @Override
     public List<String> paramsToRemove() {
-        return List.of();  // removals handled inside fetchApplicationIds
+        return List.of();
     }
 
-    // Looks up bsServiceSearchMapping for WS/SW connection search (billing amendment)
     public Map<String, String> fetchServiceSearchMap(String businessServiceName) {
         StringBuilder appropriateKey = new StringBuilder();
         for (String key : config.getBsServiceSearchMapping().keySet()) {
