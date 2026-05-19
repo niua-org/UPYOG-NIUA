@@ -15,7 +15,7 @@ import org.xml.sax.helpers.AttributesImpl;
 
 public class DcrSvgStyleGenerator {
 
-    /** First existing file in this list wins when Kabeja has no font mapping (direct single-PDF path only). */
+    /** First existing file in this list gets applied when Kabeja has no font mapping (direct single-PDF path only). */
     private static final String[] FONT_FALLBACK_PATHS = new String[] {
             "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -28,8 +28,43 @@ public class DcrSvgStyleGenerator {
     }
 
     /**
-     * Kabeja calls this with the same svgContext map DcrSvgGenerator fills in setupProperties. The flag alone
-     * switches legacy vs direct behaviour so we do not thread new parameters through Kabeja.
+     * Writes the given DXF style information as SAX events to the provided
+     * {@link org.xml.sax.ContentHandler}.
+     *
+     * <p>
+     * This method acts as a dispatcher between two SVG generation strategies:
+     * </p>
+     *
+     * <ul>
+     *   <li>
+     *     <b>Single PDF mode</b> - Uses the optimized SAX generation flow
+     *     intended for unified PDF generation when the context flag
+     *     {@code egov.singlePdfUsingKabeja} is enabled.
+     *   </li>
+     *   <li>
+     *     <b>Legacy mode</b> - Uses the older SAX conversion implementation
+     *     for backward compatibility.
+     *   </li>
+     * </ul>
+     *
+     * <p>
+     * The selection is controlled through the {@code svgContext} map:
+     * </p>
+     *
+     * <pre>
+     * egov.singlePdfUsingKabeja = true
+     * </pre>
+     *
+     * <p>
+     * If the flag is set to {@link Boolean#TRUE}, the method delegates to
+     * {@code toSaxSinglePdf(...)}; otherwise it falls back to
+     * {@code toSaxLegacy(...)}.
+     * </p>
+     *
+     * @param handler the SAX content handler that receives generated XML/SVG events
+     * @param svgContext context map containing SVG rendering configuration and feature flags
+     * @param style the DXF style definition to be converted into SAX events
+     * @throws SAXException if an error occurs while emitting SAX events
      */
     public static void toSAX(ContentHandler handler, Map svgContext, DXFStyle style) throws SAXException {
         if (Boolean.TRUE.equals(svgContext.get("egov.singlePdfUsingKabeja"))) {
