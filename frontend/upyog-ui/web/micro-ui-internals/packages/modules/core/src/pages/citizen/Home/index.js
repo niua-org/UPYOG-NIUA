@@ -128,7 +128,7 @@ useEffect(() => {
     navigate(redirectPath, { replace: true });
   }
 }, [user]);
-console.log("citizenServicesObjcitizenServicesObj",citizenServicesObj)
+
   const allCitizenServicesProps = {
     header: t(citizenServicesObj?.headerLabel),
     sideOption: {

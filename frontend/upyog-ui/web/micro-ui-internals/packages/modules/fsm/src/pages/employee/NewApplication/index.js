@@ -194,12 +194,43 @@ export const NewApplication = ({ parentUrl, heading }) => {
       workflow: null,
     };
 
-    window.Digit.SessionStorage.set("propertyType", null);
-    window.Digit.SessionStorage.set("subType", null);
-    Digit.SessionStorage.set("city_property", null);
-    Digit.SessionStorage.set("selected_localities", null);
-    Digit.SessionStorage.set("locality_property", null);
-    navigate("/upyog-ui/employee/fsm/response", formData);
+    handleSubmit(formData);
+  };
+
+  const mutation = Digit.Hooks.fsm.useDesludging(tenantId);
+
+  const handleSubmit = (formData) => {
+    mutation.mutate(
+      formData,
+      {
+        onSuccess: (response) => {
+          window.Digit.SessionStorage.set("propertyType", null);
+          window.Digit.SessionStorage.set("subType", null);
+          Digit.SessionStorage.set("city_property", null);
+          Digit.SessionStorage.set("selected_localities", null);
+          Digit.SessionStorage.set("locality_property", null);
+          navigate("/upyog-ui/employee/fsm/response", { 
+            replace: true, 
+            state: { 
+              data: response,
+              isSuccess: true,
+              formData: formData
+            } 
+          });
+        },
+        onError: (error) => {
+          navigate("/upyog-ui/employee/fsm/response", { 
+            replace: true, 
+            state: { 
+              data: null,
+              isSuccess: false,
+              error: error,
+              formData: formData
+            } 
+          });
+        }
+      }
+    );
   };
 
   if (isLoading || isTripConfigLoading || isApplicantConfigLoading) {

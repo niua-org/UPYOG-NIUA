@@ -14,6 +14,18 @@ import {
 import DropdownStatus from "./DropdownStatus";
 import { useTranslation } from "react-i18next";
 
+/*
+
+  WHAT WAS THE ISSUE? AFTER LTS AND HOW WE RESOLVED IT?
+
+
+  searchValidation() was causing state updates (setError)
+  during validation execution. React Hook Form expects
+  validation functions to be pure and synchronous.
+  The repeated state updates interrupted form submission,
+  so handleSubmit(onSubmitInput) was never completing.
+*/
+
 const SearchApplication = ({ onSearch, type, onClose, isFstpOperator, searchFields, searchParams, isInboxPage }) => {
   const storedSearchParams = isInboxPage ? Digit.SessionStorage.get("fsm/inbox/searchParams") : Digit.SessionStorage.get("fsm/search/searchParams");
 
@@ -26,9 +38,14 @@ const SearchApplication = ({ onSearch, type, onClose, isFstpOperator, searchFiel
   const [error, setError] = useState(false);
   const mobileView = innerWidth <= 640;
   const FSTP = Digit.UserService.hasAccess("FSM_EMP_FSTPO") || false;
-  const watchSearch = watch(["applicationNos", "mobileNumber", "fromDate", "toDate"]);
-  const [isReady, setIsReady] = useState(false);
 
+  const [applicationNos, mobileNumber, fromDate, toDate] = watch([
+    "applicationNos",
+    "mobileNumber",
+    "fromDate",
+    "toDate",
+  ]);
+  const [isReady, setIsReady] = useState(false);
 
   const onSubmitInput = (data) => {
     if (!data.mobileNumber) {
@@ -60,12 +77,11 @@ const SearchApplication = ({ onSearch, type, onClose, isFstpOperator, searchFiel
     );
   };
 
-  const searchValidation = (data) => {
-    if (FSTP) return null;
+    const searchValidation = () => {
+      if (FSTP) return true;
 
-    watchSearch.applicationNos || watchSearch.mobileNumber || (watchSearch.fromDate && watchSearch.toDate) ? setError(false) : setError(true);
-    return watchSearch.applicationNos || watchSearch.mobileNumber || (watchSearch.fromDate && watchSearch.toDate) ? true : false;
-  };
+      return !!( applicationNos || mobileNumber || (fromDate && toDate));
+    };
 
   const getFields = (input) => {
     switch (input.type) {
@@ -96,13 +112,23 @@ const SearchApplication = ({ onSearch, type, onClose, isFstpOperator, searchFiel
         );
       default:
         return (
-          <TextInput
-            {...input}
-            {...register(input.name, {
+          <Controller
+            name={input.name}
+            control={control}
+            defaultValue=""
+            rules={{
               validate: searchValidation,
-            })}
-            watch={watch}
-            shouldUpdate={true}
+            }}
+            render={({ field }) => (
+              <TextInput
+                {...input}
+                value={field.value || ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                name={field.name}
+              />
+            )}
           />
         );
     }

@@ -28,7 +28,7 @@ const CitizenApp = ({ path }) => {
         )}
         <Routes>
           <Route
-            path={`/inbox`}
+            path="inbox"
             element={
               Digit.UserService.hasAccess(["FSM_DSO"]) ? (
                 <PrivateRoute>
@@ -40,7 +40,7 @@ const CitizenApp = ({ path }) => {
             }
           />
           <Route
-            path={`/search`}
+            path="search"
             element={
               Digit.UserService.hasAccess(["FSM_DSO"]) ? (
                 <PrivateRoute>
@@ -51,21 +51,14 @@ const CitizenApp = ({ path }) => {
               )
             }
           />
-<Route path={`/new-application`} element={<PrivateRoute><NewApplicationCitizen parentRoute={path} /></PrivateRoute>} />
-          <Route path={`/my-applications`} element={<PrivateRoute><MyApplications /></PrivateRoute>} />
-          <Route
-            path={`/dso-application-details/:id`}
-            element={
-              <PrivateRoute>
-                <EmployeeApplicationDetails parentRoute={path} userType="DSO" />
-              </PrivateRoute>
-            }
-          />
-<Route path={`/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-<Route path={`/rate/:id`} element={<PrivateRoute><SelectRating parentRoute={path} /></PrivateRoute>} />
-<Route path={`/rate-view/:id`} element={<PrivateRoute><RateView parentRoute={path} /></PrivateRoute>} />
-<Route path={`/response`} element={<PrivateRoute><Response parentRoute={path}  /></PrivateRoute>} />
-<Route path={`/dso-dashboard`} element={<PrivateRoute><DsoDashboard parentRoute={path} /></PrivateRoute>} />
+          <Route path="new-application/*" element={<PrivateRoute><NewApplicationCitizen parentRoute={path} /></PrivateRoute>} />
+          <Route path="my-applications/*" element={<PrivateRoute><MyApplications /></PrivateRoute>} />
+          <Route path="dso-application-details/:id" element={<PrivateRoute><EmployeeApplicationDetails parentRoute={path} userType="DSO" /></PrivateRoute>}/>
+          <Route path="application-details/:id" element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
+          <Route path="rate/:id" element={<PrivateRoute><SelectRating parentRoute={path} /></PrivateRoute>} />
+          <Route path="rate-view/:id" element={<PrivateRoute><RateView parentRoute={path} /></PrivateRoute>} />
+          <Route path="response" element={<PrivateRoute><Response parentRoute={path}  /></PrivateRoute>} />
+          <Route path="dso-dashboard" element={<PrivateRoute><DsoDashboard parentRoute={path} /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>
