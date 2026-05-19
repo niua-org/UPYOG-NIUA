@@ -160,10 +160,10 @@
 			<groupId>org.owasp.antisamy</groupId>
 			<artifactId>antisamy</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>xerces</groupId>
-			<artifactId>xercesImpl</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>xerces</groupId>-->
+<!--			<artifactId>xercesImpl</artifactId>-->
+<!--		</dependency>-->
 
 		<!-- SECURITY END -->
 
@@ -254,10 +254,10 @@
 
 		<!-- GIS START -->
 
-		<dependency>
-			<groupId>org.opengis</groupId>
-			<artifactId>geoapi</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.opengis</groupId>-->
+<!--			<artifactId>geoapi</artifactId>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
 			<artifactId>owasp-java-html-sanitizer</artifactId>
@@ -286,7 +286,7 @@
 		<dependency>
 			
 			<groupId>org.geotools</groupId>
-			<artifactId>gt-shapefile-renderer</artifactId>
+			<artifactId>gt-render</artifactId>
 		</dependency>
 		
 <!--		<dependency>-->
