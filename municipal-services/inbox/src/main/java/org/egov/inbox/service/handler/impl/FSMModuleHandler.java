@@ -42,14 +42,22 @@ import static org.egov.inbox.util.FSMConstants.COUNT;
 @Service
 public class FSMModuleHandler implements ModuleInboxHandler {
 
-    @Autowired private FSMInboxFilterService fsmService;
-    @Autowired private InboxConfiguration config;
-    @Autowired private RestTemplate restTemplate;
-    @Autowired private WorkflowService workflowService;
-    @Autowired private ServiceRequestRepository serviceRequestRepository;
-    @Autowired private ObjectMapper mapper;
+    @Autowired
+    private FSMInboxFilterService fsmService;
+    @Autowired
+    private InboxConfiguration config;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private WorkflowService workflowService;
+    @Autowired
+    private ServiceRequestRepository serviceRequestRepository;
+    @Autowired
+    private ObjectMapper mapper;
 
-    @Lazy @Autowired private InboxService inboxService;  // only for fetchModuleObjectsPublic / toMap
+    @Lazy
+    @Autowired
+    private InboxService inboxService; // only for fetchModuleObjectsPublic / toMap
 
     @Override
     public boolean supports(String moduleName) {
@@ -90,8 +98,7 @@ public class FSMModuleHandler implements ModuleInboxHandler {
             List<Inbox> inboxes,
             Integer totalCount) {
 
-        List<HashMap<String, Object>> enriched =
-                enrichStatusCount(ctx, statusCountMap, inputStatuses, inboxes);
+        List<HashMap<String, Object>> enriched = enrichStatusCount(ctx, statusCountMap, inputStatuses, inboxes);
         Integer updatedCount = getTotalCount(enriched, inputStatuses, totalCount);
         return new PostAssembleResult(enriched, updatedCount);
     }
@@ -108,8 +115,7 @@ public class FSMModuleHandler implements ModuleInboxHandler {
 
         List<String> appStatus = Arrays.asList(WAITING_FOR_DISPOSAL_STATE, DISPOSED_STATE);
 
-        List<Map<String, Object>> vehicleResponse =
-                fetchVehicleTripResponse(criteria, ctx.getRequestInfo(), appStatus);
+        List<Map<String, Object>> vehicleResponse = fetchVehicleTripResponse(criteria, ctx.getRequestInfo(), appStatus);
 
         BusinessService businessService = workflowService.getBusinessService(
                 criteria.getTenantId(), ctx.getRequestInfo(), FSM_VEHICLE_TRIP_MODULE);
@@ -128,8 +134,8 @@ public class FSMModuleHandler implements ModuleInboxHandler {
                 .map(inbox -> inbox.getProcessInstance().getBusinessId())
                 .collect(Collectors.toList());
 
-        List<VehicleTripDetail> tripDetails =
-                fetchVehicleStatusForApplication(requiredApps, ctx.getRequestInfo(), criteria.getTenantId());
+        List<VehicleTripDetail> tripDetails = fetchVehicleStatusForApplication(requiredApps, ctx.getRequestInfo(),
+                criteria.getTenantId());
 
         inboxes.forEach(inbox -> {
             if (inbox.getProcessInstance() != null
@@ -153,12 +159,11 @@ public class FSMModuleHandler implements ModuleInboxHandler {
             processCriteria.setBusinessIds(fsmApplications);
             processCriteria.setStatus(null);
 
-            ProcessInstanceResponse processResponse =
-                    workflowService.getProcessInstance(processCriteria, ctx.getRequestInfo());
+            ProcessInstanceResponse processResponse = workflowService.getProcessInstance(processCriteria,
+                    ctx.getRequestInfo());
 
-            Map<String, ProcessInstance> processMap =
-                    processResponse.getProcessInstances().stream()
-                            .collect(Collectors.toMap(ProcessInstance::getBusinessId, Function.identity()));
+            Map<String, ProcessInstance> processMap = processResponse.getProcessInstances().stream()
+                    .collect(Collectors.toMap(ProcessInstance::getBusinessId, Function.identity()));
 
             JSONArray vehicleObjects = inboxService.fetchModuleObjectsPublic(
                     moduleSearchCriteria, processCriteria.getBusinessService(),
@@ -166,11 +171,10 @@ public class FSMModuleHandler implements ModuleInboxHandler {
 
             String businessIdParam = ctx.getSrvMap().get("businessIdProperty");
 
-            Map<String, Object> vehicleBusinessMap =
-                    StreamSupport.stream(vehicleObjects.spliterator(), false)
-                            .collect(Collectors.toMap(
-                                    obj -> ((JSONObject) obj).get(businessIdParam).toString(),
-                                    obj -> obj, (e1, e2) -> e1, LinkedHashMap::new));
+            Map<String, Object> vehicleBusinessMap = StreamSupport.stream(vehicleObjects.spliterator(), false)
+                    .collect(Collectors.toMap(
+                            obj -> ((JSONObject) obj).get(businessIdParam).toString(),
+                            obj -> obj, (e1, e2) -> e1, LinkedHashMap::new));
 
             if (vehicleObjects.length() > 0 && !processResponse.getProcessInstances().isEmpty()) {
                 fsmApplications.forEach(key -> {
@@ -201,7 +205,6 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return current + extra;
     }
 
-
     private List<Map<String, Object>> fetchVehicleTripResponse(
             InboxSearchCriteria criteria, RequestInfo requestInfo, List<String> applicationStatus) {
         VehicleSearchCriteria vsc = new VehicleSearchCriteria();
@@ -217,7 +220,8 @@ public class FSMModuleHandler implements ModuleInboxHandler {
             List<HashMap<String, Object>> statusCountMap,
             List<Map<String, Object>> vehicleResponse,
             BusinessService businessService) {
-        if (CollectionUtils.isEmpty(vehicleResponse) || businessService == null) return;
+        if (CollectionUtils.isEmpty(vehicleResponse) || businessService == null)
+            return;
         for (State appState : businessService.getStates()) {
             vehicleResponse.forEach(trip -> {
                 HashMap<String, Object> map = new HashMap<>();
@@ -227,7 +231,8 @@ public class FSMModuleHandler implements ModuleInboxHandler {
                     map.put(STATUSID, appState.getUuid());
                     map.put(FSMConstants.BUSINESS_SERVICE_PARAM, FSM_VEHICLE_TRIP_MODULE);
                 }
-                if (!map.isEmpty()) statusCountMap.add(map);
+                if (!map.isEmpty())
+                    statusCountMap.add(map);
             });
         }
     }
@@ -247,7 +252,8 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         Object result = serviceRequestRepository.fetchResult(url, criteria);
         try {
             VehicleTripDetailResponse resp = mapper.convertValue(result, VehicleTripDetailResponse.class);
-            if (resp != null && resp.getVehicleTripDetail() != null) return resp.getVehicleTripDetail();
+            if (resp != null && resp.getVehicleTripDetail() != null)
+                return resp.getVehicleTripDetail();
         } catch (IllegalArgumentException e) {
             throw new CustomException(ErrorConstants.PARSING_ERROR, "Failed to parse VehicleTripDetailResponse");
         }
@@ -266,7 +272,8 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         Object result = serviceRequestRepository.fetchResult(url, criteria);
         try {
             VehicleCustomResponse resp = mapper.convertValue(result, VehicleCustomResponse.class);
-            if (resp != null && resp.getApplicationIdList() != null) return resp.getApplicationIdList();
+            if (resp != null && resp.getApplicationIdList() != null)
+                return resp.getApplicationIdList();
         } catch (IllegalArgumentException e) {
             throw new CustomException(ErrorConstants.PARSING_ERROR, "Failed to parse VehicleCustomResponse");
         }
@@ -315,7 +322,7 @@ public class FSMModuleHandler implements ModuleInboxHandler {
 
             for (HashMap<String, Object> agg : aggregated) {
                 String entryStatus = (String) entry.get(APPLICATIONSTATUS);
-                String aggStatus   = (String) agg.get(APPLICATIONSTATUS);
+                String aggStatus = (String) agg.get(APPLICATIONSTATUS);
 
                 if (aggStatus != null && aggStatus.equalsIgnoreCase(entryStatus)) {
                     agg.put(COUNT, (Integer) entry.get(COUNT) + (Integer) agg.get(COUNT));

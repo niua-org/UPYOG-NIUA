@@ -5,11 +5,17 @@ import org.egov.inbox.service.PGRAiInboxFilterService;
 import org.egov.inbox.service.handler.InboxContext;
 import org.egov.inbox.service.handler.ModuleInboxHandler;
 import org.egov.inbox.util.PGRAiConstants;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -48,5 +54,22 @@ public class PGRAiModuleHandler implements ModuleInboxHandler {
     @Override
     public List<String> paramsToRemove() {
         return List.of();
+    }
+
+    @Override
+    public Map<String, Object> buildBusinessMap(
+            JSONArray businessObjects,
+            String businessIdParam) {
+
+        return StreamSupport.stream(
+                businessObjects.spliterator(), false)
+                .collect(Collectors.toMap(
+                        s -> ((JSONObject) s)
+                                .getJSONObject("service")
+                                .get(businessIdParam)
+                                .toString(),
+                        s -> s,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new));
     }
 }

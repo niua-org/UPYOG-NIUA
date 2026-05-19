@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 
 import static org.egov.inbox.util.RequestServiceConstants.*;
+
 @Slf4j
 @Service
 public class MTModuleHandler implements ModuleInboxHandler {

@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 
 import static org.egov.inbox.util.StreetVendingConstants.*;
+
 @Slf4j
 @Service
 public class SVModuleHandler implements ModuleInboxHandler {

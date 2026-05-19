@@ -27,7 +27,7 @@ public class PTRModuleHandler implements ModuleInboxHandler {
     }
 
     @Override
-    public boolean workflowNearingSlaCount() {
+    public boolean isWorkflowNearingSlaCountRequired() {
         return false;
     }
 

@@ -26,7 +26,7 @@ public class ASSETModuleHandler implements ModuleInboxHandler {
     }
 
     @Override
-    public boolean workflowNearingSlaCount() {
+    public boolean isWorkflowNearingSlaCountRequired() {
         return false;
     }
 

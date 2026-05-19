@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
-
 @Slf4j
 @Component
 public class ModuleHandlerRegistry {
@@ -25,7 +24,8 @@ public class ModuleHandlerRegistry {
     }
 
     public Optional<ModuleInboxHandler> getHandler(String moduleName) {
-        if (moduleName == null) return Optional.empty();
+        if (moduleName == null)
+            return Optional.empty();
         return handlers.stream().filter(h -> h.supports(moduleName)).findFirst();
     }
 
@@ -33,21 +33,29 @@ public class ModuleHandlerRegistry {
         return getHandler(moduleName).isPresent();
     }
 
+    public String getModuleName(String moduleName) {
 
-    public String resolveModuleName(String moduleName) {
-        if (moduleName == null) return null;
+        if (moduleName == null)
+            return null;
+
         return handlers.stream()
                 .filter(h -> h.supports(moduleName))
                 .findFirst()
-                .map(h -> h.resolveInternalModuleName(moduleName))
+                .map(h -> h.getInternalModuleName(moduleName))
                 .orElse(moduleName);
     }
 
-    public boolean workflowTotalCount(String moduleName) {
-        return getHandler(moduleName).map(ModuleInboxHandler::workflowTotalCount).orElse(true);
+    public boolean isWorkflowTotalCountRequired(String moduleName) {
+
+        return getHandler(moduleName)
+                .map(ModuleInboxHandler::isWorkflowTotalCountRequired)
+                .orElse(true);
     }
 
-    public boolean workflowNearingSlaCount(String moduleName) {
-        return getHandler(moduleName).map(ModuleInboxHandler::workflowNearingSlaCount).orElse(true);
+    public boolean isWorkflowNearingSlaCountRequired(String moduleName) {
+
+        return getHandler(moduleName)
+                .map(ModuleInboxHandler::isWorkflowNearingSlaCountRequired)
+                .orElse(true);
     }
 }

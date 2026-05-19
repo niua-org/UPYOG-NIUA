@@ -26,9 +26,6 @@ public class InboxContext {
     @Builder.Default
     private Boolean searchResultEmpty = Boolean.FALSE;
 
-    @Builder.Default
-    private int bsFlag = 0;
-
     private Integer totalCount;
 
     public boolean isSearchResultEmpty() {
@@ -40,7 +37,8 @@ public class InboxContext {
     }
 
     public List<String> getBusinessKeys() {
-        if (this.businessKeys == null) this.businessKeys = new ArrayList<>();
+        if (this.businessKeys == null)
+            this.businessKeys = new ArrayList<>();
         return this.businessKeys;
     }
 
@@ -49,7 +47,8 @@ public class InboxContext {
     }
 
     public void addBusinessKeys(List<String> keys) {
-        if (keys == null || keys.isEmpty()) return;
+        if (keys == null || keys.isEmpty())
+            return;
         getBusinessKeys().addAll(keys);
     }
 
@@ -60,7 +59,8 @@ public class InboxContext {
     }
 
     public void removeModuleSearchCriteria(String key) {
-        if (this.criteria == null || this.criteria.getModuleSearchCriteria() == null) return;
+        if (this.criteria == null || this.criteria.getModuleSearchCriteria() == null)
+            return;
         this.criteria.getModuleSearchCriteria().remove(key);
     }
 }

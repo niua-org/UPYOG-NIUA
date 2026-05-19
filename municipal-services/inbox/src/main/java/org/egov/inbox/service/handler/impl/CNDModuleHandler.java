@@ -12,6 +12,7 @@ import java.util.List;
 
 import static org.egov.inbox.util.CNDServiceConstants.*;
 import static org.egov.inbox.util.StreetVendingConstants.APPLICATION_STATUS;
+
 @Slf4j
 @Service
 public class CNDModuleHandler implements ModuleInboxHandler {

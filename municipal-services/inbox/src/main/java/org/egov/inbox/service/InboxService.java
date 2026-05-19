@@ -33,14 +33,17 @@ public class InboxService {
     private final ServiceRequestRepository serviceRequestRepository;
     private final ObjectMapper mapper;
 
-    @Autowired private WorkflowService workflowService;
-    @Autowired private ModuleHandlerRegistry registry;
-    @Autowired private InboxAssembler inboxAssembler;
+    @Autowired
+    private WorkflowService workflowService;
+    @Autowired
+    private ModuleHandlerRegistry registry;
+    @Autowired
+    private InboxAssembler inboxAssembler;
 
     @Autowired
     public InboxService(InboxConfiguration config,
-                        ServiceRequestRepository serviceRequestRepository,
-                        ObjectMapper mapper) {
+            ServiceRequestRepository serviceRequestRepository,
+            ObjectMapper mapper) {
         this.config = config;
         this.serviceRequestRepository = serviceRequestRepository;
         this.mapper = mapper;
@@ -52,23 +55,23 @@ public class InboxService {
         ProcessInstanceSearchCriteria processCriteria = criteria.getProcessSearchCriteria();
         processCriteria.setTenantId(criteria.getTenantId());
 
-        processCriteria.setModuleName(registry.resolveModuleName(processCriteria.getModuleName()));
+        processCriteria.setModuleName(registry.getModuleName(processCriteria.getModuleName()));
 
         String moduleName = processCriteria.getModuleName();
         log.info("fetchInboxData moduleName: {}", moduleName);
 
         Integer totalCount = 0;
-        if (registry.workflowTotalCount(moduleName))
+        if (registry.isWorkflowTotalCountRequired(moduleName))
             totalCount = workflowService.getProcessCount(criteria.getTenantId(), requestInfo, processCriteria);
 
-        // ── Nearing SLA count ─────────────────────────────────────────────────
         Integer nearingSlaCount = 0;
-        if (registry.workflowNearingSlaCount(moduleName))
+        if (registry.isWorkflowNearingSlaCountRequired(moduleName))
             nearingSlaCount = workflowService.getNearingSlaProcessCount(
                     criteria.getTenantId(), requestInfo, processCriteria);
 
         List<String> inputStatuses = CollectionUtils.isEmpty(processCriteria.getStatus())
-                ? new ArrayList<>() : new ArrayList<>(processCriteria.getStatus());
+                ? new ArrayList<>()
+                : new ArrayList<>(processCriteria.getStatus());
 
         StringBuilder assigneeUuid = new StringBuilder();
         if (!ObjectUtils.isEmpty(processCriteria.getAssignee())) {
@@ -82,8 +85,8 @@ public class InboxService {
         List<String> roles = requestInfo.getUserInfo().getRoles()
                 .stream().map(Role::getCode).collect(Collectors.toList());
 
-        List<HashMap<String, Object>> statusCountMap =
-                workflowService.getProcessStatusCount(requestInfo, processCriteria);
+        List<HashMap<String, Object>> statusCountMap = workflowService.getProcessStatusCount(requestInfo,
+                processCriteria);
 
         processCriteria.setModuleName(moduleName);
         processCriteria.setStatus(inputStatuses);
@@ -95,6 +98,11 @@ public class InboxService {
 
         Map<String, String> srvMap = fetchAppropriateServiceMapPublic(businessServiceName, moduleName);
         HashMap<String, Object> moduleSearchCriteria = criteria.getModuleSearchCriteria();
+
+        if (moduleSearchCriteria == null) {
+            moduleSearchCriteria = new HashMap<>();
+            criteria.setModuleSearchCriteria(moduleSearchCriteria);
+        }
 
         Map<String, Long> businessServiceSlaMap = new HashMap<>();
         List<Inbox> inboxes = new ArrayList<>();
@@ -143,8 +151,8 @@ public class InboxService {
                 businessServiceSlaMap.put(bSrv.getBusinessService(), bSrv.getBusinessServiceSla());
             }
 
-            HashMap<String, String> statusIdNameMap =
-                    workflowService.getActionableStatusesForRole(requestInfo, bServices, processCriteria);
+            HashMap<String, String> statusIdNameMap = workflowService.getActionableStatusesForRole(requestInfo,
+                    bServices, processCriteria);
 
             String appStatusParam = srvMap.getOrDefault("applsStatusParam", "applicationStatus");
 
@@ -177,21 +185,24 @@ public class InboxService {
                         ctx, statusCountMap, tenantAndApplnNumbersMap, roles, inputStatuses);
 
                 int handlerCount = handler.fetchCount(ctx);
-                if (handlerCount >= 0) totalCount = handlerCount;
+                if (handlerCount >= 0)
+                    totalCount = handlerCount;
                 handler.fetchApplicationIds(ctx);
+
                 handler.paramsToRemove().forEach(ctx::removeModuleSearchCriteria);
             }
 
             inboxes = inboxAssembler.assemble(ctx, processCriteria, businessServiceName,
                     srvMap, businessServiceSlaMap, tenantAndApplnNumbersMap, roles, requestInfo, workflowService);
 
-            if (ctx.getTotalCount() != null) totalCount = ctx.getTotalCount();
+            if (ctx.getTotalCount() != null)
+                totalCount = ctx.getTotalCount();
 
             if (!ObjectUtils.isEmpty(moduleName) && registry.hasHandler(moduleName)) {
                 ModuleInboxHandler.PostAssembleResult result = registry.getHandler(moduleName).get()
                         .enrichStatusCountPostAssemble(ctx, statusCountMap, inputStatuses, inboxes, totalCount);
                 statusCountMap = result.statusCountMap;
-                totalCount     = result.totalCount;
+                totalCount = result.totalCount;
             }
         }
 
@@ -247,16 +258,18 @@ public class InboxService {
         return fetchModuleSearchObjects(moduleSearchCriteria, businessServiceName, tenantId, requestInfo, srvSearchMap);
     }
 
-
     public static Map<String, Object> toMap(JSONObject object) throws JSONException {
         Map<String, Object> map = new HashMap<>();
-        if (object == null) return map;
+        if (object == null)
+            return map;
         Iterator<String> keysItr = object.keys();
         while (keysItr.hasNext()) {
             String key = keysItr.next();
             Object value = object.get(key);
-            if (value instanceof JSONArray)       value = toList((JSONArray) value);
-            else if (value instanceof JSONObject) value = toMap((JSONObject) value);
+            if (value instanceof JSONArray)
+                value = toList((JSONArray) value);
+            else if (value instanceof JSONObject)
+                value = toMap((JSONObject) value);
             map.put(key, value);
         }
         return map;
@@ -266,8 +279,10 @@ public class InboxService {
         List<Object> list = new ArrayList<>();
         for (int i = 0; i < array.length(); i++) {
             Object value = array.get(i);
-            if (value instanceof JSONArray)       value = toList((JSONArray) value);
-            else if (value instanceof JSONObject) value = toMap((JSONObject) value);
+            if (value instanceof JSONArray)
+                value = toList((JSONArray) value);
+            else if (value instanceof JSONObject)
+                value = toMap((JSONObject) value);
             list.add(value);
         }
         return list;
@@ -292,7 +307,8 @@ public class InboxService {
             moduleSearchCriteria.put("offset", 0);
 
         moduleSearchCriteria.keySet().forEach(param -> {
-            if (param.equalsIgnoreCase("tenantId")) return;
+            if (param.equalsIgnoreCase("tenantId"))
+                return;
             if (moduleSearchCriteria.get(param) instanceof Collection) {
                 url.append("&").append(param).append("=");
                 url.append(StringUtils.arrayToDelimitedString(
@@ -341,7 +357,8 @@ public class InboxService {
         StringBuilder url = new StringBuilder(srvMap.get("searchPath")).append("?tenantId=").append(tenantId);
 
         moduleSearchCriteria.keySet().forEach(param -> {
-            if (param.equalsIgnoreCase("tenantId") || param.equalsIgnoreCase("limit")) return;
+            if (param.equalsIgnoreCase("tenantId") || param.equalsIgnoreCase("limit"))
+                return;
             if (moduleSearchCriteria.get(param) instanceof Collection) {
                 url.append("&").append(param).append("=");
                 url.append(StringUtils.arrayToDelimitedString(

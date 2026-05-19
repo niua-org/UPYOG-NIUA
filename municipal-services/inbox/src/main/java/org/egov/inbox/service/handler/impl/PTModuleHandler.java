@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.List;
 
 import static org.egov.inbox.util.PTConstants.*;
+
 @Slf4j
 @Service
 public class PTModuleHandler implements ModuleInboxHandler {
@@ -24,7 +25,7 @@ public class PTModuleHandler implements ModuleInboxHandler {
     }
 
     @Override
-    public boolean workflowNearingSlaCount() {
+    public boolean isWorkflowNearingSlaCountRequired() {
         return false;
     }
 

@@ -25,7 +25,7 @@ public class EWASTEModuleHandler implements ModuleInboxHandler {
     }
 
     @Override
-    public boolean workflowNearingSlaCount() {
+    public boolean isWorkflowNearingSlaCountRequired() {
         return false;
     }
 
