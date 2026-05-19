@@ -124,7 +124,7 @@
 		<hibernate-version>5.6.15.Final</hibernate-version>
 		<hibernate-search-version>5.5.8.Final</hibernate-search-version>
 		<hibernate-validator-version>6.2.5.Final</hibernate-validator-version>
-		<jakarta-validation-version>3.1.1</jakarta-validation-version>
+		<javax-validation-version>2.0.1.Final</javax-validation-version>
 		<javax-servlet-api-version>1.0.0.Final</javax-servlet-api-version>
 		<javax-servlet-jstl-version>1.2.7</javax-servlet-jstl-version>
 <!--		<javax-servlet-jsp-version>2.3.0.Final</javax-servlet-jsp-version>-->
