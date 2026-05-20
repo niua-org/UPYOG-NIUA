@@ -986,27 +986,29 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 {`${t("ASSET_CITY")}`} <span style={{ color: "red" }}>*</span>
               </div>
               <Controller
-                control={control}
-                name={"city"}
-                defaultValue={address?.city || ""}
-                rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                render={(props) => (
-                  <Dropdown
-                    // className="form-field"
-                    selected={address?.city}
-                    select={(value) => {
-                      props.onChange(value);
-                      setAddress({ ...address, city: value });
-                    }}
-                    option={allCities}
-                    optionKey="code"
-                    t={t}
-                    placeholder={"Select"}
-                    style={{ width: "80%" }}
-                    disable={true}
-                  />
-                )}
-              />
+  control={control}
+  name={"city"}
+  defaultValue={address?.city || ""}
+  rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+  render={({ field }) => (
+    <Dropdown
+      selected={address?.city}
+      select={(value) => {
+        field.onChange(value);
+        setAddress((prev) => ({
+          ...prev,
+          city: value,
+        }));
+      }}
+      option={allCities}
+      optionKey="code"
+      t={t}
+      placeholder={"Select"}
+      style={{ width: "80%" }}
+      disable={true}
+    />
+  )}
+/>
             </div>
             <div>
               <div>
@@ -1014,27 +1016,32 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
 
               <Controller
-                control={control}
-                name={"locality"}
-                defaultValue={address?.locality || ""}
-                rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                render={(props) => (
-                  <Dropdown
-                    // className="form-field"
-                    selected={address?.locality}
-                    select={(value) => {
-                      props.onChange(value);
-                      setAddress({ ...address, locality: value });
-                    }}
-                    option={structuredLocality}
-                    optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
-                    optionKey="i18nKey"
-                    t={t}
-                    placeholder={"Select"}
-                    style={{ width: "80%" }}
-                  />
-                )}
-              />
+  control={control}
+  name={"locality"}
+  defaultValue={address?.locality || ""}
+  rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+  render={({ field }) => (
+    <Dropdown
+      selected={address?.locality}
+      select={(value) => {
+        field.onChange(value);
+        setAddress((prev) => ({
+          ...prev,
+          locality: value,
+        }));
+      }}
+      option={structuredLocality}
+      optionCardStyles={{
+        overflowY: "auto",
+        maxHeight: "300px",
+      }}
+      optionKey="i18nKey"
+      t={t}
+      placeholder={"Select"}
+      style={{ width: "80%" }}
+    />
+  )}
+/>
             </div>
           </div>
         </React.Fragment>
@@ -1084,9 +1091,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     value={assetDetails["purchaseOrderNumber"]}
                     onChange={handleInputChange}
                     validation={{
-                      isRequired: row.isMandatory,
-                      pattern: regexPattern(row.columnType),
-                      type: row.columnType,
+                      isRequired: false,
+                      pattern: "^[a-zA-Z0-9/-]*$",
+                      type: "text",
                       title: t("PT_NAME_ERROR_MESSAGE"),
                     }}
                     style={{ width: "80%" }}
