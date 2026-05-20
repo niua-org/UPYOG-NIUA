@@ -1,12 +1,10 @@
 import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
-import { useParams, useLocation,Route, Routes   } from "react-router-dom";
-// import Routes from "./routes";
-import BillList from "./routes/bill-details/bill-details";
+import { useParams, useLocation, Route, Routes } from "react-router-dom";
+import { BillList } from "../bills/routes/my-bills/my-bills";
 import BillDetails from "./routes/bill-details/bill-details";
 import { useTranslation } from "react-i18next";
 import { BackButton } from "@nudmcdgnpm/digit-ui-react-components";
-// import { myBillMap } from "./myBillsKeysMap";
 
 export const MyBills = ({ stateCode }) => {
   const { businessService } = useParams();

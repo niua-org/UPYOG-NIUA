@@ -81,8 +81,7 @@ const ApplicationDetails = (props) => {
       } else if (!action?.redirectionUrl) {
         setShowModal(true);
       } else {
-        navigate({
-          pathname: action.redirectionUrl?.pathname,
+        navigate(action.redirectionUrl?.pathname, {
           state: { ...action.redirectionUrl?.state },
         });
       }

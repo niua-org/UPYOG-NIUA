@@ -19,9 +19,9 @@ const App = () => {
       <AppContainer>
         <BackButton style={{ top: "55px" }}>Back</BackButton>
         <Routes>
-          <Route path={`/search`} element={<PrivateRoute><SearchChallanComponent /></PrivateRoute>} />
-          <Route path={`/search-results`} element={<PrivateRoute><SearchResultsComponent /></PrivateRoute>} />
-          <Route path={`/My-Challans`} element={<PrivateRoute><MyChallanResultsComponent /></PrivateRoute>} />
+          <Route path={`search`} element={<PrivateRoute><SearchChallanComponent /></PrivateRoute>} />
+          <Route path={`search-results`} element={<PrivateRoute><SearchResultsComponent /></PrivateRoute>} />
+          <Route path={`My-Challans`} element={<PrivateRoute><MyChallanResultsComponent /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

@@ -16,7 +16,7 @@ const createConsumerDetails = () => ({
 });
 
 const ConsumerDetails = ({ config, onSelect, userType, formData, setError, formState, clearErrors }) => {
-  console.log("formadata", formData)
+  // console.log("formadata", formData)
   if(window.location.href.includes("modify-challan") && sessionStorage.getItem("mcollectEditObject"))
   {
     formData = JSON.parse(sessionStorage.getItem("mcollectEditObject"))
@@ -24,7 +24,7 @@ const ConsumerDetails = ({ config, onSelect, userType, formData, setError, formS
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const isEdit = pathname.includes("/modify-challan/");
-  const [consumerDetails, setconsumerDetails] = useState(formData?.consomerDetails1 || [createConsumerDetails()]);
+  const [consumerDetails, setconsumerDetails] = useState(formData?.[config?.key] || formData?.consomerDetails1 || [createConsumerDetails()]);
   const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
@@ -99,7 +99,7 @@ const OwnerForm1 = (_props) => {
   const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, getValues } = useForm();
   const formValue = watch();
   const { errors } = localFormState;
-  console.log("errorssssss", errors)
+  // console.log("errorssssss", errors)
   const isMobile = window.Digit.Utils.browser.isMobile();
 
   
@@ -159,7 +159,7 @@ const OwnerForm1 = (_props) => {
                   <TextInput
                     value={field.value}
                     autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                    errorStyle={(localFormState.touched.ConsumerName && errors?.ConsumerName?.message) ? true : false}
+                    errorStyle={(localFormState.touchedFields?.ConsumerName && errors?.ConsumerName?.message) ? true : false}
                     onChange={(e) => {
                       field.onChange(e.target.value);
                       //setFocusIndex({ index: consumerdetail.key, type: "ConsumerName" });
@@ -174,7 +174,7 @@ const OwnerForm1 = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.ConsumerName ? errors?.ConsumerName?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields?.ConsumerName ? errors?.ConsumerName?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel style={{paddingTop:"10px"}} className="card-label-smaller">{`${t("UC_MOBILE_NUMBER")}`}<span className="check-page-link-button"> *</span></CardLabel>
             <div className="field">
@@ -193,7 +193,7 @@ const OwnerForm1 = (_props) => {
                     }}
                     labelStyle={{ marginTop: "unset", border: "1px solid #464646", borderRight: "none" }}
                     onBlur={field.onBlur}
-                    errorStyle={(localFormState.touched.mobileNumber && errors?.mobileNumber?.message) ? true : false}
+                    errorStyle={(localFormState.touchedFields?.mobileNumber && errors?.mobileNumber?.message) ? true : false}
                     disable={isEdit}
                     //style={ isMulitpleOwners ? { background: "#FAFAFA" }: ""}
                   />
@@ -202,7 +202,7 @@ const OwnerForm1 = (_props) => {
             </div>
           </LabelFieldPair>  
           <div>
-          <CardLabelError style={errorStyle}>{localFormState.touched.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields?.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
           <LabelFieldPair>  
           <CardLabel style={{paddingTop:"10px"}} className="card-label-smaller">{`${t("UC_EMAIL_ID")}`}</CardLabel>
           <div className="field">

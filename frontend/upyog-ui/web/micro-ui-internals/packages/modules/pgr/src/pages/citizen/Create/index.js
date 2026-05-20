@@ -13,7 +13,7 @@ export const CreateComplaint = () => {
   const ComponentProvider = Digit.Contexts.ComponentProvider;
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const match = useMatch();
+  const match = useMatch("*");
   const navigate = Digit.Hooks.useCustomNavigate();
   const registry = useContext(ComponentProvider);
   const dispatch = useDispatch();
@@ -129,7 +129,7 @@ export const CreateComplaint = () => {
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`${route}`}
+            path={`${route}/*`}
             key={index}
             element={<Component config={{ texts, inputs }} onSelect={handleSelect} onSkip={handleSkip} value={params} t={t} />}
           />

@@ -21,20 +21,24 @@ const CitizenSearchResults = (props) => {
   }, [config]);
 
   return (
-    <Routes>
-      <Route path={`*`}>
-        <SearchResultsComponent
-          template={params[0].labels}
-          header={params[0].texts.header}
-          actionButtonLabel={params[0].texts.actionButtonLabel}
-          t={t}
-          isMutation={propConfig?.action === "MUTATION"}
-          onSelect={onSelect}
-          config={propConfig}
-          clearParams={clearParams}
-        />
-      </Route>
-    </Routes>
+<Routes>
+  <Route
+    path="*"
+    element={
+      <SearchResultsComponent
+        template={params[0].labels}
+        header={params[0].texts.header}
+        actionButtonLabel={params[0].texts.actionButtonLabel}
+        t={t}
+        isMutation={propConfig?.action === "MUTATION"}
+        onSelect={onSelect}
+        config={propConfig}
+        clearParams={clearParams}
+      />
+    }
+  />
+</Routes>
+
   );
 };
 

@@ -57,9 +57,9 @@ const TradeLicenseList = ({ application }) => {
       setShowToast({ error: true, label: `${t("TL_ERROR_TOAST_MUTUALLY_EXPIRED")}` });
     }
   }
-useEffect(async ()=>{
-
-  const licenseNumbers = application?.licenseNumber;
+useEffect(() => {
+  const fetchApplications = async () => {
+    const licenseNumbers = application?.licenseNumber;
     const filters = { licenseNumbers, offset: 0 };
     let numOfApplications = await TLSearch.numberOfApplications(application?.tenantId, filters);
     let allowedToNextYear= false;
@@ -72,31 +72,33 @@ useEffect(async ()=>{
       const latestFinancialYear = Math.max.apply(Math, numOfApplications?.filter(ob => ob.licenseNumber === application?.licenseNumber)?.map(function(o){return parseInt(o.financialYear.split("-")[0])}))
       const isAllowedToNextYear = numOfApplications?.filter(data => (data.financialYear == finalFinancialYear && data?.status !== "REJECTED"));
 
-      if(Object.keys(fydata).length >0)
-      {
-        let FY = getvalidfromdate("", mdmsFinancialYear).finYearRange;
-        numOfApplications &&
-        numOfApplications.map((ob) => {
-            if (ob.financialYear === FY) {
-              setIsrenewalspresent(true)
-              //isrenewalspresent = true;
-            }
-          });
-          if (isAllowedToNextYear?.length > 0){
-             setAllowedToNextYear(false);
-             setoldRenewalAppNo(isAllowedToNextYear?.[0]?.applicationNumber);
+    if(Object.keys(fydata).length >0)
+    {
+      let FY = getvalidfromdate("", mdmsFinancialYear).finYearRange;
+      numOfApplications &&
+      numOfApplications.map((ob) => {
+          if (ob.financialYear === FY) {
+            setIsrenewalspresent(true)
+            //isrenewalspresent = true;
           }
-          if(!(application?.financialYear.includes(`${latestFinancialYear}`))) {
-            latestRenewalYearofAPP = application?.financialYear;
-            setlatestRenewalYearofAPP(application?.financialYear);
-          }
-          if (!isAllowedToNextYear || isAllowedToNextYear?.length == 0){
-            allowedToNextYear = true;
-            setAllowedToNextYear(true);
-          }
-        setNumberOfApplications(numOfApplications)
-      }
-},[fydata])
+        });
+        if (isAllowedToNextYear?.length > 0){
+           setAllowedToNextYear(false);
+           setoldRenewalAppNo(isAllowedToNextYear?.[0]?.applicationNumber);
+        }
+        if(!(application?.financialYear.includes(`${latestFinancialYear}`))) {
+          latestRenewalYearofAPP = application?.financialYear;
+          setlatestRenewalYearofAPP(application?.financialYear);
+        }
+        if (!isAllowedToNextYear || isAllowedToNextYear?.length == 0){
+          allowedToNextYear = true;
+          setAllowedToNextYear(true);
+        }
+      setNumberOfApplications(numOfApplications)
+    }
+  };
+  fetchApplications();
+}, [fydata]);
   const onsubmit = async() => {
     const licenseNumbers = application?.licenseNumber;
     const filters = { licenseNumbers, offset: 0 };

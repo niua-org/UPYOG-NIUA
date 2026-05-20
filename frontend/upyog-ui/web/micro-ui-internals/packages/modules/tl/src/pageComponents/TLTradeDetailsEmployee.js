@@ -238,6 +238,7 @@ const OwnerForm1 = (_props) => {
 
   let isRenewal = window.location.href.includes("renew-application-details");
   if (window.location.href.includes("edit-application-details")) isRenewal = true;
+  let isFieldsDisabled = false;
 
 
   useEffect(() => {
@@ -315,7 +316,7 @@ const OwnerForm1 = (_props) => {
                   select={field.onChange}
                   optionKey="i18nKey"
                   onBlur={field.onBlur}
-                  disable={isRenewal}
+                  disable={isFieldsDisabled}
                   t={t}
                 />
               )}
@@ -365,7 +366,7 @@ const OwnerForm1 = (_props) => {
                       setFocusIndex({ index: -1 });
                       field.onBlur(e);
                     }}
-                    disable={isRenewal}
+                    disable={isFieldsDisabled}
                   />
                 )}
               />
@@ -383,7 +384,7 @@ const OwnerForm1 = (_props) => {
                 <Dropdown
                   className="form-field"
                   selected={field.value}
-                  disable={isRenewal}
+                  disable={isFieldsDisabled}
                   option={selectedStructureTypeOptions}
                   errorStyle={(localFormState.touchedFields.structureType && errors?.structureType?.message) ? true : false}
                   select={(e) => {
@@ -449,7 +450,7 @@ const OwnerForm1 = (_props) => {
                     // date={CommencementDate} 
                     name="CommencementDate"
                     onChange={field.onChange}
-                    disabled={isRenewal}
+                    disabled={isFieldsDisabled}
                   />
                 )}
               />
@@ -475,7 +476,7 @@ const OwnerForm1 = (_props) => {
                     }}
                     labelStyle={{ marginTop: "unset" }}
                     onBlur={field.onBlur}
-                    disable={isRenewal}
+                    disable={isFieldsDisabled}
                   />
                 )}
               />
@@ -500,7 +501,7 @@ const OwnerForm1 = (_props) => {
                     autoFocus={focusIndex.index === tradedetail?.key && focusIndex.type === "operationalArea"}
                     errorStyle={(localFormState.touchedFields.operationalArea && errors?.operationalArea?.message) ? true : false}
                     onBlur={field.onBlur}
-                    disable={isRenewal}
+                    disable={isFieldsDisabled}
                   />
                 )}
               />
@@ -525,7 +526,7 @@ const OwnerForm1 = (_props) => {
                     autoFocus={focusIndex.index === tradedetail?.key && focusIndex.type === "noOfEmployees"}
                     errorStyle={(localFormState.touchedFields.noOfEmployees && errors?.noOfEmployees?.message) ? true : false}
                     onBlur={field.onBlur}
-                    disable={isRenewal}
+                    disable={isFieldsDisabled}
                   />
                 )}
               />

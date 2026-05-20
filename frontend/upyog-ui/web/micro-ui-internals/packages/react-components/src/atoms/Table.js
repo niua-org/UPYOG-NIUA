@@ -9,8 +9,8 @@ const noop = () => {};
 const Table = ({
   className = "table",
   t,
-  data = [],       
-  columns = [], 
+  data,
+  columns,
   getCellProps,
   currentPage = 0,
   pageSizeLimit = 10,
@@ -56,8 +56,8 @@ const Table = ({
     state: { pageIndex, pageSize, sortBy, globalFilter },
   } = useTable(
     {
-      columns,
-      data,
+      columns: columns || [],
+      data: data || [],
       initialState: { pageIndex: currentPage, pageSize: pageSizeLimit, sortBy: autoSort ? [{ id: initSortId, desc: false }] : sortParams },
       pageCount: totalRecords > 0 ? Math.ceil(totalRecords / pageSizeLimit) : -1,
       manualPagination: manualPagination,

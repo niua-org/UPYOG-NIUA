@@ -1,8 +1,8 @@
-import { Loader,Modal ,Card , CardHeader, StatusTable,Row} from "@nudmcdgnpm/digit-ui-react-components";
-import React ,{Fragment,useState,useEffect}from "react";
+import { Loader, Modal, Card, CardHeader, StatusTable, Row } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { Fragment, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
+import { Route, useLocation, Routes, Navigate } from "react-router-dom";
 import { newConfig } from "../../../config/Create/config";
 
 const CreateProperty = ({ parentRoute }) => {
@@ -49,7 +49,7 @@ const CreateProperty = ({ parentRoute }) => {
     if (!isNaN(lastchar)) {
       isMultiple = true;
     }
-    console.log("goNext",skipStep, index, isAddMultiple, key,currentPath,isMultiple)
+
     let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
     if (typeof nextStep == "object" && nextStep != null && isMultiple != false) {
       if (nextStep[sessionStorage.getItem("ownershipCategory")]) {
@@ -133,28 +133,26 @@ const CreateProperty = ({ parentRoute }) => {
     }
 
   const createProperty = async () => {
-    let tempObject={
-      "mobileNumber":params.owners[0].mobileNumber,
-      "name":params.owners[0].name,
+    let tempObject = {
+      "mobileNumber": params.owners[0].mobileNumber,
+      "name": params.owners[0].name,
       "doorNo": params.address.doorNo,
       "locality": params.address.locality.code,
-      "isRequestForDuplicatePropertyValidation":true
+      "isRequestForDuplicatePropertyValidation": true
     }
-    setSearchData({ city: params.address.city.code, filters: tempObject });    
+    setSearchData({ city: params.address.city.code, filters: tempObject });
     //navigate(`acknowledgement`);
   };
-  useEffect(() => {  
-    if(propertyDataLoading && propertyData?.Properties.length >0)  
-    {  
-      //alert("property exist"),  
-      setShowToast(true) 
-    }  
-    else if(propertyDataLoading && propertyData?.Properties.length === 0) {  
-      setShowToast(false)  
-      console.log("propertyDatapropertyData",propertyData)
-      navigate(`acknowledgement`);  
-    }  
-    }, [propertyData]);
+  useEffect(() => {
+    if (!propertyDataLoading && propertyData?.Properties?.length > 0) {
+      setShowToast(true);
+    }
+    else if (!propertyDataLoading && propertyData?.Properties?.length === 0) {
+      setShowToast(false);
+      console.log("propertyDatapropertyData", propertyData);
+      navigate(`acknowledgement`);
+    }
+  }, [propertyData, propertyDataLoading]);
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     if (key === "owners") {

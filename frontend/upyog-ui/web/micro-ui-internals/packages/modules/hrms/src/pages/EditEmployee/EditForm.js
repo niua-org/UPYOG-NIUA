@@ -22,6 +22,7 @@ const EditForm = ({ tenantId, data }) => {
     retry: false,
     enable: false,
   });
+  const mutation = Digit.Hooks.hrms.useHRMSUpdate(tenantId);
   const [errorInfo, setErrorInfo, clearError] = Digit.Hooks.useSessionStorage("EMPLOYEE_HRMS_ERROR_DATA", false);
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_HRMS_MUTATION_HAPPENED", false);
   const [successData, setsuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage("EMPLOYEE_HRMS_MUTATION_SUCCESS_DATA", false);
@@ -198,9 +199,23 @@ const EditForm = ({ tenantId, data }) => {
     Employees=Digit?.Customizations?.HRMS?.customiseUpdateFormData?Digit.Customizations.HRMS.customiseUpdateFormData(data,Employees):Employees;
 
 
-    navigate("/upyog-ui/employee/hrms/response", { replace: true, state: { Employees, key: "UPDATE", action: "UPDATE" } });
+    mutation.mutate(
+      { Employees },
+      {
+        onError: (error, variables) => {
+          setErrorInfo(error?.response?.data?.Errors[0]?.code || 'ERROR');
+          setMutationHappened(true);
+          navigate("/upyog-ui/employee/hrms/response", { replace: true, state: { Employees, key: "UPDATE", action: "UPDATE", error: true } });
+        },
+        onSuccess: (data) => {
+          setsuccessData(data);
+          setMutationHappened(true);
+          navigate("/upyog-ui/employee/hrms/response", { replace: true, state: { Employees, key: "UPDATE", action: "UPDATE", success: true } });
+        },
+      }
+    );
   };
-  if (isLoading) {
+  if (isLoading || mutation.isPending) {
     return <Loader />;
   }
 

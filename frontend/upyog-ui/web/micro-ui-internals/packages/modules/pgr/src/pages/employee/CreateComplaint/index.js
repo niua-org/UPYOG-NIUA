@@ -375,7 +375,6 @@ const [description, setDescription] = useState("")
       })
       setSelectedLocality(b?.[0])
       setDescription(data?.propertyId)
-      console.log("pgrProperty",localities,data?.propertyId,data)
     }
    
   },[propertyId])

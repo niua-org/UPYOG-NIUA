@@ -11,27 +11,26 @@ const SearchLicense = ({tenantId, t, onSubmit, data, count }) => {
   const initialValues = Digit.SessionStorage.get("SEARCH_APPLICATION_DETAIL")|| {
     licenseNumbers: "",
     mobileNumber: "",
-    fromDate: null,   // ✅ safe default
-    toDate: null,     // ✅ safe default
+    fromDate: null,   
+    toDate: null,    
     tradeName: "",
     offset: 0,
     limit: 10,
     sortBy: "commencementDate",
     sortOrder: "DESC",
     status: "",
-    RenewalPending: true
-};
-    const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
-        defaultValues: initialValues
-    })
-    // useEffect(() => {
-    //   register("offset")
-    //   register("limit")
-    //   register("sortBy")
-    //   register("sortOrder")
-    //   register("status")
-    //   //register("RenewalPending")
-    // },[register])
+  };
+  const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
+    defaultValues: initialValues
+  })
+  // useEffect(() => {
+  //   register("offset")
+  //   register("limit")
+  //   register("sortBy")
+  //   register("sortOrder")
+  //   register("status")
+  //   //register("RenewalPending")
+  // },[register])
 
     const onSort = useCallback((args) => {
       if (args.length === 0) return

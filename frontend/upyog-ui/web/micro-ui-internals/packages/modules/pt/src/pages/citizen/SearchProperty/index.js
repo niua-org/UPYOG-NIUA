@@ -23,9 +23,10 @@ const SearchProperty = () => {
 
   return (
     <Routes>
-      <Route path={`*`}>
-        <SearchPropertyComponent config={params[0]} />
-      </Route>
+        <Route
+    path="*"
+    element={<SearchPropertyComponent config={params[0]} />}
+  />
     </Routes>
   );
 };

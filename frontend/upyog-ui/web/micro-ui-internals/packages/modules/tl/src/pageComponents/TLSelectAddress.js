@@ -143,6 +143,20 @@ const TLSelectAddress = ({ t, config, onSelect, userType, formData, setError, fo
   }, [formValue]);
 
   useEffect(() => {
+    if (formData?.cpt?.details && window.location.href.includes("tl") && userType === "employee") {
+      const propertyLocality = formData?.cpt?.details?.address?.locality;
+      const propertyCity = formData?.cpt?.details?.address?.city || tenantId;
+      if (propertyLocality && (!getValues("locality") || getValues("locality")?.code !== propertyLocality?.code)) {
+        setValue("locality", { ...propertyLocality, i18nkey: propertyLocality?.name });
+      }
+      const cityObj = cities?.find((c) => c.code === propertyCity);
+      if (cityObj && (!getValues("city") || getValues("city")?.code !== cityObj?.code)) {
+        setValue("city", cityObj);
+      }
+    }
+  }, [formData?.cpt?.details]);
+
+  useEffect(() => {
     if (userType === "employee") {
       if (Object.keys(errors).length && !_.isEqual(formState.errors[config.key]?.type || {}, errors)) {
         setError(config.key, { type: errors });

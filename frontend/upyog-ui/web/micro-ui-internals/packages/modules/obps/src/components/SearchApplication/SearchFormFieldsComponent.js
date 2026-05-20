@@ -110,33 +110,38 @@ const SearchFormFieldsComponent = ({ formState, Controller, register, control, t
     <>
       <SearchField>
         <label>{t("BPA_SEARCH_APPLICATION_NO_LABEL")}</label>
-        <TextInput name="applicationNo" {...register("applicationNo")} />
+        <Controller
+          control={control}
+          name="applicationNo"
+          render={({ field }) => (
+            <TextInput inputRef={field.ref} value={field.value || ""} onChange={(e) => field.onChange(e.target.value)} onBlur={field.onBlur} />
+          )}
+        />
       </SearchField>
       {
         !window.location.href.includes("citizen/obps/search/application") &&
         <SearchField>
           <label>{t("BPA_APP_MOBILE_NO_SEARCH_PARAM")}</label>
-          <MobileNumber
+          <Controller
+            control={control}
             name="mobileNumber"
-            disable={window.location.href.includes("obps/search/obps-application") ? true : false}
-            {...register("mobileNumber", {
-              minLength: {
-                value: 10,
-                message: t("CORE_COMMON_MOBILE_ERROR"),
-              },
-              maxLength: {
-                value: 10,
-                message: t("CORE_COMMON_MOBILE_ERROR"),
-              },
-              pattern: {
-                value: /[6789][0-9]{9}/,
-                //type: "tel",
-                message: t("CORE_COMMON_MOBILE_ERROR"),
-              },
-            })}
-            type="number"
-            componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-          //maxlength={10}
+            rules={{
+              minLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
+              maxLength: { value: 10, message: t("CORE_COMMON_MOBILE_ERROR") },
+              pattern: { value: /[6789][0-9]{9}/, message: t("CORE_COMMON_MOBILE_ERROR") },
+            }}
+            render={({ field }) => (
+              <MobileNumber
+                name="mobileNumber"
+                inputRef={field.ref}
+                value={field.value || ""}
+                onChange={(val) => field.onChange(val)}
+                onBlur={field.onBlur}
+                disable={window.location.href.includes("obps/search/obps-application")}
+                type="number"
+                componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+              />
+            )}
           />
           <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
         </SearchField>

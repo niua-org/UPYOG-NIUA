@@ -31,10 +31,10 @@ export const SuccessfulPayment = (props) => {
   const combineResponseFSM = isFSMResponse ? `${t("PAYMENT_COLLECT_LABEL")} / ${t("PAYMENT_COLLECT")}` : t("PAYMENT_LOCALIZATION_RESPONSE");
   const mutation = Digit.Hooks.chb.useChbCreateAPI(tenantId, false);
   const AdvertisementCreateApi = Digit.Hooks.ads.useADSCreateAPI(tenantId, false);
-  const waterTankerCreateApi = Digit.Hooks.wt.useTankerCreateAPI(tenantId, false);
-  const mobileToiletCreateApi = Digit.Hooks.wt.useMobileToiletCreateAPI(tenantId, false);
-  const treePruningCreateApi = Digit.Hooks.wt.useTreePruningCreateAPI(tenantId, false);
-
+  const waterTankerCreateApi = Digit.Hooks.wt.useTankerCreateAPI(tenantId,false); 
+  const mobileToiletCreateApi = Digit.Hooks.wt.useMobileToiletCreateAPI(tenantId,false);
+  const treePruningCreateApi =Digit.Hooks.wt.useTreePruningCreateAPI(tenantId,false);
+  props.setLink(combineResponseFSM);
   let { consumerCode, receiptNumber, businessService } = useParams();
 
   receiptNumber = receiptNumber.replace(/%2F/g, "/");
@@ -48,22 +48,36 @@ export const SuccessfulPayment = (props) => {
   );
   const FSM_EDITOR = Digit.UserService.hasAccess("FSM_EDITOR_EMP") || false;
 
-  useEffect(() => {
-    props.setLink(combineResponseFSM);
-  }, [combineResponseFSM]);
-
   function onActionSelect(action) {
     setSelectedAction(action);
     setDisplayMenu(false);
   }
-
   useEffect(() => {
-    if (selectedAction === "GO_TO_HOME") {
-      navigate("/upyog-ui/employee");
-    } else if (selectedAction === "ASSIGN_TO_DSO") {
-      navigate(`/upyog-ui/employee/fsm/application-details/${consumerCode}`);
+    const fetchData = async () => {
+      const tenantId = Digit.ULBService.getCurrentTenantId();
+      const state = Digit.ULBService.getStateId();
+      const payments = await Digit.PaymentService.getReciept(tenantId, businessService, { receiptNumbers: receiptNumber });
+      let response = { filestoreIds: [payments.Payments[0]?.fileStoreId] };
+      if (!payments.Payments[0]?.fileStoreId) {
+        response = await Digit.PaymentService.generatePdf(state, { Payments: payments.Payments }, generatePdfKey);
+      }
+    };
+
+    fetchData();
+    queryClient.clear();
+  }, []);
+  useEffect(() => {
+    switch (selectedAction) {
+      case "GO_TO_HOME":
+        navigate("/upyog-ui/employee");
+        break;
+      case "ASSIGN_TO_DSO":
+        navigate(`/upyog-ui/employee/fsm/application-details/${consumerCode}`);
+        break;
+      default:
+        break;
     }
-  }, [selectedAction, consumerCode, navigate]);
+  }, [selectedAction]);
   let ACTIONS = ["GO_TO_HOME"];
   if (FSM_EDITOR) {
     ACTIONS = [...ACTIONS, "ASSIGN_TO_DSO"];

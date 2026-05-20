@@ -27,19 +27,19 @@ const App = () => {
       <div className="pgr-citizen-wrapper">
         {!location.pathname.includes("/response") && <BackButton>{t("CS_COMMON_BACK")}</BackButton>}
         <Routes>
-          <Route path= "create-complaint/*" element={<PrivateRoute><CreateComplaint /></PrivateRoute>} />
-          <Route path= "complaints/*" element={<PrivateRoute><ComplaintsList /></PrivateRoute>} />
-          <Route path= "complaints/:id" element={<PrivateRoute><ComplaintDetailsPage /></PrivateRoute>} />
+          <Route path={`create-complaint/*`} element={<PrivateRoute><CreateComplaint /></PrivateRoute>} />
+          <Route path="complaints/:id" element={<PrivateRoute><ComplaintDetailsPage /></PrivateRoute>} />
+          <Route path="complaints/*" element={<PrivateRoute><ComplaintsList /></PrivateRoute>} />
           <Route
-            path= "reopen/*"
+            path={`/reopen/*`}
             element={
               <PrivateRoute>
                 <ReopenComplaint match={{ ...match, url, path: `/reopen` }} parentRoute={path} />
               </PrivateRoute>
             }
           />
-          <Route path= "rate/:id" element={<PrivateRoute><SelectRating parentRoute={path} /></PrivateRoute>} />
-          <Route path= "response" element={<PrivateRoute><Response match={{ ...match, url, path }} /></PrivateRoute>} />
+          <Route path={`/rate/:id/*`} element={<PrivateRoute><SelectRating parentRoute={path} /></PrivateRoute>} />
+          <Route path={`response`} element={<PrivateRoute><Response match={{ ...match, url, path }} /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>
