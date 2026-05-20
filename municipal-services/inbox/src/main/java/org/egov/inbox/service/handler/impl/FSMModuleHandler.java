@@ -34,10 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static org.egov.inbox.util.BpaConstants.*;
 import static org.egov.inbox.util.FSMConstants.*;
-import static org.egov.inbox.util.FSMConstants.COUNT;
-
 /**
  * FSMModuleHandler is responsible for handling
  * inbox operations specific to FSM module.
@@ -423,7 +420,7 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         Map<String, Object> searcherRequest = new HashMap<>();
         Map<String, Object> searchCriteria = new HashMap<>();
         searchCriteria.put(TENANT_ID_PARAM, ctx.getCriteria().getTenantId());
-        searchCriteria.put(FSMConstants.OWNER_ID, ctx.getRequestInfo().getUserInfo().getUuid());
+        searchCriteria.put(OWNER_ID, ctx.getRequestInfo().getUserInfo().getUuid());
         searcherRequest.put(REQUESTINFO_PARAM, ctx.getRequestInfo());
         searcherRequest.put(SEARCH_CRITERIA_PARAM, searchCriteria);
 

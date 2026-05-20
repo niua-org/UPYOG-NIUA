@@ -17,8 +17,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.egov.inbox.util.BpaConstants.*;
-import static org.egov.inbox.util.FSMConstants.COUNT;
-
 /**
  * BPAModuleHandler is responsible for handling the inbox operations
  * specific to the "BPA" module. It implements the ModuleInboxHandler interface

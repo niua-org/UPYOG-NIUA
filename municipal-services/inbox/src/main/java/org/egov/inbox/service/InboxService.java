@@ -377,12 +377,6 @@ public class InboxService {
 
         StringBuilder url = new StringBuilder(srvMap.get("searchPath")).append("?tenantId=").append(tenantId);
 
-        if (moduleSearchCriteria.containsKey("status") && businessServiceName.contains("ptr"))
-            moduleSearchCriteria.remove("status");
-
-        if (businessServiceName.contains("asset-create") && moduleSearchCriteria.containsKey("offset"))
-            moduleSearchCriteria.put("offset", 0);
-
         moduleSearchCriteria.keySet().forEach(param -> {
             if (param.equalsIgnoreCase("tenantId"))
                 return;

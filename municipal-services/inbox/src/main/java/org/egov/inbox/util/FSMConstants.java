@@ -20,5 +20,11 @@ public class FSMConstants {
 	public static final String COMPLETED_STATE = "COMPLETED";
 	public static final String VEHICLE_LOG = "vehicleLog";
 	public static final String BUSINESS_SERVICE_PARAM = "businessservice";
+	public static final String TENANT_ID_PARAM = "tenantId";
+	public static final String LOCALITY_PARAM = "locality";
+	public static final String REQUESTINFO_PARAM = "RequestInfo";
+	public static final String SEARCH_CRITERIA_PARAM = "searchCriteria";
+	public static final String STATUS_PARAM = "status";
+	public static final String OFFSET_PARAM = "offset";
 
 }

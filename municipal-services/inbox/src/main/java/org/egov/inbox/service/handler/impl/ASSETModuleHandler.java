@@ -10,9 +10,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
-import static org.egov.inbox.util.AssetConstants.ASSET;
-import static org.egov.inbox.util.PTConstants.ACKNOWLEDGEMENT_IDS_PARAM;
-
+import static org.egov.inbox.util.AssetConstants.*;
 /**
  * ASSETModuleHandler is responsible for handling the inbox operations
  * specific to the "ASSET" module. It implements the ModuleInboxHandler interface
@@ -83,9 +81,9 @@ public class ASSETModuleHandler implements ModuleInboxHandler {
 
     /**
      * Returns a list of parameters to be removed from the search criteria.
-     * For the ASSET module, no parameters need to be removed.
+     * For the ASSET module, specific parameters like status, and offset are removed.
      *
-     * @return An empty list, as no parameters are removed for this module.
+     * @return A list of parameter keys to be removed.
      */
     @Override
     public List<String> paramsToRemove() {

@@ -9,11 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-
-import static org.egov.inbox.util.PTConstants.ACKNOWLEDGEMENT_IDS_PARAM;
-import static org.egov.inbox.util.PTRConstants.PTR;
-import static org.egov.inbox.util.TLConstants.*;
-
+import static org.egov.inbox.util.PTRConstants.*;
 /**
  * PTRModuleHandler is responsible for handling
  * inbox operations specific to PTR module.
