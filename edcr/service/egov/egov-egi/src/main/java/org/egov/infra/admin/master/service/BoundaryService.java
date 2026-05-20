@@ -70,10 +70,10 @@ import org.egov.infra.config.core.ApplicationThreadLocals;
 import org.egov.infra.utils.StringUtils;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
-import org.geotools.feature.FeatureCollection;
+import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,9 +266,19 @@ public class BoundaryService {
                 map.put("url", Thread.currentThread().getContextClassLoader()
                         .getResource(String.format(GIS_SHAPE_FILE_LOCATION, ApplicationThreadLocals.getTenantID())));
                 final DataStore dataStore = DataStoreFinder.getDataStore(map);
-                final FeatureCollection<SimpleFeatureType, SimpleFeature> collection = dataStore
-                        .getFeatureSource(dataStore.getTypeNames()[0]).getFeatures();
-                final Iterator<SimpleFeature> iterator = collection.iterator();
+                /*
+                   Updated for newer GeoTools API: replaced deprecated FeatureCollection usage
+                   with SimpleFeatureSource & SimpleFeatureCollection to fix type mismatch
+                   and ensure compatibility with org.locationtech.jts-based versions
+                */
+
+//                final FeatureCollection<SimpleFeatureType, SimpleFeature> collection = dataStore
+//                        .getFeatureSource(dataStore.getTypeNames()[0]).getFeatures();
+                final SimpleFeatureCollection collection = dataStore
+                        .getFeatureSource(dataStore.getTypeNames()[0])
+                        .getFeatures();
+//                final Iterator<SimpleFeature> iterator = collection.iterate();
+                final SimpleFeatureIterator iterator = collection.features();
                 GeometryFactory geometryFactory = new GeometryFactory();
                 Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
                 try {
@@ -280,7 +290,8 @@ public class BoundaryService {
                         }
                     }
                 } finally {
-                    collection.close(iterator);
+//                    collection.close(iterator);
+                    iterator.close();
                 }
             }
 

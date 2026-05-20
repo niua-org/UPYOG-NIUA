@@ -73,7 +73,6 @@ public class FarExtract extends FeatureExtract {
     public static final String RULE_31_1 = "31(1)";
 
     /**
-     * @param doc
      * @param pl
      * @return 1) Floor area = (sum of areas of all polygon in Building_exterior_wall layer) - (sum of all polygons in FAR_deduct
      * layer) Color is not available here when color available change to getPolyLinesByLayerAndColor Api if required

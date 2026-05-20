@@ -76,7 +76,7 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
    /**
     * Map key DxfToPdfUnifiedConverter sets only when EdcrPdfDetail.getKabejaSinglePageDXFToPdf() is true.
     * Pass the string "true" as the value. setupProperties copies intent into the shared context as the Boolean
-    * egov.singlePdfUsingKabeja so DcrSvgStyleGenerator can pick the direct font path.
+    * egov.singlePdfUsingKabeja so DcrSvgStyleGenerator can pick the direct Single PDF font path.
     */
    public static final String PROPERTY_SINGLE_PDF = "egov.singlePdfUsingKabeja";
    public static final double DEFAULT_MARGIN_PERCENT = 0.0;
@@ -795,9 +795,28 @@ public class DcrSvgGenerator extends AbstractSAXGenerator {
        while (types.hasNext()) {
            String type = (String) types.next();
            ArrayList list = (ArrayList) layer.getDXFEntities(type);
+
            /*
-            * Wrap TEXT/MTEXT in an inner group with fill/stroke overrides and reset entity lineweight/thickness
-            * only when single-PDF mode is active; legacy sheet PDFs rely on original Kabeja text rendering.
+            * In single PDF conversion mode, explicitly wrap TEXT and MTEXT entities
+            * inside a dedicated SVG group with controlled styling.
+
+            * Why this is required:
+            * During full DXF-to-single-PDF rendering, text entities may inherit unwanted
+            * stroke/fill styles from parent SVG groups or previously rendered entities.
+            * This can cause:
+            *   - bold or distorted text rendering
+            *   - outlined characters
+            *   - invisible text
+            *   - inconsistent font appearance in generated PDFs
+            *
+            * To avoid this, a separate SVG <g> element is created with:
+            *   - fill        = currentColor  -> render text using active drawing color
+            *   - stroke      = none          -> disable text outlines
+            *   - stroke-width= 0             -> prevent accidental stroke rendering
+            *   - font-weight = normal        -> normalize font weight rendering
+            *
+            * This styling isolation ensures consistent and readable text rendering
+            * when converting the complete DXF drawing into a single PDF.
             */
            boolean isTextType = this.singlePdfMode
                    && (DXFConstants.ENTITY_TYPE_TEXT.equals(type) || DXFConstants.ENTITY_TYPE_MTEXT.equals(type));

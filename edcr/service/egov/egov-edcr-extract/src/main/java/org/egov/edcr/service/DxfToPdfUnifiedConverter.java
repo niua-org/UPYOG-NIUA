@@ -181,8 +181,49 @@ public class DxfToPdfUnifiedConverter {
     }
 
     /**
-     * Aspose path: reads the DXF from disk and exports to PDF. Page size comes from edcrPdfDetail.getPageSize().
-     * kabejaSinglePageDXFToPdf is not used here; Aspose behaves the same for legacy and direct extract rows.
+     * Converts a DXF drawing file into a PDF document using the Aspose imaging library.
+     *
+     * <p>
+     * The conversion process rasterizes the CAD drawing and exports it as a PDF
+     * using configurable page dimensions derived from the provided
+     * {@link EdcrPdfDetail}. If no valid page configuration is available,
+     * default dimensions are used.
+     * </p>
+     *
+     * <p>
+     * Page size handling:
+     * </p>
+     * <ul>
+     *   <li>Reads page size, orientation, and enlargement factor from
+     *       {@link PdfPageSize}.</li>
+     *   <li>Supports portrait and landscape orientation.</li>
+     *   <li>Falls back to default dimensions when page configuration is invalid
+     *       or unavailable.</li>
+     * </ul>
+     *
+     * <p>
+     * Aspose CAD rasterization settings:
+     * </p>
+     * <ul>
+     *   <li>White background color</li>
+     *   <li>Uses original object colors from the DXF</li>
+     *   <li>Automatic layout scaling enabled</li>
+     *   <li>Scaling adjustments allowed</li>
+     * </ul>
+     *
+     * <p>
+     * The generated PDF file is created in the working directory with the
+     * provided layer name as the file name.
+     * </p>
+     *
+     * @param dxfSourceFile the source DXF file to be converted
+     * @param layerName the logical layer or output file name prefix used for the generated PDF
+     * @param edcrPdfDetail PDF configuration details containing page size, orientation,
+     *         and enlargement settings
+     * @return the generated PDF file if conversion succeeds and the file exists
+     *         with non-zero size; otherwise {@code null}
+     * @throws RuntimeException
+     *         if unexpected errors occur during PDF generation
      */
     private File convertWithAspose(File dxfSourceFile, String layerName, EdcrPdfDetail edcrPdfDetail) {
         LOG.info("Converting Dxf to Pdf with Aspose...");
