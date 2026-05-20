@@ -59,7 +59,7 @@ public class PTRModuleHandler implements ModuleInboxHandler {
             return;
         }
 
-        ctx.getCriteria().getModuleSearchCriteria().put(ACKNOWLEDGEMENT_IDS_PARAM, ids);
+        ctx.getCriteria().getModuleSearchCriteria().put(APPLICATION_NUMBERS, ids);
         ctx.addBusinessKeys(ids);
     }
 
@@ -70,7 +70,7 @@ public class PTRModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public String getApplicationIdParamKey() {
-        return ACKNOWLEDGEMENT_IDS_PARAM;
+        return APPLICATION_NUMBERS;
     }
 
     /**
@@ -81,6 +81,6 @@ public class PTRModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public List<String> paramsToRemove() {
-        return List.of(LOCALITY_PARAM, OFFSET_PARAM);
+        return List.of(LOCALITY_PARAM, OFFSET_PARAM,STATUS_PARAM);
     }
 }
