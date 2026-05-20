@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { getPattern } from "../utils";
 
 const createPlumberDetails = () => ([{
+    key: Date.now(),
     plumberName: "",
     plumberMobileNo: "",
     plumberLicenseNo: "",
@@ -18,7 +19,14 @@ const createPlumberDetails = () => ([{
 const WSActivationPlumberDetails = ({ config, onSelect, userType, formData, setError, formState, clearErrors }) => {
     const { t } = useTranslation();
     const filters = func.getQueryStringParams(location.search);
-    const [plumberDetails, setPlumberDetails] = useState(formData?.plumberDetails || [createPlumberDetails()]);
+    const [plumberDetails, setPlumberDetails] = useState(
+        formData?.plumberDetails?.[0]
+            ? [{
+                ...createPlumberDetails(),
+                ...formData.plumberDetails[0]
+            }]
+            : [createPlumberDetails()]
+    );
     const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
     const [isErrors, setIsErrors] = useState(false);
 
@@ -56,9 +64,11 @@ const WSActivationPlumberDetails = ({ config, onSelect, userType, formData, setE
 
     return (
         <React.Fragment>
-            {plumberDetails.map((plumberDetail, index) => (
+            {plumberDetails?.map((plumberDetail, index) =>
+                 plumberDetail ? (
                 <PlumberDetails key={plumberDetail.key} index={index} plumberDetail={plumberDetail} {...commonProps} />
-            ))}
+                ) : null
+                )}
         </React.Fragment>
     );
 };
@@ -108,7 +118,7 @@ const PlumberDetails = (_props) => {
         if (Object.entries(formValue).length > 0) {
             const keys = Object.keys(formValue);
             const part = {};
-            keys.forEach((key) => (part[key] = plumberDetail[key]));
+            keys.forEach((key) => (part[key] = plumberDetail?.[key]));
             let plumbermobileCheck = window.location.href.includes("ws/config-by-disconnection-application") ? (formValue?.plumberMobileNo !== undefined && part?.plumberMobileNo) : true;
             if (!_.isEqual(formValue, part) && plumbermobileCheck) {
                 let isErrorsFound = true;
@@ -119,7 +129,11 @@ const PlumberDetails = (_props) => {
                     }
                 });
                 if (isErrorsFound) setIsErrors(true);
-                let ob = [{ ...formValue }];
+                let ob = [{
+                    ...plumberDetail,
+                    ...formValue
+                }];
+
                 setPlumberDetails(ob);
                 trigger();
             }
@@ -179,7 +193,7 @@ const PlumberDetails = (_props) => {
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.detailsProvidedBy ? errors?.detailsProvidedBy?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState.touchedFields.detailsProvidedBy ? errors?.detailsProvidedBy?.message : ""}</CardLabelError>
                     {!plumberDetail?.detailsProvidedBy?.code || plumberDetail?.detailsProvidedBy?.code == "ULB" ?
                         <div>
                             <LabelFieldPair>
@@ -208,7 +222,7 @@ const PlumberDetails = (_props) => {
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.plumberLicenseNo ? errors?.plumberLicenseNo?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState.touchedFields.plumberLicenseNo ? errors?.plumberLicenseNo?.message : ""}</CardLabelError>
                             <LabelFieldPair>
                                 <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_ADDN_DETAILS_PLUMBER_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                 <div className="field">
@@ -235,7 +249,7 @@ const PlumberDetails = (_props) => {
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.plumberName ? errors?.plumberName?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState.touchedFields.plumberName ? errors?.plumberName?.message : ""}</CardLabelError>
                             <LabelFieldPair>
                                 <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PLUMBER_MOBILE_NO_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                 <div className="field">
@@ -295,7 +309,7 @@ const PlumberDetails = (_props) => {
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.plumberMobileNo ? errors?.plumberMobileNo?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState.touchedFields.plumberMobileNo ? errors?.plumberMobileNo?.message : ""}</CardLabelError>
                         </div> : null}
                 </div>
             </div>

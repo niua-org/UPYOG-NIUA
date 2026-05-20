@@ -91,7 +91,33 @@ const SearchFields = ({ register, control, reset, tenantId, t,businessService })
         </SearchField>
         <SearchField>
             <label>{t("CONSUMER_MOBILE_NUMBER")}</label>
-            <MobileNumber name="mobileNumber" type="number" {...register("mobileNumber", propsForMobileNumber)} />
+            <Controller
+                    control={control}
+                    name="mobileNumber"
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
+                />
         </SearchField>
         {applicationTypesLoading ? <Loader /> : <SearchField>
             <label>{t("WS_APPLICATION_TYPE_LABEL")}</label>

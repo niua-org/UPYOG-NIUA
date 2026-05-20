@@ -9,6 +9,7 @@ import * as func from "../utils/"
 
 const createConnectionDetails = () => ({
     water: true,
+    key: Date.now(),
     sewerage: false,
     applicationNo: "",
     serviceName: "",
@@ -25,8 +26,14 @@ const WSEditConnectionDetails = ({ config, onSelect, userType, formData, setErro
     const applicationNumber = filters?.applicationNumber;
     const { t } = useTranslation();
     const { pathname } = useLocation();
-    const [connectionDetails, setConnectionDetails] = useState(formData?.ConnectionDetails ? [formData?.ConnectionDetails?.[0]] : [createConnectionDetails()]);
-    const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
+    const [connectionDetails, setConnectionDetails] = useState(
+    formData?.ConnectionDetails?.[0]
+        ? [{
+            ...createConnectionDetails(),
+            ...formData.ConnectionDetails[0]
+        }]
+        : [createConnectionDetails()]
+    );    const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
     const stateCode = Digit.ULBService.getStateId();
     const [isErrors, setIsErrors] = useState(false);
     const [waterSewarageSelection, setWaterSewarageSelection] = useState({ water: true, sewerage: false });
@@ -88,9 +95,16 @@ const WSEditConnectionDetails = ({ config, onSelect, userType, formData, setErro
     
     return (
         <React.Fragment>
-            {connectionDetails.map((connectionDetail, index) => (
-                <ConnectionDetails key={connectionDetail.key} index={index} connectionDetail={connectionDetail} {...commonProps} />
-            ))}
+            {connectionDetails?.map((connectionDetail, index) =>
+            connectionDetail ? (
+                <ConnectionDetails
+                key={connectionDetail?.key || index}
+                index={index}
+                connectionDetail={connectionDetail}
+                {...commonProps}
+                />
+            ) : null
+            )}
         </React.Fragment>
     );
 };
@@ -139,7 +153,11 @@ const ConnectionDetails = (_props) => {
                     }
                 });
                 if (isErrorsFound) setIsErrors(true);
-                let ob = [{ ...formValue }];
+                let ob = [{
+                ...connectionDetail,
+                ...formValue
+                }];
+
                 setConnectionDetails(ob);
                 trigger();
             }
@@ -273,7 +291,7 @@ const ConnectionDetails = (_props) => {
                                 />
                             </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.proposedTaps ? errors?.proposedTaps?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedTaps ? errors?.proposedTaps?.message : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PROPOSED_PIPE_SIZE_IN_INCHES_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                             <Controller
@@ -299,7 +317,7 @@ const ConnectionDetails = (_props) => {
                                 )}
                             />
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.proposedPipeSize ? errors?.proposedPipeSize?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedPipeSize ? errors?.proposedPipeSize?.message : ""}</CardLabelError>
                     </div>
                 )}
                 {connectionDetail?.serviceName !== "WATER" && (
@@ -331,7 +349,7 @@ const ConnectionDetails = (_props) => {
                                 />
                             </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.proposedWaterClosets ? errors?.proposedWaterClosets?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedWaterClosets ? errors?.proposedWaterClosets?.message : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PROPOSED_WATER_TOILETS_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                             <div className="field">
@@ -359,7 +377,7 @@ const ConnectionDetails = (_props) => {
                                 />
                             </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.proposedToilets ? errors?.proposedToilets?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedToilets ? errors?.proposedToilets?.message : ""}</CardLabelError>
                     </div>
                 )}
             </div>}

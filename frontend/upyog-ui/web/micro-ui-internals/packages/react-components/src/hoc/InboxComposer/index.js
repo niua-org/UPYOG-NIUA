@@ -211,12 +211,17 @@ const InboxComposer = ({
               <Loader />
             ) : (
               <div>
-                {propsForInboxTable?.data?.length < 1 ? (
+                {!propsForInboxTable?.data?.length < 1 ? (
                   <Card className="margin-unset text-align-center">
                     {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
                   </Card>
                 ) : (
-                  <Table t={t} {...propsForInboxTable} />
+                  <Table 
+                    t={t} 
+                    {...propsForInboxTable}
+                    data={propsForInboxTable?.data || []}
+                    columns={propsForInboxTable?.columns || []}
+                  />
                 )}
               </div>
             )}
@@ -253,12 +258,17 @@ const InboxComposer = ({
           <Loader />
         ) : (
           <div>
-            {propsForInboxTable?.data?.length < 1 ? (
+            {!propsForInboxTable?.data?.length < 1 ? (
               <Card className="margin-unset text-align-center">
                 {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
               </Card>
             ) : (
-              <Table t={t} {...propsForInboxTable} />
+              <Table 
+                t={t} 
+                {...propsForInboxTable}
+                data={propsForInboxTable?.data || []}
+                columns={propsForInboxTable?.columns || []}
+              />
             )}
           </div>
         )}
@@ -294,7 +304,12 @@ const InboxComposer = ({
               {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
             </Card>
           ) : (
-            <Table t={t} {...propsForInboxTable} />
+            <Table 
+              t={t} 
+              {...propsForInboxTable}
+              data={propsForInboxTable?.data || []}
+              columns={propsForInboxTable?.columns || []}
+            />
           )}
         </div>
       )}
