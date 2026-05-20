@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import { toDateString } from "../utils";
 
 
-const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowToast, ActionBarStyle = {}, MenuStyle = {}, parentRoute, tenantId }) => {
+const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, setShowToast, ActionBarStyle = {}, MenuStyle = {}, parentRoute, tenantId }) => {
   const isMobile = window.Digit.Utils.browser.isMobile();
   const todaydate = new Date();
   const today = todaydate.toISOString().split("T")[0];
@@ -21,12 +21,14 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
   const fromDateFormatted = fromDate.toISOString().split("T")[0];
   const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
     defaultValues: {
+      applicationNo: "",
+      fromDate: "",
+      toDate: "",
+      status: "",
       offset: 0,
       limit: !isMobile && 10,
       sortBy: "commencementDate",
       sortOrder: "DESC",
-      fromDate: fromDateFormatted,
-      toDate: today,
     }
   })
 
@@ -424,7 +426,19 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
         </SearchField>
         <SearchField>
           <label>{t("AST_APPLICATION_ID")}</label>
-          <TextInput name="applicationNo" {...register("applicationNo")} />
+          <Controller
+            control={control}
+            name="applicationNo"
+            render={({ field }) => (
+                <TextInput
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    inputRef={field.ref}
+                />
+            )}
+            />
           </SearchField>
 
         <SearchField>
@@ -449,8 +463,8 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
             onClick={() => {
               reset({
                 applicationNo: "",
-                fromDate: fromDateFormatted,
-                toDate: today,
+                fromDate: "",
+                toDate: "",
                 status: "",
                 offset: 0,
                 limit: 10,
@@ -458,7 +472,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, data, count, setShowTo
                 sortOrder: "DESC"
               });
               setShowToast(null);
-              previousPage();
+              onClear();
             }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
         </SearchField>
       </SearchForm>

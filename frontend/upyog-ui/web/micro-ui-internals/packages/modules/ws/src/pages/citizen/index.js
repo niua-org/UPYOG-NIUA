@@ -55,7 +55,7 @@ const App = ({ path }) => {
           <Route path={`/my-payments`} element={<PrivateRoute><WSMyPayments /></PrivateRoute>} />
           <Route path={`/my-applications`} element={<PrivateRoute><WSMyApplications /></PrivateRoute>} />
           <Route path={`/my-connections`} element={<PrivateRoute><WSMyConnections /></PrivateRoute>} />
-          <Route path={`/connection/application/:acknowledgementIds`} element={<PrivateRoute><WSCitizenApplicationDetails /></PrivateRoute>} />
+          <Route path={`/connection/application/:applicationType/:tenantId/:financialYear/:applicationNo`} element={ <PrivateRoute><WSCitizenApplicationDetails /></PrivateRoute> } />
           <Route path={`/connection/additional/:acknowledgementIds`} element={<PrivateRoute><WSAdditionalDetails /></PrivateRoute>} />
           <Route path={`/connection/details/:acknowledgementIds`} element={<PrivateRoute><WSCitizenConnectionDetails /></PrivateRoute>} />
           <Route path={`/consumption/details`} element={<PrivateRoute><WSCitizenConsumptionDetails /></PrivateRoute>} />

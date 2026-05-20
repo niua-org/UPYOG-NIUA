@@ -652,7 +652,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                     {t("ADD_NEW_ADDRESS")}
                   </button>
                 </div>
-// Passing refresh callback to re-fetch updated addresses after add/edit
+
                 {showModal && (
                   <Address
                     refreshAddresses={userSearchNewV2}

@@ -18,12 +18,11 @@ const WSResponse = (props) => {
   const { isLoading: waterLoading, isError: waterError, data: waterApplicationDetails } = Digit.Hooks.ws.useWSDetailsPage(t, tenantId, filters?.applicationNumber, "WATER", { enabled: filters?.applicationNumber ? true : false });
   const { isLoading: sewerageLoading, isError: sewerageError, data: sewerageApplicationDetails } = Digit.Hooks.ws.useWSDetailsPage(t, tenantId, filters?.applicationNumber1, "SEWERAGE", { enabled: filters?.applicationNumber1 ? true : false });
 
-  useEffect(async () => {
+  useEffect(() => {
     setWaterApplicationData(waterApplicationDetails);
     setSewerageApplicationData(sewerageApplicationDetails);
-
   }, [waterApplicationDetails, sewerageApplicationDetails]);
-  
+
   const { data: oldDataWater } = Digit.Hooks.ws.useOldValue({
     tenantId,
     filters: { connectionNumber: waterApplicationData?.applicationData?.connectionNo, isConnectionSearch: true },
@@ -40,9 +39,9 @@ const WSResponse = (props) => {
     enabled: sewerageApplicationData?.applicationData?.applicationType?.includes("MODIFY_") ? true : false
   });
 
-  const oldApplicationWater =  oldDataWater?.WaterConnection?.[oldDataWater?.WaterConnection?.length - 1] 
+  const oldApplicationWater = oldDataWater?.WaterConnection?.[oldDataWater?.WaterConnection?.length - 1]
 
-  const oldApplicationSew = oldDataSew?.SewerageConnections?.[oldDataSew?.SewerageConnections?.length - 1] 
+  const oldApplicationSew = oldDataSew?.SewerageConnections?.[oldDataSew?.SewerageConnections?.length - 1]
 
 
   const handleAckPdfDownloadWater = async () => {

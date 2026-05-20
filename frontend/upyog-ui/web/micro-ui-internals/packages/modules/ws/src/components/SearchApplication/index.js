@@ -18,6 +18,14 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
   const { t } = useTranslation();
   const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
     defaultValues: {
+      applicationNumber: "",
+      connectionNumber: "",
+      mobileNumber: "",
+      applicationType: "",
+      applicationStatus: "",
+      fromDate: "",
+      toDate: "",
+      tradeName: "",
       offset: 0,
       limit: 10,
       sortBy: "commencementDate",

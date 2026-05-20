@@ -9,8 +9,8 @@ const noop = () => {};
 const Table = ({
   className = "table",
   t,
-  data,
-  columns,
+  data = [],       
+  columns = [], 
   getCellProps,
   currentPage = 0,
   pageSizeLimit = 10,

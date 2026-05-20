@@ -8,6 +8,8 @@ import _, { keys } from "lodash";
 import * as func from "../utils";
 
 const createConnectionDetails = () => ({
+  key: Date.now(),
+
   water: true,
   sewerage: false,
 
@@ -87,9 +89,16 @@ const WSConnectionDetails = ({ config, onSelect, userType, formData, setError, f
 
   return (
     <React.Fragment>
-      {connectionDetails.map((connectionDetail, index) => (
-        <ConnectionDetails key={connectionDetail.key} index={index} connectionDetail={connectionDetail} {...commonProps} />
-      ))}
+      {connectionDetails?.map((connectionDetail, index) =>
+        connectionDetail ? (
+          <ConnectionDetails
+            key={connectionDetail.key || index}
+            index={index}
+            connectionDetail={connectionDetail}
+            {...commonProps}
+          />
+        ) : null
+      )}
     </React.Fragment>
   );
 };
@@ -137,7 +146,10 @@ const ConnectionDetails = (_props) => {
           }
         });
         if (isErrorsFound) setIsErrors(true);
-        let ob = [{ ...formValue }];
+        let ob = [{
+          ...connectionDetail,
+          ...formValue
+        }];
         setConnectionDetails(ob);
         trigger();
       }
@@ -263,7 +275,7 @@ errorStyle={(localFormState.touchedFields.proposedTaps && errors?.proposedTaps?.
                 />
               </div>
             </LabelFieldPair>
-            <CardLabelError style={errorStyle}>{localFormState.touched.proposedTaps ? errors?.proposedTaps?.message : ""}</CardLabelError>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedTaps ? errors?.proposedTaps?.message : ""}</CardLabelError>
             <LabelFieldPair>
               <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%", paddingTop:"10px"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PROPOSED_PIPE_SIZE_IN_INCHES_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
               <Controller
@@ -289,7 +301,7 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                 )}
               />
             </LabelFieldPair>
-            <CardLabelError style={errorStyle}>{localFormState.touched.proposedPipeSize ? errors?.proposedPipeSize?.message : ""}</CardLabelError>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedPipeSize ? errors?.proposedPipeSize?.message : ""}</CardLabelError>
           </div>
         )}
         {connectionDetail?.sewerage && (
@@ -309,7 +321,7 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                       type="number"
                       value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedWaterClosets"}
-                      errorStyle={(localFormState.touched.proposedWaterClosets && errors?.proposedWaterClosets?.message) ? true : false}
+                      errorStyle={(localFormState.touchedFields.proposedWaterClosets && errors?.proposedWaterClosets?.message) ? true : false}
                       onChange={(e) => {
                         field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedWaterClosets" });
@@ -321,7 +333,7 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                 />
               </div>
             </LabelFieldPair>
-            <CardLabelError style={errorStyle}>{localFormState.touched.proposedWaterClosets ? errors?.proposedWaterClosets?.message : ""}</CardLabelError>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedWaterClosets ? errors?.proposedWaterClosets?.message : ""}</CardLabelError>
             <LabelFieldPair>
               <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PROPOSED_WATER_TOILETS_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
               <div className="field">
@@ -337,7 +349,7 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                       type="number"
                       value={field.value}
                       autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "proposedToilets"}
-                      errorStyle={(localFormState.touched.proposedToilets && errors?.proposedToilets?.message) ? true : false}
+                      errorStyle={(localFormState.touchedFields.proposedToilets && errors?.proposedToilets?.message) ? true : false}
                       onChange={(e) => {
                         field.onChange(e.target.value);
                         setFocusIndex({ index: connectionDetail?.key, type: "proposedToilets" });
@@ -349,7 +361,7 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
                 />
               </div>
             </LabelFieldPair>
-            <CardLabelError style={errorStyle}>{localFormState.touched.proposedToilets ? errors?.proposedToilets?.message : ""}</CardLabelError>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedToilets ? errors?.proposedToilets?.message : ""}</CardLabelError>
           </div>
         )}
       </div>
