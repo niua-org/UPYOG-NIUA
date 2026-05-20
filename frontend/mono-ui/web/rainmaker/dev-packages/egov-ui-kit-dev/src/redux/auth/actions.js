@@ -6,7 +6,6 @@ import { prepareFormData ,getUserSearchedResponse} from "egov-ui-kit/utils/commo
 import get from "lodash/get";
 import {
   setTenantId,
-  getTenantId,
   getAccessToken,
   setUserInfo,
   setAccessToken,
@@ -137,9 +136,10 @@ export const logout = () => {
   return async () => {
     try {
       const authToken = getAccessToken();
+      const tenantId = localStorageGet("tenant-id") || "pg.citya";
+      console.log("tenantId in logout action", tenantId);
       if (authToken) {
-        const tenantId = getTenantId();
-        const response = await httpRequest(AUTH.LOGOUT.URL, AUTH.LOGOUT.ACTION, [], { "tenantId": tenantId, "access_token" : authToken });
+        const response = await httpRequest(`${AUTH.LOGOUT.URL}?tenantId=${tenantId}`, AUTH.LOGOUT.ACTION, [], { "access_token" : authToken });
       } else {
         clearUserDetails();
         process.env.REACT_APP_NAME === "Citizen"
