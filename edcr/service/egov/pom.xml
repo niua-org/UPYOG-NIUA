@@ -166,7 +166,7 @@
 		<jfreechart-version>1.5.4</jfreechart-version>
 		<groovy-version>3.0.21</groovy-version>
 		<itext-version>2.1.7</itext-version>
-		<commons-javaflow-version>20060411</commons-javaflow-version>
+<!--		<commons-javaflow-version>20060411</commons-javaflow-version>-->
 <!--		<jexcelapi-version>2.6.12</jexcelapi-version>-->
         <commons-beanutils-version>1.11.0</commons-beanutils-version>
         <commons-config2-version>2.13.0</commons-config2-version>
