@@ -873,7 +873,7 @@ config:
         image-name: "apply-workflow"
         dockerfile: "build/maven/Dockerfile"
         
-  - name: "builds/upyog/municipal-services/advertisement-services"
+  - name: "builds/upyog/municipal-services/adv-services"
     build:
       - work-dir: "municipal-services/advertisement-service"
         image-name: "adv-services"
