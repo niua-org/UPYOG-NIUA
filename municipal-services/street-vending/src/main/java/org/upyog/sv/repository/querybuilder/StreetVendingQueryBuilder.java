@@ -94,6 +94,15 @@ public class StreetVendingQueryBuilder {
 			query.append(" sv.application_no = ? ");
 			preparedStmtList.add(criteria.getApplicationNumber());
 		}
+
+		if (!ObjectUtils.isEmpty(criteria.getApplicationNumbers())) {
+			List<String> applicationNumbers = criteria.getApplicationNumbers();
+			addClauseIfRequired(query,preparedStmtList);
+			query.append(" sv.application_no IN (")
+					.append(createQuery(applicationNumbers))
+					.append(")");
+			addToPreparedStatement(preparedStmtList, applicationNumbers);
+		}
 		if (!ObjectUtils.isEmpty(criteria.getFromDate())) {
 			addClauseIfRequired(query, preparedStmtList);
 			query.append(" sv.application_date >= CAST(? AS bigint) ");
