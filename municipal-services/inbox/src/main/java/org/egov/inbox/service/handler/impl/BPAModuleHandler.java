@@ -19,6 +19,11 @@ import java.util.stream.Collectors;
 import static org.egov.inbox.util.BpaConstants.*;
 import static org.egov.inbox.util.FSMConstants.COUNT;
 
+/**
+ * BPAModuleHandler is responsible for handling the inbox operations
+ * specific to the "BPA" module. It implements the ModuleInboxHandler interface
+ * to provide module-specific behavior.
+ */
 @Slf4j
 @Service
 public class BPAModuleHandler implements ModuleInboxHandler {
@@ -29,42 +34,88 @@ public class BPAModuleHandler implements ModuleInboxHandler {
         @Autowired
         private WorkflowService workflowService;
 
+        /**
+         * Checks if this handler supports the given module name.
+         *
+         * @param moduleName The name of the module to check.
+         * @return true if the module name matches "BPA", false otherwise.
+         */
         @Override
         public boolean supports(String moduleName) {
                 return BPA.equals(moduleName);
         }
 
+        /**
+         * Fetches application IDs for the BPA module based on the provided context.
+         * This method retrieves application numbers from the searcher and updates the context
+         * with the retrieved IDs.
+         *
+         * @param ctx The InboxContext containing the search criteria and other details.
+         */
         @Override
         public void fetchApplicationIds(InboxContext ctx) {
+                // Fetch application numbers using the BPA service
                 List<String> ids = bpaService.fetchApplicationNumbersFromSearcher(
                                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
 
+                // If no IDs are found, mark the search result as empty and return
                 if (CollectionUtils.isEmpty(ids)) {
                         ctx.setSearchResultEmpty(true);
                         return;
                 }
 
+                // Add the fetched IDs to the module search criteria
                 ctx.getCriteria().getModuleSearchCriteria().put(BPA_APPLICATION_NUMBER_PARAM, ids);
 
+                // Add the fetched IDs as business keys in the context
                 ctx.addBusinessKeys(ids);
         }
 
+        /**
+         * Fetches the count of applications for the BPA module based on the provided context.
+         *
+         * @param ctx The InboxContext containing the search criteria and other details.
+         * @return The count of applications matching the criteria.
+         */
         @Override
         public int fetchCount(InboxContext ctx) {
+                // Fetch the application count using the BPA service
                 return bpaService.fetchApplicationCountFromSearcher(
                                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
         }
 
+        /**
+         * Returns the parameter key used for application IDs in the BPA module.
+         *
+         * @return The parameter key for application IDs.
+         */
         @Override
         public String getApplicationIdParamKey() {
                 return BPA_APPLICATION_NUMBER_PARAM;
         }
 
+        /**
+         * Returns a list of parameters to be removed from the search criteria.
+         * For the BPA module, specific parameters like status, mobile number, locality, and offset are removed.
+         *
+         * @return A list of parameter keys to be removed.
+         */
         @Override
         public List<String> paramsToRemove() {
                 return List.of(STATUS_PARAM, MOBILE_NUMBER_PARAM, LOCALITY_PARAM, OFFSET_PARAM);
         }
 
+        /**
+         * Enriches the status count map before fetching data for the BPA module.
+         * This method handles citizen-specific and locality-specific status counts.
+         *
+         * @param ctx                     The InboxContext containing the search criteria and other details.
+         * @param statusCountMap          The current status count map to be enriched.
+         * @param tenantAndApplnNumbersMap A map of tenant IDs to application numbers.
+         * @param roles                   The roles of the user.
+         * @param inputStatuses           The input statuses provided in the criteria.
+         * @return The enriched status count map.
+         */
         @Override
         public List<HashMap<String, Object>> enrichStatusCountPreFetch(
                         InboxContext ctx,
@@ -73,15 +124,27 @@ public class BPAModuleHandler implements ModuleInboxHandler {
                         List<String> roles,
                         List<String> inputStatuses) {
 
+                // Handle citizen-specific status counts
                 statusCountMap = handleBpaCitizenStatusCount(
                                 ctx, statusCountMap, tenantAndApplnNumbersMap, roles);
 
+                // Handle locality-specific status counts
                 statusCountMap = handleBpaLocalityStatusCount(
                                 ctx, statusCountMap, inputStatuses);
 
                 return statusCountMap;
         }
 
+        /**
+         * Enriches the status count map after assembling data for the BPA module.
+         *
+         * @param ctx            The InboxContext containing the search criteria and other details.
+         * @param statusCountMap The current status count map to be enriched.
+         * @param inputStatuses  The input statuses provided in the criteria.
+         * @param inboxes        The list of inbox items.
+         * @param totalCount     The total count of applications.
+         * @return A PostAssembleResult containing the enriched status count map and total count.
+         */
         @Override
         public PostAssembleResult enrichStatusCountPostAssemble(
                         InboxContext ctx,
@@ -93,6 +156,18 @@ public class BPAModuleHandler implements ModuleInboxHandler {
                 return new PostAssembleResult(statusCountMap, totalCount);
         }
 
+        /**
+         * Fetches process instances for the BPA module based on the provided criteria.
+         * This method handles citizen-specific logic for fetching process instances.
+         *
+         * @param processCriteria         The criteria for fetching process instances.
+         * @param requestInfo             The request information containing user details.
+         * @param workflowService         The workflow service to fetch process instances.
+         * @param tenantAndApplnNumbersMap A map of tenant IDs to application numbers.
+         * @param businessIds             The list of business IDs.
+         * @param roles                   The roles of the user.
+         * @return A ProcessInstanceResponse containing the fetched process instances.
+         */
         @Override
         public ProcessInstanceResponse getProcessInstances(
                         ProcessInstanceSearchCriteria processCriteria,
@@ -153,6 +228,15 @@ public class BPAModuleHandler implements ModuleInboxHandler {
                 return mergedResponse;
         }
 
+        /**
+         * Handles citizen-specific status counts for the BPA module.
+         *
+         * @param ctx                     The InboxContext containing the search criteria and other details.
+         * @param statusCountMap          The current status count map to be enriched.
+         * @param tenantAndApplnNumbersMap A map of tenant IDs to application numbers.
+         * @param roles                   The roles of the user.
+         * @return The enriched status count map.
+         */
         private List<HashMap<String, Object>> handleBpaCitizenStatusCount(
                         InboxContext ctx,
                         List<HashMap<String, Object>> statusCountMap,
@@ -266,6 +350,18 @@ public class BPAModuleHandler implements ModuleInboxHandler {
                                 : bpaCitizenMap;
         }
 
+        
+
+
+
+        /**
+         * Handles locality-specific status counts for the BPA module.
+         *
+         * @param ctx            The InboxContext containing the search criteria and other details.
+         * @param statusCountMap The current status count map to be enriched.
+         * @param inputStatuses  The input statuses provided in the criteria.
+         * @return The enriched status count map.
+         */
         private List<HashMap<String, Object>> handleBpaLocalityStatusCount(
                         InboxContext ctx,
                         List<HashMap<String, Object>> statusCountMap,

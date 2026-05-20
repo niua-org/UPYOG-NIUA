@@ -35,272 +35,362 @@ The service aggregates data from workflow and configured municipal services, to 
 
 ---
 
-## Refactoring Changes
+# Architecture
 
-The original monolithic `InboxService.java` (~1000+ lines) has been refactored into a clean layered architecture.
+The Inbox service follows a handler-based modular architecture.
 
-### What Changed
+---
 
-| Before | After |
-|---|---|
-| Single `InboxService.java` with all logic | Split into multiple focused classes |
-| All module if-else blocks in one method | Each module has its own `ModuleInboxHandler` |
-| Hard to add new modules | Add one class in `ModuleHandlers.java` — done |
-| Circular dependency on startup | Resolved using `@Lazy` on `InboxService` injection |
-
-### New Files Added
-
-| File | Purpose |
-|---|---|
-| `service/handler/InboxOrchestrator.java` | Main pipeline coordinator |
-| `service/handler/InboxAssembler.java` | Builds final `List<Inbox>` from business objects + process instances |
-| `service/handler/StatusCountService.java` | Handles BPA citizen/locality status count + FSM vehicle enrichment |
-| `service/handler/ModuleHandlers.java` | All module-specific handlers |
-| `service/handler/ModuleHandlerRegistry.java` | Auto-collects all `ModuleInboxHandler` beans via Spring |
-| `service/handler/ModuleInboxHandler.java` | Interface that every module handler implements |
-| `service/handler/InboxContext.java` | Per-request value object passed through the pipeline |
-
-
-## Architecture Flow
+# Architecture Flow
 
 ```
-HTTP Request
-     │
-     ▼
+Client Request
+      |
+      v
 InboxController
-     │
-     ▼
-InboxService.fetchInboxData()                    
-     │
-     ▼
-InboxOrchestrator.fetchInboxData()
-     │
-     ├── workflowService.getProcessCount()
-     ├── workflowService.getNearingSlaProcessCount()
-     ├── workflowService.getProcessStatusCount()
-     │
-     ├── PATH A: No moduleSearchCriteria
-     │       └── Workflow → get process instances
-     │           └── InboxService.fetchModuleObjectsPublic() → return inboxes
-     │
-     └── PATH B: moduleSearchCriteria present
-             │
-             ├── workflowService.getBusinessService()
-             ├── workflowService.getActionableStatusesForRole()
-             │
-             ├── StatusCountService.handleBpaCitizenStatusCount()
-             ├── StatusCountService.handleBpaLocalityStatusCount()
-             │
-             ├── ModuleHandlerRegistry.getHandler(moduleName)
-             │       └── handler.fetchCount()
-             │       └── handler.fetchApplicationIds()
-             │       └── handler.paramsToRemove()
-             │
-             ├── [WS/SW Billing] BillingAmendmentInboxFilterService
-             │
-             ├── InboxAssembler.assemble()
-             │       ├── [WS/SW]  → ElasticSearch
-             │       ├── [Others] → InboxService.fetchModuleObjectsPublic()
-             │       ├── workflowService.getProcessInstance()
-             │       └── build List<Inbox>
-             │
-             └── [FSM] StatusCountService.enrichFsmStatusCount()
-                     ├── fetchVehicleTripResponsePublic()
-                     ├── populateStatusCountMapPublic()
-                     ├── fetchVehicleStatusForApplicationPublic()
-                     └── aggregateFsmStatuses()
-                             │
-                             ▼
-                        InboxResponse
+      |
+      v
+InboxService
+      |
+      +------------------------------------------------------------------+
+      |                                                                  |
+      v                                                                  v
+WorkflowService                                              ModuleHandlerRegistry
+      |                                                                  |
+      |                                                                  v
+      |                                                       ModuleInboxHandler
+      |                                                                  |
+      |     +------------+------------+------------+------------+------------+
+      |     |            |            |            |            |            |
+      |     v            v            v            v            v            v
+      | ASSETModule  BPAModule   ChallanModule  CHBModule   CNDModule   EWasteModule
+      |   Handler      Handler      Handler       Handler      Handler      Handler
+      |
+      |     +------------+------------+------------+------------+------------+
+      |     |            |            |            |            |
+      |     v            v            v            v            v
+      | FSMModule    MTModule     NDCModule    NOCModule    PGRAiModule
+      |  Handler      Handler      Handler      Handler       Handler
+      |
+      |     +------------+------------+------------+------------+------------+
+      |     |            |            |            |            |
+      |     v            v            v            v            v
+      | PTModule     PTRModule    SVModule      TLModule      TPModule
+      |  Handler      Handler      Handler       Handler       Handler
+      |
+      |                      +-------------------+-------------------+
+      |                      |                                       |
+      |                      v                                       v
+      |                 WSModuleHandler                        WTModuleHandler
+      |                      |
+      |                      v
+      |               ElasticSearch
+      |
+      +------------------------------------------------------------------+
+      |
+      v
+InboxAssembler
+      |
+      +----------------------------+-----------------------------+
+      |                            |                             |
+      v                            v                             v
+Workflow Data              Business Object Data          SLA Enrichment
+      |
+      v
+Final Inbox Response
+      |
+      v
+Client Response
 ```
 
-### CHB Example — Which files are involved
+---
 
-When a request comes for `moduleName: community-hall-booking`, here is which file does what:
+# Core Components
+
+## InboxService
+
+Location:
 
 ```
-POST /inbox/v1/_search
-     │
-     ▼
-InboxController
-     │  reads moduleName = "community-hall-booking"
-     ▼
-InboxService.java
-     │  delegates to InboxOrchestrator
-     ▼
-InboxOrchestrator.java
-     │  calls workflowService for counts and status map
-     │  calls ModuleHandlerRegistry → finds CHBModuleHandler
-     ▼
-ModuleHandlers.java  (CHBModuleHandler)
-     │  fetchCount()
-     │    → CommunityHallInboxFilterService.java
-     │        → egov-searcher → returns totalCount = 3
-     │
-     │  fetchApplicationIds()
-     │    → CommunityHallInboxFilterService.java
-     │        → egov-searcher → returns ["CHB-2024-001", "CHB-2024-002", "CHB-2024-003"]
-     │    → puts bookingNo = ["CHB-2024-001",...] in moduleSearchCriteria
-     │
-     │  paramsToRemove() → removes "offset", "status" from moduleSearchCriteria
-     ▼
-InboxAssembler.java
-     │  fetchModuleObjectsPublic()
-     │    → InboxService.java → chb-service/_search
-     │        → returns 3 booking JSONObjects
-     │
-     │  getProcessInstance()
-     │    → WorkflowService.java → workflow-v2
-     │        → returns 3 ProcessInstances
-     │
-     │  build List<Inbox>
-     │    → Inbox { processInstance, businessObject: { bookingNo: "CHB-2024-001" } }
-     │    → Inbox { processInstance, businessObject: { bookingNo: "CHB-2024-002" } }
-     │    → Inbox { processInstance, businessObject: { bookingNo: "CHB-2024-003" } }
-     ▼
-InboxResponse {
-  totalCount: 3,
-  nearingSlaCount: 1,
-  statusMap: [ { status: "PENDING", count: 2 }, { status: "APPROVED", count: 1 } ],
-  items: [ Inbox, Inbox, Inbox ]
+org.egov.inbox.service.InboxService
+```
+
+---
+
+## ModuleInboxHandler
+
+Location:
+
+```
+org.egov.inbox.service.handler.ModuleInboxHandler
+```
+
+---
+
+## ModuleHandlerRegistry
+
+Location:
+
+```
+org.egov.inbox.service.handler.ModuleHandlerRegistry
+```
+
+---
+
+## InboxAssembler
+
+Location:
+
+```
+org.egov.inbox.service.handler.InboxAssembler
+```
+
+---
+
+## InboxContext
+
+Location:
+
+```
+org.egov.inbox.service.handler.InboxContext
+```
+
+---
+
+# Current Module Handlers
+
+| Module  | Handler              |
+| ------- | -------------------- |
+| ASSET   | ASSETModuleHandler   |
+| BPA     | BPAModuleHandler     |
+| Challan | ChallanModuleHandler |
+| CHB     | CHBModuleHandler     |
+| CND     | CNDModuleHandler     |
+| EWaste  | EWasteModuleHandler  |
+| FSM     | FSMModuleHandler     |
+| MT      | MTModuleHandler      |
+| NDC     | NDCModuleHandler     |
+| NOC     | NOCModuleHandler     |
+| PGRAI   | PGRAiModuleHandler   |
+| PT      | PTModuleHandler      |
+| PTR     | PTRModuleHandler     |
+| SV      | SVModuleHandler      |
+| TL      | TLModuleHandler      |
+| TP      | TPModuleHandler      |
+| WS      | WSModuleHandler      |
+| WT      | WTModuleHandler      |
+
+---
+
+# Application Properties Configuration
+
+```
+service.search.mapping={
+"booking-refund":{
+    "searchPath":"http://localhost:8085/chb-services/booking/v1/_search",
+    "dataRoot":"hallsBookingApplication",
+    "applNosParam":"bookingNo",
+    "businessIdProperty":"bookingNo",
+    "applsStatusParam":"status"
+}
 }
 ```
 
 ---
 
-## Supported Modules
+# How To Add New Module
 
-| Module | Handler Class | Filter Service |
-|---|---|---|
-| TL (Trade License) | `TLModuleHandler` | `TLInboxFilterService` |
-| BPAREG | `TLModuleHandler` | `TLInboxFilterService` |
-| BPA (Building Plan) | `BPAModuleHandler` | `BPAInboxFilterService` |
-| PT (Property Tax) | `PTModuleHandler` | `PtInboxFilterService` |
-| PTR (Pet Registration) | `PTRModuleHandler` | `PtrInboxFilterService` |
-| NOC | `NOCModuleHandler` | `NOCInboxFilterService` |
-| CHB (Community Hall) | `CHBModuleHandler` | `CommunityHallInboxFilterService` |
-| NDC (No Dues Certificate) | `NDCModuleHandler` | `NDCInboxFilterService` |
-| CND (Construction & Demolition) | `CNDModuleHandler` | `CNDInboxFilterService` |
-| EWASTE | `EWASTEModuleHandler` | `EwasteInboxFilterService` |
-| ASSET | `ASSETModuleHandler` | `AssetInboxFilterService` |
-| SV (Street Vending) | `SVModuleHandler` | `StreetVendingInboxFilterService` |
-| WT (Water Tanker) | `WTModuleHandler` | `WTInboxFilterService` |
-| MT (Mobile Toilet) | `MTModuleHandler` | `MTInboxFilterService` |
-| TP (Tree Pruning) | `TPModuleHandler` | `TPInboxFilterService` |
-| PGR AI | `PGRAiModuleHandler` | `PGRAiInboxFilterService` |
-| Challan | `ChallanModuleHandler` | `ChallanInboxFilterService` |
-| WS (Water & Sewerage) | ElasticSearch path | `WSInboxFilterService` |
-| SW (Sewerage) | ElasticSearch path | `SWInboxFilterService` |
-| FSM | FSM vehicle path | `FSMInboxFilterService` |
-| BS WS/SW (Billing Amendment) | Billing path | `BillingAmendmentInboxFilterService` |
+## Step 1
+
+Create constants file.
+
+Example:
+
+```
+org.egov.inbox.util.NewModuleConstants
+```
 
 ---
 
-## How to Add a New Module
+## Step 2
 
-Example: **Community Hall Booking (CHB)**
+Create Inbox Filter Service.
 
-### Step 1 — `util/CommunityHallConstants.java`
+Example:
 
-```java
-public class CommunityHallConstants {
-    public static final String CHB = "community-hall-booking";
-    public static final String CHB_BOOKING_NO_PARAM = "bookingNo";
-}
+```
+NewModuleInboxFilterService
 ```
 
-### Step 2 — `service/CommunityHallInboxFilterService.java`
+Methods:
 
-Follow the same pattern as other filter services. Implement:
+```
+fetchApplicationNumbersFromSearcher()
 
-```java
+fetchApplicationCountFromSearcher()
+```
+
+---
+
+## Step 3
+
+Create Module Handler.
+
+Location:
+
+```
+org.egov.inbox.service.handler.impl
+```
+
+Example:
+
+```
 @Service
-public class CommunityHallInboxFilterService {
-
-    public List<String> fetchApplicationNumbersFromSearcher(
-            InboxSearchCriteria criteria,
-            HashMap<String, String> statusIdNameMap,
-            RequestInfo requestInfo) {
-        // call searcher and return list of booking numbers
-    }
-
-    public Integer fetchApplicationCountFromSearcher(
-            InboxSearchCriteria criteria,
-            HashMap<String, String> statusIdNameMap,
-            RequestInfo requestInfo) {
-        // return total count
-    }
-}
+public class NewModuleHandler implements ModuleInboxHandler
 ```
 
-### Step 3 — `service/handler/ModuleHandlers.java`
+Implement:
 
-Add at the bottom of the file:
-
-```java
-@Slf4j
-@Service
-class CHBModuleHandler implements ModuleInboxHandler {
-
-    @Autowired
-    private CommunityHallInboxFilterService chbService;
-
-    @Override
-    public boolean supports(String moduleName) {
-        return CHB.equals(moduleName);
-    }
-
-    @Override
-    public void fetchApplicationIds(InboxContext ctx) {
-        List<String> ids = chbService.fetchApplicationNumbersFromSearcher(
-                ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
-        if (CollectionUtils.isEmpty(ids)) {
-            ctx.setSearchResultEmpty(true);
-            return;
-        }
-        ctx.getCriteria().getModuleSearchCriteria()
-                .put(CHB_BOOKING_NO_PARAM, ids);
-        ctx.addBusinessKeys(ids);
-    }
-
-    @Override
-    public int fetchCount(InboxContext ctx) {
-        return chbService.fetchApplicationCountFromSearcher(
-                ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
-    }
-
-    @Override
-    public String getApplicationIdParamKey() {
-        return CHB_BOOKING_NO_PARAM;
-    }
-
-    @Override
-    public List<String> paramsToRemove() {
-        return List.of(OFFSET_PARAM, STATUS_PARAM);
-    }
-}
 ```
+supports()
 
-### Step 4 — `resources/application.properties`
+fetchApplicationIds()
 
-```properties
-egov.service.search.mapping={\
-  ...,\
-  "community-hall-booking": {\
-    "searchPath": "http://chb-service/chb/booking/v1/_search",\
-    "dataRoot": "hallsBookingApplication",\
-    "businessIdProperty": "bookingNo",\
-    "applNosParam": "bookingNos",\
-    "applsStatusParam": "applicationStatus"\
-  }\
-}
+fetchCount()
+
+paramsToRemove()
+
+buildBusinessMap()
 ```
-
-> `ModuleHandlerRegistry` automatically picks up the new handler via Spring's `@Service` annotation.
-> No changes needed in `InboxOrchestrator`, `InboxAssembler`, or `StatusCountService`.
 
 ---
 
-## Reference Document
+## Step 4
+
+Add service mapping configuration.
+
+```
+service.search.mapping={
+"NEW_MODULE":{
+    "searchPath":"http://localhost:8080/new-module/v1/_search",
+    "dataRoot":"applications",
+    "applNosParam":"applicationNo",
+    "businessIdProperty":"applicationNo",
+    "applsStatusParam":"status"
+}
+}
+```
+
+---
+
+## Step 5
+
+Add searcher query in:
+
+```
+egov-searcher
+```
+
+---
+
+# How To Connect Through ElasticSearch
+
+If after adding a new module you want inbox data to be fetched from ElasticSearch instead of Searcher, follow the below steps.
+
+---
+
+## Step 1
+
+Update:
+
+```
+isBillingModule()
+```
+
+Example:
+
+```
+return BS_WS_MODULENAME.equalsIgnoreCase(moduleName)
+        || BS_SW_MODULENAME.equalsIgnoreCase(moduleName)
+        || NEW_MODULE.equalsIgnoreCase(moduleName);
+```
+
+---
+
+## Step 2
+
+Update:
+
+```
+InboxAssembler
+```
+
+---
+
+## Step 3
+
+Add ElasticSearch query logic in:
+
+```
+ElasticSearchRepository
+```
+
+---
+
+## Step 4
+
+Configure:
+
+* ElasticSearch Index
+* Index Mapping
+* Data Sync
+
+---
+
+## Step 5
+
+Update:
+
+```
+getApplicationServiceSla()
+```
+
+---
+
+## Step 6
+
+Add module-specific object mapping if required.
+
+Example:
+
+```
+buildBusinessMap()
+```
+
+---
+
+# Workflow Count Handling
+
+```
+@Override
+public boolean isWorkflowTotalCountRequired() {
+    return false;
+}
+```
+
+---
+
+# Nearing SLA Count Handling
+
+```
+@Override
+public boolean isWorkflowNearingSlaCountRequired() {
+    return false;
+}
+```
+
+---
+
+# Reference Document
 
 TBD

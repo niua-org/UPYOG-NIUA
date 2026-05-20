@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * PGRAiModuleHandler is responsible for handling
+ * inbox operations specific to PGR AI module.
+ */
 @Slf4j
 @Service
 public class PGRAiModuleHandler implements ModuleInboxHandler {
@@ -24,38 +28,76 @@ public class PGRAiModuleHandler implements ModuleInboxHandler {
     @Autowired
     private PGRAiInboxFilterService pgrAiService;
 
+    /**
+     * Checks if this handler supports the given module name.
+     *
+     * @param moduleName module name
+     * @return true if module is PGR AI
+     */
     @Override
     public boolean supports(String moduleName) {
         return PGRAiConstants.PGR_MODULE.equals(moduleName);
     }
 
+    /**
+     * Fetches application ids for inbox search
+     * and updates inbox context.
+     *
+     * @param ctx inbox context
+     */
     @Override
     public void fetchApplicationIds(InboxContext ctx) {
         List<String> ids = pgrAiService.fetchApplicationIdsFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
+
         if (CollectionUtils.isEmpty(ids)) {
             ctx.setSearchResultEmpty(true);
             return;
         }
+
         ctx.addBusinessKeys(ids);
     }
 
+    /**
+     * Fetches total application count from searcher.
+     *
+     * @param ctx inbox context
+     * @return total application count
+     */
     @Override
     public int fetchCount(InboxContext ctx) {
         return pgrAiService.fetchApplicationIdsCountFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
     }
 
+    /**
+     * Returns application id parameter key.
+     *
+     * @return application id parameter key
+     */
     @Override
     public String getApplicationIdParamKey() {
         return "serviceRequestId";
     }
 
+    /**
+     * Returns module search params
+     * which should be removed.
+     *
+     * @return list of params to remove
+     */
     @Override
     public List<String> paramsToRemove() {
         return List.of();
     }
 
+    /**
+     * Builds business object map using service request id.
+     *
+     * @param businessObjects business objects response
+     * @param businessIdParam business id parameter
+     * @return mapped business object data
+     */
     @Override
     public Map<String, Object> buildBusinessMap(
             JSONArray businessObjects,

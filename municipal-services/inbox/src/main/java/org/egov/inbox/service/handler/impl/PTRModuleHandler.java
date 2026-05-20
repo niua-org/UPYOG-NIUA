@@ -14,6 +14,10 @@ import static org.egov.inbox.util.PTConstants.ACKNOWLEDGEMENT_IDS_PARAM;
 import static org.egov.inbox.util.PTRConstants.PTR;
 import static org.egov.inbox.util.TLConstants.*;
 
+/**
+ * PTRModuleHandler is responsible for handling
+ * inbox operations specific to PTR module.
+ */
 @Slf4j
 @Service
 public class PTRModuleHandler implements ModuleInboxHandler {
@@ -21,33 +25,64 @@ public class PTRModuleHandler implements ModuleInboxHandler {
     @Autowired
     private PtrInboxFilterService ptrService;
 
+    /**
+     * Checks if this handler supports the given module name.
+     *
+     * @param moduleName module name
+     * @return true if module is PTR
+     */
     @Override
     public boolean supports(String moduleName) {
         return PTR.equals(moduleName);
     }
 
+    /**
+     * Indicates whether workflow nearing SLA count
+     * is required for this module.
+     *
+     * @return false for PTR module
+     */
     @Override
     public boolean isWorkflowNearingSlaCountRequired() {
         return false;
     }
 
+    /**
+     * Fetches application ids for inbox search
+     * and updates inbox context.
+     *
+     * @param ctx inbox context
+     */
     @Override
     public void fetchApplicationIds(InboxContext ctx) {
         List<String> ids = ptrService.fetchApplicationNumbersFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
+
         if (CollectionUtils.isEmpty(ids)) {
             ctx.setSearchResultEmpty(true);
             return;
         }
+
         ctx.getCriteria().getModuleSearchCriteria().put(ACKNOWLEDGEMENT_IDS_PARAM, ids);
         ctx.addBusinessKeys(ids);
     }
 
+    /**
+     * Returns application id parameter key.
+     *
+     * @return application id parameter key
+     */
     @Override
     public String getApplicationIdParamKey() {
         return ACKNOWLEDGEMENT_IDS_PARAM;
     }
 
+    /**
+     * Returns module search params
+     * which should be removed.
+     *
+     * @return list of params to remove
+     */
     @Override
     public List<String> paramsToRemove() {
         return List.of(LOCALITY_PARAM, OFFSET_PARAM);

@@ -34,6 +34,10 @@ import static org.egov.inbox.util.BSConstants.*;
 import static org.egov.inbox.util.SWConstants.SW;
 import static org.egov.inbox.util.WSConstants.WS;
 
+/**
+ * InboxAssembler is responsible for assembling
+ * inbox response using workflow and business objects.
+ */
 @Slf4j
 @Service
 public class InboxAssembler {
@@ -54,6 +58,20 @@ public class InboxAssembler {
         @Autowired
         private ModuleHandlerRegistry registry;
 
+        /**
+         * Assembles inbox response for the provided module.
+         *
+         * @param ctx inbox context
+         * @param processCriteria workflow process search criteria
+         * @param businessServiceName business services
+         * @param srvMap service mapping configuration
+         * @param businessServiceSlaMap SLA mapping
+         * @param tenantAndApplnNumbersMap tenant application mapping
+         * @param roles user roles
+         * @param requestInfo request info
+         * @param workflowService workflow service
+         * @return assembled inbox response
+         */
         public List<Inbox> assemble(
                         InboxContext ctx,
                         ProcessInstanceSearchCriteria processCriteria,
@@ -207,6 +225,16 @@ public class InboxAssembler {
                 return inboxes;
         }
 
+        /**
+         * Builds inbox response objects.
+         *
+         * @param inboxes inbox list
+         * @param businessKeys business keys
+         * @param businessMap business object map
+         * @param processMap workflow process map
+         * @param serviceSearchMap service object map
+         * @param moduleName module name
+         */
         private void buildInboxes(
                         List<Inbox> inboxes,
                         List<String> businessKeys,
@@ -258,6 +286,16 @@ public class InboxAssembler {
                 }
         }
 
+        /**
+         * Builds inbox object for a single business id.
+         *
+         * @param key business id
+         * @param businessMap business object map
+         * @param processMap workflow process map
+         * @param serviceSearchMap service object map
+         * @param isBilling billing module flag
+         * @return inbox object
+         */
         private Inbox buildInbox(
                         String key,
                         Map<String, Object> businessMap,
@@ -292,6 +330,13 @@ public class InboxAssembler {
                 return inbox;
         }
 
+        /**
+         * Builds business object map using business id.
+         *
+         * @param businessObjects business objects response
+         * @param businessIdParam business id parameter
+         * @return mapped business object data
+         */
         private Map<String, Object> buildBusinessMap(
                         JSONArray businessObjects,
                         String businessIdParam) {
@@ -306,12 +351,26 @@ public class InboxAssembler {
                                                 LinkedHashMap::new));
         }
 
+        /**
+         * Checks whether the module is a billing module.
+         *
+         * @param moduleName module name
+         * @return true if module is WS or SW
+         */
         private boolean isBillingModule(String moduleName) {
 
                 return BS_WS_MODULENAME.equalsIgnoreCase(moduleName)
                                 || BS_SW_MODULENAME.equalsIgnoreCase(moduleName);
         }
 
+        /**
+         * Fetches inbox data from elastic search.
+         *
+         * @param criteria inbox search criteria
+         * @param businessServiceSlaMap business service SLA mapping
+         * @param ctx inbox context
+         * @return elastic search response data
+         */
         private List<Map<String, Object>> fetchFromElasticSearch(
                         InboxSearchCriteria criteria,
                         Map<String, Long> businessServiceSlaMap,
@@ -373,6 +432,13 @@ public class InboxAssembler {
                 return result;
         }
 
+        /**
+         * Calculates application service SLA.
+         *
+         * @param slaMap business service SLA mapping
+         * @param data application data
+         * @return remaining SLA in days
+         */
         private Long getApplicationServiceSla(
                         Map<String, Long> slaMap,
                         Object data) {

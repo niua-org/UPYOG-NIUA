@@ -38,6 +38,10 @@ import static org.egov.inbox.util.BpaConstants.*;
 import static org.egov.inbox.util.FSMConstants.*;
 import static org.egov.inbox.util.FSMConstants.COUNT;
 
+/**
+ * FSMModuleHandler is responsible for handling
+ * inbox operations specific to FSM module.
+ */
 @Slf4j
 @Service
 public class FSMModuleHandler implements ModuleInboxHandler {
@@ -59,37 +63,77 @@ public class FSMModuleHandler implements ModuleInboxHandler {
     @Autowired
     private InboxService inboxService; // only for fetchModuleObjectsPublic / toMap
 
+    /**
+     * Checks if this handler supports the given module name.
+     *
+     * @param moduleName module name
+     * @return true if module is FSM
+     */
     @Override
     public boolean supports(String moduleName) {
         return FSM_MODULE.equals(moduleName);
     }
 
+    /**
+     * Fetches FSM application count
+     * and updates inbox context.
+     *
+     * @param ctx inbox context
+     */
     @Override
     public void fetchApplicationIds(InboxContext ctx) {
-        String dsoId = resolveDsoId(ctx);
+        String dsoId = getDsoId(ctx);
 
         Integer count = fsmService.fetchApplicationCountFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo(), dsoId);
         ctx.setTotalCount(count);
     }
 
+    /**
+     * Fetches FSM application count from searcher.
+     *
+     * @param ctx inbox context
+     * @return total application count
+     */
     @Override
     public int fetchCount(InboxContext ctx) {
-        String dsoId = resolveDsoId(ctx);
+        String dsoId = getDsoId(ctx);
         return fsmService.fetchApplicationCountFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo(), dsoId);
     }
 
+    /**
+     * Returns FSM application id parameter key.
+     *
+     * @return application id parameter key
+     */
     @Override
     public String getApplicationIdParamKey() {
         return FSMConstants.APPLICATION_NUMBER_PARAM;
     }
 
+    /**
+     * Returns module search params
+     * which should be removed.
+     *
+     * @return list of params to remove
+     */
     @Override
     public List<String> paramsToRemove() {
         return List.of(LOCALITY_PARAM, OFFSET_PARAM);
     }
 
+    /**
+     * Enriches FSM status count and total count
+     * after inbox assembly.
+     *
+     * @param ctx inbox context
+     * @param statusCountMap status count details
+     * @param inputStatuses requested statuses
+     * @param inboxes inbox response
+     * @param totalCount current total count
+     * @return enriched post assemble result
+     */
     @Override
     public PostAssembleResult enrichStatusCountPostAssemble(
             InboxContext ctx,
@@ -103,6 +147,16 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return new PostAssembleResult(enriched, updatedCount);
     }
 
+    /**
+     * Enriches FSM inbox status count
+     * with vehicle trip details.
+     *
+     * @param ctx inbox context
+     * @param statusCountMap status count details
+     * @param inputStatuses requested statuses
+     * @param inboxes inbox response
+     * @return enriched status count map
+     */
     public List<HashMap<String, Object>> enrichStatusCount(
             InboxContext ctx,
             List<HashMap<String, Object>> statusCountMap,
@@ -189,6 +243,15 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return aggregateFsmStatuses(statusCountMap);
     }
 
+    /**
+     * Calculates the total inbox count by including
+     * additional FSM vehicle trip application counts.
+     *
+     * @param statusCountMap status wise count details
+     * @param inputStatuses requested workflow statuses
+     * @param current existing total count
+     * @return updated total count
+     */
     public Integer getTotalCount(
             List<HashMap<String, Object>> statusCountMap,
             List<String> inputStatuses,
@@ -198,6 +261,7 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         for (HashMap<String, Object> map : statusCountMap) {
             if ((WAITING_FOR_DISPOSAL_STATE.equals(map.get(APPLICATIONSTATUS))
                     || DISPOSED_STATE.equals(map.get(APPLICATIONSTATUS)))
+                    && inputStatuses != null
                     && inputStatuses.contains(map.get(STATUSID))) {
                 extra += (int) map.get(COUNT);
             }
@@ -205,6 +269,14 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return current + extra;
     }
 
+    /**
+     * Fetches vehicle trip application status response.
+     *
+     * @param criteria inbox search criteria
+     * @param requestInfo request info
+     * @param applicationStatus application statuses
+     * @return vehicle application status response
+     */
     private List<Map<String, Object>> fetchVehicleTripResponse(
             InboxSearchCriteria criteria, RequestInfo requestInfo, List<String> applicationStatus) {
         VehicleSearchCriteria vsc = new VehicleSearchCriteria();
@@ -216,6 +288,13 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return new ArrayList<>();
     }
 
+    /**
+     * Populates FSM status count map using vehicle response.
+     *
+     * @param statusCountMap status count map
+     * @param vehicleResponse vehicle response
+     * @param businessService workflow business service
+     */
     private void populateStatusCountMap(
             List<HashMap<String, Object>> statusCountMap,
             List<Map<String, Object>> vehicleResponse,
@@ -237,6 +316,14 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         }
     }
 
+    /**
+     * Fetches vehicle trip details for applications.
+     *
+     * @param applicationNos application numbers
+     * @param requestInfo request info
+     * @param tenantId tenant id
+     * @return vehicle trip details
+     */
     private List<VehicleTripDetail> fetchVehicleStatusForApplication(
             List<String> applicationNos, RequestInfo requestInfo, String tenantId) {
         VehicleTripSearchCriteria criteria = new VehicleTripSearchCriteria();
@@ -245,6 +332,13 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return fetchVehicleTripDetailsByReferenceNo(criteria, requestInfo);
     }
 
+    /**
+     * Fetches vehicle trip details by reference number.
+     *
+     * @param criteria vehicle trip search criteria
+     * @param requestInfo request info
+     * @return vehicle trip details
+     */
     private List<VehicleTripDetail> fetchVehicleTripDetailsByReferenceNo(
             VehicleTripSearchCriteria criteria, RequestInfo requestInfo) {
         StringBuilder url = new StringBuilder(config.getVehicleHost())
@@ -260,6 +354,16 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return new ArrayList<>();
     }
 
+    /**
+     * Fetches FSM application ids from vehicle states.
+     *
+     * @param inputStatuses workflow statuses
+     * @param requestInfo request info
+     * @param tenantId tenant id
+     * @param limit result limit
+     * @param offset result offset
+     * @return FSM application ids
+     */
     private List<String> fetchVehicleStateMap(
             List<String> inputStatuses, RequestInfo requestInfo,
             String tenantId, Integer limit, Integer offset) {
@@ -280,6 +384,13 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return new ArrayList<>();
     }
 
+    /**
+     * Fetches vehicle application status count.
+     *
+     * @param criteria vehicle search criteria
+     * @param requestInfo request info
+     * @return vehicle custom response
+     */
     private VehicleCustomResponse fetchVehicleApplicationCount(
             VehicleSearchCriteria criteria, RequestInfo requestInfo) {
         StringBuilder url = new StringBuilder(config.getVehicleHost())
@@ -292,7 +403,19 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         }
     }
 
-    private String resolveDsoId(InboxContext ctx) {
+    /**
+     * Fetches DSO id for logged-in FSM DSO user.
+     *
+     * @param ctx inbox context
+     * @return DSO id if user is FSM DSO else null
+     */
+    private String getDsoId(InboxContext ctx) {
+
+        if (CollectionUtils.isEmpty(
+                ctx.getRequestInfo().getUserInfo().getRoles())) {
+            return null;
+        }
+
         if (!ctx.getRequestInfo().getUserInfo().getRoles().get(0).getCode()
                 .equals(FSMConstants.FSM_DSO)) {
             return null;
@@ -311,6 +434,12 @@ public class FSMModuleHandler implements ModuleInboxHandler {
         return JsonPath.read(dsoResult, "$.vendor[0].id");
     }
 
+    /**
+     * Aggregates FSM status counts by application status.
+     *
+     * @param statusCountMap status count map
+     * @return aggregated status count map
+     */
     private List<HashMap<String, Object>> aggregateFsmStatuses(
             List<HashMap<String, Object>> statusCountMap) {
 

@@ -27,6 +27,10 @@ import java.util.stream.StreamSupport;
 
 import static org.egov.inbox.util.BSConstants.*;
 
+/**
+ * WSModuleHandler is responsible for handling
+ * inbox operations specific to WS and SW modules.
+ */
 @Slf4j
 @Service
 public class WSModuleHandler implements ModuleInboxHandler {
@@ -41,33 +45,68 @@ public class WSModuleHandler implements ModuleInboxHandler {
         @Autowired
         private InboxService inboxService;
 
+        /**
+         * Checks if this handler supports the given module name.
+         *
+         * @param moduleName module name
+         * @return true if module is WS or SW
+         */
         @Override
         public boolean supports(String moduleName) {
                 return BS_WS.equalsIgnoreCase(moduleName) || BS_SW.equalsIgnoreCase(moduleName);
         }
 
+        /**
+         * Indicates whether workflow total count
+         * is required for this module.
+         *
+         * @return false for WS and SW modules
+         */
         @Override
         public boolean isWorkflowTotalCountRequired() {
                 return false;
         }
 
+        /**
+         * Returns internal workflow module name.
+         *
+         * @param moduleName module name
+         * @return internal module name
+         */
         @Override
         public String getInternalModuleName(String moduleName) {
                 if (BS_WS.equalsIgnoreCase(moduleName))
                         return BS_WS_MODULENAME;
+
                 if (BS_SW.equalsIgnoreCase(moduleName))
                         return BS_SW_MODULENAME;
+
                 return moduleName;
         }
 
+        /**
+         * Returns original module name
+         * from internal workflow module name.
+         *
+         * @param internalModuleName internal module name
+         * @return original module name
+         */
         public String getOriginalModuleName(String internalModuleName) {
                 if (BS_WS_MODULENAME.equals(internalModuleName))
                         return BS_WS;
+
                 if (BS_SW_MODULENAME.equals(internalModuleName))
                         return BS_SW;
+
                 return internalModuleName;
         }
 
+        /**
+         * Fetches total application count from searcher.
+         *
+         * @param ctx inbox context
+         * @return total application count
+         */
         @Override
         public int fetchCount(InboxContext ctx) {
 
@@ -87,6 +126,12 @@ public class WSModuleHandler implements ModuleInboxHandler {
                 return count;
         }
 
+        /**
+         * Fetches consumer numbers for inbox search
+         * and updates inbox context.
+         *
+         * @param ctx inbox context
+         */
         @Override
         public void fetchApplicationIds(InboxContext ctx) {
 
@@ -137,16 +182,34 @@ public class WSModuleHandler implements ModuleInboxHandler {
                 }
         }
 
+        /**
+         * Returns application id parameter key.
+         *
+         * @return application id parameter key
+         */
         @Override
         public String getApplicationIdParamKey() {
                 return BS_CONSUMER_NO_PARAM;
         }
 
+        /**
+         * Returns module search params
+         * which should be removed.
+         *
+         * @return list of params to remove
+         */
         @Override
         public List<String> paramsToRemove() {
                 return List.of();
         }
 
+        /**
+         * Fetches service search configuration mapping
+         * for the provided business service.
+         *
+         * @param businessServiceName business service name
+         * @return service search mapping
+         */
         public Map<String, String> fetchServiceSearchMap(String businessServiceName) {
 
                 StringBuilder appropriateKey = new StringBuilder();
@@ -170,6 +233,17 @@ public class WSModuleHandler implements ModuleInboxHandler {
                                 appropriateKey.toString());
         }
 
+        /**
+         * Fetches and builds service object map
+         * using consumer connection number.
+         *
+         * @param businessObjects workflow business objects
+         * @param moduleSearchCriteria module search criteria
+         * @param criteria inbox search criteria
+         * @param requestInfoWrapper request info wrapper
+         * @param moduleName module name
+         * @return mapped service object data
+         */
         public Map<String, Object> fetchServiceObjectMap(
                         JSONArray businessObjects,
                         HashMap<String, Object> moduleSearchCriteria,

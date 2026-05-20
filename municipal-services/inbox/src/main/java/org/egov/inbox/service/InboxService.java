@@ -25,6 +25,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * InboxService is responsible for fetching
+ * and assembling inbox response data.
+ */
 @Slf4j
 @Service
 public class InboxService {
@@ -40,6 +44,13 @@ public class InboxService {
     @Autowired
     private InboxAssembler inboxAssembler;
 
+    /**
+     * Initializes InboxService dependencies.
+     *
+     * @param config inbox configuration
+     * @param serviceRequestRepository service request repository
+     * @param mapper object mapper
+     */
     @Autowired
     public InboxService(InboxConfiguration config,
             ServiceRequestRepository serviceRequestRepository,
@@ -50,6 +61,13 @@ public class InboxService {
         this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
+    /**
+     * Fetches inbox response data.
+     *
+     * @param criteria inbox search criteria
+     * @param requestInfo request info
+     * @return inbox response
+     */
     public InboxResponse fetchInboxData(InboxSearchCriteria criteria, RequestInfo requestInfo) {
 
         ProcessInstanceSearchCriteria processCriteria = criteria.getProcessSearchCriteria();
@@ -146,16 +164,29 @@ public class InboxService {
 
             List<BusinessService> bServices = new ArrayList<>();
             for (String bs : businessServiceName) {
+
+                /**
+                 * Fetch business service configuration
+                 * and prepare SLA mapping.
+                 */
                 BusinessService bSrv = workflowService.getBusinessService(criteria.getTenantId(), requestInfo, bs);
                 bServices.add(bSrv);
                 businessServiceSlaMap.put(bSrv.getBusinessService(), bSrv.getBusinessServiceSla());
             }
 
+            /**
+             * Fetch workflow actionable statuses
+             * for current logged-in user roles.
+             */
             HashMap<String, String> statusIdNameMap = workflowService.getActionableStatusesForRole(requestInfo,
                     bServices, processCriteria);
 
             String appStatusParam = srvMap.getOrDefault("applsStatusParam", "applicationStatus");
 
+            /**
+             * Populate application statuses
+             * into module search criteria.
+             */
             if (!statusIdNameMap.isEmpty()) {
                 if (!CollectionUtils.isEmpty(processCriteria.getStatus())) {
                     List<String> statuses = processCriteria.getStatus().stream()
@@ -168,6 +199,10 @@ public class InboxService {
                 }
             }
 
+            /**
+             * Prepare inbox context object
+             * shared across handlers.
+             */
             InboxContext ctx = InboxContext.builder()
                     .criteria(criteria)
                     .requestInfo(requestInfo)
@@ -178,6 +213,9 @@ public class InboxService {
 
             Map<String, List<String>> tenantAndApplnNumbersMap = new HashMap<>();
 
+            /**
+             * Execute module-specific handler logic.
+             */
             if (!ObjectUtils.isEmpty(moduleName) && registry.hasHandler(moduleName)) {
                 ModuleInboxHandler handler = registry.getHandler(moduleName).get();
 
@@ -187,17 +225,24 @@ public class InboxService {
                 int handlerCount = handler.fetchCount(ctx);
                 if (handlerCount >= 0)
                     totalCount = handlerCount;
+
                 handler.fetchApplicationIds(ctx);
 
                 handler.paramsToRemove().forEach(ctx::removeModuleSearchCriteria);
             }
 
+            /**
+             * Assemble final inbox response.
+             */
             inboxes = inboxAssembler.assemble(ctx, processCriteria, businessServiceName,
                     srvMap, businessServiceSlaMap, tenantAndApplnNumbersMap, roles, requestInfo, workflowService);
 
             if (ctx.getTotalCount() != null)
                 totalCount = ctx.getTotalCount();
 
+            /**
+             * Execute post assembly enrichment.
+             */
             if (!ObjectUtils.isEmpty(moduleName) && registry.hasHandler(moduleName)) {
                 ModuleInboxHandler.PostAssembleResult result = registry.getHandler(moduleName).get()
                         .enrichStatusCountPostAssemble(ctx, statusCountMap, inputStatuses, inboxes, totalCount);
@@ -212,9 +257,14 @@ public class InboxService {
         response.setNearingSlaCount(nearingSlaCount);
         response.setStatusMap(statusCountMap);
         response.setItems(inboxes);
+
         return response;
     }
 
+    /**
+     * Fetches appropriate service mapping
+     * for the provided business service.
+     */
     public Map<String, String> fetchAppropriateServiceMapPublic(
             List<String> businessServiceName, String moduleName) {
 
@@ -240,6 +290,9 @@ public class InboxService {
         return config.getServiceSearchMapping().get(appropriateKey.toString());
     }
 
+    /**
+     * Fetches module business objects.
+     */
     public JSONArray fetchModuleObjectsPublic(
             HashMap<String, Object> moduleSearchCriteria,
             List<String> businessServiceName,
@@ -249,6 +302,9 @@ public class InboxService {
         return fetchModuleObjects(moduleSearchCriteria, businessServiceName, tenantId, requestInfo, srvMap);
     }
 
+    /**
+     * Fetches module search objects.
+     */
     public JSONArray fetchModuleSearchObjectsPublic(
             HashMap<String, Object> moduleSearchCriteria,
             List<String> businessServiceName,
@@ -258,36 +314,56 @@ public class InboxService {
         return fetchModuleSearchObjects(moduleSearchCriteria, businessServiceName, tenantId, requestInfo, srvSearchMap);
     }
 
+    /**
+     * Converts JSONObject into Map.
+     */
     public static Map<String, Object> toMap(JSONObject object) throws JSONException {
         Map<String, Object> map = new HashMap<>();
         if (object == null)
             return map;
+
         Iterator<String> keysItr = object.keys();
+
         while (keysItr.hasNext()) {
             String key = keysItr.next();
             Object value = object.get(key);
+
             if (value instanceof JSONArray)
                 value = toList((JSONArray) value);
             else if (value instanceof JSONObject)
                 value = toMap((JSONObject) value);
+
             map.put(key, value);
         }
+
         return map;
     }
 
+    /**
+     * Converts JSONArray into List.
+     */
     public static List<Object> toList(JSONArray array) throws JSONException {
         List<Object> list = new ArrayList<>();
+
         for (int i = 0; i < array.length(); i++) {
+
             Object value = array.get(i);
+
             if (value instanceof JSONArray)
                 value = toList((JSONArray) value);
             else if (value instanceof JSONObject)
                 value = toMap((JSONObject) value);
+
             list.add(value);
         }
+
         return list;
     }
 
+    /**
+     * Fetches business objects
+     * from configured search API.
+     */
     private JSONArray fetchModuleObjects(
             HashMap<String, Object> moduleSearchCriteria,
             List<String> businessServiceName,
@@ -303,21 +379,29 @@ public class InboxService {
 
         if (moduleSearchCriteria.containsKey("status") && businessServiceName.contains("ptr"))
             moduleSearchCriteria.remove("status");
+
         if (businessServiceName.contains("asset-create") && moduleSearchCriteria.containsKey("offset"))
             moduleSearchCriteria.put("offset", 0);
 
         moduleSearchCriteria.keySet().forEach(param -> {
             if (param.equalsIgnoreCase("tenantId"))
                 return;
+
             if (moduleSearchCriteria.get(param) instanceof Collection) {
                 url.append("&").append(param).append("=");
                 url.append(StringUtils.arrayToDelimitedString(
                         ((Collection<?>) moduleSearchCriteria.get(param)).toArray(), ","));
+
             } else if (param.equalsIgnoreCase("appStatus")) {
+
                 url.append("&applicationStatus=").append(moduleSearchCriteria.get(param));
+
             } else if (param.equalsIgnoreCase("consumerNo")) {
+
                 url.append("&connectionNumber=").append(moduleSearchCriteria.get(param));
+
             } else if (moduleSearchCriteria.get(param) != null) {
+
                 url.append("&").append(param).append("=").append(moduleSearchCriteria.get(param));
             }
         });
@@ -328,21 +412,31 @@ public class InboxService {
                 RequestInfoWrapper.builder().requestInfo(requestInfo).build());
 
         LinkedHashMap responseMap;
+
         try {
             responseMap = mapper.convertValue(result, LinkedHashMap.class);
+
         } catch (IllegalArgumentException e) {
+
             throw new CustomException(ErrorConstants.PARSING_ERROR,
                     "Failed to parse response of ProcessInstance Count");
         }
 
         try {
+
             return new JSONObject(responseMap).getJSONArray(srvMap.get("dataRoot"));
+
         } catch (Exception e) {
+
             throw new CustomException(ErrorConstants.INVALID_MODULE_DATA,
                     "search api could not find data in dataroot " + srvMap.get("dataRoot"));
         }
     }
 
+    /**
+     * Fetches module search objects
+     * using configured search API.
+     */
     private JSONArray fetchModuleSearchObjects(
             HashMap<String, Object> moduleSearchCriteria,
             List<String> businessServiceName,
@@ -357,13 +451,19 @@ public class InboxService {
         StringBuilder url = new StringBuilder(srvMap.get("searchPath")).append("?tenantId=").append(tenantId);
 
         moduleSearchCriteria.keySet().forEach(param -> {
+
             if (param.equalsIgnoreCase("tenantId") || param.equalsIgnoreCase("limit"))
                 return;
+
             if (moduleSearchCriteria.get(param) instanceof Collection) {
+
                 url.append("&").append(param).append("=");
+
                 url.append(StringUtils.arrayToDelimitedString(
                         ((Collection<?>) moduleSearchCriteria.get(param)).toArray(), ","));
+
             } else if (moduleSearchCriteria.get(param) != null) {
+
                 url.append("&").append(param).append("=").append(moduleSearchCriteria.get(param));
             }
         });
@@ -374,16 +474,23 @@ public class InboxService {
                 RequestInfoWrapper.builder().requestInfo(requestInfo).build());
 
         LinkedHashMap responseMap;
+
         try {
+
             responseMap = mapper.convertValue(result, LinkedHashMap.class);
+
         } catch (IllegalArgumentException e) {
+
             throw new CustomException(ErrorConstants.PARSING_ERROR,
                     "Failed to parse response of ProcessInstance Count");
         }
 
         try {
+
             return new JSONObject(responseMap).getJSONArray(srvMap.get("dataRoot"));
+
         } catch (Exception e) {
+
             throw new CustomException(ErrorConstants.INVALID_MODULE_DATA,
                     "search api could not find data in serviceMap " + srvMap.get("dataRoot"));
         }

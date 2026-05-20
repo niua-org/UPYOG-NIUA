@@ -15,34 +15,94 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+/**
+ * ModuleInboxHandler defines contract
+ * for module specific inbox handling.
+ */
 public interface ModuleInboxHandler {
 
+    /**
+     * Checks whether handler supports the module.
+     *
+     * @param moduleName module name
+     * @return true if handler supports module
+     */
     boolean supports(String moduleName);
 
+    /**
+     * Fetches application ids and updates inbox context.
+     *
+     * @param ctx inbox context
+     */
     void fetchApplicationIds(InboxContext ctx);
 
+    /**
+     * Fetches total application count.
+     *
+     * @param ctx inbox context
+     * @return total application count
+     */
     default int fetchCount(InboxContext ctx) {
         return -1;
     }
 
+    /**
+     * Returns application id parameter key.
+     *
+     * @return application id parameter key
+     */
     String getApplicationIdParamKey();
 
+    /**
+     * Returns module search params
+     * which should be removed.
+     *
+     * @return list of params to remove
+     */
     default List<String> paramsToRemove() {
         return List.of();
     }
 
+    /**
+     * Returns internal workflow module name.
+     *
+     * @param moduleName module name
+     * @return internal module name
+     */
     default String getInternalModuleName(String moduleName) {
         return moduleName;
     }
 
+    /**
+     * Checks whether workflow total count
+     * is required for the module.
+     *
+     * @return workflow total count required flag
+     */
     default boolean isWorkflowTotalCountRequired() {
         return true;
     }
 
+    /**
+     * Checks whether workflow nearing SLA count
+     * is required for the module.
+     *
+     * @return workflow nearing SLA count required flag
+     */
     default boolean isWorkflowNearingSlaCountRequired() {
         return true;
     }
 
+    /**
+     * Enriches status count before inbox fetch.
+     *
+     * @param ctx inbox context
+     * @param statusCountMap status count map
+     * @param tenantAndApplnNumbersMap tenant application mapping
+     * @param roles user roles
+     * @param inputStatuses input statuses
+     * @return enriched status count map
+     */
     default List<HashMap<String, Object>> enrichStatusCountPreFetch(
             InboxContext ctx,
             List<HashMap<String, Object>> statusCountMap,
@@ -52,6 +112,16 @@ public interface ModuleInboxHandler {
         return statusCountMap;
     }
 
+    /**
+     * Enriches status count after inbox assembly.
+     *
+     * @param ctx inbox context
+     * @param statusCountMap status count map
+     * @param inputStatuses input statuses
+     * @param inboxes inbox response
+     * @param totalCount total count
+     * @return enriched post assemble result
+     */
     default PostAssembleResult enrichStatusCountPostAssemble(
             InboxContext ctx,
             List<HashMap<String, Object>> statusCountMap,
@@ -61,6 +131,17 @@ public interface ModuleInboxHandler {
         return new PostAssembleResult(statusCountMap, totalCount);
     }
 
+    /**
+     * Fetches workflow process instances.
+     *
+     * @param processCriteria workflow process criteria
+     * @param requestInfo request info
+     * @param workflowService workflow service
+     * @param tenantAndApplnNumbersMap tenant application mapping
+     * @param businessIds business ids
+     * @param roles user roles
+     * @return workflow process instances
+     */
     default ProcessInstanceResponse getProcessInstances(
             ProcessInstanceSearchCriteria processCriteria,
             RequestInfo requestInfo,
@@ -72,6 +153,13 @@ public interface ModuleInboxHandler {
         return workflowService.getProcessInstance(processCriteria, requestInfo);
     }
 
+    /**
+     * Builds business object map using business id.
+     *
+     * @param businessObjects business objects response
+     * @param businessIdParam business id parameter
+     * @return mapped business object data
+     */
     default Map<String, Object> buildBusinessMap(
             JSONArray businessObjects,
             String businessIdParam) {
@@ -87,10 +175,21 @@ public interface ModuleInboxHandler {
                         LinkedHashMap::new));
     }
 
+    /**
+     * Post assemble response wrapper.
+     */
     class PostAssembleResult {
+
         public final List<HashMap<String, Object>> statusCountMap;
+
         public final Integer totalCount;
 
+        /**
+         * Initializes post assemble result.
+         *
+         * @param statusCountMap status count map
+         * @param totalCount total count
+         */
         public PostAssembleResult(List<HashMap<String, Object>> statusCountMap, Integer totalCount) {
             this.statusCountMap = statusCountMap;
             this.totalCount = totalCount;

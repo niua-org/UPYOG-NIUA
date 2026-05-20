@@ -20,11 +20,24 @@ public class CNDModuleHandler implements ModuleInboxHandler {
     @Autowired
     private CNDInboxFilterService cndService;
 
+    /**
+     * Checks if this handler supports the given module name.
+     *
+     * @param moduleName The name of the module to check.
+     * @return true if the module name matches "CND", false otherwise.
+     */
     @Override
     public boolean supports(String moduleName) {
         return CND.equals(moduleName);
     }
 
+    /**
+     * Fetches application IDs for the CND module based on the provided context.
+     * This method retrieves application numbers from the searcher and updates the context
+     * with the retrieved IDs.
+     *
+     * @param ctx The InboxContext containing the search criteria and other details.
+     */
     @Override
     public void fetchApplicationIds(InboxContext ctx) {
         List<String> ids = cndService.fetchApplicationNumbersFromSearcher(
@@ -48,6 +61,12 @@ public class CNDModuleHandler implements ModuleInboxHandler {
         return APPLICATION_NO_PARAM;
     }
 
+    /**
+     * Returns a list of parameters to be removed from the search criteria.
+     * For the CND module, specific parameters like offset and status are removed.
+     *
+     * @return A list of parameter keys to be removed.
+     */
     @Override
     public List<String> paramsToRemove() {
         return List.of(OFFSET_PARAM, STATUS_PARAM);

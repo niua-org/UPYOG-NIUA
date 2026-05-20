@@ -12,6 +12,10 @@ import java.util.List;
 
 import static org.egov.inbox.util.StreetVendingConstants.*;
 
+/**
+ * SVModuleHandler is responsible for handling
+ * inbox operations specific to Street Vending module.
+ */
 @Slf4j
 @Service
 public class SVModuleHandler implements ModuleInboxHandler {
@@ -19,19 +23,33 @@ public class SVModuleHandler implements ModuleInboxHandler {
     @Autowired
     private StreetVendingInboxFilterService svService;
 
+    /**
+     * Checks if this handler supports the given module name.
+     *
+     * @param moduleName module name
+     * @return true if module is Street Vending
+     */
     @Override
     public boolean supports(String moduleName) {
         return SV_SERVICES.equals(moduleName);
     }
 
+    /**
+     * Fetches application ids for inbox search
+     * and updates inbox context.
+     *
+     * @param ctx inbox context
+     */
     @Override
     public void fetchApplicationIds(InboxContext ctx) {
         List<String> ids = svService.fetchApplicationIdsFromSearcher(
                 ctx.getCriteria(), ctx.getStatusIdNameMap(), ctx.getRequestInfo());
+
         if (CollectionUtils.isEmpty(ids)) {
             ctx.setSearchResultEmpty(true);
             return;
         }
+
         ctx.getCriteria().getModuleSearchCriteria().put(SV_APPLICATION_NUMBER_PARAM, ids);
         ctx.addBusinessKeys(ids);
 
@@ -42,11 +60,22 @@ public class SVModuleHandler implements ModuleInboxHandler {
         }
     }
 
+    /**
+     * Returns application id parameter key.
+     *
+     * @return application id parameter key
+     */
     @Override
     public String getApplicationIdParamKey() {
         return SV_APPLICATION_NUMBER_PARAM;
     }
 
+    /**
+     * Returns module search params
+     * which should be removed.
+     *
+     * @return list of params to remove
+     */
     @Override
     public List<String> paramsToRemove() {
         return List.of(LOCALITY_PARAM, OFFSET_PARAM, STATUS_PARAM);
