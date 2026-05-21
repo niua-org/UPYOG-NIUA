@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams,  } from "react-router-dom";
+import { Link, useParams, } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { Card, SubmitBar, BackButton, ImageUploadHandler, CardLabelError, LinkButton } from "@nudmcdgnpm/digit-ui-react-components";
@@ -33,12 +33,12 @@ const UploadPhoto = (props) => {
     if (verificationDocuments === null) {
       setValid(false);
     } else {
-      navigate(`${props.match.path}/addional-details/${id}`);
+      navigate(`/upyog-ui/citizen/pgr/reopen/addional-details/${id}`);
     }
   }
 
   function skip() {
-    navigate(`${props.match.path}/addional-details/${id}`);
+    navigate(`/upyog-ui/citizen/pgr/reopen/addional-details/${id}`);
   }
 
   useEffect(() => {

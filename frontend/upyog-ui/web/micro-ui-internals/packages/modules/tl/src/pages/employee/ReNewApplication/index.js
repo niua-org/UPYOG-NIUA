@@ -2,28 +2,31 @@ import { FormComposer, Header, Toast, Loader } from "@nudmcdgnpm/digit-ui-react-
 import cloneDeep from "lodash/cloneDeep";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation,  } from "react-router-dom";
+import { useLocation, } from "react-router-dom";
 import { convertDateToEpoch, convertEpochToDate, stringReplaceAll } from "../../../utils";
 import { newConfig as newConfigTL } from "../../../config/config";
 
 const ReNewApplication = (props) => {
-  const applicationData = cloneDeep(props?.location?.state?.applicationData) || {};
+  console.log("props", props);
+  const loc = useLocation();
+  const applicationData = cloneDeep(loc?.state?.applicationData) || {};
   const stateCode = Digit.ULBService.getStateId();
-  const loc=useLocation();
-  const propertyId =new URLSearchParams(loc.search).get("propertyId")|| loc?.state?.applicationDetails
-                      .find((details)=>details?.title === "PT_DETAILS")?.values
-                      .find((value)=> value?.title === "TL_PROPERTY_ID")?.value;
+
+  console.log("loc", loc)
+  const propertyId = new URLSearchParams(loc.search).get("propertyId") || loc?.state?.applicationDetails
+    .find((details) => details?.title === "PT_DETAILS")?.values
+    .find((value) => value?.title === "TL_PROPERTY_ID")?.value;
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const { t } = useTranslation();
   const [canSubmit, setSubmitValve] = useState(false);
   let { data: newConfig, isLoading } = Digit.Hooks.tl.useMDMS.getFormConfig(tenantId?.split?.(".")?.[0], {});
   let propertyDetails;
-  if(applicationData?.tradeLicenseDetail?.structureType.split('.')[0]==="IMMOVABLE"){
-    const { 
+  if (applicationData?.tradeLicenseDetail?.structureType.split('.')[0] === "IMMOVABLE") {
+    const {
       data: propertydetails
     } = Digit.Hooks.pt.usePropertySearch({ filters: { propertyIds: propertyId }, tenantId: tenantId });
-    propertyDetails= propertydetails;   
-}
+    propertyDetails = propertydetails;
+  }
 
   const navigate = Digit.Hooks.useCustomNavigate();
   // delete
@@ -129,7 +132,7 @@ const ReNewApplication = (props) => {
     });
   }
 
-  let clonedData = cloneDeep(props?.location?.state?.applicationData)||{};
+  let clonedData = cloneDeep(loc?.state?.applicationData) || {};
   clonedData.checkForRenewal = false;
 
   const getOwners = (application) => {
@@ -160,9 +163,9 @@ const ReNewApplication = (props) => {
     ownershipCategory: ownershipCategory,
     owners:  getOwners(applicationData)|| [],
     documents: { documents: applicationData?.tradeLicenseDetail?.applicationDocuments || [] },
-    cptId: {  id :applicationData?.tradeLicenseDetail?.structureType.split('.')[0]==="IMMOVABLE" ? propertyId : ""},
-    cpt: {details: applicationData?.tradeLicenseDetail?.structureType.split('.')[0]==="IMMOVABLE" ? propertyDetails?.Properties?.[0] : ""},
-    applicationData: cloneDeep(props?.location?.state?.applicationData)
+    cptId: { id: applicationData?.tradeLicenseDetail?.structureType.split('.')[0] === "IMMOVABLE" ? propertyId : "" },
+    cpt: { details: applicationData?.tradeLicenseDetail?.structureType.split('.')[0] === "IMMOVABLE" ? propertyDetails?.Properties?.[0] : "" },
+    applicationData: cloneDeep(loc?.state?.applicationData)
   };
 
   const closeToast = () => {

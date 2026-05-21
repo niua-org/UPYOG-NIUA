@@ -28,7 +28,7 @@ const EmployeeChallan = (props) => {
         return navigate(`/upyog-ui/employee/mcollect/modify-challan/${challanno}`);
       case "BUTTON_PAY":
         return navigate(
-          `/upyog-ui/employee/payment/collect/${challanDetails?.businessService}/${challanno}/tenantId=${tenantId}?workflow=mcollect`
+          `/upyog-ui/employee/payment/collect/${challanDetails?.businessService}/${challanno}/${tenantId}?workflow=mcollect`
         );
       default:
         break;

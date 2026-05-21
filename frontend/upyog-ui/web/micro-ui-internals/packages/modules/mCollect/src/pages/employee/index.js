@@ -77,8 +77,8 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
-          <Route path={`/new-application`} element={<PrivateRoute><CreateChallen /></PrivateRoute>} />
-          <Route path={`/new-application`} element={<PrivateRoute><NewChallan parentUrl={url} /></PrivateRoute>} />
+          {/* <Route path={`new-application`} element={<PrivateRoute><CreateChallen /></PrivateRoute>} /> */}
+          <Route path={`new-application`} element={<PrivateRoute><NewChallan parentUrl={url} /></PrivateRoute>} />
           <Route
             path={`/search`}
             element={
@@ -87,9 +87,9 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
-          <Route path={`/acknowledgement`} element={<PrivateRoute><MCollectAcknowledgement /></PrivateRoute>} />
-          <Route path={`/challansearch/:challanno`} element={<PrivateRoute><EmployeeChallan /></PrivateRoute>} />
-          <Route path={`/modify-challan/:challanNo`} element={<PrivateRoute><EditChallan /></PrivateRoute>} />
+          <Route path={`acknowledgement`} element={<PrivateRoute><MCollectAcknowledgement /></PrivateRoute>} />
+          <Route path={`challansearch/:challanno`} element={<PrivateRoute><EmployeeChallan /></PrivateRoute>} />
+          <Route path={`modify-challan/:challanNo`} element={<PrivateRoute><EditChallan /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

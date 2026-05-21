@@ -14,28 +14,32 @@ const CitizenPayment = ({ stateCode, cityCode, moduleCode }) => {
   return (
     <React.Fragment>
       <div className="bills-citizen-wrapper">
-<Routes>
-  <Route
-    path={`my-bills/:businessService/:consumerCode`}
-    element={<MyBills stateCode={stateCode} />}
-  />
-  <Route
-    path={`billDetails/:businessService/:consumerCode/:paymentAmt`}
-    element={<PayersDetails {...commonProps} stateCode={stateCode} basePath={currentPath} />}
-  />
-  <Route
-    path={`collect/:businessService/:consumerCode`}
-    element={<SelectPaymentType {...commonProps} stateCode={stateCode} basePath={currentPath} />}
-  />
-  <Route
-    path={`success/:businessService/:consumerCode/:tenantId`}
-    element={<SuccessfulPayment {...commonProps} />}
-  />
-  <Route
-    path={`failure`}
-    element={<FailedPayment {...commonProps} />}
-  />
-</Routes>
+        <Routes>
+          <Route
+            path={`my-bills/:businessService/*`}
+            element={<MyBills stateCode={stateCode} />}
+          />
+          <Route
+            path={`billDetails/:businessService/:consumerCode/:paymentAmt`}
+            element={<PayersDetails {...commonProps} stateCode={stateCode} basePath={currentPath} />}
+          />
+          <Route
+            path={`collect/:businessService/:consumerCode`}
+            element={<SelectPaymentType {...commonProps} stateCode={stateCode} basePath={currentPath} />}
+          />
+          <Route
+            path={`collect/:businessService/:consumerCode/:tenantId`}
+            element={<SelectPaymentType {...commonProps} stateCode={stateCode} basePath={currentPath} />}
+          />
+          <Route
+            path={`success/:businessService/:consumerCode/:tenantId`}
+            element={<SuccessfulPayment {...commonProps} />}
+          />
+          <Route
+            path={`failure`}
+            element={<FailedPayment {...commonProps} />}
+          />
+        </Routes>
       </div>
     </React.Fragment>
   );

@@ -57,18 +57,21 @@ const PTApplicationDetails = () => {
       setpopup(true);
   },[data,servicedata])
 
-  useEffect(async () => {
-    if (acknowledgementIds && tenantId && property) {
-      const res = await Digit.PaymentService.searchBill(tenantId, { Service: "PT.MUTATION", consumerCode: acknowledgementIds });
-      if (!res.Bill.length) {
-        const res1 = await Digit.PTService.ptCalculateMutation({ Property: property }, tenantId);
-        setBillAmount(res1?.[acknowledgementIds]?.totalAmount || t("CS_NA"));
-        setBillStatus(t(`PT_MUT_BILL_ACTIVE`));
-      } else {
-        setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"));
-        setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`));
+  useEffect(() => {
+    const fetchBillDetails = async () => {
+      if (acknowledgementIds && tenantId && property) {
+        const res = await Digit.PaymentService.searchBill(tenantId, { Service: "PT.MUTATION", consumerCode: acknowledgementIds });
+        if (!res.Bill.length) {
+          const res1 = await Digit.PTService.ptCalculateMutation({ Property: property }, tenantId);
+          setBillAmount(res1?.[acknowledgementIds]?.totalAmount || t("CS_NA"));
+          setBillStatus(t(`PT_MUT_BILL_ACTIVE`));
+        } else {
+          setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"));
+          setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`));
+        }
       }
-    }
+    };
+    fetchBillDetails();
   }, [tenantId, acknowledgementIds, property]);
 
   const { isLoading: auditDataLoading, isError: isAuditError, data: auditResponse } = Digit.Hooks.pt.usePropertySearch(

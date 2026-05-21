@@ -200,8 +200,8 @@ const BpaApplicationDetail = () => {
     if(action === "FORWARD") {
       navigate(`/upyog-ui/citizen/obps/sendbacktocitizen/ocbpa/${data?.applicationData?.tenantId}/${data?.applicationData?.applicationNo}/check`, { replace: true, state: { data: data?.applicationData, edcrDetails: data?.edcrDetails } });
     }
-    if (action === "PAY") {
-      window.location.assign(`${window.location.origin}/upyog-ui/citizen/payment/collect/${`${getBusinessServices(data?.businessService, data?.applicationStatus)}/${id}/${data?.tenantId}?tenantId=${data?.tenantId}`}`);
+if (action === "PAY") {
+      window.location.assign(`${window.location.origin}/upyog-ui/citizen/payment/collect/${`${getBusinessServices(data?.businessService, data?.applicationStatus)}/${id}?tenantId=${data?.tenantId}`}`);
     }
     if (action === "SEND_TO_CITIZEN"){
       if (workflowDetails?.data?.processInstances?.length > 2) {

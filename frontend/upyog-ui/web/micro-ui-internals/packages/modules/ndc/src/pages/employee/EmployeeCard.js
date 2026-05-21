@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { businessServiceList } from "../../utils";
 
 // This component renders a card on the employee dashboard that displays key metrics and links related to NDC (Non-Domestic Connection) applications. It uses hooks to fetch inbox data and displays total count, nearing SLA count, and links to inbox and search pages.
-const NOCEmployeeHomeCard = () => {
+const NDCEmployeeHomeCard = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -89,4 +89,4 @@ const NOCEmployeeHomeCard = () => {
   return Digit.Utils.NDCAccess() ? <EmployeeModuleCard {...propsForModuleCard} /> : null;
 };
 
-export default NOCEmployeeHomeCard;
+export default NDCEmployeeHomeCard;

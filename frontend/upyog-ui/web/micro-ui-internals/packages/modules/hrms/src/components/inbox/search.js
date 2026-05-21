@@ -70,7 +70,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                               {input?.componentInFront}
                             </span>
                           ) : null}
-                          <TextInput {...input} {...register(input.name)} watch={watch} shouldUpdate={true} />
+                          <TextInput {...input} inputRef={register(input.name).ref} {...register(input.name)} watch={watch} shouldUpdate={true} />
                         </div>
                       ) : (
                         <Controller

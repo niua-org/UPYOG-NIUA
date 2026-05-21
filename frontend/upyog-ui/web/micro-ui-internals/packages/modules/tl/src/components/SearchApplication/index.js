@@ -46,7 +46,7 @@ const SearchLicenseApplication = ({tenantId, t, onSubmit, data, count }) => {
         handleSubmit(onSubmit)()
     }
     function previousPage () {
-        setValue("offset", getValues("offset") - getValues("limit") )
+        setValue("offset", Math.max(0, getValues("offset") - getValues("limit")))
         handleSubmit(onSubmit)()
     }
 

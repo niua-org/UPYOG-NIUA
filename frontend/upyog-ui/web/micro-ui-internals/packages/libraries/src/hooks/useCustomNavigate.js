@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useInRouterContext } from "react-router-dom";
 
 /**
  * Custom navigation hook that wraps react-router-dom's useNavigate
@@ -11,17 +11,27 @@ import { useNavigate } from "react-router-dom";
  * navigate(-1); // go back
  */
 const useCustomNavigate = () => {
-  try {
-    const navigate = useNavigate(); // This will throw if outside Router
-    return navigate;
-  } catch (error) {
-    // Return fallback when outside Router context
-    return (to) => {
+  const isInRouter = useInRouterContext();
+
+  // Only use react-router navigation if Router exists
+  const navigate = isInRouter ? useNavigate() : null;
+
+  return (to, options = {}) => {
+    try {
+      if (navigate) {
+        navigate(to, options);
+      } else if (typeof to === "string") {
+        // Fallback if router context is unavailable
+        window.location.href = to;
+      }
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback for navigation failures
       if (typeof to === "string") {
         window.location.href = to;
       }
-    };
-  }
+    }
+  };
 };
 
 export default useCustomNavigate;

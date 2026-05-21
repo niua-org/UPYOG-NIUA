@@ -42,14 +42,43 @@ export const FormComposer = (props) => {
     const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
     switch (type) {
       case "text":
+        const registerPropsText = register(populators.name, populators.validation);
         return (
           <div className="field-container">
             {populators.componentInFront ? populators.componentInFront : null}
-            <TextInput className="field desktop-w-full" {...populators} {...register(populators.name, populators.validation)} value={value}/>
+            <TextInput
+              className="field desktop-w-full"
+              {...populators}
+              inputRef={registerPropsText.ref}
+              {...registerPropsText}
+              onChange={(e) => {
+                registerPropsText.onChange(e);
+                if (populators.onChange) {
+                  populators.onChange(e);
+                }
+              }}
+              value={value}
+            />
           </div>
         );
       case "textarea":
-        return <TextArea className="field desktop-w-full" value={value} name={populators.name || ""} {...populators} {...register(populators.name || "", populators.validation)} />;
+        const registerPropsTextArea = register(populators.name || "", populators.validation);
+        return (
+          <TextArea
+            className="field desktop-w-full"
+            value={value}
+            name={populators.name || ""}
+            {...populators}
+            inputRef={registerPropsTextArea.ref}
+            {...registerPropsTextArea}
+            onChange={(e) => {
+              registerPropsTextArea.onChange(e);
+              if (populators.onChange) {
+                populators.onChange(e);
+              }
+            }}
+          />
+        );
       case "component":
         {
           

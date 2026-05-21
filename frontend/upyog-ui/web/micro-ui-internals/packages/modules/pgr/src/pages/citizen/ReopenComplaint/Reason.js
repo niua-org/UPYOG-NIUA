@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams,  } from "react-router-dom";
+import { Link, useParams, } from "react-router-dom";
 import { BackButton, Card, CardHeader, CardLabelError, CardText, RadioButtons, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { LOCALIZATION_KEY } from "../../../constants/Localization";
@@ -23,7 +23,7 @@ const ReasonPage = (props) => {
     if (selected === null) {
       setValid(false);
     } else {
-      navigate(`${props.match.path}/upload-photo/${id}`);
+      navigate(`/upyog-ui/citizen/pgr/reopen/upload-photo/${id}`);
     }
   }
 
