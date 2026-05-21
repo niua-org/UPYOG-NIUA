@@ -13,10 +13,16 @@ const listenConsumer = async () => {
   const consumer = kafka.consumer({
     groupId: "egov-pdf-group",
     sessionTimeout: 15000,
+    maxBytes: 10 * 1024 * 1024, // 10 MB - equivalent to fetchMaxBytes in kafka-node
+    // roundrobin partition assignment - equivalent to protocol: ["roundrobin"] in kafka-node
+    partitionAssigners: [kafka.partitioners.RoundRobinAssigner],
+    // autoCommit is true by default in KafkaJS (autoCommitInterval default is 5000ms)
   });
 
   try {
     await consumer.connect();
+    // fromBeginning: false = fromOffset: "latest" in kafka-node (only consume new messages)
+    // outOfRangeOffset: "earliest" is handled at broker level in KafkaJS
     await consumer.subscribe({ topic: config.KAFKA_BULK_PDF_TOPIC, fromBeginning: false });
     logger.info("Consumer is ready");
   } catch (err) {
