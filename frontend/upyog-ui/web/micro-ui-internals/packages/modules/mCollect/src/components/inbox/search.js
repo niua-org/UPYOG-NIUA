@@ -76,7 +76,22 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                             {input?.componentInFront}
                           </span>
                         ) : null}
-                        <TextInput {...input} {...register(input.name)} watch={watch} shouldUpdate={true} />
+                        <Controller
+                          name={input.name}
+                          control={control}
+                          defaultValue={""}
+                          render={({ field }) => (
+                            <TextInput
+                              {...input}
+                              inputRef={field.ref}
+                              value={field.value}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              onBlur={field.onBlur}
+                              watch={watch}
+                              shouldUpdate={true}
+                            />
+                          )}
+                        />
                       </div>
                     ) : (
                       <Controller

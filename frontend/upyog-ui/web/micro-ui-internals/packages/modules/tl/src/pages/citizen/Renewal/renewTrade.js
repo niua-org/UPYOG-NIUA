@@ -2,7 +2,7 @@ import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { Navigate, Route, Routes, useLocation, useParams,  } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams, } from "react-router-dom";
 import { newConfig as newConfigTL } from "../../../config/config";
 import { getCommencementDataFormat, stringReplaceAll } from "../../../utils/index";
 
@@ -340,8 +340,8 @@ const RenewTrade = ({ parentRoute }) => {
           />
         );
       })}
-      <Route path={`${basePath}/check`} element={<CheckPage onSubmit={createProperty} value={params} />} />
-      <Route path={`${basePath}/acknowledgement`} element={<TLAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`/check`} element={<CheckPage onSubmit={createProperty} value={params} />} />
+      <Route path={`/acknowledgement`} element={<TLAcknowledgement data={params} onSuccess={onSuccess} />} />
       <Route path="*" element={<Navigate to={`${basePath}/${config.indexRoute}`} replace />} />
     </Routes>
   );

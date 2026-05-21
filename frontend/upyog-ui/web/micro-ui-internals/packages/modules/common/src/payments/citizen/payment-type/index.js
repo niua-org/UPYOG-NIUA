@@ -24,7 +24,8 @@ import TimerServices from "../timer-Services/timerServices";
 import { timerEnabledForBusinessService } from "../bills/routes/bill-details/utils";
 
 export const SelectPaymentType = (props) => {
-  const { state = {} } = useLocation();
+  const { state: rawState } = useLocation();
+  const state = rawState || {};
   const userInfo = Digit.UserService.getUser();
   const [showToast, setShowToast] = useState(null);
   const { tenantId: __tenantId, authorization, workflow: wrkflow , consumerCode : connectionNo } = Digit.Hooks.useQueryParams();
@@ -33,8 +34,8 @@ export const SelectPaymentType = (props) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const { pathname, search } = useLocation();
   // const menu = ["AXIS"];
-  let { consumerCode, businessService } = useParams();
-  const tenantId = state?.tenantId || __tenantId || Digit.ULBService.getCurrentTenantId();
+  let { consumerCode, businessService, tenantId: pathTenantId } = useParams();
+  const tenantId = state?.tenantId || pathTenantId || __tenantId || Digit.ULBService.getCurrentTenantId();
   const propertyId = state?.propertyId;
   const stateTenant = Digit.ULBService.getStateId();
   const { control, handleSubmit } = useForm();
@@ -54,7 +55,7 @@ export const SelectPaymentType = (props) => {
   useEffect(() => {
     localStorage.setItem("BillPaymentEnabled", "true");
   }, []);
-  const { name, mobileNumber } = state || {};
+  const { name, mobileNumber } = state;
 
   const billDetails = paymentdetails?.Bill ? paymentdetails?.Bill[0] : {};
   sessionStorage.setItem("payerName", billDetails?.payerName)

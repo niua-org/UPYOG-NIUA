@@ -147,7 +147,7 @@ const BillDetails = ({ paymentRules, businessService }) => {
   const onSubmit = () => {
     let paymentAmount =
       paymentType === t("CS_PAYMENT_FULL_AMOUNT")
-        ? businessService === "FSM.TRIP_CHARGES"?application?.pdfData?.advanceAmount:getTotal()
+        ? businessService === "FSM.TRIP_CHARGES" ? application?.pdfData?.advanceAmount : getTotal()
         : amount || businessService === "FSM.TRIP_CHARGES"
         ? application?.pdfData?.advanceAmount
         : amount;
@@ -172,24 +172,18 @@ const BillDetails = ({ paymentRules, businessService }) => {
     } 
     else if (timerEnabledForBusinessService(businessService)) {
       navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, {
-        state: {
-          paymentAmount,
-          tenantId: billDetails.tenantId,
-          propertyId: propertyId,
-          timerValue: state?.timerValue,
-          SlotSearchData: state?.SlotSearchData,
-        }
-      });
-      } 
-    else {
-      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { 
-        state: {
-        paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId 
-        }
+        paymentAmount,
+        tenantId: billDetails.tenantId,
+        propertyId: propertyId,
+        timerValue: state?.timerValue,
+        SlotSearchData: state?.SlotSearchData,
       });
     }
+    else {
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId });
+    }
   };
-  
+
   const onChangeAmount = (value) => {
     setError("");
     if (isNaN(value) || value.includes(".")) {
@@ -272,7 +266,6 @@ const BillDetails = ({ paymentRules, businessService }) => {
             >
               ₹
             </span>
-            {console.log(bill,"bill")}
             {paymentType !== t("CS_PAYMENT_FULL_AMOUNT") ? (
               businessService === "FSM.TRIP_CHARGES" ? (
                 <TextInput className="text-indent-xl" onChange={() => {}} value={getAdvanceAmount()} disable={true} />

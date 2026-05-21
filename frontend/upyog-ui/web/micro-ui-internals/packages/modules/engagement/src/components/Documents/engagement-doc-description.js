@@ -19,7 +19,10 @@ const SelectULB = ({ userType, t, setValue, onSelect, config, data, formData, re
         <div className="field">
           <TextArea
             name={config.key}
-            inputRef={register({
+            inputRef={register(config.key, {
+              maxLength: 140,
+            }).ref}
+            {...register(config.key, {
               maxLength: 140,
             })}
           />

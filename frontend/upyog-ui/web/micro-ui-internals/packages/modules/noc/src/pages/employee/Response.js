@@ -1,11 +1,13 @@
 import { Banner, Card, CardText, ActionBar, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 import { stringReplaceAll } from "../../utils";
 
 const Response = (props) => {
-  const { state } = props.location;
+  const location = useLocation();
+  const { state } = location;
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const nocData = state?.data?.Noc?.[0];

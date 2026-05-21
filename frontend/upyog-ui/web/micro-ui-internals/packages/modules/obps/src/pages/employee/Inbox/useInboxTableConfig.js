@@ -80,8 +80,8 @@ const useInboxTableConfig = ({ parentRoute, onPageSizeChange, formState, totalCo
         onFirstPage: () => dispatch({action: "mutateTableForm", data: {...formState.tableForm , offset: 0 }}),
         // globalSearch: {searchForItemsInTable},
         // searchQueryForTable,
-        data: table,
-        columns: tableColumnConfig
+        data: table || [],
+        columns: tableColumnConfig || []
     }
 }
 

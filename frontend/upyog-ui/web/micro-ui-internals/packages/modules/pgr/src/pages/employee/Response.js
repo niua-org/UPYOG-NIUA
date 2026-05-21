@@ -44,7 +44,7 @@ const Response = (props) => {
   const { tenants } = storeData || {};
   const [enable, setEnable] = useState(false)
   let id= appState?.complaints?.response?.ServiceWrappers?.[0]?.service?.serviceRequestId
-  const { isLoading, error, isError, complaintDetails, revalidate } = Digit.Hooks.pgr.useComplaintDetails({ tenantId:"pg.citya", id },{ enabled: enable ? true : false});
+  const { isLoading, error, isError, data: complaintDetails, refetch: revalidate } = Digit.Hooks.pgr.useComplaintDetails({ tenantId:"pg.citya", id },{ enabled: enable ? true : false});
   
   const handleDownloadPdf = async (e) => {
     const tenantInfo = tenants.find((tenant) => tenant.code === "pg.citya");

@@ -9,7 +9,7 @@ import _ from "lodash";
 import { stringReplaceAll, convertEpochToDate } from "../utils";
 
 const createConsumerDetails = (getCities) => ({
-   city: getCities()[0] ? getCities()[0] : "",
+  city: getCities()[0] ? getCities()[0] : "",
   category: "",
   categoryType: "",
   fromDate: "",
@@ -18,8 +18,7 @@ const createConsumerDetails = (getCities) => ({
 });
 
 const ServiceDetails = ({ config, onSelect, userType, formData, setError, formState, clearErrors }) => {
-  if(window.location.href.includes("modify-challan") && sessionStorage.getItem("mcollectEditObject"))
-  {
+  if (window.location.href.includes("modify-challan") && sessionStorage.getItem("mcollectEditObject")) {
     formData = JSON.parse(sessionStorage.getItem("mcollectEditObject"))
   }
   const { t } = useTranslation();
@@ -27,21 +26,22 @@ const ServiceDetails = ({ config, onSelect, userType, formData, setError, formSt
   const isEdit = pathname.includes("/modify-challan/");
   const cities = Digit.Hooks.mcollect.usemcollectTenants();
   const getCities = () => cities?.filter((e) => e.code === Digit.ULBService.getCurrentTenantId()) || [];
-  const [consumerDetails, setconsumerDetails] = useState(formData?.consomerDetails1 || [createConsumerDetails(getCities)]);
+  const [consumerDetails, setconsumerDetails] = useState(formData?.[config?.key] || formData?.consomerDetails1 || [createConsumerDetails(getCities)]);
   const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
   const [isErrors, setIsErrors] = useState(false);
   const stateCode = window?.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID");
   const data = Digit.Hooks.mcollect.useCommonMDMS(stateCode, "common-masters", ["HierarchyType"]);
-  const type = data &&  data.data &&  data.data[`common-masters`] && data.data[`common-masters`]["HierarchyType"] && data.data[`common-masters`]["HierarchyType"][0];
+  const type = data && data.data && data.data[`common-masters`] && data.data[`common-masters`]["HierarchyType"] && data.data[`common-masters`]["HierarchyType"][0];
   const [pincode, setPincode] = useState("");
   const [selectedLocality, setSelectedLocality] = useState("");
   const [TaxHeadMaster, setAPITaxHeadMaster] = useState([]);
 
-  const {Categories : categoires , data: categoriesandTypes} = Digit.Hooks.mcollect.useMCollectCategory(tenantId,"[?(@.type=='Adhoc' && @.isActive==true)]");
-
-
+  const queryResult = Digit.Hooks.mcollect.useMCollectCategory(tenantId, "[?(@.type=='Adhoc' && @.isActive==true)]");
+  const categoires = queryResult?.data?.Categories;
+  const categoriesandTypes = queryResult?.data?.data;
+  // console.log("categoirescategoires", categoires, categoriesandTypes);
   const { data: fetchedLocalities } = Digit.Hooks.useBoundaryLocalities(
     getCities()[0]?.code,
     type && type.code.toLowerCase(),
@@ -150,28 +150,21 @@ const OwnerForm1 = (_props) => {
   const { errors } = localFormState;
   const isMobile = window.Digit.Utils.browser.isMobile();
 
-  
-  const selectedCategory = useWatch({control: control, name: "category", defaultValue:""});
-  const categoiresType = Digit.Hooks.mcollect.useMCollectCategoryTypes(selectedCategory,categoriesandTypes);
-  const selectedCategoryType = useWatch({control: control, name: "categoryType", defaultValue:""});
-  const TaxHeadMasterFields = Digit.Hooks.mcollect.useMCollectTaxHeads(selectedCategoryType,categoriesandTypes);
-  const selectedPincode = useWatch({control: control, name: "pincode", defaultValue:""});
+
+  const selectedCategory = useWatch({ control: control, name: "category", defaultValue: "" });
+  const categoiresType = Digit.Hooks.mcollect.useMCollectCategoryTypes(selectedCategory, categoriesandTypes);
+  const selectedCategoryType = useWatch({ control: control, name: "categoryType", defaultValue: "" });
+  const TaxHeadMasterFields = Digit.Hooks.mcollect.useMCollectTaxHeads(selectedCategoryType, categoriesandTypes);
 
   useEffect(() => {
-    if(!isEdit)
-    setValue("categoryType","");
-  },[selectedCategory])
+    if (!isEdit && getValues("categoryType") !== "")
+      setValue("categoryType", "");
+  }, [selectedCategory?.code])
 
   useEffect(() => {
-    if(!isEdit){
-    setValue("mohalla","");
-    }
-  },[selectedPincode])
-
-  useEffect(() => {
-    if(isEdit)
-    setValue("city",selectedCity);
-  },[selectedCity]);
+    if (isEdit && getValues("city") !== selectedCity)
+      setValue("city", selectedCity);
+  }, [selectedCity]);
 
   // useEffect(() => {
   //   if(!isEdit)
@@ -181,21 +174,20 @@ const OwnerForm1 = (_props) => {
   // },[TaxHeadMasterFields])
 
   useEffect(() => {
-    if(isEdit && TaxHeadMasterFields && !(formValue[`${formValue?.categoryType?.code?.split(".")[0]}`]))
-    {
+    if (isEdit && TaxHeadMasterFields && !(formValue[`${formValue?.categoryType?.code?.split(".")[0]}`])) {
       let cdTax = JSON.parse(sessionStorage.getItem("InitialTaxFeilds"));
-      TaxHeadMasterFields && TaxHeadMasterFields.length>0 && TaxHeadMasterFields?.map((ob) => {
-        setValue(ob.code,cdTax[`${ob.code.split(".")[1]}`]);
+      TaxHeadMasterFields && TaxHeadMasterFields.length > 0 && TaxHeadMasterFields?.map((ob) => {
+        setValue(ob.code.replace(/\./g, "_"), cdTax[`${ob.code.split(".")[1]}`]);
       })
     }
-  },[TaxHeadMasterFields])
+  }, [TaxHeadMasterFields])
 
   useEffect(() => {
     const city = cities ? cities.find((obj) => obj.pincode?.find((item) => item == pincode)) : [];
     if (city?.code) {
       setPincodeNotValid(false);
       setSelectedCity(city);
-      consumerdetail["city"]=city;
+      consumerdetail["city"] = city;
       setSelectedLocality("");
       const __localityList = fetchedLocalities;
       const __filteredLocalities = __localityList.filter((city) => city["pincode"] == pincode);
@@ -213,23 +205,23 @@ const OwnerForm1 = (_props) => {
   }, []);
 
   useEffect(() => {
-    if(Object.entries(formValue).length>0){
-    const keys = Object.keys(formValue);
-    const part = {};
-    keys.forEach((key) => (part[key] = consumerdetail[key]));
-    if (!_.isEqual(formValue, part)) {
-      Object.keys(formValue).map(data => {
-        if (data != "key" && formValue[data] != undefined && formValue[data] != "" && formValue[data] != null && !isErrors) {
-          setIsErrors(true);
-        }
-      });
-      let ob =[{...formValue}];
-      let mcollectFormValue = JSON.parse(sessionStorage.getItem("mcollectFormData"));
-      mcollectFormValue = {...mcollectFormValue,...ob[0]}
-      sessionStorage.setItem("mcollectFormData",JSON.stringify(mcollectFormValue));
-      setconsumerDetails(ob);
-      trigger();
-    }
+    if (Object.entries(formValue).length > 0) {
+      const keys = Object.keys(formValue);
+      const part = {};
+      keys.forEach((key) => (part[key] = consumerdetail[key]));
+      if (!_.isEqual(formValue, part)) {
+        Object.keys(formValue).map(data => {
+          if (data != "key" && formValue[data] != undefined && formValue[data] != "" && formValue[data] != null && !isErrors) {
+            setIsErrors(true);
+          }
+        });
+        let ob = [{ ...formValue }];
+        let mcollectFormValue = JSON.parse(sessionStorage.getItem("mcollectFormData"));
+        mcollectFormValue = { ...mcollectFormValue, ...ob[0] }
+        sessionStorage.setItem("mcollectFormData", JSON.stringify(mcollectFormValue));
+        setconsumerDetails(ob);
+        trigger();
+      }
     }
   }, [formValue]);
 
@@ -245,11 +237,11 @@ const OwnerForm1 = (_props) => {
 
   const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
   return (
-    <div  style={isMobile?{}:{marginTop:"-50px"}}>
+    <div style={isMobile ? {} : { marginTop: "-50px" }}>
       <div style={{ marginBottom: "16px" }}>
         <div>
-        <CardSectionHeader>{t("SERVICEDETAILS")}</CardSectionHeader>
-      <LabelFieldPair>
+          <CardSectionHeader>{t("SERVICEDETAILS")}</CardSectionHeader>
+          <LabelFieldPair>
             <CardLabel className="card-label-smaller">{`${t("UC_CITY_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
             <Controller
               name="city"
@@ -271,9 +263,9 @@ const OwnerForm1 = (_props) => {
                 />
               )}
             />
-        </LabelFieldPair>
-        <LabelFieldPair>
-            <CardLabel className={isMobile?"card-label-APK":"card-label-smaller"}>{`${t("UC_SERVICE_CATEGORY_LABEL")} `}<span className="check-page-link-button"> *</span></CardLabel>
+          </LabelFieldPair>
+          <LabelFieldPair>
+            <CardLabel className={isMobile ? "card-label-APK" : "card-label-smaller"}>{`${t("UC_SERVICE_CATEGORY_LABEL")} `}<span className="check-page-link-button"> *</span></CardLabel>
             <Controller
               name="category"
               rules={{ required: t("REQUIRED_FIELD") }}
@@ -284,7 +276,7 @@ const OwnerForm1 = (_props) => {
                   isMandatory
                   className="form-field"
                   selected={field.value}
-                  optionCardStyles={{maxHeight:"960%"}}
+                  optionCardStyles={{ maxHeight: "960%" }}
                   id="businessService"
                   option={sortDropdownNames(categoires, "code", t)}
                   select={field.onChange}
@@ -357,42 +349,43 @@ const OwnerForm1 = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          {TaxHeadMasterFields && TaxHeadMasterFields.length>0 && TaxHeadMasterFields.map((tax) => 
-          <div>
-          <LabelFieldPair>
-            <CardLabel className={isMobile?"card-label-APK":"card-label-smaller"}>{`${t(stringReplaceAll(tax?.name,".","_"))} * `}</CardLabel>
-            <div className="field">
-              <Controller
-                control={control}
-                name={tax?.code}
-                defaultValue={consumerdetail[tax?.code]}
-                isMandatory={tax.isRequired}
-                componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
-                rules={tax.isRequired?{ required: t("REQUIRED_FIELD")}:"" }
-                render={({ field }) => (
-                  <div style={{display:"flex"}}>
-                  <div className="employee-card-input employee-card-input--front">₹</div>
-                  <TextInput
-                    value={field.value}
-                    componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
-                    autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                    onChange={(e) => {
-                      field.onChange(e.target.value);
-                      setFocusIndex({ index: consumerdetail.key, type: tax?.code });
-                    }}
-                    onBlur={(e) => {
-                      setFocusIndex({ index: -1 });
-                      field.onBlur(e);
-                    }}
+          {TaxHeadMasterFields && TaxHeadMasterFields.length > 0 && TaxHeadMasterFields.map((tax) => {
+            const safeName = tax?.code?.replace(/\./g, "_");
+            return (
+            <div key={tax?.code}>
+              <LabelFieldPair>
+                <CardLabel className={isMobile ? "card-label-APK" : "card-label-smaller"}>{`${t(stringReplaceAll(tax?.name, ".", "_"))} * `}</CardLabel>
+                <div className="field">
+                  <Controller
+                    control={control}
+                    name={safeName}
+                    defaultValue={consumerdetail[safeName] || consumerdetail[tax?.code]}
+                    isMandatory={tax.isRequired}
+                    rules={tax.isRequired ? { required: t("REQUIRED_FIELD") } : ""}
+                    render={({ field }) => (
+                      <div style={{ display: "flex" }}>
+                        <div className="employee-card-input employee-card-input--front">₹</div>
+                        <TextInput
+                          value={field.value}
+                          autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+                            setFocusIndex({ index: consumerdetail.key, type: tax?.code });
+                          }}
+                          onBlur={(e) => {
+                            setFocusIndex({ index: -1 });
+                            field.onBlur(e);
+                          }}
+                        />
+                      </div>
+                    )}
                   />
-                  </div>
-                )}
-              />
-            </div>
-          </LabelFieldPair> 
-          </div>)}
+                </div>
+              </LabelFieldPair>
+            </div>);
+          })}
         </div>
-    </div>
+      </div>
     </div>
   );
 };

@@ -37,10 +37,10 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
-          <Route path={`/create`} element={<PrivateRoute><CreateEmployee /></PrivateRoute>} />
-          <Route path={`/response`} element={<PrivateRoute><HRMSResponse parentRoute={path} /></PrivateRoute>} />
-          <Route path={`/details/:tenantId/:id`} element={<PrivateRoute><HRMSDetails /></PrivateRoute>} />
-          <Route path={`/edit/:tenantId/:id`} element={<PrivateRoute><EditEmpolyee /></PrivateRoute>} />
+          <Route path={`create`} element={<PrivateRoute><CreateEmployee /></PrivateRoute>} />
+          <Route path={`response`} element={<PrivateRoute><HRMSResponse parentRoute={path} /></PrivateRoute>} />
+          <Route path={`details/:tenantId/:id`} element={<PrivateRoute><HRMSDetails /></PrivateRoute>} />
+          <Route path={`edit/:tenantId/:id`} element={<PrivateRoute><EditEmpolyee /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

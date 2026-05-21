@@ -4,7 +4,7 @@ import EmployeeApp from "./pages/employee";
 import CitizenApp from "./pages/citizen";
 import ApplicationOverview from "./pages/employee/ApplicationOverview";
 import CitizenApplicationOverview from "./pages/citizen/ApplicationOverview";
-import NOCCard from "./pages/employee/EmployeeCard";
+import NDCCard from "./pages/employee/EmployeeCard";
 import Inbox from "./pages/employee/Inbox";
 import NOCSearchApplication from "./pages/employee/SearchApplication/Search";
 import { NewNDCStepForm as NewNDCStepFormCitizen } from "./pages/citizen/createNCDApplication/NewNDCStepForm";
@@ -50,7 +50,7 @@ const NDCModule = ({ stateCode, userType, tenants }) => {
 
 const componentsToRegister = {
   NDCModule,
-  NOCCard,
+  NDCCard,
   NDCApplicationOverview: ApplicationOverview,
   NDCInbox: Inbox,
   NOCSearchApplication,

@@ -102,32 +102,27 @@ const OwnerForm = (_props) => {
   }, []);
 
   useEffect(() => {
-    if(window.location.href.includes("tl/renew-application-details") && formData?.cpt?.details)
-    { 
-      if(typeOfOwner === "INSTITUTIONAL")
-      {
-        setValue("instituionName",owner?.instituionName);
-        setValue("subOwnerShipCategory",owner?.subOwnerShipCategory);
-        setValue("name",owner?.name);
-        setValue("designation",owner?.designation);
-        setValue("mobileNumber",owner?.mobileNumber);
-        setValue("altContactNumber",owner?.altContactNumber);
-        setValue("emailId",owner?.emailId);
-        setValue("emailId",owner?.emailId); 
-      }
-      else
-      {
-        setValue("name",owner?.name);
-        setValue("mobileNumber",owner?.mobileNumber);
-        setValue("fatherOrHusbandName",owner?.fatherOrHusbandName);
-        setValue("relationship",owner?.relationship);
-        setValue("gender",owner?.gender);
-        setValue("emailId",owner?.emailId);
-        setValue("ownerType",owner?.ownerType);
-        setValue("permanentAddress",owner?.permanentAddress);
+    if ((window.location.href.includes("tl/renew-application-details") || isSameAsPropertyOwner == true || isSameAsPropertyOwner === "true") && formData?.cpt?.details) {
+      if (typeOfOwner === "INSTITUTIONAL") {
+        setValue("instituionName", owner?.instituionName);
+        setValue("subOwnerShipCategory", owner?.subOwnerShipCategory);
+        setValue("name", owner?.name);
+        setValue("designation", owner?.designation);
+        setValue("mobileNumber", owner?.mobileNumber);
+        setValue("altContactNumber", owner?.altContactNumber);
+        setValue("emailId", owner?.emailId);
+      } else {
+        setValue("name", owner?.name);
+        setValue("mobileNumber", owner?.mobileNumber);
+        setValue("fatherOrHusbandName", owner?.fatherOrHusbandName);
+        setValue("relationship", owner?.relationship);
+        setValue("gender", owner?.gender);
+        setValue("emailId", owner?.emailId);
+        setValue("ownerType", owner?.ownerType);
+        setValue("permanentAddress", owner?.permanentAddress);
       }
     }
-  }, [formData?.cpt?.details?.propertyId, formData?.cptId?.Id, formData]);
+  }, [formData?.cpt?.details?.propertyId, formData?.cptId?.Id, formData, owner, isSameAsPropertyOwner]);
 
   useEffect(() => {
     if (!(_.isEqual(formValue, part))) {

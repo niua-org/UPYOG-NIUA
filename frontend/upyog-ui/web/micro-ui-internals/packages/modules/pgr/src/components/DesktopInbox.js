@@ -133,7 +133,7 @@ const DesktopInbox = ({
         </div>
       </div>
       <div style={{ flex: 1 }}>
-        <SearchComplaint onSearch={onSearch} type="desktop" />
+        <SearchComplaint onSearch={onSearch} type="desktop" searchParams={searchParams} />
         <div style={{ marginTop: "24px", marginLeft: "24px", flex: 1 }}>{result}</div>
       </div>
     </div>

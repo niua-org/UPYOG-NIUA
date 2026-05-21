@@ -177,7 +177,7 @@ const EmployeeApp = ({ path, url, userType }) => {
           <Route path={`/common/:filestore`} element={<PrivateRoute><CommonRedirect parentUrl={url} /></PrivateRoute>} />
           <Route path={`new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
           <Route path={`/application-details/:id`} element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path={`/renew-application-details/:id`} element={<PrivateRoute><ReNewApplication parentRoute={path} /></PrivateRoute>} />
+          <Route path={`renew-application-details/:id`} element={<PrivateRoute><ReNewApplication parentRoute={path} /></PrivateRoute>} />
           <Route path={`/edit-application-details/:id`} element={<PrivateRoute><ReNewApplication header={t("TL_ACTION_RESUBMIT")} parentRoute={path} /></PrivateRoute>} />
           <Route path={`/response`} element={<PrivateRoute><Response parentRoute={path} /></PrivateRoute>} />
           <Route path={`/search/:variant`} element={<PrivateRoute><Search parentRoute={path} /></PrivateRoute>} />
