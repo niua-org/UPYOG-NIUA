@@ -11,21 +11,13 @@ import {
   MobileNumber,
   Dropdown,
   Localities,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 
 import { useTranslation } from "react-i18next";
 
 const fieldComponents = {
   mobileNumber: MobileNumber,
-  Dropdown:(props) => (
-    <Dropdown
-      selected={props.value}
-      select={props.onChange}
-      option={props.options}
-      optionKey="i18nKey"
-      t={props.t}
-    />
-  ),
+  Dropdown: Dropdown
 };
 
 const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams, isInboxPage, defaultSearchParams, clearSearch: _clearSearch }) => {
@@ -124,8 +116,8 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                       <Label>{t(input.label) + ` ${input.isMendatory ? "*" : ""}`}</Label>
                       {!input.type ? (
                         <Controller
-                          render={(props) => {
-                            return <TextInput onChange={props.onChange} value={props.value} />;
+                          render={(field) => {
+                            return <TextInput onChange={field.onChange} value={field.value} />;
                           }}
                           name={input.name}
                           control={control}
@@ -133,9 +125,17 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                         />
                       ) : (
                         <Controller
-                          render={(props) => {
+                          render={({ field }) => {
                             const Comp = fieldComponents?.[input.type];
-                            return <Comp formValue={form} setValue={setValue} onChange={props.onChange} value={props.value} options={assetClassification} t={t}/>;
+                            return <Comp 
+                              onChange={field.onChange} 
+                              value={field.value} 
+                              select={field.onChange}  // For Dropdown component
+                              selected={field.value}   // For Dropdown component
+                              option={assetClassification} 
+                              optionKey="i18nKey"
+                              t={t}
+                            />;
                           }}
                           name={input.name}
                           control={control}

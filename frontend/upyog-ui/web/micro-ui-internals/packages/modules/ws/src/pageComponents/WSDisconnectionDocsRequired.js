@@ -1,12 +1,12 @@
 import React, { Fragment } from "react";
-import { Card, CardHeader, SubmitBar, CitizenInfoLabel, CardText, Loader, CardSubHeader, BackButton, BreadCrumb, Header, CardLabel, CardSectionHeader, CardCaption, ActionBar } from "@upyog/digit-ui-react-components";
+import { Card, CardHeader, SubmitBar, CitizenInfoLabel, CardText, Loader, CardSubHeader, BackButton, BreadCrumb, Header, CardLabel, CardSectionHeader, CardCaption, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory, useRouteMatch } from "react-router-dom";
+import {  useLocation } from "react-router-dom";
 
 const WSDisconnectionDocsRequired = ({ userType }) => {
   const { t } = useTranslation();
-  const history = useHistory();
-  const match = useRouteMatch();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const { pathname } = useLocation();
   const tenantId = Digit.ULBService.getStateId();
   const goNext = () => {
   }
@@ -42,7 +42,7 @@ const WSDisconnectionDocsRequired = ({ userType }) => {
             </Fragment>
           }
           <SubmitBar label={t(`CS_COMMON_NEXT`)} onSubmit={() => {
-                history.push(match.path.replace("docsrequired", "application-form"));
+                navigate(pathname.replace("docsrequired", "application-form"));
               }} />
         </Card>
       </Fragment>
@@ -73,7 +73,7 @@ const WSDisconnectionDocsRequired = ({ userType }) => {
             <SubmitBar
               label={t("ACTION_TEST_APPLY")}
               onSubmit={() => {
-                history.push(match.path.replace("docsrequired", "application-form"));
+                navigate(pathname.replace("docsrequired", "application-form"));
               }}
               style={{ margin: "10px 10px 0px 0px" }}
               disabled={wsDocsLoading ? true : false}

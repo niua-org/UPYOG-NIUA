@@ -8,15 +8,15 @@ import {
   SubmitBar,
   SearchForm,
   Loader
-} from "@upyog/digit-ui-react-components";
-import { Link, useHistory } from "react-router-dom";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 // Manage Properties Component
 // This component allows users to manage properties by viewing, filtering, editing, and allotting assets.
 
 const ManageProperties = ({ t }) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -36,7 +36,7 @@ const ManageProperties = ({ t }) => {
  const handleEditAsset = (asset) => {
   sessionStorage.setItem("EST_EDIT_DATA", JSON.stringify(asset));
 
-  history.push("/upyog-ui/employee/est/create-asset/newRegistration?edit=true");
+  navigate("/upyog-ui/employee/est/create-asset/newRegistration?edit=true");
 };
 
   const [properties, setProperties] = useState([]);
@@ -148,9 +148,7 @@ const ManageProperties = ({ t }) => {
   const GetCell = (value) => <span className="cell-text">{value || "N/A"}</span>;
 
   const handleAllotAsset = (asset) => {
-    history.push("/upyog-ui/employee/est/assignassets/info", { 
-      assetData: asset 
-    });
+    navigate("/upyog-ui/employee/est/assignassets/info", { state: { assetData: asset } });
   };
 
   const columns = useMemo(
@@ -167,9 +165,7 @@ const ManageProperties = ({ t }) => {
         textDecoration: "underline"
       }}
       onClick={() =>
-        history.push(
-          `/upyog-ui/employee/est/application-details/${row.original.estateNo}`
-        )
+        navigate(`/upyog-ui/employee/est/application-details/${row.original.estateNo}`)
       }
     >
       {row.original.estateNo}

@@ -1,13 +1,20 @@
 import React, { useCallback, useMemo, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@upyog/digit-ui-react-components";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link } from "react-router-dom";
 import MobileSearchApplication from "./MobileSearchApplication";
 
-const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
     const isMobile = window.Digit.Utils.browser.isMobile();
     const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
         defaultValues: {
+            acknowledgementIds: "", 
+            fromDate: "", 
+            toDate: "",
+            propertyIds: "",
+            mobileNumber:"",
+            status: "",
+            creationReason: "",
             offset: 0,
             limit: !isMobile && 10,
             sortBy: "commencementDate",
@@ -15,10 +22,10 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
         }
     })
     useEffect(() => {
-      register("offset", 0)
-      register("limit", 10)
-      register("sortBy", "commencementDate")
-      register("sortOrder", "DESC")
+      register("offset")
+      register("limit")
+      register("sortBy")
+      register("sortOrder")
     },[register])
     //need to get from workflow
     const applicationTypes = [
@@ -134,34 +141,64 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                 <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("PT_APPLICATION_NO_LABEL")}</label>
-                    <TextInput name="acknowledgementIds" inputRef={register({})} />
+                    <Controller
+                        control={control}
+                        name="acknowledgementIds"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                     <label>{t("PT_SEARCHPROPERTY_TABEL_PID")}</label>
-                    <TextInput name="propertyIds" inputRef={register({})} />
+                    <Controller
+                        control={control}
+                        name="propertyIds"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                 <label>{t("PT_OWNER_MOBILE_NO")}</label>
-                <MobileNumber
+                <Controller
+                    control={control}
                     name="mobileNumber"
-                    inputRef={register({
-                    minLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    maxLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    pattern: {
-                    value: /[6789][0-9]{9}/,
-                    //type: "tel",
-                    message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                })}
-                type="number"
-                componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                //maxlength={10}
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
                 />
                  <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                 </SearchField>
@@ -170,11 +207,11 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                     <Controller
                             control={control}
                             name="creationReason"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={applicationTypes}
                                 optionKey="i18nKey"
                                 t={t}
@@ -188,11 +225,11 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                     <Controller
                             control={control}
                             name="status"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={applicationStatuses}
                                 optionKey="i18nKey"
                                 t={t}
@@ -204,7 +241,7 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                 <SearchField>
                     <label>{t("PT_FROM_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
                         name="fromDate"
                         control={control}
                         />
@@ -212,7 +249,7 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                 <SearchField>
                     <label>{t("PT_TO_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
                         name="toDate"
                         control={control}
                         />
@@ -235,7 +272,7 @@ const PTSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, set
                             sortOrder: "DESC"
                         });
                         setShowToast(null);
-                        previousPage();
+                        onClear();
                     }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>

@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory, useLocation } from "react-router-dom";
-import { FormComposer } from "@upyog/digit-ui-react-components";
+import { useLocation } from "react-router-dom";
+import { FormComposer } from "@nudmcdgnpm/digit-ui-react-components";
 import NDCSummary from "../../../pageComponents/NDCSummary";
 import { resetNDCForm } from "../../../redux/actions/NDCFormActions";
 
 // This component is the final step in the NDC application process for citizens. It displays a summary of all the information entered by the user in the previous steps and allows them to review before submission. The user can also go back to edit the details if needed. Upon clicking the "Next" button, it triggers the submission of the application and redirects to a response page based on the API response.
 const NDCNewFormSummaryStepThreeCitizen = ({ config, onGoNext, onBackClick, t }) => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   // const tenantId = Digit.ULBService.getCurrentTenantId();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const user = Digit.UserService.getUser();
@@ -23,7 +23,7 @@ const NDCNewFormSummaryStepThreeCitizen = ({ config, onGoNext, onBackClick, t })
       const res = await onSubmit(formData, actionStatus); // wait for the API response
       // Check if the API call was successful
       if (res?.isSuccess) {
-        history.push("/upyog-ui/citizen/ndc/response/" + res?.response?.Applications?.[0]?.applicationNo);
+        navigate(`/upyog-ui/citizen/ndc/response/${res?.response?.Applications?.[0]?.applicationNo}`);
       } else {
         console.error("Submission failed, not moving to next step.", res?.response);
       }

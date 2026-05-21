@@ -194,16 +194,12 @@ export const newConfig =[
                         "cardText": "",
                         "submitBarLabel": "PT_COMMONS_NEXT"
                     },
-                    
                     "nextStep": "PropertyStructureDetails",
-                    
-                    "withoutLabel": true
                     
                 },
                 {
                     "type": "component",
                     "route": "PropertyStructureDetails",
-                  
                     "component": "PropertyStructureDetails",
                     "key": "propertyStructureDetails",
                     "withoutLabel": true,

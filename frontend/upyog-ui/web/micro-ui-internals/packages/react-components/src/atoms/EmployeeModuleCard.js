@@ -34,12 +34,12 @@ import { Link } from "react-router-dom";
 //               <span className="link" key={index}>
 //                 {link ? <Link to={link}>{label}</Link> : null}
 //                 {count ? (
-//                   <>
+//                   <Fragment>
 //                     {FsmHideCount ? null : <span className={"inbox-total"}>{count || "-"}</span>}
 //                     <Link to={link}>
 //                       <ArrowRightInbox />
 //                     </Link>
-//                   </>
+//                   </Fragment>
 //                 ) : null}
 //               </span>
 //             ))}

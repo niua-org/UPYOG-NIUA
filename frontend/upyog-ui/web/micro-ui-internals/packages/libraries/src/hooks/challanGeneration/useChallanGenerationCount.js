@@ -1,8 +1,15 @@
-import { useQuery, useQueryClient } from "react-query";
+import { queryTemplate } from "../../common/queryTemplate";
 
 const useChallanGenerationCount = (tenantId, config = {}) => {
-  return useQuery(["ChallanGeneration_COUNT", tenantId], () => Digit.ChallanGenerationService.count(tenantId), config);
+  return queryTemplate({
+    queryKey: ["ChallanGeneration_COUNT", tenantId],
+
+    queryFn: () => Digit.ChallanGenerationService.count(tenantId),
+
+    config,
+  });
 };
+
 
 /**
  * Fetches challan generation count for a given tenant using React Query.

@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useCallback, useMemo } from "react";
-import { SearchForm, Table, Card, Loader, Header } from "@upyog/digit-ui-react-components";
+import { SearchForm, Table, Card, Loader, Header } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import SearchFields from "./SearchFields";
 import { useTranslation } from "react-i18next";
@@ -18,6 +18,14 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
   const { t } = useTranslation();
   const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
     defaultValues: {
+      applicationNumber: "",
+      connectionNumber: "",
+      mobileNumber: "",
+      applicationType: "",
+      applicationStatus: "",
+      fromDate: "",
+      toDate: "",
+      tradeName: "",
       offset: 0,
       limit: 10,
       sortBy: "commencementDate",
@@ -26,14 +34,7 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
     },
   });
 
-  useEffect(() => {
-    register("offset", 0);
-    register("limit", 10);
-    register("sortBy", "commencementDate");
-    register("sortOrder", "DESC");
-    register("sortOrder", "DESC");
-    register("isConnectionSearch", true);
-  }, [register]);
+
 
   useEffect(() => {
     clearSessionFormData();

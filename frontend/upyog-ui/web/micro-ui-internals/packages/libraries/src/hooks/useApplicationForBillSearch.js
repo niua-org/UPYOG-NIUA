@@ -1,11 +1,10 @@
 import { FSMService } from "../services/elements/FSM";
 import { PTService } from "../services/elements/PT";
-import { useQuery } from "react-query";
+import { queryTemplate } from "../common/queryTemplate";
 import { MCollectService } from "../services/elements/MCollect";
 import { PTRService } from "../services/elements/PTR";
 import { CHBServices } from "../services/elements/CHB";
 import {ADSServices} from "../services/elements/ADS";
-import { SVService } from "../services/elements/SV";
 import { WTService } from "../services/elements/WT";
 import { MTService } from "../services/elements/MT";
 import { TPService } from "../services/elements/TP";
@@ -30,9 +29,6 @@ const tlApplications = async (tenantId, filters) => {
   return (await TLService.search_bill({ tenantId, filters })).Bills;
 };
 
-const svApplications = async (tenantId, filters) => {
-  return (await SVService.search({ tenantId, filters })).SVDetail;
-};
 
 const chbApplications = async (tenantId, filters) => {
   return (await CHBServices.search({ tenantId, filters })).hallsBookingApplication;
@@ -107,11 +103,6 @@ const refObj = (tenantId, filters) => {
       key: "consumerCode",
       label: "REFERENCE_NO",
     },
-    street: {
-      searchFn: () => svApplications(null, { ...filters, applicationNo: consumerCodes }),
-      key: "applicationNo",
-      label: "SV_APPLICATION_NO",
-    },
     chb: {
       searchFn: () => chbApplications(null, { ...filters, bookingNo: consumerCodes }),
       key: "bookingNo",
@@ -162,9 +153,6 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   if (window.location.href.includes("pet-services")) {
     _key = "ptr"
   } 
-  if (window.location.href.includes("sv-services")) {
-    _key = "street"
-  } 
   if (window.location.href.includes("chb-services")) {
     _key = "chb"
   } 
@@ -187,9 +175,7 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
 
   /* key from application ie being used as consumer code in bill */
   const { searchFn, key, label } = refObj(tenantId, filters)[_key];
-  const applications = useQuery(["applicationsForBillDetails", { tenantId, businessService, filters, searchFn }], searchFn, {
-    ...config,
-  });
+  const applications = queryTemplate({ queryKey: ["applicationsForBillDetails", { tenantId, businessService, filters, searchFn }], queryFn: searchFn, config });
 
   return { ...applications, key, label };
 };

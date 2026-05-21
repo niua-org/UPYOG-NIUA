@@ -1,5 +1,3 @@
-import { useQuery, useQueryClient } from "react-query";
-
 /**
  * Fetches challan bill search results using React Query.
  *
@@ -15,11 +13,21 @@ import { useQuery, useQueryClient } from "react-query";
  * @returns {Object} { isLoading, error, data, revalidate }
  */
 
-const useChallanGenerationSearchBill = ({ tenantId, filters }, config = {}) => {
-  const client = useQueryClient();
+import { queryTemplate } from "../../common/queryTemplate";
+
+const useChallanGenerationSearchBill = (
+  { tenantId, filters },
+  config = {}
+) => {
   const args = tenantId ? { tenantId, filters } : { filters };
-  const { isLoading, error, data } = useQuery(["billSearchList", tenantId, filters], () => Digit.ChallanGenerationService.search_bill(args), config);
-  return { isLoading, error, data, revalidate: () => client.invalidateQueries(["billSearchList", tenantId, filters]) };
+
+  return queryTemplate({
+    queryKey: ["billSearchList", tenantId, filters],
+
+    queryFn: () => Digit.ChallanGenerationService.search_bill(args),
+
+    config,
+  });
 };
 
 export default useChallanGenerationSearchBill;

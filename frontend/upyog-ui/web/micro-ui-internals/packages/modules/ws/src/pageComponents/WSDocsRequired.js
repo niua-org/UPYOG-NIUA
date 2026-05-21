@@ -1,12 +1,12 @@
 import React, { Fragment } from "react";
-import { Card, CardHeader, SubmitBar, CitizenInfoLabel, CardText, Loader, CardSubHeader, BackButton, BreadCrumb, Header, CardLabel, CardSectionHeader, CardCaption, ActionBar, PrintBtnCommon } from "@upyog/digit-ui-react-components";
+import { Card, CardHeader, SubmitBar, CitizenInfoLabel, CardText, Loader, CardSubHeader, BackButton, BreadCrumb, Header, CardLabel, CardSectionHeader, CardCaption, ActionBar, PrintBtnCommon } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory, useRouteMatch } from "react-router-dom";
+import {  useLocation } from "react-router-dom";
 
 const WSDocsRequired = ({ onSelect, userType, onSkip, config }) => {
   const { t } = useTranslation();
-  const history = useHistory()
-  const match = useRouteMatch();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const { pathname } = useLocation();
   const tenantId = Digit.ULBService.getStateId();
   const goNext = () => {
     onSelect("DocsReq", "");
@@ -101,7 +101,7 @@ const WSDocsRequired = ({ onSelect, userType, onSkip, config }) => {
             <SubmitBar
               label={t("ACTION_TEST_APPLY")}
               onSubmit={() => {
-                history.push(match.path.replace("create-application", "new-application"));
+                navigate(pathname.replace("create-application", "new-application"));
               }}
               style={{ margin: "10px 10px 0px 0px" }}
               disabled={wsDocsLoading ? true : false}

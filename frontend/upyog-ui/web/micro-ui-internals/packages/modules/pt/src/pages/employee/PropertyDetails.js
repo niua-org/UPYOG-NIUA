@@ -1,8 +1,8 @@
-import { EditIcon, Header, LinkLabel, Loader, Modal } from "@upyog/digit-ui-react-components";
+import { EditIcon, Header, LinkLabel, Loader, Modal } from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import { useParams,  } from "react-router-dom";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
 import OwnerHistory from "./PropertyMutation/ownerHistory";
 import usePropertyAPI from "../../../../../libraries/src/hooks/pt/usePropertyAPI"
@@ -33,7 +33,7 @@ const PropertyDetails = () => {
   const [showUpdateNo, setShowUpdateNo] = useState(false);
   const PT_CEMP = Digit.UserService.hasAccess(["PT_CEMP"]) || false;
   const [businessService, setBusinessService] = useState("PT.CREATE");
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   sessionStorage.setItem("propertyIdinPropertyDetail", applicationNumber);
   // const isMobile = window.Digit.Utils.browser.isMobile();
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 780);
@@ -193,7 +193,7 @@ const PropertyDetails = () => {
         asSectionHeader: true,
         belowComponent: () => (
           <LinkLabel
-            onClick={() => history.push({ pathname: `/upyog-ui/employee/pt/payment-details/${applicationNumber}`})}
+            onClick={() => navigate({ pathname: `/upyog-ui/employee/pt/payment-details/${applicationNumber}`})}
             style={isMobile ? { marginTop: "15px", marginLeft: "0px" } : { marginTop: "15px" }}
           >
             {t("PT_VIEW_PAYMENT")}
@@ -234,7 +234,7 @@ const PropertyDetails = () => {
                 showFinancialYearsModal: true,
                 customFunctionToExecute: (data) => {
                   delete data.customFunctionToExecute;
-                  history.replace({ pathname: `/upyog-ui/employee/pt/ptsearch/assessment-details/${applicationNumber}`, state: { ...data } });
+                  navigate(`/upyog-ui/employee/pt/ptsearch/assessment-details/${applicationNumber}`, { replace: true, state: { ...data } });
                 },
                 tenantId: Digit.ULBService.getStateId(),
               },
@@ -257,7 +257,7 @@ const PropertyDetails = () => {
                 forcedName: "PT_INACTIVE_PROPERTY",
                 showInactiveYearModel: true,
                 customFunctionToExecute: (data) => {
-                history.push("/upyog-ui/employee/pt/response", { Property: data.Property, key: "UPDATE", action: "SUBMIT" });
+                navigate("/upyog-ui/employee/pt/response", { Property: data.Property, key: "UPDATE", action: "SUBMIT" });
                 },
                 // redirectionUrl: {
                  

@@ -17,20 +17,20 @@
  */
 
 
-import { Card, KeyNote, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useHistory } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 
 const PetApplication = ({ application, tenantId, buttonLabel }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   // Function to handle the click event, setting the applicationId and redirecting
   const handleRenewalClick = () => {
     sessionStorage.setItem("petId", application?.applicationNumber)
     application?.petToken && application?.petToken?.length > 0 ? sessionStorage.setItem("petToken",application?.petToken) : ""
-    history.push(`/upyog-ui/citizen/ptr/petservice/revised-application`);
+    navigate(`/upyog-ui/citizen/ptr/petservice/revised-application`);
   };
 
   return (

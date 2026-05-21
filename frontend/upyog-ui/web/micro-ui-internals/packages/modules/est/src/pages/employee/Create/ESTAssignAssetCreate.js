@@ -1,8 +1,9 @@
-import React ,{Children, Fragment}from "react";
+import React, { Children, Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Config } from "../../../config/Create/AssignAssetConfig";
+
 /**
  * ESTAssignAssetCreate
  * ---------------------------------------------------------
@@ -15,14 +16,12 @@ import { Config } from "../../../config/Create/AssignAssetConfig";
 const ESTAssignAssetCreate = ({ parentRoute }) => {
   // React Query client for cache invalidation
   const queryClient = useQueryClient();
-    // Base route match
-  const match = useRouteMatch();
-   // Translation function
+  const match = Digit.Hooks.useModuleBasePath();
   const { t } = useTranslation();
   const { pathname } = useLocation();
   
   // Navigation handler
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
     // State ID (currently unused but available)
   const stateId = Digit.ULBService.getStateId();
   
@@ -44,7 +43,7 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
    * - Multiple-entry steps (owners, units, etc.)
    */
 
-  const goNext = (skipStep, index, isAddMultiple, key) => {  
+  const goNext = (skipStep, index, isAddMultiple, key) => {
     let currentPath = pathname.split("/").pop(),
       lastchar = currentPath.charAt(currentPath.length - 1),
       isMultiple = false,
@@ -71,25 +70,24 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
     let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
 
       // Decide navigation method
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = navigate;
     if (skipStep) {
-      redirectWithHistory = history.replace;
+      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
     }
     // Override next step for multiple add flow
     if (isAddMultiple) {
       nextStep = key;
     }
-    
+
     // Redirect to check page if flow ends
     if (nextStep === null) {
-      return redirectWithHistory(`${match.path}/check`);
+      return redirectWithHistory(`check`);
     }
         // Build next page URL
     if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${match.path}/${nextStep}`;
-    }
-     else {
-      nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
+      nextPage = `${nextStep}`;
+    } else {
+      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
@@ -101,15 +99,15 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
    */
   if(params && Object.keys(params).length>0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true")
     {
-      clearParams();
-      queryClient.invalidateQueries("EST_ASSIGN_ASSETS");
-    }
+    clearParams();
+    queryClient.invalidateQueries("EST_ASSIGN_ASSETS");
+  }
 
   /**
    * Triggered after final check page submission
    */
   const estcreate = async () => {
-    history.replace(`${match.path}/acknowledgement`);
+    navigate(`acknowledgement`);
   };
 
     /**
@@ -131,7 +129,6 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
       let units = params.units || [];
       // if(index){units[index] = data;}else{
       units = data;
-
       setParams({ ...params, units });
     } else {
       setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
@@ -142,11 +139,9 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
   const handleSkip = () => {};
   const handleMultiple = () => {};
 
-
   const onSuccess = () => {
     clearParams();
     queryClient.invalidateQueries("EST_ASSIGN_ASSETS");
-
   };
 
     /**
@@ -154,19 +149,17 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
    * Filters out citizen-hidden screens
    */
   let commonFields = Config;
-
-
   commonFields.forEach((obj) => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
-  
+
     // Default route
   config.indexRoute = "info";
-  
+
   // Load dynamic components
   const ESTAssignAssetsCheckPage = Digit?.ComponentRegistryService?.getComponent("ESTAssignAssetsCheckPage");
   const ESTAllotmentAcknowledgement = Digit?.ComponentRegistryService?.getComponent("ESTAllotmentAcknowledgement");
-  
+
 
     /**
    * Route Rendering
@@ -174,31 +167,23 @@ const ESTAssignAssetCreate = ({ parentRoute }) => {
    * Dynamically renders each step using configuration
    */
   return (
-    <Switch>
+    <Routes>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         const user = Digit.UserService.getUser().info.type;
         return (
-          <Route path={`${match.path}/${routeObj.route}`} key={index}>
-           <Component  config={{ texts, inputs, key }}  onSelect={handleSelect}  onSkip={handleSkip}  t={t}  formData={params} onAdd={handleMultiple}  userType={user}   />
-          </Route>
+          <Route
+            path={`${routeObj.route}/*`}
+            key={index}
+            element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} userType={user} />}
+          />
         );
       })}
-
-    
-       
-     
-      <Route path={`${match.path}/check`}>
-        <ESTAssignAssetsCheckPage onSubmit={estcreate} value={params} />
-      </Route>
-      <Route path={`${match.path}/acknowledgement`}>
-        <ESTAllotmentAcknowledgement data={params} onSuccess={onSuccess}/>
-      </Route>
-      <Route>
-        <Redirect to={`${match.path}/${config.indexRoute}`} />  
-      </Route>
-    </Switch>     
+      <Route path="check/*" element={<ESTAssignAssetsCheckPage onSubmit={estcreate} value={params} />} />
+      <Route path="acknowledgement/*" element={<ESTAllotmentAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="/*" element={<Navigate to={config.indexRoute} replace />} />
+    </Routes>
   );
 };
 

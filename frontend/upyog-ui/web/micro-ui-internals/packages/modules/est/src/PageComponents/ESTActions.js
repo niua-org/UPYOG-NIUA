@@ -3,17 +3,17 @@ import { useTranslation } from "react-i18next";
 import {
     Card,
     Header,
-} from "@upyog/digit-ui-react-components";
-import { useHistory, Link } from "react-router-dom";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import { Link } from "react-router-dom";
 
 // EST Actions Component
 // This component provides navigation links for managing EST-related actions such as rebates, interest, and penalties.
 
 const ESTActions = () => {
     const { t } = useTranslation();
-    const history = useHistory();
+    const navigate = Digit.Hooks.useCustomNavigate();
 
-    const goTo = (path) => history.push(path);
+    const goTo = (path) => navigate(path);
 
 
     return (

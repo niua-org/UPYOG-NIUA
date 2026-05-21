@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Toast } from "@upyog/digit-ui-react-components";
+import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import ESTSearchApplication from "../../components/ESTSearchApplication";
 

@@ -1,6 +1,6 @@
-import { Banner, Card, Loader, CardText, SubmitBar, ActionBar } from "@upyog/digit-ui-react-components";
-import { Link } from "react-router-dom";
-import { useQueryClient } from "react-query";
+import { Banner, Card, Loader, CardText, SubmitBar, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,7 +26,8 @@ const Response = (props) => {
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const mutation = Digit.Hooks.engagement.useDocCreate();
-  const { state } = props.location;
+  const location = useLocation();
+  const { state } = location;
 
   useEffect(() => {
     const onSuccess = () => {
@@ -37,7 +38,7 @@ const Response = (props) => {
     });
   }, []);
 
-  if (mutation.isLoading || mutation.isIdle) {
+  if (mutation.isPending || mutation.isIdle) {
     return <Loader />;
   }
 

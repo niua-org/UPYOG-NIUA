@@ -25,7 +25,7 @@ const AdvertisementModuleCard = ({ imageSrc, title, location, poleNo, price, pat
         value: "true",
       }
     });
-    window.location.href = `${path}bookad/searchads`;
+    window.location.href = `bookad/searchads`;
   };
   useEffect(() => {
     clearParams();
@@ -41,7 +41,7 @@ const AdvertisementModuleCard = ({ imageSrc, title, location, poleNo, price, pat
         value: "true",
       }
     });
-    window.location.href = `${path}bookad/searchads`;
+    window.location.href = `bookad/searchads`;
   };
   return (
     <div

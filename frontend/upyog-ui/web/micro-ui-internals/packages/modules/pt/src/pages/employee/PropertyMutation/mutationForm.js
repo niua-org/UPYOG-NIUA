@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FormComposer, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { newConfigMutate } from "../../../config/Mutate/config";
-import { useHistory } from "react-router-dom";
+
 
 const MutationForm = ({ applicationData, tenantId }) => {
   const { t } = useTranslation();
@@ -21,7 +21,7 @@ const MutationForm = ({ applicationData, tenantId }) => {
     clearSuccessData();
   }, []);
 
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   const onFormValueChange = (setValue, formData, formState) => {
     setSubmitValve(!Object.keys(formState.errors).length);
@@ -153,7 +153,7 @@ const MutationForm = ({ applicationData, tenantId }) => {
     else {
       submitData.Property.institution=null;
     }
-    history.replace("/upyog-ui/employee/pt/response", { Property: submitData.Property, key: "UPDATE", action: "SUBMIT" });
+    navigate("/upyog-ui/employee/pt/response", { replace: true, state: { Property: submitData.Property, key: "UPDATE", action: "SUBMIT" } });
   };
 
   const configs = newConfigMutate;

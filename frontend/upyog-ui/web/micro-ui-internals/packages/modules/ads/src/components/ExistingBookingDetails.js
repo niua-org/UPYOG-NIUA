@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader, Card, KeyNote } from "@upyog/digit-ui-react-components";
+import { Loader, Card, KeyNote } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -22,7 +22,7 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
   
   // Prepare form data for Advertisement Service
   const formdata = {
-    advertisementSlotSearchCriteria: Searchdata.map((item) => ({
+    advertisementSlotSearchCriteria: Searchdata?.map((item) => ({
       bookingId: "",
       addType: item?.addTypeCode,
       bookingStartDate: item?.bookingDate,

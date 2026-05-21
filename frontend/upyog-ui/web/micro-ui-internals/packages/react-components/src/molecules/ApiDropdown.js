@@ -24,7 +24,7 @@ const ApiDropdown = ({ populators, formData, props, inputRef, errors }) => {
   if (isApiLoading) return <Loader />;
 
   return (
-    <>
+    <Fragment>
       {populators.allowMultiSelect && (
         <div style={{ display: "grid", gridAutoFlow: "row" }}>
           <MultiSelectDropdown
@@ -66,7 +66,7 @@ const ApiDropdown = ({ populators, formData, props, inputRef, errors }) => {
           optionCardStyles={populators?.optionsCustomStyle}
         />
       )}
-    </>
+    </Fragment>
   );
 };
 

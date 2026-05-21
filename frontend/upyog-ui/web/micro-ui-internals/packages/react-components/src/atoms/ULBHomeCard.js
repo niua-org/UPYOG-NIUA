@@ -1,6 +1,5 @@
 import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { Card, CardHeader } from "..";
 
 const ULBHomeCard = (props) => {
@@ -8,7 +7,7 @@ const ULBHomeCard = (props) => {
   const state = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   return (
     <React.Fragment>
@@ -19,7 +18,7 @@ const ULBHomeCard = (props) => {
             return (
               <Card
                 style={{ minWidth: "100px", cursor: "pointer" }}
-                onClick={() => (i.hyperlink ? location.assign(i.link) : history.push(i.link))}
+                onClick={() => (i.hyperlink ? location.assign(i.link) : navigate(i.link))}
                 children={
                   <>
                     {" "}

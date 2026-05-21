@@ -1,11 +1,10 @@
-import { BreadCrumb, PrivateRoute } from "@upyog/digit-ui-react-components";
+import { BreadCrumb, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import SearchApplication from "./SearchApplication";
-import { Switch, useLocation, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Response from "./Response";
 
-// NDCBreadCrumbs is a component that renders the breadcrumb navigation for the NDC module. It takes the current location as a prop and determines which breadcrumbs to show based on the pathname. The breadcrumbs are defined in an array, where each breadcrumb has a path, content, and a show property that determines whether it should be displayed or not. The BreadCrumb component from "@upyog/digit-ui-react-components" is used to render the breadcrumbs on the UI.
 const NDCBreadCrumbs = ({ location }) => {
   const { t } = useTranslation();
   const crumbs = [
@@ -51,19 +50,18 @@ const EmployeeApp = ({ path }) => {
   const NewNDCStepForm = Digit.ComponentRegistryService.getComponent("NewNDCStepFormEmployee");
 
   const isResponse = window.location.href.includes("/response");
-  const isMobile = window.Digit.Utils.browser.isMobile();
 
   return (
     <Fragment>
       <div className="ground-container">
         {!isResponse ? <NDCBreadCrumbs location={location} /> : null}
-        <Switch>
-          <PrivateRoute path={`${path}/inbox/application-overview/:id`} component={ApplicationOverview} />
-          {/* <PrivateRoute path={`${path}/search/application-overview/:id`} component={ApplicationOverview} /> */}
-          <Route path={`${path}/inbox`} component={(props) => <Inbox {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/create`} component={(props) => <NewNDCStepForm {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/response/:id`} component={Response} />
-        </Switch>
+        <Routes>
+          <Route path="inbox/application-overview/:id" element={<PrivateRoute><ApplicationOverview /></PrivateRoute>} />
+          {/* <Route path="search/application-overview/:id" element={<PrivateRoute><ApplicationOverview /></PrivateRoute>} /> */}
+          <Route path="inbox/*" element={<Inbox parentRoute={path} />} />
+          <Route path="create/*" element={<PrivateRoute><NewNDCStepForm parentRoute={path} /></PrivateRoute>} />
+          <Route path="response/:id" element={<PrivateRoute><Response /></PrivateRoute>} />
+        </Routes>
       </div>
     </Fragment>
   );

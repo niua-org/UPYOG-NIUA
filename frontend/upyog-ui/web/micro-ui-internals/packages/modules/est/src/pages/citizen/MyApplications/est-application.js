@@ -1,24 +1,23 @@
 import React from "react";
-import { Card, KeyNote, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 
 // Estate Application Component
 // This component displays the details of an estate application and provides options to view the summary or make a payment.
 
 const EstateApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   const handleViewSummary = () => {
-    history.push(`/upyog-ui/citizen/est/application/${application?.estateNo}/${application?.tenantId}`, {
+    navigate(`/upyog-ui/citizen/est/application/${application?.estateNo}/${application?.tenantId}`, {
       assetData: application,
       tenantId
     });
   };
 
   const handleMakePayment = () => {
-    history.push({
+    navigate({
       pathname: `/upyog-ui/citizen/payment/my-bills/est-services/${application?.estateNo}`,
       state: { tenantId },
     });

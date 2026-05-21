@@ -1,12 +1,12 @@
-import { DetailsCard, Loader, Table, Modal, SearchField, SubmitBar, SearchForm, Card, CardText, } from "@upyog/digit-ui-react-components";
+import { DetailsCard, Loader, Table, Modal, SearchField, SubmitBar, SearchForm, Card, CardText, } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { memo, useEffect, useMemo, useState } from "react";
-import { Link, useHistory } from "react-router-dom";
+import { Link } from "react-router-dom";
 import PropertyInvalidMobileNumber from "../../pages/citizen/MyProperties/PropertyInvalidMobileNumber";
-import { useQuery, useQueryClient } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 const GetCell = (value) => <span className="cell-text">{value}</span>;
 
 const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchConfig }) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [jobStatus, setJobStatus] = useState({
     running: false,
     done: 0,
@@ -25,10 +25,15 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
   const [showDownloads, setShowDownloads] = useState(false);
   const [groupBillrecords, setGroupBillrecords] = useState([]);
   console.log("payload", payload);
-  let filters = { ...payload, isDefaulterNoticeSearch: true }
+  let filters={ ...payload,isDefaulterNoticeSearch:true }
   const args = tenantId ? { tenantId, filters } : { filters };
-  const { isLoading, error, data, isSuccess } = useQuery(["propertySearchList", tenantId, filters], () => Digit.PTService.search(args));
+  // const { isLoading, error, data, isSuccess } = useQuery(["propertySearchList", tenantId,filters ], () => Digit.PTService.search(args));   // v4 useQuery Syntax
 
+//v5 useQuery syntax
+  const { isLoading, error, data, isSuccess } = useQuery({
+  queryKey: ["propertySearchList", tenantId, filters],
+  queryFn: () => Digit.PTService.search(args),
+});
 
   const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, false);
 
@@ -51,23 +56,23 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
       let number = owner.mobileNumber;
 
       if (
-        (
-          (number == updateNumberConfig?.invalidNumber)
-          || !number.match(updateNumberConfig?.invalidPattern)
-          && number == JSON.parse(getUserInfo()).mobileNumber
-        )
-      ) {
+          (
+            (number == updateNumberConfig?.invalidNumber)
+            || !number.match(updateNumberConfig?.invalidPattern) 
+            && number == JSON.parse(getUserInfo()).mobileNumber
+          )
+        ) {
         isAtleastOneMobileNumberInvalid = true;
         setOwnerInvalidMobileNumberIndex(index);
       }
     })
 
-    if (isAtleastOneMobileNumberInvalid) {
+    if(isAtleastOneMobileNumberInvalid) {
       setShowModal(true);
       setSelectedProperty(val);
     } else {
       revalidate();
-      history.push(`/upyog-ui/employee/payment/collect/PT/${val?.["propertyId"]}`)
+      navigate(`/upyog-ui/employee/payment/collect/PT/${val?.["propertyId"]}`)
     }
 
   }
@@ -88,7 +93,7 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
   };
 
   const skipNContinue = () => {
-    history.push(`/upyog-ui/employee/payment/collect/PT/${selectedProperty?.['propertyId']}`)
+    navigate(`/upyog-ui/employee/payment/collect/PT/${selectedProperty?.['propertyId']}`)
   }
 
   const updateMobileNumber = () => {
@@ -136,17 +141,17 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
       },
       {
         Header: t("PT_AMOUNT_DUE"),
-        Cell: ({ row }) => GetCell(row?.original?.dueAmount ? `₹ ${row?.original?.dueAmount}` : t("PT_NA")),
+        Cell: ({ row }) => GetCell(row?.original?.dueAmount?`₹ ${row?.original?.dueAmount}`:t("PT_NA")),
         disableSortBy: true,
       },
       {
         Header: t("PT_AMOUNT_YEAR"),
-        Cell: ({ row }) => GetCell(row?.original?.dueAmountYear ? `${row?.original?.dueAmountYear}` : t("PT_NA")),
+        Cell: ({ row }) => GetCell(row?.original?.dueAmountYear?`${row?.original?.dueAmountYear}`:t("PT_NA")),
         disableSortBy: true,
       },
       {
         Header: t("PT_PROPERTY_TYPE"),
-        Cell: ({ row }) => GetCell(t(row?.original?.propertyType ? `${row?.original?.propertyType}` : ("PT_NA"))),
+        Cell: ({ row }) => GetCell(row?.original?.propertyType?`${row?.original?.propertyType}`:t("PT_NA")),
         disableSortBy: true,
       }
     ],
@@ -154,7 +159,7 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
   );
   const columns2 = useMemo(
     () => [
-
+   
       {
         Header: t("ES_TOTAL_RECORD"),
         disableSortBy: true,
@@ -170,7 +175,7 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
         disableSortBy: true,
         Cell: ({ row }) => GetCell(t(row.original.status) || ""),
       },
-
+  
       {
         Header: t("ES_SEARCH_ACTION"),
         disableSortBy: true,
@@ -178,8 +183,8 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
           return (
             <div>
               {Digit.Utils.didEmployeeHasRole("PT_CEMP") ? (
-                <span className="link">
-                  <a style={{ textDecoration: 'none' }} onClick={() => downloadNotice(row.original)}>{t("ES_PT_COLLECT_TAX")}</a>
+                <span className="link"> 
+                  <a  style={{textDecoration:'none'}} onClick={() => downloadNotice(row.original)}>{t("ES_PT_COLLECT_TAX")}</a>
                 </span>
               ) : null}
             </div>
@@ -191,7 +196,7 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
   );
   const pdfDownloadLink = (documents = {}, fileStoreId = "", format = "") => {
     /* Need to enhance this util to return required format*/
-
+  
     let downloadLink = documents[fileStoreId] || "";
     let differentFormats = downloadLink?.split(",") || [];
     let fileURL = "";
@@ -257,33 +262,33 @@ const SearchPTID = ({ tenantId, t, payload, showToast, setShowToast, ptSearchCon
     showToast && setShowToast(null);
     return <Loader />;
   }
-  //   if (error) {
-  //     !showToast && setShowToast({ error: true, label: error?.response?.data?.Errors?.[0]?.code || error });
-  //     return null;
-  //   }
-  const onViewDownload = async () => {
-    let response = await Digit.PTService.getDefaulterNoticeStatus({ offset: 0, limit: 100 });
+//   if (error) {
+//     !showToast && setShowToast({ error: true, label: error?.response?.data?.Errors?.[0]?.code || error });
+//     return null;
+//   }
+const onViewDownload =async () =>{
+    let response = await Digit.PTService.getDefaulterNoticeStatus({offset:0,limit:100});
     setShowDownloads(true)
     setGroupBillrecords(response.groupBillrecords)
-    console.log("response", response)
-  }
+    console.log("response",response)
+}
   const PTEmptyResultInbox = memo(Digit.ComponentRegistryService.getComponent("PTEmptyResultInbox"));
   const getData = (tableData = []) => {
     return tableData?.map((dataObj) => {
       const obj = {};
       columns.forEach((el) => {
-        if (el.Cell) obj[el.Header] = el.Cell({ row: { original: dataObj } });
+        if (el.Cell) obj[el.Header] = el.Cell({row:{original:dataObj}});
       });
       return obj;
     });
   };
   const tableData = Object.values(data?.Properties || {}) || [];
-  if (ptSearchConfig?.ptSearchCount && payload.locality && tableData && tableData.length > ptSearchConfig?.ptSearchCount) {
-    // !showToast &&setShowToast({ error: true, label: "PT_MODIFY_SEARCH_CRITERIA" });
+  if(ptSearchConfig?.ptSearchCount&&payload.locality&&tableData&&tableData.length>ptSearchConfig?.ptSearchCount){
+   // !showToast &&setShowToast({ error: true, label: "PT_MODIFY_SEARCH_CRITERIA" });
     return null;
   }
   const tableData2 = Object.values(groupBillrecords || {}) || [];
-
+ 
   return (
     <React.Fragment>
       {data?.Properties?.length === 0 ? (

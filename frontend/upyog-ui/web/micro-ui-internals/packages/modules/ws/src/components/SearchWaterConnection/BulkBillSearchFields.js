@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useEffect } from "react";
 import { Controller, useWatch } from "react-hook-form";
-import { TextInput, SubmitBar, SearchField, Localities } from "@upyog/digit-ui-react-components";
+import { TextInput, SubmitBar, SearchField, Localities } from "@nudmcdgnpm/digit-ui-react-components";
 
 const BulkBillSearchFields = ({ register, control, reset, tenantId, t, setValue }) => {
   const [locality, setLocality] = useState("");
@@ -17,7 +17,7 @@ const BulkBillSearchFields = ({ register, control, reset, tenantId, t, setValue 
     <>
       <SearchField>
         <label>{t("WS_SEARCH_CONNNECTION_CITY")}</label>
-        <TextInput name="city" disable={true} value={t(tenant)} inputRef={register({})} />
+        <TextInput name="city" disable={true} value={t(tenant)} {...register("city")} />
       </SearchField>
       <SearchField>
         <label>{t("WS_SEARCH_LOCALITY_LABEL")}</label>
@@ -25,15 +25,17 @@ const BulkBillSearchFields = ({ register, control, reset, tenantId, t, setValue 
           name="locality"
           defaultValue={null}
           control={control}
-          inputRef={register({})}
-          render={(props) => (
+          render={({ field }) => (
             <Localities
-              selectLocality={selectLocality}
+              selectLocality={(value) => {
+                field.onChange(value);
+                selectLocality(value);
+              }}
               tenantId={tenant}
               boundaryType="revenue"
               keepNull={false}
               optionCardStyles={{ height: "600px", overflow: "auto", zIndex: "10" }}
-              selected={locality}
+              selected={field.value || locality}
 
               //disable={!city?.code}
               disableLoader={false}

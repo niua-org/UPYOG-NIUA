@@ -10,8 +10,8 @@ import {
   FormStep,
   CardHeader,
   SubmitBar
-} from "@upyog/digit-ui-react-components";
-import { useHistory, useRouteMatch } from "react-router-dom";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import {  useLocation } from "react-router-dom";
 
 function WSDisconnectionDocumentsForm({ t, config, onSelect, userType, formData  }) { 
   const tenantId = Digit.ULBService.getStateId();
@@ -20,8 +20,8 @@ function WSDisconnectionDocumentsForm({ t, config, onSelect, userType, formData 
   const [documents, setDocuments] = useState(storedData.WSDisconnectionForm.documents ?  storedData.WSDisconnectionForm.documents : []);
   const [error, setError] = useState(null);
   const [checkRequiredFields, setCheckRequiredFields] = useState(false);
-  const history = useHistory();
-  const match = useRouteMatch();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const { pathname } = useLocation();
 
   const handleSubmit = () => {
       onSelect(config.key, {WSDisconnectionDocumentsForm: documents});
@@ -63,7 +63,7 @@ function WSDisconnectionDocumentsForm({ t, config, onSelect, userType, formData 
         <SubmitBar 
           label={t("CS_COMMON_NEXT")}
           onSubmit={() => {
-            history.push(match.path.replace("documents-upload", "check"));
+            navigate(pathname.replace("documents-upload", "check"));
           }}
           disabled={documents.length < 2 ? true : false}
          />

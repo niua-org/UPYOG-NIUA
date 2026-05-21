@@ -136,8 +136,10 @@ export const logout = () => {
   return async () => {
     try {
       const authToken = getAccessToken();
+      const tenantId = localStorageGet("tenant-id") || "pg.citya";
+      console.log("tenantId in logout action", tenantId);
       if (authToken) {
-        const response = await httpRequest(AUTH.LOGOUT.URL, AUTH.LOGOUT.ACTION, [], { "access_token" : authToken });
+        const response = await httpRequest(`${AUTH.LOGOUT.URL}?tenantId=${tenantId}`, AUTH.LOGOUT.ACTION, [], { "access_token" : authToken });
       } else {
         clearUserDetails();
         process.env.REACT_APP_NAME === "Citizen"

@@ -11,15 +11,20 @@ import {
   Toast,
   LabelFieldPair,
   TextArea
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Controller, useForm } from "react-hook-form";
-import EXIF from "exif-js";
+import exifr from "exifr";
 import { assetStyles } from "../utils/assetStyles";
 import { validateMandatoryFields } from "../utils";
 import { MarkOnMap } from "@nudmcdgnpm/upyog-ui-module-gis";
 
 const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
-  const { control } = useForm();
+  const { control } = useForm({
+    defaultValues: {
+      city: formData?.address?.city || "",
+      locality: formData?.address?.locality || "",
+    },
+  });
   const allCities = Digit.Hooks.asset.useTenants();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateTenantId = Digit.ULBService.getStateId();
@@ -55,7 +60,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const [financialYear, setfinancialYear] = useState(formData?.asset?.financialYear || initialFinancialYear);
   const [sourceOfFinance, setsourceOfFinance] = useState(formData?.asset?.sourceOfFinance || "");
-  const [address, setAddress] = useState(formData?.address);
+  const [address, setAddress] = useState(formData?.address || {});
 
   // Document State - NEW
   const [documents, setDocuments] = useState(formData?.documents?.documents || []);
@@ -63,7 +68,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const [enableSubmit, setEnableSubmit] = useState(true);
   const [checkRequiredFields, setCheckRequiredFields] = useState(true);
 
-  const [geometry, setGeometry] = useState(formData.assetDetails?.geometry ||null);
+  const [geometry, setGeometry] = useState(formData.assetDetails?.geometry || null);
   const [showMap, setShowMap] = useState(false);
   const [area, setArea] = useState(formData.assetDetails?.area || null);
 
@@ -71,10 +76,10 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     formData?.assetDetails
       ? formData?.assetDetails
       : {
-          assetParentCategory: formData?.asset?.assettype?.code,
-          geometry: formData?.assetDetails?.geometry || null,
-          area: formData?.assetDetails?.area || null,
-        }
+        assetParentCategory: formData?.asset?.assettype?.code,
+        geometry: formData?.assetDetails?.geometry || null,
+        area: formData?.assetDetails?.area || null,
+      }
   );
 
   const cities = allCities?.filter((city) => city.code === tenantId);
@@ -89,7 +94,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   );
 
   useEffect(() => {
-    if (cities&& cities.length === 1) {
+    if (cities && cities.length === 1) {
       setAddress((prev) => ({ ...prev, city: cities[0] }));
     }
   }, [tenantId]);
@@ -314,13 +319,11 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const regexPattern = (columnType) => {
     if (!columnType) {
-      return "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)$";
+      return "^[-+]?([1-8]?[0-9](\\.[0-9]+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7][0-9])|([1-9]?[0-9]))(\\.[0-9]+)?)$";
     } else if (columnType === "number") {
       return "^[0-9]+(\\.[0-9]+)?$";
     } else if (columnType === "text") {
       return "^[a-zA-Z0-9 ,./\\-]+$";
-    } else {
-      return "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)$";
     }
   };
 
@@ -336,10 +339,10 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     if (e.key === "-" || e.key === "e" || e.key === "E") {
       e.preventDefault();
     }
-  };  
+  };
 
   const specialCharacterValidation = (e) => {
-  // Allow letters, numbers, and space
+    // Allow letters, numbers, and space
     if (/^[a-zA-Z0-9 \-/]$/.test(e.key)) {
       return; // valid — do nothing
     }
@@ -496,8 +499,8 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         isDisabled={
           !assettype ||
           !assetsubtype ||
-          !financialYear||
-          !Department||
+          !financialYear ||
+          !Department ||
           !isFormValid ||
           !address?.plotNumber || !address?.city || !address?.locality || !address?.addressLineOne || !address?.addressLineTwo
         }
@@ -524,7 +527,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 defaultValue={financialYear}
                 rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                 render={({ field }) => (
-                  <Dropdown selected={financialYear} select={setfinancialYear} option={financal} optionKey="i18nKey" placeholder={"Select"} t={t} style={{ width: "80%" }}/>
+                  <Dropdown selected={financialYear} select={setfinancialYear} option={financal} optionKey="i18nKey" placeholder={"Select"} t={t} style={{ width: "80%" }} />
                 )}
               />
             </div>
@@ -574,7 +577,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 defaultValue={assettype}
                 rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                 render={(props) => (
-                  <Dropdown selected={assettype} select={setassettype} option={asset_type} optionKey="i18nKey" placeholder={"Select"} t={t} style={{ width: "80%" }}/>
+                  <Dropdown selected={assettype} select={setassettype} option={asset_type} optionKey="i18nKey" placeholder={"Select"} t={t} style={{ width: "80%" }} />
                 )}
               />
             </div>
@@ -682,7 +685,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 onChange={setassetname}
                 style={{ width: "80%" }}
                 ValidationRequired={true}
-                validation = {{
+                validation={{
                   isRequired: true,
                   // pattern: "^[a-zA-Z ]*$",
                   type: "text",
@@ -730,25 +733,25 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                           }}
                         />
-                      ) :row.type === "num" ? (
+                      ) : row.type === "num" ? (
                         <TextInput
                           t={t}
                           onKeyPress={additionalNumberValidation}
                           optionKey="i18nKey"
                           name={row.name}
-                          value={assetDetails[row.name]||""}
+                          value={assetDetails[row.name] || ""}
                           onChange={handleInputChange}
                           ValidationRequired={true}
-                          validation = {{
+                          validation={{
                             isRequired: true,
                             // pattern: /^[0-9]*$/,
                             type: "number",
                             title: t("PT_NAME_ERROR_MESSAGE"),
-                            
+
                           }}
                           style={{ width: "80%" }}
                         />
-                        
+
                       ) : row.type === "dropdown" ? (
                         <Controller
                           control={control}
@@ -811,20 +814,16 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               <div style={{ position: "relative" }}>
                 <TextInput
                   t={t}
-                  type={"text"}
-                  isMandatory={false}
-                  optionKey="i18nKey"
-                  name={"location"}
+                  type="text"
+                  name="location"
                   value={assetDetails["location"] || ""}
                   onChange={handleInputChange}
-                  style={{ flex: 1 , width: "80%"}}
-                  ValidationRequired={false}
-                  {...(validation = {
+                  style={{ width: "80%" }}
+                  {...{
                     isRequired: true,
-                    pattern: "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)$",
-                    type: "text",
+                    pattern: "^[-+]?([1-8]?[0-9](\\.[0-9]+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7][0-9])|([1-9]?[0-9]))(\\.[0-9]+)?)$",
                     title: t("VALID_LAT_LONG"),
-                  })}
+                  }}
                   placeholder={t("AST_LAT_LONG_PLACEHOLDERS")}
                 />
                 <div
@@ -846,35 +845,36 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
 
               {assetDetails?.location && (
-            <div>
-            <button style={{ color: "#a82227" }} onClick={() => setShowMap(true)}>
-               {geometry ? "Edit Marked Asset" : "Mark Asset on Map"}
-            </button>
-            </div>
-        )}
+                <div>
+                  <button style={{ color: "#a82227" }} onClick={() => setShowMap(true)}>
+                    {geometry ? "Edit Marked Asset" : "Mark Asset on Map"}
+                  </button>
+                </div>
+              )}
 
-            {showMap && (
+              {showMap && (
                 <MarkOnMap
-                onGeometrySave={(geoJson) => {
+                  key={showMap ? "open-map" : "closed-map"}
+                  onGeometrySave={(geoJson) => {
                     setGeometry(geoJson);
-                    setAssetDetails((prevDetails) => ({
-                    ...prevDetails,
-                    geometry: geoJson,
+                    setAssetDetails((prev) => ({
+                      ...prev,
+                      geometry: geoJson,
                     }));
-                }}
-                onAreaSave={(polygonArea) => {
+                  }}
+                  onAreaSave={(polygonArea) => {
                     setArea(polygonArea);
-                    setAssetDetails((prevDetails) => ({
-                    ...prevDetails,
-                    area: polygonArea,
+                    setAssetDetails((prev) => ({
+                      ...prev,
+                      area: polygonArea,
                     }));
-                }}
-                savedGeometry={geometry}  // Pass saved geometry
-                savedArea={area} // Pass saved area
-                closeModal={() => setShowMap(false)}
-                location={currentLocation}
+                  }}
+                  savedGeometry={geometry}
+                  savedArea={area}
+                  closeModal={() => setShowMap(false)}
+                  location={currentLocation}
                 />
-            )}
+              )}
             </div>
 
             <div>
@@ -893,11 +893,11 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                   setAddress({ ...address, plotNumber: e.target.value });
                 }}
                 {...(validation = {
-                    isRequired: true,
-                    pattern: regexPattern("text"),
-                    type: "text",
-                    title: t("VALID_LAT_LONG"),
-                  })}
+                  isRequired: true,
+                  pattern: regexPattern("text"),
+                  type: "text",
+                  title: t("VALID_LAT_LONG"),
+                })}
                 style={{ width: "80%" }}
                 maxLength={6}
               />
@@ -986,26 +986,29 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 {`${t("ASSET_CITY")}`} <span style={{ color: "red" }}>*</span>
               </div>
               <Controller
-                control={control}
-                name={"city"}
-                rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                render={(props) => (
-                  <Dropdown
-                    // className="form-field"
-                    selected={address?.city}
-                    select={(value) => {
-                      props.onChange(value);
-                      setAddress({ ...address, city: value });
-                    }}
-                    option={allCities}
-                    optionKey="code"
-                    t={t}
-                    placeholder={"Select"}
-                    style={{ width: "80%" }}
-                    disable={true}
-                  />
-                )}
-              />
+  control={control}
+  name={"city"}
+  defaultValue={address?.city || ""}
+  rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+  render={({ field }) => (
+    <Dropdown
+      selected={address?.city}
+      select={(value) => {
+        field.onChange(value);
+        setAddress((prev) => ({
+          ...prev,
+          city: value,
+        }));
+      }}
+      option={allCities}
+      optionKey="code"
+      t={t}
+      placeholder={"Select"}
+      style={{ width: "80%" }}
+      disable={true}
+    />
+  )}
+/>
             </div>
             <div>
               <div>
@@ -1013,26 +1016,32 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
 
               <Controller
-                control={control}
-                name={"locality"}
-                rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-                render={(props) => (
-                  <Dropdown
-                    // className="form-field"
-                    selected={address?.locality}
-                    select={(value) => {
-                      props.onChange(value);
-                      setAddress({ ...address, locality: value });
-                    }}
-                    option={structuredLocality}
-                    optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
-                    optionKey="i18nKey"
-                    t={t}
-                    placeholder={"Select"}
-                    style={{ width: "80%" }}
-                  />
-                )}
-              />
+  control={control}
+  name={"locality"}
+  defaultValue={address?.locality || ""}
+  rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+  render={({ field }) => (
+    <Dropdown
+      selected={address?.locality}
+      select={(value) => {
+        field.onChange(value);
+        setAddress((prev) => ({
+          ...prev,
+          locality: value,
+        }));
+      }}
+      option={structuredLocality}
+      optionCardStyles={{
+        overflowY: "auto",
+        maxHeight: "300px",
+      }}
+      optionKey="i18nKey"
+      t={t}
+      placeholder={"Select"}
+      style={{ width: "80%" }}
+    />
+  )}
+/>
             </div>
           </div>
         </React.Fragment>
@@ -1081,12 +1090,12 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                     name="purchaseOrderNumber"
                     value={assetDetails["purchaseOrderNumber"]}
                     onChange={handleInputChange}
-                    {...(validation = {
+                    validation={{
                       isRequired: false,
                       pattern: "^[a-zA-Z0-9/-]*$",
                       type: "text",
                       title: t("PT_NAME_ERROR_MESSAGE"),
-                    })}
+                    }}
                     style={{ width: "80%" }}
                     placeholder={t("ENT_ALPHANUMERIC_PLACEHOLDER")}
                   />
@@ -1151,28 +1160,28 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 <div>
                   <div>{`${t("AST_COST_CONSTRUCTION")}`}</div>
                   <div style={assetStyles.rupeeIconPostions}>
-              <span style={assetStyles.rupeeIcon}>
-                ₹
-              </span>
-                  <TextInput
-                    t={t}
-                    type={"text"}
-                    isMandatory={false}
-                    optionKey="i18nKey"
-                    onKeyPress={additionalNumberValidation}
-                    name="costOfCostruction"
-                    value={assetDetails["costOfCostruction"]}
-                    onChange={handleInputChange}
-                    {...(validation = {
-                      isRequired: false,
-                      pattern: "^[a-zA-Z0-9/-]*$",
-                      type: "text",
-                      title: t("PT_NAME_ERROR_MESSAGE"),
-                    })}
-                    style={{ width: "80%", paddingLeft: "35px" }}
-                    placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
-                  />
-                </div>
+                    <span style={assetStyles.rupeeIcon}>
+                      ₹
+                    </span>
+                    <TextInput
+                      t={t}
+                      type={"text"}
+                      isMandatory={false}
+                      optionKey="i18nKey"
+                      onKeyPress={additionalNumberValidation}
+                      name="costOfCostruction"
+                      value={assetDetails["costOfCostruction"]}
+                      onChange={handleInputChange}
+                      {...(validation = {
+                        isRequired: false,
+                        pattern: "^[a-zA-Z0-9/-]*$",
+                        type: "text",
+                        title: t("PT_NAME_ERROR_MESSAGE"),
+                      })}
+                      style={{ width: "80%", paddingLeft: "35px" }}
+                      placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
+                    />
+                  </div>
                 </div>
               </React.Fragment>
             )}
@@ -1216,7 +1225,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
             </div>
             <div>
               <div>
-                {`${t("AST_PURCHASE_COST")}`} 
+                {`${t("AST_PURCHASE_COST")}`}
                 <div className="tooltip" style={assetStyles.toolTip}>
                   <InfoBannerIcon />
                   <span className="tooltiptext" style={assetStyles.toolTipText}>
@@ -1225,37 +1234,37 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 </div>
               </div>
               <div style={assetStyles.rupeeIconPostions}>
-              <span style={assetStyles.rupeeIcon}>
-                ₹
-              </span>
-              <TextInput
-                t={t}
-                // type={"number"}
-                onKeyPress={additionalNumberValidation}
-                isMandatory={false}
-                optionKey="i18nKey"
-                name="purchaseCost"
-                value={assetDetails["purchaseCost"]}
-                onChange={handleInputChange}
-                ValidationRequired={true}
-                validation = {{
-                  isRequired: false,
-                  // pattern: /^[0-9]*$/,
-                  type: "number",
-                  title: t("PT_NAME_ERROR_MESSAGE"),
-                  
-                }}
-                style={{ width: "80%", paddingLeft: "35px" }}
-                disabled={isCostFieldsDisable}
-               placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
-              />
+                <span style={assetStyles.rupeeIcon}>
+                  ₹
+                </span>
+                <TextInput
+                  t={t}
+                  // type={"number"}
+                  onKeyPress={additionalNumberValidation}
+                  isMandatory={false}
+                  optionKey="i18nKey"
+                  name="purchaseCost"
+                  value={assetDetails["purchaseCost"]}
+                  onChange={handleInputChange}
+                  ValidationRequired={true}
+                  validation={{
+                    isRequired: false,
+                    // pattern: /^[0-9]*$/,
+                    type: "number",
+                    title: t("PT_NAME_ERROR_MESSAGE"),
+
+                  }}
+                  style={{ width: "80%", paddingLeft: "35px" }}
+                  disabled={isCostFieldsDisable}
+                  placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
+                />
               </div>
             </div>
 
             <div>
               <div>
                 {`${t("AST_ACQUISITION_COST")}`}
-                
+
                 <div className="tooltip" style={assetStyles.toolTip}>
                   <InfoBannerIcon />
                   <span className="tooltiptext" style={assetStyles.toolTipText}>
@@ -1264,35 +1273,35 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 </div>
               </div>
               <div style={assetStyles.rupeeIconPostions}>
-              <span style={assetStyles.rupeeIcon}>
-                ₹
-              </span>
-              <TextInput
-                t={t}
-                type={"text"}
-                isMandatory={false}
-                onKeyPress={additionalNumberValidation}
-                optionKey="i18nKey"
-                name="acquisitionCost"
-                value={assetDetails["acquisitionCost"]}
-                onChange={handleInputChange}
-                ValidationRequired={true}
-                {...(validation = {
-                  isRequired: false,
-                  pattern: /^[0-9]*$/,
-                  type: "number",
-                  title: t("PT_NAME_ERROR_MESSAGE"),
-                })}
-                style={{ width: "80%",  paddingLeft: "35px" }}
-                placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
-                disabled={isCostFieldsDisable}
-              />
-            </div>
+                <span style={assetStyles.rupeeIcon}>
+                  ₹
+                </span>
+                <TextInput
+                  t={t}
+                  type={"text"}
+                  isMandatory={false}
+                  onKeyPress={additionalNumberValidation}
+                  optionKey="i18nKey"
+                  name="acquisitionCost"
+                  value={assetDetails["acquisitionCost"]}
+                  onChange={handleInputChange}
+                  ValidationRequired={true}
+                  {...(validation = {
+                    isRequired: false,
+                    pattern: /^[0-9]*$/,
+                    type: "number",
+                    title: t("PT_NAME_ERROR_MESSAGE"),
+                  })}
+                  style={{ width: "80%", paddingLeft: "35px" }}
+                  placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
+                  disabled={isCostFieldsDisable}
+                />
+              </div>
             </div>
 
             <div>
               <div>
-                {`${t("AST_BOOK_VALUE")}`} 
+                {`${t("AST_BOOK_VALUE")}`}
                 <div className="tooltip" style={assetStyles.toolTip}>
                   <InfoBannerIcon />
                   <span className="tooltiptext" style={assetStyles.toolTipText}>
@@ -1301,34 +1310,34 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 </div>
               </div>
               <div style={assetStyles.rupeeIconPostions}>
-              <span style={assetStyles.rupeeIcon}>
-                ₹
-              </span>
-              <TextInput
-                t={t}
-                type={"number"}
-                isMandatory={false}
-                optionKey="i18nKey"
-                onKeyPress={additionalNumberValidation}
-                name="bookValue"
-                value={assetDetails["bookValue"]}
-                onChange={handleInputChange}
-                {...(validation = {
-                  isRequired: false,
-                  // pattern: /^[0-9]*$/,
-                  type: "number",
-                  title: t("PT_NAME_ERROR_MESSAGE"),
-                })}
-                style={{ width: "80%", paddingLeft: "35px" }}
-                disabled={isCostFieldsDisable}
-                placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
-              />
-            </div>
+                <span style={assetStyles.rupeeIcon}>
+                  ₹
+                </span>
+                <TextInput
+                  t={t}
+                  type={"number"}
+                  isMandatory={false}
+                  optionKey="i18nKey"
+                  onKeyPress={additionalNumberValidation}
+                  name="bookValue"
+                  value={assetDetails["bookValue"]}
+                  onChange={handleInputChange}
+                  {...(validation = {
+                    isRequired: false,
+                    // pattern: /^[0-9]*$/,
+                    type: "number",
+                    title: t("PT_NAME_ERROR_MESSAGE"),
+                  })}
+                  style={{ width: "80%", paddingLeft: "35px" }}
+                  disabled={isCostFieldsDisable}
+                  placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
+                />
+              </div>
             </div>
 
             <div>
               <div>
-                {`${t("AST_MARKET_RATE_EVALUATION")}`} 
+                {`${t("AST_MARKET_RATE_EVALUATION")}`}
                 <div className="tooltip" style={assetStyles.toolTip}>
                   <InfoBannerIcon />
                   <span className="tooltiptext" style={assetStyles.toolTipText}>
@@ -1337,34 +1346,34 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 </div>
               </div>
               <div style={assetStyles.rupeeIconPostions}>
-              <span style={assetStyles.rupeeIcon}>
-                ₹
-              </span>
-              <TextInput
-                t={t}
-                type={"number"}
-                isMandatory={false}
-                onKeyPress={additionalNumberValidation}
-                optionKey="i18nKey"
-                name="marketRateEvaluation"
-                value={assetDetails["marketRateEvaluation"]}
-                onChange={handleInputChange}
-                ValidationRequired={true}
-                {...(validation = {
-                  isRequired: false,
-                  // pattern: regexPattern("number"),
-                  type: "number",
-                  title: t("PT_NAME_ERROR_MESSAGE"),
-                })}
-                style={{ width: "80%", paddingLeft: "35px" }}
-                placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
-              />
-            </div>
+                <span style={assetStyles.rupeeIcon}>
+                  ₹
+                </span>
+                <TextInput
+                  t={t}
+                  type={"number"}
+                  isMandatory={false}
+                  onKeyPress={additionalNumberValidation}
+                  optionKey="i18nKey"
+                  name="marketRateEvaluation"
+                  value={assetDetails["marketRateEvaluation"]}
+                  onChange={handleInputChange}
+                  ValidationRequired={true}
+                  {...(validation = {
+                    isRequired: false,
+                    // pattern: regexPattern("number"),
+                    type: "number",
+                    title: t("PT_NAME_ERROR_MESSAGE"),
+                  })}
+                  style={{ width: "80%", paddingLeft: "35px" }}
+                  placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
+                />
+              </div>
             </div>
 
-             <div>
+            <div>
               <div>
-                {`${t("AST_MARKET_RATE_CIRCLE")}`} 
+                {`${t("AST_MARKET_RATE_CIRCLE")}`}
                 <div className="tooltip" style={assetStyles.toolTip}>
                   <InfoBannerIcon />
                   <span className="tooltiptext" style={assetStyles.toolTipText}>
@@ -1373,32 +1382,32 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 </div>
               </div>
               <div style={assetStyles.rupeeIconPostions}>
-              <span style={assetStyles.rupeeIcon}>
-                ₹
-              </span>
-              <TextInput
-                t={t}
-                type={"number"}
-                isMandatory={false}
-                onKeyPress={additionalNumberValidation}
-                optionKey="i18nKey"
-                name="marketRateCircle"
-                value={assetDetails["marketRateCircle"]}
-                onChange={handleInputChange}
-                ValidationRequired={true}
-                {...(validation = {
-                  isRequired: false,
-                  // pattern: regexPattern("number"),
-                  type: "number",
-                  title: t("PT_NAME_ERROR_MESSAGE"),
-                })}
-                style={{ width: "80%", paddingLeft: "35px" }}
-                 placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
-              />
-            </div>
+                <span style={assetStyles.rupeeIcon}>
+                  ₹
+                </span>
+                <TextInput
+                  t={t}
+                  type={"number"}
+                  isMandatory={false}
+                  onKeyPress={additionalNumberValidation}
+                  optionKey="i18nKey"
+                  name="marketRateCircle"
+                  value={assetDetails["marketRateCircle"]}
+                  onChange={handleInputChange}
+                  ValidationRequired={true}
+                  {...(validation = {
+                    isRequired: false,
+                    // pattern: regexPattern("number"),
+                    type: "number",
+                    title: t("PT_NAME_ERROR_MESSAGE"),
+                  })}
+                  style={{ width: "80%", paddingLeft: "35px" }}
+                  placeholder={t("ENT_NUMERIC_VALUE_ONLY")}
+                />
+              </div>
             </div>
 
-            { !["LAND", "BUILDING"].includes(assettype?.code) && (
+            {!["LAND", "BUILDING"].includes(assettype?.code) && (
               <React.Fragment>
                 <div>
                   <div>
@@ -1665,36 +1674,36 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                           )}
                         />
                       ) : row.type === "num" ? (
-                      <div style={assetStyles.rupeeIconPostions}>
-                        {row.name === "improvementCost" && (
+                        <div style={assetStyles.rupeeIconPostions}>
+                          {row.name === "improvementCost" && (
                             <span style={assetStyles.rupeeIcon}>
                               ₹
                             </span>
-                        )}
-                        <TextInput
-                          t={t}
-                          type={"number"}
-                          isMandatory={row.isMandatory}
-                          onKeyPress={additionalNumberValidation}
-                          optionKey="i18nKey"
-                          name={row.name}
-                          value={assetDetails[row.name] || ""}
-                          onChange={handleInputChange}
-                          {...(validation = {
-                            isRequired: row.isMandatory,
-                            pattern: regexPattern(row.columnType),
-                            type: row.columnType,
-                            title: t("PT_NAME_ERROR_MESSAGE"),
-                          })}
-                          style={{ 
-                            width: "80%",
-                            ...(row.name === "improvementCost" && { paddingLeft: "35px" })
-                          }}
-                          readOnly={row.isReadOnly}
-                          disabled={row.disable}
-                        />
-                      </div>
-                      ): row.type=== "textArea" ? (
+                          )}
+                          <TextInput
+                            t={t}
+                            type={"number"}
+                            isMandatory={row.isMandatory}
+                            onKeyPress={additionalNumberValidation}
+                            optionKey="i18nKey"
+                            name={row.name}
+                            value={assetDetails[row.name] || ""}
+                            onChange={handleInputChange}
+                            {...(validation = {
+                              isRequired: row.isMandatory,
+                              pattern: regexPattern(row.columnType),
+                              type: row.columnType,
+                              title: t("PT_NAME_ERROR_MESSAGE"),
+                            })}
+                            style={{
+                              width: "80%",
+                              ...(row.name === "improvementCost" && { paddingLeft: "35px" })
+                            }}
+                            readOnly={row.isReadOnly}
+                            disabled={row.disable}
+                          />
+                        </div>
+                      ) : row.type === "textArea" ? (
                         <TextArea
                           t={t}
                           type={"textarea"}
@@ -1714,27 +1723,27 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             title: t("PT_NAME_ERROR_MESSAGE"),
                           })}
                         />
-                      ):
-                      (
-                        <TextInput
-                          t={t}
-                          type={row.type}
-                          isMandatory={row.isMandatory}
-                          optionKey="i18nKey"
-                          onKeyPress={specialCharacterValidation}
-                          name={row.name}
-                          value={assetDetails[row.name] || ""}
-                          onChange={handleInputChange}
-                          {...(validation = {
-                            isRequired: row.isMandatory,
-                            pattern: regexPattern(row.columnType),
-                            type: row.columnType,
-                            title: t("PT_NAME_ERROR_MESSAGE"),
-                          })}
-                          style={{ width: "80%" }}
-                          readOnly={row.isReadOnly}
-                        />
-                      )}
+                      ) :
+                        (
+                          <TextInput
+                            t={t}
+                            type={row.type}
+                            isMandatory={row.isMandatory}
+                            optionKey="i18nKey"
+                            onKeyPress={specialCharacterValidation}
+                            name={row.name}
+                            value={assetDetails[row.name] || ""}
+                            onChange={handleInputChange}
+                            {...(validation = {
+                              isRequired: row.isMandatory,
+                              pattern: regexPattern(row.columnType),
+                              type: row.columnType,
+                              title: t("PT_NAME_ERROR_MESSAGE"),
+                            })}
+                            style={{ width: "80%" }}
+                            readOnly={row.isReadOnly}
+                          />
+                        )}
                     </div>
                   );
                 })}
@@ -1775,8 +1784,8 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
     filteredDocument
       ? { ...filteredDocument, active: doc?.active === true, code: filteredDocument?.documentType }
       : doc?.dropdownData?.length === 1
-      ? doc?.dropdownData[0]
-      : {}
+        ? doc?.dropdownData[0]
+        : {}
   );
 
   const [file, setFile] = useState(null);
@@ -1800,40 +1809,37 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
     />
   );
 
-  const extractGeoLocation = (file) => {
-    return new Promise((resolve) => {
-      EXIF.getData(file, function () {
-        const lat = EXIF.getTag(this, "GPSLatitude");
-        const lon = EXIF.getTag(this, "GPSLongitude");
-        if (lat && lon) {
-          const latDecimal = convertToDecimal(lat);
-          const lonDecimal = convertToDecimal(lon);
-          resolve({ latitude: latDecimal, longitude: lonDecimal });
-        } else {
-          resolve({ latitude: null, longitude: null });
-        }
-      });
-    });
-  };
+  const extractGeoLocation = async (file) => {
+  try {
+    const gpsData = await exifr.gps(file);
 
-  const convertToDecimal = (coordinate) => {
-    const degrees = coordinate[0];
-    const minutes = coordinate[1];
-    const seconds = coordinate[2];
-    return degrees + minutes / 60 + seconds / 3600;
-  };
+    if (gpsData?.latitude && gpsData?.longitude) {
+      return {
+        latitude: gpsData.latitude,
+        longitude: gpsData.longitude,
+      };
+    }
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    setFile(file);
-    extractGeoLocation(file).then(({ latitude, longitude }) => {
-      setLatitude(latitude);
-      setLongitude(longitude);
-      if (doc?.code === "OWNER.ASSETPHOTO" && (!latitude || !longitude)) {
-        setError("Please upload a photo with location details");
-      }
-    });
-  };
+    return { latitude: null, longitude: null };
+  } catch (error) {
+    console.warn("EXIF extraction failed:", error);
+    return { latitude: null, longitude: null };
+  }
+};
+
+  const handleFileUpload = async (e) => {
+  const file = e.target.files[0];
+  setFile(file);
+
+  const { latitude, longitude } = await extractGeoLocation(file);
+
+  setLatitude(latitude);
+  setLongitude(longitude);
+
+  if (doc?.code === "OWNER.ASSETPHOTO" && (!latitude || !longitude)) {
+    setError("Please upload a photo with location details");
+  }
+};
 
   useEffect(() => {
     (async () => {

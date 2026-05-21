@@ -1,19 +1,13 @@
-import { useQuery } from "react-query";
-
-// Hook to search for EST bills based on tenantId and consumerCode
-// Returns loading state, error, data, and a refetch function
+import { queryTemplate } from "../../common/queryTemplate";
 
 const useESTBillSearch = ({ tenantId, consumerCode, businessService = "est-services", config = {} }) => {
-  const { isLoading, error, data, refetch } = useQuery(
-    ["EST_BILL_SEARCH", tenantId, consumerCode, businessService],
-    () => Digit.ESTService.fetchBill({ tenantId, consumerCode, businessService }),
-    {
-      ...config,
-      enabled: !!(tenantId && consumerCode),
-    }
-  );
-
-  return { isLoading, error, data, refetch };
+  return queryTemplate({
+    queryKey: ["EST_BILL_SEARCH", tenantId, consumerCode, businessService],
+    queryFn: () =>
+      Digit.ESTService.fetchBill({ tenantId, consumerCode, businessService }),
+    enabled: !!(tenantId && consumerCode),
+    config,
+  });
 };
 
 export default useESTBillSearch;
