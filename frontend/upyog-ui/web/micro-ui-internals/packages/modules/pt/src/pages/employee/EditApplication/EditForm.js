@@ -12,10 +12,13 @@ const EditForm = ({ applicationData }) => {
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_HAPPENED", false);
   const [successData, setsuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_SUCCESS_DATA", {});
   const { data: commonFields, isLoading } = Digit.Hooks.pt.useMDMS(Digit.ULBService.getStateId(), "PropertyTax", "CommonFieldsConfig");
+  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, false);
 
   useEffect(() => {
     setMutationHappened(false);
     clearSuccessData();
+    sessionStorage.removeItem("EMPLOYEE_MUTATION_TRIGGERED");
   }, []);
   console.log("applicationData",applicationData)
 let propertyStructureDetails= {"usageCategory":"","structureType":applicationData?.additionalDetails?.structureType,"ageOfProperty":applicationData?.additionalDetails?.ageOfProperty}
@@ -92,11 +95,40 @@ let propertyStructureDetails= {"usageCategory":"","structureType":applicationDat
     if (state?.workflow?.action === "OPEN") {
       formData.units = formData.units.filter((unit) => unit.active);
     }
-    navigate("/upyog-ui/employee/pt/response", { Property: formData, key: "UPDATE", action: "SUBMIT" });
+    mutation.mutate(
+      { Property: formData },
+      {
+        onSuccess: (responseData) => {
+          navigate("/upyog-ui/employee/pt/response", {
+            replace: true,
+            state: {
+              Property: formData,
+              responseData,
+              isSuccess: true,
+              action: "SUBMIT",
+              key: "UPDATE"
+            }
+          });
+        },
+        onError: (error) => {
+          navigate("/upyog-ui/employee/pt/response", {
+            replace: true,
+            state: {
+              Property: formData,
+              responseData: null,
+              isSuccess: false,
+              error: error?.response?.data?.Errors?.[0]?.message || error?.message || "Error updating property",
+              action: "SUBMIT",
+              key: "UPDATE"
+            }
+          });
+        }
+      }
+    );
 
   };
 
-  if (isLoading) {
+  if (isLoading || mutation.isPending) {
     return <Loader />;
   }
 

@@ -19,7 +19,7 @@ const App = ({ stateCode }) => {
           <Route path={`/property/search-results`} element={<SearchResultsComponent stateCode={stateCode} />} />
           <Route path={`/property/citizen-otp`} element={<CitizenOtp stateCode={stateCode} />} />
           <Route path={`/property/link-success/:propertyIds`} element={<PrivateRoute><PropertyLinkSuccess /></PrivateRoute>} />
-          <Route path={`/property/new-application`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
+          <Route path={`/property/new-application/*`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
           <Route path={`/view-property`} element={<PrivateRoute><ViewProperty /></PrivateRoute>} />
         </Routes>
       </AppContainer>

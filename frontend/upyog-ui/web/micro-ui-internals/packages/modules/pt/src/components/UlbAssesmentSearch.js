@@ -10,17 +10,21 @@ const UlbAssesmentSearch = ({tenantId, isLoading, t, onSubmit, data, count, setS
     const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
         defaultValues: {
             offset: 0,
-            limit: !isMobile && 10,
+            limit: !isMobile ? 10 : 0,
             sortBy: "commencementDate",
             sortOrder: "DESC"
         }
-    })
+    });
+
+    // Destructure errors to subscribe to formState Proxy for React Hook Form v7 compatibility
+    const { errors } = formState;
+
     useEffect(() => {
-      register("offset")
-      register("limit")
-      register("sortBy")
-      register("sortOrder")
-    },[register])
+      register("offset");
+      register("limit");
+      register("sortBy");
+      register("sortOrder");
+    }, [register]);
 
     useEffect(() => {
         if (financialYearsData && financialYearsData["egf-master"]) {
@@ -209,10 +213,10 @@ const UlbAssesmentSearch = ({tenantId, isLoading, t, onSubmit, data, count, setS
                 };
                 }}
                 onPageSizeChange={onPageSizeChange}
-                currentPage={getValues("offset")/getValues("limit")}
+                currentPage={Math.floor((Number(getValues("offset")) || 0) / (Number(getValues("limit")) || 10))}
                 onNextPage={nextPage}
                 onPrevPage={previousPage}
-                pageSizeLimit={getValues("limit")}
+                pageSizeLimit={Number(getValues("limit")) || 10}
                 onSort={onSort}
                 disableSort={false}
                 sortParams={[{id: getValues("sortBy"), desc: getValues("sortOrder") === "DESC" ? true : false}]}

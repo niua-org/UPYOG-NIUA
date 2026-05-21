@@ -8,7 +8,12 @@ const DocumentName = ({ userType, t, setValue, onSelect, config, data, formData,
       <LabelFieldPair style={{marginBottom:'20px'}}> 
         <CardLabel style={{ fontWeight: "bold"}}>{t("ES_COMMON_DOC_NAME") + " *"}</CardLabel>
         <div className="field">
-          <TextInput name={config.key} inputRef={register(config.key).ref} {...register(config.key)} />
+          {(() => {
+            const { ref: nameRef, ...nameRest } = register(config.key);
+            return (
+              <TextInput name={config.key} inputRef={nameRef} {...nameRest} />
+            );
+          })()}
         </div>
       </LabelFieldPair>
     </React.Fragment>

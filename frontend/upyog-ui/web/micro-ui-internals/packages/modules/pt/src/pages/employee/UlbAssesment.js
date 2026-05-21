@@ -67,7 +67,7 @@ const UlbAssesment = ({path}) => {
     //    config,
 
     //   );
-      const { isLoading, isSuccess,error,count, mutate: assessmentMutate } = Digit.Hooks.pt.UseAssessmentCreateUlb("pg.citya");
+      const { isPending: isLoading, isSuccess, error, count, data: mutationData, mutate: assessmentMutate } = Digit.Hooks.pt.UseAssessmentCreateUlb("pg.citya");
       const { isLoading: financialYearsLoading, data: financialYearsData } = Digit.Hooks.pt.useMDMS(
         tenantId,
         "pt",
@@ -80,6 +80,7 @@ const UlbAssesment = ({path}) => {
           },
         }
       );
+      const searchReult = mutationData?.Properties || [];
       console.log("mutate",assessmentMutate)
     return <React.Fragment>
         <UlbAssesmentSearch t={t} isLoading={isLoading} tenantId={tenantId} setShowToast={setShowToast} onSubmit={onSubmit} data={  isSuccess && !isLoading ? (searchReult.length>0? searchReult : { display: "ES_COMMON_NO_DATA" } ):""} count={count} financialYearsData={financialYearsData} /> 
