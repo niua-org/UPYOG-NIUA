@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="Arial">
+        <normal>fonts/Arial.ttf</normal>
+        <bold>fonts/Arial.ttf</bold>
+        <italic>fonts/Arial.ttf</italic>
+        <boldItalic>fonts/Arial.ttf</boldItalic>
+        <pdfFontName>Helvetica</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+</fontFamilies>

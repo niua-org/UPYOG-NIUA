@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.Plan;
 import org.egov.common.entity.edcr.PlanFeature;
 import org.egov.common.entity.edcr.PlanInformation;
@@ -27,7 +27,7 @@ import org.egov.edcr.utility.DcrConstants;
 import org.egov.infra.admin.master.entity.AppConfigValues;
 import org.egov.infra.admin.master.entity.City;
 import org.egov.infra.admin.master.service.AppConfigValueService;
-import org.egov.infra.admin.master.service.CityService;
+import org.egov.infra.admin.master.service.ICityService;
 import org.egov.infra.config.core.ApplicationThreadLocals;
 import org.egov.infra.custom.CustomImplProvider;
 import org.egov.infra.microservice.models.RequestInfo;
@@ -55,7 +55,7 @@ public class ExtractService {
     @Autowired
     private MdmsConfiguration mdmsConfiguration;
     @Autowired
-    private CityService cityService;
+    private ICityService cityService;
     @Autowired
     private MDMSValidator mdmsValidator;
 
@@ -67,6 +67,7 @@ public class ExtractService {
         DXFDocument doc = getDxfDocument(dxfFile);
         PlanDetail planDetail = new PlanDetail();
         planDetail.setDoc(doc);
+        planDetail.setDxfSourceFile(dxfFile);
         planDetail.setPlanInformation(pi);
         planDetail.setApplicationDate(scrutinyDate);
         Map<String, String> cityDetails = specificRuleService.getCityDetails();

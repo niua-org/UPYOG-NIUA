@@ -53,10 +53,9 @@ import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonMethod;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.edcr.security.oauth2.entity.SecuredClient;
 import org.egov.infra.rest.support.CustomTokenEnhancer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,8 +132,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 
     private SecuredClient getSecuredClientFromResource() {
         final ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(JsonMethod.FIELD, Visibility.ANY);
-        mapper.configure(SerializationConfig.Feature.AUTO_DETECT_FIELDS, true);
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         InputStream inputStream = null;
         try {
         	inputStream = getClientsConfig().getInputStream();

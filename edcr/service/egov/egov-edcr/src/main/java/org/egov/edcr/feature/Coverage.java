@@ -256,7 +256,7 @@ public class Coverage extends FeatureProcess {
 		// defined range.
 		// If a matching rule is found, proceed with its processing.
 
-		List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.COVERAGE.getValue(), true);
+			List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.COVERAGE.getValue(), true);
 
 		Optional<CoverageRequirement> matchedRule = rules.stream()
 		    .filter(CoverageRequirement.class::isInstance)
@@ -366,7 +366,6 @@ public class Coverage extends FeatureProcess {
 	}
 	
 	private Map<String, String> createCoverageDetails(String occupancy, BigDecimal coverage, BigDecimal upperLimit, Plan pl) {
-	    String desc = getLocaleMessage(RULE_DESCRIPTION_KEY, upperLimit.toString());
 	    String actualResult = getLocaleMessage(COVERAGE_RULE_ACTUAL_KEY, coverage.toString());
 	    String expectedResult = getLocaleMessage(COVERAGE_RULE_EXPECTED_KEY, upperLimit.toString());
 	    boolean isCompliant = coverage.compareTo(upperLimit) <= 0 || isResidentialOrCommercial(occupancy);
@@ -378,6 +377,8 @@ public class Coverage extends FeatureProcess {
 		detail.setProvided(actualResult);
 		detail.setStatus(isCompliant ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
 		if (!isResidentialOrCommercial(occupancy)) {
+			//Description is not applicable for Residential and Commercial occupancies.Earlier, coverage.description was fetched for all cases,which was unnecessary and could cause issues if message key is missing.
+			String desc = getLocaleMessage(RULE_DESCRIPTION_KEY, upperLimit.toString());
 			detail.setDescription(desc);
 		}
 		Map<String, String> details = mapReportDetails(detail);
@@ -385,7 +386,12 @@ public class Coverage extends FeatureProcess {
 	}
 
 	private boolean isResidentialOrCommercial(String occupancy) {
-	    return RESIDENTIAL.equalsIgnoreCase(occupancy) || COMMERCIAL.equalsIgnoreCase(occupancy);
+		// Making occupancy check null-safe - Prevents NullPointerException when occupancy is null,Handles extra spaces using trim(),Uses case-insensitive comparison for consistency
+	    if (occupancy == null) {
+	        return false;
+	    }
+	    String normalizedOccupancy = occupancy.trim();
+	    return RESIDENTIAL.equalsIgnoreCase(normalizedOccupancy) || COMMERCIAL.equalsIgnoreCase(normalizedOccupancy);
 	}
 
 

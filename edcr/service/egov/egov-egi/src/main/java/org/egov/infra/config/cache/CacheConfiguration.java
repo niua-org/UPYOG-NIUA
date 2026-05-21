@@ -96,14 +96,9 @@ public class CacheConfiguration extends CachingConfigurerSupport {
     @Bean
     @Override
     public CacheManager cacheManager() {
-        RedisCacheManager redisCacheManager = new RedisCacheManager(redisTemplate);
-        redisCacheManager.setTransactionAware(true);
-        redisCacheManager.setCacheNames(cities);
-        redisCacheManager.setUsePrefix(true);
-        redisCacheManager.setDefaultExpiration(60 * 60L);
-        return redisCacheManager;
+        return RedisCacheManager.builder(redisTemplate.getConnectionFactory())
+                .build();
     }
-
     @Resource(name = "cities")
     public void setCities(List<String> cities) {
         this.cities = cities;

@@ -147,19 +147,20 @@ public class JpaConfiguration {
         properties.put(DIALECT, env.getProperty(DIALECT));
         properties.put(GENERATE_STATISTICS, generateStatistics);
         properties.put(CACHE_REGION_FACTORY, env.getProperty(CACHE_REGION_FACTORY));
+        properties.put("hibernate.connection.handling_mode", "DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION");
         properties.put(USE_SECOND_LEVEL_CACHE, enableSecondLevelCache);
         properties.put(USE_QUERY_CACHE, enableQueryCache);
         properties.put(USE_MINIMAL_PUTS, env.getProperty(USE_MINIMAL_PUTS));
         properties.put("hibernate.cache.infinispan.cachemanager", env.getProperty("hibernate.cache.infinispan.cachemanager"));
         properties.put(JTA_PLATFORM, env.getProperty(JTA_PLATFORM));
-        properties.put(AUTO_CLOSE_SESSION, env.getProperty(AUTO_CLOSE_SESSION));
+        properties.put(AUTO_CLOSE_SESSION, false);
         properties.put(USE_STREAMS_FOR_BINARY, env.getProperty(USE_STREAMS_FOR_BINARY));
         properties.put(DEFAULT_BATCH_FETCH_SIZE, batchUpdateSize);
         properties.put(BATCH_VERSIONED_DATA, true);
         properties.put(ORDER_INSERTS, true);
         properties.put(ORDER_UPDATES, true);
         properties.put(AUTOCOMMIT, false);
-        properties.put(RELEASE_CONNECTIONS, "after_statement");
+        properties.put(RELEASE_CONNECTIONS, "after_transaction");
         properties.put("jadira.usertype.autoRegisterUserTypes", true);
         properties.put("jadira.usertype.databaseZone", "jvm");
 

@@ -79,6 +79,7 @@ import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
@@ -108,10 +109,21 @@ import net.sf.jasperreports.export.SimpleWriterExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsExporterConfiguration;
 
 public class JasperReportService extends AbstractReportService<JasperReport> {
+	
+	 static {
+	        System.setProperty(
+	            "net.sf.jasperreports.subreport.runner.factory",
+	            "net.sf.jasperreports.engine.fill.JRThreadSubreportRunnerFactory"
+	        );
+	        System.setProperty(
+	            DefaultJasperReportsContext.PROPERTIES_FILE, 
+	            "config/jasperreports.properties"
+	        );
+	    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JasperReportService.class);
 
-    private static final String TEMPLATE_EXTENSION = ".jasper";
+    private static final String TEMPLATE_EXTENSION = ".jrxml";
     private static final String JASPER_PROPERTIES_FILE = "config/jasperreports.properties";
     private static final String EXCEPTION_IN_REPORT_CREATION = "Error occurred while generating report.";
     private static final String PRINT_PDF_JAVASCRIPT = "this.print()";
@@ -120,8 +132,8 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
     private EntityManager entityManager;
 
     public JasperReportService(int templateCacheMinSize, int templateCacheMaxSize) {
-        super(templateCacheMinSize, templateCacheMaxSize);
-        System.setProperty(DefaultJasperReportsContext.PROPERTIES_FILE, JASPER_PROPERTIES_FILE);
+    	super(0, 0);
+       
     }
 
     @Override
@@ -132,20 +144,31 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
     @Override
     protected ReportOutput createReportFromSql(ReportRequest reportInput, Connection connection) {
         try {
-            JasperPrint jasperPrint = JasperFillManager.fillReport(getTemplate(reportInput.getReportTemplate()),
-                    reportInput.getReportParams(), connection);
+          
+            InputStream is = getClass().getClassLoader()
+                    .getResourceAsStream(reportInput.getReportTemplate());
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(is);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(
+                    jasperReport,
+                    reportInput.getReportParams(),
+                    connection
+            );
+
             return new ReportOutput(exportReport(reportInput, jasperPrint), reportInput);
-        } catch (JRException | IOException e) {
+
+        } catch (Exception e) {
             LOGGER.error(EXCEPTION_IN_REPORT_CREATION, e);
         }
         return null;
     }
-
     @Override
     protected ReportOutput createReportFromJavaBean(ReportRequest reportInput) {
         try {
             Object reportData = reportInput.getReportInputData();
             JRDataSource dataSource;
+
             if (reportData == null) {
                 dataSource = new JREmptyDataSource();
             } else if (reportData.getClass().isArray()) {
@@ -155,29 +178,54 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
             } else {
                 dataSource = new JRBeanArrayDataSource(new Object[]{reportData}, false);
             }
-            JasperPrint jasperPrint = JasperFillManager.fillReport(getTemplate(reportInput.getReportTemplate()),
-                    reportInput.getReportParams(), dataSource);
+
+          
+            InputStream is = getClass().getClassLoader()
+                    .getResourceAsStream(reportInput.getReportTemplate());
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(is);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(
+                    jasperReport,
+                    reportInput.getReportParams(),
+                    dataSource
+            );
+
             return new ReportOutput(exportReport(reportInput, jasperPrint), reportInput);
-        } catch (JRException | IOException e) {
+
+        } catch (Exception e) {
             LOGGER.error(EXCEPTION_IN_REPORT_CREATION, e);
         }
         return null;
-
     }
-
     @Override
     protected ReportOutput createReportFromHql(ReportRequest reportInput) {
         try {
+          
             Map<String, Object> reportParams = reportInput.getReportParams();
             if (reportParams == null) {
                 reportParams = new HashMap<>();
             }
-            reportParams.put(JRHibernateQueryExecuterFactory.PARAMETER_HIBERNATE_SESSION, entityManager.unwrap(Session.class));
-            JasperReportsContext jrc = DefaultJasperReportsContext.getInstance();
-            jrc.setValue(JRHibernateQueryExecuterFactory.PROPERTY_HIBERNATE_FIELD_MAPPING_DESCRIPTIONS, false);
-            JasperPrint jasperPrint = JasperFillManager.getInstance(jrc).fill(getTemplate(reportInput.getReportTemplate()), reportParams);
+
+            reportParams.put(
+                    JRHibernateQueryExecuterFactory.PARAMETER_HIBERNATE_SESSION,
+                    entityManager.unwrap(Session.class)
+            );
+
+            InputStream is = getClass().getClassLoader()
+                    .getResourceAsStream(reportInput.getReportTemplate());
+
+            JasperReport jasperReport = JasperCompileManager.compileReport(is);
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(
+                    jasperReport,
+                    reportParams,
+                    new JREmptyDataSource()
+            );
+
             return new ReportOutput(exportReport(reportInput, jasperPrint), reportInput);
-        } catch (JRException | IOException e) {
+
+        } catch (Exception e) {
             LOGGER.error(EXCEPTION_IN_REPORT_CREATION, e);
         }
         return null;
@@ -186,13 +234,12 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
     @Override
     protected JasperReport loadTemplate(InputStream templateInputStream) {
         try {
-            return (JasperReport) JRLoader.loadObject(templateInputStream);
+            return JasperCompileManager.compileReport(templateInputStream);
         } catch (JRException e) {
             LOGGER.error(EXCEPTION_IN_REPORT_CREATION, e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
-
     private byte[] exportReport(ReportRequest reportInput, JasperPrint jasperPrint) throws JRException, IOException {
         try (ByteArrayOutputStream reportOutputStream = new ByteArrayOutputStream()) {
             Exporter exporter = getExporter(reportInput, jasperPrint, reportOutputStream);

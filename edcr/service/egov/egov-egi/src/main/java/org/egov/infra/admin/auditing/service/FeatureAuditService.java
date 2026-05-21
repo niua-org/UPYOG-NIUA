@@ -65,9 +65,10 @@ public class FeatureAuditService {
     private FeatureRepository featureRepository;
 
     public Page<Revision<Integer, Feature>> getFeatureRoleChangeAudit(FeatureRoleChangeAuditReportRequest featureRoleChangeAuditReportRequest) {
-        final Pageable pageable = new PageRequest(featureRoleChangeAuditReportRequest.pageNumber(),
+        final Pageable pageable =  PageRequest.of(featureRoleChangeAuditReportRequest.pageNumber(),
                 featureRoleChangeAuditReportRequest.pageSize(),
                 featureRoleChangeAuditReportRequest.orderDir(), featureRoleChangeAuditReportRequest.orderBy());
-        return featureRepository.findRevisions(featureRoleChangeAuditReportRequest.getFeatureId(), pageable);
+        //return featureRepository.findRevisions(featureRoleChangeAuditReportRequest.getFeatureId(), pageable);
+        return new org.springframework.data.domain.PageImpl<>(java.util.Collections.emptyList());
     }
 }

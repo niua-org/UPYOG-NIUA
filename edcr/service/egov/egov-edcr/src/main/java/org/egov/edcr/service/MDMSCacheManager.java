@@ -214,7 +214,6 @@ public class MDMSCacheManager {
 	    String subZone = plan.getPlanInformation().getSubZone() != null
 	            ? plan.getPlanInformation().getSubZone().toLowerCase()
 	            : null;
-
 		String riskType = includeRiskType ? fetchEdcrRulesMdms.getRiskType(plan).toLowerCase() : null;
 
 		String checkedTenantId = edcrConfigProperties.getIsStateWise() ? null : tenantId;

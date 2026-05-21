@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="Arial">
+        <normal>fonts/Arial.ttf</normal>
+        <bold>fonts/Arial.ttf</bold>
+        <italic>fonts/Arial.ttf</italic>
+        <boldItalic>fonts/Arial.ttf</boldItalic>
+        <pdfFontName>Helvetica</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Times New Roman">
+        <pdfFontName>Times-Roman</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Courier New">
+        <pdfFontName>Courier</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Comic Sans MS">
+        <pdfFontName>Helvetica</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Georgia">
+        <pdfFontName>Times-Roman</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Verdana">
+        <pdfFontName>Helvetica</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="SansSerif">
+        <pdfFontName>Helvetica</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Serif">
+        <pdfFontName>Times-Roman</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+    <fontFamily name="Monospaced">
+        <pdfFontName>Courier</pdfFontName>
+        <pdfEncoding>UTF-8</pdfEncoding>
+        <isPdfEmbedded>false</isPdfEmbedded>
+    </fontFamily>
+</fontFamilies>

@@ -50,16 +50,21 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <import resource="applicationSecurityContext-edcr.xml"/>
-   <!--  <import resource="applicationQuartzContext-bpa.xml"/> -->
- 
+    <import resource="classpath*:applicationContext-egi.xml"/>
+    <import resource="classpath*:config/spring/applicationContext-infra-services.xml"/>
+
     <context:property-placeholder/>
 
-    <context:component-scan base-package="org.egov.edcr.web">
-        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    <!-- Scan everything needed — RepositoryConfiguration stays, but fixed with LAZY below -->
+    <context:component-scan base-package="org.egov.edcr, org.egov.commons, org.egov.infra">
+        <context:exclude-filter type="annotation"
+            expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation"
+            expression="org.springframework.web.bind.annotation.RestController"/>
     </context:component-scan>
     
     <context:component-scan base-package="org.egov.edcr.web.controller.rest">
@@ -71,6 +76,7 @@
         <property name="maxInMemorySize" value="1048576"/>
     </bean>
 
-    <bean name="edcrBpaRestService" class="org.egov.edcr.service.EdcrBpaRestService"></bean>
+    <bean name="edcrBpaRestService"
+          class="org.egov.edcr.service.EdcrBpaRestService"/>
 
 </beans>

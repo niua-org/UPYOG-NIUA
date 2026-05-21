@@ -48,19 +48,11 @@
 
 package org.egov.infra.admin.master.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Objects;
-import com.google.gson.annotations.Expose;
-import org.egov.infra.persistence.entity.AbstractAuditable;
-import org.egov.infra.persistence.validator.annotation.CompositeUnique;
-import org.egov.infra.persistence.validator.annotation.DateFormat;
-import org.egov.infra.persistence.validator.annotation.Unique;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.NotBlank;
-import org.hibernate.validator.constraints.SafeHtml;
-import org.springframework.format.annotation.DateTimeFormat;
+import static org.egov.infra.admin.master.entity.Boundary.SEQ_BOUNDARY;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -70,22 +62,29 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
-import static org.egov.infra.admin.master.entity.Boundary.SEQ_BOUNDARY;
+import org.egov.infra.persistence.entity.AbstractAuditable;
+import org.egov.infra.persistence.validator.annotation.CompositeUnique;
+import org.egov.infra.persistence.validator.annotation.DateFormat;
+import org.egov.infra.persistence.validator.annotation.Unique;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.validator.constraints.Length;
+import javax.validation.constraints.NotBlank;
+import org.egov.infra.validation.SanitizeHtml;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Objects;
+import com.google.gson.annotations.Expose;
 
 @Entity
 @CompositeUnique(fields = {"boundaryNum", "boundaryType"}, enableDfltMsg = true)
 @Unique(fields = "code", enableDfltMsg = true)
 @Table(name = "EG_BOUNDARY")
-@NamedQuery(name = "Boundary.findBoundariesByBoundaryType",
-        query = "select b from Boundary b where b.boundaryType.id = :boundaryTypeId")
 @SequenceGenerator(name = SEQ_BOUNDARY, sequenceName = SEQ_BOUNDARY, allocationSize = 1)
 public class Boundary extends AbstractAuditable {
 
@@ -97,12 +96,12 @@ public class Boundary extends AbstractAuditable {
     private Long id;
 
     @Length(max = 512)
-    @SafeHtml
+    @SanitizeHtml
     @NotBlank
     private String name;
 
     @Length(max = 25)
-    @SafeHtml
+    @SanitizeHtml
     @NotBlank
     private String code;
 
@@ -133,7 +132,7 @@ public class Boundary extends AbstractAuditable {
 
     private Long bndryId;
 
-    @SafeHtml
+    @SanitizeHtml
     private String localName;
 
     private Float longitude;

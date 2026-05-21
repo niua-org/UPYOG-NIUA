@@ -62,13 +62,7 @@ import org.egov.common.entity.edcr.Plan;
 import org.egov.commons.mdms.BpaMdmsUtil;
 import org.egov.commons.mdms.config.MdmsConfiguration;
 import org.egov.commons.mdms.validator.MDMSValidator;
-import org.egov.edcr.contract.ComparisonDetail;
-import org.egov.edcr.contract.ComparisonRequest;
-import org.egov.edcr.contract.ComparisonResponse;
-import org.egov.edcr.contract.EdcrDetail;
-import org.egov.edcr.contract.EdcrRequest;
-import org.egov.edcr.contract.EdcrResponse;
-import org.egov.edcr.contract.PlanResponse;
+import org.egov.edcr.contract.*;
 import org.egov.edcr.entity.ApplicationType;
 import org.egov.edcr.service.EdcrRestService;
 import org.egov.edcr.service.EdcrValidator;
@@ -401,6 +395,26 @@ public class RestEdcrApplicationController {
         }
     }
 
+    // API to fetch EDCR application details with a minimized and optimized BPA response payload
+    @PostMapping(value = "/edcrdetails", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> edcrDetails(@ModelAttribute EdcrRequest edcrRequest,
+                                         @RequestBody @Valid RequestInfoWrapper requestInfoWrapper) {
+        ErrorDetail edcReqRes = edcrValidator.validate(edcrRequest);
+        if (edcReqRes != null && StringUtils.isNotBlank(edcReqRes.getErrorMessage()))
+            return new ResponseEntity<>(edcReqRes, HttpStatus.BAD_REQUEST);
+        ErrorDetail edcRes = edcrValidator.validate(requestInfoWrapper);
+        if (edcRes != null && StringUtils.isNotBlank(edcRes.getErrorMessage()))
+            return new ResponseEntity<>(edcRes, HttpStatus.BAD_REQUEST);
+        List<EdcrDetailBpa> edcrDetail = edcrRestService.fetchEdcrBpa(edcrRequest, requestInfoWrapper);
+        Integer count = edcrRestService.fetchCount(edcrRequest, requestInfoWrapper);
+        if (!edcrDetail.isEmpty() && edcrDetail.get(0).getErrors() != null) {
+            return new ResponseEntity<>(edcrDetail.get(0).getErrors(), HttpStatus.OK);
+        } else {
+            return getSuccessResponseForEdcrDetail(edcrDetail, requestInfoWrapper.getRequestInfo(), count);
+        }
+    }
+
     @PostMapping(value = "/extractplan", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> planDetails(@RequestBody MultipartFile planFile,
@@ -456,6 +470,39 @@ public class RestEdcrApplicationController {
     
     private ResponseEntity<?> getSuccessResponse(List<EdcrDetail> edcrDetails, RequestInfo requestInfo, Integer count) {
         EdcrResponse edcrRes = new EdcrResponse();
+        edcrRes.setEdcrDetail(edcrDetails);
+        edcrRes.setCount(count);
+        ResponseInfo responseInfo = edcrRestService.createResponseInfoFromRequestInfo(requestInfo, true);
+        edcrRes.setResponseInfo(responseInfo);
+        return new ResponseEntity<>(edcrRes, HttpStatus.OK);
+
+    }
+
+    /**
+     * Creates a successful HTTP response containing EDCR BPA application details.
+     *
+     * <p>
+     * This method prepares an {@link EdcrResponseBpa} response object by
+     * populating:
+     * </p>
+     * <ul>
+     *     <li>The list of EDCR BPA details</li>
+     *     <li>Total record count</li>
+     *     <li>Response metadata generated from the request information</li>
+     * </ul>
+     *
+     * <p>
+     * The response is returned with HTTP status {@link HttpStatus#OK}.
+     * </p>
+     *
+     * @param edcrDetails the list of EDCR BPA detail responses
+     * @param requestInfo the request metadata used to generate response information
+     * @param count the total number of EDCR records returned in the response
+     * @return a {@link ResponseEntity} containing the populated
+     *         {@link EdcrResponseBpa} response object with HTTP 200 status
+     */
+    private ResponseEntity<?> getSuccessResponseForEdcrDetail(List<EdcrDetailBpa> edcrDetails, RequestInfo requestInfo, Integer count) {
+        EdcrResponseBpa edcrRes = new EdcrResponseBpa();
         edcrRes.setEdcrDetail(edcrDetails);
         edcrRes.setCount(count);
         ResponseInfo responseInfo = edcrRestService.createResponseInfoFromRequestInfo(requestInfo, true);

@@ -27,20 +27,23 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
     
     private static final Logger LOG = LogManager.getLogger(MultiReadRequestWrapper.class);
     
-    private ByteArrayOutputStream cachedBytes;
+    private final byte[] cachedBody; // Change to byte[] and make final
     private final Map<String, String> customHeaders;
 
-    public MultiReadRequestWrapper(HttpServletRequest request) {
+    public MultiReadRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
         this.customHeaders = new HashMap<>();
+        // EAGERLY cache body in constructor before anything else reads it
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copy(request.getInputStream(), baos);
+        this.cachedBody = baos.toByteArray();
+        LOG.debug("Cached request body size: {} bytes", cachedBody.length);
     }
 
     @Override
     public ServletInputStream getInputStream() {
-        if (cachedBytes == null)
-            cacheInputStream();
-
-        return new CachedServletInputStream();
+        // Always returns fresh stream from cached body
+        return new CachedServletInputStream(this.cachedBody);
     }
 
     @Override
@@ -48,31 +51,22 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
         return new BufferedReader(new InputStreamReader(getInputStream()));
     }
 
-    private void cacheInputStream() {
-        cachedBytes = new ByteArrayOutputStream();
-        try {
-            IOUtils.copy(super.getInputStream(), cachedBytes);
-        } catch (IOException e) {
-            LOG.error("Error occurred when caching", e);
-        }
-    }
-
+    // Update CachedServletInputStream to take byte[] parameter
     public class CachedServletInputStream extends ServletInputStream {
-        private ByteArrayInputStream input;
+        private final ByteArrayInputStream input;
 
-        public CachedServletInputStream() {
-            input = new ByteArrayInputStream(cachedBytes.toByteArray());
+        public CachedServletInputStream(byte[] cachedBody) {
+            this.input = new ByteArrayInputStream(cachedBody);
         }
 
         @Override
         public int read() {
-            
             return input.read();
         }
 
         @Override
         public boolean isFinished() {
-            return false;
+            return input.available() == 0; // Fix this too - was always returning false!
         }
 
         @Override
@@ -92,42 +86,29 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
 
     @Override
     public String getHeader(String name) {
-        // check the custom headers first
         String headerValue = customHeaders.get(name);
-
         if (headerValue != null) {
             return headerValue;
         }
-        // else return from into the original wrapped object
         return ((HttpServletRequest) getRequest()).getHeader(name);
     }
 
     @Override
     public Enumeration<String> getHeaderNames() {
-        // create a set of the custom header names
         Set<String> set = new HashSet<>(customHeaders.keySet());
-
-        // now add the headers from the wrapped request object
         Enumeration<String> e = ((HttpServletRequest) getRequest()).getHeaderNames();
         while (e.hasMoreElements()) {
-            // add the names of the request headers into the list
-            String n = e.nextElement();
-            set.add(n);
+            set.add(e.nextElement());
         }
-
-        // create an enumeration from the set and return
         return Collections.enumeration(set);
     }
-    
+
     @Override
     public Enumeration<String> getHeaders(String name) {
-        // check the custom headers first
         String headerValue = customHeaders.get(name);
-
         if (headerValue != null) {
             return new Enumerator<>(Arrays.asList(headerValue));
-        } else {
-            return super.getHeaders(name);
         }
+        return super.getHeaders(name);
     }
 }

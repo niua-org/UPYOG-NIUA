@@ -120,10 +120,10 @@ public class OcComparisonReportService {
         FastReportBuilder drb = new FastReportBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(new Font(50, Font._FONT_TIMES_NEW_ROMAN, true));
+        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
 
-        titleStyle.setFont(new Font(2, Font._FONT_TIMES_NEW_ROMAN, false));
+        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
         String applicationNumber = StringUtils.isNotBlank(ocDcr.getApplication().getApplicationNumber())
                 ? ocDcr.getApplication().getApplicationNumber()
                 : "NA";
@@ -271,10 +271,10 @@ public class OcComparisonReportService {
         FastReportBuilder drb = new FastReportBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(new Font(50, Font._FONT_TIMES_NEW_ROMAN, true));
+        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
 
-        titleStyle.setFont(new Font(2, Font._FONT_TIMES_NEW_ROMAN, false));
+        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
         String applicationNumber = StringUtils.isNotBlank(ocDcr.getApplication().getApplicationNumber())
                 ? ocDcr.getApplication().getApplicationNumber()
                 : "NA";

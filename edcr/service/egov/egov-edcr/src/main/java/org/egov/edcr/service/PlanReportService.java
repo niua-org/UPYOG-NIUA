@@ -25,8 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.Block;
 import org.egov.common.entity.edcr.Building;
 import org.egov.common.entity.edcr.DcrReportBlockDetail;
@@ -44,12 +44,11 @@ import org.egov.common.entity.edcr.VirtualBuilding;
 import org.egov.common.entity.edcr.VirtualBuildingReport;
 import org.egov.edcr.autonumber.DcrApplicationNumberGenerator;
 import org.egov.edcr.autonumber.OCPlanScrutinyNumberGenerator;
-import org.egov.edcr.constants.DxfFileConstants;
 import org.egov.edcr.entity.ApplicationType;
 import org.egov.edcr.entity.EdcrApplication;
 import org.egov.edcr.entity.EdcrApplicationDetail;
 import org.egov.edcr.utility.DcrConstants;
-import org.egov.infra.admin.master.service.CityService;
+import org.egov.infra.admin.master.service.ICityService;
 import org.egov.infra.config.core.ApplicationThreadLocals;
 import org.egov.infra.reporting.util.ReportUtil;
 import org.egov.infra.utils.DateUtils;
@@ -94,7 +93,7 @@ public class PlanReportService {
     @Value("${edcr.client.subreport}")
     private boolean clientSpecificSubReport;
     @Autowired
-    private CityService cityService;
+    private ICityService cityService;
     @Autowired
     private DcrApplicationNumberGenerator dcrApplicationNumberGenerator;
     @Autowired
@@ -586,10 +585,13 @@ public class PlanReportService {
         StringBuilder reportBuilder = new StringBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(new Font(50, Font._FONT_TIMES_NEW_ROMAN, true));
+       // titleStyle.setFont(new Font(50, Font._FONT_TIMES_NEW_ROMAN, true));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
 
-        titleStyle.setFont(new Font(2, Font._FONT_TIMES_NEW_ROMAN, false));
+       // titleStyle.setFont(new Font(2, Font._FONT_TIMES_NEW_ROMAN, false));
+        titleStyle.setFont(new Font(Font.MEDIUM, "SansSerif", "Helvetica", "UTF-8", false));
+        titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
+        
         String applicationNumber = StringUtils.isNotBlank(dcrApplication.getApplicationNumber())
                 ? dcrApplication.getApplicationNumber()
                 : "NA";
@@ -1061,7 +1063,7 @@ public class PlanReportService {
         FastReportBuilder drb = new FastReportBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(Font.ARIAL_MEDIUM_BOLD);
+        titleStyle.setFont(new Font(Font.MEDIUM, "SansSerif", "Helvetica", "UTF-8", false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
         titleStyle.setVerticalAlign(VerticalAlign.BOTTOM);
 
@@ -1077,7 +1079,7 @@ public class PlanReportService {
             drb.addColumn("Provided as per drawings", "actualResult", String.class.getName(), 120, columnStyle,
                     columnHeaderStyle);
             drb.addColumn("Accepted / Not Accepted ", "status", String.class.getName(), 50, columnStyle, columnHeaderStyle);
-        } catch (ColumnBuilderException | ClassNotFoundException e) {
+        } catch (ColumnBuilderException e) {
             LOG.error(e.getMessage(), e);
         }
         drb.setUseFullPageWidth(true);

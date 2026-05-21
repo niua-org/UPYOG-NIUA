@@ -88,7 +88,17 @@ public class EdcrPdfDetail implements Serializable {
     private Map<String, Integer> colorOverrides = new HashMap<>();
     @Transient
     private Map<String, Integer> thicknessOverrides = new HashMap<>();
-    
+
+    /**
+     * When true, this row is the single full-drawing PDF path for Kabeja (set only on the synthetic row from
+     * DxfToPdfConverterExtract when legacy sheet mode is off; see DcrConstants.DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS).
+     * DxfToPdfUnifiedConverter then applies extra generator options and DcrSvgGenerator.PROPERTY_SINGLE_PDF for
+     * bounds, margins, stroke, text, and fonts. When null or false, Kabeja uses the legacy multi-sheet property map.
+     * Do not set true for rows built from MDMS DxfToPdfLayerConfig or EDCR_DXF_PDF app config.
+     */
+    @Transient
+    private Boolean kabejaSinglePageDXFToPdf;
+
     private String downloadURL;
 
     public String getLayer() {
@@ -185,6 +195,21 @@ public class EdcrPdfDetail implements Serializable {
 
     public void setThicknessOverrides(Map<String, Integer> thicknessOverrides) {
         this.thicknessOverrides = thicknessOverrides;
+    }
+
+    /**
+     * Returns true when this row should use the single-page Kabeja tuning pipeline; null or false for legacy sheets.
+     */
+    public Boolean getKabejaSinglePageDXFToPdf() {
+        return kabejaSinglePageDXFToPdf;
+    }
+
+    /**
+     * Only DxfToPdfConverterExtract.buildDirectEdcrPdfDetail should set this to true for the one full-drawing row.
+     * Legacy sheet rows must never set true here.
+     */
+    public void setKabejaSinglePageDXFToPdf(Boolean kabejaSinglePageDXFToPdf) {
+        this.kabejaSinglePageDXFToPdf = kabejaSinglePageDXFToPdf;
     }
 
     public String getDownloadURL() {

@@ -52,6 +52,6 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
 	default-lazy-init="true">
 
-	<context:component-scan base-package="org.egov.edcr" />
+	<context:component-scan base-package="org.egov, org.egov.edcr" />
 
 </beans>

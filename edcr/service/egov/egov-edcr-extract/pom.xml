@@ -50,19 +50,25 @@
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Releases Repository</name>
-			<url>https://nexus-repo.digit.org/nexus/content/repositories/releases/</url>
+			<url>http://upyog-nexus.niua.org/nexus/content/repositories/releases/</url>
 		</repository>
+		
 		<snapshotRepository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Snapshots Repository</name>
-			<url>https://nexus-repo.digit.org/nexus/content/repositories/snapshots/</url>
+			<url>http://upyog-nexus.niua.org/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 	<repositories>
 		<repository>
+    <id>central</id>
+    <name>Maven Central</name>
+    <url>https://repo.maven.apache.org/maven2</url>
+</repository>
+		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov Public Repository Group</name>
-			<url>https://nexus-repo.digit.org/nexus/content/groups/public/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 				<updatePolicy>always</updatePolicy>
@@ -73,12 +79,9 @@
 		</repository>
 		<repository>
 			<id>JBoss Repository</id>
-			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
 		</repository>
-		<repository>
-			<id>JSPRESSO</id>
-			<url>http://repository.jspresso.org/maven2/</url>
-		</repository>
+		
 		<!-- Customized In Project Repository -->
 		<!-- <repository>
 			<id>in-project</id>
@@ -91,7 +94,7 @@
 		<pluginRepository>
 			<id>repo.egovernments.org</id>
 			<name>eGov Public Repository Group</name>
-			<url>https://nexus-repo.digit.org/nexus/content/groups/public/</url>
+			<url>http://upyog-nexus.niua.org/nexus/content/groups/public/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -143,13 +146,47 @@
 			<version>2.1.1-SNAPSHOT</version>
 		</dependency>
 
-
+<dependency>
+    <groupId>net.sf.jasperreports</groupId>
+    <artifactId>jasperreports</artifactId>
+    <version>6.20.0</version>
+    <exclusions>
+        <exclusion>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-javaflow</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>commons-javaflow</groupId>
+            <artifactId>commons-javaflow</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>org.eclipse.jdt</groupId>
+    <artifactId>ecj</artifactId>
+    <version>3.33.0</version>
+</dependency>
+<dependency>
+    <groupId>net.sf.jasperreports</groupId>
+    <artifactId>jasperreports-functions</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-javaflow</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>commons-javaflow</groupId>
+            <artifactId>commons-javaflow</artifactId>
+        </exclusion>
+    </exclusions>
+   
+</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.hibernate</groupId>-->
+<!--			<artifactId>hibernate-entitymanager</artifactId>-->
+<!--		</dependency>-->
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-entitymanager</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
 		<dependency>
@@ -184,25 +221,36 @@
 		<dependency>
 			<groupId>net.sf.jasperreports</groupId>
 			<artifactId>jasperreports-fonts</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.jasperreports</groupId>
-			<artifactId>jasperreports-functions</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>net.sf.jasperreports</groupId>
-			<artifactId>jasperreports-javaflow</artifactId>
+			<exclusions>
+        <exclusion>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-javaflow</artifactId>
+        </exclusion>
+    </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>ar.com.fdvs</groupId>
 			<artifactId>DynamicJasper</artifactId>
-			<version>5.0.2</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jasperreports</artifactId>
-					<groupId>net.sf.jasperreports</groupId>
-				</exclusion>
-			</exclusions>
+			<version>5.3.8</version>
+			 
+    <exclusions>
+        <exclusion>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-javaflow</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>commons-javaflow</groupId>
+            <artifactId>commons-javaflow</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-javaflow</artifactId>
+        </exclusion>
+         </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>

@@ -74,7 +74,7 @@ import javax.servlet.http.HttpSession;
 
 import org.egov.infra.admin.master.entity.City;
 import org.egov.infra.admin.master.entity.CityPreferences;
-import org.egov.infra.admin.master.service.CityService;
+import org.egov.infra.admin.master.service.ICityService;
 import org.egov.infra.config.core.ApplicationThreadLocals;
 import org.egov.infra.config.security.authentication.userdetail.CurrentUser;
 import org.egov.infra.security.utils.SecurityUtils;
@@ -88,7 +88,7 @@ import org.springframework.security.core.userdetails.User;
 public class ApplicationCoreFilter implements Filter {
 
     @Autowired
-    private CityService cityService;
+    private ICityService cityService;
 
     @Autowired
     private SecurityUtils securityUtils;
