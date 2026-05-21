@@ -1,11 +1,8 @@
 /**
- * commons.js
- * Shared utility functions used across the PDF service.
- * Handles localisation fetching with in-memory caching, date formatting,
- * localisation key building, value safety checks, and footer function restoration.
- *
- * Before: used require() for node-cache and moment-timezone - CommonJS style
- * Change: replaced require() with ESM imports - native ESM for Node 22
+ * This file is currently unused.
+ * Refactored imports from CommonJS (require)
+ * to native ESM imports for node-cache and
+ * moment-timezone compatibility with Node.js 22.
  */
 
 import axios from "axios";

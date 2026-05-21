@@ -1,3 +1,44 @@
+/*
+ * This file is used to handle all API-related operations
+ * for PDF generation and bill processing.
+ *
+ * Main work of this file:
+ *
+ * 1. Calls different eGov services using axios
+ *    - User Service
+ *    - Property Service
+ *    - Water/Sewerage Service
+ *    - Payment Service
+ *    - Billing Service
+ *    - Workflow Service
+ *
+ * 2. Fetches required data like:
+ *    - User details
+ *    - Property details
+ *    - Water/Sewerage connections
+ *    - Bills and payments
+ *    - Workflow information
+ *
+ * 3. Generates PDFs using PDF service.
+ *
+ * 4. Handles bulk PDF generation for:
+ *    - Water bills
+ *    - Sewerage bills
+ *    - Property tax bills
+ *    - Defaulter notices
+ *
+ * 5. Sends bulk PDF jobs to Kafka
+ *    so PDF generation can happen asynchronously.
+ *
+ * 6. Updates PostgreSQL tables
+ *    to track PDF job status and record count.
+ *
+ * Flow:
+ * Search Data -> Prepare Bill Data ->
+ * Generate PDF / Push to Kafka ->
+ * Update Database Status
+ */
+
 var config = require("./config");
 var axios = require("axios").default;
 var url = require("url");
@@ -7,6 +48,11 @@ const { Pool } = require('pg');
 const { log } = require("console");
 
 
+/*
+ * Create PostgreSQL DB connection
+ * using config values
+ */
+
 const pool = new Pool({
   user: config.DB_USER,
   host: config.DB_HOST,
@@ -15,6 +61,13 @@ const pool = new Pool({
   port: config.DB_PORT,
 });
 
+/*
+ * Send message to Kafka topic
+ *
+ * topic  -> Kafka topic name
+ * message -> data to send
+ * jobid -> used for logging
+ */
 auth_token = config.auth_token;
 // sendToKafka function to publish messages to Kafka topic
 async function sendToKafka(topic, message, jobid) {
@@ -29,7 +82,11 @@ async function sendToKafka(topic, message, jobid) {
     throw new Error(`error while publishing to kafka: ${err.message}`);
   }
 }
-
+/*
+ * Search user details using UUID
+ *
+ * Calls user service API
+ */
 async function search_user(uuid, tenantId, requestinfo) {
   return await axios({
     method: "post",
@@ -53,7 +110,13 @@ async function search_epass(uuid, tenantId, requestinfo) {
     },
   });
 }
-
+/*
+ * Search property details
+ *
+ * Citizen users are restricted
+ * to their own records using
+ * mobile number/userName
+ */
 async function search_property(
   uuid,
   tenantId,
@@ -70,6 +133,10 @@ async function search_property(
     //  Avoid using `uuids` here because PT receipt flow passes citizen UUID, which filters out property results.
     // to run it locally comment the uuids
   };
+/*
+   * For citizen login,
+   * restrict search to own property
+   */
 
   if (
     checkIfCitizen(requestinfo) &&
