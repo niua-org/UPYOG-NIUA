@@ -20,7 +20,7 @@ const WorkbenchModule = ({ stateCode, userType, tenants }) => {
     return <Loader />;
   }
 
-  return <EmployeeApp stateCode={stateCode} />;
+  return <EmployeeApp stateCode={stateCode} path="/workbench-ui/employee/workbench"  />;
 };
 
 const componentsToRegister = {

@@ -23,7 +23,7 @@ const MDMSSearchv2 = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
   
   let {masterName:modulee,moduleName:master,tenantId} = Digit.Hooks.useQueryParams()
-  
+
   const [availableSchemas, setAvailableSchemas] = useState([]);
   const [currentSchema, setCurrentSchema] = useState(null);
   const [masterName, setMasterName] = useState(null); //for dropdown
@@ -100,51 +100,66 @@ const MDMSSearchv2 = () => {
     }
   }, [moduleName])
   
-  useEffect(() => {
-    if (currentSchema) {
-      const dropDownOptions = [];
-      const {
-        definition: { properties },
-      } = currentSchema;
-      
-      Object.keys(properties)?.forEach((key) => {
-        if (properties[key].type === "string" && !properties[key].format) {
-          dropDownOptions.push({
-            name:key,
-            code: key,
-            i18nKey:Digit.Utils.locale.getTransformedLocale(`${currentSchema.code}_${key}`)
-          });
-        }
-      });
-
-      const [schemaModule, schemaMaster] = currentSchema.code.split('.');
-      const newConfig = _.cloneDeep(Config);
-      newConfig.sections.search.uiConfig.fields[0].populators.options = dropDownOptions;
-      newConfig.actionLink=`workbench/mdms-add-v2?moduleName=${schemaModule}&masterName=${schemaMaster}`;
-      
-      newConfig.additionalDetails = {
-        currentSchemaCode:currentSchema.code
-      }
+useEffect(() => {
+  if (currentSchema) {
+    const dropDownOptions = [];
+    const {
+      definition: { properties },
+    } = currentSchema;
     
-      newConfig.sections.searchResult.uiConfig.columns = [...dropDownOptions.map(option => {
-        return {
-          label:option.i18nKey,
-          i18nKey:option.i18nKey,
-          jsonPath:`data.${option.code}`,
-          dontShowNA:true
-        }
-      }),{
-        label:"WBH_ISACTIVE",
-        i18nKey:"WBH_ISACTIVE",
-        jsonPath:`isActive`,
-        additionalCustomization:true
-      }]
-      newConfig.apiDetails.serviceName=`/${Digit.Hooks.workbench.getMDMSContextPath()}/v2/_search`;
-      
-      console.log('Updated Config with schemaCode:', newConfig.additionalDetails?.currentSchemaCode);
-      setUpdatedConfig(newConfig)
+    Object.keys(properties)?.forEach((key) => {
+      if (properties[key].type === "string" && !properties[key].format) {
+        dropDownOptions.push({
+          name: key,
+          code: key,
+          i18nKey: Digit.Utils.locale.getTransformedLocale(`${currentSchema.code}_${key}`)
+        });
+      }
+    });
+
+    const [schemaModule, schemaMaster] = currentSchema.code.split('.');
+    const newConfig = _.cloneDeep(Config);
+    newConfig.sections.search.uiConfig.fields[0].populators.options = dropDownOptions;
+    newConfig.actionLink = `workbench/mdms-add-v2?moduleName=${schemaModule}&masterName=${schemaMaster}`;
+    
+    newConfig.additionalDetails = {
+      currentSchemaCode: currentSchema.code
     }
-  }, [currentSchema]);
+
+    newConfig.sections.searchResult.uiConfig.columns = [...dropDownOptions.map(option => {
+      return {
+        label: option.i18nKey,
+        i18nKey: option.i18nKey,
+        jsonPath: `data.${option.code}`,
+        dontShowNA: true
+      }
+    }), {
+      label: "WBH_ISACTIVE",
+      i18nKey: "WBH_ISACTIVE",
+      jsonPath: `isActive`,
+      additionalCustomization: true
+    }]
+
+    newConfig.apiDetails.serviceName = `/${Digit.Hooks.workbench.getMDMSContextPath()}/v2/_search`;
+
+    // Fixed: tenantId and schemaCode were missing from MdmsCriteria in API call.
+    // Updated: Explicitly set tenantId and schemaCode in apiDetails requestBody
+    // so API receives correct MdmsCriteria instead of empty custom:{} object.
+    newConfig.apiDetails.requestBody = {
+      ...newConfig.apiDetails.requestBody,
+      MdmsCriteria: {
+        tenantId: tenantId,              // tenantId add kiya
+        schemaCode: currentSchema.code,  // schemaCode add kiya
+        filters: {},
+        limit: 10,
+        offset: 0
+      }
+    };
+
+    console.log('Updated MdmsCriteria:', newConfig.apiDetails.requestBody.MdmsCriteria);
+    setUpdatedConfig(newConfig);
+  }
+}, [currentSchema]);
 
   const handleAddMasterData = () => {
     const [schemaModule, schemaMaster] = currentSchema?.code?.split('.') || [];
