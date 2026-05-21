@@ -257,7 +257,38 @@ const PropertyDetails = () => {
                 forcedName: "PT_INACTIVE_PROPERTY",
                 showInactiveYearModel: true,
                 customFunctionToExecute: (data) => {
-                navigate("/upyog-ui/employee/pt/response", { Property: data.Property, key: "UPDATE", action: "SUBMIT" });
+                  mutation.mutate(
+                    {
+                      Property: data.Property,
+                    },
+                    {
+                      onError: (error) => {
+                        navigate("/upyog-ui/employee/pt/response", {
+                          replace: true,
+                          state: {
+                            Property: data.Property,
+                            responseData: null,
+                            isSuccess: false,
+                            error: error?.response?.data?.Errors?.[0]?.message || error?.message || "Error updating property",
+                            action: "SUBMIT",
+                            key: "UPDATE",
+                          },
+                        });
+                      },
+                      onSuccess: (responseData) => {
+                        navigate("/upyog-ui/employee/pt/response", {
+                          replace: true,
+                          state: {
+                            Property: data.Property,
+                            responseData,
+                            isSuccess: true,
+                            action: "SUBMIT",
+                            key: "UPDATE",
+                          },
+                        });
+                      },
+                    }
+                  );
                 },
                 // redirectionUrl: {
                  
@@ -295,7 +326,7 @@ const PropertyDetails = () => {
     }
   }
 
-  if (fetchBillLoading) {
+  if (fetchBillLoading || mutation.isPending) {
     return <Loader />;
   }
   const UpdatePropertyNumberComponent = Digit?.ComponentRegistryService?.getComponent("EmployeeUpdateOwnerNumber");
