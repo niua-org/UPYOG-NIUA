@@ -58,7 +58,7 @@ public class FSMModuleHandler implements ModuleInboxHandler {
 
     @Lazy
     @Autowired
-    private InboxService inboxService; // only for fetchModuleObjectsPublic / toMap
+    private InboxService inboxService;
 
     /**
      * Checks if this handler supports the given module name.
