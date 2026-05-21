@@ -32,7 +32,7 @@ import {
   ChallanGenerationModule,
   initChallanGenerationComponents,
   ChallanReducers,
-} from "@upyog/digit-ui-module-challangeneration";
+} from "@nudmcdgnpm/digit-ui-module-challangeneration";
 import { initReceiptsComponents, ReceiptsModule } from "@upyog/digit-ui-module-receipts";
 import { initOBPSComponents } from "@upyog/digit-ui-module-obps";
 import { initNOCComponents } from "@upyog/digit-ui-module-noc";
@@ -54,9 +54,9 @@ import {
   EWComponents }
   from "@upyog/upyog-ui-module-ew";
 
-import { SVComponents, SVLinks, SVModule } from "@upyog/upyog-ui-module-sv";
+
 import {CHBModule,CHBLinks,CHBComponents} from "@upyog/upyog-ui-module-chb";
-import {ADSModule,ADSLinks,ADSComponents} from "@upyog/upyog-ui-module-ads";
+import {ADSModule,ADSLinks,ADSComponents} from "@nudmcdgnpm/upyog-ui-module-ads";
 import { WTModule, WTLinks, WTComponents } from "@upyog/upyog-ui-module-wt";
 import { VENDORComponents, VENDORLinks, VENDORModule } from "@upyog/upyog-ui-module-vendor";
 import { PGRAIComponents, PGRAILinks, PGRAIModule } from "@upyog/upyog-ui-module-pgrai";
@@ -65,8 +65,8 @@ import { GISComponents, GISLinks, GISModule } from "@nudmcdgnpm/upyog-ui-module-
 import { ESTComponents, ESTLinks, ESTModule } from "@nudmcdgnpm/upyog-ui-module-est";
 import { initNDCComponents, NDCReducers } from "@nudmcdgnpm/upyog-ui-module-ndc";
 
-import "leaflet/dist/leaflet.css";
-import "leaflet-draw/dist/leaflet.draw.css";
+// import "leaflet/dist/leaflet.css";
+// import "leaflet-draw/dist/leaflet.draw.css";
 
 initLibraries();
 
@@ -134,9 +134,6 @@ window.Digit.ComponentRegistryService.setupRegistry({
   ADSLinks,
   ADSModule,
   ...ADSComponents,
-  SVModule,
-  SVLinks,
-  ...SVComponents,
   EWModule,
   EWLinks,
   ...EWComponents,
@@ -188,9 +185,8 @@ const moduleReducers = (initData) => ({
 });
 
 function App() {
-  const stateCode =
-    window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") ||
-    process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
+  const stateCode = window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") || process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
+  
   if (!stateCode) {
     return <h1>stateCode is not defined</h1>;
   }

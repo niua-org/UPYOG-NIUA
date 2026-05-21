@@ -1,7 +1,7 @@
-import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useRouteMatch } from "react-router-dom";
+import { Link } from "react-router-dom";
 import getAssetAcknowledgementData from "../../../../getAssetAcknowledgementData";
 
 import { Assetdata } from "../../../../utils";
@@ -34,35 +34,35 @@ const BannerPicker = (props) => {
   );
 };
 
-const NewResponse = ({ data, onSuccess }) => {
+const NewResponse = ({ data, onSuccess, mutation }) => {
 
 
   
   const { t } = useTranslation();
   
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.asset.useAssetCreateAPI(data?.address?.city?.code); 
+  // const mutation = Digit.Hooks.asset.useAssetCreateAPI(data?.address?.city?.code); 
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
-  const match = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const { tenants } = storeData || {};
 
 
-  useEffect(() => {
-    try {
+  // useEffect(() => {
+  //   try {
       
-      data.tenantId = data.address?.city?.code;
-      let formdata = Assetdata(data)
-      console.log("formdata in acknowejkfdlgi ::: ", formdata);
+  //     data.tenantId = data.address?.city?.code;
+  //     let formdata = Assetdata(data)
+  //     console.log("formdata in acknowejkfdlgi ::: ", formdata);
 
       
 
 
-      mutation.mutate(formdata, {
-        onSuccess,
-      });
-    } catch (err) {
-    }
-  }, []);
+  //     mutation.mutate(formdata, {
+  //       onSuccess,
+  //     });
+  //   } catch (err) {
+  //   }
+  // }, []);
 
   
 
@@ -76,7 +76,7 @@ const NewResponse = ({ data, onSuccess }) => {
     Digit.Utils.pdf.generate(data);
   };
 
-  return mutation.isLoading || mutation.isIdle ? (
+  return mutation.isPending || mutation.isIdle ? (
     <Loader />
   ) : (
     <Card>

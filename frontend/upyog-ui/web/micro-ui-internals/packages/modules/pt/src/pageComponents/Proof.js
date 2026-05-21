@@ -1,4 +1,4 @@
-import { CardLabel, CardLabelDesc, Dropdown, UploadFile, FormStep } from "@upyog/digit-ui-react-components";
+import { CardLabel, CardLabelDesc, Dropdown, UploadFile, FormStep } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { stringReplaceAll } from "../utils";

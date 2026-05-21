@@ -1,4 +1,4 @@
-import { CardLabel, LabelFieldPair, TextInput, CardLabelError, DatePicker } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, TextInput, CardLabelError, DatePicker } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { getPattern } from "../utils";
 import * as func from "../utils";
@@ -149,18 +149,18 @@ const ConnectionDetails = (_props) => {
                                 type="number"
                                 rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
                                         type="number"
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === activationDetail?.key && focusIndex.type === "meterId"}
-                                        errorStyle={(localFormState.touched.meterId && errors?.meterId?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.meterId && errors?.meterId?.message) ? true : false}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: activationDetail?.key, type: "meterId" });
                                         }}
                                         labelStyle={{ marginTop: "unset" }}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                     />
                                 )}
                             />
@@ -176,11 +176,11 @@ const ConnectionDetails = (_props) => {
                                 // isMandatory={true}
                                 defaultValue={activationDetail?.meterInstallationDate}
                                 control={control}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <DatePicker
-                                        date={props.value}
+                                        date={field.value}
                                         name="meterInstallationDate"
-                                        onChange={props.onChange}
+                                        onChange={field.onChange}
                                     />
                                 )}
                             />
@@ -197,18 +197,18 @@ const ConnectionDetails = (_props) => {
                                 rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                 defaultValue={activationDetail?.meterInitialReading}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <TextInput
                                         type="number"
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === activationDetail?.key && focusIndex.type === "meterInitialReading"}
-                                        errorStyle={(localFormState.touched.meterInitialReading && errors?.meterInitialReading?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.meterInitialReading && errors?.meterInitialReading?.message) ? true : false}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: activationDetail?.key, type: "meterInitialReading" });
                                         }}
                                         labelStyle={{ marginTop: "unset" }}
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                     />
                                 )}
                             />
@@ -225,13 +225,13 @@ const ConnectionDetails = (_props) => {
                             // isMandatory={true}
                             defaultValue={activationDetail?.connectionExecutionDate}
                             control={control}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <DatePicker
-                                    date={props.value}
+                                    date={field.value}
                                     name="connectionExecutionDate"
-                                    onChange={props.onChange}
+                                    onChange={field.onChange}
                                     autoFocus={focusIndex.index === activationDetail?.key && focusIndex.type === "connectionExecutionDate"}
-                                    errorStyle={(localFormState.touched.connectionExecutionDate && errors?.connectionExecutionDate?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields.connectionExecutionDate && errors?.connectionExecutionDate?.message) ? true : false}
                                 />
                             )}
                         />
@@ -248,13 +248,13 @@ const ConnectionDetails = (_props) => {
                             isMandatory={true}
                             defaultValue={activationDetail?.dateEffectiveFrom}
                             control={control}
-                            render={(props) => (
+                            render={({ field }) => (
                                 <DatePicker
-                                    date={props.value}
+                                    date={field.value}
                                     name="dateEffectiveFrom"
-                                    onChange={props.onChange}
+                                    onChange={field.onChange}
                                     autoFocus={focusIndex.index === activationDetail?.key && focusIndex.type === "dateEffectiveFrom"}
-                                    errorStyle={(localFormState.touched.dateEffectiveFrom && errors?.dateEffectiveFrom?.message) ? true : false}
+                                    errorStyle={(localFormState.touchedFields.dateEffectiveFrom && errors?.dateEffectiveFrom?.message) ? true : false}
                                 />
                             )}
                         />

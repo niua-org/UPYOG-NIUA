@@ -1,6 +1,5 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
-import { useRouteMatch } from "react-router-dom";
 import EmployeeApp from "./pages/employee";
 import ApplicationOverview from "./pages/employee/ApplicationOverview";
 import NOCCard from "./pages/employee/EmployeeCard";
@@ -9,7 +8,7 @@ import NOCSearchApplication from "./pages/employee/SearchApplication/Search";
 
 const NOCModule = ({ stateCode, userType, tenants }) => {
   const moduleCode = "common-noc";
-  const { path, url } = useRouteMatch();
+  const { path, url } = Digit.Hooks.useModuleBasePath();
   const language = Digit.StoreData.getCurrentLanguage();
   const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
 

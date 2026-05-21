@@ -13,11 +13,11 @@ import {
   TextInput,
   LinkButton,
   MultiLink,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { Controller, useForm } from "react-hook-form";
 import React, { Fragment, useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import NDCDocument from "../../../pageComponents/NDCDocument";
 import NDCModal from "../../../pageComponents/NDCModal";
 import { Loader } from "../../../components/Loader";
@@ -32,7 +32,7 @@ const availableOptions = [
 const ApplicationOverview = () => {
   const { id } = useParams();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const toastRef = useRef(null);
   const tenantId = window.localStorage.getItem("Employee.tenant-id");
   const state = tenantId?.split(".")[0];
@@ -326,9 +326,9 @@ const ApplicationOverview = () => {
     if (action?.action == "APPLY") {
       submitAction(payload);
     } else if (action?.action == "PAY") {
-      history.push(`/upyog-ui/employee/payment/collect/NDC/${appNo}/${tenantId}?tenantId=${tenantId}`);
+      navigate(`/upyog-ui/employee/payment/collect/NDC/${appNo}/${tenantId}?tenantId=${tenantId}`);
     } else if (action?.action == "EDIT") {
-      history.push(`/upyog-ui/employee/ndc/create/${appNo}`);
+      navigate(`/upyog-ui/employee/ndc/create/${appNo}`);
     } else {
       setShowModal(true);
       setSelectedAction(action);
@@ -385,10 +385,9 @@ const ApplicationOverview = () => {
       setShowErrorToastt(true);
 
       return;
-    } else if (!filtData?.comment) {
+    } else if (!String(filtData?.comment || "").trim()) {
       setErrorOne("Comment is Mandatory");
       setShowErrorToastt(true);
-
       return;
     }
 
@@ -411,7 +410,7 @@ const ApplicationOverview = () => {
 
       //  Delay navigation so toast shows
       setTimeout(() => {
-        history.push("/upyog-ui/employee/ndc/inbox");
+        navigate("/upyog-ui/employee/ndc/inbox");
         window.location.reload();
       }, 2000);
 
@@ -689,7 +688,7 @@ const ApplicationOverview = () => {
         <ActionBar>
           {displayMenu && (workflowDetails?.data?.actionState?.nextActions || workflowDetails?.data?.nextActions) ? (
             <Menu
-              localeKeyPrefix={`WF_EDITRENEWAL`}
+              localeKeyPrefix={`WF_EDdcddcdITRENEWAL`}
               options={actions}
               optionKey={"action"}
               t={t}
@@ -707,7 +706,7 @@ const ApplicationOverview = () => {
             label={t("COMMON_EDIT")}
             onSubmit={() => {
               const id = applicationDetails?.Applications?.[0]?.applicationNo;
-              history.push(`/upyog-ui/employee/ndc/create/${id}`);
+              navigate(`/upyog-ui/employee/ndc/create/${id}`);
             }}
           />
         </ActionBar>

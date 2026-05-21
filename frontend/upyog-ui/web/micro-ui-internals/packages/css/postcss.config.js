@@ -1,14 +1,14 @@
-const postcssPresetEnv = require("postcss-preset-env");
-
 module.exports = {
-  parser: require("postcss-scss"),
+  parser: "postcss-scss",
   plugins: [
     require("postcss-import"),
-    require("postcss-nested").default,
+    require("postcss-nested"),
     require("tailwindcss"),
     require("postcss-preset-env"),
     require("autoprefixer"),
-    // require("cssnano"),
+    ...(process.env.NODE_ENV === "production"
+      ? [require("cssnano")]
+      : []),
   ],
 };
 

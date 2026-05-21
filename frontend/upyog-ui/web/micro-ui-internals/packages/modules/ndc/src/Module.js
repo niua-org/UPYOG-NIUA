@@ -1,11 +1,10 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
-import { useRouteMatch } from "react-router-dom";
 import EmployeeApp from "./pages/employee";
 import CitizenApp from "./pages/citizen";
 import ApplicationOverview from "./pages/employee/ApplicationOverview";
 import CitizenApplicationOverview from "./pages/citizen/ApplicationOverview";
-import NOCCard from "./pages/employee/EmployeeCard";
+import NDCCard from "./pages/employee/EmployeeCard";
 import Inbox from "./pages/employee/Inbox";
 import NOCSearchApplication from "./pages/employee/SearchApplication/Search";
 import { NewNDCStepForm as NewNDCStepFormCitizen } from "./pages/citizen/createNCDApplication/NewNDCStepForm";
@@ -32,7 +31,7 @@ export const NDCReducers = getRootReducer;
 // NDCModule is the entry point for the NDC module. It checks the user type and renders the appropriate app (EmployeeApp or CitizenApp) based on that. It also fetches necessary data from the store and handles loading state.
 const NDCModule = ({ stateCode, userType, tenants }) => {
   const moduleCode = "NDC";
-  const { path, url } = useRouteMatch();
+  const { path, url } = Digit.Hooks.useModuleBasePath();
   const language = Digit.StoreData.getCurrentLanguage();
   const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
 
@@ -51,7 +50,7 @@ const NDCModule = ({ stateCode, userType, tenants }) => {
 
 const componentsToRegister = {
   NDCModule,
-  NOCCard,
+  NDCCard,
   NDCApplicationOverview: ApplicationOverview,
   NDCInbox: Inbox,
   NOCSearchApplication,

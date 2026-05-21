@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
-// import { ArrowDown, Modal, ButtonSelector, Calender } from "@upyog/digit-ui-react-components";
+// import { ArrowDown, Modal, ButtonSelector, Calender } from "../index";
 import ButtonSelector from "../atoms/ButtonSelector";
 import { ArrowDown, Calender } from "../atoms/svgindex";
 import Modal from "../hoc/Modal";
@@ -135,7 +135,7 @@ const DateRange = ({ values, onFilterChange, t, labelClass }) => {
   };
 
   return (
-    <>
+    <Fragment>
       <div className="filter-label">{t(`ES_DSS_DATE_RANGE`)}</div>
       <div className="employee-select-wrap" ref={wrapperRef}>
         <div className="select">
@@ -159,7 +159,7 @@ const DateRange = ({ values, onFilterChange, t, labelClass }) => {
           </div>
         )}
       </div>
-    </>
+    </Fragment>
   );
 };
 

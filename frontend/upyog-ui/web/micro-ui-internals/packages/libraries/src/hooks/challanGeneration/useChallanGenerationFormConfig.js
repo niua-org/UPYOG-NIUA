@@ -1,5 +1,5 @@
 import React from "react";
-import { useQuery } from "react-query";
+import { queryTemplate } from "../../common/queryTemplate";
 import { MdmsService } from "../../services/elements/MDMS";
 
 /**
@@ -16,32 +16,31 @@ import { MdmsService } from "../../services/elements/MDMS";
  */
 
 const useChallanGenerationFormConfig = {
+  getFormConfig: (tenantId, config = {}) =>
+    queryTemplate({
+      queryKey: [tenantId, "FORM_CONFIG"],
 
-  getFormConfig: (tenantId, config) =>
-    useQuery(
-      [tenantId, "FORM_CONFIG"],
-      () =>
+      queryFn: () =>
         MdmsService.getDataByCriteria(
           tenantId,
           {
             details: {
-              tenantId: tenantId,
+              tenantId,
               moduleDetails: [
                 {
-                   moduleName: "mCollect",
-                  masterDetails: [
-                    {
-                      name: "CreateFieldsConfig",
-                    },
-                  ],
+                  moduleName: "mCollect",
+                  masterDetails: [{ name: "CreateFieldsConfig" }],
                 },
               ],
             },
           },
           "mCollect"
         ),
-      { select: (d) => d.mCollect?.CreateFieldsConfig, ...config }
-    ),
+
+      select: (d) => d?.mCollect?.CreateFieldsConfig,
+
+      config,
+    }),
 };
 
 export default useChallanGenerationFormConfig;

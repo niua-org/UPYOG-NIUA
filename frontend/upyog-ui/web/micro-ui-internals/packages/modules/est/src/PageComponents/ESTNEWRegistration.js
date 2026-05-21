@@ -7,7 +7,7 @@ import {
   Dropdown,
   FormStep,
   SubmitBar,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { useLocation } from "react-router-dom";

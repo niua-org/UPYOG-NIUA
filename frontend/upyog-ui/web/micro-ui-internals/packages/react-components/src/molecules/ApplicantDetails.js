@@ -22,7 +22,7 @@
 
 
 import React, { useEffect, useState } from "react";
-import { FormStep, TextInput, CardLabel, MobileNumber, RadioButtons, Dropdown } from "@upyog/digit-ui-react-components";
+import { FormStep, TextInput, CardLabel, MobileNumber, RadioButtons, Dropdown } from "../index";
 
 const ApplicantDetails = ({ t, config, onSelect, formData }) => {
   const user = Digit.UserService.getUser().info;
@@ -113,7 +113,6 @@ const ApplicantDetails = ({ t, config, onSelect, formData }) => {
           {...(validation = {
             isRequired: true,
             pattern: "^[a-zA-Z ]+$",
-            type: "tel",
             title: t("PT_NAME_ERROR_MESSAGE"),
           })}
         />
@@ -141,7 +140,7 @@ const ApplicantDetails = ({ t, config, onSelect, formData }) => {
           name="mobileNumber"
           onChange={(value) => setMobileNo({ target: { value } })}
           style={ {width: user.type === "EMPLOYEE" ? "49%" : "86%"}}
-          {...{ required: true, pattern: "[6-9]{1}[0-9]{9}", type: "tel", title: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID") }}
+          {...{ required: true, pattern: "[6-9]{1}[0-9]{9}",  title: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID") }}
         />
 
         <CardLabel>{`${t("COMMON_ALT_MOBILE_NUMBER")}`}</CardLabel>
@@ -150,7 +149,7 @@ const ApplicantDetails = ({ t, config, onSelect, formData }) => {
             name="alternateNumber"
             onChange={(value) => setAltMobileNo({ target: { value } })}
             style={ {width: user.type === "EMPLOYEE" ? "49%" : "86%"}}
-            {...{ required: false, pattern: "[6-9]{1}[0-9]{9}", type: "tel", title: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID") }}
+            {...{ required: false, pattern: "[6-9]{1}[0-9]{9}", title: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID") }}
           />
         {(config?.additionaFields?.dateofBirth)?
         <React.Fragment>
@@ -188,7 +187,6 @@ const ApplicantDetails = ({ t, config, onSelect, formData }) => {
           {...(validation = {
             isRequired: true,
             pattern: "^[a-zA-Z ]+$",
-            type: "tel",
             title: t("PT_NAME_ERROR_MESSAGE"),
           })}
         />
@@ -223,7 +221,6 @@ const ApplicantDetails = ({ t, config, onSelect, formData }) => {
         {...(validation = {
           isRequired: true,
           pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\\.[a-zA-Z]{3,4}$",
-          type: "email",
           title: t("PT_NAME_ERROR_MESSAGE"),
         })}
       />

@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { queryTemplate } from "../common/queryTemplate";
 
 // Sort function
 const alphabeticalSortFunctionForTenantsBasedOnName = (firstEl, secondEl) => {
@@ -40,4 +40,4 @@ const alphabeticalSortFunctionForTenantsBasedOnName = (firstEl, secondEl) => {
 };
 
 
-export const useTenants = () => useQuery(["ALL_TENANTS"], () => Digit.SessionStorage.get("initData").tenants.sort(alphabeticalSortFunctionForTenantsBasedOnName))
+export const useTenants = () => queryTemplate({ queryKey: ["ALL_TENANTS"], queryFn: () => Digit.SessionStorage.get("initData").tenants.sort(alphabeticalSortFunctionForTenantsBasedOnName) })

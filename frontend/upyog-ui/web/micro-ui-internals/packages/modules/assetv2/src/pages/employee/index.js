@@ -1,7 +1,7 @@
-import { PrivateRoute,BreadCrumb,AppContainer,BackButton } from "@upyog/digit-ui-react-components";
+import { PrivateRoute,BreadCrumb,AppContainer,BackButton } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Link, Switch, useLocation } from "react-router-dom";
+import { Link, useLocation, Routes, Route } from "react-router-dom";
 import { ASSETV2Links } from "../../Module";
 import SearchApp from "./SearchApp";
 import SearchReport from "./SearchReport";
@@ -64,57 +64,56 @@ const EmployeeApp = ({ path, url, userType }) => {
   const isNewRegistration = window.location.href.includes("new-assets") || window.location.href.includes("asset/assetservice/application-details");
 
   return (
-    <Switch>
-      <AppContainer>
+    <AppContainer>
       <React.Fragment>
         <div className="ground-container">
-        {!isRes ? 
-              <div style={isNewRegistration ? { marginLeft: "12px",display: "flex", alignItems: "center" } : { marginLeft: "-4px",display: "flex", alignItems: "center" }}>
-                  <BackButton location={location} />
-                  <span style={{ margin: "0 5px 16px", display: "inline-block" }}>|</span>
-                  <AssetBreadCrumbs location={location} />
-               
-              </div>
-          : null}
-          <PrivateRoute exact path={`${path}/`} component={() => <ASSETV2Links matchPath={path} userType={userType} />} />
-          <PrivateRoute
-            path={`${path}/assetservice/inbox`}
-            component={() => (
-              <Inbox
-                useNewInboxAPI={true}
-                parentRoute={path}
-                businessService="asset-create"
-                filterComponent="AST_INBOX_FILTER"
-                initialStates={inboxInitialState}
-                isInbox={true}
-              />
-            )}
-          />
-          
-          <PrivateRoute path={`${path}/assetservice/assign-assets/:id`} component={() => <NewAssetAssignApplication parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/maintenance-assets/:id`} component={() => <MaintenanceApplication parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/dispose-assets/:id`} component={() => <DisposeApplication parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/return-assets/:id`} component={() => <NewAssetReturnApplication parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/edit/:id`} component={() => <EditAsset parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/new-assets`} component={() => <ASSETCreate parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/applicationsearch/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/assign-response`} component={(props) => <Response {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/maintenance`} component={(props) => <Maintenance {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/edit-maintenance`} component={(props) => <EditMaintenance {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/maintenance-edit/:id`} component={() => <EditAssetMaintenance parentUrl={url} />} />
-          <PrivateRoute path={`${path}/assetservice/asset-dispose-response`} component={(props) => <DisposeResponse {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/asset-process-depreciation-response`} component={(props) => <ProcessDepreciationResponse {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/return-response`} component={(props) => <ReturnResponse {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/search`} component={(props) => <Search {...props} t={t} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/my-asset`} component={(props) => <SearchApp {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/report`} component={(props) => <SearchReport {...props} parentRoute={path} />} />
-          <PrivateRoute path={`${path}/assetservice/edit-response`} component={(props) => <EditResponse {...props} parentRoute={path} />} />
-
+          {!isRes ? (
+            <div style={isNewRegistration ? { marginLeft: "12px", display: "flex", alignItems: "center" } : { marginLeft: "-4px", display: "flex", alignItems: "center" }}>
+              <BackButton location={location} />
+              <span style={{ margin: "0 5px 16px", display: "inline-block" }}>|</span>
+              <AssetBreadCrumbs location={location} />
+            </div>
+          ) : null}
+          <Routes>
+            <Route path={`/*`} element={<PrivateRoute><ASSETV2Links userType={userType} /></PrivateRoute>} />
+            <Route
+              path= "assetservice/inbox/*"
+              element={
+                <PrivateRoute>
+                  <Inbox
+                    useNewInboxAPI={true}
+                    parentRoute={path}
+                    businessService="asset-create"
+                    filterComponent="AST_INBOX_FILTER"
+                    initialStates={inboxInitialState}
+                    isInbox={true}
+                  />
+                </PrivateRoute>
+              }
+            />
+            <Route path= "assetservice/assign-assets/:id" element={<PrivateRoute><NewAssetAssignApplication /></PrivateRoute>} />
+            <Route path= "assetservice/maintenance-assets/:id" element={<PrivateRoute><MaintenanceApplication /></PrivateRoute>} />
+            <Route path= "assetservice/dispose-assets/:id" element={<PrivateRoute><DisposeApplication /></PrivateRoute>} />
+            <Route path= "assetservice/return-assets/:id" element={<PrivateRoute><NewAssetReturnApplication /></PrivateRoute>} />
+            <Route path= "assetservice/edit/:id" element={<PrivateRoute><EditAsset /></PrivateRoute>} />
+            <Route path= "assetservice/new-assets/*" element={<PrivateRoute><ASSETCreate /></PrivateRoute>} />
+            <Route path= "assetservice/application-details/:id" element={<PrivateRoute><ApplicationDetails /></PrivateRoute>} />
+            <Route path= "assetservice/applicationsearch/application-details/:id" element={<PrivateRoute><ApplicationDetails /></PrivateRoute>} />
+            <Route path= "assetservice/assign-response/*" element={<PrivateRoute><Response /></PrivateRoute>} />
+            <Route path= "assetservice/maintenance/*" element={<PrivateRoute><Maintenance /></PrivateRoute>} />
+            <Route path= "assetservice/edit-maintenance/*" element={<PrivateRoute><EditMaintenance /></PrivateRoute>} />
+            <Route path= "assetservice/maintenance-edit/:id" element={<PrivateRoute><EditAssetMaintenance /></PrivateRoute>} />
+            <Route path= "assetservice/asset-dispose-response/*" element={<PrivateRoute><DisposeResponse /></PrivateRoute>} />
+            <Route path= "assetservice/asset-process-depreciation-response/*" element={<PrivateRoute><ProcessDepreciationResponse /></PrivateRoute>} />
+            <Route path= "assetservice/return-response/*" element={<PrivateRoute><ReturnResponse /></PrivateRoute>} />
+            {/* <Route path= "assetservice/search" element={<PrivateRoute><Search /></PrivateRoute>} /> */}
+            <Route path= "assetservice/my-asset/*" element={<PrivateRoute><SearchApp /></PrivateRoute>} />
+            <Route path= "assetservice/report/*" element={<PrivateRoute><SearchReport /></PrivateRoute>} />
+            <Route path= "assetservice/edit-response/*" element={<PrivateRoute><EditResponse /></PrivateRoute>} />
+          </Routes>
         </div>
       </React.Fragment>
-      </AppContainer>
-    </Switch>
+    </AppContainer>
   );
 };
 

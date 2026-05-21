@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { TelePhone, DisplayPhotos } from "@upyog/digit-ui-react-components";
+import { TelePhone, DisplayPhotos } from "@nudmcdgnpm/digit-ui-react-components";
 
  /*The component receives two props: 
     -`data` which contains all the information to be displayed (name, phone number, comments, etc.)
@@ -14,8 +14,8 @@ const WFCaption = ({ data,OpenImage }) => {
       <p>{data.name}</p>
       {data.mobileNumber && <TelePhone mobile={data.mobileNumber} />}
       {data.source && <p>{t("ES_APPLICATION_DETAILS_APPLICATION_CHANNEL_" + data.source.toUpperCase())}</p>}
-      {data?.wfComment ? <div>{data?.wfComment?.map( e => 
-      <div className="TLComments">
+      {data?.wfComment ? <div>{data?.wfComment?.map((e, index) => 
+      <div className="TLComments" key={index}>
         <h3>{t("WF_COMMON_COMMENTS")}</h3>
         <p style={{overflowX:"scroll"}}>{e}</p>
       </div>

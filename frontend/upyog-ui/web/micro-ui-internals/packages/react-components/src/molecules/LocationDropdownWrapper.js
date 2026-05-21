@@ -53,7 +53,7 @@ const LocationDropdownWrapper = ({ populators, formData, props, inputRef, errors
   if (isLoading) return <Loader />;
 
   return (
-    <>
+    <Fragment>
       {populators.allowMultiSelect && (
         <div style={{ display: "grid", gridAutoFlow: "row" }}>
           <MultiSelectDropdown
@@ -98,7 +98,7 @@ const LocationDropdownWrapper = ({ populators, formData, props, inputRef, errors
           optionCardStyles={populators?.optionsCustomStyle}
         />
       )}
-    </>
+    </Fragment>
   );
 };
 

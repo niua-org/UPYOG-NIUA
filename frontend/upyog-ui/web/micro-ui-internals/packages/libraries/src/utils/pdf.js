@@ -1,5 +1,6 @@
 import { Fonts } from "./fonts";
-const pdfMake = require("pdfmake/build/pdfmake.js");
+// const pdfMake = require("pdfmake/build/pdfmake.js");
+import pdfMake from "pdfmake/build/pdfmake.js";
 import QRCode from "qrcode";
 // const pdfFonts = require("pdfmake/build/vfs_fonts.js");
 // pdfMake.vfs = pdfFonts.pdfMake.vfs;

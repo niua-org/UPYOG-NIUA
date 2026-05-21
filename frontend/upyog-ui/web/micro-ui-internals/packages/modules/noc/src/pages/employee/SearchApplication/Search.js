@@ -32,10 +32,10 @@ const SearchApplication = ({ tenantId, t, onSubmit, data, error, isLoading, Coun
   });
 
   useEffect(() => {
-    methods.register("offset", 0);
-    methods.register("limit", 10);
-    methods.register("sortBy", "commencementDate");
-    methods.register("sortOrder", "DESC");
+    methods.register("offset");
+    methods.register("limit");
+    methods.register("sortBy");
+    methods.register("sortOrder");
   }, [methods.register]);
 
   const columns = useSearchApplicationTableConfig();

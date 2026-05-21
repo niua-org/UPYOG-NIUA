@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckBox } from "@upyog/digit-ui-react-components";
+import { CheckBox } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 const Status = ({ onAssignmentChange, searchParams, businessServices, statusMap, moduleCode }) => {

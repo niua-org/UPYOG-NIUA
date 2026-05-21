@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouteMatch } from "react-router-dom";
 import EmployeeApp from "./pages/employee";
 import ASSETV2Card from "./components/ASSETV2Card";
 import InboxFilter from "./components/inbox/NewInboxFilter";
@@ -93,7 +92,7 @@ const addComponentsToRegistry = () => {
 
 
 export const ASSETV2Module = ({ stateCode, userType, tenants }) => {
-  const { path, url } = useRouteMatch();
+  const { path, url } = Digit.Hooks.useModuleBasePath();
 
   const moduleCode = "ASSET";
   const language = Digit.StoreData.getCurrentLanguage();
@@ -103,16 +102,20 @@ export const ASSETV2Module = ({ stateCode, userType, tenants }) => {
 
   Digit.SessionStorage.set("ASSET_TENANTS", tenants);
 
-  useEffect(
-    () =>
-      userType === "employee" &&
-      Digit.LocalizationService.getLocale({
+// Fetch localization data if the user is an employee if the user type is employee, fetch localization data for the current tenant and language
+  useEffect(() => {
+  if (userType === "employee") {
+    const loadLocale = async () => {
+      await Digit.LocalizationService.getLocale({
         modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
         locale: Digit.StoreData.getCurrentLanguage(),
         tenantId: Digit.ULBService.getCurrentTenantId(),
-      }),
-    []
-  );
+      });
+    };
+
+    loadLocale();
+  }
+}, []);
 
   if (userType === "employee") {
     return <EmployeeApp path={path} url={url} userType={userType} />;

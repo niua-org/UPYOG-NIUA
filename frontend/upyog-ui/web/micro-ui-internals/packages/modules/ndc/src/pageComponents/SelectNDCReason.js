@@ -9,7 +9,7 @@ import {
   MobileNumber,
   DatePicker,
   Loader,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
@@ -84,23 +84,23 @@ function SelectNDCReason({ config, onSelect, userType, formData, setError, formS
           rules={{ required: t("REQUIRED_FIELD") }}
           defaultValue={ndcReason}
           control={control}
-          render={(props) => (
+          render={({ field }) => (
             <Dropdown
               className="form-field"
-              selected={props.value}
+              selected={field.value}
               option={ndcReasonOptions}
               select={(e) => {
                 setNDCReason(e);
-                props.onChange(e);
+                field.onChange(e);
               }}
               optionKey="i18nKey"
-              onBlur={props.onBlur}
+              onBlur={field.onBlur}
               t={t}
             />
           )}
         />
       </LabelFieldPair>
-      <CardLabelError className="ndc-card-label-error">{localFormState.touched.structureType ? errors?.structureType?.message : ""}</CardLabelError>
+      <CardLabelError className="ndc-card-label-error">{localFormState.touched?.NDCReason ? localFormState.errors?.NDCReason?.message : ""}</CardLabelError>
       {/* Reason */}
       {watch("NDCReason")?.code == "OTHERS" && (
         <LabelFieldPair>
@@ -110,19 +110,14 @@ function SelectNDCReason({ config, onSelect, userType, formData, setError, formS
               control={control}
               name={"reason"}
               defaultValue={ndcReason?.reason || ""}
-              render={(props) => (
+              render={({ field }) => (
                 <TextInput
-                  value={props.value}
+                  value={field.value}
                   onChange={(e) => {
                     onSelect("NDCReason", { ...formData?.NDCReason, reason: e.target.value }, config);
-
-                    // onSelect("reason", e.target.value, config);
-                    // setPropertyDetails((prev) => ({ ...prev, reason: e.target.value }));
-                    props.onChange(e.target.value);
+                    field.onChange(e.target.value);
                   }}
-                  onBlur={(e) => {
-                    props.onBlur(e);
-                  }}
+                  onBlur={field.onBlur}
                 />
               )}
             />

@@ -9,9 +9,8 @@ import {
   SubmitBar,
   CheckBox,
   EditIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import { checkForNA, ESTDocumnetPreview, formatEpochDate } from "../../../utils"; // ensure path is correct
 
 /* =========================================================
@@ -25,8 +24,8 @@ import { checkForNA, ESTDocumnetPreview, formatEpochDate } from "../../../utils"
  * the user back to a specific form step
  */
 const ActionButton = ({ jumpTo }) => {
-  const history = useHistory();
-  return <LinkButton label={<EditIcon />} onClick={() => history.push(jumpTo)} />;
+  const navigate = Digit.Hooks.useCustomNavigate();
+  return <LinkButton label={<EditIcon />} onClick={() => navigate(jumpTo)} />;
 };
 
 /* =========================================================

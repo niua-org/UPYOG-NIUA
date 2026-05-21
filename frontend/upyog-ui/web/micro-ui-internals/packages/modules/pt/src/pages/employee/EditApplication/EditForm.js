@@ -1,12 +1,12 @@
-import { FormComposer, Loader } from "@upyog/digit-ui-react-components";
+import { FormComposer, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { newConfig } from "../../../config/Create/config";
 
 const EditForm = ({ applicationData }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { state } = useLocation();
   const [canSubmit, setSubmitValve] = useState(false);
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_HAPPENED", false);
@@ -52,7 +52,7 @@ let propertyStructureDetails= {"usageCategory":"","structureType":applicationDat
     else 
     setSubmitValve(!Object.keys(formState.errors).length);
   };
-  const unitValues = [];
+
   const onSubmit = (data) => {
     console.log("dataaaa",data)
     const formData = {     
@@ -92,7 +92,7 @@ let propertyStructureDetails= {"usageCategory":"","structureType":applicationDat
     if (state?.workflow?.action === "OPEN") {
       formData.units = formData.units.filter((unit) => unit.active);
     }
-    history.push("/upyog-ui/employee/pt/response", { Property: formData, key: "UPDATE", action: "SUBMIT" });
+    navigate("/upyog-ui/employee/pt/response", { Property: formData, key: "UPDATE", action: "SUBMIT" });
 
   };
 

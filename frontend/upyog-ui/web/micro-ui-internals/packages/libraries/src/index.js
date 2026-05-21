@@ -54,7 +54,6 @@ import { PTRService } from "./services/elements/PTR";
 import { ASSETService } from "./services/elements/ASSET";  
 import { CHBServices } from "./services/elements/CHB"; 
 import { ADSServices } from "./services/elements/ADS";
-import { SVService } from "./services/elements/SV";
 import { EwService } from "./services/elements/EW";
 import { EmployeeDashboardService } from "./services/elements/EMPDASHBOARD";
 import { GIS } from "./services/elements/GIS";
@@ -138,7 +137,6 @@ const initLibraries = () => {
   setupLibraries("CHBServices", CHBServices);
   setupLibraries("ADSServices", ADSServices);
   setupLibraries("EwService", EwService);
-  setupLibraries("SVService", SVService);
   setupLibraries("CMServices", CMServices);
   setupLibraries("EmployeeDashboardService", EmployeeDashboardService);
   setupLibraries("GIS", GIS);
@@ -158,3 +156,4 @@ const initLibraries = () => {
 };
 
 export { initLibraries, Enums, Hooks, subFormRegistry };
+export { default as useModuleBasePath } from "./hooks/useModuleBasePath";

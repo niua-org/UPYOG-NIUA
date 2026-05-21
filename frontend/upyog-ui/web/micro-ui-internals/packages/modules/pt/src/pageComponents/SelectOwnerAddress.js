@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TextInput, CheckBox, CardLabel, LabelFieldPair, TextArea } from "@upyog/digit-ui-react-components";
+import { TextInput, CheckBox, CardLabel, LabelFieldPair, TextArea } from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 import FormStep from "../../../../react-components/src/molecules/FormStep"
@@ -73,7 +73,7 @@ const SelectOwnerAddress = ({ t, config, onSelect, userType, formData, ownerInde
       goNext();
     }
   }, [permanentAddress]);
-console.log("permanentAddresspermanentAddress",permanentAddress)
+
   if (userType === "employee") {
     return (
       <LabelFieldPair key={index}>

@@ -9,7 +9,7 @@ import {
   Dropdown,
   FormComposer,
   TextArea,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 const SelectULB = ({ userType, t, setValue, onSelect, config, data, formData, register, errors, setError, clearErrors, formState, control }) => {  return (
@@ -19,7 +19,10 @@ const SelectULB = ({ userType, t, setValue, onSelect, config, data, formData, re
         <div className="field">
           <TextArea
             name={config.key}
-            inputRef={register({
+            inputRef={register(config.key, {
+              maxLength: 140,
+            }).ref}
+            {...register(config.key, {
               maxLength: 140,
             })}
           />

@@ -2,11 +2,11 @@ import React, { useEffect, useState,useRef } from "react";
 import { useTranslation } from "react-i18next";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
 
-import { useParams, useLocation, useHistory } from "react-router-dom";
-import { ActionBar, Header, Loader, SubmitBar,Card,CardSubHeader,CardSectionHeader,LinkLabel, CardLabel, CardHeader, CardText} from "@upyog/digit-ui-react-components";
-import { useQueryClient } from "react-query";
+import { useParams, useLocation,  } from "react-router-dom";
+import { ActionBar, Header, Loader, SubmitBar,Card,CardSubHeader,CardSectionHeader,LinkLabel, CardLabel, CardHeader, CardText} from "@nudmcdgnpm/digit-ui-react-components";
+import { useQueryClient } from "@tanstack/react-query";
 import _, { first, update } from "lodash";
-import { Modal,Dropdown, Row, StatusTable } from "@upyog/digit-ui-react-components";
+import { Modal,Dropdown, Row, StatusTable } from "@nudmcdgnpm/digit-ui-react-components";
 import {convertEpochToDate} from "../../utils/index";
 
 
@@ -21,7 +21,7 @@ const AssessmentDetails = () => {
   const AssessmentData = location?.state?.Assessment;
   const [showToast, setShowToast] = useState(null);
   const queryClient = useQueryClient();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [appDetailsToShow, setAppDetailsToShow] = useState({});
   const isMobile = window.Digit.Utils.browser.isMobile();
   
@@ -126,7 +126,7 @@ const AssessmentDetails = () => {
             // queryClient.setQueryData(["PT_ASSESSMENT", propertyId, location?.state?.Assessment?.financialYear], true);
             if(userType?.value?.info?.type == "CITIZEN")
             {
-              history.push(`/upyog-ui/citizen/payment/my-bills/PT/${propertyId}`);
+              navigate(`/upyog-ui/citizen/payment/my-bills/PT/${propertyId}`);
             }
             else{
               proceeedToPay()
@@ -139,7 +139,7 @@ const AssessmentDetails = () => {
   };
 
   const proceeedToPay = () => {
-    history.push(`/upyog-ui/employee/payment/collect/PT/${propertyId}`);
+    navigate(`/upyog-ui/employee/payment/collect/PT/${propertyId}`);
   };
 
   if (ptCalculationEstimateLoading || assessmentLoading||!applicationDetails?.applicationDetails) {

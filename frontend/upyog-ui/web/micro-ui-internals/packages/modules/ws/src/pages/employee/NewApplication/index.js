@@ -1,8 +1,8 @@
-import { FormComposer, Header, Loader, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Header, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import cloneDeep from "lodash/cloneDeep";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useHistory } from "react-router-dom";
+import { useLocation,  } from "react-router-dom";
 import * as func from "../../../utils";
 import _ from "lodash";
 import { newConfig as newConfigLocal } from "../../../config/wsCreateConfig";
@@ -14,7 +14,7 @@ import {
 const NewApplication = () => {
   const { t } = useTranslation();
   const { state } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   let filters = func.getQueryStringParams(location.search);
   const [canSubmit, setSubmitValve] = useState(false);
   const [isEnableLoader, setIsEnableLoader] = useState(false);
@@ -179,7 +179,7 @@ const NewApplication = () => {
                       onSuccess: async (sewerageUpdateData, variables) => {
                         setAppDetails({ ...appDetails, sewerageConnection: sewerageUpdateData?.SewerageConnections?.[0] });
                         clearSessionFormData();
-                        history.push(`/upyog-ui/employee/ws/ws-response?applicationNumber=${waterUpdateData?.WaterConnection?.[0]?.applicationNo}&applicationNumber1=${sewerageUpdateData?.SewerageConnections?.[0]?.applicationNo}`);
+                        navigate(`/upyog-ui/employee/ws/ws-response?applicationNumber=${waterUpdateData?.WaterConnection?.[0]?.applicationNo}&applicationNumber1=${sewerageUpdateData?.SewerageConnections?.[0]?.applicationNo}`);
                         // window.location.href = `${window.location.origin}/upyog-ui/employee/ws/ws-response?applicationNumber=${waterUpdateData?.WaterConnection?.[0]?.applicationNo}&applicationNumber1=${sewerageUpdateData?.SewerageConnections?.[0]?.applicationNo}`
                       },
                     });
@@ -211,7 +211,7 @@ const NewApplication = () => {
               onSuccess: (data, variables) => {
                 setAppDetails({ ...appDetails, waterConnection: data?.WaterConnection?.[0] });
                 clearSessionFormData();
-                history.push(`/upyog-ui/employee/ws/ws-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);
+                navigate(`/upyog-ui/employee/ws/ws-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);
                 // window.location.href = `${window.location.origin}/upyog-ui/employee/ws/ws-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`;
               },
             })
@@ -239,7 +239,7 @@ const NewApplication = () => {
               onSuccess: (data, variables) => {
                 setAppDetails({ ...appDetails, sewerageConnection: data?.SewerageConnections?.[0] });
                 clearSessionFormData();
-                history.push(`/upyog-ui/employee/ws/ws-response?applicationNumber1=${data?.SewerageConnections?.[0]?.applicationNo}`);
+                navigate(`/upyog-ui/employee/ws/ws-response?applicationNumber1=${data?.SewerageConnections?.[0]?.applicationNo}`);
                 // window.location.href = `${window.location.origin}/upyog-ui/employee/ws/ws-response?applicationNumber1=${data?.SewerageConnections?.[0]?.applicationNo}`;
               },
             });

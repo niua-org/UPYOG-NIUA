@@ -1,4 +1,4 @@
-import { ModuleCardFullWidth } from "@upyog/digit-ui-react-components";
+import { ModuleCardFullWidth } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -37,7 +37,6 @@ const NDSSCard = () => {
     .filter((ele) => ele["nActive"] === true)
     .map((obj) => ({
       label: t(obj?.label),
-      link: `/upyog-ui/employee/dss/dashboard/${obj?.key}`,
       link: obj?.others?`/upyog-ui/employee/dss/${obj?.key}`:`/upyog-ui/employee/dss/dashboard/${obj?.key}`,
     }));
 

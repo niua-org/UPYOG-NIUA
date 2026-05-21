@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Header, ResponseComposer, Loader, Modal, Card, KeyNote, SubmitBar, CitizenInfoLabel} from "@upyog/digit-ui-react-components";
+import { Header, ResponseComposer, Loader, Modal, Card, KeyNote, SubmitBar, CitizenInfoLabel} from "@nudmcdgnpm/digit-ui-react-components";
 import PropTypes from "prop-types";
-import { useHistory, Link, useLocation } from "react-router-dom";
+import { Link, useLocation,  } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 
@@ -72,10 +72,10 @@ const PropertySearchResults = ({ template, header, actionButtonLabel, isMutation
     }
   );
 
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   const proceedToPay = (data) => {
-    history.push(`/upyog-ui/citizen/payment/my-bills/PT/${data.property_id}`, { tenantId });
+    navigate(`/upyog-ui/citizen/payment/my-bills/PT/${data.property_id}`, { tenantId });
   };
 
   if (paymentDetails.isLoading || result.isLoading) {
@@ -96,7 +96,7 @@ const PropertySearchResults = ({ template, header, actionButtonLabel, isMutation
       if (Number(data.total_due) > 0) {
         setShowModal(data);
       } else onSelect(config.key, { data, property });
-    } else history.push(`/upyog-ui/citizen/payment/my-bills/PT/${data.property_id}`, { tenantId });
+    } else navigate(`/upyog-ui/citizen/payment/my-bills/PT/${data.property_id}`, { tenantId });
   };
 
   const payment = {};

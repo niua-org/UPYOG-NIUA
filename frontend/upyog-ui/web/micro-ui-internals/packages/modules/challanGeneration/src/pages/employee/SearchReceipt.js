@@ -4,16 +4,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 // UI components
-import { Card, TextInput, Header, ActionBar, SubmitBar, Loader, InfoIcon, Toast, Dropdown, Table } from "@upyog/digit-ui-react-components";
+import { Card, TextInput, Header, ActionBar, SubmitBar, Loader, InfoIcon, Toast, Dropdown, Table } from "@nudmcdgnpm/digit-ui-react-components";
 
 // React Hook Form for form handling
 import { useForm, FormProvider, Controller } from "react-hook-form";
 
 // i18n for translations
 import { useTranslation } from "react-i18next";
-
-// Navigation
-import { useHistory } from "react-router-dom";
 
 /**
  * SearchReceipt Component
@@ -26,7 +23,7 @@ import { useHistory } from "react-router-dom";
 const SearchReceipt = () => {
 
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
   // ===================== STATE =====================

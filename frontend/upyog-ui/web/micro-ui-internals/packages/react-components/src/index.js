@@ -176,7 +176,8 @@ import {
   InfoIcon,
   LoginIcon,
   PTRIcon,
-  CHBIcon
+  CHBIcon,
+  SuccessSvg
 } from "./atoms/svgindex";
 import Table from "./atoms/Table";
 import TelePhone from "./atoms/TelePhone";
@@ -471,6 +472,8 @@ export {
   CHBIcon,
   AddressDetails,
   ApplicantDetails,
-  Timeline
+  Timeline,
+  SuccessSvg
+
   
 };

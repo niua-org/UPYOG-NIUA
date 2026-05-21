@@ -1,7 +1,7 @@
-import { Card, CardSubHeader, Header, Loader, Row, StatusTable, SubmitBar, ActionBar } from "@upyog/digit-ui-react-components";
+import { Card, CardSubHeader, Header, Loader, Row, StatusTable, SubmitBar, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import ViewTimeline from "../../components/ViewTimeline";
 
 // EST Application Details Component
@@ -9,10 +9,10 @@ import ViewTimeline from "../../components/ViewTimeline";
 
 const ESTApplicationDetails = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { assetNo, tenantId } = useParams();
   const [allotmentData, setAllotmentData] = useState(null);
-  const passedData = history.location?.state?.applicationData;
+  const passedData = navigate.location?.state?.applicationData;
   const [data, setData] = useState(passedData || null);
   const [isLoading, setIsLoading] = useState(!passedData);
   const [billData, setBillData] = useState(null);
@@ -22,13 +22,13 @@ const ESTApplicationDetails = () => {
   const [userType, setUserType] = useState("citizen");
 
   useEffect(() => {
-  const currentPath = history.location.pathname;
+  const currentPath = navigate.location.pathname;
   if (currentPath.includes('/employee/')) {
     setUserType("employee");
   } else {
     setUserType("citizen");
   }
-}, [history.location.pathname]);
+}, [navigate.location.pathname]);
 
   useEffect(() => {
   const fetchData = async () => {
@@ -117,7 +117,7 @@ const fetchBillData = async () => {
 
 
   const handleMakePayment = () => {
-    history.push({
+    navigate({
       pathname: `/upyog-ui/citizen/payment/my-bills/est-services/${data?.estateNo}`,
     });
   };
