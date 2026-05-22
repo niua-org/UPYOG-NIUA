@@ -2,7 +2,7 @@
   "moduleName": "cnd_employee_module",
   "description": "CnD employee full UI workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.cndEmployee.url}",
 
   "instructions": [
 
@@ -11,7 +11,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "username",
       "action": "TYPE",
-      "inputValue": "${employee.username}",
+      "inputValue": "${cnd.login.username}",
       "dynamicSleep": 500
     },
 
@@ -20,7 +20,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "password",
       "action": "TYPE",
-      "inputValue": "${employee.password}",
+      "inputValue": "${cnd.login.password}",
       "dynamicSleep": 500
     },
 
@@ -41,11 +41,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Open CnD Inbox",
       "locatorStrategy": "XPATH",
@@ -54,20 +49,14 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Enter Application Number",
       "locatorStrategy": "XPATH",
-      "locatorValue": "(//input[@type='text'])[1]",
-      "action": "TYPE_FROM_STORE",
-      "inputValue": "application.number",
+      "locatorValue": "(//input[@type='text'])[3]",
+      "action": "TYPE",
+      "inputValue": "${cnd.application.number}",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Click Search",
       "locatorStrategy": "XPATH",
@@ -76,7 +65,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Open Application",
       "locatorStrategy": "XPATH",
@@ -85,11 +73,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Click Take Action",
       "locatorStrategy": "XPATH",
@@ -98,7 +81,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Assign Field Inspector",
       "locatorStrategy": "XPATH",
@@ -107,11 +89,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Select Inspector",
       "locatorStrategy": "CSS",
@@ -120,7 +97,6 @@
       "inputValue": "0:0",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "FI Comment",
       "locatorStrategy": "NAME",
@@ -129,7 +105,6 @@
       "inputValue": "Assigned",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Submit FI",
       "locatorStrategy": "XPATH",
@@ -138,11 +113,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Take Action Approve",
       "locatorStrategy": "XPATH",
@@ -151,7 +121,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Approve",
       "locatorStrategy": "XPATH",
@@ -160,18 +129,13 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
-      "stepName": "Fill Waste Types",
+      "stepName": "Enter Waste Quantity",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//div[contains(@class,'waste-type-row')]",
-      "action": "FILL_WASTE_ROWS",
+      "locatorValue": "(//input[@type='tel'])[1]",
+      "action": "TYPE",
       "inputValue": "10",
-      "dynamicSleep": 2000
+      "dynamicSleep": 1000
     },
 
     {
@@ -182,11 +146,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Go Home",
       "locatorStrategy": "XPATH",
@@ -195,11 +154,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Open Inbox Again",
       "locatorStrategy": "XPATH",
@@ -212,12 +166,11 @@
     {
       "stepName": "Search Again",
       "locatorStrategy": "XPATH",
-      "locatorValue": "(//input[@type='text'])[1]",
-      "action": "TYPE_FROM_STORE",
-      "inputValue": "application.number",
+      "locatorValue": "(//input[@type='text'])[3]",
+      "action": "TYPE",
+      "inputValue": "${cnd.application.number}",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Search Button Again",
       "locatorStrategy": "XPATH",
@@ -226,7 +179,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Open Application Again",
       "locatorStrategy": "XPATH",
@@ -235,11 +187,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Take Action Fees",
       "locatorStrategy": "XPATH",
@@ -248,7 +195,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Collect Fees",
       "locatorStrategy": "XPATH",
@@ -257,11 +203,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
-
-
-
-
     {
       "stepName": "Payer Name",
       "locatorStrategy": "NAME",
@@ -270,7 +211,6 @@
       "inputValue": "Arpit Rao",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Payer Mobile",
       "locatorStrategy": "NAME",
@@ -279,7 +219,6 @@
       "inputValue": "9999999999",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Receipt Number",
       "locatorStrategy": "NAME",
@@ -288,7 +227,6 @@
       "inputValue": "GEN123456",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Receipt Date",
       "locatorStrategy": "XPATH",
@@ -297,7 +235,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Collect Payment",
       "locatorStrategy": "XPATH",
@@ -306,11 +243,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Go Home Again",
       "locatorStrategy": "XPATH",
@@ -319,11 +251,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Open Inbox Third Time",
       "locatorStrategy": "XPATH",
@@ -332,7 +259,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Search Third Time",
       "locatorStrategy": "XPATH",
@@ -341,7 +267,6 @@
       "inputValue": "application.number",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Search Third Button",
       "locatorStrategy": "XPATH",
@@ -350,7 +275,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Open Third Application",
       "locatorStrategy": "XPATH",
@@ -359,11 +283,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Assign Vendor",
       "locatorStrategy": "XPATH",
@@ -372,7 +291,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Cancel Popup",
       "locatorStrategy": "XPATH",
@@ -381,11 +299,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Assign Vendor Again",
       "locatorStrategy": "XPATH",
@@ -394,7 +307,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Select Vendor",
       "locatorStrategy": "CSS",
@@ -403,7 +315,6 @@
       "inputValue": "0:0",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Set Schedule Date",
       "locatorStrategy": "XPATH",
@@ -412,7 +323,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Vendor Comment",
       "locatorStrategy": "NAME",
@@ -421,7 +331,6 @@
       "inputValue": "Assigned",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Submit Vendor",
       "locatorStrategy": "XPATH",

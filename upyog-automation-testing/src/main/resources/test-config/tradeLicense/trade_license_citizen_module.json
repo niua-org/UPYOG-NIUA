@@ -1,58 +1,66 @@
 {
   "moduleName":"trade_license_citizen_module",
+  "description": "TL full citizen  flow ",
+
+  "baseUrl": "${selected.url}",
 
   "instructions":[
 
     {
-      "stepName":"Citizen Mobile Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue":"${citizen.mobile.number}"
+      "stepName": "Enter Mobile Number",
+      "locatorStrategy": "NAME",
+      "locatorValue": "mobileNumber",
+      "action": "TYPE",
+      "inputValue": "${selected.mobile}",
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Accept Terms",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='checkbox'].form-field",
-      "action":"CLICK_JS"
+      "stepName": "Accept Terms Checkbox",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='checkbox'].form-field",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Click Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "stepName": "Click Next After Mobile",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
     },
-
     {
-      "stepName":"Enter OTP",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.input-otp",
-      "action":"TYPE_OTP",
-      "inputValue":"${test.otp}"
+      "stepName": "Enter OTP",
+      "locatorStrategy": "NAME",
+      "locatorValue": "input.input-otp",
+      "action": "TYPE_OTP",
+      "inputValue": "${selected.otp}",
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Submit OTP",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "stepName": "Submit OTP",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
     },
-
     {
-      "stepName":"Select City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action":"SELECT_RADIO_BY_TEXT",
-      "inputValue":"${test.city.name}"
+      "stepName": "Select City",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action": "SELECT_RADIO_BY_TEXT",
+      "inputValue": "${selected.city}",
+      "dynamicSleep": 1500
     },
-
     {
-      "stepName":"Continue",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Continue",
-      "action":"CLICK_JS"
+      "stepName": "Click Continue",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Continue')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
     },
 
 
@@ -61,21 +69,24 @@
       "stepName":"Open Trade License",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[@href='/upyog-ui/citizen/tl-home']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Apply Trade License",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[text()='Apply for Trade License']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Info Page Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -85,66 +96,75 @@
       "locatorStrategy":"NAME",
       "locatorValue":"TradeName",
       "action":"TYPE",
-      "inputValue":"Institute"
+      "inputValue":"Institute",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Business Name Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Business Question Yes",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Yes",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Yes']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Business Question Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Select Kutcha",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Kutcha",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Kutcha']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Kutcha Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Establishment Date",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='date']",
-      "action":"SET_DATE_FIXED",
-      "inputValue":"2025-05-20"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[@type='date']",
+      "action":"SET_DATE_JS",
+      "inputValue":"1990-05-20",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Date Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
 
     {
       "stepName":"Trade Type Goods",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Goods",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Services']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -152,7 +172,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -160,7 +181,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
+      "inputValue":"1:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -168,28 +190,32 @@
       "locatorStrategy":"NAME",
       "locatorValue":"UomValue",
       "action":"TYPE",
-      "inputValue":"6"
+      "inputValue":"7",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Trade Category Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Additional Question No",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"No",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='No']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Additional Question Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
@@ -197,7 +223,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"TradeGSTNumber",
       "action":"TYPE",
-      "inputValue":"10SEIJI3622O0Z4"
+      "inputValue":"10SEIJI3622O0Z4",
+      "dynamicSleep": 2000
     },
 
     {
@@ -205,7 +232,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"OperationalSqFtArea",
       "action":"TYPE",
-      "inputValue":"454"
+      "inputValue":"454",
+      "dynamicSleep": 2000
     },
 
     {
@@ -213,30 +241,33 @@
       "locatorStrategy":"NAME",
       "locatorValue":"NumberOfEmployees",
       "action":"TYPE",
-      "inputValue":"10"
+      "inputValue":"10",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"GST Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Hazardous No",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"No",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='No']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Hazardous Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
-
 
 
     {
@@ -244,7 +275,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -252,7 +284,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"totLandArea",
       "action":"TYPE",
-      "inputValue":"345"
+      "inputValue":"345",
+      "dynamicSleep": 2000
     },
 
     {
@@ -260,7 +293,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"totConstructionArea",
       "action":"TYPE",
-      "inputValue":"87"
+      "inputValue":"87",
+      "dynamicSleep": 2000
     },
 
     {
@@ -268,15 +302,17 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
+      "inputValue":"1:0",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"City Dropdown",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
-      "action":"SELECT_DROPDOWN_BY_TEXT",
-      "inputValue":"2:Delhi"
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:6",
+      "dynamicSleep": 2000
     },
 
     {
@@ -284,7 +320,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"3:0"
+      "inputValue":"3:1",
+      "dynamicSleep": 2000
     },
 
     {
@@ -292,7 +329,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"houseDoorNo",
       "action":"TYPE",
-      "inputValue":"445"
+      "inputValue":"445",
+      "dynamicSleep": 2000
     },
 
     {
@@ -300,7 +338,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"buildingColonyName",
       "action":"TYPE",
-      "inputValue":"church street"
+      "inputValue":"church street",
+      "dynamicSleep": 2000
     },
 
     {
@@ -308,7 +347,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"landmarkName",
       "action":"TYPE",
-      "inputValue":"circle point"
+      "inputValue":"circle point",
+      "dynamicSleep": 2000
     },
 
     {
@@ -316,7 +356,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"4:3"
+      "inputValue":"4:3",
+      "dynamicSleep": 2000
     },
 
     {
@@ -324,7 +365,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"mobileNumber0",
       "action":"TYPE",
-      "inputValue":"9494848897"
+      "inputValue":"9494848897",
+      "dynamicSleep": 2000
     },
 
     {
@@ -332,14 +374,16 @@
       "locatorStrategy":"NAME",
       "locatorValue":"name0",
       "action":"TYPE",
-      "inputValue":"atul"
+      "inputValue":"Arpit Rao",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Gender",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Male",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Male']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -347,22 +391,25 @@
       "locatorStrategy":"NAME",
       "locatorValue":"fatherOrHusbandName0",
       "action":"TYPE",
-      "inputValue":"father"
+      "inputValue":"father",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Relationship",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Husband",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Father']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Category",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
-      "action":"SELECT_DROPDOWN_BY_TEXT",
-      "inputValue":"5:BPL"
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"5:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -370,44 +417,47 @@
       "locatorStrategy":"NAME",
       "locatorValue":"address0",
       "action":"TYPE",
-      "inputValue":"owner address"
+      "inputValue":"owner address",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Property Submit",
       "locatorStrategy":"CSS",
       "locatorValue":"button.submit-bar[type='submit']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Property Proceed",
       "locatorStrategy":"CSS",
       "locatorValue":"button.submit-bar[type='button']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Property Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
-
-
-
     {
-      "stepName":"Institutional Government",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Institutional - Government",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "stepName": "Institutional Government",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//label[normalize-space()='Institutional - Government']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Owner Type Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -417,15 +467,17 @@
       "locatorStrategy":"NAME",
       "locatorValue":"institutionName",
       "action":"TYPE",
-      "inputValue":"Government Office"
+      "inputValue":"ijijhvhgcy",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Government Type",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
-      "action":"SELECT_DROPDOWN_BY_TEXT",
-      "inputValue":"0:Central Government"
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:1",
+      "dynamicSleep": 2000
     },
 
     {
@@ -433,15 +485,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"name",
       "action":"TYPE",
-      "inputValue":"Officer"
-    },
-
-    {
-      "stepName":"Designation",
-      "locatorStrategy":"NAME",
-      "locatorValue":"designation",
-      "action":"TYPE",
-      "inputValue":"Officer"
+      "inputValue":"Ajay",
+      "dynamicSleep": 2000
     },
 
     {
@@ -449,28 +494,32 @@
       "locatorStrategy":"NAME",
       "locatorValue":"mobilenumber",
       "action":"TYPE",
-      "inputValue":"8474857362"
+      "inputValue":"8474857362",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Institution Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Same Address Checkbox",
       "locatorStrategy":"CSS",
       "locatorValue":"input[type='checkbox'][value=\"Same as Trade's Address\"]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Address Confirm Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -480,29 +529,34 @@
       "locatorStrategy":"ID",
       "locatorValue":"tl-doc",
       "action":"UPLOAD_FILE",
-      "inputValue":"${tl.document.identity.proof}"
+      "inputValue":"${document.common.proof}",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Document 1 Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
+
 
     {
       "stepName":"Upload Document 2",
       "locatorStrategy":"ID",
       "locatorValue":"tl-doc",
       "action":"UPLOAD_FILE",
-      "inputValue":"${tl.document.identity.proof}"
+      "inputValue":"${document.common.proof}",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Document 2 Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
@@ -510,23 +564,26 @@
       "locatorStrategy":"ID",
       "locatorValue":"tl-doc",
       "action":"UPLOAD_FILE",
-      "inputValue":"${tl.document.image}"
+      "inputValue":"${document.common.png}",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Image Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
 
     {
       "stepName":"Submit Application",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Submit Application",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit Application']]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     }
 
   ]

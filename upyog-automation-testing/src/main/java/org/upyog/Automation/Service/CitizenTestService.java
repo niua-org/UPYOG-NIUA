@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.Automation.Common.CommonCitizenTest;
+import org.upyog.Automation.Utils.WorkflowDataStore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +27,10 @@ public class CitizenTestService {
                                      String otp,
                                      String cityName,
                                      String permitNumber) {
+        WorkflowDataStore.put("citizen.mobile.number", mobileNumber);
+        WorkflowDataStore.put("test.otp", otp);
+        WorkflowDataStore.put("test.city.name", cityName);
+        WorkflowDataStore.put("base.url", baseUrl);
 
         logger.info("Starting citizen test for modules: {}", moduleName);
 

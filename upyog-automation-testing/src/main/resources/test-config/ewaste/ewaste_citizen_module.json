@@ -3,62 +3,7 @@
   "description": "E-Waste citizen registration workflow",
   "baseUrl": "${selected.url}",
   "instructions": [
-    {
-      "stepName": "Enter Mobile Number",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${selected.mobile}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Accept Terms Checkbox",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox'].form-field",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Click Next After Mobile",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "NAME",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 3000
-    },
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1500
-    },
-    {
-      "stepName": "Click Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
+
     {
       "stepName": "Navigate to E-Waste module",
       "locatorStrategy": "XPATH",
@@ -112,7 +57,7 @@
       "locatorStrategy": "CSS",
       "locatorValue": "input[type='file'].input-mirror-selector-button",
       "action": "UPLOAD_FILE",
-      "inputValue": "${document.EwasteImage.proof}",
+      "inputValue": "${document.common.proof}",
       "dynamicSleep": 3000
     },
     {

@@ -4,6 +4,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
 import org.slf4j.Logger;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -126,6 +129,10 @@ public class ActionExecutor {
                     executeSetDateToday(instruction);
                     break;
 
+                case "SET_DATE_PLUS_DAYS":
+                    executeSetDatePlusDays(instruction);
+                    break;
+
                 case "SWITCH_WINDOW":
                     switchWindow();
                     break;
@@ -133,6 +140,31 @@ public class ActionExecutor {
                 case "WAIT_FOR_TEXT":
                     waitForText(instruction);
                     break;
+
+                case "SET_DATE_TEXT":
+                    executeSetDateText(instruction);
+                    break;
+
+                case "MULTI_SELECT_CHECKBOX":
+                    executeMultiSelectCheckbox(instruction);
+                    break;
+
+                case "OPEN_URL":
+                    openUrl(instruction);
+                    break;
+
+                case "SET_CURRENT_TIME":
+                    executeSetCurrentTime(instruction);
+                    break;
+
+                case "SET_CUSTOM_TIME":
+                    executeSetCustomTime(instruction);
+                    break;
+
+                case "SET_DATE_JS":
+                    executeSetDateJs(instruction);
+                    break;
+
 
                 default:
                     throw new IllegalArgumentException(
@@ -165,16 +197,40 @@ public class ActionExecutor {
      * TYPE action: Clears the field and types the input value.
      */
     private void executeType(TestInstruction instruction) {
-        By locator = locatorResolver.resolveLocator(instruction);
-        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
 
-        // Scroll element into view to ensure it's interactable
-        js.executeScript("arguments[0].scrollIntoView({block:'center'});", element);
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        WebElement element =
+                wait.until(
+                        ExpectedConditions.elementToBeClickable(locator)
+                );
+
+        // Scroll into view
+        js.executeScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                element
+        );
+
+        // Resolve dynamic value from WorkflowDataStore
+        String value = instruction.getInputValue();
+
+        String storedValue =
+                WorkflowDataStore.get(
+                        instruction.getInputValue()
+                );
+
+        if (storedValue != null) {
+            value = storedValue;
+        }
 
         element.clear();
-        element.sendKeys(instruction.getInputValue());
 
-        logger.debug("Typed '{}' into element", instruction.getInputValue());
+        element.sendKeys(value);
+
+        logger.debug(
+                "Typed '{}' into element",
+                value
+        );
     }
 
     /**
@@ -370,20 +426,82 @@ public class ActionExecutor {
      * Uses JavaScript to set value and dispatch change event.
      */
     private void executeSetDateToday(TestInstruction instruction) {
-        By locator = locatorResolver.resolveLocator(instruction);
-        WebElement dateInput = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
 
-        String today = LocalDate.now().toString(); // Format: yyyy-MM-dd
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        List<WebElement> dateInputs =
+                wait.until(driver -> driver.findElements(locator));
+
+        int fieldIndex = Integer.parseInt(instruction.getInputValue());
+
+        WebElement dateInput = dateInputs.get(fieldIndex);
+
+        LocalDate dateToSet;
+
+        if (fieldIndex == 0) {
+            // From date = tomorrow
+            dateToSet = LocalDate.now();
+        } else {
+            // To date = +15 days
+            dateToSet = LocalDate.now().plusDays(15);
+        }
+
+        String date = dateToSet.toString();
 
         js.executeScript(
-                "arguments[0].value='" + today + "';" +
-                        "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
-                dateInput
+                "const input = arguments[0];" +
+                        "const value = arguments[1];" +
+
+                        // React ke liye native setter
+                        "const nativeInputValueSetter = Object.getOwnPropertyDescriptor(" +
+                        "window.HTMLInputElement.prototype, 'value').set;" +
+
+                        "nativeInputValueSetter.call(input, value);" +
+
+                        // React events
+                        "input.dispatchEvent(new Event('input', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('change', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('blur', { bubbles: true }));",
+
+                dateInput,
+                date
         );
 
-        logger.debug("Set date to: {}", today);
+        logger.info("Date field {} set to {}", fieldIndex, date);
     }
 
+    /**
+     * SET_DATE_PLUS_DAYS action: Sets a date input to plus 5 days.
+     * Uses JavaScript to set value and dispatch change event.
+     */
+
+    private void executeSetDatePlusDays(TestInstruction instruction) {
+
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        List<WebElement> dateInputs =
+                wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(locator));
+
+        String[] values = instruction.getInputValue().split(",");
+
+        int fieldIndex = Integer.parseInt(values[0]);
+        int plusDays = Integer.parseInt(values[1]);
+
+        WebElement dateInput = dateInputs.get(fieldIndex);
+
+        String dateToSet =
+                LocalDate.now().plusDays(plusDays).toString();
+
+        js.executeScript(
+                "arguments[0].value = arguments[1];" +
+                        "arguments[0].dispatchEvent(new Event('input', { bubbles: true }));" +
+                        "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));",
+                dateInput,
+                dateToSet
+        );
+
+        logger.debug("Set future date to: {}", dateToSet);
+    }
     /**
      * CLEAR_AND_TYPE action: Clears existing content using keyboard shortcuts
      * before typing. Useful when element.clear() doesn't work properly.
@@ -616,6 +734,10 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * CHECK_LAST_CHECKBOX action: Selects a checkbox by its visible label.
+     */
+
     private void checkLastCheckbox(
             TestInstruction instruction)
             throws InterruptedException {
@@ -668,16 +790,18 @@ public class ActionExecutor {
         );
     }
 
-    private void captureText(
-            TestInstruction instruction)
+    /**
+     * CAPTURE_TEXT action: Captures the text by its visible text label.
+     */
+
+    private void captureText(TestInstruction instruction)
             throws InterruptedException {
 
         WebElement element =
                 wait.until(
-                        ExpectedConditions
-                                .visibilityOfElementLocated(
-                                        locatorResolver.resolveLocator(instruction)
-                                )
+                        ExpectedConditions.visibilityOfElementLocated(
+                                locatorResolver.resolveLocator(instruction)
+                        )
                 );
 
         js.executeScript(
@@ -688,8 +812,7 @@ public class ActionExecutor {
         Thread.sleep(300);
 
         String capturedValue =
-                element.getText()
-                        .trim();
+                element.getText().trim();
 
         if (capturedValue.isEmpty()) {
 
@@ -702,6 +825,9 @@ public class ActionExecutor {
                 instruction.getInputValue(),
                 capturedValue
         );
+
+        // ADD THIS
+        TestDataStore.PERMIT_NUMBER = capturedValue;
 
         logger.info(
                 "Captured [{}] = {}",
@@ -756,6 +882,10 @@ public class ActionExecutor {
                 instruction.getDynamicSleep()
         );
     }
+    /**
+     * SWITCH_WINDOW action: Helps in switching the windows for payment gateways.
+     */
+
 
     private void switchWindow() {
 
@@ -782,6 +912,10 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * WAIT_FOR_TEXT: Helps in visibility of text if it appears late
+     */
+
     private void waitForText(
             TestInstruction instruction) {
 
@@ -801,5 +935,219 @@ public class ActionExecutor {
                 "Text found: {}",
                 instruction.getInputValue()
         );
+    }
+
+    /**
+     * SET_DATE_TEXT: To fill the date through text
+     */
+
+    private void executeSetDateText(TestInstruction instruction) {
+
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        List<WebElement> inputs = wait.until(
+                ExpectedConditions.visibilityOfAllElementsLocatedBy(locator)
+        );
+
+        String[] parts = instruction.getInputValue().split(":");
+
+        int index = Integer.parseInt(parts[0]);
+        String dateValue = parts[1];
+
+        WebElement input = inputs.get(index);
+
+        input.click();
+
+        input.sendKeys(Keys.COMMAND + "a");
+        input.sendKeys(Keys.BACK_SPACE);
+
+        input.sendKeys(dateValue);
+
+        input.sendKeys(Keys.TAB);
+
+        logger.debug("Date field {} set to {}", index, dateValue);
+    }
+
+    /**
+     * MULTI_SELECT_CHECKBOX: To select multiple options from the dropdown
+     */
+
+    private void executeMultiSelectCheckbox(TestInstruction instruction)
+            throws InterruptedException {
+
+        String[] values = instruction.getInputValue().split(",");
+
+        for (String value : values) {
+
+            String xpath =
+                    "//div[contains(@class,'option-item')][.//p[contains(normalize-space(.),'"
+                            + value.trim() + "')]]//div[contains(@class,'custom-checkbox')]";
+
+            WebElement option = wait.until(
+                    ExpectedConditions.elementToBeClickable(By.xpath(xpath))
+            );
+
+            js.executeScript(
+                    "arguments[0].dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));" +
+                            "arguments[0].dispatchEvent(new MouseEvent('mouseup', {bubbles:true}));" +
+                            "arguments[0].click();" +
+                            "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+                    option
+            );
+
+            Thread.sleep(500);
+
+            js.executeScript("arguments[0].click();", option);
+
+            logger.info("Selected checkbox option: {}", value.trim());
+
+            Thread.sleep(1000);
+        }
+    }
+
+    /**
+     * OPEN_URL: To open url when we log out from one mobile number and
+     * login again through another mobile number
+     */
+
+
+    private void openUrl(TestInstruction instruction)
+            throws InterruptedException {
+
+        driver.get(instruction.getLocatorValue());
+
+        logger.info(
+                "Opened URL: {}",
+                instruction.getLocatorValue()
+        );
+
+        Thread.sleep(
+                instruction.getDynamicSleep()
+        );
+    }
+
+    /**
+     * SET_CURRENT_TIME: This helps in setting the current time
+     */
+
+    private void executeSetCurrentTime(TestInstruction instruction) {
+
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        WebElement element = wait.until(
+                ExpectedConditions.elementToBeClickable(locator)
+        );
+
+        String currentTime = LocalTime.now()
+                .format(DateTimeFormatter.ofPattern("HH:mm"));
+
+        js.executeScript(
+                "arguments[0].value=arguments[1]; arguments[0].dispatchEvent(new Event('change'));",
+                element,
+                currentTime
+        );
+
+        logger.debug("Set current time: {}", currentTime);
+    }
+
+    /**
+     * SET_CUSTOM_TIME: This helps in setting the custom time
+     */
+
+    private void executeSetCustomTime(TestInstruction instruction) {
+
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        WebElement element = wait.until(
+                ExpectedConditions.elementToBeClickable(locator)
+        );
+
+        String inputTime = instruction.getInputValue()
+                .replaceAll("\\s+", " ")
+                .trim()
+                .toUpperCase();
+
+        String[] parts = inputTime.split(" ");
+
+        String timePart = parts[0];
+        String ampm = parts[1];
+
+        String[] timeArray = timePart.split(":");
+
+        int hour = Integer.parseInt(timeArray[0]);
+        String minute = timeArray[1];
+
+        if (ampm.equals("PM") && hour != 12) {
+            hour += 12;
+        }
+
+        if (ampm.equals("AM") && hour == 12) {
+            hour = 0;
+        }
+
+        String formattedTime =
+                String.format("%02d:%s", hour, minute);
+
+        logger.info("Setting time: {}", formattedTime);
+
+        js.executeScript(
+
+                "const input = arguments[0];" +
+                        "const value = arguments[1];" +
+
+                        "const nativeInputValueSetter = " +
+                        "Object.getOwnPropertyDescriptor(" +
+                        "window.HTMLInputElement.prototype," +
+                        "'value').set;" +
+
+                        "nativeInputValueSetter.call(input, value);" +
+
+                        "input.dispatchEvent(new Event('input', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('change', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('blur', { bubbles: true }));",
+
+                element,
+                formattedTime
+        );
+
+        logger.info("Time set successfully");
+    }
+
+    /**
+     * SET_DATE_JS: This helps in setting the date through js
+     */
+
+
+    private void executeSetDateJs(TestInstruction instruction) {
+
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        WebElement element = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(locator)
+        );
+
+        String dateValue = instruction.getInputValue();
+
+        js.executeScript(
+
+                "const input = arguments[0];" +
+                        "const value = arguments[1];" +
+
+                        // React native setter
+                        "const nativeInputValueSetter = " +
+                        "Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
+
+                        "nativeInputValueSetter.call(input, value);" +
+
+                        // React events
+                        "input.dispatchEvent(new Event('input', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('change', { bubbles: true }));" +
+                        "input.dispatchEvent(new Event('blur', { bubbles: true }));",
+
+                element,
+                dateValue
+        );
+
+        logger.info("React date set successfully: {}", dateValue);
     }
 }

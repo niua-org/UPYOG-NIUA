@@ -1,58 +1,65 @@
 {
   "moduleName":"water_and_sewerage_citizen_module",
+  "description": "Water & Sewerage citizen  flow ",
 
+  "baseUrl": "${selected.url}",
   "instructions":[
 
     {
-      "stepName":"Citizen Mobile Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue":"${citizen.mobile.number}"
+      "stepName": "Enter Mobile Number",
+      "locatorStrategy": "NAME",
+      "locatorValue": "mobileNumber",
+      "action": "TYPE",
+      "inputValue": "${selected.mobile}",
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Accept Terms",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='checkbox'].form-field",
-      "action":"CLICK_JS"
+      "stepName": "Accept Terms Checkbox",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='checkbox'].form-field",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Click Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "stepName": "Click Next After Mobile",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
     },
-
     {
-      "stepName":"Enter OTP",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.input-otp",
-      "action":"TYPE_OTP",
-      "inputValue":"${test.otp}"
+      "stepName": "Enter OTP",
+      "locatorStrategy": "NAME",
+      "locatorValue": "input.input-otp",
+      "action": "TYPE_OTP",
+      "inputValue": "${selected.otp}",
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Submit OTP",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "stepName": "Submit OTP",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
     },
-
     {
-      "stepName":"Select City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action":"SELECT_RADIO_BY_TEXT",
-      "inputValue":"${test.city.name}"
+      "stepName": "Select City",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action": "SELECT_RADIO_BY_TEXT",
+      "inputValue": "${selected.city}",
+      "dynamicSleep": 1500
     },
-
     {
-      "stepName":"Continue",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Continue",
-      "action":"CLICK_JS"
+      "stepName": "Click Continue",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Continue')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
     },
 
 
@@ -109,39 +116,44 @@
 
     {
       "stepName":"Info Page Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Property Details Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Common Connection Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
 
     {
       "stepName":"Choose Both Services",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Both Water and Sewerage",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Both Water and Sewerage']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Service Type Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -150,8 +162,9 @@
       "stepName":"Connection Quantity",
       "locatorStrategy":"CSS",
       "locatorValue":"input.employee-card-input",
-      "action":"TYPE_BY_INDEX",
-      "inputValue":"0:10"
+      "action":"TYPE",
+      "inputValue":"10",
+      "dynamicSleep": 2000
     },
 
     {
@@ -159,39 +172,43 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Water Connection Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
 
     {
       "stepName":"Water Closets",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.employee-card-input",
-      "action":"TYPE_BY_INDEX",
-      "inputValue":"0:6"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[contains(@class,'employee-card-input')])[1]",
+      "action":"TYPE",
+      "inputValue":"10",
+      "dynamicSleep":2000
     },
-
     {
       "stepName":"Toilet Seats",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.employee-card-input",
-      "action":"TYPE_BY_INDEX",
-      "inputValue":"1:4"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[contains(@class,'employee-card-input')])[2]",
+      "action":"TYPE",
+      "inputValue":"3",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Sewerage Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -201,15 +218,17 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Upload Identity Proof",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"0:${document.identity1.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[1]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
 
@@ -219,15 +238,17 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
+      "inputValue":"1:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Upload Address Proof",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"1:${document.address1.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[2]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
 
@@ -237,15 +258,17 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"2:0"
+      "inputValue":"2:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Upload Electricity Bill",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"2:${document.electricityBill.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[3]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
 
@@ -255,32 +278,35 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"3:0"
+      "inputValue":"3:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Upload Plumber Drawing",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"3:${document.plumberReportDrawing.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[4]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
 
 
     {
       "stepName":"Documents Next",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Next",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
 
     {
       "stepName":"Submit Application",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"SUBMIT",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@class='submit-bar ' and @type='button'][.//header[text()='SUBMIT']]",
       "action":"CLICK_JS"
     }
 

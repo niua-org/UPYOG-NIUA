@@ -41,33 +41,22 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Open CHB Search Bookings",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//span[text()='Community Hall Booking']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Search Bookings']",
+      "locatorValue": "//span[text()='Community Hall Booking']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Search Application']",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Enter Booking Number",
       "locatorStrategy": "NAME",
       "locatorValue": "bookingNo",
-      "action": "TYPE_FROM_STORE",
-      "inputValue": "application.number",
+      "action": "TYPE",
+      "inputValue":  "${chb.application.number}",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Click Search",
       "locatorStrategy": "XPATH",
@@ -76,11 +65,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Click TAKE ACTION",
       "locatorStrategy": "XPATH",
@@ -89,11 +73,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Click Cancel Booking",
       "locatorStrategy": "XPATH",

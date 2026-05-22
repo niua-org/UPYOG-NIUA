@@ -2,7 +2,7 @@
   "moduleName": "asset_employee_module",
   "description": "Asset employee full UI workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${employee.niuatt.base.url}",
 
   "instructions": [
 
@@ -11,7 +11,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "username",
       "action": "TYPE",
-      "inputValue": "${employee.username}",
+      "inputValue": "${asset.login.username}",
       "dynamicSleep": 500
     },
     {
@@ -19,7 +19,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "password",
       "action": "TYPE",
-      "inputValue": "${employee.password}",
+      "inputValue": "${asset.login.password}",
       "dynamicSleep": 500
     },
     {
@@ -80,9 +80,9 @@
     },
     {
       "stepName": "Enter Asset Name",
-      "locatorStrategy": "INDEX",
-      "locatorValue": "4",
-      "action": "TYPE_BY_INDEX",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//input[@name='AssetName']",
+      "action": "TYPE",
       "inputValue": "MacBook",
       "dynamicSleep": 1000
     },

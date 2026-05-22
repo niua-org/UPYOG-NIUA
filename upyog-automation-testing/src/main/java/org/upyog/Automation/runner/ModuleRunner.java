@@ -23,7 +23,7 @@ public class ModuleRunner {
         String moduleToRun =
                 args.length > 0
                         ? args[0].toUpperCase()
-                        : "EWASTE_CITIZEN";
+                        : "SEWERAGE_EMP";
 
         WebDriver driver = null;
 
@@ -31,18 +31,33 @@ public class ModuleRunner {
 
             driver = createWebDriver();
 
-            // Runtime values
-            WorkflowDataStore.put("selected.url",
-                    "https://upyog.niua.org/upyog-ui/citizen/login");
-
-            WorkflowDataStore.put("selected.mobile",
-                    "9999999999");
-
-            WorkflowDataStore.put("selected.otp",
-                    "123456");
-
-            WorkflowDataStore.put("selected.city",
-                    "Delhi");
+//            // Runtime values
+//            WorkflowDataStore.put("selected.url",
+//                    "https://upyog.niua.org/upyog-ui/citizen/login");
+//
+//            WorkflowDataStore.put("selected.cndCitizen.url",
+//                    "https://upyog.niua.org/cnd-ui/citizen/login");
+//
+//            WorkflowDataStore.put("selected.svCitizen.url",
+//                    "https://upyog.niua.org/sv-ui/citizen/login");
+//
+//            WorkflowDataStore.put("selected.cndEmployee.url",
+//                    "https://upyog.niua.org/cnd-ui/employee/login");
+//
+//            WorkflowDataStore.put("selected.svEmployee.url",
+//                    "https://upyog.niua.org/sv-ui/employee/login");
+//
+//            WorkflowDataStore.put("selected.mobile",
+//                    "9999999999");
+//
+//            WorkflowDataStore.put("selected.otp",
+//                    "123456");
+//
+//            WorkflowDataStore.put("selected.city",
+//                    "Delhi");
+//
+//            WorkflowDataStore.put("selected.city.mohali",
+//                    "Mohali");
 
             TestEngine engine =
                     new TestEngine(
@@ -65,7 +80,6 @@ public class ModuleRunner {
 
         // Download matching ChromeDriver and clear old cached drivers
         WebDriverManager.chromedriver()
-                .clearDriverCache()
                 .setup();
 
         ChromeOptions options = new ChromeOptions();
@@ -115,7 +129,7 @@ public class ModuleRunner {
             case "ADVERTISEMENT_CITIZEN":
 
                 result = engine.executeModule(
-                        "test-config/advertisement/advertisement_citizen_module.json"
+                        "test-config/advertisement/adv_citizen_module.json"
                 );
 
                 break;
@@ -123,7 +137,7 @@ public class ModuleRunner {
             case "ADVERTISEMENT_EMPLOYEE":
 
                 result = engine.executeModule(
-                        "test-config/advertisement/advertisement_employee_module.json"
+                        "test-config/advertisement/adv_employee_module.json"
                 );
 
                 break;
@@ -170,7 +184,15 @@ public class ModuleRunner {
             case "CND_REQUEST":
 
                 result = engine.executeModule(
-                        "test-config/cnd/cnd_request_module.json"
+                        "test-config/cnd/cnd_citizen_module.json"
+                );
+
+                break;
+
+            case "CND_EMPLOYEE":
+
+                result = engine.executeModule(
+                        "test-config/cnd/cnd_employee_module.json"
                 );
 
                 break;
@@ -183,6 +205,18 @@ public class ModuleRunner {
 
                 break;
 
+            // =====================================================
+            // DESLUDGING SERVICE
+            // =====================================================
+
+            case "DESLUDGING":
+
+                result = engine.executeModule(
+                        "test-config/desludging/desludging_citizen_module.json"
+                );
+
+                break;
+
 
             // =====================================================
             // OBPAS
@@ -191,7 +225,7 @@ public class ModuleRunner {
             case "OBPAS_CREATE":
 
                 result = engine.executeModule(
-                        "test-config/obpas/obpas_create_module.json"
+                        "test-config/obpas/obpas_citizen_module.json"
                 );
 
                 break;
@@ -207,7 +241,7 @@ public class ModuleRunner {
             case "OBPAS_OC":
 
                 result = engine.executeModule(
-                        "test-config/obpas/obpas_oc_module.json"
+                        "test-config/obpas/obpas_oc_citizen_module.json"
                 );
 
                 break;
@@ -215,7 +249,7 @@ public class ModuleRunner {
             case "OBPAS_OC_EMP":
 
                 result = engine.executeModule(
-                        "test-config/obpas/obpas_oc_emp_module.json"
+                        "test-config/obpas/obpas_oc_employee_module.json"
                 );
 
                 break;
@@ -249,7 +283,7 @@ public class ModuleRunner {
             case "PROPERTY_TAX":
 
                 result = engine.executeModule(
-                        "test-config/property/property_tax_citizen_module.json"
+                        "test-config/propertyTax/property_tax_citizen_module.json"
                 );
 
                 break;
@@ -257,7 +291,7 @@ public class ModuleRunner {
             case "PROPERTY_TAX_EMP":
 
                 result = engine.executeModule(
-                        "test-config/property/property_tax_employee_module.json"
+                        "test-config/propertyTax/property_tax_employee_module.json"
                 );
 
                 break;
@@ -283,6 +317,81 @@ public class ModuleRunner {
 
                 break;
 
+            // =====================================================
+            // WATER + SEWERAGE
+            // =====================================================
+
+            case "MOBILE_TOILET_CITIZEN":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/mobile_toilet_citizen_module.json"
+                );
+
+                break;
+
+            case "MOBILE_TOILET_EMP":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/mobile_toilet_employee_module.json"
+                );
+
+                break;
+            case "MOBILE_TOILET_VENDOR":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/mobile_toilet_vendor_module.json"
+                );
+
+                break;
+
+            case "TREE_PRUNING_CITIZEN":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/tree_pruning_citizen_module.json"
+                );
+
+                break;
+
+            case "TREE_PRUNING_EMP":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/tree_pruning_employee_module.json"
+                );
+
+                break;
+
+            case "TREE_PRUNING_VENDOR":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/tree_pruning_vendor_module.json"
+                );
+
+                break;
+
+            case "WATER_TANKER_CITIZEN":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/water_tanker_citizen_module.json"
+                );
+
+                break;
+
+            case "WATER_TANKER_EMP":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/water_tanker_employee_module.json"
+                );
+
+                break;
+
+            case "WATER_TANKER_VENDOR":
+
+                result = engine.executeModule(
+                        "test-config/RequestService/water_tanker_vendor_module.json"
+                );
+
+                break;
+
 
             // =====================================================
             // STREET VENDING
@@ -291,7 +400,7 @@ public class ModuleRunner {
             case "STREET_VENDING":
 
                 result = engine.executeModule(
-                        "test-config/streetvending/street_vending_citizen_module.json"
+                        "test-config/streetVending/street_vending_citizen_module.json"
                 );
 
                 break;
@@ -299,7 +408,7 @@ public class ModuleRunner {
             case "STREET_VENDING_EMP":
 
                 result = engine.executeModule(
-                        "test-config/streetvending/street_vending_employee_module.json"
+                        "test-config/streetVending/street_vending_employee_module.json"
                 );
 
                 break;
@@ -333,23 +442,23 @@ public class ModuleRunner {
             case "WATER_AND_SEWERAGE":
 
                 result = engine.executeModule(
-                        "test-config/waterandsewerage/water_and_sewerage_citizen_module.json"
+                        "test-config/waterAndSewerage/water_and_sewerage_citizen_module.json"
                 );
 
                 break;
 
-            case "WATER":
+            case "WATER_EMP":
 
                 result = engine.executeModule(
-                        "test-config/waterandsewerage/water_employee_module.json"
+                        "test-config/waterAndSewerage/water_employee_module.json"
                 );
 
                 break;
 
-            case "SEWERAGE":
+            case "SEWERAGE_EMP":
 
                 result = engine.executeModule(
-                        "test-config/waterandsewerage/sewerage_employee_module.json"
+                        "test-config/waterAndSewerage/sewerage_employee_module.json"
                 );
 
                 break;

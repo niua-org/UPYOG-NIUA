@@ -70,10 +70,9 @@
     {
       "stepName": "Open Advertisement Booking",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//a[@href='/upyog-ui/citizen/ads/bookad']",
+      "locatorValue": "//a[contains(@href,'/ads/bookad')]",
       "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
+      "dynamicSleep": 5000
     },
     {
       "stepName": "Select Category",
@@ -104,40 +103,35 @@
       "locatorStrategy": "CSS",
       "locatorValue": "input[type='date']",
       "action": "SET_DATE_TODAY",
-      "inputValue": "0",
-      "dynamicSleep": 1000
+      "inputValue": "0"
     },
     {
       "stepName": "Set To Date",
       "locatorStrategy": "CSS",
       "locatorValue": "input[type='date']",
       "action": "SET_DATE_TODAY",
-      "inputValue": "1",
+      "inputValue": "1"
+    },
+    {
+      "stepName":"Select Night Light Yes",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[normalize-space()='Yes']",
+      "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
     {
-      "stepName": "Select Night Light No",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='radio']",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "No",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Click Search",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Search')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
+      "stepName":"Click Search",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Search')]",
+      "action":"CLICK_JS",
       "dynamicSleep": 3000
     },
     {
-      "stepName": "Select All Sites",
-      "locatorStrategy": "CSS",
-      "locatorValue": "table tbody input[type='checkbox']",
-      "action": "CHECK_ALL_CHECKBOXES",
-      "inputValue": null,
-      "dynamicSleep": 2000
+      "stepName": "Select First Available Site",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//tr[td[contains(.,'Available')]]//input[@type='checkbox'])[1]",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
     {
       "stepName": "Add To Cart",
@@ -292,11 +286,27 @@
       "dynamicSleep": 1000
     },
     {
+      "stepName": "Upload Sample Document",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[1]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
+    },
+    {
       "stepName": "Select Address Proof Type",
       "locatorStrategy": "CSS",
       "locatorValue": "div.select svg.cp",
       "action": "SELECT_DROPDOWN_BY_INDEX",
       "inputValue": "1:0",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Upload Address Proof",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[2]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
     },
     {
@@ -308,27 +318,11 @@
       "dynamicSleep": 1000
     },
     {
-      "stepName": "Upload Sample Document",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='file'].input-mirror-selector-button",
-      "action": "UPLOAD_FILE",
-      "inputValue": "${document.sampleDocument.proof}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Upload Address Proof",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='file'].input-mirror-selector-button",
-      "action": "UPLOAD_FILE",
-      "inputValue": "${document.address.proof}",
-      "dynamicSleep": 1000
-    },
-    {
       "stepName": "Upload Identity Proof",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='file'].input-mirror-selector-button",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[3]",
       "action": "UPLOAD_FILE",
-      "inputValue": "${document.Identity.proof}",
+      "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
     },
     {

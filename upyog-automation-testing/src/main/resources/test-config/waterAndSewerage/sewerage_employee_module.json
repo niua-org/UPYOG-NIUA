@@ -1,5 +1,8 @@
 {
   "moduleName":"sewerage_employee_module",
+  "description": "Sewerage employee flow ",
+
+  "baseUrl": "${employee.base.url}",
 
   "instructions":[
 
@@ -8,7 +11,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${wns.login.username}"
+      "inputValue":"${ws.login.username}",
+      "dynamicSleep": 1000
     },
 
     {
@@ -16,7 +20,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${wns.login.password}"
+      "inputValue":"${ws.login.password}",
+      "dynamicSleep": 1000
     },
 
     {
@@ -24,14 +29,16 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Continue Login",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Continue",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[text()='Continue']]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -39,8 +46,9 @@
     {
       "stepName":"Open Sewerage Inbox",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//span[text()='Sewerage']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Inbox']",
-      "action":"CLICK_JS"
+      "locatorValue":"//a[contains(@href,'/ws/sewerage/inbox')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -50,37 +58,43 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNumber",
       "action":"TYPE",
-      "inputValue":"${sewerage.application.number}"
+      "inputValue":"${sw.application.number}",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Search Application",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Search']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Open Application",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//table//tbody//tr//a",
-      "action":"CLICK_JS"
+      "stepName": "Open Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//table//a[1]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
     },
 
 
 
     {
       "stepName":"Take Action Verify And Forward 1",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Verify And Forward 1",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Verify and Forward",
-      "action":"CLICK_ACTION_MENU"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Verify and Forward']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -88,143 +102,124 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Verified and Okay to forward"
+      "inputValue":"Verified and Okay to forward",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Submit Verify And Forward 1",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Verify and Forward']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
     },
-
-
-
-    {
-      "stepName":"Take Action Verify And Forward 2",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
-    },
-
-    {
-      "stepName":"Click Verify And Forward 2",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Verify and Forward",
-      "action":"CLICK_ACTION_MENU"
-    },
-
-    {
-      "stepName":"Comment 2",
-      "locatorStrategy":"NAME",
-      "locatorValue":"comments",
-      "action":"TYPE",
-      "inputValue":"Verified and Okay to forward"
-    },
-
-    {
-      "stepName":"Submit Verify And Forward 2",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[normalize-space()='Verify and Forward']",
-      "action":"CLICK_JS"
-    },
-
 
 
     {
       "stepName":"Take Action Edit",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Edit",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Edit",
-      "action":"CLICK_ACTION_MENU"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Edit']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
 
     {
       "stepName":"Proposed Water Closets",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Proposed Water closets",
-      "action":"TYPE_BY_H2",
-      "inputValue":"2"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='number'])[1]",
+      "action":"TYPE",
+      "inputValue":"12",
+      "dynamicSleep":2000
     },
-
     {
       "stepName":"Proposed Toilets",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Proposed toilets",
-      "action":"TYPE_BY_H2",
-      "inputValue":"2"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='number'])[2]",
+      "action":"TYPE",
+      "inputValue":"15",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Water Closets",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Number of Water Closets",
-      "action":"TYPE_BY_H2",
-      "inputValue":"2"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='number'])[3]",
+      "action":"TYPE",
+      "inputValue":"15",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Toilet Seats",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Number of Toilet Seats",
-      "action":"TYPE_BY_H2",
-      "inputValue":"2"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='number'])[4]",
+      "action":"TYPE",
+      "inputValue":"5",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Select Plumber",
       "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
+      "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Plumber License",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Plumber License Number",
-      "action":"TYPE_BY_H2",
-      "inputValue":"78987655446"
+      "stepName":"Plumber License Number",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Plumber License Number')]/following::input[1]",
+      "action":"TYPE",
+      "inputValue":"7876776712345",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Plumber Name",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Plumber Name",
-      "action":"TYPE_BY_H2",
-      "inputValue":"Amit Kumar"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Plumber Name')]/following::input[1]",
+      "action":"TYPE",
+      "inputValue":"Ramesh Kumar",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Plumber Mobile",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Plumber Mobile Number",
-      "action":"TYPE_BY_H2",
-      "inputValue":"9876543210"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Plumber Mobile Number')]/following::input[@type='text'][1]",
+      "action":"TYPE",
+      "inputValue":"9999997669",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Road Cutting Dropdown",
       "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
+      "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
+      "inputValue":"1:0",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Area Of Plot",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Area of Plot",
-      "action":"TYPE_BY_H2",
-      "inputValue":"1200"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Area of Plot')]/following::input[1]",
+      "action":"TYPE",
+      "inputValue":"250",
+      "dynamicSleep":2000
     },
 
 
@@ -239,10 +234,11 @@
 
     {
       "stepName":"Upload Evidence 1",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"0:${document.identity1.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[1]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
     {
@@ -255,10 +251,11 @@
 
     {
       "stepName":"Upload Evidence 2",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"1:${document.identity1.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[2]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
     {
@@ -271,10 +268,11 @@
 
     {
       "stepName":"Upload Evidence 3",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"2:${document.identity1.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[3]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
     {
@@ -287,35 +285,39 @@
 
     {
       "stepName":"Upload Evidence 4",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='file']",
-      "action":"UPLOAD_FILE_BY_INDEX",
-      "inputValue":"3:${document.identity1.proof}"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[4]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
     },
 
 
 
     {
       "stepName":"Submit Edit Page",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"SUBMIT",
-      "action":"CLICK_JS"
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'SUBMIT')]",
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
     },
 
 
 
     {
       "stepName":"Take Action Verify And Forward 3",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Verify And Forward 3",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Verify and Forward",
-      "action":"CLICK_ACTION_MENU"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Verify and Forward']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -323,30 +325,34 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Verified and Okay to forward"
+      "inputValue":"Verified and Okay to forward",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Submit Verify And Forward 3",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Verify and Forward']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
 
     {
       "stepName":"Take Action Approve Connection",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Approve Connection",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Approve Connection",
-      "action":"CLICK_ACTION_MENU"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//p[normalize-space()='Approve Connection']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -354,30 +360,34 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Approved"
+      "inputValue":"Approved",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Submit Approve Connection",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Approve Connection']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
     },
 
 
 
     {
       "stepName":"Take Action Collect",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Collect",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Collect",
-      "action":"CLICK_ACTION_MENU"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Collect')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -387,7 +397,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"payerMobile",
       "action":"TYPE",
-      "inputValue":"9999999999"
+      "inputValue":"9999999999",
+      "dynamicSleep":2000
     },
 
     {
@@ -395,77 +406,89 @@
       "locatorStrategy":"NAME",
       "locatorValue":"instrumentNumber",
       "action":"TYPE",
-      "inputValue":"GEN123456"
+      "inputValue":"GEN123456",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Receipt Date",
       "locatorStrategy":"XPATH",
       "locatorValue":"//input[@type='date']",
-      "action":"SET_DATE_TODAY"
+      "action":"SET_DATE_TODAY",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Collect Payment",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Collect Payment",
-      "action":"CLICK_JS"
-    },
-
-
-
-    {
-      "stepName":"Go Back Home",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Go back to home page",
-      "action":"CLICK_JS"
-    },
-
-
-
-    {
-      "stepName":"Open Sewerage Inbox Again",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//span[text()='Sewerage']/ancestor::div[contains(@class,'employeeCustomCard')]//*[normalize-space()='Inbox']",
-      "action":"CLICK_JS"
+      "locatorValue":"//p[normalize-space()='Collect Payment']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
+
+
     {
-      "stepName":"Search Again",
+      "stepName":"Go Back To Home",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Go back to home page')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
+    },
+
+
+    {
+      "stepName":"Open Sewerage Inbox",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[contains(@href,'/ws/sewerage/inbox')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
+    },
+
+
+
+    {
+      "stepName":"Enter Application Number",
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNumber",
       "action":"TYPE",
-      "inputValue":"${sewerage.application.number}"
+      "inputValue":"${sw.application.number}",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Click Search Again",
+      "stepName":"Search Application",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Search']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Open Application Again",
+      "stepName": "Open Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//table//a[1]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
+    },
+
+
+
+    {
+      "stepName":"Take Action Collect",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//table//tbody//tr//a",
-      "action":"CLICK_JS"
-    },
-
-
-
-    {
-      "stepName":"Take Action Activate Connection",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"TAKE ACTION",
-      "action":"CLICK_JS"
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Activate Connection",
-      "locatorStrategy":"LABELTEXT",
+      "locatorStrategy":"XPATH",
       "locatorValue":"Activate Connection",
-      "action":"CLICK_ACTION_MENU"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -473,47 +496,53 @@
     {
       "stepName":"Select Plumber Again",
       "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
+      "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Plumber License Again",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Plumber License Number",
-      "action":"TYPE_BY_H2",
-      "inputValue":"78987655446"
+      "stepName":"Plumber License Number",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Plumber License Number')]/following::input[1]",
+      "action":"TYPE",
+      "inputValue":"PLUM12345",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Plumber Name Again",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Plumber Name",
-      "action":"TYPE_BY_H2",
-      "inputValue":"Amit Kumar"
+      "stepName":"Plumber Name",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Plumber Name')]/following::input[1]",
+      "action":"TYPE",
+      "inputValue":"Ramesh Kumar",
+      "dynamicSleep":2000
     },
 
     {
-      "stepName":"Plumber Mobile Again",
-      "locatorStrategy":"H2LABEL",
-      "locatorValue":"Plumber Mobile Number",
-      "action":"TYPE_BY_H2",
-      "inputValue":"9876543210"
+      "stepName":"Plumber Mobile",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//h2[contains(text(),'Plumber Mobile Number')]/following::input[@type='text'][1]",
+      "action":"TYPE",
+      "inputValue":"9999997669",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Connection Date",
       "locatorStrategy":"XPATH",
       "locatorValue":"//input[@type='date']",
-      "action":"SET_DATE_TODAY"
+      "action":"SET_DATE_TODAY",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Activate Connection Submit",
-      "locatorStrategy":"HEADERBUTTON",
-      "locatorValue":"Activate Connection",
-      "action":"CLICK_JS"
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Activate Connection')]",
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
     }
 
   ]

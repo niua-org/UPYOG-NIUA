@@ -114,6 +114,14 @@
       "inputValue": null,
       "dynamicSleep": 1500
     },
+    {
+      "stepName": "Search Property City",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.select svg.cp",
+      "action": "SELECT_DROPDOWN_BY_INDEX",
+      "inputValue": "0:0",
+      "dynamicSleep": 1000
+    },
 
     {
       "stepName": "Search Property Mobile",
@@ -144,10 +152,9 @@
 
     {
       "stepName": "Select Property Type",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "Residential",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"//label[normalize-space()='Residential']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
       "dynamicSleep": 1000
     },
 
@@ -162,10 +169,9 @@
 
     {
       "stepName": "Select Sub Property Type",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "Independent house",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"//label[normalize-space()='Independent house']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
       "dynamicSleep": 1000
     },
 
@@ -186,7 +192,6 @@
       "inputValue": null,
       "dynamicSleep": 1500
     },
-
     {
       "stepName": "Enter Pincode",
       "locatorStrategy": "XPATH",
@@ -195,16 +200,125 @@
       "inputValue": "143001",
       "dynamicSleep": 1000
     },
+    {
+      "stepName": "Pincode Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Property Address Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Provide Property Address Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Slum Area",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"//*[contains(text(),'NO')]/preceding::input[@type='radio'][1]",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Slum Area Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Provide Property address Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Provide Landmark Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Choose Pit type",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"//label[normalize-space()='Conventional septic tank']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
 
+    {
+      "stepName":"Road Width",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"//input[@placeholder='Enter road width in meters']",
+      "action":"TYPE",
+      "inputValue":"200",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Distance From The Pit",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[@placeholder='Enter distance of pit from road']",
+      "action":"TYPE",
+      "inputValue":"300",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
     {
       "stepName": "Upload Pit Image",
       "locatorStrategy": "CSS",
       "locatorValue": "input[type='file']",
       "action": "UPLOAD_FILE",
-      "inputValue": "${document.pitPhoto.proof}",
+      "inputValue": "${document.common.proof}",
       "dynamicSleep": 2000
     },
-
+    {
+      "stepName": "Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
     {
       "stepName": "Submit",
       "locatorStrategy": "XPATH",
@@ -213,6 +327,5 @@
       "inputValue": null,
       "dynamicSleep": 5000
     }
-
   ]
 }

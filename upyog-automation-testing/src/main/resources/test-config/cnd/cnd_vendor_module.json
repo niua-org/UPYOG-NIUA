@@ -2,7 +2,7 @@
   "moduleName": "cnd_vendor_module",
   "description": "CnD vendor full workflow",
 
-  "baseUrl": "${selected.url}",
+  "baseUrl": "${selected.cndCitizen.url}",
 
   "instructions": [
 
@@ -50,7 +50,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Select City",
       "locatorStrategy": "CSS",
@@ -59,7 +58,6 @@
       "inputValue": "${selected.city}",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Continue",
       "locatorStrategy": "XPATH",
@@ -68,11 +66,6 @@
       "inputValue": null,
       "dynamicSleep": 3000
     },
-
-
-
-
-
     {
       "stepName": "Open CnD Module",
       "locatorStrategy": "XPATH",
@@ -81,7 +74,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Open Vendor Module",
       "locatorStrategy": "XPATH",

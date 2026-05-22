@@ -1,5 +1,9 @@
 {
   "moduleName":"mobile_toilet_employee_module",
+  "description": "Mobile Toilet employee full workflow",
+
+  "baseUrl": "${employee.base.url}",
+
 
   "instructions":[
 
@@ -8,7 +12,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${mt.login.username}"
+      "inputValue":"${mt.login.username}",
+      "dynamicSleep": 1000
     },
 
     {
@@ -16,7 +21,9 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${mt.login.password}"
+      "inputValue":"${mt.login.password}",
+      "dynamicSleep": 1000
+
     },
 
     {
@@ -24,14 +31,16 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Continue Login",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(@class,'submit-bar') and .//header[text()='Continue']]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -40,7 +49,8 @@
       "stepName":"Open Search Booking",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[contains(@href,'/wt/mt/my-bookings')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -50,21 +60,25 @@
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${mobileToilet.application.number}"
+      "inputValue":"${mt.application.number}",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Search Booking",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Search']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
-      "stepName":"Open Application",
-      "locatorStrategy":"LINKTEXT",
-      "locatorValue":"${mobileToilet.application.number}",
-      "action":"CLICK"
+      "stepName": "Open Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//table//a[1]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
     },
 
 
@@ -73,14 +87,16 @@
       "stepName":"Take Action Approve",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click Approve",
       "locatorStrategy":"XPATH",
       "locatorValue":"//p[normalize-space()='Approve']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -88,14 +104,16 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Approved"
+      "inputValue":"Approved",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Approve Popup Submit",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Approve']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -104,14 +122,16 @@
       "stepName":"Take Action Pay",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click PAY",
       "locatorStrategy":"XPATH",
       "locatorValue":"//p[normalize-space()='PAY']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
 
@@ -121,7 +141,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"payerMobile",
       "action":"TYPE",
-      "inputValue":"9999999999"
+      "inputValue":"9999999999",
+      "dynamicSleep": 1000
     },
 
     {
@@ -129,21 +150,25 @@
       "locatorStrategy":"NAME",
       "locatorValue":"instrumentNumber",
       "action":"TYPE",
-      "inputValue":"GEN123456"
+      "inputValue":"GEN123456",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Receipt Date",
       "locatorStrategy":"XPATH",
       "locatorValue":"//input[@type='date']",
-      "action":"SET_DATE_TODAY"
+      "action":"SET_DATE_TODAY",
+      "inputValue": "0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Collect Payment",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[.//header[normalize-space()='Collect Payment']]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
 
@@ -152,7 +177,8 @@
       "stepName":"Go Back To Home",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Go back to home page')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
 
@@ -161,7 +187,8 @@
       "stepName":"Open Search Booking Again",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[contains(@href,'/wt/mt/my-bookings')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
     {
@@ -169,21 +196,25 @@
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${mobileToilet.application.number}"
+      "inputValue":"${mt.application.number}",
+      "dynamicSleep": 3000
     },
 
     {
       "stepName":"Search Booking Again",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Search']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
     {
-      "stepName":"Open Application Again",
-      "locatorStrategy":"LINKTEXT",
-      "locatorValue":"${mobileToilet.application.number}",
-      "action":"CLICK"
+      "stepName": "Open Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//table//a[1]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
     },
 
 
@@ -192,14 +223,16 @@
       "stepName":"Take Action Assign Vendor",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
     {
       "stepName":"Click Assign Vendor",
       "locatorStrategy":"XPATH",
       "locatorValue":"//p[normalize-space()='Assign Vendor']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
 
@@ -209,7 +242,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 3000
     },
 
     {
@@ -217,14 +251,16 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Assigned"
+      "inputValue":"Assigned",
+      "dynamicSleep": 3000
     },
 
     {
       "stepName":"Assign Vendor Submit",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Assign Vendor']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     }
 
   ]

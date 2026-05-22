@@ -101,10 +101,10 @@ public class TestEngine {
                 failureReason
         );
 
-        logger.info("========================================");
+        logger.info("========================================================================================================================");
         logger.info("Module execution complete: {}", result.isSuccess() ? "PASSED" : "FAILED");
         logger.info("Steps passed: {}/{}", passedSteps, totalSteps);
-        logger.info("========================================");
+        logger.info("========================================================================================================================");
 
         return result;
     }

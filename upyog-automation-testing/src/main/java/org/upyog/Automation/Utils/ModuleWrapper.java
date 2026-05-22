@@ -53,8 +53,8 @@ public class ModuleWrapper {
 
         } catch (Exception e) {
 
-            logger.error("FAILED: {}", moduleName);
-            logger.error("Reason: {}", e.getMessage());
+            logger.error("FAILED: " + moduleName, e);
+            //logger.error("Reason: {}", e.getMessage());
 
         } finally {
 

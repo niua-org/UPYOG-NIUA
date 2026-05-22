@@ -1,74 +1,81 @@
 {
   "moduleName":"water_tanker_citizen_module",
+  "description": "Water Tanker citizen workflow",
+  "baseUrl": "${selected.url}",
 
   "instructions":[
 
     {
-      "stepName":"Citizen Mobile Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue":"${citizen.mobile.number}"
+      "stepName": "Enter Mobile Number",
+      "locatorStrategy": "NAME",
+      "locatorValue": "mobileNumber",
+      "action": "TYPE",
+      "inputValue": "${selected.mobile}",
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Accept Terms",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='checkbox'].form-field",
-      "action":"CLICK_JS"
+      "stepName": "Accept Terms Checkbox",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='checkbox'].form-field",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Click Next",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[@type='submit']",
-      "action":"CLICK_JS"
+      "stepName": "Click Next After Mobile",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
     },
-
     {
-      "stepName":"Enter OTP",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.input-otp",
-      "action":"TYPE_OTP",
-      "inputValue":"${test.otp}"
+      "stepName": "Enter OTP",
+      "locatorStrategy": "NAME",
+      "locatorValue": "input.input-otp",
+      "action": "TYPE_OTP",
+      "inputValue": "${selected.otp}",
+      "dynamicSleep": 1000
     },
-
     {
-      "stepName":"Submit OTP",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[@type='submit']",
-      "action":"CLICK_JS"
+      "stepName": "Submit OTP",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
     },
-
     {
-      "stepName":"Select City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action":"SELECT_RADIO_BY_TEXT",
-      "inputValue":"${test.city.name}"
+      "stepName": "Select City",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action": "SELECT_RADIO_BY_TEXT",
+      "inputValue": "${selected.city}",
+      "dynamicSleep": 1500
     },
-
     {
-      "stepName":"Continue",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Continue')]",
-      "action":"CLICK_JS"
+      "stepName": "Click Continue",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Continue')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
     },
-
-
 
     {
       "stepName":"Open Request Service",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[@href='/upyog-ui/citizen/wt-home']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
     {
-      "stepName":"Open Select Request Service",
+      "stepName":"Click Select Request Service",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='Select Request Service']",
-      "action":"CLICK_JS"
+      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='Request Service']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -78,14 +85,16 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Save And Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Save & Next')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -94,18 +103,9 @@
       "stepName":"Info Page Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
-
-
-
-    {
-      "stepName":"Click Fill New Details",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Fill New Details')]",
-      "action":"CLICK_JS"
-    },
-
 
 
     {
@@ -113,7 +113,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicantName",
       "action":"TYPE",
-      "inputValue":"Arpit Rao"
+      "inputValue":"Arpit Rao",
+      "dynamicSleep": 2000
     },
 
     {
@@ -121,22 +122,15 @@
       "locatorStrategy":"NAME",
       "locatorValue":"emailId",
       "action":"TYPE",
-      "inputValue":"arpit@gmail.com"
+      "inputValue":"arpit@gmail.com",
+      "dynamicSleep": 2000
     },
-
-    {
-      "stepName":"Applicant Mobile Optional",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"OPTIONAL_TYPE",
-      "inputValue":"9999999999"
-    },
-
     {
       "stepName":"Applicant Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
@@ -146,7 +140,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -154,7 +149,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"houseNo",
       "action":"TYPE",
-      "inputValue":"A-12"
+      "inputValue":"A-12",
+      "dynamicSleep": 2000
     },
 
     {
@@ -162,23 +158,26 @@
       "locatorStrategy":"NAME",
       "locatorValue":"streetName",
       "action":"TYPE",
-      "inputValue":"Test Street"
+      "inputValue":"Test Street",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Address Line 1",
       "locatorStrategy":"NAME",
-      "locatorValue":"addressline1",
-      "action":"OPTIONAL_TYPE",
-      "inputValue":"Address Line 1"
+      "locatorValue":"addressLine1",
+      "action":"TYPE",
+      "inputValue":"Address Line 1",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Address Line 2",
       "locatorStrategy":"NAME",
-      "locatorValue":"addressline2",
-      "action":"OPTIONAL_TYPE",
-      "inputValue":"Address Line 2"
+      "locatorValue":"addressLine2",
+      "action":"TYPE",
+      "inputValue":"Address Line 2",
+      "dynamicSleep": 2000
     },
 
     {
@@ -186,7 +185,8 @@
       "locatorStrategy":"NAME",
       "locatorValue":"landmark",
       "action":"TYPE",
-      "inputValue":"Near Test Landmark"
+      "inputValue":"Near Test Landmark",
+      "dynamicSleep": 2000
     },
 
     {
@@ -194,7 +194,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
+      "inputValue":"1:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -202,7 +203,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"2:0"
+      "inputValue":"2:0",
+      "dynamicSleep": 2000
     },
 
     {
@@ -210,23 +212,26 @@
       "locatorStrategy":"NAME",
       "locatorValue":"pincode",
       "action":"TYPE",
-      "inputValue":"110011"
+      "inputValue":"143001",
+      "dynamicSleep": 2000
     },
 
     {
       "stepName":"Address Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
     },
 
 
 
     {
       "stepName":"Select Tanker Type",
-      "locatorStrategy":"LABELTEXT",
-      "locatorValue":"Tanker",
-      "action":"CLICK_RADIO_BY_LABEL"
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Tanker']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -234,7 +239,9 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0"
+      "inputValue":"0:0",
+      "dynamicSleep": 1000
+
     },
 
     {
@@ -242,7 +249,8 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0"
+      "inputValue":"1:0",
+      "dynamicSleep": 1000
     },
 
     {
@@ -250,32 +258,37 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"2:0"
+      "inputValue":"2:0",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Delivery Date",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='date']",
-      "action":"SET_DATE_BY_INDEX",
-      "inputValue":"0:+5"
+      "locatorStrategy": "XPATH",
+      "locatorValue":"//input[@type='date']",
+      "action":"SET_DATE_TODAY",
+      "inputValue":"0",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Delivery Time",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"(//input[@type='time'])[1]",
+      "action":"SET_CUSTOM_TIME",
+      "inputValue":"10:30 AM",
+      "dynamicSleep":2000
     },
 
     {
       "stepName":"Description",
-      "locatorStrategy":"TAGNAME",
-      "locatorValue":"textarea",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//textarea[@name='description']",
       "action":"TYPE",
-      "inputValue":"Water tanker required for household use"
+      "inputValue":"Need Water Tanker urgently",
+      "dynamicSleep":2000
     },
 
-    {
-      "stepName":"Delivery Time",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='time']",
-      "action":"TYPE",
-      "inputValue":"09:30"
-    },
+
 
     {
       "stepName":"Request Details Next",

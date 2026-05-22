@@ -2,7 +2,7 @@
   "moduleName": "cnd_citizen_module",
   "description": "CnD citizen full workflow",
 
-  "baseUrl": "${selected.url}",
+  "baseUrl": "${selected.cndCitizen.url}",
 
   "instructions": [
 
@@ -68,11 +68,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Open CnD Module",
       "locatorStrategy": "XPATH",
@@ -81,7 +76,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
     {
       "stepName": "Open Pickup Request",
       "locatorStrategy": "XPATH",
@@ -90,11 +84,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Info Page Next",
       "locatorStrategy": "XPATH",
@@ -103,30 +92,11 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
-    {
-      "stepName": "Fill New Details",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//header[contains(text(),'FILL_NEW_DETAILS')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-
-
-
-
-
     {
       "stepName": "Select Pickup Type",
-      "locatorStrategy": "TAGNAME",
-      "locatorValue": "body",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "Request for pick-up",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Request for pick-up']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
       "dynamicSleep": 1000
     },
 
@@ -138,11 +108,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Applicant Name",
       "locatorStrategy": "NAME",
@@ -178,11 +143,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Property Type",
       "locatorStrategy": "CSS",
@@ -204,21 +164,19 @@
     {
       "stepName": "From Date",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//label[contains(text(),'Time Period')]/following::input[1]",
-      "action": "TYPE_DATE",
-      "inputValue": "02/06/1996",
+      "locatorValue": "//input[@type='date']",
+      "action": "SET_DATE_TEXT",
+      "inputValue": "0:02-09-1995",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "To Date",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//label[contains(text(),'Time Period')]/following::input[2]",
+      "locatorValue": "//input[@type='date']",
       "action": "SET_DATE_TODAY",
-      "inputValue": null,
+      "inputValue": "1",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Construction Type",
       "locatorStrategy": "CSS",
@@ -227,7 +185,6 @@
       "inputValue": "1:3",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Save Next Property",
       "locatorStrategy": "XPATH",
@@ -236,20 +193,28 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
-      "stepName": "Select Waste Types",
-      "locatorStrategy": "TAGNAME",
-      "locatorValue": "body",
-      "action": "MULTI_SELECT_CHECKBOX",
-      "inputValue": "Mixed Waste,Cement Bags",
+      "stepName": "Open Waste Type Dropdown",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.multi-select-dropdown-wrap div.label",
+      "action": "CLICK_JS",
       "dynamicSleep": 1000
     },
-
+    {
+      "stepName": "Select Waste Types",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='checkbox'])",
+      "action": "CLICK_JS",
+      "inputValue": "[2][3]",
+      "dynamicSleep": 500
+    },
+    {
+      "stepName": "Open Waste Type Dropdown",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.multi-select-dropdown-wrap div.label",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
     {
       "stepName": "Waste Quantity",
       "locatorStrategy": "NAME",
@@ -258,34 +223,30 @@
       "inputValue": "10",
       "dynamicSleep": 500
     },
-
     {
       "stepName": "Requested Pickup Date",
       "locatorStrategy": "CSS",
       "locatorValue": "input[type='date']",
-      "action": "SET_FUTURE_DATE",
-      "inputValue": "5",
-      "dynamicSleep": 500
+      "action": "SET_DATE_TODAY",
+      "inputValue": "0",
+      "dynamicSleep": 1000
     },
-
     {
       "stepName": "Upload Site Photo",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='file']",
-      "action": "UPLOAD_FILE_BY_INDEX",
-      "inputValue": "0:${document.siteMediaPhoto.proof}",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[1]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Upload Stack Photo",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='file']",
-      "action": "UPLOAD_FILE_BY_INDEX",
-      "inputValue": "1:${document.stackPhoto.proof}",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[2]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Save Next Waste",
       "locatorStrategy": "XPATH",
@@ -294,17 +255,11 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
-      "stepName": "Select Address Card",
+      "stepName": "Select First Address Card",
       "locatorStrategy": "XPATH",
-      "locatorValue": "(//div[contains(@class,'card')])[1]",
+      "locatorValue": "(//div[contains(@class,'card') and contains(@style,'cursor: pointer')])[1]",
       "action": "CLICK_JS",
-      "inputValue": null,
       "dynamicSleep": 1000
     },
 
@@ -316,11 +271,6 @@
       "inputValue": null,
       "dynamicSleep": 2000
     },
-
-
-
-
-
     {
       "stepName": "Accept Declaration",
       "locatorStrategy": "CSS",
@@ -329,7 +279,6 @@
       "inputValue": null,
       "dynamicSleep": 1000
     },
-
     {
       "stepName": "Submit Application",
       "locatorStrategy": "XPATH",
@@ -337,6 +286,14 @@
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 5000
+    },
+    {
+      "stepName": "Capture Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//div[contains(@class,'application-number')]",
+      "action": "CAPTURE_TEXT",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 500
     }
 
   ]
