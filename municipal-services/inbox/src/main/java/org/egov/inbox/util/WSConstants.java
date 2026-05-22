@@ -19,6 +19,9 @@ public class WSConstants extends CommonConstants {
     public static final String WS_ASSIGNEE_PARAM = "assignee";
 
     public static final String ACKNOWLEDGEMENT_IDS_PARAM = "businessIds";
+    public static final String WS_REQUESTINFO_PARAM = "RequestInfo";
+    public static final String WS_SEARCH_CRITERIA_PARAM = "searchCriteria";
+    public static final String USERID_PARAM = "userIds";
 
     public static final String WS_BUSINESS_IDS_PARAM = "businessIds";
 

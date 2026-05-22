@@ -17,6 +17,9 @@ public class SWConstants extends CommonConstants {
     public static final String SW_APPLICATION_SEARCH_TYPE_PARAM = "searchType";
 
     public static final String ACKNOWLEDGEMENT_IDS_PARAM = "businessIds";
+    public static final String SW_REQUESTINFO_PARAM = "RequestInfo";
+    public static final String SW_SEARCH_CRITERIA_PARAM = "searchCriteria";
+    public static final String USERID_PARAM = "userIds";
 
     public static final String SW_BUSINESS_IDS_PARAM = "businessIds";
 

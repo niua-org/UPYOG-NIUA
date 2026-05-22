@@ -10,7 +10,7 @@ public class BSConstants extends CommonConstants {
 	public static final String BS_WS_MODULENAME = "WS";
 	public static final String BS_SW_MODULENAME = "SW";
 	public static final String BS = "BS";
-
+	public static final String BS_BUSINESS_SERVICE_PARAM = "businessService";
 	public static final String PROPERTY_ID_PARAM = "propertyId";
 	public static final String BS_APPLICATION_NUMBER_PARAM = "applicationNumber";
 	public static final String BS_APPLICATION_STATUS_PARAM = "applicationStatus";
@@ -18,6 +18,9 @@ public class BSConstants extends CommonConstants {
 	public static final String BS_APPLICATION_SEARCH_TYPE_PARAM = "searchType";
 
 	public static final String ACKNOWLEDGEMENT_IDS_PARAM = "businessIds";
+	public static final String BS_REQUESTINFO_PARAM = "RequestInfo";
+	public static final String BS_SEARCH_CRITERIA_PARAM = "searchCriteria";
+	public static final String USERID_PARAM = "userIds";
 	public static final String BS_BUSINESS_IDS_PARAM = "businessIds";
 	public static final String BS_CONSUMER_NO_PARAM = "consumerCode";
 	public static final String BS_AMENDMENT_ID_PARAM = "amendmentId";
