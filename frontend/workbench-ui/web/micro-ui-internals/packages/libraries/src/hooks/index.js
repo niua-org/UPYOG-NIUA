@@ -31,11 +31,6 @@ import useUpdateCustom from "./useUpdateCustom";
 
 import useEmployeeSearch from "./useEmployeeSearch";
 
-import useDocCreate from "./engagement/useCreate";
-import useDocDelete from "./engagement/useDelete";
-import { useEngagementMDMS } from "./engagement/useMdms";
-import useDocSearch from "./engagement/useSearch";
-import useDocUpdate from "./engagement/useUpdate";
 import useEventDetails from "./events/useEventDetails";
 import useEventInbox from "./events/useEventInbox";
 
@@ -65,13 +60,7 @@ const events = {
   useUpdateEvent,
 };
 
-const engagement = {
-  useMDMS: useEngagementMDMS,
-  useDocCreate,
-  useDocSearch,
-  useDocDelete,
-  useDocUpdate,
-};
+
 
 const survey = {
   useCreate: useSurveyCreate,
@@ -109,7 +98,6 @@ const Hooks = {
   useAccessControl,
   usePrivacyContext,
   events,
-  engagement,
   survey,
   useGenderMDMS,
   useRouteSubscription,

@@ -19,7 +19,6 @@
   "dependencies": {
     "@upyog/workbench-ui-libraries": "1.8.1",
     "@upyog/workbench-ui-module-core": "1.8.2",
-    "@upyog/workbench-ui-module-engagement": "1.8.0",
     "@upyog/workbench-ui-module-utilities": "1.0.0",
     "@upyog/workbench-ui-react-components": "1.0.0",
     "@nudmcdgnpm/digit-ui-module-workbench": "^1.0.0",

@@ -17,7 +17,6 @@
     "@nudmcdgnpm/digit-ui-module-workbench": "1.0.0",
     "@upyog/workbench-ui-module-core": "1.8.2",
     "@upyog/workbench-ui-module-utilities": "1.0.0",
-    "@upyog/workbench-ui-module-engagement": "1.8.0",
     "@upyog/workbench-ui-react-components": "1.0.0",
     "http-proxy-middleware": "^1.0.5",
     "react": "^19.0.0",

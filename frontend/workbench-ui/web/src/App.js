@@ -1,7 +1,6 @@
 import React from "react";
 import { initLibraries } from "@upyog/workbench-ui-libraries";
 import { DigitUI } from "@upyog/workbench-ui-module-core";
-import { initEngagementComponents } from "@upyog/workbench-ui-module-engagement";
 import { initUtilitiesComponents } from "@upyog/workbench-ui-module-utilities";
 import { UICustomizations } from "./Customisations/UICustomizations";
 import { initWorkbenchComponents } from "@nudmcdgnpm/digit-ui-module-workbench";
@@ -17,7 +16,6 @@ const enabledModules = [
 const moduleReducers = (initData) => ({});
 
 const initDigitUI = () => {
-  initEngagementComponents();
   initUtilitiesComponents();
   initWorkbenchComponents();
 
