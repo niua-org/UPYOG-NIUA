@@ -77,7 +77,7 @@ const EmployeeApp = ({ path, url, userType }) => {
         </div>
         <Routes>
           <Route path={`*`} element={<PrivateRoute><CommonPTLinks matchPath={path} userType={userType} /></PrivateRoute>} />
-          <Route path={`/new-application`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
+          <Route path={`/new-application/*`} element={<PrivateRoute><NewApplication parentUrl={url} /></PrivateRoute>} />
           <Route path={`/search`} element={<PrivateRoute><Search /></PrivateRoute>} />
           <Route path={`/view-property`} element={<PrivateRoute><ViewProperty /></PrivateRoute>} />
         </Routes>

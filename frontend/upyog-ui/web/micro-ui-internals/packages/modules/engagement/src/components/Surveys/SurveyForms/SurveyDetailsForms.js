@@ -92,43 +92,54 @@ const SurveyDetailsForms = ({ t, registerRef, controlSurveyForm, surveyFormState
 
       <span className="surveyformfield">
         <label>{`${t("CS_SURVEY_NAME")} * `}</label>
-        <TextInput
-          name="title"
-          type="text"
-          {...registerRef("title",{
+        {(() => {
+          const { ref: titleRef, ...titleRest } = registerRef("title", {
             required: t("ES_ERROR_REQUIRED"),
             maxLength: {
               value: 60,
               message: t("EXCEEDS_60_CHAR_LIMIT"),
             },
-            pattern:{
+            pattern: {
               value: /^[A-Za-z_-][A-Za-z0-9_\ -]*$/,
               message: t("ES_SURVEY_DONT_START_WITH_NUMBER")
             }
-          })}
-          disable={disableInputs}
-        />
+          });
+          return (
+            <TextInput
+              name="title"
+              type="text"
+              inputRef={titleRef}
+              {...titleRest}
+              disable={disableInputs}
+            />
+          );
+        })()}
         {surveyFormState?.errors?.title && <CardLabelError>{surveyFormState?.errors?.["title"]?.message}</CardLabelError>}
       </span>
 
       <span className="surveyformfield">
         <label>{`${t("CS_SURVEY_DESCRIPTION")} `}</label>
-        <TextInput
-          name="description"
-          type="text"
-          {...registerRef("description",{
-            //required: t("ES_ERROR_REQUIRED"),
+        {(() => {
+          const { ref: descRef, ...descRest } = registerRef("description", {
             maxLength: {
               value: 140,
               message: t("EXCEEDS_140_CHAR_LIMIT"),
             },
-            pattern:{
+            pattern: {
               value: /^[A-Za-z_-][A-Za-z0-9_\ -]*$/,
               message: t("ES_SURVEY_DONT_START_WITH_NUMBER")
             }
-          })}
-          disable={enableDescriptionOnly ?  !enableDescriptionOnly : disableInputs}
-        />
+          });
+          return (
+            <TextInput
+              name="description"
+              type="text"
+              inputRef={descRef}
+              {...descRest}
+              disable={enableDescriptionOnly ? !enableDescriptionOnly : disableInputs}
+            />
+          );
+        })()}
         {surveyFormState?.errors?.description && <CardLabelError>{surveyFormState?.errors?.["description"]?.message}</CardLabelError>}
       </span>
     </div>

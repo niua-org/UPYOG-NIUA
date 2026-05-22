@@ -2,10 +2,11 @@ package org.upyog.Automation.Common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.upyog.Automation.Base.BaseTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Modules.Adv.AdvBookingCreate;
-import org.upyog.Automation.Modules.CHB.ChbCreate;
+import org.upyog.Automation.Modules.CHB.chbCreate;
 import org.upyog.Automation.Modules.CnD.CnDRequest;
 import org.upyog.Automation.Modules.DesludgingService.DesludgingCreate;
 import org.upyog.Automation.Modules.EWaste.EWasteCreate;
@@ -20,6 +21,10 @@ import org.upyog.Automation.Modules.RequestService.TreePruningCitizen;
 import org.upyog.Automation.Modules.RequestService.WaterTankerCitizen;
 import org.upyog.Automation.Modules.RequestService.MobileToiletCitizen;
 import org.upyog.Automation.Modules.WaterAndSewerage.WAndSCreate;
+import org.upyog.Automation.Utils.ModuleWrapper;
+import org.upyog.Automation.Utils.ModuleTask;
+import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -28,51 +33,51 @@ import org.upyog.Automation.Modules.WaterAndSewerage.WAndSCreate;
  */
 
 @Component
-public class CommonCitizenTest {
+public class CommonCitizenTest extends BaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonCitizenTest.class);
 
     @Autowired
     private SvCreateApplication svCreateApplication;
-    
+
     @Autowired
     private TradeLicenseCreate tradeLicenseCreate;
-    
+
     @Autowired
     private PetCreateApplication petCreateApplication;
-    
+
     @Autowired
     private AdvBookingCreate advBookingCreate;
-    
+
     @Autowired
     private TreePruningCitizen treePruningCitizen;
-    
+
     @Autowired
     private WaterTankerCitizen waterTankerCitizen;
-    
+
     @Autowired
     private MobileToiletCitizen mobileToiletCitizen;
-    
+
     @Autowired
     private PropertyTaxCreate propertyTaxCreate;
-    
+
     @Autowired
     private PgrCreate pgrCreate;
-    
+
     @Autowired
     private OBPASCreate obpasCreate;
-    
+
     @Autowired
     private EWasteCreate eWasteCreate;
-    
+
     @Autowired
-    private ChbCreate chbCreate;
+    private chbCreate chbCreate;
 
     @Autowired
     private CnDRequest cndRequest;
 
     @Autowired
-    private OBPASOcCreate obpasOcCreate;
+    private OBPASOcCreate obpasOCCreate;
 
     @Autowired
     private DesludgingCreate desludgingCreate;
@@ -81,73 +86,308 @@ public class CommonCitizenTest {
     private WAndSCreate wAndSCreate;
 
     public void runCitizenTest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String permitNumber) throws InterruptedException {
+        setUp();
         logger.info("Starting {} citizen test", moduleName);
 
         try {
             switch (moduleName.toUpperCase()) {
 
+//                case "STREET_VENDING":
+//                    ModuleWrapper.execute(
+//                            "STREET_VENDING",
+//                            () -> svCreateApplication.svCreateReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
+
                 case "STREET_VENDING":
-                    svCreateApplication.svCreateReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "STREET_VENDING",
+                            () -> svCreateApplication.svCreateReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
+
+//                case "TRADE_LICENSE":
+//                    ModuleWrapper.execute(
+//                            "TRADE_LICENSE",
+//                            () -> tradeLicenseCreate.tradeLicenceCitizenReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
 
                 case "TRADE_LICENSE":
-                    tradeLicenseCreate.tradeLicenceCitizenReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "TRADE_LICENSE",
+                            () -> tradeLicenseCreate.tradeLicenceCitizenReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
-                case "PET_REGISTRATION":
-                    petCreateApplication.petApptest(baseUrl, moduleName, mobileNumber, otp, cityName);
+//                case "PET_REGISTRATION":
+//                    ModuleWrapper.execute(
+//                            "PET_REGISTRATION",
+//                            () -> petCreateApplication.petApptest(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
+                case "PET":
+
+                    ModuleWrapper.execute(
+                            "PET",
+                            () -> petCreateApplication.petApptest(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
+//                case "ADVERTISEMENT":
+//                    ModuleWrapper.execute(
+//                            "ADVERTISEMENT",
+//                            () -> advBookingCreate.advBookingReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
                 case "ADVERTISEMENT":
-                    advBookingCreate.advBookingReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "ADV",
+                            () -> advBookingCreate.advBookingReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
+
+//                case "TREE_PRUNING":
+//                    ModuleWrapper.execute(
+//                            "TREE_PRUNING",
+//                            () -> treePruningCitizen.treePruningCreate(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
 
                 case "TREE_PRUNING":
-                    treePruningCitizen.treePruningCreate(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "TREE_PRUNING",
+                            () -> treePruningCitizen.treePruningCreate(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
+
+//                case "WATER_TANKER":
+//                    ModuleWrapper.execute(
+//                            "WATER_TANKER",
+//                            () -> waterTankerCitizen.waterTankerCreate(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
 
                 case "WATER_TANKER":
-                    waterTankerCitizen.waterTankerCreate(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "WATER_TANKER",
+                            () -> waterTankerCitizen.waterTankerCreate(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
+
+//                case "MOBILE_TOILET":
+//                    ModuleWrapper.execute(
+//                            "MOBILE_TOILET",
+//                            () -> mobileToiletCitizen.mobileToiletCreate(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
 
                 case "MOBILE_TOILET":
-                    mobileToiletCitizen.mobileToiletCreate(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "MOBILE_TOILET",
+                            () -> mobileToiletCitizen.mobileToiletCreate(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
+
+//                case "PROPERTY_TAX":
+//                    ModuleWrapper.execute("PROPERTY TAX",
+//                            () -> propertyTaxCreate.newPropertyReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
 
                 case "PROPERTY_TAX":
-                    propertyTaxCreate.newPropertyReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "PROPERTY_TAX",
+                            () -> propertyTaxCreate.newPropertyReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
-                case "PUBLIC_GRIEVANCE_REDRESSAL":
-                    pgrCreate.pgrReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+//                case "PUBLIC_GRIEVANCE_REDRESSAL":
+//                    ModuleWrapper.execute("PGR",
+//                            () -> pgrCreate.pgrReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
+
+                case "PGR":
+
+                    ModuleWrapper.execute(
+                            "PGR",
+                            () -> pgrCreate.pgrReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
-                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
-                    obpasCreate.obpasReg(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber);
+//                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
+//                    ModuleWrapper.execute("OBPAS",
+//                            () -> obpasCreate.obpasReg(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber)
+//                    );
+//                    break;
+                case "OBPAS":
+
+                    ModuleWrapper.execute(
+                            "OBPAS",
+                            () -> obpasCreate.obpasReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
-                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
-                    obpasOcCreate.obpasOCReg(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber);
+//                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
+//                    ModuleWrapper.execute(
+//                            "OBPAS_OC",
+//                            () -> obpasOcCreate.obpasOCReg(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber)
+//                    );
+//                    break;
+
+                case "CONSTRUCTION_AND_DEMOLITION":
+
+                    ModuleWrapper.execute(
+                            "CND_CITIZEN",
+                            () -> cndRequest.cndReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
                 case "EWASTE_MANAGEMENT_SYSTEM":
-                    eWasteCreate.eWasteReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+                    ModuleWrapper.execute(
+                            "EWASTE",
+                            () -> eWasteCreate.eWasteReg(driver, wait, js)
+                    );
                     break;
 
+//                case "COMMUNITY_HALL_BOOKING":
+//                    ModuleWrapper.execute(
+//                            "CHB",
+//                            () -> chbCreate.chbReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
                 case "COMMUNITY_HALL_BOOKING":
-                    chbCreate.chbReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "CHB",
+                            () -> chbCreate.chbReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
-                case "CONSTRUCTION_AND_DEMOLITION":
-                    cndRequest.cndReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+//                case "CONSTRUCTION_AND_DEMOLITION":
+//                    ModuleWrapper.execute(
+//                            "CND",
+//                            () -> cndRequest.cndReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
+                case "CND":
+
+                    ModuleWrapper.execute(
+                            "CND",
+                            () -> cndRequest.cndReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
+//                case "DESLUDGING_SERVICE":
+//                    ModuleWrapper.execute(
+//                            "DESLUDGING",
+//                            () -> desludgingCreate.desludgingReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
                 case "DESLUDGING_SERVICE":
-                    desludgingCreate.desludgingReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "DESLUDGING",
+                            () -> desludgingCreate.desludgingReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
+
+//                case "WATER_AND_SEWERAGE":
+//                    ModuleWrapper.execute(
+//                            "WATER_AND_SEWERAGE",
+//                            () -> wAndSCreate.wandSReg(baseUrl, moduleName, mobileNumber, otp, cityName)
+//                    );
+//                    break;
 
                 case "WATER_AND_SEWERAGE":
-                    wAndSCreate.wandSReg(baseUrl, moduleName, mobileNumber, otp, cityName);
+
+                    ModuleWrapper.execute(
+                            "WATER_AND_SEWERAGE",
+                            () -> wAndSCreate.wandSReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
                     break;
 
                 default:
@@ -155,12 +395,431 @@ public class CommonCitizenTest {
                     throw new RuntimeException("Unknown module: " + moduleName);
 
             }
-
             logger.info("{} test completed", moduleName);
 
         } catch (Exception e) {
             logger.error("Error in {} test: {}", moduleName, e.getMessage());
             throw new RuntimeException(e);
+        }finally {
+
+            tearDown();
         }
     }
+
+    public void runMultipleModules(String baseUrl,
+                                   List<String> selectedModules,
+                                   String mobileNumber,
+                                   String otp,
+                                   String cityName,
+                                   String permitNumber) throws InterruptedException {
+
+        setUp();
+
+        logger.info("Starting multiple citizen modules: {}", selectedModules);
+
+        try {
+
+            List<ModuleTask> modules = new ArrayList<>();
+
+            for (String moduleName : selectedModules) {
+
+                switch (moduleName.toUpperCase()) {
+
+//                    case "STREET_VENDING":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "STREET_VENDING",
+//                                        () -> svCreateApplication.svCreateReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "STREET_VENDING":
+
+                        ModuleWrapper.execute(
+                                "STREET_VENDING",
+                                () -> svCreateApplication.svCreateReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "TRADE_LICENSE":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "TRADE_LICENSE",
+//                                        () -> tradeLicenseCreate.tradeLicenceCitizenReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "TRADE_LICENSE":
+
+                        ModuleWrapper.execute(
+                                "TRADE_LICENSE",
+                                () -> tradeLicenseCreate.tradeLicenceCitizenReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "PET_REGISTRATION":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "PET_REGISTRATION",
+//                                        () -> petCreateApplication.petApptest(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "PET":
+
+                        ModuleWrapper.execute(
+                                "PET",
+                                () -> petCreateApplication.petApptest(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "ADVERTISEMENT":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "ADVERTISEMENT",
+//                                        () -> advBookingCreate.advBookingReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+                    case "ADVERTISEMENT":
+
+                        ModuleWrapper.execute(
+                                "ADV",
+                                () -> advBookingCreate.advBookingReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "TREE_PRUNING":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "TREE_PRUNING",
+//                                        () -> treePruningCitizen.treePruningCreate(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "TREE_PRUNING":
+
+                        ModuleWrapper.execute(
+                                "TREE_PRUNING",
+                                () -> treePruningCitizen.treePruningCreate(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "WATER_TANKER":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "WATER_TANKER",
+//                                        () -> waterTankerCitizen.waterTankerCreate(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "WATER_TANKER":
+
+                        ModuleWrapper.execute(
+                                "WATER_TANKER",
+                                () -> waterTankerCitizen.waterTankerCreate(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "MOBILE_TOILET":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "MOBILE_TOILET",
+//                                        () -> mobileToiletCitizen.mobileToiletCreate(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "MOBILE_TOILET":
+
+                        ModuleWrapper.execute(
+                                "MOBILE_TOILET",
+                                () -> mobileToiletCitizen.mobileToiletCreate(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "PROPERTY_TAX":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "PROPERTY_TAX",
+//                                        () -> propertyTaxCreate.newPropertyReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "PROPERTY_TAX":
+
+                        ModuleWrapper.execute(
+                                "PROPERTY_TAX",
+                                () -> propertyTaxCreate.newPropertyReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "PUBLIC_GRIEVANCE_REDRESSAL":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "PGR",
+//                                        () -> pgrCreate.pgrReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "PGR":
+
+                        ModuleWrapper.execute(
+                                "PGR",
+                                () -> pgrCreate.pgrReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "OBPAS",
+//                                        () -> obpasCreate.obpasReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName,
+//                                                permitNumber
+//                                        )
+//                                )
+//                        );
+//                        break;
+                    case "OBPAS_CREATE":
+
+                        ModuleWrapper.execute(
+                                "OBPAS",
+                                () -> obpasCreate.obpasReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "OBPAS_OC",
+//                                        () -> obpasOcCreate.obpasOCReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName,
+//                                                permitNumber
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "OBPAS_OC":
+
+                        ModuleWrapper.execute(
+                                "OBPAS_OC",
+                                () -> obpasOCCreate.obpasOCReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+                    case "EWASTE_MANAGEMENT_SYSTEM":
+
+                        ModuleWrapper.execute(
+                                "EWASTE",
+                                () -> eWasteCreate.eWasteReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "COMMUNITY_HALL_BOOKING":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "CHB",
+//                                        () -> chbCreate.chbReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+                    case "COMMUNITY_HALL_BOOKING":
+
+                        ModuleWrapper.execute(
+                                "CHB",
+                                () -> chbCreate.chbReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "CONSTRUCTION_AND_DEMOLITION":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "CND",
+//                                        () -> cndRequest.cndReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+                    case "CONSTRUCTION_AND_DEMOLITION":
+
+                        ModuleWrapper.execute(
+                                "CND",
+                                () -> cndRequest.cndReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "DESLUDGING_SERVICE":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "DESLUDGING",
+//                                        () -> desludgingCreate.desludgingReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+                    case "DESLUDGING_SERVICE":
+
+                        ModuleWrapper.execute(
+                                "DESLUDGING",
+                                () -> desludgingCreate.desludgingReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+//                    case "WATER_AND_SEWERAGE":
+//                        modules.add(
+//                                new ModuleTask(
+//                                        "WATER_AND_SEWERAGE",
+//                                        () -> wAndSCreate.wandSReg(
+//                                                baseUrl, moduleName,
+//                                                mobileNumber, otp, cityName
+//                                        )
+//                                )
+//                        );
+//                        break;
+
+                    case "WATER_AND_SEWERAGE":
+
+                        ModuleWrapper.execute(
+                                "WATER_AND_SEWERAGE",
+                                () -> wAndSCreate.wandSReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+                    default:
+                        logger.warn("Skipping unknown module: {}", moduleName);
+                }
+            }
+
+            ModuleWrapper.executeBatch(modules);
+
+        } finally {
+
+            tearDown();
+        }
     }
+}

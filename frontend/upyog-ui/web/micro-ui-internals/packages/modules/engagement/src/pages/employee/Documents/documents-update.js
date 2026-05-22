@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from "react";
 import { Card, Header, LabelFieldPair, CardLabel, TextInput, Dropdown, FormComposer, SubmitBar, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { documentsFormConfig } from "../../../config/doc-update";
 
 
-const Documents = (props) => {
+const Documents = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const [canSubmit, setSubmitValve] = useState(false);
 
@@ -26,10 +28,10 @@ const Documents = (props) => {
   )
 
   const update = (data) => {
-    const fileSize = data.document?.filestoreId?.fileSize ? data.document?.filestoreId?.fileSize : props.location.state?.DocumentEntity?.fileSize;
-    const fileType = data.document?.filestoreId?.fileType ? data.document?.filestoreId?.fileType : props.location.state?.DocumentEntity?.fileType;
+    const fileSize = data.document?.filestoreId?.fileSize ? data.document?.filestoreId?.fileSize : location.state?.DocumentEntity?.fileSize;
+    const fileType = data.document?.filestoreId?.fileType ? data.document?.filestoreId?.fileType : location.state?.DocumentEntity?.fileType;
     const DocumentEntity = {
-      ...props.location?.state?.DocumentEntity,
+      ...location?.state?.DocumentEntity,
       name: data.documentName,
       description: data?.description.length ? data.description : "",
       category: data.docCategory?.name,
@@ -56,7 +58,7 @@ const Documents = (props) => {
         }}
         fieldStyle={{}}
         onFormValueChange={onFormValueChange}
-        defaultValues={props.location.state?.DocumentEntity}
+        defaultValues={location.state?.DocumentEntity}
         isDisabled={!canSubmit}
       />
 
