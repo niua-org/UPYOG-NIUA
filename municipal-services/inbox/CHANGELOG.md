@@ -76,6 +76,13 @@ ModuleHandlerRegistry
 ModuleInboxHandler
     ->
 InboxAssembler
+
+
+* `InboxService` handles the overall inbox processing flow and workflow integration.
+* `ModuleHandlerRegistry` stores and finds the appropriate module handler dynamically based on module name.
+* `ModuleInboxHandler` handles module-specific logic like application fetching, counts, SLA handling, and business mapping.
+* `InboxAssembler` combines workflow and business object data to prepare the final inbox response.
+
 ```
 
 Benefits:
@@ -93,25 +100,24 @@ Benefits:
 
 ## Added Module Handlers
 
-* ASSETModuleHandler
-* BPAModuleHandler
-* ChallanModuleHandler
-* CHBModuleHandler
-* CNDModuleHandler
-* EWasteModuleHandler
-* FSMModuleHandler
-* MTModuleHandler
-* NDCModuleHandler
-* NOCModuleHandler
-* PGRAiModuleHandler
-* PTModuleHandler
-* PTRModuleHandler
-* SVModuleHandler
-* TLModuleHandler
-* TPModuleHandler
-* WSModuleHandler
-* WTModuleHandler
-
+* `ASSETModuleHandler` handles inbox processing for Asset module applications.
+* `BPAModuleHandler` handles inbox processing for BPA module applications.
+* `ChallanModuleHandler` handles inbox processing for Challan module applications.
+* `CHBModuleHandler` handles inbox processing for Community Hall Booking applications.
+* `CNDModuleHandler` handles inbox processing for Construction and Demolition applications.
+* `EWasteModuleHandler` handles inbox processing for E-Waste applications.
+* `FSMModuleHandler` handles inbox processing for FSM applications.
+* `MTModuleHandler` handles inbox processing for Mobile Toilet service applications.
+* `NDCModuleHandler` handles inbox processing for NDC applications.
+* `NOCModuleHandler` handles inbox processing for NOC applications.
+* `PGRAiModuleHandler` handles inbox processing for PGRAI grievance applications.
+* `PTModuleHandler` handles inbox processing for Property Tax applications.
+* `PTRModuleHandler` handles inbox processing for Pet Registration applications.
+* `SVModuleHandler` handles inbox processing for Street Vending applications.
+* `TLModuleHandler` handles inbox processing for Trade License applications.
+* `TPModuleHandler` handles inbox processing for Tree Pruning service applications.
+* `WSModuleHandler` handles inbox processing for Water and Sewerage applications using ElasticSearch flow.
+* `WTModuleHandler` handles inbox processing for Water Tanker service applications.
 ---
 
 ## Moved Logic From InboxService To Handlers
