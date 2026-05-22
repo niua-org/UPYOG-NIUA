@@ -79,6 +79,12 @@ import static org.egov.inbox.util.TLConstants.SEARCH_CRITERIA_PARAM;
 import static org.egov.inbox.util.TLConstants.TENANT_ID_PARAM;
 import static org.egov.inbox.util.WSConstants.WS;
 
+/**
+ * Old inbox implementation temporarily kept for fallback/reference
+ * This class will be removed once the new handler-based architecture
+ * is fully tested and stabilized in production.
+ */
+
 @Slf4j
 @Service
 public class OldInboxService {

@@ -75,6 +75,9 @@ public class InboxService {
 
         processCriteria.setModuleName(registry.getModuleName(processCriteria.getModuleName()));
 
+        if(StringUtils.isEmpty(processCriteria.getModuleName()))
+            throw new CustomException(ErrorConstants.MODULE_NAME_MISSING, "Module name is missing in the request");
+
         String moduleName = processCriteria.getModuleName();
         log.info("fetchInboxData moduleName: {}", moduleName);
 
