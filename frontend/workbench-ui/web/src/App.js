@@ -9,7 +9,6 @@ window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH");
 
 const enabledModules = [
   "Utilities",
-  // "Engagement",
   "Workbench"
 ];
 

@@ -40,7 +40,6 @@ Workbench UI is an internal administrative tool designed for:
 - 🗂️ Master Data Management System (MDMS V2)
 - 🌐 Multi-language Localization Support
 - 👥 Role-Based Access Control (RBAC)
-- 📢 Engagement Module
 - 🎨 Modern UI with Tailwind CSS
 - ⚡ Fast Development with Vite
 - 🔄 State Management with React Query
@@ -176,7 +175,6 @@ workbench-ui/
 │   │   │   └── modules/
 │   │   │       ├── core/            # Core module
 │   │   │       ├── workbench/       # Workbench module
-│   │   │       ├── engagement/      # Engagement module
 │   │   │       └── utilities/       # Utility functions
 │   │   ├── example/                 # Example configurations
 │   │   ├── scripts/                 # Build and publish scripts
@@ -211,11 +209,6 @@ workbench-ui/
 - Data Import/Export
 - Version Control
 
-### 3. Engagement Module
-- Events Management
-- Surveys
-- Document Management
-- Notifications
 
 ### 4. Utilities Module
 - Helper Functions
@@ -271,7 +264,6 @@ This project uses Yarn Workspaces for monorepo management:
 - `@upyog/workbench-ui-react-components`
 - `@nudmcdgnpm/workbench-ui-svg-components`
 - `@upyog/workbench-ui-module-core`
-- `@upyog/workbench-ui-module-engagement`
 - `@upyog/workbench-ui-module-utilities`
 - `@nudmcdgnpm/digit-ui-module-workbench`
 
@@ -315,7 +307,8 @@ The project includes a `Jenkinsfile` for automated CI/CD pipeline.
 
 ### Removed Features
 
-**Payment Module**: Removed as workbench is an internal tool and doesn't require payment functionality. Role-based access control (RBAC) is handled at the backend level.
+- **Engagement Module**: Removed to focus on core workbench functionality (MDMS & Localization).
+- **Payment Module**: Removed as workbench is an internal tool and doesn't require payment functionality. Role-based access control (RBAC) is handled at the backend level.
 
 ## 📄 License
 
