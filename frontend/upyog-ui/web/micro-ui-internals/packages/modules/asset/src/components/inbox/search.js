@@ -134,6 +134,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                               selected={field.value}   // For Dropdown component
                               option={assetClassification} 
                               optionKey="i18nKey"
+                              t = {t}
                             />;
                           }}
                           name={input.name}
