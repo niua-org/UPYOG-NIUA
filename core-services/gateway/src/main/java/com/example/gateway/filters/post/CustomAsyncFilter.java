@@ -74,9 +74,7 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
             log.info("CustomAsyncFilter Topic:" + topic);
             log.info("customAsyncRequest body:" + customAsyncRequest);
 
-            //
-            String jsonMessage = objectMapper.writeValueAsString(customAsyncRequest);
-            kafkaTemplate.send(topic, jsonMessage);
+            kafkaTemplate.send(topic, customAsyncRequest);
 
 
 
