@@ -68,6 +68,7 @@
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
     </bean>
 
+    <!-- for enabling spring's annotation-based transaction management -->
     <tx:annotation-driven proxy-target-class="false"/>
 
     <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">

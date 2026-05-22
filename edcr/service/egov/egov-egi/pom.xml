@@ -168,14 +168,14 @@
 		<!-- SECURITY END -->
 
 		<!-- QUARTZ START -->
-		<dependency>
+<!--		<dependency>-->
 <!--			<groupId>org.quartz-scheduler</groupId>-->
 <!--			<artifactId>quartz</artifactId>-->
 <!--		</dependency>-->
 <!--		<dependency>-->
 <!--			<groupId>org.quartz-scheduler</groupId>-->
 <!--			<artifactId>quartz-jobs</artifactId>-->
-		</dependency>
+<!--		</dependency>-->
 		<!-- QUARTZ END -->
 
 		<!-- DISPLAYTAG START -->

@@ -73,6 +73,10 @@
                 </executions>
             </plugin>
         </plugins>
+        
+        <!-- Disabled filtering of resources as it is causing issues with the test cases. 
+        This is because the test cases are using the properties files from the classpath and filtering is replacing the placeholders in the properties files with empty values, 
+        which is causing the test cases to fail. -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
