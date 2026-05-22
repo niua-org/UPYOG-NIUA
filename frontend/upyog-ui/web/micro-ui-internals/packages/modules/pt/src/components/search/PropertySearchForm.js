@@ -105,13 +105,13 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                   defaultValue={formValue?.[key]}
                   rules={field.validation}
                   control={control}
-                  render={({ field }, customProps) => {
+                  render={({ field: controllerField }) => {
                     const CustomComponent = field?.customComponent;
 
                     return CustomComponent ? (
                       <CustomComponent
                         selectLocality={(d) => {
-                          field.onChange(d);
+                          controllerField.onChange(d);
                         }}
                         tenantId={tenantId}
                         selected={formValue?.[key]}
@@ -122,18 +122,24 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 />
             :field?.type === "number"?
             <div>
-            <MobileNumber
-              name="mobileNumber"
-              {...register(key, {
-                value: getValues(key),
-                shouldUnregister: true,
-                ...validation,
-              })}
-              type="number"
-              componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-              //maxlength={10}
-        />
-        </div>
+            <Controller
+              control={control}
+              name={key}
+              rules={validation}
+              render={({ field: controllerField }) => (
+                <MobileNumber
+                  name={key}
+                  value={controllerField.value}
+                  onChange={controllerField.onChange}
+                  onBlur={controllerField.onBlur}
+                  inputRef={controllerField.ref}
+                  type="number"
+                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
+                  //maxlength={10}
+                />
+              )}
+            />
+            </div>
         :field.type === "propertyType"?
         <div>
         <Dropdown
@@ -145,7 +151,6 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
           option={usageCategoryMajorMenu()}
           select={(e) => setProptype(e)}
           {...register(key, {
-            value: getValues(key),
             shouldUnregister: true,
           })}
           
@@ -158,7 +163,6 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                   name={key}
                   type={field?.type}
                   {...register(key, {
-                  value: getValues(key),
                   shouldUnregister: true,
                   ...validation,
                 })}

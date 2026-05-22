@@ -66,19 +66,22 @@ const MutationApplicationDetails = ({ propertyId, acknowledgementIds, workflowDe
   const [selectedAction, setSelectedAction] = useState(null);
   const { isLoading: isLoadingApplicationDetails, isError: isErrorApplicationDetails, data: applicationDetails, error: errorApplicationDetails } = Digit.Hooks.pt.useApplicationDetail(t, tenantId, propertyId);
 
-  useEffect(async ()=>{
-    if(acknowledgementIds){
-      const res = await Digit.PaymentService.searchBill(tenantId, {Service: businessService, consumerCode: acknowledgementIds});
-      if(! res.Bill.length) {
-        const res1 = await Digit.PTService.ptCalculateMutation({Property: applicationDetails?.applicationData}, tenantId);
-        setBillAmount(res1?.[acknowledgementIds]?.totalAmount || t("CS_NA"))
-        setBillStatus(t(`PT_MUT_BILL_ACTIVE`))
-      } else {
-        setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"))
-        setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`))
+  useEffect(() => {
+    const fetchBillDetails = async () => {
+      if(acknowledgementIds){
+        const res = await Digit.PaymentService.searchBill(tenantId, {Service: businessService, consumerCode: acknowledgementIds});
+        if(! res.Bill.length) {
+          const res1 = await Digit.PTService.ptCalculateMutation({Property: applicationDetails?.applicationData}, tenantId);
+          setBillAmount(res1?.[acknowledgementIds]?.totalAmount || t("CS_NA"))
+          setBillStatus(t(`PT_MUT_BILL_ACTIVE`))
+        } else {
+          setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"))
+          setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`))
+        }
       }
-    }
-  },[tenantId, acknowledgementIds, businessService])
+    };
+    fetchBillDetails();
+  },[tenantId, acknowledgementIds, businessService, applicationDetails])
 
   useEffect(() => {
     showTransfererDetails();

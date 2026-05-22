@@ -58,6 +58,15 @@ const PTEmployeeOwnershipDetails = ({ config, onSelect, userType, formData, setE
       menu.push({ i18nKey: `PT_FORM3_${formGender.code}`, code: `${formGender.code}`, value: `${formGender.code}` });
     });
 
+  const [ownerErrors, setOwnerErrors] = useState({});
+
+  const updateOwnerErrors = (ownerKey, errors) => {
+    setOwnerErrors((prev) => {
+      if (_.isEqual(prev[ownerKey], errors)) return prev;
+      return { ...prev, [ownerKey]: errors };
+    });
+  };
+
   const addNewOwner = () => {
     const newOwner = createOwnerDetails();
     setOwners((prev) => [...prev, newOwner]);
@@ -65,6 +74,11 @@ const PTEmployeeOwnershipDetails = ({ config, onSelect, userType, formData, setE
 
   const removeOwner = (owner) => {
     setOwners((prev) => prev.filter((o) => o.key != owner.key));
+    setOwnerErrors((prev) => {
+      const copy = { ...prev };
+      delete copy[owner.key];
+      return copy;
+    });
   };
 
   useEffect(() => {
@@ -74,8 +88,24 @@ const PTEmployeeOwnershipDetails = ({ config, onSelect, userType, formData, setE
   useEffect(() => {
     if (!formData?.owners) {
       setOwners([createOwnerDetails()]);
+      setOwnerErrors({});
     }
   }, [formData?.ownershipCategory?.code]);
+
+  useEffect(() => {
+    const combinedErrors = {};
+    Object.keys(ownerErrors).forEach((key) => {
+      if (ownerErrors[key] && Object.keys(ownerErrors[key]).length > 0) {
+        Object.assign(combinedErrors, ownerErrors[key]);
+      }
+    });
+
+    if (Object.keys(combinedErrors).length) {
+      setError(config.key, { type: combinedErrors });
+    } else {
+      clearErrors(config.key);
+    }
+  }, [ownerErrors]);
 
   const commonProps = {
     focusIndex,
@@ -92,6 +122,7 @@ const PTEmployeeOwnershipDetails = ({ config, onSelect, userType, formData, setE
     config,
     menu,
     isEditScreen,
+    updateOwnerErrors,
   };
 
   // if (isEditScreen) {
@@ -128,12 +159,15 @@ const OwnerForm = (_props) => {
     formState,
     menu,
     isEditScreen,
+    updateOwnerErrors,
   } = _props;
   const { originalData = {} } = formData;
   const { institution = {} } = originalData;
   const [uuid, setUuid] = useState(null);
   const [showToast, setShowToast] = useState(null);
-  const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, unregister } = useForm();
+  const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, unregister } = useForm({
+    mode: "onChange",
+  });
   console.log("localstate", localFormState)
   const formValue = watch();
   const { errors } = localFormState;
@@ -243,8 +277,7 @@ const OwnerForm = (_props) => {
 
 
   useEffect(() => {
-    if (Object.keys(errors).length && !_.isEqual(formState.errors[config.key]?.type || {}, errors)) setError(config.key, { type: errors });
-    else if (!Object.keys(errors).length && formState.errors[config.key]) clearErrors(config.key);
+    updateOwnerErrors(owner.key, errors);
   }, [errors]);
 
   const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };

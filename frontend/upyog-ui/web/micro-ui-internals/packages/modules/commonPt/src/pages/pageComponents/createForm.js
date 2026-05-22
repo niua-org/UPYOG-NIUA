@@ -56,8 +56,10 @@ const CreatePropertyForm = ({ config, onSelect,value, userType, redirectUrl }) =
     } else {
       if(userType === 'employee') {
         navigate(`save-property?redirectToUrl=${redirectUrl}`, {
-          data: formValue,
-          prevState:{...location?.state}
+          state: {
+            data: formValue,
+            prevState: {...location?.state}
+          }
         });
       } else {
         navigate(`/upyog-ui/citizen/commonPt/property/citizen-otp`, { replace: true, state: {

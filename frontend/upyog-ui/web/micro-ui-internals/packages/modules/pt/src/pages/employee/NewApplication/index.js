@@ -16,10 +16,32 @@ const NewApplication = () => {
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_HAPPENED", false);
   const [successData, setsuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage("EMPLOYEE_MUTATION_SUCCESS_DATA", { });
   const { data: commonFields, isLoading } = Digit.Hooks.pt.useMDMS(Digit.ULBService.getStateId(), "PropertyTax", "CommonFieldsConfig");
+  const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, true);
   useEffect(() => {
     setMutationHappened(false);
     clearSuccessData();
+    sessionStorage.removeItem("EMPLOYEE_MUTATION_TRIGGERED");
   }, []);
+
+  const areOwnersValid = (owners, ownershipCategory) => {
+    if (!owners || !Array.isArray(owners) || owners.length === 0) return false;
+    const isIndividual = ownershipCategory?.code?.includes("INDIVIDUAL");
+    return owners.every(owner => {
+      if (isIndividual) {
+        const basicValid = owner?.name && owner?.gender?.code && owner?.mobileNumber && 
+                           owner?.fatherOrHusbandName && owner?.relationship?.code && owner?.ownerType?.code;
+        if (!basicValid) return false;
+        if (owner?.ownerType?.code !== "NONE") {
+          return owner?.documents?.documentType?.code && owner?.documents?.documentUid;
+        }
+        return true;
+      } else {
+        return owner?.institution?.name && owner?.institution?.type?.code && 
+               owner?.name && owner?.altContactNumber && owner?.mobileNumber && 
+               owner?.designation && owner?.correspondenceAddress;
+      }
+    });
+  };
 
   const unitValues=[];
   const onFormValueChange = (setValue, formData, formState) => {
@@ -33,7 +55,7 @@ const NewApplication = () => {
                                   formData?.usageCategoryMajor && formData?.PropertyType && 
                                   formData?.landarea && formData?.electricity && formData?.uid &&
                                   formData?.propertyStructureDetails && formData?.ownershipCategory && 
-                                  formData?.owners?.length > 0;
+                                  areOwnersValid(formData?.owners, formData?.ownershipCategory);
     
     console.log("hasAllRequiredFields:", hasAllRequiredFields);
     
@@ -42,27 +64,95 @@ const NewApplication = () => {
     
     Object.keys(formState.errors).forEach(key => {
       const error = formState.errors[key];
-      console.log(`Checking error for key: ${key}`, error);
+      const fieldValue = formData?.[key];
+      console.log(`Checking error for key: ${key}`, error, "fieldValue:", fieldValue);
       
-      // If error.type is an object (nested errors from components)
-      if (error?.type && typeof error.type === 'object') {
-        const nestedErrors = Object.values(error.type);
-        console.log(`  Nested errors for ${key}:`, nestedErrors);
-        
-        // Check if any nested error is NOT just a required error on empty field
-        nestedErrors.forEach(nestedError => {
-          if (nestedError && typeof nestedError === 'object') {
-            // Check if this is a real validation error (has message and it's not just required)
-            if (nestedError.message && nestedError.type !== 'required') {
-              console.log(`  Found real error in ${key}:`, nestedError);
-              hasRealErrors = true;
-            }
+      // Skip if field has a value - required error is irrelevant
+      if (fieldValue && error?.type === 'required') {
+        console.log(`  Field ${key} has value, ignoring required error`);
+        return;
+      }
+      
+      // If error is a complex object with nested errors (like from arrays or components)
+      if (error && typeof error === 'object') {
+        // Special handling for owners array - it's a complex nested structure
+        if (key === 'owners') {
+          const nestedErrorsObj = error.type || error;
+          if (nestedErrorsObj && typeof nestedErrorsObj === 'object') {
+            Object.values(nestedErrorsObj).forEach(nestedError => {
+              if (nestedError && typeof nestedError === 'object') {
+                // Only count non-required errors as real validation errors
+                if (nestedError.type && nestedError.type !== 'required') {
+                  console.log(`  Found real validation error in owners: ${nestedError.type}`, nestedError);
+                  hasRealErrors = true;
+                }
+              }
+            });
           }
-        });
-      } else if (error?.type && error.type !== 'required') {
-        // Simple error that's not a required error
-        console.log(`  Found simple real error for ${key}:`, error);
-        hasRealErrors = true;
+          return;
+        }
+
+        // Special handling for documents - error.type is an array of missing document codes
+        if (key === 'documents') {
+          if (Array.isArray(error?.type) && error.type.length > 0) {
+            console.log(`  Found missing documents error:`, error.type);
+            hasRealErrors = true;
+          }
+          return;
+        }
+
+        // If error is a complex object with nested errors (like from arrays)
+        if (!error?.type) {
+          console.log(`  Checking nested errors in ${key}`);
+          let hasOnlyRequiredErrors = true;
+          
+          Object.values(error).forEach(nestedError => {
+            if (nestedError && typeof nestedError === 'object') {
+              // Check each nested error
+              Object.values(nestedError).forEach(itemError => {
+                if (itemError && typeof itemError === 'object') {
+                  // Only count non-required errors as real errors
+                  if (itemError.type && itemError.type !== 'required') {
+                    console.log(`  Found real validation error: ${itemError.type}`, itemError);
+                    hasOnlyRequiredErrors = false;
+                    hasRealErrors = true;
+                  }
+                }
+              });
+            }
+          });
+          
+          if (hasOnlyRequiredErrors && fieldValue) {
+            console.log(`  All errors in ${key} are required errors and field has data, ignoring`);
+            return;
+          }
+        }
+        
+        // If error.type is an object (nested errors from components)
+        if (error?.type && typeof error.type === 'object') {
+          const nestedErrors = Object.values(error.type);
+          console.log(`  Nested errors for ${key}:`, nestedErrors);
+          
+          // Check if any nested error is NOT just a required error on empty field
+          nestedErrors.forEach(nestedError => {
+            if (nestedError && typeof nestedError === 'object') {
+              // Ignore required errors on fields that have values
+              if (nestedError.type === 'required' && fieldValue) {
+                console.log(`  Field ${key} has value, ignoring nested required error`);
+                return;
+              }
+              // Check if this is a real validation error (has message and it's not just required)
+              if (nestedError.message && nestedError.type !== 'required') {
+                console.log(`  Found real error in ${key}:`, nestedError);
+                hasRealErrors = true;
+              }
+            }
+          });
+        } else if (error?.type && error.type !== 'required') {
+          // Simple error that's not a required error
+          console.log(`  Found simple real error for ${key}:`, error);
+          hasRealErrors = true;
+        }
       }
     });
     
@@ -193,10 +283,39 @@ const NewApplication = () => {
       };
     }
 
-    navigate("/upyog-ui/employee/pt/response", { replace: true, state: { Property: formData } }); //current wala
+    mutation.mutate(
+      { Property: formData },
+      {
+        onSuccess: (responseData) => {
+          navigate("/upyog-ui/employee/pt/response", {
+            replace: true,
+            state: {
+              Property: formData,
+              responseData,
+              isSuccess: true,
+              action: "CREATE",
+              key: "CREATE"
+            }
+          });
+        },
+        onError: (error) => {
+          navigate("/upyog-ui/employee/pt/response", {
+            replace: true,
+            state: {
+              Property: formData,
+              responseData: null,
+              isSuccess: false,
+              error: error?.response?.data?.Errors?.[0]?.message || error?.message || "Error creating property",
+              action: "CREATE",
+              key: "CREATE"
+            }
+          });
+        }
+      }
+    );
 
   };
-  if (isLoading) {
+  if (isLoading || mutation.isPending) {
     return <Loader />;
   }
 

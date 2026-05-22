@@ -15,7 +15,6 @@ const PropertyTax = ({ t, config, onSelect, userType, formData }) => {
   let docs = Documentsob?.PropertyTax?.[config?.isMutation ? docType[0] : docType];
   if (!config?.isMutation) docs = docs?.filter((doc) => doc["digit-citizen"]);
   function onSave() {}
-console.log("PropertyTax",formData)
 
   function goNext() {
     onSelect();

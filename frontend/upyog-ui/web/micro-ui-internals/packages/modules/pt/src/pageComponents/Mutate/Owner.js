@@ -255,7 +255,7 @@ const OwnerSteps = ({ owner, addNewOwner, removeOwner, setOwners, owners, ownerI
         return (
           <Route
             key={index}
-            path={`/${routeObj.route}`}
+            path="index"
             element={
               <Component
                 config={routeObj}
