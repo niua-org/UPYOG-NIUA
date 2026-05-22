@@ -190,6 +190,30 @@ public class CityService implements ICityService
         return format(CITY_LOGO_URL, tenants.get(getTenantID()));
     }
 
+    /**
+     * Retrieves the configured city logo as a byte array.
+     *
+     * <p>
+     * This method first attempts to fetch the city logo from the cache using
+     * the configured cache key. If the logo is not available in the cache or
+     * the cached content is empty, the logo is fetched from the file store
+     * service and then stored in the cache for future access.
+     * </p>
+     *
+     * <p>
+     * If the city logo configuration is missing (either file store ID or city
+     * code is unavailable), the method logs the issue and returns an empty
+     * byte array.
+     * </p>
+     *
+     * <p>
+     * The returned byte array is typically used for embedding the city logo
+     * in reports, PDFs, or other generated documents.
+     * </p>
+     *
+     * @return the city logo as a byte array; returns an empty byte array if
+     *         the logo configuration is unavailable or the logo cannot be fetched
+     */
     public byte[] getCityLogoAsBytes() {
         byte[] cityLogo = (byte[]) cityLogoCache.get(cityLogoCacheKey(), CITY_LOGO_HASH_KEY);
 /*

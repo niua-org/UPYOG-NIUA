@@ -1576,6 +1576,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
+<!--		Added filtering to resources so that we can use @build.number@ and @app.version@ in the xml files-->
 		<resources>
 		<resource>
 			<directory>src/main/resources</directory>
