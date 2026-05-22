@@ -6,7 +6,7 @@ import {
   LabelFieldPair,
   Loader,
   RadioButtons,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import  FormStep  from "../../../../react-components/src/molecules/FormStep";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -100,7 +100,7 @@ const PropertyType = ({ t, config, onSelect, userType, formData, setError, clear
               t={t}
             />
           </LabelFieldPair>
-          {formState.touched[config.key] ? (
+          {formState.touchedFields?.[config.key] ? (
             <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
               {formState.errors?.[config.key]?.message}
             </CardLabelError>

@@ -66,7 +66,7 @@ export const setaddressDetails = (data) => {
 export const setCartDetails = (data) => {
   let { adslist } = data;
   
-  let cartDetails = adslist?.cartDetails.map((slot) => {
+  let cartDetails = adslist?.cartDetails?.map((slot) => {
     return { 
       addType:slot.addTypeCode,
       faceArea:slot.faceAreaCode,

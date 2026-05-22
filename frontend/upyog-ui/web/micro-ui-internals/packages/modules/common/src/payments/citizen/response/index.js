@@ -1,15 +1,17 @@
-import { Banner, Card, CardText, Loader, Row, StatusTable, SubmitBar, DownloadPrefixIcon } from "@upyog/digit-ui-react-components";
-import React, { useEffect, useState } from "react";
+import { Banner, Card, CardText, Loader, Row, StatusTable, SubmitBar, DownloadPrefixIcon } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
-export const SuccessfulPayment = (props)=>{
-  if(localStorage.getItem("BillPaymentEnabled")!=="true"){
+export const SuccessfulPayment = (props) => {
+  const params = new URLSearchParams(window.location.search);
+  const hasTxnId = params.get("eg_pg_txnid");
+  if (localStorage.getItem("BillPaymentEnabled") !== "true" && !hasTxnId) {
     window.history.forward();
-   return null;
- }
- return <WrapPaymentComponent {...props}/>
+    return null;
+  }
+  return <WrapPaymentComponent {...props} />
 }
 
 export const convertEpochToDate = (dateEpoch) => {
@@ -26,24 +28,34 @@ export const convertEpochToDate = (dateEpoch) => {
     return "NA";
   }
 };
- const WrapPaymentComponent = (props) => {
+const WrapPaymentComponent = (props) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { eg_pg_txnid: egId, workflow: workflw, propertyId } = Digit.Hooks.useQueryParams();
   const [printing, setPrinting] = useState(false);
   const [allowFetchBill, setallowFetchBill] = useState(false);
   const { businessService: business_service, consumerCode, tenantId } = useParams();
-  const { data: bpaData = {}, isLoading: isBpaSearchLoading, isSuccess: isBpaSuccess, error: bpaerror } = Digit.Hooks.obps.useOBPSSearch(
-    "", {}, tenantId, { applicationNo: consumerCode }, {}, {enabled:(window.location.href.includes("bpa") || window.location.href.includes("BPA"))}
-  );
   
-  const { isLoading, data, isError } = Digit.Hooks.usePaymentUpdate({ egId }, business_service, {
-    
+  // Memoize payment update parameters to prevent unnecessary re-renders
+  const paymentUpdateParams = useMemo(() => ({ egId }), [egId]);
+  
+  // Memoize business service to keep it stable
+  const memoizedBusinessService = useMemo(() => business_service, [business_service]);
+  
+  // Memoize payment update options to prevent unnecessary re-renders
+  const paymentUpdateOptions = useMemo(() => ({
     retry: false,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
-  });
-  console.log("datatatataty",data)
+    enabled: !!egId,  // Only run hook when egId is present
+  }), [egId]);
+
+  const { data: bpaData = {}, isLoading: isBpaSearchLoading, isSuccess: isBpaSuccess, error: bpaerror } = Digit.Hooks.obps.useOBPSSearch(
+    "", {}, tenantId, { applicationNo: consumerCode }, {}, { enabled: (window.location.href.includes("bpa") || window.location.href.includes("BPA")) }
+  );
+
+  const { isLoading, data, isError } = Digit.Hooks.usePaymentUpdate(paymentUpdateParams, memoizedBusinessService, paymentUpdateOptions);
+  console.log("API Call - egId:", egId, "data:", data, "isLoading:", isLoading);
 
   const { label } = Digit.Hooks.useApplicationsForBusinessServiceSearch({ businessService: business_service }, { enabled: false });
 
@@ -91,16 +103,16 @@ export const convertEpochToDate = (dateEpoch) => {
 
   useEffect(() => {
     return () => {
-      localStorage.setItem("BillPaymentEnabled","false")
-      queryClient.clear();
+      localStorage.setItem("BillPaymentEnabled", "false")
+      // queryClient.clear();
     };
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     if (data && data.txnStatus && data.txnStatus !== "FAILURE") {
       setallowFetchBill(true);
     }
-  }, [data]);
+  }, [data?.txnStatus]);
 
   if (isLoading || recieptDataLoading) {
     return <Loader />;
@@ -316,7 +328,6 @@ export const convertEpochToDate = (dateEpoch) => {
       currentDate.getFullYear() + "-" + (currentDate.getMonth() + 1) + "-" + currentDate.getDate()
     );
     let reqData = { ...bpaDataDetails, edcrDetail: [{ ...edcrData }] };
-    console.log("reqData",reqData)
     let response = await Digit.PaymentService.generatePdf(bpaDataDetails?.tenantId, { Bpa: [reqData] }, order);
     const fileStore = await Digit.PaymentService.printReciept(bpaDataDetails?.tenantId, { fileStoreIds: response.filestoreIds[0] });
     window.open(fileStore[response?.filestoreIds[0]], "_blank");
@@ -374,7 +385,7 @@ export const convertEpochToDate = (dateEpoch) => {
       return "FY " + from + "-" + to;
     } else return "N/A";
   };
-  
+
   let bannerText;
   if (workflw) {
     bannerText = `CITIZEN_SUCCESS_UC_PAYMENT_MESSAGE`;
@@ -439,37 +450,6 @@ export const convertEpochToDate = (dateEpoch) => {
     }
     const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: fileStoreId });
     window.open(fileStore[fileStoreId], "_blank");
-  };
-
-  // This function is used to print NDC receipt. It first checks if the receipt is already generated and stored in filestore. 
-  // If yes, it fetches the receipt from filestore and opens it in a new tab. 
-  // If not, it generates the receipt using the payment details and application details, stores it in filestore and then opens it in a new tab.
-  const printNDCReceipt = async () => {
-    if (printing) return;
-    setPrinting(true);
-    try {
-      console.log("consumerCode for ndc", consumerCode);
-      console.log("tenantId for ndc", tenantId);
-      const applicationDetails = await Digit.NDCService.NDCsearch({
-        tenantId,
-        filters: { applicationNo: consumerCode },
-      });
-      let application = applicationDetails?.Applications?.[0];
-      let fileStoreId = applicationDetails?.Applications?.[0]?.paymentReceiptFilestoreId;
-      if (!fileStoreId) {
-        const payments = await Digit.PaymentService.getReciept(tenantId, business_service, { receiptNumbers: receiptNumber });
-        let response = await Digit.PaymentService.generatePdf(
-          tenantId,
-          { Payments: [{ ...(payments?.Payments?.[0] || {}), ...application }] },
-          "ndc-receipt"
-        );
-        fileStoreId = response?.filestoreIds[0];
-      }
-      const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: fileStoreId });
-      window.open(fileStore[fileStoreId], "_blank");
-    } finally {
-      setPrinting(false);
-    }
   };
 
   const printWTReceipt = async () => {
@@ -615,7 +595,6 @@ export const convertEpochToDate = (dateEpoch) => {
   //New Payment Reciept For PT module with year bifurcations
 
   const printRecieptNew = async (payment) => {
-    console.log("paymentpayment",payment,payment.Payments[0].paymentDetails[0].receiptNumber,payment.Payments[0])
     const tenantId = Digit.ULBService.getCurrentTenantId();
     const state = Digit.ULBService.getStateId();
     let paymentArray=[];
@@ -988,11 +967,11 @@ export const convertEpochToDate = (dateEpoch) => {
       {business_service?.includes("PT") &&<div style={{marginTop:"10px"}}><Link to={`/upyog-ui/citizen/feedback?redirectedFrom=${"upyog-ui/citizen/payment/success"}&propertyId=${consumerCode? consumerCode : ""}&acknowldgementNumber=${egId ? egId : ""}&tenantId=${tenantId}&creationReason=${business_service?.split(".")?.[1]}`}>
           <SubmitBar label={t("CS_REVIEW_AND_FEEDBACK")} />
       </Link></div>}
-      {business_service?.includes("PT") ? (
+      {/* {business_service?.includes("PT") ? (
         <div className="link" style={isMobile ? { marginTop: "8px", width: "100%", textAlign: "center" } : { marginTop: "8px" }} onClick={printReciept}>
             {t("CS_DOWNLOAD_RECEIPT")}
           </div>
-      ) : null}
+      ) : null} */}
       {business_service?.includes("WS") ? (
         <div className="link" style={isMobile ? { marginTop: "8px", width: "100%", textAlign: "center" } : { marginTop: "8px" }} onClick={printReciept}>
             {t("CS_DOWNLOAD_RECEIPT")}
@@ -1074,22 +1053,6 @@ export const convertEpochToDate = (dateEpoch) => {
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
           {t("SV_ID_CARD")}
-        </div>
-      ) : null}
-      {business_service == "NDC" ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "15px",
-            flexWrap: "wrap",
-            gap: "20px",
-          }}
-        >
-          <SubmitBar onSubmit={printNDCReceipt} label={t("CS_DOWNLOAD_RECEIPT")} />
-          <Link to={`/upyog-ui/citizen`}>
-            <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
-          </Link>
         </div>
       ) : null}
       {!(business_service?.includes("TL")) || !(business_service?.includes("PT")) && <SubmitBar onSubmit={printReciept} label={t("COMMON_DOWNLOAD_RECEIPT")} />}

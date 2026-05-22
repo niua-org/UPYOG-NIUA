@@ -1,4 +1,4 @@
-import { CardLabel, FormStep, LabelFieldPair, TextInput, CardLabelError } from "@upyog/digit-ui-react-components";
+import { CardLabel, FormStep, LabelFieldPair, TextInput, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
@@ -124,7 +124,7 @@ const Area = ({ t, config, onSelect, value, userType, formData, setError: setFor
               />
             </div>
           </LabelFieldPair>
-          {formState.touched[config.key] ? (
+          {formState.touchedFields?.[config.key] ? (
             <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
               {formState.errors?.[config.key]?.message}
             </CardLabelError>

@@ -9,10 +9,10 @@ import {
   SubmitBar,
   EditIcon,
   GenericFileIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import { checkForNA } from "../../../utils";
 import { convertTo12HourFormat, formatDate, APPLICATION_PATH } from "../../../utils";
 
@@ -22,9 +22,9 @@ In Parent Component,  we are passing the data as a props coming through params (
 
 const ActionButton = ({ jumpTo }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   function routeTo() {
-    history.push(jumpTo);
+    navigate(jumpTo);
   }
   return (
     <LinkButton

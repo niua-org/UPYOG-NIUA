@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar } from "@upyog/digit-ui-react-components";
-import { Link, useHistory } from "react-router-dom";
+import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import getPTAcknowledgementData from "../getPTAcknowledgementData";
 
 const GetMessage = (type, action, isSuccess, isEmployee, t) => {
@@ -35,7 +35,7 @@ const BannerPicker = (props) => {
 const Response = (props) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(null);
   const [enableAudit, setEnableAudit] = useState(false);
@@ -48,7 +48,8 @@ const Response = (props) => {
   };
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const { state } = props.location;
+  const location = useLocation();
+  const { state } = location;
 
   const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, state.key !== "UPDATE");
   const mutation1 = Digit.Hooks.pt.usePropertyAPI(tenantId, false);
@@ -111,7 +112,7 @@ const Response = (props) => {
     Digit.Utils.pdf.generate(data);
   };
 
-  if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
+  if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
     return <Loader />;
   }
 

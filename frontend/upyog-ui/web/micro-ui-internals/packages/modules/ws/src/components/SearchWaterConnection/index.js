@@ -1,13 +1,13 @@
 import React, { Fragment, useState,useEffect, useCallback, useMemo } from "react";
-import { SearchForm, Table, Card, Loader, Header,Toast } from "@upyog/digit-ui-react-components";
+import { SearchForm, Table, Card, Loader, Header,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import SearchFields from "./SearchFields";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import MobileSearchWater from "./MobileSearchWater";
-import { useHistory } from "react-router-dom";
+
 const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, businessService, isLoading }) => {
-  const history = useHistory()
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [result,setResult]=  useState([])
   const [showToast, setShowToast] = useState(null);
   const replaceUnderscore = (str) => {
@@ -27,15 +27,30 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
     day = (day > 9 ? "" : "0") + day;
     return `${day}/${month}/${year}`;
   };
-  useEffect(async () => {
+  useEffect(() => {
+  const fetchDemand = async () => {
     const payload = {
-      "BulkBillCriteria": {
-        "tenantId": "pg.citya"
-      }
+      BulkBillCriteria: {
+        tenantId: "pg.citya",
+      },
+    };
+
+    try {
+      const data = await Digit.WSService.WSSewsearchDemand(
+        payload,
+        window.location.href.includes("ws/sewerage/search-demand")
+          ? "sw"
+          : "ws"
+      );
+
+      setResult(data?.connection || []);
+    } catch (err) {
+      console.error(err);
     }
-    let data = await Digit.WSService.WSSewsearchDemand(payload, window.location.href.includes("ws/sewerage/search-demand") ? "sw" : "ws")
-    setResult(data.connection)
-  }, [])
+  };
+
+  fetchDemand();
+}, []);
   const { t } = useTranslation();
   const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
     defaultValues: {
@@ -47,14 +62,7 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
     },
   });
 
-  useEffect(() => {
-    register("offset", 0);
-    register("limit", 10);
-    register("sortBy", "commencementDate");
-    register("searchType", "CONNECTION");
-    register("sortOrder", "DESC");
-    register("propertyId", "");
-  }, [register]);
+  // Removed v6 useEffect register calls - use defaultValues in useForm instead
 
   const onSort = useCallback((args) => {
     if (args.length === 0) return;
@@ -175,7 +183,7 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
         },
       },
     ],
-    []
+    [t, tenantId]
   );
   const columns2 = useMemo(
     () => [
@@ -229,7 +237,7 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
           } 
       },
     ],
-    []
+    [t, tenantId]
   );
 
   const generateDemand1 = (row) => {
@@ -255,8 +263,8 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
     setShowToast({
       label: `${data}`
   })
-    history.push(`/upyog-ui/employee/payment/collect/SW/${encodeURIComponent(
-      row.original?.["connectionNo"])}/${row.original?.["tenantId"]}?tenantId=${row.original?.["tenantId"]}?workflow=WS&ISWSCON`)
+    navigate(`/upyog-ui/employee/payment/collect/SW/${encodeURIComponent(
+      row.original?.["connectionNo"])}/${row.original?.["tenantId"]}?tenantId=${row.original?.["tenantId"]}&workflow=WS&ISWSCON`)
 
   }
   const getActionItem = (status, row) => {
@@ -274,7 +282,7 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
                   to={{
                     pathname: `/upyog-ui/employee/payment/collect/${row.original?.["service"] === "WATER" ? "WS" : "SW"}/${encodeURIComponent(
                       row.original?.["connectionNo"]
-                    )}/${row.original?.["tenantId"]}?tenantId=${row.original?.["tenantId"]}?workflow=WS&ISWSCON`,
+                    )}/${row.original?.["tenantId"]}?tenantId=${row.original?.["tenantId"]}&workflow=WS&ISWSCON`,
                   }}
                 >
                   {t(`${"WS_COMMON_COLLECT_LABEL"}`)}{" "}
@@ -302,7 +310,7 @@ const SearchWaterConnection = ({ tenantId, onSubmit, data, count, resultOk, busi
         {window.location.href.includes("water") ? t("WS_WATER_SEARCH_CONNECTION_SUB_HEADER") : t("WS_SEWERAGE_SEARCH_CONNECTION_SUB_HEADER")}
       </Header>
       {window.location.href.includes("search-demand")?"":<SearchForm className="ws-custom-wrapper" onSubmit={onSubmit} handleSubmit={handleSubmit}>
-        <SearchFields {...{ register, control, reset, tenantId, t }} />
+        <SearchFields {...{ register, control, reset, tenantId, t}} />
       </SearchForm>}
       { isLoading ? <Loader /> : null } 
       {data?.display && !resultOk ? (

@@ -1,6 +1,6 @@
-FROM upyogio/alpine-node-builder-14:yarn AS build
+# FROM upyogio/alpine-node-builder-14:yarn AS build
 #FROM ghcr.io/egovernments/alpine-node-builder-14:yarn AS build
-RUN apk update && apk upgrade
+FROM node:22.0.0-alpine AS build
 RUN apk add --no-cache git>2.30.0
 
 
@@ -12,13 +12,10 @@ ENV GENERATE_SOURCEMAP "false"
 COPY ${WORK_DIR} .
 RUN ls -lah
 
-RUN yarn config set ignore-engines true
-
 #RUN node web/envs.js
 RUN cd web/ \
     && node envs.js \
-    && node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(20480*20480))' \
-    &&  ./install-deps.sh \
+    && node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))' \
     && yarn install \
     && yarn build 
     

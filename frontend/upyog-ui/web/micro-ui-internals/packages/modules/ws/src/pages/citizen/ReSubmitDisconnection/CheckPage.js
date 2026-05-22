@@ -1,18 +1,18 @@
 import {
     Card, CardHeader, CardSubHeader, CardText,
     CitizenInfoLabel, LinkButton, Row, StatusTable, SubmitBar, EditIcon, Header, CardSectionHeader, Loader
-  } from "@upyog/digit-ui-react-components";
+  } from "@nudmcdgnpm/digit-ui-react-components";
   import React, { useState } from "react";
   import { useTranslation } from "react-i18next";
-  import { useHistory, useRouteMatch, Link } from "react-router-dom";
+  import { Link,  } from "react-router-dom";
   import DisconnectTimeline from "../../../components/DisconnectTimeline";
   import WSDocument from "../../../pageComponents/WSDocument";
 import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSReSubmitDisconnection,  } from "../../../utils";
   
   const CheckPage = () => {
     const { t } = useTranslation();
-    const history = useHistory();
-    const match = useRouteMatch();
+    const navigate = Digit.Hooks.useCustomNavigate();
+    const match = Digit.Hooks.useModuleBasePath();
     const value = Digit.SessionStorage.get("WS_DISCONNECTION");
     const [documents, setDocuments] = useState( value.WSDisconnectionForm.documents || []);
     let routeLink = `/upyog-ui/citizen/ws/resubmit-disconnect-application`;
@@ -55,7 +55,7 @@ import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSReSubmitDiscon
             },
             onSuccess: async (data, variables) => {
                 Digit.SessionStorage.set("WS_DISCONNECTION", { ...value?.applicationData, ...value?.WSDisconnectionForm , DisconnectionResponse: data?.WaterConnection?.[0]});
-                history.push(`/upyog-ui/citizen/ws/disconnect-acknowledge?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);
+                navigate(`/upyog-ui/citizen/ws/disconnect-acknowledge?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);
             },
           });
         }
@@ -71,7 +71,7 @@ import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSReSubmitDiscon
             },
             onSuccess: async (data, variables) => {
                 Digit.SessionStorage.set("WS_DISCONNECTION", {...value?.applicationData, ...value?.WSDisconnectionForm , DisconnectionResponse: data?.SewerageConnections?.[0]});
-                history.push(`/upyog-ui/citizen/ws/disconnect-acknowledge?applicationNumber=${data?.SewerageConnections?.[0]?.applicationNo}`);
+                navigate(`/upyog-ui/citizen/ws/disconnect-acknowledge?applicationNumber=${data?.SewerageConnections?.[0]?.applicationNo}`);
             },
           });
         }

@@ -9,8 +9,8 @@ import {
   SubmitBar,
   Menu,
   CardSectionHeader,
-} from "@upyog/digit-ui-react-components";
-import { useLocation, useHistory } from "react-router-dom";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import { useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setNDCStep } from "../redux/actions/NDCFormActions";
 import { useTranslation } from "react-i18next";
@@ -23,7 +23,7 @@ import Timeline from "../components/NDCTimeline";
 const NDCSummary = ({ formData, goNext, onGoBack }) => {
   const { pathname: url } = useLocation();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const menuRef = useRef();
   const dispatch = useDispatch();
   const mutateScreen = url.includes("/property-mutate/");

@@ -1,13 +1,13 @@
 import React, { Fragment,useState } from 'react'
-import { Card, CardSectionHeader, Header, Loader, RadioButtons, Row, StatusTable, TextInput,ActionBar,SubmitBar } from "@upyog/digit-ui-react-components";
+import { Card, CardSectionHeader, Header, Loader, RadioButtons, Row, StatusTable, TextInput,ActionBar,SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next";
 import { BillDetailsConfig } from './BillDetailsConfig';
 import CancelBillModal from '../../components/CancelBill/CancelBillModal';
-import { useHistory } from "react-router-dom";
+
 
 const BillDetailsv1 = (props) => {
-    const history = useHistory()
+    const navigate = Digit.Hooks.useCustomNavigate();
     //serviceTYpe -> WS,SW
     const { connectionNumber,service:serviceType,tenantId} = Digit.Hooks.useQueryParams();
     
@@ -48,7 +48,7 @@ const BillDetailsv1 = (props) => {
                 reasonMessage: t(_data?.reason?.message)
             }
         }
-        history.push("/upyog-ui/employee/bills/response-cancelBill", { filters, bill });
+        navigate("/upyog-ui/employee/bills/response-cancelBill", { filters, bill });
     }
 
     const getTranslatedValues = (dataValue, isNotTranslated) => {

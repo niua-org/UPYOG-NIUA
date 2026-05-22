@@ -1,11 +1,11 @@
 import { PTService } from "../../services/elements/PT";
-import { useMutation } from "react-query";
+import { mutationTemplate } from "../../common/mutationTemplate";
 
 const usePropertyAPI = (tenantId, type = true) => {
   if (type) {
-    return useMutation((data) => PTService.create(data, tenantId));
+    return mutationTemplate({ mutationFn: (data) => PTService.create(data, tenantId) });
   } else {
-    return useMutation((data) => PTService.update(data, tenantId));
+    return mutationTemplate({ mutationFn: (data) => PTService.update(data, tenantId) });
   }
 };
 

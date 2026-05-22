@@ -1,7 +1,7 @@
-import { Banner, Card, CardText, LinkButton, Loader, Row, StatusTable, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, LinkButton, Loader, Row, StatusTable, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation, useHistory } from "react-router-dom";
+import { Link, useLocation,  } from "react-router-dom";
 // import getPTAcknowledgementData from "../../../getPTAcknowledgementData";
 import { convertToPropertyLightWeight, convertToUpdatePropertyLightWeight } from "../utils";
 
@@ -37,7 +37,7 @@ const PTAcknowledgement = ({ onSuccess, onSelect, formData, redirectUrl, userTyp
   const location = useLocation();
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   let data = location?.state?.data;
   if (onSelect) {
@@ -80,11 +80,11 @@ const PTAcknowledgement = ({ onSuccess, onSelect, formData, redirectUrl, userTyp
       });
 
       if (!createNUpdate) {
-        if (!(mutation.isLoading && mutation.isIdle)) {
+        if (!(mutation.isPending && mutation.isIdle)) {
           if (mutation.isSuccess) {
             setTimeout(() => {
               if (redirectUrl) {
-                history.push(`${redirectUrl}?propertyId=${mutation?.data?.Properties[0]?.propertyId}&tenantId=${formdata.Property.tenantId}`, {
+                navigate(`${redirectUrl}?propertyId=${mutation?.data?.Properties[0]?.propertyId}&tenantId=${formdata.Property.tenantId}`, {
                   ...location?.state?.prevState,
                 });
                 const scrollConst = redirectUrl?.includes("employee/tl") ? 1600 : 300;
@@ -104,7 +104,7 @@ const PTAcknowledgement = ({ onSuccess, onSelect, formData, redirectUrl, userTyp
     if (mutation.isSuccess) {
       setTimeout(() => {
         if (redirectUrl) {
-          history.push(`${redirectUrl}?propertyId=${mutation?.data?.Properties[0]?.propertyId}&tenantId=${tenant}`, {
+          navigate(`${redirectUrl}?propertyId=${mutation?.data?.Properties[0]?.propertyId}&tenantId=${tenant}`, {
             ...location?.state?.prevState,
           });
           const scrollConst = redirectUrl?.includes("employee/tl") ? 1600 : 300;
@@ -131,7 +131,7 @@ const PTAcknowledgement = ({ onSuccess, onSelect, formData, redirectUrl, userTyp
         if (mutationForUpdate.isSuccess) {
           setTimeout(() => {
             if (redirectUrl) {
-              history.push(
+              navigate(
                 `${redirectUrl}?propertyId=${mutationForUpdate?.data?.Properties[0]?.propertyId}&tenantId=${mutationForUpdate?.data?.Properties[0]?.tenantId}`,
                 { ...location?.state?.prevState }
               );
@@ -155,7 +155,7 @@ const PTAcknowledgement = ({ onSuccess, onSelect, formData, redirectUrl, userTyp
     }
   };
 
-  return mutation.isLoading || mutation.isIdle ? (
+  return mutation.isPending || mutation.isIdle ? (
     <Loader />
   ) : (
     <Card>
@@ -184,7 +184,7 @@ const PTAcknowledgement = ({ onSuccess, onSelect, formData, redirectUrl, userTyp
             label={t("CS_COMMON_PROCEED")}
             onSubmit={() => {
               if (redirectUrl) {
-                history.push(
+                navigate(
                   `${redirectUrl}?propertyId=${mutationForUpdate?.data?.Properties[0]?.propertyId}&tenantId=${mutationForUpdate?.data?.Properties[0]?.tenantId}`,
                   { ...location?.state?.prevState }
                 );

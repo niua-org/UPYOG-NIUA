@@ -10,8 +10,8 @@ import {
   Loader,
   Header,
   Dropdown,
-} from "@upyog/digit-ui-react-components";
-import { Link, useHistory } from "react-router-dom";
+} from "@nudmcdgnpm/digit-ui-react-components";
+import { Link } from "react-router-dom";
 
 const ESTSearchApplication = ({
   tenantId,
@@ -22,7 +22,7 @@ const ESTSearchApplication = ({
   count,
   setShowToast,
 }) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   const [selectedAssetType, setSelectedAssetType] = useState(null); // assetParentCategory
   const [selectedLocality, setSelectedLocality] = useState(null);   // localityCode
@@ -145,7 +145,7 @@ const ESTSearchApplication = ({
   const GetCell = (value) => <span className="cell-text">{value || "N/A"}</span>;
 
   const handleAllotAsset = (asset) => {
-    history.push("/upyog-ui/employee/est/assignassets/info", { assetData: asset });
+    navigate("/upyog-ui/employee/est/assignassets/info", { state: { assetData: asset } });
   };
 
   const columns = useMemo(
@@ -340,7 +340,7 @@ const ESTSearchApplication = ({
               ))}
 
             <button
-              onClick={() => history.push("/upyog-ui/employee/est/create-asset")}
+              onClick={() => navigate("/upyog-ui/employee/est/create-asset")}
               style={{
                 backgroundColor: "#007bff",
                 color: "white",

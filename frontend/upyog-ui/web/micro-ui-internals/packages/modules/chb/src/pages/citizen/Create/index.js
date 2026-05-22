@@ -1,11 +1,11 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React ,{Fragment}from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 import { citizenConfig } from "../../../config/Create/citizenconfig";
 import { data } from "jquery";
-
+import { CHBDataConvert } from "../../../utils";
 /**
  * CHBCreate Component
  * 
@@ -54,13 +54,15 @@ import { data } from "jquery";
 const CHBCreate = ({ parentRoute }) => {
 
   const queryClient = useQueryClient();
-  const match = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
   let config = [];
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("CHB_CREATE", {});
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.chb.useChbCreateAPI(tenantId);
   const goNext = (skipStep, index, isAddMultiple, key) => {
 
     
@@ -90,21 +92,21 @@ const CHBCreate = ({ parentRoute }) => {
 
 
     
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
     if (skipStep) {
-      redirectWithHistory = history.replace;
+      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
     }
     if (isAddMultiple) {
       nextStep = key;
     }
     if (nextStep === null) {
-      return redirectWithHistory(`${match.path}/check`);
+      return redirectWithHistory(`check`);
     }
     if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${match.path}/${nextStep}`;
+      nextPage = `${nextStep}`;
     }
      else {
-      nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
+      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
@@ -117,8 +119,17 @@ const CHBCreate = ({ parentRoute }) => {
       queryClient.invalidateQueries("CHB_CREATE");
     }
 
-  const chbcreate = async () => {
-    history.push(`${match.path}/acknowledgement`);
+    const handleSubmit = () => {
+      console.log("params", params)
+    let formdata = CHBDataConvert(params);; 
+    formdata.hallsBookingApplication.tenantId = tenantId;
+    mutation.mutate(formdata, {
+      onSuccess: () => {
+        clearParams();
+        queryClient.invalidateQueries("CHB_CREATE");
+        navigate("acknowledgement", { replace: true });
+      },
+    });
   };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
@@ -159,27 +170,25 @@ const CHBCreate = ({ parentRoute }) => {
   
   
   return (
-    <Switch>
+    <Routes>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
-          <Route path={`${match.path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
-          </Route>
+          <Route
+            path={`${routeObj.route}`}
+            key={index}
+            element={
+              <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
+            }
+          />
         );
       })}
 
-      <Route path={`${match.path}/check`}>
-        <CheckPage onSubmit={chbcreate} value={params} />
-      </Route>
-      <Route path={`${match.path}/acknowledgement`}>
-        <CHBAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
-      <Route>
-        <Redirect to={`${match.path}/${config.indexRoute}`} />
-      </Route>
-    </Switch>
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<CHBAcknowledgement mutation={mutation} />} />
+      <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
+    </Routes>
   );
 };
 

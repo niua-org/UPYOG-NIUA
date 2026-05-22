@@ -1,5 +1,6 @@
 import React from "react";
-import ReactDOM from "react-dom";
+// import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 
 import { initLibraries } from "@upyog/digit-ui-libraries";
 import { PGRReducers } from "@upyog/digit-ui-module-pgr";
@@ -11,7 +12,7 @@ import { initPGRComponents } from "@upyog/digit-ui-module-pgr";
 import { initDSSComponents } from "@upyog/digit-ui-module-dss";
 import { initHRMSComponents } from "@upyog/digit-ui-module-hrms";
 import { initReceiptsComponents, ReceiptsModule } from "@upyog/digit-ui-module-receipts";
-// import { initReportsComponents } from "@upyog/digit-ui-module-reports";
+// import { initReportsComponents } from "@nudmcdgnpm/digit-ui-module-reports";
 import { initMCollectComponents } from "@upyog/digit-ui-module-mcollect";
 import { initTLComponents } from "@upyog/digit-ui-module-tl";
 import { PaymentModule, PaymentLinks, paymentConfigs } from "@upyog/digit-ui-module-common";
@@ -27,7 +28,7 @@ import { initBillsComponents, BillsModule } from "@upyog/digit-ui-module-bills";
 // import {initCustomisationComponents} from "./customisations";
 
 // import { PGRModule, PGRLinks } from "@upyog/digit-ui-module-pgr";
-// import { Body, TopBar } from "@upyog/digit-ui-react-components";
+// import { Body, TopBar } from "@nudmcdgnpm/digit-ui-react-components";
 import "@nudmcdgnpm/upyog-css";
 
 import { PTRModule, PTRLinks, PTRComponents } from "@upyog/upyog-ui-module-ptr";
@@ -37,7 +38,7 @@ import {
   ChallanGenerationModule,
   initChallanGenerationComponents,
   ChallanReducers,
-} from "@upyog/digit-ui-module-challangeneration";
+} from "@nudmcdgnpm/digit-ui-module-challangeneration";
 
 import { 
   EWModule, 
@@ -45,22 +46,25 @@ import {
   EWComponents }
   from "@upyog/upyog-ui-module-ew";
 
-import { SVComponents, SVLinks, SVModule } from "@upyog/upyog-ui-module-sv";
+
 import {CHBModule,CHBLinks,CHBComponents} from "@upyog/upyog-ui-module-chb";
-import {ADSModule,ADSLinks,ADSComponents} from "@upyog/upyog-ui-module-ads";
+import {ADSModule,ADSLinks,ADSComponents} from "@nudmcdgnpm/upyog-ui-module-ads";
 import { WTModule, WTLinks, WTComponents } from "@upyog/upyog-ui-module-wt";
 import { VENDORComponents, VENDORLinks, VENDORModule } from "@upyog/upyog-ui-module-vendor";
 import { PGRAIComponents, PGRAILinks, PGRAIModule } from "@upyog/upyog-ui-module-pgrai";
 import { GISComponents, GISLinks, GISModule } from "@nudmcdgnpm/upyog-ui-module-gis";
 import { ESTComponents, ESTLinks, ESTModule } from "@nudmcdgnpm/upyog-ui-module-est";
 import { initNDCComponents, NDCReducers } from "@nudmcdgnpm/upyog-ui-module-ndc";
-// import * as comps from "@upyog/digit-ui-react-components";
+// import * as comps from "@nudmcdgnpm/digit-ui-react-components";
 
 // import { subFormRegistry } from "@upyog/digit-ui-libraries";
 
 import { pgrCustomizations, pgrComponents } from "./pgr";
 
 var Digit = window.Digit || {};
+
+const container = document.getElementById("root");
+  const root = createRoot(container);
 
 const enabledModules = [
   "Tqm",
@@ -157,9 +161,6 @@ const initDigitUI = () => {
     ADSLinks,
   ADSModule,
   ...ADSComponents,
-  SVModule,
-  SVLinks,
-  ...SVComponents,
   EWModule,
   EWLinks,
   ...EWComponents,
@@ -172,7 +173,7 @@ const initDigitUI = () => {
   VENDORModule,
   VENDORLinks,
   ...VENDORComponents,
-    ESTModule,
+  ESTModule,
   ESTLinks,
   ...ESTComponents,
   PGRAIModule,
@@ -224,7 +225,15 @@ const initDigitUI = () => {
   initTokens(stateCode);
 
   const registry = window?.Digit.ComponentRegistryService.getRegistry();
-  ReactDOM.render(<DigitUI stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />, document.getElementById("root"));
+
+  root.render(
+    <DigitUI
+      stateCode={stateCode}
+      enabledModules={enabledModules}
+      moduleReducers={moduleReducers}
+    />
+  );
+  // ReactDOM.render(<DigitUI stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />, document.getElementById("root"));
 };
 
 initLibraries().then(() => {

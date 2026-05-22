@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { CardLabel, LabelFieldPair, TextInput, Toast } from "@upyog/digit-ui-react-components";
+import { CardLabel, LabelFieldPair, TextInput, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import _ from "lodash";
 import { resetNDCForm, updateNDCForm } from "../redux/actions/NDCFormActions";
-import { useLocation } from "react-router-dom";
+import { useLocation,Link } from "react-router-dom";
 import { Loader } from "../components/Loader";
 
 const getAddress = (address, t) => {
@@ -80,7 +80,9 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
       setSearchPropertyId(ptFromApi.consumerCode);
       setNoDue(true);
       setPropertyDues({ dues: { totalAmount: 0 } });
-      onSelect(config.key, { ...formData[config.key], id: ptFromApi.consumerCode });
+      const updated = { ...formData[config.key], id: ptFromApi.consumerCode };
+      onSelect(config.key, updated);
+      dispatch(updateNDCForm(config.key, updated));
     }
   }, [ptFromApi]);
 
@@ -94,7 +96,7 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
         isfirstRender.current = false;
         return;
       }
-      if (!formData?.cpt?.details) {
+      if (!formData?.cpt?.details && isSearchClicked) {
         setPropertyDetails({});
         setShowToast({ error: true, label: "CS_PT_NO_PROPERTIES_FOUND" });
       }
@@ -113,11 +115,15 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
   }, [error, propertyDetails]);
 
   useEffect(() => {
-    onSelect(config.key, { ...formData[config.key], details: propertyDetails?.Properties?.[0] });
+    const updated = { ...formData[config.key], details: propertyDetails?.Properties?.[0] };
+    onSelect(config.key, updated);
+    dispatch(updateNDCForm(config.key, updated));
   }, [propertyDetails, pathname]);
 
   useEffect(() => {
-    onSelect(config.key, { ...formData[config.key], dues: propertyDues?.dues });
+    const updated = { ...formData[config.key], dues: propertyDues?.dues };
+    onSelect(config.key, updated);
+    dispatch(updateNDCForm(config.key, updated));
   }, [propertyDues, pathname]);
 
   const searchProperty = () => {
@@ -143,7 +149,7 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
         address: "",
       });
 
-      dispatch(resetNDCForm());
+      // dispatch(resetNDCForm());
       // refetch();
     }
   };
@@ -151,7 +157,7 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
   const handlePropertyChange = (e) => {
     setPropertyId(e.target.value);
     setValue(e.target.value, propertyIdInput.name);
-    setIsSearchClicked(false); // ✅ show button again when input changes
+    setIsSearchClicked(false); // show button again when input changes
     setNoDue(false);
     setCheckStats(false);
     setPayDuesButton(false);
@@ -182,7 +188,9 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
   };
 
   function setValue(value, input) {
-    onSelect(config.key, { ...formData[config.key], [input]: value });
+    const updated = { ...formData[config.key], [input]: value };
+    onSelect(config.key, updated);
+    dispatch(updateNDCForm(config.key, updated));
   }
 
   function getValue(input) {
@@ -194,7 +202,9 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
     try {
       const result = await Digit.PaymentService.fetchBill(tenantId, {
         businessService: "PT",
-        consumerCode: formData?.cpt?.id,
+        // consumerCode: formData?.cpt?.id,
+        consumerCode: propertyId,
+
       });
       if (result?.Bill?.length > 0) {
         if (result?.Bill[0]?.totalAmount > 0) {
@@ -273,16 +283,15 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
             {getPayDuesButton && <div className="ndc-pay-due-button">Rs. {formData?.cpt?.dues?.totalAmount} </div>}
 
             {getPayDuesButton && (
-              <button
-                className="submit-bar"
-                type="button"
-                onClick={() => {
-                  setPayDuesButton(false);
-                }}
-              >
-                {`${t("PAY_DUES")} `}
-              </button>
-            )}
+  <Link to={`/upyog-ui/citizen/payment/my-bills/PT/${propertyId}`}>
+    <button
+      className="submit-bar"
+      type="button"
+    >
+      {`${t("PAY_DUES")}`}
+    </button>
+  </Link>
+)}
             {getNoDue && <div className="ndc-no-due-button">{t("NO_DUES_FOUND_FOR_PROPERTY")}</div>}
           </div>
         </LabelFieldPair>

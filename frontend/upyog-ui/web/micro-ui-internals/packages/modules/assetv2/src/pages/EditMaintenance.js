@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar } from "@upyog/digit-ui-react-components";
-import { Link, useHistory, useLocation } from "react-router-dom";
+import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 
@@ -37,7 +37,7 @@ const EditMaintenance = (props) => {
   console.log('For coming data from props in response:- ', props)
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(null);
   const [enableAudit, setEnableAudit] = useState(false);
@@ -100,7 +100,7 @@ const EditMaintenance = (props) => {
   }, []);
 
 
-  if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
+  if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
     return <Loader />;
   }
 

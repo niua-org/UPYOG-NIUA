@@ -13,11 +13,10 @@ import {
   WSICon,
   PTRIcon,
   CHBIcon
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import EmployeeDashboard from "./EmployeeDashboard";
-import { useHistory } from "react-router-dom";
 
 /* 
 Feature :: Citizen All service screen cards
@@ -85,8 +84,6 @@ const iconSelector = (code) => {
       return <CHBIcon className="fill-path-primary-main" />;
     case "ADS":
       return <CHBIcon className="fill-path-primary-main" />;
-    case "NDC":
-      return <PTRIcon className="fill-path-primary-main" />
     default:
       return <PTIcon className="fill-path-primary-main" />;
   }
@@ -141,7 +138,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
 
 const EmployeeHome = ({ modules }) => {
   const { t } = useTranslation();
-  const history = useHistory(); // ← Add this import at top
+  const navigate = Digit.Hooks.useCustomNavigate();
   const dashboardCemp = Digit.UserService.hasAccess(["DASHBOARD_EMPLOYEE"])?true:false;
   if(window.Digit.SessionStorage.get("PT_CREATE_EMP_TRADE_NEW_FORM")) window.Digit.SessionStorage.set("PT_CREATE_EMP_TRADE_NEW_FORM",{})
   return (
@@ -151,7 +148,7 @@ const EmployeeHome = ({ modules }) => {
         <div className="dashboard-btn-wrapper">
         <button
           className="view-dashboard-btn"
-          onClick={() => history.push("/upyog-ui/employee/dashboard")}
+          onClick={() => navigate("/upyog-ui/employee/dashboard")}
         >
           <span className="dashboard-icon">📊</span>
           <span className="dashboard-text">{t("VIEW_DASHBOARD")}</span>

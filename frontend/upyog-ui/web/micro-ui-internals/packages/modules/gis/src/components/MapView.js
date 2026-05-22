@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
-import { CardLabel, SubmitBar, Dropdown, BackButton } from '@upyog/digit-ui-react-components';
+import { CardLabel, SubmitBar, Dropdown, BackButton } from '@nudmcdgnpm/digit-ui-react-components';
 import { MAP_TILE_URL, createMapIcons, LEAFLET_DEFAULT_ICON_OPTIONS } from '../utils';
 import { getDigiPin } from '../../../../libraries/src/utils/digipin';
 

@@ -1,7 +1,7 @@
-import { FormComposer, Loader, Dropdown, Localities, Header, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Loader, Dropdown, Localities, Header, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useRouteMatch,useLocation } from "react-router-dom";
+import { useLocation,  } from "react-router-dom";
 import { newConfig } from "../../config/Create/config";
 import _, { create, unset } from "lodash";
 
@@ -14,8 +14,8 @@ const CreatePropertyForm = ({ config, onSelect,value, userType, redirectUrl }) =
 
   const [canSubmit, setCanSubmit] = useState(false);
   const defaultValues = { ...value};
-  const history = useHistory();
-  const match = useRouteMatch();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const match = Digit.Hooks.useModuleBasePath();
   sessionStorage.setItem("VisitedCommonPTSearch",true);
   sessionStorage.setItem("VisitedLightCreate",true);
   const isMobile = window.Digit.Utils.browser.isMobile();
@@ -55,19 +55,17 @@ const CreatePropertyForm = ({ config, onSelect,value, userType, redirectUrl }) =
       onSelect('cptNewProperty', { property: formValue });
     } else {
       if(userType === 'employee') {
-        history.push(`${match.path}/save-property?redirectToUrl=${redirectUrl}`, {
+        navigate(`save-property?redirectToUrl=${redirectUrl}`, {
           data: formValue,
           prevState:{...location?.state}
         });
       } else {
-        history.replace(`/upyog-ui/citizen/commonPt/property/citizen-otp`,
-          {
+        navigate(`/upyog-ui/citizen/commonPt/property/citizen-otp`, { replace: true, state: {
             // from: getFromLocation(location.state, searchParams),
             mobileNumber: formValue?.owners?.[0]?.mobileNumber,
             redirectBackTo: '/upyog-ui/citizen/commonPt/property/new-application/save-property',
             redirectData: formValue,
-          }
-        );
+          } });
       }
     }
   }

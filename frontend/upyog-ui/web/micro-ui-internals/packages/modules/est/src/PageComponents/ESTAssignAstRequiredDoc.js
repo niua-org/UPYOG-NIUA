@@ -4,7 +4,7 @@ import {
   CardSubHeader,
   CardText,
   SubmitBar,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 
 /**

@@ -1,4 +1,4 @@
-import { CitizenInfoLabel, RadioButtons } from "@upyog/digit-ui-react-components";
+import { CitizenInfoLabel, RadioButtons } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState } from "react";
 import  FormStep  from "../../../../react-components/src/molecules/FormStep";
 import Timeline from "../components/TLTimeline";

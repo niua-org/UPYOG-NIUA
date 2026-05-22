@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, MobileNumber } from "@upyog/digit-ui-react-components";
+import { TextInput, Label, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -87,8 +87,8 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                       <Label>{t(input.label) + ` ${input.isMendatory ? "*" : ""}`}</Label>
                       {!input.type ? (
                         <Controller
-                          render={(props) => {
-                            return <TextInput onChange={props.onChange} value={props.value} />;
+                          render={({ field }) => {
+                            return <TextInput onChange={field.onChange} value={field.value} />;
                           }}
                           name={input.name}
                           control={control}
@@ -96,9 +96,9 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                         />
                       ) : (
                         <Controller
-                          render={(props) => {
+                          render={({ field }) => {
                             const Comp = fieldComponents?.[input.type];
-                            return <Comp formValue={form} setValue={setValue} onChange={props.onChange} value={props.value} />;
+                            return <Comp formValue={form} setValue={setValue} onChange={field.onChange} value={field.value} />;
                           }}
                           name={input.name}
                           control={control}
@@ -121,7 +121,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
               {type === "desktop" && !mobileView && !isInboxPage && (
                 <div className="search-action-wrapper">
                   <SubmitBar className="submit-bar-search" label={t("ES_COMMON_SEARCH")} submit />
-                  <div style={{ width: "100%", textAlign: "right", width: "240px", textAlign: "right", marginLeft: "96px" }}>
+                  <div style={{ width: "240px", textAlign: "right", marginLeft: "96px" }}>
                     {clearAll()}
                   </div>
                 </div>

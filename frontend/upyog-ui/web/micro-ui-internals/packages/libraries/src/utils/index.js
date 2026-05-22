@@ -410,7 +410,6 @@ const vendorAccess = () => {
 export default {
   pdf: PDFUtil,
   downloadReceipt,
-  downloadBill,
   downloadPDFFromLink,
   downloadBill,
   getFileUrl,

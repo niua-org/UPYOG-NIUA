@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
-//
+import { useLocation } from "react-router-dom";
 import Stepper from "../../../../../../react-components/src/customComponents/Stepper";
 import { config } from "../../../config/citizen/CitizenNDCApplicationConfig";
 import { setNDCStep, updateNDCForm, resetNDCForm } from "../../../redux/actions/NDCFormActions";
-import { CardHeader, Toast } from "@upyog/digit-ui-react-components";
+import { CardHeader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const createEmployeeConfig = [
   {
@@ -55,13 +54,14 @@ const updatedCreateEmployeeconfig = createEmployeeConfig.map((item) => {
 });
 
 export const NewNDCStepForm = () => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [showToast, setShowToast] = useState(null);
   const formState = useSelector((state) => state.ndc.NDCForm);
   const formData = formState.formData;
   const step = formState.step;
+  const location = useLocation();
   // const tenantId = Digit.ULBService.getCurrentTenantId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
@@ -82,15 +82,8 @@ export const NewNDCStepForm = () => {
   const handleSubmit = () => {};
 
   useEffect(() => {
-    const unlisten = history.listen(() => {
-      // route changed
-      dispatch(resetNDCForm());
-      // dispatch(updateNDCForm("reset", {}));
-      // dispatch(setNDCStep(1));
-    });
-
-    return () => unlisten();
-  }, [history, dispatch]);
+    dispatch(resetNDCForm());
+  }, [location.pathname]);
 
   return (
     <div className="employeeCard" >

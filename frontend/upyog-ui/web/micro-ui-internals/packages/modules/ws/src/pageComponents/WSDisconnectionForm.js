@@ -20,9 +20,9 @@ import {
   ActionBar,
   Dropdown,
   InfoIcon
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
-import { useHistory, useRouteMatch } from "react-router-dom";
+import {  useLocation } from "react-router-dom";
 import DisconnectTimeline from "../components/DisconnectTimeline";
 import { stringReplaceAll, createPayloadOfWSDisconnection, updatePayloadOfWSDisconnection, convertDateToEpoch } from "../utils";
 import { addDays, format } from "date-fns";
@@ -34,8 +34,8 @@ const WSDisconnectionForm = ({ t, config, onSelect, userType }) => {
 
   const isMobile = window.Digit.Utils.browser.isMobile();
   const applicationData = Digit.SessionStorage.get("WS_DISCONNECTION");
-  const history = useHistory();
-  const match = useRouteMatch();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const { pathname } = useLocation();
   
   const [disconnectionData, setDisconnectionData] = useState({
       type: applicationData.WSDisconnectionForm ? applicationData.WSDisconnectionForm.type : "",
@@ -175,7 +175,7 @@ const WSDisconnectionForm = ({ t, config, onSelect, userType }) => {
                 },
                 onSuccess: (data, variables) => {
                   Digit.SessionStorage.set("WS_DISCONNECTION", {...applicationData, DisconnectionResponse: data?.WaterConnection?.[0]});
-                  history.push(`/upyog-ui/employee/ws/ws-disconnection-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);                
+                  navigate(`/upyog-ui/employee/ws/ws-disconnection-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);                
                 },
               })
             },
@@ -204,7 +204,7 @@ const WSDisconnectionForm = ({ t, config, onSelect, userType }) => {
                 },
                 onSuccess: (data, variables) => {
                   Digit.SessionStorage.set("WS_DISCONNECTION", {...applicationData, DisconnectionResponse: data?.SewerageConnections?.[0]});
-                  history.push(`/upyog-ui/employee/ws/ws-disconnection-response?applicationNumber=${data?.SewerageConnections?.[0]?.applicationNo}`);              
+                  navigate(`/upyog-ui/employee/ws/ws-disconnection-response?applicationNumber=${data?.SewerageConnections?.[0]?.applicationNo}`);              
                 },
               })
             },
@@ -327,7 +327,7 @@ if(userType === 'citizen') {
                   }, 3000); 
                 }
                 else{
-                  history.push(match.path.replace("application-form", "documents-upload"));
+                  navigate(pathname.replace("application-form", "documents-upload"));
                 }
                 
               }}

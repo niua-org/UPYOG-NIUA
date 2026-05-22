@@ -1,5 +1,5 @@
-import { Banner, Card, Loader, ActionBar, SubmitBar } from "@upyog/digit-ui-react-components";
-import { useQueryClient } from "react-query";
+import { Banner, Card, Loader, ActionBar, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -40,7 +40,7 @@ const Response = (props) => {
     }
   }, []);
 
-  if (mutation.isLoading || mutation.isIdle) {
+  if (mutation.isPending || mutation.isIdle) {
     return <Loader />;
   }
 

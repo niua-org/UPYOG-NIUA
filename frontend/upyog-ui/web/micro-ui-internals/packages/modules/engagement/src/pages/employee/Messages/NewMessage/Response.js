@@ -1,7 +1,7 @@
-import { ActionBar, Banner, Card, CardText, Loader, SubmitBar } from "@upyog/digit-ui-react-components";
+import { ActionBar, Banner, Card, CardText, Loader, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 const BannerPicker = (props) => {
@@ -89,7 +89,7 @@ const Response = (props) => {
     )
   }
 
-  if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
+  if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
     return <Loader />
   }
   return (

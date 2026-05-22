@@ -1,7 +1,7 @@
 import React, { use, useEffect, useState } from "react";
-import { CardLabel, Dropdown, UploadFile, Toast, FormStep, LabelFieldPair, ActionBar } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, UploadFile, Toast, FormStep, LabelFieldPair, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { Loader } from "../components/Loader";
-import EXIF from "exif-js";
+import exifr from "exifr";
 
 /**
  * ChallanDocuments component:
@@ -121,49 +121,51 @@ function PTRSelectDocument({ t, document: doc, setDocuments, setError, documents
 
   const handlePTRSelectDocument = (value) => setSelectedDocument(value);
 
-  function selectfile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  async function selectfile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const fileType = file.type.toLowerCase();
+  const fileType = file.type.toLowerCase();
 
-    // ✅ Case 1: Handle image files with EXIF
-    if (fileType.includes("image/jpeg") || fileType.includes("image/jpg") || fileType.includes("image/png")) {
-      const reader = new FileReader();
-      reader.onload = function () {
-        const img = new Image();
-        img.onload = function () {
-          EXIF.getData(img, function () {
-            const lat = EXIF.getTag(this, "GPSLatitude");
-            const lon = EXIF.getTag(this, "GPSLongitude");
-            const latRef = EXIF.getTag(this, "GPSLatitudeRef") || "N";
-            const lonRef = EXIF.getTag(this, "GPSLongitudeRef") || "E";
+  // ✅ Case 1: Image files (JPEG/JPG/PNG)
+  if (
+    fileType.includes("image/jpeg") ||
+    fileType.includes("image/jpg") ||
+    fileType.includes("image/png")
+  ) {
+    try {
+      let latitude = null;
+      let longitude = null;
 
-            let latitude = null;
-            let longitude = null;
+      // ✅ Extract GPS safely using exifr
+      const gpsData = await exifr.gps(file);
 
-            if (lat && lon) {
-              latitude = convertDMSToDD(lat, latRef);
-              longitude = convertDMSToDD(lon, lonRef);
-            } else {
-              console.warn("⚠️ No GPS data found in image.");
-            }
+      if (gpsData) {
+        latitude = gpsData.latitude || null;
+        longitude = gpsData.longitude || null;
+      } else {
+        console.warn("⚠️ No GPS data found in image");
+      }
 
-            // ✅ Save file + coordinates
-            setFile(file);
-            updateDocument(selectedDocument, { latitude, longitude });
-          });
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
-    // ✅ Case 2: Handle PDFs or other file types
-    else {
+      // ✅ Save file + coordinates
       setFile(file);
-      updateDocument(selectedDocument, {}); // no lat/long
+      updateDocument(selectedDocument, { latitude, longitude });
+
+    } catch (err) {
+      console.warn("EXIF extraction failed:", err);
+
+      // fallback (no crash)
+      setFile(file);
+      updateDocument(selectedDocument, {});
     }
   }
+
+  // ✅ Case 2: PDFs or other file types
+  else {
+    setFile(file);
+    updateDocument(selectedDocument, {});
+  }
+}
 
   // helper function to avoid repeating code
   function updateDocument(selectedDocument, extraFields = {}) {

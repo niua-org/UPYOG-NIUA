@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory, useLocation } from "react-router-dom";
-import { FormComposer } from "@upyog/digit-ui-react-components";
+import { useLocation } from "react-router-dom";
+import { FormComposer } from "@nudmcdgnpm/digit-ui-react-components";
 import NDCSummary from "../../../../pageComponents/NDCSummary";
 import { resetNDCForm } from "../../../../redux/actions/NDCFormActions";
 
 const NDCNewFormSummaryStepThreeEmployee = ({ config, onGoNext, onBackClick, t }) => {
   const dispatch = useDispatch();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = window.localStorage.getItem("CITIZEN.CITY");
   const checkFormData = useSelector((state) => state.ndc.NDCForm.formData || {});
 
@@ -20,7 +20,7 @@ const NDCNewFormSummaryStepThreeEmployee = ({ config, onGoNext, onBackClick, t }
 
       // Check if the API call was successful
       if (res?.isSuccess) {
-        history.push("/upyog-ui/employee/ndc/response/" + res?.response?.Applications?.[0]?.applicationNo);
+        navigate("/upyog-ui/employee/ndc/response/" + res?.response?.Applications?.[0]?.applicationNo);
       } else {
         console.error("Submission failed, not moving to next step.", res?.response);
       }
