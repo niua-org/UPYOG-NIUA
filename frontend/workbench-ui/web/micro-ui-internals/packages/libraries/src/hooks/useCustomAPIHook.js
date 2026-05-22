@@ -1,32 +1,50 @@
-import { queryTemplate } from "../common/queryTemplate";
-import { useQueryClient } from "../common/queryClientTemplate";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CustomService } from "../services/elements/CustomService";
 
-/**
- * Custom hook which can gives the privacy functions to access
- *
- * @author jagankumar-egov
- *
- * Feature :: Privacy
- *
- * @example
- *         const { privacy , updatePrivacy } = Digit.Hooks.usePrivacyContext()
- *
- * @returns {Object} Returns the object which contains privacy value and updatePrivacy method
- */
-const useCustomAPIHook = ({ url, params = {}, body = {}, plainAccessRequest = {}, config = {} } = {}) => {
+const useCustomAPIHook = ({
+  url,
+  params,
+  body,
+  config = {},
+  plainAccessRequest,
+  changeQueryName,
+}) => {
   const client = useQueryClient();
-  //api name, querystr, reqbody
-  const { isLoading, data } = queryTemplate({
-    queryKey: ["CUSTOM", url, params, body, plainAccessRequest].filter((e) => e),
-    queryFn: () => CustomService.getResponse({ url, params, body, plainAccessRequest }),
-    config: config,
-  });
-  return {
+
+  const {
     isLoading,
     data,
+    isFetching,
+    refetch,
+    error,
+    isError,
+  } = useQuery({
+    queryKey: [url, changeQueryName, params, body].filter((e) => e),
+    queryFn: () =>
+      CustomService.getResponse({
+        url,
+        params,
+        body,
+        plainAccessRequest,
+      }),
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    ...config,
+  });
+
+  return {
+    isLoading,
+    isFetching,
+    data,
+    error,
+    isError,
+    refetch,
     revalidate: () => {
-      data && client.invalidateQueries({ queryKey: ["CUSTOM", url, params, body, plainAccessRequest] });
+      if (data) {
+        client.invalidateQueries({
+          queryKey: [url, changeQueryName, params, body].filter((e) => e),
+        });
+      }
     },
   };
 };

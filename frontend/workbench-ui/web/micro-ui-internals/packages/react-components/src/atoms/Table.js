@@ -86,7 +86,7 @@ const Table = ({
     onSort(sortBy);
   }, [onSort, sortBy]);
 
-  useEffect(() => setGlobalFilter(onSearch), [onSearch, setGlobalFilter]);
+  useEffect(() => setGlobalFilter(onSearch), [onSearch, setGlobalFilter, data]);
 
   const tref = useRef();
 /*

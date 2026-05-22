@@ -11,7 +11,8 @@ import { Loader } from '../atoms/Loader';
 import NoResultsFound from '../atoms/NoResultsFound';
 import { InfoIcon,EditIcon } from "../atoms/svgindex";
 
-const ResultsTable = ({ tableContainerClass, config,data,isLoading,isFetching,fullConfig,revalidate,additionalConfig }) => {
+const ResultsTable = ({ tableContainerClass, config, data,isLoading,isFetching,fullConfig,revalidate,additionalConfig }) => {
+    
     const {apiDetails} = fullConfig
     const { t } = useTranslation();
     const resultsKey = config.resultsJsonPath
