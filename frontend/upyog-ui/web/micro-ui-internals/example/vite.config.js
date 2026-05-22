@@ -175,7 +175,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const isProd = mode === "production";
 
-  const proxyTarget = env.REACT_APP_PROXY_API || "https://upyog.niua.org";
+  const proxyTarget = env.REACT_APP_PROXY_API || "https://niuatt.niua.in";
   const assetsTarget = env.REACT_APP_PROXY_ASSETS || proxyTarget;
 
   const apiPaths = [
