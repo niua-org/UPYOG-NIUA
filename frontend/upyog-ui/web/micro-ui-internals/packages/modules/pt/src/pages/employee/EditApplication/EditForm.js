@@ -39,6 +39,7 @@ let propertyStructureDetails= {"usageCategory":"","structureType":applicationDat
   };
   sessionStorage.setItem("PropertyInitials",JSON.stringify(defaultValues?.originalData));
 
+  const unitValues = [];
   const onFormValueChange = (setValue, formData, formState) => {
     unitValues.length = 0;
     if (formData?.units && Array.isArray(formData.units)) {

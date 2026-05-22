@@ -19,7 +19,7 @@ const App = () => {
     searchParams: {},
   };
 
- 
+
 
   const CreateProperty = Digit?.ComponentRegistryService?.getComponent("PTCreateProperty");
   const EditProperty = Digit?.ComponentRegistryService?.getComponent("PTEditProperty");
@@ -32,19 +32,20 @@ const App = () => {
   const PropertyInformation = Digit?.ComponentRegistryService?.getComponent("PropertyInformation");
   const PropertyOwnerHistory = Digit?.ComponentRegistryService?.getComponent("PropertyOwnerHistory");
   const AssessmentDetails = Digit?.ComponentRegistryService?.getComponent("PTAssessmentDetails");
- 
+
   return (
-    <span className={"pt-citizen"}style={{width:"100%"}}>
+    <span className={"pt-citizen"} style={{ width: "100%" }}>
       <AppContainer>
         {!shouldHideBackButton(hideBackButtonConfig) ? <BackButton>Back</BackButton> : ""}
         <Routes>
           <Route path={`property/new-application/*`} element={<PrivateRoute><CreateProperty /></PrivateRoute>} />
-          <Route path={`property/edit-application`} element={<PrivateRoute><EditProperty /></PrivateRoute>} />
+          <Route path={`property/edit-application/*`} element={<PrivateRoute><EditProperty /></PrivateRoute>} />
           <Route path={`property/citizen-search`} element={<SearchPropertyComponent />} />
           <Route path={`property/search-results`} element={<SearchResultsComponent />} />
           <Route path={`property/application/:acknowledgementIds/:tenantId`} element={<PrivateRoute><PTApplicationDetails /></PrivateRoute>} />
           <Route path={`property/my-applications`} element={<PrivateRoute><PTMyApplications /></PrivateRoute>} />
           <Route path={`property/my-properties`} element={<PrivateRoute><MyProperties /></PrivateRoute>} />
+          <Route path={`property/my-properties/:offset`} element={<PrivateRoute><MyProperties /></PrivateRoute>} />
           <Route path={`property/my-payments`} element={<PrivateRoute><PTMyPayments /></PrivateRoute>} />
           <Route path={`property/property-mutation/*`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
           <Route path={`property/properties/:propertyIds`} element={<PrivateRoute><PropertyInformation /></PrivateRoute>} />

@@ -128,8 +128,9 @@ const OwnerCitizen = (props) => {
   const { pathname } = useLocation();
   const [owners, setOwners] = Digit.Hooks.useSessionStorage("PT_MUTATE_MULTIPLE_OWNERS", [createOwnerDetails()]);
 
-  const [lastPath, setLastPath] = Digit.Hooks.useSessionStorage("PT_MUTATE_MULTIPLE_OWNERS_LAST_PATH", `/0/${config[0].route}`);
+  const [lastPath, setLastPath] = Digit.Hooks.useSessionStorage("PT_MUTATE_MULTIPLE_OWNERS_LAST_PATH", `0/${config[0].route}`);
   const { path, url } = Digit.Hooks.useModuleBasePath();
+  const parentPath = pathname.split("/multiple-owners")[0] + "/multiple-owners";
 
   const allowMultipleOwners = formData?.ownershipCategory?.code === "INDIVIDUAL.MULTIPLEOWNERS";
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -142,13 +143,14 @@ const OwnerCitizen = (props) => {
     if (!allowMultipleOwners && owners.length > 1) {
       setOwners([owners[0]]);
       onSelect(propsConfig.key, [owners[0]]);
-      navigate(`/0/${config[0].route}`, { replace: true });
+      navigate(`${parentPath}/0/${config[0].route}`, { replace: true });
     }
   }, [allowMultipleOwners]);
 
   useEffect(() => {
-    if (lastPath !== pathname.split(path)[1]) {
-      setLastPath(pathname.split(path)[1]);
+    const relPath = pathname.split("multiple-owners/")[1];
+    if (relPath && lastPath !== relPath) {
+      setLastPath(relPath);
     }
   }, [pathname]);
 
@@ -165,7 +167,7 @@ const OwnerCitizen = (props) => {
   };
 
   useEffect(() => {
-    if (owners.length > prevOwnerLength) navigate(`/${owners.length - 1}/${config[0].route}`);
+    if (owners.length > prevOwnerLength) navigate(`${parentPath}/${owners.length - 1}/${config[0].route}`);
   }, [owners]);
 
   const removeOwner = (owner) => {
@@ -182,7 +184,7 @@ const OwnerCitizen = (props) => {
           return (
             <Route
               key={owner.key}
-               path={`${path}/${index}/*`}
+              path={`${index}/*`}
               element={<OwnerSteps owner={owner} ownerIndex={index} {...commonProps} />}
             />
           );
@@ -190,8 +192,8 @@ const OwnerCitizen = (props) => {
         <Route
           path="*"
           element={
-            pathname != `${lastPath}` && lastPath != "" ? (
-              <Navigate to={`${lastPath}`} replace />
+            pathname.split("multiple-owners/")[1] != `${lastPath}` && lastPath != "" ? (
+              <Navigate to={`${parentPath}/${lastPath}`} replace />
             ) : null
           }
         />
@@ -255,7 +257,7 @@ const OwnerSteps = ({ owner, addNewOwner, removeOwner, setOwners, owners, ownerI
         return (
           <Route
             key={index}
-            path="index"
+            path={`${routeObj.route}/*`}
             element={
               <Component
                 config={routeObj}
@@ -270,9 +272,6 @@ const OwnerSteps = ({ owner, addNewOwner, removeOwner, setOwners, owners, ownerI
           />
         );
       })}
-      {/* <Route>
-        <Navigate to={`/${config[0].route}`} replace />
-      </Route> */}
     </Routes>
   );
 };
