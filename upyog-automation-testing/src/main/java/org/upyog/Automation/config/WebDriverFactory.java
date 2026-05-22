@@ -1,12 +1,12 @@
 package org.upyog.Automation.config;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,71 +20,99 @@ public class WebDriverFactory {
     @Value("${selenium.grid.enabled:false}")
     private boolean gridEnabled;
 
-    // Track active WebDriver instances
-    private static final List<WebDriver> activeDrivers = new ArrayList<>();
+    private static final List<WebDriver> activeDrivers =
+            new ArrayList<>();
 
     public WebDriver createDriver() {
+
         try {
+
             closeAllDrivers();
 
-            ChromeOptions options = new ChromeOptions();
+            ChromeOptions options =
+                    new ChromeOptions();
+
             options.addArguments("--remote-allow-origins=*");
             options.addArguments("--disable-blink-features=AutomationControlled");
             options.addArguments("--start-maximized");
             options.addArguments("--incognito");
 
-            // safer for Docker only (not always needed locally)
             options.addArguments("--no-sandbox");
             options.addArguments("--disable-dev-shm-usage");
 
             WebDriver driver;
 
-            // OVERRIDE from command line if provided
-            boolean isGrid = Boolean.parseBoolean(
-                    System.getProperty("selenium.grid.enabled", String.valueOf(gridEnabled))
-            );
+            boolean isGrid =
+                    Boolean.parseBoolean(
+                            System.getProperty(
+                                    "selenium.grid.enabled",
+                                    String.valueOf(gridEnabled)
+                            )
+                    );
 
-            String url = System.getProperty("selenium.grid.url", gridUrl);
+            String url =
+                    System.getProperty(
+                            "selenium.grid.url",
+                            gridUrl
+                    );
 
             if (isGrid) {
 
-                System.out.println("Running on GRID: " + url);
+                System.out.println(
+                        "Running on GRID: " + url
+                );
 
-                driver = new RemoteWebDriver(new URL(url), options);
+                driver =
+                        new RemoteWebDriver(
+                                new URL(url),
+                                options
+                        );
 
-                // IMPORTANT (file upload support)
                 ((RemoteWebDriver) driver)
-                        .setFileDetector(new org.openqa.selenium.remote.LocalFileDetector());
+                        .setFileDetector(
+                                new org.openqa.selenium.remote.LocalFileDetector()
+                        );
 
             } else {
 
-                System.out.println("Running on LOCAL Chrome");
+                System.out.println(
+                        "Running on LOCAL Chrome"
+                );
 
-                WebDriverManager.chromedriver().setup();
-                driver = new ChromeDriver(options);
+                // Selenium Manager automatically handles driver
+                driver =
+                        new ChromeDriver(options);
             }
 
             activeDrivers.add(driver);
+
             return driver;
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create WebDriver: " + e.getMessage(), e);
+
+            throw new RuntimeException(
+                    "Failed to create WebDriver: "
+                            + e.getMessage(),
+                    e
+            );
         }
     }
 
-    /**
-     * Close all active WebDriver instances
-     */
     public static void closeAllDrivers() {
+
         for (WebDriver driver : activeDrivers) {
+
             try {
+
                 if (driver != null) {
                     driver.quit();
                 }
-            } catch (Exception e) {
-                // Ignore errors when closing
+
+            } catch (Exception ignored) {
+
             }
         }
+
         activeDrivers.clear();
     }
 }

@@ -1,0 +1,227 @@
+{
+  "moduleName":"pgr_citizen_module",
+  "description": "PGR Registration Citizen flow",
+
+  "baseUrl": "${selected.url}",
+
+  "instructions":[
+
+    {
+      "stepName":"Enter Mobile Number",
+      "locatorStrategy":"NAME",
+      "locatorValue":"mobileNumber",
+      "action":"TYPE",
+      "inputValue":"${selected.mobile}",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Accept Terms",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'].form-field",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Click Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+
+
+    {
+      "stepName":"Enter OTP",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input.input-otp",
+      "action":"TYPE_OTP",
+      "inputValue":"${selected.otp}",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Submit OTP",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[@type='submit']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+
+
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action":"SELECT_RADIO_BY_TEXT",
+      "inputValue":"${selected.city}",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"Continue",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Continue')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+
+
+    {
+      "stepName":"Open PGR Module",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pgr-home']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName":"File New Complaint",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pgr/create-complaint/complaint-type']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
+    },
+
+
+
+    {
+      "stepName":"Select Service Category",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:1",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName":"Select Complaint Type",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"1:0",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName":"Select Complaint Subtype",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"2:1",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName":"Complaint Type Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(@class,'submit-bar')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Skip Pin Location",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//span[normalize-space()='Skip and Continue']/parent::*",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Location Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Enter Pincode",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//input[contains(@name,'pincode')]",
+      "action":"TYPE",
+      "inputValue":"143001",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName":"Pincode Next",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Select City",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Delhi']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Select Locality",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Main Road Abadpura']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Address Page Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Enter Landmark",
+      "locatorStrategy":"CSS",
+      "locatorValue":"textarea.card-textarea",
+      "action":"TYPE",
+      "inputValue":"Park is dirty, needs cleaning",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Landmark Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Upload Evidence Photo",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[1]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.png}",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Evidence Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName":"Additional Details",
+      "locatorStrategy":"CSS",
+      "locatorValue":"textarea.card-textarea",
+      "action":"TYPE",
+      "inputValue":"The park is dirty and needs to be cleaned soon."
+    },
+    {
+      "stepName": "Additional Details Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    }
+
+  ]
+}

@@ -1,0 +1,300 @@
+{
+  "moduleName": "cnd_citizen_module",
+  "description": "CnD citizen full workflow",
+
+  "baseUrl": "${selected.cndCitizen.url}",
+
+  "instructions": [
+
+    {
+      "stepName": "Enter Mobile",
+      "locatorStrategy": "NAME",
+      "locatorValue": "mobileNumber",
+      "action": "TYPE",
+      "inputValue": "${selected.mobile}",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Accept Terms",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='checkbox'].form-field",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 500
+    },
+
+    {
+      "stepName": "Click Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Enter OTP",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input.input-otp",
+      "action": "TYPE_OTP",
+      "inputValue": "${selected.otp}",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Submit OTP",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[@type='submit']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+
+    {
+      "stepName": "Select City",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
+      "action": "SELECT_RADIO_BY_TEXT",
+      "inputValue": "${selected.city}",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Continue",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Continue')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Open CnD Module",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[@href='/cnd-ui/citizen/cnd-home']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Open Pickup Request",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[@href='/cnd-ui/citizen/cnd/apply']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Info Page Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Select Pickup Type",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//label[normalize-space()='Request for pick-up']/preceding-sibling::span/input[@type='radio']",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Save Next Pickup",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Save & Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Applicant Name",
+      "locatorStrategy": "NAME",
+      "locatorValue": "applicantName",
+      "action": "TYPE",
+      "inputValue": "Arpit Rao",
+      "dynamicSleep": 500
+    },
+
+    {
+      "stepName": "Applicant Email",
+      "locatorStrategy": "NAME",
+      "locatorValue": "emailId",
+      "action": "TYPE",
+      "inputValue": "Asdj@gmail.com",
+      "dynamicSleep": 500
+    },
+
+    {
+      "stepName": "Applicant Mobile",
+      "locatorStrategy": "NAME",
+      "locatorValue": "mobileNumber",
+      "action": "TYPE",
+      "inputValue": "9999999999",
+      "dynamicSleep": 500
+    },
+
+    {
+      "stepName": "Save Next Applicant",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Property Type",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.select svg.cp",
+      "action": "SELECT_DROPDOWN_BY_INDEX",
+      "inputValue": "0:1",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "House Area",
+      "locatorStrategy": "NAME",
+      "locatorValue": "houseArea",
+      "action": "TYPE",
+      "inputValue": "1600",
+      "dynamicSleep": 500
+    },
+
+    {
+      "stepName": "From Date",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//input[@type='date']",
+      "action": "SET_DATE_TEXT",
+      "inputValue": "0:02-09-1995",
+      "dynamicSleep": 500
+    },
+    {
+      "stepName": "To Date",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//input[@type='date']",
+      "action": "SET_DATE_TODAY",
+      "inputValue": "1",
+      "dynamicSleep": 500
+    },
+    {
+      "stepName": "Construction Type",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.select svg.cp",
+      "action": "SELECT_DROPDOWN_BY_INDEX",
+      "inputValue": "1:3",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Save Next Property",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Open Waste Type Dropdown",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.multi-select-dropdown-wrap div.label",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Select Waste Types",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='checkbox'])",
+      "action": "CLICK_JS",
+      "inputValue": "[2][3]",
+      "dynamicSleep": 500
+    },
+    {
+      "stepName": "Open Waste Type Dropdown",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.multi-select-dropdown-wrap div.label",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Waste Quantity",
+      "locatorStrategy": "NAME",
+      "locatorValue": "wasteQuantity",
+      "action": "TYPE",
+      "inputValue": "10",
+      "dynamicSleep": 500
+    },
+    {
+      "stepName": "Requested Pickup Date",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='date']",
+      "action": "SET_DATE_TODAY",
+      "inputValue": "0",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Upload Site Photo",
+      "locatorStrategy": "XPATH",
+      "locatorValue":"(//input[@type='file'])[1]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Upload Stack Photo",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[2]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.common.proof}",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Save Next Waste",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Save & Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Select First Address Card",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//div[contains(@class,'card') and contains(@style,'cursor: pointer')])[1]",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+
+    {
+      "stepName": "Save Next Address",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Save & Next')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Accept Declaration",
+      "locatorStrategy": "CSS",
+      "locatorValue": "input[type='checkbox']",
+      "action": "CHECK_LAST_CHECKBOX",
+      "inputValue": null,
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Submit Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[.//header[text()='Submit Application']]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 5000
+    },
+    {
+      "stepName": "Capture Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//div[contains(@class,'application-number')]",
+      "action": "CAPTURE_TEXT",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 500
+    }
+
+  ]
+}

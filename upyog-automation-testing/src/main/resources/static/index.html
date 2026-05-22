@@ -22,6 +22,27 @@
         .result { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
         .result.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .result.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        #moduleCheckboxes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.module-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: normal;
+    margin: 0;
+}
+
+.module-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
     </style>
 </head>
 <body>
@@ -54,27 +75,85 @@
                 </div>
                 <div class="form-group">
                     <label>Module Name *</label>
-                    <select name="moduleName" required>
-                        <option value="">Select Module</option>
-                        <option value="STREET_VENDING">Street Vending</option>
-                        <option value="PET_REGISTRATION">Pet Registration</option>
-                        <option value="TRADE_LICENSE">Trade License</option>
-                        <option value="ADVERTISEMENT">Advertisement</option>
-                        <option value="TREE_PRUNING">Tree Pruning</option>
-                        <option value="WATER_TANKER">Water Tanker</option>
-                        <option value="WATER_TANKER_VENDOR">Water Tanker Vendor</option>
-                        <option value="MOBILE_TOILET">Mobile Toilet</option>
-                        <option value="PROPERTY_TAX">Property Tax</option>
-                        <option value="PUBLIC_GRIEVANCE_REDRESSAL">Public Grievance Redressal</option>
-                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM">Online Building Plan Approval System Create</option>
-                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC">Online Building Plan Approval System OC</option>
-                        <option value="EWASTE_MANAGEMENT_SYSTEM">E-Waste</option>
-                        <option value="COMMUNITY_HALL_BOOKING">Community Hall Booking</option>
-                        <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition</option>
-                        <option value="DESLUDGING_SERVICE">Desludging Service</option>
-                        <option value="WATER_AND_SEWERAGE">Water And Sewerage Service</option>
-                        <option value="FIRE_NOC">Fire NOC</option>
-                    </select>
+
+                    <div id="moduleCheckboxes">
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="STREET_VENDING">
+                            <span>Street Vending</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="PET_REGISTRATION">
+                            <span>Pet Registration</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="TRADE_LICENSE">
+                            <span>Trade License</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="PROPERTY_TAX">
+                            <span>Property Tax</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="EWASTE_MANAGEMENT_SYSTEM">
+                            <span>E-Waste</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM">
+                            <span>OBPAS</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="PUBLIC_GRIEVANCE_REDRESSAL">
+                            <span>PGR</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="ADVERTISEMENT">
+                            <span>Advertisement</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="TREE_PRUNING">
+                            <span>Tree Pruning</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="WATER_TANKER">
+                            <span>Water Tanker</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="MOBILE_TOILET">
+                            <span>Mobile Toilet</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="COMMUNITY_HALL_BOOKING">
+                            <span>Community Hall Booking</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="CONSTRUCTION_AND_DEMOLITION">
+                            <span>Construction and Demolition</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="DESLUDGING_SERVICE">
+                            <span>Desludging Service</span>
+                        </label>
+
+                        <label class="module-option">
+                            <input type="checkbox" name="modules" value="WATER_AND_SEWERAGE">
+                            <span>Water and Sewerage</span>
+                        </label>
+
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Mobile Number *</label>
@@ -132,10 +211,12 @@
                 <div class="form-group">
                     <label>Module Name *</label>
                     <select name="moduleName" required>
+
                         <option value="">Select Module</option>
                         <option value="STREET_VENDING">Street Vending</option>
                         <option value="PET_REGISTRATION">Pet Registration</option>
                         <option value="TRADE_LICENSE">Trade License</option>
+                        <option value="TRADE_LICENSE1">Trade License Inbox</option>
                         <option value="ADVERTISEMENT">Advertisement</option>
                         <option value="TREE_PRUNING">Tree Pruning</option>
                         <option value="TREE_PRUNING_VERIFIER">Tree Pruning Verifier</option>
@@ -256,8 +337,19 @@
 
         document.getElementById('citizenForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
+           const formData = new FormData(e.target);
+
+const selectedModules =
+    Array.from(
+        document.querySelectorAll(
+            'input[name="modules"]:checked'
+        )
+    ).map(cb => cb.value);
+
+const data = Object.fromEntries(formData);
+
+// Send comma-separated values to backend
+data.moduleName = selectedModules.join(",");
             
             const resultDiv = document.getElementById('citizenResult');
             resultDiv.style.display = 'block';

@@ -11,13 +11,9 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
-
 public class DriverFactory {
 
     public static WebDriver createChromeDriver() {
-
-        WebDriverManager.chromedriver().setup();
 
         // Grid config
         boolean isGrid = Boolean.parseBoolean(
