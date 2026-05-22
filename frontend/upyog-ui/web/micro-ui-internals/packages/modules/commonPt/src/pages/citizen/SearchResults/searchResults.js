@@ -118,8 +118,7 @@ console.log("result",result)
     }
   });
 
-  const arr = result?.data?.Properties?.filter((e) => e.status === "ACTIVE");
-console.log("arrarr",arr)
+  const arr = isMutation ? result?.data?.Properties?.filter((e) => e.status?.toUpperCase() === "ACTIVE") : result?.data?.Properties;
   const searchResults = arr?.map((property) => {
    
     let addr = property?.address || {};

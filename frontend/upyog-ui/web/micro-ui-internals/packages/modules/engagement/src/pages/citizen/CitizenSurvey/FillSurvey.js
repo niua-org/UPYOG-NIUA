@@ -3,6 +3,7 @@ import  { useState, useEffect } from "react";
 import CitizenSurveyDisplayForm from "../../../components/Surveys/CitizenSurveyDisplayForm";
 import NoSurveyFoundPage from "../../../components/Surveys/NoSurveyFoundPage";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 const transformSurveyResponseData = (data,surveyData) => {
     /**
@@ -38,7 +39,8 @@ const getQuestionID = (key,surveyData) =>{
   return questionId;
 }
 
-const FillSurvey = ({ location }) => {
+const FillSurvey = () => {
+  const location = useLocation();
   //const surveyData = location?.state;
   const user = Digit.UserService.getUser();
   const { applicationNumber: surveyId, tenantId } = Digit.Hooks.useQueryParams();
