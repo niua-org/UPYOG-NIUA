@@ -688,7 +688,7 @@ const ApplicationOverview = () => {
         <ActionBar>
           {displayMenu && (workflowDetails?.data?.actionState?.nextActions || workflowDetails?.data?.nextActions) ? (
             <Menu
-              localeKeyPrefix={`WF_EDdcddcdITRENEWAL`}
+              localeKeyPrefix={`WF_EDITRENEWAL`}
               options={actions}
               optionKey={"action"}
               t={t}

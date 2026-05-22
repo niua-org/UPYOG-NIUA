@@ -190,9 +190,22 @@ export const externalAPIMapping = async function (
     responsePromises.push(resPromise)
   }
 
-  responses = await Promise.all(responsePromises)
+  responses = await Promise.all(responsePromises);
+
   for (let i = 0; i < externalAPIArray.length; i++) {
-    var res = responses[i].data
+  let res = responses[i]?.data;
+
+  
+  if (typeof res === "string") {
+    try {
+      res = JSON.parse(res);
+      console.log("Parsed string response to JSON object");
+    } catch (e) {
+      logger.error("Failed to parse API response");
+      logger.error(e.stack || e);
+    }
+  }
+
 
     //putting required data from external API call in format config
 
