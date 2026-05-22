@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { queryTemplate } from "../../common/queryTemplate";
 
 /**
  * Custom Hook: useChallanGenerationRecieptSearch
@@ -37,9 +37,19 @@ import { useQuery } from "react-query";
  * - Avoid passing unstable objects in the query key to prevent unnecessary re-renders.
  */
 
-export const useChallanGenerationRecieptSearch = ({ tenantId, ...params }, config = {}) => {
-  return useQuery(["challangeneration_Reciept_Search", { tenantId, params }, config], () => Digit.ChallanGenerationService.recieptSearch(tenantId, params), {
-    refetchOnMount: false,
-    ...config,
+export const useChallanGenerationRecieptSearch = (
+  { tenantId, ...params },
+  config = {}
+) => {
+  return queryTemplate({
+    queryKey: ["challanGenerationReceiptSearch", tenantId, params],
+
+    queryFn: () =>
+      Digit.ChallanGenerationService.recieptSearch(tenantId, params),
+
+    config: {
+      refetchOnMount: false,
+      ...config,
+    },
   });
 };

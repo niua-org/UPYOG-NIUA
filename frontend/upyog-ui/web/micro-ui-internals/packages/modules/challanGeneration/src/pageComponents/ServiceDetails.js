@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { CardLabel, LabelFieldPair, Dropdown, TextInput, LinkButton, CardLabelError, MobileNumber, DatePicker, Loader, CardSectionHeader,TextArea } from "@upyog/digit-ui-react-components";
+import React, { useState, useEffect, } from "react";
+import { CardLabel, LabelFieldPair, Dropdown, TextInput, DatePicker, CardSectionHeader,TextArea } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller, useWatch } from "react-hook-form";
-import * as func from "../pages/employee/Utils/Category";
 import { sortDropdownNames } from "../pages/employee/Utils/Sortbyname";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import _ from "lodash";
-import { getUniqueItemsFromArray, commonTransform, stringReplaceAll,getPattern, convertEpochToDate } from "../utils";
+import { stringReplaceAll } from "../utils";
 
 /**
  * ServiceDetails component:

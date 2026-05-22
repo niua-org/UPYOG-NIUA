@@ -1,4 +1,4 @@
-import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, LabelFieldPair, Loader, TextInput, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { stringReplaceAll, getPattern } from "../utils";
 import cloneDeep from "lodash/cloneDeep";
@@ -28,9 +28,29 @@ const WSActivationConnectionDetails = ({ config, onSelect, userType, formData, s
     const { t } = useTranslation();
     const { pathname } = useLocation();
     const filters = func.getQueryStringParams(location.search);
-    const [connectionDetails, setConnectionDetails] = window.location.href.includes("modify") ? useState(
-         formData?.connectionDetails ? [formData?.connectionDetails?.[0]] : [createConnectionDetails(filters?.service?.toUpperCase())]
-    ) : useState(formData?.connectionDetails || [createConnectionDetails(filters?.service?.toUpperCase())]);
+    const defaultConnectionDetails = {
+    key: Date.now(),
+    ...createConnectionDetails(filters?.service?.toUpperCase())
+    };
+
+    const [connectionDetails, setConnectionDetails] =
+        window.location.href.includes("modify")
+            ? useState(
+                formData?.connectionDetails?.[0]
+                    ? [{
+                        ...defaultConnectionDetails,
+                        ...formData.connectionDetails[0]
+                    }]
+                    : [defaultConnectionDetails]
+            )
+            : useState(
+                formData?.connectionDetails?.length
+                    ? formData.connectionDetails.map((item) => ({
+                        ...defaultConnectionDetails,
+                        ...item
+                    }))
+                    : [defaultConnectionDetails]
+            );
     const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
     const tenantId = Digit.ULBService.getCurrentTenantId();
     const stateCode = Digit.ULBService.getStateId();
@@ -119,9 +139,16 @@ const WSActivationConnectionDetails = ({ config, onSelect, userType, formData, s
 
     return (
         <React.Fragment>
-            {connectionDetails.map((connectionDetail, index) => (
-                <ConnectionDetails key={connectionDetail.key} index={index} connectionDetail={connectionDetail} {...commonProps} />
-            ))}
+            {connectionDetails?.map((connectionDetail, index) =>
+                connectionDetail ? (
+                    <ConnectionDetails
+                        key={connectionDetail?.key || index}
+                        index={index}
+                        connectionDetail={connectionDetail}
+                        {...commonProps}
+                    />
+                ) : null
+            )}
         </React.Fragment>
     );
 };
@@ -184,10 +211,11 @@ const ConnectionDetails = (_props) => {
                     // }
                 });
                 if (isErrorsFound) setIsErrors(true);
-                let ob = [{ ...formValue }];
-                // let mcollectFormValue = JSON.parse(sessionStorage.getItem("mcollectFormData"));
-                // mcollectFormValue = { ...mcollectFormValue, ...ob[0] }
-                // sessionStorage.setItem("mcollectFormData", JSON.stringify(mcollectFormValue));
+                let ob = [{
+                    ...connectionDetail,
+                    ...formValue
+                }];
+
                 setConnectionDetails(ob);
                 trigger();
             }
@@ -231,24 +259,24 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.connectionType}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("connectionType")}
                                         disable={false}
                                         option={connectionTypeList}
-                                        errorStyle={(localFormState.touched.connectionType && errors?.connectionType?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.connectionType && errors?.connectionType?.message) ? true : false}
                                         select={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
                             />
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.connectionType ? errors?.connectionType?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.connectionType ? errors?.connectionType?.message : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_SERV_DETAIL_WATER_SOURCE")}`}<span className="check-page-link-button"> *</span></CardLabel>
                             <Controller
@@ -257,13 +285,13 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.waterSource}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("waterSource")}
                                         disable={false}
                                         option={waterSourceList}
-                                        errorStyle={(localFormState.touched.waterSource && errors?.waterSource?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.waterSource && errors?.waterSource?.message) ? true : false}
                                         select={(e) => {
 
 
@@ -274,16 +302,16 @@ const ConnectionDetails = (_props) => {
                                             const listOfSubSource = waterSubSourceData?.filter(data => e?.code?.split(".")[0] == data?.code?.split(".")[0]);
                                             setWaterSubSourceList(listOfSubSource);
 
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
                             />
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.waterSource ? errors?.waterSource?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.waterSource ? errors?.waterSource?.message : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_SERV_DETAIL_WATER_SUB_SOURCE")}`}<span className="check-page-link-button"> *</span></CardLabel>
                             <Controller
@@ -292,24 +320,24 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.sourceSubData}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("sourceSubData")}
                                         disable={false}
                                         option={waterSubSourceList}
-                                        errorStyle={(localFormState.touched.sourceSubData && errors?.sourceSubData?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.sourceSubData && errors?.sourceSubData?.message) ? true : false}
                                         select={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
                             />
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.sourceSubData ? errors?.sourceSubData?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.sourceSubData ? errors?.sourceSubData?.message : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PIPE_SIZE_IN_INCHES_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                             <Controller
@@ -318,24 +346,24 @@ const ConnectionDetails = (_props) => {
                                 defaultValue={connectionDetail?.pipeSize}
                                 rules={{ required: t("REQUIRED_FIELD") }}
                                 isMandatory={true}
-                                render={(props) => (
+                                render={({ field }) => (
                                     <Dropdown
                                         className="form-field"
                                         selected={getValues("pipeSize")}
                                         disable={false}
                                         option={pipeSizeList}
-                                        errorStyle={(localFormState.touched.pipeSize && errors?.pipeSize?.message) ? true : false}
+                                        errorStyle={(localFormState.touchedFields.pipeSize && errors?.pipeSize?.message) ? true : false}
                                         select={(e) => {
-                                            props.onChange(e);
+                                            field.onChange(e);
                                         }}
                                         optionKey="i18nKey"
-                                        onBlur={props.onBlur}
+                                        onBlur={field.onBlur}
                                         t={t}
                                     />
                                 )}
                             />
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.pipeSize ? errors?.pipeSize?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.pipeSize ? errors?.pipeSize?.message : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_SERV_DETAIL_NO_OF_TAPS")}`}<span className="check-page-link-button"> *</span></CardLabel>
                             <div className="field">
@@ -346,24 +374,24 @@ const ConnectionDetails = (_props) => {
                                     rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                     type="number"
                                     isMandatory={true}
-                                    render={(props) => (
+                                    render={({ field }) => (
                                         <TextInput
                                             type="number"
-                                            value={props.value}
+                                            value={field.value}
                                             autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfTaps"}
-                                            errorStyle={(localFormState.touched.noOfTaps && errors?.noOfTaps?.message) ? true : false}
+                                            errorStyle={(localFormState.touchedFields.noOfTaps && errors?.noOfTaps?.message) ? true : false}
                                             onChange={(e) => {
-                                                props.onChange(e.target.value);
+                                                field.onChange(e.target.value);
                                                 setFocusIndex({ index: connectionDetail?.key, type: "noOfTaps" });
                                             }}
                                             labelStyle={{ marginTop: "unset" }}
-                                            onBlur={props.onBlur}
+                                            onBlur={field.onBlur}
                                         />
                                     )}
                                 />
                             </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.noOfTaps ? errors?.noOfTaps?.message : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState.touchedFields.noOfTaps ? errors?.noOfTaps?.message : ""}</CardLabelError>
                     </div>
                         : <div>
                             <LabelFieldPair>
@@ -376,24 +404,24 @@ const ConnectionDetails = (_props) => {
                                         rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         type="number"
                                         isMandatory={true}
-                                        render={(props) => (
+                                    render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 type="number"
                                                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfWaterClosets"}
-                                                errorStyle={(localFormState.touched.noOfWaterClosets && errors?.noOfWaterClosets?.message) ? true : false}
+                                                errorStyle={(localFormState.touchedFields.noOfWaterClosets && errors?.noOfWaterClosets?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: connectionDetail?.key, type: "noOfWaterClosets" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.noOfWaterClosets ? errors?.noOfWaterClosets?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState.touchedFields.noOfWaterClosets ? errors?.noOfWaterClosets?.message : ""}</CardLabelError>
                             <LabelFieldPair>
                                 <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_SERV_DETAIL_NO_OF_TOILETS")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                 <div className="field">
@@ -404,24 +432,24 @@ const ConnectionDetails = (_props) => {
                                         rules={{ validate: (e) => ((e && getPattern("WSOnlyNumbers").test(e)) || !e ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")), required: t("REQUIRED_FIELD") }}
                                         type="number"
                                         isMandatory={true}
-                                        render={(props) => (
+                                        render={({ field }) => (
                                             <TextInput
-                                                value={props.value}
+                                                value={field.value}
                                                 type="number"
                                                 autoFocus={focusIndex.index === connectionDetail?.key && focusIndex.type === "noOfToilets"}
-                                                errorStyle={(localFormState.touched.noOfToilets && errors?.noOfToilets?.message) ? true : false}
+                                                errorStyle={(localFormState.touchedFields.noOfToilets && errors?.noOfToilets?.message) ? true : false}
                                                 onChange={(e) => {
-                                                    props.onChange(e.target.value);
+                                                    field.onChange(e.target.value);
                                                     setFocusIndex({ index: connectionDetail?.key, type: "noOfToilets" });
                                                 }}
                                                 labelStyle={{ marginTop: "unset" }}
-                                                onBlur={props.onBlur}
+                                                onBlur={field.onBlur}
                                             />
                                         )}
                                     />
                                 </div>
                             </LabelFieldPair>
-                            <CardLabelError style={errorStyle}>{localFormState.touched.noOfToilets ? errors?.noOfToilets?.message : ""}</CardLabelError>
+                            <CardLabelError style={errorStyle}>{localFormState.touchedFields.noOfToilets ? errors?.noOfToilets?.message : ""}</CardLabelError>
                         </div>}
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { CardLabel, Dropdown, UploadFile, Toast, Loader, FormStep, LabelFieldPair, CardSubHeader,CardLabelDesc, InfoBannerIcon } from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, UploadFile, Toast, Loader, FormStep, LabelFieldPair, CardSubHeader,CardLabelDesc, InfoBannerIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../components/ASTTimeline";
-import EXIF from 'exif-js';
+import exifr from "exifr";
 
 const NewDocument = ({ t, config, onSelect, formData }) => {
   const [documents, setDocuments] = useState(formData?.documents?.documents || []);
@@ -89,43 +89,38 @@ function ASSETSelectDocument({
     />
   );
 
-  const extractGeoLocation = (file) => {
-    return new Promise((resolve) => {
-      EXIF.getData(file, function () {
-        const lat = EXIF.getTag(this, 'GPSLatitude');
-        const lon = EXIF.getTag(this, 'GPSLongitude');
-        if (lat && lon) {
-          const latDecimal = convertToDecimal(lat);
-          const lonDecimal = convertToDecimal(lon);
-          resolve({ latitude: latDecimal, longitude: lonDecimal });
-        } else {
-          resolve({ latitude: null, longitude: null });
-          // if (doc?.code === "OWNER.ASSETPHOTO") {
-          //   alert("Please upload a photo with location details");
-          // }
-        }
-      });
-    });
-  };
+  const extractGeoLocation = async (file) => {
+  try {
+    const gpsData = await exifr.gps(file);
 
-  const convertToDecimal = (coordinate) => {
-    const degrees = coordinate[0];
-    const minutes = coordinate[1];
-    const seconds = coordinate[2];
-    return degrees + minutes / 60 + seconds / 3600;
-  };
+    if (gpsData?.latitude && gpsData?.longitude) {
+      return {
+        latitude: gpsData.latitude,
+        longitude: gpsData.longitude,
+      };
+    }
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    setFile(file);
-    extractGeoLocation(file).then(({ latitude, longitude }) => {
-      setLatitude(latitude);
-      setLongitude(longitude);
-      if (doc?.code === "OWNER.ASSETPHOTO" && (!latitude || !longitude)) {
-        setError("Please upload a photo with location details");
-      }
-    });
-  };
+    return { latitude: null, longitude: null };
+  } catch (error) {
+    console.warn("EXIF extraction failed:", error);
+    return { latitude: null, longitude: null };
+  }
+};
+
+
+  const handleFileUpload = async (e) => {
+  const file = e.target.files[0];
+  setFile(file);
+
+  const { latitude, longitude } = await extractGeoLocation(file);
+
+  setLatitude(latitude);
+  setLongitude(longitude);
+
+  if (doc?.code === "OWNER.ASSETPHOTO" && (!latitude || !longitude)) {
+    setError("Please upload a photo with location details");
+  }
+};
 
    useEffect(() => {
       (async () => {

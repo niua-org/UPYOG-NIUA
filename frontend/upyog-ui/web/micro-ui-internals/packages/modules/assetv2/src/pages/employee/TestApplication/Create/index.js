@@ -1,20 +1,23 @@
-import { Loader } from "@upyog/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React ,{Fragment}from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
 // import { newAssetConfig } from "../../../../config/Create/newAssetConfig";
 import { assetAllDetailsConfig } from "../../../../config/Create/assetAllDetailsConfig";
+import { Assetdata } from "../../../../utils";
 
 const ASSETCreate = ({ parentRoute }) => {
   const queryClient = useQueryClient();
-  const match = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId();
+  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.asset.useAssetCreateAPI(tenantId);
   let config = [];
-  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("Asset_Test", {});
+  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("AST_CREATE", {});
 
   const goNext = (skipStep, index, isAddMultiple, key) => {    
     let currentPath = pathname.split("/").pop(),
@@ -42,21 +45,21 @@ const ASSETCreate = ({ parentRoute }) => {
     let { nextStep = {} } = config.find((routeObj) => routeObj.route === (currentPath || '0'));
 
 
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
     if (skipStep) {
-      redirectWithHistory = history.replace;
+      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
     }
     if (isAddMultiple) {
       nextStep = key;
     }
     if (nextStep === null) {
-      return redirectWithHistory(`${match.path}/check`);
+      return redirectWithHistory(`check`);
     }
     if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${match.path}/${nextStep}`;
+      nextPage = `${nextStep}`;
     }
      else {
-      nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
+      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
@@ -69,9 +72,17 @@ const ASSETCreate = ({ parentRoute }) => {
       queryClient.invalidateQueries("AST_CREATE");
     }
 
-  const astcreate = async () => {
-    history.push(`${match.path}/acknowledgement`);
-  };
+  const handleSubmit = () => {
+      const formdata = Assetdata(params); 
+      formdata.Asset.tenantId = tenantId;
+      mutation.mutate(formdata, {
+        onSuccess: () => {
+          clearParams();
+          queryClient.invalidateQueries("AST_CREATE");
+          navigate("acknowledgement", { replace: true });
+        },
+      });
+    };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     // setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
@@ -107,28 +118,25 @@ const ASSETCreate = ({ parentRoute }) => {
 
   
   return (
-    <Switch>
+    <Routes>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
-          <Route path={`${match.path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
-          </Route>
+          <Route
+            path={`${routeObj.route}`}
+            key={index}
+            element={
+              <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
+            }
+          />
         );
       })}
 
-      
-      <Route path={`${match.path}/check`}>
-        <CheckPage onSubmit={astcreate} value={params} />
-      </Route>
-      <Route path={`${match.path}/acknowledgement`}>
-        <NewResponse data={params} onSuccess={onSuccess} />
-      </Route>
-      <Route>
-        <Redirect to={`${match.path}/${config.indexRoute}`} />
-      </Route>
-    </Switch>
+      <Route path={`check`} element={<CheckPage onSubmit={handleSubmit} value={params} />} />
+      <Route path={`acknowledgement`} element={<NewResponse data={params} onSuccess={onSuccess} mutation={mutation} />} />
+      <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
+    </Routes>
   );
 };
 

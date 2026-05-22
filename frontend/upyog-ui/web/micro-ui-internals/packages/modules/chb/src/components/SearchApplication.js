@@ -1,7 +1,7 @@
   import React, { useCallback, useMemo, useEffect,useRef,useState } from "react"
   import { useForm, Controller } from "react-hook-form";
-  import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@upyog/digit-ui-react-components";
-  import { Link,useHistory} from "react-router-dom";
+  import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
+  import { Link,  } from "react-router-dom";
   import CHBCancelBooking from "./CHBCancelBooking";
 
   /**
@@ -46,26 +46,28 @@
  * - Displays search results in a table format with pagination and sorting options.
  * - Includes a modal for viewing or managing booking details.
  */
-  const CHBSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+  const CHBSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
     
       const isMobile = window.Digit.Utils.browser.isMobile();
       const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
           defaultValues: {
+              bookingNo: "",
+              communityHallCode: "",
+              status: undefined,
+              mobileNumber: "",
+              fromDate: "",
+              toDate: "",
               offset: 0,
               limit: !isMobile && 10,
               sortBy: "commencementDate",
-              sortOrder: "DESC",
-              fromDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], // Default to one month ago
-              toDate: new Date().toISOString().split('T')[0], // Default to today's date
-              status: { i18nKey: "Booked", code: "BOOKED", value: t("CHB_BOOKED") }
+              sortOrder: "DESC"
           }
       })
       useEffect(() => {
-        register("offset", 0)
-        register("limit", 10)
-        register("sortBy", "commencementDate")
-        register("sortOrder", "DESC")
-        handleSubmit(onSubmit)();
+        register("offset")
+        register("limit")
+        register("sortBy")
+        register("sortOrder")
       },[register])
       const [bookingDetails,setBookingDetails]=useState("");
       const [showModal,setShowModal] = useState(false)
@@ -159,7 +161,7 @@
               Cell: ({ row }) => {
                 const [isMenuOpen, setIsMenuOpen] = useState(false);
                 const menuRef = useRef();
-                const history = useHistory(); // Initialize history
+                const navigate = Digit.Hooks.useCustomNavigate(); // Initialize history
 
                 const toggleMenu = () => {
                   setIsMenuOpen(!isMenuOpen);
@@ -216,7 +218,7 @@
                   if (isSlotBooked) {
                     setShowToast({ error: true, label: t("CHB_COMMUNITY_HALL_ALREADY_BOOKED") });
                   } else {
-                    history.push({
+                    navigate({
                       pathname: `/upyog-ui/employee/payment/collect/${"chb-services"}/${application?.bookingNo}`,
                       state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo,timerValue:result?.data.timerValue ,SlotSearchData:SlotSearchData },
                     });
@@ -307,8 +309,10 @@
           setValue("offset", getValues("offset") + getValues("limit"))
           handleSubmit(onSubmit)()
       }
-      function previousPage () {
-          setValue("offset", getValues("offset") - getValues("limit") )
+     function previousPage () {
+          const currentOffset = getValues("offset");
+          const limit = getValues("limit");
+          setValue("offset", Math.max(0, currentOffset - limit)); // Prevent negative
           handleSubmit(onSubmit)()
       }
       let validation={}
@@ -323,19 +327,30 @@
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
                       <label>{t("CHB_BOOKING_NO")}</label>
-                      <TextInput name="bookingNo" inputRef={register({})} />
+                      <Controller
+                        control={control}
+                        name="bookingNo"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                   </SearchField>
                   <SearchField>
                       <label>{t("CHB_COMMUNITY_HALL_NAME")}</label>
                       <Controller
                               control={control}
                               name="communityHallCode"
-                              render={(props) => (
-
+                              render={({ field }) => (
                                   <Dropdown
-                                  selected={props.value}
-                                  select={props.onChange}
-                                  onBlur={props.onBlur}
+                                  selected={field.value}
+                                  select={field.onChange}
+                                  onBlur={field.onBlur}
                                   option={menu}
                                   optionKey="i18nKey"
                                   t={t}
@@ -350,11 +365,11 @@
                       <Controller
                               control={control}
                               name="status"
-                              render={(props) => (
+                              render={({ field }) => (
                                   <Dropdown
-                                  selected={props.value}
-                                  select={props.onChange}
-                                  onBlur={props.onBlur}
+                                  selected={field.value}
+                                  select={field.onChange}
+                                  onBlur={field.onBlur}
                                   option={statusOptions}
                                   optionKey="i18nKey"
                                   t={t}
@@ -366,33 +381,39 @@
                   </SearchField>
                   <SearchField>
                   <label>{t("CHB_MOBILE_NUMBER")}</label>
-                  <MobileNumber
-                      name="mobileNumber"
-                      inputRef={register({
-                      minLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      maxLength: {
-                          value: 10,
-                          message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                      pattern: {
-                      value: /[6789][0-9]{9}/,
-                      //type: "tel",
-                      message: t("CORE_COMMON_MOBILE_ERROR"),
-                      },
-                  })}
-                  type="number"
-                  componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                  //maxlength={10}
-                  />
+                  <Controller
+                    control={control}
+                    name="mobileNumber"
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
+                />
                   <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                   </SearchField> 
                   <SearchField>
                       <label>{t("FROM_DATE")}</label>
                       <Controller
-                          render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange}  max={new Date().toISOString().split('T')[0]}/>}
+                          render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange}  max={new Date().toISOString().split('T')[0]}/>}
                           name="fromDate"
                           control={control}
                           />
@@ -400,7 +421,7 @@
                   <SearchField>
                       <label>{t("TO_DATE")}</label>
                       <Controller
-                          render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                          render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
                           name="toDate"
                           control={control}
                           />
@@ -423,7 +444,7 @@
                               sortOrder: "DESC"
                           });
                           setShowToast(null);
-                          previousPage();
+                          onClear();
                       }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                   </SearchField>
               </SearchForm>

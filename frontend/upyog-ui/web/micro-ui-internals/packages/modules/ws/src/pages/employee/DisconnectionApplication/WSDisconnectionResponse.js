@@ -1,14 +1,14 @@
-import { Banner, Card, CardText, SubmitBar, ActionBar } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, SubmitBar, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import * as func from "../../../utils"
 import getWSDisconectionAcknowledgementData from "../../../utils/getWSDisconnectionAcknowledgementData"
 
 const WSDisconnectionResponse = (props) => {
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   let filters = func.getQueryStringParams(location.search);
 
   const disconnectionData = Digit.SessionStorage.get("WS_DISCONNECTION");
@@ -20,7 +20,7 @@ const WSDisconnectionResponse = (props) => {
   };
   
   const onSubmit = () => {
-    history.push(`/upyog-ui/employee`);
+    navigate(`/upyog-ui/employee`);
   }
 
   return (

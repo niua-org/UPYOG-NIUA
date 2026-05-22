@@ -11,10 +11,10 @@ import {
   LinkLabel,
   LinkButton,
   StatusTable,
-} from  "@upyog/digit-ui-react-components";
+} from  "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useHistory, useParams } from "react-router-dom";
+import { Link, useParams,  } from "react-router-dom";
 import getPDFData from "../../../utils/getTLAcknowledgementData";
 import TLWFApplicationTimeline from "../../../pageComponents/TLWFApplicationTimeline";
 import TLDocument from "../../../pageComponents/TLDocumets";
@@ -29,7 +29,7 @@ const TLApplicationDetails = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const { tenantId } = useParams();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [bill, setBill] = useState(null);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("CITIZEN_TL_MUTATION_HAPPENED", false);
@@ -109,7 +109,7 @@ const TLApplicationDetails = () => {
   }
 
   if (application?.applicationDetails?.length === 0) {
-    history.goBack();
+    navigate(-1);
   }
 
   const handleDownloadPdf = async () => {
@@ -362,7 +362,7 @@ const TLApplicationDetails = () => {
                     style={{ textAlign: "left" }}
                     label={t("TL_VIEW_PROPERTY_DETAIL")}
                     onClick={() => {
-                      history.push(
+                      navigate(
                         `/upyog-ui/citizen/commonpt/view-property?propertyId=${PTData?.Properties?.[0]?.propertyId}&tenantId=${PTData?.Properties?.[0]?.tenantId}`
                       );
                     }}

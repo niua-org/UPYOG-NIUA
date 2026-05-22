@@ -13,9 +13,9 @@ import {
   EditIcon,
   ViewsIcon,
   DeleteIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { values } from "lodash";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useState, useEffect} from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import BPADocuments from "./BPADocuments";
@@ -68,7 +68,23 @@ function ApplicationDetailsContent({
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   let { id: applicationNo } = useParams(); // Extracts PG-1013-2025-I-001019
-  const { isLoading, isError, data: applicationDetailsofAsset, error } = Digit.Hooks.asset.useAssetApplicationDetail(t, tenantId, applicationNo);
+  const isAssetModule = window.location.href.includes("/asset/");
+  const [applicationDetailsofAsset, setApplicationDetailsofAsset] = useState(null);
+
+  useEffect(() => {
+    if (!isAssetModule) return;
+
+    const fetchAssetDetails = async () => {
+      try {
+        const response = await Digit.AssetService.search(tenantId, { applicationNumber: applicationNo });
+        setApplicationDetailsofAsset(response);
+      } catch (err) {
+        console.error("Failed to fetch asset details", err);
+      }
+    };
+
+    fetchAssetDetails();
+  }, [tenantId, applicationNo]);
 
   function OpenImage(imageSource, index, thumbnailsToShow) {
     window.open(thumbnailsToShow?.fullImage?.[0], "_blank");
@@ -350,7 +366,7 @@ function ApplicationDetailsContent({
 
             {detail?.isTable && (
               <table
-                style={{ tableLayout: "fixed", width: "100%", borderCollapse: "collapse", borderCollapse: "collapse", border: "1px solid black" }}
+                style={{ tableLayout: "fixed", width: "100%", borderCollapse: "collapse", border: "1px solid black" }}
               >
                 <tr style={{ textAlign: "left" }}>
                   {detail?.headers.map((header) => (
@@ -425,7 +441,8 @@ function ApplicationDetailsContent({
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             {/* Show the original value */}
                             <span>{getTextValue(value)}</span>
-                            {applicationDetailsofAsset?.applicationData?.applicationData?.additionalDetails?.geometry ? (
+                            {isAssetModule && (
+                           applicationDetailsofAsset?.applicationData?.applicationData?.additionalDetails?.geometry ? (
                               <button
                                 style={{
                                   backgroundColor: "#a82227",
@@ -457,6 +474,7 @@ function ApplicationDetailsContent({
                               >
                                 {t("Mark on Map")}
                               </button>
+                            )
                             )}
                           </div>
                         }
@@ -685,14 +703,14 @@ function ApplicationDetailsContent({
             </Fragment>
           )}
 
-          {showMapModal && (
+           {isAssetModule && showMapModal && (
             <ViewOnMap
               closeModal={handleCloseMap}
               location={selectedLocation} // pass lat/lng or ID
               assetDetails={applicationDetailsofAsset?.applicationData?.applicationData}
             />
           )}
-          {showMap && (
+          {isAssetModule && showMap && (
             <MarkOnMap
               onGeometrySave={(geoJson) => {
                 setGeometry(geoJson);

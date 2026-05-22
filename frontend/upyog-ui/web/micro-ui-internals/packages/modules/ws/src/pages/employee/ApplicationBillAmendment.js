@@ -19,11 +19,11 @@ import {
   InfoBannerIcon,
   Toast,
   Table
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useEffect, useMemo, useReducer, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useHistory, useLocation } from "react-router-dom";
+import { useLocation,  } from "react-router-dom";
 
 
 
@@ -90,7 +90,7 @@ const ApplicationBillAmendment = () => {
   const WS_ADDITIONAL_AMOUNT = watch("WS_ADDITIONAL_AMOUNT");
   const SW_REDUCED_AMOUNT = watch("SW_REDUCED_AMOUNT");
   const SW_ADDITIONAL_AMOUNT = watch("SW_ADDITIONAL_AMOUNT");
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const uploadFile = async (data, fname, props) => {
     setUploadError("")
     try {
@@ -291,7 +291,7 @@ const ApplicationBillAmendment = () => {
       return
     }
 
-    history.push("/upyog-ui/employee/ws/response", data);
+    navigate("/upyog-ui/employee/ws/response", data);
   };
 
 

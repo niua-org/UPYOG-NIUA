@@ -10,10 +10,10 @@ import {
   Toast,
   MultiLink,
   DownloadBtnCommon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useHistory, useRouteMatch } from "react-router-dom";
+import { useParams, useMatch } from "react-router-dom";
 import { stringReplaceAll, convertEpochToDate } from "./utils";
 import ActionModal from "./components/Modal";
 import { downloadAndPrintChallan, downloadAndPrintReciept } from "./utils";
@@ -34,8 +34,8 @@ const EmployeeChallan = (props) => {
   const [displayMenu, setDisplayMenu] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
-  const history = useHistory();
-  const { url } = useRouteMatch();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const { url } = useMatch();
   const [isDisplayDownloadMenu, setIsDisplayDownloadMenu] = useState(false);
   const [showToast, setShowToast] = useState(null);
 
@@ -44,9 +44,9 @@ const EmployeeChallan = (props) => {
       case "CANCEL_CHALLAN":
         return setShowModal(true);
       case "UPDATE_CHALLAN":
-        return history.push(`/upyog-ui/employee/mcollect/modify-challan/${challanno}`);
+        return navigate(`/upyog-ui/employee/mcollect/modify-challan/${challanno}`);
       case "BUTTON_PAY":
-        return history.push(
+        return navigate(
           `/upyog-ui/employee/payment/collect/${challanDetails?.businessService}/${challanno}/tenantId=${tenantId}?workflow=mcollect`
         );
       default:
@@ -70,7 +70,7 @@ const EmployeeChallan = (props) => {
         if (result.challans && result.challans.length > 0) {
           const challan = result.challans[0];
           let LastModifiedTime = Digit.SessionStorage.set("isMcollectAppChanged", challan.challanNo);
-          history.push(
+          navigate(
             `/upyog-ui/employee/challan-generation/acknowledgement?purpose=challan&status=success&tenantId=${challan?.tenantId}&serviceCategory=${challan.businessService}&challanNumber=${challan.challanNo}&applicationStatus=${challan.applicationStatus}`,
             { from: url }
           );

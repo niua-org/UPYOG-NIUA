@@ -8,17 +8,16 @@ import {
   SubmitBar,
   Loader,
   Dropdown,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 
 // EST Property Allottee Details Component
 // This component allows users to search and view details of property allottees with filtering options based on asset number, allottee name, and allotment status.
 
 const ESTPropertyAllotteeDetails = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -109,7 +108,7 @@ const clearFilters = (event) => {
         Cell: ({ row }) => (
           <span 
             style={{ color: "#a82227", cursor: "pointer", textDecoration: "underline" }}
-            onClick={() => history.push(`/upyog-ui/employee/est/application-details/${row.original.assetNo}`)}
+            onClick={() => navigate(`/upyog-ui/employee/est/application-details/${row.original.assetNo}`)}
           >
             {row.original.assetNo || "N/A"}
           </span>
@@ -143,7 +142,7 @@ const clearFilters = (event) => {
         Cell: ({ row }) => GetCell(row.original.status || "ACTIVE") 
       },
     ],
-    [t, history]
+    [t, navigate]
   );
 
   if (loading) return <Loader />;

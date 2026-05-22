@@ -1,4 +1,4 @@
-import { Card, Header, KeyNote, Loader, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Card, Header, KeyNote, Loader, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -47,19 +47,19 @@ const MyApplications = ({ view }) => {
               <KeyNote keyValue={t("TL_LOCALIZATION_OWNER_NAME")} note={t(ownerNames)} />
               <KeyNote keyValue={t("TL_HOME_SEARCH_RESULTS_APP_STATUS_LABEL")} note={t(application?.TL_HOME_SEARCH_RESULTS_APP_STATUS_LABEL)} />
 
-              <div className="action-button-myapplication" >
-                {/* {application?.Applications?.applicationStatus !== "PENDINGPAYMENT" && ( */}
-                <Link to={`/upyog-ui/citizen/ndc/search/application-overview/${application?.Applications?.applicationNo}`}>
-                  <SubmitBar label={t("CS_VIEW_DETAILS")} />
-                </Link>
-                {/* )} */}
+              <div className="action-button-myapplication">
+                <div style={{ marginBottom: "8px" }}>
+                  <Link to={`/upyog-ui/citizen/ndc/search/application-overview/${application?.Applications?.applicationNo}`}>
+                    <SubmitBar label={t("CS_VIEW_DETAILS")} />
+                  </Link>
+                </div>
 
                 {application?.Applications?.applicationStatus === "PENDINGPAYMENT" && (
-                  <Link to={`/upyog-ui/citizen/payment/collect/NDC/${application?.Applications?.applicationNo}/${tenantId}?tenantId=${tenantId}`}>
-                
+                  <div>
+                    <Link to={`/upyog-ui/citizen/payment/collect/NDC/${application?.Applications?.applicationNo}/${tenantId}?tenantId=${tenantId}`}>
                       <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} />
-                   
-                  </Link>
+                    </Link>
+                  </div>
                 )}
               </div>
             </Card>

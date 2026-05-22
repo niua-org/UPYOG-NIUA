@@ -12,7 +12,7 @@ import {
     RadioButtons,
     Card,
     InfoBannerIcon
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -356,7 +356,7 @@ const OwnerForm = (_props) => {
                                 name={"applicationNo"}
                                 defaultValue={maintenanceDetails?.applicationNo}
 
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         value={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.id))}`}
                                         readOnly // Makes the input field readonly
@@ -377,7 +377,7 @@ const OwnerForm = (_props) => {
                                 name={"applicationNo"}
                                 defaultValue={maintenanceDetails?.applicationNo}
 
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         value={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.applicationNo))}`}
                                         readOnly // Makes the input field readonly
@@ -410,7 +410,7 @@ const OwnerForm = (_props) => {
                                 name={"applicationNo"}
                                 defaultValue={maintenanceDetails?.applicationNo}
 
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         value={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.assetName))}`}
                                         readOnly // Makes the input field readonly
@@ -431,7 +431,7 @@ const OwnerForm = (_props) => {
                                 name={"applicationNo"}
                                 defaultValue={maintenanceDetails?.applicationNo}
 
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         value={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.assetParentCategory))}`}
                                         readOnly // Makes the input field readonly
@@ -458,7 +458,7 @@ const OwnerForm = (_props) => {
                                 name={"applicationNo"}
                                 defaultValue={maintenanceDetails?.applicationNo}
 
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         value={`${t(checkForNA(applicationDetails?.applicationData?.applicationData?.lifeOfAsset))}`}
                                         readOnly // Makes the input field readonly
@@ -507,24 +507,24 @@ const OwnerForm = (_props) => {
                                                 required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                                 validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                             }}
-                                            render={(props) => (
+                                            render={({field}) => (
                                                 <TextInput
-                                                    value={props.value}
+                                                    value={field.value}
                                                     autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "assetWarrantyDescription"}
                                                     onChange={(e) => {
-                                                        props.onChange(e.target.value);
+                                                        field.onChange(e.target.value);
                                                         setFocusIndex({ index: maintenanceDetails.key, type: "assetWarrantyDescription" });
                                                     }}
                                                     onBlur={(e) => {
                                                         setFocusIndex({ index: -1 });
-                                                        props.onBlur(e);
+                                                        field.onBlur(e);
                                                     }}
                                                 />
                                             )}
                                         />
                                     </div>
                                 </LabelFieldPair>
-                                <CardLabelError style={errorStyle}>{localFormState.touched.assetWarrantyDescription ? errors?.assetWarrantyDescription?.message : ""}</CardLabelError> */}
+                                <CardLabelError style={errorStyle}>{localFormState?.touched?.assetWarrantyDescription ? errors?.assetWarrantyDescription?.message : ""}</CardLabelError> */}
 
                                 <LabelFieldPair>
                                     <CardLabel className="card-label-smaller">{t("AST_WARRANTY_DESCRIPTION")} <span style={{ color: "red" }}>*</span></CardLabel>
@@ -537,25 +537,25 @@ const OwnerForm = (_props) => {
                                                 required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                                 validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                             }}
-                                            render={(props) => (
+                                            render={({field}) => (
                                                 <TextArea
                                                     type={"textarea"}
-                                                    value={props.value}
+                                                    value={field.value}
                                                     autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "assetWarrantyDescription"}
                                                     onChange={(e) => {
-                                                        props.onChange(e.target.value);
+                                                        field.onChange(e.target.value);
                                                         setFocusIndex({ index: maintenanceDetails.key, type: "assetWarrantyDescription" });
                                                     }}
                                                     onBlur={(e) => {
                                                         setFocusIndex({ index: -1 });
-                                                        props.onBlur(e);
+                                                        field.onBlur(e);
                                                     }}
                                                 />
                                             )}
                                         />
                                     </div>
                                 </LabelFieldPair>
-                                <CardLabelError style={errorStyle}>{localFormState.touched.assetWarrantyDescription ? errors?.assignedUser?.assetWarrantyDescription : ""}</CardLabelError>
+                                <CardLabelError style={errorStyle}>{localFormState?.touched?.assetWarrantyDescription ? errors?.assignedUser?.assetWarrantyDescription : ""}</CardLabelError>
                             </div>
                         )}
                     {warrantyExp.code === "IN_AMC" &&
@@ -575,25 +575,25 @@ const OwnerForm = (_props) => {
                                                         /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                                 },
                                             }}
-                                            render={(props) => (
+                                            render={({field}) => (
                                                 <TextInput
-                                                    value={props.value}
+                                                    value={field.value}
                                                     // disable={isEditScreen}
                                                     autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "amcDetails"}
                                                     onChange={(e) => {
-                                                        props.onChange(e.target.value);
+                                                        field.onChange(e.target.value);
                                                         setFocusIndex({ index: maintenanceDetails.key, type: "amcDetails" });
                                                     }}
                                                     onBlur={(e) => {
                                                         setFocusIndex({ index: -1 });
-                                                        props.onBlur(e);
+                                                        field.onBlur(e);
                                                     }}
                                                 />
                                             )}
                                         />
                                     </div>
                                 </LabelFieldPair>
-                                <CardLabelError style={errorStyle}>{localFormState.touched.amcDetails ? errors?.amcDetails?.message : ""}</CardLabelError> */}
+                                <CardLabelError style={errorStyle}>{localFormState?.touched?.amcDetails ? errors?.amcDetails?.message : ""}</CardLabelError> */}
 
                                 <LabelFieldPair>
                                     <CardLabel className="card-label-smaller">{t("AST_AMC_DETAILS")} <span style={{ color: "red" }}>*</span> </CardLabel>
@@ -606,25 +606,25 @@ const OwnerForm = (_props) => {
                                                 required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                                 validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                             }}
-                                            render={(props) => (
+                                            render={({field}) => (
                                                 <TextArea
                                                     type={"textarea"}
-                                                    value={props.value}
+                                                    value={field.value}
                                                     autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "amcDetails"}
                                                     onChange={(e) => {
-                                                        props.onChange(e.target.value);
+                                                        field.onChange(e.target.value);
                                                         setFocusIndex({ index: maintenanceDetails.key, type: "amcDetails" });
                                                     }}
                                                     onBlur={(e) => {
                                                         setFocusIndex({ index: -1 });
-                                                        props.onBlur(e);
+                                                        field.onBlur(e);
                                                     }}
                                                 />
                                             )}
                                         />
                                     </div>
                                 </LabelFieldPair>
-                                <CardLabelError style={errorStyle}>{localFormState.touched.amcDetails ? errors?.assignedUser?.amcDetails : ""}</CardLabelError>
+                                <CardLabelError style={errorStyle}>{localFormState?.touched?.amcDetails ? errors?.assignedUser?.amcDetails : ""}</CardLabelError>
 
                             </div>
                         )}
@@ -640,12 +640,12 @@ const OwnerForm = (_props) => {
                             control={control}
                             name={"maintenanceType"}
                             defaultValue={maintenanceDetails?.maintenanceType}
-                            render={(props) => (
+                            render={({field}) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
-                                    select={props.onChange}
-                                    onBlur={props.onBlur}
+                                    selected={field.value}
+                                    select={field.onChange}
+                                    onBlur={field.onBlur}
                                     option={maintenanceOpt}
                                     optionKey="i18nKey"
                                     t={t}
@@ -671,12 +671,12 @@ const OwnerForm = (_props) => {
                                     //   return selectedDate >= today ? true : t("ERR_DATE_MUST_BE_TODAY_OR_FUTURE");
                                     // },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         type="date"
-                                        value={props.value}
+                                        value={field.value}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                         }}
                                     // Remove the max attribute to allow future dates
                                     />
@@ -696,19 +696,19 @@ const OwnerForm = (_props) => {
                             control={control}
                             name={"maintenanceCycle"}
                             defaultValue={maintenanceDetails?.maintenanceCycle}
-                            render={(props) => (
+                            render={({field}) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
+                                    selected={field.value}
                                     select={(value) => {
-                                        props.onChange(value);
-                                        const date = control.getValues("assetMaintenanceDate");
+                                        field.onChange(value);
+                                        const date = getValues("assetMaintenanceDate");
                                         if (date) {
                                             const nextDate = calculateNextDate(date, value);
-                                            control.setValue("assetNextMaintenanceDate", nextDate);
+                                            setValue("assetNextMaintenanceDate", nextDate);
                                         }
                                     }}
-                                    onBlur={props.onBlur}
+                                    onBlur={field.onBlur}
                                     option={maintenanceCycleOpt}
                                     optionKey="i18nKey"
                                     t={t}
@@ -717,7 +717,7 @@ const OwnerForm = (_props) => {
                         />
                     </LabelFieldPair>
 
-                    <CardLabelError style={errorStyle}>{localFormState.touched.maintenanceCycle ? errors?.maintenanceCycle?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.maintenanceCycle ? errors?.maintenanceCycle?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 {t("AST_NEXT_MAINTENANCE_DATE")} <span style={{ color: "red" }}>*</span>
@@ -739,12 +739,12 @@ const OwnerForm = (_props) => {
                                         return selectedDate >= today ? true : t("ERR_DATE_MUST_BE_TODAY_OR_FUTURE");
                                     },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         type="date"
-                                        value={props.value}
+                                        value={field.value}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                         }} s
                                     // Remove the max attribute to allow future dates
                                     />
@@ -764,12 +764,12 @@ const OwnerForm = (_props) => {
                             name={"paymentType"}
                             defaultValue={maintenanceDetails?.paymentType}
 
-                            render={(props) => (
+                            render={({field}) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
-                                    select={props.onChange}
-                                    onBlur={props.onBlur}
+                                    selected={field.value}
+                                    select={field.onChange}
+                                    onBlur={field.onBlur}
                                     option={paymentTypeOpt}
                                     optionKey="i18nKey"
                                     t={t}
@@ -777,7 +777,7 @@ const OwnerForm = (_props) => {
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.paymentType ? errors?.paymentType?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.paymentType ? errors?.paymentType?.message : ""}</CardLabelError>
 
                     {/* <LabelFieldPair>
                         <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -798,25 +798,25 @@ const OwnerForm = (_props) => {
                                             /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                     },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
-                                        value={props.value}
+                                        value={field.value}
                                         // disable={isEditScreen}
                                         autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "costOfMaintenance"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: maintenanceDetails.key, type: "costOfMaintenance" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair> */}
-                    <CardLabelError style={errorStyle}>{localFormState.touched.amcDetails ? errors?.amcDetails?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.amcDetails ? errors?.amcDetails?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_MAINTENANCE_DESCRIPTION")} <span style={{ color: "red" }}>*</span> </CardLabel>
@@ -829,25 +829,25 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextArea
                                         type={"textarea"}
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "description"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: maintenanceDetails.key, type: "description" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.description ? errors?.assignedUser?.description : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.description ? errors?.assignedUser?.description : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_VENDOR")} <span style={{ color: "red" }}>*</span> </CardLabel>
                         <div className="field">
@@ -862,25 +862,25 @@ const OwnerForm = (_props) => {
                                             /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                     },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
-                                        value={props.value}
+                                        value={field.value}
                                         // disable={isEditScreen}
                                         autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "vendor"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: maintenanceDetails.key, type: "vendor" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.vendor ? errors?.vendor?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.vendor ? errors?.vendor?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_PARTS_TO_BE_ADDED")} <span style={{ color: "red" }}>*</span></CardLabel>
@@ -893,25 +893,25 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextArea
                                         type={"textarea"}
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "partsAddedOrReplaced"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: maintenanceDetails.key, type: "partsAddedOrReplaced" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.partsAddedOrReplaced ? errors?.assignedUser?.partsAddedOrReplaced : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.partsAddedOrReplaced ? errors?.assignedUser?.partsAddedOrReplaced : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_SUPPORTING_DOCUMENTS")} <span style={{ color: "red" }}>*</span> </CardLabel>
@@ -919,13 +919,13 @@ const OwnerForm = (_props) => {
                             <Controller
                                 control={control}
                                 name={"supportingDocument"}
-                                render={(props) => (
+                                render={({field}) => (
                                     <UploadFile
                                         id={"supportingDocument"}
                                         onUpload={(e) => handleFileUpload(e, setSupportingDocumentFile)}
                                         onDelete={() => {
                                             setSupportingDocumentFile(null);
-                                            props.onChange(null);
+                                            field.onChange(null);
                                         }}
                                         message={supportingDocumentFile ? `1 ${t(`CS_ACTION_FILEUPLOADED`)}` : t(`CS_ACTION_NO_FILEUPLOADED`)}
                                         accept="image/*, .pdf, .png, .jpeg, .jpg"
@@ -943,13 +943,13 @@ const OwnerForm = (_props) => {
                             <Controller
                                 control={control}
                                 name={"preCondition"}
-                                render={(props) => (
+                                render={({field}) => (
                                     <UploadFile
                                         id={"preCondition"}
                                         onUpload={(file) => handleFileUpload(file, setPreConditionFile)}
                                         onDelete={() => {
                                             setPreConditionFile(null);
-                                            props.onChange(null);
+                                            field.onChange(null);
                                         }}
                                         message={preConditionFile ? `1 ${t(`CS_ACTION_FILEUPLOADED`)}` : t(`CS_ACTION_NO_FILEUPLOADED`)}
                                         accept="image/*, .pdf, .png, .jpeg, .jpg"
@@ -971,25 +971,25 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextArea
                                         type={"textarea"}
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "preConditionRemarks"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: maintenanceDetails.key, type: "preConditionRemarks" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.preConditionRemarks ? errors?.assignedUser?.preConditionRemarks : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.preConditionRemarks ? errors?.assignedUser?.preConditionRemarks : ""}</CardLabelError>
                     <div style={{ backgroundColor: "#f1f3f4", borderRadius: "8px", padding: "20px" }}>
 
 
@@ -999,13 +999,13 @@ const OwnerForm = (_props) => {
                                 <Controller
                                     control={control}
                                     name={"postCondition"}
-                                    render={(props) => (
+                                    render={({field}) => (
                                         <UploadFile
                                             id={"postCondition"}
                                             onUpload={(file) => handleFileUpload(file, setPostConditionFile)}
                                             onDelete={() => {
                                                 setPostConditionFile(null);
-                                                props.onChange(null);
+                                                field.onChange(null);
                                             }}
                                             message={postConditionFile ? `1 ${t(`CS_ACTION_FILEUPLOADED`)}` : t(`CS_ACTION_NO_FILEUPLOADED`)}
                                             accept="image/*, .pdf, .png, .jpeg, .jpg"
@@ -1027,25 +1027,25 @@ const OwnerForm = (_props) => {
                                         required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                         validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                     }}
-                                    render={(props) => (
+                                    render={({field}) => (
                                         <TextArea
                                             type={"textarea"}
-                                            value={props.value}
+                                            value={field.value}
                                             autoFocus={focusIndex.index === maintenanceDetails?.key && focusIndex.type === "postConditionRemarks"}
                                             onChange={(e) => {
-                                                props.onChange(e.target.value);
+                                                field.onChange(e.target.value);
                                                 setFocusIndex({ index: maintenanceDetails.key, type: "postConditionRemarks" });
                                             }}
                                             onBlur={(e) => {
                                                 setFocusIndex({ index: -1 });
-                                                props.onBlur(e);
+                                                field.onBlur(e);
                                             }}
                                         />
                                     )}
                                 />
                             </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.postConditionRemarks ? errors?.assignedUser?.postConditionRemarks : ""}</CardLabelError>
+                        <CardLabelError style={errorStyle}>{localFormState?.touched?.postConditionRemarks ? errors?.assignedUser?.postConditionRemarks : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 {t("AST_IS_LIFE_OF__ASSET_AFFECTED")} <span style={{ color: "red" }}>*</span>
@@ -1077,12 +1077,12 @@ const OwnerForm = (_props) => {
                                             control={control}
                                             name={"assetMaintenanceIncreasedYear"}
                                             defaultValue={maintenanceDetails?.assetMaintenanceIncreasedYear || null}
-                                            render={(props) => (
+                                            render={({field}) => (
                                                 <Dropdown
                                                     className="form-field"
-                                                    selected={props.value}
-                                                    select={props.onChange}
-                                                    onBlur={props.onBlur}
+                                                    selected={field.value}
+                                                    select={field.onChange}
+                                                    onBlur={field.onBlur}
                                                     option={maintenanceIncreasedHandle}
                                                     optionKey="i18nKey"
                                                     t={t}
@@ -1090,7 +1090,7 @@ const OwnerForm = (_props) => {
                                             )}
                                         />
                                     </LabelFieldPair>
-                                    <CardLabelError style={errorStyle}>{localFormState.touched.assetMaintenanceIncreasedYear ? errors?.assetMaintenanceIncreasedYear?.message : ""}</CardLabelError>
+                                    <CardLabelError style={errorStyle}>{localFormState?.touched?.assetMaintenanceIncreasedYear ? errors?.assetMaintenanceIncreasedYear?.message : ""}</CardLabelError>
                                 </div>
                             )}
                     </div>

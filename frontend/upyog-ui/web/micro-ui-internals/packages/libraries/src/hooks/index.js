@@ -299,15 +299,8 @@ import useEditUpdateAPI from "./asset/useEditUpdateAPI";
 import useMaintenanceAPI from "./asset/useMaintenanceAPI";
 import createTokenAPI from "./digiLockerApi/createTokenAPI";
 
-import useSVDoc from "./sv/useSVDoc";
-import useNDCDoc from "./ndc/useNDCDoc";
-import useSvCreateApi from "./sv/useSvCreateApi";
-import useTenantsSV from "./sv/useTenants";
 import useADSSlotSearch from "./ads/useADSSlotSearch";
 import useADSSearch from "./ads/useADSSearch";
-import useSVApplicationDetail from "./sv/useSVApplicationDetail";
-import useSvSearchApplication from "./sv/useSvSearchApplication";
-import useSVApplicationAction from "./sv/useSVApplicationAction";
 import useADSApplicationDetail from "./ads/useADSApplicationDetail";
 import useChbCreateAPI from "./chb/useChbCreateAPI";
 import useADSCreateAPI from "./ads/useADSCreateAPI";
@@ -376,7 +369,10 @@ import useESTBillSearch from "./estate/useESTBillSearch";
 import { useNDCSearchApplication, useNDCSearchApplicationEmployee } from "./ndc/useNDCSearchApplication";
 import useNDCDocumentSearch from "./ndc/useNDCDocumentSearch";
 import useNDCInbox from "./ndc/useInbox";
+import useNDCDoc from "./ndc/useNDCDoc";
 
+import useModuleBasePath from "./useModuleBasePath";
+import useCustomNavigate from "./useCustomNavigate";
 const pgr = {
   useComplaintDetails,
   useComplaintsList,
@@ -427,7 +423,6 @@ const fsm = {
   usePaymentHistory,
   useVendorUpdate,
   useVehicleDetails,
-  useVehicleCreate,
   useVendorCreate,
   useVehicleCreate,
   useUpdateVehicle,
@@ -679,14 +674,7 @@ const asset = {
   useEditUpdateAPI
 };
 
-const sv = {
-  useSVDoc,
-  useSvCreateApi,
-  useTenants: useTenantsSV,
-  useSvSearchApplication,
-  useSVApplicationDetail,
-  useSVApplicationAction
-}
+
 
 const ew = {
   useEWCreateAPI,
@@ -796,7 +784,6 @@ const Hooks = {
   useStore,
   useDocumentSearch,
   useTenants,
-  useInbox: useTLInbox,
   useFeedBackSearch,
   useAccessControl,
   useBillSearch,
@@ -833,7 +820,6 @@ const Hooks = {
   useAudit,
   createTokenAPI,
   asset,
-  sv,
   chb,
   ads,
   ew,
@@ -848,7 +834,9 @@ const Hooks = {
   challangeneration,
   pgrAi,
   useInbox,
-  ndc
+  ndc,
+  useCustomNavigate,
+  useModuleBasePath
 };
 
 export default Hooks;

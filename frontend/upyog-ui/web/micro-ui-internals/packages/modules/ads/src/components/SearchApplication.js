@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useEffect,useRef,useState } from "react"
 import { useForm, Controller } from "react-hook-form";
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@upyog/digit-ui-react-components";
-import { Link,useHistory} from "react-router-dom";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
+import { Link  } from "react-router-dom";
 import ADSCancelBooking from "./ADSCancelBooking";
 
 /** 
@@ -9,26 +9,29 @@ import ADSCancelBooking from "./ADSCancelBooking";
  * It provides search filters like booking number,status, mobile number, and date range.
  * The component also includes ability to view details or cancel bookings.
  */
-const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, count, setShowToast }) => {
   
     const isMobile = window.Digit.Utils.browser.isMobile();
     const { register, control, handleSubmit, setValue, getValues, reset, formState } = useForm({
         defaultValues: {
+            bookingNo: "",
+            applicantName: "",
+            faceArea: undefined,
+            status: undefined,
+            mobileNumber: "",
+            fromDate: "",
+            toDate: "",
             offset: 0,
             limit: !isMobile && 10,
             sortBy: "commencementDate",
-            sortOrder: "DESC",
-            fromDate: new Date().toISOString().split('T')[0], // Default to today's date
-            toDate: new Date().toISOString().split('T')[0], // Default to today's date
-            status: { i18nKey: "Booked", code: "BOOKED", value: t("CHB_BOOKED") }
+            sortOrder: "DESC"
         }
     })
     useEffect(() => {
-      register("offset", 0)
-      register("limit", 10)
-      register("sortBy", "commencementDate")
-      register("sortOrder", "DESC")
-      handleSubmit(onSubmit)();
+      register("offset")
+      register("limit")
+      register("sortBy")
+      register("sortOrder")
     },[register])
     const [bookingDetails,setBookingDetails]=useState("");
     const [showModal,setShowModal] = useState(false)
@@ -115,7 +118,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
             Cell: ({ row }) => {
               const [isMenuOpen, setIsMenuOpen] = useState(false);
               const menuRef = useRef();
-              const history = useHistory(); // Initialize history
+              const navigate = Digit.Hooks.useCustomNavigate(); // Initialize history
 
               const toggleMenu = () => {
                 setIsMenuOpen(!isMenuOpen);
@@ -142,7 +145,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
               };
                 const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
                 let formdata = {
-                  advertisementSlotSearchCriteria:application?.cartDetails.map((item) => ({
+                  advertisementSlotSearchCriteria:application?.cartDetails?.map((item) => ({
                     bookingId: application?.bookingId,
                     addType: item?.addType,
                     bookingStartDate: item?.bookingDate,
@@ -164,14 +167,15 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                       cartDetails:application?.cartDetails,
                     };
                     const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-                    const timerValue=result?.advertisementSlotAvailabiltityDetails[0].timerValue;
+                    const timerValue=result?.advertisementSlotAvailabiltityDetails[0]?.timerValue;
+
                     if (isSlotBooked) {
                       setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
                     } else {
-                      history.push({
-                        pathname: `/upyog-ui/employee/payment/collect/${"adv-services"}/${application?.bookingNo}`,
-                        state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData },
-                      });
+                      navigate(
+                        `/upyog-ui/employee/payment/collect/${"adv-services"}/${application?.bookingNo}`,
+                        { state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo, timerValue:timerValue, SlotSearchData:SlotSearchData } }
+                      );
                     }
                 } catch (error) {
                   setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
@@ -261,10 +265,13 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
         handleSubmit(onSubmit)()
     }
     function previousPage () {
-        setValue("offset", getValues("offset") - getValues("limit") )
-        handleSubmit(onSubmit)()
-    }
-    let validation={}
+          setValue(
+            "offset",
+            Math.max(0, getValues("offset") - getValues("limit"))
+          );
+          handleSubmit(onSubmit)();
+        }
+        let validation = {}
 
     return <React.Fragment>
                 
@@ -276,22 +283,46 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("ADS_BOOKING_NO")}</label>
-                    <TextInput name="bookingNo" inputRef={register({})} />
+                    <Controller
+                        control={control}
+                        name="bookingNo"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                     <label>{t("ADS_APPLICANT_NAME")}</label>
-                    <TextInput  name="applicantName" inputRef={register({})} />
+                    <Controller
+                        control={control}
+                        name="applicantName"
+                        render={({ field }) => (
+                            <TextInput
+                                name={field.name}
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                inputRef={field.ref}
+                            />
+                        )}
+                    />
                 </SearchField>
                 <SearchField>
                     <label>{t("ADS_FACE_AREA")}</label>
                     <Controller
                             control={control}
                             name="faceArea"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={face}
                                 optionKey="i18nKey"
                                 t={t}
@@ -306,11 +337,11 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                     <Controller
                             control={control}
                             name="status"
-                            render={(props) => (
+                            render={({ field }) => (
                                 <Dropdown
-                                selected={props.value}
-                                select={props.onChange}
-                                onBlur={props.onBlur}
+                                selected={field.value}
+                                select={field.onChange}
+                                onBlur={field.onBlur}
                                 option={statusOptions}
                                 optionKey="i18nKey"
                                 t={t}
@@ -322,33 +353,39 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 </SearchField>
                 <SearchField>
                 <label>{t("ADS_MOBILE_NUMBER")}</label>
-                <MobileNumber
+                <Controller
+                    control={control}
                     name="mobileNumber"
-                    inputRef={register({
-                    minLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    maxLength: {
-                        value: 10,
-                        message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                    pattern: {
-                    value: /[6789][0-9]{9}/,
-                    //type: "tel",
-                    message: t("CORE_COMMON_MOBILE_ERROR"),
-                    },
-                })}
-                type="number"
-                componentInFront={<div className="employee-card-input employee-card-input--front">+91</div>}
-                //maxlength={10}
+                    rules={{
+                        minLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        maxLength: {
+                            value: 10,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                        pattern: {
+                            value: /[6789][0-9]{9}/,
+                            message: t("CORE_COMMON_MOBILE_ERROR"),
+                        },
+                    }}
+                    render={({ field }) => (
+                        <MobileNumber
+                            name={field.name}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            inputRef={field.ref}
+                        />
+                    )}
                 />
                 <CardLabelError>{formState?.errors?.["mobileNumber"]?.message}</CardLabelError>
                 </SearchField> 
                 <SearchField>
                     <label>{t("FROM_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange}  max={new Date().toISOString().split('T')[0]}/>}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange}  max={new Date().toISOString().split('T')[0]}/>}
                         name="fromDate"
                         control={control}
                         />
@@ -356,7 +393,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                 <SearchField>
                     <label>{t("TO_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} />}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} />}
                         name="toDate"
                         control={control}
                         />
@@ -380,7 +417,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, data, count, se
                             sortOrder: "DESC"
                         });
                         setShowToast(null);
-                        previousPage();
+                        onClear();
                     }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>

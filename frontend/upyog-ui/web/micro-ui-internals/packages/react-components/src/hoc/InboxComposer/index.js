@@ -16,7 +16,6 @@ import PopUp from "../../atoms/PopUp";
 import { CloseSvg } from "../../atoms/svgindex";
 import MobileComponentDirectory from "./MobileComponentDirectory";
 
-// InboxComposer is a component that composes the inbox UI. It handles the rendering of different components based on the user type and screen size. It also manages the state of the mobile modal and form submissions.
 const InboxComposer = ({
   isInboxLoading,
   PropsForInboxLinks,
@@ -212,12 +211,17 @@ const InboxComposer = ({
               <Loader />
             ) : (
               <div>
-                {propsForInboxTable?.data?.length < 1 ? (
+                {!propsForInboxTable?.data?.length < 1 ? (
                   <Card className="margin-unset text-align-center">
                     {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
                   </Card>
                 ) : (
-                  <Table t={t} {...propsForInboxTable} />
+                  <Table 
+                    t={t} 
+                    {...propsForInboxTable}
+                    data={propsForInboxTable?.data || []}
+                    columns={propsForInboxTable?.columns || []}
+                  />
                 )}
               </div>
             )}
@@ -254,12 +258,17 @@ const InboxComposer = ({
           <Loader />
         ) : (
           <div>
-            {propsForInboxTable?.data?.length < 1 ? (
+            {!propsForInboxTable?.data?.length < 1 ? (
               <Card className="margin-unset text-align-center">
                 {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
               </Card>
             ) : (
-              <Table t={t} {...propsForInboxTable} />
+              <Table 
+                t={t} 
+                {...propsForInboxTable}
+                data={propsForInboxTable?.data || []}
+                columns={propsForInboxTable?.columns || []}
+              />
             )}
           </div>
         )}
@@ -290,12 +299,17 @@ const InboxComposer = ({
         <Loader />
       ) : (
         <div>
-          {!propsForInboxTable?.data || propsForInboxTable?.data?.length < 1 ? (
+          {propsForInboxTable?.data?.length < 1 ? (
             <Card className="margin-unset text-align-center">
               {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
             </Card>
           ) : (
-            <Table t={t} {...propsForInboxTable} />
+            <Table 
+              t={t} 
+              {...propsForInboxTable}
+              data={propsForInboxTable?.data || []}
+              columns={propsForInboxTable?.columns || []}
+            />
           )}
         </div>
       )}

@@ -1,7 +1,6 @@
-import { CitizenHomeCard, PTIcon,ApplicantDetails, AddressDetails } from "@upyog/digit-ui-react-components";
+import { CitizenHomeCard, PTIcon,ApplicantDetails, AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouteMatch } from "react-router-dom";
 import CitizenApp from "./pages";
 import EmployeeApp from "./pages/employee";
 import ServiceTypes from "./components/ServiceTypes";
@@ -31,21 +30,23 @@ const componentsToRegister = {
 
   // Parent component of module
   export const GISModule = ({ stateCode, userType, tenants }) => {
-    const { path, url } = useRouteMatch();
+    const { path, url } = Digit.Hooks.useModuleBasePath();
     const moduleCode = "GIS";
     const language = Digit.StoreData.getCurrentLanguage();
     const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
     addComponentsToRegistry();
     Digit.SessionStorage.set("WT_TENANTS", tenants);
-    useEffect(() =>
-        userType === "employee" &&
+
+// Fetch localization data if the user is an employee if the user type is employee, fetch localization data for the current tenant and language
+    useEffect(() => {
+      if (userType === "employee") {
         Digit.LocalizationService.getLocale({
           modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
           locale: Digit.StoreData.getCurrentLanguage(),
           tenantId: Digit.ULBService.getCurrentTenantId(),
-        }),
-      []
-    );
+        });
+      }
+    }, [userType]);
   
     if (userType === "employee") {
       return <EmployeeApp path={path} url={url} userType={userType} />;

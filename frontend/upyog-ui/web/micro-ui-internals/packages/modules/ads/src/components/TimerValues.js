@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Toast } from "@upyog/digit-ui-react-components";
+import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 
 export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
@@ -14,7 +14,7 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
    
    // Prepare form data for Advertisement Service
    const formdata = {
-    advertisementSlotSearchCriteria: SlotSearchData.map((item) => ({
+    advertisementSlotSearchCriteria: SlotSearchData?.map((item) => ({
       bookingId: "",
       addType: item?.addTypeCode,
       bookingStartDate: item?.bookingDate,

@@ -1,5 +1,3 @@
-import { useQuery, useQueryClient } from "react-query";
-
 /**
  * Fetches challan generation search results based on filters.
  *
@@ -17,27 +15,39 @@ import { useQuery, useQueryClient } from "react-query";
  * @returns {Object} { isLoading, error, data, revalidate }
  */
 
-const useChallanGenerationSearch = ({ tenantId, filters, isChallanGenerationAppChanged }, config = {}) => {
-  if (filters.status && filters.status.length > 0) {
-    filters.status = filters.status.toString();
-  } else if (filters.status && filters.status.length === 0) {
-    delete filters.status;
-  }
+import { queryTemplate } from "../../common/queryTemplate";
 
-  if (filters.businessService && filters.businessService.length > 0) {
-    filters.businessService = filters.businessService.toString();
-  } else if (filters.businessService && filters.businessService.length === 0) {
-    delete filters.businessService;
-  }
+const useChallanGenerationSearch = (
+  { tenantId, filters, isChallanGenerationAppChanged },
+  config = {}
+) => {
+  const formattedFilters = { ...filters };
 
-  const client = useQueryClient();
-  const args = tenantId ? { tenantId, filters } : { filters };
-  const { isLoading, error, data } = useQuery(
-    ["challanGenerationSearchList", tenantId, filters, isChallanGenerationAppChanged],
-    () => Digit.ChallanGenerationService.search(args),
-    config
-  );
-  return { isLoading, error, data, revalidate: () => client.invalidateQueries(["propertySearchList", tenantId, filters]) };
+  if (formattedFilters?.status?.length > 0)
+    formattedFilters.status = formattedFilters.status.toString();
+  else delete formattedFilters.status;
+
+  if (formattedFilters?.businessService?.length > 0)
+    formattedFilters.businessService =
+      formattedFilters.businessService.toString();
+  else delete formattedFilters.businessService;
+
+  const args = tenantId
+    ? { tenantId, filters: formattedFilters }
+    : { filters: formattedFilters };
+
+  return queryTemplate({
+    queryKey: [
+      "challanGenerationSearchList",
+      tenantId,
+      formattedFilters,
+      isChallanGenerationAppChanged,
+    ],
+
+    queryFn: () => Digit.ChallanGenerationService.search(args),
+
+    config,
+  });
 };
 
 export default useChallanGenerationSearch;

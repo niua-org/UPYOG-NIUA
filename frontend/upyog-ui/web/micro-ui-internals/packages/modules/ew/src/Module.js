@@ -1,7 +1,6 @@
-import { Header, CitizenHomeCard, PTIcon } from "@upyog/digit-ui-react-components";
+import { Header, CitizenHomeCard, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouteMatch } from "react-router-dom";
 import { TableConfig } from "./config/inbox-table-config";
 import EWCard from "./components/EWCard";
 import EWASTEProductDetails from "./pageComponents/EWASTEProductDetails";
@@ -61,7 +60,7 @@ const addComponentsToRegistry = () => {
 
 // Main module component for EW (E-Waste) module
 export const EWModule = ({ stateCode, userType, tenants }) => {
-  const { path, url } = useRouteMatch(); // Hook to get route match details
+  const { path, url } = Digit.Hooks.useModuleBasePath();
 
   const moduleCode = "EW"; // Module code for E-Waste
   const language = Digit.StoreData.getCurrentLanguage(); // Get current language from store
@@ -69,19 +68,18 @@ export const EWModule = ({ stateCode, userType, tenants }) => {
 
   addComponentsToRegistry(); // Register components
 
-  Digit.SessionStorage.set("EW_TENANTS", tenants); // Store tenant information in session storage
+  Digit.SessionStorage.set("EW_TENANTS", tenants);
 
-  // Effect to load localization for employee user type
-  useEffect(
-    () =>
-      userType === "employee" &&
+// Fetch localization data if the user is an employee if the user type is employee, fetch localization data for the current tenant and language
+  useEffect(() => {
+    if (userType === "employee") {
       Digit.LocalizationService.getLocale({
         modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
         locale: Digit.StoreData.getCurrentLanguage(),
         tenantId: Digit.ULBService.getCurrentTenantId(),
-      }),
-    []
-  );
+      });
+    }
+  }, [userType]);
 
   // Render EmployeeApp for employee user type, otherwise render CitizenApp
   if (userType === "employee") {

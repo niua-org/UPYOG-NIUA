@@ -1,21 +1,21 @@
 import {
   ActionBar, Card, CardLabel, CardSectionHeader, CardText, Header, Loader,
   SubmitBar
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import { useParams,  } from "react-router-dom";
 
 const RequiredDoc = () => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { id } = useParams();
   const [docs, setDocs] = useState([]);
   const { isLoading, data: Documentsob } = Digit.Hooks.pt.usePropertyMDMS(stateId, "PropertyTax", ["MutationDocuments"]);
   const OnSubmit = () => {
-    history.push(`/upyog-ui/employee/pt/property-mutate/${id}`);
+    navigate(`/upyog-ui/employee/pt/property-mutate/${id}`);
   };
 
   useEffect(() => {

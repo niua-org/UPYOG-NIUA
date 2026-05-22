@@ -1,7 +1,6 @@
-import { Header, CitizenHomeCard,CHBIcon } from "@upyog/digit-ui-react-components";
+import { Header, CitizenHomeCard,CHBIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouteMatch } from "react-router-dom";
 
 import CitizenApp from "./pages/citizen";
 import ADSCreate from "./pages/citizen/Create";
@@ -48,7 +47,7 @@ const addComponentsToRegistry = () => {
 
 // Main ADSModule component
 export const ADSModule = ({ stateCode, userType, tenants }) => {
-  const { path, url } = useRouteMatch();
+  const { path, url } = Digit.Hooks.useModuleBasePath();
 
   const moduleCode = "ADS";
   const language = Digit.StoreData.getCurrentLanguage();
@@ -58,17 +57,16 @@ export const ADSModule = ({ stateCode, userType, tenants }) => {
 
   Digit.SessionStorage.set("ADS_TENANTS", tenants);
 
-  // Fetch localization data if the user is an employee
-  useEffect(
-    () =>
-      userType === "employee" &&
+  // Fetch localization data if the user is an employee if the user type is employee, fetch localization data for the current tenant and language
+  useEffect(() => {
+    if (userType === "employee") {
       Digit.LocalizationService.getLocale({
         modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
         locale: Digit.StoreData.getCurrentLanguage(),
         tenantId: Digit.ULBService.getCurrentTenantId(),
-      }),
-    []
-  );
+      });
+    }
+  }, []);
 
   // Render different apps based on user type
   if (userType === "employee") {

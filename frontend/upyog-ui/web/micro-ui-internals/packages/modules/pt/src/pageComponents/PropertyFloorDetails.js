@@ -1,4 +1,4 @@
-import { CardLabel, CitizenInfoLabel, Dropdown, LabelFieldPair, RadioButtons } from "@upyog/digit-ui-react-components";
+import { CardLabel, CitizenInfoLabel, Dropdown, LabelFieldPair, RadioButtons } from "@nudmcdgnpm/digit-ui-react-components";
 import  FormStep  from "../../../../react-components/src/molecules/FormStep";
 import React, { useEffect, useState } from "react";
 import Timeline from "../components/TLTimeline";

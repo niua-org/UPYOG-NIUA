@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CardLabel, Dropdown, UploadFile, Toast, Loader, FormStep, LabelFieldPair,Card,CardSubHeader,CardLabelDesc} from "@upyog/digit-ui-react-components";
+import { CardLabel, Dropdown, UploadFile, Toast, Loader, FormStep, LabelFieldPair,Card,CardSubHeader,CardLabelDesc} from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../components/ADSTimeline";
 import ADSCartAndCancellationPolicyDetails from "../components/ADSCartAndCancellationPolicyDetails";
 import {TimerValues} from "../components/TimerValues";
@@ -24,7 +24,7 @@ const ADSDocumentDetails = ({ t, config, onSelect, userType, formData, setError:
   
 
   const handleSubmit = () => {
-    let cartDetails = value?.cartDetails.map((slot) => {
+    let cartDetails = value?.cartDetails?.map((slot) => {
       return { 
         addType:slot.addTypeCode,
         faceArea:slot.faceAreaCode,
@@ -81,7 +81,7 @@ const ADSDocumentDetails = ({ t, config, onSelect, userType, formData, setError:
       doc.hasDropdown = true;
       
       let isRequired = false;
-      documents.map((data) => {
+      documents?.map((data) => {
         if (doc.required && data?.documentType.includes(doc.code)) isRequired = true;
       });
       if (!isRequired && doc.required) count = count + 1;

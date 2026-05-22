@@ -247,12 +247,6 @@ const Urls = {
     update: "/ewaste-services/ewaste-request/_update",
   },
 
-  sv:{
-    create: "/sv-services/street-vending/_create",
-    search: "/sv-services/street-vending/_search",
-    update: "/sv-services/street-vending/_update",
-    deleteDraft:"/sv-services/street-vending/_deletedraft",
-  },
 
   chb: {
     create: "/chb-services/booking/v1/_create",

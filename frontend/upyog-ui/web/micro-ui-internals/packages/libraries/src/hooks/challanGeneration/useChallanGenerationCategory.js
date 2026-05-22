@@ -1,6 +1,3 @@
-import { useQuery } from "react-query";
-import { MdmsService } from "../../services/elements/MDMS";
-
 /**
  * Fetches challan generation categories from MDMS using React Query.
  *
@@ -16,17 +13,38 @@ import { MdmsService } from "../../services/elements/MDMS";
  * @returns {Object} { Categories, data }
  */
 
+import { queryTemplate } from "../../common/queryTemplate";
+import { MdmsService } from "../../services/elements/MDMS";
+
 const useChallanGenerationCategory = (tenantId, filter, config = {}) => {
+  return queryTemplate({
+    queryKey: ["ChallanGeneration_CATEGORY_SERVICE", tenantId, filter],
 
-const {data} =  useQuery("ChallanGeneration_CATEGORY_SERVICE", () => MdmsService.getPaymentRules(tenantId, filter), config);
-let Categories = [];
-data?.MdmsRes?.BillingService?.BusinessService.map((ob) => {
-  let found = Categories.length>0? Categories?.some(el => el?.code.split(".")[0] === ob.code.split(".")[0]) : false;  
-  if(!found) Categories.push({...ob, i18nkey:`BILLINGSERVICE_BUSINESSSERVICE_${(ob.code.split(".")[0]).toUpperCase()}`})
-})
+    queryFn: () => MdmsService.getPaymentRules(tenantId, filter),
 
-return {Categories, data};
+    select: (data) => {
+      let Categories = [];
+
+      data?.MdmsRes?.BillingService?.BusinessService?.forEach((ob) => {
+        const exists = Categories.some(
+          (el) => el?.code.split(".")[0] === ob.code.split(".")[0]
+        );
+
+        if (!exists) {
+          Categories.push({
+            ...ob,
+            i18nkey: `BILLINGSERVICE_BUSINESSSERVICE_${ob.code
+              .split(".")[0]
+              .toUpperCase()}`,
+          });
+        }
+      });
+
+      return { Categories, data };
+    },
+
+    config,
+  });
 };
-
 
 export default useChallanGenerationCategory;

@@ -1,12 +1,18 @@
-import get from "lodash/get";
+// Before: mixed require() and import, missing .js extensions on local imports
+// Change: replaced require() with ESM import, added .js extensions for Node 22 ESM compatibility
+
+import get from "lodash.get";
 import axios from "axios";
 import {
   getLocalisationkey,
   findLocalisation,
   getDateInRequiredFormat,
   getValue
-} from "./commons";
-import logger from "../config/logger";
+} from "./commons.js";
+import logger from "../config/logger.js";
+
+import jp from "jsonpath";
+
 /**
  *
  * @param {*} key -name of the key used to identify module configs. Provided request URL
@@ -32,7 +38,6 @@ export const externalAPIMapping = async function (
   requestInfo,
   unregisteredLocalisationCodes
 ) {
-  var jp = require("jsonpath");
   var objectOfExternalAPI = getValue(
     jp.query(dataconfig, "$.DataConfigs.mappings.*.mappings.*.externalAPI.*"),
     [],
