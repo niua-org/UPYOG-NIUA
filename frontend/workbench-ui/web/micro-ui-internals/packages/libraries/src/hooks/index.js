@@ -1,6 +1,3 @@
-import { useClearNotifications, useEvents, useNotificationCount } from "./events";
-import useCreateEvent from "./events/useCreateEvent";
-import useUpdateEvent from "./events/useUpdateEvent";
 import { useInitStore } from "./store";
 import useAccessControl from "./useAccessControl";
 import { useApplicationsForBusinessServiceSearch } from "./useApplicationForBillSearch";
@@ -31,16 +28,6 @@ import useUpdateCustom from "./useUpdateCustom";
 
 import useEmployeeSearch from "./useEmployeeSearch";
 
-import useEventDetails from "./events/useEventDetails";
-import useEventInbox from "./events/useEventInbox";
-
-import useSurveyCreate from "./surveys/useCreate";
-import useSurveyDelete from "./surveys/useDelete";
-import useSurveySearch from "./surveys/useSearch";
-import useSurveyShowResults from "./surveys/useShowResults";
-import useSurveySubmitResponse from "./surveys/useSubmitResponse";
-import useSurveyInbox from "./surveys/useSurveyInbox";
-import useSurveyUpdate from "./surveys/useUpdate";
 
 
 
@@ -49,30 +36,8 @@ import useGetHowItWorksJSON from "./useHowItWorksJSON";
 import { usePrivacyContext } from "./usePrivacyContext";
 import useStaticData from "./useStaticData";
 import useCustomNavigate from "./useCustomNavigate";
-import useUpdateSurvey from "./surveys/useUpdate";
-import useServeyCreateDef from "./surveys/useCreateSurvey";
 import useGenderMDMS from "./useGenderMDMS";
 
-const events = {
-  useInbox: useEventInbox,
-  useCreateEvent,
-  useEventDetails,
-  useUpdateEvent,
-};
-
-
-
-const survey = {
-  useCreate: useSurveyCreate,
-  useUpdate: useSurveyUpdate,
-  useDelete: useSurveyDelete,
-  useSearch: useSurveySearch,
-  useSubmitResponse: useSurveySubmitResponse,
-  useShowResults: useSurveyShowResults,
-  useSurveyInbox,
-  useUpdateSurvey: useUpdateSurvey,
-  useServeyCreateDef: useServeyCreateDef
-};
 
 const Hooks = {
   useSessionStorage,
@@ -89,16 +54,11 @@ const Hooks = {
   useApplicationStatusGeneral,
   useModuleTenants,
   useNewInboxGeneral,
-  useEvents,
-  useClearNotifications,
-  useNotificationCount,
   useStore,
   useDocumentSearch,
   useTenants,
   useAccessControl,
   usePrivacyContext,
-  events,
-  survey,
   useGenderMDMS,
   useRouteSubscription,
   useCustomAPIHook,

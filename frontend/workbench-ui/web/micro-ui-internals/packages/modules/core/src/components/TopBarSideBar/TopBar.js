@@ -47,21 +47,6 @@ const TopBar = ({
   let navigate = Digit.Hooks.useCustomNavigate();
   const { pathname } = useLocation();
 
-  const conditionsToDisableNotificationCountTrigger = () => {
-    if (Digit.UserService?.getUser()?.info?.type === "EMPLOYEE") return false;
-    if (Digit.UserService?.getUser()?.info?.type === "CITIZEN") {
-      if (!CitizenHomePageTenantId) return false;
-      else return true;
-    }
-    return false;
-  };
-
-  const { data: { unreadCount: unreadNotificationCount } = {}, isSuccess: notificationCountLoaded } = Digit.Hooks.useNotificationCount({
-    tenantId: CitizenHomePageTenantId,
-    config: {
-      enabled: conditionsToDisableNotificationCountTrigger(),
-    },
-  });
 
   const updateSidebar = () => {
     if (!Digit.clikOusideFired) {
@@ -71,14 +56,6 @@ const TopBar = ({
     }
   };
 
-  function onNotificationIconClick() {
-    navigate(`/workbench-ui/citizen/engagement/notifications`);
-  }
-
-  const urlsToDisableNotificationIcon = (pathname) =>
-    !!Digit.UserService?.getUser()?.access_token
-      ? false
-      : [`/workbench-ui/citizen/select-language`, `/workbench-ui/citizen/select-location`].includes(pathname);
 
   if (CITIZEN) {
     return (
@@ -90,11 +67,7 @@ const TopBar = ({
           logoUrl={stateInfo?.logoUrlWhite}
           onLogout={handleLogout}
           userDetails={userDetails}
-          notificationCount={unreadNotificationCount < 99 ? unreadNotificationCount : 99}
-          notificationCountLoaded={notificationCountLoaded}
           cityOfCitizenShownBesideLogo={t(CitizenHomePageTenantId)}
-          onNotificationIconClick={onNotificationIconClick}
-          hideNotificationIconOnSomeUrlsWhenNotLoggedIn={urlsToDisableNotificationIcon(pathname)}
           changeLanguage={!mobileView ? <ChangeLanguage dropdown={true} /> : null}
         />
       </div>
