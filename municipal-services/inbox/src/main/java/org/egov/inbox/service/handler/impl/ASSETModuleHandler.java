@@ -65,7 +65,7 @@ public class ASSETModuleHandler implements ModuleInboxHandler {
         }
 
         // Add the fetched IDs to the module search criteria and context
-        ctx.getCriteria().getModuleSearchCriteria().put(ACKNOWLEDGEMENT_IDS_PARAM, ids);
+        ctx.getCriteria().getModuleSearchCriteria().put(APPLICATION_NO, ids);
         ctx.addBusinessKeys(ids);
     }
 
@@ -76,7 +76,7 @@ public class ASSETModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public String getApplicationIdParamKey() {
-        return ACKNOWLEDGEMENT_IDS_PARAM;
+        return APPLICATION_NO;
     }
 
     /**
@@ -87,6 +87,6 @@ public class ASSETModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public List<String> paramsToRemove() {
-        return List.of();
+        return List.of(OFFSET_PARAM, STATUS_PARAM);
     }
 }
