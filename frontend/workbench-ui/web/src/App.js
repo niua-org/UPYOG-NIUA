@@ -19,7 +19,11 @@ const initDigitUI = () => {
   initWorkbenchComponents();
 
   window.Digit.Customizations = {
-    commonUiConfig: UICustomizations,
+    ...window.Digit.Customizations,
+    commonUiConfig: {
+      ...window.Digit.Customizations?.commonUiConfig,
+      ...UICustomizations,
+    },
   };
 };
 

@@ -62,17 +62,12 @@ const setupHooks = (HookName, HookFunction, method, isHook = true) => {
 const setupLibraries = (Library, service, method) => {
   window.Digit = window.Digit || {};
   window.Digit[Library] = window.Digit[Library] || {};
-  if (Library === "Customizations" && service === "commonUiConfig") {
-    // Merge UICustomizations directly into Digit.Customizations
-    window.Digit[Library] = { ...window.Digit[Library], ...method };
-  } else {
-    window.Digit[Library][service] = method;
-  }
+  window.Digit[Library][service] = method;
 };
 
 /* To Overide any existing config/middlewares  we need to use similar method */
 const updateCustomConfigs = () => {
-  setupLibraries("Customizations", "commonUiConfig", UICustomizations);
+  setupLibraries("Customizations", "commonUiConfig", { ...window?.Digit?.Customizations?.commonUiConfig, ...UICustomizations });
   setupLibraries("Utils","parsingUtils",{...window?.Digit?.Utils?.parsingUtils,...parsingUtils})
 };
 

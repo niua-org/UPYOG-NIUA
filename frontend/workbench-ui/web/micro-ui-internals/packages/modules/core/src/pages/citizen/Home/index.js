@@ -1,5 +1,5 @@
 import {
-  Calender, CardBasedOptions, CaseIcon, ComplaintIcon, DocumentIcon, HomeIcon, Loader, OBPSIcon, PTIcon, WhatsNewCard
+  Calender, CardBasedOptions, CaseIcon, ComplaintIcon, DocumentIcon, HomeIcon, Loader, OBPSIcon, PTIcon, 
 } from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -11,19 +11,7 @@ const Home = () => {
   const { data: { stateInfo, uiHomePage } = {}, isLoading } = Digit.Hooks.useStore.getInitData();
   let isMobile = window.Digit.Utils.browser.isMobile();
 
-  const conditionsToDisableNotificationCountTrigger = () => {
-    if (Digit.UserService?.getUser()?.info?.type === "EMPLOYEE") return false;
-    if (!Digit.UserService?.getUser()?.access_token) return false;
-    return true;
-  };
 
-  const { data: EventsData, isLoading: EventsDataLoading } = Digit.Hooks.useEvents({
-    tenantId,
-    variant: "whats-new",
-    config: {
-      enabled: conditionsToDisableNotificationCountTrigger(),
-    },
-  });
 
   if (!tenantId) {
     navigate(`/workbench-ui/citizen/select-language`);
@@ -35,7 +23,7 @@ const Home = () => {
   const infoAndUpdatesObj = uiHomePage?.informationAndUpdatesCard;
   const whatsAppBannerWebObj = uiHomePage?.whatsAppBannerDesktop;
   const whatsAppBannerMobObj = uiHomePage?.whatsAppBannerMobile;
-  const whatsNewSectionObj = uiHomePage?.whatsNewSection;
+  
   const redirectURL = uiHomePage?.redirectURL;
   /* configure redirect URL only if it is required to overide the default citizen home screen */
   if (redirectURL) {
@@ -151,19 +139,6 @@ const Home = () => {
           </div>
         )}
 
-        {conditionsToDisableNotificationCountTrigger() ? (
-          EventsDataLoading ? (
-            <Loader />
-          ) : (
-            <div className="WhatsNewSection">
-              <div className="headSection">
-                <h2>{t(whatsNewSectionObj?.headerLabel)}</h2>
-                <p onClick={() => history.push(whatsNewSectionObj?.sideOption?.navigationUrl)}>{t(whatsNewSectionObj?.sideOption?.name)}</p>
-              </div>
-              <WhatsNewCard {...EventsData?.[0]} />
-            </div>
-          )
-        ) : null}
       </div>
     </div>
   );

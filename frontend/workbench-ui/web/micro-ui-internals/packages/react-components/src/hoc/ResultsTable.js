@@ -57,7 +57,7 @@ const ResultsTable = ({ tableContainerClass, config, data,isLoading,isFetching,f
                 }
             }
 
-            if (column.additionalCustomization){
+         if (column.additionalCustomization){
                 return {
                     Header: t(column?.label) || t("ES_COMMON_NA"),
                     accessor:column.jsonPath,

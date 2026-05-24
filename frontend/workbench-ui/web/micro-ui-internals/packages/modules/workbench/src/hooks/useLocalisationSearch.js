@@ -5,12 +5,24 @@ import { LocalisationSearch } from "../utils/LocalisationSearch";
 const useLocalisationSearch = ({url, params, body, config = {}, plainAccessRequest,changeQueryName="Random",state }) => {
   const client = useQueryClient();
   const CustomService = Digit.CustomService
+  const hasAnySearchValue = state?.searchForm && Object.values(state.searchForm).some((v) => {
+    if (v === null || v === undefined || v === "") return false;
+    if (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0) return false;
+    if (Array.isArray(v) && v.length === 0) return false;
+    return true;
+  });
+  const finalEnabled = hasAnySearchValue ;
+  console.log("[useLocalisationSearch] called. hasAnySearchValue:", hasAnySearchValue, "config.enabled:", config?.enabled, "finalEnabled:", finalEnabled, "params:", JSON.stringify(params), "searchForm:", JSON.stringify(state?.searchForm));
   const { isLoading, data, isFetching, refetch, error } = queryTemplate({
-    queryKey: [url, changeQueryName].filter((e) => e),
-    queryFn: () => LocalisationSearch.fetchResults({ url, params, body, plainAccessRequest, state }),
+    queryKey: [url, changeQueryName, state?.searchForm].filter((e) => e),
+    queryFn: () => {
+      console.log("[useLocalisationSearch] >>> queryFn EXECUTING with params:", JSON.stringify(params));
+      return LocalisationSearch.fetchResults({ url, params, body, plainAccessRequest, state });
+    },
     config: {
       cacheTime: 0,
       ...config,
+      enabled: finalEnabled,
     },
   });
 

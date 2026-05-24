@@ -34,7 +34,7 @@ function ApplyWorkflow() {
   const [businessService, setBusinessService] = useState("");
   const [selectedUniqueIdentifier, setSelectedUniqueIdentifier] = useState(null);
   const [jsonData, setJsonData] = useState({});
-  const [workflowOperationData, setWorkflowOperationData] = useState("");
+
   const schemaCodePayload = "WORKFLOW.BusinessServices";
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [isModalOpen, setModalOpen] = useState(false); // State to track modal visibility.
@@ -103,24 +103,24 @@ function ApplyWorkflow() {
 
   console.log("Unique Identifier Data:", data?.uniqueIdentifierData);
 
-  const { dataVal } = Digit.Hooks.useCustomAPIHook({
+  const { data: workflowMdmsResponse } = Digit.Hooks.useCustomAPIHook({
     url: `/${Digit.Hooks.workbench.getMDMSContextPath()}/v1/_search`,
     body: { MdmsCriteria },
     config: {
       select: (dataVal) => {
         console.log("Fetched MDMS Data for Workflow operation:", dataVal);
-        const mappedData = dataVal?.MdmsRes?.["common-masters"]?.WorkbenchWorkflowOperation.map((item) => ({
+        const mappedData = dataVal?.MdmsRes?.["common-masters"]?.WorkbenchWorkflowOperation?.map((item) => ({
           i18nKey: item?.code,
           code: item?.code,
         }));
-        setWorkflowOperationData(mappedData);
+        
         return {
           workflowOperationData: mappedData,
         };
       },
     },
   });
-
+const workflowOperationData = workflowMdmsResponse?.workflowOperationData || [];
   const { isLoading: isApplying } = Digit.Hooks.useCustomAPIHook({
     url: "/apply-workflow/api/v1/_process",
     body: shouldCallApi ? {
@@ -167,9 +167,6 @@ function ApplyWorkflow() {
     setShouldCallApi(true);
   };
 
- useEffect(() => {
-    console.log("workflowOperationData updated:", workflowOperationData);
-  }, [workflowOperationData]);
 
   useEffect(() => {
     if (selectedUniqueIdentifier) {
