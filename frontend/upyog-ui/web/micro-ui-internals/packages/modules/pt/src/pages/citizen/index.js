@@ -32,7 +32,7 @@ const App = () => {
   const PropertyInformation = Digit?.ComponentRegistryService?.getComponent("PropertyInformation");
   const PropertyOwnerHistory = Digit?.ComponentRegistryService?.getComponent("PropertyOwnerHistory");
   const AssessmentDetails = Digit?.ComponentRegistryService?.getComponent("PTAssessmentDetails");
-  console.log("CreateProperty",CreateProperty)
+ 
   return (
     <span className={"pt-citizen"}style={{width:"100%"}}>
       <AppContainer>
@@ -46,7 +46,7 @@ const App = () => {
           <Route path={`property/my-applications`} element={<PrivateRoute><PTMyApplications /></PrivateRoute>} />
           <Route path={`property/my-properties`} element={<PrivateRoute><MyProperties /></PrivateRoute>} />
           <Route path={`property/my-payments`} element={<PrivateRoute><PTMyPayments /></PrivateRoute>} />
-          <Route path={`property/property-mutation`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
+          <Route path={`property/property-mutation/*`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />
           <Route path={`property/properties/:propertyIds`} element={<PrivateRoute><PropertyInformation /></PrivateRoute>} />
           <Route path={`payment-details/:id`} element={<PrivateRoute><PaymentDetails parentRoute={path} /></PrivateRoute>} />
           <Route path={`property/transfer-ownership`} element={<PrivateRoute><MutateProperty /></PrivateRoute>} />

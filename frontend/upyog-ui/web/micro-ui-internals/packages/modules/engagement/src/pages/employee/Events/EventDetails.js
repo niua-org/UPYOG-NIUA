@@ -1,6 +1,7 @@
-import React, { Fragment, useState ,useEffect} from "react";
+import React, { Fragment, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { Header, Card, CardSectionHeader, PDFSvg, Loader, StatusTable, Menu, ActionBar, SubmitBar, Modal, CardText } from "@nudmcdgnpm/digit-ui-react-components";
 import ApplicationDetailsTemplate from "../../../../../templates/ApplicationDetails";
 
@@ -27,20 +28,12 @@ const EventDetails = () => {
   const { id } = useParams();
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
+  const queryClient = useQueryClient();
+  const updateEventMutation = Digit.Hooks.events.useUpdateEvent();
   const [showModal, setShowModal] = useState(false);
   const [displayMenu, setDisplayMenu] = useState(false);
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const { isLoading, data } = Digit.Hooks.events.useEventDetails(tenantId, { ids: id });
-
-  const [mutationHappened, setMutationHappened, clear] = Digit.Hooks.useSessionStorage("EMPLOYEE_EVENT_MUTATION_HAPPENED", false);
-  const [errorInfo, setErrorInfo, clearError] = Digit.Hooks.useSessionStorage("EMPLOYEE_EVENT_ERROR_DATA", false);
-  const [successData, setsuccessData, clearSuccessData] = Digit.Hooks.useSessionStorage("EMPLOYEE_EVENT_MUTATION_SUCCESS_DATA", false);
-
-  useEffect(() => {
-    setMutationHappened(false);
-    clearSuccessData();
-    clearError();
-  }, []);
 
   function onActionSelect(action) {
     // setSelectedAction(action);
@@ -62,7 +55,15 @@ const EventDetails = () => {
         },
       ],
     };
-    navigate("/upyog-ui/employee/engagement/event/response?delete=true", details);
+    updateEventMutation.mutate(details, {
+      onSuccess: (responseData) => {
+        queryClient.clear();
+        navigate("/upyog-ui/employee/engagement/event/response?delete=true", { state: { isSuccess: true, data: responseData } });
+      },
+      onError: (error) => {
+        navigate("/upyog-ui/employee/engagement/event/response?delete=true", { state: { isSuccess: false, error } });
+      }
+    });
   };
 
   return (
@@ -71,8 +72,8 @@ const EventDetails = () => {
       <ApplicationDetailsTemplate
         applicationData={data?.applicationData}
         applicationDetails={data}
-        isLoading={isLoading}
-        isDataLoading={isLoading}
+        isLoading={isLoading || updateEventMutation.isPending}
+        isDataLoading={isLoading || updateEventMutation.isPending}
       // workflowDetails={workflowDetails}
       // businessService={
       //   workflowDetails?.data?.applicationBusinessService

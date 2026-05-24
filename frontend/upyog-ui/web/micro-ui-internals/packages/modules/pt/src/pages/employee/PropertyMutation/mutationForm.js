@@ -9,6 +9,7 @@ const MutationForm = ({ applicationData, tenantId }) => {
   const [canSubmit, setSubmitValve] = useState(false);
 
   const { data: mutationDocs, isLoading } = Digit.Hooks.pt.useMDMS(Digit.ULBService.getStateId(), "PropertyTax", "MutationDocuments");
+  const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, false);
   const defaultValues = {
     originalData: applicationData,
   };
@@ -19,6 +20,7 @@ const MutationForm = ({ applicationData, tenantId }) => {
   useEffect(() => {
     setMutationHappened(false);
     clearSuccessData();
+    sessionStorage.removeItem("EMPLOYEE_MUTATION_TRIGGERED");
   }, []);
 
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -153,8 +155,41 @@ const MutationForm = ({ applicationData, tenantId }) => {
     else {
       submitData.Property.institution=null;
     }
-    navigate("/upyog-ui/employee/pt/response", { replace: true, state: { Property: submitData.Property, key: "UPDATE", action: "SUBMIT" } });
+    mutation.mutate(
+      submitData,
+      {
+        onSuccess: (responseData) => {
+          navigate("/upyog-ui/employee/pt/response", {
+            replace: true,
+            state: {
+              Property: submitData.Property,
+              responseData,
+              isSuccess: true,
+              action: "SUBMIT",
+              key: "UPDATE"
+            }
+          });
+        },
+        onError: (error) => {
+          navigate("/upyog-ui/employee/pt/response", {
+            replace: true,
+            state: {
+              Property: submitData.Property,
+              responseData: null,
+              isSuccess: false,
+              error: error?.response?.data?.Errors?.[0]?.message || error?.message || "Error updating mutation",
+              action: "SUBMIT",
+              key: "UPDATE"
+            }
+          });
+        }
+      }
+    );
   };
+
+  if (isLoading || mutation.isPending) {
+    return <Loader />;
+  }
 
   const configs = newConfigMutate;
 console.log("config", configs);

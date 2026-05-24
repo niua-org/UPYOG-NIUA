@@ -35,6 +35,10 @@ public class StreetVendingSearchCriteria {
 	@JsonProperty("applicationNumber")
 	private String applicationNumber;
 
+	// filter based on multiple application numbers
+	@JsonProperty("applicationNumbers")
+	private List<String> applicationNumbers;
+
 	@JsonProperty("mobileNumber")
 	private String mobileNumber;
 	
