@@ -25,8 +25,8 @@ const TradeLicense = ({ t, config, onSelect, userType, formData }) => {
               ? docs?.map(({ code, dropdownData }, index) => (
                 <div key={index}>
                   <CardSubHeader>{t("TRADELICENSE_" + stringReplaceAll(code, ".", "_") + "_HEADING")}</CardSubHeader>
-                  {dropdownData?.map((dropdownData) => (
-                    <CardText>{t("TRADELICENSE_" + stringReplaceAll(dropdownData?.code, ".", "_") + "_LABEL")}</CardText>
+                  {dropdownData?.map((dropdownData, idx) => (
+                    <CardText key={dropdownData?.code || idx}>{t("TRADELICENSE_" + stringReplaceAll(dropdownData?.code, ".", "_") + "_LABEL")}</CardText>
                   ))}
                 </div>
               ))

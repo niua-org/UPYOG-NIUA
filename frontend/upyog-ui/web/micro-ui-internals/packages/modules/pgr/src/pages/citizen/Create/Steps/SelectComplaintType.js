@@ -125,7 +125,11 @@ const SelectComplaintType = ({ t, config, onSelect, value }) => {
     heading={t("ES_CREATECOMPLAINT_NEW_COMPLAINT")}
     config={config1}
     onSubmit={goNext}
-    isDisabled={Object.keys(complaintType).length === 0 || complaintType === null ? true : false}
+    isDisabled={
+      !complaintType || Object.keys(complaintType).length === 0 ||
+      !subType || !subType.name || subType.name === "" ||
+      !priorityLevel || Object.keys(priorityLevel).length === 0
+    }
     label={"NEXT"}
   />
   );
