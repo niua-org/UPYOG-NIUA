@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 const fieldComponents = {
   date: DatePicker,
   mobileNumber: MobileNumber,
+  dropdown: Dropdown
 //   Locality: (props) => (
 //     <Localities
 //       tenantId={Digit.ULBService.getCurrentTenantId()}
@@ -49,6 +50,23 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
     return isEmpty;
   };
 
+  const stateId = Digit.ULBService.getStateId();
+
+  const { data: petTypeOptions } = Digit.Hooks.useEnabledMDMS(
+    stateId,
+    "PetService",
+    [{ name: "PetType" }],
+    {
+      select: (data) => {
+        return data?.PetService?.PetType?.map((item) => ({
+          i18nKey: `PTR_PET_${item.code}`,
+          code: item.code,
+          name: item.name,
+        }));
+      },
+    }
+  );
+
   const mobileView = innerWidth <= 640;
 
   // useEffect(() => {
@@ -73,23 +91,43 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
   //   });
   // }, [form, formState, setError, clearErrors]);
 
+  
 
+  
   const onSubmitInput = (data) => {
-    if (!data.mobileNumber) {
-      delete data.mobileNumber;
-    }
+  const submitData = { ...data };
 
-    data.delete = [];
+  if (!submitData.mobileNumber) {
+    delete submitData.mobileNumber;
+  }
 
-    searchFields.forEach((field) => {
-      if (!data[field.name]) data.delete.push(field.name);
-    });
+  submitData.delete = [];
 
-    onSearch(data);
-    if (type === "mobile") {
-      onClose();
-    }
-  };
+  searchFields.forEach((field) => {
+  const value = submitData[field.name];
+
+  const isEmpty =
+    value === undefined ||
+    value === null ||
+    value === "" ||
+    (Array.isArray(value) && value.length === 0);
+
+  const isDropdownWithValue =
+    typeof value === "object" &&
+    value !== null &&
+    value.code;
+
+  if (isEmpty && !isDropdownWithValue) {
+    submitData.delete.push(field.name);
+  }
+});
+
+  onSearch(submitData);
+
+  if (type === "mobile") {
+    onClose();
+  }
+};
 
   function clearSearch() {
     const resetValues = searchFields.reduce((acc, field) => ({ ...acc, [field?.name]: "" }), {});
@@ -129,64 +167,84 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
               </div>
             )}
             <div className={"complaint-input-container for-pt " + (!isInboxPage ? "for-search" : "")} style={{ width: "100%", display:"grid" }}>
-              {searchFields
-                ?.filter((e) => true)
-                ?.map((input, index) => (
-                  <div key={input.name} className="input-fields">
-                    {/* <span className={index === 0 ? "complaint-input" : "mobile-input"}> */}
-                    <span className={"mobile-input"}>
-                      <Label>{t(input.label) + ` ${input.isMendatory ? "*" : ""}`}</Label>
-                      {!input.type ? (
-                        <Controller
-                          render={({ field }) => {
-                            return <TextInput onChange={field.onChange} value={field.value} />;
-                          }}
-                          name={input.name}
-                          control={control}
-                          defaultValue={""}
-                        />
-                      ) : (
-                        <Controller
-                          render={({ field }) => {
-                            const Comp = fieldComponents?.[input.type];
-                            return <Comp formValue={form} setValue={setValue} onChange={field.onChange} value={field.value} />;
-                          }}
-                          name={input.name}
-                          control={control}
-                          defaultValue={""}
-                        />
-                      )}
+            {searchFields
+              ?.filter((e) => true)
+              ?.map((input, index) => (
+                <div key={input.name} className="input-fields">
+                  <span className={"mobile-input"}>
+                    <Label>{t(input.label) + ` ${input.isMendatory ? "*" : ""}`}</Label>
+                    {!input.type ? (
+                      <Controller
+                        render={({ field }) => {
+                          return <TextInput onChange={field.onChange} value={field.value} />;
+                        }}
+                        name={input.name}
+                        control={control}
+                        defaultValue={""}
+                      />
+                    ) : input.type === "dropdown" ? (
+                      <Controller
+                        name={input.name}
+                        control={control}
+                        defaultValue={null}
+                        render={({ field }) => (
+                          <Dropdown
+                            selected={
+                              petTypeOptions?.find(
+                                (option) => option.code === field.value
+                              ) || null
+                            }
+                            select={(e) => {
+                              field.onChange(e?.code);
+                            }}
+                            option={petTypeOptions || []}
+                            optionKey="i18nKey"
+                            t={t}
+                            placeholder={t("Select")}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <Controller
+                        render={({ field }) => {
+                          const Comp = fieldComponents?.[input.type];
+                          return <Comp formValue={form} setValue={setValue} onChange={field.onChange} value={field.value} />;
+                        }}
+                        name={input.name}
+                        control={control}
+                        defaultValue={""}
+                      />
+                    )}
+                  </span>
+                  {formState?.dirtyFields?.[input.name] ? (
+                    <span
+                      style={{ fontWeight: "700", color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px", fontSize: "12px" }}
+                      className="inbox-search-form-error"
+                    >
+                      {formState?.errors?.[input.name]?.message}
                     </span>
-                    {formState?.dirtyFields?.[input.name] ? (
-                      <span
-                        style={{ fontWeight: "700", color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px", fontSize: "12px" }}
-                        className="inbox-search-form-error"
-                      >
-                        {formState?.errors?.[input.name]?.message}
-                      </span>
-                    ) : null}
-                  </div>
-                ))}
-
-              {isInboxPage && (
-                <div style={{ gridColumn: "2/3", textAlign: "right", paddingTop: "10px" }} className="input-fields">
-                  <div>{clearAll()}</div>
+                  ) : null}
                 </div>
-              )}
+              ))}
 
-              {type === "desktop" && !mobileView && (
-                <div style={{ maxWidth: "unset", marginLeft: "unset" }} className="search-submit-wrapper">
-                  <SubmitBar
-                    className="submit-bar-search"
-                    label={t("ES_COMMON_SEARCH")}
-                    disabled={!!Object.keys(formState.errors).length}
-                    submit
-                  />
-                  {/* style={{ paddingTop: "16px", textAlign: "center" }} className="clear-search" */}
-                  {!isInboxPage && <div>{clearAll()}</div>}
-                </div>
-              )}
-            </div>
+            {isInboxPage && (
+              <div style={{ gridColumn: "2/3", textAlign: "right", paddingTop: "10px" }} className="input-fields">
+                <div>{clearAll()}</div>
+              </div>
+            )}
+
+            {type === "desktop" && !mobileView && (
+              <div style={{ maxWidth: "unset", marginLeft: "unset" }} className="search-submit-wrapper">
+                <SubmitBar
+                  className="submit-bar-search"
+                  label={t("ES_COMMON_SEARCH")}
+                  disabled={!!Object.keys(formState.errors).length}
+                  submit
+                />
+                {!isInboxPage && <div>{clearAll()}</div>}
+              </div>
+            )}
+          </div>
           </div>
         </div>
         {(type === "mobile" || mobileView) && (

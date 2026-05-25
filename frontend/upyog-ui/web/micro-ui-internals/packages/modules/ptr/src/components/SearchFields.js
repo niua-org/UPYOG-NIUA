@@ -33,6 +33,26 @@ const SearchFields = ({register, control, reset, tenantId, t, formState, setShow
                     <TextInput name="applicationNumber" {...register("applicationNumber")} />
                 </SearchField>
 
+                <SearchField>
+                <label>{t("PTR_PET_TYPE")}</label>
+
+                <Controller
+                    control={control}
+                    name="petType"
+                    render={({ field }) => (
+                    <Dropdown
+                        selected={field.value}
+                        select={(e) => field.onChange(e?.code)}
+                        option={petTypeOptions || []}
+                        optionKey="i18nKey"
+                        t={t}
+                        placeholder={t("PTR_PET_TYPE")}
+                    />
+                    )}
+                />
+                </SearchField>
+
+
                 
                 <SearchField>
                 <label>{t("PTR_OWNER_MOBILE_NO")}</label>

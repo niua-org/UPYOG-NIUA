@@ -35,7 +35,7 @@ const inboxSearchFields = {
     {
       label: "PTR_PET_TYPE",
       name: "petType",
-      // minLength: "10",
+      type: "dropdown",
       roles: [],
     },
     {
