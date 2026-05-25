@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   TextInput,
@@ -27,6 +27,9 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
   });
   const [error, setError] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  useEffect(() => {
+  reset({});
+}, [selectedTab]);
   const mobileView = innerWidth <= 640;
   const FSTP = Digit.UserService.hasAccess("FSM_EMP_FSTPO") || false;
   const watchSearch = watch(["applicationNos", "mobileNumber"]);
@@ -116,13 +119,23 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
         );
       default:
         return (
-          <TextInput
-            {...input}
-            {...register(input.name, {
+          <Controller
+            name={input.name}
+            control={control}
+            defaultValue=""
+            rules={{
               validate: searchValidation,
-            })}
-            watch={watch}
-            shouldUpdate={true}
+            }}
+            render={({ field }) => (
+              <TextInput
+                {...input}
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                ref={field.ref}
+                watch={watch}
+                shouldUpdate={true}
+              />
+            )}
           />
         );
     }
