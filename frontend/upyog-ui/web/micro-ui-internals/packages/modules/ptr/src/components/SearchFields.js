@@ -1,7 +1,7 @@
 import React, {Fragment} from "react"
 import { Controller, useWatch } from "react-hook-form"; // Importing form handling utilities from react-hook-form
  // Importing UI components from digit-ui-react-components library
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header, Menu } from "@nudmcdgnpm/digit-ui-react-components";
 
 /**
  * Component: SearchFields
@@ -43,7 +43,7 @@ const SearchFields = ({register, control, reset, tenantId, t, formState, setShow
                     <Dropdown
                         selected={field.value}
                         select={(e) => field.onChange(e?.code)}
-                        option={petTypeOptions || []}
+                        option={Menu || []}
                         optionKey="i18nKey"
                         t={t}
                         placeholder={t("PTR_PET_TYPE")}
