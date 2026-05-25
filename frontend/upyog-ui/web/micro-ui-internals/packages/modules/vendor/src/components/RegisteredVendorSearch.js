@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   TextInput,
@@ -27,9 +27,6 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
   });
   const [error, setError] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
-  useEffect(() => {
-  reset({});
-}, [selectedTab]);
   const mobileView = innerWidth <= 640;
   const FSTP = Digit.UserService.hasAccess("FSM_EMP_FSTPO") || false;
   const watchSearch = watch(["applicationNos", "mobileNumber"]);
