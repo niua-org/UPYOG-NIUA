@@ -168,11 +168,11 @@ const OwnerForm = (_props) => {
   const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, unregister } = useForm({
     mode: "onChange",
   });
-  console.log("localstate", localFormState)
+
   const formValue = watch();
   const { errors } = localFormState;
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  
+
   // Only set institution fields for non-individual owners
   if (!formData?.ownershipCategory?.code.includes("INDIVIDUAL")) {
     owner["institution"] = { name: owner?.institution?.name ? formValue?.institution?.name : institution?.name };
@@ -223,7 +223,13 @@ const OwnerForm = (_props) => {
   }, [mdmsData, formData?.ownershipCategory]);
 
   useEffect(() => {
-    trigger();
+    // Only trigger validation on mount if the owner is pre-populated (e.g., loaded from formData).
+    // Calling trigger() on a fresh/empty owner immediately marks all required fields as invalid,
+    // which propagates errors to the parent form and blocks the submit button even when
+    // the user has filled all the other form sections correctly.
+    if (owner?.name) {
+      trigger();
+    }
   }, []);
 
   const [part, setPart] = React.useState({});
@@ -236,7 +242,7 @@ const OwnerForm = (_props) => {
       setOwners((prev) => prev.map((o) => (o.key && o.key === owner.key ? { ...o, ...formValue, ..._ownerType } : { ...o })));
     }
   }, [formValue]);
-  
+
   // Clear institution and designation errors for INDIVIDUAL owners
   useEffect(() => {
     if (isIndividualTypeOwner) {
@@ -252,13 +258,13 @@ const OwnerForm = (_props) => {
   //   else if(emailPattern.test(value)){
   //     console.log("condition met")
   //     setErrors("");
-      
-      
+
+
   //   }
   //   else{
   //     setErrors("Email shd be in correct fromat");
-      
-      
+
+
   //   }
   // }
   // const handleEmailChange=(e)=>{
@@ -266,13 +272,13 @@ const OwnerForm = (_props) => {
   //   const value=e.target.value;
   //   setEmail(value);
   //   validateEmail(value);
-      
+
   // }
   // useEffect(() => {
   //   if(email){
   //     validateEmail(email);
   //   }
-    
+
   // }, [email])
 
 
@@ -324,7 +330,7 @@ const OwnerForm = (_props) => {
                   <Controller
                     control={control}
                     name={"institution.name"}
-                    defaultValue={isEditScreen ? ( institution?.name ? institution.name : owner?.name) : null}
+                    defaultValue={isEditScreen ? (institution?.name ? institution.name : owner?.name) : null}
                     rules={{
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: {
@@ -361,11 +367,11 @@ const OwnerForm = (_props) => {
                   defaultValue={
                     isEditScreen
                       ? {
-                          active: true,
-                          code: institution?.type,
-                          i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`,
-                          name: t(`COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`),
-                        }
+                        active: true,
+                        code: institution?.type,
+                        i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`,
+                        name: t(`COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`),
+                      }
                       : null
                   }
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
@@ -398,7 +404,7 @@ const OwnerForm = (_props) => {
                 defaultValue={owner?.name}
                 rules={{
                   required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                 
+
                 }}
                 render={({ field }) => (
                   <TextInput
@@ -448,7 +454,7 @@ const OwnerForm = (_props) => {
           ) : (
             <React.Fragment>
               <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("PT_LANDLINE_NUMBER_FLOATING_LABEL")}{ isIndividualTypeOwner ?"": <span className="check-page-link-button"> *</span>}</CardLabel>
+                <CardLabel className="card-label-smaller">{t("PT_LANDLINE_NUMBER_FLOATING_LABEL")}{isIndividualTypeOwner ? "" : <span className="check-page-link-button"> *</span>}</CardLabel>
                 <div className="field">
                   <Controller
                     control={control}
@@ -458,9 +464,9 @@ const OwnerForm = (_props) => {
                       isIndividualTypeOwner
                         ? {}
                         : {
-                            required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                            validate: { pattern: (e) => (/^[0-9]{11}$/i.test(e) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                          }
+                          required: t("CORE_COMMON_REQUIRED_ERRMSG"),
+                          validate: { pattern: (e) => (/^[0-9]{11}$/i.test(e) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
+                        }
                     }
                     render={({ field }) => (
                       <MobileNumber
@@ -598,7 +604,7 @@ const OwnerForm = (_props) => {
                   <Controller
                     control={control}
                     name={"designation"}
-                    defaultValue={isEditScreen ? ( institution?.designation || "") : null}
+                    defaultValue={isEditScreen ? (institution?.designation || "") : null}
                     rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                     render={({ field }) => (
                       <TextInput
@@ -676,39 +682,42 @@ const OwnerForm = (_props) => {
             </React.Fragment>
           ) : null}
           <div>
-          <LabelFieldPair>
-            <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_EMAIL_ID")}</CardLabel>
-            <div className="field">
-              <Controller
-                control={control}
-                name={"emailId"}
-                defaultValue={owner?.emailId}
-                rules={{ validate: (e) => {
-                    if (!e) return true;
-                    return /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(e) || t("CORE_INVALID_EMAIL_ID_PATTERN")}}
-                }
-                render={({ field }) => (
-                  <TextInput
-                    value={field.value}
-                    disable={isEditScreen}
-                    autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
-                    errorStyle={localFormState.touchedFields.emailId && errors?.emailId?.message ? true : false}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setFocusIndex({ index: owner.key, type: "emailId" });
-                    }}
-                    labelStyle={{ marginTop: "unset" }}
-                    onBlur={field.onBlur}
-                  />
-                )}
-              />
-            </div>
-          </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touchedFields.emailId ? errors?.emailId?.message : ""}</CardLabelError>
+            <LabelFieldPair>
+              <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_EMAIL_ID")}</CardLabel>
+              <div className="field">
+                <Controller
+                  control={control}
+                  name={"emailId"}
+                  defaultValue={owner?.emailId}
+                  rules={{
+                    validate: (e) => {
+                      if (!e) return true;
+                      return /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(e) || t("CORE_INVALID_EMAIL_ID_PATTERN")
+                    }
+                  }
+                  }
+                  render={({ field }) => (
+                    <TextInput
+                      value={field.value}
+                      disable={isEditScreen}
+                      autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
+                      errorStyle={localFormState.touchedFields.emailId && errors?.emailId?.message ? true : false}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setFocusIndex({ index: owner.key, type: "emailId" });
+                      }}
+                      labelStyle={{ marginTop: "unset" }}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
+              </div>
+            </LabelFieldPair>
+            <CardLabelError style={errorStyle}>{localFormState.touchedFields.emailId ? errors?.emailId?.message : ""}</CardLabelError>
           </div>
 
           <LabelFieldPair>
-            <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_CORR_ADDR")}{isIndividualTypeOwner ? "": <span className="check-page-link-button"> *</span> }</CardLabel>
+            <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_CORR_ADDR")}{isIndividualTypeOwner ? "" : <span className="check-page-link-button"> *</span>}</CardLabel>
             <div className="field">
               <Controller
                 control={control}
