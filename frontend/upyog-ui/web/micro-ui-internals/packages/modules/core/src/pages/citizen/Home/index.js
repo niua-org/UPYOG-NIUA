@@ -19,7 +19,8 @@ import { useTranslation } from "react-i18next";
 import {  useLocation } from "react-router-dom";
 import { CitizenSideBar } from "../../../components/TopBarSideBar/SideBar/CitizenSideBar";
 import StaticCitizenSideBar from "../../../components/TopBarSideBar/SideBar/StaticCitizenSideBar";
-import ChatBot from "./ChatBot";
+// import ChatBot from "./ChatBot";
+import SpeechBot from "./SpeechBot";
 const Home = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -248,7 +249,8 @@ useEffect(() => {
             </div>
           )
         ) : null}
-        <ChatBot/>
+       {/* <ChatBot /> text bot commented*/} 
+       <SpeechBot />
       </div>
     </div>
   );
