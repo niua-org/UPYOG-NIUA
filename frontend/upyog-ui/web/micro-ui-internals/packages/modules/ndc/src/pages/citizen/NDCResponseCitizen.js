@@ -16,8 +16,7 @@ const NDCResponseCitizen = (props) => {
   const nocData = state?.data?.Noc?.[0];
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
-  const pathname = navigate?.location?.pathname || "";
-  const ndcCode = pathname.split("/").pop(); 
+  const ndcCode = location.pathname.split("/").pop(); 
   const onSubmit = () => {
     navigate(`/upyog-ui/citizen`);
   };
