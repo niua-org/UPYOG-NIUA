@@ -287,7 +287,8 @@ public class EdcrReportConstants {
     public static final BigDecimal MAXIMUM_AREA_46_45 = BigDecimal.valueOf(46.45);
     public static final BigDecimal VENTILATION_PERCENTAGE = BigDecimal.valueOf(20); // 20% ventilation requirement
     public static final String ROOM_HEIGHT_NOTDEFINED = "Room height is not defined in layer ";
-    public static final String LAYER_ROOM_HEIGHT = "BLK_%s_FLR_%s_%s";
+//    public static final String LAYER_ROOM_HEIGHT = "BLK_%s_FLR_%s_%s";
+    public static final String LAYER_ROOM_HEIGHT = "BLK_%s_FLR_%s_UNIT_%s_%s";
 
     public static final BigDecimal MIN_WINDOW_HEIGHT = BigDecimal.valueOf(0.50);
     public static final BigDecimal MIN_DOOR_HEIGHT = BigDecimal.valueOf(2.0);

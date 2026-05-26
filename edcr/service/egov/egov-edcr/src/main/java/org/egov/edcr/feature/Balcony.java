@@ -57,6 +57,8 @@ import org.egov.common.entity.edcr.*;
 import org.egov.edcr.service.MDMSCacheManager;
 import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
+import org.egov.infra.admin.master.entity.AppConfigValues;
+import org.egov.infra.admin.master.service.AppConfigValueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -73,6 +75,9 @@ public class Balcony extends FeatureProcess {
 	
 	@Autowired
 	MDMSCacheManager cache;
+
+	@Autowired
+	private AppConfigValueService appConfigValueService;
 
 	@Override
 	public Plan validate(Plan plan) {
@@ -114,13 +119,30 @@ public class Balcony extends FeatureProcess {
 	 */
 	private void processBlockBalconies(Plan plan, Block block) {
 	    ScrutinyDetail scrutinyDetail = createScrutinyDetail(BLOCK + block.getNumber() + UNDERSCORE + MdmsFeatureConstants.BALCONY,
-	            RULE_NO, FLOOR, DESCRIPTION, PERMISSIBLE, PROVIDED, STATUS);
+	            RULE_NO, FLOOR, UNIT, DESCRIPTION, PERMISSIBLE, PROVIDED, STATUS);
+		boolean unitLayerEnabled = isUnitLayerEnabled();
 
 	    for (Floor floor : block.getBuilding().getFloors()) {
-	        processFloorBalconies(plan, block, floor, scrutinyDetail);
-	    }
+			if (unitLayerEnabled) {
+				if (floor.getUnits() != null && !floor.getUnits().isEmpty()) {
+					for (FloorUnit floorUnit : floor.getUnits()) {
+						processFloorBalconies(plan, block, floor, scrutinyDetail, floorUnit);
+					}
+				}
+			} else {
+				processFloorBalconies(plan, block, floor, scrutinyDetail);
+			}
+		}
 
 	    plan.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
+	}
+
+	private boolean isUnitLayerEnabled() {
+		List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
+				DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
+
+		return appConfigValues != null && !appConfigValues.isEmpty()
+				&& DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
 	}
 
 	/**
@@ -135,6 +157,7 @@ public class Balcony extends FeatureProcess {
 	 * @param floor          the floor to process
 	 * @param scrutinyDetail the scrutiny detail object to which validation results are added
 	 */
+	 ///Floor Wise
 	private void processFloorBalconies(Plan plan, Block block, Floor floor, ScrutinyDetail scrutinyDetail) {
 	    boolean isTypicalRepititiveFloor = false;
 
@@ -143,9 +166,23 @@ public class Balcony extends FeatureProcess {
 	    List<org.egov.common.entity.edcr.Balcony> balconies = floor.getBalconies();
 	    if (balconies != null && !balconies.isEmpty()) {
 	        for (org.egov.common.entity.edcr.Balcony balcony : balconies) {
-	            validateBalcony(plan, floor, balcony, typicalFloorValues, scrutinyDetail);
+	            validateBalcony(plan, floor, balcony, typicalFloorValues, scrutinyDetail, null);
 	        }
 	    }
+	}
+    ///Unit Wise
+	private void processFloorBalconies(Plan plan, Block block, Floor floor, ScrutinyDetail scrutinyDetail, FloorUnit floorUnit) {
+		boolean isTypicalRepititiveFloor = false;
+
+		Map<String, Object> typicalFloorValues = Util.getTypicalFloorValues(block, floor, isTypicalRepititiveFloor);
+
+		List<org.egov.common.entity.edcr.Balcony> balconies = floorUnit.getBalconies();
+
+		if (balconies != null && !balconies.isEmpty()) {
+			for (org.egov.common.entity.edcr.Balcony balcony : balconies) {
+				validateBalcony(plan, floor, balcony, typicalFloorValues, scrutinyDetail, floorUnit);
+			}
+		}
 	}
 
 	/**
@@ -162,7 +199,7 @@ public class Balcony extends FeatureProcess {
 	 * @param scrutinyDetail    the scrutiny detail object to which the validation result is added
 	 */
 	private void validateBalcony(Plan plan, Floor floor, org.egov.common.entity.edcr.Balcony balcony,
-	                              Map<String, Object> typicalFloorValues, ScrutinyDetail scrutinyDetail) {
+	                              Map<String, Object> typicalFloorValues, ScrutinyDetail scrutinyDetail, FloorUnit floorUnit) {
 		
 		BigDecimal balconyValue;
 
@@ -182,15 +219,6 @@ public class Balcony extends FeatureProcess {
 	    } else {
 	        balconyValue = BigDecimal.ZERO;
 	    }
-	    
-//	    List<BalconyRule> rules = cache.getFeatureRules(plan, MdmsFeatureConstants.BALCONY, false, BalconyRule.class);
-//
-//	    BigDecimal balconyValue = rules.stream()
-//	        .findFirst()
-//	        .map(BalconyRule::getPermissible)
-//	        .orElse(BigDecimal.ZERO);
-//
-
 
 	    boolean isAccepted = minWidth.compareTo(balconyValue.setScale(DcrConstants.DECIMALDIGITS_MEASUREMENTS,
 	            DcrConstants.ROUNDMODE_MEASUREMENTS)) >= 0;
@@ -206,6 +234,10 @@ public class Balcony extends FeatureProcess {
 		detail.setProvided(minWidth.toString());
 		detail.setStatus(isAccepted ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
 		detail.setFloorNo(floorLabel);
+		/// if unit is there
+			if(floorUnit!=null) {
+	        detail.setUnitNumber(floorUnit.getUnitNumber());
+			}
 
 		Map<String, String> details = mapReportDetails(detail);
 	    scrutinyDetail.getDetail().add(details);

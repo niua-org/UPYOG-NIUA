@@ -179,6 +179,7 @@ public class DcrConstants {
 
     public static final String EDCR_DXF_PDF = "EDCR_DXF_PDF";
     public static final String DXF_PDF_CONVERSION_ENABLED = "DXF_PDF_CONVERSION_ENABLED";
+    public static final String FLOOR_UNIT_LAYER_ENABLED = "FLOOR_UNIT_LAYER_ENABLED";
 
     /**
      * NOTE (app-config key for how DXF is turned into PDF during extract):

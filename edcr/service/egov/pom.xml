@@ -154,7 +154,7 @@
 		<elastic-search-version>2.4.6</elastic-search-version>
 		<apache-tiles-version>3.0.8</apache-tiles-version>
 		<embedded-redis-version>0.7.3</embedded-redis-version>
-		<quartz-version>2.3.2</quartz-version>
+<!--		<quartz-version>2.3.2</quartz-version>-->
 		<jasper-report-version>6.20.0</jasper-report-version>
 		<json-simple-version>1.1.1</json-simple-version>
 		<jackson-version>2.13.5</jackson-version>
@@ -290,12 +290,12 @@
 				 
 				
 			</dependency>
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate-entitymanager</artifactId>
-				<version>${hibernate-version}</version>
-				
-			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>org.hibernate</groupId>-->
+<!--				<artifactId>hibernate-entitymanager</artifactId>-->
+<!--				<version>${hibernate-version}</version>-->
+<!--				-->
+<!--			</dependency>-->
 			<dependency>
 				<groupId>org.hibernate</groupId>
 				<artifactId>hibernate-envers</artifactId>
@@ -604,16 +604,16 @@
             <!-- EMBEDDED REDIS ENDS -->
 
 			<!-- QUARTZ START -->
-			<dependency>
-				<groupId>org.quartz-scheduler</groupId>
-				<artifactId>quartz</artifactId>
-				<version>${quartz-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.quartz-scheduler</groupId>
-				<artifactId>quartz-jobs</artifactId>
-				<version>${quartz-version}</version>
-			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>org.quartz-scheduler</groupId>-->
+<!--				<artifactId>quartz</artifactId>-->
+<!--				<version>${quartz-version}</version>-->
+<!--			</dependency>-->
+<!--			<dependency>-->
+<!--				<groupId>org.quartz-scheduler</groupId>-->
+<!--				<artifactId>quartz-jobs</artifactId>-->
+<!--				<version>${quartz-version}</version>-->
+<!--			</dependency>-->
 			<!-- QUARTZ END -->
 
 			<!-- DISPLAYTAG START -->
@@ -854,11 +854,11 @@
 <!--				<artifactId>jcaptcha-api</artifactId>-->
 <!--				<version>${jcaptcha.version}</version>-->
 <!--			</dependency>-->
-			<dependency>
-				<groupId>com.jhlabs</groupId>
-				<artifactId>filters</artifactId>
-				<version>2.0.235</version>
-			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>com.jhlabs</groupId>-->
+<!--				<artifactId>filters</artifactId>-->
+<!--				<version>2.0.235</version>-->
+<!--			</dependency>-->
 			<dependency>
 				<groupId>javaxt</groupId>
 				<artifactId>javaxt-core</artifactId>
@@ -1363,10 +1363,10 @@
 <!--			<groupId>com.octo.captcha</groupId>-->
 <!--			<artifactId>jcaptcha-api</artifactId>-->
 <!--		</dependency>-->
-		<dependency>
-			<groupId>com.jhlabs</groupId>
-			<artifactId>filters</artifactId>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.jhlabs</groupId>-->
+<!--			<artifactId>filters</artifactId>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>javaxt</groupId>
 			<artifactId>javaxt-core</artifactId>

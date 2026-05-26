@@ -59,6 +59,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.*;
 import org.egov.edcr.service.MDMSCacheManager;
+import org.egov.edcr.utility.DcrConstants;
+import org.egov.infra.admin.master.entity.AppConfigValues;
+import org.egov.infra.admin.master.service.AppConfigValueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -73,6 +76,9 @@ public class BathRoom extends FeatureProcess {
 
     @Autowired
 	MDMSCacheManager cache;
+
+    @Autowired
+    private AppConfigValueService appConfigValueService;
 
     @Override
     public Plan validate(Plan pl) {
@@ -116,19 +122,35 @@ public class BathRoom extends FeatureProcess {
 
         List<Object> rules = cache.getFeatureRules(plan, FeatureEnum.BATHROOM.getValue(), false);
         Optional<BathroomRequirement> matchedRule = rules.stream()
-            .filter(BathroomRequirement.class::isInstance)
-            .map(BathroomRequirement.class::cast)
-            .findFirst();
+                .filter(BathroomRequirement.class::isInstance)
+                .map(BathroomRequirement.class::cast)
+                .findFirst();
 
         if (!matchedRule.isPresent()) return;
 
         BathroomRequirement rule = matchedRule.get();
         BigDecimal permittedArea = rule.getBathroomtotalArea() != null ? rule.getBathroomtotalArea() : BigDecimal.ZERO;
         BigDecimal permittedMinWidth = rule.getBathroomMinWidth() != null ? rule.getBathroomMinWidth() : BigDecimal.ZERO;
-
+        boolean unitLayerEnabled = isUnitLayerEnabled();
         for (Floor floor : block.getBuilding().getFloors()) {
-            processFloor(plan, floor, permittedArea, permittedMinWidth, scrutinyDetail);
+            if (unitLayerEnabled) {
+                if (floor.getUnits() != null && !floor.getUnits().isEmpty()) {
+                    for (FloorUnit floorUnit : floor.getUnits()) {
+                        processFloor(plan, floor, permittedArea, permittedMinWidth, scrutinyDetail, floorUnit);
+                    }
+                }
+            } else {
+                processFloor(plan, floor, permittedArea, permittedMinWidth, scrutinyDetail);
+            }
         }
+
+    }
+    private boolean isUnitLayerEnabled() {
+        List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
+                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
+
+        return appConfigValues != null && !appConfigValues.isEmpty()
+                && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
     }
 
     /**
@@ -151,8 +173,21 @@ public class BathRoom extends FeatureProcess {
 
         if (rooms.isEmpty() || heights.isEmpty()) return;
 
-        validateBathroom(plan, floor, rooms, heights, permittedArea, permittedMinWidth, scrutinyDetail);
+        validateBathroom(plan, floor, rooms, heights, permittedArea, permittedMinWidth, scrutinyDetail,null);
     }
+    private void processFloor(Plan plan, Floor floor, BigDecimal permittedArea, BigDecimal permittedMinWidth,
+                              ScrutinyDetail scrutinyDetail,FloorUnit floorUnit) {
+        Room bathRoom = floorUnit.getBathRoom();
+        if (bathRoom == null || bathRoom.getRooms() == null || bathRoom.getHeights() == null) return;
+
+        List<Measurement> rooms = bathRoom.getRooms();
+        List<RoomHeight> heights = bathRoom.getHeights();
+
+        if (rooms.isEmpty() || heights.isEmpty()) return;
+
+        validateBathroom(plan, floor, rooms, heights, permittedArea, permittedMinWidth, scrutinyDetail,floorUnit);
+    }
+
 
     
     /**
@@ -168,7 +203,7 @@ public class BathRoom extends FeatureProcess {
      * @param scrutinyDetail    The scrutiny detail object to update.
      */
     private void validateBathroom(Plan plan, Floor floor, List<Measurement> rooms, List<RoomHeight> heights,
-                                  BigDecimal permittedArea, BigDecimal permittedMinWidth, ScrutinyDetail scrutinyDetail) {
+                                  BigDecimal permittedArea, BigDecimal permittedMinWidth, ScrutinyDetail scrutinyDetail,FloorUnit floorUnit) {
 
         BigDecimal totalArea = BigDecimal.ZERO;
         BigDecimal minWidth = rooms.get(0).getWidth();
@@ -188,7 +223,7 @@ public class BathRoom extends FeatureProcess {
         }
 
         boolean isAccepted = totalArea.compareTo(permittedArea) >= 0 && minWidth.compareTo(permittedMinWidth) >= 0;
-        Map<String, String> resultRow = createResultRow(floor, permittedArea, permittedMinWidth, totalArea, minWidth, isAccepted);
+        Map<String, String> resultRow = createResultRow(floor,floorUnit, permittedArea, permittedMinWidth, totalArea, minWidth, isAccepted);
         scrutinyDetail.getDetail().add(resultRow);
     }
 
@@ -202,10 +237,12 @@ public class BathRoom extends FeatureProcess {
         ScrutinyDetail scrutinyDetail = new ScrutinyDetail();
         scrutinyDetail.setKey(Common_Bathroom);
         scrutinyDetail.addColumnHeading(1, RULE_NO);
-        scrutinyDetail.addColumnHeading(2, DESCRIPTION);
-        scrutinyDetail.addColumnHeading(3, REQUIRED);
-        scrutinyDetail.addColumnHeading(4, PROVIDED);
-        scrutinyDetail.addColumnHeading(5, STATUS);
+        scrutinyDetail.addColumnHeading(2, FLOOR_NO);
+        scrutinyDetail.addColumnHeading(3, UNIT);
+        scrutinyDetail.addColumnHeading(4, DESCRIPTION);
+        scrutinyDetail.addColumnHeading(5, REQUIRED);
+        scrutinyDetail.addColumnHeading(6, PROVIDED);
+        scrutinyDetail.addColumnHeading(7, STATUS);
         return scrutinyDetail;
     }
 
@@ -221,7 +258,7 @@ public class BathRoom extends FeatureProcess {
      * @param isAccepted        The result of the validation (true if passed).
      * @return A map containing all details of the result row.
      */
-    private Map<String, String> createResultRow(Floor floor, BigDecimal permittedArea, BigDecimal permittedMinWidth,
+    private Map<String, String> createResultRow(Floor floor,FloorUnit floorUnit, BigDecimal permittedArea, BigDecimal permittedMinWidth,
                                                 BigDecimal totalArea, BigDecimal minWidth, boolean isAccepted) {
         ReportScrutinyDetail detail = new ReportScrutinyDetail();
         detail.setRuleNo(RULE_41_IV);
@@ -229,9 +266,13 @@ public class BathRoom extends FeatureProcess {
         detail.setRequired(TOTAL_AREA + permittedArea.toString() + WIDTH + permittedMinWidth.toString());
         detail.setProvided(TOTAL_AREA + totalArea.toString() + WIDTH + minWidth.toString());
         detail.setStatus(isAccepted ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
+        if (floorUnit != null) {
+            detail.setUnitNumber(floorUnit.getUnitNumber());
+        }
+        detail.setFloorNo(String.valueOf(floor.getNumber()));
         return mapReportDetails(detail);
-    }
 
+    }
     /**
      * Retrieves a new Amendment object instance.
      * This method creates and returns a fresh Amendment entity that can be used

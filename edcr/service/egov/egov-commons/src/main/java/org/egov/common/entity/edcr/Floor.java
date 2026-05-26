@@ -372,6 +372,15 @@ public class Floor extends Measurement {
         this.exterior = exterior;
     }
 
+    public FloorUnit getUnitNumber(int unitNo) {
+        for (FloorUnit unit : units) {
+            if (unit.getUnitNumber() != null && unit.getUnitNumber().intValue() == unitNo) {
+                return unit;
+            }
+        }
+        return null;
+    }
+
     /*
      * public List<Measurement> getOpenSpaces() { return openSpaces; } public void setOpenSpaces(List<Measurement> openSpaces) {
      * this.openSpaces = openSpaces; }

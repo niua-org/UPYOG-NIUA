@@ -5,21 +5,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-import org.egov.common.entity.edcr.Balcony;
-import org.egov.common.entity.edcr.Block;
-import org.egov.common.entity.edcr.Floor;
+import org.egov.common.entity.edcr.*;
+import org.egov.edcr.service.LayerNames;
 import org.egov.common.entity.edcr.Measurement;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
 import org.egov.edcr.entity.blackbox.PlanDetail;
+import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
+import org.egov.infra.admin.master.entity.AppConfigValues;
+import org.egov.infra.admin.master.service.AppConfigValueService;
 import org.kabeja.dxf.DXFLWPolyline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BalconyExtract extends FeatureExtract {
-    private static final Logger LOG = LogManager.getLogger(BalconyExtract.class);
+    private static final Logger log = LoggerFactory.getLogger(BalconyExtract.class);
+    @Autowired
+    private LayerNames layerNames;
+
+    @Autowired
+    private AppConfigValueService appConfigValueService;
 
     @Override
     public PlanDetail validate(PlanDetail planDetail) {
@@ -28,36 +36,91 @@ public class BalconyExtract extends FeatureExtract {
 
     @Override
     public PlanDetail extract(PlanDetail planDetail) {
-        for (Block block : planDetail.getBlocks())
-            for (Floor floor : block.getBuilding().getFloors()) {
-                List<Balcony> balconies = new ArrayList<>();
-                String balconylayerPattern = "BLK_" + block.getNumber() + "_FLR_" + floor.getNumber() + "_BALCONY_"
-                        + "\\d{1,2}";
+        if (planDetail == null || planDetail.getBlocks() == null) {
+            return planDetail;
+        }
 
-                List<String> balconyLayers = Util.getLayerNamesLike(planDetail.getDoc(), balconylayerPattern);
+        boolean unitLayerEnabled = isUnitLayerEnabled();
 
-                for (String balconyLayer : balconyLayers) {
-                    List<DXFLWPolyline> balconyPolyLines = Util.getPolyLinesByLayer(planDetail.getDoc(), balconyLayer);
-                    List<BigDecimal> dimensions = Util.getListOfDimensionValueByLayer(planDetail, balconyLayer);
-                    String[] split = balconyLayer.split("_");
-                    String balconyNo = split[5];
-                    if (!dimensions.isEmpty() || !balconyPolyLines.isEmpty()) {
-                        Balcony balcony = new Balcony();
-
-                        List<Measurement> balconyMeasurements = balconyPolyLines.stream()
-                                .map(balconyPolyLine -> new MeasurementDetail(balconyPolyLine, true))
-                                .collect(Collectors.toList());
-
-                        balcony.setMeasurements(balconyMeasurements);
-                        balcony.setWidths(dimensions);
-                        balcony.setNumber(balconyNo);
-                        balconies.add(balcony);
-                    }
-                }
-                floor.setBalconies(balconies);
+        for (Block block : planDetail.getBlocks()) {
+            if (block.getBuilding() == null || block.getBuilding().getFloors() == null) {
+                continue;
             }
+
+            for (Floor floor : block.getBuilding().getFloors()) {
+                if (unitLayerEnabled) {
+                    extractUnitWiseBalconies(planDetail, block, floor);
+                } else {
+                    extractFloorWiseBalconies(planDetail, block, floor);
+                }
+            }
+        }
 
         return planDetail;
     }
 
+    private boolean isUnitLayerEnabled() {
+        List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
+                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
+
+        return appConfigValues != null && !appConfigValues.isEmpty()
+                && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
+    }
+
+    private void extractFloorWiseBalconies(PlanDetail planDetail, Block block, Floor floor) {
+        String balconyLayerPattern = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_BALCONY"), block.getNumber(), floor.getNumber());
+        floor.setBalconies(extractBalconies(planDetail, balconyLayerPattern));
+    }
+
+    private void extractUnitWiseBalconies(PlanDetail planDetail, Block block, Floor floor) {
+        if (floor.getUnits() == null) {
+            return;
+        }
+
+        for (FloorUnit floorUnit : floor.getUnits()) {
+            if (floorUnit.getUnitNumber() == null) {
+                continue;
+            }
+
+            log.info("Layer name in balcony extract " + layerNames.getLayerName("LAYER_NAME_BLK_FLR_UNIT_BALCONY"));
+
+            String balconyLayerPattern = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_UNIT_BALCONY"),
+                    block.getNumber(),
+                    floor.getNumber(),
+                    floorUnit.getUnitNumber());
+//            String balconyLayerPattern = "BLK_1_FLR_0_UNIT_1_BALCONY_1";
+            floorUnit.setBalconies(extractBalconies(planDetail, balconyLayerPattern));
+        }
+    }
+
+    private List<Balcony> extractBalconies(PlanDetail planDetail, String balconyLayerPattern) {
+        List<Balcony> balconies = new ArrayList<>();
+        List<String> balconyLayers = Util.getLayerNamesLike(planDetail.getDoc(), balconyLayerPattern);
+
+        for (String balconyLayer : balconyLayers) {
+            List<DXFLWPolyline> balconyPolyLines = Util.getPolyLinesByLayer(planDetail.getDoc(), balconyLayer);
+            List<BigDecimal> dimensions = Util.getListOfDimensionValueByLayer(planDetail, balconyLayer);
+
+            if (dimensions.isEmpty() && balconyPolyLines.isEmpty()) {
+                continue;
+            }
+
+            Balcony balcony = new Balcony();
+            List<Measurement> balconyMeasurements = balconyPolyLines.stream()
+                    .map(balconyPolyLine -> new MeasurementDetail(balconyPolyLine, true))
+                    .collect(Collectors.toList());
+
+            balcony.setMeasurements(balconyMeasurements);
+            balcony.setWidths(dimensions);
+            balcony.setNumber(getBalconyNumber(balconyLayer));
+            balconies.add(balcony);
+        }
+
+        return balconies;
+    }
+
+    private String getBalconyNumber(String balconyLayer) {
+        String[] layerParts = balconyLayer.split("_");
+        return layerParts[layerParts.length - 1];
+    }
 }

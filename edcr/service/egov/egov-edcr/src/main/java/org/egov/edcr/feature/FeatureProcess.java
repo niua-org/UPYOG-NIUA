@@ -75,6 +75,7 @@ public abstract class FeatureProcess {
 	public static final String RULE_NO = "Section";
 	public static final String FLOOR_NO = "Floor";
 	public static final String Room = "Room";
+	public static final String UNIT = "Unit";
 	public static final String DISTANCE = "Distance";
 	public static final String VERIFIED = "Verified";
 	public static final String ACTION = "Action";

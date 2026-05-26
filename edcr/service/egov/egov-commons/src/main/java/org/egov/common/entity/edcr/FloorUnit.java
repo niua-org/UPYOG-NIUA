@@ -56,11 +56,115 @@ public class FloorUnit extends Measurement {
     private static final long serialVersionUID = 27L;
 
     private Occupancy occupancy;
+    private List<Occupancy> occupancies = new ArrayList<>();
     private List<Measurement> deductions = new ArrayList<>();
     private BigDecimal totalUnitDeduction;
+    private List<Balcony> balconies = new ArrayList<>();
+    private Integer number;
+    private MeasurementWithHeight lightAndVentilation = new MeasurementWithHeight();
+    private MeasurementWithHeight laundryOrRecreationalVentilation = new MeasurementWithHeight();
+    private Room kitchen;
+    private Room bathRoom;
+    private Room bathRoomWaterClosets;
+    private List<Room> regularRooms = new ArrayList<>();
+    private List<Room> acRooms = new ArrayList<>();
+    private Room commonRoom;
+    private Integer unitNumber;
+    private List<Room> nonInhabitationalRooms = new ArrayList<>();
+    private List<Door> nonaHabitationalDoors = new ArrayList<>();
+    private List<Door> doors = new ArrayList<>();
+
+    public List<Door> getDoors() {
+        return doors;
+    }
+
+    public void setDoors(List<Door> doors) {
+        this.doors = doors;
+    }
+
+    public List<Room> getNonInhabitationalRooms() {
+        return nonInhabitationalRooms;
+    }
+
+    public void setNonInhabitationalRooms(List<Room> nonInhabitationalRooms) {
+        this.nonInhabitationalRooms = nonInhabitationalRooms;
+    }
+    public List<Occupancy> getOccupancies() {
+        return occupancies;
+    }
+
+    public void setOccupancies(List<Occupancy> occupancies) {
+        this.occupancies = occupancies;
+    }
 
     public Occupancy getOccupancy() {
         return occupancy;
+    }
+    public List<Balcony> getBalconies() {
+        return balconies;
+    }
+
+    public void setBalconies(List<Balcony> balconies) {
+        this.balconies = balconies;
+    }
+    public Room getKitchen() {
+        return kitchen;
+    }
+
+    public void setKitchen(Room kitchen) {
+        this.kitchen = kitchen;
+    }
+    public Room getBathRoom() {
+        return bathRoom;
+    }
+
+    public void setBathRoom(Room bathRoom) {
+        this.bathRoom = bathRoom;
+    }
+    public Room getBathRoomWaterClosets() {
+        return bathRoomWaterClosets;}
+
+    public void setBathRoomWaterClosets(Room bathRoomWaterClosets) {
+        this.bathRoomWaterClosets = bathRoomWaterClosets;
+    }
+    public Integer getNumber() {
+        return number;
+    }
+
+    public void setNumber(Integer number) {
+        this.number = number;
+    }
+
+    public MeasurementWithHeight getLightAndVentilation() {
+        return lightAndVentilation;
+    }
+
+    public void setLightAndVentilation(MeasurementWithHeight lightAndVentilation) {
+        this.lightAndVentilation = lightAndVentilation;
+    }
+
+    public MeasurementWithHeight getLaundryOrRecreationalVentilation() {
+        return laundryOrRecreationalVentilation;
+    }
+
+    public void setLaundryOrRecreationalVentilation(MeasurementWithHeight laundryOrRecreationalVentilation) {
+        this.laundryOrRecreationalVentilation = laundryOrRecreationalVentilation;
+    }
+
+    public List<Room> getAcRooms() {
+        return acRooms;
+    }
+
+    public void setAcRooms(List<Room> acRooms) {
+        this.acRooms = acRooms;
+    }
+
+    public Integer getUnitNumber() {
+        return unitNumber;
+    }
+
+    public void setUnitNumber(Integer unitNumber) {
+        this.unitNumber = unitNumber;
     }
 
     public void setOccupancy(Occupancy occupancy) {
@@ -82,5 +186,48 @@ public class FloorUnit extends Measurement {
     public void setDeductions(List<Measurement> deductions) {
         this.deductions = deductions;
     }
+
+/**
+ * @return the regularRooms
+ */
+public List<Room> getRegularRooms() {
+    return regularRooms;
+}
+
+public void addRegularRoom(Room regularRoom) {
+    this.regularRooms.add(regularRoom);
+}
+
+/**
+ * @param regularRooms the regularRooms to set
+ */
+public void setRegularRooms(List<Room> regularRooms) {
+    this.regularRooms = regularRooms;
+}
+
+public void addAcRoom(Room acRoom) {
+    this.acRooms.add(acRoom);
+}
+
+public void addNonInhabitationalRooms(Room nonInhabitationalRooms) {
+    this.nonInhabitationalRooms.add(nonInhabitationalRooms);
+}
+
+public void addDoor(Door door) {
+    this.doors.add(door);
+}
+
+public List<Door> getNonaHabitationalDoors() {
+    return nonaHabitationalDoors;
+}
+
+public void setNonaHabitationalDoors(List<Door> nonaHabitationalDoors) {
+    this.nonaHabitationalDoors = nonaHabitationalDoors;
+}
+
+public void addNonaHabitationalDoors(Door nonaHabitationalDoors) {
+    this.nonaHabitationalDoors.add(nonaHabitationalDoors);
+}
+
 
 }
