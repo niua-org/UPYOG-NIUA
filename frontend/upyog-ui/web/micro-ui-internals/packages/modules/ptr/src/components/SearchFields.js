@@ -1,7 +1,7 @@
 import React, {Fragment} from "react"
 import { Controller, useWatch } from "react-hook-form"; // Importing form handling utilities from react-hook-form
  // Importing UI components from digit-ui-react-components library
-import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
+import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header, Menu } from "@nudmcdgnpm/digit-ui-react-components";
 
 /**
  * Component: SearchFields
@@ -32,6 +32,26 @@ const SearchFields = ({register, control, reset, tenantId, t, formState, setShow
                     <label>{t("PTR_APPLICATION_NO_LABEL")}</label>
                     <TextInput name="applicationNumber" {...register("applicationNumber")} />
                 </SearchField>
+
+                <SearchField>
+                <label>{t("PTR_PET_TYPE")}</label>
+
+                <Controller
+                    control={control}
+                    name="petType"
+                    render={({ field }) => (
+                    <Dropdown
+                        selected={field.value}
+                        select={(e) => field.onChange(e?.code)}
+                        option={Menu || []}
+                        optionKey="i18nKey"
+                        t={t}
+                        placeholder={t("PTR_PET_TYPE")}
+                    />
+                    )}
+                />
+                </SearchField>
+
 
                 
                 <SearchField>

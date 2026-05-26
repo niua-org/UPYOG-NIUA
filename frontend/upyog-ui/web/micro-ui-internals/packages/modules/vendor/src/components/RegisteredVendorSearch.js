@@ -116,13 +116,23 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
         );
       default:
         return (
-          <TextInput
-            {...input}
-            {...register(input.name, {
+          <Controller
+            name={input.name}
+            control={control}
+            defaultValue=""
+            rules={{
               validate: searchValidation,
-            })}
-            watch={watch}
-            shouldUpdate={true}
+            }}
+            render={({ field }) => (
+              <TextInput
+                {...input}
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+                ref={field.ref}
+                watch={watch}
+                shouldUpdate={true}
+              />
+            )}
           />
         );
     }
