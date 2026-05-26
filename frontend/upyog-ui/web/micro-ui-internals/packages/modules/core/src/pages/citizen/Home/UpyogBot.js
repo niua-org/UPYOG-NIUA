@@ -3,10 +3,10 @@ import React, { useState } from "react";
 // Chatbot launcher logo image
 import logo from "./logo.png";
 // CSS keyframe animations and inline style objects for the chatbot UI
-import { animations, styles } from "./SpeechbotStyles";
+import { animations, styles } from "./UpyogBotStyles";
 
 /**
- * SpeechBot Component
+ * Upyog Component
  * Initially, the chatbot popup remains hidden (`isOpen = false`) and only the launcher button is displayed.
  * Clicking the launcher button triggers `toggleChatbot()`, which updates state and opens the chatbot popup.
  * Once opened:
@@ -17,7 +17,7 @@ import { animations, styles } from "./SpeechbotStyles";
  *  CSS animations are injected dynamically for smooth UI transitions.
  */
 
-function SpeechBot() {
+function UpyogBot() {
   // Controls whether the chatbot popup is visible
   const [isOpen, setIsOpen] = useState(false);
 
@@ -98,7 +98,7 @@ function SpeechBot() {
            * the user's microphone for speech-to-text interaction.
            */}
           <iframe
-            src="https://43.205.156.175/upyog-voice/"
+            src={Digit.UpyogBotService.url()}
             title="UPYOG Chatbot"
             style={styles.iframe}
             allow="microphone"
@@ -109,4 +109,4 @@ function SpeechBot() {
   );
 }
 
-export default SpeechBot;
+export default UpyogBot;
