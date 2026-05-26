@@ -54,10 +54,15 @@ const Inbox = ({ parentRoute }) => {
   const InboxObjectInSessionStorage = Digit.SessionStorage.get("NDC.INBOX");
 
   const onSearchFormReset = (setSearchFormValue) => {
-    setSearchFormValue("sourceRefId", null);
-    setSearchFormValue("applicationNo", null);
-    setSearchFormValue("mobileNumber", null);
-    dispatch({ action: "mutateSearchForm", data: searchFormDefaultValues });
+    setSearchFormValue("sourceRefId", "");
+    setSearchFormValue("applicationNo", "");
+    setSearchFormValue("mobileNumber", "");
+  
+    dispatch({ action: "mutateSearchForm", data: { ...searchFormDefaultValues,
+        applicationNo: "",
+        mobileNumber: "",
+      },
+    });
   };
 
   const onFilterFormReset = (setFilterFormValue) => {
@@ -155,8 +160,9 @@ const Inbox = ({ parentRoute }) => {
   };
 
   const SearchFormFields = useCallback(
-    ({ registerRef, searchFormState, searchFieldComponents }) => (
-      <SearchFormFieldsComponents {...{ registerRef, searchFormState, searchFieldComponents }} />
+    ({ registerRef, control, searchFormState, searchFieldComponents }) => (
+      <SearchFormFieldsComponents{...{ registerRef,control, searchFormState, searchFieldComponents,
+        }}/>
     ),
     []
   );

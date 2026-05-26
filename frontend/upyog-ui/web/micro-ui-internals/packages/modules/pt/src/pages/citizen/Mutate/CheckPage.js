@@ -64,17 +64,20 @@ const CheckPage = ({ onSubmit, value = {} }) => {
     UnOccupiedArea
    } = property;
 
-   useEffect(async ()=>{
-      const res = await Digit.PaymentService.searchBill(tenantId, {Service: "PT.MUTATION", consumerCode: property?.acknowldgementNumber});
-      if(! res.Bill.length) {
-        const res1 = await Digit.PTService.ptCalculateMutation({Property: { ...property, additionalDetails: { ...property?.additionalDetails, ...additionalDetails, documentDate: new Date(additionalDetails?.documentDate).getTime() } }}, tenantId);
-        setBillAmount(res1?.[property?.acknowldgementNumber]?.totalAmount || t("CS_NA"))
-        setBillStatus(t(`PT_MUT_BILL_ACTIVE`))
-      } else {
-        setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"))
-        setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`))
-      }
-  },[])
+   useEffect(() => {
+     const fetchBillData = async () => {
+       const res = await Digit.PaymentService.searchBill(tenantId, {Service: "PT.MUTATION", consumerCode: property?.acknowldgementNumber});
+       if(! res.Bill.length) {
+         const res1 = await Digit.PTService.ptCalculateMutation({Property: { ...property, additionalDetails: { ...property?.additionalDetails, ...additionalDetails, documentDate: new Date(additionalDetails?.documentDate).getTime() } }}, tenantId);
+         setBillAmount(res1?.[property?.acknowldgementNumber]?.totalAmount || t("CS_NA"))
+         setBillStatus(t(`PT_MUT_BILL_ACTIVE`))
+       } else {
+         setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"))
+         setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`))
+       }
+     };
+     fetchBillData();
+   },[])
 
   const typeOfApplication = !isEditProperty && !isUpdateProperty ? `new-application` : `edit-application`;
   let flatplotsize;

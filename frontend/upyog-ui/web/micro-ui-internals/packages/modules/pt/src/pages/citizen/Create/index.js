@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Route, useLocation, Routes, Navigate } from "react-router-dom";
 import { newConfig } from "../../../config/Create/config";
+import { convertToProperty } from "../../../utils";
 
 const CreateProperty = ({ parentRoute }) => {
   const queryClient = useQueryClient();
@@ -15,6 +16,10 @@ const CreateProperty = ({ parentRoute }) => {
   const stateId = Digit.ULBService.getStateId();
   let config = [];
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("PT_CREATE_PROPERTY", {});
+  const [ackData, setAckData, clearAckData] = Digit.Hooks.useSessionStorage("PT_CREATE_PROPERTY_RESPONSE", null);
+  const [ackError, setAckError, clearAckError] = Digit.Hooks.useSessionStorage("PT_CREATE_PROPERTY_RESPONSE_ERROR", null);
+  const tenantId = params?.address?.city?.code || Digit.ULBService.getCurrentTenantId();
+  const mutation = Digit.Hooks.pt.usePropertyAPI(tenantId, true);
   let { data: commonFields, isLoading } = Digit.Hooks.pt.useMDMS(stateId, "PropertyTax", "CommonFieldsConfig");  const [searchData, setSearchData] = useState({});
   const { data: propertyData, isLoading: propertyDataLoading, error, isSuccess, billData } = Digit.Hooks.pt.usePropertySearchWithDue({
     tenantId: searchData?.city,
@@ -129,8 +134,29 @@ const CreateProperty = ({ parentRoute }) => {
   if(params && Object.keys(params).length>0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true")
     {
       clearParams();
-      queryClient.invalidateQueries("PT_CREATE_PROPERTY");
+      clearAckData();
+      clearAckError();
+      queryClient.invalidateQueries({ queryKey: ["PT_CREATE_PROPERTY"] });
     }
+
+  const onSubmitProperty = () => {
+    if (mutation.isPending) return;
+    const dataForCreation = { ...params, tenantId };
+    const propertyPayload = convertToProperty(dataForCreation);
+
+    mutation.mutate(propertyPayload, {
+      onSuccess: (responseData) => {
+        setAckData(responseData);
+        setAckError(null);
+        navigate(`acknowledgement`);
+      },
+      onError: (err) => {
+        setAckData(null);
+        setAckError(err);
+        navigate(`acknowledgement`);
+      }
+    });
+  };
 
   const createProperty = async () => {
     let tempObject = {
@@ -150,7 +176,7 @@ const CreateProperty = ({ parentRoute }) => {
     else if (!propertyDataLoading && propertyData?.Properties?.length === 0) {
       setShowToast(false);
       console.log("propertyDatapropertyData", propertyData);
-      navigate(`acknowledgement`);
+      onSubmitProperty();
     }
   }, [propertyData, propertyDataLoading]);
 
@@ -204,9 +230,11 @@ let propertyStructureDetails ={"propertyStructureDetails":propertyStructureDetai
 
   const onSuccess = () => {
     clearParams();
-    queryClient.invalidateQueries("PT_CREATE_PROPERTY");
+    clearAckData();
+    clearAckError();
+    queryClient.invalidateQueries({ queryKey: ["PT_CREATE_PROPERTY"] });
   };
-  if (isLoading) {
+  if (isLoading || mutation.isPending) {
     return <Loader />;
   }
 
@@ -215,7 +243,7 @@ let propertyStructureDetails ={"propertyStructureDetails":propertyStructureDetai
   }
   const setModal=()=>{
     setShowToast(false)   
-    navigate(`acknowledgement`) 
+    onSubmitProperty();
   }
   // commonFields=newConfig;
   /* use newConfig instead of commonFields for local development in case needed */
@@ -247,7 +275,7 @@ config.indexRoute = "info";
         );
       })}
       <Route path={`check/*`} element={<CheckPage onSubmit={createProperty} value={params} />} />
-      <Route path={`acknowledgement/*`} element={<PTAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`acknowledgement/*`} element={<PTAcknowledgement ackData={ackData} isPending={mutation.isPending} error={ackError} onSuccess={onSuccess} />} />
       <Route path="*" element={<Navigate to={`${config.indexRoute}`} replace />} />
     </Routes>
     </div>
