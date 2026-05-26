@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static org.egov.inbox.util.CommonConstants.*;
+
 /**
  * PGRAiModuleHandler is responsible for handling
  * inbox operations specific to PGR AI module.
@@ -54,6 +56,7 @@ public class PGRAiModuleHandler implements ModuleInboxHandler {
             ctx.setSearchResultEmpty(true);
             return;
         }
+        ctx.getCriteria().getModuleSearchCriteria().put(getApplicationIdParamKey(), ids);
 
         ctx.addBusinessKeys(ids);
     }
@@ -77,7 +80,7 @@ public class PGRAiModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public String getApplicationIdParamKey() {
-        return "serviceRequestId";
+        return "serviceRequestIds";
     }
 
     /**
@@ -88,7 +91,7 @@ public class PGRAiModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public List<String> paramsToRemove() {
-        return List.of();
+        return List.of(OFFSET_PARAM, STATUS_PARAM,NO_OF_RECORDS_PARAM);
     }
 
     /**
