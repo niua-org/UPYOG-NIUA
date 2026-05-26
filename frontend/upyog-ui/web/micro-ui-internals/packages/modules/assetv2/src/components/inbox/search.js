@@ -116,7 +116,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                       <Label>{t(input.label) + ` ${input.isMendatory ? "*" : ""}`}</Label>
                       {!input.type ? (
                         <Controller
-                          render={(field) => {
+                          render={({ field }) => {
                             return <TextInput onChange={field.onChange} value={field.value} />;
                           }}
                           name={input.name}

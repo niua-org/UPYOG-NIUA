@@ -57,13 +57,18 @@ export const filterFunctions = {
     const searchFilters = {};
     const workflowFilters = {};
 
-    const { applicationNumbers, mobileNumber, limit, offset, sortBy, sortOrder, total, applicationStatus, services } = filtersArg || {};
+    const { applicationNumbers, mobileNumber, limit, offset, sortBy, sortOrder, total, applicationStatus, services, petType } = filtersArg || {};
+
 
     if (filtersArg?.applicationNumber) {
       searchFilters.applicationNumber = filtersArg?.applicationNumber;
     }
     if (filtersArg?.applicationNumbers) {
       searchFilters.applicationNumber = applicationNumbers;
+    }
+
+    if(petType){
+      searchFilters.petType=petType;
     }
     
     if (applicationStatus && applicationStatus?.[0]?.applicationStatus) {
