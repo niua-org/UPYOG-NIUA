@@ -361,7 +361,11 @@ eSign:{
     search: "/ndc-services/ndc/_search",
     update: "/ndc-services/ndc/_update",
     billingCalculate: "/ndc-calculator/v1/_calculate",
-  }
+  },
+
+  upyogBot: {
+    url: "https://43.205.156.175/upyog-voice/",
+  },
 };
 
 export default Urls;

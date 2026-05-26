@@ -69,6 +69,7 @@ import { PGRAIUpdate } from "./services/elements/PGRAIUpdate";
 import { ESTService } from "./services/elements/EST";
 import { NDCService } from "./services/elements/NDC";
 import { ChallanGenerationService } from "./services/elements/ChallanGeneration";
+import {UpyogBotService} from "./services/elements/UpyogBot";
 
    
 
@@ -149,6 +150,7 @@ const initLibraries = () => {
   setupLibraries("ESTService", ESTService);
   setupLibraries("NDCService", NDCService);
   setupLibraries("ChallanGenerationService", ChallanGenerationService);
+  setupLibraries("UpyogBotService", UpyogBotService);
 
   return new Promise((resolve) => {
     initI18n(resolve);
