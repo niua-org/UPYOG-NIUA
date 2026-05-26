@@ -16,7 +16,10 @@ class ElasticHook(HttpHook):
         prep_req = session.prepare_request(req)
 
 
-        resp = session.send(prep_req)
+       # Added Verification false ElasticHook is connecting to Elasticsearch over HTTPS 
+       # but SSL certificate verification is failing because the internal cluster uses a self-signed/private CA
+       # certificate that Python's SSL doesn't trust.
+        resp = session.send(prep_req, verify=False)
         try:
             resp.raise_for_status()
         except requests.exceptions.HTTPError:
