@@ -67,24 +67,27 @@ const FilterFormFieldsComponent = ({ statuses, controlFilterForm, applicationTyp
           name="applicationStatus"
           control={controlFilterForm}
           defaultValue={[]}
-          render={(props) => {
-        // Safe fallback if value is undefined
-        const selectedValues = props.value || [];
+          render={({ field }) => {
 
-        const toggleStatus = (statusCode) => {
-          console.log(statusCode, "statusCode");
+            const selectedValues = field.value || [];
 
-          if (selectedValues.includes(statusCode)) {
-            props.onChange(
-              selectedValues.filter(
-                (code) => code !== statusCode
-              )
-            );
-          } else {
-               props.onChange([
-              ...selectedValues,
-              statusCode,
-            ]);
+            const toggleStatus = (statusCode) => {
+
+              if (selectedValues.includes(statusCode)) {
+
+                field.onChange(
+                  selectedValues.filter(
+                    (code) => code !== statusCode
+                  )
+                );
+
+              } else {
+
+                field.onChange([
+                  ...selectedValues,
+                  statusCode,
+                ]);
+
               }
             };
 
@@ -96,11 +99,11 @@ const FilterFormFieldsComponent = ({ statuses, controlFilterForm, applicationTyp
                     label={`${t(status.applicationstatus)} - ${status.count}`}
                     value={status.applicationstatus}
                     checked={selectedValues.includes(
-                  status.applicationstatus
-                )}
-                onChange={() =>
-                  toggleStatus(status.applicationstatus)
-                }
+                      status.applicationstatus
+                    )}
+                    onChange={() =>
+                      toggleStatus(status.applicationstatus)
+                    }
                     index={index}
                   />
                 ))}
