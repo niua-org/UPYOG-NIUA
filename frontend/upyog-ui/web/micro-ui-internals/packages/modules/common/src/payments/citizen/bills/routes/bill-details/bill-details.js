@@ -172,15 +172,19 @@ const BillDetails = ({ paymentRules, businessService }) => {
     } 
     else if (timerEnabledForBusinessService(businessService)) {
       navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, {
+        state: {
         paymentAmount,
         tenantId: billDetails.tenantId,
         propertyId: propertyId,
         timerValue: state?.timerValue,
-        SlotSearchData: state?.SlotSearchData,
+        SlotSearchData: state?.SlotSearchData
+        }
       });
     }
     else {
-      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId });
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { 
+       state : {paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId}
+       });
     }
   };
 
