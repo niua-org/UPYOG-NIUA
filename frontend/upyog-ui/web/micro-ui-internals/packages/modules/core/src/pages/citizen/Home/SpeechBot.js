@@ -5,6 +5,17 @@ import logo from "./logo.png";
 // CSS keyframe animations and inline style objects for the chatbot UI
 import { animations, styles } from "./SpeechbotStyles";
 
+/**
+ * SpeechBot Component
+ * Initially, the chatbot popup remains hidden (`isOpen = false`) and only the launcher button is displayed.
+ * Clicking the launcher button triggers `toggleChatbot()`, which updates state and opens the chatbot popup.
+ * Once opened:
+ *     A popup container is rendered.
+ *     The chatbot UI header is displayed with logo and close button.
+ *     An iframe loads the external UPYOG voice assistant.
+ *  Clicking the close button triggers `handleChatbotClose()`, collapsing the popup and showing the launcher button again.
+ *  CSS animations are injected dynamically for smooth UI transitions.
+ */
 
 function SpeechBot() {
   // Controls whether the chatbot popup is visible
@@ -57,7 +68,7 @@ function SpeechBot() {
               />
             </div>
 
-            {/* Close (×) button — collapses the popup back to the launcher */}
+            {/* Close button — collapses the popup back to the launcher */}
             <button
               className="close-btn"
               onClick={handleChatbotClose}

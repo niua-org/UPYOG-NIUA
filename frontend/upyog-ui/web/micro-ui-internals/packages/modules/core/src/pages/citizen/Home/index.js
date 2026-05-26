@@ -249,7 +249,7 @@ useEffect(() => {
             </div>
           )
         ) : null}
-       {/* <ChatBot /> text bot commented*/} 
+       {/* <ChatBot /> text bot commented as we are using new speech bot*/} 
        <SpeechBot />
       </div>
     </div>
