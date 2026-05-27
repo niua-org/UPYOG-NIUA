@@ -14,4 +14,8 @@ public class RoleBasedDashboardRequest {
     @NotNull
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
+
+    @NotNull
+    @JsonProperty("tenantId")
+    public String tenantId;
 }
