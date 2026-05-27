@@ -112,11 +112,13 @@ const EmployeeDashboard = () => {
   const { t } = useTranslation();
   const [modulesData, setModulesData] = useState({});
   const [loading, setLoading] = useState(true);
+  const user = Digit.UserService.getUser();
+  const tenantId=user.info.tenantId;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await Digit.EmployeeDashboardService.roleBaseSearch({});
+        const response = await Digit.EmployeeDashboardService.roleBaseSearch({tenantId});
         
         if (response?.dashboardData) {
           setModulesData(response.dashboardData);
