@@ -157,12 +157,6 @@ const SubMenu = ({ item }) => {
                         </ReactTooltip>
                       )}
                     </div>
-                    {/* <div className="actions">
-                      <div className="tooltip">
-                        <p className="p1">{trimModuleName}</p>
-                        <span className="tooltiptext">{t(`ACTION_TEST_${getChildName}`)}</span>
-                      </div>{" "}
-                    </div> */}
                   </a>
                 );
               }

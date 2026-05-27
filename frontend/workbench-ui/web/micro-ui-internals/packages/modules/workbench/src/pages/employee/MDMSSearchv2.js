@@ -166,13 +166,13 @@ useEffect(() => {
   const handleAddMasterData = () => {
     const [schemaModule, schemaMaster] = currentSchema?.code?.split('.') || [];
     if (schemaModule && schemaMaster) {
-      navigate(`/workbench-ui/employee/workbench/mdms-add-v2?moduleName=${schemaModule}&masterName=${schemaMaster}`);
+      navigate(`/${window?.contextPath}/employee/workbench/mdms-add-v2?moduleName=${schemaModule}&masterName=${schemaMaster}`);
     }
   }
 
   const onClickRow = ({original:row}) => {
     const [moduleName,masterName] = row.schemaCode.split(".")
-    navigate(`/workbench-ui/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${row.uniqueIdentifier}`)
+    navigate(`/${window?.contextPath}/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${row.uniqueIdentifier}`)
   }
 
   if (isLoading) return <Loader />;

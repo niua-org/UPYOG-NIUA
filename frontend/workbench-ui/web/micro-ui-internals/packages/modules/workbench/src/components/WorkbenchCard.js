@@ -20,17 +20,17 @@ const WorkbenchCard = () => {
   let links = [
     {
       label: t("ACTION_TEST_MDMS"),
-      link: `/workbench-ui/employee/workbench/manage-master-data`,
+      link: `/${window?.contextPath}/employee/workbench/manage-master-data`,
       roles: ROLES.MDMS,
     },
     {
       label: t("ACTION_TEST_LOCALISATION"),
-      link: `/workbench-ui/employee/workbench/localisation-search`,
+      link: `/${window?.contextPath}/employee/workbench/localisation-search`,
       roles: ROLES.LOCALISATION,
     },
     {
       label: t("ACTION_TEST_APPLY_WORKFLOW"),
-      link: `/workbench-ui/employee/workbench/apply-workflow`,
+      link: `/${window?.contextPath}/employee/workbench/apply-workflow`,
       roles: ROLES.WORKFLOW,
     }
   ];

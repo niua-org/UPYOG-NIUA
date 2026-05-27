@@ -190,7 +190,7 @@ const ApplicationDetails = (props) => {
               links: [
                 {
                   name: t("WORKS_CREATE_NEW_LOI"),
-                  redirectUrl: `/${"workbench-ui"}/employee/works/create-loi`,
+                  redirectUrl: `/${window?.contextPath}/employee/works/create-loi`,
                   code: "",
                   svg: "CreateEstimateIcon",
                   isVisible:false,
@@ -198,7 +198,7 @@ const ApplicationDetails = (props) => {
                 },
                 {
                   name: t("WORKS_GOTO_LOI_INBOX"),
-                  redirectUrl: `/${"workbench-ui"}/employee/works/LOIInbox`,
+                  redirectUrl: `/${window?.contextPath}/employee/works/LOIInbox`,
                   code: "",
                   svg: "CreateEstimateIcon",
                   isVisible:true,
@@ -208,7 +208,7 @@ const ApplicationDetails = (props) => {
               responseData:data,
               requestData:variables
             }
-            navigate(`/${"workbench-ui"}/employee/works/response`, { state });
+            navigate(`/${window?.contextPath}/employee/works/response`, { state });
           }
           if(data?.estimates?.[0]){
             const updatedEstimate = data?.estimates?.[0]
@@ -220,7 +220,7 @@ const ApplicationDetails = (props) => {
               links: [
                 {
                   name: t("WORKS_CREATE_ESTIMATE"),
-                  redirectUrl: `/${"workbench-ui"}/employee/works/create-estimate`,
+                  redirectUrl: `/${window?.contextPath}/employee/works/create-estimate`,
                   code: "",
                   svg: "CreateEstimateIcon",
                   isVisible:false,
@@ -228,7 +228,7 @@ const ApplicationDetails = (props) => {
                 },
                 {
                   name: t("WORKS_GOTO_ESTIMATE_INBOX"),
-                  redirectUrl: `/${"workbench-ui"}/employee/works/inbox`,
+                  redirectUrl: `/${window?.contextPath}/employee/works/inbox`,
                   code: "",
                   svg: "RefreshIcon",
                   isVisible:true,
@@ -238,23 +238,22 @@ const ApplicationDetails = (props) => {
               responseData:data,
               requestData:variables
             }
-            navigate(`/${"workbench-ui"}/employee/works/response`, { state })
+            navigate(`/${window?.contextPath}/employee/works/response`, { state })
           }
           if (isOBPS?.bpa) {
             data.selectedAction = selectedAction;
-            navigate(`/workbench-ui/employee/obps/response`, { data: data });
+            navigate(`/${window?.contextPath}/employee/obps/response`, { data: data });
           }
           if (isOBPS?.isStakeholder) {
             data.selectedAction = selectedAction;
-            navigate(`/workbench-ui/employee/obps/stakeholder-response`, { data: data });
+            navigate(`/${window?.contextPath}/employee/obps/stakeholder-response`, { data: data });
           }
           if (isOBPS?.isNoc) {
-            navigate(`/workbench-ui/employee/noc/response`, { data: data });
+            navigate(`/${window?.contextPath}/employee/noc/response`, { data: data });
           }
           if (data?.Amendments?.length > 0 ){
             //RAIN-6981 instead just show a toast here with appropriate message
           //show toast here and return 
-            //navigate("/workbench-ui/employee/ws/response-bill-amend", { status: true, state: data?.Amendments?.[0] })
             
             if(variables?.AmendmentUpdate?.workflow?.action.includes("SEND_BACK")){
               setShowToast({ key: "success", label: t("ES_MODIFYSWCONNECTION_SEND_BACK_UPDATE_SUCCESS")})
@@ -277,7 +276,7 @@ const ApplicationDetails = (props) => {
               info: t("ATM_REGISTER_ID_WEEK"),
               id: `${musterRoll.registerId} | ${format(new Date(musterRoll.startDate), "dd/MM/yyyy")} - ${format(new Date(musterRoll.endDate), "dd/MM/yyyy")}`,
             }
-            navigate(`/${"workbench-ui"}/employee/attendencemgmt/response`, { state })
+            navigate(`/${window?.contextPath}/employee/attendencemgmt/response`, { state })
           }
           setShowToast({ key: "success", action: selectedAction });
           clearDataDetails && setTimeout(clearDataDetails, 3000);
@@ -298,9 +297,9 @@ const ApplicationDetails = (props) => {
   }
 
   return (
-    <React.Fragment>
+    <>
       {!isLoading ? (
-        <React.Fragment>
+        <>
           <ApplicationDetailsContent
             applicationDetails={applicationDetails}
             workflowDetails={workflowDetails}
@@ -357,11 +356,11 @@ const ApplicationDetails = (props) => {
             MenuStyle={MenuStyle}
             saveAttendanceState={saveAttendanceState}
           />}
-        </React.Fragment>
+        </>
       ) : (
         <Loader />
       )}
-    </React.Fragment>
+    </>
   );
 };
 

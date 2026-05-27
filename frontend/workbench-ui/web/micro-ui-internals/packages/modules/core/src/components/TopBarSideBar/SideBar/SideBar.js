@@ -71,12 +71,12 @@ const findKey = (key = "") => {
 Used to navigate to other mission's ui if user has access
 */
 const navigateToRespectiveURL = (navigate = {}, url = "") => {
-  if (url?.indexOf(`/workbench-ui`) === -1) {
+  if (url?.indexOf(`/${window?.contextPath}`) === -1) {
     const hostUrl = window.location.origin;
     const updatedURL = DIGIT_UI_CONTEXTS?.every(
       (e) => url?.indexOf(`/${e}`) === -1
     )
-      ? hostUrl + "/workbench-ui/employee/" + url
+      ? hostUrl + `/${window?.contextPath}/employee/` + url
       : hostUrl + url;
     window.location.href = updatedURL;
   } else {

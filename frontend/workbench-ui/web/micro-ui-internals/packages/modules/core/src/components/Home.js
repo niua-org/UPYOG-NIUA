@@ -34,7 +34,7 @@ export const processLinkData = (newData, code, t) => {
     const roleBasedLoginRoutes = [
       {
         role: "FSM_DSO",
-        from: `/workbench-ui/citizen/fsm/dso-dashboard`,
+        from: `/${window?.contextPath}/citizen/fsm/dso-dashboard`,
         dashoardLink: "CS_LINK_DSO_DASHBOARD",
         loginLink: "CS_LINK_LOGIN_DSO",
       },
@@ -48,7 +48,7 @@ export const processLinkData = (newData, code, t) => {
         });
       else
         newObj?.links?.push({
-          link: `/workbench-ui/citizen/login`,
+          link: `/${window?.contextPath}/citizen/login`,
           state: { role: "FSM_DSO", from },
           i18nKey: t(loginLink),
         });
@@ -89,7 +89,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
   }
 
   return (
-    <React.Fragment>
+    <>
       <div className="citizen-all-services-wrapper">
         {location.pathname.includes("sanitation-ui/citizen/all-services") ? null : <BackButton />}
         <div className="citizenAllServiceGrid">
@@ -122,7 +122,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
             })}
         </div>
       </div>
-    </React.Fragment>
+    </>
   );
 };
 

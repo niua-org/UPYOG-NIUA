@@ -18,11 +18,11 @@ import Search from "./SearchApp";
 import StaticDynamicCard from "./StaticDynamicComponent/StaticDynamicCard";
 
 const sidebarHiddenFor = [
-  `workbench-ui/citizen/register/name`,
-  `/workbench-ui/citizen/select-language`,
-  `/workbench-ui/citizen/select-location`,
-  `/workbench-ui/citizen/login`,
-  `/workbench-ui/citizen/register/otp`,
+  `${window?.contextPath}/citizen/register/name`,
+  `${window?.contextPath}/citizen/select-language`,
+  `${window?.contextPath}/citizen/select-location`,
+  `${window?.contextPath}/citizen/login`,
+  `${window?.contextPath}/citizen/register/otp`,
 ];
 
 const getTenants = (codes, tenants) => {
@@ -182,7 +182,7 @@ const ModuleLevelLinkHomePages = modules.flatMap(({ code, bannerImage }, index) 
             <ErrorComponent
               initData={initData}
               goToHome={() => {
-                navigate(`/workbench-ui/${Digit?.UserService?.getType?.()}`);
+                navigate(`/${window?.contextPath}/${Digit?.UserService?.getType?.()}`);
               }}
             />
           } />

@@ -18,7 +18,7 @@ const ForgotPassword = ({ config: propsConfig, t }) => {
       return;
     }
     Digit.UserService.setUser(user);
-    const redirectPath = location.state?.from || `/workbench-ui/employee`;
+    const redirectPath = location.state?.from || `/${window?.contextPath}/employee`;
     navigate(redirectPath);
   }, [user]);
 
@@ -41,7 +41,7 @@ const ForgotPassword = ({ config: propsConfig, t }) => {
     };
     try {
       await Digit.UserService.sendOtp(requestData, data.city.code);
-      navigate(`/workbench-ui/employee/user/change-password?mobile_number=${data.mobileNumber}&tenantId=${data.city.code}`);
+      navigate(`/${window?.contextPath}/employee/user/change-password?mobile_number=${data.mobileNumber}&tenantId=${data.city.code}`);
     } catch (err) {
       setShowToast(err?.response?.data?.error?.fields?.[0]?.message || "Invalid login credentials!");
       setTimeout(closeToast, 5000);
@@ -49,7 +49,7 @@ const ForgotPassword = ({ config: propsConfig, t }) => {
   };
 
   const navigateToLogin = () => {
-    navigate(`/workbench-ui/employee/login`);
+    navigate(`/${window?.contextPath}/employee/login`);
   };
 
   const [userId, city] = propsConfig.inputs;

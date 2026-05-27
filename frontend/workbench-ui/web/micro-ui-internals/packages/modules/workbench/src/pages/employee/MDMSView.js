@@ -113,9 +113,8 @@ const MDMSView = ({...props}) => {
     const {action:actionSelected} = action 
     //action===EDIT go to edit screen 
     if(actionSelected==="EDIT") {
-      navigate(`/workbench-ui/employee/workbench/mdms-edit?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${uniqueIdentifier}`)
+      navigate(`/${window?.contextPath}/employee/workbench/mdms-edit?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${uniqueIdentifier}`)
     }
-    //action===DISABLE || ENABLE call update api and show toast respectively
     else{
       //call update mutation
       handleEnableDisable(actionSelected)

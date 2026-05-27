@@ -54,9 +54,9 @@ export const UserService = {
       window.localStorage.clear();
       window.sessionStorage.clear();
       if (userType === "citizen") {
-        window.location.replace("/workbench-ui/citizen");
+        window.location.replace(`/${window?.contextPath}/citizen`);
       } else {
-        window.location.replace("/workbench-ui/employee/user/language-selection");
+        window.location.replace(`/${window?.contextPath}/employee/user/language-selection`);
       }
     }
   },

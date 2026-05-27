@@ -113,7 +113,7 @@ const LocalisationSearch = () => {
         Config && Digit.Utils.didEmployeeHasRole(Config?.actionRole) &&
         <ActionBar >
           <SubmitBar disabled={false} onSubmit={() => {
-              navigate(`/workbench-ui/employee/${Config?.actionLink}`);
+              navigate(`/${window?.contextPath}/employee/${Config?.actionLink}`);
             }} label={t("WBH_ADD_LOCALISATION")} />
         </ActionBar>
       }

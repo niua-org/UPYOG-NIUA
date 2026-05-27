@@ -103,10 +103,10 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    navigate(`/workbench-ui/citizen/login`);
+    navigate(`/${window?.contextPath}/citizen/login`);
   };
   const showProfilePage = () => {
-    navigate(`/workbench-ui/citizen/user/profile`);
+    navigate(`/${window?.contextPath}/citizen/user/profile`);
   };
 
   let menuItems = [...SideBarMenu(t, showProfilePage, redirectToLoginPage, isEmployee)];
@@ -169,7 +169,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
       },
       {
         text: (
-          <React.Fragment>
+          <>
             {t("CS_COMMON_HELPLINE")}
             <div className="telephone" style={{ marginTop: "-10%" }}>
               {storeData?.tenants.map((i) => {
@@ -187,7 +187,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
                 <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
               </div>
             </div>
-          </React.Fragment>
+          </>
         ),
         element: "Helpline",
         icon: "Phone",
@@ -197,7 +197,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
   Object.keys(linkData)
     ?.sort((x, y) => y.localeCompare(x))
     ?.map((key) => {
-      if (linkData[key][0]?.sidebar === `${"workbench-ui"}-links`) {
+      if (linkData[key][0]?.sidebar === `${window.contextPath}-links`) {
         menuItems.splice(1, 0, {
           type: linkData[key][0]?.sidebarURL?.includes(window?.contextPath) ? "link" : "external-link",
           text: t(`ACTION_TEST_${Digit.Utils.locale.getTransformedLocale(key)}`),
@@ -209,7 +209,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
     });
 
   return (
-    <React.Fragment>
+    <>
       <div>
         <div
           style={{
@@ -239,7 +239,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
         </div>
         <div>{showDialog && <LogoutDialog onSelect={handleOnSubmit} onCancel={handleOnCancel} onDismiss={handleOnCancel}></LogoutDialog>}</div>
       </div>
-    </React.Fragment>
+    </>
   );
 };
 

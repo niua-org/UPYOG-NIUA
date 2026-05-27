@@ -96,12 +96,12 @@ const WorkflowActions = ({ businessService, tenantId, applicationNo, forcedActio
     //send appropriate states over
     
     if(bsEstimate === businessService && action?.action === "RE-SUBMIT"){
-        navigate(`/workbench-ui/employee/estimate/create-estimate?tenantId=${tenantId}&projectNumber=${editApplicationNumber}&estimateNumber=${applicationDetails?.estimateNumber}&isEdit=true`);
+        navigate(`/${window?.contextPath}/employee/estimate/create-estimate?tenantId=${tenantId}&projectNumber=${editApplicationNumber}&estimateNumber=${applicationDetails?.estimateNumber}&isEdit=true`);
         return 
     }
 
     if(bsContract === businessService && action?.action === "EDIT"){
-      navigate(`/workbench-ui/employee/contracts/create-contract?tenantId=${tenantId}&workOrderNumber=${applicationNo}`);
+      navigate(`/${window?.contextPath}/employee/contracts/create-contract?tenantId=${tenantId}&workOrderNumber=${applicationNo}`);
       return 
   }
     if(bsAttendance === businessService && action?.action === "RE-SUBMIT"){
@@ -110,7 +110,7 @@ const WorkflowActions = ({ businessService, tenantId, applicationNo, forcedActio
     }
 
     if(bsPurchaseBill === businessService && action?.action==="RE-SUBMIT"){
-      navigate(`/workbench-ui/employee/expenditure/create-purchase-bill?tenantId=${tenantId}&billNumber=${editApplicationNumber}`);
+      navigate(`/${window?.contextPath}/employee/expenditure/create-purchase-bill?tenantId=${tenantId}&billNumber=${editApplicationNumber}`);
       return 
     }
     //here we can add cases of toast messages,edit application and more...

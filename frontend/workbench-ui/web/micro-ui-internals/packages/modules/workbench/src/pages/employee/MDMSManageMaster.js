@@ -101,7 +101,7 @@ const MDMSManageMaster = () => {
     //here set current schema based on module and master name
     if(masterName?.name && moduleName?.name){
     setCurrentSchema(availableSchemas.filter(schema => schema.code === `${masterName?.name}.${moduleName?.name}`)?.[0])
-    navigate(`/workbench-ui/employee/workbench/mdms-search-v2?moduleName=${masterName.name}&masterName=${moduleName.name}`)
+    navigate(`/${window?.contextPath}/employee/workbench/mdms-search-v2?moduleName=${masterName.name}&masterName=${moduleName.name}`)
     }
   }, [moduleName])
 

@@ -41,7 +41,7 @@ const LocationSelection = () => {
       const redirectBackTo = location.state?.redirectBackTo;
       if (redirectBackTo) {
         navigate(redirectBackTo);
-      } else navigate(`/workbench-ui/citizen`);
+      } else navigate(`/${window?.contextPath}/citizen`);
     } else {
       setShowError(true);
     }

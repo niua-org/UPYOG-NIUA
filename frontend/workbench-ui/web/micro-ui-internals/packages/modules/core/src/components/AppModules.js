@@ -17,7 +17,7 @@ export const AppModules = ({ stateCode, userType, modules, appTenants }) => {
   const user = Digit.UserService.getUser();
 
   if (!user || !user?.access_token || !user?.info) {
-    return <Navigate to={`/workbench-ui/employee/user/login`} state={{ from: location.pathname + location.search }} replace />;
+    return <Navigate to={`/${window?.contextPath}/employee/user/login`} state={{ from: location.pathname + location.search }} replace />;
   }
 
   return (
@@ -31,12 +31,12 @@ export const AppModules = ({ stateCode, userType, modules, appTenants }) => {
             } />
           ) : (
             <Route key={index} path={`${code.toLowerCase()}/*`} element={
-              <Navigate to={`/workbench-ui/employee/user/error?type=notfound&module=${code}`} replace />
+              <Navigate to={`/${window?.contextPath}/employee/user/error?type=notfound&module=${code}`} replace />
             } />
           );
         })}
         <Route path="login" element={
-          <Navigate to={`/workbench-ui/employee/user/login`} state={{ from: location.pathname + location.search }} replace />
+          <Navigate to={`/${window?.contextPath}/employee/user/login`} state={{ from: location.pathname + location.search }} replace />
         } />
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="change-password" element={<ChangePassword />} />

@@ -32,14 +32,14 @@ const TopBarSideBar = ({
     setShowDialog(false);
   }
   const userProfile = () => {
-    navigate(`/workbench-ui/employee/user/profile`);
+    navigate(`/${window?.contextPath}/employee/user/profile`);
   };
   const userOptions = [
     { name: t("EDIT_PROFILE"), icon: <EditPencilIcon className="icon" />, func: userProfile },
     { name: t("CORE_COMMON_LOGOUT"), icon: <LogoutIcon className="icon" />, func: handleLogout },
   ];
   return (
-    <React.Fragment>
+    <>
       <TopBar
         t={t}
         stateInfo={stateInfo}
@@ -71,7 +71,7 @@ const TopBarSideBar = ({
           islinkDataLoading={islinkDataLoading}
         />
       )}
-    </React.Fragment>
+    </>
   );
 };
 export default TopBarSideBar;

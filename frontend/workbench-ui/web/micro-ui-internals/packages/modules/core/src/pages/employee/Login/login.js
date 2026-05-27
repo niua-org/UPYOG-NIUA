@@ -38,20 +38,20 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
     if (user?.info?.roles?.length > 0) user.info.roles = filteredRoles;
     Digit.UserService.setUser(user);
     setEmployeeDetail(user?.info, user?.access_token);
-    let redirectPath = `/workbench-ui/employee`;
+    let redirectPath = `/${window?.contextPath}/employee`;
 
     /* logic to redirect back to same screen where we left off  */
     if (window?.location?.href?.includes("from=")) {
-      redirectPath = decodeURIComponent(window?.location?.href?.split("from=")?.[1]) || `/workbench-ui/employee`;
+      redirectPath = decodeURIComponent(window?.location?.href?.split("from=")?.[1]) || `/${window?.contextPath}/employee`;
     }
 
     /*  RAIN-6489 Logic to navigate to National DSS home incase user has only one role [NATADMIN]*/
     if (user?.info?.roles && user?.info?.roles?.length > 0 && user?.info?.roles?.every((e) => e.code === "NATADMIN")) {
-      redirectPath = `/workbench-ui/employee/dss/landing/NURT_DASHBOARD`;
+      redirectPath = `/${window?.contextPath}/employee/dss/landing/NURT_DASHBOARD`;
     }
     /*  RAIN-6489 Logic to navigate to National DSS home incase user has only one role [NATADMIN]*/
     if (user?.info?.roles && user?.info?.roles?.length > 0 && user?.info?.roles?.every((e) => e.code === "STADMIN")) {
-      redirectPath = `/workbench-ui/employee/dss/landing/home`;
+      redirectPath = `/${window?.contextPath}/employee/dss/landing/home`;
     }
 
     navigate(redirectPath);
@@ -90,7 +90,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
   };
 
   const onForgotPassword = () => {
-    navigate(`/workbench-ui/employee/user/forgot-password`);
+    navigate(`/${window?.contextPath}/employee/user/forgot-password`);
   };
   const defaultValue = {
     code: Digit.ULBService.getStateId(),
@@ -133,14 +133,6 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
       </FormComposerV2>
       {showToast && <Toast error={true} label={t(showToast)} onClose={closeToast} />}
       <div className="employee-login-home-footer" style={{ backgroundColor: "unset" }}>
-        {/* <img
-          alt="Powered by DIGIT"
-          src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER_BW")}
-          style={{ cursor: "pointer" }}
-          onClick={() => {
-            window.open(window?.globalConfigs?.getConfig?.("DIGIT_HOME_URL"), "_blank").focus();
-          }}
-        />{" "} */}
       </div>
     </Background>
   );

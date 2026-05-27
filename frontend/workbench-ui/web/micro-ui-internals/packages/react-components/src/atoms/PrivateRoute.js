@@ -23,9 +23,9 @@ export const PrivateRoute = ({ children }) => {
    */
   const getLoginRedirectionLink = () => {
     if (userType === "employee") {
-      return `/workbench-ui/employee/user/language-selection`;
+      return `/${window?.contextPath}/employee/user/language-selection`;
     } else {
-      return `/workbench-ui/citizen/login`;
+      return `/${window?.contextPath}/workbench-ui/citizen/login`;
     }
   };
 

@@ -29,7 +29,7 @@ const LanguageSelection = () => {
   );
 
   function onSubmit() {
-    navigate(`/workbench-ui/citizen/select-location`);
+    navigate(`/${window?.contextPath}/citizen/select-location`);
   }
 
   return isLoading ? (

@@ -20,7 +20,7 @@ const ChangePasswordComponent = ({ config: propsConfig, t }) => {
       return;
     }
     Digit.UserService.setUser(user);
-    const redirectPath = location.state?.from || `/workbench-ui/employee`;
+    const redirectPath = location.state?.from || `/${window?.contextPath}/employee`;
     navigate(redirectPath);
   }, [user]);
 
@@ -68,7 +68,7 @@ const ChangePasswordComponent = ({ config: propsConfig, t }) => {
   };
 
   const navigateToLogin = () => {
-    navigate(`/workbench-ui/employee/user/login`);
+    navigate(`/${window?.contextPath}/employee/user/login`);
   };
 
   const [username, password, confirmPassword] = propsConfig.inputs;

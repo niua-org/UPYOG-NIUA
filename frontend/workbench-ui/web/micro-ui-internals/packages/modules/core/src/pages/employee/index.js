@@ -89,7 +89,7 @@ const EmployeeApp = ({
                       <ErrorComponent
                         initData={initData}
                         goToHome={() => {
-                          navigate(`/workbench-ui/${Digit?.UserService?.getType?.()}`); // history.push → navigate
+                          navigate(`/${window?.contextPath}/${Digit?.UserService?.getType?.()}`); // history.push → navigate
                         }}
                       />
                     }

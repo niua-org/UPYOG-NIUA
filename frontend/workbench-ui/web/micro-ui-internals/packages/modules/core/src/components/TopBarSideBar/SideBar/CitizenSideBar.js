@@ -87,14 +87,14 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   const { isLoading, data } = Digit.Hooks.useAccessControl();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const showProfilePage = () => {
-    const redirectUrl = isEmployee ? `/workbench-ui/employee/user/profile` : `/workbench-ui/citizen/user/profile`;
+    const redirectUrl = isEmployee ? `/${window?.contextPath}/employee/user/profile` : `/${window?.contextPath}/citizen/user/profile`;
     navigate(redirectUrl);
     closeSidebar();
   };
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    navigate(`/workbench-ui/citizen/login`);
+    navigate(`/${window?.contextPath}/citizen/login`);
     closeSidebar();
   };
   if (islinkDataLoading || isLoading) {
@@ -126,7 +126,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
       },
       {
         text: (
-          <React.Fragment>
+          <>
             {t("CS_COMMON_HELPLINE")}
             <div className="telephone" style={{ marginTop: "-10%" }}>
               {storeData?.tenants?.map((tenant, idx) => {
@@ -142,7 +142,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
                 </div>
               )}
             </div>
-          </React.Fragment>
+          </>
         ),
         element: "Helpline",
         icon: "Phone",

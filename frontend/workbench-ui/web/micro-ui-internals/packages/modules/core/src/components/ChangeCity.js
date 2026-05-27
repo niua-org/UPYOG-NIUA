@@ -27,8 +27,8 @@ const ChangeCity = (prop) => {
     Digit.SessionStorage.set("Employee.tenantId", city?.value);
     Digit.UserService.setUser(loggedInData);
     setDropDownData(city);
-    if (window.location.href.includes(`/workbench-ui/employee/`)) {
-      const redirectPath = location.state?.from || `/workbench-ui/employee`;
+    if (window.location.href.includes(`/${window?.contextPath}/employee/`)) {
+      const redirectPath = location.state?.from || `/${window?.contextPath}/employee`;
       navigate(redirectPath);
     }
     window.location.reload();
@@ -68,24 +68,7 @@ const ChangeCity = (prop) => {
       />
     </div>
   );
-  // } else {
-  //   return (
-  //     <React.Fragment>
-  //       <div style={{ marginBottom: "5px" }}>City</div>
-  //       <div className="language-selector" style={{display: "flex", flexWrap: "wrap"}}>
-  //         {selectCityData?.map((city, index) => (
-  //           <div className="language-button-container" key={index}>
-  //             <CustomButton
-  //               selected={city.value === Digit.SessionStorage.get("Employee.tenantId")}
-  //               text={city.label}
-  //               onClick={() => handleChangeCity(city)}
-  //             ></CustomButton>
-  //           </div>
-  //         ))}
-  //       </div>
-  //     </React.Fragment>
-  //   );
-  // }
+  
 };
 
 export default ChangeCity;
