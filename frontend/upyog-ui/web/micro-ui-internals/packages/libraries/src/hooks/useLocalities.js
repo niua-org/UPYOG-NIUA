@@ -8,6 +8,9 @@ const useLocalities = (tenant, boundaryType = "admin", config, t) => {
     queryKey: ["BOUNDARY_DATA", tenant, boundaryType],
     queryFn: () => getLocalities[boundaryType](tenant),
     select: (data) => {
+      if (!data || !data.boundary || data.boundary.length === 0) {
+        return [];
+      }
       return LocalityService?.get(data).map((key) => {
         return { ...key, i18nkey: t(key.i18nkey) };
       });
