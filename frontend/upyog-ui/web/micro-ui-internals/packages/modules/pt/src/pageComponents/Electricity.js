@@ -1,5 +1,5 @@
 import { CardLabel,LabelFieldPair, TextInput, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
-import  FormStep  from "../../../../react-components/src/molecules/FormStep";
+import  {FormStep}  from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
