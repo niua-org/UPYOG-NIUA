@@ -1,5 +1,4 @@
 import { queryTemplate } from "../common/queryTemplate";
-// import mergeConfig from "../../config/mergeConfig";
 import { StoreService } from "../services/molecules/Store/service";
 
 export const useStore = ({ stateCode, moduleCode, language }) => {

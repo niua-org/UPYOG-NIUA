@@ -8,20 +8,6 @@ import { MdmsService } from "../services/elements/MDMS";
  * @author jagankumar-egov
  * 
  * @example
- * // returns useQuery object
- * Digit.Hooks.useCustomMDMS(
- *          "stateid",
- *          "modulename",
- *          [
- *              { name:"masterdetail1",filter:"[?(@.active == true)]"},
- *              { name:"masterdetail2" }
- *          ],
- *          { // all configs supported by the usequery 
- *              default:(data)=>{
- *                          format
- *                          return formattedData;
- *                          }
- *          })
  * 
  * @returns {Object} Returns the object of the useQuery from react-query.
  */

@@ -1,9 +1,6 @@
 import { Link } from "react-router-dom";
 import _ from "lodash";
 
-//create functions here based on module name set in mdms(eg->SearchProjectConfig)
-//how to call these -> Digit?.Customizations?.[masterName]?.[moduleName]
-// these functions will act as middlewares
 var Digit = window.Digit || {};
 
 const businessServiceMap = {
@@ -202,11 +199,6 @@ export const UICustomizations = {
         data.body.inbox.moduleSearchCriteria.orgId = selectedOrg?.[0]?.applicationNumber;
       }
 
-      // let selectedWard =  _.clone(data.body.inbox.moduleSearchCriteria.ward ? data.body.inbox.moduleSearchCriteria.ward : null);
-      // delete data.body.inbox.moduleSearchCriteria.ward;
-      // if(selectedWard) {
-      //    data.body.inbox.moduleSearchCriteria.ward = selectedWard?.[0]?.code;
-      // }
 
       let states = _.clone(data.body.inbox.moduleSearchCriteria.state ? data.body.inbox.moduleSearchCriteria.state : []);
       let ward = _.clone(data.body.inbox.moduleSearchCriteria.ward ? data.body.inbox.moduleSearchCriteria.ward : []);
@@ -214,12 +206,10 @@ export const UICustomizations = {
       delete data.body.inbox.moduleSearchCriteria.state;
       delete data.body.inbox.moduleSearchCriteria.ward;
 
-      // locality = locality?.map((row) => row?.code);
       states = Object.keys(states)?.filter((key) => states[key]);
       ward = ward?.map((row) => row?.code);
 
       // //adding formatted data to these keys
-      // if (locality.length > 0) data.body.inbox.moduleSearchCriteria.locality = locality;
       if (states.length > 0) data.body.inbox.moduleSearchCriteria.status = states;
       if (ward.length > 0) data.body.inbox.moduleSearchCriteria.ward = ward;
       const projectType = _.clone(data.body.inbox.moduleSearchCriteria.projectType ? data.body.inbox.moduleSearchCriteria.projectType : {});

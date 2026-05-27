@@ -59,11 +59,9 @@ const SearchComponent = ({ uiConfig, header = "", screenType = "search", fullCon
   };
 
  const onSubmit = (data) => {
-    console.log("[SearchComponent] onSubmit FIRED with data:", data);
 
     //here -> added a custom validator function, if required add in UICustomizations
     const isAnyError = Digit?.Customizations?.[apiDetails?.masterName]?.[apiDetails?.moduleName]?.customValidationCheck ? Digit?.Customizations?.[apiDetails?.masterName]?.[apiDetails?.moduleName]?.customValidationCheck(data) : false
-    console.log("[SearchComponent] customValidationCheck result:", isAnyError);
     if(isAnyError) {
       setShowToast(isAnyError)
       setTimeout(closeToast,3000)
@@ -71,9 +69,7 @@ const SearchComponent = ({ uiConfig, header = "", screenType = "search", fullCon
     }
 
     const filledCount = countFilledFields(data);
-    console.log("[SearchComponent] filledCount:", filledCount, "minReqFields:", uiConfig?.minReqFields);
     if(filledCount >= uiConfig?.minReqFields) {
-      console.log("[SearchComponent] dispatching searchForm with:", data);
       dispatch({
         type: uiConfig?.type === "filter" ? "filterForm" : "searchForm",
         state: {
@@ -81,7 +77,6 @@ const SearchComponent = ({ uiConfig, header = "", screenType = "search", fullCon
         }
       })
     } else {
-      console.log("[SearchComponent] showing min-criteria toast");
       setShowToast({ warning: true, label: t("ES_COMMON_MIN_SEARCH_CRITERIA_MSG") })
       setTimeout(closeToast, 3000);
     }

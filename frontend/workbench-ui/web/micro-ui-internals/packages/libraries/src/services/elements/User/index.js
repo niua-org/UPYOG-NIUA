@@ -4,7 +4,9 @@ import { Storage } from "../../atoms/Utils/Storage";
 
 // REMOVED: INVALIDROLES check - Not needed in workbench as it's an internal tool with backend RBAC
 export const UserService = {
+  
   authenticate: (details) => {
+    console.log('user service called', window?.globalConfigs?.getConfig("JWT_TOKEN"));
     const data = new URLSearchParams();
     Object.entries(details).forEach(([key, value]) => data.append(key, value));
     data.append("scope", "read");
@@ -14,7 +16,8 @@ export const UserService = {
       url: Urls.Authenticate,
       data,
       headers: {
-        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN")||"ZWdvdi11c2VyLWNsaWVudDo="}`,
+        // TODO: Remove fallback once all environments have JWT_TOKEN configured in globalConfigs
+        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN")}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });

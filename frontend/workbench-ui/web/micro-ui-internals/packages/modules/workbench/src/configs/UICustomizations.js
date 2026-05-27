@@ -3,7 +3,6 @@ import _ from "lodash";
 import React from 'react';
 
 //create functions here based on module name set in mdms(eg->SearchProjectConfig)
-//how to call these -> Digit?.Customizations?.[masterName]?.[moduleName]
 // these functions will act as middlewares
 var Digit = window.Digit || {};
 
@@ -547,9 +546,11 @@ export const UICustomizations = {
       return data;
     },
     additionalCustomizations: (row, key, column, value, t, searchResult) => {
-      //here we can add multiple conditions
-      //like if a cell is link then we return link
-      //first we can identify which column it belongs to then we can return relevant result
+      /*
+      here we can add multiple conditions
+      like if a cell is link then we return link
+      first we can identify which column it belongs to then we can return relevant result
+     */
       switch (key) {
         case "Unique Identifier":
           const [moduleName,masterName] = row.schemaCode.split(".")
@@ -598,16 +599,6 @@ export const UICustomizations = {
       }
     },
     combineData : ({isLoading,isFetching,data,defaultData,refetch,refetchDefault}) => {
-      //for every message in data we need to query defaultData , if same code is there then populate a field in data and return data
-      // data?.messages?.forEach((message,idx) => {
-      //   message.defaultMessage = ""
-      //   defaultData?.messages?.forEach((defaultMessage,defaultIdx)=> {
-      //     if(message.code === defaultMessage.code){
-      //       message.defaultMessage = defaultMessage.message
-      //     }
-      //   })
-      // })
-      // return data
       //TODO: Revisit this logic
       defaultData?.messages?.forEach((message,idx) => {
         message.defaultMessage = ""

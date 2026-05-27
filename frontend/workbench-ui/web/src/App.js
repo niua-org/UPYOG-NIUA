@@ -6,7 +6,7 @@ import { UICustomizations } from "./Customisations/UICustomizations";
 import { initWorkbenchComponents } from "@nudmcdgnpm/digit-ui-module-workbench";
 
 window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH");
-
+console.log("contextPath", window);
 const enabledModules = [
   "Utilities",
   "Workbench"
@@ -33,6 +33,7 @@ initLibraries().then(() => {
 
 function App() {
   window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH");
+  console.log("contextPath upppppp:- ", contextPath);
   const stateCode =
     window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") ||
     process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
@@ -44,7 +45,6 @@ function App() {
       stateCode={stateCode}
       enabledModules={enabledModules}
       moduleReducers={moduleReducers}
-      // defaultLanding="employee"
     />
   );
 }

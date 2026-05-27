@@ -3,12 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { initLibraries } from "@upyog/workbench-ui-libraries";
 import { DigitUI } from "@upyog/workbench-ui-module-core";
-import { initEngagementComponents } from "@upyog/workbench-ui-module-engagement";
-// import { initUtilitiesComponents } from  "@upyog/workbench-ui-module-utilities";
 import { initWorkbenchComponents } from "@nudmcdgnpm/digit-ui-module-workbench";
-
-// import "@egovernments/digit-ui-css/example/index.css";
-
 import { pgrCustomizations } from "./pgr";
 import { UICustomizations } from "./UICustomizations";
 
@@ -16,15 +11,11 @@ var Digit = window.Digit || {};
 
 const container = document.getElementById("root");
   const root = createRoot(container);
-const enabledModules = [ "DSS", 
-  //"HRMS",
-"Workbench"
-,"PGR"
-//  "Engagement", "NDSS","QuickPayLinks", "Payment",
-  // "Utilities",
-//added to check fsm
-// "FSM"
-];
+const enabledModules = [ 
+    "DSS", 
+    "Workbench",
+    "PGR"
+  ];
 
 const initTokens = (stateCode) => {
   const userType = window.sessionStorage.getItem("userType") || process.env.REACT_APP_USER_TYPE || "CITIZEN";
@@ -44,7 +35,6 @@ const initTokens = (stateCode) => {
   if (userType !== "CITIZEN") {
     window.Digit.SessionStorage.set("User", { access_token: token, info: userType !== "CITIZEN" ? JSON.parse(employeeInfo) : citizenInfo });
   } else {
-    // if (!window.Digit.SessionStorage.get("User")?.extraRoleInfo) window.Digit.SessionStorage.set("User", { access_token: token, info: citizenInfo });
   }
 
   window.Digit.SessionStorage.set("Citizen.tenantId", citizenTenantId);
@@ -59,18 +49,10 @@ const initDigitUI = () => {
     commonUiConfig: UICustomizations
   };
   window?.Digit.ComponentRegistryService.setupRegistry({
-    // PaymentModule,
-    // ...paymentConfigs,
-    // PaymentLinks,
   });
 
-  
-  initEngagementComponents();
-  // initUtilitiesComponents();
   initWorkbenchComponents();
  
-
-
   const moduleReducers = (initData) =>  ({
     pgr: PGRReducers(initData),
   });

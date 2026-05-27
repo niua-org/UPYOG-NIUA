@@ -33,16 +33,6 @@ const WorkbenchCard = () => {
       link: `/workbench-ui/employee/workbench/apply-workflow`,
       roles: ROLES.WORKFLOW,
     }
-    // {
-    //   label: t("Sample Create master"),
-    //   link: `/workbench-ui/employee/workbench/mdms-add-v2?moduleName=common-masters&masterName=Sample`,
-    //   roles: ROLES.MDMS,
-    // },
-    // {
-    //   label: t("Sample Search master"),
-    //   link: `/workbench-ui/employee/workbench/mdms-search-v2?masterName=common-masters&moduleName=Sample`,
-    //   roles: ROLES.MDMS,
-    // },
   ];
 
   links = links.filter((link) => (link?.roles && link?.roles?.length > 0 ? Digit.Utils.didEmployeeHasAtleastOneRole(link?.roles) : true));

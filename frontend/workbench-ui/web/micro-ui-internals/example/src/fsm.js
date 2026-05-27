@@ -3,8 +3,6 @@ const fsmCustomizations = {
     const employeeConfig = [
       {
         name: "applicationDetails",
-        // fields: ["sanitationType", "applicationChannel"],
-        // fieldsOrder: {sanitationType: 0, applicationChannel: 1}, // TODO
         allFields: true, // for example: If in applicationDetails you have 10 fields and in fieldsOrder you only enter 3 fields name then on browser you will only see 3 fields in that order but if you want to see rest of 7 fields at the bottom.
         // removeFields: ["applicantName"], // type the name of the field in camelCase to remove it
         addFields: [

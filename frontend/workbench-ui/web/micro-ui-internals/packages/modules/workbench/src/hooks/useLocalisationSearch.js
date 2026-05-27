@@ -12,11 +12,9 @@ const useLocalisationSearch = ({url, params, body, config = {}, plainAccessReque
     return true;
   });
   const finalEnabled = hasAnySearchValue ;
-  console.log("[useLocalisationSearch] called. hasAnySearchValue:", hasAnySearchValue, "config.enabled:", config?.enabled, "finalEnabled:", finalEnabled, "params:", JSON.stringify(params), "searchForm:", JSON.stringify(state?.searchForm));
   const { isLoading, data, isFetching, refetch, error } = queryTemplate({
     queryKey: [url, changeQueryName, state?.searchForm].filter((e) => e),
     queryFn: () => {
-      console.log("[useLocalisationSearch] >>> queryFn EXECUTING with params:", JSON.stringify(params));
       return LocalisationSearch.fetchResults({ url, params, body, plainAccessRequest, state });
     },
     config: {

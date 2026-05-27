@@ -14,15 +14,7 @@
     "react-router-dom": "6.28.0",
     "react-dom": "^19.0.0"
   },
-  "devDependencies": {
-    "babel-eslint": "10.1.0",
-    "cross-env": "7.0.3",
-    "gh-pages": "2.2.0",
-    "husky": "7.0.4",
-    "lint-staged": "12.3.7",
-    "microbundle-crl": "0.13.11",
-    "react-responsive": "9.0.2"
-  },
+
 "dependencies": {
     "@nudmcdgnpm/workbench-ui-svg-components":"1.0.0",
     "@googlemaps/js-api-loader": "1.13.10",
@@ -32,7 +24,8 @@
     "react-drag-drop-files": "2.3.10",
     "react-hook-form": "^7.51.0",
     "react-i18next": "14.0.0",
-    "react-table": "7.7.0"
+    "react-table": "7.7.0",
+    "react-responsive": "9.0.2"
   },
 "browserslist": [
     ">0.2%",

@@ -54,10 +54,6 @@ const LocalisationSearch = () => {
       setShowModal(null)
       setEditRow(null)
       setModalConfig(null)
-      // const queryCache = queryClient.getQueryCache()
-      // const queryKeys = queryCache.getAll().map(cache => cache.queryKey) // QueryKey[]
-      // queryClient.invalidateQueries([`/localization/messages/v1/_upsert`,`Random`])
-      // queryClient.invalidateQueries([`/localization/messages/v1/_upsert`,`Random`,`defaultLocale`])
       closeToast();
       setCallRefetch(true)
     };
@@ -113,18 +109,6 @@ const LocalisationSearch = () => {
     <React.Fragment>
       <div className="jk-header-btn-wrapper">
       <Header className="works-header-search">{t(Config?.label)}</Header>
-      {/* {Config && Digit.Utils.didEmployeeHasRole(Config?.actionRole) && (
-          <Button
-            label={t(Config?.actionLabel)}
-            variation="secondary"
-            icon={<AddFilled style={{ height: "20px", width: "20px" }} />}
-            onButtonClick={() => {
-              navigate(`/workbench-ui/employee/${Config?.actionLink}`);
-            }}
-            type="button"
-            className={'header-btn'}
-          />
-        )} */}
       {
         Config && Digit.Utils.didEmployeeHasRole(Config?.actionRole) &&
         <ActionBar >

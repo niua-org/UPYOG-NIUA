@@ -8,7 +8,6 @@ import React, { useContext } from "react";
  * Feature :: Privacy
  * 
  * @example
- *         const { privacy , updatePrivacy } = Digit.Hooks.usePrivacyContext()
  *
  * @returns {Object} Returns the object which contains privacy value and updatePrivacy method
  */
