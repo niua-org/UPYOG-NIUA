@@ -231,6 +231,7 @@ import ToggleSwitch from "./atoms/ToggleSwitch";
 import CitizenConsentForm from "./atoms/CitizenConsentForm";
 import AddressDetails from "./molecules/AddressDetails";
 import ApplicantDetails from "./molecules/ApplicantDetails";
+import Stepper from "./customComponents/Stepper";
 import Timeline from "./molecules/Timeline";
 
 export {
@@ -472,6 +473,7 @@ export {
   CHBIcon,
   AddressDetails,
   ApplicantDetails,
+  Stepper,
   Timeline,
   SuccessSvg
 

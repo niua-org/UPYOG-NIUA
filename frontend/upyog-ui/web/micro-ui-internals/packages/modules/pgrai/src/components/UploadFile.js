@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, Fragment } from "react";
-import ButtonSelector from "../../../../react-components/src/atoms/ButtonSelector";
-import { Close } from "../../../../react-components/src/atoms/svgindex";
+import {ButtonSelector} from "@nudmcdgnpm/digit-ui-react-components";
+import { Close } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import RemoveableTag from "../../../../react-components/src/atoms/RemoveableTag";
+import {RemoveableTag} from "@nudmcdgnpm/digit-ui-react-components";
 
 
 // using the custom upload file component in order to do the style related changes.
