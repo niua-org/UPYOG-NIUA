@@ -3,7 +3,7 @@ import { RadioOrSelect, RadioButtons, LabelFieldPair, CardLabel, Dropdown, Loade
 import { cardBodyStyle } from "../utils";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
-import FormStep from "../../../../react-components/src/molecules/FormStep";
+import {FormStep} from "@nudmcdgnpm/digit-ui-react-components";
 const SelectSpecialOwnerCategoryType = ({ t, config, onSelect, userType, formData, ownerIndex }) => {
   const { pathname: url } = useLocation();
   const editScreen = url.includes("/modify-application/");

@@ -21,7 +21,6 @@ import CHBCard from "./components/CHBCard";
 import InboxFilter from "./components/inbox/NewInboxFilter";
 import { TableConfig } from "./config/inbox-table-config";
 import ApplicationDetails from "./pages/employee/ApplicationDetails";
-import Response from "./pages/Response";
 import SelectOtp from "../../core/src/pages/citizen/Login/SelectOtp";
 import CitizenFeedback from "../../core/src/components/CitizenFeedback";
 import AcknowledgementCF from "../../core/src/components/AcknowledgementCF";
@@ -64,7 +63,6 @@ const componentsToRegister = {
   CHBWFCaption,
   CHBWFReason,
   ApplicationDetails: ApplicationDetails,
-  CHBResponse: Response,
   CHBMyApplications: CHBMyApplications,
   CHBApplicationDetails: CHBApplicationDetails,
   SelectOtp, // To-do: Temp fix, Need to check why not working if selectOtp module is already imported from core module

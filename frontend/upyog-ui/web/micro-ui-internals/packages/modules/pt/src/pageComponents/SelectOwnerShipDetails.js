@@ -9,7 +9,7 @@ import {
   Loader,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { cardBodyStyle } from "../utils";
-import FormStep from "../../../../react-components/src/molecules/FormStep"
+import {FormStep} from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 

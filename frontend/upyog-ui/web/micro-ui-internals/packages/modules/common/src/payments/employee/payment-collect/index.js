@@ -18,6 +18,7 @@ export const CollectPayment = (props) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const queryClient = useQueryClient();
   const {state,search}=useLocation();
+  console.log("statestatestate",state);
   const { path: currentPath } = Digit.Hooks.useModuleBasePath();
   let { consumerCode, businessService } = useParams();
   const tenantId = Digit.ULBService.getCurrentTenantId();

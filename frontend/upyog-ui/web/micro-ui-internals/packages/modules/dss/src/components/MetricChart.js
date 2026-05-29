@@ -1,5 +1,5 @@
 import { DownwardArrow, UpwardArrow } from "@nudmcdgnpm/digit-ui-react-components";
-import Rating from "../../../../react-components/src/atoms/Rating"
+import {Rating} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import FilterContext from "./FilterContext";

@@ -106,17 +106,30 @@ const CHBAcknowledgement = ({ data, onSuccess, mutation }) => {
 
     if (isSlotBooked) {
       setShowToast({ error: true, label: t("CHB_COMMUNITY_HALL_ALREADY_BOOKED") });
-    } else if(user.type==="CITIZEN") {
-      navigate({
-        pathname: `/upyog-ui/citizen/payment/my-bills/${"chb-services"}/${mutation.data?.hallsBookingApplication[0].bookingNo}`,
-        state: { tenantId:tenantId, bookingNo: mutation.data?.hallsBookingApplication[0].bookingNo,timerValue:result?.data?.timerValue,SlotSearchData:SlotSearchData },
-      });
-    }
-      else if(user.type==="EMPLOYEE") {
-        navigate({
-          pathname: `/upyog-ui/employee/payment/collect/${"chb-services"}/${mutation.data?.hallsBookingApplication[0].bookingNo}`,
-          state: { tenantId:tenantId, bookingNo: mutation.data?.hallsBookingApplication[0].bookingNo,timerValue:result?.data?.timerValue,SlotSearchData:SlotSearchData },
-        });
+    } else if (user?.type === "CITIZEN") {
+        navigate(
+          `/upyog-ui/citizen/payment/my-bills/chb-services/${mutation.data?.hallsBookingApplication?.[0]?.bookingNo}`,
+          {
+            state: {
+              tenantId,
+              bookingNo: mutation.data?.hallsBookingApplication?.[0]?.bookingNo,
+              timerValue: result?.data?.timerValue,
+              SlotSearchData,
+            },
+          }
+        );
+      } else if (user?.type === "EMPLOYEE") {
+        navigate(
+          `/upyog-ui/employee/payment/collect/chb-services/${mutation.data?.hallsBookingApplication?.[0]?.bookingNo}`,
+          {
+            state: {
+              tenantId,
+              bookingNo: mutation.data?.hallsBookingApplication?.[0]?.bookingNo,
+              timerValue: result?.data?.timerValue,
+              SlotSearchData,
+            },
+          }
+        );
       }
   }catch (error) {
     setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
