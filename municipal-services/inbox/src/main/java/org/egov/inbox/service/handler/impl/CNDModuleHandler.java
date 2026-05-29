@@ -67,6 +67,6 @@ public class CNDModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public List<String> paramsToRemove() {
-        return List.of(OFFSET_PARAM, STATUS_PARAM);
+        return List.of(OFFSET_PARAM,APPLICATION_STATUS);
     }
 }
