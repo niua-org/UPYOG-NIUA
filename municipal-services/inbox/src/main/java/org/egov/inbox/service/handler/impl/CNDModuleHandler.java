@@ -46,7 +46,7 @@ public class CNDModuleHandler implements ModuleInboxHandler {
         }
         ctx.getCriteria().getModuleSearchCriteria().put(APPLICATION_NO_PARAM, ids);
         ctx.addBusinessKeys(ids);
-
+        ctx.getCriteria().getModuleSearchCriteria().remove(STATUS_PARAM);
         if (ctx.getCriteria().getModuleSearchCriteria().containsKey(APPLICATION_STATUS)) {
             ctx.getCriteria().getModuleSearchCriteria().put(
                     STATUS_PARAM,
