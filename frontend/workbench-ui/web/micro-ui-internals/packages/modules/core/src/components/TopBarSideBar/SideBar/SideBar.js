@@ -195,6 +195,8 @@ const Sidebar = ({ data }) => {
               ? appendTranslate.substring(0, 20) + "..."
               : appendTranslate
           );
+        // DD THIS LINE HERE 
+        if (appendTranslate?.startsWith("ACTION_TEST_")) return null;
 
           if (!subItemKeys && subItems && Object.keys(subItems).length > 0) {
             // If the item has sub-items, render a dropdown with toggle button
@@ -250,13 +252,7 @@ const Sidebar = ({ data }) => {
                       } else return itemToHighlight;
                     });
                     setSelectedChild(null);
-                    // setOpenItems(prevState => {
-                    //   if(Object(openItems)?.keys?.length > 0){
-                    //     return {}
-                    //   }else{
-                    //     return prevState
-                    //   }
-                    // })
+          
                   }}
                   style={{
                     display: "flex",
