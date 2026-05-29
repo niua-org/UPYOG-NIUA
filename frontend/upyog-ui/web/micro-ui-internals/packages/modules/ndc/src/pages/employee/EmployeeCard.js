@@ -62,9 +62,9 @@ const NDCEmployeeHomeCard = () => {
         {
           count: !isInboxLoading ? totalCount : "",
           label: t("TOTAL_FSM"),
-          link: `/upyog-ui/employee/obps/inbox`,
+          link: `/upyog-ui/employee/ndc/inbox`,
         },
-        { count: !isInboxLoading ? nearingSlaCount : "-", label: t("TOTAL_NEARING_SLA"), link: `/upyog-ui/employee/obps/inbox` },
+        { count: !isInboxLoading ? nearingSlaCount : "-", label: t("TOTAL_NEARING_SLA"), link: `/upyog-ui/employee/ndc/inbox` },
       ],
       links: [
         {

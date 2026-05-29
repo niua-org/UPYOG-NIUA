@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import Stepper from "../../../../../../react-components/src/customComponents/Stepper";
+import {Stepper} from "@nudmcdgnpm/digit-ui-react-components";
 import { config } from "../../../config/citizen/CitizenNDCApplicationConfig";
 import { setNDCStep, updateNDCForm, resetNDCForm } from "../../../redux/actions/NDCFormActions";
 import { CardHeader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
