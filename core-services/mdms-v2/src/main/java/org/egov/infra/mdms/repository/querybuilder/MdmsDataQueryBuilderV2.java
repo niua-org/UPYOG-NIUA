@@ -95,7 +95,7 @@ public class MdmsDataQueryBuilderV2 {
         preparedStmtList.add(ObjectUtils.isEmpty(mdmsCriteriaV2.getOffset()) ? config.getDefaultOffset() : mdmsCriteriaV2.getOffset());
 
     
-        // Append limit - if not passed in request, use defaultLimit (1000)
+        // Append limit - if not passed in request, use defaultLimit (50)
         Integer limit = ObjectUtils.isEmpty(mdmsCriteriaV2.getLimit()) ? config.getDefaultLimit() : mdmsCriteriaV2.getLimit();
         paginatedQuery.append(" LIMIT ? ");
         preparedStmtList.add(limit);
