@@ -527,7 +527,7 @@ const handleCloseCart = () => {
               isMandatory={false}
               optionKey="i18nKey"
               name="fromDate"
-              value={fromDate}
+              value={fromDate || ""}
               onChange={SetFromDate}
               style={{width:user.type==="EMPLOYEE"?"50%":"86%" }}
               min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
@@ -544,7 +544,7 @@ const handleCloseCart = () => {
               isMandatory={false}
               optionKey="i18nKey"
               name="toDate"
-              value={toDate}
+              value={toDate || ""}
               onChange={SetToDate}
               style={{width:user.type==="EMPLOYEE"?"50%":"86%" }}
               min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
