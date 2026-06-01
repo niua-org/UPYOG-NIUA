@@ -170,11 +170,11 @@ const InboxComposer = ({
 
   const isEnabledCommonModules =
     window.location.href.includes("/obps/") ||
-    window.location.href.includes("/noc/") ;
+    window.location.href.includes("/noc/");
 
   const isEnabledWSCommonModules = window.location.href.includes("/ws/water/inbox") || window.location.href.includes("/ws/sewerage/inbox") ||
-  window.location.href.includes("/ws/water/bill-amendment/inbox") ||
-  window.location.href.includes("/ws/sewerage/bill-amendment/inbox");
+    window.location.href.includes("/ws/water/bill-amendment/inbox") ||
+    window.location.href.includes("/ws/sewerage/bill-amendment/inbox");
 
   if (isEnabledCommonModules) {
     return (
@@ -190,14 +190,14 @@ const InboxComposer = ({
             </FilterForm>
           </div>
         </div>
-        <div style={propsForInboxTable?.tableStyle ? { flex: 1, ...propsForInboxTable?.tableStyle}:{flex: 1}}>
+        <div style={propsForInboxTable?.tableStyle ? { flex: 1, ...propsForInboxTable?.tableStyle } : { flex: 1 }}>
           <SearchForm onSubmit={onSearchFormSubmit} handleSubmit={handleSearchFormSubmit} id="search-form" className="rm-mb form-field-flex-one">
             <SearchFormFields
               registerRef={registerSearchFormField}
               searchFormState={searchFormState}
               {...{ controlSearchForm }}
               searchFieldComponents={
-                <div style={window.location.href.includes("/citizen/obps") ? {display : "flex"} : {}}>
+                <div style={window.location.href.includes("/citizen/obps") ? { display: "flex" } : {}}>
                   <SubmitBar label={t("ES_COMMON_SEARCH")} submit form="search-form" className="submit-bar-search" />
                   <p onClick={onResetSearchForm} className="clear-search" style={{ paddingTop: "9px", color: " #a82227" }}>
                     {t(`ES_COMMON_CLEAR_SEARCH`)}
@@ -211,13 +211,13 @@ const InboxComposer = ({
               <Loader />
             ) : (
               <div>
-                {!propsForInboxTable?.data?.length < 1 ? (
+                {propsForInboxTable?.data?.length < 1 ? (
                   <Card className="margin-unset text-align-center">
                     {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
                   </Card>
                 ) : (
-                  <Table 
-                    t={t} 
+                  <Table
+                    t={t}
                     {...propsForInboxTable}
                     data={propsForInboxTable?.data || []}
                     columns={propsForInboxTable?.columns || []}
@@ -304,8 +304,8 @@ const InboxComposer = ({
               {propsForInboxTable.noResultsMessage ? t(propsForInboxTable.noResultsMessage) : t("CS_MYAPPLICATIONS_NO_APPLICATION")}
             </Card>
           ) : (
-            <Table 
-              t={t} 
+            <Table
+              t={t}
               {...propsForInboxTable}
               data={propsForInboxTable?.data || []}
               columns={propsForInboxTable?.columns || []}
