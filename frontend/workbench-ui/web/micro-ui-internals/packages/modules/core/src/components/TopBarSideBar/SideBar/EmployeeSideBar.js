@@ -96,13 +96,6 @@ const EmployeeSideBar = () => {
       if (a[0] < b[0]) { return -1; }
       if (a[0] > b[0]) { return 1; }
       return 0;
-      // const orderNumberA = a[1].item
-      //   ? a[1].item.orderNumber || Object.keys(configEmployeeSideBar).length + 1
-      //   : Object.keys(configEmployeeSideBar).length + 1;
-      // const orderNumberB = b[1].item
-      //   ? b[1].item.orderNumber || Object.keys(configEmployeeSideBar).length + 1
-      //   : Object.keys(configEmployeeSideBar).length + 1;
-      // return orderNumberA - orderNumberB;
     });
     const sortedObject = Object.fromEntries(objectArray);
     configEmployeeSideBar = sortedObject;
