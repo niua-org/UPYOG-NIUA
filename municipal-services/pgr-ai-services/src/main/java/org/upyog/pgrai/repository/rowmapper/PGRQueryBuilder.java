@@ -99,7 +99,7 @@ public class PGRQueryBuilder {
         Set<String> applicationStatuses = criteria.getApplicationStatus();
         if (!CollectionUtils.isEmpty(applicationStatuses)) {
             addClauseIfRequired(preparedStmtList, builder);
-            builder.append(" ser.applicationStatus IN (").append(createQuery(applicationStatuses)).append(")");
+            builder.append(" ser.applicationstatus IN (").append(createQuery(applicationStatuses)).append(")");
             addToPreparedStatement(preparedStmtList, applicationStatuses);
         }
 
@@ -107,6 +107,13 @@ public class PGRQueryBuilder {
             addClauseIfRequired(preparedStmtList, builder);
             builder.append(" ser.serviceRequestId=? ");
             preparedStmtList.add(criteria.getServiceRequestId());
+        }
+
+        Set<String> serviceRequestIds = criteria.getServiceRequestIds();
+        if (!CollectionUtils.isEmpty(serviceRequestIds)) {
+            addClauseIfRequired(preparedStmtList, builder);
+            builder.append(" ser.serviceRequestId IN (").append(createQuery(serviceRequestIds)).append(")");
+            addToPreparedStatement(preparedStmtList, serviceRequestIds);
         }
 
         Set<String> ids = criteria.getIds();
@@ -202,7 +209,7 @@ public class PGRQueryBuilder {
             builder.append(" ORDER BY ads.locality ");
 
         else if(criteria.getSortBy()== RequestSearchCriteria.SortBy.applicationStatus)
-            builder.append(" ORDER BY ser.applicationStatus ");
+            builder.append(" ORDER BY ser.applicationstatus ");
 
         else if(criteria.getSortBy()== RequestSearchCriteria.SortBy.serviceRequestId)
             builder.append(" ORDER BY ser.serviceRequestId ");

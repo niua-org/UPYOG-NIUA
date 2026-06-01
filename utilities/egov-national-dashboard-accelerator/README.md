@@ -302,3 +302,9 @@ extract_mymodule >> transform_mymodule >> load_mymodule
 - **`pb.testing` exclusion** — all ES queries explicitly exclude the test tenant to avoid polluting dashboard metrics.
 - **Manual DAG date flexibility** — pass `{"date": "DD-MM-YYYY"}` in conf to backfill any specific date; omit it to default to yesterday.
 - **Scheduled DAG always uses yesterday** — no conf accepted; date is always `date.today() - timedelta(days=1)` at runtime.
+
+
+
+## Development Note
+
+Any changes made to the DAG files or query modules under `dags/` are picked up by Airflow **directly** — no build or deployment step is required. Airflow reads the DAG files from the filesystem on each scheduler cycle, so edits take effect on the next DAG run automatically.

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TextInput, CheckBox, CardLabel, LabelFieldPair, TextArea, CitizenInfoLabel } from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
-import FormStep from "../../../../react-components/src/molecules/FormStep"
+import {FormStep} from "@nudmcdgnpm/digit-ui-react-components"
 const SelectOwnerAddress = ({ t, config, onSelect, userType, formData }) => {
   const [permanentAddress, setPermanentAddress] = useState(formData?.owners?.permanentAddress || "");
   const [isCorrespondenceAddress, setIsCorrespondenceAddress] = useState(formData?.owners?.isCorrespondenceAddress);
