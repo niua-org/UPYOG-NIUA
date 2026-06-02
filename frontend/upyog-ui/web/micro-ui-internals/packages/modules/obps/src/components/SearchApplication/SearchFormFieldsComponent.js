@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, CardLabelError, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 import { useWatch } from "react-hook-form";
 
-const SearchFormFieldsComponent = ({ formState, Controller, register, control, t, reset, previousPage }) => {
+const SearchFormFieldsComponent = ({ formState, Controller, register, control, t, reset, previousPage, setValue }) => {
   const stateTenantId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   // const userInformation = Digit.UserService.getUser()?.info;
@@ -14,7 +14,7 @@ const SearchFormFieldsComponent = ({ formState, Controller, register, control, t
   const applicationType = useWatch({ control, name: "applicationType" });
   const oldApplicationType = sessionStorage.getItem("search_application") || "";
   if (oldApplicationType && oldApplicationType != "undefined" && JSON.parse(oldApplicationType)?.code !== applicationType?.code)
-    control.setValue("status", "");
+    setValue("status", "");
   sessionStorage.setItem("search_application", JSON.stringify(applicationType));
   const { applicationTypes, ServiceTypes } = Digit.Hooks.obps.useServiceTypeFromApplicationType({
     Applicationtype: applicationType?.code || (userInformation?.roles?.filter((ob) => ob.code.includes("BPAREG_") ).length>0 &&  userInformation?.roles?.filter((ob) => ob.code.includes("BPA_") || ob.code.includes("CITIZEN") ).length<=0 ?"BPA_STAKEHOLDER_REGISTRATION" :"BUILDING_PLAN_SCRUTINY"),
