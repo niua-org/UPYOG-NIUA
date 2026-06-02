@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { CloseSvg, SearchForm, Table, Card, SearchAction, PopUp, DetailsCard, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import SearchFormFields from "./SearchFields";
 
-const MobileSearchApplication = ({ Controller, register, control, t, reset, previousPage, handleSubmit, tenantId, data, onSubmit, businessService }) => {
+const MobileSearchApplication = ({ Controller, register, control, t, reset, previousPage, handleSubmit, tenantId, data, onSubmit, businessService, isClearSearch, onClearSearch }) => {
   function activateModal(state, action) {
     switch (action.type) {
       case "set":
@@ -27,7 +27,7 @@ const MobileSearchApplication = ({ Controller, register, control, t, reset, prev
     </div>
   );
 
-  const searchFormFieldsComponentProps = { Controller, register, control, t, reset, previousPage, businessService };
+  const searchFormFieldsComponentProps = { Controller, register, control, t, reset, previousPage, businessService, onSubmit, onClearSearch };
   const MobileComponentDirectory = ({ currentlyActiveMobileModal, searchFormFieldsComponentProps, tenantId, ...props }) => {
     const { closeMobilePopupModal } = props;
     switch (currentlyActiveMobileModal) {
@@ -152,7 +152,7 @@ const MobileSearchApplication = ({ Controller, register, control, t, reset, prev
           />
         </PopUp>
       ) : null}
-      {data?.display ? (
+      {isClearSearch ? null : data?.display ? (
         <Card style={{ marginTop: 20 }}>
           {t(data?.display)
             .split("\\n")

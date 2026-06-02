@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useCallback, useMemo } from "react";
+import React, { Fragment, useEffect, useCallback, useMemo, useState } from "react";
 import { SearchForm, Table, Card, Loader, Header } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import SearchFields from "./SearchFields";
@@ -30,7 +30,7 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
       limit: 10,
       sortBy: "commencementDate",
       sortOrder: "DESC",
-      isConnectionSearch: true,
+      isConnectionSearch: false,
     },
   });
 
@@ -49,24 +49,36 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
     setValue("sortOrder", args.desc ? "DESC" : "ASC");
   }, []);
 
+  const [isClearSearch, setIsClearSearch] = useState(false);
+
+  const handleSearchSubmit = (d) => {
+    setIsClearSearch(false);
+    onSubmit(d);
+  };
+
+  const handleClearSearch = () => {
+    setIsClearSearch(true);
+    onSubmit({});
+  };
+
   function onPageSizeChange(e) {
     setValue("limit", Number(e.target.value));
-    handleSubmit(onSubmit)();
+    handleSubmit(handleSearchSubmit)();
   }
 
   function nextPage() {
     setValue("offset", getValues("offset") + getValues("limit"));
-    handleSubmit(onSubmit)();
+    handleSubmit(handleSearchSubmit)();
   }
   function previousPage() {
     setValue("offset", getValues("offset") - getValues("limit"));
-    handleSubmit(onSubmit)();
+    handleSubmit(handleSearchSubmit)();
   }
 
   const isMobile = window.Digit.Utils.browser.isMobile();
 
   if (isMobile) {
-    return <MobileSearchApplication {...{ Controller, register, control, t, reset, previousPage, handleSubmit, tenantId, data, onSubmit, businessService }} />;
+    return <MobileSearchApplication {...{ Controller, register, control, t, reset, previousPage, handleSubmit, tenantId, data, onSubmit: handleSearchSubmit, businessService, isClearSearch, onClearSearch: handleClearSearch }} />;
   }
 
   //need to get from workflow
@@ -212,11 +224,11 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
       < Card className={"card-search-heading"}>
         <span style={{ color: "#505A5F" }}>{t("WS_INFO_VALIDATION")}</span>
       </Card>
-      <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit} >
-        <SearchFields {...{ register, control, reset, tenantId, t,businessService }} />
+      <SearchForm onSubmit={handleSearchSubmit} handleSubmit={handleSubmit} >
+        <SearchFields {...{ register, control, reset, tenantId, t, businessService, onSubmit: handleSearchSubmit, onClearSearch: handleClearSearch }} />
       </SearchForm>
       { isLoading ? <Loader /> : null } 
-      {data?.display && !resultOk ? (
+      {isClearSearch ? null : data?.display && !resultOk ? (
         <Card style={{ marginTop: 20 }}>
           {t(data?.display)
             .split("\\n")
@@ -226,7 +238,7 @@ const SearchApplication = ({ tenantId, onSubmit, data, count, resultOk, business
               </p>
             ))}
         </Card>
-      ) : resultOk ? (
+      ) : resultOk && !isClearSearch ? (
         <Table
           t={t}
           data={data}
