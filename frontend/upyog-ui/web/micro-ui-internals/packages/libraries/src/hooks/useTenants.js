@@ -2,7 +2,6 @@ import { queryTemplate } from "../common/queryTemplate";
 
 // Sort function
 const alphabeticalSortFunctionForTenantsBasedOnName = (firstEl, secondEl) => {
-    console.log("firstEl, secondEl", firstEl, secondEl);
     
     // Extract city names for comparison
     const firstCityName = firstEl.city.name.toUpperCase();

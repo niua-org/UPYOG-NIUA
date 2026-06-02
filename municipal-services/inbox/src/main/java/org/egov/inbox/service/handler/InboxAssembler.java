@@ -307,9 +307,19 @@ public class InboxAssembler {
 
                 inbox.setProcessInstance(processMap.get(key));
 
-                inbox.setBusinessObject(
+                Object businessObject = businessMap.get(key);
+
+                if (businessObject instanceof JSONObject) {
+
+                        inbox.setBusinessObject(
                                 InboxService.toMap(
-                                                (JSONObject) businessMap.get(key)));
+                                        (JSONObject) businessObject));
+
+                } else {
+
+                        inbox.setBusinessObject(
+                                (Map<String, Object>) businessObject);
+                }
 
                 if (isBilling) {
 
@@ -320,10 +330,21 @@ public class InboxAssembler {
                                         && serviceSearchMap.containsKey(
                                                         consumerCode.toString())) {
 
-                                inbox.setServiceObject(
+                                Object serviceObject =
+                                        serviceSearchMap.get(
+                                                consumerCode.toString());
+
+                                if (serviceObject instanceof JSONObject) {
+
+                                        inbox.setServiceObject(
                                                 InboxService.toMap(
-                                                                (JSONObject) serviceSearchMap.get(
-                                                                                consumerCode.toString())));
+                                                        (JSONObject) serviceObject));
+
+                                } else {
+
+                                        inbox.setServiceObject(
+                                                (Map<String, Object>) serviceObject);
+                                }
                         }
                 }
 

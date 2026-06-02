@@ -46,7 +46,7 @@ public class CNDModuleHandler implements ModuleInboxHandler {
         }
         ctx.getCriteria().getModuleSearchCriteria().put(APPLICATION_NO_PARAM, ids);
         ctx.addBusinessKeys(ids);
-
+        ctx.getCriteria().getModuleSearchCriteria().remove(STATUS_PARAM);
         if (ctx.getCriteria().getModuleSearchCriteria().containsKey(APPLICATION_STATUS)) {
             ctx.getCriteria().getModuleSearchCriteria().put(
                     STATUS_PARAM,
@@ -67,6 +67,6 @@ public class CNDModuleHandler implements ModuleInboxHandler {
      */
     @Override
     public List<String> paramsToRemove() {
-        return List.of(OFFSET_PARAM, STATUS_PARAM);
+        return List.of(OFFSET_PARAM,APPLICATION_STATUS);
     }
 }

@@ -6,7 +6,6 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
   const { t } = useTranslation();
   const isMobile = window.Digit.Utils.browser.isMobile();
 
-  console.log("searchFieldComponents", searchFieldComponents);
 
   if (!isMobile) {
     return (
@@ -16,11 +15,11 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
             <div className="complaint-input-container ndc-complaint-input-container" >
               <SearchField>
                 <label>{t("NOC_HOME_SEARCH_RESULTS_APP_NO_LABEL")}</label>
-                <TextInput name="applicationNo" inputRef={registerRef("applicationNo")} />
+                <TextInput name="applicationNo" inputRef={registerRef("applicationNo").ref} onChange={registerRef("applicationNo").onChange} onBlur={registerRef("applicationNo").onBlur}/>
               </SearchField>
               <SearchField>
                 <label>{t("CORE_COMMON_PHONE_NUMBER")}</label>
-                <TextInput name="mobileNumber" inputRef={registerRef("mobileNumbder")} />
+                <TextInput name="mobileNumber" inputRef={registerRef("mobileNumber").ref} onChange={registerRef("mobileNumber").onChange} onBlur={registerRef("mobileNumber").onBlur}/>
               </SearchField>
               <div className="search-action-wrapper ndc-search-action-wrapper" >
                 {searchFieldComponents}
@@ -36,7 +35,7 @@ const SearchFormFieldsComponents = ({ registerRef, searchFormState, searchFieldC
     <>
       <SearchField>
         <label>{t("NOC_HOME_SEARCH_RESULTS_APP_NO_LABEL")}</label>
-        <TextInput name="applicationNo" inputRef={registerRef("applicationNo")} />
+        <TextInput name="applicationNo" {...registerRef("applicationNo")} />
       </SearchField>
       <SearchField>
         <label>{t("CORE_COMMON_PHONE_NUMBER")}</label>

@@ -1,6 +1,6 @@
 {
   "name": "@nudmcdgnpm/digit-ui-react-components",
-  "version": "3.10.2",
+  "version": "4.0.0",
   "license": "MIT",
   "main": "src/index.js",
   "source": "src/index.js",

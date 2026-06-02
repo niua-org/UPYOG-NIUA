@@ -72,7 +72,7 @@ const CHBCard = () => {
       {
         count: total?.totalCount,
         label: t("ES_TITLE_INBOX"),
-        link: `/upyog-ui/employee/chb/searchHall/inbox`,
+        link: `/upyog-ui/employee/chb/inbox`,
       },
     ],
     links:links.filter(link=>!link?.role||CHB_CEMP),

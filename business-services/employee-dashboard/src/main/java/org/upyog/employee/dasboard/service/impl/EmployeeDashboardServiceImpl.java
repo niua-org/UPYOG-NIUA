@@ -59,7 +59,7 @@ public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {
 	public RoleBasedDashboardResponse getRoleBasedDashboardData(RoleBasedDashboardRequest request) {
 		// Extract roles and tenantId from RequestInfo
 		List<org.egov.common.contract.request.Role> userRoles = request.getRequestInfo().getUserInfo().getRoles();
-		String tenantId = request.getRequestInfo().getUserInfo().getTenantId();
+		String tenantId = request.getTenantId();
 
 		log.info("Processing role-based dashboard request for tenant: {} with {} roles",
 				tenantId, userRoles.size());

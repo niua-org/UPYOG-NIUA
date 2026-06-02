@@ -12,7 +12,7 @@
     "react-router-dom": "^6.23.0"
   },
   "dependencies": {
-    "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
+    "@nudmcdgnpm/digit-ui-react-components": "4.0.0",
     "lodash": "4.17.21",
     "react-date-range": "1.4.0",
     "react-hook-form": "^7.51.0",

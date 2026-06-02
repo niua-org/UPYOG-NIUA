@@ -190,9 +190,27 @@ export const externalAPIMapping = async function (
     responsePromises.push(resPromise)
   }
 
-  responses = await Promise.all(responsePromises)
+  responses = await Promise.all(responsePromises);
+
   for (let i = 0; i < externalAPIArray.length; i++) {
-    var res = responses[i].data
+  let res = responses[i]?.data;
+
+  /*
+ * API responses may come as either a string or an object.
+ * If the response is a string, parse it to JSON so downstream processing (jp.query) can read values correctly.
+ * If already an object, continue normally.
+ * Catch and log parsing errors safely without breaking execution.
+ */
+  try {
+    if (typeof res === "string") {
+      res = JSON.parse(res);
+      logger.info("Parsed string response to JSON object");
+    }
+  } catch (err) {
+    logger.error("Failed to process API response");
+    logger.error(err.stack || err);
+  }
+
 
     //putting required data from external API call in format config
 

@@ -218,8 +218,9 @@
                   if (isSlotBooked) {
                     setShowToast({ error: true, label: t("CHB_COMMUNITY_HALL_ALREADY_BOOKED") });
                   } else {
-                    navigate({
-                      pathname: `/upyog-ui/employee/payment/collect/${"chb-services"}/${application?.bookingNo}`,
+                    navigate(
+                      `/upyog-ui/employee/payment/collect/${"chb-services"}/${application?.bookingNo}`,
+                      {
                       state: { tenantId: application?.tenantId, bookingNo: application?.bookingNo,timerValue:result?.data.timerValue ,SlotSearchData:SlotSearchData },
                     });
                   }
