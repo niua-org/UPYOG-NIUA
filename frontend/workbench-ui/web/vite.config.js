@@ -196,7 +196,7 @@ export default defineConfig(({ mode }) => {
     "/bpa-calculator", "/request-service", "/challan-generation", "/ndc-services", "/estate-management"
   ];
 
-  const packagesRoot = path.resolve(__dirname, "../packages");
+  const packagesRoot = path.resolve(__dirname, "micro-ui-internals/packages");
 
   function getAliases() {
     const aliases = {};
@@ -270,7 +270,7 @@ export default defineConfig(({ mode }) => {
         usePolling: true,
         interval: 300,
         include: [
-          path.resolve(__dirname, "../packages/**"),
+          path.resolve(__dirname, "micro-ui-internals/packages/**"),
           path.resolve(__dirname, "src/**"),
         ],
         awaitWriteFinish: {

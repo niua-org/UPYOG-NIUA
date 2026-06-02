@@ -20,7 +20,7 @@
     "@upyog/workbench-ui-module-core": "1.8.2",
     "@upyog/workbench-ui-module-utilities": "1.0.0",
     "@upyog/workbench-ui-react-components": "1.0.0",
-    "@nudmcdgnpm/digit-ui-module-workbench": "^1.0.0",
+    "@nudmcdgnpm/workbench-ui-module-workbench": "^1.0.0",
     "@nudmcdgnpm/workbench-ui-svg-components": "1.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

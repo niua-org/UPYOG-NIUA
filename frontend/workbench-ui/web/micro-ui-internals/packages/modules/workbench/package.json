@@ -1,5 +1,5 @@
 {
-  "name": "@nudmcdgnpm/digit-ui-module-workbench",
+  "name": "@nudmcdgnpm/workbench-ui-module-workbench",
   "version": "1.0.0",
   "description": "Workbench",
   "main": "src/Module.js",

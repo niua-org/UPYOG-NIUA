@@ -1,6 +1,6 @@
 # Workbench UI
 
-A React-based web application built on top of DIGIT UI Core for managing master data and localization in the DIGIT eGovernance platform.
+A React-based web application built on top of UPYOG UI Core for managing master data and localization in the UPYOG eGovernance platform.
 
 ## 📋 Table of Contents
 
@@ -21,17 +21,17 @@ A React-based web application built on top of DIGIT UI Core for managing master 
 
 ## 📖 About
 
-### DIGIT Platform
+### UPYOG Platform
 
-DIGIT (Digital Infrastructure for Governance, Impact & Transformation) is India's largest platform for governance services. It is a microservices-based API platform enabling quick rebundling of services as per specific needs.
+UPYOG (Urban Platform for DeliverY of Online Governance) is India's largest platform for governance services. It is a microservices-based API platform enabling quick rebundling of services as per specific needs.
 
-Visit [DIGIT Core Documentation](https://core.digit.org/) for more details.
+Visit [UPYOG Core Documentation](https://upyog-docs.gitbook.io/upyog-v-2.0) for more details.
 
 ### Workbench UI
 
 Workbench UI is an internal administrative tool designed for:
 
-- **MDMS V2 Management**: Manage master data (MDMS V2 Service) used across DIGIT Services/Applications
+- **MDMS V2 Management**: Manage master data (MDMS V2 Service) used across UPYOG Services/Applications
 - **Localization Management**: Manage localization data present in the system (Localization service)
 - **Configuration Management**: Handle system-wide configurations and settings
 
@@ -78,8 +78,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/egovernments/DIGIT-Frontend.git
-cd DIGIT-Frontend/frontend/workbench-ui
+git clone https://github.com/egovernments/upyog
+cd UPYOG-Frontend/frontend/workbench-ui
 ```
 
 ### 2. Install Dependencies
@@ -87,7 +87,7 @@ cd DIGIT-Frontend/frontend/workbench-ui
 #### For Development (Micro UI Internals):
 
 ```bash
-cd web/micro-ui-internals
+cd web/
 yarn install
 ```
 
@@ -95,7 +95,7 @@ yarn install
 
 ```bash
 cd web
-yarn install
+yarn build
 ```
 
 ## ⚙️ Configuration
@@ -117,24 +117,11 @@ REACT_APP_USER_TYPE=EMPLOYEE
 SKIP_PREFLIGHT_CHECK=true
 ```
 
-### Sample Configuration Files
-
-- [Sample .env file](https://github.com/egovernments/Digit-Core/blob/workbench/frontend/micro-ui/web/micro-ui-internals/example/.env-unifieddev)
-- Location: `web/micro-ui-internals/example/.env`
-
 ## 🏃 Running the Application
 
 ### Development Mode
 
-#### Option 1: Run from micro-ui-internals (For Package Development)
-
-```bash
-cd web/micro-ui-internals
-yarn install
-yarn start
-```
-
-#### Option 2: Run from web directory (For Application Development)
+To run the application locally:
 
 ```bash
 cd web
@@ -142,7 +129,7 @@ yarn install
 yarn start
 ```
 
-The application will start at `http://localhost:3000/workbench-ui`
+The application will start at `http://localhost:3000/` (or your configured port).
 
 ### Production Build
 
@@ -170,13 +157,10 @@ workbench-ui/
 │   │   │   ├── libraries/           # Shared libraries and services
 │   │   │   ├── react-components/    # Reusable React components
 │   │   │   ├── svg-components/      # SVG icon components
-│   │   │   ├── css/                 # Tailwind CSS configuration
-│   │   │   ├── config/              # Build configurations
 │   │   │   └── modules/
 │   │   │       ├── core/            # Core module
 │   │   │       ├── workbench/       # Workbench module
 │   │   │       └── utilities/       # Utility functions
-│   │   ├── example/                 # Example configurations
 │   │   ├── scripts/                 # Build and publish scripts
 │   │   └── package.json
 │   ├── src/
@@ -217,14 +201,9 @@ workbench-ui/
 
 ## 💻 Development
 
-### Package Development
+### Monorepo Development
 
-To develop and test individual packages:
-
-```bash
-cd web/micro-ui-internals
-yarn start
-```
+Since the project is structured as a monorepo using **Yarn Workspaces**, you can run the primary application from the `web` directory. Any modifications made to packages inside `web/micro-ui-internals/packages/` will automatically be detected and reloaded instantly, thanks to **Vite's live workspace path aliasing**.
 
 ### Building Packages
 
@@ -265,7 +244,7 @@ This project uses Yarn Workspaces for monorepo management:
 - `@nudmcdgnpm/workbench-ui-svg-components`
 - `@upyog/workbench-ui-module-core`
 - `@upyog/workbench-ui-module-utilities`
-- `@nudmcdgnpm/digit-ui-module-workbench`
+- `@nudmcdgnpm/workbench-ui-module-workbench`
 
 ## 🐳 Build & Deployment
 
@@ -318,30 +297,4 @@ Copyright (c) 2024 eGovernments Foundation
 
 ## 👥 Authors
 
-- [@jagankumar-egov](https://github.com/jagankumar-egov)
-
-## 📚 Documentation
-
-- [DIGIT UI Developer Guide](https://core.digit.org/guides/developer-guide/ui-developer-guide/digit-ui)
-- [DIGIT Core Documentation](https://core.digit.org/)
-- [API Documentation](https://core.digit.org/platform/core-services)
-
-## 🆘 Support
-
-For support and bug reports:
-
-- Create an issue: [DIGIT Core Issues](https://github.com/egovernments/DIGIT-core/issues)
-- Email: [support@egovernments.org](mailto:support@egovernments.org)
-- Community Forum: [DIGIT Community](https://github.com/egovernments/DIGIT-core/discussions)
-
-## 🔗 Related Links
-
-- [DIGIT Platform](https://core.digit.org/)
-- [eGovernments Foundation](https://egov.org.in/)
-- [GitHub Repository](https://github.com/egovernments/DIGIT-Frontend)
-
----
-
-**Note**: This is an internal administrative tool for DIGIT platform. For citizen-facing applications, please refer to the main DIGIT UI repository.
-
-![DIGIT Logo](https://s3.ap-south-1.amazonaws.com/works-dev-asset/mseva-white-logo.png)
+- [@NUDM TEAM]
