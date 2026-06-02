@@ -58,7 +58,7 @@ const ProcessDepreciationResponse = (props) => {
               successful={true}
             />
             <div style={{ padding: "10px", paddingBottom: "10px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <Link to={`${props.parentRoute}/assetservice/applicationsearch/application-details/${applicationDetail}`} >
+              <Link to={`/upyog-ui/employee/asset/assetservice/applicationsearch/application-details/${applicationDetail}`} >
                 <SubmitBar label={t("AST_DEPRECIATION_LIST")} />
               </Link>
             </div>
