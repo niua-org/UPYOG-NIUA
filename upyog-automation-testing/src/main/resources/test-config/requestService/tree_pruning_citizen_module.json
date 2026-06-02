@@ -1,66 +1,10 @@
 {
-  "moduleName":"mobile_toilet_citizen_module",
-  "description": "Mobile Toilet citizen workflow",
+  "moduleName":"tree_pruning_citizen_module",
+  "description": "Tree Pruning citizen workflow",
   "baseUrl": "${selected.url}",
 
   "instructions":[
 
-    {
-      "stepName": "Enter Mobile Number",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${selected.mobile}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Accept Terms Checkbox",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox'].form-field",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Click Next After Mobile",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "NAME",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 3000
-    },
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1500
-    },
-    {
-      "stepName": "Click Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
     {
       "stepName":"Open Request Service Module",
       "locatorStrategy":"XPATH",
@@ -71,18 +15,21 @@
     {
       "stepName":"Click Select Request Service",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='Request Service']",
+      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='Select Request Service']",
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
+
+
     {
-      "stepName":"Select Mobile Toilet Service",
+      "stepName":"Select Tree Pruning",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:1",
+      "inputValue":"0:2",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"Save And Next",
       "locatorStrategy":"XPATH",
@@ -90,12 +37,22 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
+
+
+
     {
       "stepName":"Info Page Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS",
       "dynamicSleep": 2000
+    },
+    {
+      "stepName":"Handle New Details Popup",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//button[contains(.,'Fill New Details')]",
+      "action":"OPTIONAL_CLICK_JS",
+      "dynamicSleep":1000
     },
     {
       "stepName":"Applicant Name",
@@ -105,6 +62,7 @@
       "inputValue":"Arpit Rao",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"Email",
       "locatorStrategy":"NAME",
@@ -116,10 +74,13 @@
     {
       "stepName":"Applicant Next",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Save & Next')]",
+      "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
+
+
+
     {
       "stepName":"Address Type",
       "locatorStrategy":"CSS",
@@ -128,6 +89,7 @@
       "inputValue":"0:0",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"House Number",
       "locatorStrategy":"NAME",
@@ -136,6 +98,7 @@
       "inputValue":"A-12",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"Street Name",
       "locatorStrategy":"NAME",
@@ -144,6 +107,7 @@
       "inputValue":"Test Street",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"Address Line 1",
       "locatorStrategy":"NAME",
@@ -152,6 +116,7 @@
       "inputValue":"123 Main Street",
       "dynamicSleep":2000
     },
+
     {
       "stepName":"Address Line 2",
       "locatorStrategy":"NAME",
@@ -160,6 +125,7 @@
       "inputValue":"Near Park",
       "dynamicSleep":2000
     },
+
     {
       "stepName":"Landmark",
       "locatorStrategy":"NAME",
@@ -168,22 +134,25 @@
       "inputValue":"Near Test Landmark",
       "dynamicSleep": 2000
     },
+
     {
-      "stepName":"City",
+      "stepName":"City Dropdown",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
       "inputValue":"1:0",
       "dynamicSleep": 2000
     },
+
     {
-      "stepName":"Locality",
+      "stepName":"Locality Dropdown",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
       "inputValue":"2:0",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"Pincode",
       "locatorStrategy":"NAME",
@@ -192,10 +161,11 @@
       "inputValue":"143001",
       "dynamicSleep": 2000
     },
+
     {
       "stepName":"Address Next",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Save & Next')]",
+      "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
@@ -203,57 +173,38 @@
 
 
     {
-      "stepName":"Number Of Mobile Toilets",
+      "stepName":"Reason Dropdown",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:5"
+      "inputValue":"0:0",
+      "dynamicSleep": 3000
     },
 
     {
-      "stepName": "Set From Date",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='date']",
-      "action": "SET_DATE_TODAY",
-      "inputValue": "0"
-    },
-    {
-      "stepName": "Set To Date",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='date']",
-      "action": "SET_DATE_TODAY",
-      "inputValue": "1"
-    },
-    {
-      "stepName":"From Time",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"(//input[@type='time'])[1]",
-      "action":"SET_CUSTOM_TIME",
-      "inputValue":"10:30 AM",
-      "dynamicSleep":2000
-    },
-    {
-      "stepName":"To Time",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"(//input[@type='time'])[2]",
-      "action":"SET_CUSTOM_TIME",
-      "inputValue":"11:30 PM",
-      "dynamicSleep":2000
+      "stepName":"Geo Tag",
+      "locatorStrategy":"CSS",
+      "locatorValue":"[class*='location']",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
     {
-      "stepName":"Special Request",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//textarea[contains(@placeholder,'Special Request')]",
-      "action":"TYPE",
-      "inputValue":"Need mobile toilet service urgently",
-      "dynamicSleep":2000
+      "stepName":"Upload Site Photo Request Page",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[1]",
+      "action":"UPLOAD_FILE",
+      "inputValue":"${document.common.proof}",
+      "dynamicSleep": 3000
     },
+
+
     {
-      "stepName":"Request Details Next",
+      "stepName":"Documents Save And Next",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Save & Next')]",
-      "action":"CLICK_JS"
+      "locatorValue":"//button[contains(.,'Next')]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     },
 
 
@@ -262,14 +213,16 @@
       "stepName":"Accept Declaration",
       "locatorStrategy":"CSS",
       "locatorValue":"input[type='checkbox']",
-      "action":"CHECK_LAST_CHECKBOX"
+      "action":"CHECK_LAST_CHECKBOX",
+      "dynamicSleep": 3000
     },
 
     {
       "stepName":"Submit Application",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit']]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 3000
     }
 
   ]

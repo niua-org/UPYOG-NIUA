@@ -174,7 +174,7 @@ const WSInbox = ({ parentRoute }) => {
   };
 
   const SearchFormFields = useCallback(
-    ({ registerRef, searchFormState }) => <SearchFormFieldsComponents {...{ registerRef, searchFormState }} className="search" />,
+    ({ registerRef, searchFormState, controlSearchForm }) => <SearchFormFieldsComponents {...{ registerRef, searchFormState, controlSearchForm }} className="search" />,
     []
   );
 

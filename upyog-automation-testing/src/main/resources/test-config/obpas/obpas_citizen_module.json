@@ -7,70 +7,6 @@
   "instructions": [
 
 
-
-
-    {
-      "stepName": "Enter Architect Mobile",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${architect.mobile.number}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Accept Terms",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox'].form-field",
-      "action": "CLICK_JS",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName": "Click Next",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']",
-      "action": "CLICK_JS",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']",
-      "action": "CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "dynamicSleep": 3000
-    },
-
-
-
-
     {
       "stepName": "Open OBPAS",
       "locatorStrategy": "XPATH",
@@ -367,7 +303,7 @@
     {
       "stepName": "Open Citizen Login",
       "locatorStrategy": "URL",
-      "locatorValue": "https://upyog.niua.org/upyog-ui/citizen/login",
+      "locatorValue": "${selected.url}",
       "action": "OPEN_URL",
       "dynamicSleep": 3000
     },
@@ -376,7 +312,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "mobileNumber",
       "action": "TYPE",
-      "inputValue": "${selected.mobile}",
+      "inputValue": "${mobile.number}",
       "dynamicSleep": 1000
     },
     {
@@ -502,7 +438,7 @@
     {
       "stepName": "Open Architect Login Again",
       "locatorStrategy": "URL",
-      "locatorValue": "https://upyog.niua.org/upyog-ui/citizen/login",
+      "locatorValue": "${selected.url}",
       "action": "OPEN_URL",
       "dynamicSleep": 3000
     },
@@ -511,7 +447,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "mobileNumber",
       "action": "TYPE",
-      "inputValue": "${architect.mobile.number}",
+      "inputValue": "${selected.mobile}",
       "dynamicSleep": 1000
     },
     {
@@ -630,14 +566,6 @@
       "dynamicSleep": 4000
     },
     {
-      "stepName": "Switch Window",
-      "locatorStrategy": "TAGNAME",
-      "locatorValue": "body",
-      "action": "SWITCH_WINDOW",
-      "dynamicSleep": 2000
-    },
-
-    {
       "stepName": "Net Banking",
       "locatorStrategy": "XPATH",
       "locatorValue": "//*[contains(text(),'Net Banking')]",
@@ -645,10 +573,11 @@
       "dynamicSleep": 2000
     },
     {
-      "stepName": "ICIC",
+      "stepName": "Select ICICI",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//*[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'icic')]",
+      "locatorValue": "//*[@id='ICIC']",
       "action": "CLICK_JS",
+      "inputValue": null,
       "dynamicSleep": 2000
     },
     {
@@ -665,14 +594,6 @@
       "locatorValue": "//button[contains(.,'Success')]",
       "action": "CLICK_JS",
       "dynamicSleep": 3000
-    },
-
-    {
-      "stepName": "Switch Back",
-      "locatorStrategy": "TAGNAME",
-      "locatorValue": "body",
-      "action": "SWITCH_WINDOW",
-      "dynamicSleep": 2000
     }
 
   ]

@@ -8,18 +8,18 @@ This repository contains the complete frontend source code for UPYOG UI — upgr
 
 ## Tech Stack Upgrade Summary
 
-| Concern | Before | After |
-|---|---|---|
-| Node.js | 14 | 22 (LTS) |
-| Build Tool | Webpack / CRA | Vite 6 |
-| React | 17 | 19.2.0 |
-| React DOM | 17 | 19.2.0 |
-| React Router | v5 (`react-router-dom`) | v6.23+ |
-| React Hook Form | v6.15.8 | v7.51+ |
-| React Query | v3 | @tanstack/react-query v5 |
-| React Redux | 7.2.8 | 9.0.0 |
-| Redux Thunk | 2.4.1 | 3.1.0 |
-| Redux | 4.1.2 | 4.2.1 |
+| Concern | Version |
+|---|---|
+| Node.js | 22 (LTS) |
+| Build Tool | Vite 6 |
+| React | 19.2.0 |
+| React DOM | 19.2.0 |
+| React Router | v6.23+ |
+| React Hook Form | v7.51+ |
+| React Query | @tanstack/react-query v5 |
+| React Redux | 9.0.0 |
+| Redux Thunk | 3.1.0 |
+| Redux | 4.2.1 |
 
 ---
 
