@@ -1,11 +1,10 @@
 import React, { useMemo } from "react";
-import { PageBasedInput, Loader, RadioButtons, CardHeader } from "@egovernments/digit-ui-react-components";
+import { PageBasedInput, Loader, RadioButtons, CardHeader } from "@upyog/workbench-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 
 const LanguageSelection = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();  /* useHistory to useNavigate */
 
   const { data: { languages, stateInfo } = {}, isLoading } = Digit.Hooks.useStore.getInitData();
   const selectedLanguage = Digit.StoreData.getCurrentLanguage();
@@ -30,7 +29,7 @@ const LanguageSelection = () => {
   );
 
   function onSubmit() {
-    history.push(`/${window?.contextPath}/citizen/select-location`);
+    navigate(`/${window?.contextPath}/citizen/select-location`);
   }
 
   return isLoading ? (

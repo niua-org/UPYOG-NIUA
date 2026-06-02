@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import { Redirect, Route, Switch, useHistory, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import CitizenApp from "./pages/citizen";
 import EmployeeApp from "./pages/employee";
 
 export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData ,defaultLanding="citizen"}) => {
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { pathname } = useLocation();
   const innerWidth = window.innerWidth;
   const cityDetails = Digit.ULBService.getCurrentUlb();
@@ -38,9 +38,10 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData ,de
     }
   }, [pathname]);
 
-  history.listen(() => {
+  // useEffect + useLocation se karo
+  useEffect(() => {
     window?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  });
+  }, [pathname]);
 
   const handleUserDropdownSelection = (option) => {
     option.func();
@@ -65,16 +66,10 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData ,de
     initData,
   };
   return (
-    <Switch>
-      <Route path={`/${window?.contextPath}/employee`}>
-        <EmployeeApp {...commonProps} />
-      </Route>
-      <Route path={`/${window?.contextPath}/citizen`}>
-        <CitizenApp {...commonProps} />
-      </Route>
-      <Route>
-        <Redirect to={`/${window?.contextPath}/${defaultLanding}`} />
-      </Route>
-    </Switch>
+    <Routes>
+      <Route path={`/${window?.contextPath}/employee/*`} element={<EmployeeApp {...commonProps} />} />
+      <Route path={`/${window?.contextPath}/citizen/*`} element={<CitizenApp {...commonProps} />} />
+      <Route path="*" element={<Navigate to={`/${window?.contextPath}/${defaultLanding}`} replace />} />
+    </Routes>
   );
 };

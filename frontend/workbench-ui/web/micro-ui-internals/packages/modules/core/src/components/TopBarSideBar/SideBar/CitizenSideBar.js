@@ -1,9 +1,9 @@
 import {
   Loader, NavBar
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import SideBarMenu from "../../../config/sidebar-menu";
 import ChangeCity from "../../ChangeCity";
 import { defaultImage } from "../../utils";
@@ -12,18 +12,20 @@ import StaticCitizenSideBar from "./StaticCitizenSideBar";
 
 const Profile = ({ info, stateName, t }) => {
   const [profilePic, setProfilePic] = React.useState(null);
-  React.useEffect(async () => {
-    const tenant = Digit.ULBService.getCurrentTenantId();
-    const uuid = info?.uuid;
-    if (uuid) {
-      const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: [uuid] }, {});
-
-      if (usersResponse && usersResponse.user && usersResponse.user.length) {
-        const userDetails = usersResponse.user[0];
-        const thumbs = userDetails?.photo?.split(",");
-        setProfilePic(thumbs?.at(0));
+  React.useEffect(() => {
+    async function fetchProfilePic() {
+      const tenant = Digit.ULBService.getCurrentTenantId();
+      const uuid = info?.uuid;
+      if (uuid) {
+        const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: [uuid] }, {});
+        if (usersResponse && usersResponse.user && usersResponse.user.length) {
+          const userDetails = usersResponse.user[0];
+          const thumbs = userDetails?.photo?.split(",");
+          setProfilePic(thumbs?.at(0));
+        }
       }
     }
+    fetchProfilePic();
   }, [profilePic !== null]);
   return (
     <div className="profile-section">
@@ -75,7 +77,8 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   const [search, setSearch] = useState("");
 
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
+  const location = useLocation();
   const closeSidebar = () => {
     Digit.clikOusideFired = true;
     toggleSidebar(false);
@@ -85,13 +88,13 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const showProfilePage = () => {
     const redirectUrl = isEmployee ? `/${window?.contextPath}/employee/user/profile` : `/${window?.contextPath}/citizen/user/profile`;
-    history.push(redirectUrl);
+    navigate(redirectUrl);
     closeSidebar();
   };
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    history.push(`/${window?.contextPath}/citizen/login`);
+    navigate(`/${window?.contextPath}/citizen/login`);
     closeSidebar();
   };
   if (islinkDataLoading || isLoading) {
@@ -123,25 +126,23 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
       },
       {
         text: (
-          <React.Fragment>
+          <>
             {t("CS_COMMON_HELPLINE")}
             <div className="telephone" style={{ marginTop: "-10%" }}>
-              {storeData?.tenants.map((i) => {
-                i.code === tenantId ? (
-                  <div className="link">
-                    <a href={`tel:${storeData?.tenants[i].contactNumber}`}>{storeData?.tenants[i].contactNumber}</a>
+              {storeData?.tenants?.map((tenant, idx) => {
+                return tenant?.code === tenantId ? (
+                  <div className="link" key={idx}>
+                    <a href={`tel:${tenant?.contactNumber}`}>{tenant?.contactNumber}</a>
                   </div>
-                ) : (
-                  <div className="link">
-                    <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
-                  </div>
-                );
+                ) : null;
               })}
-              <div className="link">
-                <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
-              </div>
+              {!storeData?.tenants?.some(t => t?.code === tenantId) && storeData?.tenants?.[0]?.contactNumber && (
+                <div className="link">
+                  <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
+                </div>
+              )}
             </div>
-          </React.Fragment>
+          </>
         ),
         element: "Helpline",
         icon: "Phone",
@@ -199,7 +200,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
           icon: configEmployeeSideBar[keys[i]][0]?.leftIcon?.split?.(":")[1],
           populators: {
             onClick: () => {
-              history.push(configEmployeeSideBar[keys[i]][0]?.navigationURL);
+              navigate(configEmployeeSideBar[keys[i]][0]?.navigationURL);
               closeSidebar();
             },
           },
@@ -227,7 +228,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   }
 
   /*  URL with openlink wont have sidebar and actions    */
-  if (history.location.pathname.includes("/openlink")) {
+  if (location.pathname.includes("/openlink")) {
     profileItem = <span></span>;
     menuItems = menuItems.filter((ele) => ele.element === "LANGUAGE");
   }

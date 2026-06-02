@@ -38,15 +38,6 @@ export const filterFunctions = {
     searchFilters["creationReason"] = ["CREATE", "MUTATION", "UPDATE"];
     workflowFilters["moduleName"] = "PT";
 
-    // if (limit) {
-    //   searchFilters.limit = limit;
-    // }
-    // if (offset) {
-    //   searchFilters.offset = offset;
-    // }
-
-    // workflowFilters.businessService = "PT.CREATE";
-    // searchFilters.mobileNumber = "9898568989";
     return { searchFilters, workflowFilters, limit, offset, sortBy, sortOrder };
   },
 };

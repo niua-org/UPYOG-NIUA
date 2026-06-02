@@ -18,11 +18,10 @@ import {
   BirthIcon,
   DeathIcon,
   FirenocIcon,
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 import { Link, useLocation } from "react-router-dom";
 import SideBarMenu from "../../../config/sidebar-menu";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import LogoutDialog from "../../Dialog/LogoutDialog";
 import ChangeCity from "../../ChangeCity";
 import { defaultImage } from "../../utils";
@@ -73,7 +72,7 @@ const IconsObject = {
 };
 const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const location = useLocation();
   const { pathname } = location;
   const { data: storeData, isFetched } = Digit.Hooks.useStore.getInitData();
@@ -104,10 +103,10 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    history.push(`/${window?.contextPath}/citizen/login`);
+    navigate(`/${window?.contextPath}/citizen/login`);
   };
   const showProfilePage = () => {
-    history.push(`/${window?.contextPath}/citizen/user/profile`);
+    navigate(`/${window?.contextPath}/citizen/user/profile`);
   };
 
   let menuItems = [...SideBarMenu(t, showProfilePage, redirectToLoginPage, isEmployee)];
@@ -170,7 +169,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
       },
       {
         text: (
-          <React.Fragment>
+          <>
             {t("CS_COMMON_HELPLINE")}
             <div className="telephone" style={{ marginTop: "-10%" }}>
               {storeData?.tenants.map((i) => {
@@ -188,7 +187,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
                 <a href={`tel:${storeData?.tenants[0].contactNumber}`}>{storeData?.tenants[0].contactNumber}</a>
               </div>
             </div>
-          </React.Fragment>
+          </>
         ),
         element: "Helpline",
         icon: "Phone",
@@ -210,7 +209,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
     });
 
   return (
-    <React.Fragment>
+    <>
       <div>
         <div
           style={{
@@ -240,7 +239,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
         </div>
         <div>{showDialog && <LogoutDialog onSelect={handleOnSubmit} onCancel={handleOnCancel} onDismiss={handleOnCancel}></LogoutDialog>}</div>
       </div>
-    </React.Fragment>
+    </>
   );
 };
 
