@@ -100,7 +100,7 @@ const EWSearchApplication = ({ tenantId, isLoading, t, onSubmit, onClear, data, 
       {
         Header: t("EW_STATUS"), // Header for the "Status" column
         Cell: ({ row }) => {
-          return GetCell(`${row?.original?.["requestStatus"]}`);
+          return GetCell(t(`${row?.original?.["requestStatus"]}`));
         },
         disableSortBy: true,
       },
