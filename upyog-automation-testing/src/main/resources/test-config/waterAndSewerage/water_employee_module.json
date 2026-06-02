@@ -2,7 +2,7 @@
   "moduleName":"water_employee_module",
   "description": "Water connection employee flow ",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions":[
 
@@ -11,7 +11,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${ws.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -20,7 +20,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${ws.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
     },
 
@@ -58,7 +58,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNumber",
       "action":"TYPE",
-      "inputValue":"${ws.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep":2000
     },
 
@@ -152,7 +152,7 @@
     },
 
     {
-      "stepName":"Connection Category",
+      "stepName":"Nature of Connection",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
@@ -178,7 +178,7 @@
       "dynamicSleep":2000
     },
     {
-      "stepName":"Pipe Size (in inches)",
+      "stepName":"Connection Size(in inches)",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
@@ -197,49 +197,20 @@
 
 
     {
-      "stepName":"Select Plumber",
+      "stepName":"Select Plumber Provided By",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0",
+      "inputValue":"5:1",
       "dynamicSleep":2000
     },
 
     {
-      "stepName":"Plumber License Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber License Number')]/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"7876776712345",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber Name",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber Name')]/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"Ramesh Kumar",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber Mobile",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber Mobile Number')]/following::input[@type='text'][1]",
-      "action":"TYPE",
-      "inputValue":"9999997669",
-      "dynamicSleep":2000
-    },
-
-
-
-    {
-      "stepName":"Road Cutting Dropdown",
+      "stepName":"Road Cutting Road Type Dropdown",
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:0",
+      "inputValue":"6:0",
       "dynamicSleep":2000
     },
 
@@ -254,22 +225,17 @@
 
 
 
+
     {
       "stepName":"Upload Evidence 1",
       "locatorStrategy": "XPATH",
       "locatorValue":"(//input[@type='file'])[1]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
-      "dynamicSleep": 1000
+      "dynamicSleep": 3000
     },
 
-    {
-      "stepName":"Evidence Type 2",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"3:0"
-    },
+
 
     {
       "stepName":"Upload Evidence 2",
@@ -277,16 +243,9 @@
       "locatorValue":"(//input[@type='file'])[2]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
-      "dynamicSleep": 1000
+      "dynamicSleep": 3000
     },
 
-    {
-      "stepName":"Evidence Type 3",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"4:0"
-    },
 
     {
       "stepName":"Upload Evidence 3",
@@ -294,16 +253,10 @@
       "locatorValue":"(//input[@type='file'])[3]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
-      "dynamicSleep": 1000
+      "dynamicSleep": 3000
     },
 
-    {
-      "stepName":"Evidence Type 4",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"5:0"
-    },
+
 
     {
       "stepName":"Upload Evidence 4",
@@ -311,11 +264,8 @@
       "locatorValue":"(//input[@type='file'])[4]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
-      "dynamicSleep": 1000
+      "dynamicSleep": 10000
     },
-
-
-
     {
       "stepName":"Submit Edit Page",
       "locatorStrategy": "XPATH",
@@ -323,9 +273,13 @@
       "action":"CLICK_JS",
       "dynamicSleep":2000
     },
-
-
-
+    {
+      "stepName":"Submit Edit Page",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'SUBMIT')]",
+      "action":"CLICK_JS",
+      "dynamicSleep":2000
+    },
     {
       "stepName":"Take Action Verify And Forward 3",
       "locatorStrategy":"XPATH",
@@ -341,7 +295,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
-
     {
       "stepName":"Comment 3",
       "locatorStrategy":"NAME",
@@ -350,7 +303,6 @@
       "inputValue":"Verified and Okay to forward",
       "dynamicSleep": 1000
     },
-
     {
       "stepName":"Submit Verify And Forward 3",
       "locatorStrategy":"XPATH",
@@ -358,9 +310,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
-
-
-
     {
       "stepName":"Take Action Approve Connection",
       "locatorStrategy":"XPATH",
@@ -368,7 +317,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
-
     {
       "stepName":"Click Approve Connection",
       "locatorStrategy":"XPATH",
@@ -376,7 +324,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
-
     {
       "stepName":"Approve Comment",
       "locatorStrategy":"NAME",
@@ -385,7 +332,6 @@
       "inputValue":"Approved",
       "dynamicSleep":2000
     },
-
     {
       "stepName":"Submit Approve Connection",
       "locatorStrategy":"XPATH",
@@ -393,9 +339,6 @@
       "action":"CLICK_JS",
       "dynamicSleep":2000
     },
-
-
-
     {
       "stepName":"Take Action Collect",
       "locatorStrategy":"XPATH",
@@ -403,17 +346,13 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
-
     {
       "stepName":"Click Collect",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Collect')]",
+      "locatorValue":"//p[normalize-space()='Collect']",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
-
-
-
     {
       "stepName":"Payer Mobile",
       "locatorStrategy":"NAME",
@@ -443,7 +382,7 @@
     {
       "stepName":"Collect Payment",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//p[normalize-space()='Collect Payment']",
+      "locatorValue":"//p[normalize-space()='Collect']",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
@@ -474,7 +413,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNumber",
       "action":"TYPE",
-      "inputValue":"${sw.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep":2000
     },
 
@@ -520,34 +459,7 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber License Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber License Number')]/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"PLUM12345",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber Name",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber Name')]/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"Ramesh Kumar",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber Mobile",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber Mobile Number')]/following::input[@type='text'][1]",
-      "action":"TYPE",
-      "inputValue":"9999997669",
+      "inputValue":"0:1",
       "dynamicSleep":2000
     },
 

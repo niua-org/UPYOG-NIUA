@@ -2,7 +2,7 @@
   "moduleName":"street_vending_employee_module",
   "description": "Street Vending employee full workflow",
 
-  "baseUrl": "${selected.svEmployee.url}",
+  "baseUrl": "${selected.url}",
 
 
   "instructions":[
@@ -12,7 +12,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${sv.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -21,7 +21,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${sv.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
     },
 
@@ -60,7 +60,7 @@
       "locatorStrategy":"CSS",
       "locatorValue":"input.employee-card-input",
       "action":"TYPE",
-      "inputValue":"${sv.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
 
@@ -211,14 +211,14 @@
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(@class,'submit-bar')]//header[normalize-space()='TAKE ACTION']/..",
       "action":"CLICK_JS",
-      "dynamicSleep": 2000
+      "dynamicSleep": 3000
     },
 
     {
-      "stepName":"Click Collect Fees",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//div/p[text()='Pay']",
-      "action":"CLICK_JS",
+      "stepName": "Select Payment Action",
+      "action": "CLICK_JS",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//*[contains(text(),'Collect Fees')]",
       "dynamicSleep": 2000
     },
 

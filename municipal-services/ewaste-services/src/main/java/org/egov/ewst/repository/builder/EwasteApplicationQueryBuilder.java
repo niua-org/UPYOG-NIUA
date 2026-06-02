@@ -3,7 +3,9 @@ package org.egov.ewst.repository.builder;
 import java.util.Arrays;
 import java.util.List;
 
+import org.egov.ewst.config.EwasteConfiguration;
 import org.egov.ewst.models.EwasteApplicationSearchCriteria;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -13,6 +15,9 @@ import org.springframework.util.ObjectUtils;
  */
 @Component
 public class EwasteApplicationQueryBuilder {
+
+	@Autowired
+	private EwasteConfiguration configuration;
 
 	// Base query for EwasteApplication
 	private static final String BASE_EW_QUERY = "SELECT RQ.id AS rqid, RQ.tenantId AS rqtenantid, RQ.requestId AS rqrequestid, RQ.calculatedAmount AS rqcalculatedamount, "
@@ -44,8 +49,9 @@ public class EwasteApplicationQueryBuilder {
 			+ "LEFT JOIN EG_EW_ADDRESS ADR ON ADR.ewId = RQ.id "
 			+ "LEFT JOIN EG_EW_EWASTEDOCUMENTS DOC ON DOC.ewId = RQ.id ";
 
-	// Default order by clause
-	private final String ORDERBY_CREATEDTIME = " ORDER BY RQ.createdTime DESC ";
+private final String paginationWrapper =
+			"SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY rqcreatedtime DESC) AS offset_ FROM ({}) result) result_offset " +
+					"WHERE offset_ >= ? AND offset_ <= ?";
 
 	/**
 	 * Constructs the SQL query for searching EwasteApplication based on the provided criteria.
@@ -104,8 +110,7 @@ public class EwasteApplicationQueryBuilder {
 			preparedStmtList.add(criteria.getToDate());
 		}
 
-		query.append(ORDERBY_CREATEDTIME);
-		return query.toString();
+		return addPaginationWrapper(query.toString(), preparedStmtList, criteria);
 	}
 
 	/**
@@ -165,4 +170,38 @@ public class EwasteApplicationQueryBuilder {
 	private void addToPreparedStatement(List<Object> preparedStmtList, List<String> ids) {
 		ids.forEach(preparedStmtList::add);
 	}
+
+	private String addPaginationWrapper(String query, List<Object> preparedStmtList,
+										EwasteApplicationSearchCriteria criteria) {
+
+		int limit = configuration.getDefaultLimit();
+		int offset = configuration.getDefaultOffset();
+		String finalQuery = paginationWrapper.replace("{}", query);
+
+		if (criteria.getLimit() == null && criteria.getOffset() == null) {
+			limit = configuration.getMaxSearchLimit();
+		}
+
+		if (criteria.getLimit() != null && criteria.getLimit() <= configuration.getMaxSearchLimit()) {
+			limit = criteria.getLimit();
+		}
+
+		if (criteria.getLimit() != null && criteria.getLimit() > configuration.getMaxSearchLimit()) {
+			limit = configuration.getMaxSearchLimit();
+		}
+
+		if (criteria.getOffset() != null)
+			offset = criteria.getOffset();
+
+		if (limit == -1) {
+			finalQuery = finalQuery.replace("WHERE offset_ >= ? AND offset_ <= ?", "");
+		} else {
+			preparedStmtList.add(offset);
+			preparedStmtList.add(offset + limit);
+		}
+
+		return finalQuery;
+
+	}
+
 }

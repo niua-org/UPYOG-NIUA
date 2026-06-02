@@ -1,14 +1,13 @@
 package org.upyog.Automation.runner;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.upyog.Automation.Base.BaseTest;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.engine.TestEngine;
 import org.upyog.Automation.engine.TestEngine.ExecutionResult;
+
 
 public class ModuleRunner {
 
@@ -20,77 +19,64 @@ public class ModuleRunner {
 
     public static void main(String[] args) {
 
-        String moduleToRun =
+        String[] modulesToRun =
                 args.length > 0
-                        ? args[0].toUpperCase()
-                        : "SEWERAGE_EMP";
+                        ? args
+                        : new String[]{
+                        "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM",
+
+
+                };
 
         WebDriver driver = null;
 
         try {
 
-            driver = createWebDriver();
+            WorkflowDataStore.put("selected.url",
+                    "https://upyog.niua.org/upyog-ui/citizen/login");
 
-//            // Runtime values
-//            WorkflowDataStore.put("selected.url",
-//                    "https://upyog.niua.org/upyog-ui/citizen/login");
-//
-//            WorkflowDataStore.put("selected.cndCitizen.url",
-//                    "https://upyog.niua.org/cnd-ui/citizen/login");
-//
-//            WorkflowDataStore.put("selected.svCitizen.url",
-//                    "https://upyog.niua.org/sv-ui/citizen/login");
-//
-//            WorkflowDataStore.put("selected.cndEmployee.url",
-//                    "https://upyog.niua.org/cnd-ui/employee/login");
-//
-//            WorkflowDataStore.put("selected.svEmployee.url",
-//                    "https://upyog.niua.org/sv-ui/employee/login");
-//
-//            WorkflowDataStore.put("selected.mobile",
-//                    "9999999999");
-//
-//            WorkflowDataStore.put("selected.otp",
-//                    "123456");
-//
-//            WorkflowDataStore.put("selected.city",
-//                    "Delhi");
-//
-//            WorkflowDataStore.put("selected.city.mohali",
-//                    "Mohali");
+            WorkflowDataStore.put("selected.cndCitizen.url",
+                    "https://niuatt.niua.in/cnd-ui/citizen/login");
+
+            WorkflowDataStore.put("selected.svCitizen.url",
+                    "https://upyog.niua.org/sv-ui/citizen/login");
+
+            WorkflowDataStore.put("selected.cndEmployee.url",
+                    "https://upyog.niua.org/cnd-ui/employee/login");
+
+            WorkflowDataStore.put("selected.svEmployee.url",
+                    "https://upyog.niua.org/sv-ui/employee/login");
+
+            if (WorkflowDataStore.get("selected.mobile") == null)
+                WorkflowDataStore.put("selected.mobile", "9999999999");
+
+            if (WorkflowDataStore.get("selected.otp") == null)
+                WorkflowDataStore.put("selected.otp", "123456");
+
+            if (WorkflowDataStore.get("selected.city") == null)
+                WorkflowDataStore.put("selected.city", "Delhi");
+
+            if (WorkflowDataStore.get("selected.permitNo") == null)
+                WorkflowDataStore.put("selected.permitNo", "TEST123");
+
+            BaseTest baseTest = new BaseTest();
+            baseTest.setUp();
+
+            driver = baseTest.getDriver();
 
             TestEngine engine =
-                    new TestEngine(
-                            driver,
-                            PROPERTIES_PATH
-                    );
+                    new TestEngine(driver, PROPERTIES_PATH);
 
-            runModule(engine, moduleToRun);
+            for (String module : modulesToRun) {
+                logger.info("Running module: {}", module);
+                runModule(engine, module.toUpperCase());
+            }
+
+            baseTest.tearDown();
 
         } catch (Exception e) {
-
-            logger.error(
-                    "Execution Failed",
-                    e
-            );
+            logger.error("Execution Failed", e);
         }
-    }
-
-    private static WebDriver createWebDriver() {
-
-        // Download matching ChromeDriver and clear old cached drivers
-        WebDriverManager.chromedriver()
-                .setup();
-
-        ChromeOptions options = new ChromeOptions();
-
-        options.addArguments("--remote-allow-origins=*");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--no-sandbox");
-
-        WebDriver driver = new ChromeDriver(options);
-
-        return driver;
     }
 
     private static void runModule(
@@ -155,6 +141,22 @@ public class ModuleRunner {
 
                 break;
 
+            case "ASSET_VERIFIER":
+
+                result = engine.executeModule(
+                        "test-config/asset/asset_employeeVerifier_module.json"
+                );
+
+                break;
+
+            case "ASSET_APPROVER":
+
+                result = engine.executeModule(
+                        "test-config/asset/asset_employeeApprover_module.json"
+                );
+
+                break;
+
 
             // =====================================================
             // CHB
@@ -209,7 +211,7 @@ public class ModuleRunner {
             // DESLUDGING SERVICE
             // =====================================================
 
-            case "DESLUDGING":
+            case "DESLUDGING_CITIZEN":
 
                 result = engine.executeModule(
                         "test-config/desludging/desludging_citizen_module.json"
@@ -217,12 +219,46 @@ public class ModuleRunner {
 
                 break;
 
+            case "DESLUDGING_EMPLOYEE":
+
+                result = engine.executeModule(
+                        "test-config/desludging/desludging_employee_module.json"
+                );
+
+                break;
+
+            case "DESLUDGING_CITIZEN_PAYMENT":
+
+                result = engine.executeModule(
+                        "test-config/desludging/desludging_citizenPayment_module.json"
+                );
+
+                break;
+
+            case "DESLUDGING_ASSIGN_PSSO":
+
+                result = engine.executeModule(
+                        "test-config/desludging/desludging_assignPsso_module.json"
+                );
+
+                break;
+
+            case "DESLUDGING_FSTPO":
+
+                result = engine.executeModule(
+                        "test-config/desludging/desludging_fstpo_module.json"
+                );
+
+                break;
+
+
+
 
             // =====================================================
             // OBPAS
             // =====================================================
 
-            case "OBPAS_CREATE":
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
 
                 result = engine.executeModule(
                         "test-config/obpas/obpas_citizen_module.json"
@@ -230,7 +266,7 @@ public class ModuleRunner {
 
                 break;
 
-            case "OBPAS_EMPLOYEE":
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_EMPLOYEE":
 
                 result = engine.executeModule(
                         "test-config/obpas/obpas_employee_module.json"
@@ -238,7 +274,7 @@ public class ModuleRunner {
 
                 break;
 
-            case "OBPAS_OC":
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
 
                 result = engine.executeModule(
                         "test-config/obpas/obpas_oc_citizen_module.json"
@@ -246,7 +282,7 @@ public class ModuleRunner {
 
                 break;
 
-            case "OBPAS_OC_EMP":
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC_EMP":
 
                 result = engine.executeModule(
                         "test-config/obpas/obpas_oc_employee_module.json"
@@ -318,13 +354,13 @@ public class ModuleRunner {
                 break;
 
             // =====================================================
-            // WATER + SEWERAGE
+            //  REQUEST SERVICE
             // =====================================================
 
             case "MOBILE_TOILET_CITIZEN":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/mobile_toilet_citizen_module.json"
+                        "test-config/requestService/mobile_toilet_citizen_module.json"
                 );
 
                 break;
@@ -332,14 +368,14 @@ public class ModuleRunner {
             case "MOBILE_TOILET_EMP":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/mobile_toilet_employee_module.json"
+                        "test-config/requestService/mobile_toilet_employee_module.json"
                 );
 
                 break;
             case "MOBILE_TOILET_VENDOR":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/mobile_toilet_vendor_module.json"
+                        "test-config/requestService/mobile_toilet_vendor_module.json"
                 );
 
                 break;
@@ -347,7 +383,7 @@ public class ModuleRunner {
             case "TREE_PRUNING_CITIZEN":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/tree_pruning_citizen_module.json"
+                        "test-config/requestService/tree_pruning_citizen_module.json"
                 );
 
                 break;
@@ -355,7 +391,7 @@ public class ModuleRunner {
             case "TREE_PRUNING_EMP":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/tree_pruning_employee_module.json"
+                        "test-config/requestService/tree_pruning_employee_module.json"
                 );
 
                 break;
@@ -363,7 +399,7 @@ public class ModuleRunner {
             case "TREE_PRUNING_VENDOR":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/tree_pruning_vendor_module.json"
+                        "test-config/requestService/tree_pruning_vendor_module.json"
                 );
 
                 break;
@@ -371,7 +407,7 @@ public class ModuleRunner {
             case "WATER_TANKER_CITIZEN":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/water_tanker_citizen_module.json"
+                        "test-config/requestService/water_tanker_citizen_module.json"
                 );
 
                 break;
@@ -379,7 +415,7 @@ public class ModuleRunner {
             case "WATER_TANKER_EMP":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/water_tanker_employee_module.json"
+                        "test-config/requestService/water_tanker_employee_module.json"
                 );
 
                 break;
@@ -387,7 +423,7 @@ public class ModuleRunner {
             case "WATER_TANKER_VENDOR":
 
                 result = engine.executeModule(
-                        "test-config/RequestService/water_tanker_vendor_module.json"
+                        "test-config/requestService/water_tanker_vendor_module.json"
                 );
 
                 break;

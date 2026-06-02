@@ -164,7 +164,7 @@ const OBPSSearchApplication = ({ tenantId, t, onSubmit, data, error, searchData,
 
   const isMobile = window.Digit.Utils.browser.isMobile();
 
-  const searchFormFieldsComponentProps = { formState, Controller, register, control, t, reset, previousPage };
+  const searchFormFieldsComponentProps = { formState, Controller, register, control, t, reset, previousPage, setValue };
 
   const getRedirectionLink = (bService) => {
     const businessService = data?.[0]?.businessService == "BPAREG" ?  "BPAREG" : bService;

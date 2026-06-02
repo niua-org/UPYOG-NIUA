@@ -2,7 +2,7 @@
   "moduleName": "cnd_vendor_module",
   "description": "CnD vendor full workflow",
 
-  "baseUrl": "${selected.cndCitizen.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions": [
 
@@ -11,7 +11,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "mobileNumber",
       "action": "TYPE",
-      "inputValue": "${cnd.mobile.number}",
+      "inputValue": "${selected.number}",
       "dynamicSleep": 1000
     },
 

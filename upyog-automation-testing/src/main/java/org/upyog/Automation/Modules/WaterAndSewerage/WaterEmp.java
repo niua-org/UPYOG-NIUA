@@ -19,11 +19,11 @@ public class WaterEmp {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/waterandsewerage/water_employee_module.json"
+                    "test-config/waterAndSewerage/water_employee_module.json"
             );
 
         }catch(Exception e){

@@ -1,14 +1,14 @@
 {
   "moduleName": "employee_module",
   "description": "E-Waste employee approval workflow",
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
   "instructions": [
     {
       "stepName": "Enter username",
       "locatorStrategy": "NAME",
       "locatorValue": "username",
       "action": "TYPE",
-      "inputValue": "${ewaste.login.username}",
+      "inputValue": "${selected.username}",
       "dynamicSleep": 300
     },
     {
@@ -16,7 +16,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "password",
       "action": "TYPE",
-      "inputValue": "${ewaste.login.password}",
+      "inputValue": "${selected.password}",
       "dynamicSleep": 300
     },
     {
@@ -38,7 +38,7 @@
     {
       "stepName": "Navigate to E-Waste inbox",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//span[normalize-space()='E Waste']/ancestor::div[contains(@class,'employeeCustomCard')]//a",
+      "locatorValue": "//span[normalize-space()='E WASTE MANAGEMENT']/ancestor::div[contains(@class,'employeeCustomCard')]//a",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 2000
@@ -48,7 +48,7 @@
       "locatorStrategy": "XPATH",
       "locatorValue": "//h4[contains(text(),'Request ID')]/following::input[1]",
       "action": "TYPE",
-      "inputValue": "${ewaste.application.number}",
+      "inputValue": "${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
     {
@@ -62,7 +62,7 @@
     {
       "stepName": "Click application link",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//a[contains(text(),'${ewaste.application.number}')]",
+      "locatorValue": "//a[contains(text(),'${selected.applicationNumber}')]",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 1500
