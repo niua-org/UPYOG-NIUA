@@ -3,7 +3,7 @@ import { initLibraries } from "@upyog/workbench-ui-libraries";
 import { DigitUI } from "@upyog/workbench-ui-module-core";
 import { initUtilitiesComponents } from "@upyog/workbench-ui-module-utilities";
 import { UICustomizations } from "./Customisations/UICustomizations";
-import { initWorkbenchComponents } from "@nudmcdgnpm/digit-ui-module-workbench";
+import { initWorkbenchComponents } from "@nudmcdgnpm/workbench-ui-module-workbench";
 
 window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH");
 console.log("contextPath", window);
