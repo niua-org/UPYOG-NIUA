@@ -6,65 +6,6 @@
   "instructions":[
 
     {
-      "stepName": "Enter Mobile Number",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${selected.mobile}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Accept Terms Checkbox",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox'].form-field",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Click Next After Mobile",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "NAME",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 3000
-    },
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1500
-    },
-    {
-      "stepName": "Click Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-
-
-
-    {
       "stepName":"Open Water And Sewerage",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[@href='/upyog-ui/citizen/ws-home']",
@@ -93,7 +34,7 @@
       "locatorStrategy":"XPATH",
       "locatorValue":"//h2[contains(.,'Mobile number')]/following::input[1]",
       "action":"TYPE",
-      "inputValue":"9999999999"
+      "inputValue":"7906413996"
     },
 
     {

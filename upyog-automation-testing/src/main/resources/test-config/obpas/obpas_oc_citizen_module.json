@@ -7,77 +7,12 @@
   "instructions":[
 
     {
-      "stepName": "Enter Architect Mobile",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${architect.mobile.number}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Accept Terms",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox'].form-field",
-      "action": "CLICK_JS",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName": "Click Next",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']",
-      "action": "CLICK_JS",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']",
-      "action": "CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "dynamicSleep": 3000
-    },
-
-
-
-
-    {
       "stepName": "Open OBPAS",
       "locatorStrategy": "XPATH",
       "locatorValue": "//a[@href='/upyog-ui/citizen/obps-home']",
       "action": "CLICK_JS",
       "dynamicSleep": 2000
     },
-
-
-
     {
       "stepName": "Open Architect Login",
       "locatorStrategy": "XPATH",
@@ -85,9 +20,6 @@
       "action": "CLICK_JS",
       "dynamicSleep": 2000
     },
-
-
-
     {
       "stepName":"OC New Construction",
       "locatorStrategy":"XPATH",
@@ -95,29 +27,20 @@
       "action":"CLICK_JS",
       "dynamicSleep": 3000
     },
-
-
-
     {
       "stepName":"Info Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS","dynamicSleep": 3000
     },
-
-
-
     {
       "stepName":"Permit Number",
       "locatorStrategy":"NAME",
       "locatorValue":"permitNumber",
       "action":"TYPE",
-      "inputValue":"${permit.number}",
+      "inputValue":"${selected.permitNo}",
       "dynamicSleep": 1000
     },
-
-
-
     {
       "stepName":"Permit Date",
       "locatorStrategy":"XPATH",
@@ -126,9 +49,6 @@
       "inputValue":"${permit.date}",
       "dynamicSleep": 1000
     },
-
-
-
     {
       "stepName":"Search Permit",
       "locatorStrategy":"XPATH",
@@ -658,10 +578,11 @@
       "dynamicSleep": 2000
     },
     {
-      "stepName": "ICIC",
+      "stepName": "Select ICICI",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//*[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'icic')]",
+      "locatorValue": "//*[@id='ICIC']",
       "action": "CLICK_JS",
+      "inputValue": null,
       "dynamicSleep": 2000
     },
     {

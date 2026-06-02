@@ -23,7 +23,7 @@ public class MobileToiletEmp {
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/requestservice/mobile_toilet_employee_module.json"
+                    "test-config/requestService/mobile_toilet_employee_module.json"
             );
 
         }catch(Exception e){

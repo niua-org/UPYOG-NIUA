@@ -1,14 +1,22 @@
 package org.upyog.Automation.Common;
 
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Base.BaseTest;
 import org.upyog.Automation.Modules.Adv.AdvEmp;
+import org.upyog.Automation.Modules.Asset.AssetApprover;
 import org.upyog.Automation.Modules.Asset.AssetEmp;
+import org.upyog.Automation.Modules.Asset.AssetVerifier;
 import org.upyog.Automation.Modules.CHB.chbEmp;
 import org.upyog.Automation.Modules.CnD.CnDEmp;
+import org.upyog.Automation.Modules.DesludgingService.DelsudgingEmployeeComplete;
+import org.upyog.Automation.Modules.DesludgingService.DelsudgingFstpo;
+import org.upyog.Automation.Modules.DesludgingService.DesludgingAssignPsso;
+import org.upyog.Automation.Modules.DesludgingService.DesludgingEmployeeUpdate;
 import org.upyog.Automation.Modules.EWaste.EWasteEmp;
 import org.upyog.Automation.Modules.OBPAS.OBPASEmp;
 import org.upyog.Automation.Modules.OBPAS.OBPASOcEmp;
@@ -24,7 +32,10 @@ import org.upyog.Automation.Modules.TradeLicense.TradeLicenseEmp;
 import org.upyog.Automation.Modules.WaterAndSewerage.SewerageEmp;
 import org.upyog.Automation.Modules.WaterAndSewerage.WaterEmp;
 import org.upyog.Automation.Modules.RequestService.WaterTankerEmployee;
+import org.upyog.Automation.Utils.DriverFactory;
 import org.upyog.Automation.Utils.ModuleWrapper;
+
+import java.time.Duration;
 
 /**
  * Common entry point for all employee module tests
@@ -49,6 +60,12 @@ public class CommonEmployeeTest extends BaseTest {
     
     @Autowired
     private AssetEmp assetEmp;
+
+    @Autowired
+    private AssetVerifier assetVerifier;
+
+    @Autowired
+    private AssetApprover assetApprover;
 
     @Autowired
     private AdvEmp advEmp;
@@ -92,18 +109,40 @@ public class CommonEmployeeTest extends BaseTest {
     @Autowired
     private WaterEmp waterEmp;
 
+    @Autowired
+    private DesludgingEmployeeUpdate desludgingEmployeeUpdate;
+
+    @Autowired
+    private DelsudgingEmployeeComplete desludgingEmployeeComplete;
+
+    @Autowired
+    private DesludgingAssignPsso desludgingAssignPsso;
+
+    @Autowired
+    private DelsudgingFstpo delsudgingFstpo;
 
 
-    public void runEmployeeTest(String baseUrl, String moduleName, String username, String password, String applicationNumber) {
+    private void employeeSetUp(String baseUrl) {
+        driver = DriverFactory.createChromeDriver();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        js = (JavascriptExecutor) driver;
+
+        driver.get(baseUrl);
+    }
+
+
+    public void runEmployeeTest(String baseUrl,
+                                String moduleName,
+                                String username,
+                                String password,
+                                String applicationNumber) {
+
+        employeeSetUp(baseUrl);
+
         logger.info("Starting {} employee test", moduleName);
 
         try {
             switch (moduleName.toUpperCase()) {
-
-
-//                case "STREET_VENDING":
-//                    svEmp.inboxEmpSv(baseUrl, username, password, applicationNumber);
-//                    break;
 
                 case "STREET_VENDING":
 
@@ -118,13 +157,11 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "PET_REGISTRATION":
-//                    petApplicationEmp.petInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
-                case "PET":
+
+                case "PET_REGISTRATION":
 
                     ModuleWrapper.execute(
-                            "PET",
+                            "PET_REGISTRATION",
                             () -> petApplicationEmp.petInboxEmp(
                                     driver,
                                     wait,
@@ -134,9 +171,6 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "TRADE_LICENSE":
-//                    tradeLicenseEmp.tlInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
                 case "TRADE_LICENSE":
 
@@ -155,13 +189,11 @@ public class CommonEmployeeTest extends BaseTest {
                     inboxEmpTl.inboxEmpTl(baseUrl, username, password, applicationNumber);
                     break;
 
-//                case "ASSET_MANAGEMENT_SYSTEM":
-//                    assetEmp.assetInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
+
                 case "ASSET_MANAGEMENT_SYSTEM":
 
                     ModuleWrapper.execute(
-                            "ASSET_EMP",
+                            "ASSET_MANAGEMENT_SYSTEM",
                             () -> assetEmp.assetEmployeeFlow(
                                     driver,
                                     wait,
@@ -171,13 +203,37 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "ADVERTISEMENT":
-//                    advEmp.advInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
+                case "ASSET_MANAGEMENT_SYSTEM_VERIFIER":
+
+                    ModuleWrapper.execute(
+                            "ASSET_MANAGEMENT_SYSTEM_VERIFIER",
+                            () -> assetVerifier.assetEmployeeVerifier(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+                case "ASSET_MANAGEMENT_SYSTEM_APPROVER":
+
+                    ModuleWrapper.execute(
+                            "ASSET_MANAGEMENT_SYSTEM_APPROVER",
+                            () -> assetApprover.assetEmployeeApprover(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+
                 case "ADVERTISEMENT":
 
                     ModuleWrapper.execute(
-                            "ADV_EMP",
+                            "ADVERTISEMENT",
                             () -> advEmp.advApproval(
                                     driver,
                                     wait,
@@ -187,9 +243,6 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "PROPERTY_TAX":
-//                    propertyTaxEmp.propertyInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
                 case "PROPERTY_TAX":
 
@@ -204,13 +257,11 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "EWASTE_MANAGEMENT_SYSTEM":
-//                    eWasteEmp.eWasteInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
+
                 case "EWASTE_MANAGEMENT_SYSTEM":
 
                     ModuleWrapper.execute(
-                            "EWASTE_EMP",
+                            "EWASTE_MANAGEMENT_SYSTEM",
                             () -> eWasteEmp.eWasteApproval(
                                     driver,
                                     wait,
@@ -220,13 +271,63 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
-//                    obpasEmp.OBPASInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
-                case "OBPAS_EMP":
+                case "DESLUDGING_EMPLOYEE_UPDATE":
 
                     ModuleWrapper.execute(
-                            "OBPAS_EMP",
+                            "DESLUDGING_EMPLOYEE_UPDATE",
+                            () -> desludgingEmployeeUpdate.desludgingUpdate(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+                case "DESLUDGING_EMPLOYEE_COMPLETE":
+
+                    ModuleWrapper.execute(
+                            "DESLUDGING_EMPLOYEE_COMPLETE",
+                            () -> desludgingEmployeeComplete.desludgingCom(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+                case "DESLUDGING_EMPLOYEE_PSSO":
+
+                    ModuleWrapper.execute(
+                            "DESLUDGING_EMPLOYEE_PSSO",
+                            () -> desludgingAssignPsso.desludgingPss(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+                case "DESLUDGING_EMPLOYEE_FSTPO":
+
+                    ModuleWrapper.execute(
+                            "DESLUDGING_EMPLOYEE_FSTPO",
+                            () -> delsudgingFstpo.desludgingFstp(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+
+                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
+
+                    ModuleWrapper.execute(
+                            "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM",
                             () -> obpasEmp.OBPASInbox(
                                     driver,
                                     wait,
@@ -236,14 +337,11 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
-//                    obpasOcEmp.OBPASOcInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
-                case "OBPAS_OC":
+                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
 
                     ModuleWrapper.execute(
-                            "OBPAS_OC",
+                            "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC",
                             () -> obpasOcEmp.OBPASOcInboxEmp(
                                     driver,
                                     wait,
@@ -253,9 +351,6 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "WATER_TANKER":
-//                    waterTankerEmployee.waterTankerInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
                 case "WATER_TANKER":
 
@@ -270,9 +365,6 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "TREE_PRUNING":
-//                    treePruningEmp.treePruningInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
                 case "TREE_PRUNING":
 
@@ -287,26 +379,6 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "TREE_PRUNING_VERIFIER":
-//                    treePruningVerifier.treePruningInboxVerifier(baseUrl, username, password, applicationNumber);
-//                    break;
-
-                case "TREE_PRUNING_VENDOR":
-
-                    ModuleWrapper.execute(
-                            "TREE_PRUNING_VENDOR",
-                            () -> treePruningVerifier.treePruningInboxVerifier(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-//                case "MOBILE_TOILET":
-//                    mobileToiletEmp.mobileToiletInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
                 case "MOBILE_TOILET":
 
@@ -321,9 +393,7 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "COMMUNITY_HALL_BOOKING":
-//                    chbEmp.chbInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
+
                 case "COMMUNITY_HALL_BOOKING":
 
                     ModuleWrapper.execute(
@@ -337,9 +407,7 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "CONSTRUCTION_AND_DEMOLITION":
-//                    cndEmp.CnDInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
+
                 case "CONSTRUCTION_AND_DEMOLITION":
 
                     ModuleWrapper.execute(
@@ -353,14 +421,11 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "PUBLIC_GRIEVANCE_REDRESSAL":
-//                    pgrEmp.pgrInboxEmp(baseUrl, username, password, applicationNumber);
-//                    break;
 
-                case "PGR":
+                case "PUBLIC_GRIEVANCE_REDRESSAL":
 
                     ModuleWrapper.execute(
-                            "PGR",
+                            "PUBLIC_GRIEVANCE_REDRESSAL",
                             () -> pgrEmp.pgrInboxEmp(
                                     driver,
                                     wait,
@@ -370,15 +435,8 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-//                case "WATER_AND_SEWERAGE":
-//                    if (applicationNumber.startsWith("SW")) {
-//                        sewerageEmp.sewerageInboxEmp(baseUrl, username, password, applicationNumber);
-//                    } else {
-//                        waterEmp.waterInboxEmp(baseUrl, username, password, applicationNumber);
-//                    }
-//                    break;
 
-                case "SEWERAGE":
+                case "SEWERAGE_EMP":
 
                     ModuleWrapper.execute(
                             "SEWERAGE",
@@ -391,7 +449,7 @@ public class CommonEmployeeTest extends BaseTest {
 
                     break;
 
-                case "WATER":
+                case "WATER_EMP":
 
                     ModuleWrapper.execute(
                             "WATER",

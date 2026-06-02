@@ -2,7 +2,7 @@
   "moduleName":"pgr_employee_module",
   "description": "PGR employee full workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
 
   "instructions":[
@@ -12,7 +12,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${pgr.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -21,7 +21,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${pgr.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
     },
 
@@ -65,7 +65,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"serviceRequestId",
       "action":"TYPE",
-      "inputValue":"${pgr.application.number}"
+      "inputValue":"${selected.applicationNumber}"
     },
 
     {
@@ -97,7 +97,7 @@
     {
       "stepName":"Click Assign Grievance",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//p[normalize-space()='Assign Grievance']",
+      "locatorValue":"//p[normalize-space()='Assign Complaint']",
       "action":"CLICK_JS",
       "dynamicSleep": 3000
     },

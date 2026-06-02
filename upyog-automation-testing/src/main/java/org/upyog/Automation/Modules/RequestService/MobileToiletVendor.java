@@ -23,7 +23,7 @@ public class MobileToiletVendor {
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/requestservice/mobile_toilet_vendor_module.json"
+                    "test-config/requestService/mobile_toilet_vendor_module.json"
             );
 
         }catch(Exception e){
