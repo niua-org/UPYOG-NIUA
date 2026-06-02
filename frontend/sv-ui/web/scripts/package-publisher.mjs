@@ -1,7 +1,5 @@
 /**
  * package-publisher.mjs
- * 
- * @author Shivank - NIUA
  *
  * Centralized NPM publish script for all UPYOG UI workspace modules.
  *
