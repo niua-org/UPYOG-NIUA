@@ -181,7 +181,7 @@ const ADSCitizenDetails = ({ t, config, onSelect, userType, formData,value=formD
             ValidationRequired={true}
             {...(validation = {
               required: true,
-              pattern: "[A-Za-z0-9._%+-]+@[a-z0-9.-]+.[a-z]{2,4}$",
+              pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
               type: "email",
               title: t("CHB_NAME_ERROR_MESSAGE"),
             })}

@@ -30,9 +30,9 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
           <DigitApp
             initData={initData}
             stateCode={stateCode}
-            modules={initData?.modules}
-            appTenants={initData.tenants}
-            logoUrl={initData?.stateInfo?.logoUrl}
+            modules={initData?.modules || []}
+            appTenants={initData?.tenants || []}
+            logoUrl={initData?.stateInfo?.logoUrl || ""}
           />
         </Body>
       </Router>
