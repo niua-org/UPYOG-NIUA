@@ -5,70 +5,6 @@
 
   "instructions":[
 
-    {
-      "stepName":"Vendor Mobile Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue":"${toilet.vendor.mobile.number}",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName":"Accept Terms",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='checkbox'].form-field",
-      "action":"CLICK_JS",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName":"Click Next",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[@type='submit']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 500
-    },
-
-
-
-    {
-      "stepName":"Enter OTP",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.input-otp",
-      "action":"TYPE_OTP",
-      "inputValue":"${selected.otp}",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName":"Submit OTP",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[@type='submit']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 500
-    },
-
-
-
-    {
-      "stepName":"Select City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action":"SELECT_RADIO_BY_TEXT",
-      "inputValue":"${selected.city}",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName":"Continue",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Continue')]",
-      "action":"CLICK_JS",
-      "dynamicSleep": 500
-    },
-
-
 
     {
       "stepName":"Open Request Service",
@@ -103,7 +39,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${mt.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 500
     },
 
