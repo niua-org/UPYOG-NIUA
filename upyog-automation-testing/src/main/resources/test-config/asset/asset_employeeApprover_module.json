@@ -47,7 +47,7 @@
       "locatorStrategy": "XPATH",
       "locatorValue": "//h4[contains(text(),'Asset Unique ID')]/following::input[1]",
       "action": "TYPE",
-      "inputValue": "${asset.application.number}",
+      "inputValue": "${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
     {

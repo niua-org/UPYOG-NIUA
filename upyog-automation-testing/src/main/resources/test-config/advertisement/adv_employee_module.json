@@ -51,7 +51,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "bookingNo",
       "action": "TYPE_FROM_STORE",
-      "inputValue": "&{adv.application.number}",
+      "inputValue": "&{selected.applicationNumber}",
       "dynamicSleep": 1000
     },
     {

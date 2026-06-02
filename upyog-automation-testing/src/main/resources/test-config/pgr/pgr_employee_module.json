@@ -65,7 +65,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"serviceRequestId",
       "action":"TYPE",
-      "inputValue":"${pgr.application.number}"
+      "inputValue":"${selected.applicationNumber}"
     },
 
     {

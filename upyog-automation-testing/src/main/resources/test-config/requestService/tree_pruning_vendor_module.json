@@ -50,7 +50,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${treePruning.application.number}"
+      "inputValue":"${selected.applicationNumber}"
     },
 
     {
@@ -63,7 +63,7 @@
     {
       "stepName":"Open Application",
       "locatorStrategy":"LINKTEXT",
-      "locatorValue":"${treePruning.application.number}",
+      "locatorValue":"${selected.applicationNumber}",
       "action":"CLICK"
     },
 

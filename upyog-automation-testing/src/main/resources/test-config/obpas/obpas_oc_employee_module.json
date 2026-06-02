@@ -54,7 +54,7 @@
       "locatorStrategy":"XPATH",
       "locatorValue":"(//input[@type='text'])[1]",
       "action":"TYPE",
-      "inputValue":"${obpas.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 3000
     },
 
@@ -146,7 +146,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNo",
       "action":"TYPE",
-      "inputValue":"${obpas.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 3000
     },
 
@@ -318,7 +318,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNo",
       "action":"TYPE",
-      "inputValue":"${obpas.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 3000
     },
 

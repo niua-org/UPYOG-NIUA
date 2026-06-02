@@ -452,7 +452,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNumber",
       "action":"TYPE",
-      "inputValue":"${sw.application.number}",
+      "inputValue":"${selected.applicatioNumber}",
       "dynamicSleep":2000
     },
 

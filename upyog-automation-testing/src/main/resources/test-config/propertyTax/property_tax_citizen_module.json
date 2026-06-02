@@ -280,7 +280,7 @@
       "locatorValue":"(//input[@type='file'])[1]",
       "action":"UPLOAD_FILE",
       "inputValue":"${document.common.proof}",
-      "dynamicSleep": 1000
+      "dynamicSleep": 2000
     },
 
     {

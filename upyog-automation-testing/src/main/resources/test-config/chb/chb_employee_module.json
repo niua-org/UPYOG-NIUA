@@ -54,7 +54,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "bookingNo",
       "action": "TYPE",
-      "inputValue":  "${chb.application.number}",
+      "inputValue":  "${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
     {

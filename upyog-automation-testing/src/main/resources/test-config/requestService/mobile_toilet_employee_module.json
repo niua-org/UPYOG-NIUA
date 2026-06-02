@@ -60,7 +60,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${mt.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
 
@@ -196,7 +196,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${mt.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 3000
     },
 
