@@ -1,0 +1,87 @@
+{
+  "moduleName": "desludging_citizenPayment_module",
+  "description": "Desludging citizen payment workflow",
+  "baseUrl": "${selected.url}",
+  "instructions": [
+
+    {
+      "stepName": "Open Desludging module",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[@href='/upyog-ui/citizen/fsm-home']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Open View application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//a[@href='/upyog-ui/citizen/fsm/my-applications']",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Open First Application View",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//button[contains(.,'View')])[1]",
+      "action": "CLICK_JS",
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Make Payment",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 1500
+    },
+    {
+      "stepName": "Click Proceed To Pay",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'proceed to pay')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
+    },
+    {
+      "stepName": "Click UPYOG Pay",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(@class,'submit-bar') and .//header[normalize-space()='Pay']]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 4000
+    },
+    {
+      "stepName": "Click Net Banking",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//*[contains(text(),'Net Banking')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Select ICICI",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//*[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'ICICI Bank')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Click Gateway Pay",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'pay')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName": "Click Success",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Success')]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 3000
+    }
+  ]
+}

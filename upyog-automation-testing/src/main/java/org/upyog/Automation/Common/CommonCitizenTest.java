@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.upyog.Automation.Modules.Adv.AdvBookingCreate;
 import org.upyog.Automation.Modules.CHB.chbCreate;
 import org.upyog.Automation.Modules.CnD.CnDRequest;
+import org.upyog.Automation.Modules.DesludgingService.DesludgingCitizenPayment;
+import org.upyog.Automation.Modules.DesludgingService.DesludgingCitizenPayment2;
 import org.upyog.Automation.Modules.DesludgingService.DesludgingCreate;
 import org.upyog.Automation.Modules.EWaste.EWasteCreate;
 import org.upyog.Automation.Modules.OBPAS.OBPASCreate;
@@ -83,6 +85,12 @@ public class CommonCitizenTest extends BaseTest {
     private DesludgingCreate desludgingCreate;
 
     @Autowired
+    private DesludgingCitizenPayment desludgingCitizenPayment;
+
+    @Autowired
+    private DesludgingCitizenPayment2 desludgingCitizenPayment2;
+
+    @Autowired
     private WAndSCreate wAndSCreate;
 
     public void runCitizenTest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String permitNumber) throws InterruptedException {
@@ -92,12 +100,7 @@ public class CommonCitizenTest extends BaseTest {
         try {
             switch (moduleName.toUpperCase()) {
 
-//                case "STREET_VENDING":
-//                    ModuleWrapper.execute(
-//                            "STREET_VENDING",
-//                            () -> svCreateApplication.svCreateReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
 
                 case "STREET_VENDING":
 
@@ -112,12 +115,6 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "TRADE_LICENSE":
-//                    ModuleWrapper.execute(
-//                            "TRADE_LICENSE",
-//                            () -> tradeLicenseCreate.tradeLicenceCitizenReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
 
                 case "TRADE_LICENSE":
 
@@ -132,16 +129,11 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "PET_REGISTRATION":
-//                    ModuleWrapper.execute(
-//                            "PET_REGISTRATION",
-//                            () -> petCreateApplication.petApptest(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
-                case "PET":
+
+                case "PET_REGISTRATION":
 
                     ModuleWrapper.execute(
-                            "PET",
+                            "PET_REGISTRATION",
                             () -> petCreateApplication.petApptest(
                                     driver,
                                     wait,
@@ -151,16 +143,11 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "ADVERTISEMENT":
-//                    ModuleWrapper.execute(
-//                            "ADVERTISEMENT",
-//                            () -> advBookingCreate.advBookingReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
                 case "ADVERTISEMENT":
 
                     ModuleWrapper.execute(
-                            "ADV",
+                            "ADVERTISEMENT",
                             () -> advBookingCreate.advBookingReg(
                                     driver,
                                     wait,
@@ -170,12 +157,7 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "TREE_PRUNING":
-//                    ModuleWrapper.execute(
-//                            "TREE_PRUNING",
-//                            () -> treePruningCitizen.treePruningCreate(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
 
                 case "TREE_PRUNING":
 
@@ -190,12 +172,7 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "WATER_TANKER":
-//                    ModuleWrapper.execute(
-//                            "WATER_TANKER",
-//                            () -> waterTankerCitizen.waterTankerCreate(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
 
                 case "WATER_TANKER":
 
@@ -210,12 +187,7 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "MOBILE_TOILET":
-//                    ModuleWrapper.execute(
-//                            "MOBILE_TOILET",
-//                            () -> mobileToiletCitizen.mobileToiletCreate(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
 
                 case "MOBILE_TOILET":
 
@@ -230,11 +202,7 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "PROPERTY_TAX":
-//                    ModuleWrapper.execute("PROPERTY TAX",
-//                            () -> propertyTaxCreate.newPropertyReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
 
                 case "PROPERTY_TAX":
 
@@ -249,16 +217,12 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "PUBLIC_GRIEVANCE_REDRESSAL":
-//                    ModuleWrapper.execute("PGR",
-//                            () -> pgrCreate.pgrReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
 
-                case "PGR":
+
+                case "PUBLIC_GRIEVANCE_REDRESSAL":
 
                     ModuleWrapper.execute(
-                            "PGR",
+                            "PUBLIC_GRIEVANCE_REDRESSAL",
                             () -> pgrCreate.pgrReg(
                                     driver,
                                     wait,
@@ -268,15 +232,11 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
-//                    ModuleWrapper.execute("OBPAS",
-//                            () -> obpasCreate.obpasReg(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber)
-//                    );
-//                    break;
-                case "OBPAS":
+
+                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
 
                     ModuleWrapper.execute(
-                            "OBPAS",
+                            "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM",
                             () -> obpasCreate.obpasReg(
                                     driver,
                                     wait,
@@ -286,18 +246,12 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
-//                    ModuleWrapper.execute(
-//                            "OBPAS_OC",
-//                            () -> obpasOcCreate.obpasOCReg(baseUrl, moduleName, mobileNumber, otp, cityName, permitNumber)
-//                    );
-//                    break;
 
-                case "CONSTRUCTION_AND_DEMOLITION":
+                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
 
                     ModuleWrapper.execute(
-                            "CND_CITIZEN",
-                            () -> cndRequest.cndReg(
+                            "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC",
+                            () -> obpasOCCreate.obpasOCReg(
                                     driver,
                                     wait,
                                     js
@@ -306,23 +260,18 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
+
                 case "EWASTE_MANAGEMENT_SYSTEM":
                     ModuleWrapper.execute(
-                            "EWASTE",
+                            "EWASTE_MANAGEMENT_SYSTEM",
                             () -> eWasteCreate.eWasteReg(driver, wait, js)
                     );
                     break;
 
-//                case "COMMUNITY_HALL_BOOKING":
-//                    ModuleWrapper.execute(
-//                            "CHB",
-//                            () -> chbCreate.chbReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
                 case "COMMUNITY_HALL_BOOKING":
 
                     ModuleWrapper.execute(
-                            "CHB",
+                            "COMMUNITY_HALL_BOOKING",
                             () -> chbCreate.chbReg(
                                     driver,
                                     wait,
@@ -332,16 +281,11 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "CONSTRUCTION_AND_DEMOLITION":
-//                    ModuleWrapper.execute(
-//                            "CND",
-//                            () -> cndRequest.cndReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
-                case "CND":
+
+                case "CONSTRUCTION_AND_DEMOLITION":
 
                     ModuleWrapper.execute(
-                            "CND",
+                            "CONSTRUCTION_AND_DEMOLITION",
                             () -> cndRequest.cndReg(
                                     driver,
                                     wait,
@@ -351,16 +295,11 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "DESLUDGING_SERVICE":
-//                    ModuleWrapper.execute(
-//                            "DESLUDGING",
-//                            () -> desludgingCreate.desludgingReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+
                 case "DESLUDGING_SERVICE":
 
                     ModuleWrapper.execute(
-                            "DESLUDGING",
+                            "DESLUDGING_SERVICE",
                             () -> desludgingCreate.desludgingReg(
                                     driver,
                                     wait,
@@ -370,12 +309,32 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-//                case "WATER_AND_SEWERAGE":
-//                    ModuleWrapper.execute(
-//                            "WATER_AND_SEWERAGE",
-//                            () -> wAndSCreate.wandSReg(baseUrl, moduleName, mobileNumber, otp, cityName)
-//                    );
-//                    break;
+                case "DESLUDGING_SERVICE_PAYMENT":
+
+                    ModuleWrapper.execute(
+                            "DESLUDGING",
+                            () -> desludgingCitizenPayment.desludgingPaymentReg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
+                case "DESLUDGING_SERVICE_PAYMENT2":
+
+                    ModuleWrapper.execute(
+                            "DESLUDGING",
+                            () -> desludgingCitizenPayment2.desludgingPayment2Reg(
+                                    driver,
+                                    wait,
+                                    js
+                            )
+                    );
+
+                    break;
+
 
                 case "WATER_AND_SEWERAGE":
 
@@ -425,17 +384,7 @@ public class CommonCitizenTest extends BaseTest {
 
                 switch (moduleName.toUpperCase()) {
 
-//                    case "STREET_VENDING":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "STREET_VENDING",
-//                                        () -> svCreateApplication.svCreateReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
 
                     case "STREET_VENDING":
 
@@ -450,17 +399,7 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "TRADE_LICENSE":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "TRADE_LICENSE",
-//                                        () -> tradeLicenseCreate.tradeLicenceCitizenReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
 
                     case "TRADE_LICENSE":
 
@@ -475,22 +414,12 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "PET_REGISTRATION":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "PET_REGISTRATION",
-//                                        () -> petCreateApplication.petApptest(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
 
-                    case "PET":
+
+                    case "PET_REGISTRATION":
 
                         ModuleWrapper.execute(
-                                "PET",
+                                "PET_REGISTRATION",
                                 () -> petCreateApplication.petApptest(
                                         driver,
                                         wait,
@@ -500,21 +429,12 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "ADVERTISEMENT":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "ADVERTISEMENT",
-//                                        () -> advBookingCreate.advBookingReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
+
                     case "ADVERTISEMENT":
 
                         ModuleWrapper.execute(
-                                "ADV",
+                                "ADVERTISEMENT",
                                 () -> advBookingCreate.advBookingReg(
                                         driver,
                                         wait,
@@ -524,17 +444,8 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "TREE_PRUNING":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "TREE_PRUNING",
-//                                        () -> treePruningCitizen.treePruningCreate(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
+
 
                     case "TREE_PRUNING":
 
@@ -549,17 +460,7 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "WATER_TANKER":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "WATER_TANKER",
-//                                        () -> waterTankerCitizen.waterTankerCreate(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
 
                     case "WATER_TANKER":
 
@@ -574,17 +475,7 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "MOBILE_TOILET":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "MOBILE_TOILET",
-//                                        () -> mobileToiletCitizen.mobileToiletCreate(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
 
                     case "MOBILE_TOILET":
 
@@ -599,17 +490,7 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "PROPERTY_TAX":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "PROPERTY_TAX",
-//                                        () -> propertyTaxCreate.newPropertyReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
 
                     case "PROPERTY_TAX":
 
@@ -624,22 +505,12 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "PUBLIC_GRIEVANCE_REDRESSAL":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "PGR",
-//                                        () -> pgrCreate.pgrReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
 
-                    case "PGR":
+
+                    case "PUBLIC_GRIEVANCE_REDRESSAL":
 
                         ModuleWrapper.execute(
-                                "PGR",
+                                "PUBLIC_GRIEVANCE_REDRESSAL",
                                 () -> pgrCreate.pgrReg(
                                         driver,
                                         wait,
@@ -649,22 +520,11 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "OBPAS",
-//                                        () -> obpasCreate.obpasReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName,
-//                                                permitNumber
-//                                        )
-//                                )
-//                        );
-//                        break;
-                    case "OBPAS_CREATE":
+
+                    case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
 
                         ModuleWrapper.execute(
-                                "OBPAS",
+                                "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM",
                                 () -> obpasCreate.obpasReg(
                                         driver,
                                         wait,
@@ -674,23 +534,12 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "OBPAS_OC",
-//                                        () -> obpasOcCreate.obpasOCReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName,
-//                                                permitNumber
-//                                        )
-//                                )
-//                        );
-//                        break;
 
-                    case "OBPAS_OC":
+
+                    case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
 
                         ModuleWrapper.execute(
-                                "OBPAS_OC",
+                                "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC",
                                 () -> obpasOCCreate.obpasOCReg(
                                         driver,
                                         wait,
@@ -703,7 +552,7 @@ public class CommonCitizenTest extends BaseTest {
                     case "EWASTE_MANAGEMENT_SYSTEM":
 
                         ModuleWrapper.execute(
-                                "EWASTE",
+                                "EWASTE_MANAGEMENT_SYSTEM",
                                 () -> eWasteCreate.eWasteReg(
                                         driver,
                                         wait,
@@ -713,21 +562,11 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "COMMUNITY_HALL_BOOKING":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "CHB",
-//                                        () -> chbCreate.chbReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
                     case "COMMUNITY_HALL_BOOKING":
 
                         ModuleWrapper.execute(
-                                "CHB",
+                                "COMMUNITY_HALL_BOOKING",
                                 () -> chbCreate.chbReg(
                                         driver,
                                         wait,
@@ -737,21 +576,11 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "CONSTRUCTION_AND_DEMOLITION":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "CND",
-//                                        () -> cndRequest.cndReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
                     case "CONSTRUCTION_AND_DEMOLITION":
 
                         ModuleWrapper.execute(
-                                "CND",
+                                "CONSTRUCTION_AND_DEMOLITION",
                                 () -> cndRequest.cndReg(
                                         driver,
                                         wait,
@@ -761,21 +590,11 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "DESLUDGING_SERVICE":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "DESLUDGING",
-//                                        () -> desludgingCreate.desludgingReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+
                     case "DESLUDGING_SERVICE":
 
                         ModuleWrapper.execute(
-                                "DESLUDGING",
+                                "DESLUDGING_SERVICE",
                                 () -> desludgingCreate.desludgingReg(
                                         driver,
                                         wait,
@@ -785,17 +604,33 @@ public class CommonCitizenTest extends BaseTest {
 
                         break;
 
-//                    case "WATER_AND_SEWERAGE":
-//                        modules.add(
-//                                new ModuleTask(
-//                                        "WATER_AND_SEWERAGE",
-//                                        () -> wAndSCreate.wandSReg(
-//                                                baseUrl, moduleName,
-//                                                mobileNumber, otp, cityName
-//                                        )
-//                                )
-//                        );
-//                        break;
+                    case "DESLUDGING_SERVICE_PAYMENT":
+
+                        ModuleWrapper.execute(
+                                "DESLUDGING_SERVICE_PAYMENT",
+                                () -> desludgingCitizenPayment.desludgingPaymentReg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+                    case "DESLUDGING_SERVICE_PAYMENT2":
+
+                        ModuleWrapper.execute(
+                                "DESLUDGING_SERVICE_PAYMENT2",
+                                () -> desludgingCitizenPayment2.desludgingPayment2Reg(
+                                        driver,
+                                        wait,
+                                        js
+                                )
+                        );
+
+                        break;
+
+
 
                     case "WATER_AND_SEWERAGE":
 

@@ -2,7 +2,7 @@
   "moduleName":"property_tax_employee_module",
   "description": "Property Tax employee full workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
 
   "instructions":[
@@ -12,7 +12,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${property.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -21,7 +21,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${property.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
     },
 
@@ -47,7 +47,7 @@
     {
       "stepName":"Open Property Tax Inbox",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//a[contains(@href,'/employee/pt/inbox')]",
+      "locatorValue":"//a[contains(@href,'/employee/pt/application-search')]",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
@@ -55,9 +55,9 @@
     {
       "stepName":"Enter Property ID",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//h4[contains(.,'Property ID')]/following::input[1]",
+      "locatorValue":"//label[normalize-space()='Property ID']/following::input[1]",
       "action":"TYPE",
-      "inputValue":"${pt.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep":1000
     },
 
@@ -205,7 +205,7 @@
     {
       "stepName":"Click Assess Property",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//p[normalize-space()='Assess Property']",
+      "locatorValue":"//p[normalize-space()='ASSESS PROPERTY']",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
@@ -213,7 +213,7 @@
     {
       "stepName":"Select Financial Year",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//label[normalize-space()='2025-26']/preceding-sibling::span/input[@type='radio']",
+      "locatorValue":"//label[normalize-space()='2024-25']/preceding-sibling::span/input[@type='radio']",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
@@ -229,7 +229,7 @@
     {
       "stepName":"Assess Property Final Button",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Assess Property')]",
+      "locatorValue":"//button[contains(.,'ASSESS PROPERTY')]",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },

@@ -2,7 +2,7 @@
   "moduleName":"obpas_employee_module",
   "description": "Obpas employee full workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions":[
 
@@ -12,7 +12,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${obpas.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 500
     },
     {
@@ -20,7 +20,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${obpas.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 500
     },
     {

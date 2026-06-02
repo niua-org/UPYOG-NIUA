@@ -65,3 +65,7 @@ The test is configured as a Spring component with `@PostConstruct` annotation, w
     For example:
     /Users/niua-l1232/Documents/doc.pdf should be replaced with your own system path.
   - Use IP- localhost:8080
+
+## IPs For Html Page
+- http://13.201.2.162:8080
+- http://65.0.8.57:8080

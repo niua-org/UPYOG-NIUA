@@ -21,11 +21,11 @@ public class AssetEmp {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/asset/asset_employee_module.json"
+                    "test-config/asset/asset_employee_module.json"
             );
 
         }

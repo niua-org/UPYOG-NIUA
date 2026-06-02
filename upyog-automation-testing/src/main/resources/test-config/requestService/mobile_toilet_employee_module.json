@@ -1,7 +1,8 @@
 {
-  "moduleName":"water_tanker_employee_module",
-  "description": "Water Tanker citizen workflow",
-  "baseUrl": "${employee.base.url}",
+  "moduleName":"mobile_toilet_employee_module",
+  "description": "Mobile Toilet employee full workflow",
+
+  "baseUrl": "${selected.url}",
 
 
   "instructions":[
@@ -11,7 +12,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${wt.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -20,8 +21,9 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${wt.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
+
     },
 
     {
@@ -40,30 +42,34 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
+
+
+
     {
       "stepName":"Open Search Booking",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//a[contains(@href,'wt/inbox')]",
+      "locatorValue":"//a[contains(@href,'/wt/mt/my-bookings')]",
       "action":"CLICK_JS",
-      "dynamicSleep":1000
+      "dynamicSleep": 1000
     },
 
 
 
     {
       "stepName":"Enter Booking Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h4[contains(text(),'Booking No.')]/following::input[1]",
+      "locatorStrategy":"NAME",
+      "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${wt.application.number}",
-      "dynamicSleep":1000
+      "inputValue":"${mt.application.number}",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Search Booking",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[normalize-space()='Search']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -76,6 +82,7 @@
     },
 
 
+
     {
       "stepName":"Take Action Approve",
       "locatorStrategy":"XPATH",
@@ -83,6 +90,7 @@
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
+
     {
       "stepName":"Click Approve",
       "locatorStrategy":"XPATH",
@@ -113,7 +121,7 @@
     {
       "stepName":"Take Action Pay",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(@class,'submit-bar') and .//header[normalize-space()='TAKE ACTION']]",
+      "locatorValue":"//button[contains(.,'TAKE ACTION')]",
       "action":"CLICK_JS",
       "dynamicSleep": 1000
     },
@@ -176,20 +184,20 @@
 
 
     {
-      "stepName":"Open Water Tanker Inbox Again",
+      "stepName":"Open Search Booking Again",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//a[contains(@href,'wt/inbox')]",
+      "locatorValue":"//a[contains(@href,'/wt/mt/my-bookings')]",
       "action":"CLICK_JS",
       "dynamicSleep": 3000
     },
 
     {
-      "stepName":"Enter Booking Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h4[contains(text(),'Booking No.')]/following::input[1]",
+      "stepName":"Enter Booking Number Again",
+      "locatorStrategy":"NAME",
+      "locatorValue":"bookingNo",
       "action":"TYPE",
-      "inputValue":"${wt.application.number}",
-      "dynamicSleep":1000
+      "inputValue":"${mt.application.number}",
+      "dynamicSleep": 3000
     },
 
     {
@@ -234,7 +242,7 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:2",
+      "inputValue":"0:5",
       "dynamicSleep": 3000
     },
 

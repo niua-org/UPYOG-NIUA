@@ -7,68 +7,6 @@
 
   "instructions": [
 
-    {
-      "stepName": "Enter mobile number",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${selected.mobile}",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName": "Accept terms",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox']",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName": "Click Next",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 500
-    },
-
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1000
-    },
-
-    {
-      "stepName": "Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
 
     {
       "stepName": "Open Desludging module",
@@ -326,6 +264,14 @@
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 5000
+    },
+    {
+      "stepName": "Capture Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//div[contains(text(),'FSM-')]",
+      "action": "CAPTURE_TEXT",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 1000
     }
   ]
 }

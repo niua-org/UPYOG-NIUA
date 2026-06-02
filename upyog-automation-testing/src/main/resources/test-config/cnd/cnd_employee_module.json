@@ -2,7 +2,7 @@
   "moduleName": "cnd_employee_module",
   "description": "CnD employee full UI workflow",
 
-  "baseUrl": "${selected.cndEmployee.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions": [
 
@@ -11,7 +11,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "username",
       "action": "TYPE",
-      "inputValue": "${cnd.login.username}",
+      "inputValue": "${selected.username}",
       "dynamicSleep": 500
     },
 
@@ -20,7 +20,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "password",
       "action": "TYPE",
-      "inputValue": "${cnd.login.password}",
+      "inputValue": "${selected.password}",
       "dynamicSleep": 500
     },
 

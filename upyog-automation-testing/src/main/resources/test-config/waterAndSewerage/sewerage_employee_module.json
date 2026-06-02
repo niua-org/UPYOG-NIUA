@@ -2,7 +2,7 @@
   "moduleName":"sewerage_employee_module",
   "description": "Sewerage employee flow ",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions":[
 
@@ -11,7 +11,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${ws.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -20,7 +20,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${ws.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
     },
 
@@ -58,7 +58,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNumber",
       "action":"TYPE",
-      "inputValue":"${sw.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep":2000
     },
 

@@ -2,7 +2,7 @@
   "moduleName": "chb_employee_module",
   "description": "CHB employee full workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions": [
 
@@ -11,7 +11,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "username",
       "action": "TYPE",
-      "inputValue": "${chb.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 500
     },
 
@@ -20,7 +20,7 @@
       "locatorStrategy": "NAME",
       "locatorValue": "password",
       "action": "TYPE",
-      "inputValue": "${chb.login.password}",
+      "inputValue": "${selected.password}",
       "dynamicSleep": 500
     },
 

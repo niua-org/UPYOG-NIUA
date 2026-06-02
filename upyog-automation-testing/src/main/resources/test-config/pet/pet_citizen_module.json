@@ -8,68 +8,6 @@
 
 
     {
-      "stepName":"Enter Mobile Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue":"${selected.mobile}",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"Accept Terms",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='checkbox'].form-field",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"Click Next",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[@type='submit']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-
-
-    {
-      "stepName":"Enter OTP",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input.input-otp",
-      "action":"TYPE_OTP",
-      "inputValue":"${selected.otp}",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"Submit OTP",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[@type='submit']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-
-
-    {
-      "stepName":"Select City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action":"SELECT_RADIO_BY_TEXT",
-      "inputValue":"${selected.city}",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"Continue",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Continue')]",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-    {
       "stepName":"Open Pet Module",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[@href='/upyog-ui/citizen/ptr-home']",
@@ -405,42 +343,6 @@
       "locatorValue":"//button[contains(.,'Submit')]",
       "action":"CLICK_JS",
       "dynamicSleep": 2000
-    },
-
-
-
-
-    {
-      "stepName":"Go Home",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//a[@href='/digit-ui/citizen']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"Open Pet Module Again",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//a[@href='/digit-ui/citizen/ptr-home']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"My Applications",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//div[contains(@class,'CitizenHomeCard')]//a[text()='My Applications']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
-    },
-
-    {
-      "stepName":"Track Application",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Track')]",
-      "action":"CLICK_JS",
-      "dynamicSleep": 2000
     }
-
   ]
 }
