@@ -6,7 +6,6 @@ import { UICustomizations } from "./Customisations/UICustomizations";
 import { initWorkbenchComponents } from "@nudmcdgnpm/workbench-ui-module-workbench";
 
 window.contextPath = window?.globalConfigs?.getConfig("CONTEXT_PATH");
-console.log("contextPath", window);
 const enabledModules = [
   "Utilities",
   "Workbench"
