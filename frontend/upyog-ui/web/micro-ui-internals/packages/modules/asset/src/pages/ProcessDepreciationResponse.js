@@ -11,6 +11,8 @@ const ProcessDepreciationResponse = (props) => {
   const [applicationDetail, setApplicationDetail] = useState(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true); // Loader state
+  const moduleBasePath = Digit.Hooks.useModuleBasePath();
+
 
 
 
@@ -58,7 +60,7 @@ const ProcessDepreciationResponse = (props) => {
               successful={true}
             />
             <div style={{ padding: "10px", paddingBottom: "10px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <Link to={`/upyog-ui/employee/asset/assetservice/applicationsearch/application-details/${applicationDetail}`} >
+              <Link to={`${moduleBasePath}/assetservice/applicationsearch/application-details/${applicationDetail}`} >
                 <SubmitBar label={t("AST_DEPRECIATION_LIST")} />
               </Link>
             </div>
