@@ -1,33 +1,20 @@
 import {
-  Calender, CardBasedOptions, CaseIcon, ComplaintIcon, DocumentIcon, HomeIcon, Loader, OBPSIcon, PTIcon, WhatsNewCard
-} from "@egovernments/digit-ui-react-components";
+  Calender, CardBasedOptions, CaseIcon, ComplaintIcon, DocumentIcon, HomeIcon, Loader, OBPSIcon, PTIcon, 
+} from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 
 const Home = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
   const { data: { stateInfo, uiHomePage } = {}, isLoading } = Digit.Hooks.useStore.getInitData();
   let isMobile = window.Digit.Utils.browser.isMobile();
 
-  const conditionsToDisableNotificationCountTrigger = () => {
-    if (Digit.UserService?.getUser()?.info?.type === "EMPLOYEE") return false;
-    if (!Digit.UserService?.getUser()?.access_token) return false;
-    return true;
-  };
 
-  const { data: EventsData, isLoading: EventsDataLoading } = Digit.Hooks.useEvents({
-    tenantId,
-    variant: "whats-new",
-    config: {
-      enabled: conditionsToDisableNotificationCountTrigger(),
-    },
-  });
 
   if (!tenantId) {
-    history.push(`/${window?.contextPath}/citizen/select-language`);
+    navigate(`/${window?.contextPath}/citizen/select-language`);
   }
 
   const appBannerWebObj = uiHomePage?.appBannerDesktop;
@@ -36,7 +23,7 @@ const Home = () => {
   const infoAndUpdatesObj = uiHomePage?.informationAndUpdatesCard;
   const whatsAppBannerWebObj = uiHomePage?.whatsAppBannerDesktop;
   const whatsAppBannerMobObj = uiHomePage?.whatsAppBannerMobile;
-  const whatsNewSectionObj = uiHomePage?.whatsNewSection;
+  
   const redirectURL = uiHomePage?.redirectURL;
   /* configure redirect URL only if it is required to overide the default citizen home screen */
   if (redirectURL) {
@@ -112,11 +99,7 @@ const Home = () => {
         name: t(infoAndUpdatesObj?.props?.[3]?.label),
         Icon: <DocumentIcon />,
         onClick: () => history.push(infoAndUpdatesObj?.props?.[3]?.navigationUrl),
-      },
-      // {
-      //     name: t("CS_COMMON_HELP"),
-      //     Icon: <HelpIcon/>
-      // }
+      }
     ],
     styles: { display: "flex", flexWrap: "wrap", justifyContent: "flex-start", width: "100%" },
   };
@@ -152,19 +135,6 @@ const Home = () => {
           </div>
         )}
 
-        {conditionsToDisableNotificationCountTrigger() ? (
-          EventsDataLoading ? (
-            <Loader />
-          ) : (
-            <div className="WhatsNewSection">
-              <div className="headSection">
-                <h2>{t(whatsNewSectionObj?.headerLabel)}</h2>
-                <p onClick={() => history.push(whatsNewSectionObj?.sideOption?.navigationUrl)}>{t(whatsNewSectionObj?.sideOption?.name)}</p>
-              </div>
-              <WhatsNewCard {...EventsData?.[0]} />
-            </div>
-          )
-        ) : null}
       </div>
     </div>
   );

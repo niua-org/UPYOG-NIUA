@@ -1,7 +1,7 @@
-import { Card, Loader, SVG } from "@egovernments/digit-ui-react-components";
+import { Card, Loader, SVG } from "@upyog/workbench-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import { DigitJSONForm } from "../../Module";
 import _ from "lodash";
 import { DigitLoader } from "../../components/DigitLoader";
@@ -38,7 +38,7 @@ const MDMSAdd = ({ defaultFormData, updatesToUISchema, screenType = "add", onVie
   }, [defaultFormData]);
 
   const { t } = useTranslation();
-  const history = useHistory();
+  
   const reqCriteria = {
     url: `/${Digit.Hooks.workbench.getMDMSContextPath()}/schema/v1/_search`,
     params: {},

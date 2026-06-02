@@ -11,10 +11,9 @@ import {
   BackButton,
   Loader,
   SubmitBar
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
 import UploadDrawer from "./ImageUpload/UploadDrawer";
 
 const defaultImage =
@@ -41,7 +40,7 @@ const defaultImage =
   "L+RGKCddCGmatiPyPB/+ekO/M/q/7uvbt22kTt3zEnXPzCV13T3Gel4/6NduDu66xRvlPNkM1RjjxUdv+4WhGx6TftD19Q/dfzpwcHO+rE3fAAAAAElFTkSuQmCC";
 
 const UserProfile = ({ stateCode, userType, cityDetails }) => {
-  const history = useHistory();
+  
   const { t } = useTranslation();
   const url = window.location.href;
   const stateId = Digit.ULBService.getStateId();
@@ -401,7 +400,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
           }}
         >
           {userType === "citizen" ? (
-            <React.Fragment>
+            <>
               <LabelFieldPair>
                 <CardLabel style={editScreen ? { color: "#B1B4B6" } : {}}>{`${t("CORE_COMMON_PROFILE_NAME")}`}*</CardLabel>
                 <div style={{ width: "100%", maxWidth:"960px" }}>
@@ -474,9 +473,9 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
               >
                 {t("CORE_COMMON_SAVE")}
               </button>
-            </React.Fragment>
+            </>
           ) : (
-            <React.Fragment>
+            <>
               <LabelFieldPair style={{ display: "flex" }}>
                 <CardLabel className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>
                   {`${t("CORE_COMMON_PROFILE_NAME")}`}*
@@ -582,7 +581,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
 
               <LabelFieldPair>
                 <div>
-                  <a style={{ color: "orange", cursor: "default", marginBottom: "5", cursor: "pointer" }} onClick={TogleforPassword}>
+                  <a style={{ color: "orange", marginBottom: "5", cursor: "pointer" }} onClick={TogleforPassword}>
                     {t("CORE_COMMON_CHANGE_PASSWORD")}
                   </a>
                   {changepassword ? (
@@ -646,7 +645,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                   )}
                 </div>
               </LabelFieldPair>
-            </React.Fragment>
+            </>
           )}
         </section>
       </div>
@@ -655,22 +654,6 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
         <div className="action-bar-wrap">
       
           <SubmitBar t={t} label={t("CORE_COMMON_SAVE")} onSubmit={updateProfile} />
-          {/* <button
-            onClick={updateProfile}
-            style={{
-              marginTop: "24px",
-              backgroundColor: "#F47738",
-              width: windowWidth < 768 ? "100%" : "248px",
-              height: "40px",
-              float: "right",
-              margin: windowWidth < 768 ? "0 16px" : "",
-              marginRight: windowWidth < 768 ? "16px" : "31px",
-              color: "white",
-              borderBottom: "1px solid black",
-            }}
-          >
-            {t("CORE_COMMON_SAVE")}
-          </button> */}
      
         </div>
       ) : (

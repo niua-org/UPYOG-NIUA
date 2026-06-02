@@ -11,7 +11,7 @@ import {
   PTIcon,
   TLIcon,
   WSICon,
-} from "@egovernments/digit-ui-react-components";
+} from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -89,7 +89,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
   }
 
   return (
-    <React.Fragment>
+    <>
       <div className="citizen-all-services-wrapper">
         {location.pathname.includes("sanitation-ui/citizen/all-services") ? null : <BackButton />}
         <div className="citizenAllServiceGrid">
@@ -122,7 +122,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
             })}
         </div>
       </div>
-    </React.Fragment>
+    </>
   );
 };
 

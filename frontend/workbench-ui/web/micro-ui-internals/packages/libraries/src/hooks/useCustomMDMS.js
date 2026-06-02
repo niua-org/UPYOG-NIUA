@@ -1,4 +1,4 @@
-import { useQuery } from "react-query";
+import { queryTemplate } from "../common/queryTemplate";
 import { MdmsService } from "../services/elements/MDMS";
 
 /**
@@ -8,25 +8,15 @@ import { MdmsService } from "../services/elements/MDMS";
  * @author jagankumar-egov
  * 
  * @example
- * // returns useQuery object
- * Digit.Hooks.useCustomMDMS(
- *          "stateid",
- *          "modulename",
- *          [
- *              { name:"masterdetail1",filter:"[?(@.active == true)]"},
- *              { name:"masterdetail2" }
- *          ],
- *          { // all configs supported by the usequery 
- *              default:(data)=>{
- *                          format
- *                          return formattedData;
- *                          }
- *          })
  * 
  * @returns {Object} Returns the object of the useQuery from react-query.
  */
 const useCustomMDMS = (tenantId, moduleName, masterDetails = [], config = {}) => {
-  return useQuery([tenantId, moduleName, masterDetails], () => MdmsService.getMultipleTypesWithFilter(tenantId, moduleName, masterDetails), config);
+  return queryTemplate({
+    queryKey: [tenantId, moduleName, masterDetails],
+    queryFn: () => MdmsService.getMultipleTypesWithFilter(tenantId, moduleName, masterDetails),
+    config: { ...config }
+  });
 };
 
 export default useCustomMDMS;
