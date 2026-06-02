@@ -36,11 +36,11 @@ export const PTRMyApplications = () => {
     off = filter;
     t1 = parseInt(filter) + 10;
   } else {
-    t1 = 4;
+    t1 = 10;
   }
   let filter1 = !isNaN(parseInt(filter))
     ? { limit: "10", sortOrder: "ASC", sortBy: "createdTime", offset: off, tenantId, mobileNumber:user?.mobileNumber}
-    : { limit: "4", sortOrder: "ASC", sortBy: "createdTime", offset: "0",mobileNumber:user?.mobileNumber, tenantId };
+    : { limit: "10", sortOrder: "ASC", sortBy: "createdTime", offset: "0",mobileNumber:user?.mobileNumber, tenantId };
 
   const { isLoading, isError, error, data } = Digit.Hooks.ptr.usePTRSearch({ filters: filter1 }, { filters: filter1 });
   
