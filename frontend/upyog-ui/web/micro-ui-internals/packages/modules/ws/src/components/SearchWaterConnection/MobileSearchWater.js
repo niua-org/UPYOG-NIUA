@@ -4,7 +4,7 @@ import { CloseSvg, SearchForm, Table, Card, SearchAction, PopUp, DetailsCard, Lo
 
 import SearchFormFields from "./SearchFields";
 
-const MobileSearchWater = ({ Controller, register, control, t, reset, previousPage, handleSubmit, tenantId, data, onSubmit }) => {
+const MobileSearchWater = ({ Controller, register, control, t, reset, previousPage, handleSubmit, tenantId, data, onSubmit, isClearSearch, onClearSearch }) => {
   function activateModal(state, action) {
     switch (action.type) {
       case "set":
@@ -28,7 +28,7 @@ const MobileSearchWater = ({ Controller, register, control, t, reset, previousPa
     </div>
   );
 
-  const searchFormFieldsComponentProps = { Controller, register, control, t, reset, previousPage };
+  const searchFormFieldsComponentProps = { Controller, register, control, t, reset, previousPage, onSubmit, onClearSearch };
 
   const MobileComponentDirectory = ({ currentlyActiveMobileModal, searchFormFieldsComponentProps, tenantId, ...props }) => {
     const { closeMobilePopupModal } = props;
@@ -144,7 +144,7 @@ const MobileSearchWater = ({ Controller, register, control, t, reset, previousPa
           />
         </PopUp>
       ) : null}
-      {data?.display ? (
+      {isClearSearch ? null : data?.display ? (
         <Card style={{ marginTop: 20 }}>
           {t(data?.display)
             .split("\\n")

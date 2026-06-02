@@ -2,7 +2,7 @@ import React, { Fragment } from "react"
 import { Controller, useWatch } from "react-hook-form";
 import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, Loader, MobileNumber } from "@nudmcdgnpm/digit-ui-react-components";
 
-const SearchFields = ({ register, control, reset, tenantId, t,businessService }) => {
+const SearchFields = ({ register, control, reset, tenantId, t, businessService, onSubmit, onClearSearch }) => {
     const { isLoading: applicationTypesLoading, data: applicationTypes } = Digit.Hooks.ws.useWSMDMSWS.applicationTypes(Digit.ULBService.getStateId());
     const filterString = businessService==="WS" ? "WATER" : "SEWERAGE";
     const filteredApplicationTypes = applicationTypes?.filter(e => e?.code?.includes(filterString))
@@ -65,28 +65,44 @@ const SearchFields = ({ register, control, reset, tenantId, t,businessService })
     return <>
         <SearchField>
             <label>{t("WS_ACK_COMMON_APP_NO_LABEL")}</label>
-            <TextInput 
-                name="applicationNumber" 
-                {...register("applicationNumber", {
+            <Controller
+                control={control}
+                name="applicationNumber"
+                rules={{
                     required: false,
                     pattern: {
                         value: /^[a-zA-Z0-9-_\/]*$/,
                         message: t("ERR_INVALID_APPLICATION_NO")
                     }
-                })}
+                }}
+                render={({ field }) => (
+                    <TextInput
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                    />
+                )}
             />
         </SearchField>
         <SearchField>
             <label>{t("WS_MYCONNECTIONS_CONSUMER_NO")}</label>
-            <TextInput 
-                name="connectionNumber" 
-                {...register("connectionNumber", {
+            <Controller
+                control={control}
+                name="connectionNumber"
+                rules={{
                     required: false,
                     pattern: {
                         value: /^[a-zA-Z0-9\/-]*$/,
                         message: t("ERR_INVALID_CONSUMER_NO")
                     }
-                })}
+                }}
+                render={({ field }) => (
+                    <TextInput
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                    />
+                )}
             />
         </SearchField>
         <SearchField>
@@ -172,19 +188,27 @@ const SearchFields = ({ register, control, reset, tenantId, t,businessService })
         <SearchField className="submit">
             <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
             <p onClick={() => {
-                reset({
+                const resetValues = {
                     applicationType: "",
                     fromDate: "",
                     toDate: "",
                     connectionNumber: "",
                     applicationStatus: "",
                     applicationNumber: "",
+                    mobileNumber: "",
                     tradeName: "",
                     offset: 0,
                     limit: 10,
                     sortBy: "commencementDate",
-                    sortOrder: "DESC"
-                });
+                    sortOrder: "DESC",
+                    isConnectionSearch: false
+                };
+                reset(resetValues);
+                if (onClearSearch) {
+                    onClearSearch();
+                } else {
+                    onSubmit(resetValues);
+                }
             }}>{t(`CS_COMMON_CLEAR_SEARCH`)}</p>
         </SearchField>
     </>

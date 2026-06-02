@@ -110,6 +110,7 @@ const InboxComposer = ({
       FilterFormFields,
       registerSearchFormField,
       searchFormState,
+      controlSearchForm,
       handleSearchFormSubmit,
       onResetSearchForm,
       registerFilterFormField,
