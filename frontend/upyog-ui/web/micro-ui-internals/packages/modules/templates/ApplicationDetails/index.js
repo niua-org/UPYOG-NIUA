@@ -68,12 +68,23 @@ const ApplicationDetails = (props) => {
         setWarningPopUp(true);
       } else if (action?.redirectionUrll) {
         if (action?.redirectionUrll?.action === "ACTIVATE_CONNECTION") {
-          // window.location.assign(`${window.location.origin}digit-ui/employee/ws/${action?.redirectionUrll?.pathname}`, { data: action?.redirectionUrll?.state });
-
-          navigate(`${action?.redirectionUrll?.pathname}`, JSON.stringify({ data: action?.redirectionUrll?.state, url: `${location?.pathname}${location.search}` }));
+          navigate(
+            action?.redirectionUrll?.pathname,
+            {
+              state: {
+                data: action?.redirectionUrll?.state,
+                url: `${location?.pathname}${location.search}`,
+              },
+            }
+          );
         }
         else if (action?.redirectionUrll?.action === "RE-SUBMIT-APPLICATION"){
-          navigate(`${action?.redirectionUrll?.pathname}`, { data: action?.redirectionUrll?.state });
+          navigate(
+            action?.redirectionUrll?.pathname,
+            {
+              state: action?.redirectionUrll?.state,
+            }
+          );
         }
         else {
           window.location.assign(`${window.location.origin}/upyog-ui/employee/payment/collect/${action?.redirectionUrll?.pathname}`);

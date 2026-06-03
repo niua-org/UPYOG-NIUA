@@ -158,7 +158,7 @@ const CustomTable = ({ data = {}, onSearch, setChartData, setChartDenomination, 
       {
         const updatedData = addMissingFinancialYears(tableData);
 
-        console.log("updatedData",updatedData)
+
         const result = updatedData?.map((row) => {
           console.log("tableDatatableData",tableData)
           return Object.keys(row).reduce((acc, key) => {
@@ -171,7 +171,7 @@ const CustomTable = ({ data = {}, onSearch, setChartData, setChartDenomination, 
       }
       else {
         const result = tableData?.map((row) => {
-          console.log("tableDatatableData",tableData)
+
           return Object.keys(row).reduce((acc, key) => {
             if (key === "key") return acc;
             acc[key] = typeof row?.[key] === "object" ? row?.[key]?.value : row?.[key];
