@@ -2,7 +2,7 @@ import { mutationTemplate } from "../../common/mutationTemplate";
 import { VendorService } from "../../services/elements/EmpVendor";
 
 const useVendorAdditionaldetailsAPI = (tenantId) => {
-  console.log("data in api hook cakll :: ", tenantId);
+
   return mutationTemplate({ mutationFn: (data) => VendorService.createVendorAdditionaldetails(data, tenantId) });
 };
 
