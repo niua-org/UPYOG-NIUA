@@ -5,7 +5,7 @@ import { MdmsService } from "../services/elements/MDMS";
  * Custom hook which can be used to
  * make a single hook a module to get multiple masterdetails with/without filter
  * 
- * @author jagankumar-egov
+ * @author NUMD Team
  * 
  * @example
  * 

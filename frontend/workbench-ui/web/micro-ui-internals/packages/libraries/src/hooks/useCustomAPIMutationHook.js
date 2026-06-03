@@ -4,7 +4,7 @@ import { CustomService } from "../services/elements/CustomService";
 /**
  * Custom hook which can make api call and format response
  *
- * @author jagankumar-egov
+ * @author NUDM Team
  *
  *
  * @example

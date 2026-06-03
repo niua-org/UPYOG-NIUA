@@ -3,13 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { initLibraries } from "@upyog/workbench-ui-libraries";
 import "./index.css";
 import App from './App';
-import { TLCustomisations } from './Customisations/tl/TLCustomisation';
-
 
 initLibraries();
 
 
-window.Digit.Customizations = { PGR: {} ,TL:TLCustomisations};
+window.Digit.Customizations = {};
 
 const user = window.Digit.SessionStorage.get("User");
 

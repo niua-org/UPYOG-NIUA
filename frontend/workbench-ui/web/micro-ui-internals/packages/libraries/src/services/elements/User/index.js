@@ -2,11 +2,9 @@ import Urls from "../../atoms/urls";
 import { Request, ServiceRequest } from "../../atoms/Utils/Request";
 import { Storage } from "../../atoms/Utils/Storage";
 
-// REMOVED: INVALIDROLES check - Not needed in workbench as it's an internal tool with backend RBAC
 export const UserService = {
   
   authenticate: (details) => {
-    console.log('user service called', window?.globalConfigs?.getConfig("JWT_TOKEN"));
     const data = new URLSearchParams();
     Object.entries(details).forEach(([key, value]) => data.append(key, value));
     data.append("scope", "read");
@@ -71,13 +69,6 @@ export const UserService = {
   setUser: (data) => {
     return Digit.SessionStorage.set("User", data);
   },
-  setExtraRoleDetails: (data) => {
-    const userDetails = Digit.SessionStorage.get("User");
-    return Digit.SessionStorage.set("User", { ...userDetails, extraRoleInfo: data });
-  },
-  getExtraRoleDetails: () => {     
-    return Digit.SessionStorage.get("User")?.extraRoleInfo;
-  },
   registerUser: (details, stateCode) =>
     ServiceRequest({
       serviceName: "registerUser",
@@ -97,19 +88,6 @@ export const UserService = {
       },
       params: { tenantId: stateCode },
     }),
-   
-    //create address for user
-      createAddressV2: async (details, stateCode, userUuid) =>
-        ServiceRequest({
-          serviceName: "createAddress",
-          url: Urls.UserCreateAddressV2,
-          auth: true,
-          data: {
-            address: details,
-            userUuid: userUuid,
-          },
-          params: { tenantId: stateCode },
-        }),
   hasAccess: (accessTo) => {
     const user = Digit.UserService.getUser();
     if (!user || !user.info) return false;
@@ -145,36 +123,4 @@ export const UserService = {
       data: data.pageSize ? { tenantId, ...data } : { tenantId, ...data, pageSize: "100" },
     });
   },
-  userCreate: async (tenantId, user, filters) => {
-    return Request({
-      url: Urls.UserCreate,
-      params: { ...filters },
-      method: "POST",
-      auth: false,
-      userService: false,
-      data: { user: {tenantId, ...user} } ,
-    });
-  },
-  // user search for user profile
-  userSearchNewV2: async (tenantId, data, filters) => {
-    return Request({
-      url: Urls.UserSearchNewV2,
-      params: { ...filters },
-      method: "POST",
-      auth: true,
-      userService: true,
-      data: data.pageSize ? { tenantId, ...data } : { tenantId, ...data, pageSize: "100" },
-    });
-  },
-  //update address for user
-  updateAddressV2: async (details, stateCode) =>
-    ServiceRequest({
-      serviceName: "updateAddress",
-      url: Urls.UserUpdateAddressV2,
-      auth: true,
-      data: {
-        address: details
-      },
-      params: { tenantId: stateCode },
-    })
 };

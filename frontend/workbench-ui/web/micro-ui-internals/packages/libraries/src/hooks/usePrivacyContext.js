@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 /**
  * Custom hook which can gives the privacy functions to access
  *
- * @author jagankumar-egov
+ * @author NUMD Team
  *
  * Feature :: Privacy
  * 

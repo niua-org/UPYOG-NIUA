@@ -62,15 +62,4 @@ export default App;
 ```
 
 ### Published from DIGIT Frontend 
-DIGIT Frontend Repo (https://github.com/egovernments/Digit-Frontend/tree/master)
-
-### Contributors
-
-[jagankumar-egov] [nipunarora-eGov] [Tulika-eGov] [Ramkrishna-egov] [nabeelmd-eGov] [anil-egov] [vamshikrishnakole-wtt-egov] 
-
-## License
-
-MIT © [jagankumar-egov](https://github.com/jagankumar-egov)
-
-
-![Logo](https://s3.ap-south-1.amazonaws.com/works-dev-asset/mseva-white-logo.png)
+UPYOG Frontend Repo (https://github.com/upyog)

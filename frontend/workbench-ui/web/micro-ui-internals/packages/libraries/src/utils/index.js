@@ -1,8 +1,6 @@
 import BrowserUtil from "./browser";
 import * as date from "./date";
 import * as locale from "./locale";
-import * as obps from "./obps";
-import * as pt from "./pt";
 import * as privacy from "./privacy";
 import PDFUtil, { downloadReceipt ,downloadPDFFromLink,downloadBill ,getFileUrl} from "./pdf";
 import getFileTypeFromFileStoreURL from "./fileType";
@@ -302,13 +300,7 @@ const receiptsAccess = () => {
   const RECEIPTS_ACCESS = userRoles?.filter((role) => receiptsRoles?.includes(role));
   return RECEIPTS_ACCESS?.length > 0;
 };
-const hrmsRoles = ["HRMS_ADMIN"];
-const hrmsAccess = () => {
-  const userInfo = Digit.UserService.getUser();
-  const userRoles = userInfo?.info?.roles?.map((roleData) => roleData?.code);
-  const HRMS_ACCESS = userRoles?.filter((role) => hrmsRoles?.includes(role));
-  return HRMS_ACCESS?.length > 0;
-};
+
 
 const wsAccess = () => {
   const userInfo = Digit.UserService.getUser();
@@ -353,17 +345,14 @@ export default {
   fsmAccess,
   BPAREGAccess,
   BPAAccess,
-  obps,
-  pt,
+
   ptAccess,
   NOCAccess,
   mCollectAccess,
   receiptsAccess,
   didEmployeeHasRole,
   didEmployeeHasAtleastOneRole,
-  hrmsAccess,
   getPattern,
-  hrmsRoles,
   getUnique,
   tlAccess,
   wsAccess,
