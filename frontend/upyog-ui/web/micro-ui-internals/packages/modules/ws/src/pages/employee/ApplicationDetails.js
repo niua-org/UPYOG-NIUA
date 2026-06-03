@@ -309,7 +309,7 @@ const ApplicationDetails = () => {
   });
 
   workflowDetails?.data?.actionState?.nextActions?.forEach((action) => {
-    console.log("workflowDetails",workflowDetails)
+
     if (action?.action === "PAY") {
       if (workflowDetails?.data?.processInstances?.[0]?.businessService =="WSReconnection")
       {
