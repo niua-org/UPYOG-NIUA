@@ -102,8 +102,9 @@ export const ApplicationTimeline = (props) => {
           <div style={{ marginTop: "24px" }}>
             <Link
               to={{
-                pathname: `/upyog-ui/citizen/payment/my-bills/FSM.TRIP_CHARGES/${props.id}/?tenantId=${props.application.tenantId}`,
-                state: { tenantId: props.application.tenantId },
+                pathname: `/upyog-ui/citizen/payment/my-bills/FSM.TRIP_CHARGES/${props.id}/`,
+                search: `?tenantId=${props.application?.tenantId}`,
+                state: { tenantId: props.application?.tenantId },
               }}
             >
               {window.location.href.includes("citizen/fsm/") && <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} />}
