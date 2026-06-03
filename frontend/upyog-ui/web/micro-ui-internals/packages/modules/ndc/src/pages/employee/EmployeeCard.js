@@ -35,7 +35,7 @@ const NDCEmployeeHomeCard = () => {
     tableForm: tableOrderFormDefaultValues,
   };
 
-  const { isLoading: isInboxLoading, data: { table, statuses, totalCount, nearingSlaCount } = {} } = Digit.Hooks.noc.useInbox({
+  const { isLoading: isInboxLoading, data: { table, statuses, totalCount, nearingSlaCount } = {} } = Digit.Hooks.ndc.useInbox({
     tenantId,
     filters: { ...formInitValue },
     config: { enabled: formInitValue?.filterForm?.businessServiceArray?.length > 0 },

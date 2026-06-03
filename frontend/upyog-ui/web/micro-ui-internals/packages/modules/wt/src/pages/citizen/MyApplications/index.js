@@ -228,7 +228,7 @@ export const WTMyApplications = () => {
               </div>
             </div>
           </div>
-            <Link to={`request-service/service-type`}>
+            <Link to={`${APPLICATION_PATH}/citizen/wt/request-service/service-type`}>
               <SubmitBar style={{borderRadius:"30px",width:"20%" }} label={t("NEW_REQUEST")+" +"} />
             </Link>
         </div>
