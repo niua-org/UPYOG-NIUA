@@ -111,7 +111,7 @@ e?.eventDetails?.documents?.length && e?.tenantId
 ? await fetchImageLinksFromFilestoreIds(e.eventDetails.documents, e.tenantId)
 : [];
 
-```
+
 const sla = getEventSLA(e);
 
 events.push({
@@ -126,7 +126,7 @@ events.push({
     ? timeStampBreakdown(e.eventDetails.fromDate, e.eventDetails.toDate)
     : {}),
 });
-```
+
 
 }
 
@@ -135,10 +135,6 @@ return events;
 
 const variantBasedFilter = async (variant, data) => {
 const events = await filterAllEvents(data.events, variant);
-
-if (variant === "whats-new") {
-return events.filter((i) => i?.actions?.length);
-}
 
 return events;
 };
