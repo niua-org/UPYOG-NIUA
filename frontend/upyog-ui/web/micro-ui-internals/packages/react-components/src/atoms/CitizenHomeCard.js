@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const CitizenHomeCard = ({ header, links = [], state, Icon, Info, isInfo = false, styles }) => {
-  console.log("linkslinks",links)
+
   function replaceDigitUiWithUpyogUi(data) {
     return data.map(item => ({
       ...item,
@@ -12,7 +12,7 @@ const CitizenHomeCard = ({ header, links = [], state, Icon, Info, isInfo = false
     }));
   }
   const updatedData = replaceDigitUiWithUpyogUi(links);
-  console.log("updatedData",updatedData)
+
   return (
     <div className="CitizenHomeCard" style={styles ? styles : {}}>
       <div className="header">
