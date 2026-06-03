@@ -266,7 +266,15 @@ const WSEditApplicationByConfig = () => {
     ) {
       setSubmitValve(false);
     }
-    else setSubmitValve(!(Object.keys(formState.errors).length));
+    else {
+      const hasRealErrors = Object.values(formState.errors).some(
+        (error) =>
+          error?.type &&
+          Object.keys(error.type || {}).length > 0
+      );
+
+      setSubmitValve(!hasRealErrors);
+    }
   };
 
   const onSubmit = async (data) => {
