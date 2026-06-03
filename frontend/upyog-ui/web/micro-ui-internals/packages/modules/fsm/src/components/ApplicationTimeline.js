@@ -16,6 +16,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import TLCaption from "./TLCaption";
+import { APPLICATION_PATH } from "../utils";
 
 export const ApplicationTimeline = (props) => {
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export const ApplicationTimeline = (props) => {
         <>
           {data?.nextActions.length > 0 && (
             <div>
-              <Link to={`/upyog-ui/citizen/fsm/rate/${props.id}`}>
+              <Link to={`${APPLICATION_PATH}/citizen/fsm/rate/${props.id}`}>
                 <ActionLinks>{t("CS_FSM_RATE")}</ActionLinks>
               </Link>
             </div>
@@ -71,7 +72,7 @@ export const ApplicationTimeline = (props) => {
       return (
         <div>
           <Rating withText={true} text={t(`CS_FSM_YOU_RATED`)} currentRating={checkpoint.rating} />
-          <Link to={`/upyog-ui/citizen/fsm/rate-view/${props.id}`}>
+          <Link to={`${APPLICATION_PATH}/citizen/fsm/rate-view/${props.id}`}>
             <ActionLinks>{t("CS_FSM_RATE_VIEW")}</ActionLinks>
           </Link>
         </div>
@@ -114,7 +115,7 @@ export const ApplicationTimeline = (props) => {
       case "SUBMIT_FEEDBACK":
         return (
           <div style={{ marginTop: "24px" }}>
-            <Link to={`/upyog-ui/citizen/fsm/rate/${props.id}`}>
+            <Link to={`${APPLICATION_PATH}/citizen/fsm/rate/${props.id}`}>
               <SubmitBar label={t("CS_APPLICATION_DETAILS_RATE")} />
             </Link>
           </div>
