@@ -65,25 +65,7 @@ public class GarbageCommonService {
 				}
 			});
 		}
-		
-		
-//		// update garbage unit
-//		if(!CollectionUtils.isEmpty(garbageCommonRequest.getUpdatingGarbageCollectionUnits())) {
-//			garbageCommonRequest.getUpdatingGarbageCollectionUnits().stream().forEach(collUnit -> {
-//				grbgCollectionUnitRepository.update(collUnit);
-//			});
-//		}
-		
-		
-//		// delete garbage unit
-//		if(!CollectionUtils.isEmpty(garbageCommonRequest.getDeletingGarbageCollectionUnits())) {
-//			garbageCommonRequest.getDeletingGarbageCollectionUnits().stream().forEach(collUnit -> {
-//				grbgCollectionUnitRepository.deactivate(collUnit);
-//			});
-//		}
-		
-		
-		
+
 		if(!CollectionUtils.isEmpty(garbageCommonRequest.getCreatingGrbgCollectionStaff())) {
 			garbageCommonRequest.getCreatingGrbgCollectionStaff().stream().forEach(collStaff -> {
 				if(StringUtils.isEmpty(collStaff.getUuid())) {
@@ -97,13 +79,7 @@ public class GarbageCommonService {
 				}
 			});
 		}
-		
-//		// update garbage staff
-//		if(!CollectionUtils.isEmpty(garbageCommonRequest.getUpdatingGrbgCollectionStaff())) {
-//			garbageCommonRequest.getUpdatingGrbgCollectionStaff().stream().forEach(collStaff -> {
-//				grbgCollectionStaffRepository.update(collStaff);
-//			});
-//		}
+
 		
 
 		if(!CollectionUtils.isEmpty(garbageCommonRequest.getCreatingGrbgCharge())) {
