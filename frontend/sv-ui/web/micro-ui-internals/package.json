@@ -28,7 +28,6 @@
     "dev:example": "cd example && yarn start",
    
     "build": "vite build --config example/vite.config.js",
-    "build:libraries": "cd packages/libraries && yarn build",
     "build:components": "cd packages/react-components && yarn build",
     "build:common": "cd packages/modules/common && yarn build",
     "build:css":        "cd packages/css && yarn build:prod",
