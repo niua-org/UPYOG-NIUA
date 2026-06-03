@@ -239,7 +239,7 @@ useEffect(() => {
         {conditionsToDisableNotificationCountTrigger() ? (
           EventsDataLoading ? (
             <Loader />
-          ) : (
+          ) : EventsData?.length > 0 ? (
             <div className="WhatsNewSection">
               <div className="headSection">
                 <h2>{t(whatsNewSectionObj?.headerLabel)}</h2>
@@ -247,7 +247,7 @@ useEffect(() => {
               </div>
               <WhatsNewCard {...EventsData?.[0]} />
             </div>
-          )
+          ) : null
         ) : null}
        {/* <ChatBot /> text bot commented as we are using new speech bot*/} 
        <UpyogBot />
