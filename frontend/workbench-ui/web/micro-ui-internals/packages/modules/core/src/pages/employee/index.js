@@ -8,7 +8,7 @@ import ChangePassword from "./ChangePassword";
 import ForgotPassword from "./ForgotPassword";
 import LanguageSelection from "./LanguageSelection";
 import EmployeeLogin from "./Login";
-import UserProfile from "../citizen/Home/UserProfile";
+import UserProfile from "./UserProfile";
 import ErrorComponent from "../../components/ErrorComponent";
 import { PrivateRoute } from "@upyog/workbench-ui-react-components";
 
@@ -17,16 +17,13 @@ const userScreensExempted = ["user/profile", "user/error"];
 const EmployeeApp = ({
   stateInfo,
   userDetails,
-  CITIZEN,
   cityDetails,
   mobileView,
   handleUserDropdownSelection,
   logoUrl,
-  DSO,
   stateCode,
   modules,
   appTenants,
-  sourceUrl,
   pathname,
   initData,
 }) => {
@@ -53,12 +50,11 @@ const EmployeeApp = ({
                   t={t}
                   stateInfo={stateInfo}
                   userDetails={userDetails}
-                  CITIZEN={CITIZEN}
                   cityDetails={cityDetails}
                   mobileView={mobileView}
                   handleUserDropdownSelection={handleUserDropdownSelection}
                   logoUrl={logoUrl}
-                  showSidebar={isUserProfile ? true : false}
+                  showSidebar={isUserProfile}
                   showLanguageChange={!showLanguageChange}
                 />
               )}
@@ -111,14 +107,13 @@ const EmployeeApp = ({
                 t={t}
                 stateInfo={stateInfo}
                 userDetails={userDetails}
-                CITIZEN={CITIZEN}
                 cityDetails={cityDetails}
                 mobileView={mobileView}
                 handleUserDropdownSelection={handleUserDropdownSelection}
                 logoUrl={logoUrl}
                 modules={modules}
               />
-              <div className={`main ${DSO ? "m-auto" : ""}`}>
+              <div className="main">
                 <div className="employee-app-wrapper">
                   <ErrorBoundary initData={initData}>
                     <AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} />

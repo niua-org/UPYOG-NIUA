@@ -7,15 +7,12 @@ const TopBarSideBar = ({
   t,
   stateInfo,
   userDetails,
-  CITIZEN,
   cityDetails,
   mobileView,
   handleUserDropdownSelection,
   logoUrl,
   showSidebar = true,
   showLanguageChange,
-  linkData,
-  islinkDataLoading,
 }) => {
   const [isSidebarOpen, toggleSidebar] = useState(false);
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -47,7 +44,6 @@ const TopBarSideBar = ({
         isSidebarOpen={isSidebarOpen}
         handleLogout={handleLogout}
         userDetails={userDetails}
-        CITIZEN={CITIZEN}
         cityDetails={cityDetails}
         mobileView={mobileView}
         userOptions={userOptions}
@@ -60,15 +56,8 @@ const TopBarSideBar = ({
       )}
       {showSidebar && (
         <SideBar
-          t={t}
-          CITIZEN={CITIZEN}
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          handleLogout={handleLogout}
           mobileView={mobileView}
           userDetails={userDetails}
-          linkData={linkData}
-          islinkDataLoading={islinkDataLoading}
         />
       )}
     </>

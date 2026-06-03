@@ -1,4 +1,4 @@
-import { Dropdown, Hamburger, TopBar as TopBarComponent } from "@upyog/workbench-ui-react-components";
+import { Dropdown, Hamburger } from "@upyog/workbench-ui-react-components";
 import React from "react";
 import { useLocation } from "react-router-dom";
 import ChangeCity from "../ChangeCity";
@@ -16,7 +16,6 @@ const TopBar = ({
   isSidebarOpen,
   handleLogout,
   userDetails,
-  CITIZEN,
   cityDetails,
   mobileView,
   userOptions,
@@ -42,11 +41,8 @@ const TopBar = ({
     fetchProfilePic();
   }, [profilePic !== null, userDetails?.info?.uuid]);
 
-  const CitizenHomePageTenantId = Digit.ULBService.getCitizenCurrentTenant(true);
-
   let navigate = Digit.Hooks.useCustomNavigate();
   const { pathname } = useLocation();
-
 
   const updateSidebar = () => {
     if (!Digit.clikOusideFired) {
@@ -56,23 +52,6 @@ const TopBar = ({
     }
   };
 
-
-  if (CITIZEN) {
-    return (
-      <div>
-        <TopBarComponent
-          img={stateInfo?.logoUrlWhite}
-          isMobile={true}
-          toggleSidebar={updateSidebar}
-          logoUrl={stateInfo?.logoUrlWhite}
-          onLogout={handleLogout}
-          userDetails={userDetails}
-          cityOfCitizenShownBesideLogo={t(CitizenHomePageTenantId)}
-          changeLanguage={!mobileView ? <ChangeLanguage dropdown={true} /> : null}
-        />
-      </div>
-    );
-  }
   const loggedin = userDetails?.access_token ? true : false;
   return (
     <div className="topbar">

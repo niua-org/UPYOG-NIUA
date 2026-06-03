@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import React, { useEffect, useState } from "react";
 import Background from "../../../components/Background";
 import Header from "../../../components/Header";
-import SelectOtp from "../../citizen/Login/SelectOtp";
+import SelectOtp from "../Login/SelectOtp";
 
 
 const ChangePasswordComponent = ({ config: propsConfig, t }) => {
