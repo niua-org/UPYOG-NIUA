@@ -3,14 +3,9 @@
   "version": "1.8.12",
   "license": "MIT",
   "description": "Digit Common Payment Module",
-  "main": "dist/index.modern.js",
-  "module": "dist/index.modern.js",
+  "main": "src/Module.js",
   "source": "src/Module.js",
-  "files": ["dist"],
-  "scripts": {
-    "start": "vite build --watch",
-    "build": "vite build"
-  },
+  
   "peerDependencies": {
     "react": ">=19",
     "react-dom": ">=19"

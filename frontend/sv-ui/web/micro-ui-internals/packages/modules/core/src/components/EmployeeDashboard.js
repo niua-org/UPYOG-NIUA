@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Loader } from "@nudmcdgnpm/upyog-ui-react-components-lts";
 
 /**
- * @author - Shivank Shukla - NIUA
  * 
  * This component displays a dashboard with key metrics for employees.
  * 

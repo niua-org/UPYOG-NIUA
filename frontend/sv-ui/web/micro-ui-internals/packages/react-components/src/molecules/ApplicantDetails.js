@@ -1,5 +1,4 @@
 /**
- * @author - Shivank - NIUA 
  * This component is the Common Component used for Applicant Details in both Citizen and Employee Side.
  * Key of this Component is "owner", use this in your config file inside Key
  * 
