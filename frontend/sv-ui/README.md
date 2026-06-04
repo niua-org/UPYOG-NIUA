@@ -139,7 +139,7 @@ docker build --build-arg WORK_DIR=frontend/sv-ui -t sv-ui .
 | @upyog/digit-ui-module-core | 1.8.2 | Core shell and routing |
 | @upyog/digit-ui-module-common | 1.8.12 | Payment and common flows |
 | @upyog/digit-ui-module-engagement | 1.8.0 | Events, notifications, surveys |
-| @nudmcdgnpm/upyog-ui-module-sv | 1.2.10 | Street Vending module |
+| @nudmcdgnpm/upyog-ui-module-sv | 1.3.0 | Street Vending module |
 | @nudmcdgnpm/digit-ui-libraries | 1.2.1 | Shared hooks and services |
 | vite *(dev)* | ^6.0.0 | Build tool |
 | @vitejs/plugin-react *(dev)* | ^4.3.4 | JSX transform and Fast Refresh |
