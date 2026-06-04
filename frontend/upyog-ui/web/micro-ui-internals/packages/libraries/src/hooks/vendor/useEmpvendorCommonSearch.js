@@ -10,7 +10,7 @@ const useEmpvendorCommonSearch = ({ tenantId, filters, auth, searchedFrom = "" }
     return data;
   };
 
-  console.log("useempvendorCommonSearch hook", tenantId, filters, auth, config);
+
   const { isLoading, error, data, isSuccess } = queryTemplate({ queryKey: [tenantId, filters, auth, config], queryFn: () => Digit.VendorService.vendorcommonSearch(args), select: defaultSelect, config });
   return { isLoading, error, data, isSuccess, revalidate: () => client.invalidateQueries({ queryKey: [tenantId, filters, auth] }) };
 };

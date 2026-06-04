@@ -4,7 +4,7 @@ import { Request } from "../atoms/Utils/Request";
 
 export const PreApprovedPlanService = {
   search: (data={}) => {
-    console.log("Urls.preApproved.search", data)
+
     return Request({
       url: Urls.preApproved.search,
       params: {...data },
@@ -16,7 +16,7 @@ export const PreApprovedPlanService = {
     });
   },
   estimate: (data, params) => {
-    console.log("dataaEst", data)
+
     if (data && data.CalulationCriteria) {
       
       return Request({

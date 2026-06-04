@@ -4,7 +4,7 @@
  */
 
 const getTimelineAcknowledgementData = (workflowDetails, tenantInfo, pdfFiles = {}, t) => {
-  console.log('pdfFiles', pdfFiles)
+
   const timeline = workflowDetails?.data?.timeline || workflowDetails?.timeline || [];
   const processInstances = workflowDetails?.data?.processInstances || workflowDetails?.processInstances || [];
   
