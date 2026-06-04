@@ -40,7 +40,7 @@ export const AppModules = ({ stateCode, userType, modules, appTenants }) => {
         } />
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="change-password" element={<ChangePassword />} />
-        <Route path="*" element={<AppHome userType={userType} modules={modules} />} />
+        <Route path="*" element={<AppHome modules={modules} />} />
         {/* <Route path="user-profile" element={<UserProfile />} /> */}
       </Routes>
     </div>
