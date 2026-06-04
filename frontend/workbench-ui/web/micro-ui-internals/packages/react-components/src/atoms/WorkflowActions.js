@@ -9,7 +9,7 @@ import Toast from "./Toast";
 
 const WorkflowActions = ({ businessService, tenantId, applicationNo, forcedActionPrefix, ActionBarStyle = {}, MenuStyle = {}, applicationDetails, url, setStateChanged, moduleCode,editApplicationNumber,editCallback ,callback}) => {
   
-  const navigate = Digit.Hooks.useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { estimateNumber } = Digit.Hooks.useQueryParams();
   applicationNo = applicationNo ? applicationNo : estimateNumber 
 

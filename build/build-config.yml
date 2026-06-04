@@ -801,7 +801,7 @@ config:
   - name: builds/upyog/frontend/micro-ui/workbench-ui
     build:
       - work-dir: frontend/workbench-ui/
-        dockerfile: frontend/workbench-ui/web/workbench/Dockerfile
+        dockerfile: frontend/workbench-ui/web/docker/Dockerfile
         image-name: workbench-ui
   - name: builds/upyog/frontend/micro-ui/tqm-ui
     build:
