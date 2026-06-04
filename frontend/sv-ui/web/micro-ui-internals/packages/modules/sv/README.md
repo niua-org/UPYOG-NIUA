@@ -13,7 +13,7 @@ npm install --save @nudmcdgnpm/upyog-ui-module-sv
 In your `frontend/sv-ui/web/package.json`, add:
 
 ```json
-"@nudmcdgnpm/upyog-ui-module-sv": "^1.2.10"
+"@nudmcdgnpm/upyog-ui-module-sv": "^1.3.0"
 ```
 
 ## Usage
