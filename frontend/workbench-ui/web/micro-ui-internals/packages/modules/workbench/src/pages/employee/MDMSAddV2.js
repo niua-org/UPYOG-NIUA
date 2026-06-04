@@ -1,5 +1,5 @@
 import { Card, Loader, SVG } from "@upyog/workbench-ui-react-components";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DigitJSONForm } from "../../Module";
@@ -172,7 +172,7 @@ const MDMSAdd = ({ defaultFormData, updatesToUISchema, screenType = "add", onVie
         });
       }
     }
-  }, [schema]);
+  }, [schema?.code]);
 
   useEffect(() => {
     if (!_.isEqual(sessionFormData, session)) {

@@ -5,7 +5,7 @@ import { Loader,Toast } from '@upyog/workbench-ui-react-components';
 import { useTranslation } from "react-i18next";
 
 const MDMSView = ({...props}) => {
-  const navigate = Digit.Hooks.useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation()
   const [showToast, setShowToast] = useState(false);
   let { moduleName, masterName, tenantId,uniqueIdentifier } = Digit.Hooks.useQueryParams();
