@@ -1,5 +1,4 @@
 /**
- * @author - Shivank Shukla 
  * The SVBankDetails component is a form step that collects and validates user bank account details.
 
     Key Features:

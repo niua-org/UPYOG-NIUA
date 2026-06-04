@@ -1,11 +1,9 @@
-import { AddFilled, Button, Header, InboxSearchComposer, Loader, Dropdown, Card } from "@egovernments/digit-ui-react-components";
+import { AddFilled, Button, Header, InboxSearchComposer, Loader, Dropdown, Card } from "@upyog/workbench-ui-react-components";
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Config as Configg } from "../../configs/searchMDMSConfig";
 import _, { drop } from "lodash";
-
-
 
 function sortByKey(arr, key) {
   return arr.slice().sort((a, b) => {
@@ -22,13 +20,13 @@ function sortByKey(arr, key) {
   });
 }
 
-
 const MDMSManageMaster = () => {
   let Config = _.clone(Configg)
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   
   let {masterName:modulee,moduleName:master,tenantId} = Digit.Hooks.useQueryParams()
+
   
   const [availableSchemas, setAvailableSchemas] = useState([]);
   const [currentSchema, setCurrentSchema] = useState(null);
@@ -56,9 +54,7 @@ const MDMSManageMaster = () => {
 
   const { isLoading, data: dropdownData } = Digit.Hooks.useCustomAPIHook({
     url: `/${Digit.Hooks.workbench.getMDMSContextPath()}/schema/v1/_search`,
-    params: {
-      
-    },
+    params: {},
     body: {
       SchemaDefCriteria
     },
@@ -68,16 +64,13 @@ const MDMSManageMaster = () => {
           return array.indexOf(value) === index;
         }
         
-        //when api is working fine change here(thsese are all schemas available in a tenant)
-        // const schemas = sampleSchemaResponse.SchemaDefinitions;
-        const schemas = data?.SchemaDefinitions
-        setAvailableSchemas(schemas);
-        if(schemas?.length===1) setCurrentSchema(schemas?.[0])
-        //now extract moduleNames and master names from this schema
+        const schemas = data?.SchemaDefinitions;
         const obj = {
           mastersAvailable: [],
+          schemas: schemas || [],
         };
-        schemas.forEach((schema, idx) => {
+        
+        schemas?.forEach((schema, idx) => {
           const { code } = schema;
           const splittedString = code.split(".");
           const [master, mod] = splittedString;
@@ -85,16 +78,15 @@ const MDMSManageMaster = () => {
           obj.mastersAvailable.push(master);
         });
         
-        obj.mastersAvailable = obj.mastersAvailable.filter(onlyUnique)
+        obj.mastersAvailable = obj.mastersAvailable.filter(onlyUnique);
         obj.mastersAvailable = obj.mastersAvailable.map((mas) => toDropdownObj(mas));
-        //sorting based on localised value
-        obj.mastersAvailable = sortByKey(obj.mastersAvailable,'translatedValue')
+        obj.mastersAvailable = sortByKey(obj.mastersAvailable,'translatedValue');
         return obj;
       },
     },
   });
 
-
+  // console.log(dropdownData, "dropdownData");
   useEffect(() => {
     setMasterOptions(dropdownData?.mastersAvailable)
   }, [dropdownData])
@@ -109,54 +101,9 @@ const MDMSManageMaster = () => {
     //here set current schema based on module and master name
     if(masterName?.name && moduleName?.name){
     setCurrentSchema(availableSchemas.filter(schema => schema.code === `${masterName?.name}.${moduleName?.name}`)?.[0])
-    history.push(`/${window?.contextPath}/employee/workbench/mdms-search-v2?moduleName=${masterName.name}&masterName=${moduleName.name}`)
+    navigate(`/${window?.contextPath}/employee/workbench/mdms-search-v2?moduleName=${masterName.name}&masterName=${moduleName.name}`)
     }
   }, [moduleName])
-  
-  // useEffect(() => {
-  //   if (currentSchema) {
-  //     const dropDownOptions = [];
-  //     const {
-  //       definition: { properties },
-  //     } = currentSchema;
-      
-  //     Object.keys(properties)?.forEach((key) => {
-  //       if (properties[key].type === "string" && !properties[key].format) {
-  //         dropDownOptions.push({
-  //           // name: key,
-  //           name:key,
-  //           code: key,
-  //           i18nKey:Digit.Utils.locale.getTransformedLocale(`${currentSchema.code}_${key}`)
-  //         });
-  //       }
-  //     });
-
-  //     Config.sections.search.uiConfig.fields[0].populators.options = dropDownOptions;
-  //     Config.actionLink=Config.actionLink+`?moduleName=${masterName?.name}&masterName=${moduleName?.name}`;
-  //     // Config.apiDetails.serviceName = `/mdms-v2/v2/_search/${currentSchema.code}`
-      
-      
-  //     Config.additionalDetails = {
-  //       currentSchemaCode:currentSchema.code
-  //     }
-  //     //set the column config
-      
-  //     Config.sections.searchResult.uiConfig.columns = [{
-  //       label: "WBH_UNIQUE_IDENTIFIER",
-  //       jsonPath: "uniqueIdentifier",
-  //       additionalCustomization:true
-  //     },...dropDownOptions.map(option => {
-  //       return {
-  //         label:option.i18nKey,
-  //         i18nKey:option.i18nKey,
-  //         jsonPath:`data.${option.code}`,
-  //         dontShowNA:true
-  //       }
-  //     })]
-
-  //     setUpdatedConfig(Config)
-  //   }
-  // }, [currentSchema]);
 
   if (isLoading) return <Loader />;
   return (
@@ -175,7 +122,6 @@ const MDMSManageMaster = () => {
             setUpdatedConfig(null)
           }}
           t={t}
-          // placeholder={t("WBH_MODULE_NAME")}
           placeholder={t("WBH_MODULE_NAME")}
           
           disable={master ? true : false}
@@ -190,7 +136,6 @@ const MDMSManageMaster = () => {
             setModuleName(e);
           }}
           t={t}
-          // placeholder={t("WBH_MODULE_NAME")}
           placeholder={t("WBH_MASTER_NAME")}
           
           disable = {modulee ? true : false}

@@ -1,15 +1,10 @@
 {
   "name": "@nudmcdgnpm/upyog-ui-module-sv",
-  "version": "1.2.10",
+  "version": "1.3.0",
   "license": "MIT",
-  "main": "dist/index.modern.js",
-  "module": "dist/index.modern.js",
+  "main": "src/Module.js",
   "source": "src/Module.js",
-  "files": ["dist"],
-  "scripts": {
-    "start": "vite build --watch",
-    "build": "vite build"
-  },
+  
   "peerDependencies": {
     "react": ">=19",
     "react-dom": ">=19",

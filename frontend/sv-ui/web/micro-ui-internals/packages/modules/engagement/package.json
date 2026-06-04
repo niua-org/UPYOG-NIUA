@@ -2,16 +2,9 @@
     "name": "@upyog/digit-ui-module-engagement",
     "version": "1.8.0",
     "license": "MIT",
-    "main": "dist/index.modern.js",
-    "module": "dist/index.modern.js",
+    "main": "src/Module.js",
     "source": "src/Module.js",
-    "files": [
-        "dist"
-    ],
-    "scripts": {
-        "start": "vite build --watch",
-        "build": "vite build"
-    },
+
     "devDependencies": {
         "@vitejs/plugin-react": "^4.3.4",
         "vite": "^6.0.0"
