@@ -10,6 +10,7 @@ const useCustomAPIHook = ({
   changeQueryName,
 }) => {
   const client = useQueryClient();
+  const bodyKey = JSON.stringify(body);
 
   const {
     isLoading,
@@ -19,7 +20,7 @@ const useCustomAPIHook = ({
     error,
     isError,
   } = useQuery({
-    queryKey: [url, changeQueryName, params, body].filter((e) => e),
+    queryKey: [url, changeQueryName, params, bodyKey].filter((e) => e),
     queryFn: () =>
       CustomService.getResponse({
         url,
@@ -27,8 +28,8 @@ const useCustomAPIHook = ({
         body,
         plainAccessRequest,
       }),
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
     ...config,
   });
 
@@ -42,7 +43,7 @@ const useCustomAPIHook = ({
     revalidate: () => {
       if (data) {
         client.invalidateQueries({
-          queryKey: [url, changeQueryName, params, body].filter((e) => e),
+          queryKey: [url, changeQueryName, params, bodyKey].filter((e) => e),
         });
       }
     },
