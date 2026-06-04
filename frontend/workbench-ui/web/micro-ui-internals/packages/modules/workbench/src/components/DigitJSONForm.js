@@ -152,7 +152,7 @@ function ArrayFieldTemplate(props) {
 function ObjectFieldTemplate(props) {
   const children = props.properties.map((element) => {
     return (
-      <div className="field-wrapper object-wrapper" id={`${props?.idSchema?.["$id"]}_${element.name}`}>
+      <div key={element.name} className="field-wrapper object-wrapper" id={`${props?.idSchema?.["$id"]}_${element.name}`}>
         {element.content}
       </div>
     );
@@ -200,7 +200,7 @@ function CustomFieldTemplate(props) {
           {required ? "*" : null}
         </label>
         {description}
-        <span class="all-input-field-wrapper">
+        <span className="all-input-field-wrapper">
           {children}
           {errors}
           {help}
