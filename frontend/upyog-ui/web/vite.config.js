@@ -199,35 +199,17 @@ export default defineConfig(({ mode }) => {
 
   // function getAliases() {
   //   const aliases = {};
-    
-  //   // Read workspace configuration from package.json
-  //   const rootPackageJsonPath = path.join(__dirname, "package.json");
-  //   const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, "utf-8"));
-  //   const workspaces = rootPackageJson.workspaces || [];
-    
-  //   // Extract module names that are actually in workspaces
-  //   const workspaceModules = new Set();
-  //   workspaces.forEach(workspace => {
-  //     const name = workspace.split("/").pop();
-  //     workspaceModules.add(name);
-  //   });
 
-  //     function register(pkgDir) {
-  //       const pkgJsonPath = path.join(pkgDir, "package.json");
-  //       if (!fs.existsSync(pkgJsonPath)) return;
-  //       const { name, main } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"));
-  //       if (!name) return;
-
-  //       const moduleName = pkgDir.split("/").pop();
-  //       if (!workspaceModules.has(moduleName)) return;
-
-  //       const entry = main
-  //         ? path.join(pkgDir, main)
-  //         : path.join(pkgDir, "src", "index.js");
-  //       if (fs.existsSync(entry)) {
-  //         aliases[name] = entry;
-  //       }
-  //     }
+  //   function register(pkgDir) {
+  //     const pkgJsonPath = path.join(pkgDir, "package.json");
+  //     if (!fs.existsSync(pkgJsonPath)) return;
+  //     const { name, main } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"));
+  //     if (!name) return;
+  //     const entry = main
+  //       ? path.join(pkgDir, main)
+  //       : path.join(pkgDir, "src", "index.js");
+  //     if (fs.existsSync(entry)) aliases[name] = entry;
+  //   }
 
   //   const modulesDir = path.join(packagesRoot, "modules");
   //   if (fs.existsSync(modulesDir)) {
@@ -236,22 +218,43 @@ export default defineConfig(({ mode }) => {
   //       if (fs.statSync(pkgDir).isDirectory()) register(pkgDir);
   //     });
   //   }
-    
+
+  //   register(path.join(packagesRoot, "libraries"));
+  //   register(path.join(packagesRoot, "react-components"));
+
   //   return aliases;
   // }
 
   function getAliases() {
     const aliases = {};
 
+      const rootPackageJsonPath = path.join(__dirname, "package.json");
+      const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, "utf-8"));
+      const workspaces = rootPackageJson.workspaces || [];
+
+      const workspaceModules = new Set();
+      workspaces.forEach(workspace => {
+        const name = workspace.split("/").pop();
+        workspaceModules.add(name);
+      });
+
     function register(pkgDir) {
       const pkgJsonPath = path.join(pkgDir, "package.json");
       if (!fs.existsSync(pkgJsonPath)) return;
       const { name, main } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"));
       if (!name) return;
+
+        // Only register alias if package is in workspaces[]
+        // Not in workspaces = no alias = Vite picks from NPM
+        const moduleName = pkgDir.split("/").pop();
+        if (!workspaceModules.has(moduleName)) return;
+
       const entry = main
         ? path.join(pkgDir, main)
         : path.join(pkgDir, "src", "index.js");
-      if (fs.existsSync(entry)) aliases[name] = entry;
+      if (fs.existsSync(entry)) {
+        aliases[name] = entry;
+      }
     }
 
     const modulesDir = path.join(packagesRoot, "modules");
@@ -262,12 +265,16 @@ export default defineConfig(({ mode }) => {
       });
     }
 
-    register(path.join(packagesRoot, "libraries"));
-    register(path.join(packagesRoot, "react-components"));
+      // libraries and react-components — same workspace rule applies
+      [
+        path.join(packagesRoot, "libraries"),
+        path.join(packagesRoot, "react-components"),
+      ].forEach(pkgDir => {
+        if (fs.existsSync(pkgDir)) register(pkgDir);
+      });
 
     return aliases;
   }
-
   const moduleAliases = getAliases();
 
   const proxy = {};
