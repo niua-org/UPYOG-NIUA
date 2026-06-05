@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { initLibraries } from "@nudmcdgnpm/digit-ui-libraries";
 // import "@upyog/cnd-ui-css/dist/index.css";
 import "./index.css";
@@ -52,10 +52,11 @@ if (!user || !user.access_token || !user.info) {
   // end
 }
 
-ReactDOM.render(
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
 
