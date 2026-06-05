@@ -81,4 +81,9 @@ public class SchemeService extends PersistenceService<Scheme, Integer> {
         final Query query = getSession().createQuery(" from Scheme where isactive = true");
         return query.list();
     }
+
+    public List<Scheme> getBySchemeCode() {
+        final Query query = getSession().createQuery(" from Scheme where isactive = true and stateCode is not null");
+        return query.list();
+    }
 }

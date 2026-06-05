@@ -2147,11 +2147,6 @@ public class BudgetDetailService extends PersistenceService<BudgetDetail, Long> 
                     budgetDetail.setFund(budgetUpload.getFund());
                     budgetDetail.setFunction(budgetUpload.getFunction());
                     budgetDetail.setExecutingDepartment(budgetUpload.getDeptCode());
-                    budgetDetail.setMajorCode(budgetUpload.getMajorCode());
-                    budgetDetail.setMinorCode(budgetUpload.getMinorCode());     
-                    budgetDetail.setLastYearApproved(new BigDecimal(budgetUpload.getLastYearApproved()) );   
-                    budgetDetail.setCurrentApproved(new  BigDecimal(budgetUpload.getCurrentApproved()) );   
-                    budgetDetail.setPercentageChange(new BigDecimal(budgetUpload.getPercentageChange()) );   
                     budgetDetail.setAnticipatoryAmount(BigDecimal.ZERO);
                     budgetDetail.setPlanningPercent(BigDecimal.valueOf(budgetUpload.getPlanningPercentage()));
                     if (budgetType.equalsIgnoreCase(RE)) {
@@ -2444,56 +2439,61 @@ public class BudgetDetailService extends PersistenceService<BudgetDetail, Long> 
 
             Budget budget = new Budget();
 
-            if (budgetType.equalsIgnoreCase("BE")) {
-                budgetName = deptCode + "-" + budgetType + "-" + revOrCap + "-" + beFYear.getFinYearRange();
-                budgetFinancialYear = beFYear;
-
-                if (!isManualEntry) {
+                if (budgetType.equalsIgnoreCase(BE)) {
+                    budgetName = deptCode + "-" + budgetType + "-" + revOrCap + "-" + beFYear.getFinYearRange();
                     budgetDes = microserviceUtils.getDepartmentByCode(deptCode).getName() + " " + budgetType + " "
-                            + capitalOrRevenue + " Budget for the year " + beFYear.getFinYearRange();
+                            + capitalOrRevenue + "Budget for the year " + beFYear.getFinYearRange();
+                    budgetFinancialYear = beFYear;
                 } else {
-                    budgetDes = deptCode + " " + budgetType + " " + capitalOrRevenue + " Budget for the year " + beFYear.getFinYearRange();
+                    budgetName = deptCode + "-" + budgetType + "-" + revOrCap + "-" + reFYear.getFinYearRange();
+                    budgetDes = microserviceUtils.getDepartmentByCode(deptCode).getName() + " " + budgetType + " "
+                            + capitalOrRevenue + "Budget for the year " + reFYear.getFinYearRange();
+                    budgetFinancialYear = reFYear;
                 }
+                if (budgetService.getByName(budgetName) == null) {
+                    materialPath = rootmaterial + capOrRevCount++;
 
-            } else {
-                budgetName = deptCode + "-" + budgetType + "-" + revOrCap + "-" + reFYear.getFinYearRange();
-                budgetFinancialYear = reFYear;
-
-                if (!isManualEntry) {
-                    budgetDes = microserviceUtils.getDepartmentByCode(deptCode).getName() + " " + budgetType + " "
-                            + capitalOrRevenue + " Budget for the year " + reFYear.getFinYearRange();
-                } else {
-                    budgetDes = deptCode + " " + budgetType + " " + capitalOrRevenue + " Budget for the year " + reFYear.getFinYearRange();
+                    if (budgetType.equalsIgnoreCase(BE)) {
+                        final Budget refBudget = budgetService
+                                .getByName(deptCode + "-RE-" + revOrCap + "-" + reFYear.getFinYearRange());
+                        budget.setName(budgetName);
+                        budget.setDescription(budgetDes);
+                        budget.setFinancialYear(budgetFinancialYear);
+                        budget.setIsActiveBudget(true);
+                        budget.setIsPrimaryBudget(true);
+                        // budget = setBudgetState(budget);
+                        budget.setStatus(status);
+                        budget.setIsbere(budgetType);
+                        budget.setMaterializedPath(materialPath);
+                        budget.setReferenceBudget(refBudget);
+                        budget.setParent(parent);
+                        budgetService.applyAuditing(budget);
+                        budget = budgetService.persist(budget);
+                    } else {
+                        budget.setName(budgetName);
+                        budget.setDescription(budgetDes);
+                        budget.setFinancialYear(budgetFinancialYear);
+                        budget.setIsActiveBudget(true);
+                        budget.setIsPrimaryBudget(true);
+                        // budget = setBudgetState(budget);
+                        budget.setStatus(status);
+                        budget.setIsbere(budgetType);
+                        budget.setMaterializedPath(materialPath);
+                        budget.setParent(parent);
+                        budgetService.applyAuditing(budget);
+                        budget = budgetService.persist(budget);
+                    }
                 }
             }
-
-            if (budgetService.getByName(budgetName) == null) {
-                materialPath = rootmaterial + capOrRevCount++;
-
-                budget.setName(budgetName);
-                budget.setDescription(budgetDes);
-                budget.setFinancialYear(budgetFinancialYear);
-                budget.setIsActiveBudget(true);
-                budget.setIsPrimaryBudget(true);
-                budget.setStatus(status);
-                budget.setIsbere(budgetType);
-                budget.setMaterializedPath(materialPath);
-                budget.setParent(parent);
-
-                if (budgetType.equalsIgnoreCase("BE")) {
-                    final Budget refBudget = budgetService
-                            .getByName(deptCode + "-RE-" + revOrCap + "-" + reFYear.getFinYearRange());
-                    budget.setReferenceBudget(refBudget);
-                }
-
-                budgetService.applyAuditing(budget);
-                budget = budgetService.persist(budget);
-            }
-        }
-    } catch (Exception e) {
-        throw new RuntimeException("Error while creating department-wise budget heads: " + e.getMessage(), e);
+        } catch (final ValidationException e) {
+            throw new ValidationException(Arrays
+                    .asList(new ValidationError(e.getErrors().get(0).getMessage(), e.getErrors().get(0).getMessage())));
+        } /*
+           * catch (final Exception e) { throw new
+           * ValidationException(Arrays.asList(new
+           * ValidationError(e.getMessage(), e.getMessage()))); }
+           */
     }
-}
 
 	public BudgetDetail getBudgetDetail(final Long fundId, final Long functionId, final String deptCode,
 			final Long glCodeId, final CFinancialYear fYear, final String budgetType) {

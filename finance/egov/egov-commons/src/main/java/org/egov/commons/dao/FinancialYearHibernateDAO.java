@@ -371,4 +371,31 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
         return query.list();
     }
 
+    //for ULB DASHBOARD
+
+    public String getCurrFinancialYearEndDate() {
+        Date dt = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+        String currentDate = formatter.format(dt);
+        logger.info("Fetching current financial year's ending date");
+
+        String result = "";
+        Query query = getCurrentSession().createQuery(
+                "select cfinancialyear.endingDate from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= '"
+                        + currentDate + "' and cfinancialyear.endingDate >= '" + currentDate + "' ");
+
+        ArrayList list = (ArrayList) query.list();
+        if (list.size() > 0) {
+            if (list.get(0) == null)
+                return "0.0";
+            else
+                result = list.get(0).toString();
+        } else {
+            return "0.0";
+        }
+        return result;
+    }
+
+
+
 }
