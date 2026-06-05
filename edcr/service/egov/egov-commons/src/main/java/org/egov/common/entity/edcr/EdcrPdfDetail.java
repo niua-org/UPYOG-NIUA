@@ -163,17 +163,10 @@ public class EdcrPdfDetail implements Serializable {
         this.thicknessOverrides = thicknessOverrides;
     }
 
-    /**
-     * Returns true when this row should use the single-page Kabeja tuning pipeline; null or false for legacy sheets.
-     */
     public Boolean getKabejaSinglePageDXFToPdf() {
         return kabejaSinglePageDXFToPdf;
     }
 
-    /**
-     * Only DxfToPdfConverterExtract.buildDirectEdcrPdfDetail should set this to true for the one full-drawing row.
-     * Legacy sheet rows must never set true here.
-     */
     public void setKabejaSinglePageDXFToPdf(Boolean kabejaSinglePageDXFToPdf) {
         this.kabejaSinglePageDXFToPdf = kabejaSinglePageDXFToPdf;
     }
