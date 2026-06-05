@@ -1,54 +1,51 @@
-import { useQuery, useQueryClient } from "react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CustomService } from "../services/elements/CustomService";
 
-/**
- * Custom hook which can make api call and format response
- *
- * @author jagankumar-egov
- *
- *
- * @example
- * 
- const requestCriteria = [
-      "/user/_search",             // API details
-    {},                            //requestParam
-    {data : {uuid:[Useruuid]}},    // requestBody
-    {} ,                           // privacy value 
-    {                              // other configs
-      enabled: privacyState,
-      cacheTime: 100,
-      select: (data) => {
-                                    // format data
-        return  _.get(data, loadData?.jsonPath, value);
-      },
-    },
-  ];
-  const { isLoading, data, revalidate } = Digit.Hooks.useCustomAPIHook(...requestCriteria);
-
- *
- * @returns {Object} Returns the object which contains data and isLoading flag
- */
-
-
-const useCustomAPIHook = ({ url, params, body, config = {}, plainAccessRequest,changeQueryName="Random" }) => {
+const useCustomAPIHook = ({
+  url,
+  params,
+  body,
+  config = {},
+  plainAccessRequest,
+  changeQueryName,
+}) => {
   const client = useQueryClient();
+  const bodyKey = JSON.stringify(body);
 
-  const { isLoading, data, isFetching,refetch } = useQuery(
-    [url,changeQueryName].filter((e) => e),
-    () => CustomService.getResponse({ url, params, body, plainAccessRequest }),
-    {
-      cacheTime:0,
-      ...config,
-    }
-  );
+  const {
+    isLoading,
+    data,
+    isFetching,
+    refetch,
+    error,
+    isError,
+  } = useQuery({
+    queryKey: [url, changeQueryName, params, bodyKey].filter((e) => e),
+    queryFn: () =>
+      CustomService.getResponse({
+        url,
+        params,
+        body,
+        plainAccessRequest,
+      }),
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    ...config,
+  });
 
   return {
     isLoading,
     isFetching,
     data,
+    error,
+    isError,
     refetch,
     revalidate: () => {
-      data && client.invalidateQueries({ queryKey: [url].filter((e) => e) });
+      if (data) {
+        client.invalidateQueries({
+          queryKey: [url, changeQueryName, params, bodyKey].filter((e) => e),
+        });
+      }
     },
   };
 };
