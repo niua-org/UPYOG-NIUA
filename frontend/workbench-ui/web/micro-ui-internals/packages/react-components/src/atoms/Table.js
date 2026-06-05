@@ -36,6 +36,8 @@ const Table = ({
   tableRef,
   isReportTable=false,
   inboxStyles,
+  onClickRow,
+  rowClassName,
 }) => {
   const {
     getTableProps,
@@ -139,7 +141,18 @@ const Table = ({
             const rowProps = row.getRowProps();
             const { key: rowKey, ...restRowProps } = rowProps;
             return (
-              <tr key={rowKey} {...restRowProps}>
+              <tr
+                  key={rowKey}
+                  {...restRowProps}
+                  onClick={(e) => {
+                    if (typeof onClickRow === 'function') {
+                      onClickRow(row);
+                    }
+                  }}
+                  style={{ ...(restRowProps.style || {}), cursor: typeof onClickRow === 'function' ? 'pointer' : 'default' }}
+                  className={rowClassName || ''}
+              >
+
               {showAutoSerialNo&&  <td >
               {i+1}
               </td>}

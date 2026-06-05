@@ -261,7 +261,7 @@ export default defineConfig(({ mode }) => {
     },
 
     server: {
-      port: 3001,
+      port: 3000,
       proxy,
       fs: {
         allow: [".."],
