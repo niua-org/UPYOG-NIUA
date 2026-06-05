@@ -432,7 +432,6 @@ export const UICustomizations = {
       return false;
     },
     preProcess: (data,additionalDetails) => {
-      console.log('preProcess called with:', { data, additionalDetails });
       
       const tenantId = Digit.ULBService.getCurrentTenantId();
       data.body.MdmsCriteria.tenantId = tenantId 
@@ -453,11 +452,9 @@ export const UICustomizations = {
       data.body.MdmsCriteria.schemaCode = additionalDetails?.currentSchemaCode
       delete data.body.MdmsCriteria.custom
       
-      console.log('preProcess output:', data);
       return data;
     },
     additionalCustomizations: (row, key, column, value, t, searchResult) => {
-      console.log('additionalCustomization parameters:', { row, key, column, value });
       //here we can add multiple conditions
       //like if a cell is link then we return link
       //first we can identify which column it belongs to then we can return relevant result
