@@ -24,7 +24,16 @@ public class LayerNames {
        
     }
 
-    // Called lazily on first actual use — DB is 100% ready by then
+    /**
+     * Lazily loads and caches layer name mappings from the database.
+     *
+     * <p>The layer names are fetched only once and stored in an in-memory map
+     * for fast subsequent lookups. This method uses double-checked locking to
+     * ensure that the cache is initialized only once in a thread-safe manner.</p>
+     *
+     * <p>If the cache has already been initialized, the method returns
+     * immediately without performing any database access.</p>
+     */
     private void loadIfNeeded() {
         if (layerNamesMap == null) {
             synchronized (this) {

@@ -181,19 +181,17 @@ public class DcrConstants {
     public static final String DXF_PDF_CONVERSION_ENABLED = "DXF_PDF_CONVERSION_ENABLED";
 
     /**
-     * NOTE (app-config key for how DXF is turned into PDF during extract):
+     * App-config key for how DXF is turned into PDF during extract
      *
-     * Stored in Digit DCR app config (same tables as other EG_APPCONFIG values).
+     * Stored in Digit DCR app config (EG_APPCONFIG table).
      *
      * When the value is YES (case-insensitive):
      * - DxfToPdfConverterExtract uses MDMS DxfToPdfLayerConfig when MDMS is on and/or EDCR_DXF_PDF rules to build
      *   many EdcrPdfDetail rows, runs sanitize, toggles layers per sheet, and may produce several PDFs — legacy behaviour.
      *
-     * Any other value or a missing row:
+     * When the value is NO (case-insensitive):
      * - One synthetic EdcrPdfDetail for the whole drawing, no sheet regex parsing, no sanitize; kabejaSinglePageDXFToPdf
      *   turns on the tuned Kabeja path in DxfToPdfUnifiedConverter and DcrSvgGenerator.
-     *
-     * Lets some environments get one full-drawing PDF without forcing everyone off per-sheet rules until they migrate.
      */
     public static final String DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS = "DXF_TO_PDF_USE_LEGACY_LAYER_SHEETS";
 

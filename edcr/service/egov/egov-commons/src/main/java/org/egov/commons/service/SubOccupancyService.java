@@ -63,9 +63,11 @@ public class SubOccupancyService {
         return subOccupancyRepository.findAll();
     }
 
+    /*
     public List<SubOccupancy> findAllOrderByOrderNumber() {
         return subOccupancyRepository.findAll(Sort.by(Sort.Direction.ASC, "orderNumber"));
     }
+    */
     
     public List<SubOccupancy> findSubOccupanciesByOccupancy(String occupancy) {
         return subOccupancyRepository.findByOccupancyNameAndIsActiveTrueOrderByOrderNumberAsc(occupancy);

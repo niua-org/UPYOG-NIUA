@@ -109,14 +109,23 @@ import net.sf.jasperreports.export.SimpleWriterExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsExporterConfiguration;
 
 public class JasperReportService extends AbstractReportService<JasperReport> {
-	
+
 	 static {
+            /*
+                Configure Jasper to use JRThreadSubreportRunnerFactory for executing
+                subreports, which helps handle subreport processing efficiently.
+            */
 	        System.setProperty(
 	            "net.sf.jasperreports.subreport.runner.factory",
 	            "net.sf.jasperreports.engine.fill.JRThreadSubreportRunnerFactory"
 	        );
+            /*
+                Specify the custom jasperreports.properties file so JasperReports
+                loads application-specific report configuration (fonts, export settings,
+                performance-related properties, etc.) during report generation.
+            */
 	        System.setProperty(
-	            DefaultJasperReportsContext.PROPERTIES_FILE, 
+	            DefaultJasperReportsContext.PROPERTIES_FILE,
 	            "config/jasperreports.properties"
 	        );
 	    }
@@ -133,7 +142,7 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
 
     public JasperReportService(int templateCacheMinSize, int templateCacheMaxSize) {
     	super(0, 0);
-       
+
     }
 
     @Override
@@ -141,10 +150,14 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
         return TEMPLATE_EXTENSION;
     }
 
+    /*
+    Generates a Jasper report using the supplied JRXML template and database connection. The template is compiled, populated with data
+    by executing its SQL queries, exported to the requested format,and returned as a ReportOutput.
+    */
     @Override
     protected ReportOutput createReportFromSql(ReportRequest reportInput, Connection connection) {
         try {
-          
+
             InputStream is = getClass().getClassLoader()
                     .getResourceAsStream(reportInput.getReportTemplate());
 
@@ -179,7 +192,7 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
                 dataSource = new JRBeanArrayDataSource(new Object[]{reportData}, false);
             }
 
-          
+
             InputStream is = getClass().getClassLoader()
                     .getResourceAsStream(reportInput.getReportTemplate());
 
@@ -201,7 +214,7 @@ public class JasperReportService extends AbstractReportService<JasperReport> {
     @Override
     protected ReportOutput createReportFromHql(ReportRequest reportInput) {
         try {
-          
+
             Map<String, Object> reportParams = reportInput.getReportParams();
             if (reportParams == null) {
                 reportParams = new HashMap<>();

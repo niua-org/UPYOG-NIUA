@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.egov.infra.admin.master.entity.City;
 
+// Interface for Cityservice class
 public interface ICityService {
 
     City updateCity(City city);

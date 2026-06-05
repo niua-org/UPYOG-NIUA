@@ -9,6 +9,7 @@
            http://www.springframework.org/schema/tx
            http://www.springframework.org/schema/tx/spring-tx.xsd">
 
+    <!--    Without this line, Spring will not automatically manage transactions for methods annotated with @Transactional-->
     <tx:annotation-driven proxy-target-class="false"/>
 
     <bean name="erpApplicationContext"
