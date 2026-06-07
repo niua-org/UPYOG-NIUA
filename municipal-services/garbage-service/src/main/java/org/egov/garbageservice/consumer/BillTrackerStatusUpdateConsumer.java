@@ -52,26 +52,7 @@ public class BillTrackerStatusUpdateConsumer {
 	@Autowired
 	private GarbageBillTrackerRepository trackerRepository;
 
-//	@KafkaListener(topics = {"${kafka.topics.receipt.create}","${kafka.topics.notification.pg.save.txns}"})
-//    @KafkaListener(topics = {"${kafka.topics.bill.tracker.status.update}"}, groupId = "update-tracker-group")
-//	public void trackerStatusUpdate(Map<String, Object> consumerRecord,
-//			@Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-//		DocumentContext context = null;
-//
-//		try {
-//			context = JsonPath.parse(objectMapper.writeValueAsString(consumerRecord));
-//		} catch (JsonProcessingException e) {
-//			e.printStackTrace(); // or use logger.error("Error serializing record", e);
-//		}
-//		String paymentId = objectMapper.convertValue(context.read("$.Payment.id"), String.class);
-//		List<Bill> bills = Arrays
-//				.asList(objectMapper.convertValue(context.read("$.Payment.paymentDetails.*.bill"), Bill[].class));
-//
-//		RequestInfo requestInfo = objectMapper.convertValue(context.read("$.RequestInfo"), RequestInfo.class);
-////		billReq.setBills(bills);
-////		billReq.setRequestInfo(requestInfo);
-//
-//	}
+
 
  /**
      * Kafka listener method to receive bill update messages.
