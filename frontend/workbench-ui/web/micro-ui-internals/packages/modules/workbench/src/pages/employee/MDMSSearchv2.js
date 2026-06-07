@@ -157,8 +157,6 @@ useEffect(() => {
     };
   newConfig.apiDetails.changeQueryName = currentSchema.code;
 
-
-    console.log('Updated MdmsCriteria:', newConfig.apiDetails.requestBody.MdmsCriteria);
     setUpdatedConfig(newConfig);
   }
 }, [currentSchema]);

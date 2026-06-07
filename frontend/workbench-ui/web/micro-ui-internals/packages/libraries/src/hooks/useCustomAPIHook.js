@@ -1,6 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CustomService } from "../services/elements/CustomService";
 
+// ISSUE: Including `RequestInfo` in the react-query `queryKey` caused an infinite loop.
+// Because `RequestInfo.ts` = Date.now() — a new timestamp is generated on every render,
+// making react-query treat each render as a new query and triggering a re-fetch each time.
+// FIX: Exclude `RequestInfo` from `bodyKey` so the query key stays stable across renders.
+// NOTE: Original `body` (with RequestInfo) is still passed to `queryFn` — API calls work correctly.
+
 const useCustomAPIHook = ({
   url,
   params,
@@ -10,7 +16,8 @@ const useCustomAPIHook = ({
   changeQueryName,
 }) => {
   const client = useQueryClient();
-  const bodyKey = JSON.stringify(body);
+  const { RequestInfo, ...stableBody } = body || {};
+  const bodyKey = JSON.stringify(stableBody);
 
   const {
     isLoading,
