@@ -2,6 +2,7 @@ package org.egov.garbageservice.repository.builder;
 
 import org.springframework.stereotype.Component;
 
+/** Holds SQL query constants for CRUD operations on scheduled garbage request records. */
 @Component
 public class GrbgScheduledRequestsQueryBuilder {
 

@@ -13,6 +13,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
 
+/** ResultSet extractor that maps SQL query results into a list of GarbageBill domain objects. */
 @Component
 public class GarbageBillRowMapper implements ResultSetExtractor<List<GarbageBill>> {
 

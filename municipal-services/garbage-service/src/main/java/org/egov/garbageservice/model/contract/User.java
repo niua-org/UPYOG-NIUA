@@ -59,8 +59,7 @@ public class User {
 
 	@NotNull
 	@Size(max = 100)
-	// @Pattern(regexp = "^[^\\$\"'<>?\\\\~`!@#$%^()+={}\\[\\]*,:;“”‘’]*$", message
-	// = "Invalid name. Only alphabets and special characters -, ',`, .")
+	@Pattern(regexp = "^[^\\$\"'<>?\\\\~`!@#$%^()+={}\\[\\]*,:;\"']*$", message = "Invalid name. Only alphabets and special characters -, ', `, .")
 	@JsonProperty("name")
 	private String name;
 
@@ -68,8 +67,7 @@ public class User {
 	@JsonProperty("gender")
 	private String gender;
 
-	// @Pattern(regexp = "(^[6-9][0-9]{9}$)", message = "Inavlid mobile number,
-	// should start with 6-9 and contain ten digits of 0-9")
+	@Pattern(regexp = "(^[6-9][0-9]{9}$)", message = "Invalid mobile number, should start with 6-9 and contain ten digits of 0-9")
 	@NotNull
 	@CustomSafeHtml
 	@JsonProperty("mobileNumber")

@@ -18,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+/** Repository for retrieving aggregate counts and statistics related to garbage applications. */
 @Repository
 @Slf4j
 public class GarbageCountRepository {

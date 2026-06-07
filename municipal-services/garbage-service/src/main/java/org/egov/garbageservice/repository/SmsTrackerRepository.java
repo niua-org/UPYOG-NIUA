@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 
 
+/** JPA repository for SmsTracker entities, providing a native insert operation to log SMS notifications. */
 @Repository
 public interface SmsTrackerRepository extends JpaRepository<SmsTracker, String> {
 

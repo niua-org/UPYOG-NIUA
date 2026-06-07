@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.extern.slf4j.Slf4j;
 
+/** Repository for managing garbage account data, including creation, update, deletion, and flexible search operations. */
 @Repository
 @Slf4j
 public class GarbageAccountRepository {

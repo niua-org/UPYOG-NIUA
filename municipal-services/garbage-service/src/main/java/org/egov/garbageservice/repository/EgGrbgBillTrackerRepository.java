@@ -9,6 +9,7 @@ import org.egov.garbageservice.model.EgGrbgBillTracker;
 
 import java.util.List;
 
+/** JPA repository for EgGrbgBillTracker entities, providing query support to fetch active bills for SMS notification. */
 @Repository
 public interface EgGrbgBillTrackerRepository extends JpaRepository<EgGrbgBillTracker, String>{
 

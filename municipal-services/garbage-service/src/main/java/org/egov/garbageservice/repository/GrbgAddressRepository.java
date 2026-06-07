@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/** Repository for creating, updating, and deleting garbage address records in the database. */
 @Repository
 public class GrbgAddressRepository {
 

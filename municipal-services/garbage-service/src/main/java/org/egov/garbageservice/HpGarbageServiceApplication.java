@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.web.client.RestTemplate;
 
+/** Entry point for the HP Garbage Service Spring Boot application. */
 @SpringBootApplication
 @ComponentScan(basePackages = { "org.egov.garbageservice", "org.egov.garbageservice.controller",
         "org.egov.garbageservice.config", "org.egov.garbageservice.repository" })

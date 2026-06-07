@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/** Repository for creating, updating, and deleting old garbage ID mapping records in the database. */
 @Repository
 public class GrbgOldDetailsRepository {
 

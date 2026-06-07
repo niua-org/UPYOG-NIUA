@@ -2,6 +2,7 @@ package org.egov.garbageservice.repository.builder;
 
 import org.springframework.stereotype.Component;
 
+/** Holds SQL query constants for inserting, updating, and deleting garbage application records. */
 @Component
 public class GrbgApplicationQueryBuilder {
 

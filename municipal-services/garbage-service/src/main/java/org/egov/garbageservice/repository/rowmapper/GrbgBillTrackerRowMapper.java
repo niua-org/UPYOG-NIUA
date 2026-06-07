@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
+/** Row mapper that converts a SQL ResultSet row into a GrbgBillTracker domain object. */
 @Component
 public class GrbgBillTrackerRowMapper implements RowMapper<GrbgBillTracker> {
 

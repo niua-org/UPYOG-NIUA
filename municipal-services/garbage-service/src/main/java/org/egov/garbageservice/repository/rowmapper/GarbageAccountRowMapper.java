@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/** ResultSet extractor that maps SQL query results into a list of GarbageAccount domain objects, including nested addresses, units, applications, and child accounts. */
 @Component
 public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageAccount>> {
 	

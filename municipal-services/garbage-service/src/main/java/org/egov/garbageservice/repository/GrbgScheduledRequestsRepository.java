@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/** Repository for managing scheduled garbage request records, supporting CRUD operations via JdbcTemplate. */
 @Repository
 public class GrbgScheduledRequestsRepository {
 

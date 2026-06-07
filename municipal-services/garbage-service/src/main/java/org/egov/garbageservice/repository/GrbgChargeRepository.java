@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/** Repository for creating and updating garbage charge records in the database. */
 @Repository
 public class GrbgChargeRepository {
 

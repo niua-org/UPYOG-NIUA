@@ -17,6 +17,7 @@ import org.springframework.util.CollectionUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+/** Repository for creating, updating, and searching garbage bill records in the database. */
 @Repository
 @Slf4j
 public class GarbageBillRepository {

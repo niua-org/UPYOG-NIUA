@@ -28,6 +28,7 @@ import org.egov.garbageservice.model.AuditDetails;
 
 import lombok.extern.slf4j.Slf4j;
 
+/** Repository for managing garbage bill tracker records, including creation, status updates, penalty/rebate adjustments, and failure logging. */
 @Repository
 @Slf4j
 public class GarbageBillTrackerRepository {

@@ -2,6 +2,7 @@ package org.egov.garbageservice.repository;
 
 import java.math.BigDecimal;
 
+/** Projection interface representing a flattened view of bill and owner details used for SMS notification. */
 public interface BillSmsView {
 
     String getUuid();

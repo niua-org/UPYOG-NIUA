@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/** Repository for persisting and updating garbage document records in the database. */
 @Repository
 public class GrbgDocumentRepository {
 
