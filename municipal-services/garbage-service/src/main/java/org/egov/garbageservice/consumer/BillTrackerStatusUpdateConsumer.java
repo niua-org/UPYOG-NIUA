@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//import org.egov.collection.model.PaymentRequest;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.garbageservice.contract.bill.Bill;
 import org.egov.garbageservice.model.AuditDetails;
