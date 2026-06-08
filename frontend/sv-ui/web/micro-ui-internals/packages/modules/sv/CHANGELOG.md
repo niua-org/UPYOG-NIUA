@@ -7,7 +7,7 @@ All notable changes to this module are documented here.
 ## [1.2.10] — LTS Fork, Vite Migration & Dependency Upgrades
 
 ### Version
-- Initial release of `@nudmcdgnpm/upyog-ui-module-sv` at version `1.2.10`
+- Initial release of `@nudmcdgnpm/upyog-ui-module-sv` at version `1.3.0`
 
 ### Build Tool
 - Replaced `microbundle-crl` with `vite ^6.0.0` and `@vitejs/plugin-react ^4.3.4`

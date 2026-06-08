@@ -10,8 +10,8 @@ import _ from "lodash";
 
 const ActivateConnection = () => {
     const { t } = useTranslation();
-    let { state } = useLocation();
-    state = state ? JSON.parse(state) : {};
+    const location = useLocation();
+    let state = location.state || {};
     const navigate = Digit.Hooks.useCustomNavigate();
     let filters = func.getQueryStringParams(location.search);
     const [canSubmit, setSubmitValve] = useState(false);
@@ -110,9 +110,29 @@ const ActivateConnection = () => {
       }, [isAppDetailsPage]);
 
     const onFormValueChange = (setValue, formData, formState) => {
-        if (Object.keys(formState.errors).length > 0 && Object.keys(formState.errors).length == 1 && formState.errors["owners"] && Object.values(formState.errors["owners"].type).filter((ob) => ob.type === "required").length == 0 && Object.getPrototypeOf(formState.errors) === Object.prototype) setSubmitValve(true);
-        else setSubmitValve(!(Object.keys(formState.errors).length));
-    };
+        if (
+            Object.keys(formState.errors).length > 0 &&
+            Object.keys(formState.errors).length === 1 &&
+            formState.errors["owners"] &&
+            Object.values(formState.errors["owners"].type).filter(
+            (ob) => ob.type === "required"
+            ).length === 0 &&
+            Object.getPrototypeOf(formState.errors) === Object.prototype
+        ) {
+            setSubmitValve(true);
+            return;
+        }
+
+        const hasErrors = Object.entries(formState.errors).some(([_, error]) => {
+            return !(
+            error?.type &&
+            typeof error.type === "object" &&
+            Object.keys(error.type).length === 0
+            );
+        });
+
+        setSubmitValve(!hasErrors);
+        };
 
     const getConvertedDate = async (dateOfTime) => {
         let dateOfReplace = stringReplaceAll(dateOfTime, "/", "-");

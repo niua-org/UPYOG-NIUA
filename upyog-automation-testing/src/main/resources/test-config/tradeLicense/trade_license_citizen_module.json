@@ -7,65 +7,6 @@
   "instructions":[
 
     {
-      "stepName": "Enter Mobile Number",
-      "locatorStrategy": "NAME",
-      "locatorValue": "mobileNumber",
-      "action": "TYPE",
-      "inputValue": "${selected.mobile}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Accept Terms Checkbox",
-      "locatorStrategy": "CSS",
-      "locatorValue": "input[type='checkbox'].form-field",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Click Next After Mobile",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "NAME",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 3000
-    },
-    {
-      "stepName": "Select City",
-      "locatorStrategy": "CSS",
-      "locatorValue": "div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action": "SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1500
-    },
-    {
-      "stepName": "Click Continue",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(.,'Continue')]",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-
-
-
-    {
       "stepName":"Open Trade License",
       "locatorStrategy":"XPATH",
       "locatorValue":"//a[@href='/upyog-ui/citizen/tl-home']",
@@ -365,7 +306,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"mobileNumber0",
       "action":"TYPE",
-      "inputValue":"9494848897",
+      "inputValue":"9999999999",
       "dynamicSleep": 2000
     },
 
@@ -420,6 +361,13 @@
       "inputValue":"owner address",
       "dynamicSleep": 2000
     },
+    {
+      "stepName":"Same Address Checkbox",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'][value=\"Same as Property Address\"]",
+      "action":"CLICK_JS",
+      "dynamicSleep": 2000
+    },
 
     {
       "stepName":"Property Submit",
@@ -457,11 +405,8 @@
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
       "action":"CLICK_JS",
-      "dynamicSleep": 2000
+      "dynamicSleep": 3000
     },
-
-
-
     {
       "stepName":"Institution Name",
       "locatorStrategy":"NAME",
@@ -470,7 +415,6 @@
       "inputValue":"ijijhvhgcy",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Government Type",
       "locatorStrategy":"CSS",
@@ -479,7 +423,6 @@
       "inputValue":"0:1",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Contact Person",
       "locatorStrategy":"NAME",
@@ -488,7 +431,6 @@
       "inputValue":"Ajay",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Contact Mobile",
       "locatorStrategy":"NAME",
@@ -497,7 +439,6 @@
       "inputValue":"8474857362",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Institution Next",
       "locatorStrategy":"XPATH",
@@ -505,7 +446,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Same Address Checkbox",
       "locatorStrategy":"CSS",
@@ -513,7 +453,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Address Confirm Next",
       "locatorStrategy":"XPATH",
@@ -521,9 +460,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
-
-
     {
       "stepName":"Upload Document 1",
       "locatorStrategy":"ID",
@@ -532,7 +468,6 @@
       "inputValue":"${document.common.proof}",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Document 1 Next",
       "locatorStrategy":"XPATH",
@@ -540,8 +475,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
-
     {
       "stepName":"Upload Document 2",
       "locatorStrategy":"ID",
@@ -550,7 +483,6 @@
       "inputValue":"${document.common.proof}",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Document 2 Next",
       "locatorStrategy":"XPATH",
@@ -558,7 +490,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Upload Image",
       "locatorStrategy":"ID",
@@ -567,7 +498,6 @@
       "inputValue":"${document.common.png}",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Image Next",
       "locatorStrategy":"XPATH",
@@ -575,16 +505,12 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
-
-
     {
       "stepName":"Submit Application",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit Application']]",
       "action":"CLICK_JS",
-      "dynamicSleep": 2000
+      "dynamicSleep": 5000
     }
-
   ]
 }

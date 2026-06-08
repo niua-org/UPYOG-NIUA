@@ -4,6 +4,7 @@
   "baseUrl": "${selected.url}",
   "instructions": [
 
+
     {
       "stepName": "Navigate to E-Waste module",
       "locatorStrategy": "XPATH",

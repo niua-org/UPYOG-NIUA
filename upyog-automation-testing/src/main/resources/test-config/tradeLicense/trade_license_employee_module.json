@@ -2,7 +2,7 @@
   "moduleName":"trade_license_employee_module",
   "description": "Trade License employee full workflow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
 
   "instructions":[
@@ -12,7 +12,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${tl.login.username}",
+      "inputValue":"${selected.username}",
       "dynamicSleep": 1000
     },
 
@@ -21,7 +21,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${tl.login.password}",
+      "inputValue":"${selected.password}",
       "dynamicSleep": 1000
     },
 
@@ -59,7 +59,7 @@
       "locatorStrategy":"CSS",
       "locatorValue":"input.employee-card-input",
       "action":"TYPE",
-      "inputValue":"${tl.application.number}",
+      "inputValue":"${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
 

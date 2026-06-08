@@ -11,7 +11,6 @@
  *      yarn start
  *
  * IMPORTANT:
- * - Never run `yarn start:dev` directly because it expects compiled `dist/` files.
  * - This setup ensures proper aliasing of internal workspace packages and avoids
  *   dependency duplication issues (like multiple React instances).
  *
@@ -167,6 +166,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { apiPaths } from "./setupProxy";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -178,53 +178,84 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.REACT_APP_PROXY_API || "https://niuatt.niua.in";
   const assetsTarget = env.REACT_APP_PROXY_ASSETS || proxyTarget;
 
-  const apiPaths = [
-    "/access/v1/actions/mdms", "/egov-mdms-service", "/egov-location",
-    "/mdms-v2", "/localization", "/egov-workflow-v2", "/pgr-services",
-    "/filestore", "/egov-hrms", "/user-otp", "/user", "/fsm",
-    "/billing-service", "/collection-services", "/pdf-service", "/pg-service",
-    "/vehicle", "/vendor", "/property-services", "/fsm-calculator",
-    "/pt-calculator-v2", "/dashboard-analytics", "/echallan-services",
-    "/egov-searcher", "/egov-pdf", "/egov-survey-services", "/egov-user-event",
-    "/egov-document-uploader", "/egov-url-shortening", "/inbox", "/tl-services",
-    "/tl-calculator", "/edcr", "/bpa-services", "/noc-services", "/ws-services",
-    "/sw-services", "/ws-calculator", "/sw-calculator", "/report",
-    "/service-request", "/pet-services", "/ewaste-services",
-    "/chb-services", "/adv-services", "/employee-dashboard",
-    "/verification-service", "/asset-services", "/vendor-management",
-    "/tp-services", "/pgr-ai-services", "/gis-dx-service", "/individual",
-    "/bpa-calculator", "/request-service", "/challan-generation", "/ndc-services", "/estate-management", "/ndc-calculator"
-  ];
 
   const packagesRoot = path.resolve(__dirname, "micro-ui-internals/packages");
 
+
   function getAliases() {
-    const aliases = {};
+  const aliases = {};
 
-    function register(pkgDir) {
-      const pkgJsonPath = path.join(pkgDir, "package.json");
-      if (!fs.existsSync(pkgJsonPath)) return;
-      const { name, main } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"));
-      if (!name) return;
-      const entry = main
-        ? path.join(pkgDir, main)
-        : path.join(pkgDir, "src", "index.js");
-      if (fs.existsSync(entry)) aliases[name] = entry;
+  const rootPackageJsonPath = path.join(__dirname, "package.json");
+  const rootPackageJson = JSON.parse(fs.readFileSync(rootPackageJsonPath, "utf-8"));
+  const workspaces = rootPackageJson.workspaces || [];
+
+  /**
+   * Build a set of active workspace package names from the root package.json.
+   * Only packages listed here will be aliased to local source.
+   * Packages absent from this list resolve from node_modules (NPM).
+   *
+   * Example:
+   *   "micro-ui-internals/packages/modules/ads" → "ads"
+   *   "micro-ui-internals/packages/libraries"   → "libraries"
+   */
+  const activeWorkspaces = new Set(
+    workspaces.map(ws => ws.split("/").pop())
+  );
+
+  /**
+   * Registers a Vite alias for a package if and only if it is listed
+   * in the root workspaces[]. This ensures:
+   *   - In workspace  → Vite resolves from local src/ (live changes, HMR)
+   *   - Not in workspace → No alias registered → Vite resolves from node_modules (NPM)
+   *
+   * Entry point priority: package.json "main" field → fallback to src/index.js
+   */
+  function register(pkgDir) {
+    const pkgJsonPath = path.join(pkgDir, "package.json");
+    if (!fs.existsSync(pkgJsonPath)) return;
+
+    const { name, main } = JSON.parse(fs.readFileSync(pkgJsonPath, "utf-8"));
+    if (!name) return;
+
+    const packageName = pkgDir.split("/").pop();
+    if (!activeWorkspaces.has(packageName)) return;
+
+    const entry = main
+      ? path.join(pkgDir, main)
+      : path.join(pkgDir, "src", "index.js");
+
+    if (fs.existsSync(entry)) {
+      aliases[name] = entry;
     }
-
-    const modulesDir = path.join(packagesRoot, "modules");
-    if (fs.existsSync(modulesDir)) {
-      fs.readdirSync(modulesDir).forEach((pkg) => {
-        const pkgDir = path.join(modulesDir, pkg);
-        if (fs.statSync(pkgDir).isDirectory()) register(pkgDir);
-      });
-    }
-
-    register(path.join(packagesRoot, "libraries"));
-    register(path.join(packagesRoot, "react-components"));
-
-    return aliases;
   }
+
+  /**
+   * Scan all feature modules under packages/modules/*.
+   * Each subdirectory is treated as a potential workspace package.
+   */
+  const modulesDir = path.join(packagesRoot, "modules");
+  if (fs.existsSync(modulesDir)) {
+    fs.readdirSync(modulesDir)
+      .map(pkg => path.join(modulesDir, pkg))
+      .filter(pkgDir => fs.statSync(pkgDir).isDirectory())
+      .forEach(register);
+  }
+
+  /**
+   * Shared infrastructure packages — libraries and react-components.
+   * These follow the exact same workspace rule as feature modules.
+   * Add to workspaces[] to develop locally, remove to consume from NPM.
+   */
+  const sharedPackages = [
+    path.join(packagesRoot, "libraries"),
+    path.join(packagesRoot, "react-components"),
+  ];
+
+  sharedPackages.filter(pkgDir => fs.existsSync(pkgDir)).forEach(register);
+
+  return aliases;
+}
+
 
   const moduleAliases = getAliases();
 
@@ -273,7 +304,7 @@ export default defineConfig(({ mode }) => {
         usePolling: true,
         interval: 300,
         include: [
-          path.resolve(__dirname, "../packages/**"),
+          path.resolve(__dirname, "micro-ui-internals/packages/**"),
           path.resolve(__dirname, "src/**"),
         ],
         awaitWriteFinish: {

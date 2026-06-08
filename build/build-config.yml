@@ -801,7 +801,7 @@ config:
   - name: builds/upyog/frontend/micro-ui/workbench-ui
     build:
       - work-dir: frontend/workbench-ui/
-        dockerfile: frontend/workbench-ui/web/workbench/Dockerfile
+        dockerfile: frontend/workbench-ui/web/docker/Dockerfile
         image-name: workbench-ui
   - name: builds/upyog/frontend/micro-ui/tqm-ui
     build:
@@ -1026,3 +1026,9 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/ndc-calculator/src/main/resources/db"
         image-name: "ndc-calculator-db"
+        
+  - name: "builds/upyog/upyog-voice-bot"
+    build:
+      - work-dir: "upyog-voice-bot"
+        image-name: "upyog-voice-bot"
+        dockerfile: "upyog-voice-bot/Dockerfile"

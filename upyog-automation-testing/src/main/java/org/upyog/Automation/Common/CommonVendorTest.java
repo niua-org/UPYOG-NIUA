@@ -1,5 +1,7 @@
 package org.upyog.Automation.Common;
 
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,9 +9,11 @@ import org.springframework.stereotype.Component;
 import org.upyog.Automation.Base.BaseTest;
 import org.upyog.Automation.Modules.CnD.CndVendor;
 import org.upyog.Automation.Modules.RequestService.MobileToiletVendor;
-import org.upyog.Automation.Modules.RequestService.TreePruningVerifier;
 import org.upyog.Automation.Modules.RequestService.WaterTankerVendor;
+import org.upyog.Automation.Utils.DriverFactory;
 import org.upyog.Automation.Utils.ModuleWrapper;
+
+import java.time.Duration;
 
 @Component
 public class CommonVendorTest extends BaseTest {
@@ -25,15 +29,30 @@ public class CommonVendorTest extends BaseTest {
     @Autowired
     private CndVendor cndVendor;
 
-    public void runVendorTest(String baseUrl, String moduleName, String mobileNumber, String otp, String cityName, String applicationNumber) throws InterruptedException{
+    private void vendorSetUp(String baseUrl) {
+
+        driver = DriverFactory.createChromeDriver();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        js = (JavascriptExecutor) driver;
+
+        driver.get(baseUrl);
+    }
+
+    public void runVendorTest(
+            String baseUrl,
+            String moduleName,
+            String mobileNumber,
+            String otp,
+            String cityName,
+            String applicationNumber) {
+
+        vendorSetUp(baseUrl);
+
         logger.info("Starting {} vendor test", moduleName);
 
         try {
             switch (moduleName.toUpperCase()) {
 
-//                case "WATER_TANKER_VENDOR":
-//                    waterTankerVendor.waterTankerVCreate(baseUrl, moduleName, mobileNumber, otp, cityName, applicationNumber);
-//                    break;
 
                 case "WATER_TANKER_VENDOR":
 
@@ -48,9 +67,6 @@ public class CommonVendorTest extends BaseTest {
 
                     break;
 
-//                case "MOBILE_TOILET_VENDOR":
-//                    mobileToiletVendor.mobileToiletVCreate(baseUrl, moduleName, mobileNumber, otp, cityName, applicationNumber);
-//                    break;
 
                 case "MOBILE_TOILET_VENDOR":
 
@@ -65,9 +81,7 @@ public class CommonVendorTest extends BaseTest {
 
                     break;
 
-//                case "CONSTRUCTION_AND_DEMOLITION":
-//                    cndVendor.cndVReg(baseUrl, moduleName, mobileNumber, otp, cityName, applicationNumber);
-//                    break;
+
                 case "CONSTRUCTION_AND_DEMOLITION_VENDOR":
 
                     ModuleWrapper.execute(

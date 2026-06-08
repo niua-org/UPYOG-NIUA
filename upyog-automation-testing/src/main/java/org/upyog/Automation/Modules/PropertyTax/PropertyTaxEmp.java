@@ -19,11 +19,11 @@ public class PropertyTaxEmp {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/propertytax/property_tax_employee_module.json"
+                    "test-config/propertyTax/property_tax_employee_module.json"
             );
 
         }catch(Exception e){

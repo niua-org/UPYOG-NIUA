@@ -19,11 +19,11 @@ public class TradeLicenseEmp {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/tradelicense/trade_license_employee_module.json"
+                    "test-config/tradeLicense/trade_license_employee_module.json"
             );
 
         }catch(Exception e){

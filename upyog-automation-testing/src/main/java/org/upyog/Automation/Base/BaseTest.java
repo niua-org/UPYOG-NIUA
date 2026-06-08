@@ -6,10 +6,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.upyog.Automation.Utils.*;
 
+
 import java.time.Duration;
 
 public class BaseTest {
-    private static final Logger logger = LoggerFactory.getLogger(BaseTest.class);
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(BaseTest.class);
 
     protected WebDriver driver;
     protected WebDriverWait wait;
@@ -22,28 +25,55 @@ public class BaseTest {
         js = (JavascriptExecutor) driver;
 
         String baseUrl =
-                ConfigReader.get("citizen.base.url");
+                WorkflowDataStore.get("selected.url");
 
-        logger.info(
-                "LOGIN URL = {}",
-                baseUrl
-        );
+        String mobile =
+                WorkflowDataStore.get("selected.mobile");
 
-        // AUTO LOGIN
+        String otp =
+                WorkflowDataStore.get("selected.otp");
+
+        String city =
+                WorkflowDataStore.get("selected.city");
+
+        // Fallback only if HTML didn't send values
+        if (baseUrl == null)
+            baseUrl = ConfigReader.get("citizen.base.url");
+
+        if (mobile == null)
+            mobile = ConfigReader.get("user.mobile");
+
+        if (otp == null)
+            otp = ConfigReader.get("user.otp");
+
+        if (city == null)
+            city = ConfigReader.get("city.name");
+
+        logger.info("LOGIN URL = {}", baseUrl);
+        logger.info("MOBILE = {}", mobile);
+        logger.info("CITY = {}", city);
+
         LoginHelper.citizenLogin(
                 driver,
                 wait,
                 js,
                 baseUrl,
-                ConfigReader.get("user.mobile"),
-                ConfigReader.get("user.otp"),
-                ConfigReader.get("city.name")
+                mobile,
+                otp,
+                city
         );
+        logger.info("HTML selected.url = {}",
+                WorkflowDataStore.get("selected.url"));
     }
 
-    public void tearDown() {
+    public void tearDown() throws InterruptedException {
+        Thread.sleep(15000);
         if (driver != null) {
             driver.quit();
         }
+    }
+
+    public WebDriver getDriver() {
+        return driver;
     }
 }

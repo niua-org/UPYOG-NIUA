@@ -2,6 +2,7 @@ package org.upyog.Automation.engine;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
 import org.upyog.Automation.model.TestModule;
 import org.upyog.Automation.Utils.JsonConfigLoader;
@@ -62,12 +63,15 @@ public class TestEngine {
         logger.info("========================================");
 
         // Navigate to base URL if specified
-        String baseUrl = module.getBaseUrl();
-        if (baseUrl != null && !baseUrl.isEmpty() && !baseUrl.contains("${")) {
+        String baseUrl = WorkflowDataStore.get("selected.url");
+        String currentUrl = driver.getCurrentUrl();
+
+        if (currentUrl == null || currentUrl.contains("login")) {
             driver.get(baseUrl);
             logger.info("Navigated to base URL: {}", baseUrl);
+        } else {
+            logger.info("Already logged in, skipping navigation");
         }
-
         List<TestInstruction> instructions = module.getInstructions();
         int totalSteps = instructions.size();
         int passedSteps = 0;

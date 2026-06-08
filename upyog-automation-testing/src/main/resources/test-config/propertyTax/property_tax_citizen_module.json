@@ -3,66 +3,11 @@
   "description": "Property Tax citizen registration workflow",
   "baseUrl": "${selected.url}",
   "instructions":[
-    {
-      "stepName":"Enter Mobile Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"mobileNumber",
-      "action":"TYPE",
-      "inputValue": "${selected.mobile}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName":"Accept Terms",
-      "locatorStrategy":"CSS",
-      "locatorValue":"input[type='checkbox'].form-field",
-      "action":"CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName":"Click Next",
-      "locatorStrategy":"XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action":"CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
-    {
-      "stepName": "Enter OTP",
-      "locatorStrategy": "NAME",
-      "locatorValue": "input.input-otp",
-      "action": "TYPE_OTP",
-      "inputValue": "${selected.otp}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Submit OTP",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@type='submit']//header[text()='Next']/..",
-      "action": "CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 3000
-    },
-    {
-      "stepName":"Select City",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.radio-wrap.reverse-radio-selection-wrapper div",
-      "action":"SELECT_RADIO_BY_TEXT",
-      "inputValue": "${selected.city}",
-      "dynamicSleep": 1500
-    },
-    {
-      "stepName":"Continue",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Continue')]",
-      "action":"CLICK_JS",
-      "inputValue": null,
-      "dynamicSleep": 2000
-    },
+
     {
       "stepName":"Open Property Tax Module",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//a[@href='${module.propertTax.url}']",
+      "locatorValue":"//a[@href='/upyog-ui/citizen/pt-home']",
       "action":"CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 1000
@@ -233,33 +178,35 @@
     {
       "stepName":"Pincode",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//input[contains(@name,'pincode')]",
-      "action":"TYPE",
-      "inputValue":"143001",
-      "dynamicSleep": 1000
+      "locatorValue":"//input[contains(@placeholder,'Pincode')]",
+      "action":"OPTIONAL_TYPE",
+      "inputValue":"110001",
+      "dynamicSleep":1000
     },
     {
       "stepName":"Pincode Next",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Next')]",
-      "action":"CLICK_JS"
-    },
-
-
-
-
-    {
-      "stepName":"City Radio",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"(//input[@type='radio'])[1]",
-      "action":"CLICK_JS"
+      "action":"OPTIONAL_CLICK_JS",
+      "dynamicSleep":1500
     },
 
     {
-      "stepName":"Locality Radio",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"(//input[@type='radio'])[2]",
-      "action":"CLICK_JS"
+      "stepName":"City",
+      "action":"OPTIONAL_SELECT_DROPDOWN_BY_INDEX||OPTIONAL_CLICK_JS",
+      "locatorStrategy":"CSS||XPATH",
+      "locatorValue":"div.select svg||//label[contains(.,'City A')]",
+      "inputValue":"0:4||",
+      "dynamicSleep":1500
+    },
+
+    {
+      "stepName":"Locality",
+      "action":"OPTIONAL_SELECT_DROPDOWN_BY_INDEX||OPTIONAL_CLICK_JS",
+      "locatorStrategy":"CSS||XPATH",
+      "locatorValue":"div.select svg.cp||//label[contains(.,'YourLocalityName')]",
+      "inputValue":"1:1||",
+      "dynamicSleep":1500
     },
 
     {
@@ -269,10 +216,6 @@
       "action":"CLICK_JS",
       "dynamicSleep":1000
     },
-
-
-
-
     {
       "stepName":"Street Name",
       "locatorStrategy":"NAME",
@@ -337,7 +280,7 @@
       "locatorValue":"(//input[@type='file'])[1]",
       "action":"UPLOAD_FILE",
       "inputValue":"${document.common.proof}",
-      "dynamicSleep": 1000
+      "dynamicSleep": 2000
     },
 
     {
@@ -389,7 +332,7 @@
       "locatorStrategy":"NAME",
       "locatorValue":"mobileNumber",
       "action":"TYPE",
-      "inputValue":"9999999999",
+      "inputValue":"7906413996",
       "dynamicSleep":1000
     },
 
@@ -512,7 +455,14 @@
       "locatorValue":"//button[contains(.,'Proceed')]",
       "action":"CLICK_JS",
       "dynamicSleep":1000
+    },
+    {
+      "stepName": "Capture Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//div[contains(@class,'application-number')]",
+      "action": "CAPTURE_TEXT",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 500
     }
-
   ]
 }

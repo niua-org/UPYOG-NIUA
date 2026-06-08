@@ -55,7 +55,7 @@ export const filterFunctions = {
     return { searchFilters, workflowFilters };
   },
   PTR: (filtersArg) => {
-    console.log("filer",filtersArg )
+
     let { uuid } = Digit.UserService.getUser()?.info || {};
 
     const searchFilters = {};
@@ -158,14 +158,14 @@ export const filterFunctions = {
   },
 
   ASSET: (filtersArg) => {
-    console.log("filtersArg",filtersArg);
+
     let { uuid } = Digit.UserService.getUser()?.info || {};
 
     const searchFilters = {};
     const workflowFilters = {};
 
     const { applicationNo, mobileNumber,assetclassification, assetParentCategory, limit, offset, sortBy, sortOrder, total, applicationStatus, services } = filtersArg || {};
-    console.log("filtersArg",applicationNo,assetclassification,assetParentCategory);
+
     if (filtersArg?.applicationNo) {
       searchFilters.applicationNo = filtersArg?.applicationNo;
     }
@@ -223,7 +223,7 @@ export const filterFunctions = {
 
   
   EST: (filtersArg) => {
-    console.log("filtersArg",filtersArg);
+
     let { uuid } = Digit.UserService.getUser()?.info || {};
 
     const searchFilters = {};
@@ -276,7 +276,7 @@ export const filterFunctions = {
   },
   
   EW: (filtersArg) => {
-    console.log("filer",filtersArg )
+
     let { uuid } = Digit.UserService.getUser()?.info || {};
 
     const searchFilters = {};
@@ -328,7 +328,7 @@ export const filterFunctions = {
   },
   
   CHB: (filtersArg) => {
-    console.log("filer",filtersArg )
+
     let { uuid } = Digit.UserService.getUser()?.info || {};
 
     const searchFilters = {};

@@ -250,6 +250,23 @@ Change `REACT_APP_PROXY_API` in `web/.env` to switch environments.
 
 ---
 
+## Local Docker Run
+
+If you want to run your docker locally to see of your jenkins build will get success or not then first 
+open your Docker Desktop App and then run below command in **upyog-ui** directory.
+
+docker build \
+  --progress=plain \
+  --no-cache \
+  -f web/docker/Dockerfile \
+  --build-arg WORK_DIR=. \
+  -t upyog-ui-test .
+
+
+It will start building your Code with the logs same as jenkins logs
+
+---
+
 ## License
 
 UPYOG Source Code is open source under [UPYOG CODE, COPYRIGHT AND CONTRIBUTION LICENSE TERMS](https://upyog.niua.org/employee/Upyog%20Code%20and%20Copyright%20License_v1.pdf)

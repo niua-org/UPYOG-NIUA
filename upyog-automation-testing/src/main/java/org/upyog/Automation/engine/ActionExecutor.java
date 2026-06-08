@@ -38,6 +38,19 @@ import java.util.List;
  */
 public class ActionExecutor {
 
+    private String resolveByEnv(String value) {
+        if (value == null || !value.contains("||")) {
+            return value;
+        }
+
+        String env = WorkflowDataStore.get("selected.env");
+        String[] parts = value.split("\\|\\|");
+
+        return "NIUATT".equalsIgnoreCase(env)
+                ? parts[0]
+                : parts[1];
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(ActionExecutor.class);
 
     private final WebDriver driver;
@@ -66,8 +79,17 @@ public class ActionExecutor {
      * @throws Exception if action execution fails
      */
     public void execute(TestInstruction instruction) throws Exception {
-        String action = instruction.getAction();
+
+        String action = resolveByEnv(instruction.getAction());
+        String locatorValue = resolveByEnv(instruction.getLocatorValue());
+        String inputValue = resolveByEnv(instruction.getInputValue());
+
+        instruction.setAction(action);
+        instruction.setLocatorValue(locatorValue);
+        instruction.setInputValue(inputValue);
+
         String stepName = instruction.getStepName();
+
 
         logger.info(
                 "Executing Step: {} | Action: {} | Locator: {}",
@@ -165,6 +187,35 @@ public class ActionExecutor {
                     executeSetDateJs(instruction);
                     break;
 
+                case "TYPE_BY_LABEL":
+                    executeTypeByLabel(instruction);
+                    break;
+
+                case "OPTIONAL_CLICK_JS":
+                    try {
+                        executeJsClick(instruction);
+                    } catch (Exception e) {
+                        logger.info("Optional step skipped");
+                    }
+                    break;
+
+                case "OPTIONAL_SELECT_DROPDOWN_BY_INDEX":
+                    try {
+                        executeDropdownSelectionByIndex(instruction);
+                        logger.info("Optional dropdown executed");
+                    } catch (Exception e) {
+                        logger.info("Optional dropdown step skipped");
+                    }
+                    break;
+                case "OPTIONAL_TYPE":
+                    try {
+                        executeType(instruction);
+                        logger.info("Optional type executed");
+                    } catch (Exception e) {
+                        logger.info("Optional type skipped");
+                    }
+                    break;
+
 
                 default:
                     throw new IllegalArgumentException(
@@ -251,13 +302,48 @@ public class ActionExecutor {
      * Useful when standard click is intercepted by modals, loading spinners, etc.
      */
     private void executeJsClick(TestInstruction instruction) {
-        By locator = locatorResolver.resolveLocator(instruction);
-        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
 
-        js.executeScript("arguments[0].scrollIntoView({block:'center'});", element);
+        String resolvedLocator =
+                resolveByEnv(instruction.getLocatorValue());
+
+        By locator;
+
+        switch (instruction.getLocatorStrategy().toUpperCase()) {
+            case "XPATH":
+                locator = By.xpath(resolvedLocator);
+                break;
+
+            case "CSS":
+                locator = By.cssSelector(resolvedLocator);
+                break;
+
+            case "ID":
+                locator = By.id(resolvedLocator);
+                break;
+
+            case "NAME":
+                locator = By.name(resolvedLocator);
+                break;
+
+            default:
+                throw new RuntimeException(
+                        "Unsupported locator strategy: "
+                                + instruction.getLocatorStrategy()
+                );
+        }
+
+        WebElement element = wait.until(
+                ExpectedConditions.presenceOfElementLocated(locator)
+        );
+
+        js.executeScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                element
+        );
+
         js.executeScript("arguments[0].click();", element);
 
-        logger.debug("JS-clicked element");
+        logger.info("Resolved locator used: {}", resolvedLocator);
     }
 
     /**
@@ -348,36 +434,73 @@ public class ActionExecutor {
      * UPLOAD_FILE action: Handles file input elements.
      * Makes hidden file inputs visible before sending file path.
      */
-    private void executeFileUpload(TestInstruction instruction) throws InterruptedException {
+    private void executeFileUpload(TestInstruction instruction)
+            throws InterruptedException {
+
         By locator = locatorResolver.resolveLocator(instruction);
+
         String filePath = instruction.getInputValue();
 
-        // Validate file exists
-        File file = new File(filePath);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("Upload file not found: " + filePath);
+        // Load file from resources
+        java.net.URL resource =
+                getClass()
+                        .getClassLoader()
+                        .getResource(filePath);
+
+        if (resource == null) {
+
+            throw new IllegalArgumentException(
+                    "Upload file not found in resources: "
+                            + filePath
+            );
         }
 
-        List<WebElement> fileInputs = wait.until(
-                ExpectedConditions.presenceOfAllElementsLocatedBy(locator)
-        );
+        File file;
+
+        try {
+
+            file = new File(resource.toURI());
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Unable to load upload file: "
+                            + filePath,
+                    e
+            );
+        }
+
+        List<WebElement> fileInputs =
+                wait.until(
+                        ExpectedConditions
+                                .presenceOfAllElementsLocatedBy(locator)
+                );
 
         if (fileInputs.isEmpty()) {
-            throw new NoSuchElementException("No file input found with locator: " + locator);
+
+            throw new NoSuchElementException(
+                    "No file input found with locator: "
+                            + locator
+            );
         }
 
-        // Use first file input by default
         WebElement fileInput = fileInputs.get(0);
 
-        // Make hidden file input visible for Selenium interaction
+        // Make hidden input visible
         js.executeScript(
-                "arguments[0].style.opacity='1'; arguments[0].style.display='block';",
+                "arguments[0].style.opacity='1';" +
+                        "arguments[0].style.display='block';",
                 fileInput
         );
+
         Thread.sleep(300);
 
         fileInput.sendKeys(file.getAbsolutePath());
-        logger.debug("Uploaded file: {}", filePath);
+
+        logger.debug(
+                "Uploaded file: {}",
+                file.getAbsolutePath()
+        );
     }
 
     /**
@@ -602,40 +725,24 @@ public class ActionExecutor {
             TestInstruction instruction)
             throws InterruptedException {
 
-        String[] indexes =
-                instruction.getInputValue()
-                        .split(":");
+        String[] indexes = instruction.getInputValue().split(":");
 
-        int dropdownIndex =
-                Integer.parseInt(indexes[0]);
+        int dropdownIndex = Integer.parseInt(indexes[0]);
+        int optionIndex = Integer.parseInt(indexes[1]);
 
-        int optionIndex =
-                Integer.parseInt(indexes[1]);
-
-        // Wait for dropdown inputs to appear
         wait.until(
-                ExpectedConditions
-                        .visibilityOfElementLocated(
-                                By.cssSelector(
-                                        instruction.getLocatorValue()
-                                )
-                        )
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.cssSelector(instruction.getLocatorValue())
+                )
         );
 
-        List<WebElement> dropdownInputs =
-                driver.findElements(
-                        By.cssSelector(
-                                instruction.getLocatorValue()
-                        )
-                );
-
-        logger.info(
-                "Found {} dropdown(s)",
-                dropdownInputs.size()
+        List<WebElement> dropdownInputs = driver.findElements(
+                By.cssSelector(instruction.getLocatorValue())
         );
+
+        logger.info("Found {} dropdown(s)", dropdownInputs.size());
 
         if (dropdownInputs.isEmpty()) {
-
             throw new RuntimeException(
                     "No dropdowns found with locator: "
                             + instruction.getLocatorValue()
@@ -643,19 +750,14 @@ public class ActionExecutor {
         }
 
         if (dropdownIndex >= dropdownInputs.size()) {
-
             throw new RuntimeException(
                     "Dropdown index out of range: "
                             + dropdownIndex
             );
         }
 
-        WebElement dropdown =
-                dropdownInputs.get(
-                        dropdownIndex
-                );
+        WebElement dropdown = dropdownInputs.get(dropdownIndex);
 
-        // Scroll into view
         js.executeScript(
                 "arguments[0].scrollIntoView({block:'center'});",
                 dropdown
@@ -663,53 +765,42 @@ public class ActionExecutor {
 
         Thread.sleep(300);
 
-        // React-safe open dropdown
         js.executeScript(
                 "arguments[0].focus();" +
-                        "arguments[0].dispatchEvent(" +
-                        "new MouseEvent('mousedown', { bubbles:true })" +
-                        ");" +
-                        "arguments[0].dispatchEvent(" +
-                        "new MouseEvent('click', { bubbles:true })" +
-                        ");",
+                        "arguments[0].dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));" +
+                        "arguments[0].dispatchEvent(new MouseEvent('click',{bubbles:true}));",
                 dropdown
         );
 
-        // Wait for options
-        WebElement optionsContainer =
-                wait.until(
-                        ExpectedConditions
-                                .visibilityOfElementLocated(
-                                        By.cssSelector(
-                                                "div.options-card"
-                                        )
-                                )
-                );
+        Thread.sleep(1000);
 
-        List<WebElement> options =
-                optionsContainer.findElements(
-                        By.cssSelector(
-                                "div.profile-dropdown--item"
-                        )
-                );
-
-        logger.info(
-                "Found {} option(s)",
-                options.size()
+        List<WebElement> options = driver.findElements(
+                By.cssSelector("div.profile-dropdown--item, div[role='option'], .employee-select-option")
         );
 
-        if (optionIndex >= options.size()) {
+        if (options.isEmpty()) {
+            logger.info("Primary dropdown selector failed, trying fallback...");
+            options = driver.findElements(By.cssSelector("li"));
+        }
 
+        options = options.stream()
+                .filter(WebElement::isDisplayed)
+                .filter(e -> !e.getText().trim().isEmpty())
+                .toList();
+
+        logger.info("Filtered {} option(s)", options.size());
+
+        for (int i = 0; i < options.size(); i++) {
+            logger.info("Option {} : {}", i, options.get(i).getText());
+        }
+
+        if (optionIndex >= options.size()) {
             throw new RuntimeException(
-                    "Option index out of range: "
-                            + optionIndex
+                    "Option index out of range: " + optionIndex
             );
         }
 
-        WebElement option =
-                options.get(
-                        optionIndex
-                );
+        WebElement option = options.get(optionIndex);
 
         js.executeScript(
                 "arguments[0].scrollIntoView({block:'center'});",
@@ -718,14 +809,9 @@ public class ActionExecutor {
 
         Thread.sleep(200);
 
-        js.executeScript(
-                "arguments[0].click();",
-                option
-        );
+        js.executeScript("arguments[0].click();", option);
 
-        Thread.sleep(
-                instruction.getDynamicSleep()
-        );
+        Thread.sleep(instruction.getDynamicSleep());
 
         logger.info(
                 "Selected dropdown {} option {}",
@@ -828,6 +914,7 @@ public class ActionExecutor {
 
         // ADD THIS
         TestDataStore.PERMIT_NUMBER = capturedValue;
+        TestDataStore.PERMIT_DATE = capturedValue;
 
         logger.info(
                 "Captured [{}] = {}",
@@ -837,6 +924,11 @@ public class ActionExecutor {
 
         Thread.sleep(
                 instruction.getDynamicSleep()
+
+        );
+        logger.info(
+                "WorkflowDataStore APPLICATION_NO = {}",
+                WorkflowDataStore.get("APPLICATION_NO")
         );
     }
 
@@ -1149,5 +1241,25 @@ public class ActionExecutor {
         );
 
         logger.info("React date set successfully: {}", dateValue);
+    }
+
+    private void executeTypeByLabel(TestInstruction instruction) {
+
+        WebElement input = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("//*[contains(normalize-space(.),'" +
+                                instruction.getLocatorValue() +
+                                "')]/following::input[1]")
+                )
+        );
+
+        js.executeScript("arguments[0].scrollIntoView(true);", input);
+
+        input.clear();
+        input.sendKeys(instruction.getInputValue());
+
+        logger.debug("Typed '{}' into label '{}'",
+                instruction.getInputValue(),
+                instruction.getLocatorValue());
     }
 }
