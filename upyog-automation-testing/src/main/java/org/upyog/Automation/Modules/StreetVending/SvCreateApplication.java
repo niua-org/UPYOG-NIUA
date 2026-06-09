@@ -19,11 +19,11 @@ public class SvCreateApplication {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/streetvending/street_vending_citizen_module.json"
+                    "test-config/streetVending/street_vending_citizen_module.json"
             );
 
         }catch(Exception e){

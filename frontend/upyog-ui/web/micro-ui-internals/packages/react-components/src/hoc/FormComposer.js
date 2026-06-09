@@ -296,8 +296,8 @@ const FormComposer = (props) => {
                   </React.Fragment>
                 );
               return (
-                <Fragment>
-                  <LabelFieldPair key={index}>
+              <Fragment key={field?.populators?.name || field?.label || index}>
+                  <LabelFieldPair>
                     {!field.withoutLabel && (
                       <CardLabel style={{ color: field.isSectionText ? "#505A5F" : "", marginBottom: props.inline ? "8px" : "revert" }}>
                         {t(field.label)}

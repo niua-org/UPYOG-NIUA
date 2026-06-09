@@ -175,19 +175,20 @@ const Home = (props) => {
             </div>
             {code?.toUpperCase() === "ADS" && (
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between" }}>
-                {Advertisement.map((ad) => (
-                  <AdvertisementModuleCard
-                    imageSrc={ad.imageSrc}
-                    poleNo={ad.poleNo}
-                    light={ad.light}
-                    title={ad.title}
-                    location={ad.location}
-                    price={ad.price}
-                    path={`/upyog-ui/citizen/${code.toLowerCase()}/`}
-                    adType={ad.adtype}
-                    faceArea={ad.faceArea}
-                  />
-                ))}
+                {Advertisement.map((ad, index) => (
+  <AdvertisementModuleCard
+    key={ad?.poleNo || ad?.title || index}
+    imageSrc={ad.imageSrc}
+    poleNo={ad.poleNo}
+    light={ad.light}
+    title={ad.title}
+    location={ad.location}
+    price={ad.price}
+    path={`/upyog-ui/citizen/${code.toLowerCase()}/`}
+    adType={ad.adtype}
+    faceArea={ad.faceArea}
+  />
+))}
               </div>
             )}
             <StaticDynamicCard moduleCode={code?.toUpperCase()} />

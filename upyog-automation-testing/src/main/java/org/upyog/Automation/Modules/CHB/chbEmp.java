@@ -25,7 +25,7 @@ public class chbEmp {
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/chb/chb_employee_module.json"
+                    "test-config/chb/chb_employee_module.json"
             );
 
         } catch (Exception e) {

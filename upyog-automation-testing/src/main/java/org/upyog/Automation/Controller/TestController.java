@@ -77,7 +77,7 @@ public class TestController {
 
     @PostMapping("/vendor")
     public ResponseEntity<Map<String, String>> runVendorTest(@RequestBody VendorTestRequest request) {
-        String result = vendorTestService.runVendorSideTest(
+        String result = vendorTestService.runVendorTest(
                 request.getBaseUrl(),
                 request.getModuleName(),
                 request.getMobileNumber(),
@@ -117,7 +117,7 @@ public class TestController {
         public String getCityName() { return cityName; }
         public void setCityName(String cityName) { this.cityName = cityName; }
         public String getPermitNumber() { return permitNumber; }
-        public void setPermitNumber(String permitNumber){ this.permitNumber = permitNumber;}
+        public void setPermitNumber(String permitNumber) { this.permitNumber = permitNumber;}
     }
 
     public static class EmployeeTestRequest {

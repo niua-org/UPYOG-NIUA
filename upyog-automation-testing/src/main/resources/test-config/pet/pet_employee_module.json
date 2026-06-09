@@ -2,7 +2,7 @@
   "moduleName":"pet_employee_module",
   "description": "Pet Registration Employee flow",
 
-  "baseUrl": "${employee.base.url}",
+  "baseUrl": "${selected.url}",
 
   "instructions":[
 
@@ -12,14 +12,14 @@
       "locatorStrategy":"NAME",
       "locatorValue":"username",
       "action":"TYPE",
-      "inputValue":"${pet.login.username}"
+      "inputValue":"${selected.username}"
     },
     {
       "stepName":"Employee Password",
       "locatorStrategy":"NAME",
       "locatorValue":"password",
       "action":"TYPE",
-      "inputValue":"${pet.login.password}"
+      "inputValue":"${selected.password}"
     },
     {
       "stepName":"Select City",
@@ -47,7 +47,7 @@
       "locatorStrategy": "XPATH",
       "locatorValue": "(//input[@type='text'])[3]",
       "action": "TYPE",
-      "inputValue": "${pet.application.number}",
+      "inputValue": "${selected.applicationNumber}",
       "dynamicSleep": 1000
     },
     {
@@ -70,14 +70,16 @@
       "stepName":"Take Action Verify",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click VERIFY",
       "locatorStrategy":"XPATH",
       "locatorValue":"//div[contains(@class,'menu-wrap')]//p[normalize-space()='VERIFY']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -85,26 +87,30 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Automated verification comment."
+      "inputValue":"Automated verification comment.",
+      "dynamicSleep": 1000
     },
     {
       "stepName":"Click Verify Popup",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(@class,'selector-button-primary') and .//h2[normalize-space()='Verify']]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
     {
       "stepName":"Take Action Approve",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click APPROVE",
       "locatorStrategy":"XPATH",
       "locatorValue":"//div[contains(@class,'menu-wrap')]//p[normalize-space()='APPROVE']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
@@ -112,73 +118,46 @@
       "locatorStrategy":"NAME",
       "locatorValue":"comments",
       "action":"TYPE",
-      "inputValue":"Automated approval comment."
+      "inputValue":"Automated approval comment.",
+      "dynamicSleep": 1000
     },
     {
       "stepName":"Click Approve Popup",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(@class,'selector-button-primary') and .//h2[normalize-space()='Approve']]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
-
-
-
-
     {
       "stepName":"Take Action Pay",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Click PAY",
       "locatorStrategy":"XPATH",
       "locatorValue":"//div[contains(@class,'menu-wrap')]//p[normalize-space()='PAY']",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     },
-
-
-
-
     {
       "stepName":"Enter Payer Mobile",
       "locatorStrategy":"NAME",
       "locatorValue":"payerMobile",
       "action":"TYPE",
-      "inputValue":"9847584944"
+      "inputValue":"9999999999",
+      "dynamicSleep": 1000
     },
 
     {
       "stepName":"Collect Payment",
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'Collect Payment')]",
-      "action":"CLICK_JS"
-    },
-
-
-
-
-    {
-      "stepName":"Download Receipt 1",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.primary-label-btn.d-grid:nth-of-type(1) svg",
-      "action":"CLICK_JS"
-    },
-
-    {
-      "stepName":"Download Receipt 2",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.primary-label-btn.d-grid:nth-of-type(2) svg",
-      "action":"CLICK_JS"
-    },
-
-    {
-      "stepName":"Download Receipt 3",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.primary-label-btn.d-grid:nth-of-type(3) svg",
-      "action":"CLICK_JS"
+      "action":"CLICK_JS",
+      "dynamicSleep": 1000
     }
-
   ]
 }

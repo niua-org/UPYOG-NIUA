@@ -19,11 +19,11 @@ public class OBPASOcEmp {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/obpas/obpas_oc_employee.json"
+                    "test-config/obpas/obpas_oc_employee.json"
             );
 
         }catch(Exception e){

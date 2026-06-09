@@ -27,10 +27,30 @@ public class CitizenTestService {
                                      String otp,
                                      String cityName,
                                      String permitNumber) {
+
         WorkflowDataStore.put("citizen.mobile.number", mobileNumber);
+        WorkflowDataStore.put("selected.mobile", mobileNumber);
+
         WorkflowDataStore.put("test.otp", otp);
+        WorkflowDataStore.put("selected.otp", otp);
+
         WorkflowDataStore.put("test.city.name", cityName);
+        WorkflowDataStore.put("selected.city", cityName);
+
+        WorkflowDataStore.put("selected.permitNo", permitNumber);
+
+        logger.info("Permit stored: {}", permitNumber);
+
         WorkflowDataStore.put("base.url", baseUrl);
+        WorkflowDataStore.put("selected.url", baseUrl);
+        String env = baseUrl.contains("niuatt")
+                ? "NIUATT"
+                : "UPYOG";
+
+        WorkflowDataStore.put("selected.env", env);
+
+        logger.info("Selected ENV: {}", env);
+
 
         logger.info("Starting citizen test for modules: {}", moduleName);
 

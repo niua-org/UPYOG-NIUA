@@ -21,11 +21,11 @@ public class OBPASOcCreate {
             TestEngine engine =
                     new TestEngine(
                             driver,
-                            "src/main/resources/config/dev.properties"
+                            "config/dev.properties"
                     );
 
             engine.executeModule(
-                    "src/main/resources/test-config/obpas/obpas_oc_create.json"
+                    "test-config/obpas/obpas_oc_create.json"
             );
 
         }catch(Exception e){

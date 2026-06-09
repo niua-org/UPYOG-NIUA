@@ -187,17 +187,23 @@ const BPACitizenHomeScreen = ({ parentRoute }) => {
 
   const homeScreen = (
     <div className="mainContent">
-      {homeDetails.map((data) => {
-        return (
-          <div>
-            {data.name === "employeeCard" ? (
-              <EmployeeModuleCard {...data} />
-            ) : (
-              <CitizenHomeCard header={data.title} links={data.links} Icon={() => data.Icon} styles={data?.styles} />
-            )}
-          </div>
-        );
-      })}
+      {homeDetails.map((data, index) => {
+  return (
+    <div key={data?.name || data?.title || index}>
+      {data.name === "employeeCard" ? (
+        <EmployeeModuleCard {...data} />
+      ) : (
+        <CitizenHomeCard
+          header={data.title}
+          links={data.links}
+          Icon={() => data.Icon}
+          styles={data?.styles}
+        />
+      )}
+    </div>
+  );
+})}
+      
     </div>
   );
   sessionStorage.setItem("isPermitApplication", true);

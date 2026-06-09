@@ -2,7 +2,7 @@ import { Surveys } from "../../services/elements/Surveys";
 import { mutationTemplate } from "../../common/mutationTemplate";
 
 const useCreateSurveysDef = (filters, config) => {
-  console.log("useCreateSurveysDef");
+
   return mutationTemplate({ mutationFn: (filters) => Surveys.createSurvey(filters) });
 };
 
