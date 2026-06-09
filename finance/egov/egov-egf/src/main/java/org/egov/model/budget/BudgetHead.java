@@ -10,6 +10,28 @@ import org.egov.utils.BudgetAccountType;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.SafeHtml;
 
+
+/**
+ * BudgetHead entity class
+ *
+ * This entity represents the budget head master data in the financial system.
+ * Budget heads are the primary classification units for organizing and tracking
+ * budgetary allocations and expenditures. Each budget head represents a specific
+ * category of income or expenditure.
+ *
+ * Key Features:
+ * - Maintains unique code and name for each budget head
+ * - Supports both revenue and capital account types
+ * - Categorizes budget heads (e.g., Revenue Receipt, Revenue Expenditure, Capital Receipt, Capital Expenditure)
+ * - Supports scheme/program applicability
+ * - Maintains active/inactive status
+ * - Supports ordering for display purposes
+ * - Ensures uniqueness of budget head codes
+ *
+ * Table: EGF_BUDGETHEAD
+ * Sequence: SEQ_EGF_BUDGETHEAD
+ *
+ */
 @Entity
 @Table(name = "EGF_BUDGETHEAD")
 @SequenceGenerator(name = BudgetHead.SEQ_BUDGETHEAD, sequenceName = BudgetHead.SEQ_BUDGETHEAD, allocationSize = 1)

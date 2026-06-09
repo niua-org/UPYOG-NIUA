@@ -27,6 +27,25 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
+
+/**
+ * BudgetItemService provides business logic for BudgetItem entity operations.
+ * Handles budget item creation, validation, calculation, and complete budget form processing.
+ *
+ * Key Features:
+ * - Create, update, and validate budget items with comprehensive field validation
+ * - Calculate opening and closing balances based on revenue and expenditure items
+ * - Compute totals for revenue (RR, CR) and expenditure (RE, CE) budget types
+ * - Handle scheme-based budget validations for applicable budget heads
+ * - Process complete budget input forms with automatic balance calculations
+ * - Group and filter budget items by budget group, function, and financial year
+ * - Support for marking items as not applicable to exclude from calculations
+ * - Retrieve distinct functions that have associated budget items
+ * - Update existing budget items while handling new row insertions
+ *
+ * @see BudgetItem
+ * @see BudgetItemRepository
+ */
 @Service
 public class BudgetItemService {
 

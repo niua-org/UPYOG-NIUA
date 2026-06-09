@@ -15,6 +15,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
+/*
+ * REST controller providing AJAX endpoint for scheme search and autocomplete functionality.
+ * Used by budget module forms to enable scheme selection via name or code search.
+ * Returns JSON list of matching schemes for dropdown/autocomplete components.
+ */
+
 @Controller()
 @RequestMapping("/scheme")
 public class SchemeRestController {

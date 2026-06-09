@@ -1,3 +1,14 @@
+
+/*
+ * Function-wise Budget Input Helper
+ * Manages dynamic budget entry form with budget head and scheme autocomplete
+ * - Initializes budget head typeahead filtered by function with validation for duplicates
+ * - Handles scheme field visibility based on budget head program flag
+ * - Generates budget codes (format: FunctionCode-BudgetHeadCode) and state codes
+ * - Supports dynamic row add/delete with 80 row limit
+ * - Implements NA checkbox to disable row inputs for not applicable entries
+ */
+
 $(document).ready(function () {
     $.i18n.properties({
         name: 'message',
@@ -392,7 +403,7 @@ $(document).on('change', '.scheme-input', function () {
                 $(this).removeClass("is-invalid");
             }
         });
-}
+
 
 
 function initTypeaheadOnScheme() {

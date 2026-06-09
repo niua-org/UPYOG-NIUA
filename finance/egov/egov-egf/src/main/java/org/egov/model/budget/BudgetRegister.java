@@ -17,8 +17,33 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Represents a budget submission that groups multiple BudgetItems
- * and participates in workflow approval (like EgBillregister).
+ * BudgetRegister entity class
+ *
+ * This entity represents the budget register which acts as a container/document
+ * for grouping multiple budget items together for approval workflow. It serves
+ * as the main entry point for budget creation and approval process in the system.
+ *
+ * Key Features:
+ * - Generates unique budget register number for tracking
+ * - Groups multiple budget items for batch processing
+ * - Supports workflow-based approval process through StateAware
+ * - Links current and target financial years
+ * - Maintains creation date and status tracking
+ * - Cascade operations to associated budget items
+ *
+ * Budget Register Workflow:
+ * 1. Created with a unique register number
+ * 2. Budget items are added to the register
+ * 3. Submitted for approval through workflow
+ * 4. Status changes as it moves through approval hierarchy
+ * 5. Finally approved/rejected by authorized personnel
+ *
+ * Relationship:
+ * - One BudgetRegister can contain many BudgetItems (One-to-Many)
+ * - Extends StateAware for workflow management
+ *
+ * Table: EG_BUDGETREGISTER
+ * Sequence: SEQ_EG_BUDGETREGISTER
  */
 @Entity
 @Table(name = "EG_BUDGETREGISTER")

@@ -31,6 +31,62 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
+
+/**
+ * BudgetRegisterController manages the complete lifecycle of budget register workflow.
+ *
+ * Primary Responsibilities:
+ * - Budget register creation with automatic naming and numbering
+ * - Workflow initiation and management (forward, approve, reject, revert, cancel)
+ * - Budget register viewing and searching
+ * - Workflow state tracking and history display
+ * - Role-based access control for budget operations
+ * - Financial year validation for budget creation
+ *
+ * Request Mappings:
+ * - GET/POST /budget/register/new - Display new budget register creation form
+ * - POST /budget/register/create - Create and initiate workflow for new budget register
+ * - GET/POST /budget/register/view - List all budget registers with search filters
+ * - GET/POST /budget/register/workflow/view/{budgetRegisterNumber} - View budget register workflow details
+ * - GET/POST /budget/register/workflow/form/{id} - Display workflow action form for assigned users
+ * - POST /budget/register/workflow/update - Process workflow transitions (forward, approve, reject, etc.)
+ *
+ * Key Features:
+ * - Automatic budget register naming: Budget-{NextFYRange} format
+ * - Automatic budget register number generation: BR-{FYRange}-{Sequence}
+ * - Duplicate prevention: Only one active budget register per financial year combination
+ * - Designation-based creation access: FMO, AO roles allowed to create
+ * - Workflow state management: NEW, FORWARDED, APPROVED, REJECTED, CANCELLED, REVERTED
+ * - Workflow history tracking with audit trail
+ * - Role-based workflow actions based on current assignee position
+ *
+ * Business Rules:
+ * - Budget register created for current FY and next FY pair
+ * - Cannot create duplicate budget register for same FY combination unless previous is rejected/cancelled
+ * - Only designated roles (FMO, AO) can create budget registers
+ * - Workflow actions restricted to current assignee position
+ * - Reverted budgets can be recreated by authorized users
+ *
+ * Dependencies:
+ * - BudgetRegisterWorkflowService: Core business logic and workflow operations
+ * - CFinancialYearService: Financial year data retrieval and validation
+ * - MicroserviceUtils: Employee and assignment data from microservices
+ * - SecurityUtils: Current user authentication and authorization
+ * - FinancialUtils: Workflow history formatting
+ *
+ * View Resolution:
+ * - budgetheader-new: Budget register creation form
+ * - budgetregister-view: Budget register listing page
+ * - budgetregister-workflow: Budget register workflow view (read-only)
+ * - budgetregister-workflow-form: Budget register workflow action form
+ * - budgetregister-error: Error page for financial year validation failures
+ *
+ * Security:
+ * - @SafeHtml validation on path variables and request parameters
+ * - User authentication through SecurityUtils
+ * - Position-based workflow access control
+ * - Designation-based creation authorization
+ */
 @Controller
 @RequestMapping("/budget/register")
 public class BudgetRegisterController extends GenericWorkFlowController {

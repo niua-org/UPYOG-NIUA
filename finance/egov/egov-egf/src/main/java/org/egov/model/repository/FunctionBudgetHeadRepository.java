@@ -10,6 +10,20 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+
+/**
+ * FunctionBudgetHeadRepository provides data access operations for FunctionBudgetHead entity.
+ * Manages the mapping between functions (departments) and budget heads.
+ *
+ * Key Features:
+ * - Find all budget head mappings for a specific function/department
+ * - Retrieve mappings with ID greater than specified value (for pagination/incremental loading)
+ * - Search distinct functions that have budget head mappings by function name or code
+ * - Custom JPQL query for case-insensitive function search across mapped budget heads
+ *
+ * @see FunctionBudgetHead
+ * @see JpaRepository
+ */
 @Repository
 public interface FunctionBudgetHeadRepository extends JpaRepository<FunctionBudgetHead, Long> {
 

@@ -17,6 +17,35 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
+
+
+/**
+ * BudgetItem entity class
+ *
+ * This entity represents individual budget line items in the financial system.
+ * Each budget item captures the budget estimates and actuals for a specific
+ * combination of function, budget head, and financial year. It maintains both
+ * current and next year estimates along with actual expenditure data.
+ *
+ * Key Features:
+ * - Links budget heads with functions (departments) and financial years
+ * - Captures current year estimate, actual, and revised estimate
+ * - Captures next year estimate for budget planning
+ * - Supports scheme-based budgeting
+ * - Groups budget items using budget groups
+ * - Generates unique budget codes based on function and budget head
+ * - Maintains association with budget register for workflow
+ * - Provides safe getters to handle null values
+ *
+ * Budget Item Lifecycle:
+ * 1. Created for a specific financial year (nextEstimate)
+ * 2. Tracks current financial year data (currentEstimate, currentActual, currentRevisedEstimate)
+ * 3. Associated with budget register for approval workflow
+ *
+ * Table: egf_budgetitem
+ * Sequence: seq_egf_budgetitem
+ *
+ */
 @Entity
 @Table(name = BudgetItem.TABLE_NAME)
 @Unique(id = "id", tableName = BudgetItem.TABLE_NAME, enableDfltMsg = true)

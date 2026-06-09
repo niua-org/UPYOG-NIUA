@@ -82,6 +82,14 @@ public class SchemeService extends PersistenceService<Scheme, Integer> {
         return query.list();
     }
 
+
+    /**
+     * Retrieves all active schemes that have a state code assigned.
+     * Used by BudgetItemController for scheme selection in budget item operations.
+     * Filters schemes to only include those with state-level code mappings.
+     *
+     * @return List of active Scheme entities with non-null state codes
+     */
     public List<Scheme> getBySchemeCode() {
         final Query query = getSession().createQuery(" from Scheme where isactive = true and stateCode is not null");
         return query.list();

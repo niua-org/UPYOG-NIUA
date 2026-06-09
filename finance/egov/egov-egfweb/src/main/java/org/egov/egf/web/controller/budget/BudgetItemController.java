@@ -41,6 +41,22 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+
+
+/**
+ * Controller for managing budget item operations - create, view, edit, and complete budget views.
+ * Handles function-wise budget entry with validation for opening/closing balances and budget items.
+ * Supports multi-step workflow: select function → enter budget items → view/edit → complete budget view.
+ * Groups budget items by account type (Revenue/Capital) and category for organized display.
+ * Integrates with BudgetRegister workflow to ensure budget data is linked to approved budget registers.
+ * Validates financial years, functions, schemes, and prevents duplicate budget entries per function.
+ * Computes budget totals (estimates, actuals, revised) for revenue and capital budgets.
+ * Enforces role-based access (FMO, AO designations) for budget creation and editing.
+ * Auto-generates budget codes using function, financial year, and budget head metadata.
+ * Provides comprehensive views: item-level, function-wise, and consolidated complete budget summaries.
+ */
+
+
 @Controller
 @RequestMapping("/budget")
 public class BudgetItemController {

@@ -30,6 +30,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * BudgetRegisterWorkflowService manages BudgetRegister entity workflow operations.
+ * Handles budget register creation, workflow transitions, and approval process.
+ *
+ * Key Features:
+ * - Create and initialize budget registers with workflow
+ * - Manage workflow transitions (START, FORWARD, APPROVE, REJECT, CANCEL, REVERT)
+ * - Generate unique budget register numbers with format: BR-{FinYearRange}-{Sequence}
+ * - Handle workflow state changes and status updates
+ * - Integration with SimpleWorkflowService for approval hierarchy
+ * - Support for multi-level approval process with position-based routing
+ * - Retrieve budget registers by financial years and status
+ *
+ * Workflow Actions:
+ * - START: Initialize workflow for new budget register
+ * - FORWARD: Forward to next approver in hierarchy
+ * - APPROVE: Final approval by authorized person
+ * - REJECT: Reject budget register
+ * - CANCEL: Cancel budget register
+ * - REVERT: Send back to creator for corrections
+ *
+ * @see BudgetRegister
+ * @see BudgetRegisterWorkflowRepository
+ * @see SimpleWorkflowService
+ */
 @Service
 public class BudgetRegisterWorkflowService {
 

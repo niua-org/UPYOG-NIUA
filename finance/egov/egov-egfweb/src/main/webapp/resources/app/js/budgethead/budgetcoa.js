@@ -1,3 +1,11 @@
+/*
+ * Budget Head COA (Chart of Accounts) Mapping Helper
+ * Manages dynamic account code selection for linking budget heads to GL accounts
+ * - Implements account code autocomplete using Bloodhound with subledger support
+ * - Validates duplicate account code entries per budget head
+ * - Supports dynamic row add/delete operations with 40 row limit
+ * - Integrates with /common/getaccountcodesforaccountdetailtype endpoint
+ */
 
 $(document).ready(function () {
     $.i18n.properties({

@@ -1,3 +1,34 @@
+/**
+ * Budget Item Form Helper - Client-side JavaScript for budget item entry form.
+ *
+ * Key Features:
+ * - Budget head autocomplete with typeahead.js (searches by function)
+ * - Dynamic budget code generation (function code + budget head code)
+ * - Scheme autocomplete for program-based budget heads
+ * - Dynamic row add/delete for multiple budget items
+ * - State budget code generation (combines state codes from budget head and scheme)
+ * - Duplicate budget code validation
+ * - Form field validation (required fields, invalid codes)
+ *
+ * Autocomplete Endpoints:
+ * - Budget Head: /budgethead/ajaxBudgetHead/{functionId}
+ * - Scheme: /scheme/ajaxSchemes
+ *
+ * Validation Rules:
+ * - Maximum 80 budget item rows per form
+ * - Budget codes must be unique within the form
+ * - Scheme is mandatory for program-based budget heads
+ * - Budget head must be selected before submission
+ *
+ * Auto-generated Fields:
+ * - Budget Code: functionCode-budgetHeadCode
+ * - Budget Group: Mapped from account type (RR/RE → Revenue, CR/CE → Capital)
+ * - State Budget Code: stateCode or stateCode-schemeStateCode (if scheme selected)
+ */
+
+
+
+
 $(document).ready(function () {
     $.i18n.properties({
         name: 'message',

@@ -9,6 +9,19 @@ import org.egov.infra.workflow.matrix.entity.WorkFlowMatrix;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+
+
+/**
+ * BudgetHeader entity represents the header/master information of a budget document.
+ * It serves as the main container for budget metadata and workflow information.
+ *
+ * - Links current and target financial years for budget planning
+ * - Supports workflow-based approval process
+ * - Implements optimistic locking for concurrent update control
+ * - Extends StateAware for workflow management
+ *
+ * Table: budget_header
+ */
 @Entity
 @Table(name = BudgetHeader.TABLE_NAME)
 @Getter

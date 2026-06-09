@@ -21,6 +21,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
+/**
+ * BudgetHeadService provides business logic for BudgetHead entity operations.
+ * Handles budget head creation, retrieval, and classification management.
+ *
+ * Key Features:
+ * - Create budget heads with automatic account type code assignment (RR, RE, CR, CE)
+ * - Retrieve budget heads grouped by account type (Revenue/Capital, Receipt/Expenditure)
+ * - Search budget heads by name or code with case-insensitive matching
+ * - Filter budget heads by function/department association
+ * - Get active budget heads sorted by display order
+ * - Maps BudgetAccountType enum to short codes for database storage
+ *
+ * @see BudgetHead
+ * @see BudgetHeadRepository
+ */
+
 @Service
 @Transactional(readOnly = true)
 public class BudgetHeadService {

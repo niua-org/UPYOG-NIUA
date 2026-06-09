@@ -1,4 +1,14 @@
+/**
+ * JavaScript for BudgetRegister workflow validation and form submission handling.
+ *
+ * Handles workflow actions: Submit, Forward, Approve, Reject, Cancel, Revert, Create And Approve.
+ * Validates required fields based on workflow action selected.
+ * Manages dynamic field requirement rules for approval department, designation, position, and comments.
+ * Ensures form validation before workflow transition submission.
+ */
 
+
+// Workflow button click handler - validates form and fields based on action type
 
 
 $('.btn-wf-primary').click(function(){
@@ -40,6 +50,16 @@ $('.btn-wf-primary').click(function(){
 	return false;
 });
 
+
+/**
+ * Validates workflow approver fields based on the selected workflow action.
+ * Dynamically sets required/optional attributes for department, designation, position, and comments.
+ *
+ * Action-specific validation rules:
+ * - Submit/Forward: Requires department, designation, position (comment optional)
+ * - Reject/Cancel/Revert: Requires comment (department, designation, position optional)
+ * - Approve: All fields optional except inherent form validations
+ * **/
 
 function validateWorkFlowApprover(name) {
 	document.getElementById("workFlowAction").value = name;

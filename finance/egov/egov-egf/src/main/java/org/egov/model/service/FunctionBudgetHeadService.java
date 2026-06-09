@@ -14,6 +14,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
+/**
+ * FunctionBudgetHeadService provides business logic for FunctionBudgetHead mapping operations.
+ * Manages the association between functions (departments) and budget heads.
+ *
+ * Key Features:
+ * - Retrieve budget head mappings for specific functions/departments
+ * - Get all function-budget head mappings sorted by function code
+ * - Search functions by name or code that have budget head mappings
+ * - Support for authorized budget head access control per department
+ *
+ * @see FunctionBudgetHead
+ * @see FunctionBudgetHeadRepository
+ */
 @Service
 public class FunctionBudgetHeadService {
 

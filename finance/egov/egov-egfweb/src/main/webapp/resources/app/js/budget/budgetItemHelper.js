@@ -1,3 +1,31 @@
+/**
+ * Budget Item Helper - Client-side JavaScript for function selection in budget item forms.
+ *
+ * Key Features:
+ * - Function autocomplete using typeahead.js
+ * - Searches functions by name or code via AJAX endpoint
+ * - Auto-populates hidden function ID field on selection
+ * - Clears function ID when user manually edits the field
+ *
+ * Autocomplete Endpoint:
+ * - GET /function/getByNameOrCode?query={search}
+ * - Returns functions with budget heads configured (via FunctionBudgetHeadService)
+ *
+ * Response Format:
+ * - "CODE - NAME ~ ID" (e.g., "F001 - Education ~ 123")
+ *
+ * Form Fields:
+ * - #function: Visible input for function name/code (typeahead enabled)
+ * - #functionId: Hidden input storing selected function ID
+ *
+ * Validation:
+ * - Minimum 3 characters required to trigger autocomplete
+ * - Function ID cleared if user types manually (ensures valid selection)
+ */
+
+
+
+
 $(document).ready(function () {
     var functionName = new Bloodhound({
         datumTokenizer: function (datum) {

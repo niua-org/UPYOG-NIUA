@@ -21,6 +21,13 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/*
+ * Controller for budget head master data management in the budget module.
+ * Handles CRUD operations for budget heads and provides AJAX endpoints for autocomplete.
+ * Supports function-wise budget head mapping and search by name/code or function.
+ * Enables creation and viewing of budget heads with account type classification.
+ */
+
 @Controller
 @RequestMapping("/budgethead")
 public class BudgetHeadController {

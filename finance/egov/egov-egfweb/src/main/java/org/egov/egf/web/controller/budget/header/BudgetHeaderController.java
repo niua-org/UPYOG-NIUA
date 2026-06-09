@@ -16,6 +16,32 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * BudgetHeaderController handles web requests for budget header management.
+ *
+ * Primary Responsibilities:
+ * - Display forms for creating new budget headers
+ * - Auto-generate budget header names based on financial year
+ * - Validate and prepare financial year data (current and next FY)
+ * - Provide model attributes for budget header creation views
+ *
+ * Request Mappings:
+ * - GET/POST /budget/header/new - Displays new budget header creation form with pre-populated financial year data
+ *
+ * Key Features:
+ * - Automatic budget name generation: Budget_{NextFYRange} format
+ * - Financial year validation and error handling
+ * - Calculates next financial year from current FY end date
+ * - Supports both GET and POST for form display
+ *
+ * Dependencies:
+ * - CFinancialYearService: For fetching current and next financial years
+ *
+ * View Resolution:
+ * - Returns "budgetheader-new" view for budget header creation form
+ */
+
+
 @Controller
 @RequestMapping("/budget/header")
 public class BudgetHeaderController {

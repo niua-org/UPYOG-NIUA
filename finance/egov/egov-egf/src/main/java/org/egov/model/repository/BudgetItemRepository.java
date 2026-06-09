@@ -12,6 +12,22 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+
+/**
+ * BudgetItemRepository provides data access operations for BudgetItem entity.
+ * Handles complex queries for budget item retrieval based on various criteria.
+ *
+ * Key Features:
+ * - Find budget items by budget register, function, financial year, and budget group
+ * - Filter items by notApplicable flag to exclude inactive budget items
+ * - Check existence of budgets for specific function and financial year combinations
+ * - Retrieve distinct functions that have budget items
+ * - Support for querying budget items with multiple budget groups
+ * - Custom JPQL queries for existence checks and distinct function retrieval
+ *
+ */
+
+
 @Repository
 public interface BudgetItemRepository extends JpaRepository<BudgetItem, Long> {
 

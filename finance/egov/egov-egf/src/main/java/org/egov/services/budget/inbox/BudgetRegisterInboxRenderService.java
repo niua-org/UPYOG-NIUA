@@ -12,6 +12,26 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+
+/*
+ * Inbox rendering service for BudgetRegister workflow items.
+ *
+ * This service implements the InboxRenderService interface to integrate BudgetRegister entities
+ * with the eGov workflow inbox system. It provides functionality to fetch and display budget
+ * register items in the user's workflow inbox.
+ *
+ * Key Features:
+ * - Retrieves budget registers assigned to specific positions/users for workflow action
+ * - Fetches draft budget registers that have not yet been submitted to workflow
+ * - Filters out closed/completed workflow items from the inbox
+ * - Handles empty owner lists gracefully by returning empty results
+ *
+ * Workflow Integration:
+ * - Assigned items: Budget registers with active workflow states assigned to user positions
+ * - Draft items: Budget registers created by users but not yet submitted (state is NULL)
+ *
+ * Used by the workflow inbox UI to populate the user's pending tasks and draft items.
+ */
 @Service("BudgetRegisterInboxRenderService")
 public class BudgetRegisterInboxRenderService implements InboxRenderService<BudgetRegister> {
 

@@ -191,6 +191,16 @@ public class FunctionController {
 		return gson.toJson(object);
 	}
 
+
+
+	/**
+	 * AJAX endpoint to find functions by name or code for budget module autocomplete.
+	 * Returns only functions that have associated budget heads configured.
+	 * Used by budget item forms to enable function selection with budget head validation.
+	 *
+	 * @param query Search query for function name or code
+	 * @return List of formatted function strings: "code - name ~ id"
+	 */
 	@GetMapping(value = "/getByNameOrCode", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public List<String> findFunctionNames(@RequestParam @SafeHtml final String query) {
