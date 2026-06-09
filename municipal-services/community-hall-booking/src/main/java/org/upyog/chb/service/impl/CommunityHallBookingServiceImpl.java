@@ -104,7 +104,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	public CommunityHallBookingDetail createBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest) {
 		log.info("Create community hall booking for user : "
 				+ communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid());
-		// TODO move to util calss 
+		// TODO move to util calls and validate tenant id in the controller layer
 		String tenantId = communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.")[0];
 		if (communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.").length == 1) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_TENANT,
@@ -328,14 +328,14 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		boolean bookingAllowed = availabiltityDetailsList.stream()
 				.anyMatch(detail -> BookingStatusEnum.BOOKED.toString().equals(detail.getSlotStaus()));
 
-		if (!bookingAllowed && criteria.getIsTimerRequired()) {
-			timerValue = bookingTimerService.getTimerValue(criteria, info, availabiltityDetailsList);
+		if (!bookingAllowed && Boolean.TRUE.equals(criteria.getIsTimerRequired())) {
+			timerValue = bookingTimerService.managePaymentTimer(criteria, info, availabiltityDetailsList);
 		}
 
 		CommunityHallSlotAvailabilityResponse hallSlotAvailabilityResponse = CommunityHallSlotAvailabilityResponse
 				.builder().hallSlotAvailabiltityDetails(availabiltityDetailsList).timerValue(timerValue).build();
 
-		log.info("Availabiltity details response after updating status :" + hallSlotAvailabilityResponse);
+		log.info("Availability details response after updating status :" + hallSlotAvailabilityResponse);
 		return hallSlotAvailabilityResponse;
 	}
 
@@ -357,16 +357,22 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 			.stream().collect(Collectors.toMap(Function.identity(), Function.identity()));
 	log.info("Timer Details from db : " + timerDetails);
 
-	timerDetails.forEach(detail -> {
-		// Create a Slot availability object for comparison
+		timerDetails.forEach(detail -> applyTimerDetailToAvailability(info, criteria, availabilityDetails, slotDetailsMap,
+				detail));
+
+	return availabilityDetails;
+}
+
+	private void applyTimerDetailToAvailability(RequestInfo info, CommunityHallSlotSearchCriteria criteria,
+			List<CommunityHallSlotAvailabilityDetail> availabilityDetails,
+			Map<CommunityHallSlotAvailabilityDetail, CommunityHallSlotAvailabilityDetail> slotDetailsMap,
+			BookingPaymentTimerDetails detail) {
 		CommunityHallSlotAvailabilityDetail availabilityDetail = CommunityHallSlotAvailabilityDetail.builder()
 				.communityHallCode(detail.getCommunityHallcode()).hallCode(detail.getHallcode())
-				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(), CommunityHallBookingConstants.DATE_FORMAT))
+				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(),
+						CommunityHallBookingConstants.DATE_FORMAT))
 				.tenantId(detail.getTenantId()).build();
 
-		// Check if the timerDetails set contains this booking and if it's created by
-		// the current user
-		// Update the slot status based on the comparison
 		if (availabilityDetails.contains(availabilityDetail)) {
 			log.info("Booking created by user id {} and booking id {} ", criteria.getBookingId(),
 					info.getUserInfo().getUuid());
@@ -382,11 +388,7 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 				slotAvailabilityDetail.setSlotStaus(BookingStatusEnum.BOOKED.toString());
 			}
 		}
-
-	});
-
-	return availabilityDetails;
-}
+	}
 
 
 

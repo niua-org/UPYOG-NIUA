@@ -219,58 +219,44 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	@Override
 	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
 			boolean updateBookingStatus) {
+		createBookingTimer(criteria, requestInfo, updateBookingStatus, null);
+	}
+
+	@Override
+	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
+			boolean updateBookingStatus, List<BookingPaymentTimerDetails> timerDetails) {
 		String bookingId = criteria.getBookingId();
 		String createdBy = requestInfo.getUserInfo().getUuid();
 		long createdTime = CommunityHallBookingUtil.getCurrentTimestamp();
-		String communitycode = criteria.getCommunityHallCode();
-		String hallcode = criteria.getHallCode();
 		String lastModifiedBy = requestInfo.getUserInfo().getUuid();
 		long lastModifiedTime = CommunityHallBookingUtil.getCurrentTimestamp();
-		String tenantId = criteria.getTenantId();
 
-		// Parse bookingStartDate and bookingEndDate into LocalDate
-		LocalDate startDate = LocalDate.parse(criteria.getBookingStartDate());
-		LocalDate endDate = LocalDate.parse(criteria.getBookingEndDate());
-
-//		// Log the information at the beginning of the method
-//		log.info("Executing Insert Query with the following details: ");
-//		log.info("Booking ID: {}", bookingId);
-//		log.info("Created By: {}", createdBy);
-//		log.info("Created Time: {}", createdTime);
-//
-//		// Query execution
-//		String query = CommunityHallBookingQueryBuilder.PAYMENT_TIMER_INSERT_QUERY;
-//		jdbcTemplate.update(query, bookingId, createdBy, createdTime, "ACTIVE", null, communitycode, hallcode, lastModifiedBy, lastModifiedTime);
-
-		// Log the information
-		log.info("Executing Insert Query with the following details: ");
-		log.info("Booking ID: {}", bookingId);
-		log.info("Created By: {}", createdBy);
-		log.info("Created Time: {}", createdTime);
-		log.info("Community Code: {}", communitycode);
-		log.info("Hall Code: {}", hallcode);
-		log.info("Date Range: {} to {}", startDate, endDate);
-
-		// Iterate through the date range
 		List<Object[]> batchArgs = new ArrayList<>();
-		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-			batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", // Status
-					null, // Booking No (optional, replace with actual value if available)
-					communitycode, hallcode, date, // Booking Date
-					tenantId, lastModifiedBy, lastModifiedTime });
+		if (timerDetails != null && !timerDetails.isEmpty()) {
+			for (BookingPaymentTimerDetails detail : timerDetails) {
+				batchArgs.add(new Object[] { detail.getBookingId(), detail.getCreatedBy(), detail.getCreatedTime(),
+						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getCommunityHallcode(),
+						detail.getHallcode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
+						lastModifiedTime });
+			}
+		} else {
+			var hallCodes = org.upyog.chb.util.CommunityHallSlotCriteriaUtil.resolveHallCodes(criteria);
+			var bookingDates = org.upyog.chb.util.CommunityHallSlotCriteriaUtil.resolveBookingDates(criteria);
+			for (var date : bookingDates) {
+				for (var hallcode : hallCodes) {
+					batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", null,
+							criteria.getCommunityHallCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
+							lastModifiedTime });
+				}
+			}
 		}
 
-		// Execute batch insert
-		String query = CommunityHallBookingQueryBuilder.PAYMENT_TIMER_INSERT_QUERY;
-		jdbcTemplate.batchUpdate(query, batchArgs);
-
-		// Log after the query execution
-		log.info("Insert Query Executed Successfully for Booking ID: {}", bookingId);
+		log.info("Insert payment timer rows bookingId={} count={}", bookingId, batchArgs.size());
+		jdbcTemplate.batchUpdate(CommunityHallBookingQueryBuilder.PAYMENT_TIMER_INSERT_QUERY, batchArgs);
 
 		if (updateBookingStatus) {
 			updateBookingSynchronously(bookingId, createdBy, null, BookingStatusEnum.PENDING_FOR_PAYMENT.toString());
 		}
-
 	}
 	
 //	@Override
