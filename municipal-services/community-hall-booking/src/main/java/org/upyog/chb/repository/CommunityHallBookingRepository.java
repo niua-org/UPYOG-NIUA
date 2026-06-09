@@ -68,6 +68,9 @@ public interface CommunityHallBookingRepository {
 
 	void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo, boolean updateBookingStatus);
 
+	void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
+			boolean updateBookingStatus, List<BookingPaymentTimerDetails> timerDetails);
+
 	void deleteBookingTimer(String bookingId, boolean updateBookingStatus);
 
 	void updateBookingSynchronously(String bookingId, String uuid, PaymentDetail paymentDetail, String status);

@@ -2,6 +2,8 @@ package org.upyog.chb.seatlock.redis;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.RedisConnectionFailureException;
@@ -16,6 +18,11 @@ import org.upyog.chb.seatlock.model.ReleaseSeatResult;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of SeatLockService using Redis as the underlying mechanism.
+ * Provides methods to lock, release, check, and extend seat locks.
+ * Uses Redis scripts for atomic operations and ensures high performance.
+ */
 @Slf4j
 public class RedisSeatLockService implements SeatLockService {
 
@@ -24,6 +31,12 @@ public class RedisSeatLockService implements SeatLockService {
 	private final DefaultRedisScript<Long> acquireScript;
 	private final DefaultRedisScript<Long> unlockScript;
 
+	/**
+	 * Constructor for RedisSeatLockService.
+	 *
+	 * @param redis  The StringRedisTemplate instance for Redis operations.
+	 * @param props  The SeatLockProperties containing configuration values.
+	 */
 	public RedisSeatLockService(StringRedisTemplate redis, SeatLockProperties props) {
 		this.redis = redis;
 		this.props = props;
@@ -35,15 +48,23 @@ public class RedisSeatLockService implements SeatLockService {
 		this.unlockScript.setResultType(Long.class);
 	}
 
+	/**
+	 * Attempts to lock a seat for a specific user for a given duration.
+	 *
+	 * @param seatId The unique identifier of the seat to lock.
+	 * @param userId The identifier of the user requesting the lock.
+	 * @param ttl    The time-to-live (TTL) duration for the lock.
+	 * @return The result of the lock operation.
+	 */
 	@Override
 	public LockSeatResult lockSeat(String seatId, String userId, Duration ttl) {
-		var v = validate(seatId, userId, ttl);
-		if (v.isPresent()) {
-			return v.get();
+		Optional<LockSeatResult> validationResult = validate(seatId, userId, ttl);
+		if (validationResult.isPresent()) {
+			return validationResult.get();
 		}
-		var key = redisKey(seatId);
-		var ttlMs = ttl.toMillis();
-		var code = redis.execute(acquireScript, java.util.List.of(key), userId, String.valueOf(ttlMs));
+		String key = redisKey(seatId);
+		long ttlMs = ttl.toMillis();
+		Long code = redis.execute(acquireScript, List.of(key), userId, String.valueOf(ttlMs));
 		long resultCode = (code == null) ? 0L : code;
 		if (resultCode == 1L || resultCode == 2L) {
 			return new LockSeatResult.Acquired(seatId, userId, Instant.now().plusMillis(ttlMs));
@@ -54,11 +75,18 @@ public class RedisSeatLockService implements SeatLockService {
 		}
 	}
 
+	/**
+	 * Releases a previously locked seat for a specific user.
+	 *
+	 * @param seatId The unique identifier of the seat to release.
+	 * @param userId The identifier of the user requesting the release.
+	 * @return The result of the release operation.
+	 */
 	@Override
 	public ReleaseSeatResult releaseSeat(String seatId, String userId) {
 		requireIds(seatId, userId);
-		var key = redisKey(seatId);
-		var deleted = redis.execute(unlockScript, java.util.List.of(key), userId);
+		String key = redisKey(seatId);
+		Long deleted = redis.execute(unlockScript, List.of(key), userId);
 		if (deleted > 0) {
 			return new ReleaseSeatResult.Released(seatId);
 		}
@@ -68,6 +96,12 @@ public class RedisSeatLockService implements SeatLockService {
 		return new ReleaseSeatResult.NotOwner(seatId, userId);
 	}
 
+	/**
+	 * Checks if a seat is currently locked.
+	 *
+	 * @param seatId The unique identifier of the seat to check.
+	 * @return True if the seat is locked, false otherwise.
+	 */
 	@Override
 	public boolean isSeatLocked(String seatId) {
 		if (seatId == null || seatId.isBlank()) {
@@ -76,22 +110,30 @@ public class RedisSeatLockService implements SeatLockService {
 		return Boolean.TRUE.equals(redis.hasKey(redisKey(seatId)));
 	}
 
+	/**
+	 * Extends the lock duration for a specific seat.
+	 *
+	 * @param seatId The unique identifier of the seat to extend the lock for.
+	 * @param userId The identifier of the user requesting the lock extension.
+	 * @param ttl    The new time-to-live (TTL) duration for the lock.
+	 * @return The result of the lock extension operation.
+	 */
 	@Override
 	public ExtendLockResult extendLock(String seatId, String userId, Duration ttl) {
-		var v = validate(seatId, userId, ttl);
-		if (v.isPresent()) {
-			var validationResult = v.get();
-			if (validationResult instanceof LockSeatResult.InvalidArgument) {
-				return new ExtendLockResult.InvalidArgument(((LockSeatResult.InvalidArgument) validationResult).message());
-			} else if (validationResult instanceof LockSeatResult.RateLimited) {
-				return new ExtendLockResult.InvalidArgument(((LockSeatResult.RateLimited) validationResult).message());
+		Optional<LockSeatResult> validationResult = validate(seatId, userId, ttl);
+		if (validationResult.isPresent()) {
+			LockSeatResult result = validationResult.get();
+			if (result instanceof LockSeatResult.InvalidArgument) {
+				return new ExtendLockResult.InvalidArgument(((LockSeatResult.InvalidArgument) result).message());
+			} else if (result instanceof LockSeatResult.RateLimited) {
+				return new ExtendLockResult.InvalidArgument(((LockSeatResult.RateLimited) result).message());
 			} else {
-				return new ExtendLockResult.InvalidArgument("unexpected validation branch");
+				return new ExtendLockResult.InvalidArgument("Unexpected validation branch");
 			}
 		}
-		var key = redisKey(seatId);
-		var ttlMs = ttl.toMillis();
-		var code = redis.execute(acquireScript, java.util.List.of(key), userId, String.valueOf(ttlMs));
+		String key = redisKey(seatId);
+		long ttlMs = ttl.toMillis();
+		Long code = redis.execute(acquireScript, List.of(key), userId, String.valueOf(ttlMs));
 		long resultCode = (code == null) ? 0L : code;
 		if (resultCode == 1L || resultCode == 2L) {
 			return new ExtendLockResult.Extended(seatId, Instant.now().plusMillis(ttlMs));
@@ -102,32 +144,64 @@ public class RedisSeatLockService implements SeatLockService {
 		}
 	}
 
+	/**
+	 * Determines if the given exception is caused by Redis infrastructure issues.
+	 *
+	 * @param t The exception to check.
+	 * @return True if the exception is related to Redis infrastructure, false otherwise.
+	 */
 	public static boolean isRedisInfrastructureError(Throwable t) {
 		return t instanceof RedisConnectionFailureException || t instanceof RedisSystemException
 				|| t instanceof QueryTimeoutException;
 	}
 
+	/**
+	 * Generates the Redis key for a given seat ID.
+	 *
+	 * @param seatId The seat ID.
+	 * @return The Redis key.
+	 */
 	private String redisKey(String seatId) {
 		return props.redisKeyPrefix() + seatId;
 	}
 
-	private java.util.Optional<LockSeatResult> validate(String seatId, String userId, Duration ttl) {
+	/**
+	 * Validates the input parameters for seat locking or extension.
+	 *
+	 * @param seatId The seat ID.
+	 * @param userId The user ID.
+	 * @param ttl    The time-to-live duration.
+	 * @return An Optional containing a validation result, or empty if valid.
+	 */
+	private Optional<LockSeatResult> validate(String seatId, String userId, Duration ttl) {
 		if (seatId == null || seatId.isBlank() || userId == null || userId.isBlank()) {
-			return java.util.Optional.of(new LockSeatResult.InvalidArgument("seatId and userId required"));
+			return Optional.of(new LockSeatResult.InvalidArgument("seatId and userId required"));
 		}
 		if (ttl == null || ttl.isNegative() || ttl.isZero()) {
-			return java.util.Optional.of(new LockSeatResult.InvalidArgument("ttl must be positive"));
+			return Optional.of(new LockSeatResult.InvalidArgument("ttl must be positive"));
 		}
-		return java.util.Optional.empty();
+		return Optional.empty();
 	}
 
+	/**
+	 * Ensures that the seat ID and user ID are not null or blank.
+	 *
+	 * @param seatId The seat ID.
+	 * @param userId The user ID.
+	 */
 	private void requireIds(String seatId, String userId) {
 		if (seatId == null || seatId.isBlank() || userId == null || userId.isBlank()) {
 			throw new IllegalArgumentException("seatId and userId required");
 		}
 	}
 
-	private java.util.Optional<String> readHolder(String key) {
-		return java.util.Optional.ofNullable(redis.opsForValue().get(key));
+	/**
+	 * Reads the current holder of the lock for a given Redis key.
+	 *
+	 * @param key The Redis key.
+	 * @return An Optional containing the holder ID, or empty if not found.
+	 */
+	private Optional<String> readHolder(String key) {
+		return Optional.ofNullable(redis.opsForValue().get(key));
 	}
 }

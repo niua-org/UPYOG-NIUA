@@ -1,10 +1,6 @@
 /**
- * Timer-based seat locking with pluggable storage (PostgreSQL vs Redis) and optional Redis→DB fallback.
- * <p>
- * Java 17 usage: {@code record} DTOs for API bodies and rows, {@code sealed} hierarchies for exhaustive
- * outcomes, {@code switch} expressions on those hierarchies, and {@code var} for local temporaries where
- * types are obvious — together they reduce null/branch bugs and make illegal states unrepresentable.
- * <p>
- * Configure with {@code seat-lock.provider=db|redis|redis-with-db-fallback}.
+ * Optional generic seat-lock framework (disabled when {@code seat-lock.enabled=false}).
+ * Community hall payment timers use {@code org.upyog.chb.service.BookingTimerService} and
+ * {@code eg_chb_payment_timer} instead — see {@code PaymentTimerRedisService} for optional Redis mirror.
  */
 package org.upyog.chb.seatlock;
