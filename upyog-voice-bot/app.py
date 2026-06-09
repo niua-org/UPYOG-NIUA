@@ -762,14 +762,36 @@ def retrieve_document_stream(query, user_lang, history):
 
 # ============== ROUTES ==============
 
+"""
+Serves the chatbot UI (index.html).
+Route '/' handles direct local access at localhost:8090.
+Route '/upyog-voice-bot' handles requests routed through niautt's EKS ingress
+at niautt.niua.in/upyog-voice-bot.
+strict_slashes=False accepts both trailing-slash and non-trailing-slash URLs.
+"""
 @app.route("/")
+@app.route("/upyog-voice-bot", strict_slashes=False)
+@app.route("/upyog-voice-bot/")
 def index_page():
     """Serve the frontend."""
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
 
-@app.route("/chat", methods=["POST"])
+"""
+Main chat endpoint — three route aliases registered:
+  /chat                  → direct local access (localhost:8090)
+  /upyog-voice-bot/chat  → production via niautt EKS ingress
+  /upyog-voice/chat      → backward compatibility with old deployment path
+GET requests return a health check response so Kubernetes liveness
+probes do not mark the pod as unhealthy.
+"""
+@app.route("/chat", methods=["GET", "POST"])
+@app.route("/upyog-voice-bot/chat", methods=["GET", "POST"])
+@app.route("/upyog-voice/chat", methods=["GET", "POST"])
 def chat():
     """Standard non-streaming chat endpoint with LLM-first architecture."""
+    if request.method == "GET":
+        return jsonify({"status": "ok", "message": "UPYOG Voice Bot Chat Endpoint"}), 200
+
     global model, data, index, is_loading
 
     try:
@@ -960,9 +982,19 @@ def chat():
         logger.error(f"Chat Error: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/stream", methods=["POST"])
+"""
+Streaming SSE endpoint — two route aliases:
+  /stream                  → direct local access
+  /upyog-voice-bot/stream  → production via niautt EKS ingress
+GET requests return a health check response for Kubernetes liveness probes.
+"""
+@app.route("/stream", methods=["GET", "POST"])
+@app.route("/upyog-voice-bot/stream", methods=["GET", "POST"])
 def stream():
     """Streaming SSE endpoint for lower perceived latency."""
+    if request.method == "GET":
+        return jsonify({"status": "ok", "message": "UPYOG Voice Bot Stream Endpoint"}), 200
+
     global model, data, index, is_loading, stop_generation
 
     try:
@@ -986,7 +1018,14 @@ def stream():
         logger.error(f"Stream Error: {e}")
         return Response(f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n", mimetype='text/event-stream')
 
+"""
+Stop endpoint — called when the user interrupts (barges in) while the bot is speaking.
+Two route aliases:
+  /stop                  → direct local access
+  /upyog-voice-bot/stop  → production via niautt EKS ingress
+"""
 @app.route("/stop", methods=["POST"])
+@app.route("/upyog-voice-bot/stop", methods=["POST"])
 def stop():
     """Stop endpoint - called when user barges in."""
     global stop_generation

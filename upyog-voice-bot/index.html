@@ -798,10 +798,37 @@
         // API URL
         // Use dynamic URL for both local testing and Nginx proxy compatibility
         let API_URL = window.location.origin;
-        if (window.location.pathname.includes('/upyog-voice')) {
+        if (window.location.pathname.includes('/upyog-voice-bot')) {
+            API_URL += '/upyog-voice-bot';
+        } else if (window.location.pathname.includes('/upyog-voice')) {
             API_URL += '/upyog-voice';
         }
         console.log('UPYOG Voice v2 initialized. Target:', API_URL);
+
+        // ===== NIAUTT AUTH INTEGRATION =====
+        // When this chatbot is embedded as an iframe inside niautt, the parent page
+        // (UpyogBot.js component) sends the logged-in user's RequestInfo via postMessage
+        // as soon as this page finishes loading. We store it here and attach it to
+        // every /chat request so the backend receives standard niautt-style auth context.
+
+        // Holds the RequestInfo received from the niautt parent page.
+        // Starts empty — gets populated when the postMessage arrives.
+        let NIAUTT_REQUEST_INFO = {};
+
+        // Listen for the postMessage sent by niautt's UpyogBot.js component (onLoad).
+        // type "INIT_DATA" identifies this as the niautt auth initialization message.
+        // Stores the full RequestInfo (authToken, userInfo, apiId, plainAccessRequest).
+        window.addEventListener("message", function (event) {
+            console.log("Received message:", event.data);
+            if (event.data?.type === "INIT_DATA") {
+                // Store the received RequestInfo for use in all subsequent /chat calls
+                NIAUTT_REQUEST_INFO = event.data.RequestInfo || {};
+            }
+        });
+
+        // Helper that returns the stored RequestInfo with a fresh msgId timestamp.
+        // niautt requires a unique msgId on every API request (format: timestamp|locale).
+        const getRequestInfo = () => ({ ...NIAUTT_REQUEST_INFO, msgId: `${Date.now()}|en_IN` });
 
         // ============== STATE MACHINE ==============
         function setState(newState) {
@@ -1380,7 +1407,7 @@
             }
 
             // Step 3: Signal backend to stop TTS generation
-            fetch('/stop', { method: 'POST' }).catch(() => {});
+            fetch(`${API_URL}/stop`, { method: 'POST' }).catch(() => {});
 
             // Step 4: Clear all transcript buffers
             finalTranscript = '';
@@ -1463,6 +1490,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        RequestInfo: getRequestInfo(),
                         query: transcript,
                         session_id: conversationSessionId,
                         history: history.slice(-HISTORY_TO_BACKEND)  // Only last 8 turns to backend
