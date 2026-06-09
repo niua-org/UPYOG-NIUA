@@ -38,7 +38,7 @@ const MDMSManageMaster = () => {
   tenantId = tenantId || Digit.ULBService.getCurrentTenantId();
   const SchemaDefCriteria = {
     tenantId:tenantId ,
-    limit:200
+    limit:500
   }
   if(master && modulee ) {
     SchemaDefCriteria.codes = [`${master}.${modulee}`] 
