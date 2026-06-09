@@ -30,8 +30,7 @@
     "micro-ui-internals/packages/modules/mCollect",
     "micro-ui-internals/packages/modules/chb",
     "micro-ui-internals/packages/modules/assetv2",
-    "micro-ui-internals/packages/modules/gis",
-    "micro-ui-internals/packages/react-components"
+    "micro-ui-internals/packages/modules/gis"
   ],
   "engines": {
     "node": ">=22"
@@ -55,7 +54,7 @@
     "@upyog/digit-ui-module-receipts": "3.0.1",
     "@upyog/digit-ui-module-tl": "3.10.0",
     "@upyog/digit-ui-module-ws": "3.10.0",
-    "@nudmcdgnpm/digit-ui-react-components": "4.0.0",
+    "@nudmcdgnpm/digit-ui-react-components": "4.0.5",
     "@nudmcdgnpm/upyog-ui-module-ads": "3.11.0",
     "@upyog/upyog-ui-module-asset": "3.10.0",
     "@upyog/upyog-ui-module-ew": "3.10.0",
