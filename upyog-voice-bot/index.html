@@ -404,7 +404,6 @@
                     setTimeout(() => {
                         if (sessionActive && recognition) {
                             try { recognition.start(); } catch(e) {
-                                console.warn('onend restart failed:', e.name);
                             }
                         }
                     }, 100);
@@ -412,7 +411,6 @@
             };
 
             recognition.onerror = function onRecognitionError(e) {
-                console.error('❌ Recognition error:', e.error);
                 if (e.error === 'no-speech' || e.error === 'aborted') return;
 
                 setTimeout(() => {
@@ -433,10 +431,10 @@
                 try {
                     recognition.start();
                 } catch(e) {
-                    console.error('Failed to start recognition:', e);
+                    addBotMessage('Sorry, microphone could not start. Please try again.', null, null, null, null);
                 }
             } else {
-                console.error('Recognition object not created');
+                addBotMessage('Sorry, voice recognition is not supported on this browser.', null, null, null, null);
             }
         }
 
@@ -539,7 +537,6 @@
                         setState(States.LISTENING);
                     } else {
                         // Real error — recreate
-                        console.error('onTurnComplete restart error:', e);
                         setTimeout(() => {
                             if (sessionActive) {
                                 destroyRecognition();
@@ -594,7 +591,6 @@
                 }
                 checkVolume();
             } catch(e) {
-                console.error('Barge-in monitor error:', e);
             }
         }
 
@@ -644,7 +640,6 @@
                     try {
                         recognition.start();
                     } catch(e) {
-                        console.error('Barge-in: failed to restart recognition:', e);
                         // Try once more after another short delay
                         setTimeout(() => {
                             if (sessionActive) {
@@ -711,7 +706,6 @@
                 }
 
                 if (data.error) {
-                    console.error('Error:', data.error);
                     addBotMessage('Sorry, an error occurred.', null, null, null, null);
                     setState(States.LISTENING);
                     onTurnComplete();
@@ -744,7 +738,6 @@
 
             } catch (error) {
                 if (error.name !== 'AbortError') {
-                    console.error('Fetch error:', error);
                     addBotMessage('Sorry, connection failed.', null, null, null, null);
                 }
                 setState(States.LISTENING);
@@ -795,16 +788,16 @@
                 };
 
                 currentAudio.onerror = function onAudioError() {
-                    console.error('Audio playback error');
                     URL.revokeObjectURL(url);
                     currentAudio = null;
+                    addBotMessage('Sorry, could not play audio. Please try again.', null, null, null, null);
                     setState(States.LISTENING);
                     onTurnComplete();
                 };
 
                 await currentAudio.play();
             } catch(e) {
-                console.error('Audio error:', e);
+                addBotMessage('Sorry, could not play audio. Please try again.', null, null, null, null);
                 setState(States.LISTENING);
                 onTurnComplete();
             }
@@ -855,7 +848,6 @@
                     startBargeInMonitor();
                     setState(States.LISTENING);
                 } catch(e) {
-                    console.error('Failed to start session:', e);
                     sessionActive = false;
                     sessionBtn.innerText = 'Start Session';
                     sessionBtn.classList.remove('end');
