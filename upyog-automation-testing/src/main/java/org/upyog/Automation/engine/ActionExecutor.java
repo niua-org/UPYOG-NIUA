@@ -4,6 +4,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.upyog.Automation.Reports.ReportManager;
 import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
@@ -228,11 +229,20 @@ public class ActionExecutor {
 
             logger.info("✓ Completed step: {}", stepName);
 
+            ReportManager.logStep(
+                    "PASSED : " + stepName
+            );
+
         } catch (NoSuchElementException e) {
+            ReportManager.getTest()
+                    .fail("FAILED : " + stepName);
             logger.error("✗ Element not found for step '{}': {}", stepName, e.getMessage());
             throw new RuntimeException("Step failed - element not found: " + stepName, e);
 
+
         } catch (TimeoutException e) {
+            ReportManager.getTest()
+                    .fail("TIMEOUT : " + stepName);
             logger.error("✗ Timeout waiting for element in step '{}': {}", stepName, e.getMessage());
             throw new RuntimeException("Step failed - timeout: " + stepName, e);
 
@@ -240,7 +250,19 @@ public class ActionExecutor {
             logger.warn("Click intercepted for step '{}', attempting JS click", stepName);
             // Fallback to JS click when standard click is intercepted
             executeJsClick(instruction);
+
+            ReportManager.logStep(
+                    "PASSED (JS CLICK) : " + stepName
+            );
+
             applyDynamicSleep(instruction);
+        }
+        catch (Exception e) {
+
+            ReportManager.getTest()
+                    .fail("FAILED : " + stepName);
+
+            throw e;
         }
     }
 
@@ -930,6 +952,14 @@ public class ActionExecutor {
                 "WorkflowDataStore APPLICATION_NO = {}",
                 WorkflowDataStore.get("APPLICATION_NO")
         );
+        logger.info(
+                "Captured Value = {}",
+                capturedValue
+        );
+        logger.info(
+                "APPLICATION_NO STORED = {}",
+                WorkflowDataStore.get("APPLICATION_NO")
+        );
     }
 
     private void typeFromStore(
@@ -945,10 +975,19 @@ public class ActionExecutor {
                                 )
                 );
 
+        String key = instruction.getInputValue();
+
         String storedValue =
-                org.upyog.Automation.Utils.WorkflowDataStore.get(
-                        instruction.getInputValue()
-                );
+                WorkflowDataStore.get(key);
+
+        if ((storedValue == null || storedValue.isEmpty())
+                && "APPLICATION_NO".equals(key)) {
+
+            storedValue =
+                    WorkflowDataStore.get(
+                            "selected.applicationNumber"
+                    );
+        }
 
         if (storedValue == null) {
 

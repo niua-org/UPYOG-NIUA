@@ -37,20 +37,18 @@ public class EmployeeTestService {
         logger.info("Selected ENV: {}", env);
         logger.info("Starting {} employee test", moduleName);
 
-        new Thread(() -> {
-            try {
-                commonEmployeeTest.runEmployeeTest(
-                        baseUrl,
-                        moduleName,
-                        username,
-                        password,
-                        applicationNumber
-                );
-            } catch (Exception e) {
-                logger.error("Error in employee test: {}", e.getMessage());
-                e.printStackTrace();
-            }
-        }).start();
+        try {
+            commonEmployeeTest.runEmployeeTest(
+                    baseUrl,
+                    moduleName,
+                    username,
+                    password,
+                    applicationNumber
+            );
+        } catch (Exception e) {
+            logger.error("Error in employee test: {}", e.getMessage());
+            e.printStackTrace();
+        }
 
         return moduleName + " employee test started successfully.";
     }
