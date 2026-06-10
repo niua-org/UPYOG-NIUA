@@ -23,20 +23,25 @@ import org.hibernate.validator.constraints.SafeHtml;
 
 
 /**
- * BudgetCoa entity class
+ * Entity representing the mapping between a {@link BudgetHead} and its
+ * corresponding Chart of Accounts (COA) entry.
  *
- * This entity represents the mapping between budget heads and their corresponding
- * chart of accounts. It links budget heads to specific account codes and account
- * head names for financial tracking and reporting purposes.
+ * <p>Each record links a budget head to a specific GL account code and account
+ * head name, enabling financial tracking and reporting against budgeted amounts.</p>
  *
- * Key Features:
- * - Associates budget heads with chart of accounts
- * - Maintains account code and account head information
- * - Supports audit trail through AbstractAuditable
+ * <p><b>Key Characteristics:</b></p>
+ * <ul>
+ *   <li>Associates budget heads with chart of account entries via a many-to-one relationship.</li>
+ *   <li>Maintains the GL account code and descriptive account head name for each mapping.</li>
+ *   <li>Inherits audit trail support (created by, modified by, timestamps) from
+ *       {@link AbstractAuditable}.</li>
+ * </ul>
  *
- * Table: EGF_BUDGETCOA
- * Sequence: SEQ_EGF_BUDGETCOA
+ * <p>Mapped to the database table {@code EGF_BUDGETCOA}, with primary keys generated
+ * from the sequence {@code SEQ_EGF_BUDGETCOA}.</p>
  *
+ * @see BudgetHead
+ * @see AbstractAuditable
  */
 
 @Entity
@@ -57,24 +62,12 @@ public class BudgetCoa extends AbstractAuditable {
     private Long id;
 
 
-    /**
-     * Reference to the budget head
-     * Many BudgetCoa records can be associated with one BudgetHead
-     * This is a mandatory field
-     */
     @ManyToOne
     @JoinColumn(name = "budgethead_id")
     @NotNull
     private BudgetHead budgetHead;
 
-    /**
-     * Account code from the Chart of Accounts
-     * This represents the GL code or account code used in financial system
-     * Maximum length: 20 characters
-     * This is a mandatory field
-     *
-     * Example: "1234567890"
-     */
+
     @Column(name = "account_code", nullable = false, length = 20)
     @NotNull
     @Length(max = 20)
@@ -82,14 +75,6 @@ public class BudgetCoa extends AbstractAuditable {
     private String accountCode;
 
 
-    /**
-     * Account head name or description
-     * This contains the descriptive name of the account from Chart of Accounts
-     * Maximum length: 255 characters
-     * This is a mandatory field
-     *
-     * Example: "Revenue Account - Property Tax"
-     */
     @Column(name = "account_head", nullable = false, length = 255)
     @NotNull
     @Length(max = 255)

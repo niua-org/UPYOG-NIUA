@@ -81,6 +81,17 @@ public class BudgetRegisterWorkflowService {
 
 
 
+    /**
+     * Retrieves the primary assignment details of the specified user.
+     *
+     * <p>
+     * Assignment information is fetched through employee master services
+     * and includes position, designation, and department details.
+     * </p>
+     *
+     * @param userId identifier of the user
+     * @return assignment details if available, otherwise null
+     */
 
     private Assignment getCurrentUserAssignment(final Long userId) {
 //        Long userId = ApplicationThreadLocals.getUserId();
@@ -121,16 +132,31 @@ public class BudgetRegisterWorkflowService {
         return !desgnList.isEmpty() ? desgnList.get(0) : null;
     }
 
-
     /**
-     * Create or progress a workflow transition for BudgetRegister.
+     * Creates or progresses a workflow transition for a budget register.
      *
-     * @param budgetRegister     budget entity (StateAware)
-     * @param approvalPosition   position id of the approver (nullable)
-     * @param approvalComment    comments to attach
-     * @param additionalRule     additional rule used for wf lookup (nullable)
-     * @param workFlowAction     action like "START"/"FORWARD"/"APPROVE"/"REJECT"/"CANCEL"
-     * @param approvalDesignation approver designation name (nullable)
+     * <p>
+     * Handles all workflow actions including:
+     * <ul>
+     *     <li>START - Initiates workflow</li>
+     *     <li>FORWARD - Moves workflow to next approver</li>
+     *     <li>APPROVE - Completes workflow approval</li>
+     *     <li>REJECT - Rejects the budget register</li>
+     *     <li>CANCEL - Cancels the workflow</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Workflow ownership, state transitions, comments, and next actions
+     * are determined using the configured workflow matrix.
+     * </p>
+     *
+     * @param budgetRegister budget register undergoing workflow transition
+     * @param approvalPosition position of the next approver
+     * @param approvalComment workflow comments
+     * @param additionalRule additional workflow rule if applicable
+     * @param workFlowAction action to be performed
+     * @param approvalDesignation designation of the approver
      */
     public void createBudgetRegisterWorkflowTransition(final BudgetRegister budgetRegister,
                                                        final Long approvalPosition,
@@ -293,8 +319,29 @@ public class BudgetRegisterWorkflowService {
 
 
     /**
-     * Creates or progresses a BudgetRegister along with workflow transition.
+     * Creates a new budget register or progresses an existing one
+     * through the configured workflow.
+     *
+     * <p>
+     * This method:
+     * <ol>
+     *     <li>Initializes budget register status.</li>
+     *     <li>Persists the register.</li>
+     *     <li>Executes workflow transition.</li>
+     *     <li>Updates workflow-based status.</li>
+     *     <li>Saves the final workflow state.</li>
+     * </ol>
+     * </p>
+     *
+     * @param budgetRegister budget register entity
+     * @param approvalPosition next approver position
+     * @param approvalComment workflow comments
+     * @param additionalRule additional workflow rule
+     * @param workFlowAction workflow action to execute
+     * @param approvalDesignation approver designation
+     * @return persisted budget register with updated workflow state
      */
+
     @Transactional
     public BudgetRegister create(final BudgetRegister budgetRegister,
                                  final Long approvalPosition,
@@ -373,6 +420,15 @@ public class BudgetRegisterWorkflowService {
         return saved;
     }
 
+    /**
+     * Initializes audit information for a newly created budget register.
+     *
+     * <p>
+     * Populates creator and last modified details before persisting.
+     * </p>
+     *
+     * @param budgetRegister budget register to initialize
+     */
 
     public void initiateBudgetRegisterWf(BudgetRegister budgetRegister) {
 
@@ -406,6 +462,12 @@ public class BudgetRegisterWorkflowService {
         return budgetRegisterWorkflowRepository.findTopByCurrentFinancialYearAndFinancialYearOrderByIdDesc(currentFy, nextFy);
     }
 
+    /**
+     * Retrieves all budget registers ordered by budget register number.
+     *
+     * @return list of budget registers
+     */
+
     public List<BudgetRegister> findBudgetRegisters() {
         List<BudgetRegister> budgetRegisters =  budgetRegisterWorkflowRepository.findAll(new Sort(Sort.Direction.DESC, "budgetRegisterNumber"));
 
@@ -423,15 +485,50 @@ public class BudgetRegisterWorkflowService {
 
     }
 
+    /**
+     * Retrieves a budget register using its unique register number.
+     *
+     * @param budgetRegisterNumber budget register number
+     * @return matching budget register
+     */
+
+
     public BudgetRegister findBudgetRegisterByRegisterNumber(String budgetRegisterNumber) {
         return budgetRegisterWorkflowRepository.findByBudgetRegisterNumber(budgetRegisterNumber);
     }
+
+    /**
+     * Retrieves a budget register by its identifier.
+     *
+     * @param id budget register identifier
+     * @return matching budget register
+     */
 
     public BudgetRegister findOne(Long id) {
         return budgetRegisterWorkflowRepository.findOne(id);
     }
 
 
+    /**
+     * Legacy workflow transition implementation for budget registers.
+     *
+     * <p>
+     * Supports workflow actions such as forward, approve, reject,
+     * revert, cancel, and DMA forwarding.
+     * </p>
+     *
+     * <p>
+     * This method is retained for backward compatibility with the
+     * existing workflow implementation.
+     * </p>
+     *
+     * @param budgetRegister budget register under workflow
+     * @param approvalPosition next approver position
+     * @param approvalComment workflow comments
+     * @param additionalRule additional workflow rule
+     * @param workFlowAction workflow action
+     * @param approvalDesignation approver designation
+     */
 
     @Transactional
     public void createBudgetRegisterWorkFlowTransitionNew(final BudgetRegister budgetRegister, final Long approvalPosition, final String approvalComment, final String additionalRule, final String workFlowAction, final String approvalDesignation) {
@@ -652,10 +749,22 @@ public class BudgetRegisterWorkflowService {
 
     }
 
+    /**
+     * Updates workflow-related status values before transition.
+     *
+     * @param budgetRegister budget register entity
+     * @param workFlowAction workflow action being performed
+     */
+
     private void setStatusValues(BudgetRegister budgetRegister,String workFlowAction) {
         //
     }
 
+    /**
+     * Persists the specified budget register.
+     *
+     * @param currentBudgetRegister budget register to save
+     */
     public void save(BudgetRegister currentBudgetRegister) {
         budgetRegisterWorkflowRepository.save(currentBudgetRegister);
     }

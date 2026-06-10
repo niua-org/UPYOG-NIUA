@@ -20,6 +20,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Service for aggregating financial data used in the eGov dashboard report.
+ *
+ * <p>Provides count-based summary metrics across various financial entities including
+ * contractors, suppliers, expense bills, work orders, purchase orders, journal vouchers,
+ * funds, bank accounts, and payments. These metrics are assembled into a
+ * {@link DashboardReport} for display on the application dashboard.</p>
+ *
+ * <p><b>Date Handling:</b> Several methods accept a date range ({@code startDate}, {@code endDate}).
+ * When dates are not provided, they default to the current financial year's start and end dates
+ * as resolved by {@link FinancialYearHibernateDAO}.</p>
+ *
+ * @see DashboardReport
+ * @see ExpenseBillRepository
+ * @see JournalVoucherRepository
+ */
+
+
 @Service
 public class DashboardReportService {
 
@@ -150,6 +168,36 @@ public class DashboardReportService {
     }
 
 
+    /**
+     * Populates the provided {@link DashboardReport} with aggregated
+     * financial statistics for the specified reporting period.
+     *
+     * <p>
+     * The report includes:
+     * <ul>
+     *     <li>Expense bills</li>
+     *     <li>Contractor bills</li>
+     *     <li>Supplier bills</li>
+     *     <li>Work orders</li>
+     *     <li>Purchase orders</li>
+     *     <li>Journal vouchers</li>
+     *     <li>Funds</li>
+     *     <li>Bank accounts</li>
+     *     <li>Contractors</li>
+     *     <li>Suppliers</li>
+     *     <li>Payments</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * When no date range is provided, the current financial year's
+     * start and end dates are used automatically.
+     * </p>
+     *
+     * @param dashboardReport report object to populate
+     * @param startDate start date of reporting period
+     * @param endDate end date of reporting period
+     */
 
     @Transactional(readOnly = true)
     public void buildDashboardReport(DashboardReport dashboardReport, Date startDate, Date endDate) {

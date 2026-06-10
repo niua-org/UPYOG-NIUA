@@ -12,16 +12,22 @@ import java.time.LocalDateTime;
 
 
 /**
- * BudgetHeader entity represents the header/master information of a budget document.
- * It serves as the main container for budget metadata and workflow information.
+ * Entity representing the header and master information of a budget document.
  *
- * - Links current and target financial years for budget planning
- * - Supports workflow-based approval process
- * - Implements optimistic locking for concurrent update control
- * - Extends StateAware for workflow management
+ * <p>Serves as the main container for budget metadata and workflow state,
+ * linking financial year information with the approval lifecycle of a budget.</p>
  *
- * Table: budget_header
+ * <p><b>Key Characteristics:</b></p>
+ * <ul>
+ *   <li>Links the current and target financial years for budget planning.</li>
+ *   <li>Supports a workflow-based approval process by extending {@code StateAware}.</li>
+ *   <li>Implements optimistic locking via a version field for concurrent update control.</li>
+ * </ul>
+ *
+ * <p>Mapped to the database table {@code budget_header}.</p>
  */
+
+
 @Entity
 @Table(name = BudgetHeader.TABLE_NAME)
 @Getter

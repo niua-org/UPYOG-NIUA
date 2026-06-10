@@ -12,18 +12,27 @@ import java.util.List;
 
 
 /**
- * FunctionBudgetHeadRepository provides data access operations for FunctionBudgetHead entity.
- * Manages the mapping between functions (departments) and budget heads.
+ * Spring Data JPA repository for {@link FunctionBudgetHead} entities, providing data access
+ * operations for the mapping between {@link CFunction} (departments) and {@link BudgetHead} records.
  *
- * Key Features:
- * - Find all budget head mappings for a specific function/department
- * - Retrieve mappings with ID greater than specified value (for pagination/incremental loading)
- * - Search distinct functions that have budget head mappings by function name or code
- * - Custom JPQL query for case-insensitive function search across mapped budget heads
+ * <p>Extends {@link JpaRepository} to inherit standard CRUD and pagination operations,
+ * and defines additional methods for function-scoped retrieval, incremental loading,
+ * and case-insensitive function search across mapped budget heads.</p>
+ *
+ * <p><b>Key Capabilities:</b></p>
+ * <ul>
+ *   <li>Retrieves all {@link FunctionBudgetHead} mappings for a specific function or department.</li>
+ *   <li>Fetches mappings with an ID greater than a given value, supporting incremental
+ *       or paginated loading scenarios.</li>
+ *   <li>Searches for distinct {@link CFunction} entries that have budget head mappings,
+ *       filtered case-insensitively by function name or code.</li>
+ * </ul>
  *
  * @see FunctionBudgetHead
- * @see JpaRepository
+ * @see CFunction
+ * @see BudgetHead
  */
+
 @Repository
 public interface FunctionBudgetHeadRepository extends JpaRepository<FunctionBudgetHead, Long> {
 

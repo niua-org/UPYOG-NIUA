@@ -23,16 +23,26 @@ import java.util.stream.Collectors;
 
 
 /**
- * BudgetHeadService provides business logic for BudgetHead entity operations.
- * Handles budget head creation, retrieval, and classification management.
+ * Service class responsible for managing {@link BudgetHead} entities and
+ * providing business operations related to budget head creation, retrieval,
+ * search, and classification.
  *
- * Key Features:
- * - Create budget heads with automatic account type code assignment (RR, RE, CR, CE)
- * - Retrieve budget heads grouped by account type (Revenue/Capital, Receipt/Expenditure)
- * - Search budget heads by name or code with case-insensitive matching
- * - Filter budget heads by function/department association
- * - Get active budget heads sorted by display order
- * - Maps BudgetAccountType enum to short codes for database storage
+ * <p>
+ * This service acts as an intermediary between the controller layer and
+ * {@link BudgetHeadRepository}, encapsulating business logic associated with
+ * budget heads.
+ * </p>
+ *
+ * <p>
+ * Responsibilities include:
+ * <ul>
+ *     <li>Creating budget heads with corresponding account type codes.</li>
+ *     <li>Retrieving budget heads grouped by account type.</li>
+ *     <li>Fetching active budget heads in display order.</li>
+ *     <li>Searching budget heads by code or name.</li>
+ *     <li>Retrieving budget heads associated with a specific function.</li>
+ * </ul>
+ * </p>
  *
  * @see BudgetHead
  * @see BudgetHeadRepository
@@ -57,10 +67,25 @@ public class BudgetHeadService {
         this.budgetHeadRepository = budgetHeadRepository;
     }
 
-    // @Transactional
-    // public BudgetHead create(final BudgetHead budgetHead) {
-    // return budgetHeadRepository.save(budgetHead);
-    // }
+    /**
+     * Creates and persists a new {@link BudgetHead}.
+     *
+     * <p>
+     * Based on the selected {@link BudgetAccountType}, a corresponding
+     * account type code is automatically assigned:
+     * </p>
+     *
+     * <ul>
+     *     <li>REVENUE_RECEIPTS → RR</li>
+     *     <li>REVENUE_EXPENDITURE → RE</li>
+     *     <li>CAPITAL_RECEIPTS → CR</li>
+     *     <li>CAPITAL_EXPENDITURE → CE</li>
+     * </ul>
+     *
+     * @param budgetHead budget head entity to be created
+     * @return persisted BudgetHead entity
+     */
+
     @Transactional
     public BudgetHead create(final BudgetHead budgetHead) {
         if (budgetHead.getAccountType() != null) {
@@ -84,6 +109,22 @@ public class BudgetHeadService {
         return budgetHeadRepository.save(budgetHead);
     }
 
+    /**
+     * Retrieves all budget heads, groups them by account type, and
+     * populates the provided model with categorized budget head lists.
+     *
+     * <p>
+     * The following model attributes are added:
+     * </p>
+     * <ul>
+     *     <li>rr - Revenue Receipts</li>
+     *     <li>re - Revenue Expenditure</li>
+     *     <li>cr - Capital Receipts</li>
+     *     <li>ce - Capital Expenditure</li>
+     * </ul>
+     *
+     * @param model Spring MVC model to populate with grouped budget heads
+     */
 
     public void getBudgetHeadList(Model model) {
         List<BudgetHead> budgetHeads =  budgetHeadRepository.findAll();

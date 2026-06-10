@@ -21,11 +21,50 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/*
- * Controller for budget head master data management in the budget module.
- * Handles CRUD operations for budget heads and provides AJAX endpoints for autocomplete.
- * Supports function-wise budget head mapping and search by name/code or function.
- * Enables creation and viewing of budget heads with account type classification.
+/**
+ * Controller responsible for managing Budget Head master data
+ * and function-wise budget head mappings.
+ *
+ * <p>
+ * This controller provides functionality for creating, viewing,
+ * searching, and retrieving budget heads used in the budgeting module.
+ * It also supports function-specific budget head mapping and
+ * autocomplete services for budget entry screens.
+ * </p>
+ *
+ * <h3>Primary Responsibilities</h3>
+ * <ul>
+ *     <li>Create new budget heads.</li>
+ *     <li>Display budget head master data.</li>
+ *     <li>Provide budget head search and autocomplete services.</li>
+ *     <li>Retrieve budget heads mapped to specific functions.</li>
+ *     <li>Display function-wise budget head mappings.</li>
+ * </ul>
+ *
+ * <h3>Supported Endpoints</h3>
+ * <ul>
+ *     <li><b>GET/POST /budgethead/new</b> - Display budget head creation form.</li>
+ *     <li><b>POST /budgethead/create</b> - Create a new budget head.</li>
+ *     <li><b>POST /budgethead/view</b> - View all budget heads.</li>
+ *     <li><b>GET /budgethead/ajaxBudgetHead</b> - Search budget heads by code or name.</li>
+ *     <li><b>GET /budgethead/ajaxBudgetHead/{functionId}</b> -
+ *         Search budget heads mapped to a function.</li>
+ *     <li><b>POST /budgethead/function-wise-view</b> -
+ *         View function-wise budget head mappings.</li>
+ * </ul>
+ *
+ * <h3>Key Features</h3>
+ * <ul>
+ *     <li>Budget head creation with account type classification.</li>
+ *     <li>Support for Revenue and Capital budget account types.</li>
+ *     <li>Function-wise budget head assignment and retrieval.</li>
+ *     <li>AJAX-based autocomplete and search functionality.</li>
+ * </ul>
+ *
+ * @see BudgetHead
+ * @see FunctionBudgetHead
+ * @see BudgetHeadService
+ * @see FunctionBudgetHeadService
  */
 
 @Controller

@@ -10,18 +10,27 @@ import java.util.List;
 
 import org.egov.model.budget.BudgetHead;
 
-
 /**
- * BudgetHeadRepository provides data access operations for BudgetHead entity.
- * Extends JpaRepository for standard CRUD operations and custom query methods.
+ * Spring Data JPA repository for {@link BudgetHead} entities, providing standard
+ * CRUD operations and custom query methods for budget head data access.
  *
- * Key Features:
- * - Search budget heads by code or name with case-insensitive matching
- * - Find budget heads mapped to specific functions/departments
- * - Filter budget heads based on function with search query
- * - Uses native SQL queries for complex joins with function_budget_head mapping table
+ * <p>Extends {@link JpaRepository} to inherit pagination, sorting, and basic
+ * persistence operations, and defines additional methods for search and
+ * function-based filtering of budget heads.</p>
  *
+ * <p><b>Key Capabilities:</b></p>
+ * <ul>
+ *   <li>Case-insensitive partial search across budget head code and name.</li>
+ *   <li>Retrieval of all budget heads mapped to a specific {@link CFunction}
+ *       via the {@code function_budget_head} join table.</li>
+ *   <li>Combined function-scoped search by code or name using native SQL.</li>
+ * </ul>
+ *
+ * @see BudgetHead
+ * @see CFunction
  */
+
+
 @Repository
 public interface BudgetHeadRepository extends JpaRepository<BudgetHead, Long> {
     

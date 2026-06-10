@@ -55,6 +55,26 @@ public class BudgetHeaderController {
     private CFinancialYearService financialYearService;
 
 
+    /**
+     * Displays the budget header creation form.
+     *
+     * <p>
+     * Retrieves the current and next financial years, generates a default
+     * budget header name using the next financial year's range, and populates
+     * the model with a new {@link BudgetHeader} instance.
+     * </p>
+     *
+     * <p>
+     * Example generated name:
+     * <pre>
+     * Budget_2026-27
+     * </pre>
+     * </p>
+     *
+     * @param model Spring MVC model used to populate view attributes
+     * @return the budget header creation view name
+     */
+
     @RequestMapping(value = "/new", method = { RequestMethod.GET, RequestMethod.POST })
     public String newForm(final Model model) {
 
@@ -66,6 +86,33 @@ public class BudgetHeaderController {
         return BUDGET_HEADER_NEW;
     }
 
+
+    /**
+     * Retrieves the current and next financial years and adds them to the model.
+     *
+     * <p>
+     * The next financial year is determined by adding one day to the
+     * current financial year's ending date and resolving the corresponding
+     * financial year.
+     * </p>
+     *
+     * <p>
+     * The following model attributes are populated:
+     * <ul>
+     *     <li>currentFy - Current financial year</li>
+     *     <li>nextFy - Next financial year</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * If either financial year cannot be resolved, an error message is added
+     * to the model and {@code null} is returned.
+     * </p>
+     *
+     * @param model Spring MVC model used to populate financial year attributes
+     * @return map containing current and next financial years with keys
+     *         {@code currentFy} and {@code nextFy}, or {@code null} if unavailable
+     */
 
     private Map<String, CFinancialYear> addFinancialYears(Model model) {
         CFinancialYear financialYear = financialYearService.getCurrentFinancialYear();

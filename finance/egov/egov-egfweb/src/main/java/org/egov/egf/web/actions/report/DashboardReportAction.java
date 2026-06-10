@@ -29,6 +29,41 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+
+
+/**
+ * Struts2 action class for generating and displaying the eGov financial dashboard report.
+ *
+ * <p>This action handles three distinct flows:</p>
+ * <ul>
+ *   <li><b>View Form</b> — Renders the date-range input form for filtered report generation.</li>
+ *   <li><b>View Report</b> — Displays the dashboard report for the current financial year
+ *       using auto-resolved dates.</li>
+ *   <li><b>View Filtered Report</b> — Displays the dashboard report for a user-supplied
+ *       date range, after validating that both dates fall within the same active financial year.</li>
+ * </ul>
+ *
+ * <p><b>Validation:</b> The {@link #validate()} method enforces the following rules
+ * before the filtered report action executes:</p>
+ * <ul>
+ *   <li>Start date and end date are required.</li>
+ *   <li>Start date must not be after end date.</li>
+ *   <li>Both dates must belong to an active financial year.</li>
+ *   <li>Both dates must fall within the same financial year.</li>
+ * </ul>
+ *
+ * <p><b>Result mappings:</b></p>
+ * <ul>
+ *   <li>{@code viewReport} → {@code dashboardReport-viewReport.jsp}</li>
+ *   <li>{@code viewForm} → {@code dashboardReport-viewForm.jsp}</li>
+ * </ul>
+ *
+ * @see DashboardReportService
+ * @see DashboardReport
+ * @see FinancialYearDAO
+ */
+
+
 @ParentPackage("egov")
 @Results({
         @Result(name = "viewReport", location = "dashboardReport-viewReport.jsp"),
@@ -52,6 +87,21 @@ public class DashboardReportAction extends BaseFormAction {
     public Object getModel() {
         return dashboardReport;
     }
+
+
+
+
+    /**
+     * Renders the dashboard report for the current financial year using auto-resolved dates.
+     *
+     * <p>Validates that an active financial year exists for today's date before building the report.
+     * If no active financial year is found, an action error is added and the form view is returned.</p>
+     *
+     * <p>Validation is skipped for this action ({@link SkipValidation}).</p>
+     *
+     * @return {@code "viewReport"} on success, or {@code "viewForm"} if no active
+     *         financial year is found for the current date
+     */
 
 
     @SkipValidation

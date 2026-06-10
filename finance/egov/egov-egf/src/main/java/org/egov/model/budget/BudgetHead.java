@@ -12,26 +12,32 @@ import org.hibernate.validator.constraints.SafeHtml;
 
 
 /**
- * BudgetHead entity class
+ * Entity representing a budget head master record in the financial system.
  *
- * This entity represents the budget head master data in the financial system.
- * Budget heads are the primary classification units for organizing and tracking
- * budgetary allocations and expenditures. Each budget head represents a specific
- * category of income or expenditure.
+ * <p>A budget head is the primary classification unit for organising and tracking
+ * budgetary allocations and expenditures. Each record represents a distinct category
+ * of income or expenditure, identified by a unique code and name.</p>
  *
- * Key Features:
- * - Maintains unique code and name for each budget head
- * - Supports both revenue and capital account types
- * - Categorizes budget heads (e.g., Revenue Receipt, Revenue Expenditure, Capital Receipt, Capital Expenditure)
- * - Supports scheme/program applicability
- * - Maintains active/inactive status
- * - Supports ordering for display purposes
- * - Ensures uniqueness of budget head codes
+ * <p><b>Key Characteristics:</b></p>
+ * <ul>
+ *   <li>Uniquely identified by {@code code}, enforced at the database and validation level.</li>
+ *   <li>Classified by {@link BudgetAccountType} (e.g. Revenue Receipt, Revenue Expenditure,
+ *       Capital Receipt, Capital Expenditure).</li>
+ *   <li>Supports scheme/program applicability via the {@code program} field.</li>
+ *   <li>Maintains active/inactive status for lifecycle management.</li>
+ *   <li>Supports display ordering via the {@code order} field.</li>
+ *   <li>Inherits audit trail support (created by, modified by, timestamps)
+ *       from {@link AbstractAuditable}.</li>
+ * </ul>
  *
- * Table: EGF_BUDGETHEAD
- * Sequence: SEQ_EGF_BUDGETHEAD
+ * <p>Mapped to the database table {@code EGF_BUDGETHEAD}, with primary keys generated
+ * from the sequence {@code SEQ_EGF_BUDGETHEAD}.</p>
  *
+ * @see BudgetAccountType
+ * @see AbstractAuditable
+ * @see BudgetCoa
  */
+
 @Entity
 @Table(name = "EGF_BUDGETHEAD")
 @SequenceGenerator(name = BudgetHead.SEQ_BUDGETHEAD, sequenceName = BudgetHead.SEQ_BUDGETHEAD, allocationSize = 1)

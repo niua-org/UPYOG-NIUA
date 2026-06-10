@@ -132,6 +132,40 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+/**
+ * Service layer for managing {@link BudgetDetail} entities within the eGov budget module.
+ *
+ * <p>This service extends {@link PersistenceService} and provides comprehensive business logic
+ * for budget detail operations including creation, search, workflow management, actuals fetching,
+ * and consolidated budget reporting.</p>
+ *
+ * <p><b>Core Responsibilities:</b></p>
+ * <ul>
+ *   <li>CRUD operations for {@link BudgetDetail} with duplicate validation and unique number generation.</li>
+ *   <li>Hierarchical budget tree traversal and materialized path management.</li>
+ *   <li>Fetching actuals from vouchers and bills for budget vs. actual comparisons.</li>
+ *   <li>Workflow transitions (save, verify, reject, cancel) for budget detail approval lifecycle.</li>
+ *   <li>Bulk budget loading via {@link BudgetUpload}, including root budget and department head creation.</li>
+ *   <li>Consolidated budget report data retrieval grouped by major GL code or GL code range.</li>
+ * </ul>
+ *
+ * <p><b>Workflow States Supported:</b></p>
+ * <ul>
+ *   <li>{@code NEW} — Draft state after initial save.</li>
+ *   <li>{@code Created} — Submitted for approval.</li>
+ *   <li>{@code Verified/Approved} — Approved by authorised user.</li>
+ *   <li>{@code Rejected} — Sent back to the initiator.</li>
+ *   <li>{@code Cancelled} — Terminated from workflow.</li>
+ * </ul>
+ *
+ * @see BudgetDetail
+ * @see BudgetService
+ * @see BudgetGroupService
+ * @see PersistenceService
+ */
+
+
 @Service
 @Transactional(readOnly = true)
 public class BudgetDetailService extends PersistenceService<BudgetDetail, Long> {

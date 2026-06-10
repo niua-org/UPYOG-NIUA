@@ -20,32 +20,44 @@ import java.math.BigDecimal;
 
 
 /**
- * BudgetItem entity class
+ * Entity representing an individual budget line item in the financial system.
  *
- * This entity represents individual budget line items in the financial system.
- * Each budget item captures the budget estimates and actuals for a specific
- * combination of function, budget head, and financial year. It maintains both
- * current and next year estimates along with actual expenditure data.
+ * <p>Each {@code BudgetItem} captures the budget estimates and actuals for a specific
+ * combination of {@link CFunction} (department/function), {@link BudgetHead}, and
+ * {@link CFinancialYear}. It maintains current year financial data alongside next year
+ * estimates to support multi-year budget planning.</p>
  *
- * Key Features:
- * - Links budget heads with functions (departments) and financial years
- * - Captures current year estimate, actual, and revised estimate
- * - Captures next year estimate for budget planning
- * - Supports scheme-based budgeting
- * - Groups budget items using budget groups
- * - Generates unique budget codes based on function and budget head
- * - Maintains association with budget register for workflow
- * - Provides safe getters to handle null values
+ * <p><b>Key Characteristics:</b></p>
+ * <ul>
+ *   <li>Links a budget head with a function and two financial years (current and target).</li>
+ *   <li>Captures current year estimate, actual expenditure, and revised estimate.</li>
+ *   <li>Captures the next year estimate for forward budget planning.</li>
+ *   <li>Supports scheme-based budgeting via an optional {@link Scheme} association.</li>
+ *   <li>Groups line items using a budget group code for classification.</li>
+ *   <li>Generates a unique budget code from function and budget head codes.</li>
+ *   <li>Associates with a {@link BudgetRegister} for the approval workflow.</li>
+ *   <li>Provides null-safe getters that return {@link BigDecimal#ZERO} instead of {@code null}.</li>
+ *   <li>Inherits audit trail support from {@link AbstractAuditable}.</li>
+ * </ul>
  *
- * Budget Item Lifecycle:
- * 1. Created for a specific financial year (nextEstimate)
- * 2. Tracks current financial year data (currentEstimate, currentActual, currentRevisedEstimate)
- * 3. Associated with budget register for approval workflow
+ * <p><b>Budget Item Lifecycle:</b></p>
+ * <ol>
+ *   <li>Created for a target financial year with an initial {@code nextEstimate}.</li>
+ *   <li>Current year data ({@code currentEstimate}, {@code currentActual},
+ *       {@code currentRevisedEstimate}) is populated as the financial year progresses.</li>
+ *   <li>Associated with a {@link BudgetRegister} for workflow-based approval.</li>
+ * </ol>
  *
- * Table: egf_budgetitem
- * Sequence: seq_egf_budgetitem
+ * <p>Mapped to the database table {@code egf_budgetitem}, with primary keys generated
+ * from the sequence {@code seq_egf_budgetitem}.</p>
  *
+ * @see BudgetHead
+ * @see BudgetRegister
+ * @see CFunction
+ * @see CFinancialYear
+ * @see AbstractAuditable
  */
+
 @Entity
 @Table(name = BudgetItem.TABLE_NAME)
 @Unique(id = "id", tableName = BudgetItem.TABLE_NAME, enableDfltMsg = true)

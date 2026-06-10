@@ -10,10 +10,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 
-/*
+/**
  * Service for bulk budget data input operations.
- * Handles function-wise budget item creation by bulk saving budget items to the repository.
+ *
+ * <p>Handles the creation of function-wise {@link BudgetItem} records by bulk saving them
+ * to the repository. The class is read-only by default at the transaction level;
+ * write operations are explicitly marked with {@link Transactional}.</p>
+ *
+ * @see BudgetItem
+ * @see BudgetItemRepository
  */
+
+
+
 @Service
 @Transactional(readOnly = true)
 public class BudgetInputService {

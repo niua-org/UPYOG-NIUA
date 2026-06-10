@@ -44,18 +44,72 @@ import java.util.stream.Collectors;
 
 
 /**
- * Controller for managing budget item operations - create, view, edit, and complete budget views.
- * Handles function-wise budget entry with validation for opening/closing balances and budget items.
- * Supports multi-step workflow: select function → enter budget items → view/edit → complete budget view.
- * Groups budget items by account type (Revenue/Capital) and category for organized display.
- * Integrates with BudgetRegister workflow to ensure budget data is linked to approved budget registers.
- * Validates financial years, functions, schemes, and prevents duplicate budget entries per function.
- * Computes budget totals (estimates, actuals, revised) for revenue and capital budgets.
- * Enforces role-based access (FMO, AO designations) for budget creation and editing.
- * Auto-generates budget codes using function, financial year, and budget head metadata.
- * Provides comprehensive views: item-level, function-wise, and consolidated complete budget summaries.
+ * Controller responsible for managing function-wise budget entry,
+ * maintenance, and reporting operations.
+ *
+ * <p>
+ * This controller provides functionality for creating, updating,
+ * viewing, and consolidating budget information associated with
+ * budget registers and functions.
+ * </p>
+ *
+ * <h3>Primary Responsibilities</h3>
+ * <ul>
+ *     <li>Create function-wise budgets against a budget register.</li>
+ *     <li>Validate budget register, function, budget head, and scheme information.</li>
+ *     <li>Manage opening balance, budget entries, and closing balance calculations.</li>
+ *     <li>Support budget editing and update operations.</li>
+ *     <li>Display function-wise and consolidated budget views.</li>
+ *     <li>Prevent duplicate budget creation for a function within a budget register.</li>
+ * </ul>
+ *
+ * <h3>Workflow</h3>
+ * <ol>
+ *     <li>Select Budget Register.</li>
+ *     <li>Select Function.</li>
+ *     <li>Enter Opening Balance.</li>
+ *     <li>Capture Revenue and Capital Budget Items.</li>
+ *     <li>Automatically calculate Closing Balance.</li>
+ *     <li>View or Edit submitted budget information.</li>
+ * </ol>
+ *
+ * <h3>Key Features</h3>
+ * <ul>
+ *     <li>Function-wise budget preparation and maintenance.</li>
+ *     <li>Automatic budget code generation.</li>
+ *     <li>Grouping of budget items by account type and category.</li>
+ *     <li>Opening and closing balance management.</li>
+ *     <li>Scheme-based budget head support.</li>
+ *     <li>Consolidated budget summary generation.</li>
+ *     <li>Financial year validation and budget register integration.</li>
+ * </ul>
+ *
+ * <h3>Supported Views</h3>
+ * <ul>
+ *     <li><code>budgetitem-new</code> - Function selection screen.</li>
+ *     <li><code>functionwisebudget-form</code> - Budget entry form.</li>
+ *     <li><code>budgetitem-view</code> - Budget detail view.</li>
+ *     <li><code>budgetitem-edit</code> - Budget edit form.</li>
+ *     <li><code>budgetitem-function</code> - Function-wise budget listing.</li>
+ *     <li><code>budgetitemcomplete-view</code> - Consolidated budget report.</li>
+ * </ul>
+ *
+ * <h3>Business Rules</h3>
+ * <ul>
+ *     <li>A function can have only one budget within a budget register.</li>
+ *     <li>Opening balance is mandatory before budget entry.</li>
+ *     <li>Closing balance is automatically derived from opening balance
+ *         and budget totals.</li>
+ *     <li>Budget items are grouped under Revenue and Capital categories.</li>
+ *     <li>Only valid budget heads and schemes are permitted.</li>
+ * </ul>
+ *
+ * @see BudgetItem
+ * @see BudgetForm
+ * @see BudgetRegister
+ * @see BudgetItemService
+ * @see BudgetRegisterWorkflowService
  */
-
 
 @Controller
 @RequestMapping("/budget")

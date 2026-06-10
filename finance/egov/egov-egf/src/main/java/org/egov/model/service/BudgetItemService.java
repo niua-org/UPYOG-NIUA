@@ -87,6 +87,14 @@ public class BudgetItemService {
     }
 
 
+    /**
+     * Validates the existence of the specified budget register.
+     *
+     * @param budgetRegisterId identifier of the budget register
+     * @param resultBinder binding result used for validation errors
+     * @return the corresponding budget register if found, otherwise null
+     */
+
     public BudgetRegister validateBudgetRegister(Long budgetRegisterId,final BindingResult resultBinder) {
         BudgetRegister mBudgetRegister = budgetRegisterWorkflowService.findOne(budgetRegisterId);
         if (mBudgetRegister == null) {
@@ -95,6 +103,14 @@ public class BudgetItemService {
         return mBudgetRegister;
     }
 
+    /**
+     * Validates the existence of the specified function.
+     *
+     * @param functionId identifier of the function
+     * @param bindingResult binding result used for validation errors
+     * @return the corresponding function if found, otherwise null
+     */
+
     public CFunction validateFunction(Long functionId, final  BindingResult bindingResult) {
         CFunction function = functionRepository.findOne(functionId);
         if (function == null) {
@@ -102,6 +118,16 @@ public class BudgetItemService {
         }
         return function;
     }
+
+    /**
+     * Validates opening balance details and populates mandatory
+     * budget-related attributes before persistence.
+     *
+     * @param openingBalance opening balance budget item
+     * @param bindingResult binding result used to capture validation errors
+     * @param function associated function
+     * @param budgetRegister associated budget register
+     */
 
     public void validateOpeningBudget(BudgetItem openingBalance, final BindingResult bindingResult, CFunction function, BudgetRegister budgetRegister) {
         if (!openingBalance.isValuesFilled()) {
@@ -126,6 +152,16 @@ public class BudgetItemService {
             openingBalance.setBudgetRegister(budgetRegister);
         }
     }
+
+    /**
+     * Validates all submitted budget items, performs budget head and scheme
+     * verification, and populates mandatory fields required for persistence.
+     *
+     * @param budgetItems list of budget items to validate
+     * @param bindingResult binding result used to capture validation errors
+     * @param function associated function
+     * @param budgetRegister associated budget register
+     */
 
     public void validateBudgetItems(List<BudgetItem> budgetItems, final BindingResult bindingResult, CFunction function, BudgetRegister budgetRegister) {
 
@@ -228,6 +264,21 @@ public class BudgetItemService {
 
     }
 
+    /**
+     * Saves a complete budget input form including opening balance,
+     * budget line items, and automatically calculated closing balance.
+     *
+     * <p>
+     * Revenue and expenditure totals are calculated based on account
+     * type codes and used to derive the closing balance values.
+     * </p>
+     *
+     * @param form submitted budget form
+     * @param budgetRegister target budget register
+     * @param function associated function
+     * @throws Exception if an error occurs while saving budget data
+     */
+
     @Transactional(rollbackFor = Exception.class)
     public void saveBudgetInputForm(BudgetForm form, BudgetRegister budgetRegister, CFunction function) throws Exception {
 
@@ -319,6 +370,15 @@ public class BudgetItemService {
         budgetItemRepository.save(form.getItems());
     }
 
+    /**
+     * Retrieves budget items grouped by budget group for the specified
+     * account types, function, and budget register.
+     *
+     * @param types list of budget groups
+     * @param function function for which budget items are required
+     * @param budgetRegister budget register reference
+     * @return budget items grouped by budget group
+     */
 
     public Map<String, List<BudgetItem>> getBudgetItemsByTypesFunctionFyBudgetRegister(
             List<String> types, CFunction function, BudgetRegister budgetRegister) {
@@ -337,11 +397,33 @@ public class BudgetItemService {
         return budgetItemRepository.findByBudgetGroupInAndFunctionAndBudgetRegisterAndNotApplicableFalse(types, function, budgetRegister).stream().collect(Collectors.groupingBy(BudgetItem::getBudgetGroup));
     }
 
+    /**
+     * Retrieves only applicable budget items grouped by budget group.
+     *
+     * <p>
+     * Budget items marked as not applicable are excluded.
+     * </p>
+     *
+     * @param types list of budget groups
+     * @param function function reference
+     * @param budgetRegister budget register reference
+     * @return grouped applicable budget items
+     */
+
     public Map<String, List<BudgetItem>> getBudgetItemsByTypesFunctionAndBudgetRegister(List<String> types, CFunction function, BudgetRegister budgetRegister) {
         return budgetItemRepository.findByBudgetGroupInAndFunctionAndBudgetRegister(types, function, budgetRegister).stream().collect(Collectors.groupingBy(BudgetItem::getBudgetGroup));
 //        return budgetItemRepository.findByBudgetGroupInAndFunctionAndBudgetRegister(types, function, budgetRegister).stream().collect(Collectors.groupingBy(BudgetItem::getBudgetGroup));
     }
 
+    /**
+     * Checks whether a budget already exists for the specified function,
+     * financial year, and budget register.
+     *
+     * @param function function reference
+     * @param currentFinancialYear financial year reference
+     * @param budgetRegister budget register reference
+     * @return true if budget exists, otherwise false
+     */
 
 
     public Boolean checkIfBudgetExistsForFunctionAndFinancialYearAndBudgetRegister(CFunction function,
@@ -357,6 +439,17 @@ public class BudgetItemService {
         return code.equalsIgnoreCase("rr") || code.equalsIgnoreCase("cr");
     }
 
+    /**
+     * Updates an existing budget input form including opening balance,
+     * budget line items, and recalculated closing balance.
+     *
+     * <p>
+     * Existing records are updated while newly added rows are inserted.
+     * </p>
+     *
+     * @param form updated budget form
+     * @param budgetRegister associated budget register
+     */
 
     @Transactional
     public void updateBudgetInputForm(BudgetForm form, BudgetRegister budgetRegister) {
@@ -562,12 +655,28 @@ public class BudgetItemService {
         return functions;
     }
 
+    /**
+     * Retrieves functions for which budget entries exist under the
+     * specified budget register.
+     *
+     * @param budgetRegister budget register reference
+     * @return list of functions having budget entries
+     */
+
     public List<CFunction> functionsHavingBudgetOfBudgetRegister(BudgetRegister budgetRegister) {
         List<CFunction> functions = budgetItemRepository.findDistinctFunctionsByBudgetRegisterWithBudgetItems(budgetRegister.getId());
 
         return functions;
     }
 
+
+    /**
+     * Retrieves functions for which budget entries exist under the
+     * specified budget register.
+     *
+     * @param budgetRegister budget register reference
+     * @return list of functions having budget entries
+     */
 
     public Map<String, List<BudgetItem>> getBudgetItemsByTypesAndBudgetRegister(
             List<String> types,BudgetRegister budgetRegister) {
@@ -579,10 +688,34 @@ public class BudgetItemService {
     }
 
 
+    /**
+     * Checks whether budget data already exists for the specified
+     * function within the given budget register.
+     *
+     * @param budgetRegister budget register reference
+     * @param function function reference
+     * @return true if budget data exists, otherwise false
+     */
 
     public boolean validateIfFunctionBudgetExists(BudgetRegister budgetRegister, CFunction function) {
         return budgetItemRepository.existsFunctionWiseBudget(function.getId(), budgetRegister.getId());
     }
+
+    /**
+     * Repopulates model attributes required to redisplay the budget form
+     * after validation failures.
+     *
+     * <p>
+     * This method rebuilds grouped budget item structures and restores
+     * all form-related data for rendering on the UI.
+     * </p>
+     *
+     * @param model spring model
+     * @param function selected function
+     * @param budgetRegisterId budget register identifier
+     * @param budgetForm submitted budget form
+     * @param budgetRegister budget register reference
+     */
 
 
     public void populateValidationErrors(Model model, CFunction function, Long budgetRegisterId, BudgetForm budgetForm, BudgetRegister budgetRegister) {
@@ -639,6 +772,16 @@ public class BudgetItemService {
         model.addAttribute("nextFy", budgetRegister.getFinancialYear());
 
     }
+
+    /**
+     * Populates model attributes required for editing an existing budget.
+     *
+     * @param model spring model
+     * @param function selected function
+     * @param budgetRegisterId budget register identifier
+     * @param budgetForm budget form containing existing values
+     * @param budgetRegister budget register reference
+     */
 
     public void populateForEdit(Model model, CFunction function, Long budgetRegisterId, BudgetForm budgetForm, BudgetRegister budgetRegister) {
 

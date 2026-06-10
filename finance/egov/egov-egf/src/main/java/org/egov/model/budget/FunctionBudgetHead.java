@@ -9,33 +9,46 @@ import javax.persistence.*;
 
 
 /**
- * FunctionBudgetHead entity class
+ * Entity representing the mapping between a {@link CFunction} (department or service)
+ * and a {@link BudgetHead}, acting as a join table for their many-to-many relationship.
  *
- * This entity represents the mapping/association between Functions (Departments/Services)
- * and Budget Heads. It acts as a bridge table to establish a many-to-many relationship,
- * defining which budget heads are applicable or allowed for which functions.
+ * <p>Each record defines a permitted association — declaring that a specific budget head
+ * is authorised for use by a specific function. Budget items can only be created for
+ * function and budget head combinations that have a corresponding {@code FunctionBudgetHead}
+ * mapping.</p>
  *
- * Key Features:
- * - Links functions with budget heads
- * - Prevents duplicate mappings through unique constraint
- * - Controls which budget heads can be used by specific departments
- * - Supports budget authorization and access control
+ * <p><b>Key Characteristics:</b></p>
+ * <ul>
+ *   <li>Bridges the many-to-many relationship between {@link CFunction} and {@link BudgetHead}.</li>
+ *   <li>Enforces uniqueness of each function–budget head pair via a composite unique constraint
+ *       on {@code function_id} and {@code budget_head_id}, preventing duplicate mappings.</li>
+ *   <li>Supports budget access control by restricting which budget heads are available
+ *       to which departments or services.</li>
+ *   <li>Both associations are loaded lazily to avoid unnecessary joins.</li>
+ * </ul>
  *
- * Business Purpose:
- * This mapping ensures that:
- * - Only authorized budget heads can be used by specific departments
- * - Budget items can only be created for valid function-budgethead combinations
- * - Proper segregation of budget allocation across departments
- * - Controlled and structured budget planning
+ * <p><b>Business Purpose:</b></p>
+ * <ul>
+ *   <li>Only authorised budget heads may be used by a given department (function).</li>
+ *   <li>Ensures proper segregation of budget allocation across departments.</li>
+ *   <li>Supports structured and controlled budget planning workflows.</li>
+ * </ul>
  *
- * Example Usage:
- * - Engineering Department can use "Road Maintenance" budget head
- * - Health Department can use "Medical Supplies" budget head
- * - Education Department cannot use "Road Maintenance" budget head (unless mapped)
+ * <p><b>Examples:</b></p>
+ * <ul>
+ *   <li>The Engineering department is mapped to the "Road Maintenance" budget head.</li>
+ *   <li>The Health department is mapped to the "Medical Supplies" budget head.</li>
+ *   <li>The Education department cannot use "Road Maintenance" unless an explicit
+ *       mapping record exists.</li>
+ * </ul>
  *
- * Table: function_budget_head
- * Unique Constraint: Combination of function_id and budget_head_id must be unique
+ * <p>Mapped to the database table {@code function_budget_head}, with a composite unique
+ * constraint on ({@code budget_head_id}, {@code function_id}).</p>
+ *
+ * @see CFunction
+ * @see BudgetHead
  */
+
 @Entity
 @Table(name = "function_budget_head",
         uniqueConstraints = @UniqueConstraint(columnNames = {"budget_head_id", "function_id"}))

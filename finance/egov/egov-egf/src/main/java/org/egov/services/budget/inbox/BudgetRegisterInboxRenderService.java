@@ -13,25 +13,33 @@ import java.util.Date;
 import java.util.List;
 
 
-/*
- * Inbox rendering service for BudgetRegister workflow items.
+/**
+ * Inbox rendering service for {@link BudgetRegister} workflow items.
  *
- * This service implements the InboxRenderService interface to integrate BudgetRegister entities
- * with the eGov workflow inbox system. It provides functionality to fetch and display budget
- * register items in the user's workflow inbox.
+ * <p>This service implements the {@link InboxRenderService} interface to integrate
+ * {@link BudgetRegister} entities with the eGov workflow inbox system. It provides
+ * functionality to fetch and display budget register items in the user's workflow inbox.</p>
  *
- * Key Features:
- * - Retrieves budget registers assigned to specific positions/users for workflow action
- * - Fetches draft budget registers that have not yet been submitted to workflow
- * - Filters out closed/completed workflow items from the inbox
- * - Handles empty owner lists gracefully by returning empty results
+ * <p><b>Key Features:</b></p>
+ * <ul>
+ *   <li>Retrieves budget registers assigned to specific positions/users for workflow action.</li>
+ *   <li>Fetches draft budget registers that have not yet been submitted to workflow.</li>
+ *   <li>Filters out closed/completed workflow items from the inbox.</li>
+ *   <li>Handles empty owner lists gracefully by returning empty results.</li>
+ * </ul>
  *
- * Workflow Integration:
- * - Assigned items: Budget registers with active workflow states assigned to user positions
- * - Draft items: Budget registers created by users but not yet submitted (state is NULL)
+ * <p><b>Workflow Integration:</b></p>
+ * <ul>
+ *   <li><b>Assigned items:</b> Budget registers with active workflow states assigned to user positions.</li>
+ *   <li><b>Draft items:</b> Budget registers created by users but not yet submitted (state is {@code NULL}).</li>
+ * </ul>
  *
- * Used by the workflow inbox UI to populate the user's pending tasks and draft items.
+ * <p>Used by the workflow inbox UI to populate the user's pending tasks and draft items.</p>
+ *
+ * @see InboxRenderService
+ * @see BudgetRegister
  */
+
 @Service("BudgetRegisterInboxRenderService")
 public class BudgetRegisterInboxRenderService implements InboxRenderService<BudgetRegister> {
 
@@ -42,6 +50,19 @@ public class BudgetRegisterInboxRenderService implements InboxRenderService<Budg
     @PersistenceContext
     private EntityManager entityManager;
 
+
+    /**
+     * Retrieves all {@link BudgetRegister} workflow items currently assigned to the given owner positions.
+     *
+     * <p>Fetches budget registers whose workflow state is assigned to one of the provided
+     * position IDs and whose workflow status is not closed (status {@code <> 2}).</p>
+     *
+     * @param owners a {@link List} of position IDs representing the current user's assigned positions;
+     *               must not be {@code null}
+     * @return a {@link List} of {@link BudgetRegister} entities assigned to the given positions
+     *         with an active (non-closed) workflow state, or an empty list if {@code owners}
+     *         is {@code null} or empty
+     */
 
     @Override
     public List<BudgetRegister> getAssignedWorkflowItems(List<Long> owners) {
@@ -55,6 +76,22 @@ public class BudgetRegisterInboxRenderService implements InboxRenderService<Budg
                 .setParameter("owners", owners)
                 .getResultList();
     }
+
+
+    /**
+     * Retrieves all draft {@link BudgetRegister} items created by the given users
+     * that have not yet been submitted to the workflow.
+     *
+     * <p>A budget register is considered a draft when its workflow {@code state} is {@code NULL},
+     * meaning it has been saved but not yet forwarded for approval. Results are filtered
+     * to only include records created by users whose IDs match the provided list.</p>
+     *
+     * @param owners a {@link List} of user IDs representing the current user's identities;
+     *               must not be {@code null}
+     * @return a {@link List} of draft {@link BudgetRegister} entities created by the specified
+     *         users with no associated workflow state, or an empty list if {@code owners}
+     *         is {@code null} or empty
+     */
 
     @Override
     public List<BudgetRegister> getDraftWorkflowItems(List<Long> owners) {

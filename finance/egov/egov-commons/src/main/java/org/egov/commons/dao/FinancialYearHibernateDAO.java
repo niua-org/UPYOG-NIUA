@@ -373,6 +373,19 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
 
     //for ULB DASHBOARD
 
+    /**
+     * Retrieves the ending date of the current financial year based on today's date.
+     * <p>
+     * This method queries the {@code CFinancialYear} table to find the financial year
+     * whose start date is on or before today and whose end date is on or after today.
+     * The date is formatted as {@code dd-MMM-yyyy} before being used in the query.
+     * </p>
+     *
+     * @return the ending date of the current financial year as a {@code String}
+     *         in the format {@code dd-MMM-yyyy}, or {@code "0.0"} if no matching
+     *         financial year is found or the ending date is {@code null}.
+     */
+
     public String getCurrFinancialYearEndDate() {
         Date dt = new Date();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");

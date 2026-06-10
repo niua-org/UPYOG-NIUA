@@ -17,34 +17,51 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * BudgetRegister entity class
+ * Entity representing a budget register document in the financial system.
  *
- * This entity represents the budget register which acts as a container/document
- * for grouping multiple budget items together for approval workflow. It serves
- * as the main entry point for budget creation and approval process in the system.
+ * <p>A {@code BudgetRegister} acts as a container that groups multiple {@link BudgetItem}
+ * entries together for batch processing through a workflow-based approval lifecycle.
+ * It serves as the primary entry point for budget creation and submission in the system.</p>
  *
- * Key Features:
- * - Generates unique budget register number for tracking
- * - Groups multiple budget items for batch processing
- * - Supports workflow-based approval process through StateAware
- * - Links current and target financial years
- * - Maintains creation date and status tracking
- * - Cascade operations to associated budget items
+ * <p><b>Key Characteristics:</b></p>
+ * <ul>
+ *   <li>Carries a unique, non-updatable register number for tracking and reference.</li>
+ *   <li>Groups one or more {@link BudgetItem} records via a one-to-many relationship,
+ *       with cascade and orphan-removal behaviour.</li>
+ *   <li>Extends {@link StateAware} to participate in the eGov workflow engine,
+ *       enabling state transitions and approval routing.</li>
+ *   <li>Links both the authoring financial year ({@code currentFinancialYear}) and
+ *       the target financial year ({@code financialYear}) for multi-year budget planning.</li>
+ *   <li>Tracks the approval status via {@link EgwStatus}.</li>
+ *   <li>Carries transient UI fields for workflow action routing that are not persisted.</li>
+ * </ul>
  *
- * Budget Register Workflow:
- * 1. Created with a unique register number
- * 2. Budget items are added to the register
- * 3. Submitted for approval through workflow
- * 4. Status changes as it moves through approval hierarchy
- * 5. Finally approved/rejected by authorized personnel
+ * <p><b>Approval Workflow Lifecycle:</b></p>
+ * <ol>
+ *   <li>Register is created with a unique {@code budgetRegisterNumber}.</li>
+ *   <li>{@link BudgetItem} records are added and associated with the register.</li>
+ *   <li>Register is submitted for approval through the workflow engine.</li>
+ *   <li>Status advances as it moves through the approval hierarchy.</li>
+ *   <li>Register is finally approved or rejected by authorised personnel.</li>
+ * </ol>
  *
- * Relationship:
- * - One BudgetRegister can contain many BudgetItems (One-to-Many)
- * - Extends StateAware for workflow management
+ * <p><b>Key Relationships:</b></p>
+ * <ul>
+ *   <li>One {@code BudgetRegister} contains many {@link BudgetItem} records (one-to-many,
+ *       cascade all, orphan removal enabled).</li>
+ *   <li>Extends {@link StateAware} for workflow state management.</li>
+ * </ul>
  *
- * Table: EG_BUDGETREGISTER
- * Sequence: SEQ_EG_BUDGETREGISTER
+ * <p>Mapped to the database table {@code EG_BUDGETREGISTER}, with primary keys generated
+ * from the sequence {@code SEQ_EG_BUDGETREGISTER}.</p>
+ *
+ * @see BudgetItem
+ * @see StateAware
+ * @see CFinancialYear
+ * @see EgwStatus
  */
+
+
 @Entity
 @Table(name = "EG_BUDGETREGISTER")
 @SequenceGenerator(

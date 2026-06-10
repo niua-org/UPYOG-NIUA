@@ -14,19 +14,31 @@ import java.util.List;
 
 
 /**
- * BudgetItemRepository provides data access operations for BudgetItem entity.
- * Handles complex queries for budget item retrieval based on various criteria.
+ * Spring Data JPA repository for {@link BudgetItem} entities, providing standard
+ * CRUD operations and custom query methods for budget item data access.
  *
- * Key Features:
- * - Find budget items by budget register, function, financial year, and budget group
- * - Filter items by notApplicable flag to exclude inactive budget items
- * - Check existence of budgets for specific function and financial year combinations
- * - Retrieve distinct functions that have budget items
- * - Support for querying budget items with multiple budget groups
- * - Custom JPQL queries for existence checks and distinct function retrieval
+ * <p>Extends {@link JpaRepository} to inherit pagination, sorting, and basic
+ * persistence operations, and defines additional methods for retrieving budget items
+ * by various combinations of register, function, financial year, and budget group.</p>
  *
+ * <p><b>Key Capabilities:</b></p>
+ * <ul>
+ *   <li>Retrieval of budget items by {@link BudgetRegister}, {@link CFunction},
+ *       {@link CFinancialYear}, and budget group — individually or in combination.</li>
+ *   <li>Filtering of applicable items by excluding records where
+ *       {@code notApplicable} is {@code true}.</li>
+ *   <li>Existence checks for budget items scoped to a function, financial year,
+ *       and/or budget register — without loading full entity graphs.</li>
+ *   <li>Retrieval of distinct {@link CFunction} values that have associated
+ *       budget items, optionally scoped to a specific register.</li>
+ *   <li>Support for filtering across multiple budget groups via {@code IN} queries.</li>
+ * </ul>
+ *
+ * @see BudgetItem
+ * @see BudgetRegister
+ * @see CFunction
+ * @see CFinancialYear
  */
-
 
 @Repository
 public interface BudgetItemRepository extends JpaRepository<BudgetItem, Long> {
