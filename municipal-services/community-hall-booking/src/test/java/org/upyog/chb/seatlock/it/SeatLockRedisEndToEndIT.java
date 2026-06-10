@@ -57,7 +57,7 @@ class SeatLockRedisEndToEndIT {
 		registry.add("spring.sql.init.mode", () -> "always");
 		registry.add("spring.sql.init.schema-locations", () -> "classpath:schema-seat-lock-test.sql");
 		registry.add("spring.flyway.enabled", () -> "false");
-		registry.add("seat-lock.enabled", () -> "true");
+		registry.add("seat.lock.enabled", () -> "true");
 		registry.add("seat-lock.provider", () -> "redis");
 		registry.add("seat-lock.rate-limit-enabled", () -> "false");
 		registry.add("seat-lock.default-lock-ttl", () -> "PT5M");

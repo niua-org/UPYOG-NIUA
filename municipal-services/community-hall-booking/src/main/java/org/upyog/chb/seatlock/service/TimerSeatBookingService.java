@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@ConditionalOnProperty(name = "seat-lock.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "seat.lock.enabled", havingValue = "true")
 public class TimerSeatBookingService {
 
 	private final SeatLockService seatLockService;
