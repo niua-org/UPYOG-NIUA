@@ -1828,55 +1828,6 @@ public class MicroserviceUtils {
         return null;
     }
 
-
-
-    public Tutorial getTutorial(String id) {
-        List<Tutorial> tutorialList = this.masterDataCache.get("egi-tutorials");
-
-        Tutorial mTutorial = null;
-        if (null != tutorialList && !tutorialList.isEmpty()) {
-
-            List<Tutorial> tut = tutorialList.stream()
-                    .filter(tutorial -> id.equalsIgnoreCase(tutorial.getId()))
-                    .collect(Collectors.toList());
-            if (null != tut && tut.size() > 0) {
-                mTutorial = tut.get(0);
-            }
-
-        }
-
-        if (null == mTutorial) {
-            mTutorial = this.fetchTutorialByTutorialId(id);
-        }
-
-        return mTutorial;
-
-    }
-
-    private Tutorial fetchTutorialByTutorialId(String id) {
-        List<Tutorial> tutorials = getTutorials(id);
-        return (tutorials != null && !tutorials.isEmpty()) ? tutorials.get(0) : null;
-    }
-
-    public List<Tutorial> getTutorials() {
-        return getTutorials(null);
-    }
-
-    public List<Tutorial> getTutorials(String id) {
-        List<ModuleDetail> moduleDetailList = new ArrayList<>();
-        try {
-            this.prepareModuleDetails(moduleDetailList, "TUTORIALS", "tutorials", "id", id, String.class);
-            Map postForObject = mapper.convertValue(this.getMdmsData(moduleDetailList, true, null, null), Map.class);
-            if (postForObject != null) {
-                return mapper.convertValue(JsonPath.read(postForObject, "$.MdmsRes.TUTORIALS.tutorials"), new TypeReference<List<Tutorial>>(){});
-            }
-        } catch (ApplicationRuntimeException e) {
-            LOGGER.error("ERROR occurred while fetching business service details in getBusinessServiceByCodes method: ", e);
-        } catch (Exception e) {
-            LOGGER.error("ERROR occurred while fetching tutorials from MDMS: ", e);
-        }
-        return Collections.emptyList();
-    }
    
 
 }
