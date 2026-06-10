@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-@ConditionalOnProperty(name = "chb.payment-timer.redis.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "chb.payment.timer.redis.enabled", havingValue = "true")
 public class PaymentTimerRedisService {
 
 	@Autowired

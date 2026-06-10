@@ -28,7 +28,7 @@ import org.upyog.chb.seatlock.service.TimerSeatBookingService;
 @Testcontainers(disabledWithoutDocker = true)
 @org.springframework.test.context.TestPropertySource(properties = {
 		"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
-		"seat-lock.enabled=true", "seat-lock.provider=db", "seat-lock.rate-limit-enabled=false" })
+		"seat.lock.enabled=true", "seat-lock.provider=db", "seat-lock.rate-limit-enabled=false" })
 @DisplayName("Seat lock integration (PostgreSQL)")
 @Ignore
 class SeatLockDbEndToEndIT {

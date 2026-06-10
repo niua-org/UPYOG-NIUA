@@ -20,7 +20,7 @@ import org.upyog.chb.seatlock.redis.RedisSeatLockService;
  * Legacy generic seat-lock module — disabled by default. CHB payment timers use {@code eg_chb_payment_timer} only.
  */
 @Configuration
-@ConditionalOnProperty(name = "seat-lock.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "seat.lock.enabled", havingValue = "true")
 @EnableConfigurationProperties(SeatLockProperties.class)
 public class SeatLockConfiguration {
 
