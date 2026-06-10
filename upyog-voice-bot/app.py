@@ -93,7 +93,7 @@ def load_resources():
             current_dir = os.path.dirname(os.path.abspath(__file__))
 
             # Load FAQ data
-            data_path = os.path.join(current_dir, 'UpyogFAQ.csv')
+            data_path = os.path.join(current_dir, 'data', 'UpyogFAQ.csv')
             data = pd.read_csv(data_path)
             logger.info(f"FAQ data loaded from {data_path}")
 
@@ -109,8 +109,8 @@ def load_resources():
             logger.info("FAQ FAISS index initialized.")
 
             # Load FRS Knowledge Base
-            frs_path = os.path.join(current_dir, 'frs_smart_faq.csv')
-            frs_idx_path = os.path.join(current_dir, 'frs_smart_index.faiss')
+            frs_path = os.path.join(current_dir, 'data', 'frs_smart_faq.csv')
+            frs_idx_path = os.path.join(current_dir, 'data', 'frs_smart_index.faiss')
             if os.path.exists(frs_path) and os.path.exists(frs_idx_path):
                 frs_data = pd.read_csv(frs_path)
                 frs_index = faiss.read_index(frs_idx_path)
@@ -775,6 +775,17 @@ strict_slashes=False accepts both trailing-slash and non-trailing-slash URLs.
 def index_page():
     """Serve the frontend."""
     return send_from_directory(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+
+"""
+Serves static files from the assets/ folder (styles.css, constants.js, icons.js).
+Three route aliases match all deployment paths — local dev, EKS ingress, and
+the production VM nginx proxy.
+"""
+@app.route("/assets/<path:filename>")
+@app.route("/upyog-voice-bot/assets/<path:filename>")
+@app.route("/upyog-voice/assets/<path:filename>")
+def serve_assets(filename):
+    return send_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'), filename)
 
 """
 Main chat endpoint — three route aliases registered:
