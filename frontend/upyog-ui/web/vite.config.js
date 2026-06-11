@@ -173,33 +173,56 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // helper function to log memory usage (for debugging purposes)
-function logMemory(stage) {
-  const stats = v8.getHeapStatistics();
-  const mem = process.memoryUsage();
+  function logMemory(stage) {
+    const stats = v8.getHeapStatistics();
+    const mem = process.memoryUsage();
 
-  console.log(`\n========== ${stage} ==========`);
+    let containerUsed = "Unknown";
 
-  console.log(
-    `Total Heap Memory Allocated (MB): ${(mem.heapTotal / 1048576).toFixed(2)}`
-  );
+    try {
+      // cgroup v2
+      const current = fs.readFileSync(
+        "/sys/fs/cgroup/memory.current",
+        "utf8"
+      ).trim();
 
-  console.log(
-    `Total Heap Memory In Use (MB): ${(mem.heapUsed / 1048576).toFixed(2)}`
-  );
+      containerUsed = `${(Number(current) / 1048576).toFixed(2)} MB`;
+    } catch {
+      try {
+        // cgroup v1 fallback
+        const current = fs.readFileSync(
+          "/sys/fs/cgroup/memory/memory.usage_in_bytes",
+          "utf8"
+        ).trim();
 
-  console.log(
-    `Total Heap Memory Available Limit (MB): ${(stats.heap_size_limit / 1048576).toFixed(2)}`
-  );
+        containerUsed = `${(Number(current) / 1048576).toFixed(2)} MB`;
+      } catch {
+        // ignore
+      }
+    }
 
-  console.log(
-    `Remaining Heap Available (MB): ${(
-      (stats.heap_size_limit - mem.heapUsed) /
-      1048576
-    ).toFixed(2)}`
-  );
+    console.log(`\n========== ${stage} ==========`);
 
-  console.log("=====================================");
-}
+    console.log(`Container Memory Used (MB): ${containerUsed}`);
+
+    console.log(
+      `Node RSS Memory (MB): ${(mem.rss / 1048576).toFixed(2)}`
+    );
+
+    console.log(
+      `Total Heap Memory Allocated (MB): ${(mem.heapTotal / 1048576).toFixed(2)}`
+    );
+
+    console.log(
+      `Total Heap Memory In Use (MB): ${(mem.heapUsed / 1048576).toFixed(2)}`
+    );
+
+    console.log(
+      `Total Heap Memory Available Limit (MB): ${(stats.heap_size_limit / 1048576).toFixed(2)}`
+    );
+
+    console.log("=================================");
+  }
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -373,14 +396,73 @@ export default defineConfig(({ mode }) => {
       hmr: true,
     },
 
+    // build: {
+    //   outDir: "build",
+    //   sourcemap: false,
+    //   rollupOptions: {
+    //     output: {
+    //       manualChunks: {
+    //         vendor: ["react", "react-dom", "react-router-dom"],
+    //       },
+    //     },
+    //   },
+    // },
+
     build: {
-      outDir: "build",
-      sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ["react", "react-dom", "react-router-dom"],
-          },
+        outDir: "build",
+        sourcemap: false,
+        chunkSizeWarningLimit: 8000,
+        rollupOptions: {
+          output: {
+            manualChunks(id) {
+
+              // ── WORKSPACE MODULES ──────────────────────────────────────────
+              // Each local module gets its own chunk
+              if (id.includes("micro-ui-internals/packages/modules/")) {
+                const match = id.match(/packages\/modules\/([^/]+)/);
+                if (match) return `module-${match[1]}`;
+              }
+
+              if (id.includes("micro-ui-internals/packages/libraries")) {
+                return "pkg-libraries";
+              }
+
+              if (id.includes("micro-ui-internals/packages/react-components")) {
+                return "pkg-react-components";
+              }
+
+              // ── NODE MODULES ───────────────────────────────────────────────
+              if (!id.includes("node_modules")) return;
+
+              // React family
+              if (
+                id.includes("/react/") ||
+                id.includes("/react-dom/") ||
+                id.includes("/react-redux/") ||
+                id.includes("/redux/") ||
+                id.includes("/scheduler/")
+              ) return "vendor-react";
+
+              // Routing
+              if (
+                id.includes("/react-router/") ||
+                id.includes("/react-router-dom/") ||
+                id.includes("/@remix-run/")
+              ) return "vendor-router";
+
+              // Data fetching
+              if (id.includes("/@tanstack/")) return "vendor-query";
+
+              // i18n
+              if (
+                id.includes("/i18next/") ||
+                id.includes("/react-i18next/") ||
+                id.includes("/i18next-react-postprocessor/")
+              ) return "vendor-i18n";
+
+              // Everything else from node_modules
+              return "vendor-misc";
+            },
         },
       },
     },
