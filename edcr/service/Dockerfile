@@ -1,4 +1,5 @@
-FROM egovio/alpine-maven-builder-jdk-8:gcp AS build
+#FROM egovio/alpine-maven-builder-jdk-8:gcp AS build
+FROM FROM maven:3.8.8-openjdk-8 AS build
 ARG WORK_DIR
 WORKDIR /app
 
@@ -8,9 +9,9 @@ COPY ${WORK_DIR} ./${WORK_DIR}
 
     
 RUN cd ${WORK_DIR} && \
-    mvn clean package -DskipTests \
-    -Dmaven.wagon.http.ssl.insecure=true \
-    -Dmaven.wagon.http.ssl.allowall=true
+    mvn clean package -DskipTests
+#    -Dmaven.wagon.http.ssl.insecure=true \
+ #   -Dmaven.wagon.http.ssl.allowall=true
                                  
 
 # Create runtime image
