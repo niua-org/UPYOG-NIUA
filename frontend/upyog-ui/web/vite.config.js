@@ -167,9 +167,39 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { apiPaths } from "./setupProxy";
+import v8 from "v8";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// helper function to log memory usage (for debugging purposes)
+function logMemory(stage) {
+  const stats = v8.getHeapStatistics();
+  const mem = process.memoryUsage();
+
+  console.log(`\n========== ${stage} ==========`);
+
+  console.log(
+    `Total Heap Memory Allocated (MB): ${(mem.heapTotal / 1048576).toFixed(2)}`
+  );
+
+  console.log(
+    `Total Heap Memory In Use (MB): ${(mem.heapUsed / 1048576).toFixed(2)}`
+  );
+
+  console.log(
+    `Total Heap Memory Available Limit (MB): ${(stats.heap_size_limit / 1048576).toFixed(2)}`
+  );
+
+  console.log(
+    `Remaining Heap Available (MB): ${(
+      (stats.heap_size_limit - mem.heapUsed) /
+      1048576
+    ).toFixed(2)}`
+  );
+
+  console.log("=====================================");
+}
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -266,8 +296,36 @@ export default defineConfig(({ mode }) => {
   proxy["/pb-egov-assets"] = { target: assetsTarget, changeOrigin: true };
 
   return {
+    // plugins: [
+    //   react(),
+    // ],
+
     plugins: [
-      react(),
+        react(),
+
+        {
+          name: "memory-logger",
+
+          buildStart() {
+            logMemory("BUILD START");
+          },
+
+          generateBundle() {
+            logMemory("RENDERING CHUNKS");
+          },
+
+          writeBundle() {
+            logMemory("WRITING BUNDLE");
+          },
+
+          closeBundle() {
+            logMemory("BUILD COMPLETE");
+          },
+
+          renderChunk() {
+            logMemory("RENDER CHUNK");
+          },
+        },
     ],
 
     root: __dirname,
