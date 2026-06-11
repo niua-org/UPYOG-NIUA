@@ -1,5 +1,5 @@
 #FROM egovio/alpine-maven-builder-jdk-8:gcp AS build
-FROM maven:3.8.8-openjdk-8 AS build
+FROM maven:3.8.6-openjdk-8-slim AS build
 ARG WORK_DIR
 WORKDIR /app
 
