@@ -124,8 +124,8 @@ const ApplicationDetails = () => {
   const refundBannerStyle = isRefundSuccess
     ? { backgroundColor: "#D4EDDA", border: "1px solid #C3E6CB", color: "#155724" }
     : isRefundInProgress
-    ? { backgroundColor: "#FFF3CD", border: "1px solid #FFEBAA", color: "#856404" }
-    : { backgroundColor: "#E2E3E5", border: "1px solid #D6D8DB", color: "#383D41" };
+      ? { backgroundColor: "#FFF3CD", border: "1px solid #FFEBAA", color: "#856404" }
+      : { backgroundColor: "#E2E3E5", border: "1px solid #D6D8DB", color: "#383D41" };
 
   useEffect(() => {
     if (refund && appDetailsToShow?.applicationData?.applicationDetails) {
@@ -249,15 +249,15 @@ const ApplicationDetails = () => {
   const dowloadOptions =
     data?.hallsBookingApplication?.[0]?.paymentReceiptFilestoreId || data?.hallsBookingApplication?.[0]?.permissionLetterFilestoreId
       ? [
-          data?.hallsBookingApplication?.[0]?.paymentReceiptFilestoreId && {
-            label: t("CHB_RECEIPT"),
-            onClick: () => getRecieptSearch({ tenantId: tenantId }),
-          },
-          data?.hallsBookingApplication?.[0]?.permissionLetterFilestoreId && {
-            label: t("CHB_PERMISSION_LETTER"),
-            onClick: () => getPermissionLetter({ tenantId: tenantId }),
-          },
-        ].filter(Boolean)
+        data?.hallsBookingApplication?.[0]?.paymentReceiptFilestoreId && {
+          label: t("CHB_RECEIPT"),
+          onClick: () => getRecieptSearch({ tenantId: tenantId }),
+        },
+        data?.hallsBookingApplication?.[0]?.permissionLetterFilestoreId && {
+          label: t("CHB_PERMISSION_LETTER"),
+          onClick: () => getPermissionLetter({ tenantId: tenantId }),
+        },
+      ].filter(Boolean)
       : [];
 
   return (
