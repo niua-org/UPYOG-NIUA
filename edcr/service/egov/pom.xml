@@ -1098,9 +1098,9 @@
 			<version>1.0.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.kabeja</groupId>
+			<groupId>com.upyog.project</groupId>
 			<artifactId>kabeja</artifactId>
-			<version>0.4</version>
+			<version>1.0.0</version>
 		</dependency>
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES START -->
 		<dependency>

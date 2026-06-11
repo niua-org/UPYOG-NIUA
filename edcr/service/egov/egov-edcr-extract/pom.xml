@@ -104,7 +104,7 @@
 		<dependency>
 			<groupId>org.kabeja</groupId>
 			<artifactId>kabeja</artifactId>
-			<version>0.4</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
