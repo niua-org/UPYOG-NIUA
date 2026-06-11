@@ -423,8 +423,12 @@ public class NttdataGateway implements Gateway {
 					status = Refund.RefundStatusEnum.PENDING;
 				 else 
 					status = Refund.RefundStatusEnum.FAILURE;
+				
+				BigDecimal refundAmount = resp.getRefundPayInstrument().getPayDetails() != null
+				        ? BigDecimal.valueOf(resp.getRefundPayInstrument().getPayDetails().getTotalRefundAmount())
+				        : refundRequest.getRefundAmount();
 				return Refund.builder().refundId(refundRequest.getRefundId()).status(status)
-						.refundAmount(BigDecimal.valueOf(resp.getRefundPayInstrument().getPayDetails().getTotalRefundAmount()))
+						.refundAmount(refundAmount)
 						.originalTxnId(refundRequest.getOriginalTxnId())
 						.gatewayStatusCode(resp.getRefundPayInstrument().getResponseDetails().getStatusCode())
 						.gatewayStatusMsg(resp.getRefundPayInstrument().getResponseDetails().getDescription())
