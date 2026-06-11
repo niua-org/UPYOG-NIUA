@@ -124,7 +124,7 @@
             <url>https://repository.jboss.org/nexus/content/groups/public/</url>
         </repository>
         <repository>
-            <id>upyog-nexus</id>
+            <id>javaxt.com</id>
             <name>UPYOG Nexus Public</name>
             <url>https://upyog-nexus.niua.org/nexus/content/groups/public</url>
             <releases>
