@@ -364,7 +364,7 @@ eSign:{
   },
 
   upyogBot: {
-    url: "https://43.205.156.175/upyog-voice/",
+    iframeUrl: "/upyog-voice-bot",
   },
 };
 
