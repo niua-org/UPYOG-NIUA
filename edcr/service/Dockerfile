@@ -10,8 +10,6 @@ COPY ${WORK_DIR} ./${WORK_DIR}
     
 RUN cd ${WORK_DIR} && \
     mvn clean package -DskipTests
-#    -Dmaven.wagon.http.ssl.insecure=true \
- #   -Dmaven.wagon.http.ssl.allowall=true
                                  
 
 # Create runtime image
