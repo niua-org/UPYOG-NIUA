@@ -38,6 +38,7 @@ public class ServiceConstants {
     public static final String NOT_FOUND = " is not found";
     public static final String TENANTID = "?tenantId=";
     public static final String BUSINESS_SERVICES = "&businessServices=";
+    public static final String EST_MONTHLY_RENT= "EST_BOOKING_FEE";
 
     public static final class EstateConstants {
         public static final String INVALID_TENANT = "INVALID TENANT";
