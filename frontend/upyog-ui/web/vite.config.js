@@ -172,7 +172,18 @@ import v8 from "v8";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// helper function to log memory usage (for debugging purposes)
+/**
+ * Logs memory usage statistics for the current Node.js process and container.
+ *
+ * Reports container memory usage (read from cgroup v2, falling back to cgroup v1
+ * if unavailable), Node.js RSS memory, total heap allocated, total heap in use,
+ * and the heap size limit. Output is logged to the console under a labeled
+ * section header for the given stage.
+ *
+ * @param {string} stage - A label identifying the point in execution at which
+ *                          memory is being measured (e.g., "Before build", "After build").
+ * @returns {void}
+ */
   function logMemory(stage) {
     const stats = v8.getHeapStatistics();
     const mem = process.memoryUsage();

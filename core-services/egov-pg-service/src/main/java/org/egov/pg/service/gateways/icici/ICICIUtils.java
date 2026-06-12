@@ -16,6 +16,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Utility class providing helper methods for the ICICI payment gateway integration.
+ * <p>
+ * Includes methods for generating transaction timestamps and for computing the
+ * secure hash (HMAC SHA256) required to authenticate requests sent to and
+ * responses received from the ICICI payment gateway.
+ * </p>
+ */
+
 @Slf4j
 class ICICIUtils {
 
@@ -27,6 +36,18 @@ class ICICIUtils {
     }
 
     /*============================================ GENERATE PLAIN HASH TEXT==============*/
+    /**
+     * Generates the plain (unhashed) text used as input for secure hash computation.
+     * <p>
+     * Converts the given request object into a sorted map (alphabetical by key), removes
+     * any existing {@code secureHash} field, and concatenates the non-null values of all
+     * remaining fields in key-sorted order.
+     * </p>
+     *
+     * @param request the request object (or map) to be converted into plain hash text
+     * @return the concatenated string of field values used for hash generation
+     * @throws RuntimeException if the request cannot be converted or processed
+     */
     public static  String generatePlainHashText(Object request) {
 
         try {
@@ -56,6 +77,22 @@ class ICICIUtils {
 
 
     /*============================================ HMAC SHA256==============*/
+    /**
+     * Generates the secure hash for a given request using HMAC SHA256.
+     * <p>
+     * Converts the request object into a sorted map (alphabetical by key), removes any
+     * existing {@code secureHash} field, concatenates the non-null values of the
+     * remaining fields in key-sorted order to form the plain hash text, and computes
+     * the HMAC SHA256 of that text using the provided secret key. The resulting hash
+     * bytes are returned as a lowercase hexadecimal string.
+     * </p>
+     *
+     * @param request   the request object (or map) for which the secure hash is to be generated
+     * @param secretKey the merchant secret key used as the HMAC key
+     * @return the hexadecimal string representation of the computed HMAC SHA256 hash
+     * @throws RuntimeException if hash generation fails due to an invalid algorithm,
+     *                           key, or any other processing error
+     */
     public static String generateSecureHash(Object request, String secretKey) {
 
         try {
