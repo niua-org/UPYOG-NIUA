@@ -88,6 +88,8 @@ public class CommunityHallBookingDetail {
  	private ProcessInstance workflow;
  	
  	private long timerValue;
+ 	
+ 	private String draftId;
 	
 
 	public CommunityHallBookingDetail addUploadedDocumentDetailsItem(DocumentDetail uploadedDocumentDetailsItem) {
