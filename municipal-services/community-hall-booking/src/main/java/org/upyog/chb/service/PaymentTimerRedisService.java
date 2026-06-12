@@ -28,6 +28,12 @@ public class PaymentTimerRedisService {
 	@Autowired
 	private CommunityHallBookingConfiguration bookingConfiguration;
 
+	/**
+	 * Attempts to acquire a Redis slot hold for a payment timer detail.
+	 *
+	 * @param detail timer details identifying the slot and booking reference
+	 * @return true when the Redis slot hold was acquired or renewed; false when held by another booking
+	 */
 	public boolean tryAcquireSlot(BookingPaymentTimerDetails detail) {
 		var key = PaymentTimerKeyBuilder.toRedisSlotKey(detail);
 		var value = PaymentTimerKeyBuilder.toRedisValue(detail.getCreatedBy(), detail.getBookingId());
@@ -45,6 +51,11 @@ public class PaymentTimerRedisService {
 		return false;
 	}
 
+	/**
+	 * Synchronizes persisted payment timer rows into the Redis mirror store.
+	 *
+	 * @param details list of timer rows to mirror in Redis
+	 */
 	public void syncTimerRows(List<BookingPaymentTimerDetails> details) {
 		var ttl = paymentTimerDuration();
 		for (var detail : details) {
@@ -55,6 +66,11 @@ public class PaymentTimerRedisService {
 		}
 	}
 
+	/**
+	 * Removes Redis mirror rows for the provided timer details.
+	 *
+	 * @param details list of timer rows to remove from Redis
+	 */
 	public void removeTimerRows(List<BookingPaymentTimerDetails> details) {
 		for (var detail : details) {
 			redis.delete(PaymentTimerKeyBuilder.toRedisTimerRowKey(detail));
