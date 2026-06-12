@@ -75,6 +75,8 @@ public interface CommunityHallBookingRepository {
 
 	void updateBookingSynchronously(String bookingId, String uuid, PaymentDetail paymentDetail, String status);
 
+	void updateTimerBookingId(String bookingId, String bookingNo, String draftId);
+
 	List<BookingPaymentTimerDetails> getBookingTimer(CommunityHallSlotSearchCriteria criteria);
 
 	/**

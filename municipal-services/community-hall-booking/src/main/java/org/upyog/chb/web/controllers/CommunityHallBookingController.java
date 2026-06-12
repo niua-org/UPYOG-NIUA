@@ -163,7 +163,7 @@ public class CommunityHallBookingController {
 				StatusEnum.SUCCESSFUL);
 		
 		communityHallSlotAvailabilityResponse.setResponseInfo(info);
-		
+//		communityHallSlotAvailabilityResponse.setDraftId(criteria.getDraftId());
 		return new ResponseEntity<>(communityHallSlotAvailabilityResponse, HttpStatus.OK);
 	}
 	

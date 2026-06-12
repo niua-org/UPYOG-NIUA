@@ -135,6 +135,12 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 
 		// 4.Persist the request using persister service
 		bookingRepository.saveCommunityHallBooking(communityHallsBookingRequest);
+		bookingRepository.updateTimerBookingId(
+				communityHallsBookingRequest.getHallsBookingApplication().getBookingId(),
+				communityHallsBookingRequest.getHallsBookingApplication().getBookingNo(),
+				communityHallsBookingRequest.getHallsBookingApplication().getDraftId());
+		communityHallsBookingRequest.getHallsBookingApplication().setTimerValue(bookingTimerService
+				.getRemainingTimerValue(communityHallsBookingRequest.getHallsBookingApplication().getBookingId()));
 
 		return communityHallsBookingRequest.getHallsBookingApplication();
 	}
@@ -333,7 +339,8 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		}
 
 		CommunityHallSlotAvailabilityResponse hallSlotAvailabilityResponse = CommunityHallSlotAvailabilityResponse
-				.builder().hallSlotAvailabiltityDetails(availabiltityDetailsList).timerValue(timerValue).build();
+				.builder().hallSlotAvailabiltityDetails(availabiltityDetailsList).timerValue(timerValue)
+				.draftId(criteria.getDraftId()).build();
 
 		log.info("Availability details response after updating status :" + hallSlotAvailabilityResponse);
 		return hallSlotAvailabilityResponse;
@@ -379,7 +386,7 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 			CommunityHallSlotAvailabilityDetail slotAvailabilityDetail = slotDetailsMap.get(availabilityDetail);
 			log.info("Slot Availability detail ::: " + slotAvailabilityDetail.toString());
 			boolean isCreatedByCurrentUser = detail.getCreatedBy().equals(info.getUserInfo().getUuid());
-			boolean existingBookingIdCheck = detail.getBookingId().equals(criteria.getBookingId());
+			boolean existingBookingIdCheck = detail.getBookingId().equals(getTimerBookingReference(criteria));
 
 			if (isCreatedByCurrentUser && existingBookingIdCheck) {
 				log.info("inside booking created by me with same booking id ");
@@ -388,6 +395,10 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 				slotAvailabilityDetail.setSlotStaus(BookingStatusEnum.BOOKED.toString());
 			}
 		}
+	}
+
+	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 
 

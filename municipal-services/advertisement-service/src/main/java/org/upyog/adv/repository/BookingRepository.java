@@ -17,6 +17,7 @@ import org.upyog.adv.web.models.AdvertisementSearchCriteria;
 import org.upyog.adv.web.models.AdvertisementSlotAvailabilityDetail;
 import org.upyog.adv.web.models.AdvertisementSlotSearchCriteria;
 import org.upyog.adv.web.models.BookingDetail;
+import org.upyog.adv.web.models.BookingPaymentTimerDetails;
 import org.upyog.adv.web.models.BookingRequest;
 
 import digit.models.coremodels.PaymentDetail;
@@ -63,7 +64,13 @@ public interface BookingRepository {
 	//Map<String, Long> getRemainingTimerValues(List<BookingDetail> bookingDetails);
 	
 	void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteria, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail availabiltityDetailsResponse);
+			AdvertisementSlotAvailabilityDetail availabiltityDetailsResponse, String preGeneratedDraftId);
+
+	String fetchDraftIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId);
+
+	List<BookingPaymentTimerDetails> getPaymentTimerByBookingId(String bookingId);
+
+	List<BookingPaymentTimerDetails> getPaymentTimerByCreatedBy(String uuid);
 	
 	Map<String, Long> getRemainingTimerValues(String bookingId);
 	

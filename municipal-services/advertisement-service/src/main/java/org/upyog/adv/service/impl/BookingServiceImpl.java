@@ -207,7 +207,7 @@ public class BookingServiceImpl implements BookingService {
 	   boolean slotBookedFlag = setSlotBookedFlag(allAvailabilityDetails);
 	   log.info("Slot booked flag for criteria : " + slotBookedFlag);
 	   if (isTimerRequiredForAnyCriteria) {
-	    bookingRepository.deleteDataFromTimerAndDraft(requestInfo.getUserInfo().getUuid(), criteriaList.get(0).getDraftId(), criteriaList.get(0).getBookingId());
+	    paymentTimerService.deleteDataFromTimerAndDraft(requestInfo.getUserInfo().getUuid(), criteriaList.get(0).getDraftId(), criteriaList.get(0).getBookingId());
 	   }
 	    if (isTimerRequiredForAnyCriteria && !slotBookedFlag) {
 	        // Insert the timer for all criteria at once
@@ -477,6 +477,7 @@ public class BookingServiceImpl implements BookingService {
 
 		if (StringUtils.isNotBlank(draftId)) {
 			log.info("Deleting draft entry for draft id: " + draftId);
+			paymentTimerService.removeRedisMirrorForDraft(draftId);
 			bookingRepository.deleteDraftApplication(draftId);
 		}
 		return BookingConstants.DRAFT_DISCARDED;

@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
@@ -225,7 +224,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	@Override
 	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
 			boolean updateBookingStatus, List<BookingPaymentTimerDetails> timerDetails) {
-		String bookingId = criteria.getBookingId();
+		String bookingId = getTimerBookingReference(criteria);
 		String createdBy = requestInfo.getUserInfo().getUuid();
 		long createdTime = CommunityHallBookingUtil.getCurrentTimestamp();
 		String lastModifiedBy = requestInfo.getUserInfo().getUuid();
@@ -257,6 +256,10 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		if (updateBookingStatus) {
 			updateBookingSynchronously(bookingId, createdBy, null, BookingStatusEnum.PENDING_FOR_PAYMENT.toString());
 		}
+	}
+
+	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 	
 //	@Override
@@ -345,13 +348,22 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
+	public void updateTimerBookingId(String bookingId, String bookingNo, String draftId) {
+		if (StringUtils.isBlank(draftId)) {
+			return;
+		}
+		jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_TIMER_BOOKING_ID_QUERY, bookingId, bookingNo,
+				draftId);
+	}
+
+	@Override
 	public List<BookingPaymentTimerDetails> getBookingTimer(CommunityHallSlotSearchCriteria criteria) {
 		
 		List<BookingPaymentTimerDetails> paymentTimerList = jdbcTemplate.query(CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, 
-				new Object[]{criteria.getBookingId()},
+				new Object[]{getTimerBookingReference(criteria)},
 				new GenericRowMapper<>(BookingPaymentTimerDetails.class));
 		
-		log.info("Booking payment timer query : {} and parmas : {}", CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, criteria.getBookingId());
+		log.info("Booking payment timer query : {} and parmas : {}", CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, getTimerBookingReference(criteria));
 		
 		return paymentTimerList;
 	}

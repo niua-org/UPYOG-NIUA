@@ -47,10 +47,11 @@ public class BookingTimerService {
 	public long managePaymentTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo info,
 			List<CommunityHallSlotAvailabilityDetail> availabilityDetailsList) {
 		validateTimerCriteria(criteria, info);
+		ensureTimerBookingReference(criteria);
 
 		var existingTimers = bookingRepository.getBookingTimer(criteria);
 		if (!CollectionUtils.isEmpty(existingTimers)) {
-			log.info("Reusing existing payment timer for bookingId={}", criteria.getBookingId());
+			log.info("Reusing existing payment timer for bookingId={}", getTimerBookingReference(criteria));
 			return getTimerValue(existingTimers.get(0));
 		}
 
@@ -68,7 +69,7 @@ public class BookingTimerService {
 				assertNoConflictingTimer(activeTimersInRange, criteria, userId, hallCode, bookingDate);
 
 				var detail = PaymentTimerKeyBuilder.toTimerDetails(criteria.getTenantId(),
-						criteria.getCommunityHallCode(), hallCode, bookingDate, criteria.getBookingId(), userId,
+						criteria.getCommunityHallCode(), hallCode, bookingDate, getTimerBookingReference(criteria), userId,
 						createdTime);
 
 				if (redis != null && !redis.tryAcquireSlot(detail)) {
@@ -80,7 +81,8 @@ public class BookingTimerService {
 		}
 
 		try {
-			bookingRepository.createBookingTimer(criteria, info, true, timerDetails);
+			boolean isFinalBooking = criteria.getBookingId() != null && !criteria.getBookingId().isEmpty();
+			bookingRepository.createBookingTimer(criteria, info, isFinalBooking, timerDetails);
 			if (redis != null) {
 				redis.syncTimerRows(timerDetails);
 			}
@@ -93,7 +95,7 @@ public class BookingTimerService {
 
 		var timerValue = CommunityHallBookingUtil
 				.getSeconds(Integer.parseInt(bookingConfiguration.getBookingPaymentTimerValue()));
-		log.info("Payment timer created bookingId={} hallCodes={} timerValueSeconds={}", criteria.getBookingId(),
+		log.info("Payment timer created bookingId={} hallCodes={} timerValueSeconds={}", getTimerBookingReference(criteria),
 				hallCodes, timerValue);
 		return timerValue;
 	}
@@ -104,12 +106,24 @@ public class BookingTimerService {
 		return managePaymentTimer(criteria, info, availabilityDetailsList);
 	}
 
+	public long getRemainingTimerValue(String bookingId) {
+		if (StringUtils.isBlank(bookingId)) {
+			return 0L;
+		}
+		var criteria = CommunityHallSlotSearchCriteria.builder().bookingId(bookingId).build();
+		var timers = bookingRepository.getBookingTimer(criteria);
+		if (CollectionUtils.isEmpty(timers)) {
+			return 0L;
+		}
+		return Math.max(getTimerValue(timers.get(0)), 0L);
+	}
+
 	private void assertNoConflictingTimer(List<BookingPaymentTimerDetails> activeTimersInRange,
 			CommunityHallSlotSearchCriteria criteria, String userId, String hallCode,
 			java.time.LocalDate bookingDate) {
 		var conflict = activeTimersInRange.stream()
 				.anyMatch(t -> hallCode.equals(t.getHallcode()) && bookingDate.equals(t.getBookingDate())
-						&& !(userId.equals(t.getCreatedBy()) && criteria.getBookingId().equals(t.getBookingId())));
+						&& !(userId.equals(t.getCreatedBy()) && getTimerBookingReference(criteria).equals(t.getBookingId())));
 		if (conflict) {
 			throw new CustomException("SLOT_PAYMENT_TIMER_LOCKED",
 					"Hall slot already has an active payment timer. hallCode=" + hallCode + " bookingDate=" + bookingDate);
@@ -117,14 +131,21 @@ public class BookingTimerService {
 	}
 
 	private void validateTimerCriteria(CommunityHallSlotSearchCriteria criteria, RequestInfo info) {
-		if (StringUtils.isBlank(criteria.getBookingId())) {
-			throw new CustomException("INVALID_BOOKING_ID", "bookingId is required when payment timer is enabled");
-		}
 		if (info == null || info.getUserInfo() == null || StringUtils.isBlank(info.getUserInfo().getUuid())) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
 					"Authenticated user is required for payment timer");
 		}
 		CommunityHallSlotCriteriaUtil.resolveHallCodes(criteria);
+	}
+
+	private void ensureTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+		if (StringUtils.isBlank(criteria.getBookingId()) && StringUtils.isBlank(criteria.getDraftId())) {
+			criteria.setDraftId(CommunityHallBookingUtil.getRandonUUID());
+		}
+	}
+
+	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 
 	private Long getTimerValue(BookingPaymentTimerDetails bookingPaymentTimerDetails) {

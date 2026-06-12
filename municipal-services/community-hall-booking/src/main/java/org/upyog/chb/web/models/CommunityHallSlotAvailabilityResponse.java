@@ -49,5 +49,6 @@ public class CommunityHallSlotAvailabilityResponse   {
 	
 	private long timerValue;
 
+	private String draftId;
 }
 

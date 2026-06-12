@@ -70,6 +70,9 @@ public class PaymentService {
 	@Autowired
 	private BookingRepositoryImpl bookingRepo;
 
+	@Autowired
+	private PaymentTimerService paymentTimerService;
+
 	/**
 	 *
 	 * @param record
@@ -93,7 +96,8 @@ public class PaymentService {
 				BookingRequest bookingRequest = BookingRequest.builder()
 						.requestInfo(paymentRequest.getRequestInfo()).bookingApplication(bookingDetail).build();
 				bookingService.updateBookingSynchronously(bookingRequest, paymentRequest.getPayment().getPaymentDetails().get(0), BookingStatusEnum.BOOKED);
-				bookingRepo.deleteBookingIdForTimer(bookingRequest.getBookingApplication().getBookingId());
+				paymentTimerService.deleteBookingIdForTimer(bookingRequest.getBookingApplication().getBookingId(),
+						paymentRequest.getRequestInfo());
 			}
 		} catch (IllegalArgumentException e) {
 			log.error("Illegal argument exception occured while sending notification ADV : " + e.getMessage());
