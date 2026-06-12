@@ -9,8 +9,28 @@
            http://www.springframework.org/schema/tx
            http://www.springframework.org/schema/tx/spring-tx.xsd">
 
-    <!--    Without this line, Spring will not automatically manage transactions for methods annotated with @Transactional-->
-    <tx:annotation-driven proxy-target-class="false"/>
+    <!--
+    Enables Spring's annotation-driven transaction management for methods
+    annotated with @Transactional.
+
+    proxy-target-class="false" instructs Spring to use JDK Dynamic Proxies
+    instead of CGLIB proxies.
+
+    JDK Dynamic Proxy:
+    - Default behavior when target class implements an interface.
+    - Creates proxies based on interfaces.
+    - Lower overhead and preferred when service interfaces are available.
+
+    CGLIB Proxy (proxy-target-class="true"):
+    - Creates subclass-based proxies.
+    - Can proxy classes that do not implement interfaces.
+    - Requires additional bytecode generation and cannot proxy final classes
+      or final methods.
+
+    This configuration is required to ensure transactional boundaries are
+    applied correctly to ERP service layer methods after the Spring upgrade.
+    -->
+    <tx:annotation-driven proxy-target-class="true"/>
 
     <bean name="erpApplicationContext"
           class="org.springframework.context.support.ClassPathXmlApplicationContext">

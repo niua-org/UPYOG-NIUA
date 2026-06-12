@@ -22,7 +22,21 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.security.web.savedrequest.Enumerator;
-
+/**
+ * HttpServletRequest wrapper that allows the request body to be read
+ * multiple times by caching the request payload in memory.
+ *
+ * <p>
+ * The standard HttpServletRequest input stream can be consumed only once.
+ * This wrapper reads and stores the request body during construction and
+ * provides fresh input streams/readers backed by the cached content for
+ * subsequent reads.
+ * </p>
+ *
+ * <p>
+ * It also supports adding and retrieving custom request headers.
+ * </p>
+ */
 public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
     
     private static final Logger LOG = LogManager.getLogger(MultiReadRequestWrapper.class);
@@ -30,6 +44,11 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
     private final byte[] cachedBody; // Change to byte[] and make final
     private final Map<String, String> customHeaders;
 
+    /**
+     * Creates a request wrapper and caches the request body in memory.
+     * @param request the original HTTP request
+     * @throws IOException if an error occurs while reading the request body
+     */
     public MultiReadRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
         this.customHeaders = new HashMap<>();
@@ -39,13 +58,19 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
         this.cachedBody = baos.toByteArray();
         LOG.debug("Cached request body size: {} bytes", cachedBody.length);
     }
-
+    /**
+     * Returns a new ServletInputStream backed by the cached request body.
+     * @return cached request body input stream
+     */
     @Override
     public ServletInputStream getInputStream() {
         // Always returns fresh stream from cached body
         return new CachedServletInputStream(this.cachedBody);
     }
-
+    /**
+     * Returns a BufferedReader for reading the cached request body.
+     * @return reader for the cached request content
+     */
     @Override
     public BufferedReader getReader() {
         return new BufferedReader(new InputStreamReader(getInputStream()));
@@ -54,7 +79,11 @@ public class MultiReadRequestWrapper extends HttpServletRequestWrapper {
     // Update CachedServletInputStream to take byte[] parameter
     public class CachedServletInputStream extends ServletInputStream {
         private final ByteArrayInputStream input;
-
+        /**
+         * ServletInputStream implementation backed by a cached byte array.
+         * Provides repeated access to the request body without consuming
+         * the original request stream.
+         */
         public CachedServletInputStream(byte[] cachedBody) {
             this.input = new ByteArrayInputStream(cachedBody);
         }

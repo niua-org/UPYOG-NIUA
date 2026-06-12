@@ -153,14 +153,14 @@ public class JpaConfiguration {
         properties.put(USE_MINIMAL_PUTS, env.getProperty(USE_MINIMAL_PUTS));
         properties.put("hibernate.cache.infinispan.cachemanager", env.getProperty("hibernate.cache.infinispan.cachemanager"));
         properties.put(JTA_PLATFORM, env.getProperty(JTA_PLATFORM));
-        properties.put(AUTO_CLOSE_SESSION, false);
+        properties.put(AUTO_CLOSE_SESSION, env.getProperty(AUTO_CLOSE_SESSION));
         properties.put(USE_STREAMS_FOR_BINARY, env.getProperty(USE_STREAMS_FOR_BINARY));
         properties.put(DEFAULT_BATCH_FETCH_SIZE, batchUpdateSize);
         properties.put(BATCH_VERSIONED_DATA, true);
         properties.put(ORDER_INSERTS, true);
         properties.put(ORDER_UPDATES, true);
         properties.put(AUTOCOMMIT, false);
-        properties.put(RELEASE_CONNECTIONS, "after_transaction");
+        properties.put(RELEASE_CONNECTIONS, "after_statement");
         properties.put("jadira.usertype.autoRegisterUserTypes", true);
         properties.put("jadira.usertype.databaseZone", "jvm");
 

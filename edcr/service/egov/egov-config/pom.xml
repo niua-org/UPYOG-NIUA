@@ -73,10 +73,11 @@
                 </executions>
             </plugin>
         </plugins>
-        
-        <!-- Disabled filtering of resources as it is causing issues with the test cases. 
-        This is because the test cases are using the properties files from the classpath and filtering is replacing the placeholders in the properties files with empty values, 
-        which is causing the test cases to fail. -->
+
+        <!--Resource filtering is enabled in the parent/main POM.
+        It is explicitly disabled here because test cases load properties files directly from the classpath.
+        When filtering is applied, property placeholders are replaced with empty values during test execution,
+        causing test failures. Disabling filtering preserves the original placeholders and ensures tests run successfully.-->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

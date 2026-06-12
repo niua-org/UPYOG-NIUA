@@ -98,7 +98,12 @@ public class EgovMasterDataCaching {
 //            throw new ApplicationRuntimeException("Error occurred while getting Cache Manager", e);
 //        }
 //    }
-    
+/*
+ * WildFly 26 no longer exposes the legacy JNDI Infinispan container
+ * (java:jboss/infinispan/container/master-data) used in earlier versions.
+ * Creating a local DefaultCacheManager avoids deployment failures caused by
+ * missing JNDI resources while preserving in-memory caching functionality.
+ */
     static {
         try {
         	CACHE_MANAGER = new DefaultCacheManager(false);  // local instance
