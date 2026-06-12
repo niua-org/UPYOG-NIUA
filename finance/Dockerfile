@@ -1,15 +1,13 @@
-FROM egovio/alpine-maven-builder-jdk-8:gcp AS build
+#FROM egovio/alpine-maven-builder-jdk-8:gcp AS build
+FROM upyogio/alpine-maven-3.9-builder-jdk-8:gcp-v2 AS build
 ARG WORK_DIR
 WORKDIR /app
 
 # copy the project files
 COPY ${WORK_DIR} ./${WORK_DIR}
-#RUN cd ${WORK_DIR} \
-#    && mvn clean package -DskipTests
-RUN cd ${WORK_DIR} && \
-    mvn clean package -DskipTests \
-    -Dmaven.wagon.http.ssl.insecure=true \
-    -Dmaven.wagon.http.ssl.allowall=true
+RUN cd ${WORK_DIR} \
+     && mvn clean package -DskipTests
+
 #COPY entrypoint.sh ./${WORK_DIR}/entrypoint.sh
 #RUN chmod +x ./${WORK_DIR}/entrypoint.sh && ./${WORK_DIR}/entrypoint.sh
 
