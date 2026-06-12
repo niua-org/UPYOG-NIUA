@@ -26,7 +26,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * ICICI Gateway implementation
+ * Gateway implementation for ICICI Bank payment integration.
+ * This class implements the {@link Gateway} interface to provide payment initiation
+ * and status check capabilities via ICICI's payment gateway API. It handles secure
+ * hash generation for request authentication, builds the sale initiation request,
+ * and parses status check responses into the internal {@link Transaction} model.
  */
 @Service
 @Slf4j
@@ -67,6 +71,19 @@ public class ICICIGateway implements Gateway {
 
     }
 
+    /**
+     * Generates the redirect URI for initiating a sale transaction on the ICICI payment gateway.
+     *
+     * Builds the initiate-sale request payload, computes and attaches a secure hash for
+     * authentication, and posts it to ICICI's initiate sale endpoint. On a successful
+     * response (response code {@code R1000}), constructs the redirect URI by appending
+     * the {@code tranCtx} returned by ICICI to the {@code redirectURI}.
+     *
+     * @param transaction the transaction for which the redirect URI is to be generated
+     * @return the {@link URI} to which the user should be redirected to complete payment
+     * @throws RuntimeException if the response from ICICI is empty, indicates failure,
+     *                           or any error occurs during the request
+     */
     @Override
     public URI generateRedirectURI(Transaction transaction) {
 
@@ -120,6 +137,9 @@ public class ICICIGateway implements Gateway {
         }
     }
 
+    /**
+     * Fetches the current status of a transaction from the ICICI payment gateway.
+     */
     @Override
     public Transaction fetchStatus(Transaction currentStatus, Map<String, String> params) {
 
@@ -217,8 +237,19 @@ public class ICICIGateway implements Gateway {
     }
 
     /**
-     * ==================================== BUILD INITIATE SALE REQUEST
-     * =============================================
+     * ==== BUILD INITIATE SALE REQUEST ====
+     *
+     *
+     *       Builds the request payload required to initiate a sale transaction with ICICI.
+     *
+     *       Populates merchant identification, transaction amount (formatted to two decimal
+     *       places), currency code, customer details, return URL, transaction date, and
+     *       additional product/module information.
+     *
+     *
+     *       @param transaction the transaction for which the initiate sale request is to be built
+     *       @return a map representing the initiate sale request payload (excluding the secure hash)
+     *
      */
     private Map<String, Object> buildInitiateSaleRequest(Transaction transaction) {
 
