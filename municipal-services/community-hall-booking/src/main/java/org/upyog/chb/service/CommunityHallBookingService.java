@@ -120,12 +120,17 @@ public interface CommunityHallBookingService {
 	Integer getBookingCount(@Valid CommunityHallBookingSearchCriteria criteria, @NonNull RequestInfo requestInfo);
 
 	/**
-	 * Updates booking status synchronously and optionally deletes the associated timer entry.
+	 * 
+	 * Updates booking status synchronously and optionally deletes the associated
+	 * timer entry.
 	 *
 	 * @param communityHallsBookingRequest booking request to update
-	 * @param paymentDetail               optional payment details for the update
-	 * @param status                      booking status to set
-	 * @param deleteBookingTimer          whether to delete the timer entry after update
+	 * @param paymentDetail                optional payment details for the update
+	 * @param status                       booking status to set
+	 * @param deleteBookingTimer           whether to delete the timer entry after
+	 *                                     update
+	 */
+	void updateBookingSynchronously(CommunityHallBookingRequest communityHallsBookingRequest,
 			PaymentDetail paymentDetail, BookingStatusEnum status, boolean deleteBookingTimer);
 	
 }
