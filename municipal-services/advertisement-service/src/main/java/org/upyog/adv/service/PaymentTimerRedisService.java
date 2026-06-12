@@ -28,6 +28,15 @@ public class PaymentTimerRedisService {
 	@Autowired
 	private BookingConfiguration bookingConfiguration;
 
+	/**
+	 * Attempts to acquire a Redis-based slot hold for the given timer detail.
+	 *
+	 * <p>If the slot is already held by the current booking, the TTL is refreshed.
+	 * Otherwise, the method returns {@code false} when another booking holds the slot.</p>
+	 *
+	 * @param detail timer details used to build the Redis key
+	 * @return {@code true} when the slot hold is acquired or refreshed; otherwise {@code false}
+	 */
 	public boolean tryAcquireSlot(BookingPaymentTimerDetails detail) {
 		var key = PaymentTimerKeyBuilder.toRedisSlotKey(detail);
 		var value = PaymentTimerKeyBuilder.toRedisValue(detail.getCreatedBy(), detail.getBookingId());
@@ -45,6 +54,14 @@ public class PaymentTimerRedisService {
 		return false;
 	}
 
+	/**
+	 * Synchronizes timer row entries into Redis for the provided timer details.
+	 *
+	 * <p>This method stores a Redis key for each timer row, allowing optional
+	 * Redis mirroring of database timer state.</p>
+	 *
+	 * @param details timer rows to synchronize into Redis
+	 */
 	public void syncTimerRows(List<BookingPaymentTimerDetails> details) {
 		var ttl = paymentTimerDuration();
 		for (var detail : details) {
@@ -55,6 +72,13 @@ public class PaymentTimerRedisService {
 		}
 	}
 
+	/**
+	 * Removes Redis entries for the provided timer rows.
+	 *
+	 * <p>Both the row mirror and slot hold keys are deleted for each timer detail.</p>
+	 *
+	 * @param details timer rows whose Redis mirror entries should be removed
+	 */
 	public void removeTimerRows(List<BookingPaymentTimerDetails> details) {
 		for (var detail : details) {
 			redis.delete(PaymentTimerKeyBuilder.toRedisTimerRowKey(detail));
@@ -62,6 +86,11 @@ public class PaymentTimerRedisService {
 		}
 	}
 
+	/**
+	 * Returns the configured payment timer duration for Redis TTL operations.
+	 *
+	 * @return duration configured for advertisement payment holds
+	 */
 	private Duration paymentTimerDuration() {
 		return Duration.ofMillis(bookingConfiguration.getPaymentTimer());
 	}

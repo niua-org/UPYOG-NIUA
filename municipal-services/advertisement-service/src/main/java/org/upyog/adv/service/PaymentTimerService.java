@@ -36,6 +36,19 @@ public class PaymentTimerService {
 	@Autowired
 	private ObjectProvider<PaymentTimerRedisService> paymentTimerRedis;
 
+	/**
+	 * Creates payment timer holds for the requested advertisement slots.
+	 *
+	 * <p>
+	 * When the booking has not been created yet, the timer table stores a generated
+	 * draft id in {@code booking_id}. The final booking create flow later replaces
+	 * that draft id with the actual booking id and booking number.
+	 * </p>
+	 *
+	 * @param criteriaList                 slot search criteria used to build timer rows
+	 * @param requestInfo                  request metadata and authenticated user details
+	 * @param availabiltityDetailsResponse slot availability response to receive timer details
+	 */
 	@Transactional
 	public void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
 			List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse) {
@@ -51,6 +64,10 @@ public class PaymentTimerService {
 		var redis = paymentTimerRedis.getIfAvailable();
 
 		if (willInsertNewTimer) {
+			/*
+			 * Generate the hold id before touching Redis or the DB so the same value is used
+			 * consistently across both stores.
+			 */
 			preGeneratedDraftId = BookingUtil.getRandonUUID();
 			var createdTime = BookingUtil.getCurrentTimestamp();
 			timerDetails = PaymentTimerKeyBuilder.buildTimerDetailsList(criteriaList, preGeneratedDraftId, uuid,
@@ -82,6 +99,13 @@ public class PaymentTimerService {
 		}
 	}
 
+	/**
+	 * Deletes timer rows for an advertisement booking id and removes the optional
+	 * Redis mirror first.
+	 *
+	 * @param bookingId   booking id or draft id used in the timer table
+	 * @param requestInfo request metadata
+	 */
 	@Transactional
 	public void deleteBookingIdForTimer(String bookingId, RequestInfo requestInfo) {
 		log.info("Deleting timer entry for booking id : {}", bookingId);
@@ -89,6 +113,14 @@ public class PaymentTimerService {
 		bookingRepository.deleteBookingIdForTimer(bookingId);
 	}
 
+	/**
+	 * Deletes timer and draft data for a user when no specific draft id or booking id
+	 * is supplied.
+	 *
+	 * @param uuid      authenticated user uuid
+	 * @param draftId   draft id to retain when present
+	 * @param bookingId booking id to retain when present
+	 */
 	@Transactional
 	public void deleteDataFromTimerAndDraft(String uuid, String draftId, String bookingId) {
 		if (StringUtils.isBlank(draftId) && StringUtils.isBlank(bookingId)) {
@@ -97,11 +129,21 @@ public class PaymentTimerService {
 		bookingRepository.deleteDataFromTimerAndDraft(uuid, draftId, bookingId);
 	}
 
+	/**
+	 * Removes Redis mirror entries for timer rows still identified by draft id.
+	 *
+	 * @param draftId draft id stored in the timer table as booking id
+	 */
 	@Transactional
 	public void removeRedisMirrorForDraft(String draftId) {
 		removeRedisMirrorForBooking(draftId);
 	}
 
+	/**
+	 * Removes Redis mirror rows for a single timer booking reference.
+	 *
+	 * @param bookingId booking id or draft id used by timer rows
+	 */
 	private void removeRedisMirrorForBooking(String bookingId) {
 		var redis = paymentTimerRedis.getIfAvailable();
 		if (redis == null || StringUtils.isBlank(bookingId)) {
@@ -113,6 +155,11 @@ public class PaymentTimerService {
 		}
 	}
 
+	/**
+	 * Removes Redis mirror rows for all timer holds created by a user.
+	 *
+	 * @param uuid authenticated user uuid
+	 */
 	private void removeRedisMirrorForUser(String uuid) {
 		var redis = paymentTimerRedis.getIfAvailable();
 		if (redis == null || StringUtils.isBlank(uuid)) {
@@ -124,6 +171,13 @@ public class PaymentTimerService {
 		}
 	}
 
+	/**
+	 * Filters out partial timer rows that cannot be represented safely as Redis slot
+	 * keys.
+	 *
+	 * @param timers timer rows from the database
+	 * @return timer rows with all Redis key dimensions present
+	 */
 	private List<BookingPaymentTimerDetails> filterRedisEligibleTimers(List<BookingPaymentTimerDetails> timers) {
 		return timers.stream()
 				.filter(timer -> StringUtils.isNotBlank(timer.getTenantId()) && timer.getBookingDate() != null

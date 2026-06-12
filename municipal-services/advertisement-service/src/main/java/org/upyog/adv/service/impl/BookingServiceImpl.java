@@ -43,6 +43,16 @@ import digit.models.coremodels.PaymentDetail;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Implementation of booking operations for advertisement slot reservations.
+ *
+ * <p>This service contains timer-aware slot availability handling, draft cleanup,
+ * and booking creation logic that reconciles draft timer holds with final
+ * booking identifiers.</p>
+ *
+ * <p>Timer logic is used to keep slot holds active during payment and to
+ * reflect held or booked slots when checking availability.</p>
+ */
 @Service
 @Slf4j
 public class BookingServiceImpl implements BookingService {
@@ -68,6 +78,16 @@ public class BookingServiceImpl implements BookingService {
 	@Autowired
 	private ADVEncryptionService encryptionService;
 
+	/**
+	 * Creates a new advertisement booking and reconciles draft timer holds.
+	 *
+	 * <p>After the booking is persisted, this method updates any existing timer
+	 * entries that were held against a draft id so they reference the final
+	 * booking identifier instead.</p>
+	 *
+	 * @param bookingRequest booking request containing applicant and slot data
+	 * @return created booking details with final identifiers
+	 */
 	@Override
 	public BookingDetail createBooking(@Valid BookingRequest bookingRequest) {
 		log.info("Create advertisement booking for user : " + bookingRequest.getRequestInfo().getUserInfo().getId());
@@ -96,7 +116,6 @@ public class BookingServiceImpl implements BookingService {
 		bookingRepository.saveBooking(bookingRequest);
 
 		String draftId = bookingRequest.getBookingApplication().getDraftId();
-		// 5
 
 		String bookingId = bookingRequest.getBookingApplication().getBookingId();
 
@@ -111,6 +130,11 @@ public class BookingServiceImpl implements BookingService {
 		     draftIdFromDraft = draftData.get(0).getDraftId(); 
 		}
 
+		/*
+		 * Slot-search stores the draft id in the timer table until the booking is
+		 * created. After enrichment generates the final booking id and booking number,
+		 * the timer rows are moved from draft id to the real booking reference.
+		 */
 		bookingRepository.updateTimerBookingId(bookingId, bookingDetails.getBookingNo(), draftIdFromDraft);
 
 		if (StringUtils.isNotBlank(draftId)) {
@@ -172,6 +196,17 @@ public class BookingServiceImpl implements BookingService {
 		return bookingCount;
 	}
 
+	/**
+	 * Checks availability for a single advertisement slot criteria and adjusts
+	 * the response based on currently active timer holds.
+	 *
+	 * <p>Timer-held slots may remain available for the current user but are
+	 * marked booked for other users.</p>
+	 *
+	 * @param criteria slot search criteria
+	 * @param requestInfo request metadata and authenticated user details
+	 * @return availability details after applying timer status updates
+	 */
 	@Override
 	public List<AdvertisementSlotAvailabilityDetail> checkAdvertisementSlotAvailability(
 			AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo) {
@@ -189,6 +224,18 @@ public class BookingServiceImpl implements BookingService {
 		return availabilityDetailsResponse;
 	}
 	
+	/**
+	 * Evaluates availability for multiple advertisement slot search criteria and
+	 * applies timer holds when necessary.
+	 *
+	 * <p>If any of the requested slot criteria require a timer, existing draft
+	 * timer holds are cleaned up and a new booking timer is inserted for the
+	 * requested availability details.</p>
+	 *
+	 * @param criteriaList list of slot search criteria
+	 * @param requestInfo request metadata and authenticated user details
+	 * @return merged availability details with timer-based booking status applied
+	 */
 	@Override
 	public List<AdvertisementSlotAvailabilityDetail> getAdvertisementSlotAvailability(
 	        List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo) {
@@ -219,6 +266,12 @@ public class BookingServiceImpl implements BookingService {
 	    return allAvailabilityDetails;
 	}
 
+	/**
+	 * Determines whether any slot in the availability response is already booked.
+	 *
+	 * @param details slot availability details to inspect
+	 * @return {@code true} if any slot is booked; otherwise {@code false}
+	 */
 	@Override
 	public boolean setSlotBookedFlag(List<AdvertisementSlotAvailabilityDetail> details) {
 	    // Check if any slot is booked and return true if so
@@ -271,6 +324,17 @@ public class BookingServiceImpl implements BookingService {
 
 
 
+	/**
+	 * Updates availability details based on timer-held slot entries from the database.
+	 *
+	 * <p>If a timer entry belongs to the current user and matches the active draft or
+	 * booking id, the slot remains available. Otherwise, it is marked as booked.</p>
+	 *
+	 * @param availabilityDetailsResponse current availability response list
+	 * @param criteria slot search criteria used to query timer entries
+	 * @param requestInfo request metadata and authenticated user details
+	 * @return availability details with timer status updates applied
+	 */
 	public List<AdvertisementSlotAvailabilityDetail> updateSlotAvailaibilityStatusFromTimer(
 			List<AdvertisementSlotAvailabilityDetail> availabilityDetailsResponse,
 			AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo) { 
@@ -320,6 +384,13 @@ public class BookingServiceImpl implements BookingService {
 
 	}
 	
+	/**
+	 * Resolves the current draft id for the authenticated user.
+	 *
+	 * @param availabiltityDetailsResponse list of availability details (unused for lookup)
+	 * @param requestInfo request metadata and authenticated user details
+	 * @return the current draft id if present, otherwise {@code null}
+	 */
 	@Override
 	public String getDraftId(List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse,
             RequestInfo requestInfo) {
@@ -473,6 +544,13 @@ public class BookingServiceImpl implements BookingService {
 		return bookingRepository.getAdvertisementDraftApplications(requestInfo, criteria);
 	}
 
+	/**
+	 * Deletes a draft advertisement booking and removes any associated timer
+	 * mirror entries from Redis.
+	 *
+	 * @param draftId draft id to delete
+	 * @return confirmation message after draft discard
+	 */
 	public String deleteAdvertisementDraft(String draftId) {
 
 		if (StringUtils.isNotBlank(draftId)) {
@@ -484,4 +562,3 @@ public class BookingServiceImpl implements BookingService {
 	}
 
 }
-

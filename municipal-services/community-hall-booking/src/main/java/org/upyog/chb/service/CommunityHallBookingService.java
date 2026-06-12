@@ -54,6 +54,18 @@ import lombok.NonNull;
  */
 public interface CommunityHallBookingService {
 
+/**
+	 * Creates a new community hall booking with the provided request payload.
+	 *
+	 * <p>
+	 * This method handles validation, enrichment, and persistence of the booking.
+	 * If a timer hold was active prior to booking creation, it also reconciles the
+	 * final booking id with any existing timer rows.
+	 * </p>
+	 *
+	 * @param communityHallsBookingRequest booking request containing booking details and request metadata
+	 * @return created booking detail
+	 */
 	CommunityHallBookingDetail createBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest);
 	
 	CommunityHallBookingDetail createInitBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest);	
@@ -62,6 +74,19 @@ public interface CommunityHallBookingService {
 
 	CommunityHallBookingDetail updateBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest, PaymentDetail paymentDetail, BookingStatusEnum bookingStatusEnum);
 
+	/**
+	 * Gets community hall slot availability for the requested criteria.
+	 *
+	 * <p>
+	 * This method evaluates existing bookings, active timer holds, and availability
+	 * rules to return slot details and a possible payment timer value for the
+	 * current request.
+	 * </p>
+	 *
+	 * @param criteria slot search criteria containing hall codes, dates, and timer flags
+	 * @param info     request metadata and authenticated user details
+	 * @return response with available slots, booking statuses, and timer information
+	 */
 	CommunityHallSlotAvailabilityResponse getCommunityHallSlotAvailability(CommunityHallSlotSearchCriteria criteria, RequestInfo info);
 
 	Integer getBookingCount(@Valid CommunityHallBookingSearchCriteria criteria, @NonNull RequestInfo requestInfo);

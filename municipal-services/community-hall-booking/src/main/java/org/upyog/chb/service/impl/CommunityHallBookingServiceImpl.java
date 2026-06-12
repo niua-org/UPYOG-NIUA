@@ -135,6 +135,12 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 
 		// 4.Persist the request using persister service
 		bookingRepository.saveCommunityHallBooking(communityHallsBookingRequest);
+		/*
+		 * Slot-search can reserve hall slots before a booking id exists. In that case,
+		 * the timer table stores draftId in booking_id. Once create generates the real
+		 * booking id and booking number, the timer rows are moved to the final booking
+		 * reference and the remaining timer value is returned in the create response.
+		 */
 		bookingRepository.updateTimerBookingId(
 				communityHallsBookingRequest.getHallsBookingApplication().getBookingId(),
 				communityHallsBookingRequest.getHallsBookingApplication().getBookingNo(),
@@ -315,6 +321,19 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		
 	}
 
+	/**
+	 * Retrieves community hall slot availability for the given search criteria.
+	 *
+	 * <p>
+	 * This service method resolves slot availability, applies existing timer row
+	 * state, and optionally creates or reuses a payment timer when the client
+	 * requests a timer hold.
+	 * </p>
+	 *
+	 * @param criteria slot search criteria containing hall codes, booking dates, and timer flags
+	 * @param info     request metadata and authenticated user details
+	 * @return availability response with slots, status, draft id, and timer value
+	 */
 	@Override
 	public CommunityHallSlotAvailabilityResponse getCommunityHallSlotAvailability(
 			CommunityHallSlotSearchCriteria criteria, RequestInfo info) {
