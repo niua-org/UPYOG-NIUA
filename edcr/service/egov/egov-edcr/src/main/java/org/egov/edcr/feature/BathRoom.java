@@ -59,9 +59,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.*;
 import org.egov.edcr.service.MDMSCacheManager;
-import org.egov.edcr.utility.DcrConstants;
-import org.egov.infra.admin.master.entity.AppConfigValues;
-import org.egov.infra.admin.master.service.AppConfigValueService;
+import org.egov.edcr.service.ConfigCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +76,7 @@ public class BathRoom extends FeatureProcess {
 	MDMSCacheManager cache;
 
     @Autowired
-    private AppConfigValueService appConfigValueService;
+    private ConfigCacheService configCacheService;
 
     @Override
     public Plan validate(Plan pl) {
@@ -131,9 +129,8 @@ public class BathRoom extends FeatureProcess {
         BathroomRequirement rule = matchedRule.get();
         BigDecimal permittedArea = rule.getBathroomtotalArea() != null ? rule.getBathroomtotalArea() : BigDecimal.ZERO;
         BigDecimal permittedMinWidth = rule.getBathroomMinWidth() != null ? rule.getBathroomMinWidth() : BigDecimal.ZERO;
-        boolean unitLayerEnabled = isUnitLayerEnabled();
         for (Floor floor : block.getBuilding().getFloors()) {
-            if (unitLayerEnabled) {
+            if (configCacheService.isUnitLayerEnabled()) {
                 if (floor.getUnits() != null && !floor.getUnits().isEmpty()) {
                     for (FloorUnit floorUnit : floor.getUnits()) {
                         processFloor(plan, floor, permittedArea, permittedMinWidth, scrutinyDetail, floorUnit);
@@ -144,13 +141,6 @@ public class BathRoom extends FeatureProcess {
             }
         }
 
-    }
-    private boolean isUnitLayerEnabled() {
-        List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
-                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
-
-        return appConfigValues != null && !appConfigValues.isEmpty()
-                && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
     }
 
     /**

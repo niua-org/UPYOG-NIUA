@@ -58,6 +58,7 @@ import org.egov.edcr.service.MDMSCacheManager;
 import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
 import org.egov.infra.admin.master.entity.AppConfigValues;
+import org.egov.edcr.service.ConfigCacheService;
 import org.egov.infra.admin.master.service.AppConfigValueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -78,6 +79,9 @@ public class Balcony extends FeatureProcess {
 
 	@Autowired
 	private AppConfigValueService appConfigValueService;
+
+	@Autowired
+	private ConfigCacheService configCacheService;
 
 	@Override
 	public Plan validate(Plan plan) {
@@ -120,10 +124,9 @@ public class Balcony extends FeatureProcess {
 	private void processBlockBalconies(Plan plan, Block block) {
 	    ScrutinyDetail scrutinyDetail = createScrutinyDetail(BLOCK + block.getNumber() + UNDERSCORE + MdmsFeatureConstants.BALCONY,
 	            RULE_NO, FLOOR, UNIT, DESCRIPTION, PERMISSIBLE, PROVIDED, STATUS);
-		boolean unitLayerEnabled = isUnitLayerEnabled();
 
 	    for (Floor floor : block.getBuilding().getFloors()) {
-			if (unitLayerEnabled) {
+			if (configCacheService.isUnitLayerEnabled()) {
 				if (floor.getUnits() != null && !floor.getUnits().isEmpty()) {
 					for (FloorUnit floorUnit : floor.getUnits()) {
 						processFloorBalconies(plan, block, floor, scrutinyDetail, floorUnit);
@@ -135,14 +138,6 @@ public class Balcony extends FeatureProcess {
 		}
 
 	    plan.getReportOutput().getScrutinyDetails().add(scrutinyDetail);
-	}
-
-	private boolean isUnitLayerEnabled() {
-		List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
-				DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
-
-		return appConfigValues != null && !appConfigValues.isEmpty()
-				&& DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
 	}
 
 	/**

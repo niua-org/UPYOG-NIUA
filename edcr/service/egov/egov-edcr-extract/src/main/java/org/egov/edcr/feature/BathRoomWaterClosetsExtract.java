@@ -15,6 +15,7 @@ import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
 import org.egov.infra.admin.master.service.AppConfigValueService;
 import org.egov.infra.admin.master.entity.AppConfigValues;
+import org.egov.edcr.service.ConfigCacheService;
 import org.kabeja.dxf.DXFLWPolyline;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,8 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
 
     @Autowired
     private AppConfigValueService appConfigValueService;
+    @Autowired
+    private ConfigCacheService configCacheService;
 
     @Override
     public PlanDetail validate(PlanDetail planDetail) {
@@ -39,8 +42,6 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
             return planDetail;
         }
 
-        boolean unitLayerEnabled = isUnitLayerEnabled();
-
         for (Block block : planDetail.getBlocks()) {
 
             if (block.getBuilding() == null
@@ -50,7 +51,7 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
 
             for (Floor floor : block.getBuilding().getFloors()) {
 
-                if (unitLayerEnabled) {
+                if (configCacheService.isUnitLayerEnabled()) {
                     extractUnitWiseBathRoomWC(planDetail, block, floor);
                 } else {
                     extractFloorWiseBathRoomWC(planDetail, block, floor);
@@ -61,13 +62,7 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
         return planDetail;
     }
 
-    private boolean isUnitLayerEnabled() {
-        List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
-                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
 
-        return appConfigValues != null && !appConfigValues.isEmpty()
-                && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
-    }
 
     private void extractFloorWiseBathRoomWC(PlanDetail planDetail, Block block, Floor floor) {
         String wcBathLayerName = String.format(
@@ -128,7 +123,4 @@ public class BathRoomWaterClosetsExtract extends FeatureExtract {
         return bathRoomWC;
     }
 }
-
-
-
 

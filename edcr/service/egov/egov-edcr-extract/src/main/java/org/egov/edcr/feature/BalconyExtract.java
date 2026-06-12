@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.egov.common.entity.edcr.*;
+import org.egov.edcr.service.ConfigCacheService;
 import org.egov.edcr.service.LayerNames;
 import org.egov.common.entity.edcr.Measurement;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
@@ -29,6 +30,9 @@ public class BalconyExtract extends FeatureExtract {
     @Autowired
     private AppConfigValueService appConfigValueService;
 
+    @Autowired
+    private ConfigCacheService configCacheService;
+
     @Override
     public PlanDetail validate(PlanDetail planDetail) {
         return planDetail;
@@ -40,7 +44,6 @@ public class BalconyExtract extends FeatureExtract {
             return planDetail;
         }
 
-        boolean unitLayerEnabled = isUnitLayerEnabled();
 
         for (Block block : planDetail.getBlocks()) {
             if (block.getBuilding() == null || block.getBuilding().getFloors() == null) {
@@ -48,7 +51,7 @@ public class BalconyExtract extends FeatureExtract {
             }
 
             for (Floor floor : block.getBuilding().getFloors()) {
-                if (unitLayerEnabled) {
+                if (configCacheService.isUnitLayerEnabled()) {
                     extractUnitWiseBalconies(planDetail, block, floor);
                 } else {
                     extractFloorWiseBalconies(planDetail, block, floor);
@@ -57,14 +60,6 @@ public class BalconyExtract extends FeatureExtract {
         }
 
         return planDetail;
-    }
-
-    private boolean isUnitLayerEnabled() {
-        List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
-                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
-
-        return appConfigValues != null && !appConfigValues.isEmpty()
-                && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
     }
 
     private void extractFloorWiseBalconies(PlanDetail planDetail, Block block, Floor floor) {

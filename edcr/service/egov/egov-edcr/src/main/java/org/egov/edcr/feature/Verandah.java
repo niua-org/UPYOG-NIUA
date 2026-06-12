@@ -60,6 +60,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.egov.common.entity.edcr.*;
 import org.egov.edcr.service.MDMSCacheManager;
+import org.egov.edcr.service.ConfigCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -86,6 +87,8 @@ public class Verandah extends FeatureProcess {
 		// Currently no validation logic required for Verandah feature
 		return pl;
 	}
+	@Autowired
+	private ConfigCacheService configCacheService;
 	
 	@Autowired
 	MDMSCacheManager cache;
@@ -101,31 +104,48 @@ public class Verandah extends FeatureProcess {
 	 */
 	@Override
 	public Plan process(Plan pl) {
-	    for (Block block : pl.getBlocks()) {
-	        ScrutinyDetail scrutinyDetail = createScrutinyDetail();
-	        VerandahRequirement verandahRule = getVerandahRule(pl);
+		for (Block block : pl.getBlocks()) {
+			ScrutinyDetail scrutinyDetail = createScrutinyDetail();
+			VerandahRequirement verandahRule = getVerandahRule(pl);
 
-	        if (verandahRule == null) {
-	            continue;
-	        }
+			if (verandahRule == null) {
+				continue;
+			}
 
-	        BigDecimal permissibleWidth = verandahRule.getVerandahWidth();
-	        BigDecimal permissibleDepth = verandahRule.getVerandahDepth();
+			BigDecimal permissibleWidth = verandahRule.getVerandahWidth();
+			BigDecimal permissibleDepth = verandahRule.getVerandahDepth();
 
-	        if (block.getBuilding() == null || block.getBuilding().getFloors() == null) continue;
+			if (block.getBuilding() == null || block.getBuilding().getFloors() == null) continue;
+			for (Floor floor : block.getBuilding().getFloors()) {
 
-	        for (Floor floor : block.getBuilding().getFloors()) {
-	            if (floor.getVerandah() == null || floor.getVerandah().getMeasurements() == null
-	                    || floor.getVerandah().getMeasurements().isEmpty()) {
-	                continue;
-	            }
-
-	            evaluateVerandahWidth(pl, scrutinyDetail, floor, permissibleWidth);
-	            evaluateVerandahDepth(pl, scrutinyDetail, floor, permissibleDepth);
-	        }
-	    }
-	    return pl;
+				if (configCacheService.isUnitLayerEnabled()) {
+					if (floor.getUnits() != null && !floor.getUnits().isEmpty()) {
+						for (FloorUnit floorUnit : floor.getUnits()) {
+							processFloor(pl, floor, floorUnit, scrutinyDetail, permissibleWidth, permissibleDepth);
+						}
+					}
+				} else {
+					processFloor(pl, floor, null, scrutinyDetail, permissibleWidth, permissibleDepth);
+				}
+			}
+		}
+		return pl;
 	}
+
+//	        for (Floor floor : block.getBuilding().getFloors()) {
+//	            if (floor.getVerandah() == null || floor.getVerandah().getMeasurements() == null
+//	                    || floor.getVerandah().getMeasurements().isEmpty()) {
+//	                continue;
+//	            }
+//
+//	            evaluateVerandahWidth(pl, scrutinyDetail, floor, permissibleWidth);
+//	            evaluateVerandahDepth(pl, scrutinyDetail, floor, permissibleDepth);
+//	        }
+//	    }
+//		}
+//			return pl;
+//		}
+
 
 	/**
 	 * Creates and initializes a scrutiny detail object for verandah validation reporting.
@@ -137,10 +157,12 @@ public class Verandah extends FeatureProcess {
 	    ScrutinyDetail detail = new ScrutinyDetail();
 	    detail.setKey(Common_Verandah);
 	    detail.addColumnHeading(1, RULE_NO);
-	    detail.addColumnHeading(2, DESCRIPTION);
-	    detail.addColumnHeading(3, REQUIRED);
-	    detail.addColumnHeading(4, PROVIDED);
-	    detail.addColumnHeading(5, STATUS);
+		detail.addColumnHeading(2, FLOOR_NO);
+	    detail.addColumnHeading(3, DESCRIPTION);
+		detail.addColumnHeading(4, UNIT);
+	    detail.addColumnHeading(5, REQUIRED);
+	    detail.addColumnHeading(6, PROVIDED);
+	    detail.addColumnHeading(7, STATUS);
 	    return detail;
 	}
 
@@ -151,6 +173,16 @@ public class Verandah extends FeatureProcess {
 	 * @param pl The building plan containing configuration details
 	 * @return VerandahRequirement rule if found, null otherwise
 	 */
+	private void processFloor(Plan pl, Floor floor, FloorUnit floorUnit, ScrutinyDetail scrutinyDetail, BigDecimal permissibleWidth, BigDecimal permissibleDepth) {
+			MeasurementWithHeight verandah = floorUnit == null ? floor.getVerandah() : floorUnit.getVerandah();
+			if (verandah == null || verandah.getMeasurements() == null || verandah.getMeasurements().isEmpty()) {
+				return;
+			}
+			evaluateVerandahWidth(pl, scrutinyDetail, floor, floorUnit, verandah, permissibleWidth);
+			evaluateVerandahDepth(pl, scrutinyDetail, floor, floorUnit, verandah, permissibleDepth);
+		}
+
+
 	private VerandahRequirement getVerandahRule(Plan pl) {
 		 List<Object> rules = cache.getFeatureRules(pl, FeatureEnum.VERANDAH.getValue(), false);
 	        Optional<VerandahRequirement> matchedRule = rules.stream()
@@ -170,8 +202,9 @@ public class Verandah extends FeatureProcess {
 	 * @param floor The floor containing verandah measurements
 	 * @param permissibleWidth The minimum required verandah width
 	 */
-	private void evaluateVerandahWidth(Plan pl, ScrutinyDetail scrutinyDetail, Floor floor, BigDecimal permissibleWidth) {
-	    Optional<BigDecimal> minWidthOpt = floor.getVerandah().getMeasurements().stream()
+	private void evaluateVerandahWidth(Plan pl, ScrutinyDetail scrutinyDetail, Floor floor,FloorUnit floorUnit,
+	                                   MeasurementWithHeight verandah, BigDecimal permissibleWidth) {
+	    Optional<BigDecimal> minWidthOpt = verandah.getMeasurements().stream()
 	            .map(Measurement::getWidth)
 	            .min(Comparator.naturalOrder());
 
@@ -183,7 +216,11 @@ public class Verandah extends FeatureProcess {
 			detail.setRequired(MIN_WIDTH + permissibleWidth + METER);
 			detail.setProvided(WIDTH_AREA + minWidth + AT_FLOOR + floor.getNumber());
 			detail.setStatus(minWidth.compareTo(permissibleWidth) >= 0 ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
+			detail.setFloorNo(String.valueOf(floor.getNumber()));
 
+			if (floorUnit != null) {
+				detail.setUnitNumber(floorUnit.getUnitNumber());
+			}
 			Map<String, String> details = mapReportDetails(detail);
 			addScrutinyDetailtoPlan(scrutinyDetail, pl, details);
 	    }
@@ -199,8 +236,9 @@ public class Verandah extends FeatureProcess {
 	 * @param floor The floor containing verandah measurements
 	 * @param permissibleDepth The maximum allowed verandah depth
 	 */
-	private void evaluateVerandahDepth(Plan pl, ScrutinyDetail scrutinyDetail, Floor floor, BigDecimal permissibleDepth) {
-	    Optional<BigDecimal> minDepthOpt = floor.getVerandah().getHeightOrDepth().stream()
+	private void evaluateVerandahDepth(Plan pl, ScrutinyDetail scrutinyDetail, Floor floor,FloorUnit floorUnit,
+				MeasurementWithHeight verandah, BigDecimal permissibleDepth) {
+	    Optional<BigDecimal> minDepthOpt = verandah.getHeightOrDepth().stream()
 	            .min(Comparator.naturalOrder());
 
 	    if (minDepthOpt.isPresent() && minDepthOpt.get().compareTo(BigDecimal.ZERO) > 0) {
@@ -211,6 +249,11 @@ public class Verandah extends FeatureProcess {
 			detail.setRequired(MIN_DEPTH_NOT_MORE_THAN + permissibleDepth + METER);
 			detail.setProvided(DEPTH_AREA + minDepth + AT_FLOOR + floor.getNumber());
 			detail.setStatus(minDepth.compareTo(permissibleDepth) <= 0 ? Result.Accepted.getResultVal() : Result.Not_Accepted.getResultVal());
+			detail.setFloorNo(String.valueOf(floor.getNumber()));
+
+			if (floorUnit != null) {
+				detail.setUnitNumber(floorUnit.getUnitNumber());
+			}
 
 			Map<String, String> details = mapReportDetails(detail);
 			addScrutinyDetailtoPlan(scrutinyDetail, pl, details);

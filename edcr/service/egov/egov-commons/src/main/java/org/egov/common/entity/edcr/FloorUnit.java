@@ -51,7 +51,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FloorUnit extends Measurement {
+public class FloorUnit extends Floor {
 
     private static final long serialVersionUID = 27L;
 
@@ -73,6 +73,7 @@ public class FloorUnit extends Measurement {
     private List<Room> nonInhabitationalRooms = new ArrayList<>();
     private List<Door> nonaHabitationalDoors = new ArrayList<>();
     private List<Door> doors = new ArrayList<>();
+    private List<Measurement> constructedAreas;
 
     public List<Door> getDoors() {
         return doors;
@@ -116,6 +117,13 @@ public class FloorUnit extends Measurement {
     }
     public Room getBathRoom() {
         return bathRoom;
+    }
+
+    public List<Measurement> getConstructedAreas() {
+        return constructedAreas;
+    }
+    public void setConstructedAreas(List<Measurement> constructedAreas) {
+        this.constructedAreas = constructedAreas;
     }
 
     public void setBathRoom(Room bathRoom) {

@@ -11,6 +11,7 @@ import org.egov.common.entity.edcr.*;
 import org.egov.edcr.constants.DxfFileConstants;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
 import org.egov.edcr.entity.blackbox.PlanDetail;
+import org.egov.edcr.service.ConfigCacheService;
 import org.egov.edcr.service.LayerNames;
 import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
@@ -28,16 +29,16 @@ public class KitchenExtract extends FeatureExtract {
 
     @Autowired
     private AppConfigValueService appConfigValueService;
+    @Autowired
+    private ConfigCacheService configCacheService;
 
     @Override
     public PlanDetail extract(PlanDetail pl) {
         if (LOG.isDebugEnabled())
             LOG.debug("Starting of Kitchen room Extract......");
-        if (pl == null && pl.getBlocks().isEmpty()){
+        if (pl == null || pl.getBlocks().isEmpty()) {
             return pl;
         }
-
-        boolean unitLayerEnabled= isUnitLayerEnabled();
 
         for (Block block : pl.getBlocks()) {
 
@@ -45,59 +46,68 @@ public class KitchenExtract extends FeatureExtract {
                 continue;
             }
             outside:
-            for(Floor floor: block.getBuilding().getFloors()){
-                if (!block.getTypicalFloor().isEmpty()) {
-                    for (TypicalFloor tp : block.getTypicalFloor()) {
-                        if (tp.getRepetitiveFloorNos().contains(floor.getNumber())) {
-                            for (Floor allFloors : block.getBuilding().getFloors()) {
+            // Process each floor in the current block.
+            for (Floor floor : block.getBuilding().getFloors()) {
+                // If typical floors are configured, check whether this floor is a repetitive floor.
+                if (!block.getTypicalFloor().isEmpty())
+                    // Iterate through all typical floor mappings for this block.
+                    for (TypicalFloor tp : block.getTypicalFloor())
+                        // Continue only when current floor number is listed as a repetitive floor.
+                        if (tp.getRepetitiveFloorNos().contains(floor.getNumber()))
+                            // Search all floors to find the model floor for this typical floor mapping.
+                            for (Floor allFloors : block.getBuilding().getFloors())
+                                // Match the model floor number with the typical floor model floor number.
                                 if (allFloors.getNumber().equals(tp.getModelFloorNo())) {
 
-                                    if (!unitLayerEnabled && allFloors.getKitchen() != null) {
+                                    // In floor-wise mode, copy kitchen directly from the model floor.
+                                    if (!configCacheService.isUnitLayerEnabled() && allFloors.getKitchen() != null) {
                                         floor.setKitchen(allFloors.getKitchen());
+                                        // Skip normal extraction because typical floor kitchen has been copied.
                                         continue outside;
                                     }
 
-                                    if (unitLayerEnabled && allFloors.getUnits() != null && floor.getUnits() != null) {
-                                        for (FloorUnit targetUnit :
-                                                floor.getUnits()) {
-                                            if (targetUnit.getUnitNumber() == null) {
-                                                continue;
-                                            }
-                                            for (FloorUnit sourceUnit : allFloors.getUnits()) {
-                                                if (sourceUnit.getUnitNumber() == null) {
-                                                    continue;
-                                                }
-                                                if (targetUnit.getUnitNumber().equals(sourceUnit.getUnitNumber()) && sourceUnit.getKitchen() != null) {
-                                                    targetUnit.setKitchen(sourceUnit.getKitchen());
-                                                }
-                                            }
-                                        }
+                                    // In unit-wise mode, copy kitchen from matching units of the model floor.
+                                    if (configCacheService.isUnitLayerEnabled() && allFloors.getUnits() != null) {
 
+                                        // If repetitive floor has no units, use units from the model floor.
+                                        if(floor.getUnits()==null){
+                                            floor.setUnits(allFloors.getUnits());
+                                        }
+                                        // Loop through units of the current repetitive floor.
+//                                        for (FloorUnit targetUnit : floor.getUnits()) {
+//                                            // Skip target unit when unit number is missing.
+//                                            if (targetUnit.getUnitNumber() == null) {
+//                                                continue;
+//                                            }
+//                                            // Loop through units of the model floor.
+//                                            for (FloorUnit sourceUnit : allFloors.getUnits()) {
+//                                                // Skip source unit when unit number is missing.
+//                                                if (sourceUnit.getUnitNumber() == null) {
+//                                                    continue;
+//                                                }
+//                                                // Copy kitchen when source and target unit numbers match.
+//                                                if (targetUnit.getUnitNumber().equals(sourceUnit.getUnitNumber()) && sourceUnit.getKitchen() != null) {
+//                                                    targetUnit.setKitchen(sourceUnit.getKitchen());
+//                                                }
+//                                            }
+//                                        }
+
+                                        // Skip normal extraction because unit-wise typical kitchen copy is complete.
                                         continue outside;
                                     }
                                 }
-                            }
-                        }
-                    }
-                }
 
-                if (unitLayerEnabled) {
+                // If floor was not handled as a typical repetitive floor, extract from drawing layers.
+                if (configCacheService.isUnitLayerEnabled()) {
                     extractUnitWiseKitchen(pl, block, floor);
-                } else {
+                }
+                else {
                     extractFloorWiseKitchen(pl, block, floor);
                 }
             }
         }
-
-        return pl;
-    }
-    private boolean isUnitLayerEnabled()
-    {
-        List<AppConfigValues> appConfigValues =
-                appConfigValueService.getConfigValuesByModuleAndKey(DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
-
-        return appConfigValues != null && !appConfigValues.isEmpty() && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
-    }
+            return pl;
+        }
     private void extractFloorWiseKitchen(PlanDetail pl,Block block,Floor floor) {
         String kitchenLayer = String.format(layerNames.getLayerName("LAYER_NAME_KITCHEN"), block.getNumber(),
                 floor.getNumber());
@@ -136,6 +146,7 @@ public class KitchenExtract extends FeatureExtract {
                 kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_STORE_ROOM_COLOR, pl);
         List<DXFLWPolyline> commercialKitchenDiningPolyLines = Util.getPolyLinesByLayerAndColor(pl.getDoc(),
                 kitchenLayer, DxfFileConstants.COMMERCIAL_KITCHEN_DINING_ROOM_COLOR, pl);
+
 
         if (!residentialKitchenPolyLines.isEmpty())
             kitchenPolyLines.addAll(residentialKitchenPolyLines);

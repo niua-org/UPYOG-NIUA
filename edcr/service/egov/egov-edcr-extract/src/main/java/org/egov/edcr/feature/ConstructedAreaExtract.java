@@ -6,15 +6,16 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.egov.common.entity.edcr.Block;
-import org.egov.common.entity.edcr.Floor;
-import org.egov.common.entity.edcr.Measurement;
-import org.egov.common.entity.edcr.TypicalFloor;
+import org.egov.common.entity.edcr.*;
+//import org.egov.common.entity.edcr.Floor;
+//import org.egov.common.entity.edcr.Measurement;
+//import org.egov.common.entity.edcr.TypicalFloor;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
 import org.egov.edcr.entity.blackbox.PlanDetail;
 import org.egov.edcr.service.LayerNames;
 import org.egov.edcr.utility.Util;
 import org.kabeja.dxf.DXFLWPolyline;
+import org.egov.edcr.service.ConfigCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class ConstructedAreaExtract extends FeatureExtract {
 
     @Autowired
     private LayerNames layerNames;
+
+    @Autowired
+    private ConfigCacheService configCacheService;
 
     @Override
     public PlanDetail validate(PlanDetail planDetail) {

@@ -62,6 +62,7 @@ import org.egov.common.entity.edcr.*;
 import org.egov.edcr.constants.EdcrRulesMdmsConstants;
 import org.egov.edcr.service.MDMSCacheManager;
 import org.egov.edcr.service.FetchEdcrRulesMdms;
+import org.egov.edcr.service.ConfigCacheService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -86,6 +87,9 @@ public class ToiletDetails extends FeatureProcess {
     public Plan validate(Plan pl) {
         return pl;
     }
+
+    @Autowired
+    private ConfigCacheService configCacheService;
 
     @Autowired
 	MDMSCacheManager cache;
@@ -121,10 +125,11 @@ public class ToiletDetails extends FeatureProcess {
         scrutinyDetail.setKey(Common_Toilet);
         scrutinyDetail.addColumnHeading(1, RULE_NO);
         scrutinyDetail.addColumnHeading(2, DESCRIPTION);
-        scrutinyDetail.addColumnHeading(3, FLOOR_NO);
-        scrutinyDetail.addColumnHeading(4, REQUIRED);
-        scrutinyDetail.addColumnHeading(5, PROVIDED);
-        scrutinyDetail.addColumnHeading(6, STATUS);
+        scrutinyDetail.addColumnHeading(3, UNIT);
+        scrutinyDetail.addColumnHeading(4, FLOOR_NO);
+        scrutinyDetail.addColumnHeading(5, REQUIRED);
+        scrutinyDetail.addColumnHeading(6, PROVIDED);
+        scrutinyDetail.addColumnHeading(7, STATUS);
         return scrutinyDetail;
     }
 
@@ -141,14 +146,51 @@ public class ToiletDetails extends FeatureProcess {
         if (block.getBuilding() == null || block.getBuilding().getFloors() == null) return;
 
         for (Floor floor : block.getBuilding().getFloors()) {
-            if (floor.getToilet() == null || floor.getToilet().isEmpty()) continue;
 
-            for (Toilet toilet : floor.getToilet()) {
-                if (toilet.getToilets() == null || toilet.getToilets().isEmpty()) continue;
-
-                for (Measurement toiletMeasurement : toilet.getToilets()) {
-                    evaluateToiletMeasurement(pl, floor, toilet, toiletMeasurement, scrutinyDetail);
+            if (configCacheService.isUnitLayerEnabled()) {
+                if (floor.getUnits() != null && !floor.getUnits().isEmpty()) {
+                    for (FloorUnit floorUnit : floor.getUnits()) {
+                        processFloorToilet(pl, floor, floorUnit, scrutinyDetail);
+                    }
                 }
+            } else {
+                processFloorToilet(pl, floor, scrutinyDetail);
+            }
+        }
+    }
+//            if (floor.getToilet() == null || floor.getToilet().isEmpty()) continue;
+//
+//            for (Toilet toilet : floor.getToilet()) {
+//                if (toilet.getToilets() == null || toilet.getToilets().isEmpty()) continue;
+//
+//                for (Measurement toiletMeasurement : toilet.getToilets()) {
+//                    evaluateToiletMeasurement(pl, floor, toilet, toiletMeasurement, scrutinyDetail);
+//                }
+//            }
+//        }
+//    }
+
+    private void processFloorToilet(Plan pl,Floor floor,ScrutinyDetail scrutinyDetail){
+        if (floor.getToilet() == null || floor.getToilet().isEmpty())
+            return;
+        for (Toilet toilet : floor.getToilet()) {
+            if (toilet.getToilets() == null || toilet.getToilets().isEmpty())
+                continue;
+            for (Measurement toiletMeasurement : toilet.getToilets())
+            {
+                evaluateToiletMeasurement(pl, floor, toilet, toiletMeasurement, scrutinyDetail, null);
+            }
+        }
+    }
+    private void processFloorToilet(Plan pl,Floor floor,FloorUnit floorUnit,ScrutinyDetail scrutinyDetail){
+        if (floor.getToilet() == null || floor.getToilet().isEmpty())
+            return;
+        for (Toilet toilet : floor.getToilet()) {
+            if (toilet.getToilets() == null || toilet.getToilets().isEmpty())
+                continue;
+            for (Measurement toiletMeasurement : toilet.getToilets())
+            {
+                evaluateToiletMeasurement(pl, floor, toilet, toiletMeasurement, scrutinyDetail, null);
             }
         }
     }
@@ -164,8 +206,9 @@ public class ToiletDetails extends FeatureProcess {
      * @param measurement The specific toilet measurement to validate
      * @param scrutinyDetail The scrutiny detail object to add results to
      */
+
     private void evaluateToiletMeasurement(Plan pl, Floor floor, Toilet toilet, Measurement measurement,
-                                           ScrutinyDetail scrutinyDetail) {
+                                           ScrutinyDetail scrutinyDetail,FloorUnit floorUnit) {
         BigDecimal area = measurement.getArea().setScale(2, RoundingMode.HALF_UP);
         BigDecimal width = measurement.getWidth().setScale(2, RoundingMode.HALF_UP);
         BigDecimal ventilationHeight = toilet.getToiletVentilation() != null
@@ -176,6 +219,9 @@ public class ToiletDetails extends FeatureProcess {
         detail.setRuleNo(RULE_41_5_5);
         detail.setDescription(TOILET_DESCRIPTION);
         detail.setFloorNo(String.valueOf(floor.getNumber()));
+        if (floorUnit != null) {
+            detail.setUnitNumber(floorUnit.getUnitNumber());
+        }
 
         Optional<ToiletRequirement> toiletRule = getToiletRule(pl);
         if (toiletRule == null) return;

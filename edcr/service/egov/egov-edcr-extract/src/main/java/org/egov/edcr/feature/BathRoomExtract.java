@@ -11,10 +11,9 @@ import org.egov.common.entity.edcr.*;
 import org.egov.edcr.entity.blackbox.MeasurementDetail;
 import org.egov.edcr.entity.blackbox.PlanDetail;
 import org.egov.edcr.service.LayerNames;
-import org.egov.edcr.utility.DcrConstants;
 import org.egov.edcr.utility.Util;
+import org.egov.edcr.service.ConfigCacheService;
 import org.egov.infra.admin.master.service.AppConfigValueService;
-import org.egov.infra.admin.master.entity.AppConfigValues;
 import org.kabeja.dxf.DXFLWPolyline;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +27,9 @@ public class BathRoomExtract extends FeatureExtract {
     @Autowired
     private AppConfigValueService appConfigValueService;
 
+    @Autowired
+    private ConfigCacheService configCacheService;
+
     @Override
     public PlanDetail validate(PlanDetail planDetail) {
         return planDetail;
@@ -39,7 +41,6 @@ public class BathRoomExtract extends FeatureExtract {
             return planDetail;
         }
 
-        boolean unitLayerEnabled = isUnitLayerEnabled();
 
 //        List<DXFLWPolyline> rooms;
 //        List<Measurement> roomMeasurements;
@@ -52,7 +53,7 @@ public class BathRoomExtract extends FeatureExtract {
             }
 
             for (Floor floor : block.getBuilding().getFloors()) {
-                if (unitLayerEnabled) {
+                if (configCacheService.isUnitLayerEnabled()) {
                     extractUnitWiseBathRooms(planDetail, block, floor);
                 } else {
                     extractFloorWiseBathRooms(planDetail, block, floor);
@@ -61,13 +62,7 @@ public class BathRoomExtract extends FeatureExtract {
         }
         return planDetail;
     }
-    private boolean isUnitLayerEnabled(){
-        List<AppConfigValues> appConfigValues = appConfigValueService.getConfigValuesByModuleAndKey(
-                DcrConstants.APPLICATION_MODULE_TYPE, DcrConstants.FLOOR_UNIT_LAYER_ENABLED);
 
-        return appConfigValues != null && !appConfigValues.isEmpty()
-                && DcrConstants.YES.equalsIgnoreCase(appConfigValues.get(0).getValue());
-    }
     private void extractFloorWiseBathRooms(PlanDetail planDetail,Block block,Floor floor) {
         String bathLayerName = String.format(layerNames.getLayerName("LAYER_NAME_BLK_FLR_BATH"), block.getNumber(), floor.getNumber());
 
@@ -118,6 +113,7 @@ public class BathRoomExtract extends FeatureExtract {
                 .map(roomPolyLine -> new MeasurementDetail(roomPolyLine, true))
                 .collect(Collectors.toList());
         bathRoom.setRooms(roomMeasurements);
+
 
         List<RoomHeight> roomHeightsList = new ArrayList<>();
 
