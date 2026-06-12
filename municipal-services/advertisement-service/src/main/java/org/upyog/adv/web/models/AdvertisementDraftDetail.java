@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Domain model class used by advertisement service requests and responses.
+ */
 @Validated
 @NoArgsConstructor
 @AllArgsConstructor

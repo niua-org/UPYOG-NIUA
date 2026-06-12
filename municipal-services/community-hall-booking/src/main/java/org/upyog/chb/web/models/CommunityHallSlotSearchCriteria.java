@@ -52,5 +52,7 @@ public class CommunityHallSlotSearchCriteria {
 	private Boolean isTimerRequired;
 	
 	private String bookingId;
+	
+	private String draftId;
 
 }

@@ -67,6 +67,11 @@ public class NotificationConsumer {
 			log.error("Error while processing CHB notification to value: " + record + " on topic: " + topic + ": " + e);
 		}
 
+		if (bookingRequest.getHallsBookingApplication() == null) {
+			log.warn("Received booking request with null hallsBookingApplication. Skipping notification processing.");
+			return;
+		}
+
 		String bookingStatus = bookingRequest.getHallsBookingApplication().getBookingStatus();
 		log.info("CHB Appplication Received with booking no : "
 				+ bookingRequest.getHallsBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);

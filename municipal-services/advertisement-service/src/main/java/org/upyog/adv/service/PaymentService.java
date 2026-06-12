@@ -70,10 +70,18 @@ public class PaymentService {
 	@Autowired
 	private BookingRepositoryImpl bookingRepo;
 
+	@Autowired
+	private PaymentTimerService paymentTimerService;
+
 	/**
+	 * Processes payment notification records from the receipt consumer.
 	 *
-	 * @param record
-	 * @param topic
+	 * <p>When a payment record belongs to an advertisement booking, this method
+	 * updates the booking status and removes the associated timer hold.</p>
+	 *
+	 * @param record raw payment notification data
+	 * @param topic Kafka topic name or source identifier
+	 * @throws JsonProcessingException when message parsing fails
 	 */
 	public void process(HashMap<String, Object> record, String topic) throws JsonProcessingException {
 		log.info(" Receipt consumer class entry " + record.toString());
@@ -93,7 +101,8 @@ public class PaymentService {
 				BookingRequest bookingRequest = BookingRequest.builder()
 						.requestInfo(paymentRequest.getRequestInfo()).bookingApplication(bookingDetail).build();
 				bookingService.updateBookingSynchronously(bookingRequest, paymentRequest.getPayment().getPaymentDetails().get(0), BookingStatusEnum.BOOKED);
-				bookingRepo.deleteBookingIdForTimer(bookingRequest.getBookingApplication().getBookingId());
+				paymentTimerService.deleteBookingIdForTimer(bookingRequest.getBookingApplication().getBookingId(),
+						paymentRequest.getRequestInfo());
 			}
 		} catch (IllegalArgumentException e) {
 			log.error("Illegal argument exception occured while sending notification ADV : " + e.getMessage());
@@ -104,7 +113,17 @@ public class PaymentService {
 	}
 
 	
-   	public void processTransaction(HashMap<String, Object> record, String topic, BookingStatusEnum status){
+   	/**
+	 * Processes transaction messages to update booking status based on payment result.
+	 *
+	 * <p>This method handles both failure and pending payment transaction states,
+	 * and keeps timer-aware booking records in sync when payment is not completed.</p>
+	 *
+	 * @param record raw transaction message data
+	 * @param topic message source or topic name
+	 * @param status expected booking status to apply while processing
+	 */
+	public void processTransaction(HashMap<String, Object> record, String topic, BookingStatusEnum status){
 
         TransactionRequest transactionRequest = mapper.convertValue(record, TransactionRequest.class);
 
