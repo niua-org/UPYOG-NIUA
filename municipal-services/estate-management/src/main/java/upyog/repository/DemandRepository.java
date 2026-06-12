@@ -1,6 +1,9 @@
 package upyog.repository;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
@@ -11,12 +14,11 @@ import upyog.web.models.billing.Demand;
 import upyog.web.models.billing.DemandRequest;
 import upyog.web.models.billing.DemandResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.stereotype.Repository;
+import lombok.extern.slf4j.Slf4j;
 
 @Repository
+@Slf4j
 public class DemandRepository {
-
 
     @Autowired
     private ServiceRequestRepository serviceRequestRepository;
@@ -58,6 +60,39 @@ public class DemandRepository {
         return response.getDemands();
     }
 
+    public List<Demand> searchDemand(RequestInfo requestInfo, String tenantId, String consumerCode, String businessService) {
+        return search(requestInfo, tenantId, consumerCode, businessService, null, null, true);
+    }
 
+    public List<Demand> searchAllDemands(RequestInfo requestInfo, String tenantId, String consumerCode, String businessService) {
+        return search(requestInfo, tenantId, consumerCode, businessService, null, null, false);
+    }
+
+    public List<Demand> searchDemandByPeriod(RequestInfo requestInfo, String tenantId, String consumerCodes, String businessService, Long periodFrom, Long periodTo) {
+        return search(requestInfo, tenantId, consumerCodes, businessService, periodFrom, periodTo, false);
+    }
+
+    private List<Demand> search(RequestInfo requestInfo, String tenantId, String consumerCode,
+                                String businessService, Long periodFrom, Long periodTo, boolean unpaidOnly) {
+        StringBuilder url = new StringBuilder(config.getBillingHost())
+                .append(config.getDemandSearchEndpoint())
+                .append("?tenantId=").append(tenantId)
+                .append("&consumerCode=").append(consumerCode)
+                .append("&businessService=").append(businessService);
+        if (unpaidOnly)  url.append("&isPaymentCompleted=false");
+        if (periodFrom != null) url.append("&periodFrom=").append(periodFrom);
+        if (periodTo   != null) url.append("&periodTo=").append(periodTo);
+        log.info("Searching demands at: {}", url);
+        Map<String, Object> request = new HashMap<>();
+        request.put("RequestInfo", requestInfo);
+        Object result = serviceRequestRepository.fetchResult(url, request);
+        DemandResponse response = null;
+        try {
+            response = mapper.convertValue(result, DemandResponse.class);
+        } catch (IllegalArgumentException e) {
+            throw new CustomException("PARSING ERROR", "Failed to parse response of search demand");
+        }
+        return response != null && response.getDemands() != null ? response.getDemands() : Collections.emptyList();
+    }
 
 }

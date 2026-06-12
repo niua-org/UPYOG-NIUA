@@ -21,7 +21,7 @@ public class CalculationService {
 
         for (Map<String, Object> taxRate : taxRateList) {
             String feeType = (String) taxRate.get("feeType");
-            Object amountObj = taxRate.get("amount");
+            Object amountObj = allotmentRequest.getAllotments().get(0).getMonthlyRent();
 
             BigDecimal amount;
             if (amountObj instanceof Integer) {
