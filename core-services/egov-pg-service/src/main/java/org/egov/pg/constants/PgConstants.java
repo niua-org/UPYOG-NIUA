@@ -13,7 +13,8 @@ public class PgConstants {
     public static final String NOTIFICATION_LOCALE = "en_IN";
     public static final String PG_NOTIFICATION = "PG_NOTIFICATION";
     public static final String PG_MODULE = "egov-pg";
-
+    public static final String PG_REFUND = "PG_REFUND";
+    public static final String HMAC_SHA256 = "HmacSHA256";
     private PgConstants() {
     }
 

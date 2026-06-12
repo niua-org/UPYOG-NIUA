@@ -167,9 +167,73 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { apiPaths } from "./setupProxy";
+import v8 from "v8";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Logs memory usage statistics for the current Node.js process and container.
+ *
+ * Reports container memory usage (read from cgroup v2, falling back to cgroup v1
+ * if unavailable), Node.js RSS memory, total heap allocated, total heap in use,
+ * and the heap size limit. Output is logged to the console under a labeled
+ * section header for the given stage.
+ *
+ * @param {string} stage - A label identifying the point in execution at which
+ *                          memory is being measured (e.g., "Before build", "After build").
+ * @returns {void}
+ */
+  function logMemory(stage) {
+    const stats = v8.getHeapStatistics();
+    const mem = process.memoryUsage();
+
+    let containerUsed = "Unknown";
+
+    try {
+      // cgroup v2
+      const current = fs.readFileSync(
+        "/sys/fs/cgroup/memory.current",
+        "utf8"
+      ).trim();
+
+      containerUsed = `${(Number(current) / 1048576).toFixed(2)} MB`;
+    } catch {
+      try {
+        // cgroup v1 fallback
+        const current = fs.readFileSync(
+          "/sys/fs/cgroup/memory/memory.usage_in_bytes",
+          "utf8"
+        ).trim();
+
+        containerUsed = `${(Number(current) / 1048576).toFixed(2)} MB`;
+      } catch {
+        // ignore
+      }
+    }
+
+    console.log(`\n========== ${stage} ==========`);
+
+    console.log(`Container Memory Used (MB): ${containerUsed}`);
+
+    console.log(
+      `Node RSS Memory (MB): ${(mem.rss / 1048576).toFixed(2)}`
+    );
+
+    console.log(
+      `Total Heap Memory Allocated (MB): ${(mem.heapTotal / 1048576).toFixed(2)}`
+    );
+
+    console.log(
+      `Total Heap Memory In Use (MB): ${(mem.heapUsed / 1048576).toFixed(2)}`
+    );
+
+    console.log(
+      `Total Heap Memory Available Limit (MB): ${(stats.heap_size_limit / 1048576).toFixed(2)}`
+    );
+
+    console.log("=================================");
+  }
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -266,8 +330,36 @@ export default defineConfig(({ mode }) => {
   proxy["/pb-egov-assets"] = { target: assetsTarget, changeOrigin: true };
 
   return {
+    // plugins: [
+    //   react(),
+    // ],
+
     plugins: [
-      react(),
+        react(),
+
+        {
+          name: "memory-logger",
+
+          buildStart() {
+            logMemory("BUILD START");
+          },
+
+          generateBundle() {
+            logMemory("RENDERING CHUNKS");
+          },
+
+          writeBundle() {
+            logMemory("WRITING BUNDLE");
+          },
+
+          closeBundle() {
+            logMemory("BUILD COMPLETE");
+          },
+
+          renderChunk() {
+            logMemory("RENDER CHUNK");
+          },
+        },
     ],
 
     root: __dirname,
@@ -315,14 +407,73 @@ export default defineConfig(({ mode }) => {
       hmr: true,
     },
 
+    // build: {
+    //   outDir: "build",
+    //   sourcemap: false,
+    //   rollupOptions: {
+    //     output: {
+    //       manualChunks: {
+    //         vendor: ["react", "react-dom", "react-router-dom"],
+    //       },
+    //     },
+    //   },
+    // },
+
     build: {
-      outDir: "build",
-      sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ["react", "react-dom", "react-router-dom"],
-          },
+        outDir: "build",
+        sourcemap: false,
+        chunkSizeWarningLimit: 8000,
+        rollupOptions: {
+          output: {
+            manualChunks(id) {
+
+              // ── WORKSPACE MODULES ──────────────────────────────────────────
+              // Each local module gets its own chunk
+              if (id.includes("micro-ui-internals/packages/modules/")) {
+                const match = id.match(/packages\/modules\/([^/]+)/);
+                if (match) return `module-${match[1]}`;
+              }
+
+              if (id.includes("micro-ui-internals/packages/libraries")) {
+                return "pkg-libraries";
+              }
+
+              if (id.includes("micro-ui-internals/packages/react-components")) {
+                return "pkg-react-components";
+              }
+
+              // ── NODE MODULES ───────────────────────────────────────────────
+              if (!id.includes("node_modules")) return;
+
+              // React family
+              if (
+                id.includes("/react/") ||
+                id.includes("/react-dom/") ||
+                id.includes("/react-redux/") ||
+                id.includes("/redux/") ||
+                id.includes("/scheduler/")
+              ) return "vendor-react";
+
+              // Routing
+              if (
+                id.includes("/react-router/") ||
+                id.includes("/react-router-dom/") ||
+                id.includes("/@remix-run/")
+              ) return "vendor-router";
+
+              // Data fetching
+              if (id.includes("/@tanstack/")) return "vendor-query";
+
+              // i18n
+              if (
+                id.includes("/i18next/") ||
+                id.includes("/react-i18next/") ||
+                id.includes("/i18next-react-postprocessor/")
+              ) return "vendor-i18n";
+
+              // Everything else from node_modules
+              return "vendor-misc";
+            },
         },
       },
     },
