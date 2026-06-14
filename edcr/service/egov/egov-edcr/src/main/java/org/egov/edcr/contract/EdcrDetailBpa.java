@@ -5,7 +5,35 @@ import java.util.List;
 
 import org.egov.common.entity.edcr.Plan;
 import org.egov.common.entity.edcr.PlanBpa;
-
+/**
+ * Represents the complete details of an eDCR (Electronic Development Control
+ * Regulations) BPA application.
+ *
+ * <p>
+ * This DTO is used to transfer application-related information between
+ * different layers of the system, including application metadata, plan
+ * details, permit information, uploaded files, validation results, and
+ * processing status.
+ * </p>
+ *
+ * <p>
+ * The class encapsulates:
+ * <ul>
+ * <li>Application details such as application number, date, type, and status.</li>
+ * <li>eDCR-specific information such as eDCR number and comparison eDCR number.</li>
+ * <li>Plan-related information including plan reports, generated PDFs, and BPA plan details.</li>
+ * <li>Permit details such as permit number and permit issue date.</li>
+ * <li>DXF file references used during plan scrutiny and processing.</li>
+ * <li>Error information generated during validation and scrutiny processes.</li>
+ * <li>Tenant-specific information for multi-tenant deployments.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * This object is commonly used in eDCR workflows for application submission,
+ * scrutiny, approval processing, report generation, and BPA integration.
+ * </p>
+ */
 public class EdcrDetailBpa {
 
     private String dxfFile;

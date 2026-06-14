@@ -134,10 +134,12 @@
         <exception-type>org.egov.infra.exception.ApplicationRuntimeException</exception-type>
         <location>/error/500</location>
     </error-page>
+<!-- Verified the configuration. The /error/404 endpoint/page is not available in the
+     application, so the 404 error-page mapping is not required and has been kept disabled.-->
 
-   <!--  <error-page>
-        <error-code>404</error-code>
-        <location>/error/404</location>
-    </error-page> -->
+<!--     <error-page>-->
+<!--        <error-code>404</error-code>-->
+<!--        <location>/error/404</location>-->
+<!--    </error-page>-->
 
 </web-app>

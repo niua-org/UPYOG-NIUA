@@ -62,7 +62,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
+//import javax.annotation.Resource;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -96,8 +96,8 @@ public class ApplicationCoreFilter implements Filter {
     @Value("${cdn.domain.url}")
     private String cdnURL;
 
-    @Resource(name = "cities")
-    private transient List<String> cities;
+//    @Resource(name = "cities")
+//    private transient List<String> cities;
 
     @Value("${client.id}")
     private String clientId;

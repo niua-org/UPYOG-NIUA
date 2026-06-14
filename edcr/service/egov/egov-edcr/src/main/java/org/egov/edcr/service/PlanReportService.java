@@ -56,6 +56,7 @@ import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import static org.egov.common.constants.JasperReportConstants.*;
 
 import ar.com.fdvs.dj.core.DJConstants;
 import ar.com.fdvs.dj.core.DynamicJasperHelper;
@@ -589,7 +590,12 @@ public class PlanReportService {
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
 
        // titleStyle.setFont(new Font(2, Font._FONT_TIMES_NEW_ROMAN, false));
-        titleStyle.setFont(new Font(Font.MEDIUM, "SansSerif", "Helvetica", "UTF-8", false));
+        titleStyle.setFont(
+                new Font(FONT_SIZE_MEDIUM,
+                        FONT_FAMILY,
+                        PDF_FONT_NAME,
+                        FONT_ENCODING,
+                        false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
         
         String applicationNumber = StringUtils.isNotBlank(dcrApplication.getApplicationNumber())
@@ -1063,7 +1069,12 @@ public class PlanReportService {
         FastReportBuilder drb = new FastReportBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(new Font(Font.MEDIUM, "SansSerif", "Helvetica", "UTF-8", false));
+        titleStyle.setFont(
+                new Font(FONT_SIZE_MEDIUM,
+                        FONT_FAMILY,
+                        PDF_FONT_NAME,
+                        FONT_ENCODING,
+                        false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
         titleStyle.setVerticalAlign(VerticalAlign.BOTTOM);
 

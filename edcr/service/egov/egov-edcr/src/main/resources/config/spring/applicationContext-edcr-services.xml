@@ -7,6 +7,6 @@
 	default-lazy-init="true">
 	<import resource="classpath:/config/spring/applicationContext-edcrExtract-services.xml"/>
 
-	<context:component-scan base-package="org.egov" />
+	<context:component-scan base-package="org.egov.edcr" />
 
 </beans>

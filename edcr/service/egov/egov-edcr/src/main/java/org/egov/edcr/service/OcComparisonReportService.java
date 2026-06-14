@@ -49,9 +49,9 @@ import org.egov.infra.reporting.util.ReportUtil;
 import org.egov.infra.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.egov.common.constants.JasperReportConstants.*;
 
 import ar.com.fdvs.dj.core.DJConstants;
 import ar.com.fdvs.dj.core.DynamicJasperHelper;
@@ -120,10 +120,14 @@ public class OcComparisonReportService {
         FastReportBuilder drb = new FastReportBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
+        titleStyle.setFont(
+                new Font(FONT_SIZE_NORMAL,
+                        FONT_FAMILY,
+                        PDF_FONT_NAME,
+                        FONT_ENCODING,
+                        false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
 
-        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
         String applicationNumber = StringUtils.isNotBlank(ocDcr.getApplication().getApplicationNumber())
                 ? ocDcr.getApplication().getApplicationNumber()
                 : "NA";
@@ -271,10 +275,14 @@ public class OcComparisonReportService {
         FastReportBuilder drb = new FastReportBuilder();
 
         final Style titleStyle = new Style("titleStyle");
-        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
+        titleStyle.setFont(
+                new Font(FONT_SIZE_NORMAL,
+                        FONT_FAMILY,
+                        PDF_FONT_NAME,
+                        FONT_ENCODING,
+                        false));
         titleStyle.setHorizontalAlign(HorizontalAlign.CENTER);
 
-        titleStyle.setFont(new Font(9, "SansSerif", "Helvetica", "UTF-8", false));
         String applicationNumber = StringUtils.isNotBlank(ocDcr.getApplication().getApplicationNumber())
                 ? ocDcr.getApplication().getApplicationNumber()
                 : "NA";
