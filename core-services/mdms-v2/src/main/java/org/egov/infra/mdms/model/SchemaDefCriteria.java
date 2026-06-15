@@ -37,6 +37,9 @@ public class SchemaDefCriteria {
     @JsonProperty("limit")
     private Integer limit;
 
+    @JsonProperty("moduleName")
+    private String moduleName;
+
 
     public SchemaDefCriteria addCodesItem(String codesItem) {
         if (this.codes == null) {
