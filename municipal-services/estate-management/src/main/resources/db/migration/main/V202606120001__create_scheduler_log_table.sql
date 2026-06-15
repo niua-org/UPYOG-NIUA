@@ -14,3 +14,9 @@ CREATE TABLE IF NOT EXISTS eg_est_scheduler_log (
     last_modified_by    VARCHAR(64),
     last_modified_time  BIGINT
 );
+
+CREATE INDEX IF NOT EXISTS idx_est_scheduler_allotment
+ON eg_est_scheduler_log(allotment_id);
+
+CREATE INDEX IF NOT EXISTS idx_est_scheduler_period
+ON eg_est_scheduler_log(billing_period_from, billing_period_to);

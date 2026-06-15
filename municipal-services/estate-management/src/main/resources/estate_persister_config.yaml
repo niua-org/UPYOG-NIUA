@@ -47,7 +47,7 @@ serviceMaps:
       fromTopic: save-allotment-details
       isTransaction: true
       queryMaps:
-        - query: INSERT INTO ug_em_allotment_details(allotment_id, estate_no, tenant_id, asset_reference_no, property_type, citizen_request_letter, allotment_letter, signed_deed, user_uuid, allotee_name, mobile_number, alternate_contact_no, email_id, agreement_start_date, agreement_end_date, duration, rate, monthly_rent, advance_payment, allotment_date, advance_payment_date, eoffice_file_no, additional_details, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::DATE, ?::DATE, ?, ?, ?, ?, ?::DATE, ?::DATE, ?, ?, ?, ?, ?, ?);
+        - query: INSERT INTO ug_em_allotment_details(allotment_id, estate_no, tenant_id, asset_reference_no, property_type, citizen_request_letter, allotment_letter, signed_deed, user_uuid, allotee_name, mobile_number, alternate_contact_no, email_id, agreement_start_date, agreement_end_date, duration, rate, monthly_rent, advance_payment, allotment_date, advance_payment_date, eoffice_file_no, additional_details, billing_cycle, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), ?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), ?, ?, ?, ?, ?, ?, ?);
           basePath: Allotments.*
           jsonMaps:
             - jsonPath: $.Allotments.*.allotmentId
@@ -75,6 +75,7 @@ serviceMaps:
             - jsonPath: $.Allotments.*.additionalDetails
               type: JSON
               dbType: JSONB
+            - jsonPath: $.Allotments.*.billingCycle
             - jsonPath: $.Allotments.*.auditDetails.createdBy
             - jsonPath: $.Allotments.*.auditDetails.lastModifiedBy
             - jsonPath: $.Allotments.*.auditDetails.createdTime
@@ -102,7 +103,7 @@ serviceMaps:
       fromTopic: save-monthly-rent-payment
       isTransaction: true
       queryMaps:
-        - query: INSERT INTO ug_em_monthly_rent_payment(id, allotment_id, rent, payment_type, penalty_amount, previous_month, payment_date, last_date_of_payment, due_payment_date, payment_status, due_payment, validity_days, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?::DATE, ?::DATE, ?::DATE, ?::DATE, ?, ?, ?, ?, ?, ?, ?);
+        - query: INSERT INTO ug_em_monthly_rent_payment(id, allotment_id, rent, payment_type, penalty_amount, previous_month, payment_date, last_date_of_payment, due_payment_date, payment_status, due_payment, validity_days, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), ?, ?, ?, ?, ?, ?, ?);
           basePath: rentPaymentDetails
           jsonMaps:
             - jsonPath: $.rentPaymentDetails.id
@@ -127,7 +128,7 @@ serviceMaps:
       fromTopic: save-est-scheduler-log
       isTransaction: true
       queryMaps:
-        - query: INSERT INTO eg_est_scheduler_log(id, allotment_id, tenant_id, billing_date, billing_period_from, billing_period_to, amount, penalty_amount, payment_type, status, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?::DATE, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        - query: INSERT INTO eg_est_scheduler_log(id, allotment_id, tenant_id, billing_date, billing_period_from, billing_period_to, amount, penalty_amount, payment_type, status, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
           basePath: schedulerLog
           jsonMaps:
             - jsonPath: $.schedulerLog.id

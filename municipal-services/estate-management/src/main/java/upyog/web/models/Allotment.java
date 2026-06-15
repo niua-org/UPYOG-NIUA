@@ -70,6 +70,7 @@ public class Allotment {
 
     private AuditDetails auditDetails;
 
-    // MONTHLY or QUARTERLY
+    // MONTHLY , QUARTERLY, YEARLY
+    @NotBlank
     private String billingCycle;
 }

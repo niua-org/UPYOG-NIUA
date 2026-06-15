@@ -11,15 +11,13 @@ import upyog.repository.EstateRepository;
 import upyog.util.MdmsUtil;
 import upyog.web.models.Allotment;
 import upyog.web.models.AllotmentSearchCriteria;
-import upyog.web.models.billing.Demand;
-
+import upyog.web.models.BillingCycle;
+import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,14 +37,13 @@ public class RentScheduler {
     @SchedulerLock(name = "RentScheduler_generateDemand", lockAtLeastFor = "PT10M", lockAtMostFor = "PT30M")
     public void generateDemands() {
         LocalDate today = LocalDate.now();
-        if (today.getDayOfMonth() != 1) return;
         process(today, RequestInfo.builder().build());
     }
 
     // ── Manual trigger ────────────────────────────────────────────────────────
 
     public String triggerManually(RequestInfo requestInfo, LocalDate billingDate) {
-        LocalDate date = (billingDate != null ? billingDate : LocalDate.now()).withDayOfMonth(1);
+        LocalDate date = (billingDate != null ? billingDate : LocalDate.now());
         log.info("Manual scheduler trigger for {}", date);
         return process(date, requestInfo);
     }
@@ -54,61 +51,71 @@ public class RentScheduler {
     // ── Core ──────────────────────────────────────────────────────────────────
 
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
-        List<Allotment> allotments = estateRepository.searchAllotments(new AllotmentSearchCriteria());
-        if (allotments.isEmpty()) return "No allotments found";
 
-        // Collect all active consumer codes
-        List<Allotment> activeAllotments = allotments.stream()
-                .filter(a -> isActive(a, billingDate))
-                .collect(Collectors.toList());
+        List<Allotment> allotments =
+                estateRepository.searchAllotments(
+                        new AllotmentSearchCriteria());
 
-        if (activeAllotments.isEmpty()) return "No active allotments found";
+        if (allotments.isEmpty()) {
+            return "No allotments found";
+        }
 
-        // Bulk search: find consumer codes that already have demand in this billing period
-        YearMonth billingMonth = YearMonth.from(billingDate);
-        long periodFrom = billingDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        long periodTo   = billingMonth.atEndOfMonth().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        List<Allotment> activeAllotments =
+                allotments.stream()
+                        .filter(a -> isActive(a, billingDate))
+                        .filter(a -> isBillingDue(a, billingDate))
+                        .collect(Collectors.toList());
 
-        String tenantId = activeAllotments.get(0).getTenantId();
-        String allConsumerCodes = activeAllotments.stream()
-                .map(Allotment::getAssetNo)
-                .collect(Collectors.joining(","));
+        if (activeAllotments.isEmpty()) {
+            return "No active allotments found";
+        }
 
-        List<Demand> existingDemands = demandRepository.searchDemandByPeriod(
-                requestInfo, tenantId, allConsumerCodes, estateConfiguration.getBusinessServiceName(), periodFrom, periodTo);
+        BigDecimal penaltyRate =
+                getPenaltyRateFromMdms(
+                        requestInfo,
+                        activeAllotments.get(0).getTenantId());
 
-        Set<String> alreadyGenerated = existingDemands.stream()
-                .map(Demand::getConsumerCode)
-                .collect(Collectors.toSet());
+        log.info(
+                "Penalty rate from MDMS: {}%",
+                penaltyRate.multiply(BigDecimal.valueOf(100)));
 
-        log.info("Billing period {}: {} active allotments, {} already have demands",
-                billingDate, activeAllotments.size(), alreadyGenerated.size());
-
-        BigDecimal penaltyRate = getPenaltyRateFromMdms(requestInfo, tenantId);
-        log.info("Penalty rate from MDMS: {}%", penaltyRate.multiply(BigDecimal.valueOf(100)));
-
-        int generated = 0, skipped = 0;
+        int generated = 0;
+        int skipped = 0;
 
         for (Allotment allotment : activeAllotments) {
-            if (alreadyGenerated.contains(allotment.getAssetNo())) {
-                log.info("Demand already exists for consumerCode {}, skipping", allotment.getAssetNo());
-                skipped++;
-                continue;
-            }
+
             try {
-                demandService.generateMonthlyDemand(requestInfo, allotment, billingDate, penaltyRate);
+
+                demandService.generateDemand(
+                        requestInfo,
+                        allotment,
+                        billingDate,
+                        penaltyRate);
+
                 generated++;
-                log.info("Demand generated for allotment {}", allotment.getAllotmentId());
+
+                log.info(
+                        "Demand generated for allotment {}",
+                        allotment.getAllotmentId());
+
             } catch (Exception e) {
-                log.error("Failed for allotment {}: {}", allotment.getAllotmentId(), e.getMessage(), e);
+
+                log.error(
+                        "Failed for allotment {}: {}",
+                        allotment.getAllotmentId(),
+                        e.getMessage(),
+                        e);
             }
         }
 
-        String result = "Generated: " + generated + ", Skipped: " + skipped;
+        String result =
+                "Generated: " + generated +
+                        ", Skipped: " + skipped;
+
         log.info("Scheduler done — {}", result);
+
         return result;
     }
-
     /**
      * Active = agreementStartDate <= billingDate AND (no endDate OR endDate >= billingDate)
      */
@@ -141,8 +148,60 @@ public class RentScheduler {
                 return new BigDecimal(rate.toString()).divide(BigDecimal.valueOf(100));
             }
         } catch (Exception e) {
-            log.error("Failed to fetch penalty rate from MDMS, defaulting to 5%: {}", e.getMessage());
+            log.error("Failed to fetch penalty rate from MDMS, defaulting to 5%: {}", e.getMessage(), e);
         }
         return new BigDecimal("0.05");
+    }
+
+    private boolean isBillingDue(Allotment allotment, LocalDate today) {
+
+        LocalDate startDate = allotment.getAgreementStartDate();
+
+        if (startDate == null) {
+            return false;
+        }
+
+        if (today.isBefore(startDate)) {
+            return false;
+        }
+
+        if (allotment.getAgreementEndDate() != null
+                && today.isAfter(allotment.getAgreementEndDate())) {
+            return false;
+        }
+
+        int expectedBillingDay = Math.min(
+                startDate.getDayOfMonth(),
+                today.lengthOfMonth());
+
+        BillingCycle cycle = BillingCycle.valueOf(
+                allotment.getBillingCycle().toUpperCase(Locale.ROOT));
+
+        switch (cycle) {
+
+            case MONTHLY:
+
+                return today.getDayOfMonth() == expectedBillingDay;
+
+            case QUARTERLY:
+
+                long months =
+                        ChronoUnit.MONTHS.between(
+                                startDate.withDayOfMonth(1),
+                                today.withDayOfMonth(1));
+
+                return today.getDayOfMonth() == expectedBillingDay
+                        && months > 0
+                        && months % 3 == 0;
+
+            case YEARLY:
+
+                return today.getDayOfMonth() == expectedBillingDay
+                        && today.getMonth() == startDate.getMonth()
+                        && today.getYear() > startDate.getYear();
+
+            default:
+                return false;
+        }
     }
 }
