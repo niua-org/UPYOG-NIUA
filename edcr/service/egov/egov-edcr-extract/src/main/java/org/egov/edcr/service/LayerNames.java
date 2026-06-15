@@ -3,57 +3,52 @@ package org.egov.edcr.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.egov.common.entity.edcr.LayerName;
 import org.egov.commons.service.LayerNameService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import javax.annotation.PreDestroy;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
 @Service
 public class LayerNames {
 
-    private Map<String, String> layerNamesMap = null; 
-    @Autowired
-    public LayerNameService layerNameService;
+    private final Map<String, String> layerNamesMap = new HashMap<>();
+    private final LayerNameService layerNameService;
 
-    @Autowired
     public LayerNames(LayerNameService layerNameService) {
         this.layerNameService = layerNameService;
-       
     }
 
-    /**
-     * Lazily loads and caches layer name mappings from the database.
-     *
-     * <p>The layer names are fetched only once and stored in an in-memory map
-     * for fast subsequent lookups. This method uses double-checked locking to
-     * ensure that the cache is initialized only once in a thread-safe manner.</p>
-     *
-     * <p>If the cache has already been initialized, the method returns
-     * immediately without performing any database access.</p>
+     /**
+     * Loads all layer name mappings into the in-memory cache when the Spring
+     * application context is fully initialized.
+     * <p>
+     * This method is triggered automatically on {@link ContextRefreshedEvent}
+     * and populates {@code layerNamesMap} with data retrieved from the database
+     * to avoid repeated database lookups during runtime.
+     * </p>
      */
-    private void loadIfNeeded() {
-        if (layerNamesMap == null) {
-            synchronized (this) {
-                if (layerNamesMap == null) {
-                    Map<String, String> map = new HashMap<>();
-                    List<LayerName> layerNames = layerNameService.findAll();
-                    for (LayerName l : layerNames)
-                        map.put(l.getKey(), l.getValue());
-                    layerNamesMap = map;
-                }
-            }
+    @EventListener(ContextRefreshedEvent.class)
+    private void loadLayerNames() {
+        if(layerNamesMap.isEmpty()) {
+            List<LayerName> layerNames = layerNameService.findAll();
+            for (LayerName l : layerNames)
+                layerNamesMap.put(l.getKey(), l.getValue());
         }
     }
 
+    @PreDestroy
+    public void destroy() {
+        layerNamesMap.clear();
+    }
+
     public String getLayerName(String layerNameKey) {
-        loadIfNeeded(); // ← loads on first real request
         return layerNamesMap.get(layerNameKey);
     }
 
-    public void setLayerNameService(LayerNameService layerNameService) {
-        this.layerNameService = layerNameService;
-    }
 }

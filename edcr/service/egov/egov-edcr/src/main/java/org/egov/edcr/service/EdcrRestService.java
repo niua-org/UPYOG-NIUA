@@ -175,6 +175,9 @@ public class EdcrRestService {
 
 	@Value("${indexer.host}")
 	private String indexerHost;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 	
     public Session getCurrentSession() {
         return entityManager.unwrap(Session.class);
@@ -500,9 +503,8 @@ public class EdcrRestService {
                 pl1.setPlanInformation(pi);
                 edcrDetail.setPlanDetail(pl1);
             } else {
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                PlanBpa pl1 = mapper.readValue(file, PlanBpa.class);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                PlanBpa pl1 = objectMapper.readValue(file, PlanBpa.class);
                 pl1.getPlanInformation().setApplicantName(edcrApplnDtl.getApplication().getApplicantName());
 
                 if (LOG.isInfoEnabled())
@@ -601,9 +603,8 @@ public class EdcrRestService {
                 pl1.setPlanInformation(pi);
                 edcrDetail.setPlanDetail(pl1);
             } else {
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                Plan pl1 = mapper.readValue(file, Plan.class);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                Plan pl1 = objectMapper.readValue(file, Plan.class);
                 pl1.getPlanInformation().setApplicantName(edcrApplnDtl.getApplication().getApplicantName());
                
                 if (LOG.isInfoEnabled())
@@ -696,9 +697,8 @@ public class EdcrRestService {
                 pl1.setPlanInformation(pi);
                 edcrDetail.setPlanDetail(pl1);
             } else {
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                Plan pl1 = mapper.readValue(file, Plan.class);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                Plan pl1 = objectMapper.readValue(file, Plan.class);
                 pl1.getPlanInformation().setApplicantName(String.valueOf(applnDtls[4]));
                 if (LOG.isInfoEnabled())
                     LOG.info("**************** Plan detail object **************" + pl1);
@@ -811,9 +811,8 @@ public class EdcrRestService {
                 pl1.setPlanInformation(pi);
                 edcrDetail.setPlanDetail(pl1);
             } else {
-                ObjectMapper mapper = new ObjectMapper();
-                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                PlanBpa pl1 = mapper.readValue(file, PlanBpa.class);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                PlanBpa pl1 = objectMapper.readValue(file, PlanBpa.class);
                 pl1.getPlanInformation().setApplicantName(String.valueOf(applnDtls[4]));
                 if (LOG.isInfoEnabled())
                     LOG.info("**************** Plan detail object **************" + pl1);
@@ -988,8 +987,7 @@ public class EdcrRestService {
             userId = userInfo.getUuid();
         else if (userInfo != null && StringUtils.isNoneBlank(userInfo.getId()))
             userId = userInfo.getId();
-        // When the user is ANONYMOUS, then search application by edcrno or transaction
-        // number
+        // When the user is ANONYMOUS, then search application by edcrno or transaction number
         if (userInfo != null && StringUtils.isNoneBlank(userId) && userInfo.getPrimaryrole() != null
                 && !userInfo.getPrimaryrole().isEmpty()) {
             List<String> roles = userInfo.getPrimaryrole().stream().map(Role::getCode).collect(Collectors.toList());

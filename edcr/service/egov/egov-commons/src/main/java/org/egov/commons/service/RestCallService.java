@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,12 +20,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class RestCallService {
     private static final Logger LOG = LogManager.getLogger(RestCallService.class);
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    /**
+     * Sends a POST request to the specified URI with a JSON request body and
+     * returns the response as a generic object.
+     * <p>
+     * The request is serialized to JSON for logging purposes and sent with
+     * {@code Content-Type: application/json} and
+     * {@code Accept: application/json} headers. The response is deserialized
+     * into a {@link java.util.Map}.
+     * </p>
+     *
+     * @param uri the target endpoint URI to which the POST request will be sent
+     * @param request the request payload object to be serialized and sent in the
+     *                request body
+     * @return the response returned by the remote service, typically as a
+     *         {@link java.util.Map}; {@code null} if an error occurs during
+     *         request serialization
+     * @throws HttpClientErrorException if the remote service returns a 4xx
+     *                                  client error response
+     */
     public Object fetchResult(StringBuilder uri, Object request) {
         Object response = null;
         try {
-            ObjectMapper mapper = new ObjectMapper();
             LOG.info("URI: " + uri.toString());
-            LOG.info("Request: " + mapper.writeValueAsString(request));
+            LOG.info("Request: " + objectMapper.writeValueAsString(request));
 
             // THIS is the fix - forces JSON instead of XML
             HttpHeaders headers = new HttpHeaders();
@@ -32,7 +57,6 @@ public class RestCallService {
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             HttpEntity<Object> entity = new HttpEntity<>(request, headers);
 
-            RestTemplate restTemplate = new RestTemplate();
             response = restTemplate.postForObject(uri.toString(), entity, Map.class);
 
         } catch (HttpClientErrorException e) {

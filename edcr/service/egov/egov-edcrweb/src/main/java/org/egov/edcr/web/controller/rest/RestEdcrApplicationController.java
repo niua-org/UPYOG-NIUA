@@ -137,6 +137,9 @@ public class RestEdcrApplicationController {
     @Autowired
     private EdcrValidator edcrValidator;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @PostMapping(value = "/scrutinizeplan", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> scrutinizePlan(@RequestBody MultipartFile planFile,
@@ -150,7 +153,7 @@ public class RestEdcrApplicationController {
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
         try {
-            edcr = new ObjectMapper().readValue(edcrRequest, EdcrRequest.class);
+            edcr = objectMapper.readValue(edcrRequest, EdcrRequest.class);
             ErrorDetail edcRes = edcrValidator.validate(edcr);
             if (edcRes != null && StringUtils.isNotBlank(edcRes.getErrorMessage()))
                 return new ResponseEntity<>(edcRes, HttpStatus.BAD_REQUEST);
@@ -182,7 +185,7 @@ public class RestEdcrApplicationController {
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
         try {
-            edcr = new ObjectMapper().readValue(edcrRequest, EdcrRequest.class);
+            edcr = objectMapper.readValue(edcrRequest, EdcrRequest.class);
             ErrorDetail edcRes = edcrValidator.validate(edcr);
             if (edcRes != null && StringUtils.isNotBlank(edcRes.getErrorMessage()))
                 return new ResponseEntity<>(edcRes, HttpStatus.BAD_REQUEST);
@@ -220,9 +223,9 @@ public class RestEdcrApplicationController {
         }
         try {
             List<ErrorDetail> errorResponses = new ArrayList<ErrorDetail>();
-            edcr = new ObjectMapper().readValue(edcrRequest, EdcrRequest.class);
+            edcr = objectMapper.readValue(edcrRequest, EdcrRequest.class);
             if(userInfo != null) {
-                UserInfo userInfoReq = new ObjectMapper().readValue(userInfo, UserInfo.class);
+                UserInfo userInfoReq = objectMapper.readValue(userInfo, UserInfo.class);
                 UserInfo enrichUser = new UserInfo();
                 enrichUser.setId(userInfoReq.getId());
                 enrichUser.setUuid(userInfoReq.getUuid());
@@ -307,9 +310,9 @@ public class RestEdcrApplicationController {
         }
         try {
             List<ErrorDetail> errorResponses = new ArrayList<ErrorDetail>();
-            edcr = new ObjectMapper().readValue(edcrRequest, EdcrRequest.class);
+            edcr = objectMapper.readValue(edcrRequest, EdcrRequest.class);
             if(userInfo != null) {
-                UserInfo userInfoReq = new ObjectMapper().readValue(userInfo, UserInfo.class);
+                UserInfo userInfoReq = objectMapper.readValue(userInfo, UserInfo.class);
                 UserInfo enrichUser = new UserInfo();
                 enrichUser.setId(userInfoReq.getId());
                 enrichUser.setUuid(userInfoReq.getUuid());
@@ -395,7 +398,24 @@ public class RestEdcrApplicationController {
         }
     }
 
-    // API to fetch EDCR application details with a minimized and optimized BPA response payload
+    /**
+     * Retrieves optimized EDCR scrutiny details based on the supplied search criteria.
+     *
+     * <p>Validates the request parameters and request metadata before
+     * fetching EDCR records. If validation fails, a {@code 400 Bad Request}
+     * response containing the validation error details is returned.</p>
+     *
+     * <p>On successful validation, the endpoint fetches matching EDCR
+     * scrutiny details along with the total record count. If the scrutiny
+     * result contains processing errors, those errors are returned in the
+     * response. Otherwise, a success response containing the EDCR details
+     * and pagination metadata is returned.</p>
+     *
+     * @param edcrRequest filter criteria used to search EDCR records
+     * @param requestInfoWrapper request metadata and user context
+     * @return a response containing EDCR details, validation errors,
+     *         or scrutiny processing errors
+     */
     @PostMapping(value = "/edcrdetails", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> edcrDetails(@ModelAttribute EdcrRequest edcrRequest,
@@ -406,6 +426,7 @@ public class RestEdcrApplicationController {
         ErrorDetail edcRes = edcrValidator.validate(requestInfoWrapper);
         if (edcRes != null && StringUtils.isNotBlank(edcRes.getErrorMessage()))
             return new ResponseEntity<>(edcRes, HttpStatus.BAD_REQUEST);
+
         List<EdcrDetailBpa> edcrDetail = edcrRestService.fetchEdcrBpa(edcrRequest, requestInfoWrapper);
         Integer count = edcrRestService.fetchCount(edcrRequest, requestInfoWrapper);
         if (!edcrDetail.isEmpty() && edcrDetail.get(0).getErrors() != null) {
@@ -428,7 +449,7 @@ public class RestEdcrApplicationController {
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
         try {
-            edcr = new ObjectMapper().readValue(edcrRequest, EdcrRequest.class);
+            edcr = objectMapper.readValue(edcrRequest, EdcrRequest.class);
             ErrorDetail edcRes = edcrValidator.validate(edcr);
             if (edcRes != null && StringUtils.isNotBlank(edcRes.getErrorMessage()))
                 return new ResponseEntity<>(edcRes, HttpStatus.BAD_REQUEST);
@@ -443,11 +464,10 @@ public class RestEdcrApplicationController {
                     HttpStatus.BAD_REQUEST);
             return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
         }
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         String jsonRes = "";
         try {
-            jsonRes = mapper.writeValueAsString(plan);
+            jsonRes = objectMapper.writeValueAsString(plan);
         } catch (JsonProcessingException e) {
             return new ResponseEntity<>(e, HttpStatus.BAD_REQUEST);
         }
@@ -515,7 +535,7 @@ public class RestEdcrApplicationController {
         PlanResponse planRes = new PlanResponse();
         Plan plan;
         try {
-            plan = new ObjectMapper().readValue(jsonRes, Plan.class);
+            plan = objectMapper.readValue(jsonRes, Plan.class);
         } catch (IOException e) {
             return new ResponseEntity<>(e, HttpStatus.BAD_REQUEST);
         }

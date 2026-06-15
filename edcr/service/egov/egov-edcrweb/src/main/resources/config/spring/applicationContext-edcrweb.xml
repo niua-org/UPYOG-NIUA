@@ -8,11 +8,18 @@
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <import resource="applicationSecurityContext-edcr.xml"/>
-    <import resource="classpath*:applicationContext-egi.xml"/>
     <import resource="classpath*:config/spring/applicationContext-infra-services.xml"/>
 
     <context:property-placeholder/>
 
+    <!--
+    Scans Spring-managed components from the specified packages and
+    registers them as beans in the application context.
+
+    Controllers and RestControllers are explicitly excluded because
+    they are loaded through the web application context and should not
+    be part of the root application context.
+    -->
     <!-- Scan everything needed — RepositoryConfiguration stays, but fixed with LAZY below -->
     <context:component-scan base-package="org.egov.edcr, org.egov.commons, org.egov.infra">
         <context:exclude-filter type="annotation"
@@ -20,7 +27,7 @@
         <context:exclude-filter type="annotation"
             expression="org.springframework.web.bind.annotation.RestController"/>
     </context:component-scan>
-    
+
     <context:component-scan base-package="org.egov.edcr.web.controller.rest">
         <context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.RestController"/>
     </context:component-scan>
@@ -30,7 +37,6 @@
         <property name="maxInMemorySize" value="1048576"/>
     </bean>
 
-    <bean name="edcrBpaRestService"
-          class="org.egov.edcr.service.EdcrBpaRestService"/>
+    <bean name="edcrBpaRestService" class="org.egov.edcr.service.EdcrBpaRestService"/>
 
 </beans>

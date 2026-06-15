@@ -78,7 +78,7 @@
         <repository>
             <id>AsposeJavaAPI</id>
             <name>Aspose Java API</name>
-            <url>https://upyog-nexus.niua.org/repo/</url>
+            <url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/com/upyog/project/aspose-cad/</url>
         </repository>
 <!--		<repository>-->
 <!--				<id>aspose</id>-->
@@ -88,6 +88,18 @@
             <id>javaxt.com</id>
             <url>https://upyog-nexus.niua.org/maven</url>
         </repository>
+<!--		<repository>-->
+<!--			<id>taglibs</id>-->
+<!--			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/com/upyog/project/taglibs/1.0.0/</url>-->
+<!--		</repository>-->
+<!--		<repository>-->
+<!--			<id>kabeja</id>-->
+<!--			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/com/upyog/project/kabeja/</url>-->
+<!--		</repository>-->
+<!--		<repository>-->
+<!--			<id>upyog-central</id>-->
+<!--			<url>https://upyog-nexus.niua.org/nexus/content/repositories/central</url>-->
+<!--		</repository>-->
     </repositories>
 
 	<pluginRepositories>
@@ -172,7 +184,7 @@
         <commons-config2-version>2.13.0</commons-config2-version>
         <!--		<commons-lang-version>2.6</commons-lang-version>-->
         <commons-lang3-version>3.20.0</commons-lang3-version>
-        <commons-email-version>2.0.0-M1</commons-email-version>
+<!--        <commons-email-version>2.0.0-M1</commons-email-version>-->
         <!--		<commons-collections-version>3.2.2</commons-collections-version>-->
         <commons-collections4-version>4.5.0</commons-collections4-version>
         <commons.text.version>1.15.0</commons.text.version>
@@ -725,17 +737,17 @@
     <artifactId>jackson-dataformat-xml</artifactId>
     <version>${jackson-version}</version>
 </dependency>
-			<dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-email2-javax</artifactId>
-				<version>${commons-email-version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>javax.activation</groupId>
-						<artifactId>activation</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
+<!--			<dependency>-->
+<!--                <groupId>org.apache.commons</groupId>-->
+<!--                <artifactId>commons-email2-javax</artifactId>-->
+<!--				<version>${commons-email-version}</version>-->
+<!--				<exclusions>-->
+<!--					<exclusion>-->
+<!--						<groupId>javax.activation</groupId>-->
+<!--						<artifactId>activation</artifactId>-->
+<!--					</exclusion>-->
+<!--				</exclusions>-->
+<!--			</dependency>-->
 			<dependency>
     <groupId>com.fasterxml.woodstox</groupId>
     <artifactId>woodstox-core</artifactId>
@@ -1148,9 +1160,9 @@
 
 	<dependencies>
 			<dependency>
-                            <groupId>com.aspose</groupId>
-                            <artifactId>aspose-cad</artifactId>
-                            <version>20.10</version>
+				<groupId>com.upyog.project</groupId>
+				 <artifactId>aspose-cad</artifactId>
+				 <version>1.0.0</version>
 			</dependency>
 
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES START -->

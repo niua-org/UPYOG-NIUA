@@ -19,10 +19,23 @@ import org.egov.common.entity.bpa.Usage;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/*
-This object holds the complete plan information
-Being used for the /edcrdetails endpoint.
-*/
+/**
+ * Represents the complete building plan data used during EDCR scrutiny
+ * and BPA processing.
+ *
+ * <p>This is the root domain object that aggregates all information
+ * required for plan validation, scrutiny, and report generation,
+ * including plot details, plan information, building blocks,
+ * occupancies, scrutiny status, and tenant-specific data.</p>
+ *
+ * <p>The object is commonly used for exchanging plan details through
+ * EDCR APIs, including the {@code /edcrdetails} endpoint, and serves
+ * as the central model passed through the scrutiny workflow.</p>
+ *
+ * <p>It contains both user-provided plan information and data generated
+ * during scrutiny, such as rule validation results, occupancy mappings,
+ * and plan status.</p>
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlanBpa implements Serializable {
 

@@ -104,6 +104,9 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
     @Autowired
     private DxfToPdfUnifiedConverter dxfToPdfUnifiedConverter;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * Extracts and converts DXF drawing content into PDF(s) based on the configured
      * DXF_PDF_CONVERSION_ENABLED conversion mode.
@@ -322,8 +325,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 List<Object> dxfToPdfMdmsEnabled = edcrMdmsConfig.get("DxfToPdfConfig");
 
                 String jsonStr = new JSONObject((LinkedHashMap<?, ?>) dxfToPdfMdmsEnabled.get(0)).toString();
-                ObjectMapper mapper = new ObjectMapper();
-                mdmsEdcrResponse = mapper.readValue(jsonStr, MdmsEdcrResponse.class);
+                mdmsEdcrResponse = objectMapper.readValue(jsonStr, MdmsEdcrResponse.class);
             } catch (IOException e) {
                 LOG.error("Error occured while reading mdms data", e);
             }
@@ -333,8 +335,7 @@ public class DxfToPdfConverterExtract extends FeatureExtract {
                 for (Object obj : dxfToPdfConfig) {
                     try {
                         String jsonString = new JSONObject((LinkedHashMap<?, ?>) obj).toString();
-                        ObjectMapper mapper1 = new ObjectMapper();
-                        DxfToPdfLayerConfig config = mapper1.readValue(jsonString, DxfToPdfLayerConfig.class);
+                        DxfToPdfLayerConfig config = objectMapper.readValue(jsonString, DxfToPdfLayerConfig.class);
                         List<EdcrPdfDetail> layerNameList = getPdfLayerNames(planDetail, config);
                         for (EdcrPdfDetail d : layerNameList) {
                             if (LOG.isDebugEnabled())

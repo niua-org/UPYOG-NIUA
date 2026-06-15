@@ -58,6 +58,8 @@ public class ExtractService {
     private ICityService cityService;
     @Autowired
     private MDMSValidator mdmsValidator;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private Logger LOG = LogManager.getLogger(ExtractService.class);
 
@@ -113,8 +115,7 @@ public class ExtractService {
                 for (Object obj : dimensionConfig) {
                     try {
                         String jsonString = new JSONObject((LinkedHashMap<?, ?>) obj).toString();
-                        ObjectMapper mapper = new ObjectMapper();
-                        MdmsEdcrResponse res = mapper.readValue(jsonString, MdmsEdcrResponse.class);
+                        MdmsEdcrResponse res = objectMapper.readValue(jsonString, MdmsEdcrResponse.class);
                         configs.put(res.getCode(), res.getEnabled());
                     } catch (IOException e) {
                         LOG.error("Error occured while reading mdms data", e);

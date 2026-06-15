@@ -86,17 +86,19 @@ public class OcComparisonReportService {
     @Autowired
     private FileStoreService fileStoreService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     public InputStream generateOcComparisonReport(EdcrApplicationDetail ocDcr,
             EdcrApplicationDetail permitDcr, OcComparisonDetail comparisonDetail) {
 
         FileStoreMapper ocPlanFileMapper = ocDcr.getPlanDetailFileStore();
         File ocFile = ocPlanFileMapper != null ? fileStoreService.fetch(
                 ocPlanFileMapper.getFileStoreId(), DcrConstants.APPLICATION_MODULE_TYPE) : null;
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Plan ocPlan = null;
         try {
-            ocPlan = mapper.readValue(ocFile, Plan.class);
+            ocPlan = objectMapper.readValue(ocFile, Plan.class);
         } catch (IOException e) {
             LOG.log(Level.ERROR, e);
         }
@@ -104,11 +106,10 @@ public class OcComparisonReportService {
         FileStoreMapper permitFileMapper = permitDcr.getPlanDetailFileStore();
         File permitFile = permitFileMapper != null ? fileStoreService.fetch(
                 permitFileMapper.getFileStoreId(), DcrConstants.APPLICATION_MODULE_TYPE) : null;
-        ObjectMapper permitMapper = new ObjectMapper();
-        permitMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Plan permitPlan = null;
         try {
-            permitPlan = permitMapper.readValue(permitFile, Plan.class);
+            permitPlan = objectMapper.readValue(permitFile, Plan.class);
         } catch (IOException e) {
             LOG.log(Level.ERROR, e);
         }
@@ -260,11 +261,10 @@ public class OcComparisonReportService {
         FileStoreMapper permitFileMapper = permitDcr.getPlanDetailFileStore();
         File permitFile = permitFileMapper != null ? fileStoreService.fetch(
                 permitFileMapper.getFileStoreId(), DcrConstants.APPLICATION_MODULE_TYPE) : null;
-        ObjectMapper permitMapper = new ObjectMapper();
-        permitMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Plan permitPlan = null;
         try {
-            permitPlan = permitMapper.readValue(permitFile, Plan.class);
+            permitPlan = objectMapper.readValue(permitFile, Plan.class);
         } catch (IOException e) {
             LOG.log(Level.ERROR, e);
         }
@@ -415,11 +415,10 @@ public class OcComparisonReportService {
         FileStoreMapper permitFileMapper = permitDcr.getPlanDetailFileStore();
         File permitFile = permitFileMapper != null ? fileStoreService.fetch(
                 permitFileMapper.getFileStoreId(), DcrConstants.APPLICATION_MODULE_TYPE) : null;
-        ObjectMapper permitMapper = new ObjectMapper();
-        permitMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Plan permitPlan = null;
         try {
-            permitPlan = permitMapper.readValue(permitFile, Plan.class);
+            permitPlan = objectMapper.readValue(permitFile, Plan.class);
         } catch (IOException e) {
             LOG.log(Level.ERROR, e);
         }
