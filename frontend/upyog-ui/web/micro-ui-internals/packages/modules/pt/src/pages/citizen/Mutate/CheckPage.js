@@ -10,10 +10,10 @@ import {
   SubmitBar,
   Header,
   EditIcon,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 import {
   checkForNA,
   getFixedFilename, isPropertyIndependent, isPropertyselfoccupied,
@@ -24,9 +24,9 @@ import PropertyDocument from "../../../pageComponents/PropertyDocument";
 
 const ActionButton = ({ jumpTo }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   function routeTo() {
-    history.push(jumpTo);
+    navigate(jumpTo);
   }
 
   return <LinkButton label={t("CS_COMMON_CHANGE")} className="check-page-link-button" onClick={routeTo} />;
@@ -34,7 +34,7 @@ const ActionButton = ({ jumpTo }) => {
 
 const CheckPage = ({ onSubmit, value = {} }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
   const [billAmount, setBillAmount] = useState(null);
@@ -64,17 +64,20 @@ const CheckPage = ({ onSubmit, value = {} }) => {
     UnOccupiedArea
    } = property;
 
-   useEffect(async ()=>{
-      const res = await Digit.PaymentService.searchBill(tenantId, {Service: "PT.MUTATION", consumerCode: property?.acknowldgementNumber});
-      if(! res.Bill.length) {
-        const res1 = await Digit.PTService.ptCalculateMutation({Property: { ...property, additionalDetails: { ...property?.additionalDetails, ...additionalDetails, documentDate: new Date(additionalDetails?.documentDate).getTime() } }}, tenantId);
-        setBillAmount(res1?.[property?.acknowldgementNumber]?.totalAmount || t("CS_NA"))
-        setBillStatus(t(`PT_MUT_BILL_ACTIVE`))
-      } else {
-        setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"))
-        setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`))
-      }
-  },[])
+   useEffect(() => {
+     const fetchBillData = async () => {
+       const res = await Digit.PaymentService.searchBill(tenantId, {Service: "PT.MUTATION", consumerCode: property?.acknowldgementNumber});
+       if(! res.Bill.length) {
+         const res1 = await Digit.PTService.ptCalculateMutation({Property: { ...property, additionalDetails: { ...property?.additionalDetails, ...additionalDetails, documentDate: new Date(additionalDetails?.documentDate).getTime() } }}, tenantId);
+         setBillAmount(res1?.[property?.acknowldgementNumber]?.totalAmount || t("CS_NA"))
+         setBillStatus(t(`PT_MUT_BILL_ACTIVE`))
+       } else {
+         setBillAmount(res?.Bill[0]?.totalAmount || t("CS_NA"))
+         setBillStatus(t(`PT_MUT_BILL_${res?.Bill[0]?.status?.toUpperCase()}`))
+       }
+     };
+     fetchBillData();
+   },[])
 
   const typeOfApplication = !isEditProperty && !isUpdateProperty ? `new-application` : `edit-application`;
   let flatplotsize;

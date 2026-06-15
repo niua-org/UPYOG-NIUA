@@ -36,6 +36,12 @@ public class AssetValidator {
      * @param criteria    The BPASearch Criteria
      */
     public void validateSearch(RequestInfo requestInfo, AssetSearchCriteria criteria) {
+        // Skip validation for inter-service calls
+        if (Boolean.TRUE.equals(criteria.getIsInterServiceCall())) {
+            log.debug("Skipping validation for inter-service call");
+            return;
+        }
+
         String allowedParamStr = null;
         if (requestInfo.getUserInfo() != null) {
 

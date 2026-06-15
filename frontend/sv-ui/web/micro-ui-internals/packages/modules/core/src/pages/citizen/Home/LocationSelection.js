@@ -1,11 +1,11 @@
-import { BackButton, CardHeader, CardLabelError, PageBasedInput, SearchOnRadioButtons } from "@nudmcdgnpm/digit-ui-react-components";
+import { BackButton, CardHeader, CardLabelError, Loader, PageBasedInput, SearchOnRadioButtons } from "@nudmcdgnpm/upyog-ui-react-components-lts";
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const LocationSelection = () => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const location = useLocation();
   const { data: cities, isLoading } = Digit.Hooks.useTenants();
 
@@ -40,15 +40,15 @@ const LocationSelection = () => {
       Digit.SessionStorage.set("CITIZEN.COMMON.HOME.CITY", selectedCity);
       const redirectBackTo = location.state?.redirectBackTo;
       if (redirectBackTo) {
-        history.replace(redirectBackTo);
-      } else history.push("/sv-ui/citizen");
+        navigate(redirectBackTo, { replace: true });
+      } else navigate("/sv-ui/citizen");
     } else {
       setShowError(true);
     }
   }
 
   return isLoading ? (
-    <loader />
+    <Loader />
   ) : (
     <div className="selection-card-wrapper">
       <BackButton />

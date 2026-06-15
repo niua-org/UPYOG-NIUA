@@ -77,8 +77,10 @@ const CndCreate = ({ parentRoute }) => {
       let owners = params.owners || [];
       owners[index] = data;
       setParams({ ...params, ...{ [key]: [...owners] } });
-    } 
-    else {
+    } else if (key === "Documents") {
+      // Spread the data from Documents key to root level
+      setParams({ ...params, ...data });
+    } else {
       setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
     }
     goNext(skipStep, index, isAddMultiple, key);

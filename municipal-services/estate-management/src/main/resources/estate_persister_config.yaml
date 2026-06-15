@@ -1,0 +1,118 @@
+serviceMaps:
+  serviceName: estate-management-service
+  mappings:
+
+    - version: 1.0
+      description: Persist asset details into ug_em_asset_details table
+      fromTopic: save-asset-details
+      isTransaction: true
+      queryMaps:
+        - query: INSERT INTO ug_em_asset_details(asset_id, estate_no, tenant_id, building_name, building_no, ref_asset_no, floor, locality_code, locality, total_floor_area, dimension_length, dimension_width, rent_rate, name, description, classification, parent_category, category, subcategory, department, asset_type, asset_status, asset_allotment_type, asset_allotment_status, additional_details, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          basePath: Assets.*
+          jsonMaps:
+            - jsonPath: $.Assets.*.assetId
+            - jsonPath: $.Assets.*.estateNo
+            - jsonPath: $.Assets.*.tenantId
+            - jsonPath: $.Assets.*.buildingName
+            - jsonPath: $.Assets.*.buildingNo
+            - jsonPath: $.Assets.*.refAssetNo
+            - jsonPath: $.Assets.*.floor
+            - jsonPath: $.Assets.*.localityCode
+            - jsonPath: $.Assets.*.locality
+            - jsonPath: $.Assets.*.totalFloorArea
+            - jsonPath: $.Assets.*.dimensionLength
+            - jsonPath: $.Assets.*.dimensionWidth
+            - jsonPath: $.Assets.*.rate
+            - jsonPath: $.Assets.*.assetName
+            - jsonPath: $.Assets.*.description
+            - jsonPath: $.Assets.*.assetClassification
+            - jsonPath: $.Assets.*.assetParentCategory
+            - jsonPath: $.Assets.*.assetCategory
+            - jsonPath: $.Assets.*.assetSubCategory
+            - jsonPath: $.Assets.*.department
+            - jsonPath: $.Assets.*.assetType
+            - jsonPath: $.Assets.*.assetStatus
+            - jsonPath: $.Assets.*.assetAllotmentType
+            - jsonPath: $.Assets.*.assetAllotmentStatus
+            - jsonPath: $.Assets.*.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.Assets.*.auditDetails.createdBy
+            - jsonPath: $.Assets.*.auditDetails.lastModifiedBy
+            - jsonPath: $.Assets.*.auditDetails.createdTime
+            - jsonPath: $.Assets.*.auditDetails.lastModifiedTime
+
+    - version: 1.0
+      description: Persist allotment details into ug_em_allotment_details table
+      fromTopic: save-allotment-details
+      isTransaction: true
+      queryMaps:
+        - query: INSERT INTO ug_em_allotment_details(allotment_id, estate_no, tenant_id, user_uuid, allotee_name, mobile_number, alternate_contact_no, email_id, agreement_start_date, agreement_end_date, duration, rate, monthly_rent, advance_payment, allotment_date, advance_payment_date, eoffice_file_no, additional_details, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          basePath: Allotments.*
+          jsonMaps:
+            - jsonPath: $.Allotments.*.allotmentId
+            - jsonPath: $.Allotments.*.assetNo
+            - jsonPath: $.Allotments.*.tenantId
+            - jsonPath: $.Allotments.*.userUuid
+            - jsonPath: $.Allotments.*.alloteeName
+            - jsonPath: $.Allotments.*.mobileNo
+            - jsonPath: $.Allotments.*.alternateMobileNo
+            - jsonPath: $.Allotments.*.emailId
+            - jsonPath: $.Allotments.*.agreementStartDate
+            - jsonPath: $.Allotments.*.agreementEndDate
+            - jsonPath: $.Allotments.*.duration
+            - jsonPath: $.Allotments.*.rentRate
+            - jsonPath: $.Allotments.*.monthlyRent
+            - jsonPath: $.Allotments.*.advancePayment
+            - jsonPath: $.Allotments.*.allotmentDate
+            - jsonPath: $.Allotments.*.advancePaymentDate
+            - jsonPath: $.Allotments.*.eofficeFileNo
+            - jsonPath: $.Allotments.*.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.Allotments.*.auditDetails.createdBy
+            - jsonPath: $.Allotments.*.auditDetails.lastModifiedBy
+            - jsonPath: $.Allotments.*.auditDetails.createdTime
+            - jsonPath: $.Allotments.*.auditDetails.lastModifiedTime
+
+    - version: 1.0
+      description: Persist document details into ug_em_document_details table
+      fromTopic: save-document-details
+      isTransaction: true
+      queryMaps:
+        - query: INSERT INTO ug_em_document_details(document_id, estate_no, document_type, filestore_id, created_on, created_by, last_updated_by, last_updated_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+          basePath: documentDetails
+          jsonMaps:
+            - jsonPath: $.documentDetails.documentId
+            - jsonPath: $.documentDetails.estateNo
+            - jsonPath: $.documentDetails.documentType
+            - jsonPath: $.documentDetails.filestoreId
+            - jsonPath: $.documentDetails.createdOn
+            - jsonPath: $.documentDetails.createdBy
+            - jsonPath: $.documentDetails.lastUpdatedBy
+            - jsonPath: $.documentDetails.lastUpdatedOn
+
+    - version: 1.0
+      description: Persist monthly rent payment details into ug_em_monthly_rent_payment table
+      fromTopic: save-monthly-rent-payment
+      isTransaction: true
+      queryMaps:
+        - query: INSERT INTO ug_em_monthly_rent_payment(id, allotment_id, rent, payment_type, penalty_amount, previous_month, payment_date, last_date_of_payment, due_payment_date, payment_status, due_payment, validity_days, created_on, created_by, last_updated_by, last_updated_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          basePath: rentPaymentDetails
+          jsonMaps:
+            - jsonPath: $.rentPaymentDetails.id
+            - jsonPath: $.rentPaymentDetails.allotmentId
+            - jsonPath: $.rentPaymentDetails.rent
+            - jsonPath: $.rentPaymentDetails.paymentType
+            - jsonPath: $.rentPaymentDetails.penaltyAmount
+            - jsonPath: $.rentPaymentDetails.previousMonth
+            - jsonPath: $.rentPaymentDetails.paymentDate
+            - jsonPath: $.rentPaymentDetails.lastDateOfPayment
+            - jsonPath: $.rentPaymentDetails.duePaymentDate
+            - jsonPath: $.rentPaymentDetails.paymentStatus
+            - jsonPath: $.rentPaymentDetails.duePayment
+            - jsonPath: $.rentPaymentDetails.validityDays
+            - jsonPath: $.rentPaymentDetails.createdOn
+            - jsonPath: $.rentPaymentDetails.createdBy
+            - jsonPath: $.rentPaymentDetails.lastUpdatedBy
+            - jsonPath: $.rentPaymentDetails.lastUpdatedOn

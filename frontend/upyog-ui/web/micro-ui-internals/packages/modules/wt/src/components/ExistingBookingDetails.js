@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Loader, Card, KeyNote } from "@upyog/digit-ui-react-components";
+import { Loader, Card, KeyNote } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import {useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet }) => {
+export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,moduleKey }) => {
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [filters, setFilters] = useState(null);
@@ -14,6 +14,7 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet }) => {
   const setwtData = (application) => {
     const newSessionData = {
       address: {
+        addressType: {name: "Other", code: "OTHER", i18nKey: "COMMON_ADDRESS_TYPE_OTHER"},
         houseNo: application?.address?.houseNo,
         streetName: application?.address?.streetName,
         addressline1: application?.address?.addressLine1,
@@ -30,14 +31,7 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet }) => {
         alternateNumber: application?.applicantDetail?.alternateNumber,
         emailId: application?.applicantDetail?.emailId,
 
-      },
-      requestDetails: {
-        deliveryDate: application?.deliveryDate,
-        deliveryTime: application?.deliveryTime,
-        waterQuantity: {code: application?.waterQuantity, value: application?.waterQuantity, i18nKey: application?.waterQuantity},
-        tankerType: {code: application?.tankerType, value : application?.tankerType, i18nKey: application?.tankerType},
-        description: application?.description,
-      },
+      }
     };
     setExistingDataSet(newSessionData);
     setIsDataSet(true);  // Set the flag to true after data is set
@@ -67,14 +61,38 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet }) => {
     setFilters(initialFilters);
   }, [offset]); 
 
-  // Use the search hook with filters
-  const { isLoading, data } = Digit.Hooks.wt.useTankerSearchAPI({ filters });
+  // Use the search hook with filters based on moduleKey
+  const getSearchHook = () => {
+    switch(moduleKey) {
+      case "MT_MODULE":
+        return Digit.Hooks.wt.useMobileToiletSearchAPI({ filters });
+      case "TREE_PRUNING":
+        return Digit.Hooks.wt.useTreePruningSearchAPI({ filters });
+      case "WT_MODULE":
+      default:
+        return Digit.Hooks.wt.useTankerSearchAPI({ filters });
+    }
+  };
+  
+  const { isLoading, data } = getSearchHook();
 
   if (isLoading) {
     return <Loader />;
   }
 
-  const filteredApplications = data?.waterTankerBookingDetail || [];
+  const getApplications = () => {
+    switch(moduleKey) {
+      case "MT_MODULE":
+        return data?.mobileToiletBookingDetails || [];
+      case "TREE_PRUNING":
+        return data?.treePruningBookingDetails || [];
+      case "WT_MODULE":
+      default:
+        return data?.waterTankerBookingDetail || [];
+    }
+  };
+  
+  const filteredApplications = getApplications();
   const applicationContainerStyle = {
     padding: '10px',
     margin: '10px 0',

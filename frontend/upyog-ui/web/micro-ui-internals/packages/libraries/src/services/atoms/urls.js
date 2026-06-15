@@ -37,6 +37,7 @@ const Urls = {
   Shortener: "/egov-url-shortening/shortener",
   UserCreateAddressV2: "/user/_createAddress", 
   employeeDashboardSearch: "/employee-dashboard/_search",
+  employeeRoleBaseDashboardSearch: "/employee-dashboard/v2/_search",
 
   fsm: {
     search: "/fsm/v1/_search",
@@ -121,6 +122,26 @@ const Urls = {
     bill_download: "/egov-pdf/download/BILL/consolidatedbill",
     count: "/echallan-services/eChallan/v1/_count",
   },
+
+  challangeneration: {
+    search: "/echallan-services/eChallan/v1/_search",
+    create: "/challan-services/Challan/v1/_create",
+    fetch_bill: "/billing-service/bill/v2/_fetchbill?",
+    search_bill: "/egov-searcher/bill-genie/mcollectbills/_get",
+    search_bill_pt: "/egov-searcher/bill-genie/billswithaddranduser/_get",
+    update: "/echallan-services/eChallan/v1/_update",
+    download_pdf: "/egov-pdf/download/UC/mcollect-challan",
+    receipt_download: "/egov-pdf/download/PAYMENT/consolidatedreceipt",
+    bill_download: "/egov-pdf/download/BILL/consolidatedbill",
+    count: "/echallan-services/eChallan/v1/_count",
+    reciept_search: "/collection-services/payments/:businessService/_search",
+    generate_pdf: "/pdf-service/v1/_create",
+    file_fetch: "/filestore/v1/files/url",
+    create_new: "/challan-generation/challan/_create",
+    search_new: "/challan-generation/challan/_search",
+    update_new: "/challan-generation/challan/_update",
+  },
+  
   hrms: {
     search: "/egov-hrms/employees/_search",
     count: "/egov-hrms/employees/_count",
@@ -226,12 +247,6 @@ const Urls = {
     update: "/ewaste-services/ewaste-request/_update",
   },
 
-  sv:{
-    create: "/sv-services/street-vending/_create",
-    search: "/sv-services/street-vending/_search",
-    update: "/sv-services/street-vending/_update",
-    deleteDraft:"/sv-services/street-vending/_deletedraft",
-  },
 
   chb: {
     create: "/chb-services/booking/v1/_create",
@@ -258,6 +273,11 @@ const Urls = {
     PGR_Search_AI: "/pgr-ai-services/v1/request/_search",
     PGR_Update_AI:"/pgr-ai-services/v1/request/_update"
   },
+
+  gis: {
+        gis_dx_PT: "/gis-dx-service/gis-dx/v1/_search/PT",
+        gis_dx_ASSET: "/gis-dx-service/gis-dx/v1/_search/ASSET",
+   },
 
 digiLocker:{
   authorization:"/requester-services-dx/digilocker/authorization/url",
@@ -316,6 +336,14 @@ eSign:{
     update: "/request-service/mobile-toilet/v1/_update",
     search: "/request-service/mobile-toilet/v1/_search",
   },
+
+ est: {
+    create: "/estate-management/estate/asset/v1/_create",
+    search: "/estate-management/estate/asset/v1/_search",
+    allotment: "/estate-management/estate/allotment/v1/_create",
+    allotmentSearch: "/estate-management/estate/allotment/v1/_search",
+  },
+  
   tp: {
     create: "/tp-services/tree-pruning/v1/_create",
     update: "/tp-services/tree-pruning/v1/_update",
@@ -327,6 +355,16 @@ eSign:{
     search: "/vendor-services/vendor/_search",
     additionaldetailsCreate: "/vendor-management/api/v1/_create",
     vendorcommonSearch: "/vendor-management/api/v1/vendorPlusAdditional/_search"
+  },
+  ndc: {
+    create: "/ndc-services/ndc/_create",
+    search: "/ndc-services/ndc/_search",
+    update: "/ndc-services/ndc/_update",
+    billingCalculate: "/ndc-calculator/v1/_calculate",
+  },
+
+  upyogBot: {
+    iframeUrl: "/upyog-voice-bot",
   },
 };
 

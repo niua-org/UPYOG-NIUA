@@ -13,7 +13,7 @@ import {
   RadioButtons,
   TextInput,
 
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import BookingPopup from "../components/BookingPopup";
 
 
@@ -463,7 +463,7 @@ const handleCloseCart = () => {
             name={"adsType"}
             defaultValue={adsType}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={adsType}
@@ -484,7 +484,7 @@ const handleCloseCart = () => {
             name={"selectedLocation"}
             defaultValue={selectedLocation}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={selectedLocation}
@@ -506,7 +506,7 @@ const handleCloseCart = () => {
               name={"adsType"}
               defaultValue={selectedFace}
               rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-              render={(props) => (
+              render={({ field }) => (
                 <Dropdown
                   className="form-field"
                   selected={selectedFace}
@@ -527,7 +527,7 @@ const handleCloseCart = () => {
               isMandatory={false}
               optionKey="i18nKey"
               name="fromDate"
-              value={fromDate}
+              value={fromDate || ""}
               onChange={SetFromDate}
               style={{width:user.type==="EMPLOYEE"?"50%":"86%" }}
               min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
@@ -544,7 +544,7 @@ const handleCloseCart = () => {
               isMandatory={false}
               optionKey="i18nKey"
               name="toDate"
-              value={toDate}
+              value={toDate || ""}
               onChange={SetToDate}
               style={{width:user.type==="EMPLOYEE"?"50%":"86%" }}
               min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
@@ -577,7 +577,7 @@ const handleCloseCart = () => {
             <SubmitBar label={t("ADS_VIEW_CART")} onSubmit={handleViewCart} />
           </div>
           <div
-            class="container"
+            className="container"
             style={{
               width: "1px",
             }}

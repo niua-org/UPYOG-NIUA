@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from "react-i18next";
-import { useHistory } from 'react-router-dom';
-import { CardLabel,SubmitBar, Dropdown } from '@upyog/digit-ui-react-components';
+
+import { CardLabel,SubmitBar, Dropdown } from '@nudmcdgnpm/digit-ui-react-components';
 
 
 const CHBMapView = () => {
@@ -10,7 +10,7 @@ const CHBMapView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [inputValue, setInputValue] = useState('');
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   const geoJsonData = {
     "type": "FeatureCollection",
@@ -341,7 +341,7 @@ const CHBMapView = () => {
         }
     } 
     window.selectHall = (hallCode,hallId) => {
-      history.push({
+      navigate({
         pathname: `/upyog-ui/citizen/chb/bookHall/searchhall`,
         selectedCommunityHall: {code: hallCode, value: hallCode, i18nKey: hallCode, communityHallId:hallId}
       });

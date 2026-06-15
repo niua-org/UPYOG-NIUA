@@ -1,12 +1,12 @@
-import { FormComposer,Dropdown } from "@upyog/digit-ui-react-components";
+import { FormComposer,Dropdown } from "@nudmcdgnpm/digit-ui-react-components";
 import PropTypes from "prop-types";
 import React, { useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHistory } from "react-router-dom";
+
 
 const SearchTrade = ({ config: propsConfig, onSelect }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const [canSubmit, setCanSubmit] = useState(false);
   const userInfo =  Digit.UserService.getUser(); 
   let user = userInfo?.info;
@@ -40,7 +40,7 @@ const SearchTrade = ({ config: propsConfig, onSelect }) => {
       alert(t("TL_ERROR_NEED_ONE_PARAM"));
     }
     else {
-      history.push(
+      navigate(
         `/upyog-ui/citizen/tl/tradelicence/renewal-list?mobileNumber=${data?.mobileNumber ? data?.mobileNumber : ``}&LicenseNumber=${data?.LicenseNum ? data?.LicenseNum : ``}&tenantId=${cityCode?cityCode:``}`
       );
     }

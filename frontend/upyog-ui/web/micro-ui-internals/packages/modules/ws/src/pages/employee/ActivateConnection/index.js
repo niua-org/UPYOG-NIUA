@@ -1,8 +1,8 @@
-import { FormComposer, Header, Loader, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Header, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import cloneDeep from "lodash/cloneDeep";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useHistory } from "react-router-dom";
+import { useLocation,  } from "react-router-dom";
 import { newConfig as newConfigLocal } from "../../../config/wsActivationConfig";
 import { stringReplaceAll, convertDateToEpochNew, convertEpochToDates } from "../../../utils";
 import * as func from "../../../utils";
@@ -10,9 +10,9 @@ import _ from "lodash";
 
 const ActivateConnection = () => {
     const { t } = useTranslation();
-    let { state } = useLocation();
-    state = state ? JSON.parse(state) : {};
-    const history = useHistory();
+    const location = useLocation();
+    let state = location.state || {};
+    const navigate = Digit.Hooks.useCustomNavigate();
     let filters = func.getQueryStringParams(location.search);
     const [canSubmit, setSubmitValve] = useState(false);
     const [isEnableLoader, setIsEnableLoader] = useState(false);
@@ -110,9 +110,29 @@ const ActivateConnection = () => {
       }, [isAppDetailsPage]);
 
     const onFormValueChange = (setValue, formData, formState) => {
-        if (Object.keys(formState.errors).length > 0 && Object.keys(formState.errors).length == 1 && formState.errors["owners"] && Object.values(formState.errors["owners"].type).filter((ob) => ob.type === "required").length == 0 && Object.getPrototypeOf(formState.errors) === Object.prototype) setSubmitValve(true);
-        else setSubmitValve(!(Object.keys(formState.errors).length));
-    };
+        if (
+            Object.keys(formState.errors).length > 0 &&
+            Object.keys(formState.errors).length === 1 &&
+            formState.errors["owners"] &&
+            Object.values(formState.errors["owners"].type).filter(
+            (ob) => ob.type === "required"
+            ).length === 0 &&
+            Object.getPrototypeOf(formState.errors) === Object.prototype
+        ) {
+            setSubmitValve(true);
+            return;
+        }
+
+        const hasErrors = Object.entries(formState.errors).some(([_, error]) => {
+            return !(
+            error?.type &&
+            typeof error.type === "object" &&
+            Object.keys(error.type).length === 0
+            );
+        });
+
+        setSubmitValve(!hasErrors);
+        };
 
     const getConvertedDate = async (dateOfTime) => {
         let dateOfReplace = stringReplaceAll(dateOfTime, "/", "-");
@@ -128,7 +148,7 @@ const ActivateConnection = () => {
 
     const closeToast = () => {
         setShowToast(null);
-        // history.push(`/upyog-ui/employee/ws/application-details?applicationNumber=${filters?.applicationNumber}&service=${filters?.service}`, {});
+        // navigate(`/upyog-ui/employee/ws/application-details?applicationNumber=${filters?.applicationNumber}&service=${filters?.service}`, {});
     };
 
     const closeToastOfError = () => { setShowToast(null); };

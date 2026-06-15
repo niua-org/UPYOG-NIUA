@@ -39,6 +39,7 @@ import useCancelBill from "./bills/useCancelBill";
 import useTenantsBills from "./bills/useTenants";
 import useGetHowItWorksJSON from "./useHowItWorksJSON";
 import useGetFAQsJSON from "./useGetFAQsJSON";
+import useReportMeta from "./reports/useReport";
 
 import useStaticData from "./useStaticData";
 import useBillAmendmentInbox from "./billAmendment/useInbox";
@@ -63,7 +64,13 @@ const cnd ={
   useCndApplicationAction,
   useVendorSearch,
   useVehiclesSearch
-}
+};
+
+const reports = {
+  useReportMeta,
+};
+
+
 
 const Hooks = {
   useSessionStorage,
@@ -114,7 +121,10 @@ const Hooks = {
   createTokenAPI,
   useCustomBackNavigation,
   useRouteSubscription,
-  cnd
+  cnd,
+  reports
 };
+
+
 
 export default Hooks;

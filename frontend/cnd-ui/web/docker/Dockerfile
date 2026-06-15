@@ -9,7 +9,7 @@ RUN yarn add @nudmcdgnpm/upyog-ui-module-cnd
 ARG WORK_DIR
 WORKDIR /app
 ENV NODE_OPTIONS "--max-old-space-size=1792"
-ENV GENERATE_SOURCEMAP "true"
+ENV GENERATE_SOURCEMAP "false"
 
 COPY ${WORK_DIR} .
 RUN ls -lah

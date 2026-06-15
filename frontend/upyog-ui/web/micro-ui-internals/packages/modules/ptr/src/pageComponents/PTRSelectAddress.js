@@ -26,7 +26,7 @@
  */
 
 import React, { useState,useEffect} from "react";
-import { FormStep, TextInput, CardLabel, Dropdown, TextArea, SearchIcon, Toast} from "@upyog/digit-ui-react-components";
+import { FormStep, TextInput, CardLabel, Dropdown, TextArea, SearchIcon, Toast} from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import Timeline from "../components/PTRTimeline";
@@ -196,7 +196,7 @@ const PTRSelectAddress = ({ t, config, onSelect, formData, renewApplication }) =
               style={inputStyles}
               ValidationRequired={false}
               {...(validation = {
-                isRequired: true,
+                isRequired: false,
                 pattern: "^[a-zA-Z0-9/-]*$",
                 type: "text",
                 title: t("PT_NAME_ERROR_MESSAGE"),
@@ -324,7 +324,7 @@ const PTRSelectAddress = ({ t, config, onSelect, formData, renewApplication }) =
             name={"city"}
             defaultValue={city}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={city}
@@ -342,7 +342,7 @@ const PTRSelectAddress = ({ t, config, onSelect, formData, renewApplication }) =
             name={"locality"}
             defaultValue={locality}
             rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={(props) => (
+            render={({ field }) => (
               <Dropdown
                 className="form-field"
                 selected={locality}

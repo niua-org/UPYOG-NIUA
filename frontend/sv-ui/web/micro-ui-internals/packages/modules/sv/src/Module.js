@@ -1,7 +1,7 @@
-import { CitizenHomeCard, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
+import { CitizenHomeCard, PTIcon } from "@nudmcdgnpm/upyog-ui-react-components-lts";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouteMatch } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import SVCreate from "./pages/citizen/Create";
 import CitizenApp from "./pages/citizen"
 import SVApplicantDetails from "./pageComponents/SVApplicantDetails";
@@ -26,6 +26,9 @@ import Caption from "./components/Caption";
 import ViewTimeline from "./components/ViewTimeline";
 import SVSpecialCategory from "./pageComponents/SVSpecialCategory";
 import RenewPopup from "./components/RenewPopup";
+// import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";  this module is not upgraded to latest node version and react version and it is giving error while importing, so commenting out the import and usage of this module for now, will be added once the module is upgraded to latest versions 
+
+
 
 const componentsToRegister = {
    Create:SVCreate,
@@ -46,7 +49,9 @@ const componentsToRegister = {
    Caption,
    ViewTimeline,
    SVSpecialCategory,
-   RenewPopup
+   RenewPopup,
+  //  ReportSearchApplication,
+  //  EnhancedReport
   };
   
   // function to register the component as per standard 
@@ -58,22 +63,32 @@ const componentsToRegister = {
 
   // Parent component of module
   export const SVModule = ({ stateCode, userType, tenants }) => {
-    const { path, url } = useRouteMatch();
+    const location = useLocation();
+    const path = location.pathname;
+    const url = location.pathname;
+
+
     const moduleCode = "SV";
     const language = Digit.StoreData.getCurrentLanguage();
     const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
     addComponentsToRegistry();
     Digit.SessionStorage.set("SV_TENANTS", tenants);
-    useEffect(
-      () =>
-        userType === "employee" &&
+    // Fixed: React 19 requires useEffect to return either a cleanup function or nothing (undefined).
+    // Old code used arrow function shorthand which returned the result of the && expression.
+    // When userType !== "employee", the && expression returned false — an invalid return value in React 19.
+    // When userType === "employee", it returned a Promise from getLocale() — also invalid in React 19.
+    // Fixed: Replaced with block body using if statement — returns undefined implicitly, which is valid.
+    // Fixed: Added  userType to dependency array — best practice to include all values used inside useEffect.
+    useEffect(() => {
+      if (userType === "employee") {
         Digit.LocalizationService.getLocale({
           modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
           locale: Digit.StoreData.getCurrentLanguage(),
           tenantId: Digit.ULBService.getCurrentTenantId(),
-        }),
-      []
-    );
+        });
+      }
+    }, [userType]);
+
   
     if (userType === "employee") {
       return <EmployeeApp path={path} url={url} userType={userType} />;

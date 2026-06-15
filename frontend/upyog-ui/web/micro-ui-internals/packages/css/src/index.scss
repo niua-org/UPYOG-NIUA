@@ -2,11 +2,15 @@
 
 /*@import url("https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap");*/
 
-@import "tailwindcss/base";
+// @import "tailwindcss/base";
 
-@import "tailwindcss/components";
+// @import "tailwindcss/components";
 
-@import "tailwindcss/utilities";
+// @import "tailwindcss/utilities";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @import "react-date-range/dist/styles.css";
 @import "react-date-range/dist/theme/default.css";
@@ -106,6 +110,7 @@
 @import "./pages/citizen/updatePropertyNumber.scss";
 @import "./pages/citizen/citizenDocument.scss";
 @import "./pages/employee/surveys.scss";
+@import "./common/newApplicationTimeline.scss";
 
 .display-none {
   display: none;

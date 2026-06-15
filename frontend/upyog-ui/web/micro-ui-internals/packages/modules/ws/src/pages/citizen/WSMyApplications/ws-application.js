@@ -1,4 +1,4 @@
-import { Card, KeyNote, SubmitBar, Loader } from "@upyog/digit-ui-react-components";
+import { Card, KeyNote, SubmitBar, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -66,20 +66,27 @@ const WSApplication = ({ application }) => {
       </Link>
       {application?.applicationStatus === "PENDING_FOR_PAYMENT"  ? (
             <Link
-              to={{
-                pathname: `/upyog-ui/citizen/payment/my-bills/${
+                to={`/upyog-ui/citizen/payment/my-bills/${
                   businessService
-                }/${application?.applicationNo?.includes("DC") ? (stringReplaceAll(application?.connectionNo, "/", "+") || stringReplaceAll(application?.connectionNo, "/", "+")) :
-                  (stringReplaceAll(application?.applicationNo, "/", "+") ||
-                  stringReplaceAll(application?.applicationNo, "/", "+"))
-                }?workflow=WNS&tenantId=${application?.tenantId }&ConsumerName=${application?.connectionHolders?.map((owner) => owner.name).join(",") || application?.connectionHolders?.map((owner) => owner.name).join(",") || PTData?.Properties?.[0]?.owners?.map((owner) => owner.name).join(",")}&isDisoconnectFlow=${application?.applicationNo?.includes("DC")?true : false}`,
-                state: {},
-              }}
-            >
-              <div style= {{marginTop : "10px"}}>
-              <SubmitBar label={t("MAKE_PAYMENT")} />
-              </div>
-            </Link>
+                }/${
+                  application?.applicationNo?.includes("DC")
+                    ? (
+                        stringReplaceAll(application?.connectionNo, "/", "+") ||
+                        stringReplaceAll(application?.connectionNo, "/", "+")
+                      )
+                    : (
+                        stringReplaceAll(application?.applicationNo, "/", "+") ||
+                        stringReplaceAll(application?.applicationNo, "/", "+")
+                      )
+                }?workflow=WNS&tenantId=${application?.tenantId}&ConsumerName=${
+                  application?.connectionHolders?.map((owner) => owner.name).join(",") ||
+                  PTData?.Properties?.[0]?.owners?.map((owner) => owner.name).join(",")
+                }&isDisoconnectFlow=${application?.applicationNo?.includes("DC")}`}
+              >
+                <div style={{ marginTop: "10px" }}>
+                  <SubmitBar label={t("MAKE_PAYMENT")} />
+                </div>
+              </Link>
           ) : null}
     </Card>
   );

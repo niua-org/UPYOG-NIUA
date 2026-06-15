@@ -99,6 +99,13 @@ public class AssetRepository {
             log.info("Final query: " + query);
             return jdbcTemplate.query(query, preparedStmtList.toArray(), assetLimitedDateRowMapper);
         }
+        // Always use the full search query to get the gis data from additionaldetails
+//        String query = queryBuilder.getAssetSearchQuery(searchCriteria, preparedStmtList);
+//
+//        log.info("Final Asset Search Query: " + query);
+//
+//        // Always use FULL row mapper
+//        return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
     }
 
     public List<AssetAssignment> getAssetAssignmentDetails(String tenantId, String assetId) {

@@ -27,6 +27,7 @@ const EmployeeApp = () => {
   const FacilityCentreCreationDetails = Digit?.ComponentRegistryService?.getComponent("FacilityCentreCreationDetails");
   const FacilitySubmissionResponse = Digit?.ComponentRegistryService?.getComponent("FacilitySubmissionResponse");
   const CndCreate = Digit?.ComponentRegistryService?.getComponent("CndCreate");
+  const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
 
   return (
     <span className={"cnd-citizen"} style={cndStyles.wasteQuantityCitizen}>
@@ -54,6 +55,8 @@ const EmployeeApp = () => {
           <PrivateRoute path={`${path}/my-request`} component={(props) => <SearchApp {...props} parentRoute={path} />} />
           <PrivateRoute path={`${path}/cnd-service/facility-centre/:id`} component={() => <FacilityCentreCreationDetails parentUrl={url} />} />
           <PrivateRoute path={`${path}/facility-response`} component={(props) => <FacilitySubmissionResponse {...props} parentRoute={path} />} />
+
+          <PrivateRoute path={`${path}/CNDApplicationReport`} component={(props) => <EnhancedReport {...props} parentRoute={path} moduleName="rainmaker-CND" reportName="CNDApplicationReport" />} />
 
         </AppContainer>
       </Switch>

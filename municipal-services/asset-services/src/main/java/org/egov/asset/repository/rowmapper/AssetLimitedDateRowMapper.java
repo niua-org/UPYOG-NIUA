@@ -6,6 +6,11 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.postgresql.util.PGobject;
+
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,6 +21,11 @@ import java.util.Map;
 @Component
 public class AssetLimitedDateRowMapper implements ResultSetExtractor<List<Asset>> {
 
+    private final ObjectMapper objectMapper;
+    
+    public AssetLimitedDateRowMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
     /**
      * extract the data from the resultset and prepare the BPA Object
      *
@@ -73,5 +83,16 @@ public class AssetLimitedDateRowMapper implements ResultSetExtractor<List<Asset>
         assetAssignment.setReturnDate(rs.getLong("returnDate"));
         assetAssignment.setIsAssigned(rs.getBoolean("isAssigned"));
         asset.setAssetAssignment(assetAssignment);
+
+        //AdditionalDetails Mapping
+        PGobject additionalDetails = (PGobject) rs.getObject("additionalDetails");
+        if (additionalDetails != null) {
+            try {
+                JsonNode additionalDetailsNode = objectMapper.readTree(additionalDetails.getValue());
+                asset.setAdditionalDetails(additionalDetailsNode);
+            } catch (Exception e) {
+                throw new SQLException("Failed to parse additionalDetails JSON for asset " + asset.getId(), e);
+            }
+        }
     }
 }

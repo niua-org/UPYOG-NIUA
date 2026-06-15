@@ -1,7 +1,7 @@
-import { FormComposer, Header, Loader, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Header, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useHistory } from "react-router-dom";
+import { useLocation,  } from "react-router-dom";
 import * as func from "../../../utils";
 import _ from "lodash";
 import { newConfig as newConfigLocal } from "../../../config/wsCreateConfig";
@@ -12,7 +12,7 @@ const ModifyApplication = () => {
   const { t } = useTranslation();
   let { state } = useLocation();
   state = state  ? (typeof(state) === "string" ? JSON.parse(state) : state) : {};
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   let filters = func.getQueryStringParams(location.search);
   const [canSubmit, setSubmitValve] = useState(false);
   const [showToast, setShowToast] = useState(null);
@@ -170,7 +170,7 @@ const ModifyApplication = () => {
               },
               onSuccess: (data, variables) => {
                 clearSessionFormData();
-                history.push(`/upyog-ui/employee/ws/ws-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);
+                navigate(`/upyog-ui/employee/ws/ws-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`);
                 // window.location.href = `${window.location.origin}/upyog-ui/employee/ws/ws-response?applicationNumber=${data?.WaterConnection?.[0]?.applicationNo}`;
               },
             })
@@ -199,7 +199,7 @@ const ModifyApplication = () => {
               },
               onSuccess: (data, variables) => {
                 clearSessionFormData();
-                history.push(`/upyog-ui/employee/ws/ws-response?applicationNumber1=${data?.SewerageConnections?.[0]?.applicationNo}`);
+                navigate(`/upyog-ui/employee/ws/ws-response?applicationNumber1=${data?.SewerageConnections?.[0]?.applicationNo}`);
                 // window.location.href = `${window.location.origin}/upyog-ui/employee/ws/ws-response?applicationNumber1=${data?.SewerageConnections?.[0]?.applicationNo}`;
               }
             });

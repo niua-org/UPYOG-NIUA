@@ -1,7 +1,7 @@
-import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar,Toast } from "@upyog/digit-ui-react-components";
+import { Banner, Card, CardText, LinkButton, LinkLabel, Loader, Row, StatusTable, SubmitBar,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, {useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useRouteMatch,useHistory } from "react-router-dom";
+import { Link,  } from "react-router-dom";
 import { CHBDataConvert } from "../../../utils";
 
 
@@ -67,13 +67,12 @@ const BannerPicker = (props) => {
   );
 };
 
-const CHBAcknowledgement = ({ data, onSuccess }) => {
+const CHBAcknowledgement = ({ data, onSuccess, mutation }) => {
   const { t } = useTranslation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.chb.useChbCreateAPI(tenantId);
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
-  const match = useRouteMatch();
+  const match = Digit.Hooks.useModuleBasePath();
   const { tenants } = storeData || {};
   const user = Digit.UserService.getUser().info;
   const [showToast, setShowToast] = useState(null);
@@ -107,31 +106,44 @@ const CHBAcknowledgement = ({ data, onSuccess }) => {
 
     if (isSlotBooked) {
       setShowToast({ error: true, label: t("CHB_COMMUNITY_HALL_ALREADY_BOOKED") });
-    } else if(user.type==="CITIZEN") {
-      history.push({
-        pathname: `/upyog-ui/citizen/payment/my-bills/${"chb-services"}/${mutation.data?.hallsBookingApplication[0].bookingNo}`,
-        state: { tenantId:tenantId, bookingNo: mutation.data?.hallsBookingApplication[0].bookingNo,timerValue:result?.data?.timerValue,SlotSearchData:SlotSearchData },
-      });
-    }
-      else if(user.type==="EMPLOYEE") {
-        history.push({
-          pathname: `/upyog-ui/employee/payment/collect/${"chb-services"}/${mutation.data?.hallsBookingApplication[0].bookingNo}`,
-          state: { tenantId:tenantId, bookingNo: mutation.data?.hallsBookingApplication[0].bookingNo,timerValue:result?.data?.timerValue,SlotSearchData:SlotSearchData },
-        });
+    } else if (user?.type === "CITIZEN") {
+        navigate(
+          `/upyog-ui/citizen/payment/my-bills/chb-services/${mutation.data?.hallsBookingApplication?.[0]?.bookingNo}`,
+          {
+            state: {
+              tenantId,
+              bookingNo: mutation.data?.hallsBookingApplication?.[0]?.bookingNo,
+              timerValue: result?.data?.timerValue,
+              SlotSearchData,
+            },
+          }
+        );
+      } else if (user?.type === "EMPLOYEE") {
+        navigate(
+          `/upyog-ui/employee/payment/collect/chb-services/${mutation.data?.hallsBookingApplication?.[0]?.bookingNo}`,
+          {
+            state: {
+              tenantId,
+              bookingNo: mutation.data?.hallsBookingApplication?.[0]?.bookingNo,
+              timerValue: result?.data?.timerValue,
+              SlotSearchData,
+            },
+          }
+        );
       }
   }catch (error) {
     setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
   }
   };
-  useEffect(() => {
-    try {
-      data.tenantId = tenantId;
-      let formdata = CHBDataConvert(data);
-      mutation.mutate(formdata, {
-        onSuccess,
-      });
-    } catch (err) {}
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     data.tenantId = tenantId;
+  //     let formdata = CHBDataConvert(data);
+  //     mutation.mutate(formdata, {
+  //       onSuccess,
+  //     });
+  //   } catch (err) {}
+  // }, []);
 
   useEffect(() => {
       if (showToast) {
@@ -143,11 +155,11 @@ const CHBAcknowledgement = ({ data, onSuccess }) => {
       }
     }, [showToast]);
 
-  return mutation.isLoading || mutation.isIdle ? (
+  return mutation.isPending || mutation.isIdle ? (
     <Loader />
   ) : (
     <Card>
-      <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
+      <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isPending} />
       <StatusTable>
         {mutation.isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />}
       </StatusTable>

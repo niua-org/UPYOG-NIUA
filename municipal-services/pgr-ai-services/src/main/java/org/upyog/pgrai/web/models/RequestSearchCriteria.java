@@ -36,6 +36,10 @@ public class RequestSearchCriteria {
     @JsonProperty("serviceRequestId")
     private String serviceRequestId;
 
+    // Added for search by multiple service request ids
+    @JsonProperty("serviceRequestIds")
+    private Set<String> serviceRequestIds;
+
     @JsonProperty("sortBy")
     private SortBy sortBy;
 

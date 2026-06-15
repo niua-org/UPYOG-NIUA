@@ -32,9 +32,11 @@ public class SchedulerService {
 	@Autowired
 	private BookingRepository bookingRepo;
 	
-	/* This scheduler runs every 5 mins
-	 * to delete the bookingId from the paymentTimer table when 
-	 * the timer is expired or payment is failed
+	/**
+	 * Deletes expired or failed payment timer entries on a fixed interval.
+	 *
+	 * <p>This scheduled task runs every 5 minutes and removes stale booking
+	 * references from the payment timer table.</p>
 	 */
 	@Scheduled(fixedRate = 5 * 60 * 1000) //Runs every 5 minutes
 	public void cleanupExpiredEntries() {

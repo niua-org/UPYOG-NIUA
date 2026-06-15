@@ -11,7 +11,7 @@ import {
   CardText,
   CardHeader,
   SubmitBar,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -183,21 +183,21 @@ const WSApplicationDetails = () => {
         downloadOptions = disconnectionNoticeNApplicationFormOptions
       }
       else{
-        downloadOptions = downloadOptions.concat(applicationDownloadObject);
+        downloadOptions = downloadOptions?.concat(applicationDownloadObject);
       }
       break;
     case "PENDING_FOR_CITIZEN_ACTION":
     case "PENDING_FOR_FIELD_INSPECTION":
-      downloadOptions = downloadOptions.concat(applicationDownloadObject);
+      downloadOptions = downloadOptions?.concat(applicationDownloadObject);
       // dowloadOptions = [applicationDownloadObject];
       break;
     case "PENDING_APPROVAL_FOR_CONNECTION":
     case "PENDING_FOR_PAYMENT":
-      downloadOptions = downloadOptions.concat(applicationDownloadObject, wsEstimateDownloadObject);
+      downloadOptions = downloadOptions?.concat(applicationDownloadObject, wsEstimateDownloadObject);
       break;
     case "PENDING_FOR_CONNECTION_ACTIVATION":
     case "CONNECTION_ACTIVATED":
-      downloadOptions = downloadOptions.concat(
+      downloadOptions = downloadOptions?.concat(
         sanctionDownloadObject,
         wsEstimateDownloadObject,
         applicationDownloadObject,
@@ -205,20 +205,19 @@ const WSApplicationDetails = () => {
       );
       break;
     case "REJECTED":
-      downloadOptions = downloadOptions.concat(applicationDownloadObject);
+      downloadOptions = downloadOptions?.concat(applicationDownloadObject);
       break;
     case "PENDING_FOR_DISCONNECTION_EXECUTION":
     case "DISCONNECTION_EXECUTED":
-    case "PENDING_FOR_PAYMENT":
       if(data?.WaterConnection?.[0].applicationType?.includes("DISCONNECT") || data?.SewerageConnections?.[0].applicationType?.includes("DISCONNECT") ){
         downloadOptions = disconnectionNoticeNApplicationFormOptions
       }
       else{
-        downloadOptions = downloadOptions.concat(applicationDownloadObject);
+        downloadOptions = downloadOptions?.concat(applicationDownloadObject);
       }
       break;
     default:
-      downloadOptions = downloadOptions.concat(applicationDownloadObject);
+      downloadOptions = downloadOptions?.concat(applicationDownloadObject);
       break;
   }
 
@@ -653,15 +652,26 @@ let serviceType = data && data?.WaterConnection?.[0] ? "WATER" : "SEWERAGE";
           {data?.WaterConnection?.[0]?.applicationStatus === "PENDING_FOR_PAYMENT" ||
           data?.SewerageConnections?.[0]?.applicationStatus === "PENDING_FOR_PAYMENT" ? (
             <Link
-              to={{
-                pathname: `/upyog-ui/citizen/payment/my-bills/${
-                  paymentDetails?.data?.Bill?.[0]?.businessService
-                }/${applicationNobyData?.includes("DC") ? (stringReplaceAll(data?.WaterConnection?.[0]?.connectionNo, "/", "+") || stringReplaceAll(data?.SewerageConnections?.[0]?.connectionNo, "/", "+")) :
-                  (stringReplaceAll(data?.WaterConnection?.[0]?.applicationNo, "/", "+") ||
-                  stringReplaceAll(data?.SewerageConnections?.[0]?.applicationNo, "/", "+"))
-                }?workflow=WNS&tenantId=${data?.WaterConnection?.[0]?.tenantId || data?.SewerageConnections?.[0]?.tenantId}&ConsumerName=${data?.WaterConnection?.[0]?.connectionHolders?.map((owner) => owner.name).join(",") || data?.SewerageConnections?.[0]?.connectionHolders?.map((owner) => owner.name).join(",") || PTData?.Properties?.[0]?.owners?.map((owner) => owner.name).join(",")}&isDisoconnectFlow=${applicationNobyData?.includes("DC")?true : false}`,
-                state: {},
-              }}
+              to={`/upyog-ui/citizen/payment/my-bills/${
+                paymentDetails?.data?.Bill?.[0]?.businessService
+              }/${
+                applicationNobyData?.includes("DC")
+                  ? (
+                      stringReplaceAll(data?.WaterConnection?.[0]?.connectionNo, "/", "+") ||
+                      stringReplaceAll(data?.SewerageConnections?.[0]?.connectionNo, "/", "+")
+                    )
+                  : (
+                      stringReplaceAll(data?.WaterConnection?.[0]?.applicationNo, "/", "+") ||
+                      stringReplaceAll(data?.SewerageConnections?.[0]?.applicationNo, "/", "+")
+                    )
+              }?workflow=WNS&tenantId=${
+                data?.WaterConnection?.[0]?.tenantId ||
+                data?.SewerageConnections?.[0]?.tenantId
+              }&ConsumerName=${
+                data?.WaterConnection?.[0]?.connectionHolders?.map((owner) => owner.name).join(",") ||
+                data?.SewerageConnections?.[0]?.connectionHolders?.map((owner) => owner.name).join(",") ||
+                PTData?.Properties?.[0]?.owners?.map((owner) => owner.name).join(",")
+              }&isDisoconnectFlow=${applicationNobyData?.includes("DC")}`}
             >
               <SubmitBar label={t("MAKE_PAYMENT")} />
             </Link>

@@ -105,6 +105,9 @@ public class CommunityHallBookingQueryBuilder {
 	
 	public static final String UPADTE_BOOKING_PAYMENT_TIMER_VALUE_QUERY = "UPDATE eg_chb_payment_timer " +
             " SET status = ? WHERE booking_id = ?";
+
+	public static final String UPDATE_TIMER_BOOKING_ID_QUERY = "UPDATE eg_chb_payment_timer "
+			+ " SET booking_id = ?, booking_no = ? WHERE booking_id = ?";
 	
 	public static final String UPDATE_BOOKING_STATUS =  "update eg_chb_booking_detail set booking_status = ?, lastmodifiedby = ?, lastmodifiedtime = ? "
 			+ " where booking_id in (?) ";
@@ -115,7 +118,8 @@ public class CommunityHallBookingQueryBuilder {
 			+ "		      AND community_hall_code = ? "
 			+ "		      AND hall_code = ? "
 			+ "		      AND booking_date BETWEEN ? AND ?;";
-
+	
+	
 	/**
 	 * To give the Search query based on the requirements.
 	 * 

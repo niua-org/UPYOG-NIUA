@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPYOG Automation Testing</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+
+        .tab {
+            padding: 10px 20px;
+            background: #fff;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .tab.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+        }
+
+        .result.error {
+            background: #f8d7da;
+        }
+
+        /* MULTI SELECT */
+
+        .multi-select-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .multi-select-box {
+    border: 1px solid #ddd;
+    padding: 12px;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+        .multi-select-dropdown {
+    display: none;
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 999;
+    padding: 0;
+    margin-top: 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+        .multi-select-dropdown.show {
+            display: block;
+        }
+
+       #moduleSearch {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    outline: none;
+    margin: 0;
+    box-sizing: border-box;
+    border-radius: 0;
+}
+
+       #moduleOptions label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+#moduleOptions input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+        #moduleOptions label:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UPYOG Automation Testing Portal</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('citizen')">Citizen Testing</div>
+            <div class="tab" onclick="switchTab('employee')">Employee Testing</div>
+            <div class="tab" onclick="switchTab('vendor')">Vendor Testing</div>
+        </div>
+
+        <!-- Citizen Testing Form -->
+        <div id="citizen" class="tab-content active">
+            <h2>Citizen Application Testing</h2>
+            <form id="citizenForm">
+                <div class="form-group">
+                    <label>Base URL *</label>
+                    <select name="baseUrl" required>
+                        <option value="">Select Base URL</option>
+                        <option value="https://upyog-test.niua.org/upyog-ui/citizen/login">upyog-test.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/upyog-ui/citizen/login">upyog.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/upyog-ui/citizen/login">niuatt.niua.in/upyog-ui/citizen/login</option>
+                        <option value="http://localhost:8080/upyog-ui/citizen/login">localhost:8080/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/cnd-ui/citizen/login">upyog.niua.org/cnd-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/cnd-ui/citizen/login">niuatt.niua.in/cnd-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/sv-ui/citizen/login">upyog.niua.org/sv-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/sv-ui/citizen/login">niuatt.niua.in/sv-ui/citizen/login</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Module Name *</label>
+
+                    <div class="multi-select-container">
+                        <div class="multi-select-box" onclick="toggleDropdown(event)">
+                            <span id="selectedModulesText">Select Modules</span>
+                            <span>▼</span>
+                        </div>
+
+                        <div id="moduleDropdown" class="multi-select-dropdown">
+                            <input
+                                    type="text"
+                                    id="moduleSearch"
+                                    placeholder="Search modules..."
+                                    onkeyup="filterModules()"
+                            />
+                            <div id="moduleOptions">
+
+                                <label><input type="checkbox" name="modules" value="STREET_VENDING"> Street Vending</label>
+                                <label><input type="checkbox" name="modules" value="PET_REGISTRATION"> Pet Registration</label>
+                                <label><input type="checkbox" name="modules" value="TRADE_LICENSE"> Trade License</label>
+                                <label><input type="checkbox" name="modules" value="PROPERTY_TAX"> Property Tax</label>
+                                <label><input type="checkbox" name="modules" value="EWASTE_MANAGEMENT_SYSTEM"> E-Waste</label>
+                                <label><input type="checkbox" name="modules" value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM"> OBPAS</label>
+                                <label><input type="checkbox" name="modules" value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC"> OBPAS OC</label>
+                                <label><input type="checkbox" name="modules" value="PUBLIC_GRIEVANCE_REDRESSAL"> PGR</label>
+                                <label><input type="checkbox" name="modules" value="ADVERTISEMENT"> Advertisement</label>
+                                <label><input type="checkbox" name="modules" value="TREE_PRUNING"> Tree Pruning</label>
+                                <label><input type="checkbox" name="modules" value="WATER_TANKER"> Water Tanker</label>
+                                <label><input type="checkbox" name="modules" value="MOBILE_TOILET"> Mobile Toilet</label>
+                                <label><input type="checkbox" name="modules" value="COMMUNITY_HALL_BOOKING"> Community Hall</label>
+                                <label><input type="checkbox" name="modules" value="CONSTRUCTION_AND_DEMOLITION"> Construction & Demolition</label>
+                                <label><input type="checkbox" name="modules" value="DESLUDGING_SERVICE"> Desludging</label>
+                                <label><input type="checkbox" name="modules" value="DESLUDGING_SERVICE_PAYMENT"> Desludging Payment</label>
+                                <label><input type="checkbox" name="modules" value="DESLUDGING_SERVICE_PAYMENT2"> Desludging Payment2</label>
+                                <label><input type="checkbox" name="modules" value="WATER_AND_SEWERAGE"> Water & Sewerage</label>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input type="text" name="mobileNumber" value="7906413996" required>
+                </div>
+                <div class="form-group">
+                    <label>OTP *</label>
+                    <input type="text" name="otp" value="123456" required>
+                </div>
+                <div class="form-group">
+                    <label>City Name *</label>
+                    <select name="cityName" required>
+                        <option value="">Select City</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Sankhali Municipal Council">Sankhali Municipal Council</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Nagpur">Nagpur</option>
+                        <option value="Noida">Noida</option>
+                        <option value="Dharamshala">Dharamshala</option>
+                        <option value="Kurali">Kurali</option>
+                        <option value="Mohali">Mohali</option>
+                        <option value="Patiala">Patiala</option>
+                        <option value="Shimla">Shimla</option>
+                        <option value="City A">City A</option>
+                        <option value="City B">City B</option>
+                        <option value="City C">City C</option>
+                        <option value="City D">City D</option>
+                        <option value="City E">City E</option>
+                    </select>
+                </div>
+                <button type="submit">Run Test</button>
+            </form>
+            <div id="citizenResult" class="result"></div>
+        </div>
+
+        <!-- Employee Testing Form -->
+        <div id="employee" class="tab-content">
+            <h2>Employee Workflow Testing</h2>
+            <form id="employeeForm">
+                <div class="form-group">
+                    <label>Base URL *</label>
+                    <select name="baseUrl" required>
+                        <option value="">Select Base URL</option>
+                        <option value="https://upyog-test.niua.org/upyog-ui/employee/login">upyog-test.niua.org/upyog-ui/employee/login</option>
+                        <option value="https://upyog.niua.org/upyog-ui/employee/login">upyog.niua.org/upyog-ui/employee/login</option>
+                        <option value="https://niuatt.niua.in/upyog-ui/employee/login">niuatt.niua.in/upyog-ui/employee/login</option>
+                        <option value="http://localhost:8080/upyog-ui/employee/login">localhost:8080/upyog-ui/employee/login</option>
+                        <option value="https://upyog.niua.org/cnd-ui/employee/login">upyog.niua.org/cnd-ui/employee/login</option>
+                        <option value="https://niuatt.niua.in/cnd-ui/employee/login">niuatt.niua.in/cnd-ui/employee/login</option>
+                        <option value="https://upyog.niua.org/sv-ui/employee/login">upyog.niua.org/sv-ui/employee/login</option>
+                        <option value="https://niuatt.niua.in/sv-ui/employee/login">niuatt.niua.in/sv-ui/employee/login</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Module Name *</label>
+                    <select name="moduleName" required>
+
+                        <option value="">Select Module</option>
+                        <option value="STREET_VENDING">Street Vending</option>
+                        <option value="PET_REGISTRATION">Pet Registration</option>
+                        <option value="TRADE_LICENSE">Trade License</option>
+                        <option value="TRADE_LICENSE1">Trade License Inbox</option>
+                        <option value="ADVERTISEMENT">Advertisement</option>
+                        <option value="TREE_PRUNING">Tree Pruning</option>
+                        <option value="TREE_PRUNING_VERIFIER">Tree Pruning Verifier</option>
+                        <option value="WATER_TANKER">Water Tanker</option>
+                        <option value="MOBILE_TOILET">Mobile Toilet</option>
+                        <option value="PROPERTY_TAX">Property Tax</option>
+                        <option value="PUBLIC_GRIEVANCE_REDRESSAL">Public Grievance Redressal</option>
+                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM">Online Building Plan Approval System</option>
+                        <option value="ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC">Online Building Plan Approval System OC</option>
+                        <option value="EWASTE_MANAGEMENT_SYSTEM">E-Waste</option>
+                        <option value="ASSET_MANAGEMENT_SYSTEM">Asset Management</option>
+                        <option value="ASSET_MANAGEMENT_SYSTEM_VERIFIER">Asset Management Verifier</option>
+                        <option value="ASSET_MANAGEMENT_SYSTEM_APPROVER">Asset Management Approver</option>
+                        <option value="COMMUNITY_HALL_BOOKING">Community Hall Booking </option>
+                        <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition </option>
+                        <option value="DESLUDGING_EMPLOYEE_UPDATE">Desludging Service Update </option>
+                        <option value="DESLUDGING_EMPLOYEE_COMPLETE">Desludging Service Complete </option>
+                        <option value="DESLUDGING_EMPLOYEE_PSSO">Desludging Service PSSO </option>
+                        <option value="DESLUDGING_EMPLOYEE_FSTPO">Desludging Service FSTPO </option>
+                        <option value="WATER_EMP">Water Service</option>
+                        <option value="SEWERAGE_EMP">Sewerage Service</option>
+                        <option value="FIRE_NOC">Fire NOC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" name="username" placeholder="SV_CEMP" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" placeholder="upyogTest@123" required>
+                </div>
+                <div class="form-group">
+                    <label>Application Number</label>
+                    <input type="text" name="applicationNumber" placeholder="SV-1013-000044">
+                </div>
+                <button type="submit">Run Test</button>
+            </form>
+            <div id="employeeResult" class="result"></div>
+        </div>
+
+        <!-- Vendor Testing Form -->
+        <div id="vendor" class="tab-content">
+            <h2>Vendor Application Testing</h2>
+            <form id="vendorForm">
+                <div class="form-group">
+                    <label>Base URL *</label>
+                    <select name="baseUrl" required>
+                        <option value="">Select Base URL</option>
+                        <option value="https://upyog-test.niua.org/upyog-ui/citizen/login">upyog-test.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/upyog-ui/citizen/login">upyog.niua.org/upyog-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/upyog-ui/citizen/login">niuatt.niua.in/upyog-ui/citizen/login</option>
+                        <option value="http://localhost:8080/upyog-ui/citizen/login">localhost:8080/upyog-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/cnd-ui/citizen/login">upyog.niua.org/cnd-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/cnd-ui/citizen/login">niuatt.niua.in/cnd-ui/citizen/login</option>
+                        <option value="https://upyog.niua.org/sv-ui/citizen/login">upyog.niua.org/sv-ui/citizen/login</option>
+                        <option value="https://niuatt.niua.in/sv-ui/citizen/login">niuatt.niua.in/sv-ui/citizen/login</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Module Name *</label>
+                    <select name="moduleName" required>
+
+
+                        <option value="WATER_TANKER_VENDOR">Water Tanker Vendor</option>
+                        <option value="MOBILE_TOILET_VENDOR">Mobile Toilet Vendor</option>
+                        <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition Vendor</option>
+
+
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number *</label>
+                    <input type="text" name="mobileNumber" placeholder="7906413996" required>
+                </div>
+                <div class="form-group">
+                    <label>OTP *</label>
+                    <input type="text" name="otp" value="123456" required>
+                </div>
+                <div class="form-group">
+                    <label>City Name *</label>
+                    <select name="cityName" required>
+                        <option value="">Select City</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Sankhali Municipal Council">Sankhali Municipal Council</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Nagpur">Nagpur</option>
+                        <option value="Noida">Noida</option>
+                        <option value="Dharamshala">Dharamshala</option>
+                        <option value="Kurali">Kurali</option>
+                        <option value="Mohali">Mohali</option>
+                        <option value="Patiala">Patiala</option>
+                        <option value="Shimla">Shimla</option>
+                        <option value="State">State</option>
+                        <option value="City A">City A</option>
+                        <option value="City B">City B</option>
+                        <option value="City C">City C</option>
+                        <option value="City D">City D</option>
+                        <option value="City E">City E</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Application Number</label>
+                    <input type="text" name="applicationNumber" placeholder="WT-1013-001139">
+                </div>
+                <button type="submit">Run Test</button>
+            </form>
+            <div id="vendorResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+         // =========================
+         // CITIZEN FORM SUBMIT
+         // =========================
+
+        document.getElementById('citizenForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+           const formData = new FormData(e.target);
+
+const selectedModules =
+    Array.from(
+        document.querySelectorAll(
+            'input[name="modules"]:checked'
+        )
+    ).map(cb => cb.value);
+
+const data = Object.fromEntries(formData);
+
+// Send comma-separated values to backend
+data.moduleName = selectedModules.join(",");
+            
+            const resultDiv = document.getElementById('citizenResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Running test...';
+
+            try {
+                window.open('http://65.0.8.57:8000', '_blank');
+                
+                const response = await fetch('/api/test/citizen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.text();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        });
+
+       // =========================
+       // EMPLOYEE FORM SUBMIT
+       // =========================
+
+        document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const resultDiv = document.getElementById('employeeResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Running test...';
+
+            try {
+                window.open('http://65.0.8.57:8080', '_blank');
+
+                const response = await fetch('/api/test/employee', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.text();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        });
+
+        // =========================
+       // VENDOR FORM SUBMIT
+       // =========================
+       document.getElementById('vendorForm').addEventListener('submit', async (e) => {
+           e.preventDefault();
+           const formData = new FormData(e.target);
+           const data = Object.fromEntries(formData);
+
+
+           const resultDiv = document.getElementById('vendorResult');
+           resultDiv.style.display = 'block';
+           resultDiv.className = 'result';
+           resultDiv.textContent = 'Running test...';
+
+
+           try {
+           window.open('http://65.0.8.57:8000', '_blank');
+               const response = await fetch('/api/test/vendor', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify(data)
+               });
+               const result = await response.text();
+               resultDiv.className = 'result success';
+               resultDiv.textContent = result;
+           } catch (error) {
+               resultDiv.className = 'result error';
+               resultDiv.textContent = 'Error: ' + error.message;
+           }
+       });
+       // =========================
+// AUTO-FILL LOGIC + MULTI-SELECT DROPDOWN
+// =========================
+
+// Employee/Vendor dropdown autofill
+document.querySelectorAll("select[name='moduleName']").forEach(select => {
+    select.addEventListener("change", function () {
+
+        const form = this.closest("form");
+
+        const mobileField = form.querySelector("input[name='mobileNumber']");
+        const otpField = form.querySelector("input[name='otp']");
+        const baseUrlField = form.querySelector("[name='baseUrl']");
+
+        if (!mobileField || !otpField) return;
+
+        let mobile = "7906413996";
+        let otp = "123456";
+
+        const baseUrl = baseUrlField ? baseUrlField.value : "";
+
+        if (
+            this.value === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ||
+            this.value === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC"
+        ) {
+            if (baseUrl.includes("niuatt.niua")) {
+                mobile = "7272727216";
+            } else if (baseUrl.includes("upyog.niua")) {
+                mobile = "8888888881";
+            }
+        }
+
+        mobileField.value = mobile;
+        otpField.value = otp;
+    });
+});
+
+// Citizen multi-select dropdown
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("moduleDropdown").classList.toggle("show");
+}
+
+function filterModules() {
+    const search = document.getElementById("moduleSearch").value.toLowerCase();
+    const labels = document.querySelectorAll("#moduleOptions label");
+
+    labels.forEach(label => {
+        const text = label.textContent.toLowerCase();
+        label.style.display = text.includes(search)
+            ? "flex"
+            : "none";
+    });
+}
+
+document.querySelectorAll("input[name='modules']").forEach(cb => {
+    cb.addEventListener("change", function () {
+        updateSelectedModules();
+        autoFillCitizenFields(this);
+    });
+});
+
+function updateSelectedModules() {
+    const selected = Array.from(
+        document.querySelectorAll("input[name='modules']:checked")
+    ).map(cb => cb.parentElement.textContent.trim());
+
+    document.getElementById("selectedModulesText").textContent =
+        selected.length > 0
+            ? selected.join(", ")
+            : "Select Modules";
+}
+
+function autoFillCitizenFields(moduleCheckbox) {
+    const form = moduleCheckbox.closest("form");
+
+    const mobileField = form.querySelector("input[name='mobileNumber']");
+    const otpField = form.querySelector("input[name='otp']");
+    const baseUrlField = form.querySelector("[name='baseUrl']");
+
+    if (!mobileField || !otpField) return;
+
+    let mobile = "7906413996";
+    let otp = "123456";
+
+    const baseUrl = baseUrlField ? baseUrlField.value : "";
+    const selectedModule = moduleCheckbox.value;
+
+    if (
+        selectedModule === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ||
+        selectedModule === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC"
+    ) {
+        if (baseUrl.includes("niuatt.niua")) {
+            mobile = "7272727216";
+        } else if (baseUrl.includes("upyog.niua")) {
+            mobile = "8888888881";
+        }
+    }
+     if (
+        selectedModule === "STREET_VENDING"
+         ) {
+        if (baseUrl.includes("niuatt.niua.in/sv-ui/citizen/login")) {
+            mobile = "8010012414";
+        }
+     }
+
+    mobileField.value = mobile;
+    otpField.value = otp;
+
+    mobileField.dispatchEvent(new Event('input', { bubbles: true }));
+    mobileField.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// Outside click close
+document.addEventListener("click", function(e) {
+    const dropdown = document.querySelector(".multi-select-container");
+
+    if (dropdown && !dropdown.contains(e.target)) {
+        document.getElementById("moduleDropdown").classList.remove("show");
+    }
+});
+    </script>
+</body>
+</html>

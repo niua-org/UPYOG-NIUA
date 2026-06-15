@@ -1,7 +1,7 @@
-import { CardHeader, Header, Toast, Card, StatusTable, Row, Loader, Menu, PDFSvg, SubmitBar, LinkButton, ActionBar, CheckBox, MultiLink, CardText, CardSubHeader } from "@upyog/digit-ui-react-components";
+import { CardHeader, Header, Toast, Card, StatusTable, Row, Loader, Menu, PDFSvg, SubmitBar, LinkButton, ActionBar, CheckBox, MultiLink, CardText, CardSubHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment, useEffect, useState } from "react";
-import { useParams, useHistory } from "react-router-dom";
-import { useQueryClient } from "react-query";
+import { useParams,  } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import BPAApplicationTimeline from "./BPAApplicationTimeline";
 import DocumentDetails from "../../../components/DocumentDetails";
@@ -36,7 +36,7 @@ const BpaApplicationDetail = () => {
   sessionStorage.setItem("isEDCRDisable", JSON.stringify(true));
   sessionStorage.setItem("BPA_IS_ALREADY_WENT_OFF_DETAILS", JSON.stringify(false));
 
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
   sessionStorage.setItem("bpaApplicationDetails", false);
   let isFromSendBack = false;
   const { data: stakeHolderDetails, isLoading: stakeHolderDetailsLoading } = Digit.Hooks.obps.useMDMS(stateCode, "StakeholderRegistraition", "TradeTypetoRoleMapping");
@@ -198,16 +198,16 @@ const BpaApplicationDetail = () => {
   function onActionSelect(action) {
     let path = data?.applicationData?.businessService == "BPA_OC" ? "ocbpa" : "bpa";
     if(action === "FORWARD") {
-      history.replace(`/upyog-ui/citizen/obps/sendbacktocitizen/ocbpa/${data?.applicationData?.tenantId}/${data?.applicationData?.applicationNo}/check`, { data: data?.applicationData, edcrDetails: data?.edcrDetails });
+      navigate(`/upyog-ui/citizen/obps/sendbacktocitizen/ocbpa/${data?.applicationData?.tenantId}/${data?.applicationData?.applicationNo}/check`, { replace: true, state: { data: data?.applicationData, edcrDetails: data?.edcrDetails } });
     }
-    if (action === "PAY") {
-      window.location.assign(`${window.location.origin}/upyog-ui/citizen/payment/collect/${`${getBusinessServices(data?.businessService, data?.applicationStatus)}/${id}/${data?.tenantId}?tenantId=${data?.tenantId}`}`);
+if (action === "PAY") {
+      window.location.assign(`${window.location.origin}/upyog-ui/citizen/payment/collect/${`${getBusinessServices(data?.businessService, data?.applicationStatus)}/${id}?tenantId=${data?.tenantId}`}`);
     }
     if (action === "SEND_TO_CITIZEN"){
       if (workflowDetails?.data?.processInstances?.length > 2) {
         window.location.replace(`/upyog-ui/citizen/obps/editApplication/${path}/${data?.applicationData?.tenantId}/${data?.applicationData?.applicationNo}`)
       } else {
-        getBPAFormData(data?.applicationData, mdmsData, history, t)
+        getBPAFormData(data?.applicationData, mdmsData, navigate, t)
       }
     }
     setSelectedAction(action);
@@ -232,7 +232,7 @@ const BpaApplicationDetail = () => {
         },
         onSuccess: (data, variables) => {
           setIsEnableLoader(false);
-          history.replace(`/upyog-ui/citizen/obps/response`, { data: data });
+          navigate(`/upyog-ui/citizen/obps/response`, { replace: true, state: { data: data } });
           setShowModal(false);
           setShowToast({ key: "success", action: selectedAction });
           setTimeout(closeToast, 5000);
@@ -470,7 +470,7 @@ const BpaApplicationDetail = () => {
                         onClick={() => downloadDiagram(scrutiny?.value)}
                         label={<PDFSvg />}>
                       </LinkButton>
-                      <p style={{ marginTop: "8px", marginBottom: "20px", fontWeight: "bold", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t(scrutiny?.text)}</p>
+                      <p style={{ marginTop: "8px", marginBottom: "20px", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t(scrutiny?.text)}</p>
                     </Fragment>
                   )) : null}
 

@@ -54,9 +54,9 @@ import { PTRService } from "./services/elements/PTR";
 import { ASSETService } from "./services/elements/ASSET";  
 import { CHBServices } from "./services/elements/CHB"; 
 import { ADSServices } from "./services/elements/ADS";
-import { SVService } from "./services/elements/SV";
 import { EwService } from "./services/elements/EW";
 import { EmployeeDashboardService } from "./services/elements/EMPDASHBOARD";
+import { GIS } from "./services/elements/GIS";
 import {CustomService} from "./services/elements/CustomService";    
 import { CMServices } from "./services/elements/CM";
 import { WTService } from "./services/elements/WT";
@@ -66,6 +66,10 @@ import { TPService } from "./services/elements/TP";
 
 import { PGRAIService } from "./services/elements/PGRAI";
 import { PGRAIUpdate } from "./services/elements/PGRAIUpdate";
+import { ESTService } from "./services/elements/EST";
+import { NDCService } from "./services/elements/NDC";
+import { ChallanGenerationService } from "./services/elements/ChallanGeneration";
+import {UpyogBotService} from "./services/elements/UpyogBot";
 
    
 
@@ -134,15 +138,19 @@ const initLibraries = () => {
   setupLibraries("CHBServices", CHBServices);
   setupLibraries("ADSServices", ADSServices);
   setupLibraries("EwService", EwService);
-  setupLibraries("SVService", SVService);
   setupLibraries("CMServices", CMServices);
   setupLibraries("EmployeeDashboardService", EmployeeDashboardService);
+  setupLibraries("GIS", GIS);
   setupLibraries("WTService",WTService);
   setupLibraries("VendorService", VendorService);
   setupLibraries("MTService", MTService);
   setupLibraries("TPService", TPService);
   setupLibraries("PGRAIService", PGRAIService);
   setupLibraries("PGRAIUpdate", PGRAIUpdate);
+  setupLibraries("ESTService", ESTService);
+  setupLibraries("NDCService", NDCService);
+  setupLibraries("ChallanGenerationService", ChallanGenerationService);
+  setupLibraries("UpyogBotService", UpyogBotService);
 
   return new Promise((resolve) => {
     initI18n(resolve);
@@ -150,3 +158,4 @@ const initLibraries = () => {
 };
 
 export { initLibraries, Enums, Hooks, subFormRegistry };
+export { default as useModuleBasePath } from "./hooks/useModuleBasePath";

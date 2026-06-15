@@ -7,7 +7,7 @@ import {
     Row,
     StatusTable,
     Dropdown
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -173,24 +173,24 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validate: { pattern: (val) => (/^[a-zA-Z\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
-                                        value={props.value}
+                                        value={field.value}
                                         autoFocus={focusIndex.index === assigndetails?.key && focusIndex.type === "assignedUser"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: assigndetails.key, type: "assignedUser" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.assignedUser ? errors?.assignedUser?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.assignedUser ? errors?.assignedUser?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_EMP_CODE")}</CardLabel>
                         <div className="field">
@@ -205,25 +205,25 @@ const OwnerForm = (_props) => {
                                             /^[a-zA-Z0-9\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                                     },
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
-                                        value={props.value}
+                                        value={field.value}
                                         // disable={isEditScreen}
                                         autoFocus={focusIndex.index === assigndetails?.key && focusIndex.type === "employeeCode"}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                             setFocusIndex({ index: assigndetails.key, type: "employeeCode" });
                                         }}
                                         onBlur={(e) => {
                                             setFocusIndex({ index: -1 });
-                                            props.onBlur(e);
+                                            field.onBlur(e);
                                         }}
                                     />
                                 )}
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_DESIGNATION")}</CardLabel>
@@ -232,12 +232,12 @@ const OwnerForm = (_props) => {
                             control={control}
                             name={"designation"}
                             defaultValue={assigndetails?.designation}
-                            render={(props) => (
+                            render={({field}) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
-                                    select={props.onChange}
-                                    onBlur={props.onBlur}
+                                    selected={field.value}
+                                    select={field.onChange}
+                                    onBlur={field.onBlur}
                                     option={designationNamefromMDMS}
                                     optionKey="i18nKey"
                                     t={t}
@@ -246,7 +246,7 @@ const OwnerForm = (_props) => {
                         />
                     </LabelFieldPair>
 
-                    <CardLabelError style={errorStyle}>{localFormState.touched.designation ? errors?.designation?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.designation ? errors?.designation?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_ALLOCATED_DEPARTMENT")}</CardLabel>
@@ -255,12 +255,12 @@ const OwnerForm = (_props) => {
                             name={"allocatedDepartment"}
                             defaultValue={assigndetails?.allocatedDepartment}
 
-                            render={(props) => (
+                            render={({field}) => (
                                 <Dropdown
                                     className="form-field"
-                                    selected={props.value}
-                                    select={props.onChange}
-                                    onBlur={props.onBlur}
+                                    selected={field.value}
+                                    select={field.onChange}
+                                    onBlur={field.onBlur}
                                     option={departNamefromMDMS}
                                     optionKey="i18nKey"
                                     t={t}
@@ -268,7 +268,7 @@ const OwnerForm = (_props) => {
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.allocatedDepartment ? errors?.allocatedDepartment?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.allocatedDepartment ? errors?.allocatedDepartment?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_TRANSFER_DATE")}</CardLabel>
@@ -281,12 +281,12 @@ const OwnerForm = (_props) => {
                                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                                     validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                                 }}
-                                render={(props) => (
+                                render={({field}) => (
                                     <TextInput
                                         type="date"
-                                        value={props.value}
+                                        value={field.value}
                                         onChange={(e) => {
-                                            props.onChange(e.target.value);
+                                            field.onChange(e.target.value);
                                         }}
                                         max={new Date().toISOString().split('T')[0]}
                                     />
@@ -294,7 +294,7 @@ const OwnerForm = (_props) => {
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
 
 
 

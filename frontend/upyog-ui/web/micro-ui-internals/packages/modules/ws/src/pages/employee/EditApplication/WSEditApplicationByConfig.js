@@ -1,7 +1,7 @@
-import { FormComposer, Header, Loader, Toast } from "@upyog/digit-ui-react-components";
+import { FormComposer, Header, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useHistory } from "react-router-dom";
+import { useLocation, } from "react-router-dom";
 import * as func from "../../../utils";
 import _ from "lodash";
 import { newConfig as newConfigLocal } from "../../../config/wsCreateConfig";
@@ -47,30 +47,30 @@ const convertEditApplicationDetails1 = (data, appData, serviceType) => {
     ],
     roadCuttingInfo: data?.roadCuttingDetails?.filter((o) => o.roadType.code != "").map((details) => (
       details?.id && details?.id !== null
-      ? 
-      {
-        id: details?.id,
-        roadType: details?.roadType?.code,
-        roadCuttingArea: details?.area,
-        status: details?.status 
-      } 
-    : {
-      roadType: details?.roadType?.code,
-      roadCuttingArea: details?.area,
-    } )),
+        ?
+        {
+          id: details?.id,
+          roadType: details?.roadType?.code,
+          roadCuttingArea: details?.area,
+          status: details?.status
+        }
+        : {
+          roadType: details?.roadType?.code,
+          roadCuttingArea: details?.area,
+        })),
     connectionNo: null,
     ...serviceType === "WATER" ?
-    {
-      connectionType: data?.connectionDetails?.[0]?.connectionType?.code || appData?.connectionType,
-      waterSource: data?.connectionDetails?.[0]?.sourceSubData?.code || appData?.waterSource,
-      pipeSize: data?.connectionDetails?.[0]?.pipeSize?.size || appData?.pipeSize,
-      noOfTaps: data?.connectionDetails?.[0]?.noOfTaps || appData?.noOfTaps,
-      sourceSubData: data?.connectionDetails?.[0]?.sourceSubData?.code || appData?.sourceSubData,
-    } : {
-      connectionType: 'Non Metered',
-      noOfWaterClosets: data?.connectionDetails?.[0]?.noOfWaterClosets || appData?.noOfWaterClosets || "",
-      noOfToilets: data?.connectionDetails?.[0]?.noOfToilets || appData?.noOfToilets || "",
-    },
+      {
+        connectionType: data?.connectionDetails?.[0]?.connectionType?.code || appData?.connectionType,
+        waterSource: data?.connectionDetails?.[0]?.sourceSubData?.code || appData?.waterSource,
+        pipeSize: data?.connectionDetails?.[0]?.pipeSize?.size || appData?.pipeSize,
+        noOfTaps: data?.connectionDetails?.[0]?.noOfTaps || appData?.noOfTaps,
+        sourceSubData: data?.connectionDetails?.[0]?.sourceSubData?.code || appData?.sourceSubData,
+      } : {
+        connectionType: 'Non Metered',
+        noOfWaterClosets: data?.connectionDetails?.[0]?.noOfWaterClosets || appData?.noOfWaterClosets || "",
+        noOfToilets: data?.connectionDetails?.[0]?.noOfToilets || appData?.noOfToilets || "",
+      },
     tenantId: data?.cpt?.details?.tenantId
   }
 
@@ -90,7 +90,7 @@ const convertEditApplicationDetails1 = (data, appData, serviceType) => {
         mobileNumber: data?.plumberDetails?.[0]?.plumberMobileNo || appData?.plumberMobileNo
       }
     ]
-  } 
+  }
 
   return payload;
 }
@@ -100,8 +100,8 @@ const convertEditApplicationDetails1 = (data, appData, serviceType) => {
 const WSEditApplicationByConfig = () => {
   const { t } = useTranslation();
   let { state } = useLocation();
-  state = state  ? (typeof(state) === "string" ? JSON.parse(state) : state) : {};
-  const history = useHistory();
+  state = state ? (typeof (state) === "string" ? JSON.parse(state) : state) : {};
+  const navigate = Digit.Hooks.useCustomNavigate();
   let filters = func.getQueryStringParams(location.search);
   const [canSubmit, setSubmitValve] = useState(false);
   const [showToast, setShowToast] = useState(null);
@@ -111,7 +111,7 @@ const WSEditApplicationByConfig = () => {
   const [isAppDetailsPage, setIsAppDetailsPage] = useState(false);
 
   let tenantId = Digit.ULBService.getCurrentTenantId();
-  tenantId ? tenantId : Digit.SessionStorage.get("CITIZEN.COMMON.HOME.CITY")?.code;
+  tenantId = tenantId || Digit.SessionStorage.get("CITIZEN.COMMON.HOME.CITY")?.code;
 
   const applicationNumber = filters?.applicationNumber;
   const editApplicationDetails = JSON.parse(sessionStorage.getItem("WS_EDIT_APPLICATION_DETAILS"));
@@ -121,9 +121,33 @@ const WSEditApplicationByConfig = () => {
   let { data: newConfig, isLoading: isConfigLoading } = Digit.Hooks.ws.useWSConfigMDMS.WSCreateConfig(stateId, {});
 
   let details = cloneDeep(state?.data?.applicationDetails);
-  const actionData = cloneDeep(state?.data?.action);
-  let { isLoading, isError, data: applicationDetails, error } = Digit.Hooks.ws.useWSDetailsPage(t, tenantId, details?.applicationNo, details?.applicationData?.serviceType,{privacy : Digit.Utils.getPrivacyObject() });
-  details = applicationDetails;
+
+  const shouldFetchDetails =
+    !!tenantId &&
+    !!applicationNumber &&
+    !!serviceType;
+
+  let {
+    isLoading,
+    isError,
+    data: applicationDetails,
+    error,
+  } = Digit.Hooks.ws.useWSDetailsPage(
+    t,
+    tenantId,
+    applicationNumber,
+    serviceType,
+    {
+      enabled: shouldFetchDetails,
+      retry: false,
+      refetchOnWindowFocus: false,
+      privacy: Digit.Utils.getPrivacyObject(),
+    }
+  );
+
+  if (applicationDetails) {
+    details = applicationDetails;
+  }
   const [propertyId, setPropertyId] = useState(new URLSearchParams(useLocation().search).get("propertyId"));
 
   const [sessionFormData, setSessionFormData, clearSessionFormData] = Digit.Hooks.useSessionStorage("PT_CREATE_EMP_WS_NEW_FORM", {});
@@ -131,7 +155,7 @@ const WSEditApplicationByConfig = () => {
 
   const { data: propertyDetails } = Digit.Hooks.pt.usePropertySearch(
     { filters: { propertyIds: propertyId }, tenantId: tenantId },
-    { filters: { propertyIds: propertyId }, tenantId: tenantId, enabled: propertyId && propertyId != "" ? true : false, privacy : Digit.Utils.getPrivacyObject() }
+    { filters: { propertyIds: propertyId }, tenantId: tenantId, enabled: propertyId && propertyId != "" ? true : false, privacy: Digit.Utils.getPrivacyObject() }
   );
 
   useEffect(() => {
@@ -144,32 +168,66 @@ const WSEditApplicationByConfig = () => {
       config.body = bodyDetails;
       setConfig(config);
     }
-  },[newConfig]);
+  }, [newConfig]);
 
   useEffect(() => {
     !propertyId && sessionFormData?.cpt?.details?.propertyId && setPropertyId(sessionFormData?.cpt?.details?.propertyId);
   }, [sessionFormData?.cpt]);
 
-  useEffect(async () => {
-    const IsDetailsExists = sessionStorage.getItem("IsDetailsExists") ? JSON.parse(sessionStorage.getItem("IsDetailsExists")) : false
-    if (details?.applicationData?.id && !IsDetailsExists) {
-      sessionStorage.setItem("appData",JSON.stringify(appData));
-      const convertAppData = await convertApplicationData(details, serviceType, false, false, t);
-      setSessionFormData({ ...sessionFormData, ...convertAppData });
-      setAppData({ ...convertAppData })
-      sessionStorage.setItem("IsDetailsExists", JSON.stringify(true));
-    }
-  }, [details,applicationDetails,sessionFormData?.cpt, sessionFormData, propertyDetails]);
+  useEffect(() => {
+    const loadData = async () => {
+      const IsDetailsExists = sessionStorage.getItem("IsDetailsExists")
+        ? JSON.parse(sessionStorage.getItem("IsDetailsExists"))
+        : false;
+
+      if (details?.applicationData?.id && !IsDetailsExists) {
+        sessionStorage.setItem("appData", JSON.stringify(appData));
+
+        const convertAppData = await convertApplicationData(
+          details,
+          serviceType,
+          false,
+          false,
+          t
+        );
+
+        setSessionFormData((prev) => ({
+          ...prev,
+          ...convertAppData,
+        }));
+
+        setAppData({ ...convertAppData });
+
+        sessionStorage.setItem("IsDetailsExists", JSON.stringify(true));
+      }
+    };
+
+    loadData();
+  }, [details, applicationDetails, propertyDetails]);
 
   useEffect(() => {
-    setSessionFormData({ ...sessionFormData, cpt: { details: propertyDetails?.Properties?.[0] } });
+    setSessionFormData((prev) => ({
+      ...prev,
+      cpt: { details: propertyDetails?.Properties?.[0] },
+    }));
   }, [propertyDetails]);
 
   useEffect(() => {
-    if (sessionFormData?.DocumentsRequired?.documents?.length > 0 || sessionFormData?.ConnectionDetails?.[0]?.water || sessionFormData?.ConnectionDetails?.[0]?.sewerage || sessionFormData?.cpt?.details && !isLoading) {
+    if (isError) {
+      setEnabledLoader(false);
+      return;
+    }
+
+    if (
+      (sessionFormData?.DocumentsRequired?.documents?.length > 0 ||
+        sessionFormData?.ConnectionDetails?.[0]?.water ||
+        sessionFormData?.ConnectionDetails?.[0]?.sewerage ||
+        sessionFormData?.cpt?.details) &&
+      !isLoading
+    ) {
       setEnabledLoader(false);
     }
-  }, [propertyDetails, sessionFormData, sessionFormData?.cpt]);
+  }, [propertyDetails, sessionFormData, sessionFormData?.cpt, isLoading, isError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -191,65 +249,63 @@ const WSEditApplicationByConfig = () => {
       setSessionFormData({ ...sessionFormData, ...formData });
     }
     if (Object.keys(formState.errors).length > 0 && Object.keys(formState.errors).length == 1 && formState.errors["owners"] && Object.values(formState.errors["owners"].type).filter((ob) => ob.type === "required").length == 0 && !formData?.cpt?.details?.propertyId) setSubmitValve(true);
-    else if( formData.ConnectionDetails?.[0]?.water && (formData.roadCuttingDetails?.[0]?.roadType?.code == "" 
-    || formData.roadCuttingDetails?.[0]?.area == "" 
-    || formData.plumberDetails?.[0]?.detailsProvidedBy == ""
-    || formData.connectionDetails?.[0]?.connectionType == ""
-    || formData.connectionDetails?.[0]?.waterSource == ""
-    || formData.connectionDetails?.[0]?.sourceSubData == "")
-    ){
+    else if (formData.ConnectionDetails?.[0]?.water && (formData.roadCuttingDetails?.[0]?.roadType?.code == ""
+      || formData.roadCuttingDetails?.[0]?.area == ""
+      || formData.plumberDetails?.[0]?.detailsProvidedBy == ""
+      || formData.connectionDetails?.[0]?.connectionType == ""
+      || formData.connectionDetails?.[0]?.waterSource == ""
+      || formData.connectionDetails?.[0]?.sourceSubData == "")
+    ) {
       setSubmitValve(false);
     }
-    else if( formData.ConnectionDetails?.[0]?.sewerage && (formData.roadCuttingDetails?.[0]?.roadType?.code == "" 
-    || formData.roadCuttingDetails?.[0]?.area == "" 
-    || formData.plumberDetails?.[0]?.detailsProvidedBy == ""
-    || formData.connectionDetails?.[0]?.noOfWaterClosets == ""
-    || formData.connectionDetails?.[0]?.noOfToilets == "")
-    ){
+    else if (formData.ConnectionDetails?.[0]?.sewerage && (formData.roadCuttingDetails?.[0]?.roadType?.code == ""
+      || formData.roadCuttingDetails?.[0]?.area == ""
+      || formData.plumberDetails?.[0]?.detailsProvidedBy == ""
+      || formData.connectionDetails?.[0]?.noOfWaterClosets == ""
+      || formData.connectionDetails?.[0]?.noOfToilets == "")
+    ) {
       setSubmitValve(false);
     }
-    else setSubmitValve(!(Object.keys(formState.errors).length));
+    else {
+      const hasRealErrors = Object.values(formState.errors).some(
+        (error) =>
+          error?.type &&
+          Object.keys(error.type || {}).length > 0
+      );
+
+      setSubmitValve(!hasRealErrors);
+    }
   };
 
   const onSubmit = async (data) => {
-    if(!canSubmit){
+    if (!canSubmit) {
       setShowToast({ warning: true, message: "PLEASE_FILL_MANDATORY_DETAILS" });
-      setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
+      setTimeout(() => setShowToast(false), 3000);
+      return;
     }
-    else{
-    const details = sessionStorage.getItem("WS_EDIT_APPLICATION_DETAILS") ? JSON.parse(sessionStorage.getItem("WS_EDIT_APPLICATION_DETAILS")) : {};
+
+    const details = sessionStorage.getItem("WS_EDIT_APPLICATION_DETAILS")
+      ? JSON.parse(sessionStorage.getItem("WS_EDIT_APPLICATION_DETAILS"))
+      : {};
+
     let convertAppData = await convertEditApplicationDetails1(data, details, serviceType);
+
     if (sessionAhocFormData?.adhocPenalty) convertAppData.additionalDetails.adhocPenalty = parseInt(sessionAhocFormData?.adhocPenalty);
     if (sessionAhocFormData?.adhocPenaltyComment) convertAppData.additionalDetails.adhocPenaltyComment = sessionAhocFormData?.adhocPenaltyComment || "";
     if (sessionAhocFormData?.adhocPenaltyReason) convertAppData.additionalDetails.adhocPenaltyReason = sessionAhocFormData?.adhocPenaltyReason || "";
     if (sessionAhocFormData?.adhocRebate) convertAppData.additionalDetails.adhocRebate = parseInt(sessionAhocFormData?.adhocRebate);
     if (sessionAhocFormData?.adhocRebateComment) convertAppData.additionalDetails.adhocRebateComment = sessionAhocFormData?.adhocRebateComment || "";
     if (sessionAhocFormData?.adhocRebateReason) convertAppData.additionalDetails.adhocRebateReason = sessionAhocFormData?.adhocRebateReason || "";
-    const reqDetails = data?.ConnectionDetails?.[0]?.serviceName == "WATER" ? { WaterConnection: convertAppData } : { SewerageConnection: convertAppData }
+
     setSubmitValve(false);
     sessionStorage.setItem("redirectedfromEDIT", true);
     sessionStorage.setItem("WS_SESSION_APPLICATION_DETAILS", JSON.stringify(convertAppData));
-     window.location.assign(`${window.location.origin}${state?.url}`);
 
-    // if (mutate) {
-    //   mutate(reqDetails, {
-    //     onError: (error, variables) => {
-    //       setShowToast({ key: "error", message: error?.message ? error.message : error });
-    //       setTimeout(closeToastOfError, 5000);
-    //       setSubmitValve(true);
-    //     },
-    //     onSuccess: (data, variables) => {
-    //       clearSessionAdhocFormData();
-    //       setSessionAdhocFormData({});
-    //       setShowToast({ key: false, message: "WS_APPLICATION_SUBMITTED_SUCCESSFULLY_LABEL" });
-    //       setIsAppDetailsPage(true);
-    //       // setTimeout(closeToast(), 5000);
-    //     },
-    //   });
-    // }
-    }
+    // Build fallback URL from available query params
+    const redirectUrl = state?.url
+      || `/upyog-ui/employee/ws/application-details?applicationNumber=${applicationNumber}&tenantId=${tenantId}&service=${serviceType}&from=WS_SEWERAGE_APPLICATION_SEARCH`;
+
+    window.location.assign(`${window.location.origin}${redirectUrl}`);
   };
 
 
@@ -257,8 +313,16 @@ const WSEditApplicationByConfig = () => {
     setShowToast(null);
   };
 
-  if (enabledLoader || isConfigLoading) {
+  if (isConfigLoading || (enabledLoader && !isError)) {
     return <Loader />;
+  }
+
+  if (isError) {
+    return (
+      <div style={{ padding: "16px" }}>
+        Failed to load application details
+      </div>
+    );
   }
 
   return (

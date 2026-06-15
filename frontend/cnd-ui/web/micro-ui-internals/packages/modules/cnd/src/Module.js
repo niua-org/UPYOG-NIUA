@@ -30,6 +30,8 @@ import PickupArrivalDetails from "./pageComponents/PickupArrivalDetails";
 import DisposeDetails from "./pageComponents/DisposeDetails";
 import FacilitySubmissionResponse from "./pages/employee/FacilityCentre/FacilitySubmissionResponse";
 import Address from "./pageComponents/Address";
+import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
+
 
 const componentsToRegister = {
   ApplicantDetails,
@@ -56,7 +58,9 @@ const componentsToRegister = {
   PickupArrivalDetails,
   DisposeDetails,
   FacilitySubmissionResponse,
-  Address
+  Address,
+  EnhancedReport,
+  ReportSearchApplication
   };
   
   // function to register the component as per standard 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FormStep, RadioButtons, LabelFieldPair, CardLabel, Dropdown, Loader, TextInput, CheckBox } from "@upyog/digit-ui-react-components";
+import { FormStep, RadioButtons, LabelFieldPair, CardLabel, Dropdown, Loader, TextInput, CheckBox } from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../../components/TLTimeline";
 
 const IsMutationPending = (props) => {
@@ -7,7 +7,7 @@ const IsMutationPending = (props) => {
 
   const menu = [{ code: "YES" }, { code: "NO" }];
 
-  const [isMutationInCourt, setMutationInCourt] = useState(formData?.[config.key]?.isMutationInCourt);
+  const [isMutationInCourt, setMutationInCourt] = useState(formData?.[config.key]?.isMutationInCourt || { code: "NO" });
   const [caseDetails, setCaseDetails] = useState(formData?.[config.key]?.caseDetails || "");
 
   const goNext = () => {
@@ -43,7 +43,7 @@ const IsMutationPending = (props) => {
           </CardLabel> */}
           <div className="field" style={{ width: "55%" }}>
             <CheckBox
-              label={`${t("PT_MUTATION_COURT_PENDING_OR_NOT")}` + <span className="check-page-link-button"> *</span>}
+              label={<React.Fragment>{t("PT_MUTATION_COURT_PENDING_OR_NOT")}<span className="check-page-link-button"> *</span></React.Fragment>}
               name={"isMutationInCourt"}
               onChange={setIsMutationInCourt}
               checked={isMutationInCourt?.code === "YES" ? true : false}

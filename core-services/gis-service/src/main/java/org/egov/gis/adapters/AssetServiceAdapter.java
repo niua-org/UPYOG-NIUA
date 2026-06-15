@@ -37,7 +37,8 @@ public class AssetServiceAdapter implements MunicipalServiceAdapter {
 
         try {
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(getServiceEndpoint())
-                    .queryParam("tenantId", request.getTenantId());
+                    .queryParam("tenantId", request.getTenantId())
+                    .queryParam("isInterServiceCall", true);
 
             if (request.getSearchCriteria() != null && !request.getSearchCriteria().isEmpty()) {
                 for (Map.Entry<String, Object> entry : request.getSearchCriteria().entrySet()) {

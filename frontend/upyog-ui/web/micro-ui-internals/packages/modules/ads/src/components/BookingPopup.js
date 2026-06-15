@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from "react";
-import { Modal, Card,SubmitBar} from "@upyog/digit-ui-react-components";
+import { Modal, Card,SubmitBar} from "@nudmcdgnpm/digit-ui-react-components";
 import { ExistingBookingDetails } from "./ExistingBookingDetails";
 
 const Close = () => (
@@ -42,7 +42,7 @@ const BookingPopup = ({ t, closeModal,onSubmit,setExistingDataSet,Searchdata }) 
 
     // Prepare form data for Advertisement Service
     const formdata = {
-        advertisementSlotSearchCriteria: Searchdata.map((item) => ({
+        advertisementSlotSearchCriteria: Searchdata?.map((item) => ({
             bookingId: "",
             addType: item?.addTypeCode,
             bookingStartDate: item?.bookingDate,

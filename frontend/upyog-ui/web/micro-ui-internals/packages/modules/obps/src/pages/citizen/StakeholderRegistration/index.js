@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "react-query";
-import { useRouteMatch, useLocation, useHistory, Switch, Route, Redirect } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLocation, Route,  Routes, Navigate } from "react-router-dom";
 import { newConfig as newConfigBPAREG } from "../../../config/stakeholderConfig";
 // import CheckPage from "./CheckPage";
 // import StakeholderAcknowledgement from "./StakeholderAcknowledgement";
@@ -10,9 +10,9 @@ import { newConfig as newConfigBPAREG } from "../../../config/stakeholderConfig"
 const StakeholderRegistration = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { path, url } = useRouteMatch();
+  const { path, url } = Digit.Hooks.useModuleBasePath();
   const { pathname, state } = useLocation();
-  const history = useHistory();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("BUILDING_PERMIT", state?.edcrNumber ? { data: { scrutinyNumber: { edcrNumber: state?.edcrNumber }}} : {});
@@ -23,11 +23,11 @@ const StakeholderRegistration = () => {
   const goNext = (skipStep) => {
     const currentPath = pathname.split("/").pop();
     const { nextStep } = config.find((routeObj) => routeObj.route === currentPath);
-    let redirectWithHistory = history.push;
+    let redirectWithHistory = navigate;
     if (nextStep === null) {
-      return redirectWithHistory(`${path}/check`);
+      return redirectWithHistory(`/check`);
     }
-    redirectWithHistory(`${path}/${nextStep}`);
+    redirectWithHistory(`/${nextStep}`);
 
   }
 
@@ -36,7 +36,7 @@ const StakeholderRegistration = () => {
     queryClient.invalidateQueries("PT_CREATE_PROPERTY");
   };
   const createApplication = async () => {
-    history.push(`${path}/acknowledgement`);
+    navigate(`/acknowledgement`);
   };
 
   const handleSelect = (key, data, skipStep, isFromCreateApi) => {
@@ -67,26 +67,22 @@ const StakeholderRegistration = () => {
   const StakeholderAcknowledgement = Digit?.ComponentRegistryService?.getComponent('StakeholderAcknowledgement');
 
   return (
-    <Switch>
+    <Routes>
       {config.map((routeObj, index) => {
         const { component, texts, inputs, key } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
-          <Route path={`${path}/${routeObj.route}`} key={index}>
-            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />
-          </Route>
+          <Route
+            path={`/${routeObj.route}`}
+            key={index}
+            element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />}
+          />
         );
       })}
-       <Route path={`${path}/check`}>
-          <CheckPage onSubmit={createApplication} value={params} />
-        </Route>
-        <Route path={`${path}/acknowledgement`}>
-        <StakeholderAcknowledgement data={params} onSuccess={onSuccess} />
-      </Route>
-      <Route>
-        <Redirect to={`${path}/${config.indexRoute}`} />
-      </Route>
-    </Switch>
+      <Route path={`/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
+      <Route path={`/acknowledgement`} element={<StakeholderAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="*" element={<Navigate to={`/${config.indexRoute}`} replace />} />
+    </Routes>
   );
 };
 

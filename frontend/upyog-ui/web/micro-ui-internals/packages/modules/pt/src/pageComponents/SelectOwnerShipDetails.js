@@ -7,9 +7,9 @@ import {
   CardLabel,
   CardLabelError,
   Loader,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { cardBodyStyle } from "../utils";
-import FormStep from "../../../../react-components/src/molecules/FormStep"
+import {FormStep} from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 
@@ -151,7 +151,7 @@ const SelectOwnerShipDetails = ({ t, config, onSelect, userType, formData, onBlu
             t={t}
           />
         </LabelFieldPair>
-        {formState.touched?.[config.key] ? (
+        {formState.touchedFields?.[config.key] ? (
           <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
             {formState.errors[config.key]?.message}
           </CardLabelError>

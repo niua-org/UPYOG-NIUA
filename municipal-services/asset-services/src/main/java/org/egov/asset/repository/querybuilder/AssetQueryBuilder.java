@@ -62,6 +62,7 @@ public class AssetQueryBuilder {
             + "asset.assetstatus, "
             + "asset.createdtime, "
             + "asset.assetAssignable, "
+            + "asset.additionaldetails, "
             + "assign.isassigned, "
             + "assign.assignedusername, "
             + "assign.employeecode, "

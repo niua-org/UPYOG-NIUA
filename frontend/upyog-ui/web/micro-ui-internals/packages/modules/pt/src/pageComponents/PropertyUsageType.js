@@ -7,7 +7,7 @@ import {
   CardLabel,
   Dropdown,
   CardLabelError,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import { cardBodyStyle } from "../utils";
 import { useLocation } from "react-router-dom";
 
@@ -92,8 +92,8 @@ const PropertyUsageType = ({ t, config, onSelect, userType, formData, formState,
         setError(config.key, { type: "required", message: t(`CORE_COMMON_REQUIRED_ERRMSG`) });
       } else {
         clearErrors(config.key);
+        goNext();
       }
-      goNext();
     }
   }, [usageCategoryMajor]);
 
@@ -115,7 +115,7 @@ const PropertyUsageType = ({ t, config, onSelect, userType, formData, formState,
             t={t}
           />
         </LabelFieldPair>
-        {formState.touched[config.key] ? (
+        {formState.touchedFields?.[config.key] ? (
           <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
             {formState.errors?.[config.key]?.message}
           </CardLabelError>

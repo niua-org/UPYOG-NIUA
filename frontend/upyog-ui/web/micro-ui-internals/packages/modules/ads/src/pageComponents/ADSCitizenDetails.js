@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FormStep, TextInput, CardLabel, MobileNumber, Card, CardSubHeader } from "@upyog/digit-ui-react-components";
+import { FormStep, TextInput, CardLabel, MobileNumber, Card, CardSubHeader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/ADSTimeline";
 import ADSCartAndCancellationPolicyDetails from "../components/ADSCartAndCancellationPolicyDetails";
@@ -53,7 +53,7 @@ const ADSCitizenDetails = ({ t, config, onSelect, userType, formData,value=formD
   const goNext = () => {
     let applicantData = formData.applicant && formData.applicant[index];
     // Create the formdata object
-    let cartDetails = value?.cartDetails.map((slot) => {
+    let cartDetails = value?.cartDetails?.map((slot) => {
       return { 
         addType:slot.addTypeCode,
         faceArea:slot.faceAreaCode,
@@ -181,7 +181,7 @@ const ADSCitizenDetails = ({ t, config, onSelect, userType, formData,value=formD
             ValidationRequired={true}
             {...(validation = {
               required: true,
-              pattern: "[A-Za-z0-9._%+-]+@[a-z0-9.-]+.[a-z]{2,4}$",
+              pattern: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
               type: "email",
               title: t("CHB_NAME_ERROR_MESSAGE"),
             })}
