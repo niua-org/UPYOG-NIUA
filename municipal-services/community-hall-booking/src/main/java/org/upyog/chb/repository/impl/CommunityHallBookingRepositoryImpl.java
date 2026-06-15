@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
@@ -219,58 +218,48 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	@Override
 	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
 			boolean updateBookingStatus) {
-		String bookingId = criteria.getBookingId();
+		createBookingTimer(criteria, requestInfo, updateBookingStatus, null);
+	}
+
+	@Override
+	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
+			boolean updateBookingStatus, List<BookingPaymentTimerDetails> timerDetails) {
+		String bookingId = getTimerBookingReference(criteria);
 		String createdBy = requestInfo.getUserInfo().getUuid();
 		long createdTime = CommunityHallBookingUtil.getCurrentTimestamp();
-		String communitycode = criteria.getCommunityHallCode();
-		String hallcode = criteria.getHallCode();
 		String lastModifiedBy = requestInfo.getUserInfo().getUuid();
 		long lastModifiedTime = CommunityHallBookingUtil.getCurrentTimestamp();
-		String tenantId = criteria.getTenantId();
 
-		// Parse bookingStartDate and bookingEndDate into LocalDate
-		LocalDate startDate = LocalDate.parse(criteria.getBookingStartDate());
-		LocalDate endDate = LocalDate.parse(criteria.getBookingEndDate());
-
-//		// Log the information at the beginning of the method
-//		log.info("Executing Insert Query with the following details: ");
-//		log.info("Booking ID: {}", bookingId);
-//		log.info("Created By: {}", createdBy);
-//		log.info("Created Time: {}", createdTime);
-//
-//		// Query execution
-//		String query = CommunityHallBookingQueryBuilder.PAYMENT_TIMER_INSERT_QUERY;
-//		jdbcTemplate.update(query, bookingId, createdBy, createdTime, "ACTIVE", null, communitycode, hallcode, lastModifiedBy, lastModifiedTime);
-
-		// Log the information
-		log.info("Executing Insert Query with the following details: ");
-		log.info("Booking ID: {}", bookingId);
-		log.info("Created By: {}", createdBy);
-		log.info("Created Time: {}", createdTime);
-		log.info("Community Code: {}", communitycode);
-		log.info("Hall Code: {}", hallcode);
-		log.info("Date Range: {} to {}", startDate, endDate);
-
-		// Iterate through the date range
 		List<Object[]> batchArgs = new ArrayList<>();
-		for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-			batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", // Status
-					null, // Booking No (optional, replace with actual value if available)
-					communitycode, hallcode, date, // Booking Date
-					tenantId, lastModifiedBy, lastModifiedTime });
+		if (timerDetails != null && !timerDetails.isEmpty()) {
+			for (BookingPaymentTimerDetails detail : timerDetails) {
+				batchArgs.add(new Object[] { detail.getBookingId(), detail.getCreatedBy(), detail.getCreatedTime(),
+						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getCommunityHallcode(),
+						detail.getHallcode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
+						lastModifiedTime });
+			}
+		} else {
+			var hallCodes = org.upyog.chb.util.CommunityHallSlotCriteriaUtil.resolveHallCodes(criteria);
+			var bookingDates = org.upyog.chb.util.CommunityHallSlotCriteriaUtil.resolveBookingDates(criteria);
+			for (var date : bookingDates) {
+				for (var hallcode : hallCodes) {
+					batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", null,
+							criteria.getCommunityHallCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
+							lastModifiedTime });
+				}
+			}
 		}
 
-		// Execute batch insert
-		String query = CommunityHallBookingQueryBuilder.PAYMENT_TIMER_INSERT_QUERY;
-		jdbcTemplate.batchUpdate(query, batchArgs);
-
-		// Log after the query execution
-		log.info("Insert Query Executed Successfully for Booking ID: {}", bookingId);
+		log.info("Insert payment timer rows bookingId={} count={}", bookingId, batchArgs.size());
+		jdbcTemplate.batchUpdate(CommunityHallBookingQueryBuilder.PAYMENT_TIMER_INSERT_QUERY, batchArgs);
 
 		if (updateBookingStatus) {
 			updateBookingSynchronously(bookingId, createdBy, null, BookingStatusEnum.PENDING_FOR_PAYMENT.toString());
 		}
+	}
 
+	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 	
 //	@Override
@@ -359,13 +348,22 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
+	public void updateTimerBookingId(String bookingId, String bookingNo, String draftId) {
+		if (StringUtils.isBlank(draftId)) {
+			return;
+		}
+		jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_TIMER_BOOKING_ID_QUERY, bookingId, bookingNo,
+				draftId);
+	}
+
+	@Override
 	public List<BookingPaymentTimerDetails> getBookingTimer(CommunityHallSlotSearchCriteria criteria) {
 		
 		List<BookingPaymentTimerDetails> paymentTimerList = jdbcTemplate.query(CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, 
-				new Object[]{criteria.getBookingId()},
+				new Object[]{getTimerBookingReference(criteria)},
 				new GenericRowMapper<>(BookingPaymentTimerDetails.class));
 		
-		log.info("Booking payment timer query : {} and parmas : {}", CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, criteria.getBookingId());
+		log.info("Booking payment timer query : {} and parmas : {}", CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, getTimerBookingReference(criteria));
 		
 		return paymentTimerList;
 	}

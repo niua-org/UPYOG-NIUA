@@ -78,7 +78,11 @@ public class AdvertisementBookingQueryBuilder {
 	public static final String UPDATE_BOOKING_STATUS =  "update eg_adv_booking_detail set booking_status = ?, lastmodifiedby=?, lastmodifiedtime=? "
 			+ " where booking_id = ?";
 
-	public static final String PAYMENT_TIMER_QUERY = "INSERT INTO eg_adv_payment_timer(booking_id, createdby, createdtime, status, booking_no, lastmodifiedby, lastmodifiedtime, add_type, location, face_area, night_light, booking_start_date, booking_end_date, booking_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::DATE, ?::DATE, ?::DATE);\n";
+	public static final String PAYMENT_TIMER_QUERY = "INSERT INTO eg_adv_payment_timer(booking_id, createdby, createdtime, status, booking_no, lastmodifiedby, lastmodifiedtime, add_type, location, face_area, night_light, booking_start_date, booking_end_date, booking_date, tenant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::DATE, ?::DATE, ?::DATE, ?);\n";
+
+	public static final String GET_PAYMENT_TIMER_BY_BOOKING_ID = "SELECT booking_id, createdby, createdtime, status, tenant_id, add_type, location, face_area, night_light, booking_date FROM eg_adv_payment_timer WHERE booking_id = ?";
+
+	public static final String GET_PAYMENT_TIMER_BY_CREATED_BY = "SELECT booking_id, createdby, createdtime, status, tenant_id, add_type, location, face_area, night_light, booking_date FROM eg_adv_payment_timer WHERE createdby = ?";
 
 	public static final String DRAFT_QUERY = "INSERT INTO eg_adv_draft_detail(draft_id, tenant_id, user_uuid, draft_application_data, createdby, lastmodifiedby, createdtime, lastmodifiedtime) VALUES (?, ?, ?,CAST(? AS jsonb), ?, ?, ?, ?);\n";
 
