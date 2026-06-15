@@ -1,9 +1,15 @@
 /**
  * package-builder.mjs
- * 
- * @author Shivank - NIUA
  *
+ * Purpose:
  * Centralized Vite library build script for all UPYOG UI workspace modules.
+ *
+ * Responsibilities:
+ * - Reads workspaces from root package.json to discover packages.
+ * - Sorts packages topologically to ensure dependencies build first.
+ * - Compiles packages into dist/ folder in CJS/ES formats via Vite lib mode.
+ *
+ * @author Shivank - NIUA
  *
  * WHY THIS EXISTS:
  * After migrating from CRA/Webpack to Vite, individual module build scripts

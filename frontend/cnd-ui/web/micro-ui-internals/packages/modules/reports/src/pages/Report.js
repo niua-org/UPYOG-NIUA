@@ -1,3 +1,15 @@
+/**
+ * Report.js
+ *
+ * Purpose:
+ * Page route wrapper for report outputs.
+ *
+ * Responsibilities:
+ * - Acts as the primary route page mapping route params (moduleName, reportName).
+ * - Dispatches metadata and search requests utilizing tenant context defaults.
+ * - Feeds query state indicators and records arrays into the SearchApplication component.
+ */
+
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next';
 import { useParams } from "react-router-dom";

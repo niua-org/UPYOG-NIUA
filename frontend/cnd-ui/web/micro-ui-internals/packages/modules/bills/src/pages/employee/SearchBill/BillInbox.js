@@ -1,3 +1,15 @@
+/**
+ * BillInbox.js
+ *
+ * Purpose:
+ * Inbox search page for standard bill searches in the employee portal.
+ *
+ * Responsibilities:
+ * - Displays search inputs (bill number, consumer code, mobile number) and table output.
+ * - Hooks up pagination and sorting capabilities to search queries.
+ * - Switches view representation adaptively between desktop inbox and mobile cards.
+ */
+
 import { Header } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

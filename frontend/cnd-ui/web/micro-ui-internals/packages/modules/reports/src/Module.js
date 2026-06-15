@@ -1,3 +1,15 @@
+/**
+ * Module.js
+ *
+ * Purpose:
+ * Reports module initialization and component registration.
+ *
+ * Responsibilities:
+ * - Initializes and configures the reports components registry.
+ * - Exports the ReportsModule and exposes nested sub-components (EnhancedReport, ReportSearchApplication).
+ * - Checks user authorization type and mounts the EmployeeApp component.
+ */
+
 import React from "react";
 import EmployeeApp from "./pages";
 import ReportsCard from "./components/ReportsCard";

@@ -269,6 +269,31 @@ export function CNDDocumnetPreview({ documents, titleStyles, isSendBackFlow = fa
   );
 }
 
+/**
+ * Generates React Hook Form validation rules dynamically from
+ * the search field configuration.
+ *
+ * Why this is needed:
+ * - Inbox search fields are rendered dynamically from searchFields.js.
+ * - Validation properties such as maxLength, minLength, and pattern
+ *   exist in the configuration but are not directly understood by RHF.
+ * - This helper converts those configuration values into RHF-compatible
+ *   validation rules and applies standard UPYOG validations where required.
+ *
+ * Example:
+ * {
+ *   type: "mobileNumber",
+ *   maxLength: 10,
+ *   pattern: "^$|[6-9][0-9]{9}"
+ * }
+ *
+ * becomes:
+ * {
+ *   maxLength: { value: 10, message: ... },
+ *   pattern: { value: /^[6789][0-9]{9}$/, message: ... }
+ * }
+ */
+
 export const getValidationRules = (input) => {
   const rules = {};
   if (input.maxLength) {

@@ -1,9 +1,15 @@
 /**
  * package-publisher.mjs
- * 
- * @author Shivank - NIUA
  *
+ * Purpose:
  * Centralized NPM publish script for all UPYOG UI workspace modules.
+ *
+ * Responsibilities:
+ * - Resolves workspaces to be published, checking current NPM registry version to avoid duplicate publish.
+ * - Writes clean publish-ready package.json files into dist/ folder.
+ * - Runs npm publish against compile directories using public access settings.
+ *
+ * @author Shivank - NIUA
  *
  * WHY THIS EXISTS:
  * Modules in this monorepo have "main": "src/Module.js" in their package.json

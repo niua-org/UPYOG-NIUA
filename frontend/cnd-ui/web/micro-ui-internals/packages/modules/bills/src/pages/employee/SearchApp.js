@@ -1,3 +1,14 @@
+/**
+ * SearchApp.js
+ *
+ * Purpose:
+ * Search component wrapper for finding bills.
+ *
+ * Responsibilities:
+ * - Coordinates form submission logic and saves search parameters to session storage.
+ * - Invokes the bill search hook (useBillSearch) with filters like consumer code, bill number, and mobile number.
+ * - Renders the child search application UI component (PTSearchApplication).
+ */
 
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

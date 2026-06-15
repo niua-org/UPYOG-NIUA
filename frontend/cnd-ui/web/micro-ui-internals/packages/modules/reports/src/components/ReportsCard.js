@@ -1,3 +1,15 @@
+/**
+ * ReportsCard.js
+ *
+ * Purpose:
+ * Homepage card widget displaying report links.
+ *
+ * Responsibilities:
+ * - Defines links for Property Tax (PT) and Water & Sewerage (W&S) reports.
+ * - Controls link access by filtering against active employee roles.
+ * - Mounts the compiled action lists into the EmployeeModuleCard container.
+ */
+
 import { EmployeeModuleCard, ReceiptIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";

@@ -1,3 +1,15 @@
+/**
+ * index.js (Bills Utilities)
+ *
+ * Purpose:
+ * Common utility and helper methods for the bills module.
+ *
+ * Responsibilities:
+ * - Implements formatting utilities (e.g. converting epoch to date, dot replacement).
+ * - Defines print functions for receipts and bills.
+ * - Sets up retry/cancel actions for water and sewerage group bill job requests.
+ */
+
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect,useState,Fragment } from "react";
 import { useTranslation } from "react-i18next";

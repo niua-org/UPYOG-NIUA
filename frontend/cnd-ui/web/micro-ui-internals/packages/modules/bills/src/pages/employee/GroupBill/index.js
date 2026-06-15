@@ -1,3 +1,15 @@
+/**
+ * index.js (GroupBill)
+ *
+ * Purpose:
+ * Group bill inbox page for employee interface.
+ *
+ * Responsibilities:
+ * - Renders desktop and mobile views for searching and viewing group bills.
+ * - Connects to the billing search services and hooks (useBillSearch).
+ * - Manages filter selections, pagination states, and download/print triggers for group bills.
+ */
+
 import { Header, DownloadIcon, MultiLink,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

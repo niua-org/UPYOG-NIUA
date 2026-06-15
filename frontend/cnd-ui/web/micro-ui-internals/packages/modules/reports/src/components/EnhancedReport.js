@@ -1,3 +1,15 @@
+/**
+ * EnhancedReport.js
+ *
+ * Purpose:
+ * Main layout wrapper rendering report views dynamically.
+ *
+ * Responsibilities:
+ * - Fetches report configuration metadata and table data using API hooks.
+ * - Maps UI search inputs to request query formats expected by backend reports engine.
+ * - Transforms raw date epochs into readable locale dates for table rows.
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from "react-router-dom";

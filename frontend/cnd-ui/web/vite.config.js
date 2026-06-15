@@ -1,4 +1,16 @@
 /**
+ * vite.config.js
+ *
+ * Purpose:
+ * Main Vite configuration for UPYOG UI workspace.
+ *
+ * Responsibilities:
+ * - Configures local dev server (port 3000) and request proxies.
+ * - Performs dynamic monorepo package aliasing for workspaces.
+ * - Enforces single React/ReactDOM dependency resolution.
+ */
+
+/**
  * ========================= VITE CONFIG EXPLANATION =========================
  *
  * This configuration is designed for a monorepo setup where multiple internal

@@ -1,3 +1,15 @@
+/**
+ * SearchFormFieldsComponent.js
+ *
+ * Purpose:
+ * Dynamic inputs generator for reports query forms.
+ *
+ * Responsibilities:
+ * - Resolves metadata schemas into input controls (e.g. TextInput, Dropdown, MultiSelectDropdown, DatePicker).
+ * - Binds input values and error notifications to form validation controllers.
+ * - Implements form submission and filters reset triggers.
+ */
+
 import React, { Fragment } from "react";
 import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, CardLabelError, MobileNumber,MultiSelectDropdown,FilterFormField } from "@nudmcdgnpm/digit-ui-react-components";
 import { useWatch } from "react-hook-form";

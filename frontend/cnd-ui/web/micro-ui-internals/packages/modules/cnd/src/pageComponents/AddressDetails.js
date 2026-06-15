@@ -1,3 +1,15 @@
+/**
+ * AddressDetails.js
+ *
+ * Purpose:
+ * Form component capturing address details for application flow.
+ *
+ * Responsibilities:
+ * - Validates input fields including house number, street name, pincode, and landmark.
+ * - Fetches localities dynamically based on selected city.
+ * - Triggers state updates and parent step advancement on form submit.
+ */
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";

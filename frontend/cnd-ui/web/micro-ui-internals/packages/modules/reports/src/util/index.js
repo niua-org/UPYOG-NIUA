@@ -1,3 +1,13 @@
+/**
+ * index.js (Reports Utilities)
+ *
+ * Purpose:
+ * Utility helpers specific to reports verification logic.
+ *
+ * Responsibilities:
+ * - Defines the role check function (checkForEmployee) to authorize page links.
+ */
+
 export const checkForEmployee = (roles) => {
     const tenantId = Digit.ULBService.getCurrentTenantId();
     const userInfo = Digit.UserService.getUser();

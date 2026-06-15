@@ -1,3 +1,15 @@
+/**
+ * index.js (Reports Page Router)
+ *
+ * Purpose:
+ * Route manager for the reports module pages.
+ *
+ * Responsibilities:
+ * - Renders breadcrumb index navigation headers.
+ * - Maps dynamic report query routing paths (/search/:moduleName/:reportName).
+ * - Enforces private routing verification around components.
+ */
+
 import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";

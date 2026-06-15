@@ -1,3 +1,15 @@
+/**
+ * ResponseCancelBill.js
+ *
+ * Purpose:
+ * Renders the cancellation status/response view for a bill.
+ *
+ * Responsibilities:
+ * - Invokes the hook to process bill cancellation using location state params.
+ * - Displays success/failure banner and details based on the API response.
+ * - Provides navigation options back to employee home page.
+ */
+
 import { ActionBar, Banner, Card, CardText, Loader, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components"
 import React, { useEffect } from "react"
 import { useTranslation } from "react-i18next"

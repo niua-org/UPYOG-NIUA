@@ -1,3 +1,15 @@
+/**
+ * index.js (Employee Routing)
+ *
+ * Purpose:
+ * Router entry point for all employee bill modules.
+ *
+ * Responsibilities:
+ * - Implements breadcrumb rendering for navigation indicators.
+ * - Configures React Router routes for standard bill workflows (Search, Group Bills, Cancel Bills, Bill Details).
+ * - Coordinates MDMS configuration fetches for BillingService genie setup.
+ */
+
 import { PrivateRoute,BreadCrumb } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";

@@ -1,3 +1,15 @@
+/**
+ * ReportSearchApplication.js
+ *
+ * Purpose:
+ * Search page representation logic for report configurations.
+ *
+ * Responsibilities:
+ * - Coordinates search fields configuration and validation with react-hook-form.
+ * - Formats dynamic table structures, injecting row count indexes and summary totals.
+ * - Supplies document extraction actions (PDF/XLS downloads) and handles mobile details list layouts.
+ */
+
 import React, { Fragment, useState, useEffect, useMemo, useCallback, useRef, useReducer } from 'react'
 import SearchFormFieldsComponent from '../../../reports/src/components/SearchFormFieldsComponent'
 import { useForm, Controller } from "react-hook-form";
