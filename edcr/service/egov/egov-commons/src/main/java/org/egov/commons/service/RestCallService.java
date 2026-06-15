@@ -1,6 +1,7 @@
 package org.egov.commons.service;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -57,7 +59,10 @@ public class RestCallService {
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             HttpEntity<Object> entity = new HttpEntity<>(request, headers);
 
-            response = restTemplate.postForObject(uri.toString(), entity, Map.class);
+            ResponseEntity<Map> responseEntity = restTemplate.postForEntity(uri.toString(), entity, Map.class);
+            response = responseEntity.getBody();
+            LOG.debug("Response Status from RestCallservice.fetchResult: {}", responseEntity.getStatusCode());
+            LOG.debug("Fetched Result from RestCallService.fetchResult: " + objectMapper.writeValueAsString(response));
 
         } catch (HttpClientErrorException e) {
             LOG.error("Error occurred while calling API: status={}, body={}",
