@@ -53,6 +53,20 @@ public class SchemaDefinitionQueryBuilder {
             builder.append(" schema.code IN ( ").append(QueryUtil.createQuery(schemaDefCriteria.getCodes().size())).append(" )");
             QueryUtil.addToPreparedStatement(preparedStmtList, new HashSet<>(schemaDefCriteria.getCodes()));
         }
+        if (!Objects.isNull(schemaDefCriteria.getModuleName())) {
+
+            String moduleName = schemaDefCriteria.getModuleName().trim();
+
+            if (moduleName.length() < 3) {
+                throw new IllegalArgumentException(
+                    "Minimum 3 characters are required for module search."
+                );
+            }
+
+            QueryUtil.addClauseIfRequired(builder, preparedStmtList);
+            builder.append(" schema.code ILIKE ? ");
+            preparedStmtList.add(moduleName + "%.%");
+        }
 
         return builder.toString();
     }
