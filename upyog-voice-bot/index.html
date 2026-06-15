@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPYOG AI Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="/upyog-voice-bot/assets/styles.css">
 </head>
 
 <body>
@@ -69,9 +69,8 @@
         </div>
     </div>
 
-<script src="assets/constants.js"></script>
-<script src="assets/icons.js"></script>
-<script>
+    <script src="/upyog-voice-bot/assets/constants.js"></script>
+    <script src="/upyog-voice-bot/assets/icons.js"></script><script>
         // ============== STATE ==============
         // States, STATE_LABELS, CONFIG, BG_LAYERS, LANG_OPTIONS, LANG_PREFERENCES
         // are defined in assets/constants.js (loaded before this script).
@@ -778,21 +777,36 @@
                 const url = URL.createObjectURL(blob);
                 audioPool.push(url);
 
-                currentAudio = new Audio(url);
+                const audio = currentAudio = new Audio(url);
 
-                currentAudio.onended = function onAudioEnded() {
+                // Guard flag — browsers sometimes fire both onended and onerror
+                // for the same element. Only the first event should trigger cleanup.
+                let audioHandled = false;
+
+                audio.onended = function onAudioEnded() {
+                    if (audioHandled) return;
+                    audioHandled = true;
                     URL.revokeObjectURL(url);
                     currentAudio = null;
                     setState(States.LISTENING);
                     onTurnComplete();
                 };
 
-                currentAudio.onerror = function onAudioError() {
+                audio.onerror = function onAudioError() {
+                    if (audioHandled) return;
+                    audioHandled = true;
                     URL.revokeObjectURL(url);
                     currentAudio = null;
-                    addBotMessage('Sorry, could not play audio. Please try again.', null, null, null, null);
-                    setState(States.LISTENING);
-                    onTurnComplete();
+                    // If audio played for any time, treat as normal completion —
+                    // onerror can fire spuriously at the end of valid audio on some browsers.
+                    if (audio.currentTime > 0) {
+                        setState(States.LISTENING);
+                        onTurnComplete();
+                    } else {
+                        addBotMessage('Sorry, could not play audio. Please try again.', null, null, null, null);
+                        setState(States.LISTENING);
+                        onTurnComplete();
+                    }
                 };
 
                 await currentAudio.play();
