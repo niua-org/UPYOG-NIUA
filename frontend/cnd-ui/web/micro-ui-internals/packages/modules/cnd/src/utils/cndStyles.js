@@ -115,13 +115,6 @@ export const cndStyles= {
     marginBottom:"15px",
   },
 
-  errorStyle: { 
-    width: "70%", 
-    marginLeft: "30%", 
-    fontSize: "12px",
-    marginTop: "-21px"
-  },
-
   employeeSideContainer:{
     border: "1px solid #E3E3E3", 
     padding: "16px", 

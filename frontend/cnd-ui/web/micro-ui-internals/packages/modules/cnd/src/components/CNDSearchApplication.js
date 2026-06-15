@@ -122,14 +122,16 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
             <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("CND_APPLICATION_NUMBER")}</label>
-                    <TextInput name="applicationNumber" inputRef={register({})} />
+                    <TextInput name="applicationNumber" inputRef={register("applicationNumber").ref} {...register("applicationNumber")} />
                 </SearchField>
 
                 <SearchField>
                     <label>{t("CND_REGISTERED_MOB_NUMBER")}</label>
                     <MobileNumber
                         name="mobileNumber"
-                        inputRef={register({
+                        maxlength={10}
+                        maxLength={10}
+                        inputRef={register("mobileNumber", {
                             minLength: {
                                 value: 10,
                                 message: t("CORE_COMMON_MOBILE_ERROR"),
@@ -139,7 +141,21 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                                 message: t("CORE_COMMON_MOBILE_ERROR"),
                             },
                             pattern: {
-                                value: /[6789][0-9]{9}/,
+                                value: Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/,
+                                message: t("CORE_COMMON_MOBILE_ERROR"),
+                            },
+                        }).ref}
+                        {...register("mobileNumber", {
+                            minLength: {
+                                value: 10,
+                                message: t("CORE_COMMON_MOBILE_ERROR"),
+                            },
+                            maxLength: {
+                                value: 10,
+                                message: t("CORE_COMMON_MOBILE_ERROR"),
+                            },
+                            pattern: {
+                                value: Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/,
                                 message: t("CORE_COMMON_MOBILE_ERROR"),
                             },
                         })}
@@ -151,7 +167,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                 <SearchField>
                     <label>{t("ES_FROM_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} max={today} />}
                         name="fromDate"
                         control={control}
                     />
@@ -159,7 +175,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                 <SearchField>
                     <label>{t("ES_TO_DATE")}</label>
                     <Controller
-                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
+                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} max={today} />}
                         name="toDate"
                         control={control}
                     />

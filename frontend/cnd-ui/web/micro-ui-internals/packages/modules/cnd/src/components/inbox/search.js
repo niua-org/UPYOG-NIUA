@@ -8,7 +8,8 @@ import {
   ActionBar,
   CloseSvg,
   DatePicker,
-  MobileNumber
+  MobileNumber,
+  CardLabelError
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { cndStyles } from "../../utils/cndStyles";
@@ -27,6 +28,35 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
   const { handleSubmit, reset, watch, control, formState, setValue } = useForm({
     defaultValues: isInboxPage ? searchParams : { locality: null, city: null, ...searchParams },
   });
+
+  const getValidationRules = (input) => {
+    const rules = {};
+    if (input.maxLength) {
+      rules.maxLength = {
+        value: input.maxLength,
+        message: t(input.errorMessages?.maxLength || "CORE_COMMON_MOBILE_ERROR")
+      };
+    }
+    if (input.minLength) {
+      rules.minLength = {
+        value: input.minLength,
+        message: t(input.errorMessages?.minLength || "CORE_COMMON_MOBILE_ERROR")
+      };
+    }
+    if (input.pattern) {
+      let patternVal = input.pattern;
+      if (input.type === "mobileNumber") {
+        patternVal = Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/;
+      } else {
+        patternVal = new RegExp(input.pattern);
+      }
+      rules.pattern = {
+        value: patternVal,
+        message: t(input.errorMessages?.pattern || "CORE_COMMON_MOBILE_ERROR")
+      };
+    }
+    return rules;
+  };
 
   const form = watch();
 
@@ -77,7 +107,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
 
   const clearAll = (mobileView) => {
     return (
-      <LinkLabel style={mobileView?cndStyles.clearButtonMobile:cndStyles.clearButtonDesktop} onClick={clearSearch}>
+      <LinkLabel style={mobileView ? cndStyles.clearButtonMobile : cndStyles.clearButtonDesktop} onClick={clearSearch}>
         {t("ES_COMMON_CLEAR_SEARCH")}
       </LinkLabel>
     );
@@ -86,7 +116,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
   return (
     <form onSubmit={handleSubmit(onSubmitInput)}>
       <React.Fragment>
-        <div className="search-container" style={ isInboxPage ? cndStyles.searchContainerInbox:cndStyles.searchContainer}>
+        <div className="search-container" style={isInboxPage ? cndStyles.searchContainerInbox : cndStyles.searchContainer}>
           <div className="search-complaint-container">
             {(type === "mobile" || mobileView) && (
               <div className="complaint-header">
@@ -105,25 +135,32 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                       <Label>{t(input.label) + ` ${input.isMandatory ? "*" : ""}`}</Label>
                       {!input.type ? (
                         <Controller
-                          render={(props) => {
-                            return <TextInput onChange={props.onChange} value={props.value} />;
-                          }}
+                          render={({ field }) => (
+                            <TextInput onChange={field.onChange} value={field.value} maxlength={input.maxLength} maxLength={input.maxLength} />
+                          )}
                           name={input.name}
                           control={control}
                           defaultValue={""}
+                          rules={getValidationRules(input)}
                         />
                       ) : (
                         <Controller
-                          render={(props) => {
+                          render={({ field }) => {
                             const Comp = fieldComponents?.[input.type];
-                            return <Comp formValue={form} setValue={setValue} onChange={props.onChange} value={props.value} />;
+                            return <Comp formValue={form} setValue={setValue} onChange={field.onChange} value={field.value} maxlength={input.maxLength} maxLength={input.maxLength} />;
                           }}
                           name={input.name}
                           control={control}
                           defaultValue={""}
+                          rules={getValidationRules(input)}
                         />
                       )}
                     </span>
+                    {formState?.errors?.[input.name] && (
+                      <CardLabelError style={{ marginTop: "-10px", marginBottom: "10px" }}>
+                        {formState?.errors?.[input.name]?.message}
+                      </CardLabelError>
+                    )}
                   </div>
                 ))}
 
@@ -139,7 +176,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                   {!isInboxPage && <div>{clearAll()}</div>}
                 </div>
               )}
-            {isInboxPage && (
+              {isInboxPage && (
                 <div style={cndStyles.inboxClearButton} className="input-fields">
                   <div>{clearAll()}</div>
                 </div>
