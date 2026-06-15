@@ -6,6 +6,9 @@ WORKDIR /app
 # Install Maven
 RUN apk add --no-cache maven
 
+# Install Maven
+RUN apk add --no-cache maven
+
 # copy the project files
 COPY ${WORK_DIR}/pom.xml ./pom.xml
 COPY build/maven/start.sh ./start.sh
@@ -15,10 +18,12 @@ COPY build/maven/start.sh ./start.sh
 
 COPY ${WORK_DIR}/src ./src
 RUN mvn -B -f /app/pom.xml package
+RUN mvn -B -f /app/pom.xml package
 
 
 # Create runtime image
 
+FROM amazoncorretto:17-alpine
 FROM amazoncorretto:17-alpine
 
 WORKDIR /opt/egov
