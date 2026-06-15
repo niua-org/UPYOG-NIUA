@@ -8,14 +8,17 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import upyog.repository.DemandRepository;
 import upyog.repository.EstateRepository;
+import upyog.util.MdmsUtil;
 import upyog.web.models.Allotment;
 import upyog.web.models.AllotmentSearchCriteria;
 import upyog.web.models.billing.Demand;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,7 @@ public class RentScheduler {
     private final DemandService    demandService;
     private final DemandRepository demandRepository;
     private final upyog.config.EstateConfiguration estateConfiguration;
+    private final MdmsUtil mdmsUtil;
 
     // ── Auto trigger: cron runs daily, processes only on 1st of month ─────────
 
@@ -80,6 +84,9 @@ public class RentScheduler {
         log.info("Billing period {}: {} active allotments, {} already have demands",
                 billingDate, activeAllotments.size(), alreadyGenerated.size());
 
+        BigDecimal penaltyRate = getPenaltyRateFromMdms(requestInfo, tenantId);
+        log.info("Penalty rate from MDMS: {}%", penaltyRate.multiply(BigDecimal.valueOf(100)));
+
         int generated = 0, skipped = 0;
 
         for (Allotment allotment : activeAllotments) {
@@ -89,7 +96,7 @@ public class RentScheduler {
                 continue;
             }
             try {
-                demandService.generateMonthlyDemand(requestInfo, allotment, billingDate);
+                demandService.generateMonthlyDemand(requestInfo, allotment, billingDate, penaltyRate);
                 generated++;
                 log.info("Demand generated for allotment {}", allotment.getAllotmentId());
             } catch (Exception e) {
@@ -119,5 +126,23 @@ public class RentScheduler {
             return false;
         }
         return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private BigDecimal getPenaltyRateFromMdms(RequestInfo requestInfo, String tenantId) {
+        try {
+            Object mdmsData = mdmsUtil.mDMSCall(requestInfo, tenantId);
+            Map<String, Object> mdmsMap = (Map<String, Object>) mdmsData;
+            List<Map<String, Object>> penaltyList = (List<Map<String, Object>>)
+                    ((Map<String, Object>) ((Map<String, Object>) mdmsMap
+                            .get("MdmsRes")).get("Estate")).get("Penalty");
+            if (penaltyList != null && !penaltyList.isEmpty()) {
+                Object rate = penaltyList.get(0).get("rate");
+                return new BigDecimal(rate.toString()).divide(BigDecimal.valueOf(100));
+            }
+        } catch (Exception e) {
+            log.error("Failed to fetch penalty rate from MDMS, defaulting to 5%: {}", e.getMessage());
+        }
+        return new BigDecimal("0.05");
     }
 }

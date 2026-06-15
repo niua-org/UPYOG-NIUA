@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public class DemandService {
     @Autowired
     private MdmsUtil mdmsUtil;
 
-    private static final BigDecimal PENALTY_RATE = new BigDecimal("0.05");
+
 
 
     /**
@@ -60,7 +61,7 @@ public class DemandService {
      *    - If not found: use current amount as-is.
      * 3. Save demand + publish to Kafka.
      */
-    public void generateMonthlyDemand(RequestInfo requestInfo, Allotment allotment, LocalDate billingDate) {
+    public void generateMonthlyDemand(RequestInfo requestInfo, Allotment allotment, LocalDate billingDate, BigDecimal penaltyRate) {
         LocalDate endDate = allotment.getAgreementEndDate();
         BigDecimal monthlyRent = allotment.getMonthlyRent();
         YearMonth billingMonth = YearMonth.from(billingDate);
@@ -89,26 +90,30 @@ public class DemandService {
         List<Demand> unpaidDemands = demandRepository.searchDemand(
                 requestInfo, allotment.getTenantId(), allotment.getAssetNo(), config.getBusinessServiceName());
 
+        BigDecimal bookingFeeAmount;  // EST_BOOKING_FEE = prevUnpaid + current (or just current)
+        BigDecimal penaltyAmount = BigDecimal.ZERO; // EST_PENALTY_FEE = base * penaltyRate
         BigDecimal finalAmount;
         List<Demand> toUpdate = Collections.emptyList();
 
         if (!unpaidDemands.isEmpty()) {
-            // Cancel previous bills and accumulate unpaid amount
             BigDecimal prevUnpaid = unpaidDemands.stream()
                     .flatMap(d -> d.getDemandDetails().stream())
                     .map(DemandDetail::getTaxAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 5% penalty on (prevUnpaid + current)
-            BigDecimal base = prevUnpaid.add(currentAmount);
-            finalAmount = base.add(base.multiply(PENALTY_RATE)).setScale(2, RoundingMode.HALF_UP);
-            log.info("Penalty applied for allotment {}: prev={}, current={}, total={}",
-                    allotment.getAllotmentId(), prevUnpaid, currentAmount, finalAmount);
+            // EST_BOOKING_FEE = prevUnpaid + current
+            bookingFeeAmount = prevUnpaid.add(currentAmount);
+            // EST_PENALTY_FEE = prevUnpaid * penaltyRate (penalty only on unpaid previous amount)
+            penaltyAmount = prevUnpaid.multiply(penaltyRate).setScale(2, RoundingMode.HALF_UP);
+            finalAmount = bookingFeeAmount.add(penaltyAmount);
+            log.info("Penalty applied for allotment {}: prev={}, current={}, bookingFee={}, penalty={}, total={}",
+                    allotment.getAllotmentId(), prevUnpaid, currentAmount, bookingFeeAmount, penaltyAmount, finalAmount);
 
             // Cancel (zero out) old demands
             unpaidDemands.forEach(d -> d.getDemandDetails().forEach(dd -> dd.setTaxAmount(BigDecimal.ZERO)));
             toUpdate = unpaidDemands;
         } else {
+            bookingFeeAmount = currentAmount;
             finalAmount = currentAmount;
         }
 
@@ -119,16 +124,25 @@ public class DemandService {
                 .mobileNumber(allotment.getMobileNo())
                 .build();
 
-        DemandDetail detail = DemandDetail.builder()
-                .taxHeadMasterCode(ServiceConstants.EST_MONTHLY_RENT)
-                .taxAmount(finalAmount)
+        List<DemandDetail> demandDetails = new LinkedList<>();
+        demandDetails.add(DemandDetail.builder()
+                .taxHeadMasterCode(ServiceConstants.EST_BOOKING_FEE)
+                .taxAmount(bookingFeeAmount)
                 .collectionAmount(BigDecimal.ZERO)
                 .tenantId(allotment.getTenantId())
-                .build();
+                .build());
+        if (penaltyAmount.compareTo(BigDecimal.ZERO) > 0) {
+            demandDetails.add(DemandDetail.builder()
+                    .taxHeadMasterCode(ServiceConstants.EST_PENALTY_FEE)
+                    .taxAmount(penaltyAmount)
+                    .collectionAmount(BigDecimal.ZERO)
+                    .tenantId(allotment.getTenantId())
+                    .build());
+        }
 
         Demand demand = Demand.builder()
                 .consumerCode(allotment.getAssetNo())
-                .demandDetails(List.of(detail))
+                .demandDetails(demandDetails)
                 .payer(payer)
                 .tenantId(allotment.getTenantId())
                 .taxPeriodFrom(convertToTimestamp(billingDate))
@@ -140,10 +154,8 @@ public class DemandService {
         if (!toUpdate.isEmpty()) {
             demandRepository.updateDemand(requestInfo, toUpdate);
         }
-        // Save demand to billing service
         demandRepository.saveDemand(requestInfo, List.of(demand));
 
-        // Save scheduler log entry to DB via Kafka
         String userUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : "system";
         long now = System.currentTimeMillis();
         SchedulerLog schedulerLog = SchedulerLog.builder()
@@ -154,7 +166,7 @@ public class DemandService {
                 .billingPeriodFrom(convertToTimestamp(billingDate))
                 .billingPeriodTo(convertToTimestamp(periodEnd))
                 .amount(finalAmount)
-                .penaltyAmount(toUpdate.isEmpty() ? BigDecimal.ZERO : finalAmount.subtract(currentAmount))
+                .penaltyAmount(penaltyAmount)
                 .paymentType(endsThisMonth ? "PARTIAL" : "FULL")
                 .status("PENDING")
                 .createdBy(userUuid)
@@ -168,7 +180,7 @@ public class DemandService {
                 allotment.getAllotmentId(), billingDate, periodEnd);
     }
 
-    public List<Demand> createDemand(AllotmentRequest allotmentRequest, Object mdmsData, boolean generateDemand) {
+    public List<Demand> createDemand(AllotmentRequest allotmentRequest, boolean generateDemand) {
         String tenantId = allotmentRequest.getAllotments().get(0).getTenantId();
         String consumerCode = allotmentRequest.getAllotments().get(0).getAssetNo();
         Allotment allotment = allotmentRequest.getAllotments().get(0);
@@ -182,12 +194,7 @@ public class DemandService {
                 .tenantId(tenantId)
                 .build();
 
-        Map<String, Object> mdmsDataMap = (Map<String, Object>) mdmsData;
-        List<Map<String, Object>> taxRateList = (List<Map<String, Object>>)
-                ((Map<String, Object>) ((Map<String, Object>) mdmsDataMap
-                        .get("MdmsRes")).get("Estate")).get("EstateCalculationType");
-
-        List<DemandDetail> demandDetails = calculationService.calculateDemand(allotmentRequest, taxRateList);
+        List<DemandDetail> demandDetails = calculationService.calculateDemand(allotment);
 
         LocalDate agreementStartDate = allotment.getAgreementStartDate();
         // taxPeriodTo = end of the first billing month only, not the full agreement end date

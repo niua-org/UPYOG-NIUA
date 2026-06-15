@@ -97,7 +97,7 @@ public class MdmsUtil {
 
         // Request EstateCalculationType master containing tax configuration
         estateMasterDetails.add(MasterDetail.builder()
-                .name("EstateCalculationType")
+                .name("Penalty")
                 .build());
 
         ModuleDetail moduleDetail = ModuleDetail.builder()
