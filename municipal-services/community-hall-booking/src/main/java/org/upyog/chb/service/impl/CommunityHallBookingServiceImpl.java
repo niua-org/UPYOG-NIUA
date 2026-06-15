@@ -104,7 +104,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	public CommunityHallBookingDetail createBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest) {
 		log.info("Create community hall booking for user : "
 				+ communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid());
-		// TODO move to util calss 
+		// TODO move to util calls and validate tenant id in the controller layer
 		String tenantId = communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.")[0];
 		if (communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.").length == 1) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_TENANT,
@@ -135,6 +135,18 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 
 		// 4.Persist the request using persister service
 		bookingRepository.saveCommunityHallBooking(communityHallsBookingRequest);
+		/*
+		 * Slot-search can reserve hall slots before a booking id exists. In that case,
+		 * the timer table stores draftId in booking_id. Once create generates the real
+		 * booking id and booking number, the timer rows are moved to the final booking
+		 * reference and the remaining timer value is returned in the create response.
+		 */
+		bookingRepository.updateTimerBookingId(
+				communityHallsBookingRequest.getHallsBookingApplication().getBookingId(),
+				communityHallsBookingRequest.getHallsBookingApplication().getBookingNo(),
+				communityHallsBookingRequest.getHallsBookingApplication().getDraftId());
+		communityHallsBookingRequest.getHallsBookingApplication().setTimerValue(bookingTimerService
+				.getRemainingTimerValue(communityHallsBookingRequest.getHallsBookingApplication().getBookingId()));
 
 		return communityHallsBookingRequest.getHallsBookingApplication();
 	}
@@ -309,6 +321,19 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		
 	}
 
+	/**
+	 * Retrieves community hall slot availability for the given search criteria.
+	 *
+	 * <p>
+	 * This service method resolves slot availability, applies existing timer row
+	 * state, and optionally creates or reuses a payment timer when the client
+	 * requests a timer hold.
+	 * </p>
+	 *
+	 * @param criteria slot search criteria containing hall codes, booking dates, and timer flags
+	 * @param info     request metadata and authenticated user details
+	 * @return availability response with slots, status, draft id, and timer value
+	 */
 	@Override
 	public CommunityHallSlotAvailabilityResponse getCommunityHallSlotAvailability(
 			CommunityHallSlotSearchCriteria criteria, RequestInfo info) {
@@ -328,14 +353,15 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		boolean bookingAllowed = availabiltityDetailsList.stream()
 				.anyMatch(detail -> BookingStatusEnum.BOOKED.toString().equals(detail.getSlotStaus()));
 
-		if (!bookingAllowed && criteria.getIsTimerRequired()) {
-			timerValue = bookingTimerService.getTimerValue(criteria, info, availabiltityDetailsList);
+		if (!bookingAllowed && Boolean.TRUE.equals(criteria.getIsTimerRequired())) {
+			timerValue = bookingTimerService.managePaymentTimer(criteria, info, availabiltityDetailsList);
 		}
 
 		CommunityHallSlotAvailabilityResponse hallSlotAvailabilityResponse = CommunityHallSlotAvailabilityResponse
-				.builder().hallSlotAvailabiltityDetails(availabiltityDetailsList).timerValue(timerValue).build();
+				.builder().hallSlotAvailabiltityDetails(availabiltityDetailsList).timerValue(timerValue)
+				.draftId(criteria.getDraftId()).build();
 
-		log.info("Availabiltity details response after updating status :" + hallSlotAvailabilityResponse);
+		log.info("Availability details response after updating status :" + hallSlotAvailabilityResponse);
 		return hallSlotAvailabilityResponse;
 	}
 
@@ -357,23 +383,29 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 			.stream().collect(Collectors.toMap(Function.identity(), Function.identity()));
 	log.info("Timer Details from db : " + timerDetails);
 
-	timerDetails.forEach(detail -> {
-		// Create a Slot availability object for comparison
+		timerDetails.forEach(detail -> applyTimerDetailToAvailability(info, criteria, availabilityDetails, slotDetailsMap,
+				detail));
+
+	return availabilityDetails;
+}
+
+	private void applyTimerDetailToAvailability(RequestInfo info, CommunityHallSlotSearchCriteria criteria,
+			List<CommunityHallSlotAvailabilityDetail> availabilityDetails,
+			Map<CommunityHallSlotAvailabilityDetail, CommunityHallSlotAvailabilityDetail> slotDetailsMap,
+			BookingPaymentTimerDetails detail) {
 		CommunityHallSlotAvailabilityDetail availabilityDetail = CommunityHallSlotAvailabilityDetail.builder()
 				.communityHallCode(detail.getCommunityHallcode()).hallCode(detail.getHallcode())
-				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(), CommunityHallBookingConstants.DATE_FORMAT))
+				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(),
+						CommunityHallBookingConstants.DATE_FORMAT))
 				.tenantId(detail.getTenantId()).build();
 
-		// Check if the timerDetails set contains this booking and if it's created by
-		// the current user
-		// Update the slot status based on the comparison
 		if (availabilityDetails.contains(availabilityDetail)) {
 			log.info("Booking created by user id {} and booking id {} ", criteria.getBookingId(),
 					info.getUserInfo().getUuid());
 			CommunityHallSlotAvailabilityDetail slotAvailabilityDetail = slotDetailsMap.get(availabilityDetail);
 			log.info("Slot Availability detail ::: " + slotAvailabilityDetail.toString());
 			boolean isCreatedByCurrentUser = detail.getCreatedBy().equals(info.getUserInfo().getUuid());
-			boolean existingBookingIdCheck = detail.getBookingId().equals(criteria.getBookingId());
+			boolean existingBookingIdCheck = detail.getBookingId().equals(getTimerBookingReference(criteria));
 
 			if (isCreatedByCurrentUser && existingBookingIdCheck) {
 				log.info("inside booking created by me with same booking id ");
@@ -382,11 +414,11 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 				slotAvailabilityDetail.setSlotStaus(BookingStatusEnum.BOOKED.toString());
 			}
 		}
+	}
 
-	});
-
-	return availabilityDetails;
-}
+	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
+	}
 
 
 

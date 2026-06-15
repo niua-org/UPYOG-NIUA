@@ -33,6 +33,7 @@ import org.upyog.adv.repository.rowmapper.AdvertisementUpdateSlotAvailabilityRow
 import org.upyog.adv.repository.rowmapper.BookingCartDetailRowmapper;
 import org.upyog.adv.repository.rowmapper.BookingDetailIdRowmapper;
 import org.upyog.adv.repository.rowmapper.BookingDetailRowmapper;
+import org.upyog.adv.repository.rowmapper.BookingPaymentTimerRowMapper;
 import org.upyog.adv.repository.rowmapper.DocumentDetailsRowMapper;
 import org.upyog.adv.util.BookingUtil;
 import org.upyog.adv.web.models.AdvertisementDraftDetail;
@@ -41,6 +42,7 @@ import org.upyog.adv.web.models.AdvertisementSlotAvailabilityDetail;
 import org.upyog.adv.web.models.AdvertisementSlotSearchCriteria;
 import org.upyog.adv.web.models.AuditDetails;
 import org.upyog.adv.web.models.BookingDetail;
+import org.upyog.adv.web.models.BookingPaymentTimerDetails;
 import org.upyog.adv.web.models.BookingRequest;
 import org.upyog.adv.web.models.CartDetail;
 import org.upyog.adv.web.models.DocumentDetail;
@@ -102,6 +104,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 	private AdvertisementUpdateSlotAvailabilityRowMapper availabilityUpdateRowMapper;
 	@Autowired
 	private AdvertisementDraftApplicationRowMapper draftApplicationRowMapper;
+	@Autowired
+	private BookingPaymentTimerRowMapper bookingPaymentTimerRowMapper;
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -175,8 +179,9 @@ public class BookingRepositoryImpl implements BookingRepository {
 		}
 	}
 
+	@Override
 	public void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail availabilityDetailsResponse) {
+			AdvertisementSlotAvailabilityDetail availabilityDetailsResponse, String preGeneratedDraftId) {
 
 		String tenantId = requestInfo.getUserInfo().getTenantId();
 		String uuid = requestInfo.getUserInfo().getUuid();
@@ -186,13 +191,38 @@ public class BookingRepositoryImpl implements BookingRepository {
 
 		// Step 2: If no existing draft ID, perform the batch insert
 		if (draftId == null) {
-			draftId = insertNewDraftId(criteriaList, uuid, tenantId);
-			processBatchInsert(criteriaList, draftId, uuid);
+			draftId = preGeneratedDraftId != null ? preGeneratedDraftId : BookingUtil.getRandonUUID();
+			insertNewDraftId(draftId, uuid, tenantId);
+			processBatchInsert(criteriaList, draftId, uuid, tenantId);
 			setTimerValue(availabilityDetailsResponse);
 		}
 
 		// Step 3: getAndInsertTimerData timer data
 		getAndInsertTimerData(draftId, criteriaList, requestInfo, availabilityDetailsResponse);
+	}
+
+	@Override
+	public String fetchDraftIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid,
+			String tenantId) {
+		return fetchDraftId(criteriaList, uuid, tenantId);
+	}
+
+	@Override
+	public List<BookingPaymentTimerDetails> getPaymentTimerByBookingId(String bookingId) {
+		if (StringUtils.isBlank(bookingId)) {
+			return Collections.emptyList();
+		}
+		return jdbcTemplate.query(AdvertisementBookingQueryBuilder.GET_PAYMENT_TIMER_BY_BOOKING_ID,
+				new Object[] { bookingId }, bookingPaymentTimerRowMapper);
+	}
+
+	@Override
+	public List<BookingPaymentTimerDetails> getPaymentTimerByCreatedBy(String uuid) {
+		if (StringUtils.isBlank(uuid)) {
+			return Collections.emptyList();
+		}
+		return jdbcTemplate.query(AdvertisementBookingQueryBuilder.GET_PAYMENT_TIMER_BY_CREATED_BY,
+				new Object[] { uuid }, bookingPaymentTimerRowMapper);
 	}
 
 	private String fetchDraftId(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId) {
@@ -223,17 +253,15 @@ public class BookingRepositoryImpl implements BookingRepository {
 		return null;
 	}
 
-	private String insertNewDraftId(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId) {
+	private void insertNewDraftId(String draftId, String uuid, String tenantId) {
 		long createdTime = BookingUtil.getCurrentTimestamp();
-		String draftId = BookingUtil.getRandonUUID();
 
 		jdbcTemplate.update(AdvertisementBookingQueryBuilder.DRAFT_QUERY, draftId, tenantId, uuid, "{}", uuid, uuid,
 				createdTime, createdTime);
-
-		return draftId;
 	}
 
-	private void processBatchInsert(List<AdvertisementSlotSearchCriteria> criteriaList, String draftId, String uuid) {
+	private void processBatchInsert(List<AdvertisementSlotSearchCriteria> criteriaList, String draftId, String uuid,
+			String tenantId) {
 		long createdTime = BookingUtil.getCurrentTimestamp();
 		String status = BookingConstants.ACTIVE;
 
@@ -245,7 +273,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 			while (!startDate.isAfter(endDate)) {
 				batchArgs.add(new Object[] { draftId, uuid, createdTime, status, "", uuid, createdTime,
 						criteria.getAddType(), criteria.getLocation(), criteria.getFaceArea(), criteria.getNightLight(),
-						criteria.getBookingStartDate(), criteria.getBookingEndDate(), startDate.toString() });
+						criteria.getBookingStartDate(), criteria.getBookingEndDate(), startDate.toString(),
+						criteria.getTenantId() != null ? criteria.getTenantId() : tenantId });
 				startDate = startDate.plusDays(1);
 			}
 		}

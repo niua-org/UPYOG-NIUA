@@ -1,6 +1,7 @@
 package org.upyog.chb.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,7 @@ import java.util.List;
  * - It ensures consistent and reusable logic for demand-related operations.
  */
 @Repository
+@Slf4j
 public class DemandRepository {
 
 	@Autowired
@@ -62,14 +64,14 @@ public class DemandRepository {
 		StringBuilder url = new StringBuilder(config.getBillingHost());
 		url.append(config.getDemandCreateEndpoint());
 		DemandRequest request = new DemandRequest(requestInfo, demand);
-		System.out.println("Request object for fetchResult: " + request);
-		System.out.println("URL for fetchResult: " + url);
+		log.info("Request object for fetchResult: " + request);
+		log.info("URL for fetchResult: " + url);
 		Object result = serviceRequestRepository.fetchResult(url, request);
-		System.out.println("Result from fetchResult method: " + result);
+		log.info("Result from fetchResult method: " + result);
 		DemandResponse response = null;
 		try {
 			response = mapper.convertValue(result, DemandResponse.class);
-			System.out.println("Demand response mapper: " + response);
+			log.info("Demand response mapper: " + response);
 		} catch (IllegalArgumentException e) {
 			throw new CustomException("PARSING ERROR", "Failed to parse response of create demand");
 		}
