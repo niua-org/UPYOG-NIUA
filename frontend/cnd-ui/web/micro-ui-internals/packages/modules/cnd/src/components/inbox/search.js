@@ -13,6 +13,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { cndStyles } from "../../utils/cndStyles";
+import { getValidationRules } from "../../utils";
 /**
  * The SearchApplication component creates a dynamic search form based on configurable search fields, 
  * with different layouts for mobile and desktop views. It manages form state, validation, and submission of search criteria.
@@ -28,35 +29,6 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
   const { handleSubmit, reset, watch, control, formState, setValue } = useForm({
     defaultValues: isInboxPage ? searchParams : { locality: null, city: null, ...searchParams },
   });
-
-  const getValidationRules = (input) => {
-    const rules = {};
-    if (input.maxLength) {
-      rules.maxLength = {
-        value: input.maxLength,
-        message: t(input.errorMessages?.maxLength || "CORE_COMMON_MOBILE_ERROR")
-      };
-    }
-    if (input.minLength) {
-      rules.minLength = {
-        value: input.minLength,
-        message: t(input.errorMessages?.minLength || "CORE_COMMON_MOBILE_ERROR")
-      };
-    }
-    if (input.pattern) {
-      let patternVal = input.pattern;
-      if (input.type === "mobileNumber") {
-        patternVal = Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/;
-      } else {
-        patternVal = new RegExp(input.pattern);
-      }
-      rules.pattern = {
-        value: patternVal,
-        message: t(input.errorMessages?.pattern || "CORE_COMMON_MOBILE_ERROR")
-      };
-    }
-    return rules;
-  };
 
   const form = watch();
 

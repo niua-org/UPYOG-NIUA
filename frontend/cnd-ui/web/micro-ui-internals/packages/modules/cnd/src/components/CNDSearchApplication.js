@@ -8,7 +8,7 @@ import { cndStyles } from "../utils/cndStyles";
  * Gets data from its parent component through data prop
  * Displays table only when the data is available and on the click of search button
  */
-const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
+const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, setShowToast, onClear }) => {
 
     const isMobile = window.Digit.Utils.browser.isMobile();
     const todaydate = new Date();
@@ -19,7 +19,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
             limit: !isMobile && 10,
             sortBy: "commencementDate",
             sortOrder: "DESC",
-            isUserDetailRequired:"true",
+            isUserDetailRequired: "true",
             fromDate: today,
             toDate: today,
         }
@@ -181,7 +181,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                     />
                 </SearchField>
                 {/* Empty Field added for the formatting of the form */}
-                <SearchField></SearchField> 
+                <SearchField></SearchField>
                 <SearchField className="submit">
                     <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
                     <p style={cndStyles.clearButton}
@@ -198,7 +198,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                                 sortOrder: "DESC"
                             });
                             setShowToast(null);
-                            previousPage();
+                            onClear();
                         }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>
@@ -220,7 +220,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                     totalRecords={count}
                     columns={columns}
                     getCellProps={(cellInfo) => {
-                        return {style: cndStyles.applicationTable};
+                        return { style: cndStyles.applicationTable };
                     }}
                     onPageSizeChange={onPageSizeChange}
                     currentPage={getValues("offset") / getValues("limit")}

@@ -23,7 +23,6 @@ const GetActionMessage = (props) => {
 };
 
 const BannerPicker = (props) => {
-  console.log("prop:", props);
   return (
     <Banner
       message={GetActionMessage(props)}

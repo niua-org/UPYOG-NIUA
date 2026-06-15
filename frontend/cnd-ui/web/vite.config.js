@@ -178,6 +178,24 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.REACT_APP_PROXY_API || "https://niuatt.niua.in";
   const assetsTarget = env.REACT_APP_PROXY_ASSETS || proxyTarget;
 
+  const apiPaths = [
+    "/access/v1/actions/mdms", "/egov-mdms-service", "/egov-location",
+    "/mdms-v2", "/localization", "/egov-workflow-v2", "/pgr-services",
+    "/filestore", "/egov-hrms", "/user-otp", "/user", "/fsm",
+    "/billing-service", "/collection-services", "/pdf-service", "/pg-service",
+    "/vehicle", "/vendor", "/property-services", "/fsm-calculator",
+    "/pt-calculator-v2", "/dashboard-analytics", "/echallan-services",
+    "/egov-searcher", "/egov-pdf", "/egov-survey-services", "/egov-user-event",
+    "/egov-document-uploader", "/egov-url-shortening", "/inbox", "/tl-services",
+    "/tl-calculator", "/edcr", "/bpa-services", "/noc-services", "/ws-services",
+    "/sw-services", "/ws-calculator", "/sw-calculator", "/report",
+    "/service-request", "/pet-services", "/ewaste-services",
+    "/chb-services", "/adv-services", "/employee-dashboard",
+    "/verification-service", "/asset-services", "/vendor-management",
+    "/tp-services", "/pgr-ai-services", "/gis-dx-service", "/individual",
+    "/bpa-calculator", "/request-service", "/challan-generation", "/ndc-services", "/estate-management", "/ndc-calculator"
+  ];
+
 
   const packagesRoot = path.resolve(__dirname, "micro-ui-internals/packages");
 
@@ -235,10 +253,10 @@ export default defineConfig(({ mode }) => {
      */
     const modulesDir = path.join(packagesRoot, "modules");
     if (fs.existsSync(modulesDir)) {
-      fs.readdirSync(modulesDir)
-        .map(pkg => path.join(modulesDir, pkg))
-        .filter(pkgDir => fs.statSync(pkgDir).isDirectory())
-        .forEach(register);
+      fs.readdirSync(modulesDir).forEach((pkg) => {
+        const pkgDir = path.join(modulesDir, pkg);
+        if (fs.statSync(pkgDir).isDirectory()) register(pkgDir);
+      });
     }
 
     /**
@@ -255,7 +273,6 @@ export default defineConfig(({ mode }) => {
 
     return aliases;
   }
-
 
   const moduleAliases = getAliases();
 

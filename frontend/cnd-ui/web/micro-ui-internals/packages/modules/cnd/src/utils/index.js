@@ -43,7 +43,6 @@ export const cndPayload = (data) => {
   {
     cndApplication: {
       tenantId: data?.tenantId,
-      additionalDetails: null,
       applicationType: "REQUEST_FOR_PICKUP",
       applicationStatus: "BOOKING_CREATED",
       depositCentreDetails: "",
@@ -75,7 +74,6 @@ export const cndPayload = (data) => {
         wasteType: item.code, // Using the code value from wasteMaterialType
         quantity: 0,
         metrics: "",
-        auditDetails: null
       })) || [],
       documentDetails: [
         ...(data?.wasteType?.siteMediaPhoto ? [{
@@ -84,7 +82,6 @@ export const cndPayload = (data) => {
           documentType: CND_VARIABLES.SITE_MEDIA_PHOTO,
           uploadedByUserType: user?.info?.type,
           fileStoreId: data.wasteType.siteMediaPhoto,
-          auditDetails: null
         }] : []),
         ...(data?.wasteType?.siteStack ? [{
           documentDetailId: "",
@@ -92,7 +89,6 @@ export const cndPayload = (data) => {
           documentType: CND_VARIABLES.SITE_STACK_PHOTO,
           uploadedByUserType: user?.info?.type,
           fileStoreId: data.wasteType.siteStack,
-          auditDetails: null
         }] : [])
       ],
       workflow: {
@@ -112,7 +108,7 @@ export const cndPayload = (data) => {
         addressLine1: data?.addressDetails?.selectedAddressStatement?.address || data?.address?.addressLine1,
         addressLine2: data?.addressDetails?.selectedAddressStatement?.address2 || data?.address?.addressLine2,
         landmark: data?.addressDetails?.selectedAddressStatement?.landmark || data?.address?.landmark,
-        floorNumber: null,
+        floorNumber: "",
         locality: data?.addressDetails?.selectedAddressStatement?.locality || data?.address?.locality?.i18nKey,
         city: data?.addressDetails?.selectedAddressStatement?.city || data?.address?.city?.city?.name,
         pinCode: data?.addressDetails?.selectedAddressStatement?.pinCode || data?.address?.pincode,
@@ -272,3 +268,32 @@ export function CNDDocumnetPreview({ documents, titleStyles, isSendBackFlow = fa
     </div>
   );
 }
+
+export const getValidationRules = (input) => {
+  const rules = {};
+  if (input.maxLength) {
+    rules.maxLength = {
+      value: input.maxLength,
+      message: t(input.errorMessages?.maxLength || "CORE_COMMON_MOBILE_ERROR")
+    };
+  }
+  if (input.minLength) {
+    rules.minLength = {
+      value: input.minLength,
+      message: t(input.errorMessages?.minLength || "CORE_COMMON_MOBILE_ERROR")
+    };
+  }
+  if (input.pattern) {
+    let patternVal = input.pattern;
+    if (input.type === "mobileNumber") {
+      patternVal = Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/;
+    } else {
+      patternVal = new RegExp(input.pattern);
+    }
+    rules.pattern = {
+      value: patternVal,
+      message: t(input.errorMessages?.pattern || "CORE_COMMON_MOBILE_ERROR")
+    };
+  }
+  return rules;
+};
