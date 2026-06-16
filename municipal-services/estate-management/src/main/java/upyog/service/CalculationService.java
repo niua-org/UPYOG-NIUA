@@ -2,6 +2,7 @@ package upyog.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import upyog.config.ServiceConstants;
 import upyog.web.models.Allotment;
 import upyog.web.models.BillingCycle;
 import upyog.web.models.billing.DemandDetail;
@@ -18,9 +19,16 @@ import java.util.Locale;
 @Slf4j
 public class CalculationService {
 
+    /**
+     * Creates booking fee demand details for the calculated rent amount.
+     *
+     * @param amount calculated rent amount for the billing period
+     * @param allotment allotment details for which demand is being generated
+     * @return list containing booking fee demand detail
+     */
     public List<DemandDetail> calculateDemand(BigDecimal amount, Allotment allotment) {
         DemandDetail detail = DemandDetail.builder()
-                .taxHeadMasterCode("EST_BOOKING_FEE")
+                .taxHeadMasterCode(ServiceConstants.EST_BOOKING_FEE)
                 .taxAmount(amount)
                 .collectionAmount(BigDecimal.ZERO)
                 .tenantId(allotment.getTenantId())
@@ -29,6 +37,31 @@ public class CalculationService {
         return List.of(detail);
     }
 
+    /**
+     * Calculates rent amount for the given billing period based on the configured
+     * billing cycle of the allotment.
+     *
+     * <p>
+     * Supported billing cycles:
+     * <ul>
+     *     <li>MONTHLY - Calculates full or partial monthly rent.</li>
+     *     <li>QUARTERLY - Calculates full quarter rent (3 months) or proportional
+     *     rent for a partial quarter.</li>
+     *     <li>YEARLY - Calculates full year rent (12 months) or proportional
+     *     rent for a partial year.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Partial rent is calculated proportionally based on the number of chargeable
+     * days within the billing period.
+     * </p>
+     *
+     * @param allotment allotment details containing rent and billing cycle information
+     * @param periodFrom billing period start date
+     * @param periodTo billing period end date
+     * @return calculated rent amount for the billing period
+     */
     public BigDecimal calculateAmount(
             Allotment allotment,
             LocalDate periodFrom,

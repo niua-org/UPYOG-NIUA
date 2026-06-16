@@ -50,14 +50,14 @@ public class DemandService {
 
 
 
-
     /**
-     * Full revised flow (architecture diagram):
-     * 1. Compute billing amount: full month or pro-rata if allotment ends this month.
-     * 2. Check for unpaid previous demand.
-     *    - If found: cancel it, apply 5% penalty on (prevUnpaid + current).
-     *    - If not found: use current amount as-is.
-     * 3. Save demand + publish to Kafka.
+     * Generates a rent demand for the specified billing date based on the
+     * allotment billing cycle, outstanding dues and applicable penalty.
+     *
+     * @param requestInfo request information
+     * @param allotment allotment for which demand is being generated
+     * @param billingDate billing execution date
+     * @param penaltyRate penalty percentage configured in MDMS
      */
     public void generateDemand(RequestInfo requestInfo,
                                Allotment allotment,
@@ -227,7 +227,7 @@ public class DemandService {
         String userUuid =
                 requestInfo.getUserInfo() != null
                         ? requestInfo.getUserInfo().getUuid()
-                        : "system";
+                        : ServiceConstants.STATUS_SYSTEM;
 
         long now = System.currentTimeMillis();
 
@@ -243,9 +243,9 @@ public class DemandService {
                         .penaltyAmount(penaltyAmount)
                         .paymentType(
                                 partialCycle
-                                        ? "PARTIAL"
-                                        : "FULL")
-                        .status("PENDING")
+                                        ? ServiceConstants.PAYMENT_TYPE_PARTIAL
+                                        : ServiceConstants.PAYMENT_TYPE_FULL)
+                        .status(ServiceConstants.STATUS_PENDING)
                         .createdBy(userUuid)
                         .createdTime(now)
                         .lastModifiedBy(userUuid)
@@ -262,6 +262,14 @@ public class DemandService {
 
     }
 
+    /**
+     * Creates an initial demand for the allotment based on the configured
+     * billing cycle and agreement period.
+     *
+     * @param allotmentRequest allotment request details
+     * @param generateDemand flag indicating whether demand should be persisted
+     * @return generated demand details
+     */
     public List<Demand> createDemand(AllotmentRequest allotmentRequest, boolean generateDemand) {
 
         String tenantId = allotmentRequest.getAllotments().get(0).getTenantId();

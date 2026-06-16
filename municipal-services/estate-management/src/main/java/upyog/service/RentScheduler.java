@@ -31,7 +31,10 @@ public class RentScheduler {
     private final upyog.config.EstateConfiguration estateConfiguration;
     private final MdmsUtil mdmsUtil;
 
-    // ── Auto trigger: cron runs daily, processes only on 1st of month ─────────
+    /**
+     * Triggers rent demand generation for all eligible allotments.
+     * Runs based on the configured scheduler cron expression.
+     */
 
     @Scheduled(cron = "${est.scheduler.cron}")
     @SchedulerLock(name = "RentScheduler_generateDemand", lockAtLeastFor = "PT10M", lockAtMostFor = "PT30M")
@@ -40,16 +43,27 @@ public class RentScheduler {
         process(today, RequestInfo.builder().build());
     }
 
-    // ── Manual trigger ────────────────────────────────────────────────────────
-
+    /**
+     * Manually triggers demand generation for a specific billing date.
+     *
+     * @param requestInfo request information
+     * @param billingDate billing date to process; current date is used when null
+     * @return processing summary
+     */
     public String triggerManually(RequestInfo requestInfo, LocalDate billingDate) {
         LocalDate date = (billingDate != null ? billingDate : LocalDate.now());
         log.info("Manual scheduler trigger for {}", date);
         return process(date, requestInfo);
     }
 
-    // ── Core ──────────────────────────────────────────────────────────────────
-
+    /**
+     * Processes eligible allotments and generates rent demands based on
+     * configured billing cycles and agreement validity.
+     *
+     * @param billingDate billing execution date
+     * @param requestInfo request information
+     * @return processing summary containing generated and skipped counts
+     */
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
 
         List<Allotment> allotments =
@@ -116,8 +130,13 @@ public class RentScheduler {
 
         return result;
     }
+
     /**
-     * Active = agreementStartDate <= billingDate AND (no endDate OR endDate >= billingDate)
+     * Checks whether an allotment is active for the given billing date.
+     *
+     * @param allotment allotment details
+     * @param billingDate billing date to validate
+     * @return true if allotment is active; otherwise false
      */
     private boolean isActive(Allotment allotment, LocalDate billingDate) {
         if (allotment.getAgreementStartDate() == null
@@ -135,6 +154,14 @@ public class RentScheduler {
         return true;
     }
 
+    /**
+     * Fetches the penalty rate configured in MDMS.
+     * Returns a default value of 5% if MDMS lookup fails.
+     *
+     * @param requestInfo request information
+     * @param tenantId tenant identifier
+     * @return penalty rate as a decimal value
+     */
     @SuppressWarnings("unchecked")
     private BigDecimal getPenaltyRateFromMdms(RequestInfo requestInfo, String tenantId) {
         try {
@@ -153,6 +180,14 @@ public class RentScheduler {
         return new BigDecimal("0.05");
     }
 
+    /**
+     * Determines whether demand generation is due for the allotment
+     * based on its billing cycle and agreement dates.
+     *
+     * @param allotment allotment details
+     * @param today current processing date
+     * @return true if billing is due; otherwise false
+     */
     private boolean isBillingDue(Allotment allotment, LocalDate today) {
 
         LocalDate startDate = allotment.getAgreementStartDate();

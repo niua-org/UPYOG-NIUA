@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import upyog.config.EstateConfiguration;
+import upyog.config.ServiceConstants;
 import upyog.repository.EstateRepository;
 import upyog.web.models.RentPaymentDetails;
 
@@ -30,8 +31,14 @@ public class PaymentUpdateService {
     @Autowired
     private EstateRepository estateRepository;
 
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
+    /**
+     * Processes payment events received from the payment consumer and
+     * creates rent payment entries for Estate Management payments.
+     *
+     * @param record payment event payload
+     * @param topic kafka topic name
+     * @throws JsonProcessingException if payment payload conversion fails
+     */
     public void process(HashMap<String, Object> record, String topic) throws JsonProcessingException {
         try {
             PaymentRequest paymentRequest = mapper.convertValue(record, PaymentRequest.class);
@@ -46,7 +53,7 @@ public class PaymentUpdateService {
             BigDecimal paidAmount = paymentRequest.getPayment().getPaymentDetails().get(0).getTotalAmountPaid();
             String tenantId = paymentRequest.getPayment().getTenantId();
             String userUuid = paymentRequest.getRequestInfo().getUserInfo() != null
-                    ? paymentRequest.getRequestInfo().getUserInfo().getUuid() : "system";
+                    ? paymentRequest.getRequestInfo().getUserInfo().getUuid() : ServiceConstants.STATUS_SYSTEM;
             long now = System.currentTimeMillis();
             LocalDate today = LocalDate.now();
 
@@ -56,13 +63,13 @@ public class PaymentUpdateService {
                     .id(UUID.randomUUID().toString())
                     .allotmentId(consumerCode)
                     .rent(paidAmount)
-                    .paymentType("MONTHLY_RENT")
+                    .paymentType(ServiceConstants.PAYMENT_TYPE_MONTHLY_RENT)
                     .penaltyAmount(BigDecimal.ZERO)
                     .previousMonth(today.minusMonths(1).withDayOfMonth(1))
                     .paymentDate(today)
                     .lastDateOfPayment(today)
                     .duePaymentDate(today.plusMonths(1).withDayOfMonth(1))
-                    .paymentStatus("PAID")
+                    .paymentStatus(ServiceConstants.STATUS_PAID)
                     .duePayment(BigDecimal.ZERO)
                     .validityDays(30)
                     .createdBy(userUuid)

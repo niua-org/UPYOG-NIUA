@@ -10,6 +10,7 @@ import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import upyog.config.EstateConfiguration;
+import upyog.config.ServiceConstants;
 import upyog.web.models.billing.Demand;
 import upyog.web.models.billing.DemandRequest;
 import upyog.web.models.billing.DemandResponse;
@@ -40,7 +41,7 @@ public class DemandRepository {
         try {
             response = mapper.convertValue(result, DemandResponse.class);
         } catch (IllegalArgumentException e) {
-            throw new CustomException("PARSING ERROR", "Failed to parse response of create demand");
+            throw new CustomException(ServiceConstants.PARSING_ERROR_CODE, "Failed to parse response of create demand");
         }
         return response.getDemands();
     }
@@ -55,23 +56,40 @@ public class DemandRepository {
         try {
             response = mapper.convertValue(result, DemandResponse.class);
         } catch (IllegalArgumentException e) {
-            throw new CustomException("PARSING ERROR", "Failed to parse response of update demand");
+            throw new CustomException(ServiceConstants.PARSING_ERROR_CODE, "Failed to parse response of update demand");
         }
         return response.getDemands();
     }
 
+    /**
+     * Searches for unpaid demands for the specified consumer.
+     * Used while calculating penalty on outstanding dues.
+     */
     public List<Demand> searchDemand(RequestInfo requestInfo, String tenantId, String consumerCode, String businessService) {
         return search(requestInfo, tenantId, consumerCode, businessService, null, null, true);
     }
 
+    /**
+     * Searches for all demands for the specified consumer,
+     * including paid and unpaid demands.
+     * Used to prevent duplicate demand generation for the same billing period.
+     */
     public List<Demand> searchAllDemands(RequestInfo requestInfo, String tenantId, String consumerCode, String businessService) {
         return search(requestInfo, tenantId, consumerCode, businessService, null, null, false);
     }
 
-    public List<Demand> searchDemandByPeriod(RequestInfo requestInfo, String tenantId, String consumerCodes, String businessService, Long periodFrom, Long periodTo) {
-        return search(requestInfo, tenantId, consumerCodes, businessService, periodFrom, periodTo, false);
-    }
-
+    /**
+     * Searches demands from the billing service based on the supplied criteria.
+     *
+     * @param requestInfo request information
+     * @param tenantId tenant identifier
+     * @param consumerCode consumer code
+     * @param businessService business service name
+     * @param periodFrom billing period start timestamp in epoch milliseconds
+     * @param periodTo billing period end timestamp in epoch milliseconds
+     * @param unpaidOnly true to fetch only unpaid demands; false to fetch all demands
+     * @return matching demands or an empty list if no demands are found
+     */
     private List<Demand> search(RequestInfo requestInfo, String tenantId, String consumerCode,
                                 String businessService, Long periodFrom, Long periodTo, boolean unpaidOnly) {
         StringBuilder url = new StringBuilder(config.getBillingHost())
@@ -90,7 +108,7 @@ public class DemandRepository {
         try {
             response = mapper.convertValue(result, DemandResponse.class);
         } catch (IllegalArgumentException e) {
-            throw new CustomException("PARSING ERROR", "Failed to parse response of search demand");
+            throw new CustomException(ServiceConstants.PARSING_ERROR_CODE, "Failed to parse response of search demand");
         }
         return response != null && response.getDemands() != null ? response.getDemands() : Collections.emptyList();
     }

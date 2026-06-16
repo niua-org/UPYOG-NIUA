@@ -102,6 +102,7 @@ public class EstateConfiguration {
     @Value("${save-monthly-rent-payment}")
     private String monthlyRentPaymentSaveTopic;
 
+    // save scheduler log topic
     @Value("${save-scheduler-log-topic}")
     private String schedulerLogTopic;
 
@@ -131,6 +132,7 @@ public class EstateConfiguration {
     @Value("${egov.demand.update.endpoint}")
     private String demandUpdateEndpoint;
 
+    // Demand Search Endpoint
     @Value("${egov.demand.search.endpoint}")
     private String demandSearchEndpoint;
 }

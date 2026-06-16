@@ -24,18 +24,13 @@ import javax.sql.DataSource;
 @EnableSchedulerLock(defaultLockAtMostFor = "PT30M")
 public class EstateManagement {
 
-    /**
-	 * Configures the ShedLock LockProvider bean using JDBC.
-	 * <p>
-	 * This bean sets up ShedLock to use the application's shared database for acquiring and managing distributed locks.
-	 * It uses Spring's JdbcTemplate and ensures all instances of the service check and update the same `shedlock` table,
-	 * enabling only one instance to run a scheduled task at any given time.
-	 * <p>
-	 * The `.usingDbTime()` ensures that all instances rely on the database server's time to avoid clock drift issues
-	 * across different machines.
+	/**
+	 * Creates a JDBC-based ShedLock provider to ensure that scheduled
+	 * jobs are executed by only one application instance at a time.
+	 * Uses database time to avoid clock synchronization issues.
 	 *
-	 * @param dataSource the shared application DataSource
-	 * @return a configured LockProvider instance for ShedsLock
+	 * @param dataSource application data source
+	 * @return configured lock provider
 	 */
 	@Bean
 	public LockProvider lockProvider(DataSource dataSource) {
