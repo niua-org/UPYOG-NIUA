@@ -101,6 +101,9 @@ public class Scheme implements java.io.Serializable {
 		return id;
 	}
 
+	/** * Sets the scheme id. Made public (not private) for framework compatibility:
+	 * * Spring form binding, JSP/EL property resolution, and Hibernate require public setters.
+	 * * Note: Intended for framework use only; application code should not mutate id after entity creation. */
 	@SuppressWarnings("unused")
 	public void setId(final Integer id) {
 		this.id = id;
@@ -257,6 +260,10 @@ public class Scheme implements java.io.Serializable {
 		this.lastModifiedDate = lastModifiedDate;
 	}
 
+	/**	 * Returns the state code indicating government level (Central/State) and jurisdiction.	 *
+	 <p>
+	 <p><strong>Business Importance:</strong> Only schemes with a non-null stateCode are eligible 	 * for state-level budget operations. This field is essential for the federalism model 	 * (segregating central vs. state budgets).</p>
+	 * @return the state code, or {@code null} if not assigned or unclassified	 */
 
 	public String getStateCode() {
 		return stateCode;
@@ -271,6 +278,11 @@ public class Scheme implements java.io.Serializable {
 
 		return "id:" + id + ",Code:" + code + "," + "isActive:" + isactive;
 	}
+
+	/** * Scheme ka id set karta hai. Public rakha gaya (private nahi) kyunki frameworks ko chahiye: * Spring form binding, JSP/EL, aur Hibernate ko id set karne ke liye public setter chahiye. * Note: Sirf framework use ke liye hai; app code ko id change nahi karna chahiye entity load hone ke baad. */
+
+	/**	 * Returns a formatted display string combining scheme code and name.	 * <p>Used in JSP dropdowns and UI displays to show both identifiers in a human-readable format.	 * Handles null/empty values gracefully:	 * <ul>	 *     <li>If both code and name exist: returns {@code "CODE - NAME"} (e.g., {@code "PMAY-U - Pradhan Mantri Awas Yojana"})</li>	 *     <li>If only code exists: returns {@code "CODE"}</li>	 *     <li>If only name exists: returns {@code "NAME"}</li>	 *     <li>If both are null/empty: returns empty string {@code ""}</li>	 * </ul>	 * </p>	 *
+	 * @return formatted code and name string, or empty string if both are null/empty	 * @see "#budgetitem-form.jsp" showing usage: {@code value="${scheme.codeAndNameForShow}"}	 */
 
 	public String getCodeAndNameForShow() {
 		StringBuilder stringBuilder = new StringBuilder();
