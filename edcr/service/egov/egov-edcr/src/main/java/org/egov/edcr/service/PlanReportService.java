@@ -1092,6 +1092,8 @@ public class PlanReportService {
             drb.addColumn("Accepted / Not Accepted ", "status", String.class.getName(), 50, columnStyle, columnHeaderStyle);
         } catch (ColumnBuilderException e) {
             LOG.error(e.getMessage(), e);
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
         }
         drb.setUseFullPageWidth(true);
         drb.setPageSizeAndOrientation(Page.Page_Legal_Landscape());

@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+    JasperReports font extension configuration.
+
+    This file registers the DejaVu font families used by JasperReports during
+    report rendering and export operations. The configured fonts provide
+    Unicode character support and are embedded in generated PDF documents to
+    ensure consistent appearance across different environments and operating systems.
+
+    The file also defines font mappings for HTML exports and maps Java logical
+    fonts (SansSerif, Serif, and Monospaced) to the corresponding DejaVu font
+    families for consistent rendering across supported output formats.
+-->
 <fontFamilies>
 
 	<fontFamily name="DejaVu Sans">
