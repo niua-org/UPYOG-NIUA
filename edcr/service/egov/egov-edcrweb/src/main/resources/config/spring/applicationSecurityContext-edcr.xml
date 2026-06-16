@@ -37,7 +37,7 @@
                 <security:filter-chain pattern="/error/**"               filters="none"/>
                 <security:filter-chain pattern="/public/**"              filters="none"/>
                 <security:filter-chain pattern="/rest/dcr/downloadfile/**"    filters="none"/>
-                <security:filter-chain pattern="/rest/dcr/scrutinydetails/**" filters="none"/>
+<!--                <security:filter-chain pattern="/rest/dcr/scrutinydetails/**" filters="none"/>-->
 
                 <!-- All other requests — minimal filter set for REST -->
                 <security:filter-chain pattern="/**"

@@ -470,12 +470,15 @@ public class EdcrRestService {
         }
         if (edcrApplnDtl.getApplication().getServiceType() != null)
             edcrDetail.setApplicationSubType(edcrApplnDtl.getApplication().getServiceType());
-        String tenantId;
-        String[] tenantArr = edcrApplnDtl.getApplication().getThirdPartyUserTenant().split("\\.");
-        if (tenantArr.length == 1)
-            tenantId = tenantArr[0];
-        else
-            tenantId = tenantArr[1];
+
+//        String[] tenantArr = edcrApplnDtl.getApplication().getThirdPartyUserTenant().split("\\.");
+//        if (tenantArr.length == 1)
+//            tenantId = tenantArr[0];
+//        else
+//            tenantId = tenantArr[1];
+
+        String tenantId = FeatureUtil.getTenantId(edcrApplnDtl.getApplication().getThirdPartyUserTenant());
+
         if (edcrApplnDtl.getDxfFileId() != null)
             edcrDetail.setDxfFile(format(getFileDownloadUrl(edcrApplnDtl.getDxfFileId().getFileStoreId(), tenantId)));
 
@@ -570,12 +573,14 @@ public class EdcrRestService {
         }
         if (edcrApplnDtl.getApplication().getServiceType() != null)
             edcrDetail.setApplicationSubType(edcrApplnDtl.getApplication().getServiceType());
-        String tenantId;
-        String[] tenantArr = edcrApplnDtl.getApplication().getThirdPartyUserTenant().split("\\.");
-        if (tenantArr.length == 1)
-            tenantId = tenantArr[0];
-        else
-            tenantId = tenantArr[1];
+
+        String tenantId = FeatureUtil.getTenantId(edcrApplnDtl.getApplication().getThirdPartyUserTenant());
+//        String[] tenantArr = edcrApplnDtl.getApplication().getThirdPartyUserTenant().split("\\.");
+//        if (tenantArr.length == 1)
+//            tenantId = tenantArr[0];
+//        else
+//            tenantId = tenantArr[1];
+
         if (edcrApplnDtl.getDxfFileId() != null)
             edcrDetail.setDxfFile(format(getFileDownloadUrl(edcrApplnDtl.getDxfFileId().getFileStoreId(), tenantId)));
 
