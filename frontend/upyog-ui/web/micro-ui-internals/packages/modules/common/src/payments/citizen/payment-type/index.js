@@ -22,6 +22,7 @@ import $ from "jquery";
 import { makePayment } from "./payGov";
 import TimerServices from "../timer-Services/timerServices";
 import { timerEnabledForBusinessService } from "../bills/routes/bill-details/utils";
+import { startHdfcPayment } from "./hdfcCollectNow";
 
 export const SelectPaymentType = (props) => {
   const { state: rawState } = useLocation();
@@ -109,6 +110,13 @@ export const SelectPaymentType = (props) => {
           "returnUrl": redirect[1]
         }
         let atom = new AtomPaynetz(options, 'uat');
+      } else if (d?.paymentType === "RAZORPAY") {
+        try {
+          startHdfcPayment(data);
+        } catch (e) {
+          console.log("Error in HDFC Payment Redirect ", e);
+          setShowToast({ key: true, label: "CS_PAYMENT_INIT_FAILED" });
+        }
       }
       else {
         // new payment gatewayfor UPYOG pay
