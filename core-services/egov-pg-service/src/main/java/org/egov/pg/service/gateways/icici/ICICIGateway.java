@@ -48,6 +48,10 @@ public class ICICIGateway implements Gateway {
     private final RestTemplate restTemplate;
     private ObjectMapper objectMapper;
 
+    /**
+     * Aggregator ID provided by ICICI Payment Gateway.
+     * Used to identify the payment aggregator while initiating transactions.
+     */
     private final String AGGREGATOR_ID;
     private final String ORIGINAL_RETURN_URL_KEY;
     private final boolean ACTIVE;
@@ -299,6 +303,7 @@ public class ICICIGateway implements Gateway {
         return request;
     }
 
+    /* TODO: will uncomment when refund will implement */
 //    @Override
 //    public Refund initiateRefund(Refund refundTxn) {
 //        // TODO Auto-generated method stub

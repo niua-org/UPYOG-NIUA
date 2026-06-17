@@ -138,6 +138,7 @@ public class RedirectController {
         }
         else if (gateway != null && gateway.equalsIgnoreCase("ICICI")) {
             if (returnURL != null) {
+                // Append eg_pg_txnid so frontend SuccessfulPayment component can call _update API to verify transaction status
                 if (txnId != null && !returnURL.contains("eg_pg_txnid")) {
                     returnURL = returnURL + (returnURL.contains("?") ? "&" : "?") + "eg_pg_txnid=" + txnId;
                 }
