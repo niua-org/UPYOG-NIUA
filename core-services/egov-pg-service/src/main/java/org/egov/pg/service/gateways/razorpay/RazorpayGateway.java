@@ -107,8 +107,8 @@ public class RazorpayGateway implements Gateway {
              process the response and then safely redirect the user to the frontend.
 
              Example output:
-             https://assamuat.niua.in/pg-service/transaction/v1/_redirect
-                 ?originalreturnurl=https://assamuat.niua.in/citizen/payment/success/BPA.PLANNING_PERMIT_FEE/PG-BP-2025-11-26-000640/as.ghoungoorgp
+             https://niuatt.niua.in/pg-service/transaction/v1/_redirect
+                 ?originalreturnurl=https://niuatt.niua.in/citizen/payment/success/BPA.PLANNING_PERMIT_FEE/PG-BP-2025-11-26-000640/pg.citya
                  &eg_pg_txnid=PG_PG_2025_11_26_000640_21
                  */
             String originalReturnUrl = transaction.getCallbackUrl();
