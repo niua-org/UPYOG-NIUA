@@ -1,4 +1,4 @@
-import { PrivateRoute,BreadCrumb,AppContainer,BackButton } from "@nudmcdgnpm/digit-ui-react-components";
+import { PrivateRoute,BreadCrumb,AppContainer,BackButton } from "@upyog/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, Routes, Route } from "react-router-dom";
@@ -6,45 +6,59 @@ import { ASSETLinks } from "../../Module";
 import SearchApp from "./SearchApp";
 import SearchReport from "./SearchReport";
 import Inbox from "./Inbox";
-
-const EmployeeApp = ({ path, url, userType }) => {
-  const { t } = useTranslation();
+import "../../css/asset-inline-auto.css";
+const EmployeeApp = ({
+  path,
+  url,
+  userType
+}) => {
+  const {
+    t
+  } = useTranslation();
   const location = useLocation();
   const mobileView = innerWidth <= 640;
   sessionStorage.removeItem("revalidateddone");
   const isMobile = window.Digit.Utils.browser.isMobile();
-
   const inboxInitialState = {
     searchParams: {
-      uuid: { code: "ASSIGNED_TO_ALL", name: "ES_INBOX_ASSIGNED_TO_ALL" },
+      uuid: {
+        code: "ASSIGNED_TO_ALL",
+        name: "ES_INBOX_ASSIGNED_TO_ALL"
+      },
       services: ["asset-create"],
       applicationStatus: [],
-      locality: [],
-
-    },
+      locality: []
+    }
   };
-
-  const AssetBreadCrumbs = ({ location }) => {
-    const { t } = useTranslation();
+  const AssetBreadCrumbs = ({
+    location
+  }) => {
+    const {
+      t
+    } = useTranslation();
     const search = useLocation().search;
     const fromScreen = new URLSearchParams(search).get("from") || null;
-    const { from : fromScreen2 } = Digit.Hooks.useQueryParams();
-    const crumbs = [
-      {
-        path: "/upyog-ui/employee",
-        content: t("ES_COMMON_HOME"),
-        show: true,
-      },
-      {
-        path: "/upyog-ui/employee/asset/assetservice/inbox",
-        content: t("ES_TITLE_INBOX"),
-        show: location.pathname.includes("asset/assetservice/inbox") ? false : false,
-      },
-    ];
-    return <BreadCrumb style={isMobile?{display:"flex"}:{margin: "0 0 4px", color:"#000000" }}  spanStyle={{maxWidth:"min-content"}} crumbs={crumbs} />;
-  }
-
-  
+    const {
+      from: fromScreen2
+    } = Digit.Hooks.useQueryParams();
+    const crumbs = [{
+      path: "/upyog-ui/employee",
+      content: t("ES_COMMON_HOME"),
+      show: true
+    }, {
+      path: "/upyog-ui/employee/asset/assetservice/inbox",
+      content: t("ES_TITLE_INBOX"),
+      show: location.pathname.includes("asset/assetservice/inbox") ? false : false
+    }];
+    return <BreadCrumb style={isMobile ? {
+      display: "flex"
+    } : {
+      margin: "0 0 4px",
+      color: "#000000"
+    }} spanStyle={{
+      maxWidth: "min-content"
+    }} crumbs={crumbs} />;
+  };
   const NewAssetAssignApplication = Digit?.ComponentRegistryService?.getComponent("AssignAssetApplication");
   const DisposeApplication = Digit?.ComponentRegistryService?.getComponent("DisposeApplication");
   const MaintenanceApplication = Digit?.ComponentRegistryService?.getComponent("MaintenanceApplication");
@@ -71,7 +85,7 @@ const EmployeeApp = ({ path, url, userType }) => {
           {!isRes ? (
             <div style={isNewRegistration ? { marginLeft: "12px", display: "flex", alignItems: "center" } : { marginLeft: "-4px", display: "flex", alignItems: "center" }}>
               <BackButton location={location} />
-              <span style={{ margin: "0 5px 16px", display: "inline-block" }}>|</span>
+              <span className="asset-auto-224">|</span>
               <AssetBreadCrumbs location={location} />
             </div>
           ) : null}
@@ -191,5 +205,4 @@ const EmployeeApp = ({ path, url, userType }) => {
     </AppContainer>
   );
 };
-
 export default EmployeeApp;

@@ -31,12 +31,12 @@
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Releases Repository</name>
-			<url>https://nexus-repo.digit.org/nexus/content/repositories/releases/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo.egovernments.org</id>
 			<name>eGov ERP Snapshots Repository</name>
-			<url>https://nexus-repo.digit.org/nexus/content/repositories/snapshots/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/repositories/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
 
@@ -44,7 +44,7 @@
 		<repository>
 			<id>repo.egovernments.org</id>
 			<name>eGov Public Repository Group</name>
-			<url>https://nexus-repo.digit.org/nexus/content/groups/public/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 				<updatePolicy>always</updatePolicy>
@@ -63,10 +63,10 @@
 			<url>https://repository.aspose.com/repo/</url>
 		</repository>-->
 		<repository>
-			<id>AsposeJavaAPI</id>
-			<name>Aspose Java API</name>
-			<url>http://releases.aspose.com/repo/</url>
-		</repository> 
+			<id>upyog-releases</id>
+			<name>UPYOG Releases</name>
+			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/</url>
+		</repository>
 		<repository>
 			<id>javaxt.com</id>
 			<url>https://www.javaxt.com/maven</url>
@@ -77,7 +77,7 @@
 		<pluginRepository>
 			<id>repo.egovernments.org</id>
 			<name>eGov Public Repository Group</name>
-			<url>https://nexus-repo.digit.org/nexus/content/groups/public/</url>
+			<url>https://upyog-nexus.niua.org/nexus/content/groups/public/</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -1087,12 +1087,21 @@
 	</dependencyManagement>
 
 	<dependencies>
-			<dependency>
+			<!-- <dependency>
                             <groupId>com.aspose</groupId>
                             <artifactId>aspose-cad</artifactId>
                             <version>20.10</version>
-                        </dependency>
-
+                        </dependency> -->
+		<dependency>
+			<groupId>com.upyog.project</groupId>
+			<artifactId>aspose-cad</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.kabeja</groupId>
+			<artifactId>kabeja</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 		<!-- SERVLET SPEC JBOSS DEPENDENCIES START -->
 		<dependency>
 			<groupId>org.jboss.spec.javax.servlet</groupId>

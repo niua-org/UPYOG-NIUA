@@ -1,4 +1,4 @@
-import { Loader, Modal, Card, CardHeader, StatusTable, Row } from "@nudmcdgnpm/digit-ui-react-components";
+import { Loader, Modal, Card, CardHeader, StatusTable, Row } from "@upyog/digit-ui-react-components";
 import React, { Fragment, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -288,7 +288,7 @@ config.indexRoute = "info";
       actionSaveLabel={"Proceed"}
       actionSaveOnSubmit={setModal}
       formId="modal-action"
-    >  <div style={{ width: "100%" }}>
+    >  <div className="pt-auto-105">
     <Card>
         <CardHeader>Property Details</CardHeader>
      

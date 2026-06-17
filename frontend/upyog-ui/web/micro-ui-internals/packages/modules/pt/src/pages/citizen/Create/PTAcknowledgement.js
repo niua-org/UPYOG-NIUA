@@ -15,22 +15,12 @@ const GetActionMessage = (props) => {
     return !isEditOrMutation ? t("CS_PROPERTY_APPLICATION_FAILED") : t("CS_PROPERTY_UPDATE_APPLICATION_FAILED");
   }
 };
-
 const rowContainerStyle = {
   padding: "4px 0px",
-  justifyContent: "space-between",
+  justifyContent: "space-between"
 };
-
-const BannerPicker = (props) => {
-  return (
-    <Banner
-      message={GetActionMessage(props)}
-      applicationNumber={props.data?.Properties?.[0]?.acknowldgementNumber}
-      info={props.isSuccess ? props.t("PT_APPLICATION_NO") : ""}
-      successful={props.isSuccess}
-      style={{ width: "100%" }}
-    />
-  );
+const BannerPicker = props => {
+  return <Banner message={GetActionMessage(props)} applicationNumber={props.data?.Properties[0].acknowldgementNumber} info={props.isSuccess ? props.t("PT_APPLICATION_NO") : ""} successful={props.isSuccess} className="pt-auto-104" />;
 };
 
 /**
@@ -100,8 +90,6 @@ const PTAcknowledgement = ({ ackData, isPending, error, onSuccess }) => {
       <Link to={`/upyog-ui/citizen`}>
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} onClick={onSuccess} />
       </Link>
-    </Card>
-  );
+    </Card>;
 };
-
 export default PTAcknowledgement;

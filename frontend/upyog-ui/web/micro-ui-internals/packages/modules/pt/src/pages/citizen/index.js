@@ -1,4 +1,4 @@
-import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
+import { AppContainer, BackButton, PrivateRoute } from "@upyog/digit-ui-react-components";
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { shouldHideBackButton } from "../../utils";
@@ -34,7 +34,7 @@ const App = () => {
   const AssessmentDetails = Digit?.ComponentRegistryService?.getComponent("PTAssessmentDetails");
 
   return (
-    <span className={"pt-citizen"} style={{ width: "100%" }}>
+    <span className={"pt-citizen pt-auto-149"}>
       <AppContainer>
         {!shouldHideBackButton(hideBackButtonConfig) ? <BackButton>Back</BackButton> : ""}
         <Routes>

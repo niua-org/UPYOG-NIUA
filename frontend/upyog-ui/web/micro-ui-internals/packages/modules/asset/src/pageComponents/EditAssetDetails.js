@@ -4,22 +4,33 @@ import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-
+import "../css/asset-inline-auto.css";
 const editnewDetails = () => ({
-  key: Date.now(),
+  key: Date.now()
 });
-
-const EditAssetDetails = ({ config, onSelect, formData, setError, clearErrors }) => {
-
-  const { t } = useTranslation();
+const EditAssetDetails = ({
+  config,
+  onSelect,
+  formData,
+  setError,
+  clearErrors
+}) => {
+  const {
+    t
+  } = useTranslation();
   const [editNewAssetDetails, seteditAssignDetails] = useState(formData?.editNewAssetDetails || [editnewDetails()]);
-  const { id: applicationNo } = useParams();
+  const {
+    id: applicationNo
+  } = useParams();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const { data: applicationDetails } = Digit.Hooks.asset.useAssetApplicationDetail(t, tenantId, applicationNo);
+  const {
+    data: applicationDetails
+  } = Digit.Hooks.asset.useAssetApplicationDetail(t, tenantId, applicationNo);
   let comingDataFromAPI = applicationDetails?.applicationData?.applicationData;
-  const [focusIndex, setFocusIndex] = useState({ index: -1, type: "" });
-
-
+  const [focusIndex, setFocusIndex] = useState({
+    index: -1,
+    type: ""
+  });
   useEffect(() => {
     onSelect(config?.key, editNewAssetDetails);
   }, [editNewAssetDetails]);
@@ -51,17 +62,12 @@ const EditAssetDetails = ({ config, onSelect, formData, setError, clearErrors })
     comingDataFromAPI,
     // warrantyTime
   };
-  return (
-    <React.Fragment>
-      {editNewAssetDetails.map((editNewAssetDetails, index) => (
-        <OwnerForm key={editNewAssetDetails.key} index={index} editNewAssetDetails={editNewAssetDetails} {...commonProps} />
-      ))}
+  return <React.Fragment>
+      {editNewAssetDetails.map((editNewAssetDetails, index) => <OwnerForm key={editNewAssetDetails.key} index={index} editNewAssetDetails={editNewAssetDetails} {...commonProps} />)}
       {/* <OwnerForm key={editNewAssetDetails.key} index={0} editNewAssetDetails={editNewAssetDetails} {...commonProps} /> */}
-    </React.Fragment>
-  );
+    </React.Fragment>;
 };
-
-const OwnerForm = (_props) => {
+const OwnerForm = _props => {
   const {
     editNewAssetDetails,
     focusIndex,
@@ -74,17 +80,19 @@ const OwnerForm = (_props) => {
     comingDataFromAPI,
     // warrantyTime
   } = _props;
-  let formJson = []
+  let formJson = [];
 
   //  const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateTenantId = Digit.ULBService.getStateId();
 
   // This call with stateTenantId (Get state-level data)
-  const stateResponseObject = Digit.Hooks.useEnabledMDMS(stateTenantId, "ASSET", [{ name: "AssetParentCategoryFields" }], {
-    select: (data) => {
+  const stateResponseObject = Digit.Hooks.useEnabledMDMS(stateTenantId, "ASSET", [{
+    name: "AssetParentCategoryFields"
+  }], {
+    select: data => {
       const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
       return formattedData;
-    },
+    }
   });
   let combinedData;
 
@@ -109,31 +117,42 @@ const OwnerForm = (_props) => {
   } else {
     console.log("combinedData.data is not an array or is empty.");
   }
-
-
   const [showToast, setShowToast] = useState(null);
-  const { control, formState: localFormState, watch, trigger } = useForm();
+  const {
+    control,
+    formState: localFormState,
+    watch,
+    trigger
+  } = useForm();
   const formValue = watch();
-  const { errors } = localFormState;
+  const {
+    errors
+  } = localFormState;
   const [part, setPart] = React.useState({});
-
   let isEdit = true;
-
-  const convertToObject = (String) => (String ? { i18nKey: String, code: String, value: String } : null);
-
+  const convertToObject = String => String ? {
+    i18nKey: String,
+    code: String,
+    value: String
+  } : null;
   useEffect(() => {
     if (!_.isEqual(part, formValue)) {
-      setPart({ ...formValue });
-      seteditAssignDetails((prev) => prev.map((o) => (o.key === editNewAssetDetails.key ? { ...o, ...formValue } : o)));
+      setPart({
+        ...formValue
+      });
+      seteditAssignDetails(prev => prev.map(o => o.key === editNewAssetDetails.key ? {
+        ...o,
+        ...formValue
+      } : o));
       trigger();
     }
   }, [formValue]);
-
   useEffect(() => {
-    if (Object.keys(errors).length && !_.isEqual(localFormState.errors[config.key]?.type || {}, errors)) setError(config.key, { type: errors });
-    else if (!Object.keys(errors).length && localFormState.errors[config.key]) clearErrors(config.key);
+    if (Object.keys(errors).length && !_.isEqual(localFormState.errors[config.key]?.type || {}, errors)) setError(config.key, {
+      type: errors
+    });else if (!Object.keys(errors).length && localFormState.errors[config.key]) clearErrors(config.key);
   }, [errors]);
-  const regexPattern = (columnType) => {
+  const regexPattern = columnType => {
     if (!columnType) {
       return "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)$";
     } else if (columnType === "number") {
@@ -144,30 +163,33 @@ const OwnerForm = (_props) => {
       return "^[-+]?([1-8]?\\d(\\.\\d+)?|90(\\.0+)?),\\s*[-+]?(180(\\.0+)?|((1[0-7]\\d)|([1-9]?\\d))(\\.\\d+)?)$";
     }
   };
-  const fetchCurrentLocation = (name) => {
+  const fetchCurrentLocation = name => {
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setAssetDetails((prevDetails) => ({
-            ...prevDetails,
-            [name]: `${latitude}, ${longitude}`, // Update the specific field
-          }));
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-        }
-      );
+      navigator.geolocation.getCurrentPosition(position => {
+        const {
+          latitude,
+          longitude
+        } = position.coords;
+        setAssetDetails(prevDetails => ({
+          ...prevDetails,
+          [name]: `${latitude}, ${longitude}` // Update the specific field
+        }));
+      }, error => {
+        console.error("Error getting location:", error);
+      });
     } else {
       alert("Geolocation is not supported by your browser.");
     }
   };
-  const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
-
-  return (
-    <React.Fragment>
-      <div style={{ marginBottom: "16px" }}>
-        <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
+  const errorStyle = {
+    width: "70%",
+    marginLeft: "30%",
+    fontSize: "12px",
+    marginTop: "-21px"
+  };
+  return <React.Fragment>
+      <div className="asset-auto-101">
+        <div className="asset-auto-102">
 
           <React.Fragment>
             {
@@ -439,8 +461,7 @@ const OwnerForm = (_props) => {
               <CardLabelError style={errorStyle}>
                 {localFormState?.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
               </CardLabelError>
-
-              <LabelFieldPair>
+               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_PURCHASE_DATE") + " *"}</CardLabel>
                 <div className="field">
                   <Controller
@@ -498,8 +519,7 @@ const OwnerForm = (_props) => {
               <CardLabelError style={errorStyle}>
                 {localFormState?.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
               </CardLabelError>
-
-              <LabelFieldPair>
+               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("AST_ASSET_AGE")}</CardLabel>
                 <div className="field">
                   <Controller
@@ -610,16 +630,9 @@ const OwnerForm = (_props) => {
 
         </div>
       </div>
-      {showToast?.label && (
-        <Toast
-          label={showToast?.label}
-          onClose={(w) => {
-            setShowToast((x) => null);
-          }}
-        />
-      )}
-    </React.Fragment>
-  );
+      {showToast?.label && <Toast label={showToast?.label} onClose={w => {
+      setShowToast(x => null);
+    }} />}
+    </React.Fragment>;
 };
-
 export default EditAssetDetails;

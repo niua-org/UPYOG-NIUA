@@ -1,11 +1,13 @@
-import { Banner, Card, Loader, Row, StatusTable, SubmitBar,Toast } from "@nudmcdgnpm/digit-ui-react-components";
+import { Banner, Card, Loader, Row, StatusTable, SubmitBar,Toast } from "@upyog/digit-ui-react-components";
 import React, {useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  } from "react-router-dom";
 import { ADSDataConvert } from "../../../utils";
-
-const GetActionMessage = (props) => {
-  const { t } = useTranslation();
+import "../../../css/ads-inline-auto.css";
+const GetActionMessage = props => {
+  const {
+    t
+  } = useTranslation();
   if (props.isSuccess) {
     return !window.location.href.includes("editbookads") ? t("ES_ADS_RESPONSE_CREATE_ACTION") : t("CS_ADS_UPDATE_BOOKING_SUCCESS");
   } else if (props.isLoading) {
@@ -14,21 +16,12 @@ const GetActionMessage = (props) => {
     return !window.location.href.includes("editbookads") ? t("CS_ADS_BOOKING_FAILED") : t("CS_ADS_UPDATE_BOOKING_FAILED");
   }
 };
-
 const rowContainerStyle = {
   padding: "4px 0px",
-  justifyContent: "space-between",
+  justifyContent: "space-between"
 };
-const BannerPicker = (props) => {
-  return (
-    <Banner
-      message={GetActionMessage(props)}
-      applicationNumber={props.data?.bookingApplication[0].bookingNo}
-      info={props.isSuccess ? props.t("ADS_BOOKING_NO") : ""}
-      successful={props.isSuccess}
-      style={{ width: "100%" }}
-    />
-  );
+const BannerPicker = props => {
+  return <Banner message={GetActionMessage(props)} applicationNumber={props.data?.bookingApplication[0].bookingNo} info={props.isSuccess ? props.t("ADS_BOOKING_NO") : ""} successful={props.isSuccess} className="ads-auto-93" />;
 };
 
 /**
@@ -59,8 +52,8 @@ const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
       tenantId: tenantId,
       location: item?.location,
       nightLight: item?.nightLight,
-      isTimerRequired: true,
-    })),
+      isTimerRequired: true
+    }))
   };
  
     const handleMakePayment = async () => {
@@ -90,7 +83,10 @@ const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
             });
           }
     } catch (error) {
-      setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
+      setShowToast({
+        error: true,
+        label: t("CS_SOMETHING_WENT_WRONG")
+      });
     }
     };
   // useEffect(() => {
@@ -118,41 +114,29 @@ useEffect(() => {
     <Card>
       <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
       <StatusTable>
-        {mutation.isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />}
+        {mutation.isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{
+        whiteSpace: "pre",
+        width: "60%"
+      }} />}
       </StatusTable>
-      {mutation.isSuccess && (
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
-        {user.type==="EMPLOYEE" &&(<Link to={`/upyog-ui/employee`}>
+      {mutation.isSuccess && <div className="ads-auto-94">
+        {user.type === "EMPLOYEE" && <Link to={`/upyog-ui/employee`}>
         <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
-         </Link>)}
-         {user.type==="CITIZEN" &&(<Link to={`/upyog-ui/citizen`}>
+         </Link>}
+         {user.type === "CITIZEN" && <Link to={`/upyog-ui/citizen`}>
         <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
-         </Link>)}
+         </Link>}
           <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
-      </div>
-    )}
-    {!mutation.isSuccess && user.type==="CITIZEN" &&(
-      <Link to={`/upyog-ui/citizen`}>
+      </div>}
+    {!mutation.isSuccess && user.type === "CITIZEN" && <Link to={`/upyog-ui/citizen`}>
       <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
-       </Link>
-     )}
-     {!mutation.isSuccess && user.type==="EMPLOYEE" &&(
-      <Link to={`/upyog-ui/employee`}>
+       </Link>}
+     {!mutation.isSuccess && user.type === "EMPLOYEE" && <Link to={`/upyog-ui/employee`}>
       <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
-       </Link>
-     )}
-     {showToast && (
-             <Toast
-               error={showToast.error}
-               warning={showToast.warning}
-               label={t(showToast.label)}
-               onClose={() => {
-                 setShowToast(null);
-               }}
-             />
-      )}
-    </Card>
-  );
+       </Link>}
+     {showToast && <Toast error={showToast.error} warning={showToast.warning} label={t(showToast.label)} onClose={() => {
+      setShowToast(null);
+    }} />}
+    </Card>;
 };
-
 export default ADSAcknowledgement;
