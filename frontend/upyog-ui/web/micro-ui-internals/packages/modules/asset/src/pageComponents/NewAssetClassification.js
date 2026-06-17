@@ -158,6 +158,7 @@ const NewAssetClassification = ({
       code: `${asset_mdms.code}`,
       value: `${asset_mdms.name}`
     });
+  });
 
   Asset_Type &&
     Asset_Type.map((asset_type_mdms) => {
@@ -315,7 +316,8 @@ const NewAssetClassification = ({
     code: 'false',
     value: 'NO'
   }];
-  return <React.Fragment>
+  return (
+    <React.Fragment>
       {window.location.href.includes("/employee") ? <Timeline currentStep={1} /> : null}
 
       <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={!assetclassification || !assetsubtype || !BookPagereference}>
@@ -502,6 +504,7 @@ const NewAssetClassification = ({
         }} render={props => <Dropdown className="form-field" selected={assetAssignable} select={setAssetAssignable} option={assetAssignableMenu} optionKey="code" placeholder={"Select"} t={t} />} />
         </div>
       </FormStep>
-    </React.Fragment>;
+    </React.Fragment>
+  );
 };
 export default NewAssetClassification;

@@ -178,6 +178,6 @@ import {
         }} className="wt-auto-48" />}
               </Card>
             </div>
-          </React.Fragment>;
+          </React.Fragment>);
 };
 export default MTApplicationDetails;

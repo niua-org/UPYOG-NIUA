@@ -51,7 +51,8 @@ const ServiceDoc = ({
                       {dropdownData.map((dropdownData, dropdownIndex) => (
                         <CardText key={dropdownData?.code || dropdownIndex} className={"primaryColor"}>
                           {/* {`${dropdownIndex + 1}`}. {t(stringReplaceAll(dropdownData?.code, ".", "_"))} */}
-                        </CardText>)}
+                        </CardText>
+                      ))}
                     </div>) : null}
           </div>
         </div>

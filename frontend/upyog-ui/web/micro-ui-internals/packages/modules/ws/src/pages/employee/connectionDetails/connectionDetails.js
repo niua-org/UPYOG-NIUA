@@ -277,7 +277,8 @@ const GetConnectionDetails = () => {
         <Close />
       </div>;
   };
-  return <Fragment>
+  return (
+    <Fragment>
       <div>
         <div className="employee-application-details ws-connection-details-root">
 <div className="ws-connection-details-header-row">
@@ -340,9 +341,11 @@ const GetConnectionDetails = () => {
                 {t("WS_COMMON_TABLE_COL_AMT_DUE_LABEL")}: ₹{due ? due : applicationDetails?.fetchBillsData?.[0]?.totalAmount}
               </span>
             </div>
-          </Modal> : null}
+          </Modal>
+        ) : null}
         {showActionToast && <Toast error={showActionToast.key} label={t(`${showActionToast.label}`)} onClose={closeBillToast} />}
       </div>
-    </Fragment>;
+    </Fragment>
+  );
 };
 export default GetConnectionDetails;

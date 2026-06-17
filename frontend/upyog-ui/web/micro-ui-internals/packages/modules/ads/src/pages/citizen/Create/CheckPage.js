@@ -168,6 +168,7 @@ import {
         </div>
         <SubmitBar label={t("ADS_COMMON_BUTTON_SUBMIT")} onSubmit={onSubmit} disabled={!agree} />
       </Card>
-     </React.Fragment>;
+     </React.Fragment>
+    );
 };
 export default CheckPage;

@@ -73,7 +73,7 @@ const SearchLicense = ({tenantId, t, onSubmit, data, count }) => {
                     {row.original["licenseNumber"]}
                   </a>
                 </span>
-              </div>;
+              </div>);
     }
   }, {
     Header: t("TL_LOCALIZATION_TRADE_NAME"),
@@ -96,7 +96,8 @@ const SearchLicense = ({tenantId, t, onSubmit, data, count }) => {
     Header: t("TL_COMMON_TABLE_COL_STATUS"),
     accessor: row => GetCell(t(row?.workflowCode && row?.status && `WF_${row?.workflowCode?.toUpperCase()}_${row.status}` || "NA")),
     disableSortBy: true
-  }], []);
+    }
+  ]), []);
   return <React.Fragment>
         <Header>{t("TL_SEARCH_LICENSE")}</Header>
         <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>

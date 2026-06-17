@@ -18,7 +18,7 @@ const createConnectionDetails = service => service == "WATER" ? {
 } : {
     noOfWaterClosets: "",
     noOfToilets: ""
-});
+  };
 
 
 const WSActivationConnectionDetails = ({ config, onSelect, userType, formData, setError, formState, clearErrors }) => {

@@ -118,13 +118,13 @@ import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSDisconnection,
             },
           });
         }
-      }
     }
   };
   if (isEnableLoader) {
     return <Loader />;
   }
-  return <React.Fragment>
+  return (
+    <React.Fragment>
     <Header styles={{
       fontSize: "32px"
     }}>{t("WS_COMMON_SUMMARY")}</Header>
@@ -165,6 +165,7 @@ import { convertDateToEpoch, convertEpochToDate, createPayloadOfWSDisconnection,
           </div>)}
         <SubmitBar label={t("CS_COMMON_SUBMIT")} onSubmit={() => onSubmit(value?.WSDisconnectionForm)} />
       </Card>
-    </React.Fragment>;
+    </React.Fragment>
+  );
 };
 export default CheckPage;

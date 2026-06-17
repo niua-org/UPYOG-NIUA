@@ -403,7 +403,7 @@ const OwnerForm = _props => {
                 </LabelFieldPair>
                 <CardLabelError style={errorStyle}>{localFormState.touchedFields?.emailId ? errors?.emailId?.message : ""}</CardLabelError>
               </React.Fragment>
-            )}
+            }
             {typeOfOwner !== "INSTITUTIONAL" && (
               <React.Fragment>
                 <LabelFieldPair>

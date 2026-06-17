@@ -345,7 +345,7 @@ errorStyle={(localFormState.touchedFields.proposedPipeSize && errors?.proposedPi
             </LabelFieldPair>
             <CardLabelError style={errorStyle}>{localFormState.touchedFields.proposedPipeSize ? errors?.proposedPipeSize?.message : ""}</CardLabelError>
           </div>
-        )}
+        }
         {connectionDetail?.sewerage && (
           <div>
             <LabelFieldPair>

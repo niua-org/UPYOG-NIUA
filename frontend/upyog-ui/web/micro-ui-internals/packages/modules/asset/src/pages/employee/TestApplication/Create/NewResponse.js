@@ -85,6 +85,7 @@ const NewResponse = ({ data, onSuccess, mutation }) => {
       <Link to={`/upyog-ui/employee`}>
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
       </Link>
-    </Card>;
+    </Card>
+  );
 };
 export default NewResponse;

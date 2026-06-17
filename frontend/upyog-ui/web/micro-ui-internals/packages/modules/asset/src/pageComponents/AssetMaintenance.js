@@ -545,7 +545,7 @@ const OwnerForm = _props => {
                                 </LabelFieldPair>
                                 <CardLabelError style={errorStyle}>{localFormState?.touched?.assetWarrantyDescription ? errors?.assignedUser?.assetWarrantyDescription : ""}</CardLabelError>
                             </div>
-                        )}
+                        }
                     {warrantyExp.code === "IN_AMC" &&
                         (
                             <div>
@@ -614,7 +614,7 @@ const OwnerForm = _props => {
                                 </LabelFieldPair>
                                 <CardLabelError style={errorStyle}>{localFormState?.touched?.amcDetails ? errors?.assignedUser?.amcDetails : ""}</CardLabelError>
 
-                            </div>}
+                            </div>)}
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller asset-auto-68">
@@ -1078,7 +1078,7 @@ const OwnerForm = _props => {
                                     </LabelFieldPair>
                                     <CardLabelError style={errorStyle}>{localFormState?.touched?.assetMaintenanceIncreasedYear ? errors?.assetMaintenanceIncreasedYear?.message : ""}</CardLabelError>
                                 </div>
-                            )}
+                            }
                     </div>
                 </div>
             </div>
@@ -1090,7 +1090,6 @@ const OwnerForm = _props => {
                     }}
                 />
             )}
-        </React.Fragment>
-    );
+        </React.Fragment>;
 };
 export default AssetMaintenance;

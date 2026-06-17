@@ -64,7 +64,8 @@ const ProcessDepreciationResponse = props => {
                 <SubmitBar label={t("AST_DEPRECIATION_LIST")} />
               </Link>
             </div>
-          </div> : <Banner message="Processing..." successful={false} />}
+          </div>
+        ) : <Banner message="Processing..." successful={false} />}
       </Card>
 
       {error && message && <Toast error={true} label={message} onClose={closeToast} />}

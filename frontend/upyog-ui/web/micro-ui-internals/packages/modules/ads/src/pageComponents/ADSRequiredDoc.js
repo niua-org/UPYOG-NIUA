@@ -58,8 +58,11 @@ const ADSRequiredDoc = ({
                         key={dropdownData?.code || dropdownIndex}
                         className={"primaryColor"}>
                           {`${dropdownIndex + 1}`}. {t("ADS_" + stringReplaceAll(dropdownData?.code, ".", "_"))}
-                        </CardText>)}
-                    </div>) : null}
+                        </CardText>
+                      ))}
+                    </div>
+                  ))
+              : null}
           </div>
         </div>
         <span>

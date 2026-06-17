@@ -265,7 +265,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
     }} // Hide Action Bar
     isOpen={showPriceBreakup} // Pass isOpen prop
     onClose={handlePriceBreakupClick} // Pass onClose prop
-    className="ads-auto-20" />}
+    className="ads-auto-20" />)}
     </div>;
 };
 export default ADSCartAndCancellationPolicyDetails;

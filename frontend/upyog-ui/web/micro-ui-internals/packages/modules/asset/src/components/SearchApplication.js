@@ -247,8 +247,10 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
       //   },
       // ];
 
-      return <div ref={menuRef}>
-            {row?.original?.status === "APPROVED" ? <React.Fragment>
+      return (
+        <div ref={menuRef}>
+            {row?.original?.status === "APPROVED" ? (
+              <React.Fragment>
                 <SubmitBar label={t("WF_TAKE_ACTION")} onSubmit={toggleMenu} />
                 {isMenuOpen && <div className="asset-auto-7">
                     {actionOptions.filter(option => {
@@ -269,10 +271,9 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
             to={option.link} className="asset-auto-10">
                             {option.label}
                           </Link>
-                        )
-                    ))}
+                    )}
                   </div>
-                )}
+                }
               </React.Fragment>
             ) : (
               t("AST_SHOULD_BE_APPROVED_FIRST")
@@ -282,7 +283,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
       },
       mobileCell: (original) => GetMobCell(original?.searchData?.["applicationNo"]),
     },
-  ]), [actionDetail])
+  ], [actionDetail]);
 
   const onSort = useCallback((args) => {
     if (args.length === 0) return

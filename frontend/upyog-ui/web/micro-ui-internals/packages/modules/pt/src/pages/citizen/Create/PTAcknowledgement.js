@@ -90,6 +90,7 @@ const PTAcknowledgement = ({ ackData, isPending, error, onSuccess }) => {
       <Link to={`/upyog-ui/citizen`}>
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} onClick={onSuccess} />
       </Link>
-    </Card>;
+    </Card>
+  );
 };
 export default PTAcknowledgement;

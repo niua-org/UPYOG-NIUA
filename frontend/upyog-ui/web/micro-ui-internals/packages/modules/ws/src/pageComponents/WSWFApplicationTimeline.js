@@ -74,7 +74,8 @@ const WSWFApplicationTimeline = props => {
             >
               <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} />
             </Link>
-          </div>;
+          </div>
+        );
           break;
         }
       case "EDIT":

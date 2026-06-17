@@ -635,8 +635,10 @@ function Unit({
               )}
             />
             </LabelFieldPair> 
-            </React.Fragment> : null}     
-        </React.Fragment> : null}         
+            </React.Fragment>
+            ) : null}     
+        </React.Fragment>
+        ) : null}         
 
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("PT_FORM2_BUILT_AREA") + " *"}</CardLabel>
@@ -664,6 +666,7 @@ function Unit({
         </LabelFieldPair>
         <CardLabelError style={errorStyle}>{localFormState.touchedFields?.builtUpArea ? errors?.builtUpArea?.message : ""}</CardLabelError>
       </div>
-    </div>;
+    </div>
+  );
 }
 export default Units;

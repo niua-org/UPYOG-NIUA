@@ -208,7 +208,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
               );
             },
           }
-      ]), [] )
+      ], [])
       const statusOptions = [
         { i18nKey: "Booked", code: "BOOKED", value: t("ADS_BOOKED") },
         { i18nKey: "Booking in Progress", code: "BOOKING_CREATED", value: t("ADS_BOOKING_IN_PROGRES") },

@@ -143,6 +143,7 @@ const WSResponse = props => {
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} onSubmit={onSubmit} className="ws-auto-347" />
         </ActionBar>
       </Card>
-    </div>;
+    </div>
+  );
 };
 export default WSResponse;

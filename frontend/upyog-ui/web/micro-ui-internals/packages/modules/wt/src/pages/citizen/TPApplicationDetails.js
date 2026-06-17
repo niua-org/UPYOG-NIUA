@@ -175,6 +175,6 @@ import {
         }} className="wt-auto-65" />}
               </Card>
             </div>
-          </React.Fragment>;
+          </React.Fragment>);
 };
 export default TPApplicationDetails;

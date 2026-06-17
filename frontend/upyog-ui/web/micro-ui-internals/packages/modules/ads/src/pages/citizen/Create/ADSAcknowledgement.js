@@ -137,6 +137,6 @@ useEffect(() => {
      {showToast && <Toast error={showToast.error} warning={showToast.warning} label={t(showToast.label)} onClose={() => {
       setShowToast(null);
     }} />}
-    </Card>;
+    </Card>);
 };
 export default ADSAcknowledgement;

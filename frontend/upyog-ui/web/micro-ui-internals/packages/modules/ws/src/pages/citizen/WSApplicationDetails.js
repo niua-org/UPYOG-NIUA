@@ -607,7 +607,7 @@ const WSApplicationDetails = () => {
               }&isDisoconnectFlow=${applicationNobyData?.includes("DC")}`}
             >
               <SubmitBar label={t("MAKE_PAYMENT")} />
-            </Link> : null}
+            </Link>) : null}
           {!data?.WaterConnection?.[0]?.applicationType.includes("DISCONNECT") && data?.WaterConnection?.[0]?.applicationStatus.includes("PENDING_FOR_CITIZEN_ACTION") || !data?.SewerageConnections?.[0]?.applicationType.includes("DISCONNECT") && data?.SewerageConnections?.[0]?.applicationStatus.includes("PENDING_FOR_CITIZEN_ACTION") ? <Link to={{
           pathname: `/upyog-ui/citizen/ws/edit-application/${data?.WaterConnection?.[0]?.tenantId || data?.SewerageConnections?.[0]?.tenantId}`,
           state: {
