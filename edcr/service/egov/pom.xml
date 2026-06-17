@@ -78,7 +78,7 @@
         <repository>
             <id>AsposeJavaAPI</id>
             <name>Aspose Java API</name>
-            <url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/com/upyog/project/aspose-cad/</url>
+            <url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/</url>
         </repository>
 <!--		<repository>-->
 <!--				<id>aspose</id>-->
@@ -1182,6 +1182,7 @@
 			<groupId>org.apache.taglibs</groupId>
 			<artifactId>taglibs-standard-impl</artifactId>
 		</dependency>
+
 <!--		<dependency>-->
 <!--			<groupId>org.jboss.spec.javax.servlet.jsp</groupId>-->
 <!--			<artifactId>jboss-jsp-api_2.3_spec</artifactId>-->
