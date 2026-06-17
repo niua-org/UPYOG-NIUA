@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Card, SubmitBar } from "@upyog/digit-ui-react-components";
+import { Modal, Card, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { ExistingBookingDetails } from "./ExistingBookingDetails";
 import "../css/ads-inline-auto.css";
 const Close = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFFFFF">

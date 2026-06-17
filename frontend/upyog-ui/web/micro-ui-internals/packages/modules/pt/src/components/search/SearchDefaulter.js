@@ -1,4 +1,4 @@
-import { DetailsCard, Loader, Table, Modal, SearchField, SubmitBar, SearchForm, Card, CardText, } from "@upyog/digit-ui-react-components";
+import { DetailsCard, Loader, Table, Modal, SearchField, SubmitBar, SearchForm, Card, CardText, } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { memo, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import PropertyInvalidMobileNumber from "../../pages/citizen/MyProperties/PropertyInvalidMobileNumber";

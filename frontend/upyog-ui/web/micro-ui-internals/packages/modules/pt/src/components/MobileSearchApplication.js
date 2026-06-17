@@ -9,7 +9,7 @@ import {
   DetailsCard,
   Loader,
   Toast,
-} from "@upyog/digit-ui-react-components";
+} from "@nudmcdgnpm/digit-ui-react-components";
 import SearchFormFields from "./SearchFields";
 import "../css/pt-inline-auto.css";
 const MobileSearchApplication = ({

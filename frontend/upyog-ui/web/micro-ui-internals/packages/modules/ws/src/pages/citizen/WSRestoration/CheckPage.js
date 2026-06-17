@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardSubHeader, CardText, Toast, CitizenInfoLabel, LinkButton, Row, StatusTable, SubmitBar, EditIcon, Header, CardSectionHeader, Loader } from "@upyog/digit-ui-react-components";
+import { Card, CardHeader, CardSubHeader, CardText, Toast, CitizenInfoLabel, LinkButton, Row, StatusTable, SubmitBar, EditIcon, Header, CardSectionHeader, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  } from "react-router-dom";
