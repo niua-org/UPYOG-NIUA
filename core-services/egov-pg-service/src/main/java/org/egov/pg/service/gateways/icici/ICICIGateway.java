@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 //import org.egov.pg.models.Refund;
@@ -171,22 +170,19 @@ public class ICICIGateway implements Gateway {
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
-            // ICICI status API returns a JSON Array, extract first element as the actual response object
-            ResponseEntity<List> response = restTemplate.exchange(STATUS_CHECK_URL, HttpMethod.POST, entity, List.class);
+            ResponseEntity<Map> response = restTemplate.exchange(STATUS_CHECK_URL, HttpMethod.POST, entity, Map.class);
 
-            List<Object> responseList = response.getBody();
+            Map<String, Object> responseBody = response.getBody();
+            log.info("ICICI status response : {}", responseBody);
 
-            if (responseList == null || responseList.isEmpty()) {
-
+            if (responseBody == null) {
                 throw new RuntimeException("Empty response from ICICI");
             }
 
-            // First element contains the transaction status object
-            Map<String, Object> responseBody = (Map<String, Object>) responseList.get(0);
-            log.info("ICICI status response : {}", responseBody);
-
             currentStatus.setGatewayTxnId((String) responseBody.get("txnID"));
-
+            currentStatus.setGatewayStatusCode((String) responseBody.get("txnResponseCode"));
+            currentStatus.setGatewayStatusMsg((String) responseBody.get("txnRespDescription"));
+            currentStatus.setTxnAmount((String) responseBody.get("amount"));
             currentStatus.setResponseJson(objectMapper.writeValueAsString(responseBody));
 
             String txnStatus = (String) responseBody.get("txnStatus");
@@ -194,9 +190,7 @@ public class ICICIGateway implements Gateway {
             if ("SUC".equalsIgnoreCase(txnStatus)) {
 
                 currentStatus.setTxnStatus(TxnStatusEnum.SUCCESS);
-
-            } else if ("FAIL".equalsIgnoreCase(txnStatus)) {
-
+           } else if ("FAIL".equalsIgnoreCase(txnStatus) || "REJ".equalsIgnoreCase(txnStatus)) {
                 currentStatus.setTxnStatus(TxnStatusEnum.FAILURE);
 
             } else {
