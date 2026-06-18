@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import _, { keys } from "lodash";
 import * as func from "../utils";
-import "../css/ws-inline-auto.css";
+
 const createConnectionDetails = () => ({
   key: Date.now(),
 

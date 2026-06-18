@@ -4,7 +4,7 @@ import { cardBodyStyle } from "../utils";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 import { getOwnersForNewApplication } from "../utils/index";
-import "../css/tl-inline-auto.css";
+
 const SelectOwnerShipDetails = ({
   t,
   config,

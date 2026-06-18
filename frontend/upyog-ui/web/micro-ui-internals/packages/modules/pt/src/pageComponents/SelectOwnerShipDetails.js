@@ -12,7 +12,7 @@ import {
 import { cardBodyStyle } from "../utils";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
-import "../css/pt-inline-auto.css";
+
 const SelectOwnerShipDetails = ({
   t,
   config,

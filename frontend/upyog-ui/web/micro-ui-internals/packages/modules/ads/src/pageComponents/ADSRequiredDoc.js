@@ -7,7 +7,7 @@ import { TimerValues } from "../components/TimerValues";
   ADSRequiredDoc  displays the info page for  required documents for an advertisement to book
    and it also shows upload restrictions and document requirements.
 */
-import "../css/ads-inline-auto.css";
+
 const ADSRequiredDoc = ({
   t,
   config,

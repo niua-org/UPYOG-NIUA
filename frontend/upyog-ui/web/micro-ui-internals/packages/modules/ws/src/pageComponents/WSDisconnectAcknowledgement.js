@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { pdfDocumentName, pdfDownloadLink } from "../utils";
 import getWSDisconectionAcknowledgementData from "../utils/getWSDisconnectionAcknowledgementData";
-import "../css/ws-inline-auto.css";
+
 const BannerPicker = props => {
   return <Banner message={props.message} applicationNumber={props?.applicationNumber} successful={props.isSuccess} headerStyles={{
     fontSize: "32px"

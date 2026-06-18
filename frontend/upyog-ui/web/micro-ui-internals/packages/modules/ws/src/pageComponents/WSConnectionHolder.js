@@ -3,7 +3,7 @@ import { CardLabel, CheckBox, Dropdown, FormStep, Loader, MobileNumber, RadioBut
 import React, { useEffect, useState } from "react";
 import Timeline from "../components/Timeline";
 import { stringReplaceAll } from "../utils";
-import "../css/ws-inline-auto.css";
+
 const WSConnectionHolder = ({
   t,
   config,

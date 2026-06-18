@@ -2,7 +2,7 @@ import { CardLabel, CitizenInfoLabel, FormStep, Loader, TextInput } from "@nudmc
 import React, { useState, useEffect } from "react";
 import Timeline from "../components/TLTimeline";
 import { currentFinancialYear } from "../utils";
-import "../css/tl-inline-auto.css";
+
 const SelectTradeName = ({
   t,
   config,

@@ -7,7 +7,7 @@ import { useLocation } from "react-router-dom";
 import { getUniqueItemsFromArray, commonTransform, stringReplaceAll, getPattern } from "../utils";
 import isUndefined from "lodash/isUndefined";
 import { sortDropdownNames } from "../utils/index";
-import "../css/tl-inline-auto.css";
+
 const createAccessoriesDetails = () => ({
   accessoryCategory: "",
   count: "",

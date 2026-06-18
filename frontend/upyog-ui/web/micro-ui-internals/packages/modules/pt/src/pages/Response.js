@@ -3,7 +3,7 @@ import { Card, Banner, CardText, SubmitBar, Loader, Toast, ActionBar } from "@nu
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import getPTAcknowledgementData from "../getPTAcknowledgementData";
-import "../css/pt-inline-auto.css";
+
 const GetMessage = (type, action, isSuccess, isEmployee, t) => {
   return t(`${isEmployee ? "E" : "C"}S_PT_RESPONSE_${action ? action : "CREATE"}_${type}${isSuccess ? "" : "_ERROR"}`);
 };

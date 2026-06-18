@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import ApplicationTable from "./inbox/ApplicationTable";
 import InboxLinks from "./inbox/InboxLink";
 import SearchApplication from "./inbox/search";
-import "../css/asset-inline-auto.css";
+
 const ASTDesktopInbox = ({
   tableConfig,
   filterComponent,

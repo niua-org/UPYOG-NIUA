@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import "../css/asset-inline-auto.css";
+
 const editnewDetails = () => ({
   key: Date.now()
 });

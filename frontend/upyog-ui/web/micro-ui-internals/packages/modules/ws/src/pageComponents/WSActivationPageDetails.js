@@ -5,7 +5,7 @@ import * as func from "../utils";
 import { useForm, Controller } from "react-hook-form";
 import _ from "lodash";
 import { useTranslation } from "react-i18next";
-import "../css/ws-inline-auto.css";
+
 const createActivationDetails = () => ({
   meterId: "",
   meterInstallationDate: null,

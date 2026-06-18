@@ -15,7 +15,7 @@ import { stringReplaceAll } from "../utils";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import * as func from "../utils/";
-import "../css/ws-inline-auto.css";
+
 const createDisConnectionAppDetails = () => [{
   consumerNumber: "",
   disConnectionType: "",

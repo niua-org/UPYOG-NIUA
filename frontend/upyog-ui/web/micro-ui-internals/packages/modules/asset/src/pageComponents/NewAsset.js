@@ -13,7 +13,7 @@ import {
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/ASTTimeline";
 import { Controller, useForm } from "react-hook-form";
-import "../css/asset-inline-auto.css";
+
 const NewAsset = ({
   t,
   config,

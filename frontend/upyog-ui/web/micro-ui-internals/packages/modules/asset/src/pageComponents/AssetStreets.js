@@ -21,7 +21,7 @@ import _ from "lodash";
 import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Timeline from "../components/ASTTimeline";
-import "../css/asset-inline-auto.css";
+
 const AssetStreets = ({
   t,
   config,

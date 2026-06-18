@@ -7,7 +7,7 @@ import { useForm, Controller, useWatch } from "react-hook-form";
 import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import "../css/ws-inline-auto.css";
+
 const createConnectionDetails = service => service == "WATER" ? {
   connectionType: "",
   noOfTaps: "",

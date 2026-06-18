@@ -8,7 +8,7 @@ import { TimerValues } from "../components/TimerValues";
  * for the ADS application. It manages document state, validates uploads,
  * and integrates with a document selection dropdown.
  */
-import "../css/ads-inline-auto.css";
+
 const ADSDocumentDetails = ({
   t,
   config,

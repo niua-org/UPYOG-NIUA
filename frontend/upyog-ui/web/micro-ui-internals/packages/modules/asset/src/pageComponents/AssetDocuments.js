@@ -9,7 +9,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import "../css/asset-inline-auto.css";
+
 const AssetDocuments = ({
   t,
   config,

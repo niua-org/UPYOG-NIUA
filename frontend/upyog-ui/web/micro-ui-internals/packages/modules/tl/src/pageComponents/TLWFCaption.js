@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { TelePhone, DisplayPhotos } from "@nudmcdgnpm/digit-ui-react-components";
 //TODO: please find a better way to display in checkpoints
 import TLWFReason from "./TLWFReason";
-import "../css/tl-inline-auto.css";
+
 const TLWFCaption = ({
   data
 }) => {

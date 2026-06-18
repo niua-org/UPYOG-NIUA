@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Fragment } from "react";
 import ButtonSelector from "./ButtonSelector";
 import { useTranslation } from "react-i18next";
 import RemoveableTag from "./RemoveableTag";
-import "../css/pt-inline-auto.css";
+
 const getRandomId = () => {
   return Math.floor((Math.random() || 1) * 139);
 };

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 import { sortDropdownNames } from "../utils/index";
-import "../css/tl-inline-auto.css";
+
 const SelectTradeUnits = ({
   t,
   config,

@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
  * Populates session state with selected booking details.
  * Triggers `onSubmit` after session data is updated.
  */
-import "../css/ads-inline-auto.css";
+
 export const ExistingBookingDetails = ({
   onSubmit,
   setExistingDataSet,

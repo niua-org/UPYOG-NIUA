@@ -11,7 +11,7 @@ import {
   Toast,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import SearchFormFields from "./SearchFields";
-import "../css/pt-inline-auto.css";
+
 const MobileSearchApplication = ({
   Controller,
   register,

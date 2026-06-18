@@ -3,7 +3,7 @@ import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import PTWFCaption from "./PTWFCaption";
-import "../css/pt-inline-auto.css";
+
 const PTWFApplicationTimeline = props => {
   const {
     t

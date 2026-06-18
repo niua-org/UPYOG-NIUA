@@ -6,7 +6,7 @@ import { TelePhone, DisplayPhotos } from "@nudmcdgnpm/digit-ui-react-components"
    -`data` which contains all the information to be displayed (name, phone number, comments, etc.)
    -`OpenImage` which is a function to handle the opening of full-size images when thumbnails are clicked.
  */
-import "../css/wt-inline-auto.css";
+
 const WFCaption = ({
   data,
   OpenImage

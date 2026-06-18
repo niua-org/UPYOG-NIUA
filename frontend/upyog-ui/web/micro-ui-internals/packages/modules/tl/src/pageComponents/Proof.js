@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FormStep, UploadFile, CardLabelDesc, Dropdown, CardLabel } from "@nudmcdgnpm/digit-ui-react-components";
 import { stringReplaceAll } from "../utils";
 import Timeline from "../components/TLTimeline";
-import "../css/tl-inline-auto.css";
+
 const Proof = ({
   t,
   config,

@@ -17,7 +17,7 @@ import SearchApplication from "./inbox/search";
  * @param {Object} props - The properties passed to the component.
  * @returns {JSX.Element} A desktop inbox UI for Water Tanker applications, with search, filter, and table display.
  */
-import "../css/wt-inline-auto.css";
+
 const WTDesktopInbox = ({
   tableConfig,
   filterComponent,

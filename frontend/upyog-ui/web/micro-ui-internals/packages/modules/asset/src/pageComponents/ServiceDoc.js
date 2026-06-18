@@ -2,7 +2,7 @@ import { Card, CardHeader, CardSubHeader,CardSectionHeader, CardText, Loader, Su
 import React, { useEffect } from "react";
 import { stringReplaceAll } from "../utils";
 //import { map } from "lodash-es";
-import "../css/asset-inline-auto.css";
+
 const ServiceDoc = ({
   t,
   config,

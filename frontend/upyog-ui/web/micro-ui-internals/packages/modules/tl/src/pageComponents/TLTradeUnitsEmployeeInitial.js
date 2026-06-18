@@ -7,7 +7,7 @@ import { useLocation } from "react-router-dom";
 import { getUniqueItemsFromArray, stringReplaceAll } from "../utils";
 import cloneDeep from "lodash/cloneDeep";
 import { sortDropdownNames } from "../utils/index";
-import "../css/tl-inline-auto.css";
+
 const createUnitDetails = () => ({
   tradeType: "",
   tradeSubType: "",

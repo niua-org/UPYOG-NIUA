@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CardLabel, Dropdown, UploadFile, Toast, Loader, FormStep } from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../components/Timeline";
-import "../css/ws-inline-auto.css";
+
 const WSDocumentDetails = ({
   t,
   config,

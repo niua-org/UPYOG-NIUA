@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
 import { commonTransform, getUniqueItemsFromArray, stringReplaceAll } from "../utils";
 import { sortDropdownNames } from "../utils/index";
-import "../css/tl-inline-auto.css";
+
 const SelectAccessoriesDetails = ({
   t,
   config,

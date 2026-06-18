@@ -3,7 +3,7 @@ import { UploadFile, CardLabelDesc, Dropdown, CardLabel, FormStep } from "@nudmc
 import { stringReplaceAll } from "../utils";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
-import "../css/pt-inline-auto.css";
+
 const SelectProofIdentity = ({
   t,
   config,

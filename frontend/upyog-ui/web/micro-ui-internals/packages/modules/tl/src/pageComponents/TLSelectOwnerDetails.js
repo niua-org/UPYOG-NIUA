@@ -13,7 +13,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 
 import Timeline from "../components/TLTimeline";
-import "../css/tl-inline-auto.css";
+
 const TLSelectOwnerDetails = ({
   t,
   config,

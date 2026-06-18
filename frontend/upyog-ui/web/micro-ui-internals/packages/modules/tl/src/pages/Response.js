@@ -4,7 +4,7 @@ import { useLocation, Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import getPTAcknowledgementData from "../utils/getTLAcknowledgementData";
 import * as func from "../utils";
-import "../css/tl-inline-auto.css";
+
 const Response = props => {
   const location = useLocation();
   const { state } = location;

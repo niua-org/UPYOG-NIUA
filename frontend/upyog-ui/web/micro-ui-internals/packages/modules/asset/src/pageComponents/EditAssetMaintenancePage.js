@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { checkForNA } from "../utils";
 import { useLocation } from "react-router-dom";
-import "../css/asset-inline-auto.css";
+
 const createAssetcommonforAll = () => ({
   warrantyStatus: "",
   assetWarrantyDescription: "",

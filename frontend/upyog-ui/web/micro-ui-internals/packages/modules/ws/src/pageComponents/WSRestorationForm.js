@@ -26,7 +26,7 @@ import {  useLocation } from "react-router-dom";
 import DisconnectTimeline from "../components/DisconnectTimeline";
 import { stringReplaceAll, createPayloadOfWSDisconnection, updatePayloadOfWSDisconnection, convertDateToEpoch, updatePayloadOfWSRestoration, createPayloadOfWSReconnection } from "../utils";
 import { addDays, format } from "date-fns";
-import "../css/ws-inline-auto.css";
+
 const WSRestorationForm = ({
   t,
   config,

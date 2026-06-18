@@ -11,7 +11,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import QRCode from 'qrcode';
-import "../css/asset-inline-auto.css";
+
 const ASSETReportApplication = ({
   tenantId,
   isLoading,

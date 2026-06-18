@@ -25,7 +25,7 @@ import BookingPopup from "../components/BookingPopup";
  */
 
 import ADSCartDetails from "../components/ADSCartDetails";
-import "../css/ads-inline-auto.css";
+
 const ADSSearch = ({
   t,
   onSelect,

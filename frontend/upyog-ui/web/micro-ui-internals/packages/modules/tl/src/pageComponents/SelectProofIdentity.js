@@ -2,7 +2,7 @@ import { CardLabel, CardLabelDesc, FormStep, UploadFile } from "@nudmcdgnpm/digi
 import React, { useEffect, useState } from "react";
 import Timeline from "../components/TLTimeline";
 import { getOwnersfromProperty } from "../utils";
-import "../css/tl-inline-auto.css";
+
 const SelectProofIdentity = ({
   t,
   config,

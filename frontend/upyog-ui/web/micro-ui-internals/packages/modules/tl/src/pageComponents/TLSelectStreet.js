@@ -3,7 +3,7 @@ import { FormStep, TextInput, LabelFieldPair, CardLabel, WrapUnMaskComponent } f
 import { useForm, Controller } from "react-hook-form";
 import _ from "lodash";
 import Timeline from "../components/TLTimelineInFSM";
-import "../css/tl-inline-auto.css";
+
 const TLSelectStreet = ({
   t,
   config,

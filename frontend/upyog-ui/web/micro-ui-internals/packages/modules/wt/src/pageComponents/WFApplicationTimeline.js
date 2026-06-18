@@ -6,7 +6,7 @@ import WFCaption from "./WFCaption";
 import { APPLICATION_PATH } from "../utils";
 
 // This component WFApplicationTimeline displays the timeline of an application process.
-import "../css/wt-inline-auto.css";
+
 const WFApplicationTimeline = props => {
   let bookingCode = props?.application?.bookingNo.split("-")[0]; // for selecting the Module code from booking number
   const {

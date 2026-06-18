@@ -3,7 +3,7 @@ import React, { Fragment, useState} from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import WSWFCaption from "./WSWFCaption";
-import "../css/ws-inline-auto.css";
+
 const WSWFApplicationTimeline = props => {
   const {
     t

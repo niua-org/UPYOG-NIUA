@@ -10,7 +10,7 @@ import { TimerValues } from "../components/TimerValues";
  * ADSAddress component for capturing address details.
  * Integrates with hooks for fetching cities and localities.
  */
-import "../css/ads-inline-auto.css";
+
 const ADSAddress = ({
   t,
   config,

@@ -15,7 +15,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import "../css/tl-inline-auto.css";
+
 const createOwnerDetails = () => ({
   name: "",
   designation: "",

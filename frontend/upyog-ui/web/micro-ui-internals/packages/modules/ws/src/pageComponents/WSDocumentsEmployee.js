@@ -10,7 +10,7 @@ import {
   CardSectionHeader,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useLocation } from "react-router-dom";
-import "../css/ws-inline-auto.css";
+
 const WSDocumentsEmployee = ({
   t,
   config,

@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { stringReplaceAll } from "../utils";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import "../css/ws-inline-auto.css";
+
 const createRoadCuttingDetails = () => ({
   roadType: {
     code: "",

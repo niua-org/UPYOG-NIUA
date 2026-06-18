@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { stringReplaceAll } from "../utils";
 import Timeline from "../components/TLTimeline";
 import UploadFileDigiLocker from "../utils/UploadFile";
-import "../css/pt-inline-auto.css";
+
 const Proof = ({
   t,
   config,

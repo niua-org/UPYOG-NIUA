@@ -10,7 +10,7 @@ import { TimerValues } from "../components/TimerValues";
  * applicant information, including name, mobile number, alternate number, 
  * and email address. It provides a structured form step for user input.
  */
-import "../css/ads-inline-auto.css";
+
 const ADSCitizenDetails = ({
   t,
   config,

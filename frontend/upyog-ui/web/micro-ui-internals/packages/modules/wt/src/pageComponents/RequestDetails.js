@@ -5,7 +5,7 @@ import { FormStep, TextInput, CardLabel, RadioButtons,CheckBox,Dropdown, TextAre
  * Major Page which is developed for Request/Booking detail page
  * 
  */
-import "../css/wt-inline-auto.css";
+
 const RequestDetails = ({
   t,
   config,

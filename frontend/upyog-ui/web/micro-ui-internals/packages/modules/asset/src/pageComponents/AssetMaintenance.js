@@ -19,7 +19,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { checkForNA } from "../utils";
-import "../css/asset-inline-auto.css";
+
 const createAssetcommonforAll = () => ({
   warrantyStatus: "",
   assetWarrantyDescription: "",

@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import * as func from "../utils";
 import { getPattern, stringReplaceAll } from "../utils";
-import "../css/ws-inline-auto.css";
+
 const createConnectionHolderDetails = () => ({
   sameAsOwnerDetails: true,
   name: "",

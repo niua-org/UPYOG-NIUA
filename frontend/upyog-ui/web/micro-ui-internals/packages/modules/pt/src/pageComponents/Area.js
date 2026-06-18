@@ -2,7 +2,7 @@ import { CardLabel, FormStep, LabelFieldPair, TextInput, CardLabelError } from "
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
-import "../css/pt-inline-auto.css";
+
 const Area = ({
   t,
   config,

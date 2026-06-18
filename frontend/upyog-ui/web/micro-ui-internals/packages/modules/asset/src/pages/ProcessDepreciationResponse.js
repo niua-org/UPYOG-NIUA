@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, Banner, SubmitBar, Toast, ActionBar, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import "../css/asset-inline-auto.css";
+
 const ProcessDepreciationResponse = props => {
   const location = useLocation();
   const {

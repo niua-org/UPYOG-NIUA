@@ -12,7 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { stringReplaceAll } from "../utils";
 import Timeline from "../components/TLTimeline";
-import "../css/pt-inline-auto.css";
+
 const PropertyType = ({
   t,
   config,

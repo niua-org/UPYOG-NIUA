@@ -4,7 +4,7 @@ import { stringReplaceAll } from "../utils";
 import { useForm, Controller } from "react-hook-form";
 import _ from "lodash";
 import { useLocation } from "react-router-dom";
-import "../css/pt-inline-auto.css";
+
 const Units = ({
   t,
   config,

@@ -2,7 +2,7 @@ import { Card, CardHeader, CardSubHeader, CardText, Loader, SubmitBar } from "@n
 import React, { useEffect } from "react";
 import { cardBodyStyle, stringReplaceAll } from "../utils";
 //import { map } from "lodash-es";
-import "../css/pt-inline-auto.css";
+
 const PropertyTax = ({
   t,
   config,

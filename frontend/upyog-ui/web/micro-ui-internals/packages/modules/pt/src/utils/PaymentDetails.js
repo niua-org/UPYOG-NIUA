@@ -2,7 +2,7 @@ import { Card, CardText, Header, LinkLabel, Loader, Row, StatusTable } from "@nu
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import "../css/pt-inline-auto.css";
+
 const convertEpochToDate = dateEpoch => {
   if (dateEpoch) {
     const dateFromApi = new Date(dateEpoch);

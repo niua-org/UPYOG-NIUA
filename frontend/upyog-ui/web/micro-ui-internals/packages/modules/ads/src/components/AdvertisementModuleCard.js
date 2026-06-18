@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
  * - `handleViewAvailability`: Sets session storage with ad details and redirects to the search page.
  * - `useEffect`: Clears session storage on component mount to prevent stale data.
  */
-import "../css/ads-inline-auto.css";
+
 const AdvertisementModuleCard = ({
   imageSrc,
   title,
