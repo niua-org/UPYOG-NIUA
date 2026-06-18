@@ -81,19 +81,19 @@ public class SchemaDefinitionService {
 
             Map<String, SchemaDefinition> uniqueCodes = new TreeMap<>(); // ASC order
 
-            schemaDefinitions.forEach(s -> {
-                String moduleName = s.getCode().split("\\.")[0];
+            schemaDefinitions.forEach(schemaDefinition -> {
+                String moduleName = schemaDefinition.getCode().split("\\.")[0];
 
                 if (!uniqueCodes.containsKey(moduleName)) {
-                    s.setCode(moduleName);
-                    s.setDefinition(null);
-                    s.setDescription(null);
-                    s.setAuditDetails(null);
-                    s.setId(null);
-                    s.setTenantId(null);
-                    s.setIsActive(null);
+                    schemaDefinition.setCode(moduleName);
+                    schemaDefinition.setDefinition(null);
+                    schemaDefinition.setDescription(null);
+                    schemaDefinition.setAuditDetails(null);
+                    schemaDefinition.setId(null);
+                    schemaDefinition.setTenantId(null);
+                    schemaDefinition.setIsActive(null);
 
-                    uniqueCodes.put(moduleName, s);
+                    uniqueCodes.put(moduleName, schemaDefinition);
                 }
             });
 
