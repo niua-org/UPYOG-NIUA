@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //import org.egov.pg.models.Refund;
@@ -48,6 +49,12 @@ public class ICICIGateway implements Gateway {
     private final RestTemplate restTemplate;
     private ObjectMapper objectMapper;
 
+    /**
+     * Aggregator ID provided by ICICI Payment Gateway.
+     * Used to identify the payment aggregator while initiating transactions.
+     */
+    private final String AGGREGATOR_ID;
+    private final String ORIGINAL_RETURN_URL_KEY;
     private final boolean ACTIVE;
 
     /**
@@ -68,6 +75,8 @@ public class ICICIGateway implements Gateway {
         INITIATE_SALE_URL = environment.getRequiredProperty("icici.gateway.url");
         STATUS_CHECK_URL = environment.getRequiredProperty("icici.gateway.url.status");
         REDIRECT_URL = environment.getRequiredProperty("icici.redirect.url");
+        AGGREGATOR_ID = environment.getRequiredProperty("icici.aggregator.id");
+        ORIGINAL_RETURN_URL_KEY = environment.getRequiredProperty("icici.original.return.url.key");
 
     }
 
@@ -148,6 +157,7 @@ public class ICICIGateway implements Gateway {
             Map<String, Object> request = new HashMap<>();
 
             request.put("merchantId", MERCHANT_ID);
+            request.put("aggregatorID", AGGREGATOR_ID);
             request.put("merchantTxnNo", currentStatus.getTxnId());
             request.put("originalTxnNo", currentStatus.getTxnId());
             request.put("transactionType", "STATUS");
@@ -161,23 +171,26 @@ public class ICICIGateway implements Gateway {
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
 
-            ResponseEntity<Map> response = restTemplate.exchange(STATUS_CHECK_URL, HttpMethod.POST, entity, Map.class);
+            // ICICI status API returns a JSON Array, extract first element as the actual response object
+            ResponseEntity<List> response = restTemplate.exchange(STATUS_CHECK_URL, HttpMethod.POST, entity, List.class);
 
-            Map<String, Object> responseBody = response.getBody();
+            List<Object> responseList = response.getBody();
 
-            log.info("ICICI status response : {}", responseBody);
-
-            if (responseBody == null) {
+            if (responseList == null || responseList.isEmpty()) {
 
                 throw new RuntimeException("Empty response from ICICI");
             }
+
+            // First element contains the transaction status object
+            Map<String, Object> responseBody = (Map<String, Object>) responseList.get(0);
+            log.info("ICICI status response : {}", responseBody);
 
             currentStatus.setGatewayTxnId((String) responseBody.get("txnID"));
 
             currentStatus.setResponseJson(objectMapper.writeValueAsString(responseBody));
 
             String txnStatus = (String) responseBody.get("txnStatus");
-
+            log.info("ICICI Transaction Status: {}", txnStatus);
             if ("SUC".equalsIgnoreCase(txnStatus)) {
 
                 currentStatus.setTxnStatus(TxnStatusEnum.SUCCESS);
@@ -257,6 +270,7 @@ public class ICICIGateway implements Gateway {
         Map<String, Object> request = new HashMap<>();
 
         request.put("merchantId", MERCHANT_ID);
+        request.put("aggregatorID", AGGREGATOR_ID);
         request.put("merchantTxnNo", transaction.getTxnId());
 
         request.put("amount", new BigDecimal(transaction.getTxnAmount()).setScale(2, RoundingMode.HALF_UP).toString());
@@ -269,7 +283,16 @@ public class ICICIGateway implements Gateway {
 
         request.put("transactionType", "SALE");
 
-        request.put("returnURL", transaction.getCallbackUrl());
+        // Route ICICI callback through redirect controller instead of directly hitting frontend
+        String icicReturnUrl = UriComponentsBuilder
+                .fromHttpUrl(REDIRECT_URL)
+                .queryParam(ORIGINAL_RETURN_URL_KEY, transaction.getCallbackUrl())
+                .build()
+                .toUriString();
+
+        log.info("ICICI returnURL (wrapped) = {}", icicReturnUrl);
+
+        request.put("returnURL", icicReturnUrl);
 
         request.put("txnDate", ICICIUtils.getCurrentTxnDate());
 
@@ -284,6 +307,7 @@ public class ICICIGateway implements Gateway {
         return request;
     }
 
+    /* TODO: will uncomment when refund will implement */
 //    @Override
 //    public Refund initiateRefund(Refund refundTxn) {
 //        // TODO Auto-generated method stub
