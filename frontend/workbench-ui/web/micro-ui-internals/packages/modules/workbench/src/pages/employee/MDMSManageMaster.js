@@ -92,12 +92,6 @@ const MDMSManageMaster = () => {
     _.debounce((text) => {
       if (text && text.trim().length >= 3) {
         callSchemaAPI(text.trim());
-      } else {
-        // setSchemaData(null);
-        // setMasterOptions([]);
-        // setModuleOptions([]);
-        // setMasterName(null);
-        // setModuleName(null);
       }
     }, 500),
     [tenantId]
