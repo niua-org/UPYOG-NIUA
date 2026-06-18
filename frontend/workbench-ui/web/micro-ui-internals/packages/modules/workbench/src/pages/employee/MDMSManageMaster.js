@@ -93,11 +93,11 @@ const MDMSManageMaster = () => {
       if (text && text.trim().length >= 3) {
         callSchemaAPI(text.trim());
       } else {
-        setSchemaData(null);
-        setMasterOptions([]);
-        setModuleOptions([]);
-        setMasterName(null);
-        setModuleName(null);
+        // setSchemaData(null);
+        // setMasterOptions([]);
+        // setModuleOptions([]);
+        // setMasterName(null);
+        // setModuleName(null);
       }
     }, 500),
     [tenantId]
@@ -114,6 +114,7 @@ const MDMSManageMaster = () => {
   setModuleName(null);
   setUpdatedConfig(null);
   setModuleOptions([]);
+  setMasterOptions([]);
 };
 
 
@@ -145,7 +146,7 @@ const MDMSManageMaster = () => {
               style={{ width: "100%", margin: 0, flexShrink: 0}}
               option={masterOptions}
               className={"form-field"}
-              optionKey="code"
+              optionKey="name"
               selected={master && modulee ? toDropdownObj(master) : masterName}
               select={(e) => {
                 setMasterName(e);
