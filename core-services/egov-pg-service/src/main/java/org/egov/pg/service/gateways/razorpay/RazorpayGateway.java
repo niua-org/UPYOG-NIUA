@@ -3,6 +3,7 @@ package org.egov.pg.service.gateways.razorpay;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.pg.constants.PgConstants;
+import org.egov.pg.models.Refund;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.service.Gateway;
 import org.egov.pg.utils.Utils;
@@ -251,5 +252,16 @@ public class RazorpayGateway implements Gateway {
                 .gatewayStatusMsg(resp.getDescription())
                 .responseJson(resp)
                 .build();
+    }
+
+
+    @Override
+    public Refund initiateRefund(Refund refundTxn) {
+        return null;
+    }
+
+    @Override
+    public Refund fetchRefundStatus(Refund refundRequest) {
+        return null;
     }
 }
