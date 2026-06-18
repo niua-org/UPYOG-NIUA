@@ -201,7 +201,9 @@ public class ICICIGateway implements Gateway {
             return currentStatus;
 
         } catch (Exception ex) {
-            log.error("Error while fetching ICICI payment status", ex);
+
+            log.info("Error while fetching ICICI payment status:{}", ex);
+
             throw new RuntimeException("ICICI payment status fetch failed", ex);
         }
     }
