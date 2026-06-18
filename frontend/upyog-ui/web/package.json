@@ -30,7 +30,13 @@
     "micro-ui-internals/packages/modules/mCollect",
     "micro-ui-internals/packages/modules/chb",
     "micro-ui-internals/packages/modules/assetv2",
-    "micro-ui-internals/packages/modules/gis"
+    "micro-ui-internals/packages/modules/gis",
+    "micro-ui-internals/packages/modules/ads",
+    "micro-ui-internals/packages/modules/est",
+    "micro-ui-internals/packages/modules/ndc",
+    "micro-ui-internals/packages/modules/challangeneration",
+    "micro-ui-internals/packages/libraries/react-components"
+
   ],
   "engines": {
     "node": ">=22"
