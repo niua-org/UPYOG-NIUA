@@ -109,43 +109,34 @@ function ApplicationDetailsContent({
 
   const [fetchBillData, updatefetchBillData] = useState({});
 
-  const setBillData = async (tenantId, propertyIds, updatefetchBillData, updateCanFetchBillData) => {
-    const assessmentData = await Digit.PTService.assessmentSearch({ tenantId, filters: { propertyIds } });
-    let billData = {};
-    if (assessmentData?.Assessments?.length > 0) {
-      billData = await Digit.PaymentService.fetchBill(tenantId, {
-        businessService: "PT",
-        consumerCode: propertyIds,
-      });
-    }
-    updatefetchBillData(billData);
-    updateCanFetchBillData({
-      loading: false,
-      loaded: true,
-      canLoad: true,
-    });
-  };
   const [billData, updateCanFetchBillData] = useState({
     loading: false,
     loaded: false,
     canLoad: false,
   });
 
-  if (applicationData?.status == "ACTIVE" && !billData.loading && !billData.loaded && !billData.canLoad) {
-    updateCanFetchBillData({
-      loading: false,
-      loaded: false,
-      canLoad: true,
-    });
-  }
-  if (billData?.canLoad && !billData.loading && !billData.loaded) {
-    updateCanFetchBillData({
-      loading: true,
-      loaded: false,
-      canLoad: true,
-    });
-    setBillData(applicationData?.tenantId || tenantId, applicationData?.propertyId, updatefetchBillData, updateCanFetchBillData);
-  }
+  useEffect(() => {
+    const propId = applicationData?.propertyId;
+    const resTenant = applicationData?.tenantId || tenantId;
+    if (applicationData?.status === "ACTIVE" && propId && resTenant && !billData.loading && !billData.loaded && !billData.canLoad) {
+      const fetchBill = async () => {
+        updateCanFetchBillData({ loading: true, loaded: false, canLoad: true });
+        try {
+          const assessmentData = await Digit.PTService.assessmentSearch({ tenantId: resTenant, filters: { propertyIds: propId } });
+          let bill = {};
+          if (assessmentData?.Assessments?.length > 0) {
+            bill = await Digit.PaymentService.fetchBill(resTenant, { businessService: "PT", consumerCode: propId });
+          }
+          updatefetchBillData(bill);
+          updateCanFetchBillData({ loading: false, loaded: true, canLoad: true });
+        } catch (err) {
+          console.error(err);
+          updateCanFetchBillData({ loading: false, loaded: true, canLoad: true });
+        }
+      };
+      fetchBill();
+    }
+  }, [applicationData?.status, applicationData?.propertyId, applicationData?.tenantId, tenantId, billData.loading, billData.loaded, billData.canLoad]);
   const convertEpochToDateDMY = (dateEpoch) => {
     if (dateEpoch == null || dateEpoch == undefined || dateEpoch == "") {
       return "NA";

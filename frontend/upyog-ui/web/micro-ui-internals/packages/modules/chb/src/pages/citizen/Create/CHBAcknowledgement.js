@@ -3,6 +3,7 @@ import React, {useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  } from "react-router-dom";
 import { CHBDataConvert } from "../../../utils";
+import "../../../css/chb-inline.css";
 
 
 /**
@@ -62,7 +63,7 @@ const BannerPicker = (props) => {
       applicationNumber={props.data?.hallsBookingApplication[0].bookingNo}
       info={props.isSuccess ? props.t("CHB_BOOKING_NO") : ""}
       successful={props.isSuccess}
-      style={{ width: "100%" }}
+      className="chb-banner-full-width"
     />
   );
 };
@@ -164,7 +165,7 @@ const CHBAcknowledgement = ({ data, onSuccess, mutation }) => {
         {mutation.isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />}
       </StatusTable>
       {mutation.isSuccess && (
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
+      <div className="chb-ack-buttons-row">
         {user.type==="EMPLOYEE" &&(<Link to={`/upyog-ui/employee`}>
         <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
          </Link>)}
