@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,11 +83,7 @@ public class RentScheduler {
             return "No active allotments found";
         }
 
-        BigDecimal penaltyRate =
-                getPenaltyRateFromMdms(
-                        requestInfo,
-                        activeAllotments.get(0).getTenantId());
-
+        BigDecimal penaltyRate = mdmsUtil.getPenaltyRate(requestInfo, activeAllotments.get(0).getTenantId());
         log.info(
                 "Penalty rate from MDMS: {}%",
                 penaltyRate.multiply(BigDecimal.valueOf(100)));
@@ -152,32 +147,6 @@ public class RentScheduler {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Fetches the penalty rate configured in MDMS.
-     * Returns a default value of 5% if MDMS lookup fails.
-     *
-     * @param requestInfo request information
-     * @param tenantId tenant identifier
-     * @return penalty rate as a decimal value
-     */
-    @SuppressWarnings("unchecked")
-    private BigDecimal getPenaltyRateFromMdms(RequestInfo requestInfo, String tenantId) {
-        try {
-            Object mdmsData = mdmsUtil.mDMSCall(requestInfo, tenantId);
-            Map<String, Object> mdmsMap = (Map<String, Object>) mdmsData;
-            List<Map<String, Object>> penaltyList = (List<Map<String, Object>>)
-                    ((Map<String, Object>) ((Map<String, Object>) mdmsMap
-                            .get("MdmsRes")).get("Estate")).get("Penalty");
-            if (penaltyList != null && !penaltyList.isEmpty()) {
-                Object rate = penaltyList.get(0).get("rate");
-                return new BigDecimal(rate.toString()).divide(BigDecimal.valueOf(100));
-            }
-        } catch (Exception e) {
-            log.error("Failed to fetch penalty rate from MDMS, defaulting to 5%: {}", e.getMessage(), e);
-        }
-        return new BigDecimal("0.05");
     }
 
     /**
