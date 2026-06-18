@@ -6,7 +6,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-//import org.egov.pg.models.Refund;
+
+import org.egov.pg.models.Refund;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.models.Transaction.TxnStatusEnum;
 import org.egov.pg.service.Gateway;
@@ -241,6 +242,16 @@ public class ICICIGateway implements Gateway {
     public String generateRedirectFormData(Transaction transaction) {
 
         return null;
+    }
+
+    @Override
+    public Refund initiateRefund(Refund refundTxn) {
+        throw new RuntimeException("Method not Implemented");
+    }
+
+    @Override
+    public Refund fetchRefundStatus(Refund refundRequest) {
+        throw new RuntimeException("Method not Implemented");
     }
 
     /**
