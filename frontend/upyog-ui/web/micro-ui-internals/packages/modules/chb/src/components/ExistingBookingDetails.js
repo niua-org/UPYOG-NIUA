@@ -47,20 +47,23 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
   const [filters, setFilters] = useState(null);
   const [isDataSet, setIsDataSet] = useState(false); // State to track if data has been set
 
-  // Define the slot_search hook to refetch data on search
-  // const {refetch} = Digit.Hooks.chb.useChbSlotSearch({
-  //   tenantId:tenantId,
-  //   filters: {
-  //     communityHallCode:Searchdata.communityHallCode,
-  //     bookingStartDate:Searchdata.bookingStartDate,
-  //     bookingEndDate:Searchdata.bookingEndDate,
-  //     hallCode:Searchdata.hallCode,
-  //     isTimerRequired:true,
-  //   }
-  // });
+  // Define the slot_search hook to lock the slots and start the booking timer.
+  // Disabled by default; triggered manually via refetch() when an existing booking is chosen.
+  const { refetch } = Digit.Hooks.chb.useChbSlotSearch({
+    tenantId:tenantId,
+    filters: {
+      bookingId:"",
+      communityHallCode:Searchdata.communityHallCode,
+      bookingStartDate:Searchdata.bookingStartDate,
+      bookingEndDate:Searchdata.bookingEndDate,
+      hallCode:Searchdata.hallCode,
+      isTimerRequired:true,
+    },
+    enabled:false,
+  });
 
-  const setchbData = (application) => {
-    // const result =refetch();
+  const setchbData = async (application) => {
+    const result = await refetch();
     const newSessionData = {
       bankdetails: {
         accountNumber: application?.applicantDetail?.accountNumber,
@@ -97,9 +100,9 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
         purposeDescription: application?.purposeDescription,
       },
       timervalue:{
-        // timervalue:result?.timerValue || 0
-        timervalue:1800
-      }
+        timervalue:result?.data?.timerValue || 0
+      },
+      draftId:result?.data?.draftId || ""
     };
     setExistingDataSet(newSessionData);
     setIsDataSet(true);  // Set the flag to true after data is set

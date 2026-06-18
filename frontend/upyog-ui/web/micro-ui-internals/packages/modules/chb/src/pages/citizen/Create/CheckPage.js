@@ -20,7 +20,7 @@ import {
 import Timeline from "../../../components/CHBTimeline";
 import ApplicationTable from "../../../components/inbox/ApplicationTable";
 import CHBDocument from "../../../pageComponents/CHBDocument";
-import "../../../css/chb-inline.css";
+import { TimerValues } from "../../../components/TimerValues";
 
 const ActionButton = ({ jumpTo }) => {
   const { t } = useTranslation();
@@ -146,7 +146,12 @@ const CheckPage = ({ onSubmit, value = {} }) => {
     <React.Fragment>
      {window.location.href.includes("/citizen") ? <Timeline currentStep={6}/> : null}
     <Card>
-      <CardHeader>{t("CHB_CHECK_YOUR_DETAILS")}</CardHeader>
+      <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+        <CardHeader>{t("CHB_CHECK_YOUR_DETAILS")}</CardHeader>
+        <CardSubHeader>
+          <TimerValues timerValues={slotlist?.existingDataSet?.timervalue?.timervalue} SlotSearchData={slotlist?.Searchdata} draftId={slotlist?.existingDataSet?.draftId} />
+        </CardSubHeader>
+      </div>
       <div>
       <CardText>{t("CHB_CHECK_CHECK_YOUR_ANSWERS_TEXT")}</CardText>
         <CardSubHeader className="chb-subheader-lg">{t("CHB_APPLICANT_DETAILS")}</CardSubHeader>

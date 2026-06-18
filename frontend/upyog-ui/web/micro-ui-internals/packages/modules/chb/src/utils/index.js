@@ -128,7 +128,10 @@ export const setOwnerDetails = (data) => {
 
 
 export const CHBDataConvert = (data) => {
- 
+
+  // Captured before sethallDetails() overwrites data.slotlist with the hall details array.
+  const draftId = data?.slotlist?.existingDataSet?.draftId || "";
+  
   data = setDocumentDetails(data);
   data = setOwnerDetails(data);
   data = setBankDetails(data);
@@ -138,6 +141,7 @@ export const CHBDataConvert = (data) => {
 const formdata={
   hallsBookingApplication: {
     tenantId: data.tenantId,
+    draftId: draftId,
     applicantDetail:{
       ...data.bankdetails,
       ...data.ownerss
