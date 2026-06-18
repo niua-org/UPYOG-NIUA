@@ -294,7 +294,7 @@ export function CNDDocumnetPreview({ documents, titleStyles, isSendBackFlow = fa
  * }
  */
 
-export const getValidationRules = (input) => {
+export const getValidationRules = (input, t) => {
   const rules = {};
   if (input.maxLength) {
     rules.maxLength = {

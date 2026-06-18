@@ -113,7 +113,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                           name={input.name}
                           control={control}
                           defaultValue={""}
-                          rules={getValidationRules(input)}
+                          rules={getValidationRules(input, t)}
                         />
                       ) : (
                         <Controller
@@ -124,7 +124,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                           name={input.name}
                           control={control}
                           defaultValue={""}
-                          rules={getValidationRules(input)}
+                          rules={getValidationRules(input, t)}
                         />
                       )}
                     </span>
