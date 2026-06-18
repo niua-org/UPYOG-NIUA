@@ -62,25 +62,27 @@ const BookingPopup = ({ t, closeModal,onSubmit,setExistingDataSet,Searchdata }) 
         return showExistingBookingDetails && <h1 className="heading-m">{props.t("CHB_MY_APPLICATION_HEADER")}</h1>;
     };
     const [isDataSet, setIsDataSet] = useState(false); // State to track if data has been set
-    // Define the slot_search hook to refetch data on search
-    //   const {refetch} = Digit.Hooks.chb.useChbSlotSearch({
-    //     tenantId:tenantId,
-    //     filters: {
-    //       communityHallCode:Searchdata.communityHallCode,
-    //       bookingStartDate:Searchdata.bookingStartDate,
-    //       bookingEndDate:Searchdata.bookingEndDate,
-    //       hallCode:Searchdata.hallCode,
-    //       isTimerRequired:true,
-    //     }
-    //   });
-    
-      const setchbData = () => {
-        // const result =refetch();
+    // Define the slot_search hook to lock the slots and start the booking timer.
+    const { refetch } = Digit.Hooks.chb.useChbSlotSearch({
+      tenantId:tenantId,
+      filters: {
+        bookingId:"",
+        communityHallCode:Searchdata.communityHallCode,
+        bookingStartDate:Searchdata.bookingStartDate,
+        bookingEndDate:Searchdata.bookingEndDate,
+        hallCode:Searchdata.hallCode,
+        isTimerRequired:true,
+      },
+      enabled:false,
+    });
+
+      const setchbData = async () => {
+        const result = await refetch();
         const newSessionData = {
           timervalue:{
-            // timervalue:result?.timerValue || 10
-            timervalue:1800
-          }
+            timervalue:result?.data?.timerValue || 0
+          },
+          draftId:result?.data?.draftId || ""
         };
         setExistingDataSet(newSessionData);
         setIsDataSet(true);  // Set the flag to true after data is set
