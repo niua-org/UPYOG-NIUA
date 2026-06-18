@@ -180,8 +180,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 	}
 
 	@Override
-	public void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail availabilityDetailsResponse, String preGeneratedDraftId) {
+	public long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
+			String preGeneratedDraftId) {
 
 		String tenantId = requestInfo.getUserInfo().getTenantId();
 		String uuid = requestInfo.getUserInfo().getUuid();
@@ -194,11 +194,17 @@ public class BookingRepositoryImpl implements BookingRepository {
 			draftId = preGeneratedDraftId != null ? preGeneratedDraftId : BookingUtil.getRandonUUID();
 			insertNewDraftId(draftId, uuid, tenantId);
 			processBatchInsert(criteriaList, draftId, uuid, tenantId);
-			setTimerValue(availabilityDetailsResponse);
 		}
 
-		// Step 3: getAndInsertTimerData timer data
-		getAndInsertTimerData(draftId, criteriaList, requestInfo, availabilityDetailsResponse);
+		long timerValue = 0;
+		Map<String, Long> remainingTime = getRemainingTimerValues(draftId);
+		if (!remainingTime.isEmpty() && remainingTime.containsKey(draftId)) {
+			long remainingTimeValue = remainingTime.get(draftId);
+			timerValue = remainingTimeValue / 1000;
+		} else {
+			timerValue = bookingConfiguration.getPaymentTimer() / 1000;
+		}
+		return timerValue;
 	}
 
 	@Override
@@ -282,71 +288,7 @@ public class BookingRepositoryImpl implements BookingRepository {
 		jdbcTemplate.batchUpdate(AdvertisementBookingQueryBuilder.PAYMENT_TIMER_QUERY, batchArgs);
 	}
 
-	private void setTimerValue(AdvertisementSlotAvailabilityDetail availabilityDetailsResponse) {
-		long timerValue = bookingConfiguration.getPaymentTimer();
-		availabilityDetailsResponse.setTimerValue(timerValue / 1000); // Convert milliseconds to seconds
-	}
 
-	@Override
-	public void getAndInsertTimerData(String draftId, List<AdvertisementSlotSearchCriteria> criteriaList,
-			RequestInfo requestInfo, AdvertisementSlotAvailabilityDetail availabilityDetailsResponse) {
-
-		for (AdvertisementSlotSearchCriteria criteria : criteriaList) {
-			getTimerData(draftId, criteria, requestInfo, availabilityDetailsResponse, criteriaList);
-		}
-	}
-
-	@Override
-	public void getTimerData(String bookingId, AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail availabilityDetailsResponse,
-			List<AdvertisementSlotSearchCriteria> criteriaList) {
-		
-		
-		Map<String, Long> remainingTime = getRemainingTimerValues(bookingId);
-		if (!remainingTime.isEmpty() && remainingTime.containsKey(bookingId)) {
-			long remainingTimeValue = remainingTime.get(bookingId);
-			availabilityDetailsResponse.setTimerValue(remainingTimeValue / 1000);
-			
-		}
-		/*
-		 * List<AdvertisementSlotAvailabilityDetail> blockedSlots =
-		 * getBookedSlots(criteria, requestInfo);
-		 * 
-		 * if (!blockedSlots.isEmpty()) { log.info("Matched slot found: {}",
-		 * blockedSlots);
-		 * 
-		 * boolean dateMatched = blockedSlots.stream() .anyMatch(slot ->
-		 * slot.getBookingStartDate().equals(criteria.getBookingStartDate()) &&
-		 * slot.getBookingEndDate().equals(criteria.getBookingEndDate()));
-		 * 
-		 * if (!dateMatched) { log.info("Dates do not match, deleting old entry: {}",
-		 * bookingId);
-		 * 
-		 * String draftDeleteQuery =
-		 * AdvertisementBookingQueryBuilder.DraftID_DELETE_QUERY; String
-		 * timerDeleteQuery = AdvertisementBookingQueryBuilder.TIMER_DELETE_QUERY;
-		 * 
-		 * jdbcTemplate.update(draftDeleteQuery, bookingId);
-		 * jdbcTemplate.update(timerDeleteQuery, bookingId);
-		 * 
-		 * insertBookingIdForTimer(criteriaList, requestInfo,
-		 * availabilityDetailsResponse); } else {
-		 * 
-		 * } else { log.
-		 * info("No Matched slots found. Deleting non-matching booking entry with ID: {}"
-		 * , bookingId);
-		 * 
-		 * String draftDeleteQuery =
-		 * AdvertisementBookingQueryBuilder.DraftID_DELETE_QUERY; String
-		 * timerDeleteQuery = AdvertisementBookingQueryBuilder.TIMER_DELETE_QUERY;
-		 * 
-		 * jdbcTemplate.update(draftDeleteQuery, bookingId);
-		 * jdbcTemplate.update(timerDeleteQuery, bookingId);
-		 * 
-		 * insertBookingIdForTimer(criteriaList, requestInfo,
-		 * availabilityDetailsResponse); }
-		 */
-	}
 
 	@Override
 	public List<AdvertisementSlotAvailabilityDetail> getBookedSlots(AdvertisementSlotSearchCriteria criteria,

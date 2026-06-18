@@ -184,13 +184,13 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 
 		StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
 
-		String hallCodeQuery = " AND ecsd.hall_code ";
+		String hallCodeQuery = " AND ecsd.code ";
 
-		if (StringUtils.isNotBlank(criteria.getHallCode())) {
+		if (StringUtils.isNotBlank(criteria.getCode())) {
 			query.append(hallCodeQuery).append(" = ? ");
-			paramsList.add(criteria.getHallCode());
+			paramsList.add(criteria.getCode());
 		} else {
-			List<String> hallCodes = criteria.getHallCodes();
+			List<String> hallCodes = criteria.getCodes();
 			query.append(hallCodeQuery).append(" IN ( ");
 			int i = 0;
 			while (i < hallCodes.size()) {
@@ -234,8 +234,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		if (timerDetails != null && !timerDetails.isEmpty()) {
 			for (BookingPaymentTimerDetails detail : timerDetails) {
 				batchArgs.add(new Object[] { detail.getBookingId(), detail.getCreatedBy(), detail.getCreatedTime(),
-						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getCommunityHallcode(),
-						detail.getHallcode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
+						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getVenuecode(),
+						detail.getCode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
 						lastModifiedTime });
 			}
 		} else {
@@ -244,7 +244,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 			for (var date : bookingDates) {
 				for (var hallcode : hallCodes) {
 					batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", null,
-							criteria.getCommunityHallCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
+							criteria.getVenueCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
 							lastModifiedTime });
 				}
 			}
@@ -402,8 +402,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	        CommunityHallBookingQueryBuilder.SELECT_TIMER_QUERY,
 	        new Object[] {
 	            criteria.getTenantId(), 
-	            criteria.getCommunityHallCode(),
-	            criteria.getHallCode(),
+	            criteria.getVenueCode(),
+	            criteria.getCode(),
 	            startDate,
 	            endDate
 	        },
@@ -413,8 +413,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	            details.setCreatedBy(rs.getString("createdby"));
 	            details.setCreatedTime(rs.getLong("createdtime"));
 	            details.setStatus(rs.getString("status"));
-	            details.setCommunityHallcode(rs.getString("community_hall_code"));
-	            details.setHallcode(rs.getString("hall_code"));
+	            details.setVenuecode(rs.getString("venue_code"));
+	            details.setCode(rs.getString("code"));
 	            details.setLastModifiedBy(rs.getString("lastmodifiedby"));
 	            details.setLastModifiedTime(rs.getObject("lastmodifiedtime", Long.class));
 	            details.setTenantId(rs.getString("tenant_id"));

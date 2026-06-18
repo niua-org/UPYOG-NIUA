@@ -1,5 +1,6 @@
 package org.upyog.chb.web.models;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
@@ -26,11 +27,11 @@ public class CommunityHallSlotSearchCriteria {
 	private String tenantId;
 
 	@NotBlank
-	private String communityHallCode;
+	private String venueCode;
 
-	private String hallCode;
+	private String code;
 	
-	private List<String> hallCodes;
+	private List<String> codes;
 
 	@NotBlank
 	@ValidDate
@@ -52,6 +53,10 @@ public class CommunityHallSlotSearchCriteria {
 	private Boolean isTimerRequired;
 	
 	private String bookingId;
+	
+	private LocalTime startTime;
+	
+	private LocalTime endTime;
 	
 	private String draftId;
 

@@ -52,6 +52,18 @@ public class CommunityHallBookingConstants {
 	public static final String CHB_COMMNUITY_HALLS = "CommunityHalls";
 	public static final String CHB_HALL_CODES = "HallCode";
 	
+	public static final String CHB_PARK_CODES = "ParkCode";
+	public static final String CHB_PARKS = "Parks";
+
+	public static final String CHB_GUEST_HOUSE_CODES = "GuestHouseCode";
+	public static final String CHB_GUEST_HOUSES = "GuestHouses";
+
+	public static final String CHB_STADIUMS = "Stadiums";
+	public static final String CHB_STADIUM_CODES = "StadiumCode";
+
+	public static final String CHB_CREMATORIUM_CODES = "CrematoriumCode";
+	public static final String CHB_CREMATORIUMS = "Crematoriums";
+	
 	//Check what is the role of common fields config
 	public static final String CHB_DOCUMENTS = "Documents";
 	
@@ -69,6 +81,7 @@ public class CommunityHallBookingConstants {
 	public static final String MULTIPLE_HALL_CODES_ERROR = "MULTIPLE_HALL_CODES_ERROR";
 	public static final String EMPTY_DOCUMENT_ERROR = "EMPTY_DOCUMENT_ERROR";
 	public static final String INVALID_BOOKING_DATE = "INVALID_BOOKING_DATE";
+	public static final String INVALID_BOOKING_TIME = "INVALID_BOOKING_TIME";
 	public static final String INVALID_BOOKING_DATE_RANGE= "INVALID_BOOKING_DATE_RANGE";
 	
 	

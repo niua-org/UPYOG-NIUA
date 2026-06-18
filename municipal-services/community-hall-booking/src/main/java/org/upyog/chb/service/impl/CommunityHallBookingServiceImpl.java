@@ -2,6 +2,7 @@ package org.upyog.chb.service.impl;
 
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 					"Please provide valid tenant id for booking creation");
 		}
 
-		Object mdmsData = mdmsUtil.mDMSCall(communityHallsBookingRequest.getRequestInfo(), tenantId);
+		Object mdmsData = mdmsUtil.mDMSCall(communityHallsBookingRequest.getRequestInfo(), communityHallsBookingRequest.getHallsBookingApplication().getTenantId());
 
 		// 1. Validate request master data to confirm it has only valid data in records
 		hallBookingValidator.validateCreate(communityHallsBookingRequest, mdmsData);
@@ -337,7 +338,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	@Override
 	public CommunityHallSlotAvailabilityResponse getCommunityHallSlotAvailability(
 			CommunityHallSlotSearchCriteria criteria, RequestInfo info) {
-		if (criteria.getCommunityHallCode() == null && CollectionUtils.isEmpty(criteria.getHallCodes())) {
+		if (criteria.getVenueCode() == null && CollectionUtils.isEmpty(criteria.getCodes())) {
 			throw new CustomException("INVALID_HALL_CODE", "Invalid hall code provided for slot search");
 		}
 		log.info("criteria : {}", criteria);
@@ -394,7 +395,7 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 			Map<CommunityHallSlotAvailabilityDetail, CommunityHallSlotAvailabilityDetail> slotDetailsMap,
 			BookingPaymentTimerDetails detail) {
 		CommunityHallSlotAvailabilityDetail availabilityDetail = CommunityHallSlotAvailabilityDetail.builder()
-				.communityHallCode(detail.getCommunityHallcode()).hallCode(detail.getHallcode())
+				.venueCode(detail.getVenuecode()).code(detail.getCode())
 				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(),
 						CommunityHallBookingConstants.DATE_FORMAT))
 				.tenantId(detail.getTenantId()).build();
@@ -407,6 +408,10 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 			boolean isCreatedByCurrentUser = detail.getCreatedBy().equals(info.getUserInfo().getUuid());
 			boolean existingBookingIdCheck = detail.getBookingId().equals(getTimerBookingReference(criteria));
 
+			String fromTime = criteria.getFromTime() != null ? criteria.getFromTime() : (criteria.getStartTime() != null ? criteria.getStartTime().toString() : null);
+			String toTime = criteria.getToTime() != null ? criteria.getToTime() : (criteria.getEndTime() != null ? criteria.getEndTime().toString() : null);
+			slotAvailabilityDetail.setFromTime(fromTime);
+			slotAvailabilityDetail.setToTime(toTime);
 			if (isCreatedByCurrentUser && existingBookingIdCheck) {
 				log.info("inside booking created by me with same booking id ");
 				slotAvailabilityDetail.setSlotStaus(BookingStatusEnum.AVAILABLE.toString());
@@ -449,34 +454,54 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 					"Booking is not allowed for this no of days.");
 		}
 
-		totalDates.stream().forEach(date -> {
+		Map<String, CommunityHallSlotAvailabilityDetail> dbAvailabilityDetails = availabiltityDetails.stream()
+				.collect(Collectors.toMap(detail -> buildSlotKey(detail.getTenantId(), detail.getVenueCode(),
+						detail.getCode(), detail.getBookingDate()), Function.identity(), (first, second) -> first));
+		for (LocalDate date : totalDates) {
 			List<String> hallCodes = new ArrayList<>();
-			if (StringUtils.isNotBlank(criteria.getHallCode())) {
-				hallCodes.add(criteria.getHallCode());
+			if (StringUtils.isNotBlank(criteria.getCode())) {
+				hallCodes.add(criteria.getCode());
 			} else {
-				hallCodes.addAll(criteria.getHallCodes());
+				hallCodes.addAll(criteria.getCodes());
 			}
-			hallCodes.stream().forEach(data -> {
-				availabiltityDetailsList.add(createCommunityHallSlotAvailabiltityDetail(criteria, date, data));
-			});
-		});
+			for (String data : hallCodes) {
+				String bookingDate = CommunityHallBookingUtil.parseLocalDateToString(date,
+					CommunityHallBookingConstants.DATE_FORMAT);
+				String key = buildSlotKey(criteria.getTenantId(), criteria.getVenueCode(), data, bookingDate);
+				CommunityHallSlotAvailabilityDetail existingDetail = dbAvailabilityDetails.get(key);
+				if (existingDetail != null) {
+					availabiltityDetailsList.add(existingDetail);
+				} else {
+					availabiltityDetailsList.add(createCommunityHallSlotAvailabiltityDetail(criteria, date, data));
+				}
+			}
+		}
 
 		//Setting hall status to booked if it is already booked by checking in the database entry
-		availabiltityDetailsList.stream().forEach(detail -> {
-			if (availabiltityDetails.contains(detail)) {
+		for (CommunityHallSlotAvailabilityDetail detail : availabiltityDetailsList) {
+			int index = availabiltityDetails.indexOf(detail);
+			if (index >= 0) {
+				CommunityHallSlotAvailabilityDetail dbDetail = availabiltityDetails.get(index);
 				detail.setSlotStaus(BookingStatusEnum.BOOKED.toString());
+				detail.setFromTime(dbDetail.getFromTime());
+				detail.setToTime(dbDetail.getToTime());
 			}
-		});
+		}
 		
 		return availabiltityDetailsList;
+	}
+
+	private String buildSlotKey(String tenantId, String venueCode, String code, String bookingDate) {
+		return tenantId + "|" + venueCode + "|" + code + "|" + bookingDate;
 	}
 
 	private CommunityHallSlotAvailabilityDetail createCommunityHallSlotAvailabiltityDetail(
 			CommunityHallSlotSearchCriteria criteria, LocalDate date, String hallCode) {
 		CommunityHallSlotAvailabilityDetail availabiltityDetail = CommunityHallSlotAvailabilityDetail.builder()
-				.communityHallCode(criteria.getCommunityHallCode()).hallCode(hallCode)
+				.venueCode(criteria.getVenueCode()).code(hallCode)
 			//Setting slot status available for every hall and hall code
 				.slotStaus(BookingStatusEnum.AVAILABLE.toString()).tenantId(criteria.getTenantId())
+//				.fromTime(fromTime.toString()).toTime(toTime.toString())
 				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(date, "dd-MM-yyyy")).build();
 		return availabiltityDetail;
 	}

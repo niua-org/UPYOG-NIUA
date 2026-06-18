@@ -144,7 +144,7 @@ public class CHBNotificationService {
 			  * {LINK} - Optional			 
 			  */
 			 message = String.format(message, bookingDetail.getApplicantDetail().getApplicantName(), 
-					 bookingDetail.getBookingNo(), bookingDetail.getCommunityHallName(), messageMap.get(NotificationUtil.ACTION_LINK));
+					 bookingDetail.getBookingNo(), bookingDetail.getVenueName(), messageMap.get(NotificationUtil.ACTION_LINK));
 		}catch (Exception e) {
 			log.error("Exception occcured while fetching message", e);
 			e.printStackTrace();
@@ -181,7 +181,7 @@ public class CHBNotificationService {
 			  * {LINK} - Optional			 
 			  */
 			 message = String.format(message, bookingDetail.getApplicantDetail().getApplicantName(), 
-					 bookingDetail.getBookingNo(), bookingDetail.getCommunityHallName());
+					 bookingDetail.getBookingNo(), bookingDetail.getVenueName());
 			 
 		}catch (Exception e) {
 			log.error("Exception occcured while fetching message", e);

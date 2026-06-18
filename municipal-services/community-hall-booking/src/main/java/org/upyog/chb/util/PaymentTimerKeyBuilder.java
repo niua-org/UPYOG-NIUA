@@ -18,7 +18,7 @@ public final class PaymentTimerKeyBuilder {
 
 	/** One Redis key per timer row (matches DB uniqueness: hall + booking code + date). */
 	public static String toRedisTimerRowKey(BookingPaymentTimerDetails detail) {
-		return toRedisTimerRowKey(detail.getTenantId(), detail.getCommunityHallcode(), detail.getHallcode(),
+		return toRedisTimerRowKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
 				detail.getBookingDate(), detail.getBookingId());
 	}
 
@@ -31,7 +31,7 @@ public final class PaymentTimerKeyBuilder {
 
 	/** Slot hold key (tenant + hall + date) — prevents double booking on the same physical slot. */
 	public static String toRedisSlotKey(BookingPaymentTimerDetails detail) {
-		return toRedisSlotKey(detail.getTenantId(), detail.getCommunityHallcode(), detail.getHallcode(),
+		return toRedisSlotKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
 				detail.getBookingDate());
 	}
 
@@ -52,8 +52,8 @@ public final class PaymentTimerKeyBuilder {
 			LocalDate bookingDate, String bookingId, String userId, long createdTime) {
 		var details = new BookingPaymentTimerDetails();
 		details.setTenantId(tenantId);
-		details.setCommunityHallcode(communityHallCode);
-		details.setHallcode(hallCode);
+		details.setVenuecode(communityHallCode);
+		details.setCode(hallCode);
 		details.setBookingDate(bookingDate);
 		details.setBookingId(bookingId);
 		details.setCreatedBy(userId);

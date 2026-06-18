@@ -85,7 +85,7 @@ public class BookingTimerService {
 				assertNoConflictingTimer(activeTimersInRange, criteria, userId, hallCode, bookingDate);
 
 				var detail = PaymentTimerKeyBuilder.toTimerDetails(criteria.getTenantId(),
-						criteria.getCommunityHallCode(), hallCode, bookingDate, getTimerBookingReference(criteria), userId,
+						criteria.getVenueCode(), hallCode, bookingDate, getTimerBookingReference(criteria), userId,
 						createdTime);
 
 				if (redis != null && !redis.tryAcquireSlot(detail)) {
@@ -162,7 +162,7 @@ public class BookingTimerService {
 			CommunityHallSlotSearchCriteria criteria, String userId, String hallCode,
 			java.time.LocalDate bookingDate) {
 		var conflict = activeTimersInRange.stream()
-				.anyMatch(t -> hallCode.equals(t.getHallcode()) && bookingDate.equals(t.getBookingDate())
+				.anyMatch(t -> hallCode.equals(t.getCode()) && bookingDate.equals(t.getBookingDate())
 						&& !(userId.equals(t.getCreatedBy()) && getTimerBookingReference(criteria).equals(t.getBookingId())));
 		if (conflict) {
 			throw new CustomException("SLOT_PAYMENT_TIMER_LOCKED",

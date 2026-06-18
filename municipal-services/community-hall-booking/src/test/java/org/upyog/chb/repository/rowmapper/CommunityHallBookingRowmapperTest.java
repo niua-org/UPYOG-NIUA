@@ -55,7 +55,7 @@ class CommunityHallBookingRowmapperTest {
         assertEquals("B001", bookingDetail.getBookingId());
         assertEquals("BN001", bookingDetail.getBookingNo());
         assertEquals("T001", bookingDetail.getTenantId());
-        assertEquals("CH001", bookingDetail.getCommunityHallCode());
+        assertEquals("CH001", bookingDetail.getVenueCode());
         assertEquals("CONFIRMED", bookingDetail.getBookingStatus());
         assertEquals("CATEGORY1", bookingDetail.getSpecialCategory().getCategory());
         assertEquals("Wedding", bookingDetail.getPurpose().getPurpose());

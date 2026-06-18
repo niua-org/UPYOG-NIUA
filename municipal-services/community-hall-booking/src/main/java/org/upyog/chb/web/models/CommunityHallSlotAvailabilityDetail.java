@@ -27,12 +27,12 @@ import lombok.ToString;
 @NoArgsConstructor
 @Builder
 @ToString
-@EqualsAndHashCode(of = { "tenantId", "hallCode", "communityHallCode", "bookingDate"})
+@EqualsAndHashCode(of = { "tenantId", "venueCode", "code", "bookingDate" })
 public class CommunityHallSlotAvailabilityDetail {
 
-	private String communityHallCode;
+	private String venueCode;
 	
-	private String hallCode;
+	private String code;
 	
 	private String bookingDate;
 

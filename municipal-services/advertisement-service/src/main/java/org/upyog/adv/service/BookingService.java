@@ -10,6 +10,7 @@ import org.egov.common.contract.request.RequestInfo;
 import org.upyog.adv.enums.BookingStatusEnum;
 import org.upyog.adv.web.models.AdvertisementSearchCriteria;
 import org.upyog.adv.web.models.AdvertisementSlotAvailabilityDetail;
+import org.upyog.adv.web.models.AdvertisementSlotAvailabilityResponse;
 import org.upyog.adv.web.models.AdvertisementSlotSearchCriteria;
 import org.upyog.adv.web.models.BookingDetail;
 import org.upyog.adv.web.models.BookingRequest;
@@ -61,7 +62,7 @@ public interface BookingService {
 
 	public boolean setSlotBookedFlag(List<AdvertisementSlotAvailabilityDetail> details);
 
-	List<AdvertisementSlotAvailabilityDetail> getAdvertisementSlotAvailability(
+	AdvertisementSlotAvailabilityResponse getAdvertisementSlotAvailability(
 			List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo);
 
 	String getDraftId(List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse, RequestInfo requestInfo);

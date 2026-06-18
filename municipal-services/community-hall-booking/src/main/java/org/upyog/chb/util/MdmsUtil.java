@@ -98,6 +98,17 @@ public class MdmsUtil {
 	 */
 	public Object mDMSCall(RequestInfo requestInfo, String tenantId) {
 		MdmsCriteriaReq mdmsCriteriaReq = getMDMSRequest(requestInfo, tenantId);
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			System.out.println(
+			    mapper.writerWithDefaultPrettyPrinter()
+			          .writeValueAsString(mdmsCriteriaReq)
+			);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Object result = null;
 		if (mdmsMap == null) {
 			result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
@@ -165,6 +176,40 @@ public class MdmsUtil {
 				.filter(filterCode).build());
 		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_COMMNUITY_HALLS)
 				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_GUEST_HOUSE_CODES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_GUEST_HOUSES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_STADIUM_CODES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_STADIUMS)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_PARK_CODES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_PARKS)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_CREMATORIUMS)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_CREMATORIUM_CODES)
+				.filter(filterCode).build());
+		
+		
 		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_HALL_CODES)
 				.filter("$.[?(@.active==true)].HallCode").build());
 		chbMasterDtls.add(

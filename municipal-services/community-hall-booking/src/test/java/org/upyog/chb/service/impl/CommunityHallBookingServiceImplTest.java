@@ -253,4 +253,43 @@ public class CommunityHallBookingServiceImplTest {
         CustomException exception = assertThrows(CustomException.class, () -> communityHallBookingService.updateBooking(request, null, null));
         assertEquals("INVALID_BOOKING_CODE", exception.getCode());
     }
+
+    @Test
+    @DisplayName("Should get community hall slot availability and set fromTime and toTime correctly from database slot details")
+    void getCommunityHallSlotAvailability_SetsTimesFromDB() {
+        org.upyog.chb.web.models.CommunityHallSlotSearchCriteria criteria = org.upyog.chb.web.models.CommunityHallSlotSearchCriteria.builder()
+                .tenantId("tenant.001")
+                .venueCode("VENUE-001")
+                .code("HALL-001")
+                .bookingStartDate("2026-06-18")
+                .bookingEndDate("2026-06-18")
+                .fromTime("09:00")
+                .toTime("18:00")
+                .isTimerRequired(false)
+                .build();
+
+        List<org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail> dbSlots = new ArrayList<>();
+        dbSlots.add(org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail.builder()
+                .tenantId("tenant.001")
+                .venueCode("VENUE-001")
+                .code("HALL-001")
+                .bookingDate("18-06-2026")
+                .fromTime("10:00")
+                .toTime("17:00")
+                .slotStaus("BOOKED")
+                .build());
+
+        when(bookingRepository.getCommunityHallSlotAvailability(any(org.upyog.chb.web.models.CommunityHallSlotSearchCriteria.class)))
+                .thenReturn(dbSlots);
+
+        org.upyog.chb.web.models.CommunityHallSlotAvailabilityResponse response = communityHallBookingService.getCommunityHallSlotAvailability(criteria, requestInfo);
+
+        assertNotNull(response);
+        assertNotNull(response.getHallSlotAvailabiltityDetails());
+        assertEquals(1, response.getHallSlotAvailabiltityDetails().size());
+        org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail detail = response.getHallSlotAvailabiltityDetails().get(0);
+        assertEquals("BOOKED", detail.getSlotStaus());
+        assertEquals("10:00", detail.getFromTime());
+        assertEquals("17:00", detail.getToTime());
+    }
 }

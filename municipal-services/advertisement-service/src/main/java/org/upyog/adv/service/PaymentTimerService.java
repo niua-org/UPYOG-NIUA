@@ -50,8 +50,7 @@ public class PaymentTimerService {
 	 * @param availabiltityDetailsResponse slot availability response to receive timer details
 	 */
 	@Transactional
-	public void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
-			List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse) {
+	public long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo) {
 		var uuid = requestInfo.getUserInfo().getUuid();
 		var tenantId = criteriaList.stream().map(AdvertisementSlotSearchCriteria::getTenantId)
 				.filter(StringUtils::isNotBlank).findFirst()
@@ -86,11 +85,11 @@ public class PaymentTimerService {
 		}
 
 		try {
-			bookingRepository.insertBookingIdForTimer(criteriaList, requestInfo,
-					availabiltityDetailsResponse.get(0), preGeneratedDraftId);
+			long timerValue = bookingRepository.insertBookingIdForTimer(criteriaList, requestInfo, preGeneratedDraftId);
 			if (redis != null && !CollectionUtils.isEmpty(timerDetails)) {
 				redis.syncTimerRows(timerDetails);
 			}
+			return timerValue;
 		} catch (RuntimeException ex) {
 			if (redis != null && !CollectionUtils.isEmpty(timerDetails)) {
 				redis.removeTimerRows(timerDetails);

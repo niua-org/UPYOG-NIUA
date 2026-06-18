@@ -3,6 +3,7 @@ package org.upyog.chb.repository.querybuilder;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -49,7 +50,7 @@ public class CommunityHallBookingQueryBuilder {
 	private CommunityHallBookingConfiguration bookingConfiguration;
 
 	private static final StringBuilder bookingDetailsQuery = new StringBuilder(
-			"SELECT ecbd.booking_id, booking_no, payment_date, application_date, tenant_id, community_hall_code, \n"
+			"SELECT ecbd.booking_id, booking_no, payment_date, application_date, tenant_id, venue_code, \n"
 					+ "booking_status, special_category, purpose, purpose_description, receipt_no, ecbd.createdby, ecbd.createdtime, \n"
 					+ "ecbd.lastmodifiedby, ecbd.lastmodifiedtime,ecbd.permission_letter_filestore_id, ecbd.payment_receipt_filestore_id, \n" 
 					+ "appl.applicant_detail_id, applicant_name, applicant_email_id, applicant_mobile_no,\n"
@@ -67,14 +68,15 @@ public class CommunityHallBookingQueryBuilder {
 	private final String paginationWrapper = "SELECT * FROM " + "(SELECT *, DENSE_RANK() OVER (ORDER BY application_date DESC) offset_ FROM " + "({})"
 			+ " result) result_offset " + "WHERE offset_ > ? AND offset_ <= ?";
 
-	private static final String COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY = "SELECT ecbd.tenant_id, ecbd.community_hall_code, ecsd.capacity, ecsd.hall_code, ecsd.status,ecsd.booking_date \n"
-			+ "	FROM eg_chb_booking_detail ecbd\n"
-			+ "	join eg_chb_slot_detail ecsd on ecbd.booking_id = ecsd.booking_id"
-			+ "	LEFT JOIN eg_chb_payment_timer ecpt ON ecbd.booking_id = ecpt.booking_id\n"
-			+ " where  ecbd.tenant_id= ? and ecbd.community_hall_code = ?\n"
+	private static final String COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY =
+			"SELECT ecbd.tenant_id, ecbd.venue_code, ecsd.capacity, ecsd.code, ecsd.status, ecsd.booking_date, ecsd.booking_from_time, ecsd.booking_to_time \n"
+			+ "\tFROM eg_chb_booking_detail ecbd\n"
+			+ "\tjoin eg_chb_slot_detail ecsd on ecbd.booking_id = ecsd.booking_id\n"
+			+ "\tLEFT JOIN eg_chb_payment_timer ecpt ON ecbd.booking_id = ecpt.booking_id\n"
+			+ " where  ecbd.tenant_id= ? and ecbd.venue_code = ?\n"
 			+ " and ecsd.status in ('BOOKED', 'PENDING_FOR_PAYMENT') and \n"
-			+ "	ecsd.booking_date >= ?::DATE and ecsd.booking_date <=  ?::DATE ";
-		//	+ "	AND ecsd.hall_code in (?)";
+			+ "\tecsd.booking_date >= CAST(? AS DATE) and ecsd.booking_date <= CAST(? AS DATE) ";
+		//	+ "	AND ecsd.code in (?)";
 	
 	//private static final String COUNT_WRAPPER = " SELECT COUNT(*) FROM ({INTERNAL_QUERY}) AS count ";
 	
@@ -84,7 +86,7 @@ public class CommunityHallBookingQueryBuilder {
 	
 	
 	//public static final String PAYMENT_TIMER_INSERT_QUERY = "INSERT INTO eg_chb_payment_timer(booking_id, createdby, createdtime, status) VALUES (?, ?, ?, ?);";
-	public static final String PAYMENT_TIMER_INSERT_QUERY = "INSERT INTO eg_chb_payment_timer(booking_id, createdby, createdtime, status, booking_no, community_hall_code, hall_code, booking_date, tenant_id, lastmodifiedby, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	public static final String PAYMENT_TIMER_INSERT_QUERY = "INSERT INTO eg_chb_payment_timer(booking_id, createdby, createdtime, status, booking_no, venue_code, code, booking_date, tenant_id, lastmodifiedby, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
 	public static final String PAYMENT_TIMER_DELETE_FOR_BOOKING_ID_QUERY = "DELETE FROM eg_chb_payment_timer WHERE booking_id IN (%s)";
 	
@@ -115,8 +117,8 @@ public class CommunityHallBookingQueryBuilder {
 	public static final String SELECT_TIMER_QUERY = " SELECT * "
 			+ "		    FROM eg_chb_payment_timer "
 			+ "		    WHERE tenant_id = ? "
-			+ "		      AND community_hall_code = ? "
-			+ "		      AND hall_code = ? "
+			+ "		      AND venue_code = ? "
+			+ "		      AND code = ? "
 			+ "		      AND booking_date BETWEEN ? AND ?;";
 	
 	
@@ -178,7 +180,7 @@ public class CommunityHallBookingQueryBuilder {
 		
 		if (criteria.getCommunityHallCode() != null) {
 			addClauseIfRequired(preparedStmtList, builder);
-			builder.append(" ecbd.community_hall_code =  ? ");
+			builder.append(" ecbd.venue_code =  ? ");
 			preparedStmtList.add(criteria.getCommunityHallCode());
 		}
 		
@@ -349,12 +351,44 @@ public class CommunityHallBookingQueryBuilder {
 		StringBuilder builder = new StringBuilder(COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY);
 
 		paramsList.add(searchCriteria.getTenantId());
-		paramsList.add(searchCriteria.getCommunityHallCode());
+		paramsList.add(searchCriteria.getVenueCode());
 //		paramsList.add(SlotStatusEnum.BOOKED.toString());
 		paramsList.add(searchCriteria.getBookingStartDate());
 		paramsList.add(searchCriteria.getBookingEndDate());
+		appendTimeFilters(searchCriteria, builder, paramsList);
 
 		return builder;
+	}
+
+	private void appendTimeFilters(CommunityHallSlotSearchCriteria searchCriteria, StringBuilder builder,
+			List<Object> paramsList) {
+		if (searchCriteria.getStartTime() != null || searchCriteria.getEndTime() != null) {
+			if (searchCriteria.getStartTime() != null && searchCriteria.getEndTime() != null) {
+				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) AND ecsd.booking_from_time <= CAST(? AS TIME) ");
+				paramsList.add(searchCriteria.getStartTime().toString());
+				paramsList.add(searchCriteria.getEndTime().toString());
+			} else if (searchCriteria.getStartTime() != null) {
+				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) ");
+				paramsList.add(searchCriteria.getStartTime().toString());
+			} else {
+				builder.append(" AND ecsd.booking_from_time <= CAST(? AS TIME) ");
+				paramsList.add(searchCriteria.getEndTime().toString());
+			}
+		} else if (StringUtils.isNotBlank(searchCriteria.getFromTime())
+				|| StringUtils.isNotBlank(searchCriteria.getToTime())) {
+			if (StringUtils.isNotBlank(searchCriteria.getFromTime())
+					&& StringUtils.isNotBlank(searchCriteria.getToTime())) {
+				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) AND ecsd.booking_from_time <= CAST(? AS TIME) ");
+				paramsList.add(searchCriteria.getFromTime());
+				paramsList.add(searchCriteria.getToTime());
+			} else if (StringUtils.isNotBlank(searchCriteria.getFromTime())) {
+				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) ");
+				paramsList.add(searchCriteria.getFromTime());
+			} else {
+				builder.append(" AND ecsd.booking_from_time <= CAST(? AS TIME) ");
+				paramsList.add(searchCriteria.getToTime());
+			}
+		}
 	}
 
 }

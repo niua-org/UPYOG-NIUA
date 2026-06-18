@@ -1,6 +1,8 @@
 package org.upyog.chb.validator;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,11 +86,47 @@ public class CommunityHallBookingValidator {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_BOOKING_DATE,
 					"Booking date is not valid.");
 		}
+		
+		if(!validateTimeSlot(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
+			throw new CustomException(CommunityHallBookingConstants.INVALID_BOOKING_TIME,
+					"Booking time is not valid. Duration selection limited to 5 hours maximum.");
+		}
+	
 
 		mdmsValidator.validateMdmsData(bookingRequest, mdmsData);
 		validateDuplicateDocuments(bookingRequest);
 	}
 
+	private Boolean validateTimeSlot(List<BookingSlotDetail> bookingSlotDetails) {
+		
+		if (bookingSlotDetails == null || bookingSlotDetails.isEmpty()) {
+	        return true;
+	    }
+
+	    for (BookingSlotDetail slot : bookingSlotDetails) {
+
+	        LocalTime fromTime = slot.getBookingFromTime();
+	        LocalTime toTime = slot.getBookingToTime();
+
+	        if (fromTime == null || toTime == null) {
+	            return false;
+	        }
+
+	        // Start time must be before end time
+	        if (!fromTime.isBefore(toTime)) {
+	            return false;
+	        }
+
+	        long durationInMinutes = Duration.between(fromTime, toTime).toMinutes();
+
+	        if (durationInMinutes > 5 * 60) {
+	            return false;
+	        }
+	    }
+
+	    return true;
+	}
+	
 	public void validateUpdate(CommunityHallBookingDetail bookingDetailFromRequest, CommunityHallBookingDetail bookingDetailFromDB) {
 		log.info("validating master data for update  booking request for  booking no : " + bookingDetailFromRequest.getBookingNo());
 		//TODO: Add condition for status from to 
@@ -220,8 +258,8 @@ public class CommunityHallBookingValidator {
 	}
 	
 	public boolean isSameHallCode(List<BookingSlotDetail> bookingSlotDetails) {
-		String hallCode = bookingSlotDetails.get(0).getHallCode();
-		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getHallCode().equals(hallCode));
+		String hallCode = bookingSlotDetails.get(0).getCode();
+		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getCode().equals(hallCode));
 		return allSameCode;
 
 	}

@@ -32,10 +32,15 @@ public class MDMSValidator {
 		 * if(MdmsUtil.getMDMSDataMap().isEmpty()) {
 		 * MdmsUtil.setMDMSDataMap(masterData); }
 		 */
-		String[] masterArray = { CommunityHallBookingConstants.CHB_PURPOSE, CommunityHallBookingConstants.CHB_SPECIAL_CATEGORY,
-				CommunityHallBookingConstants.CHB_COMMNUITY_HALLS,
-				CommunityHallBookingConstants.CHB_HALL_CODES, CommunityHallBookingConstants.CHB_DOCUMENTS};
-		
+		String[] masterArray = { CommunityHallBookingConstants.CHB_PURPOSE,
+				CommunityHallBookingConstants.CHB_SPECIAL_CATEGORY, CommunityHallBookingConstants.CHB_COMMNUITY_HALLS,
+				CommunityHallBookingConstants.CHB_HALL_CODES, CommunityHallBookingConstants.CHB_PARKS,
+				CommunityHallBookingConstants.CHB_PARK_CODES, CommunityHallBookingConstants.CHB_STADIUMS,
+				CommunityHallBookingConstants.CHB_STADIUM_CODES, CommunityHallBookingConstants.CHB_CREMATORIUMS,
+				CommunityHallBookingConstants.CHB_CREMATORIUM_CODES,
+				CommunityHallBookingConstants.CHB_GUEST_HOUSE_CODES, CommunityHallBookingConstants.CHB_GUEST_HOUSES,
+				CommunityHallBookingConstants.CHB_DOCUMENTS };
+
 		log.info("Validating master data from MDMS for : " + communityHallBookingRequest.getHallsBookingApplication().getBookingNo());
 
 		validateIfMasterPresent(masterArray, masterData);

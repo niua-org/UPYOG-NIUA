@@ -139,7 +139,7 @@ public class DemandService {
 		
 		CommunityHallBookingDetail bookingDetail = CommunityHallBookingDetail.builder().tenantId(tenantId)
 				.bookingSlotDetails(estimationCriteria.getBookingSlotDetails())
-				.communityHallCode(estimationCriteria.getCommunityHallCode()).build();
+				.venueCode(estimationCriteria.getVenueCode()).build();
 		CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder().hallsBookingApplication(bookingDetail)
 				.requestInfo(estimationCriteria.getRequestInfo()).build();
 		Object mdmsData = mdmsUtil.mDMSCall(bookingRequest.getRequestInfo(), tenantId);

@@ -10,6 +10,7 @@ import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
 import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
 
 import java.lang.reflect.Method;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,8 +77,38 @@ class CommunityHallBookingQueryBuilderTest {
 
         assertNotNull(query);
         assertTrue(query.toString().contains("ecbd.tenant_id= ?"));
-        assertTrue(query.toString().contains("ecbd.community_hall_code = ?"));
+        assertTrue(query.toString().contains("ecbd.venue_code = ?"));
         assertEquals(4, paramsList.size());
+    }
+
+    @Test
+    void testGetCommunityHallSlotAvailabilityQueryWithStartEndTime() {
+        CommunityHallSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
+        criteria.setStartTime(LocalTime.parse("09:00"));
+        criteria.setEndTime(LocalTime.parse("12:00"));
+        List<Object> paramsList = new ArrayList<>();
+
+        StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
+
+        assertNotNull(query);
+        assertTrue(query.toString().contains("ecsd.booking_to_time >= CAST(? AS TIME)"));
+        assertTrue(query.toString().contains("ecsd.booking_from_time <= CAST(? AS TIME)"));
+        assertEquals(6, paramsList.size());
+    }
+
+    @Test
+    void testGetCommunityHallSlotAvailabilityQueryWithFromToTime() {
+        CommunityHallSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
+        criteria.setFromTime("09:00");
+        criteria.setToTime("12:00");
+        List<Object> paramsList = new ArrayList<>();
+
+        StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
+
+        assertNotNull(query);
+        assertTrue(query.toString().contains("ecsd.booking_to_time >= CAST(? AS TIME)"));
+        assertTrue(query.toString().contains("ecsd.booking_from_time <= CAST(? AS TIME)"));
+        assertEquals(6, paramsList.size());
     }
 
     @Test
@@ -170,7 +201,7 @@ class CommunityHallBookingQueryBuilderTest {
     private CommunityHallSlotSearchCriteria createSlotSearchCriteria(String tenantId, String hallCode, String startDate, String endDate) {
         CommunityHallSlotSearchCriteria criteria = new CommunityHallSlotSearchCriteria();
         criteria.setTenantId(tenantId);
-        criteria.setCommunityHallCode(hallCode);
+        criteria.setVenueCode(hallCode);
         criteria.setBookingStartDate(startDate);
         criteria.setBookingEndDate(endDate);
         return criteria;

@@ -36,9 +36,6 @@ public class AdvertisementSlotAvailabilityDetail {
 	
 	private String bookingId;
 	
-	private long timerValue;
-	
-//	private long remainingTimerValue;
 	
 	private String bookingDate;
 	

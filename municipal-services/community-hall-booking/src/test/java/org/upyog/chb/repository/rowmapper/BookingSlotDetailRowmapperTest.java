@@ -58,7 +58,7 @@ class BookingSlotDetailRowmapperTest {
             BookingSlotDetail slotDetail = result.get(0);
             assertEquals("slot1", slotDetail.getSlotId());
             assertEquals("booking1", slotDetail.getBookingId());
-            assertEquals("hall1", slotDetail.getHallCode());
+            assertEquals("hall1", slotDetail.getCode());
             assertEquals(LocalDate.of(2023, 11, 1), slotDetail.getBookingDate());
             assertEquals(LocalTime.of(10, 0), slotDetail.getBookingFromTime());
             assertEquals(LocalTime.of(12, 0), slotDetail.getBookingToTime());
