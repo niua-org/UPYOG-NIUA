@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.infra.mdms.model.*;
 import org.egov.infra.mdms.service.SchemaDefinitionService;
 import org.egov.infra.mdms.utils.ResponseUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -15,25 +14,18 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.egov.infra.mdms.repository.SchemaDefinitionRepository;
+import lombok.RequiredArgsConstructor;
 
 @jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2023-05-30T09:26:57.838+05:30[Asia/Kolkata]")
 @Controller
 @RequestMapping("schema/v1")
 @Slf4j
+@RequiredArgsConstructor    
 public class SchemaDefinitionController {
 
-    private SchemaDefinitionService schemaDefinitionService;
+    private final SchemaDefinitionService schemaDefinitionService;
 
-    private SchemaDefinitionRepository schemaDefinitionRepository;
-
-    @Autowired
-    public SchemaDefinitionController(
-        SchemaDefinitionService schemaDefinitionService,
-        SchemaDefinitionRepository schemaDefinitionRepository) {
-
-    this.schemaDefinitionService = schemaDefinitionService;
-    this.schemaDefinitionRepository = schemaDefinitionRepository;
-}
+    private final SchemaDefinitionRepository schemaDefinitionRepository;
 
     /**
      * Request handler for serving schema create requests.
