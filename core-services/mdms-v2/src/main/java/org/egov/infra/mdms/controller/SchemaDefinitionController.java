@@ -43,7 +43,7 @@ public class SchemaDefinitionController {
     @RequestMapping(value = "_create", method = RequestMethod.POST)
     public ResponseEntity<SchemaDefinitionResponse> create(@Valid @RequestBody SchemaDefinitionRequest schemaDefinitionRequest) {
         List<SchemaDefinition> schemaDefinitions =  schemaDefinitionService.create(schemaDefinitionRequest);
-        return new ResponseEntity<>(ResponseUtil.getSchemaDefinitionResponse(schemaDefinitionRequest.getRequestInfo(), schemaDefinitions), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(ResponseUtil.getSchemaDefinitionResponse(schemaDefinitionRequest.getRequestInfo(), schemaDefinitions,null), HttpStatus.ACCEPTED);
     }
 
     /**
@@ -54,7 +54,10 @@ public class SchemaDefinitionController {
     @RequestMapping(value = "_search", method = RequestMethod.POST)
     public ResponseEntity<SchemaDefinitionResponse> search(@Valid @RequestBody SchemaDefSearchRequest schemaDefinitionSearchRequest) {
         List<SchemaDefinition> schemaDefinitions = schemaDefinitionService.search(schemaDefinitionSearchRequest);
-        return new ResponseEntity<>(ResponseUtil.getSchemaDefinitionResponse(schemaDefinitionSearchRequest.getRequestInfo(), schemaDefinitions), HttpStatus.ACCEPTED);
+        Integer totalMasters =
+        schemaDefinitionRepository.getTotalMastersCount(
+                schemaDefinitionSearchRequest.getSchemaDefCriteria().getTenantId());
+        return new ResponseEntity<>(ResponseUtil.getSchemaDefinitionResponse(schemaDefinitionSearchRequest.getRequestInfo(), schemaDefinitions,totalMasters), HttpStatus.ACCEPTED);
     }
 
     /**
