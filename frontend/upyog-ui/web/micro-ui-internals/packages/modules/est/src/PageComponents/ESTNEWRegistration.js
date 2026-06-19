@@ -7,10 +7,12 @@ import {
   Dropdown,
   FormStep,
   SubmitBar,
+  FormFields,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { useLocation } from "react-router-dom";
+import FormDropdown from '../components/FormDropdown'
 
 /**
  * NewRegistration Component
@@ -26,10 +28,13 @@ import { useLocation } from "react-router-dom";
 
 const NewRegistration = ({ parentRoute, t: propT, onSelect, onSkip, formData = {}, config }) => {
 
+  console.log('config is  ',config.form)
+
 // Translation handler (prop-based or hook-based fallback)
   const { t: hookT } = useTranslation();
   const t = propT || hookT;
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -280,14 +285,17 @@ const validateDimensions = (length, width, totalArea) => {
       onSelect(config?.key, { Assetdata: payload }, false);
     }
   };
-/**
+
+
+
+  /**
    * Label component for required fields
    */
-  const RequiredLabel = ({ label, unit }) => (
+  const RequiredLabel = ({ label, unit, required }) => (
     <CardLabel>
       {t(label)}{" "}
       {unit && <span style={{ fontSize: "0.9em", marginLeft: "6px" }}>{unit}</span>}{" "}
-      <span style={{ color: "red" }}>*</span>
+      {required && <span style={{ color: "red" }}>*</span>}
     </CardLabel>
   );
 // Standard input width styling
@@ -304,10 +312,82 @@ const validateDimensions = (length, width, totalArea) => {
     alignItems: "flex-start",
   };
   return (
+    <>
+    {/* <FormWizard  /> */}
     <FormStep t={t} config={config} onSelect={goNext} onSkip={onSkip} isDisabled={isFormInvalid}>
       <Header style={{ fontSize: isMobile ? '18px' : '24px', marginBottom: '15px' }}>
         {isEditMode ? t("EST_UPDATE_ASSET") : t("EST_COMMON_NEW_REGISTRATION")}
       </Header>
+      {/* <FormFields formFields={config.form} /> */}
+      {config.form.map((item) => (
+        <div key={item.key}>
+          <RequiredLabel label={item.field?.code} required={item.validation?.required || false} />
+          <p>{item.field?.type}</p>
+          { item.field?.type === "text" ? 
+          <TextInput
+          name= {item.field?.name}
+          placeholder={t(`${item.field?.placeholder}`)}
+          value={buildingName}
+          onChange={(e) =>
+            sanitizeAndSet(e.target.value, setBuildingName, {
+              maxLength: item.validation?.maxLength,
+              regex: `${item.validation?.regex?.pattern}/${item.validation?.regex?.flags}` 
+            })
+          }
+          pattern={item.validation?.pattern}
+          title={t("EST_INVALID_BUILDING_NAME")}
+          required={item.validation?.required}
+          style={fullWidthStyle}
+        /> : 
+        <>
+        <p>form dropdown</p>
+        <FormDropdown entry={item} propT={t}/>
+        <p>"name: "+{item.field?.name}</p>
+        <Controller
+          control={control}
+          name="city"
+          defaultValue={selectedCity}
+          render={() => (
+            <Dropdown
+              option={cityList}
+              optionKey="i18nKey"
+              selected={selectedCity}
+              select={(city) => {
+                setSelectedCity(city);
+                setServiceType((prev) => (prev && prev !== city?.code ? "" : prev));
+              }}
+              placeholder={t("EST_SELECT_CITY")}
+              t={t}
+              required
+              style={fullWidthStyle}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="assetType"
+          defaultValue={assetType}
+          render={() => (
+            <Dropdown
+              option={Asset_Type || []}
+              optionKey="label"
+              selected={Asset_Type?.find((opt) => opt.code === assetType) || null}
+              select={(opt) => setAssetType(opt?.code)}
+              placeholder={
+                Asset_Type && Asset_Type.length
+                  ? t("EST_SELECT_ASSET_TYPE")
+                  : t("EST_NO_ASSET_TYPE_FOUND")
+              }
+              t={t}
+              required
+              style={fullWidthStyle}
+            />
+          )}
+        />
+        </>
+       }
+      </div>
+      ))} 
 
       <Card style={cardStyle}>
         <RequiredLabel label="EST_BUILDING_NAME" />
@@ -545,6 +625,7 @@ const validateDimensions = (length, width, totalArea) => {
         </div>
       </Card>
     </FormStep>
+    </>
   );
 };
 
