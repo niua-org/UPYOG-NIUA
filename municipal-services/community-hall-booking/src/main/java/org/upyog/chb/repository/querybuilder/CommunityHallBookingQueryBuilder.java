@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 
 /**
  * This class is responsible for building SQL queries for the Community Hall Booking module.
@@ -129,7 +129,7 @@ public class CommunityHallBookingQueryBuilder {
 	 * @param preparedStmtList values to be replaced on the query
 	 * @return Final Search Query
 	 */
-	public String getCommunityHallBookingSearchQuery(CommunityHallBookingSearchCriteria criteria,
+	public String getCommunityHallBookingSearchQuery(VenueBookingSearchCriteria criteria,
 			List<Object> preparedStmtList) {
 		StringBuilder builder;
 		
@@ -284,7 +284,7 @@ public class CommunityHallBookingQueryBuilder {
 	 * @return the query by replacing the placeholders with preparedStmtList
 	 */
 	private String addPaginationWrapper(String query, List<Object> preparedStmtList,
-			CommunityHallBookingSearchCriteria criteria) {
+			VenueBookingSearchCriteria criteria) {
 
 		int limit = bookingConfiguration.getDefaultLimit();
 		int offset = bookingConfiguration.getDefaultOffset();
@@ -346,7 +346,7 @@ public class CommunityHallBookingQueryBuilder {
 		return builder.toString();
 	}
 
-	public StringBuilder getCommunityHallSlotAvailabilityQuery(CommunityHallSlotSearchCriteria searchCriteria,
+	public StringBuilder getCommunityHallSlotAvailabilityQuery(VenueSlotSearchCriteria searchCriteria,
 			List<Object> paramsList) {
 		StringBuilder builder = new StringBuilder(COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY);
 
@@ -360,7 +360,7 @@ public class CommunityHallBookingQueryBuilder {
 		return builder;
 	}
 
-	private void appendTimeFilters(CommunityHallSlotSearchCriteria searchCriteria, StringBuilder builder,
+	private void appendTimeFilters(VenueSlotSearchCriteria searchCriteria, StringBuilder builder,
 			List<Object> paramsList) {
 		if (searchCriteria.getStartTime() != null || searchCriteria.getEndTime() != null) {
 			if (searchCriteria.getStartTime() != null && searchCriteria.getEndTime() != null) {

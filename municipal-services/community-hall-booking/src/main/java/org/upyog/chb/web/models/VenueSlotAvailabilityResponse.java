@@ -30,17 +30,17 @@ import lombok.ToString;
 @NoArgsConstructor
 @Builder
 @ToString
-public class CommunityHallSlotAvailabilityResponse   {
+public class VenueSlotAvailabilityResponse   {
 	
 	private ResponseInfo responseInfo;
 	
 	@JsonProperty("hallSlotAvailabiltityDetails")
 	@Valid
-	private List<CommunityHallSlotAvailabilityDetail> hallSlotAvailabiltityDetails; 
+	private List<VenueSlotAvailabilityDetail> hallSlotAvailabiltityDetails; 
 	
-	public void addNewHallsBookingApplication(CommunityHallSlotAvailabilityDetail slotAvailabiltityDetail) {
+	public void addNewHallsBookingApplication(VenueSlotAvailabilityDetail slotAvailabiltityDetail) {
 		if(this.hallSlotAvailabiltityDetails == null) {
-			this.hallSlotAvailabiltityDetails = new ArrayList<CommunityHallSlotAvailabilityDetail>();
+			this.hallSlotAvailabiltityDetails = new ArrayList<VenueSlotAvailabilityDetail>();
 		}
 		this.hallSlotAvailabiltityDetails.add(slotAvailabiltityDetail);
 	}

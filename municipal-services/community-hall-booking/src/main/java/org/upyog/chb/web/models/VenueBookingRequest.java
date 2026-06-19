@@ -26,14 +26,14 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CommunityHallBookingRequest {
+public class VenueBookingRequest {
 	
 	@Valid
 	@JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
 
 	@Valid
-	@JsonProperty("hallsBookingApplication")
-	private CommunityHallBookingDetail hallsBookingApplication; 
+	@JsonProperty("venueBookingApplication")
+	private VenueBookingDetail hallsBookingApplication; 
 	
 }

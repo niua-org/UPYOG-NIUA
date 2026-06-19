@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.util.EncryptionDecryptionUtil;
 import org.upyog.chb.web.models.ApplicantDetail;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ public class CHBEncryptionService {
 	@Autowired
 	private EncryptionDecryptionUtil encryptionDecryptionUtil;
 
-	public CommunityHallBookingDetail encryptObject(CommunityHallBookingRequest bookingRequest) {
+	public VenueBookingDetail encryptObject(VenueBookingRequest bookingRequest) {
 		ApplicantDetail applicantDetail = bookingRequest.getHallsBookingApplication().getApplicantDetail();
 		log.info("Applicant detail before encyption : " + applicantDetail.getApplicantMobileNo());
 		applicantDetail = encryptionDecryptionUtil.encryptObject(applicantDetail,
@@ -65,7 +65,7 @@ public class CHBEncryptionService {
 	}
 	
 	
-	public CommunityHallBookingDetail decryptObject(CommunityHallBookingDetail bookingDetail, RequestInfo requestInfo) {
+	public VenueBookingDetail decryptObject(VenueBookingDetail bookingDetail, RequestInfo requestInfo) {
 		ApplicantDetail applicantDetail = bookingDetail.getApplicantDetail();
 		log.info("Applicant detail before decryption : " + applicantDetail.getApplicantMobileNo());
 		applicantDetail = encryptionDecryptionUtil.decryptObject(applicantDetail, 
@@ -77,9 +77,9 @@ public class CHBEncryptionService {
 		return bookingDetail;
 	}
 	
-	public List<CommunityHallBookingDetail> decryptObject(List<CommunityHallBookingDetail> bookingDetails, RequestInfo requestInfo) {
-		Map<String, CommunityHallBookingDetail> applicantDetailMap = bookingDetails.stream().collect(
-				Collectors.toMap(CommunityHallBookingDetail::getBookingId, Function.identity()));
+	public List<VenueBookingDetail> decryptObject(List<VenueBookingDetail> bookingDetails, RequestInfo requestInfo) {
+		Map<String, VenueBookingDetail> applicantDetailMap = bookingDetails.stream().collect(
+				Collectors.toMap(VenueBookingDetail::getBookingId, Function.identity()));
 		
 		List<ApplicantDetail> applicantDetails = bookingDetails.stream().map(detail -> detail.getApplicantDetail()).collect(Collectors.toList());
 		

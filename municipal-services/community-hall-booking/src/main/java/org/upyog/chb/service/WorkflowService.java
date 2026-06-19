@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.repository.ServiceRequestRepository;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.workflow.BusinessService;
 import org.upyog.chb.web.models.workflow.BusinessServiceResponse;
 import org.upyog.chb.web.models.workflow.ProcessInstance;
@@ -82,9 +82,9 @@ public class WorkflowService {
 		return response.getProcessInstances().get(0).getState();
 	}
 
-	public State updateWorkflow(CommunityHallBookingRequest bookingRequest) {
+	public State updateWorkflow(VenueBookingRequest bookingRequest) {
 
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
 
 		ProcessInstanceRequest workflowReq = getProcessInstanceForHallBooking(bookingDetail,
 				bookingRequest.getRequestInfo());
@@ -94,7 +94,7 @@ public class WorkflowService {
 		return state;
 	}
 // Create process instance request for workflow call
-	private ProcessInstanceRequest getProcessInstanceForHallBooking(CommunityHallBookingDetail bookingDetail,
+	private ProcessInstanceRequest getProcessInstanceForHallBooking(VenueBookingDetail bookingDetail,
 			RequestInfo requestInfo) {
 
 		ProcessInstance workflow = null != bookingDetail.getWorkflow() ? bookingDetail.getWorkflow()

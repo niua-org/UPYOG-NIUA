@@ -6,11 +6,11 @@ import jakarta.validation.Valid;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.upyog.chb.enums.BookingStatusEnum;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityResponse;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotAvailabilityResponse;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 
 import digit.models.coremodels.PaymentDetail;
 import lombok.NonNull;
@@ -66,7 +66,7 @@ public interface CommunityHallBookingService {
 	 * @param communityHallsBookingRequest booking request containing booking details and request metadata
 	 * @return created booking detail
 	 */
-	CommunityHallBookingDetail createBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest);
+	VenueBookingDetail createBooking(@Valid VenueBookingRequest communityHallsBookingRequest);
 	
 	/**
 	 * Creates an initial booking during the early booking flow.
@@ -74,7 +74,7 @@ public interface CommunityHallBookingService {
 	 * @param communityHallsBookingRequest initial booking request payload
 	 * @return created booking detail with initial state
 	 */
-	CommunityHallBookingDetail createInitBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest);	
+	VenueBookingDetail createInitBooking(@Valid VenueBookingRequest communityHallsBookingRequest);	
 
 	/**
 	 * Retrieves booking details matching the provided search criteria.
@@ -83,7 +83,7 @@ public interface CommunityHallBookingService {
 	 * @param info                  request metadata and user details
 	 * @return matching booking details
 	 */
-	List<CommunityHallBookingDetail> getBookingDetails(CommunityHallBookingSearchCriteria bookingSearchCriteria, RequestInfo info);
+	List<VenueBookingDetail> getBookingDetails(VenueBookingSearchCriteria bookingSearchCriteria, RequestInfo info);
 
 	/**
 	 * Updates an existing booking based on the provided request and payment details.
@@ -93,7 +93,7 @@ public interface CommunityHallBookingService {
 	 * @param bookingStatusEnum           target booking status
 	 * @return updated booking detail
 	 */
-	CommunityHallBookingDetail updateBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest, PaymentDetail paymentDetail, BookingStatusEnum bookingStatusEnum);
+	VenueBookingDetail updateBooking(@Valid VenueBookingRequest communityHallsBookingRequest, PaymentDetail paymentDetail, BookingStatusEnum bookingStatusEnum);
 
 	/**
 	 * Gets community hall slot availability for the requested criteria.
@@ -108,7 +108,7 @@ public interface CommunityHallBookingService {
 	 * @param info     request metadata and authenticated user details
 	 * @return response with available slots, booking statuses, and timer information
 	 */
-	CommunityHallSlotAvailabilityResponse getCommunityHallSlotAvailability(CommunityHallSlotSearchCriteria criteria, RequestInfo info);
+	VenueSlotAvailabilityResponse getCommunityHallSlotAvailability(VenueSlotSearchCriteria criteria, RequestInfo info);
 
 	/**
 	 * Returns the number of bookings matching the provided search criteria.
@@ -117,7 +117,7 @@ public interface CommunityHallBookingService {
 	 * @param requestInfo request metadata and user details
 	 * @return count of matching bookings
 	 */
-	Integer getBookingCount(@Valid CommunityHallBookingSearchCriteria criteria, @NonNull RequestInfo requestInfo);
+	Integer getBookingCount(@Valid VenueBookingSearchCriteria criteria, @NonNull RequestInfo requestInfo);
 
 	/**
 	 * 
@@ -130,7 +130,7 @@ public interface CommunityHallBookingService {
 	 * @param deleteBookingTimer           whether to delete the timer entry after
 	 *                                     update
 	 */
-	void updateBookingSynchronously(CommunityHallBookingRequest communityHallsBookingRequest,
+	void updateBookingSynchronously(VenueBookingRequest communityHallsBookingRequest,
 			PaymentDetail paymentDetail, BookingStatusEnum status, boolean deleteBookingTimer);
 	
 }

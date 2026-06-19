@@ -22,7 +22,7 @@ import lombok.ToString;
 @Setter
 @Builder
 @ToString
-public class CommunityHallSlotSearchCriteria {
+public class VenueSlotSearchCriteria {
 	@JsonProperty("tenantId")
 	private String tenantId;
 

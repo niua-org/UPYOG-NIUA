@@ -28,7 +28,7 @@ import lombok.ToString;
 @Builder
 @ToString
 @EqualsAndHashCode(of = { "tenantId", "venueCode", "code", "bookingDate" })
-public class CommunityHallSlotAvailabilityDetail {
+public class VenueSlotAvailabilityDetail {
 
 	private String venueCode;
 	

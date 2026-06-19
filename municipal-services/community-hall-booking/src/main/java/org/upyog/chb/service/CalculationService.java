@@ -17,7 +17,7 @@ import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.util.MdmsUtil;
 import org.upyog.chb.web.models.BookingSlotDetail;
 import org.upyog.chb.web.models.CalculationType;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.billing.DemandDetail;
 import org.upyog.chb.web.models.billing.TaxHeadMaster;
 
@@ -72,7 +72,7 @@ public class CalculationService {
 	 * @param bookingRequest
 	 * @return
 	 */
-	public List<DemandDetail> calculateDemand(CommunityHallBookingRequest bookingRequest) {
+	public List<DemandDetail> calculateDemand(VenueBookingRequest bookingRequest) {
 
 		String tenantId = CommunityHallBookingUtil.getTenantId(bookingRequest.getHallsBookingApplication().getTenantId());
 		
@@ -90,7 +90,7 @@ public class CalculationService {
 	}
 
 	private List<DemandDetail> processCalculationForDemandGeneration(String tenantId,
-			List<CalculationType> calculationTypes, CommunityHallBookingRequest bookingRequest, List<TaxHeadMaster> headMasters) {
+			List<CalculationType> calculationTypes, VenueBookingRequest bookingRequest, List<TaxHeadMaster> headMasters) {
 
 		// Calculate total booking hours instead of days
 		Map<String, BigDecimal> hallCodeBookingHoursMap = bookingRequest.getHallsBookingApplication().getBookingSlotDetails()
@@ -147,7 +147,7 @@ public class CalculationService {
 		return demandDetails;
 	}
 	
-	private void calculateTaxDemands(CommunityHallBookingRequest bookingRequest, String tenantId,
+	private void calculateTaxDemands(VenueBookingRequest bookingRequest, String tenantId,
 			List<DemandDetail> demandDetails, BigDecimal totalTaxableAmount) {
 		List<CalculationType> taxRates = mdmsUtil.getTaxRatesMasterList(bookingRequest.getRequestInfo(), tenantId,
 				config.getModuleName(), bookingRequest.getHallsBookingApplication());

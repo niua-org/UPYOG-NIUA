@@ -15,15 +15,15 @@ import org.upyog.chb.service.CommunityHallBookingService;
 import org.upyog.chb.service.DemandService;
 import org.upyog.chb.service.SchedulerService;
 import org.upyog.chb.util.CommunityHallBookingUtil;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.CommunityHallBookingResponse;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 import org.upyog.chb.web.models.CommunityHallDemandEstimationCriteria;
 import org.upyog.chb.web.models.CommunityHallDemandEstimationResponse;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityResponse;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
+import org.upyog.chb.web.models.VenueSlotAvailabilityResponse;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 import org.upyog.chb.web.models.RequestInfoWrapper;
 import org.upyog.chb.web.models.ResponseInfo;
 import org.upyog.chb.web.models.ResponseInfo.StatusEnum;
@@ -106,9 +106,9 @@ public class CommunityHallBookingController {
 	 */
 	@RequestMapping(value = "/v1/_create", method = RequestMethod.POST) 
 	public ResponseEntity<CommunityHallBookingResponse> createBooking(
-			@Parameter(description = "Details for the community halls booking time payment and documents", required = true) @Valid @RequestBody CommunityHallBookingRequest communityHallsBookingRequest) {
+			@Parameter(description = "Details for the community halls booking time payment and documents", required = true) @Valid @RequestBody VenueBookingRequest communityHallsBookingRequest) {
 		
-		CommunityHallBookingDetail bookingDetail = bookingService.createBooking(communityHallsBookingRequest);
+		VenueBookingDetail bookingDetail = bookingService.createBooking(communityHallsBookingRequest);
 		ResponseInfo info = CommunityHallBookingUtil.createReponseInfo(communityHallsBookingRequest.getRequestInfo(), CommunityHallBookingConstants.COMMUNITY_HALL_BOOKING_CREATED,
 				StatusEnum.SUCCESSFUL);
 		CommunityHallBookingResponse communityHallResponse = CommunityHallBookingResponse.builder()
@@ -132,9 +132,9 @@ public class CommunityHallBookingController {
 	 */
 	@RequestMapping(value = "/v1/_init", method = RequestMethod.POST)
 	public ResponseEntity<CommunityHallBookingResponse> initBooking(
-			@Parameter(description = "Details for the community halls booking time payment and documents", required = true) @Valid @RequestBody CommunityHallBookingRequest communityHallsBookingRequest) {
+			@Parameter(description = "Details for the community halls booking time payment and documents", required = true) @Valid @RequestBody VenueBookingRequest communityHallsBookingRequest) {
 		
-		CommunityHallBookingDetail bookingDetail = bookingService.createInitBooking(communityHallsBookingRequest);
+		VenueBookingDetail bookingDetail = bookingService.createInitBooking(communityHallsBookingRequest);
 		ResponseInfo info = CommunityHallBookingUtil.createReponseInfo(communityHallsBookingRequest.getRequestInfo(), CommunityHallBookingConstants.COMMUNITY_HALL_BOOKING_INIT_CREATED,
 				StatusEnum.SUCCESSFUL);
 		CommunityHallBookingResponse communityHallResponse = CommunityHallBookingResponse.builder().responseInfo(info)
@@ -156,7 +156,7 @@ public class CommunityHallBookingController {
 	 */
 	@RequestMapping(value = "/v1/_update", method = RequestMethod.POST)
 	public ResponseEntity<CommunityHallBookingResponse> v1UpdateBooking(
-			@Parameter(description = "Details for the new (s) + RequestInfo meta data.", required = true) @Valid @RequestBody CommunityHallBookingRequest communityHallsBookingRequest) {
+			@Parameter(description = "Details for the new (s) + RequestInfo meta data.", required = true) @Valid @RequestBody VenueBookingRequest communityHallsBookingRequest) {
 		
 		/**
 		 * This update booking method will be called for below two tasks : 
@@ -165,7 +165,7 @@ public class CommunityHallBookingController {
 		 * 3. Update workflow when the application has reached employee login
 		 */
 		
-		CommunityHallBookingDetail bookingDetail = bookingService.updateBooking(communityHallsBookingRequest, null, 
+		VenueBookingDetail bookingDetail = bookingService.updateBooking(communityHallsBookingRequest, null, 
 				 BookingStatusEnum.valueOf(communityHallsBookingRequest.getHallsBookingApplication().getBookingStatus()));
 		ResponseInfo info = CommunityHallBookingUtil.createReponseInfo(communityHallsBookingRequest.getRequestInfo(), CommunityHallBookingConstants.COMMUNITY_HALL_BOOKING_UPDATED,
 				StatusEnum.SUCCESSFUL);
@@ -189,8 +189,8 @@ public class CommunityHallBookingController {
 	 */
 	@RequestMapping(value = "/v1/_search", method = RequestMethod.POST)
 	public ResponseEntity<CommunityHallBookingResponse> v1SearchCommunityHallBooking(@Valid @RequestBody RequestInfoWrapper requestInfoWrapper,
-            @Valid @ModelAttribute CommunityHallBookingSearchCriteria criteria) {
-		List<CommunityHallBookingDetail> applications = bookingService.getBookingDetails(criteria, requestInfoWrapper.getRequestInfo());
+            @Valid @ModelAttribute VenueBookingSearchCriteria criteria) {
+		List<VenueBookingDetail> applications = bookingService.getBookingDetails(criteria, requestInfoWrapper.getRequestInfo());
 		
 		/**
 		 * Count : it is used to show load more booking attribute on front end 
@@ -217,9 +217,9 @@ public class CommunityHallBookingController {
 	 * @return response containing slot availability details and timer information
 	 */
 	@RequestMapping(value = "/v1/_slot-search", method = RequestMethod.POST)
-	public ResponseEntity<CommunityHallSlotAvailabilityResponse> v1GetCommmunityHallSlotAvailablity(@Valid @RequestBody RequestInfoWrapper requestInfoWrapper,
-            @Valid @ModelAttribute CommunityHallSlotSearchCriteria criteria) {
-		CommunityHallSlotAvailabilityResponse communityHallSlotAvailabilityResponse  = bookingService.getCommunityHallSlotAvailability(criteria, requestInfoWrapper.getRequestInfo());
+	public ResponseEntity<VenueSlotAvailabilityResponse> v1GetCommmunityHallSlotAvailablity(@Valid @RequestBody RequestInfoWrapper requestInfoWrapper,
+            @Valid @ModelAttribute VenueSlotSearchCriteria criteria) {
+		VenueSlotAvailabilityResponse communityHallSlotAvailabilityResponse  = bookingService.getCommunityHallSlotAvailability(criteria, requestInfoWrapper.getRequestInfo());
 		ResponseInfo info = CommunityHallBookingUtil.createReponseInfo(requestInfoWrapper.getRequestInfo(), CommunityHallBookingConstants.COMMUNITY_HALL_AVIALABILITY_SEARCH,
 				StatusEnum.SUCCESSFUL);
 		

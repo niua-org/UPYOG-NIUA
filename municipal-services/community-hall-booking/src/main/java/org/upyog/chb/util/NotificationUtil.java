@@ -20,8 +20,8 @@ import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.kafka.producer.Producer;
 import org.upyog.chb.repository.ServiceRequestRepository;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.events.Action;
 import org.upyog.chb.web.models.events.ActionItem;
 import org.upyog.chb.web.models.events.EventRequest;
@@ -160,7 +160,7 @@ public class NotificationUtil {
 	 * @param mobileNumberToOwnerName Map of mobileNumber to OwnerName
 	 * @return List of SMSRequest
 	 */
-	public List<SMSRequest> createSMSRequest(CommunityHallBookingRequest bookingRequest, String message,
+	public List<SMSRequest> createSMSRequest(VenueBookingRequest bookingRequest, String message,
 			Map<String, String> mobileNumberToOwnerName) {
 
 		List<SMSRequest> smsRequest = new LinkedList<>();
@@ -206,7 +206,7 @@ public class NotificationUtil {
 	 * @param actionStatus
 	 * @return
 	 */
-	public Map<String, String> getCustomizedMsg(CommunityHallBookingDetail bookingDetail, String localizationMessage, String actionStatus, String eventType) {
+	public Map<String, String> getCustomizedMsg(VenueBookingDetail bookingDetail, String localizationMessage, String actionStatus, String eventType) {
 		String messageTemplate = null, link = null;
 		String notificationEventType = actionStatus + "_" + eventType;
 		log.info(" booking status : " + bookingDetail.getBookingStatus());
@@ -274,7 +274,7 @@ public class NotificationUtil {
 		return messageMap;
 	}
 	
-	public String getActionLink(CommunityHallBookingDetail bookingDetail, String action) {
+	public String getActionLink(VenueBookingDetail bookingDetail, String action) {
 		String link = null;
 		if(PAYMENT_LINK.equals(action)) {
 			//Payment Link
@@ -317,7 +317,7 @@ public class NotificationUtil {
 	 * and we get that timer value by hitting the make payment button
 	 * if timer value is not given then the proceed to pay button will be disabled
 	 */
-	public String getPayUrl(CommunityHallBookingDetail bookingDetail, String message) {
+	public String getPayUrl(VenueBookingDetail bookingDetail, String message) {
 	    String payLinkTemplate = config.getPayNowLink();
 	   /*  String actionLink = String.format(payLinkTemplate,
 	            config.getBusinessServiceName(),
@@ -341,7 +341,7 @@ public class NotificationUtil {
 	 * @return a shortened URL string for downloading the receipt
 	 */
 	
-     public String getReceiptDownloadLink(CommunityHallBookingDetail bookingDetail) {
+     public String getReceiptDownloadLink(VenueBookingDetail bookingDetail) {
 		
 		String downloadReceiptLinkTemplate = config.getDownloadReceipt();
 	    String actionLink = String.format(downloadReceiptLinkTemplate,

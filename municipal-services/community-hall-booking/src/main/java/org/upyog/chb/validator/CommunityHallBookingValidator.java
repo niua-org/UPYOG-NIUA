@@ -16,9 +16,9 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.BookingSlotDetail;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,7 +74,7 @@ public class CommunityHallBookingValidator {
 	 * @param bookingRequest
 	 * @param mdmsData
 	 */
-	public void validateCreate(CommunityHallBookingRequest bookingRequest, Object mdmsData) {
+	public void validateCreate(VenueBookingRequest bookingRequest, Object mdmsData) {
 		log.info("validating master data for create booking request for applicant mobile no : "
 				+ bookingRequest.getHallsBookingApplication().getApplicantDetail().getApplicantMobileNo());
 		if (!isSameHallCode(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
@@ -127,7 +127,7 @@ public class CommunityHallBookingValidator {
 	    return true;
 	}
 	
-	public void validateUpdate(CommunityHallBookingDetail bookingDetailFromRequest, CommunityHallBookingDetail bookingDetailFromDB) {
+	public void validateUpdate(VenueBookingDetail bookingDetailFromRequest, VenueBookingDetail bookingDetailFromDB) {
 		log.info("validating master data for update  booking request for  booking no : " + bookingDetailFromRequest.getBookingNo());
 		//TODO: Add condition for status from to 
 	}
@@ -143,7 +143,7 @@ public class CommunityHallBookingValidator {
 	 * 
 	 * @param bookingRequest
 	 */
-	private void validateDuplicateDocuments(CommunityHallBookingRequest bookingRequest) {
+	private void validateDuplicateDocuments(VenueBookingRequest bookingRequest) {
 		if (bookingRequest.getHallsBookingApplication().getUploadedDocumentDetails() != null) {
 			List<String> documentFileStoreIds = new LinkedList<String>();
 			bookingRequest.getHallsBookingApplication().getUploadedDocumentDetails().forEach(document -> {
@@ -164,7 +164,7 @@ public class CommunityHallBookingValidator {
 	 * @param criteria    The CommunityHallBookingSearchCriteria Criteria
 	 */
 	// TODO need to make the changes in the data
-	public void validateSearch(RequestInfo requestInfo, CommunityHallBookingSearchCriteria criteria) {
+	public void validateSearch(RequestInfo requestInfo, VenueBookingSearchCriteria criteria) {
 		log.info("Validating search request for criteria " + criteria);
 		String userType = requestInfo.getUserInfo().getType();
 		
@@ -206,7 +206,7 @@ public class CommunityHallBookingValidator {
 	 * @param criteria      CHB search criteria
 	 * @param allowedParams Allowed Params for search
 	 */
-	private void validateSearchParams(CommunityHallBookingSearchCriteria criteria, List<String> allowedParams) {
+	private void validateSearchParams(VenueBookingSearchCriteria criteria, List<String> allowedParams) {
 		log.info("Validating search params for allowedParams " + allowedParams);
 
 		if (criteria.getBookingNo() != null && !allowedParams.contains("bookingNo"))

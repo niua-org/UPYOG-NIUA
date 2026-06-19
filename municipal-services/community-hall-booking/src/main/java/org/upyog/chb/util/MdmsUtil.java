@@ -18,7 +18,7 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.web.models.CalculationType;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.billing.TaxHeadMaster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -262,7 +262,7 @@ public class MdmsUtil {
 	}
 
 	public List<CalculationType> getTaxRatesMasterList(RequestInfo requestInfo, String tenantId, String moduleName,
-			CommunityHallBookingDetail bookingDetail) {
+			VenueBookingDetail bookingDetail) {
 		List<CalculationType> taxRates = null;
 		String taxRatesMasterName = "TaxRates";
 

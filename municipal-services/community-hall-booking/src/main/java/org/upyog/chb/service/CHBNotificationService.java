@@ -24,8 +24,8 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.util.NotificationUtil;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.events.Action;
 import org.upyog.chb.web.models.events.Event;
 import org.upyog.chb.web.models.events.EventRequest;
@@ -84,8 +84,8 @@ public class CHBNotificationService {
 	@Autowired
 	private UserService userService;
 	
-	public void process(CommunityHallBookingRequest bookingRequest, String status) {
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+	public void process(VenueBookingRequest bookingRequest, String status) {
+		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
 		// Decrypt applicant detail it will be used in notification
 		bookingDetail = chbEncryptionService.decryptObject(bookingDetail, bookingRequest.getRequestInfo());
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
@@ -127,8 +127,8 @@ public class CHBNotificationService {
 	 * @param bookingRequest
 	 * @param status
 	 */
-	private void  sendMessageNotification(String localizationMessages, CommunityHallBookingRequest bookingRequest, String status) {
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+	private void  sendMessageNotification(String localizationMessages, VenueBookingRequest bookingRequest, String status) {
+		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
 		Map<String, String> messageMap = new HashMap<String, String>();
     	String message = null;
 		try {
@@ -164,8 +164,8 @@ public class CHBNotificationService {
 		
 	}
 	
-    private void sendEventNotification(String localizationMessages, CommunityHallBookingRequest bookingRequest, String status) {
-    	CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+    private void sendEventNotification(String localizationMessages, VenueBookingRequest bookingRequest, String status) {
+    	VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
     	Map<String, String> messageMap = new HashMap<String, String>();
     	String message = null;
 		try {
@@ -205,12 +205,12 @@ public class CHBNotificationService {
 	 * @param bpaRequest  The bpaRequest from kafka topic
 	 * @param smsRequests List of SMSRequets
 	 */
-	private void enrichSMSRequest(CommunityHallBookingRequest bookingRequest, List<SMSRequest> smsRequests,
+	private void enrichSMSRequest(VenueBookingRequest bookingRequest, List<SMSRequest> smsRequests,
 			Map<String, String> mobileNumberToOwner, String message) {
 		smsRequests.addAll(util.createSMSRequest(bookingRequest, message, mobileNumberToOwner));
 	}
 
-	private EventRequest getEventsForCommunityHallBooking(CommunityHallBookingRequest request, String message, String actionLink) {
+	private EventRequest getEventsForCommunityHallBooking(VenueBookingRequest request, String message, String actionLink) {
 
 		List<Event> events = new ArrayList<>();
 		String tenantId = request.getHallsBookingApplication().getTenantId();

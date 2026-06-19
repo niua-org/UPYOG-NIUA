@@ -30,7 +30,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CommunityHallBookingDetail {
+public class VenueBookingDetail {
 	
 	@JsonProperty("bookingId")
 	private String bookingId;
@@ -95,7 +95,7 @@ public class CommunityHallBookingDetail {
  	private String draftId;
 	
 
-	public CommunityHallBookingDetail addUploadedDocumentDetailsItem(DocumentDetail uploadedDocumentDetailsItem) {
+	public VenueBookingDetail addUploadedDocumentDetailsItem(DocumentDetail uploadedDocumentDetailsItem) {
 		if (this.uploadedDocumentDetails == null) {
 			this.uploadedDocumentDetails = new ArrayList<>();
 		}
@@ -104,7 +104,7 @@ public class CommunityHallBookingDetail {
 	}
 
 
-	public CommunityHallBookingDetail addBookingSlots(BookingSlotDetail bookingSlotDetail) {
+	public VenueBookingDetail addBookingSlots(BookingSlotDetail bookingSlotDetail) {
 		if(bookingSlotDetails == null){
 			bookingSlotDetails = new ArrayList<BookingSlotDetail>();
 		}

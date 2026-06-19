@@ -6,8 +6,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 
 import java.lang.reflect.Method;
 import java.time.LocalTime;
@@ -33,7 +33,7 @@ class CommunityHallBookingQueryBuilderTest {
 
     @Test
     void testGetCommunityHallBookingSearchQuery() {
-        CommunityHallBookingSearchCriteria criteria = createSearchCriteria("pg.test-tenant", "12345", "PENDING");
+        VenueBookingSearchCriteria criteria = createSearchCriteria("pg.test-tenant", "12345", "PENDING");
         List<Object> preparedStmtList = new ArrayList<>();
 
         String query = queryBuilder.getCommunityHallBookingSearchQuery(criteria, preparedStmtList);
@@ -70,7 +70,7 @@ class CommunityHallBookingQueryBuilderTest {
 
     @Test
     void testGetCommunityHallSlotAvailabilityQuery() {
-        CommunityHallSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
+        VenueSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
         List<Object> paramsList = new ArrayList<>();
 
         StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
@@ -83,7 +83,7 @@ class CommunityHallBookingQueryBuilderTest {
 
     @Test
     void testGetCommunityHallSlotAvailabilityQueryWithStartEndTime() {
-        CommunityHallSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
+        VenueSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
         criteria.setStartTime(LocalTime.parse("09:00"));
         criteria.setEndTime(LocalTime.parse("12:00"));
         List<Object> paramsList = new ArrayList<>();
@@ -98,7 +98,7 @@ class CommunityHallBookingQueryBuilderTest {
 
     @Test
     void testGetCommunityHallSlotAvailabilityQueryWithFromToTime() {
-        CommunityHallSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
+        VenueSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
         criteria.setFromTime("09:00");
         criteria.setToTime("12:00");
         List<Object> paramsList = new ArrayList<>();
@@ -114,7 +114,7 @@ class CommunityHallBookingQueryBuilderTest {
     @Test
     void testAddPaginationWrapper() throws Exception {
         // Arrange
-        CommunityHallBookingSearchCriteria criteria = createPaginationCriteria(10, 5);
+        VenueBookingSearchCriteria criteria = createPaginationCriteria(10, 5);
         List<Object> preparedStmtList = new ArrayList<>();
         String query = "SELECT * FROM bookings";
 
@@ -124,7 +124,7 @@ class CommunityHallBookingQueryBuilderTest {
 
         // Access private method using reflection
         Method method = CommunityHallBookingQueryBuilder.class.getDeclaredMethod(
-                "addPaginationWrapper", String.class, List.class, CommunityHallBookingSearchCriteria.class);
+                "addPaginationWrapper", String.class, List.class, VenueBookingSearchCriteria.class);
         method.setAccessible(true);
 
         // Act
@@ -190,16 +190,16 @@ class CommunityHallBookingQueryBuilderTest {
         assertEquals(2, preparedStmtList.size());
     }
 
-    private CommunityHallBookingSearchCriteria createSearchCriteria(String tenantId, String bookingNo, String status) {
-        CommunityHallBookingSearchCriteria criteria = new CommunityHallBookingSearchCriteria();
+    private VenueBookingSearchCriteria createSearchCriteria(String tenantId, String bookingNo, String status) {
+        VenueBookingSearchCriteria criteria = new VenueBookingSearchCriteria();
         criteria.setTenantId(tenantId);
         criteria.setBookingNo(bookingNo);
         criteria.setStatus(status);
         return criteria;
     }
 
-    private CommunityHallSlotSearchCriteria createSlotSearchCriteria(String tenantId, String hallCode, String startDate, String endDate) {
-        CommunityHallSlotSearchCriteria criteria = new CommunityHallSlotSearchCriteria();
+    private VenueSlotSearchCriteria createSlotSearchCriteria(String tenantId, String hallCode, String startDate, String endDate) {
+        VenueSlotSearchCriteria criteria = new VenueSlotSearchCriteria();
         criteria.setTenantId(tenantId);
         criteria.setVenueCode(hallCode);
         criteria.setBookingStartDate(startDate);
@@ -207,8 +207,8 @@ class CommunityHallBookingQueryBuilderTest {
         return criteria;
     }
 
-    private CommunityHallBookingSearchCriteria createPaginationCriteria(int limit, int offset) {
-        CommunityHallBookingSearchCriteria criteria = new CommunityHallBookingSearchCriteria();
+    private VenueBookingSearchCriteria createPaginationCriteria(int limit, int offset) {
+        VenueBookingSearchCriteria criteria = new VenueBookingSearchCriteria();
         criteria.setLimit(limit);
         criteria.setOffset(offset);
         return criteria;

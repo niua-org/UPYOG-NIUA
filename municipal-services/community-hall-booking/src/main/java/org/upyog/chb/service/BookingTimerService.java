@@ -18,8 +18,8 @@ import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.util.CommunityHallSlotCriteriaUtil;
 import org.upyog.chb.util.PaymentTimerKeyBuilder;
 import org.upyog.chb.web.models.BookingPaymentTimerDetails;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,8 +56,8 @@ public class BookingTimerService {
 	 * @return remaining timer value in seconds
 	 */
 	@Transactional
-	public long managePaymentTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo info,
-			List<CommunityHallSlotAvailabilityDetail> availabilityDetailsList) {
+	public long managePaymentTimer(VenueSlotSearchCriteria criteria, RequestInfo info,
+			List<VenueSlotAvailabilityDetail> availabilityDetailsList) {
 		validateTimerCriteria(criteria, info);
 		ensureTimerBookingReference(criteria);
 
@@ -126,8 +126,8 @@ public class BookingTimerService {
 	 * @return remaining timer value in seconds
 	 */
 	@Transactional
-	public long getTimerValue(CommunityHallSlotSearchCriteria criteria, RequestInfo info,
-			List<CommunityHallSlotAvailabilityDetail> availabilityDetailsList) {
+	public long getTimerValue(VenueSlotSearchCriteria criteria, RequestInfo info,
+			List<VenueSlotAvailabilityDetail> availabilityDetailsList) {
 		return managePaymentTimer(criteria, info, availabilityDetailsList);
 	}
 
@@ -141,7 +141,7 @@ public class BookingTimerService {
 		if (StringUtils.isBlank(bookingId)) {
 			return 0L;
 		}
-		var criteria = CommunityHallSlotSearchCriteria.builder().bookingId(bookingId).build();
+		var criteria = VenueSlotSearchCriteria.builder().bookingId(bookingId).build();
 		var timers = bookingRepository.getBookingTimer(criteria);
 		if (CollectionUtils.isEmpty(timers)) {
 			return 0L;
@@ -159,7 +159,7 @@ public class BookingTimerService {
 	 * @param bookingDate         booking date being checked
 	 */
 	private void assertNoConflictingTimer(List<BookingPaymentTimerDetails> activeTimersInRange,
-			CommunityHallSlotSearchCriteria criteria, String userId, String hallCode,
+			VenueSlotSearchCriteria criteria, String userId, String hallCode,
 			java.time.LocalDate bookingDate) {
 		var conflict = activeTimersInRange.stream()
 				.anyMatch(t -> hallCode.equals(t.getCode()) && bookingDate.equals(t.getBookingDate())
@@ -176,7 +176,7 @@ public class BookingTimerService {
 	 * @param criteria slot search criteria
 	 * @param info     request metadata
 	 */
-	private void validateTimerCriteria(CommunityHallSlotSearchCriteria criteria, RequestInfo info) {
+	private void validateTimerCriteria(VenueSlotSearchCriteria criteria, RequestInfo info) {
 		if (info == null || info.getUserInfo() == null || StringUtils.isBlank(info.getUserInfo().getUuid())) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
 					"Authenticated user is required for payment timer");
@@ -189,7 +189,7 @@ public class BookingTimerService {
 	 *
 	 * @param criteria slot search criteria that may receive a generated draft id
 	 */
-	private void ensureTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+	private void ensureTimerBookingReference(VenueSlotSearchCriteria criteria) {
 		if (StringUtils.isBlank(criteria.getBookingId()) && StringUtils.isBlank(criteria.getDraftId())) {
 			criteria.setDraftId(CommunityHallBookingUtil.getRandonUUID());
 		}
@@ -202,7 +202,7 @@ public class BookingTimerService {
 	 * @param criteria slot search criteria
 	 * @return booking id or draft id used by timer rows
 	 */
-	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+	private String getTimerBookingReference(VenueSlotSearchCriteria criteria) {
 		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 
@@ -246,7 +246,7 @@ public class BookingTimerService {
 		if (redis == null) {
 			return;
 		}
-		var criteria = CommunityHallSlotSearchCriteria.builder().bookingId(bookingId).build();
+		var criteria = VenueSlotSearchCriteria.builder().bookingId(bookingId).build();
 		var timers = bookingRepository.getBookingTimer(criteria);
 		if (!CollectionUtils.isEmpty(timers)) {
 			redis.removeTimerRows(timers);
@@ -261,7 +261,7 @@ public class BookingTimerService {
 	 * @return matching timer rows
 	 */
 	public List<BookingPaymentTimerDetails> getBookingFromTimerTable(RequestInfo info,
-			CommunityHallSlotSearchCriteria criteria) {
+			VenueSlotSearchCriteria criteria) {
 		return bookingRepository.getBookingTimerByCreatedBy(info, criteria);
 	}
 }

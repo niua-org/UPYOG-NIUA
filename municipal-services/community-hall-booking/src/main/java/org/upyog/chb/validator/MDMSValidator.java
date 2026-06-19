@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.util.MdmsUtil;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingRequest;
 
 import com.jayway.jsonpath.JsonPath;
 
@@ -25,7 +25,7 @@ public class MDMSValidator {
 	 *
 	 * @param communityHallBookingRequest
 	 */
-	public void validateMdmsData(CommunityHallBookingRequest communityHallBookingRequest, Object mdmsData) {
+	public void validateMdmsData(VenueBookingRequest communityHallBookingRequest, Object mdmsData) {
 
 		Map<String, List<String>> masterData = getAttributeValues(mdmsData);
 		/*

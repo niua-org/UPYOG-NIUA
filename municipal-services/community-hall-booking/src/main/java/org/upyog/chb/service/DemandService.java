@@ -15,8 +15,8 @@ import org.upyog.chb.repository.DemandRepository;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.util.MdmsUtil;
 import org.upyog.chb.validator.CommunityHallBookingValidator;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.CommunityHallDemandEstimationCriteria;
 import org.upyog.chb.web.models.billing.Demand;
 import org.upyog.chb.web.models.billing.DemandDetail;
@@ -91,11 +91,11 @@ public class DemandService {
 	 * @return
 	 */
 
-	public List<Demand> createDemand(CommunityHallBookingRequest bookingRequest, Object mdmsData, boolean generateDemand) {
+	public List<Demand> createDemand(VenueBookingRequest bookingRequest, Object mdmsData, boolean generateDemand) {
 		String tenantId = bookingRequest.getHallsBookingApplication().getTenantId();
 		String consumerCode = bookingRequest.getHallsBookingApplication().getBookingNo();
 		
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
 		User user =bookingRequest.getRequestInfo().getUserInfo();
 		
 		User owner = User.builder().name(user.getName()).emailId(user.getEmailId())
@@ -137,17 +137,17 @@ public class DemandService {
 		
 		String tenantId = estimationCriteria.getTenantId().split("\\.")[0];
 		
-		CommunityHallBookingDetail bookingDetail = CommunityHallBookingDetail.builder().tenantId(tenantId)
+		VenueBookingDetail bookingDetail = VenueBookingDetail.builder().tenantId(tenantId)
 				.bookingSlotDetails(estimationCriteria.getBookingSlotDetails())
 				.venueCode(estimationCriteria.getVenueCode()).build();
-		CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder().hallsBookingApplication(bookingDetail)
+		VenueBookingRequest bookingRequest = VenueBookingRequest.builder().hallsBookingApplication(bookingDetail)
 				.requestInfo(estimationCriteria.getRequestInfo()).build();
 		Object mdmsData = mdmsUtil.mDMSCall(bookingRequest.getRequestInfo(), tenantId);
 		List<Demand> demands = createDemand(bookingRequest, mdmsData, false);
 		return demands;
 	}
 	
-	private LocalDate getMaxBookingDate(CommunityHallBookingDetail bookingDetail) {
+	private LocalDate getMaxBookingDate(VenueBookingDetail bookingDetail) {
 		
 		return bookingDetail.getBookingSlotDetails().stream().map(detail -> detail.getBookingDate())
 				.max( LocalDate :: compareTo)

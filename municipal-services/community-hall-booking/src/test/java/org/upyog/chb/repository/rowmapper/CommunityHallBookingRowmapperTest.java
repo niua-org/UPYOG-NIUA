@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataAccessException;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -46,12 +46,12 @@ class CommunityHallBookingRowmapperTest {
         when(resultSet.getString("payment_receipt_filestore_id")).thenReturn("PR001");
 
         // Act
-        List<CommunityHallBookingDetail> result = rowmapper.extractData(resultSet);
+        List<VenueBookingDetail> result = rowmapper.extractData(resultSet);
 
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        CommunityHallBookingDetail bookingDetail = result.get(0);
+        VenueBookingDetail bookingDetail = result.get(0);
         assertEquals("B001", bookingDetail.getBookingId());
         assertEquals("BN001", bookingDetail.getBookingNo());
         assertEquals("T001", bookingDetail.getTenantId());
