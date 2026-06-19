@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.egov.infra.mdms.repository.SchemaDefinitionRepository;
 
 @jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2023-05-30T09:26:57.838+05:30[Asia/Kolkata]")
 @Controller
@@ -23,10 +24,16 @@ public class SchemaDefinitionController {
 
     private SchemaDefinitionService schemaDefinitionService;
 
+    private SchemaDefinitionRepository schemaDefinitionRepository;
+
     @Autowired
-    public SchemaDefinitionController(SchemaDefinitionService schemaDefinitionService) {
-        this.schemaDefinitionService = schemaDefinitionService;
-    }
+    public SchemaDefinitionController(
+        SchemaDefinitionService schemaDefinitionService,
+        SchemaDefinitionRepository schemaDefinitionRepository) {
+
+    this.schemaDefinitionService = schemaDefinitionService;
+    this.schemaDefinitionRepository = schemaDefinitionRepository;
+}
 
     /**
      * Request handler for serving schema create requests.
