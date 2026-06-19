@@ -333,6 +333,12 @@ public class CommunityHallBookingQueryBuilder {
 	 * return finalQuery; }
 	 */
 
+	/**
+	 * Builds a query to fetch slot rows for the provided booking ids.
+	 *
+	 * @param bookingIds booking ids to include in the query
+	 * @return SQL query string with parameter placeholders for the booking ids
+	 */
 	public String getSlotDetailsQuery(List<String> bookingIds) {
 		StringBuilder builder = new StringBuilder(slotDetailsQuery);
 		builder.append(createQueryParams(bookingIds)).append(")");
@@ -340,13 +346,22 @@ public class CommunityHallBookingQueryBuilder {
 
 	}
 
+	/**
+	 * Builds a query to fetch document rows for the provided booking ids.
+	 *
+	 * @param bookingIds booking ids to include in the query
+	 * @return SQL query string with parameter placeholders for the booking ids
+	 */
 	public String getDocumentDetailsQuery(List<String> bookingIds) {
 		StringBuilder builder = new StringBuilder(documentDetailsQuery);
 		builder.append(createQueryParams(bookingIds)).append(")");
 		return builder.toString();
 	}
 
+
+
 	public StringBuilder getCommunityHallSlotAvailabilityQuery(VenueSlotSearchCriteria searchCriteria,
+
 			List<Object> paramsList) {
 		StringBuilder builder = new StringBuilder(COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY);
 
@@ -359,6 +374,7 @@ public class CommunityHallBookingQueryBuilder {
 
 		return builder;
 	}
+
 
 	private void appendTimeFilters(VenueSlotSearchCriteria searchCriteria, StringBuilder builder,
 			List<Object> paramsList) {

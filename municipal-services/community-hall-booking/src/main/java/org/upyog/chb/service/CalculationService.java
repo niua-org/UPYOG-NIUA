@@ -69,8 +69,18 @@ public class CalculationService {
 	private CommunityHallBookingConfiguration config;
 
 	/**
-	 * @param bookingRequest
-	 * @return
+	 * Calculates the list of demands (charges + applicable taxes) for a community hall booking.
+	 * <p>
+	 * The method:
+	 * <ul>
+	 *   <li>Fetches tax head master records and tax calculation rules from MDMS/cache</li>
+	 *   <li>Computes charge amount based on booking slot duration (hours)</li>
+	 *   <li>Derives tax amounts using configured tax rates</li>
+	 * </ul>
+	 * </p>
+	 *
+	 * @param bookingRequest booking request containing booking application details
+	 * @return list of demand details (including tax breakdowns)
 	 */
 	public List<DemandDetail> calculateDemand(VenueBookingRequest bookingRequest) {
 
@@ -165,9 +175,10 @@ public class CalculationService {
 	}
 
 	/**
-	 * Calculate the number of hours between bookingFromTime and bookingToTime
-	 * @param bookingSlotDetail
-	 * @return Number of hours as BigDecimal
+	 * Calculates the number of hours between {@code bookingFromTime} and {@code bookingToTime}.
+	 *
+	 * @param bookingSlotDetail booking slot containing from/to times
+	 * @return duration in hours as {@link BigDecimal}
 	 */
 	private BigDecimal calculateHours(BookingSlotDetail bookingSlotDetail) {
 		long minutesDifference = java.time.temporal.ChronoUnit.MINUTES.between(
