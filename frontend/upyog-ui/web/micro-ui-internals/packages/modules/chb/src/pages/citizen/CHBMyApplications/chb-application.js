@@ -43,6 +43,43 @@ const ChbApplication = ({ application, tenantId, buttonLabel }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const [showToast, setShowToast] = useState(null);
 
+  const isCancelled = application?.bookingStatus === "CANCELLED";
+
+  const { data: recieptData } = Digit.Hooks.useRecieptSearch(
+    {
+      tenantId: tenantId || application?.tenantId,
+      businessService: "chb-services",
+      consumerCodes: application?.bookingNo,
+      isEmployee: false,
+    },
+    { enabled: !!(isCancelled && application?.bookingNo) }
+  );
+
+  const payment = recieptData?.Payments?.[0];
+  const isOnlinePayment = payment?.paymentMode === "ONLINE";
+  const originalTxnId = payment?.transactionNumber;
+
+  // Use the same refund API as detail pages for accurate pipeline status (INITIATED, SUCCESS, etc.)
+  // bookingNo is included in params purely as a query-key discriminator so each card
+  // in the list has a unique React Query cache entry (prevents shared-key collisions).
+  const { data: refundData } = Digit.Hooks.useCustomAPIHook(
+    "/pg-service/refund/v1/_search",
+    {
+      originalTxnId: originalTxnId || "",
+      tenantId: payment?.tenantId || tenantId || application?.tenantId,
+      bookingNo: application?.bookingNo,
+    },
+    {},
+    {},
+    {
+      enabled: !!(isCancelled && isOnlinePayment && originalTxnId),
+    }
+  );
+
+  const refund = refundData?.Refund?.[0] || refundData?.Refunds?.[0] || refundData?.[0];
+  // Show exact refund pipeline status from the API (INITIATED, SUCCESS, etc.)
+  const refundStatus = refund?.status || refund?.refundStatus || null;
+
   const { data: slotSearchData, refetch } = Digit.Hooks.chb.useChbSlotSearch({
     tenantId: application?.tenantId,
     filters: {
@@ -149,6 +186,31 @@ const ChbApplication = ({ application, tenantId, buttonLabel }) => {
       <KeyNote keyValue={t("CHB_COMMUNITY_HALL_NAME")} note={t(`${application?.communityHallCode}`)} />
       <KeyNote keyValue={t("CHB_BOOKING_DATE")} note={getBookingDateRange(application?.bookingSlotDetails)} />
       <KeyNote keyValue={t("PT_COMMON_TABLE_COL_STATUS_LABEL")} note={t(`${application?.bookingStatus}`)} />
+      {isCancelled && (
+        <KeyNote
+          keyValue={t("CHB_REFUND_STATUS") || "Refund Status"}
+          note={
+            <span
+              style={{
+                fontWeight: "600",
+                color: (refundStatus?.toUpperCase() === "SUCCESS" || refundStatus?.toUpperCase() === "SUCCESSFUL" || refundStatus?.toUpperCase() === "COMPLETED" || refundStatus?.toUpperCase() === "REFUNDED")
+                  ? "#155724"
+                  : (refundStatus?.toUpperCase() === "INITIATED" || refundStatus?.toUpperCase() === "IN_PROGRESS" || refundStatus?.toUpperCase() === "INPROGRESS")
+                  ? "#856404"
+                  : refundStatus
+                  ? "#383D41"
+                  : "#6C757D",
+              }}
+            >
+              {refundStatus
+                ? refundStatus
+                : isOnlinePayment
+                ? t("CHB_REFUND_NOT_INITIATED") || "Not initiated yet"
+                : t("CHB_OFFLINE_PAYMENT_NO_REFUND") || "Not applicable (offline payment)"}
+            </span>
+          }
+        />
+      )}
       <div>
         <Link to={`/upyog-ui/citizen/chb/application/${application?.bookingNo}/${application?.tenantId}`}>
           <SubmitBar label={buttonLabel} />

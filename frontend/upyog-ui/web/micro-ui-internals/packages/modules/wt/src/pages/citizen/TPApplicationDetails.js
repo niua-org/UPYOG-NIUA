@@ -129,16 +129,11 @@ import {
         return (
           <React.Fragment>
             <div>
-              <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
-                <Header styles={{ fontSize: "32px" }}>{t("TP_BOOKING_DETAILS")}</Header>
-                {dowloadOptions.length > 0 && (
-                  <MultiLink
-                    className="multilinkWrapper"
-                    onHeadClick={() => setShowOptions(!showOptions)}
-                    displayOptions={showOptions}
-                    options={dowloadOptions}
-                  />
-                )}
+              <div className="cardHeaderWithOptions wt-auto-61">
+                <Header styles={{
+          fontSize: "32px"
+        }}>{t("TP_BOOKING_DETAILS")}</Header>
+                {dowloadOptions.length > 0 && <MultiLink className="multilinkWrapper" onHeadClick={() => setShowOptions(!showOptions)} displayOptions={showOptions} options={dowloadOptions} />}
               </div>
               
               <Card>
@@ -147,7 +142,7 @@ import {
                 </StatusTable>
                 
       
-                <CardSubHeader style={{ fontSize: "24px" }}>{t("TP_APPLICANT_DETAILS")}</CardSubHeader>
+                <CardSubHeader className="wt-auto-62">{t("TP_APPLICANT_DETAILS")}</CardSubHeader>
                 <StatusTable>
                   <Row className="border-none" label={t("WT_APPLICANT_NAME")} text={tp_details?.applicantDetail?.name || t("CS_NA")} />
                   <Row className="border-none" label={t("WT_MOBILE_NUMBER")} text={tp_details?.applicantDetail?.mobileNumber || t("CS_NA")} />
@@ -155,7 +150,7 @@ import {
                   <Row className="border-none" label={t("WT_EMAIL_ID")} text={tp_details?.applicantDetail?.emailId || t("CS_NA")} />
                 </StatusTable>
       
-                <CardSubHeader style={{ fontSize: "24px" }}>{t("ES_TITLE_ADDRESS_DETAILS")}</CardSubHeader>
+                <CardSubHeader className="wt-auto-63">{t("ES_TITLE_ADDRESS_DETAILS")}</CardSubHeader>
                 <StatusTable>
                   <Row className="border-none" label={t("PINCODE")} text={tp_details?.address?.pincode || t("CS_NA")} />
                   <Row className="border-none" label={t("CITY")} text={tp_details?.address?.city || t("CS_NA")} />
@@ -167,7 +162,7 @@ import {
                   <Row className="border-none" label={t("LANDMARK")} text={tp_details?.address?.landmark || t("CS_NA")} />
                 </StatusTable>
       
-                <CardSubHeader style={{ fontSize: "24px" }}>{t("TP_REQUEST_DETAILS")}</CardSubHeader>
+                <CardSubHeader className="wt-auto-64">{t("TP_REQUEST_DETAILS")}</CardSubHeader>
                 <StatusTable>
                   <Row className="border-none" label={t("REASON_FOR_PRUNING")} text={t(tp_details?.reasonForPruning) || t("CS_NA")} />
                   <Row className="border-none" label={t("LATITUDE_GEOTAG")} text={tp_details?.latitude || t("CS_NA")} />
@@ -175,21 +170,11 @@ import {
                 </StatusTable>
       
                 <WFApplicationTimeline application={application} id={application?.bookingNo} userType={"citizen"} />
-                {showToast && (
-                  <Toast
-                    error={showToast.key}
-                    label={t(showToast.label)}
-                    style={{ bottom: "0px" }}
-                    onClose={() => {
-                      setShowToast(null);
-                    }}
-                  />
-                )}
+                {showToast && <Toast error={showToast.key} label={t(showToast.label)} onClose={() => {
+          setShowToast(null);
+        }} className="wt-auto-65" />}
               </Card>
             </div>
-          </React.Fragment>
-        );
-      };
-      
-      export default TPApplicationDetails;
-      
+          </React.Fragment>);
+};
+export default TPApplicationDetails;

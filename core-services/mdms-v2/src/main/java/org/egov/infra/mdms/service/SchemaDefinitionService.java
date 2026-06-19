@@ -11,8 +11,12 @@ import org.egov.infra.mdms.service.validator.SchemaDefinitionValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 @Service
 @Builder
@@ -70,7 +74,32 @@ public class SchemaDefinitionService {
         schemaDefSearchRequest.getSchemaDefCriteria().setTenantId(multiStateInstanceUtil.getStateLevelTenant(tenantId));
 
         // Fetch schema definitions based on the given criteria
-        List<SchemaDefinition> schemaDefinitions = schemaDefinitionRepository.search(schemaDefSearchRequest.getSchemaDefCriteria());
+       List<SchemaDefinition> schemaDefinitions =
+                schemaDefinitionRepository.search(schemaDefSearchRequest.getSchemaDefCriteria());
+
+        if (Boolean.TRUE.equals(schemaDefSearchRequest.getSchemaDefCriteria().getIsGetAllCodes())) {
+
+            Map<String, SchemaDefinition> uniqueCodes = new TreeMap<>(); // ASC order
+
+            schemaDefinitions.forEach(schemaDefinition -> {
+                String moduleName = schemaDefinition.getCode().split("\\.")[0];
+
+                if (!uniqueCodes.containsKey(moduleName)) {
+                    schemaDefinition.setCode(moduleName);
+                    schemaDefinition.setDefinition(null);
+                    schemaDefinition.setDescription(null);
+                    schemaDefinition.setAuditDetails(null);
+                    schemaDefinition.setId(null);
+                    schemaDefinition.setTenantId(null);
+                    schemaDefinition.setIsActive(null);
+
+                    uniqueCodes.put(moduleName, schemaDefinition);
+                }
+            });
+
+            schemaDefinitions = new ArrayList<>(uniqueCodes.values());
+        }
+        
 
         return schemaDefinitions;
     }

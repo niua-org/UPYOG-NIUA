@@ -3,7 +3,7 @@ import { FormStep, TextInput, CardLabel, MobileNumber, Card,CardSubHeader } from
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/CHBTimeline";
 import ChbCancellationPolicy from "../components/ChbCancellationPolicy";
-// import { TimerValues } from "../components/TimerValues";
+import { TimerValues } from "../components/TimerValues";
 
 
 /**
@@ -123,7 +123,7 @@ const CHBCitizenDetails
           {value?.bookingSlotDetails && value.bookingSlotDetails.length > 0
             ? formatSlotDetails(value.bookingSlotDetails)
             : null}
-            {/* <TimerValues timerValues={value?.existingDataSet?.timervalue?.timervalue} SlotSearchData={value?.Searchdata} /> */}
+            <TimerValues timerValues={value?.existingDataSet?.timervalue?.timervalue} SlotSearchData={value?.Searchdata} draftId={value?.existingDataSet?.draftId} />
           </div>
         </CardSubHeader>
         <ChbCancellationPolicy slotDetail={value?.bookingSlotDetails}/>
