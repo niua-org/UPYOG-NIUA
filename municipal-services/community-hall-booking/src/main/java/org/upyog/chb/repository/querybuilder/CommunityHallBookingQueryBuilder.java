@@ -360,9 +360,22 @@ public class CommunityHallBookingQueryBuilder {
 
 
 
-	public StringBuilder getCommunityHallSlotAvailabilityQuery(VenueSlotSearchCriteria searchCriteria,
 
+	/**
+	 * Builds the query used to fetch community hall slot availability.
+	 *
+	 * <p>
+	 * The query uses placeholders for tenant/venue and booking window, and it also
+	 * appends optional time-range filters based on {@link VenueSlotSearchCriteria}.
+	 * </p>
+	 *
+	 * @param searchCriteria slot availability search criteria
+	 * @param paramsList list to be populated with placeholder parameters (mutated)
+	 * @return SQL query string builder
+	 */
+	public StringBuilder getCommunityHallSlotAvailabilityQuery(VenueSlotSearchCriteria searchCriteria,
 			List<Object> paramsList) {
+
 		StringBuilder builder = new StringBuilder(COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY);
 
 		paramsList.add(searchCriteria.getTenantId());
