@@ -36,7 +36,7 @@ const SelectMobileNumber = ({ t, onSelect, showRegisterLink, mobileNumber, onMob
     return (
     <span>
       {isCCFEnabled?.checkBoxLabels?.map((data, index) => {
-        <span key={data?.linkId || index}>
+        return <span key={data?.linkId || index}>
           {/* {index == 0 && "CCF"} */}
           {data?.linkPrefix && <span>{t(`${data?.linkPrefix}_`)}</span>}
           {data?.link && <span id={data?.linkId} onClick={(e) => { onLinkClick(e) }} style={{ color: "#a82227", cursor: "pointer" }}>{t(`${data?.link}_`)}</span>}
