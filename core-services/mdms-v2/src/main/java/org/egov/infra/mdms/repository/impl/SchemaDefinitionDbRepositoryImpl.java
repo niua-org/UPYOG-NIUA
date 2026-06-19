@@ -73,7 +73,9 @@ public class SchemaDefinitionDbRepositoryImpl implements SchemaDefinitionReposit
     @Override
     public Integer getTotalMastersCount(String tenantId) {
 
-    String query = "SELECT COUNT(*) FROM eg_mdms_schema_definition WHERE tenantid = ?";
+    String query = "SELECT COUNT(DISTINCT split_part(code, '.', 1))\n"
+    		+ "FROM eg_mdms_schema_definition\n"
+    		+ "WHERE tenantid = ?";
 
     return jdbcTemplate.queryForObject(
             query,
