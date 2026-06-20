@@ -120,6 +120,7 @@ const MDMSManageMaster = () => {
     if (e.target.tagName !== "INPUT") return;
     debouncedSearch(e.target.value || "");
   };
+  
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -169,15 +170,11 @@ const MDMSManageMaster = () => {
     fetchAllModules();
   };
 
-  const handleModalSearchChange = (e) => {
-    setModalSearch(e.target.value);
-    setCurrentPage(1);
+  const handleModalSearch = (value = "") => {
+        setModalSearch(value);
+        setCurrentPage(1);
   };
 
-  const clearModalSearch = () => {
-    setModalSearch("");
-    setCurrentPage(1);
-  };
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages || page === currentPage) return;
@@ -308,12 +305,12 @@ const MDMSManageMaster = () => {
                   autoFocus
                   type="text"
                   value={modalSearch}
-                  onChange={handleModalSearchChange}
+                  onChange={(e) => handleModalSearch(e.target.value)}
                   placeholder="Search module name…"
                   className="module-modal__search-input"
                 />
                 {modalSearch && (
-                  <button className="module-modal__search-clear" onClick={clearModalSearch}>
+                  <button className="module-modal__search-clear" onClick={() => handleModalSearch()}>
                     ✕
                   </button>
                 )}
