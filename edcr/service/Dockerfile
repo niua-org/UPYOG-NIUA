@@ -21,7 +21,7 @@ RUN cd ${WORK_DIR} && \
 #FROM egovio/wildfly:1-helm-fin-e6312078
 #FROM upyogio/wildfly:1-ed
 #FROM upyogio/wildfly:26.1.3
-FROM nudmcdg/edcr-wildfly26:02
+FROM nudmcdg/edcr-wildfly26:03
 COPY --from=build /app/egov/egov-ear/target/*.ear /opt/jboss/wildfly/standalone/deployments/
 USER jboss
 

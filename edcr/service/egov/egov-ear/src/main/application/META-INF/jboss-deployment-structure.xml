@@ -18,6 +18,10 @@
     <ear-subdeployments-isolated>false</ear-subdeployments-isolated>
 
     <deployment>
+        <dependencies>
+            <module name="org.egov.settings"/>
+        </dependencies>
+
         <exclude-subsystems>
             <subsystem name="jpa"/>
             <subsystem name="infinispan"/>
