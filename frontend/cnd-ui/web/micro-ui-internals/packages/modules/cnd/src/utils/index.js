@@ -226,26 +226,16 @@ export function CNDDocumnetPreview({ documents, titleStyles, isSendBackFlow = fa
   );
 
   return (
-    <div style={{ marginTop: "19px" }}>
+    <div className="cnd-doc-preview-wrapper">
       {documents?.map((document, index) => (
         <React.Fragment key={index}>
-          <div className="documentWidth" style={{ width: "50%" }}>
+          <div className="documentWidth cnd-doc-preview-width">
             <div>
               {document?.title !== "NONE" && document?.values && document?.values.length > 0 ? document?.values?.map((value, index) => (
-                <a target="_" href={value?.url} style={{ marginRight: "10px", maxWidth: "100px", height: "auto", minWidth: "100px" }} key={index}>
+                <a target="_" href={value?.url} className="cnd-doc-preview-anchor" key={index}>
                   {/* Remove the centered SVG div from here */}
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    marginTop: "8px"
-                  }}>
-                    <p style={{
-                      margin: 0,
-                      fontWeight: "bold",
-                      color: "#0000FF",
-                      textDecoration: "underline"
-                    }}>
+                  <div className="cnd-doc-preview-flex">
+                    <p className="cnd-doc-preview-text">
                       {t(value?.title)}
                     </p>
                     <CndPDFSvg /> {/* SVG now appears on the right */}
@@ -254,13 +244,7 @@ export function CNDDocumnetPreview({ documents, titleStyles, isSendBackFlow = fa
               )) : !(window.location.href.includes("citizen")) && <div><p>{t("CND_NO_DOCUMENTS_UPLOADED_LABEL")}</p></div>}
             </div>
             {isHrLine && documents?.length != index + 1 ? (
-              <hr style={{
-                color: "#D6D5D4",
-                backgroundColor: "#D6D5D4",
-                height: "2px",
-                marginTop: "20px",
-                marginBottom: "20px"
-              }} />
+              <hr className="cnd-doc-preview-hr" />
             ) : null}
           </div>
         </React.Fragment>
