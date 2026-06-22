@@ -40,6 +40,9 @@ public class SchemaDefCriteria {
     @JsonProperty("moduleName")
     private String moduleName;
 
+    @JsonProperty("isGetAllCodes")
+    private Boolean isGetAllCodes;
+
 
     public SchemaDefCriteria addCodesItem(String codesItem) {
         if (this.codes == null) {

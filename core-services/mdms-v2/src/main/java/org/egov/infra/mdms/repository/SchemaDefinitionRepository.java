@@ -15,4 +15,6 @@ public interface SchemaDefinitionRepository {
 
     public List<SchemaDefinition> search(SchemaDefCriteria schemaDefCriteria);
 
+    public Integer getTotalMastersCount(String tenantId);
+
 }
