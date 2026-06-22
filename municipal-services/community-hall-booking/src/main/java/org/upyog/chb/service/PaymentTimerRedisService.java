@@ -34,8 +34,8 @@ public class PaymentTimerRedisService {
 	 * @param detail timer details identifying the slot and booking reference
 	 * @return true when the Redis slot hold was acquired or renewed; false when held by another booking
 	 */
-	public boolean tryAcquireSlot(BookingPaymentTimerDetails detail) {
-		var key = PaymentTimerKeyBuilder.toRedisSlotKey(detail);
+	public boolean tryAcquireSlot(BookingPaymentTimerDetails detail,String startTime , String endTime) {
+		var key = PaymentTimerKeyBuilder.toRedisSlotKey(detail,startTime , endTime);
 		var value = PaymentTimerKeyBuilder.toRedisValue(detail.getCreatedBy(), detail.getBookingId());
 		var ttl = paymentTimerDuration();
 		var acquired = Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(key, value, ttl));
@@ -55,11 +55,13 @@ public class PaymentTimerRedisService {
 	 * Synchronizes persisted payment timer rows into the Redis mirror store.
 	 *
 	 * @param details list of timer rows to mirror in Redis
+	 * @param toTime 
+	 * @param fromTime 
 	 */
-	public void syncTimerRows(List<BookingPaymentTimerDetails> details) {
+	public void syncTimerRows(List<BookingPaymentTimerDetails> details, String fromTime, String toTime) {
 		var ttl = paymentTimerDuration();
 		for (var detail : details) {
-			var rowKey = PaymentTimerKeyBuilder.toRedisTimerRowKey(detail);
+			var rowKey = PaymentTimerKeyBuilder.toRedisTimerRowKey(detail,fromTime,toTime);
 			var value = PaymentTimerKeyBuilder.toRedisValue(detail.getCreatedBy(), detail.getBookingId());
 			redis.opsForValue().set(rowKey, value, ttl);
 			log.debug("Redis timer row key synced: {}", rowKey);
@@ -70,11 +72,13 @@ public class PaymentTimerRedisService {
 	 * Removes Redis mirror rows for the provided timer details.
 	 *
 	 * @param details list of timer rows to remove from Redis
+	 * @param toTime 
+	 * @param fromTime 
 	 */
-	public void removeTimerRows(List<BookingPaymentTimerDetails> details) {
+	public void removeTimerRows(List<BookingPaymentTimerDetails> details, String fromTime, String toTime) {
 		for (var detail : details) {
-			redis.delete(PaymentTimerKeyBuilder.toRedisTimerRowKey(detail));
-			redis.delete(PaymentTimerKeyBuilder.toRedisSlotKey(detail));
+			redis.delete(PaymentTimerKeyBuilder.toRedisTimerRowKey(detail,fromTime , toTime));
+			redis.delete(PaymentTimerKeyBuilder.toRedisSlotKey(detail,fromTime,toTime));
 		}
 	}
 

@@ -72,7 +72,8 @@ public class BookingTimerService {
 		var bookingDates = CommunityHallSlotCriteriaUtil.resolveBookingDates(criteria);
 		var createdTime = CommunityHallBookingUtil.getCurrentTimestamp();
 		var activeTimersInRange = bookingRepository.getBookingTimerByCreatedBy(info, criteria);
-
+		String fromTime = criteria.getFromTime();
+		String toTime = criteria.getToTime();
 		var timerDetails = new ArrayList<BookingPaymentTimerDetails>();
 		var redis = paymentTimerRedis.getIfAvailable();
 
@@ -88,7 +89,7 @@ public class BookingTimerService {
 						criteria.getVenueCode(), hallCode, bookingDate, getTimerBookingReference(criteria), userId,
 						createdTime);
 
-				if (redis != null && !redis.tryAcquireSlot(detail)) {
+				if (redis != null && !redis.tryAcquireSlot(detail,fromTime, toTime)) {
 					throw new CustomException("SLOT_PAYMENT_TIMER_LOCKED",
 							"Hall slot is held by another booking. hallCode=" + hallCode + " bookingDate=" + bookingDate);
 				}
@@ -100,11 +101,11 @@ public class BookingTimerService {
 			boolean isFinalBooking = criteria.getBookingId() != null && !criteria.getBookingId().isEmpty();
 			bookingRepository.createBookingTimer(criteria, info, isFinalBooking, timerDetails);
 			if (redis != null) {
-				redis.syncTimerRows(timerDetails);
+				redis.syncTimerRows(timerDetails,fromTime , toTime);
 			}
 		} catch (RuntimeException ex) {
 			if (redis != null) {
-				redis.removeTimerRows(timerDetails);
+				redis.removeTimerRows(timerDetails,fromTime , toTime);
 			}
 			throw ex;
 		}
@@ -249,7 +250,7 @@ public class BookingTimerService {
 		var criteria = VenueSlotSearchCriteria.builder().bookingId(bookingId).build();
 		var timers = bookingRepository.getBookingTimer(criteria);
 		if (!CollectionUtils.isEmpty(timers)) {
-			redis.removeTimerRows(timers);
+			redis.removeTimerRows(timers,criteria.getFromTime(),criteria.getToTime());
 		}
 	}
 
