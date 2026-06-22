@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "3669cea0-a20b-400a-8b38-e671a66a1754",
-		"name": "MDMS v2 Bulk Data",
+		"_postman_id": "c6a56010-cb65-4bab-9514-ef85739f0d17",
+		"name": "MDMS v2 Bulk Data Copy",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "25737272"
 	},
@@ -57,7 +57,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"RequestInfo\": {\r\n        \"apiId\": \"asset-services\",\r\n        \"ver\": null,\r\n        \"ts\": null,\r\n        \"action\": null,\r\n        \"did\": null,\r\n        \"key\": null,\r\n        \"msgId\": \"search with from and to values\",\r\n        \"authToken\": \"{{authToken}}\",\r\n        \"correlationId\": null,\r\n        \"userInfo\": {\r\n            \"id\": \"1\",\r\n            \"userName\": null,\r\n            \"name\": null,\r\n            \"type\": null,\r\n            \"mobileNumber\": null,\r\n            \"emailId\": null,\r\n            \"roles\": null,\r\n            \"uuid\": \"40dceade-992d-4a8f-8243-19dda76a4171\"\r\n        }\r\n    },\r\n    \"Mdms\": {\r\n        \"tenantId\": \"pg\",\r\n        \"schemaCode\": \"NOC.NOCBusinessServiceRoleMaping\",\r\n        \"data\": {{req}},\r\n        \"isActive\": true\r\n    }\r\n}",
+					"raw": "{\r\n    \"RequestInfo\": {\r\n        \"apiId\": \"asset-services\",\r\n        \"ver\": null,\r\n        \"ts\": null,\r\n        \"action\": null,\r\n        \"did\": null,\r\n        \"key\": null,\r\n        \"msgId\": \"search with from and to values\",\r\n        \"authToken\": \"{{authToken}}\",\r\n        \"correlationId\": null,\r\n        \"userInfo\": {\r\n            \"id\": \"1\",\r\n            \"userName\": null,\r\n            \"name\": null,\r\n            \"type\": null,\r\n            \"mobileNumber\": null,\r\n            \"emailId\": null,\r\n            \"roles\": null,\r\n            \"uuid\": \"40dceade-992d-4a8f-8243-19dda76a4171\"\r\n        }\r\n    },\r\n    \"Mdms\": {\r\n        \"tenantId\": \"pg\",\r\n        \"schemaCode\": \"TradeLicense.TradeRenewal\",\r\n        \"data\": {{req}},\r\n        \"isActive\": true\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -65,7 +65,7 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:8094/mdms-v2/v2/_create/NOC.NOCBusinessServiceRoleMaping",
+					"raw": "localhost:8094/mdms-v2/v2/_create/TradeLicense.TradeRenewal",
 					"host": [
 						"localhost"
 					],
@@ -74,7 +74,7 @@
 						"mdms-v2",
 						"v2",
 						"_create",
-						"NOC.NOCBusinessServiceRoleMaping"
+						"TradeLicense.TradeRenewal"
 					]
 				}
 			},
