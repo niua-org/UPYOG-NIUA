@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.service.CHBNotificationService;
 import org.upyog.chb.util.CommunityHallBookingUtil;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.springframework.kafka.support.KafkaHeaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,28 +57,28 @@ public class NotificationConsumer {
 	@KafkaListener(topics = { "${persister.save.communityhall.booking.topic}", "${persister.update.communityhall.booking.topic}" })
 	public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
 
-		CommunityHallBookingRequest bookingRequest = new CommunityHallBookingRequest();
+		VenueBookingRequest bookingRequest = new VenueBookingRequest();
 		try {
 
 			log.info("Consuming record in CHB for notification: " + record.toString() + " from topic: " + topic);
 			//log.info("Strigifed json : " + CommunityHallBookingUtil.beuatifyJson(record));
-			bookingRequest = mapper.convertValue(record, CommunityHallBookingRequest.class);
+			bookingRequest = mapper.convertValue(record, VenueBookingRequest.class);
 		} catch (final Exception e) {
 			log.error("Error while processing CHB notification to value: " + record + " on topic: " + topic + ": " + e);
 		}
 
-		if (bookingRequest.getHallsBookingApplication() == null) {
+		if (bookingRequest.getVenueBookingApplication() == null) {
 			log.warn("Received booking request with null hallsBookingApplication. Skipping notification processing.");
 			return;
 		}
 
-		String bookingStatus = bookingRequest.getHallsBookingApplication().getBookingStatus();
+		String bookingStatus = bookingRequest.getVenueBookingApplication().getBookingStatus();
 		log.info("CHB Appplication Received with booking no : "
-				+ bookingRequest.getHallsBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);
+				+ bookingRequest.getVenueBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);
 		
 		//Send notification to user except PENDING_FOR_PAYMENT status
 		if (!BookingStatusEnum.PENDING_FOR_PAYMENT.toString().equals(bookingStatus)) {
-			CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+			VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 			if (bookingDetail.getWorkflow() == null || bookingDetail.getWorkflow().getAction() == null) {
 				bookingStatus = bookingDetail.getBookingStatus();
 			} else {

@@ -2,6 +2,7 @@ package org.upyog.chb.repository.impl;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,13 +31,13 @@ import org.upyog.chb.repository.rowmapper.DocumentDetailsRowMapper;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.BookingPaymentTimerDetails;
 import org.upyog.chb.web.models.BookingSlotDetail;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.CommunityHallBookingInitDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.CommunityHallBookingRequestInit;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 import org.upyog.chb.web.models.DocumentDetail;
 
 import digit.models.coremodels.PaymentDetail;
@@ -93,23 +94,23 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	private CommunityHallSlotAvailabilityRowMapper availabilityRowMapper;
 
 	@Override
-	public void saveCommunityHallBooking(CommunityHallBookingRequest bookingRequest) {
+	public void saveCommunityHallBooking(VenueBookingRequest bookingRequest) {
 		log.info("Saving community hall booking request data for booking no : "
-				+ bookingRequest.getHallsBookingApplication().getBookingNo());
+				+ bookingRequest.getVenueBookingApplication().getBookingNo());
 		producer.push(bookingConfiguration.getCommunityHallBookingSaveTopic(), bookingRequest);
 
 	}
 
 	@Override
-	public void saveCommunityHallBookingInit(CommunityHallBookingRequest bookingRequest) {
+	public void saveCommunityHallBookingInit(VenueBookingRequest bookingRequest) {
 		log.info("Saving community hall booking init data : "
-				+ bookingRequest.getHallsBookingApplication().getBookingId());
+				+ bookingRequest.getVenueBookingApplication().getBookingId());
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		CommunityHallBookingRequestInit testPersist = CommunityHallBookingRequestInit.builder()
 				.bookingId(bookingDetail.getBookingId()).tenantId(bookingDetail.getTenantId())
 				.bookingStatus(bookingDetail.getBookingStatus())
-				.bookingDetails(bookingRequest.getHallsBookingApplication())
+				.bookingDetails(bookingRequest.getVenueBookingApplication())
 				.createdBy(requestInfo.getUserInfo().getUuid())
 				.createdDate(CommunityHallBookingUtil.getCurrentTimestamp())
 				.lastModifiedBy(requestInfo.getUserInfo().getUuid())
@@ -121,14 +122,14 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
-	public List<CommunityHallBookingDetail> getBookingDetails(
-			CommunityHallBookingSearchCriteria bookingSearchCriteria) {
+	public List<VenueBookingDetail> getBookingDetails(
+			VenueBookingSearchCriteria bookingSearchCriteria) {
 		List<Object> preparedStmtList = new ArrayList<>();
 		String query = queryBuilder.getCommunityHallBookingSearchQuery(bookingSearchCriteria, preparedStmtList);
 
 		log.info("getBookingDetails : Final query: " + query);
 		log.info("preparedStmtList :  " + preparedStmtList);
-		List<CommunityHallBookingDetail> bookingDetails = jdbcTemplate.query(query, preparedStmtList.toArray(),
+		List<VenueBookingDetail> bookingDetails = jdbcTemplate.query(query, preparedStmtList.toArray(),
 				bookingRowmapper);
 
 		log.info("Fetched booking details size : " + bookingDetails.size());
@@ -137,8 +138,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 			return bookingDetails;
 		}
 
-		HashMap<String, CommunityHallBookingDetail> bookingMap = bookingDetails.stream().collect(Collectors.toMap(
-				CommunityHallBookingDetail::getBookingId, Function.identity(), (left, right) -> left, HashMap::new));
+		HashMap<String, VenueBookingDetail> bookingMap = bookingDetails.stream().collect(Collectors.toMap(
+				VenueBookingDetail::getBookingId, Function.identity(), (left, right) -> left, HashMap::new));
 
 		List<String> bookingIds = new ArrayList<String>();
 		bookingIds.addAll(bookingMap.keySet());
@@ -159,7 +160,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
-	public Integer getBookingCount(@Valid CommunityHallBookingSearchCriteria criteria) {
+	public Integer getBookingCount(@Valid VenueBookingSearchCriteria criteria) {
 		List<Object> preparedStatement = new ArrayList<>();
 		String query = queryBuilder.getCommunityHallBookingSearchQuery(criteria, preparedStatement);
 
@@ -171,26 +172,26 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
-	public void updateBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest) {
+	public void updateBooking(@Valid VenueBookingRequest communityHallsBookingRequest) {
 		log.info("Updating community hall booking request data for booking no : "
-				+ communityHallsBookingRequest.getHallsBookingApplication().getBookingNo());
+				+ communityHallsBookingRequest.getVenueBookingApplication().getBookingNo());
 		producer.push(bookingConfiguration.getCommunityHallBookingUpdateTopic(), communityHallsBookingRequest);
 	}
 
 	@Override
-	public List<CommunityHallSlotAvailabilityDetail> getCommunityHallSlotAvailability(
-			CommunityHallSlotSearchCriteria criteria) {
+	public List<VenueSlotAvailabilityDetail> getCommunityHallSlotAvailability(
+			VenueSlotSearchCriteria criteria) {
 		List<Object> paramsList = new ArrayList<>();
 
 		StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
 
-		String hallCodeQuery = " AND ecsd.hall_code ";
+		String hallCodeQuery = " AND ecsd.unit_code ";
 
-		if (StringUtils.isNotBlank(criteria.getHallCode())) {
+		if (StringUtils.isNotBlank(criteria.getUnitCode())) {
 			query.append(hallCodeQuery).append(" = ? ");
-			paramsList.add(criteria.getHallCode());
+			paramsList.add(criteria.getUnitCode());
 		} else {
-			List<String> hallCodes = criteria.getHallCodes();
+			List<String> hallCodes = criteria.getUnitCodes();
 			query.append(hallCodeQuery).append(" IN ( ");
 			int i = 0;
 			while (i < hallCodes.size()) {
@@ -208,7 +209,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 
 		log.info("getBookingDetails : Final query: " + query);
 		log.info("paramsList : " + paramsList);
-		List<CommunityHallSlotAvailabilityDetail> availabiltityDetails = jdbcTemplate.query(query.toString(),
+		List<VenueSlotAvailabilityDetail> availabiltityDetails = jdbcTemplate.query(query.toString(),
 				paramsList.toArray(), availabilityRowMapper);
 
 		log.info("Fetched slot availabilty details : " + availabiltityDetails);
@@ -216,27 +217,29 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
-	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
+	public void createBookingTimer(VenueSlotSearchCriteria criteria, RequestInfo requestInfo,
 			boolean updateBookingStatus) {
 		createBookingTimer(criteria, requestInfo, updateBookingStatus, null);
 	}
 
 	@Override
-	public void createBookingTimer(CommunityHallSlotSearchCriteria criteria, RequestInfo requestInfo,
+	public void createBookingTimer(VenueSlotSearchCriteria criteria, RequestInfo requestInfo,
 			boolean updateBookingStatus, List<BookingPaymentTimerDetails> timerDetails) {
 		String bookingId = getTimerBookingReference(criteria);
 		String createdBy = requestInfo.getUserInfo().getUuid();
 		long createdTime = CommunityHallBookingUtil.getCurrentTimestamp();
 		String lastModifiedBy = requestInfo.getUserInfo().getUuid();
 		long lastModifiedTime = CommunityHallBookingUtil.getCurrentTimestamp();
-
+		LocalTime startTime = LocalTime.parse(criteria.getFromTime());
+		LocalTime endTime = LocalTime.parse(criteria.getToTime());
+		
 		List<Object[]> batchArgs = new ArrayList<>();
 		if (timerDetails != null && !timerDetails.isEmpty()) {
 			for (BookingPaymentTimerDetails detail : timerDetails) {
 				batchArgs.add(new Object[] { detail.getBookingId(), detail.getCreatedBy(), detail.getCreatedTime(),
-						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getCommunityHallcode(),
-						detail.getHallcode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
-						lastModifiedTime });
+						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getVenuecode(),
+						detail.getCode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
+						lastModifiedTime,startTime , endTime });
 			}
 		} else {
 			var hallCodes = org.upyog.chb.util.CommunityHallSlotCriteriaUtil.resolveHallCodes(criteria);
@@ -244,8 +247,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 			for (var date : bookingDates) {
 				for (var hallcode : hallCodes) {
 					batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", null,
-							criteria.getCommunityHallCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
-							lastModifiedTime });
+							criteria.getVenueCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
+							lastModifiedTime,startTime , endTime});
 				}
 			}
 		}
@@ -258,7 +261,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		}
 	}
 
-	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+	private String getTimerBookingReference(VenueSlotSearchCriteria criteria) {
 		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 	
@@ -357,7 +360,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
-	public List<BookingPaymentTimerDetails> getBookingTimer(CommunityHallSlotSearchCriteria criteria) {
+	public List<BookingPaymentTimerDetails> getBookingTimer(VenueSlotSearchCriteria criteria) {
 		
 		List<BookingPaymentTimerDetails> paymentTimerList = jdbcTemplate.query(CommunityHallBookingQueryBuilder.GET_BOOKING_PAYMENT_TIMER_VALUE_QUERY, 
 				new Object[]{getTimerBookingReference(criteria)},
@@ -391,19 +394,22 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 
 	@Override
 	public List<BookingPaymentTimerDetails> getBookingTimerByCreatedBy(RequestInfo info,
-	        CommunityHallSlotSearchCriteria criteria) {
+	        VenueSlotSearchCriteria criteria) {
 
 	    // Parse bookingStartDate and bookingEndDate into SQL-compatible Date objects
 	    Date startDate = Date.valueOf(criteria.getBookingStartDate()); // String to SQL Date
 	    Date endDate = Date.valueOf(criteria.getBookingEndDate());     // String to SQL Date
-
-	    // Execute query with updated criteria
+	    LocalTime startTime = LocalTime.parse(criteria.getFromTime());
+	    LocalTime endTime = LocalTime.parse(criteria.getToTime()) ;
+	    
+	    //ecute query with updated criteria
 	    List<BookingPaymentTimerDetails> timerDetails = jdbcTemplate.query(
 	        CommunityHallBookingQueryBuilder.SELECT_TIMER_QUERY,
 	        new Object[] {
 	            criteria.getTenantId(), 
-	            criteria.getCommunityHallCode(),
-	            criteria.getHallCode(),
+	            criteria.getVenueCode(),
+	            criteria.getUnitCode(),
+	            startTime , endTime,
 	            startDate,
 	            endDate
 	        },
@@ -413,8 +419,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	            details.setCreatedBy(rs.getString("createdby"));
 	            details.setCreatedTime(rs.getLong("createdtime"));
 	            details.setStatus(rs.getString("status"));
-	            details.setCommunityHallcode(rs.getString("community_hall_code"));
-	            details.setHallcode(rs.getString("hall_code"));
+	            details.setVenuecode(rs.getString("venue_code"));
+	            details.setCode(rs.getString("unit_code"));
 	            details.setLastModifiedBy(rs.getString("lastmodifiedby"));
 	            details.setLastModifiedTime(rs.getObject("lastmodifiedtime", Long.class));
 	            details.setTenantId(rs.getString("tenant_id"));

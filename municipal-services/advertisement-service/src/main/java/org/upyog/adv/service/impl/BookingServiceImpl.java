@@ -237,7 +237,7 @@ public class BookingServiceImpl implements BookingService {
 	 * @return merged availability details with timer-based booking status applied
 	 */
 	@Override
-	public List<AdvertisementSlotAvailabilityDetail> getAdvertisementSlotAvailability(
+	public AdvertisementSlotAvailabilityResponse getAdvertisementSlotAvailability(
 	        List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo) {
 
 	    List<AdvertisementSlotAvailabilityDetail> allAvailabilityDetails = new ArrayList<>();
@@ -251,19 +251,27 @@ public class BookingServiceImpl implements BookingService {
 	    boolean isTimerRequiredForAnyCriteria = criteriaList.stream()
 	            .anyMatch(criteria -> criteria.getIsTimerRequired());
 	    
-	   boolean slotBookedFlag = setSlotBookedFlag(allAvailabilityDetails);
-	   log.info("Slot booked flag for criteria : " + slotBookedFlag);
-	   if (isTimerRequiredForAnyCriteria) {
-	    paymentTimerService.deleteDataFromTimerAndDraft(requestInfo.getUserInfo().getUuid(), criteriaList.get(0).getDraftId(), criteriaList.get(0).getBookingId());
-	   }
+	    boolean slotBookedFlag = setSlotBookedFlag(allAvailabilityDetails);
+	    log.info("Slot booked flag for criteria : " + slotBookedFlag);
+	    if (isTimerRequiredForAnyCriteria) {
+	        paymentTimerService.deleteDataFromTimerAndDraft(requestInfo.getUserInfo().getUuid(), criteriaList.get(0).getDraftId(), criteriaList.get(0).getBookingId());
+	    }
+	    
+	    long timerValue = 0;
 	    if (isTimerRequiredForAnyCriteria && !slotBookedFlag) {
 	        // Insert the timer for all criteria at once
-	        paymentTimerService.insertBookingIdForTimer(criteriaList, requestInfo, allAvailabilityDetails);
-	        log.info("Inserted booking ID for timer for all criteria.");
+	        timerValue = paymentTimerService.insertBookingIdForTimer(criteriaList, requestInfo);
+	        log.info("Inserted booking ID for timer for all criteria. Timer value: " + timerValue);
 	    }
 
+	    String draftId = getDraftId(allAvailabilityDetails, requestInfo);
 	   
-	    return allAvailabilityDetails;
+	    return AdvertisementSlotAvailabilityResponse.builder()
+	            .advertisementSlotAvailabiltityDetails(allAvailabilityDetails)
+	            .slotBooked(slotBookedFlag)
+	            .draftId(draftId)
+	            .timerValue(timerValue)
+	            .build();
 	}
 
 	/**

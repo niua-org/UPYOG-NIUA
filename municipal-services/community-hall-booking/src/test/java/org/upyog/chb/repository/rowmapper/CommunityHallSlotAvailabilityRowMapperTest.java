@@ -7,7 +7,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataAccessException;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.util.CommunityHallBookingUtil;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
+import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,15 +44,15 @@ class CommunityHallSlotAvailabilityRowMapperTest {
                     .thenReturn("01-11-2023");
 
             // Act
-            List<CommunityHallSlotAvailabilityDetail> result = rowMapper.extractData(resultSet);
+            List<VenueSlotAvailabilityDetail> result = rowMapper.extractData(resultSet);
 
             // Assert
             assertNotNull(result);
             assertEquals(1, result.size());
-            CommunityHallSlotAvailabilityDetail detail = result.get(0);
+            VenueSlotAvailabilityDetail detail = result.get(0);
             assertEquals("01-11-2023", detail.getBookingDate());
-            assertEquals("CH001", detail.getCommunityHallCode());
-            assertEquals("H001", detail.getHallCode());
+            assertEquals("CH001", detail.getVenueCode());
+            assertEquals("H001", detail.getCode());
             assertEquals("AVAILABLE", detail.getSlotStaus());
             assertEquals("T001", detail.getTenantId());
         }

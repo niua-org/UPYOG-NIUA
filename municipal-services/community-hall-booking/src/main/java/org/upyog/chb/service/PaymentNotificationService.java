@@ -14,9 +14,9 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.repository.ServiceRequestRepository;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 import org.upyog.chb.web.models.transaction.Transaction;
 import org.upyog.chb.web.models.transaction.TransactionRequest;
 import org.upyog.chb.web.models.workflow.ProcessInstance;
@@ -115,10 +115,10 @@ public class PaymentNotificationService {
 				
 				log.info("Reciept no of payment : " + paymentRequest.getPayment().getPaymentDetails().get(0).getReceiptNumber());
 				log.info("Payment date of payment : " + paymentRequest.getPayment().getPaymentDetails().get(0).getReceiptDate());
-				CommunityHallBookingDetail bookingDetail = CommunityHallBookingDetail.builder().bookingNo(bookingNo)
+				VenueBookingDetail bookingDetail = VenueBookingDetail.builder().bookingNo(bookingNo)
 						.build();
-				CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder()
-						.requestInfo(paymentRequest.getRequestInfo()).hallsBookingApplication(bookingDetail).build();
+				VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
+						.requestInfo(paymentRequest.getRequestInfo()).venueBookingApplication(bookingDetail).build();
 				
 				//now updating booking status directly using jdbc template
 				//deleting booking timer
@@ -202,20 +202,20 @@ public class PaymentNotificationService {
         		status = BookingStatusEnum.PAYMENT_FAILED;
         	}
         	
-        	CommunityHallBookingSearchCriteria bookingSearchCriteria = CommunityHallBookingSearchCriteria.builder()
+        	VenueBookingSearchCriteria bookingSearchCriteria = VenueBookingSearchCriteria.builder()
 					.bookingNo(bookingNo).build();
-			List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
+			List<VenueBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
 			if (bookingDetails.size() == 0) {
 				throw new CustomException("INVALID_BOOKING_CODE",
 						"Booking no not valid. Failed to update booking status for : " + bookingNo);
 			}
-			CommunityHallBookingDetail bookingDetail = bookingDetails.get(0);
+			VenueBookingDetail bookingDetail = bookingDetails.get(0);
         	
         	log.info("For booking no : " + bookingNo + " transaction id : " + transaction.getTxnId());
         	
         	
-			CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder()
-					.requestInfo(requestInfo).hallsBookingApplication(bookingDetail).build();
+			VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
+					.requestInfo(requestInfo).venueBookingApplication(bookingDetail).build();
 			
 			
 			if(BookingStatusEnum.PAYMENT_FAILED.equals(status)) {

@@ -13,8 +13,8 @@ import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.repository.IdGenRepository;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.AuditDetails;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.idgen.IdResponse;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,11 +63,11 @@ public class EnrichmentService {
 	@Autowired
 	private IdGenRepository idGenRepository;
 
-	public void enrichCreateBookingRequest(CommunityHallBookingRequest bookingRequest) {
+	public void enrichCreateBookingRequest(VenueBookingRequest bookingRequest) {
 		String bookingId = CommunityHallBookingUtil.getRandonUUID();
 		log.info("Enriching booking request for booking id :" + bookingId);
 		
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
 		AuditDetails auditDetails = CommunityHallBookingUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
 		
@@ -131,9 +131,9 @@ public class EnrichmentService {
 		return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
 	}
 
-	public void enrichUpdateBookingRequest(CommunityHallBookingRequest communityHallsBookingRequest, BookingStatusEnum statusEnum) {
+	public void enrichUpdateBookingRequest(VenueBookingRequest communityHallsBookingRequest, BookingStatusEnum statusEnum) {
 		AuditDetails auditDetails = CommunityHallBookingUtil.getAuditDetails(communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid(), false);
-		CommunityHallBookingDetail bookingDetail = communityHallsBookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = communityHallsBookingRequest.getVenueBookingApplication();
 		if(statusEnum != null) {
 			bookingDetail.setBookingStatus(statusEnum.toString());
 			//bookingDetail.setReceiptNo(paymentRequest.getPayment().getTransactionNumber());;
@@ -141,8 +141,8 @@ public class EnrichmentService {
 				slot.setStatus(statusEnum.toString());
 			});
 		}
-		communityHallsBookingRequest.getHallsBookingApplication().setPaymentDate(auditDetails.getLastModifiedTime());
-		communityHallsBookingRequest.getHallsBookingApplication().setAuditDetails(auditDetails);
+		communityHallsBookingRequest.getVenueBookingApplication().setPaymentDate(auditDetails.getLastModifiedTime());
+		communityHallsBookingRequest.getVenueBookingApplication().setAuditDetails(auditDetails);
 		
 	}
 

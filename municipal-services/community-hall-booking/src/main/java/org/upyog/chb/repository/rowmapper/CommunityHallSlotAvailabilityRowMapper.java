@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.util.CommunityHallBookingUtil;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
+import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
 
 /**
  * This class is responsible for mapping the result set from the database to a list of
@@ -42,19 +42,21 @@ import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
  * - It ensures consistency and reusability of mapping logic across the application.
  */
 @Component
-public class CommunityHallSlotAvailabilityRowMapper implements ResultSetExtractor<List<CommunityHallSlotAvailabilityDetail>> {
+public class CommunityHallSlotAvailabilityRowMapper implements ResultSetExtractor<List<VenueSlotAvailabilityDetail>> {
 
 	@Override
-	public List<CommunityHallSlotAvailabilityDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
-		List<CommunityHallSlotAvailabilityDetail> availabiltityDetails = new ArrayList<>();
+	public List<VenueSlotAvailabilityDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
+		List<VenueSlotAvailabilityDetail> availabiltityDetails = new ArrayList<>();
 		while (rs.next()) {
 			/**
 			 * chbd.tenant_id, chbd.community_hall_code, bsd.hall_code, bsd.status,bsd.booking_date
 			 */
-			CommunityHallSlotAvailabilityDetail availabiltityDetail = CommunityHallSlotAvailabilityDetail.builder()
+			VenueSlotAvailabilityDetail availabiltityDetail = VenueSlotAvailabilityDetail.builder()
 					.bookingDate(CommunityHallBookingUtil.convertDateFormat(rs.getString("booking_date"), CommunityHallBookingConstants.DATE_FORMAT))
-					.communityHallCode(rs.getString("community_hall_code"))
-					.hallCode(rs.getString("hall_code"))
+					.venueCode(rs.getString("venue_code"))
+					.code(rs.getString("unit_code"))
+					.fromTime(rs.getString("booking_from_time"))
+					.toTime(rs.getString("booking_to_time"))
 					.slotStaus(rs.getString("status"))
 					.tenantId(rs.getString("tenant_id"))
 					.build();
