@@ -88,18 +88,6 @@
             <id>javaxt.com</id>
             <url>https://upyog-nexus.niua.org/maven</url>
         </repository>
-<!--		<repository>-->
-<!--			<id>taglibs</id>-->
-<!--			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/com/upyog/project/taglibs/1.0.0/</url>-->
-<!--		</repository>-->
-<!--		<repository>-->
-<!--			<id>kabeja</id>-->
-<!--			<url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/com/upyog/project/kabeja/</url>-->
-<!--		</repository>-->
-<!--		<repository>-->
-<!--			<id>upyog-central</id>-->
-<!--			<url>https://upyog-nexus.niua.org/nexus/content/repositories/central</url>-->
-<!--		</repository>-->
     </repositories>
 
 	<pluginRepositories>
@@ -1311,7 +1299,10 @@
 		<!-- EMBEDDED REDIS SERVER END -->
 
 		<!-- ELASTICSEARCH DEPENDANCY STARTS -->
-	
+<!--		<dependency>-->
+<!--			<groupId>org.elasticsearch</groupId>-->
+<!--			<artifactId>elasticsearch</artifactId>-->
+<!--		</dependency>-->
 		<!-- ELASTICSEARCH DEPENDANCY ENDS -->
 
 		<!-- MISC STARTS -->
