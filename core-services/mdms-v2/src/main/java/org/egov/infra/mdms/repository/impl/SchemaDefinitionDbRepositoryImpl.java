@@ -71,6 +71,20 @@ public class SchemaDefinitionDbRepositoryImpl implements SchemaDefinitionReposit
      * @param schemaDefinitionRequest
      */
     @Override
+    public Integer getTotalMastersCount(String tenantId) {
+
+    String query = "SELECT COUNT(DISTINCT split_part(code, '.', 1))\n"
+    		+ "FROM eg_mdms_schema_definition\n"
+    		+ "WHERE tenantid = ?";
+
+    return jdbcTemplate.queryForObject(
+            query,
+            new Object[]{tenantId},
+            Integer.class
+    );
+}
+    
+    @Override
     public void update(SchemaDefinitionRequest schemaDefinitionRequest) {
     }
 
