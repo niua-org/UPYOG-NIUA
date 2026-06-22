@@ -2,6 +2,7 @@ package org.upyog.chb.service.impl;
 
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +33,12 @@ import org.upyog.chb.util.MdmsUtil;
 import org.upyog.chb.validator.CommunityHallBookingValidator;
 import org.upyog.chb.web.models.ApplicantDetail;
 import org.upyog.chb.web.models.BookingPaymentTimerDetails;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityDetail;
-import org.upyog.chb.web.models.CommunityHallSlotAvailabilityResponse;
-import org.upyog.chb.web.models.CommunityHallSlotSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
+import org.upyog.chb.web.models.VenueSlotAvailabilityResponse;
+import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 import org.upyog.chb.web.models.workflow.State;
 
 import digit.models.coremodels.PaymentDetail;
@@ -101,25 +102,26 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	private BookingTimerService bookingTimerService;
 	
 	@Override
-	public CommunityHallBookingDetail createBooking(@Valid CommunityHallBookingRequest communityHallsBookingRequest) {
+	public VenueBookingDetail createBooking(@Valid VenueBookingRequest venueBookingRequest) {
 		log.info("Create community hall booking for user : "
-				+ communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid());
+				+ venueBookingRequest.getRequestInfo().getUserInfo().getUuid());
 		// TODO move to util calls and validate tenant id in the controller layer
-		String tenantId = communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.")[0];
-		if (communityHallsBookingRequest.getHallsBookingApplication().getTenantId().split("\\.").length == 1) {
+		String tenantId = venueBookingRequest.getVenueBookingApplication().getTenantId().split("\\.")[0];
+		if (venueBookingRequest.getVenueBookingApplication().getTenantId().split("\\.").length == 1) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_TENANT,
 					"Please provide valid tenant id for booking creation");
 		}
 
-		Object mdmsData = mdmsUtil.mDMSCall(communityHallsBookingRequest.getRequestInfo(), tenantId);
+		Object mdmsData = mdmsUtil.mDMSCall(venueBookingRequest.getRequestInfo(), venueBookingRequest.getVenueBookingApplication().getTenantId());
 
+		Object venueTypeMasterData = mdmsUtil.mDMSCall(venueBookingRequest.getRequestInfo(), venueBookingRequest.getVenueBookingApplication().getTenantId());
 		// 1. Validate request master data to confirm it has only valid data in records
-		hallBookingValidator.validateCreate(communityHallsBookingRequest, mdmsData);
+		hallBookingValidator.validateCreate(venueBookingRequest, mdmsData,venueTypeMasterData);
 		// 2. Add fields that has custom logic like booking no, ids using UUID
-		enrichmentService.enrichCreateBookingRequest(communityHallsBookingRequest);
+		enrichmentService.enrichCreateBookingRequest(venueBookingRequest);
 		
 		//ENcrypt PII data of applicant
-		encryptionService.encryptObject(communityHallsBookingRequest);
+		encryptionService.encryptObject(venueBookingRequest);
 
 		/**
 		 * Workflow will come into picture once hall location changes or booking is
@@ -131,10 +133,10 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		// workflowService.updateWorkflow(communityHallsBookingRequest,
 		// WorkflowStatus.CREATE);
 
-		demandService.createDemand(communityHallsBookingRequest, mdmsData, true);
+		demandService.createDemand(venueBookingRequest, mdmsData, true);
 
 		// 4.Persist the request using persister service
-		bookingRepository.saveCommunityHallBooking(communityHallsBookingRequest);
+		bookingRepository.saveCommunityHallBooking(venueBookingRequest);
 		/*
 		 * Slot-search can reserve hall slots before a booking id exists. In that case,
 		 * the timer table stores draftId in booking_id. Once create generates the real
@@ -142,29 +144,29 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		 * reference and the remaining timer value is returned in the create response.
 		 */
 		bookingRepository.updateTimerBookingId(
-				communityHallsBookingRequest.getHallsBookingApplication().getBookingId(),
-				communityHallsBookingRequest.getHallsBookingApplication().getBookingNo(),
-				communityHallsBookingRequest.getHallsBookingApplication().getDraftId());
-		communityHallsBookingRequest.getHallsBookingApplication().setTimerValue(bookingTimerService
-				.getRemainingTimerValue(communityHallsBookingRequest.getHallsBookingApplication().getBookingId()));
+				venueBookingRequest.getVenueBookingApplication().getBookingId(),
+				venueBookingRequest.getVenueBookingApplication().getBookingNo(),
+				venueBookingRequest.getVenueBookingApplication().getDraftId());
+		venueBookingRequest.getVenueBookingApplication().setTimerValue(bookingTimerService
+				.getRemainingTimerValue(venueBookingRequest.getVenueBookingApplication().getBookingId()));
 
-		return communityHallsBookingRequest.getHallsBookingApplication();
+		return venueBookingRequest.getVenueBookingApplication();
 	}
 	
 	@Override
-	public CommunityHallBookingDetail createInitBooking(
-			@Valid CommunityHallBookingRequest communityHallsBookingRequest) {
+	public VenueBookingDetail createInitBooking(
+			@Valid VenueBookingRequest venueBookingRequest) {
 		log.info("Create community hall temp booking for user : "
-				+ communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid());
-		bookingRepository.saveCommunityHallBookingInit(communityHallsBookingRequest);
+				+ venueBookingRequest.getRequestInfo().getUserInfo().getUuid());
+		bookingRepository.saveCommunityHallBookingInit(venueBookingRequest);
 		return null;
 	}
 
 	@Override
-	public List<CommunityHallBookingDetail> getBookingDetails(CommunityHallBookingSearchCriteria bookingSearchCriteria,
+	public List<VenueBookingDetail> getBookingDetails(VenueBookingSearchCriteria bookingSearchCriteria,
 			RequestInfo info) {
 		hallBookingValidator.validateSearch(info, bookingSearchCriteria);
-		List<CommunityHallBookingDetail> bookingDetails = new ArrayList<CommunityHallBookingDetail>();
+		List<VenueBookingDetail> bookingDetails = new ArrayList<VenueBookingDetail>();
 		bookingSearchCriteria  = addCreatedByMeToCriteria(bookingSearchCriteria, info);
 		
 		log.info("loading data based on criteria" + bookingSearchCriteria);
@@ -174,10 +176,10 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 
 			ApplicantDetail applicantDetail = ApplicantDetail.builder()
 					.applicantMobileNo(bookingSearchCriteria.getMobileNumber()).build();
-			CommunityHallBookingDetail communityHallBookingDetail = CommunityHallBookingDetail.builder()
+			VenueBookingDetail communityHallBookingDetail = VenueBookingDetail.builder()
 					.applicantDetail(applicantDetail).build();
-			CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder()
-					.hallsBookingApplication(communityHallBookingDetail).requestInfo(info).build();
+			VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
+					.venueBookingApplication(communityHallBookingDetail).requestInfo(info).build();
 
 			communityHallBookingDetail = encryptionService.encryptObject(bookingRequest);
 
@@ -199,7 +201,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	
 	
 	@Override
-	public Integer getBookingCount(@Valid CommunityHallBookingSearchCriteria criteria,
+	public Integer getBookingCount(@Valid VenueBookingSearchCriteria criteria,
 			@NonNull RequestInfo requestInfo) {
 		criteria.setCountCall(true);
 		Integer bookingCount = 0;
@@ -211,7 +213,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	}
 
 	
-	private CommunityHallBookingSearchCriteria addCreatedByMeToCriteria(CommunityHallBookingSearchCriteria criteria, RequestInfo requestInfo) {
+	private VenueBookingSearchCriteria addCreatedByMeToCriteria(VenueBookingSearchCriteria criteria, RequestInfo requestInfo) {
 		if(requestInfo.getUserInfo() == null) {
 			log.info("Request info is null returning criteira");
 			return criteria;
@@ -234,42 +236,42 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	}
 
 	@Override
-	public CommunityHallBookingDetail updateBooking(CommunityHallBookingRequest communityHallsBookingRequest,
+	public VenueBookingDetail updateBooking(VenueBookingRequest venueBookingRequest,
 			PaymentDetail paymentDetail, BookingStatusEnum status) {
-		String bookingNo = communityHallsBookingRequest.getHallsBookingApplication().getBookingNo();
+		String bookingNo = venueBookingRequest.getVenueBookingApplication().getBookingNo();
 		log.info("Updating booking for booking no : " + bookingNo);
 		if (bookingNo == null) {
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
-		CommunityHallBookingSearchCriteria bookingSearchCriteria = CommunityHallBookingSearchCriteria.builder()
+		VenueBookingSearchCriteria bookingSearchCriteria = VenueBookingSearchCriteria.builder()
 				.bookingNo(bookingNo).build();
-		List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
+		List<VenueBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
 		if (bookingDetails.size() == 0) {
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
 		
-		hallBookingValidator.validateUpdate(communityHallsBookingRequest.getHallsBookingApplication(), bookingDetails.get(0));
+		hallBookingValidator.validateUpdate(venueBookingRequest.getVenueBookingApplication(), bookingDetails.get(0));
 
-		convertBookingRequest(communityHallsBookingRequest, bookingDetails.get(0));
+		convertBookingRequest(venueBookingRequest, bookingDetails.get(0));
 
 		
 		//Update payment date and receipt no on successful payment when payment detail object is received
 		if (paymentDetail != null) {
-			communityHallsBookingRequest.getHallsBookingApplication().setReceiptNo(paymentDetail.getReceiptNumber());
-			communityHallsBookingRequest.getHallsBookingApplication().setPaymentDate(paymentDetail.getReceiptDate());
+			venueBookingRequest.getVenueBookingApplication().setReceiptNo(paymentDetail.getReceiptNumber());
+			venueBookingRequest.getVenueBookingApplication().setPaymentDate(paymentDetail.getReceiptDate());
 		}
 		//Update workflow of booking application for refund when the workflow object is not null in payload
-		if (communityHallsBookingRequest.getHallsBookingApplication().getWorkflow()!=null) {
-			State state = workflowService.updateWorkflow(communityHallsBookingRequest);
+		if (venueBookingRequest.getVenueBookingApplication().getWorkflow()!=null) {
+			State state = workflowService.updateWorkflow(venueBookingRequest);
 			status = BookingStatusEnum.valueOf(state.getApplicationStatus());
 		}
-		enrichmentService.enrichUpdateBookingRequest(communityHallsBookingRequest, status);
-		bookingRepository.updateBooking(communityHallsBookingRequest);
+		enrichmentService.enrichUpdateBookingRequest(venueBookingRequest, status);
+		bookingRepository.updateBooking(venueBookingRequest);
 		log.info("fetched booking detail and updated status "
-				+ communityHallsBookingRequest.getHallsBookingApplication().getBookingStatus());
-		return communityHallsBookingRequest.getHallsBookingApplication();
+				+ venueBookingRequest.getVenueBookingApplication().getBookingStatus());
+		return venueBookingRequest.getVenueBookingApplication();
 	}
 	
 	/**
@@ -278,33 +280,33 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	 */
 	@Transactional
 	@Override
-	public void updateBookingSynchronously(CommunityHallBookingRequest communityHallsBookingRequest,
+	public void updateBookingSynchronously(VenueBookingRequest venueBookingRequest,
 			PaymentDetail paymentDetail, BookingStatusEnum status, boolean deleteBookingTimer) {
-		String bookingNo = communityHallsBookingRequest.getHallsBookingApplication().getBookingNo();
+		String bookingNo = venueBookingRequest.getVenueBookingApplication().getBookingNo();
 		log.info("Updating booking synchronously for booking no : " + bookingNo);
 		if (bookingNo == null) {
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
-		CommunityHallBookingSearchCriteria bookingSearchCriteria = CommunityHallBookingSearchCriteria.builder()
+		VenueBookingSearchCriteria bookingSearchCriteria = VenueBookingSearchCriteria.builder()
 				.bookingNo(bookingNo).build();
-		List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
+		List<VenueBookingDetail> bookingDetails = bookingRepository.getBookingDetails(bookingSearchCriteria);
 		if (bookingDetails.size() == 0) {
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
-		CommunityHallBookingDetail bookingDetail = bookingDetails.get(0);
-		communityHallsBookingRequest.setHallsBookingApplication(bookingDetail);
-		bookingRepository.updateBookingSynchronously(bookingDetail.getBookingId(), communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid(), paymentDetail, status.toString());
+		VenueBookingDetail bookingDetail = bookingDetails.get(0);
+		venueBookingRequest.setVenueBookingApplication(bookingDetail);
+		bookingRepository.updateBookingSynchronously(bookingDetail.getBookingId(), venueBookingRequest.getRequestInfo().getUserInfo().getUuid(), paymentDetail, status.toString());
 		if(deleteBookingTimer) {
-			log.info("Deleting booking timer with booking id  {}", communityHallsBookingRequest.getHallsBookingApplication().getBookingId());
-			bookingTimerService.deleteBookingTimer(communityHallsBookingRequest.getHallsBookingApplication().getBookingId(), false);
+			log.info("Deleting booking timer with booking id  {}", venueBookingRequest.getVenueBookingApplication().getBookingId());
+			bookingTimerService.deleteBookingTimer(venueBookingRequest.getVenueBookingApplication().getBookingId(), false);
 		}
 	}
 
-	private void convertBookingRequest(CommunityHallBookingRequest communityHallsBookingRequest,
-			CommunityHallBookingDetail bookingDetailDB) {
-		CommunityHallBookingDetail bookingDetailRequest = communityHallsBookingRequest.getHallsBookingApplication();
+	private void convertBookingRequest(VenueBookingRequest venueBookingRequest,
+			VenueBookingDetail bookingDetailDB) {
+		VenueBookingDetail bookingDetailRequest = venueBookingRequest.getVenueBookingApplication();
 		if (bookingDetailDB.getPermissionLetterFilestoreId() == null
 				&& bookingDetailRequest.getPermissionLetterFilestoreId() != null) {
 			bookingDetailDB.setPermissionLetterFilestoreId(bookingDetailRequest.getPermissionLetterFilestoreId());
@@ -317,7 +319,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		if(bookingDetailRequest.getWorkflow()!=null) {
 			bookingDetailDB.setWorkflow(bookingDetailRequest.getWorkflow());
 		}
-		communityHallsBookingRequest.setHallsBookingApplication(bookingDetailDB);
+		venueBookingRequest.setVenueBookingApplication(bookingDetailDB);
 		
 	}
 
@@ -335,17 +337,17 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	 * @return availability response with slots, status, draft id, and timer value
 	 */
 	@Override
-	public CommunityHallSlotAvailabilityResponse getCommunityHallSlotAvailability(
-			CommunityHallSlotSearchCriteria criteria, RequestInfo info) {
-		if (criteria.getCommunityHallCode() == null && CollectionUtils.isEmpty(criteria.getHallCodes())) {
+	public VenueSlotAvailabilityResponse getCommunityHallSlotAvailability(
+			VenueSlotSearchCriteria criteria, RequestInfo info) {
+		if (criteria.getVenueCode() == null && CollectionUtils.isEmpty(criteria.getUnitCodes())) {
 			throw new CustomException("INVALID_HALL_CODE", "Invalid hall code provided for slot search");
 		}
 		log.info("criteria : {}", criteria);
-		List<CommunityHallSlotAvailabilityDetail> availabiltityDetails = bookingRepository
+		List<VenueSlotAvailabilityDetail> availabiltityDetails = bookingRepository
 				.getCommunityHallSlotAvailability(criteria);
 		log.info("Availabiltity details fetched from DB :" + availabiltityDetails);
 
-		List<CommunityHallSlotAvailabilityDetail> availabiltityDetailsList = convertToCommunityHallAvailabilityResponse(
+		List<VenueSlotAvailabilityDetail> availabiltityDetailsList = convertToCommunityHallAvailabilityResponse(
 				criteria, availabiltityDetails);
 
 		Long timerValue = -1l;
@@ -357,7 +359,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 			timerValue = bookingTimerService.managePaymentTimer(criteria, info, availabiltityDetailsList);
 		}
 
-		CommunityHallSlotAvailabilityResponse hallSlotAvailabilityResponse = CommunityHallSlotAvailabilityResponse
+		VenueSlotAvailabilityResponse hallSlotAvailabilityResponse = VenueSlotAvailabilityResponse
 				.builder().hallSlotAvailabiltityDetails(availabiltityDetailsList).timerValue(timerValue)
 				.draftId(criteria.getDraftId()).build();
 
@@ -367,9 +369,9 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 
 
 
-private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibility(
-            RequestInfo info, CommunityHallSlotSearchCriteria criteria,
-		List<CommunityHallSlotAvailabilityDetail> availabilityDetails) {
+private List<VenueSlotAvailabilityDetail> checkTimerTableForAvailaibility(
+            RequestInfo info, VenueSlotSearchCriteria criteria,
+		List<VenueSlotAvailabilityDetail> availabilityDetails) {
 
 	List<BookingPaymentTimerDetails> timerDetails = bookingTimerService.getBookingFromTimerTable(info, criteria);
 
@@ -379,7 +381,7 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 		return availabilityDetails;
 	}
 
-	Map<CommunityHallSlotAvailabilityDetail, CommunityHallSlotAvailabilityDetail> slotDetailsMap = availabilityDetails
+	Map<VenueSlotAvailabilityDetail, VenueSlotAvailabilityDetail> slotDetailsMap = availabilityDetails
 			.stream().collect(Collectors.toMap(Function.identity(), Function.identity()));
 	log.info("Timer Details from db : " + timerDetails);
 
@@ -389,12 +391,12 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 	return availabilityDetails;
 }
 
-	private void applyTimerDetailToAvailability(RequestInfo info, CommunityHallSlotSearchCriteria criteria,
-			List<CommunityHallSlotAvailabilityDetail> availabilityDetails,
-			Map<CommunityHallSlotAvailabilityDetail, CommunityHallSlotAvailabilityDetail> slotDetailsMap,
+	private void applyTimerDetailToAvailability(RequestInfo info, VenueSlotSearchCriteria criteria,
+			List<VenueSlotAvailabilityDetail> availabilityDetails,
+			Map<VenueSlotAvailabilityDetail, VenueSlotAvailabilityDetail> slotDetailsMap,
 			BookingPaymentTimerDetails detail) {
-		CommunityHallSlotAvailabilityDetail availabilityDetail = CommunityHallSlotAvailabilityDetail.builder()
-				.communityHallCode(detail.getCommunityHallcode()).hallCode(detail.getHallcode())
+		VenueSlotAvailabilityDetail availabilityDetail = VenueSlotAvailabilityDetail.builder()
+				.venueCode(detail.getVenuecode()).code(detail.getCode())
 				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(),
 						CommunityHallBookingConstants.DATE_FORMAT))
 				.tenantId(detail.getTenantId()).build();
@@ -402,11 +404,15 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 		if (availabilityDetails.contains(availabilityDetail)) {
 			log.info("Booking created by user id {} and booking id {} ", criteria.getBookingId(),
 					info.getUserInfo().getUuid());
-			CommunityHallSlotAvailabilityDetail slotAvailabilityDetail = slotDetailsMap.get(availabilityDetail);
+			VenueSlotAvailabilityDetail slotAvailabilityDetail = slotDetailsMap.get(availabilityDetail);
 			log.info("Slot Availability detail ::: " + slotAvailabilityDetail.toString());
 			boolean isCreatedByCurrentUser = detail.getCreatedBy().equals(info.getUserInfo().getUuid());
 			boolean existingBookingIdCheck = detail.getBookingId().equals(getTimerBookingReference(criteria));
 
+			String fromTime = criteria.getFromTime() != null ? criteria.getFromTime() : null;
+			String toTime = criteria.getToTime() != null ? criteria.getToTime() :  null;
+			slotAvailabilityDetail.setFromTime(fromTime);
+			slotAvailabilityDetail.setToTime(toTime);
 			if (isCreatedByCurrentUser && existingBookingIdCheck) {
 				log.info("inside booking created by me with same booking id ");
 				slotAvailabilityDetail.setSlotStaus(BookingStatusEnum.AVAILABLE.toString());
@@ -416,7 +422,7 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 		}
 	}
 
-	private String getTimerBookingReference(CommunityHallSlotSearchCriteria criteria) {
+	private String getTimerBookingReference(VenueSlotSearchCriteria criteria) {
 		return StringUtils.isNotBlank(criteria.getBookingId()) ? criteria.getBookingId() : criteria.getDraftId();
 	}
 
@@ -428,10 +434,10 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 	 * @param availabiltityDetails
 	 * @return
 	 */
-	private List<CommunityHallSlotAvailabilityDetail> convertToCommunityHallAvailabilityResponse(
-			CommunityHallSlotSearchCriteria criteria, List<CommunityHallSlotAvailabilityDetail> availabiltityDetails) {
+	private List<VenueSlotAvailabilityDetail> convertToCommunityHallAvailabilityResponse(
+			VenueSlotSearchCriteria criteria, List<VenueSlotAvailabilityDetail> availabiltityDetails) {
 
-		List<CommunityHallSlotAvailabilityDetail> availabiltityDetailsList = new ArrayList<CommunityHallSlotAvailabilityDetail>();
+		List<VenueSlotAvailabilityDetail> availabiltityDetailsList = new ArrayList<VenueSlotAvailabilityDetail>();
 		LocalDate startDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getBookingStartDate());
 
 		LocalDate endDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getBookingEndDate());
@@ -449,34 +455,54 @@ private List<CommunityHallSlotAvailabilityDetail> checkTimerTableForAvailaibilit
 					"Booking is not allowed for this no of days.");
 		}
 
-		totalDates.stream().forEach(date -> {
+		Map<String, VenueSlotAvailabilityDetail> dbAvailabilityDetails = availabiltityDetails.stream()
+				.collect(Collectors.toMap(detail -> buildSlotKey(detail.getTenantId(), detail.getVenueCode(),
+						detail.getCode(), detail.getBookingDate()), Function.identity(), (first, second) -> first));
+		for (LocalDate date : totalDates) {
 			List<String> hallCodes = new ArrayList<>();
-			if (StringUtils.isNotBlank(criteria.getHallCode())) {
-				hallCodes.add(criteria.getHallCode());
+			if (StringUtils.isNotBlank(criteria.getUnitCode())) {
+				hallCodes.add(criteria.getUnitCode());
 			} else {
-				hallCodes.addAll(criteria.getHallCodes());
+				hallCodes.addAll(criteria.getUnitCodes());
 			}
-			hallCodes.stream().forEach(data -> {
-				availabiltityDetailsList.add(createCommunityHallSlotAvailabiltityDetail(criteria, date, data));
-			});
-		});
+			for (String data : hallCodes) {
+				String bookingDate = CommunityHallBookingUtil.parseLocalDateToString(date,
+					CommunityHallBookingConstants.DATE_FORMAT);
+				String key = buildSlotKey(criteria.getTenantId(), criteria.getVenueCode(), data, bookingDate);
+				VenueSlotAvailabilityDetail existingDetail = dbAvailabilityDetails.get(key);
+				if (existingDetail != null) {
+					availabiltityDetailsList.add(existingDetail);
+				} else {
+					availabiltityDetailsList.add(createCommunityHallSlotAvailabiltityDetail(criteria, date, data));
+				}
+			}
+		}
 
 		//Setting hall status to booked if it is already booked by checking in the database entry
-		availabiltityDetailsList.stream().forEach(detail -> {
-			if (availabiltityDetails.contains(detail)) {
+		for (VenueSlotAvailabilityDetail detail : availabiltityDetailsList) {
+			int index = availabiltityDetails.indexOf(detail);
+			if (index >= 0) {
+				VenueSlotAvailabilityDetail dbDetail = availabiltityDetails.get(index);
 				detail.setSlotStaus(BookingStatusEnum.BOOKED.toString());
+				detail.setFromTime(dbDetail.getFromTime());
+				detail.setToTime(dbDetail.getToTime());
 			}
-		});
+		}
 		
 		return availabiltityDetailsList;
 	}
 
-	private CommunityHallSlotAvailabilityDetail createCommunityHallSlotAvailabiltityDetail(
-			CommunityHallSlotSearchCriteria criteria, LocalDate date, String hallCode) {
-		CommunityHallSlotAvailabilityDetail availabiltityDetail = CommunityHallSlotAvailabilityDetail.builder()
-				.communityHallCode(criteria.getCommunityHallCode()).hallCode(hallCode)
+	private String buildSlotKey(String tenantId, String venueCode, String code, String bookingDate) {
+		return tenantId + "|" + venueCode + "|" + code + "|" + bookingDate;
+	}
+
+	private VenueSlotAvailabilityDetail createCommunityHallSlotAvailabiltityDetail(
+			VenueSlotSearchCriteria criteria, LocalDate date, String hallCode) {
+		VenueSlotAvailabilityDetail availabiltityDetail = VenueSlotAvailabilityDetail.builder()
+				.venueCode(criteria.getVenueCode()).code(hallCode)
 			//Setting slot status available for every hall and hall code
 				.slotStaus(BookingStatusEnum.AVAILABLE.toString()).tenantId(criteria.getTenantId())
+//				.fromTime(fromTime.toString()).toTime(toTime.toString())
 				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(date, "dd-MM-yyyy")).build();
 		return availabiltityDetail;
 	}

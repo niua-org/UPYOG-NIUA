@@ -85,7 +85,8 @@ public class EmbeddedRedisServer implements InitializingBean, DisposableBean, Be
          * - Spring will stop application startup immediately.
          * - The root cause becomes visible and easier to debug.
          */
-            redisServer = new RedisServer(Protocol.DEFAULT_PORT);
+//            redisServer = new RedisServer(Protocol.DEFAULT_PORT);
+            redisServer = new RedisServer(6383);
             redisServer.start();
     }
 

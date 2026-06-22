@@ -1,6 +1,8 @@
 package org.upyog.chb.validator;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,9 +16,9 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.BookingSlotDetail;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,24 +74,25 @@ public class CommunityHallBookingValidator {
 	 * @param bookingRequest
 	 * @param mdmsData
 	 */
-	public void validateCreate(CommunityHallBookingRequest bookingRequest, Object mdmsData) {
+	public void validateCreate(VenueBookingRequest bookingRequest, Object mdmsData,Object venueOTypeMasterData) {
 		log.info("validating master data for create booking request for applicant mobile no : "
-				+ bookingRequest.getHallsBookingApplication().getApplicantDetail().getApplicantMobileNo());
-		if (!isSameHallCode(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
+				+ bookingRequest.getVenueBookingApplication().getApplicantDetail().getApplicantMobileNo());
+		if (!isSameHallCode(bookingRequest.getVenueBookingApplication().getBookingSlotDetails())) {
 			throw new CustomException(CommunityHallBookingConstants.MULTIPLE_HALL_CODES_ERROR,
 					"Booking of multiple halls are not allowed.");
 		}
 		
-		if(!validateBookingDate(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
+		if(!validateBookingDate(bookingRequest.getVenueBookingApplication().getBookingSlotDetails())) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_BOOKING_DATE,
 					"Booking date is not valid.");
 		}
-
-		mdmsValidator.validateMdmsData(bookingRequest, mdmsData);
+	
+		mdmsValidator.validateMdmsData(bookingRequest, mdmsData,venueOTypeMasterData);
 		validateDuplicateDocuments(bookingRequest);
 	}
 
-	public void validateUpdate(CommunityHallBookingDetail bookingDetailFromRequest, CommunityHallBookingDetail bookingDetailFromDB) {
+	
+	public void validateUpdate(VenueBookingDetail bookingDetailFromRequest, VenueBookingDetail bookingDetailFromDB) {
 		log.info("validating master data for update  booking request for  booking no : " + bookingDetailFromRequest.getBookingNo());
 		//TODO: Add condition for status from to 
 	}
@@ -105,10 +108,10 @@ public class CommunityHallBookingValidator {
 	 * 
 	 * @param bookingRequest
 	 */
-	private void validateDuplicateDocuments(CommunityHallBookingRequest bookingRequest) {
-		if (bookingRequest.getHallsBookingApplication().getUploadedDocumentDetails() != null) {
+	private void validateDuplicateDocuments(VenueBookingRequest bookingRequest) {
+		if (bookingRequest.getVenueBookingApplication().getUploadedDocumentDetails() != null) {
 			List<String> documentFileStoreIds = new LinkedList<String>();
-			bookingRequest.getHallsBookingApplication().getUploadedDocumentDetails().forEach(document -> {
+			bookingRequest.getVenueBookingApplication().getUploadedDocumentDetails().forEach(document -> {
 				if (documentFileStoreIds.contains(document.getFileStoreId()))
 					throw new CustomException(CommunityHallBookingConstants.DUPLICATE_DOCUMENT_UPLOADED, "Same document cannot be used multiple times");
 				else
@@ -126,7 +129,7 @@ public class CommunityHallBookingValidator {
 	 * @param criteria    The CommunityHallBookingSearchCriteria Criteria
 	 */
 	// TODO need to make the changes in the data
-	public void validateSearch(RequestInfo requestInfo, CommunityHallBookingSearchCriteria criteria) {
+	public void validateSearch(RequestInfo requestInfo, VenueBookingSearchCriteria criteria) {
 		log.info("Validating search request for criteria " + criteria);
 		String userType = requestInfo.getUserInfo().getType();
 		
@@ -168,7 +171,7 @@ public class CommunityHallBookingValidator {
 	 * @param criteria      CHB search criteria
 	 * @param allowedParams Allowed Params for search
 	 */
-	private void validateSearchParams(CommunityHallBookingSearchCriteria criteria, List<String> allowedParams) {
+	private void validateSearchParams(VenueBookingSearchCriteria criteria, List<String> allowedParams) {
 		log.info("Validating search params for allowedParams " + allowedParams);
 
 		if (criteria.getBookingNo() != null && !allowedParams.contains("bookingNo"))
@@ -220,8 +223,8 @@ public class CommunityHallBookingValidator {
 	}
 	
 	public boolean isSameHallCode(List<BookingSlotDetail> bookingSlotDetails) {
-		String hallCode = bookingSlotDetails.get(0).getHallCode();
-		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getHallCode().equals(hallCode));
+		String hallCode = bookingSlotDetails.get(0).getUnitCode();
+		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getUnitCode().equals(hallCode));
 		return allSameCode;
 
 	}

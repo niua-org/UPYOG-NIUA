@@ -14,7 +14,7 @@ import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.Address;
 import org.upyog.chb.web.models.ApplicantDetail;
 import org.upyog.chb.web.models.BookingPurpose;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.SpecialCategory;
 
 /**
@@ -52,18 +52,18 @@ import org.upyog.chb.web.models.SpecialCategory;
  * - It ensures consistency and reusability of mapping logic across the application.
  */
 @Component
-public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<CommunityHallBookingDetail>> {
+public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<VenueBookingDetail>> {
 
 	@Override
-	public List<CommunityHallBookingDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
+	public List<VenueBookingDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
 		//TODO: Remove this map
-		Map<String, CommunityHallBookingDetail> bookingDetailMap = new LinkedHashMap<>();
-		List<CommunityHallBookingDetail> bookingDetails = new ArrayList<CommunityHallBookingDetail>();
+		Map<String, VenueBookingDetail> bookingDetailMap = new LinkedHashMap<>();
+		List<VenueBookingDetail> bookingDetails = new ArrayList<VenueBookingDetail>();
 		while (rs.next()) {
 			String bookingId = rs.getString("booking_id");
 			String bookingNo = rs.getString("booking_no");
 			String tenantId = rs.getString("tenant_id");
-			CommunityHallBookingDetail currentBooking = bookingDetailMap.get(bookingId);
+			VenueBookingDetail currentBooking = bookingDetailMap.get(bookingId);
 
 			if (currentBooking == null) {
 
@@ -72,11 +72,11 @@ public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<Co
 
 				BookingPurpose bookingPurpose = BookingPurpose.builder().purpose(rs.getString("purpose")).build();
 				
-				currentBooking = CommunityHallBookingDetail.builder().bookingId(bookingId).bookingNo(bookingNo)
+				currentBooking = VenueBookingDetail.builder().bookingId(bookingId).bookingNo(bookingNo)
 						.applicationDate(rs.getLong("application_date"))
 						.tenantId(tenantId)
 						//TODO : check payment_date
-						.communityHallCode(rs.getString("community_hall_code"))
+						.venueCode(rs.getString("venue_code"))
 						.bookingStatus(rs.getString("booking_status"))
 						.specialCategory(specialCategory).purpose(bookingPurpose)
 						.purposeDescription(rs.getString("purpose_description"))

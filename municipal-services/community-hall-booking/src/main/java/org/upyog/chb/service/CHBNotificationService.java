@@ -24,8 +24,8 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.util.NotificationUtil;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.events.Action;
 import org.upyog.chb.web.models.events.Event;
 import org.upyog.chb.web.models.events.EventRequest;
@@ -84,15 +84,15 @@ public class CHBNotificationService {
 	@Autowired
 	private UserService userService;
 	
-	public void process(CommunityHallBookingRequest bookingRequest, String status) {
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+	public void process(VenueBookingRequest bookingRequest, String status) {
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		// Decrypt applicant detail it will be used in notification
 		bookingDetail = chbEncryptionService.decryptObject(bookingDetail, bookingRequest.getRequestInfo());
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
 
 		log.info("Processing notification for booking no : " + bookingDetail.getBookingNo() + " with status : "
 				+ status);
-		String tenantId = bookingRequest.getHallsBookingApplication().getTenantId();
+		String tenantId = bookingRequest.getVenueBookingApplication().getTenantId();
 		String action = status;
 		Set<String> mobileNumbers = new HashSet<>(util.fetchUserUUIDs(new HashSet<>(), requestInfo, tenantId).keySet());
 		List<String> configuredChannelNames = fetchChannelList(new RequestInfo(), tenantId.split("\\.")[0],
@@ -101,7 +101,7 @@ public class CHBNotificationService {
 		log.info("Fetching localization message for notification");
 		// All notification messages are part of this messages object
 		String localizationMessages = util.getLocalizationMessages(tenantId, bookingRequest.getRequestInfo());
-		Map<String, String> messageMap = util.getCustomizedMsg(bookingRequest.getHallsBookingApplication(), localizationMessages, status,
+		Map<String, String> messageMap = util.getCustomizedMsg(bookingRequest.getVenueBookingApplication(), localizationMessages, status,
 				CommunityHallBookingConstants.CHANNEL_NAME_EVENT);
 
 
@@ -127,12 +127,12 @@ public class CHBNotificationService {
 	 * @param bookingRequest
 	 * @param status
 	 */
-	private void  sendMessageNotification(String localizationMessages, CommunityHallBookingRequest bookingRequest, String status) {
-		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+	private void  sendMessageNotification(String localizationMessages, VenueBookingRequest bookingRequest, String status) {
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		Map<String, String> messageMap = new HashMap<String, String>();
     	String message = null;
 		try {
-			messageMap = util.getCustomizedMsg(bookingRequest.getHallsBookingApplication(), localizationMessages, status
+			messageMap = util.getCustomizedMsg(bookingRequest.getVenueBookingApplication(), localizationMessages, status
 					 , CommunityHallBookingConstants.CHANNEL_NAME_SMS);
 			
 			message = messageMap.get(NotificationUtil.MESSAGE_TEXT);
@@ -144,7 +144,7 @@ public class CHBNotificationService {
 			  * {LINK} - Optional			 
 			  */
 			 message = String.format(message, bookingDetail.getApplicantDetail().getApplicantName(), 
-					 bookingDetail.getBookingNo(), bookingDetail.getCommunityHallName(), messageMap.get(NotificationUtil.ACTION_LINK));
+					 bookingDetail.getBookingNo(), bookingDetail.getVenueName(), messageMap.get(NotificationUtil.ACTION_LINK));
 		}catch (Exception e) {
 			log.error("Exception occcured while fetching message", e);
 			e.printStackTrace();
@@ -164,12 +164,12 @@ public class CHBNotificationService {
 		
 	}
 	
-    private void sendEventNotification(String localizationMessages, CommunityHallBookingRequest bookingRequest, String status) {
-    	CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+    private void sendEventNotification(String localizationMessages, VenueBookingRequest bookingRequest, String status) {
+    	VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
     	Map<String, String> messageMap = new HashMap<String, String>();
     	String message = null;
 		try {
-			messageMap = util.getCustomizedMsg(bookingRequest.getHallsBookingApplication(), localizationMessages, status
+			messageMap = util.getCustomizedMsg(bookingRequest.getVenueBookingApplication(), localizationMessages, status
 					 , CommunityHallBookingConstants.CHANNEL_NAME_EVENT);
 			
 			message = messageMap.get(NotificationUtil.MESSAGE_TEXT);
@@ -181,7 +181,7 @@ public class CHBNotificationService {
 			  * {LINK} - Optional			 
 			  */
 			 message = String.format(message, bookingDetail.getApplicantDetail().getApplicantName(), 
-					 bookingDetail.getBookingNo(), bookingDetail.getCommunityHallName());
+					 bookingDetail.getBookingNo(), bookingDetail.getVenueName());
 			 
 		}catch (Exception e) {
 			log.error("Exception occcured while fetching message", e);
@@ -205,15 +205,15 @@ public class CHBNotificationService {
 	 * @param bpaRequest  The bpaRequest from kafka topic
 	 * @param smsRequests List of SMSRequets
 	 */
-	private void enrichSMSRequest(CommunityHallBookingRequest bookingRequest, List<SMSRequest> smsRequests,
+	private void enrichSMSRequest(VenueBookingRequest bookingRequest, List<SMSRequest> smsRequests,
 			Map<String, String> mobileNumberToOwner, String message) {
 		smsRequests.addAll(util.createSMSRequest(bookingRequest, message, mobileNumberToOwner));
 	}
 
-	private EventRequest getEventsForCommunityHallBooking(CommunityHallBookingRequest request, String message, String actionLink) {
+	private EventRequest getEventsForCommunityHallBooking(VenueBookingRequest request, String message, String actionLink) {
 
 		List<Event> events = new ArrayList<>();
-		String tenantId = request.getHallsBookingApplication().getTenantId();
+		String tenantId = request.getVenueBookingApplication().getTenantId();
 		List<String> toUsers = new ArrayList<>();
 
 		// Mobile no will be used to filter out user to send notification

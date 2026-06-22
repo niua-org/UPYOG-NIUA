@@ -16,32 +16,32 @@ public final class PaymentTimerKeyBuilder {
 	private PaymentTimerKeyBuilder() {
 	}
 
-	/** One Redis key per timer row (matches DB uniqueness: hall + booking code + date). */
-	public static String toRedisTimerRowKey(BookingPaymentTimerDetails detail) {
-		return toRedisTimerRowKey(detail.getTenantId(), detail.getCommunityHallcode(), detail.getHallcode(),
-				detail.getBookingDate(), detail.getBookingId());
+	/** One Redis key per timer row (matches DB uniqueness: hall + booking code + date+time). */
+	public static String toRedisTimerRowKey(BookingPaymentTimerDetails detail,String startTime , String endTime) {
+		return toRedisTimerRowKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
+				detail.getBookingDate(), startTime , endTime,detail.getBookingId());
 	}
 
 	public static String toRedisTimerRowKey(String tenantId, String communityHallCode, String hallCode,
-			LocalDate bookingDate, String bookingId) {
+			LocalDate bookingDate, String bookingId,String startTime , String endTime) {
 		validate(tenantId, communityHallCode, hallCode, bookingDate, bookingId);
 		return REDIS_TIMER_PREFIX + String.join(":", tenantId, communityHallCode, hallCode, bookingDate.toString(),
-				bookingId);
+				bookingId,startTime, endTime);
 	}
 
 	/** Slot hold key (tenant + hall + date) — prevents double booking on the same physical slot. */
-	public static String toRedisSlotKey(BookingPaymentTimerDetails detail) {
-		return toRedisSlotKey(detail.getTenantId(), detail.getCommunityHallcode(), detail.getHallcode(),
-				detail.getBookingDate());
+	public static String toRedisSlotKey(BookingPaymentTimerDetails detail,String startTime , String endTime) {
+		return toRedisSlotKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
+				detail.getBookingDate(),startTime , endTime);
 	}
 
 	public static String toRedisSlotKey(String tenantId, String communityHallCode, String hallCode,
-			LocalDate bookingDate) {
+			LocalDate bookingDate,String startTime , String endTime) {
 		if (StringUtils.isBlank(tenantId) || StringUtils.isBlank(communityHallCode) || StringUtils.isBlank(hallCode)
-				|| bookingDate == null) {
+				|| bookingDate == null || startTime == null || endTime == null) {
 			throw new IllegalArgumentException("tenantId, communityHallCode, hallCode and bookingDate are required");
 		}
-		return REDIS_SLOT_PREFIX + String.join(":", tenantId, communityHallCode, hallCode, bookingDate.toString());
+		return REDIS_SLOT_PREFIX + String.join(":", tenantId, communityHallCode, hallCode, bookingDate.toString(),startTime , endTime);
 	}
 
 	public static String toRedisValue(String createdBy, String bookingId) {
@@ -52,8 +52,8 @@ public final class PaymentTimerKeyBuilder {
 			LocalDate bookingDate, String bookingId, String userId, long createdTime) {
 		var details = new BookingPaymentTimerDetails();
 		details.setTenantId(tenantId);
-		details.setCommunityHallcode(communityHallCode);
-		details.setHallcode(hallCode);
+		details.setVenuecode(communityHallCode);
+		details.setCode(hallCode);
 		details.setBookingDate(bookingDate);
 		details.setBookingId(bookingId);
 		details.setCreatedBy(userId);

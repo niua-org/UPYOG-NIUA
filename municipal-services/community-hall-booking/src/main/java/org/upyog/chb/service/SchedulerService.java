@@ -13,9 +13,9 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.BookingPaymentTimerDetails;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 import org.upyog.chb.web.models.workflow.ProcessInstance;
 import org.upyog.chb.web.models.workflow.State;
 
@@ -117,15 +117,15 @@ public class SchedulerService {
 		String formattedDate = CommunityHallBookingUtil.parseLocalDateToString(LocalDate.now().minusDays(1),
 				"yyyy-MM-dd");
 
-		List<CommunityHallBookingDetail> bookingDetails = bookingRepository.getBookingDetails(
-				CommunityHallBookingSearchCriteria.builder().toDate(formattedDate).status(CHB_STATUS_BOOKED).build());
+		List<VenueBookingDetail> bookingDetails = bookingRepository.getBookingDetails(
+				VenueBookingSearchCriteria.builder().toDate(formattedDate).status(CHB_STATUS_BOOKED).build());
 
 		// Exit if no booking details are found
 		if (bookingDetails == null || bookingDetails.isEmpty()) {
 			log.info("No booked applications found for update.");
 			return;
 		} else {
-			String bookingNos = bookingDetails.stream().map(CommunityHallBookingDetail::getBookingNo)
+			String bookingNos = bookingDetails.stream().map(VenueBookingDetail::getBookingNo)
 					.collect(Collectors.joining(", "));
 			log.info("Booking Nos: " + bookingNos);
 		}
@@ -164,14 +164,14 @@ public class SchedulerService {
 	 * @param requestInfo   The request information containing user and transaction
 	 *                      details.
 	 */
-	private void processBookingDetail(CommunityHallBookingDetail bookingDetail, ProcessInstance workflow,
+	private void processBookingDetail(VenueBookingDetail bookingDetail, ProcessInstance workflow,
 			RequestInfo requestInfo) {
 		log.info("Updating Workflow and status for booking number: {}", bookingDetail.getBookingNo());
 
 		// Set workflow and build booking request
 		bookingDetail.setWorkflow(workflow);
-		CommunityHallBookingRequest bookingRequest = CommunityHallBookingRequest.builder()
-				.hallsBookingApplication(bookingDetail).requestInfo(requestInfo).build();
+		VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
+				.venueBookingApplication(bookingDetail).requestInfo(requestInfo).build();
 
 		// Update workflow and booking status
 		State state = workflowService.updateWorkflow(bookingRequest);
