@@ -35,7 +35,8 @@
     "micro-ui-internals/packages/modules/est",
     "micro-ui-internals/packages/modules/ndc",
     "micro-ui-internals/packages/modules/challangeneration",
-    "micro-ui-internals/packages/libraries/react-components"
+    "micro-ui-internals/packages/libraries/react-components",
+    "micro-ui-internals/packages/css"
 
   ],
   "engines": {

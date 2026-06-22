@@ -140,7 +140,7 @@ const OwnerForm1 = (_props) => {
     }
   }, [errors]);
 
-  const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
+  
   return (
     <React.Fragment>
       <div>
@@ -172,9 +172,9 @@ const OwnerForm1 = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState.touched.ConsumerName ? errors?.ConsumerName?.message : ""}</CardLabelError>
+          <CardLabelError className="cg-error-style">{localFormState.touched.ConsumerName ? errors?.ConsumerName?.message : ""}</CardLabelError>
           <LabelFieldPair>
-            <CardLabel style={{paddingTop:"10px"}} className="card-label-smaller">{`${t("UC_MOBILE_NUMBER")}`}</CardLabel>
+            <CardLabel className="card-label-smaller cg-cardlabel-pt10">{`${t("UC_MOBILE_NUMBER")}`}</CardLabel>
             <div className="field">
               <Controller
                 control={control}
@@ -189,7 +189,7 @@ const OwnerForm1 = (_props) => {
                       props.onChange(e);
                       setFocusIndex({ index: consumerdetail.key, type: "mobileNumber" });
                     }}
-                    labelStyle={{ marginTop: "unset", border: "1px solid #464646", borderRight: "none" }}
+                    labelClassName="cg-mobile-label-style"
                     onBlur={props.onBlur}
                     errorStyle={(localFormState.touched.mobileNumber && errors?.mobileNumber?.message) ? true : false}
                     disable={isEdit}
@@ -199,7 +199,7 @@ const OwnerForm1 = (_props) => {
 
             </div>
           </LabelFieldPair>  
-          <CardLabelError style={errorStyle}>{localFormState.touched.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
+          <CardLabelError className="cg-error-style">{localFormState.touched.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
       </div>
       </div>
     </React.Fragment>

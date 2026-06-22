@@ -241,7 +241,7 @@ const OwnerForm1 = (_props) => {
 
  
   return (
-    <div  style={isMobile?{}:{marginTop:"-50px"}}>
+    <div className={isMobile?"":"cg-margin-top-neg50"}>
       <div>
         <div>
         <CardSectionHeader>{t("SERVICEDETAILS")}</CardSectionHeader>
@@ -368,21 +368,21 @@ const OwnerForm1 = (_props) => {
                 componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
                 rules={tax.isRequired?{ required: t("REQUIRED_FIELD")}:"" }
                 render={(props) => (
-                  <div style={{display:"flex"}}>
-                  <div className="employee-card-input employee-card-input--front">₹</div>
-                  <TextInput
-                    value={props.value}
-                    componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
-                    autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                    onChange={(e) => {
-                      props.onChange(e.target.value);
-                      setFocusIndex({ index: consumerdetail.key, type: tax?.code });
-                    }}
-                    onBlur={(e) => {
-                      setFocusIndex({ index: -1 });
-                      props.onBlur(e);
-                    }}
-                  />
+                  <div className="cg-display-flex">
+                    <div className="employee-card-input employee-card-input--front">₹</div>
+                    <TextInput
+                      value={props.value}
+                      componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
+                      autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
+                      onChange={(e) => {
+                        props.onChange(e.target.value);
+                        setFocusIndex({ index: consumerdetail.key, type: tax?.code });
+                      }}
+                      onBlur={(e) => {
+                        setFocusIndex({ index: -1 });
+                        props.onBlur(e);
+                      }}
+                    />
                   </div>
                 )}
               />

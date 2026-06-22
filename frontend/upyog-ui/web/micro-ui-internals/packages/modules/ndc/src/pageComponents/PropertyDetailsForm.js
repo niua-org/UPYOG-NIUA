@@ -362,21 +362,17 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
   }, [checkApiDataCheck]);
 
   return (
-    <div style={{ marginBottom: "16px" }}>
+    <div className="ndc-margin-bottom-16">
       {(cpt?.details || apiDataCheck?.[0]?.NdcDetails) && (
         <div>
-          <LabelFieldPair style={{ marginTop: "40px" }}>
+          <LabelFieldPair className="ndc-margin-top-40">
             <CardLabel className="card-label-smaller ndc_card_labels">{`${t("NDC_WATER_CONNECTION")}`}</CardLabel>
             {waterConnectionLoading ? (
               <Loader />
             ) : (
-              <div className="form-field" style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+              <div className="form-field ndc-form-field-column">
                 {propertyDetails?.waterConnection?.map((item, index) => (
-                  <div
-                    className="ndc_property_search"
-                    key={index}
-                    style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: "16px" }}
-                  >
+                  <div key={index} className="ndc_property_search ndc-flex-row-center-gap">
                     <Controller
                       key={index}
                       control={control}

@@ -8,7 +8,7 @@ const livereload = require("gulp-livereload");
 const syntax = require("postcss-scss");
 
 let output = "./example";
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "True") {
   output = "./dist";
 }
 
@@ -19,7 +19,7 @@ function cleanStyles() {
 function styles() {
   const plugins = [
     require("postcss-import"),
-    require("tailwindcss"),
+    require("@tailwindcss/postcss"),
     postcssPresetEnv({
       stage: 2,
       autoprefixer: { cascade: false },
@@ -27,7 +27,7 @@ function styles() {
     }),
     require("autoprefixer"),
     require("postcss-nested"),
-    ...(process.env.NODE_ENV === "production" ? [require("cssnano")] : []),
+    // ...(process.env.NODE_ENV === "production" ? [require("cssnano")] : []),
   ];
 
   return src("src/index.scss")
@@ -56,7 +56,7 @@ exports.styles = styles;
 exports.default = series(styles);
 exports.watch = livereloadStyles;
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "True") {
   exports.build = series(cleanStyles, styles, minify);
 } else {
   exports.build = series(styles, livereloadStyles);

@@ -111,6 +111,8 @@
 @import "./pages/citizen/citizenDocument.scss";
 @import "./pages/employee/surveys.scss";
 @import "./common/newApplicationTimeline.scss";
+@import "./components/challanGeneration.scss";
+@import "./components/ndc.scss";
 
 .display-none {
   display: none;
@@ -127,7 +129,8 @@
 }
 
 .display-flex-gap-2 {
-  @apply flex gap-3;
+  @apply flex;
+  gap: 12px;
 }
 .rm-mb {
   margin-bottom: unset !important;
