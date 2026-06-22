@@ -166,7 +166,7 @@ public class CommunityHallBookingController {
 		 */
 		
 		VenueBookingDetail bookingDetail = bookingService.updateBooking(communityHallsBookingRequest, null, 
-				 BookingStatusEnum.valueOf(communityHallsBookingRequest.getHallsBookingApplication().getBookingStatus()));
+				 BookingStatusEnum.valueOf(communityHallsBookingRequest.getVenueBookingApplication().getBookingStatus()));
 		ResponseInfo info = CommunityHallBookingUtil.createReponseInfo(communityHallsBookingRequest.getRequestInfo(), CommunityHallBookingConstants.COMMUNITY_HALL_BOOKING_UPDATED,
 				StatusEnum.SUCCESSFUL);
 		CommunityHallBookingResponse communityHallResponse = CommunityHallBookingResponse.builder().responseInfo(info)
@@ -198,7 +198,7 @@ public class CommunityHallBookingController {
 		Integer count = bookingService.getBookingCount(criteria, requestInfoWrapper.getRequestInfo());
 		ResponseInfo info = CommunityHallBookingUtil.createReponseInfo(requestInfoWrapper.getRequestInfo(), CommunityHallBookingConstants.COMMUNITY_HALL_BOOKING_LIST,
 				StatusEnum.SUCCESSFUL);
-		CommunityHallBookingResponse response = CommunityHallBookingResponse.builder().hallsBookingApplication(applications).count(count)
+		CommunityHallBookingResponse response = CommunityHallBookingResponse.builder().venueBookingApplication(applications).count(count)
 				.responseInfo(info).build();
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}

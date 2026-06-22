@@ -82,14 +82,14 @@ class CommunityHallBookingServiceImplBookingFlowTest {
 	@DisplayName("Given valid tenant and user When createBooking Then demand is created and booking persisted")
 	void createBooking_persistsAfterDemand() {
 		var detail = VenueBookingDetail.builder().tenantId("pg.citya").bookingNo("CHB-001").build();
-		var request = VenueBookingRequest.builder().requestInfo(citizenRequest).hallsBookingApplication(detail)
+		var request = VenueBookingRequest.builder().requestInfo(citizenRequest).venueBookingApplication(detail)
 				.build();
 
 		when(mdmsUtil.mDMSCall(any(), eq("pg"))).thenReturn(new Object());
-		lenient().doNothing().when(hallBookingValidator).validateCreate(any(), any());
+		lenient().doNothing().when(hallBookingValidator).validateCreate(any(), any(),any());
 		lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any());
 		when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
-				.thenReturn(request.getHallsBookingApplication());
+				.thenReturn(request.getVenueBookingApplication());
 		when(demandService.createDemand(eq(request), any(), eq(true))).thenReturn(Collections.emptyList());
 
 		var result = bookingService.createBooking(request);

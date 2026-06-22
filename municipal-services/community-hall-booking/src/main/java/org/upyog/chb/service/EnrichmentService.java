@@ -67,7 +67,7 @@ public class EnrichmentService {
 		String bookingId = CommunityHallBookingUtil.getRandonUUID();
 		log.info("Enriching booking request for booking id :" + bookingId);
 		
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
 		AuditDetails auditDetails = CommunityHallBookingUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
 		
@@ -133,7 +133,7 @@ public class EnrichmentService {
 
 	public void enrichUpdateBookingRequest(VenueBookingRequest communityHallsBookingRequest, BookingStatusEnum statusEnum) {
 		AuditDetails auditDetails = CommunityHallBookingUtil.getAuditDetails(communityHallsBookingRequest.getRequestInfo().getUserInfo().getUuid(), false);
-		VenueBookingDetail bookingDetail = communityHallsBookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = communityHallsBookingRequest.getVenueBookingApplication();
 		if(statusEnum != null) {
 			bookingDetail.setBookingStatus(statusEnum.toString());
 			//bookingDetail.setReceiptNo(paymentRequest.getPayment().getTransactionNumber());;
@@ -141,8 +141,8 @@ public class EnrichmentService {
 				slot.setStatus(statusEnum.toString());
 			});
 		}
-		communityHallsBookingRequest.getHallsBookingApplication().setPaymentDate(auditDetails.getLastModifiedTime());
-		communityHallsBookingRequest.getHallsBookingApplication().setAuditDetails(auditDetails);
+		communityHallsBookingRequest.getVenueBookingApplication().setPaymentDate(auditDetails.getLastModifiedTime());
+		communityHallsBookingRequest.getVenueBookingApplication().setAuditDetails(auditDetails);
 		
 	}
 

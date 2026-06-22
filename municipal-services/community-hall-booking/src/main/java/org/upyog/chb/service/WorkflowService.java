@@ -84,7 +84,7 @@ public class WorkflowService {
 
 	public State updateWorkflow(VenueBookingRequest bookingRequest) {
 
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 
 		ProcessInstanceRequest workflowReq = getProcessInstanceForHallBooking(bookingDetail,
 				bookingRequest.getRequestInfo());

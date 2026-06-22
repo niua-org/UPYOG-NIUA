@@ -42,7 +42,7 @@ class NotificationConsumerTest {
         VenueBookingRequest bookingRequest = new VenueBookingRequest();
         VenueBookingDetail bookingDetail = new VenueBookingDetail();
         bookingDetail.setBookingStatus("APPROVED");
-        bookingRequest.setHallsBookingApplication(bookingDetail);
+        bookingRequest.setVenueBookingApplication(bookingDetail);
 
         when(mapper.convertValue(record, VenueBookingRequest.class)).thenReturn(bookingRequest);
 
@@ -62,7 +62,7 @@ class NotificationConsumerTest {
         VenueBookingRequest bookingRequest = new VenueBookingRequest();
         VenueBookingDetail bookingDetail = new VenueBookingDetail();
         bookingDetail.setBookingStatus(BookingStatusEnum.PENDING_FOR_PAYMENT.toString());
-        bookingRequest.setHallsBookingApplication(bookingDetail);
+        bookingRequest.setVenueBookingApplication(bookingDetail);
 
         when(mapper.convertValue(record, VenueBookingRequest.class)).thenReturn(bookingRequest);
 

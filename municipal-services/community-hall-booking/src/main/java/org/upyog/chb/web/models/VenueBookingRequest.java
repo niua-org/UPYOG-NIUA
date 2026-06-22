@@ -34,6 +34,6 @@ public class VenueBookingRequest {
 
 	@Valid
 	@JsonProperty("venueBookingApplication")
-	private VenueBookingDetail hallsBookingApplication; 
+	private VenueBookingDetail venueBookingApplication; 
 	
 }

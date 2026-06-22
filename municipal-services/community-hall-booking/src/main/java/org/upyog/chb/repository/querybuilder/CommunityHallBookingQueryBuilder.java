@@ -43,6 +43,9 @@ import org.upyog.chb.web.models.VenueSlotSearchCriteria;
  * - This class is used by the repository layer to execute database operations.
  * - It ensures consistency and reusability of query logic across the application.
  */
+/**
+ * 
+ */
 @Component
 public class CommunityHallBookingQueryBuilder {
 
@@ -69,12 +72,12 @@ public class CommunityHallBookingQueryBuilder {
 			+ " result) result_offset " + "WHERE offset_ > ? AND offset_ <= ?";
 
 	private static final String COMMUNITY_HALL_SLOTS_AVAIALABILITY_QUERY =
-			"SELECT ecbd.tenant_id, ecbd.venue_code, ecsd.capacity, ecsd.code, ecsd.status, ecsd.booking_date, ecsd.booking_from_time, ecsd.booking_to_time \n"
+			"SELECT ecbd.tenant_id, ecbd.venue_code, ecsd.capacity, ecsd.unit_code, ecsd.status, ecsd.booking_date, ecsd.booking_from_time, ecsd.booking_to_time \n"
 			+ "\tFROM eg_chb_booking_detail ecbd\n"
 			+ "\tjoin eg_chb_slot_detail ecsd on ecbd.booking_id = ecsd.booking_id\n"
 			+ "\tLEFT JOIN eg_chb_payment_timer ecpt ON ecbd.booking_id = ecpt.booking_id\n"
 			+ " where  ecbd.tenant_id= ? and ecbd.venue_code = ?\n"
-			+ " and ecsd.status in ('BOOKED', 'PENDING_FOR_PAYMENT') and \n"
+			+ " and ecsd.status in ('BOOKED', 'PENDING_FOR_PAYMENT','BOOKING_CREATED') and \n"
 			+ "\tecsd.booking_date >= CAST(? AS DATE) and ecsd.booking_date <= CAST(? AS DATE) ";
 		//	+ "	AND ecsd.code in (?)";
 	
@@ -86,7 +89,7 @@ public class CommunityHallBookingQueryBuilder {
 	
 	
 	//public static final String PAYMENT_TIMER_INSERT_QUERY = "INSERT INTO eg_chb_payment_timer(booking_id, createdby, createdtime, status) VALUES (?, ?, ?, ?);";
-	public static final String PAYMENT_TIMER_INSERT_QUERY = "INSERT INTO eg_chb_payment_timer(booking_id, createdby, createdtime, status, booking_no, venue_code, code, booking_date, tenant_id, lastmodifiedby, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+	public static final String PAYMENT_TIMER_INSERT_QUERY = "INSERT INTO eg_chb_payment_timer(booking_id, createdby, createdtime, status, booking_no, venue_code, unit_code, booking_date, tenant_id, lastmodifiedby, lastmodifiedtime,start_time , end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? , ? ,?);";
 
 	public static final String PAYMENT_TIMER_DELETE_FOR_BOOKING_ID_QUERY = "DELETE FROM eg_chb_payment_timer WHERE booking_id IN (%s)";
 	
@@ -118,7 +121,8 @@ public class CommunityHallBookingQueryBuilder {
 			+ "		    FROM eg_chb_payment_timer "
 			+ "		    WHERE tenant_id = ? "
 			+ "		      AND venue_code = ? "
-			+ "		      AND code = ? "
+			+ "		      AND unit_code = ? " 
+			+"            AND start_time = ? AND end_time = ? "
 			+ "		      AND booking_date BETWEEN ? AND ?;";
 	
 	
@@ -389,34 +393,54 @@ public class CommunityHallBookingQueryBuilder {
 	}
 
 
+	
+	/**
+	 * Appends time-based filtering conditions to the dynamic SQL query based on the
+	 * provided search criteria.
+	 *
+	 * <p>
+	 * This method applies proper time range overlap logic to ensure correct booking
+	 * slot filtering. It supports filtering based on:
+	 * <ul>
+	 * <li>Both fromTime and toTime (overlap condition)</li>
+	 * <li>Only fromTime (end-time based filtering)</li>
+	 * <li>Only toTime (start-time based filtering)</li>
+	 * </ul>
+	 *
+	 * <p>
+	 * When both times are provided, the method uses interval overlap logic:
+	 * 
+	 * <pre>
+	 * existing_from_time < requested_to_time
+	 * AND existing_to_time > requested_from_time
+	 * </pre>
+	 *
+	 * @param searchCriteria contains fromTime and/or toTime filter values
+	 * @param builder        StringBuilder used to construct the SQL query
+	 *                       dynamically
+	 * @param paramsList     list of query parameters to be bound in
+	 *                       PreparedStatement
+	 */
 	private void appendTimeFilters(VenueSlotSearchCriteria searchCriteria, StringBuilder builder,
 			List<Object> paramsList) {
-		if (searchCriteria.getStartTime() != null || searchCriteria.getEndTime() != null) {
-			if (searchCriteria.getStartTime() != null && searchCriteria.getEndTime() != null) {
-				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) AND ecsd.booking_from_time <= CAST(? AS TIME) ");
-				paramsList.add(searchCriteria.getStartTime().toString());
-				paramsList.add(searchCriteria.getEndTime().toString());
-			} else if (searchCriteria.getStartTime() != null) {
-				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) ");
-				paramsList.add(searchCriteria.getStartTime().toString());
-			} else {
-				builder.append(" AND ecsd.booking_from_time <= CAST(? AS TIME) ");
-				paramsList.add(searchCriteria.getEndTime().toString());
-			}
-		} else if (StringUtils.isNotBlank(searchCriteria.getFromTime())
-				|| StringUtils.isNotBlank(searchCriteria.getToTime())) {
-			if (StringUtils.isNotBlank(searchCriteria.getFromTime())
-					&& StringUtils.isNotBlank(searchCriteria.getToTime())) {
-				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) AND ecsd.booking_from_time <= CAST(? AS TIME) ");
-				paramsList.add(searchCriteria.getFromTime());
-				paramsList.add(searchCriteria.getToTime());
-			} else if (StringUtils.isNotBlank(searchCriteria.getFromTime())) {
-				builder.append(" AND ecsd.booking_to_time >= CAST(? AS TIME) ");
-				paramsList.add(searchCriteria.getFromTime());
-			} else {
-				builder.append(" AND ecsd.booking_from_time <= CAST(? AS TIME) ");
-				paramsList.add(searchCriteria.getToTime());
-			}
+		if (StringUtils.isNotBlank(searchCriteria.getFromTime())
+				&& StringUtils.isNotBlank(searchCriteria.getToTime())) {
+
+			builder.append(
+					" AND ecsd.booking_from_time < CAST(? AS TIME) " + " AND ecsd.booking_to_time > CAST(? AS TIME) ");
+
+			paramsList.add(searchCriteria.getToTime());
+			paramsList.add(searchCriteria.getFromTime());
+
+		} else if (StringUtils.isNotBlank(searchCriteria.getFromTime())) {
+
+			builder.append(" AND ecsd.booking_to_time > CAST(? AS TIME) ");
+			paramsList.add(searchCriteria.getFromTime());
+
+		} else if (StringUtils.isNotBlank(searchCriteria.getToTime())) {
+
+			builder.append(" AND ecsd.booking_from_time < CAST(? AS TIME) ");
+			paramsList.add(searchCriteria.getToTime());
 		}
 	}
 

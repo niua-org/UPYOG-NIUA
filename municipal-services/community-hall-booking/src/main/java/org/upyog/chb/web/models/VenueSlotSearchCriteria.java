@@ -29,9 +29,9 @@ public class VenueSlotSearchCriteria {
 	@NotBlank
 	private String venueCode;
 
-	private String code;
+	private String unitCode;
 	
-	private List<String> codes;
+	private List<String> unitCodes;
 
 	@NotBlank
 	@ValidDate
@@ -53,10 +53,6 @@ public class VenueSlotSearchCriteria {
 	private Boolean isTimerRequired;
 	
 	private String bookingId;
-	
-	private LocalTime startTime;
-	
-	private LocalTime endTime;
 	
 	private String draftId;
 

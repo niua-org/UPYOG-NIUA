@@ -85,14 +85,14 @@ public class CHBNotificationService {
 	private UserService userService;
 	
 	public void process(VenueBookingRequest bookingRequest, String status) {
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		// Decrypt applicant detail it will be used in notification
 		bookingDetail = chbEncryptionService.decryptObject(bookingDetail, bookingRequest.getRequestInfo());
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
 
 		log.info("Processing notification for booking no : " + bookingDetail.getBookingNo() + " with status : "
 				+ status);
-		String tenantId = bookingRequest.getHallsBookingApplication().getTenantId();
+		String tenantId = bookingRequest.getVenueBookingApplication().getTenantId();
 		String action = status;
 		Set<String> mobileNumbers = new HashSet<>(util.fetchUserUUIDs(new HashSet<>(), requestInfo, tenantId).keySet());
 		List<String> configuredChannelNames = fetchChannelList(new RequestInfo(), tenantId.split("\\.")[0],
@@ -101,7 +101,7 @@ public class CHBNotificationService {
 		log.info("Fetching localization message for notification");
 		// All notification messages are part of this messages object
 		String localizationMessages = util.getLocalizationMessages(tenantId, bookingRequest.getRequestInfo());
-		Map<String, String> messageMap = util.getCustomizedMsg(bookingRequest.getHallsBookingApplication(), localizationMessages, status,
+		Map<String, String> messageMap = util.getCustomizedMsg(bookingRequest.getVenueBookingApplication(), localizationMessages, status,
 				CommunityHallBookingConstants.CHANNEL_NAME_EVENT);
 
 
@@ -128,11 +128,11 @@ public class CHBNotificationService {
 	 * @param status
 	 */
 	private void  sendMessageNotification(String localizationMessages, VenueBookingRequest bookingRequest, String status) {
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		Map<String, String> messageMap = new HashMap<String, String>();
     	String message = null;
 		try {
-			messageMap = util.getCustomizedMsg(bookingRequest.getHallsBookingApplication(), localizationMessages, status
+			messageMap = util.getCustomizedMsg(bookingRequest.getVenueBookingApplication(), localizationMessages, status
 					 , CommunityHallBookingConstants.CHANNEL_NAME_SMS);
 			
 			message = messageMap.get(NotificationUtil.MESSAGE_TEXT);
@@ -165,11 +165,11 @@ public class CHBNotificationService {
 	}
 	
     private void sendEventNotification(String localizationMessages, VenueBookingRequest bookingRequest, String status) {
-    	VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+    	VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
     	Map<String, String> messageMap = new HashMap<String, String>();
     	String message = null;
 		try {
-			messageMap = util.getCustomizedMsg(bookingRequest.getHallsBookingApplication(), localizationMessages, status
+			messageMap = util.getCustomizedMsg(bookingRequest.getVenueBookingApplication(), localizationMessages, status
 					 , CommunityHallBookingConstants.CHANNEL_NAME_EVENT);
 			
 			message = messageMap.get(NotificationUtil.MESSAGE_TEXT);
@@ -213,7 +213,7 @@ public class CHBNotificationService {
 	private EventRequest getEventsForCommunityHallBooking(VenueBookingRequest request, String message, String actionLink) {
 
 		List<Event> events = new ArrayList<>();
-		String tenantId = request.getHallsBookingApplication().getTenantId();
+		String tenantId = request.getVenueBookingApplication().getTenantId();
 		List<String> toUsers = new ArrayList<>();
 
 		// Mobile no will be used to filter out user to send notification

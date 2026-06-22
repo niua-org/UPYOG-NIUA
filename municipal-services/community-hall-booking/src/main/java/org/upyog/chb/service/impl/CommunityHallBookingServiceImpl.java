@@ -106,16 +106,17 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		log.info("Create community hall booking for user : "
 				+ venueBookingRequest.getRequestInfo().getUserInfo().getUuid());
 		// TODO move to util calls and validate tenant id in the controller layer
-		String tenantId = venueBookingRequest.getHallsBookingApplication().getTenantId().split("\\.")[0];
-		if (venueBookingRequest.getHallsBookingApplication().getTenantId().split("\\.").length == 1) {
+		String tenantId = venueBookingRequest.getVenueBookingApplication().getTenantId().split("\\.")[0];
+		if (venueBookingRequest.getVenueBookingApplication().getTenantId().split("\\.").length == 1) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_TENANT,
 					"Please provide valid tenant id for booking creation");
 		}
 
-		Object mdmsData = mdmsUtil.mDMSCall(venueBookingRequest.getRequestInfo(), venueBookingRequest.getHallsBookingApplication().getTenantId());
+		Object mdmsData = mdmsUtil.mDMSCall(venueBookingRequest.getRequestInfo(), venueBookingRequest.getVenueBookingApplication().getTenantId());
 
+		Object venueTypeMasterData = mdmsUtil.mDMSCall(venueBookingRequest.getRequestInfo(), venueBookingRequest.getVenueBookingApplication().getTenantId());
 		// 1. Validate request master data to confirm it has only valid data in records
-		hallBookingValidator.validateCreate(venueBookingRequest, mdmsData);
+		hallBookingValidator.validateCreate(venueBookingRequest, mdmsData,venueTypeMasterData);
 		// 2. Add fields that has custom logic like booking no, ids using UUID
 		enrichmentService.enrichCreateBookingRequest(venueBookingRequest);
 		
@@ -143,13 +144,13 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		 * reference and the remaining timer value is returned in the create response.
 		 */
 		bookingRepository.updateTimerBookingId(
-				venueBookingRequest.getHallsBookingApplication().getBookingId(),
-				venueBookingRequest.getHallsBookingApplication().getBookingNo(),
-				venueBookingRequest.getHallsBookingApplication().getDraftId());
-		venueBookingRequest.getHallsBookingApplication().setTimerValue(bookingTimerService
-				.getRemainingTimerValue(venueBookingRequest.getHallsBookingApplication().getBookingId()));
+				venueBookingRequest.getVenueBookingApplication().getBookingId(),
+				venueBookingRequest.getVenueBookingApplication().getBookingNo(),
+				venueBookingRequest.getVenueBookingApplication().getDraftId());
+		venueBookingRequest.getVenueBookingApplication().setTimerValue(bookingTimerService
+				.getRemainingTimerValue(venueBookingRequest.getVenueBookingApplication().getBookingId()));
 
-		return venueBookingRequest.getHallsBookingApplication();
+		return venueBookingRequest.getVenueBookingApplication();
 	}
 	
 	@Override
@@ -178,7 +179,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 			VenueBookingDetail communityHallBookingDetail = VenueBookingDetail.builder()
 					.applicantDetail(applicantDetail).build();
 			VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
-					.hallsBookingApplication(communityHallBookingDetail).requestInfo(info).build();
+					.venueBookingApplication(communityHallBookingDetail).requestInfo(info).build();
 
 			communityHallBookingDetail = encryptionService.encryptObject(bookingRequest);
 
@@ -237,7 +238,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	@Override
 	public VenueBookingDetail updateBooking(VenueBookingRequest venueBookingRequest,
 			PaymentDetail paymentDetail, BookingStatusEnum status) {
-		String bookingNo = venueBookingRequest.getHallsBookingApplication().getBookingNo();
+		String bookingNo = venueBookingRequest.getVenueBookingApplication().getBookingNo();
 		log.info("Updating booking for booking no : " + bookingNo);
 		if (bookingNo == null) {
 			throw new CustomException("INVALID_BOOKING_CODE",
@@ -251,26 +252,26 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
 		
-		hallBookingValidator.validateUpdate(venueBookingRequest.getHallsBookingApplication(), bookingDetails.get(0));
+		hallBookingValidator.validateUpdate(venueBookingRequest.getVenueBookingApplication(), bookingDetails.get(0));
 
 		convertBookingRequest(venueBookingRequest, bookingDetails.get(0));
 
 		
 		//Update payment date and receipt no on successful payment when payment detail object is received
 		if (paymentDetail != null) {
-			venueBookingRequest.getHallsBookingApplication().setReceiptNo(paymentDetail.getReceiptNumber());
-			venueBookingRequest.getHallsBookingApplication().setPaymentDate(paymentDetail.getReceiptDate());
+			venueBookingRequest.getVenueBookingApplication().setReceiptNo(paymentDetail.getReceiptNumber());
+			venueBookingRequest.getVenueBookingApplication().setPaymentDate(paymentDetail.getReceiptDate());
 		}
 		//Update workflow of booking application for refund when the workflow object is not null in payload
-		if (venueBookingRequest.getHallsBookingApplication().getWorkflow()!=null) {
+		if (venueBookingRequest.getVenueBookingApplication().getWorkflow()!=null) {
 			State state = workflowService.updateWorkflow(venueBookingRequest);
 			status = BookingStatusEnum.valueOf(state.getApplicationStatus());
 		}
 		enrichmentService.enrichUpdateBookingRequest(venueBookingRequest, status);
 		bookingRepository.updateBooking(venueBookingRequest);
 		log.info("fetched booking detail and updated status "
-				+ venueBookingRequest.getHallsBookingApplication().getBookingStatus());
-		return venueBookingRequest.getHallsBookingApplication();
+				+ venueBookingRequest.getVenueBookingApplication().getBookingStatus());
+		return venueBookingRequest.getVenueBookingApplication();
 	}
 	
 	/**
@@ -281,7 +282,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	@Override
 	public void updateBookingSynchronously(VenueBookingRequest venueBookingRequest,
 			PaymentDetail paymentDetail, BookingStatusEnum status, boolean deleteBookingTimer) {
-		String bookingNo = venueBookingRequest.getHallsBookingApplication().getBookingNo();
+		String bookingNo = venueBookingRequest.getVenueBookingApplication().getBookingNo();
 		log.info("Updating booking synchronously for booking no : " + bookingNo);
 		if (bookingNo == null) {
 			throw new CustomException("INVALID_BOOKING_CODE",
@@ -295,17 +296,17 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
 		VenueBookingDetail bookingDetail = bookingDetails.get(0);
-		venueBookingRequest.setHallsBookingApplication(bookingDetail);
+		venueBookingRequest.setVenueBookingApplication(bookingDetail);
 		bookingRepository.updateBookingSynchronously(bookingDetail.getBookingId(), venueBookingRequest.getRequestInfo().getUserInfo().getUuid(), paymentDetail, status.toString());
 		if(deleteBookingTimer) {
-			log.info("Deleting booking timer with booking id  {}", venueBookingRequest.getHallsBookingApplication().getBookingId());
-			bookingTimerService.deleteBookingTimer(venueBookingRequest.getHallsBookingApplication().getBookingId(), false);
+			log.info("Deleting booking timer with booking id  {}", venueBookingRequest.getVenueBookingApplication().getBookingId());
+			bookingTimerService.deleteBookingTimer(venueBookingRequest.getVenueBookingApplication().getBookingId(), false);
 		}
 	}
 
 	private void convertBookingRequest(VenueBookingRequest venueBookingRequest,
 			VenueBookingDetail bookingDetailDB) {
-		VenueBookingDetail bookingDetailRequest = venueBookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetailRequest = venueBookingRequest.getVenueBookingApplication();
 		if (bookingDetailDB.getPermissionLetterFilestoreId() == null
 				&& bookingDetailRequest.getPermissionLetterFilestoreId() != null) {
 			bookingDetailDB.setPermissionLetterFilestoreId(bookingDetailRequest.getPermissionLetterFilestoreId());
@@ -318,7 +319,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 		if(bookingDetailRequest.getWorkflow()!=null) {
 			bookingDetailDB.setWorkflow(bookingDetailRequest.getWorkflow());
 		}
-		venueBookingRequest.setHallsBookingApplication(bookingDetailDB);
+		venueBookingRequest.setVenueBookingApplication(bookingDetailDB);
 		
 	}
 
@@ -338,7 +339,7 @@ public class CommunityHallBookingServiceImpl implements CommunityHallBookingServ
 	@Override
 	public VenueSlotAvailabilityResponse getCommunityHallSlotAvailability(
 			VenueSlotSearchCriteria criteria, RequestInfo info) {
-		if (criteria.getVenueCode() == null && CollectionUtils.isEmpty(criteria.getCodes())) {
+		if (criteria.getVenueCode() == null && CollectionUtils.isEmpty(criteria.getUnitCodes())) {
 			throw new CustomException("INVALID_HALL_CODE", "Invalid hall code provided for slot search");
 		}
 		log.info("criteria : {}", criteria);
@@ -408,8 +409,8 @@ private List<VenueSlotAvailabilityDetail> checkTimerTableForAvailaibility(
 			boolean isCreatedByCurrentUser = detail.getCreatedBy().equals(info.getUserInfo().getUuid());
 			boolean existingBookingIdCheck = detail.getBookingId().equals(getTimerBookingReference(criteria));
 
-			String fromTime = criteria.getFromTime() != null ? criteria.getFromTime() : (criteria.getStartTime() != null ? criteria.getStartTime().toString() : null);
-			String toTime = criteria.getToTime() != null ? criteria.getToTime() : (criteria.getEndTime() != null ? criteria.getEndTime().toString() : null);
+			String fromTime = criteria.getFromTime() != null ? criteria.getFromTime() : null;
+			String toTime = criteria.getToTime() != null ? criteria.getToTime() :  null;
 			slotAvailabilityDetail.setFromTime(fromTime);
 			slotAvailabilityDetail.setToTime(toTime);
 			if (isCreatedByCurrentUser && existingBookingIdCheck) {
@@ -459,10 +460,10 @@ private List<VenueSlotAvailabilityDetail> checkTimerTableForAvailaibility(
 						detail.getCode(), detail.getBookingDate()), Function.identity(), (first, second) -> first));
 		for (LocalDate date : totalDates) {
 			List<String> hallCodes = new ArrayList<>();
-			if (StringUtils.isNotBlank(criteria.getCode())) {
-				hallCodes.add(criteria.getCode());
+			if (StringUtils.isNotBlank(criteria.getUnitCode())) {
+				hallCodes.add(criteria.getUnitCode());
 			} else {
-				hallCodes.addAll(criteria.getCodes());
+				hallCodes.addAll(criteria.getUnitCodes());
 			}
 			for (String data : hallCodes) {
 				String bookingDate = CommunityHallBookingUtil.parseLocalDateToString(date,

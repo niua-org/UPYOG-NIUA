@@ -84,8 +84,8 @@ class CommunityHallBookingQueryBuilderTest {
     @Test
     void testGetCommunityHallSlotAvailabilityQueryWithStartEndTime() {
         VenueSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
-        criteria.setStartTime(LocalTime.parse("09:00"));
-        criteria.setEndTime(LocalTime.parse("12:00"));
+        criteria.setFromTime("09:00");
+        criteria.setToTime("12:00");
         List<Object> paramsList = new ArrayList<>();
 
         StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);

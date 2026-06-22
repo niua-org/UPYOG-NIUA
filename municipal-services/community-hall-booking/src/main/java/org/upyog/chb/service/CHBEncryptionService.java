@@ -55,13 +55,13 @@ public class CHBEncryptionService {
 	private EncryptionDecryptionUtil encryptionDecryptionUtil;
 
 	public VenueBookingDetail encryptObject(VenueBookingRequest bookingRequest) {
-		ApplicantDetail applicantDetail = bookingRequest.getHallsBookingApplication().getApplicantDetail();
+		ApplicantDetail applicantDetail = bookingRequest.getVenueBookingApplication().getApplicantDetail();
 		log.info("Applicant detail before encyption : " + applicantDetail.getApplicantMobileNo());
 		applicantDetail = encryptionDecryptionUtil.encryptObject(applicantDetail,
 				CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY, ApplicantDetail.class);
 		log.info("Applicant detail after encyption : " + applicantDetail.getApplicantMobileNo());
-		bookingRequest.getHallsBookingApplication().setApplicantDetail(applicantDetail);
-		return bookingRequest.getHallsBookingApplication();
+		bookingRequest.getVenueBookingApplication().setApplicantDetail(applicantDetail);
+		return bookingRequest.getVenueBookingApplication();
 	}
 	
 	

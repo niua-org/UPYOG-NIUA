@@ -92,10 +92,10 @@ public class DemandService {
 	 */
 
 	public List<Demand> createDemand(VenueBookingRequest bookingRequest, Object mdmsData, boolean generateDemand) {
-		String tenantId = bookingRequest.getHallsBookingApplication().getTenantId();
-		String consumerCode = bookingRequest.getHallsBookingApplication().getBookingNo();
+		String tenantId = bookingRequest.getVenueBookingApplication().getTenantId();
+		String consumerCode = bookingRequest.getVenueBookingApplication().getBookingNo();
 		
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		User user =bookingRequest.getRequestInfo().getUserInfo();
 		
 		User owner = User.builder().name(user.getName()).emailId(user.getEmailId())
@@ -140,7 +140,7 @@ public class DemandService {
 		VenueBookingDetail bookingDetail = VenueBookingDetail.builder().tenantId(tenantId)
 				.bookingSlotDetails(estimationCriteria.getBookingSlotDetails())
 				.venueCode(estimationCriteria.getVenueCode()).build();
-		VenueBookingRequest bookingRequest = VenueBookingRequest.builder().hallsBookingApplication(bookingDetail)
+		VenueBookingRequest bookingRequest = VenueBookingRequest.builder().venueBookingApplication(bookingDetail)
 				.requestInfo(estimationCriteria.getRequestInfo()).build();
 		Object mdmsData = mdmsUtil.mDMSCall(bookingRequest.getRequestInfo(), tenantId);
 		List<Demand> demands = createDemand(bookingRequest, mdmsData, false);

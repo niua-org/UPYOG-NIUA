@@ -64,6 +64,8 @@ public class CommunityHallBookingConstants {
 	public static final String CHB_CREMATORIUM_CODES = "CrematoriumCode";
 	public static final String CHB_CREMATORIUMS = "Crematoriums";
 	
+	public static final String CHB_VENUE_TYPE_DATA = "VenueType";
+	
 	//Check what is the role of common fields config
 	public static final String CHB_DOCUMENTS = "Documents";
 	

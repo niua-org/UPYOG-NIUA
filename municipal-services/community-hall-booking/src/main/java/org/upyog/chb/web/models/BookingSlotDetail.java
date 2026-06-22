@@ -34,8 +34,8 @@ public class BookingSlotDetail {
 	private String bookingId = null;
 	
 	@NotBlank
-	@JsonProperty("code")
-	private String code;
+	@JsonProperty("unitCode")
+	private String unitCode;
 	
 	@NotBlank
 	private String capacity;

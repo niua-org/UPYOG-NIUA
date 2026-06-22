@@ -118,7 +118,7 @@ public class PaymentNotificationService {
 				VenueBookingDetail bookingDetail = VenueBookingDetail.builder().bookingNo(bookingNo)
 						.build();
 				VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
-						.requestInfo(paymentRequest.getRequestInfo()).hallsBookingApplication(bookingDetail).build();
+						.requestInfo(paymentRequest.getRequestInfo()).venueBookingApplication(bookingDetail).build();
 				
 				//now updating booking status directly using jdbc template
 				//deleting booking timer
@@ -215,7 +215,7 @@ public class PaymentNotificationService {
         	
         	
 			VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
-					.requestInfo(requestInfo).hallsBookingApplication(bookingDetail).build();
+					.requestInfo(requestInfo).venueBookingApplication(bookingDetail).build();
 			
 			
 			if(BookingStatusEnum.PAYMENT_FAILED.equals(status)) {

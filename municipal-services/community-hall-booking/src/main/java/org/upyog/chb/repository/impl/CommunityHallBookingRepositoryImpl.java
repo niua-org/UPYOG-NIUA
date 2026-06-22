@@ -2,6 +2,7 @@ package org.upyog.chb.repository.impl;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -95,7 +96,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	@Override
 	public void saveCommunityHallBooking(VenueBookingRequest bookingRequest) {
 		log.info("Saving community hall booking request data for booking no : "
-				+ bookingRequest.getHallsBookingApplication().getBookingNo());
+				+ bookingRequest.getVenueBookingApplication().getBookingNo());
 		producer.push(bookingConfiguration.getCommunityHallBookingSaveTopic(), bookingRequest);
 
 	}
@@ -103,13 +104,13 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	@Override
 	public void saveCommunityHallBookingInit(VenueBookingRequest bookingRequest) {
 		log.info("Saving community hall booking init data : "
-				+ bookingRequest.getHallsBookingApplication().getBookingId());
+				+ bookingRequest.getVenueBookingApplication().getBookingId());
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		CommunityHallBookingRequestInit testPersist = CommunityHallBookingRequestInit.builder()
 				.bookingId(bookingDetail.getBookingId()).tenantId(bookingDetail.getTenantId())
 				.bookingStatus(bookingDetail.getBookingStatus())
-				.bookingDetails(bookingRequest.getHallsBookingApplication())
+				.bookingDetails(bookingRequest.getVenueBookingApplication())
 				.createdBy(requestInfo.getUserInfo().getUuid())
 				.createdDate(CommunityHallBookingUtil.getCurrentTimestamp())
 				.lastModifiedBy(requestInfo.getUserInfo().getUuid())
@@ -173,7 +174,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	@Override
 	public void updateBooking(@Valid VenueBookingRequest communityHallsBookingRequest) {
 		log.info("Updating community hall booking request data for booking no : "
-				+ communityHallsBookingRequest.getHallsBookingApplication().getBookingNo());
+				+ communityHallsBookingRequest.getVenueBookingApplication().getBookingNo());
 		producer.push(bookingConfiguration.getCommunityHallBookingUpdateTopic(), communityHallsBookingRequest);
 	}
 
@@ -184,13 +185,13 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 
 		StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
 
-		String hallCodeQuery = " AND ecsd.code ";
+		String hallCodeQuery = " AND ecsd.unit_code ";
 
-		if (StringUtils.isNotBlank(criteria.getCode())) {
+		if (StringUtils.isNotBlank(criteria.getUnitCode())) {
 			query.append(hallCodeQuery).append(" = ? ");
-			paramsList.add(criteria.getCode());
+			paramsList.add(criteria.getUnitCode());
 		} else {
-			List<String> hallCodes = criteria.getCodes();
+			List<String> hallCodes = criteria.getUnitCodes();
 			query.append(hallCodeQuery).append(" IN ( ");
 			int i = 0;
 			while (i < hallCodes.size()) {
@@ -229,14 +230,16 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		long createdTime = CommunityHallBookingUtil.getCurrentTimestamp();
 		String lastModifiedBy = requestInfo.getUserInfo().getUuid();
 		long lastModifiedTime = CommunityHallBookingUtil.getCurrentTimestamp();
-
+		LocalTime startTime = LocalTime.parse(criteria.getFromTime());
+		LocalTime endTime = LocalTime.parse(criteria.getToTime());
+		
 		List<Object[]> batchArgs = new ArrayList<>();
 		if (timerDetails != null && !timerDetails.isEmpty()) {
 			for (BookingPaymentTimerDetails detail : timerDetails) {
 				batchArgs.add(new Object[] { detail.getBookingId(), detail.getCreatedBy(), detail.getCreatedTime(),
 						detail.getStatus() != null ? detail.getStatus() : "ACTIVE", null, detail.getVenuecode(),
 						detail.getCode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
-						lastModifiedTime });
+						lastModifiedTime,startTime , endTime });
 			}
 		} else {
 			var hallCodes = org.upyog.chb.util.CommunityHallSlotCriteriaUtil.resolveHallCodes(criteria);
@@ -245,7 +248,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 				for (var hallcode : hallCodes) {
 					batchArgs.add(new Object[] { bookingId, createdBy, createdTime, "ACTIVE", null,
 							criteria.getVenueCode(), hallcode, date, criteria.getTenantId(), lastModifiedBy,
-							lastModifiedTime });
+							lastModifiedTime,startTime , endTime});
 				}
 			}
 		}
@@ -396,14 +399,17 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	    // Parse bookingStartDate and bookingEndDate into SQL-compatible Date objects
 	    Date startDate = Date.valueOf(criteria.getBookingStartDate()); // String to SQL Date
 	    Date endDate = Date.valueOf(criteria.getBookingEndDate());     // String to SQL Date
-
-	    // Execute query with updated criteria
+	    LocalTime startTime = LocalTime.parse(criteria.getFromTime());
+	    LocalTime endTime = LocalTime.parse(criteria.getToTime()) ;
+	    
+	    //ecute query with updated criteria
 	    List<BookingPaymentTimerDetails> timerDetails = jdbcTemplate.query(
 	        CommunityHallBookingQueryBuilder.SELECT_TIMER_QUERY,
 	        new Object[] {
 	            criteria.getTenantId(), 
 	            criteria.getVenueCode(),
-	            criteria.getCode(),
+	            criteria.getUnitCode(),
+	            startTime , endTime,
 	            startDate,
 	            endDate
 	        },
@@ -414,7 +420,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	            details.setCreatedTime(rs.getLong("createdtime"));
 	            details.setStatus(rs.getString("status"));
 	            details.setVenuecode(rs.getString("venue_code"));
-	            details.setCode(rs.getString("code"));
+	            details.setCode(rs.getString("unit_code"));
 	            details.setLastModifiedBy(rs.getString("lastmodifiedby"));
 	            details.setLastModifiedTime(rs.getObject("lastmodifiedtime", Long.class));
 	            details.setTenantId(rs.getString("tenant_id"));

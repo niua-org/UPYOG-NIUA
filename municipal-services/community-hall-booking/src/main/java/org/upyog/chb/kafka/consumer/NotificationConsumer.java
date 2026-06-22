@@ -67,18 +67,18 @@ public class NotificationConsumer {
 			log.error("Error while processing CHB notification to value: " + record + " on topic: " + topic + ": " + e);
 		}
 
-		if (bookingRequest.getHallsBookingApplication() == null) {
+		if (bookingRequest.getVenueBookingApplication() == null) {
 			log.warn("Received booking request with null hallsBookingApplication. Skipping notification processing.");
 			return;
 		}
 
-		String bookingStatus = bookingRequest.getHallsBookingApplication().getBookingStatus();
+		String bookingStatus = bookingRequest.getVenueBookingApplication().getBookingStatus();
 		log.info("CHB Appplication Received with booking no : "
-				+ bookingRequest.getHallsBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);
+				+ bookingRequest.getVenueBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);
 		
 		//Send notification to user except PENDING_FOR_PAYMENT status
 		if (!BookingStatusEnum.PENDING_FOR_PAYMENT.toString().equals(bookingStatus)) {
-			VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+			VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 			if (bookingDetail.getWorkflow() == null || bookingDetail.getWorkflow().getAction() == null) {
 				bookingStatus = bookingDetail.getBookingStatus();
 			} else {

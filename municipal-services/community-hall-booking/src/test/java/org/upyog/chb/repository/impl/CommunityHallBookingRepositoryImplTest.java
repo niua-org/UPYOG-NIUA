@@ -49,7 +49,7 @@ public class CommunityHallBookingRepositoryImplTest {
     void testSaveCommunityHallBookingWithNullApplication() {
         // Arrange
         VenueBookingRequest bookingRequest = mock(VenueBookingRequest.class);
-        when(bookingRequest.getHallsBookingApplication()).thenReturn(null);
+        when(bookingRequest.getVenueBookingApplication()).thenReturn(null);
 
         // Act & Assert
         assertThrows(NullPointerException.class, () -> repository.saveCommunityHallBooking(bookingRequest));
@@ -77,7 +77,7 @@ public class CommunityHallBookingRepositoryImplTest {
     void testUpdateBookingWithNullApplication() {
         // Arrange
         VenueBookingRequest bookingRequest = mock(VenueBookingRequest.class);
-        when(bookingRequest.getHallsBookingApplication()).thenReturn(null);
+        when(bookingRequest.getVenueBookingApplication()).thenReturn(null);
 
         // Act & Assert
         assertThrows(NullPointerException.class, () -> repository.updateBooking(bookingRequest));

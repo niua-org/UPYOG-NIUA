@@ -102,9 +102,9 @@ public class WorkflowIntegrator {
 	}
 
 	public void callWorkFlow(VenueBookingRequest bookingRequest) {
-		String wfTenantId = bookingRequest.getHallsBookingApplication().getTenantId();
+		String wfTenantId = bookingRequest.getVenueBookingApplication().getTenantId();
 		JSONArray array = new JSONArray();
-		VenueBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
+		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
 		JSONObject obj = new JSONObject();
 		obj.put(BUSINESSIDKEY, bookingDetail.getBookingNo());
 		obj.put(TENANTIDKEY, wfTenantId);

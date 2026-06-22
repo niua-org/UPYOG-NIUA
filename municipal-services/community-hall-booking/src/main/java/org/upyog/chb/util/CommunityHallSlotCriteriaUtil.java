@@ -19,11 +19,11 @@ public final class CommunityHallSlotCriteriaUtil {
 
 	public static List<String> resolveHallCodes(VenueSlotSearchCriteria criteria) {
 		var hallCodes = new ArrayList<String>();
-		if (StringUtils.isNotBlank(criteria.getCode())) {
-			hallCodes.add(criteria.getCode());
+		if (StringUtils.isNotBlank(criteria.getUnitCode())) {
+			hallCodes.add(criteria.getUnitCode());
 		}
-		if (!CollectionUtils.isEmpty(criteria.getCodes())) {
-			hallCodes.addAll(criteria.getCodes());
+		if (!CollectionUtils.isEmpty(criteria.getUnitCodes())) {
+			hallCodes.addAll(criteria.getUnitCodes());
 		}
 		if (hallCodes.isEmpty()) {
 			throw new CustomException("INVALID_HALL_CODE", "Hall code is required for slot timer");

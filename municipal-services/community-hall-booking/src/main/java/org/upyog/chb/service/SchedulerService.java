@@ -171,7 +171,7 @@ public class SchedulerService {
 		// Set workflow and build booking request
 		bookingDetail.setWorkflow(workflow);
 		VenueBookingRequest bookingRequest = VenueBookingRequest.builder()
-				.hallsBookingApplication(bookingDetail).requestInfo(requestInfo).build();
+				.venueBookingApplication(bookingDetail).requestInfo(requestInfo).build();
 
 		// Update workflow and booking status
 		State state = workflowService.updateWorkflow(bookingRequest);

@@ -74,58 +74,23 @@ public class CommunityHallBookingValidator {
 	 * @param bookingRequest
 	 * @param mdmsData
 	 */
-	public void validateCreate(VenueBookingRequest bookingRequest, Object mdmsData) {
+	public void validateCreate(VenueBookingRequest bookingRequest, Object mdmsData,Object venueOTypeMasterData) {
 		log.info("validating master data for create booking request for applicant mobile no : "
-				+ bookingRequest.getHallsBookingApplication().getApplicantDetail().getApplicantMobileNo());
-		if (!isSameHallCode(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
+				+ bookingRequest.getVenueBookingApplication().getApplicantDetail().getApplicantMobileNo());
+		if (!isSameHallCode(bookingRequest.getVenueBookingApplication().getBookingSlotDetails())) {
 			throw new CustomException(CommunityHallBookingConstants.MULTIPLE_HALL_CODES_ERROR,
 					"Booking of multiple halls are not allowed.");
 		}
 		
-		if(!validateBookingDate(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
+		if(!validateBookingDate(bookingRequest.getVenueBookingApplication().getBookingSlotDetails())) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_BOOKING_DATE,
 					"Booking date is not valid.");
 		}
-		
-		if(!validateTimeSlot(bookingRequest.getHallsBookingApplication().getBookingSlotDetails())) {
-			throw new CustomException(CommunityHallBookingConstants.INVALID_BOOKING_TIME,
-					"Booking time is not valid. Duration selection limited to 5 hours maximum.");
-		}
 	
-
-		mdmsValidator.validateMdmsData(bookingRequest, mdmsData);
+		mdmsValidator.validateMdmsData(bookingRequest, mdmsData,venueOTypeMasterData);
 		validateDuplicateDocuments(bookingRequest);
 	}
 
-	private Boolean validateTimeSlot(List<BookingSlotDetail> bookingSlotDetails) {
-		
-		if (bookingSlotDetails == null || bookingSlotDetails.isEmpty()) {
-	        return true;
-	    }
-
-	    for (BookingSlotDetail slot : bookingSlotDetails) {
-
-	        LocalTime fromTime = slot.getBookingFromTime();
-	        LocalTime toTime = slot.getBookingToTime();
-
-	        if (fromTime == null || toTime == null) {
-	            return false;
-	        }
-
-	        // Start time must be before end time
-	        if (!fromTime.isBefore(toTime)) {
-	            return false;
-	        }
-
-	        long durationInMinutes = Duration.between(fromTime, toTime).toMinutes();
-
-	        if (durationInMinutes > 5 * 60) {
-	            return false;
-	        }
-	    }
-
-	    return true;
-	}
 	
 	public void validateUpdate(VenueBookingDetail bookingDetailFromRequest, VenueBookingDetail bookingDetailFromDB) {
 		log.info("validating master data for update  booking request for  booking no : " + bookingDetailFromRequest.getBookingNo());
@@ -144,9 +109,9 @@ public class CommunityHallBookingValidator {
 	 * @param bookingRequest
 	 */
 	private void validateDuplicateDocuments(VenueBookingRequest bookingRequest) {
-		if (bookingRequest.getHallsBookingApplication().getUploadedDocumentDetails() != null) {
+		if (bookingRequest.getVenueBookingApplication().getUploadedDocumentDetails() != null) {
 			List<String> documentFileStoreIds = new LinkedList<String>();
-			bookingRequest.getHallsBookingApplication().getUploadedDocumentDetails().forEach(document -> {
+			bookingRequest.getVenueBookingApplication().getUploadedDocumentDetails().forEach(document -> {
 				if (documentFileStoreIds.contains(document.getFileStoreId()))
 					throw new CustomException(CommunityHallBookingConstants.DUPLICATE_DOCUMENT_UPLOADED, "Same document cannot be used multiple times");
 				else
@@ -258,8 +223,8 @@ public class CommunityHallBookingValidator {
 	}
 	
 	public boolean isSameHallCode(List<BookingSlotDetail> bookingSlotDetails) {
-		String hallCode = bookingSlotDetails.get(0).getCode();
-		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getCode().equals(hallCode));
+		String hallCode = bookingSlotDetails.get(0).getUnitCode();
+		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getUnitCode().equals(hallCode));
 		return allSameCode;
 
 	}
