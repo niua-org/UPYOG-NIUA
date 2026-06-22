@@ -17,7 +17,7 @@ import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.util.MdmsUtil;
 import org.upyog.chb.web.models.BookingSlotDetail;
 import org.upyog.chb.web.models.CalculationType;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.billing.DemandDetail;
 import org.upyog.chb.web.models.billing.TaxHeadMaster;
 
@@ -69,16 +69,26 @@ public class CalculationService {
 	private CommunityHallBookingConfiguration config;
 
 	/**
-	 * @param bookingRequest
-	 * @return
+	 * Calculates the list of demands (charges + applicable taxes) for a community hall booking.
+	 * <p>
+	 * The method:
+	 * <ul>
+	 *   <li>Fetches tax head master records and tax calculation rules from MDMS/cache</li>
+	 *   <li>Computes charge amount based on booking slot duration (hours)</li>
+	 *   <li>Derives tax amounts using configured tax rates</li>
+	 * </ul>
+	 * </p>
+	 *
+	 * @param bookingRequest booking request containing booking application details
+	 * @return list of demand details (including tax breakdowns)
 	 */
-	public List<DemandDetail> calculateDemand(CommunityHallBookingRequest bookingRequest) {
+	public List<DemandDetail> calculateDemand(VenueBookingRequest bookingRequest) {
 
-		String tenantId = CommunityHallBookingUtil.getTenantId(bookingRequest.getHallsBookingApplication().getTenantId());
+		String tenantId = CommunityHallBookingUtil.getTenantId(bookingRequest.getVenueBookingApplication().getTenantId());
 		
 		List<TaxHeadMaster> headMasters = mdmsUtil.getTaxHeadMasterList(bookingRequest.getRequestInfo(), tenantId , CommunityHallBookingConstants.BILLING_SERVICE);
 		
-		List<CalculationType> calculationTypes = calculationTypeCache.getcalculationType(bookingRequest.getRequestInfo(), tenantId , config.getModuleName(), bookingRequest.getHallsBookingApplication());
+		List<CalculationType> calculationTypes = calculationTypeCache.getcalculationType(bookingRequest.getRequestInfo(), bookingRequest.getVenueBookingApplication().getTenantId() , config.getModuleName(), bookingRequest.getVenueBookingApplication());
 
 		log.info("Retrieved calculation types: {}", calculationTypes);
 
@@ -90,10 +100,18 @@ public class CalculationService {
 	}
 
 	private List<DemandDetail> processCalculationForDemandGeneration(String tenantId,
-			List<CalculationType> calculationTypes, CommunityHallBookingRequest bookingRequest, List<TaxHeadMaster> headMasters) {
+			List<CalculationType> calculationTypes, VenueBookingRequest bookingRequest, List<TaxHeadMaster> headMasters) {
 
-		Map<String, Long> hallCodeBookingDaysMap = bookingRequest.getHallsBookingApplication().getBookingSlotDetails()
-				.stream().collect(Collectors.groupingBy(BookingSlotDetail::getHallCode, Collectors.counting()));
+		// Calculate total booking hours instead of days
+		Map<String, BigDecimal> hallCodeBookingHoursMap = bookingRequest.getVenueBookingApplication().getBookingSlotDetails()
+				.stream().collect(Collectors.groupingBy(BookingSlotDetail::getUnitCode, 
+						Collectors.mapping(this::calculateHours, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+		
+		Map<String, Long> hallCodeBookingDaysMap = bookingRequest.getVenueBookingApplication().getBookingSlotDetails()
+				.stream()
+				.collect(Collectors.groupingBy(BookingSlotDetail::getUnitCode,
+						Collectors.mapping(BookingSlotDetail::getBookingDate,
+								Collectors.collectingAndThen(Collectors.toSet(), set -> (long) set.size()))));
 		
 		//Demand will be generated using billing service for booking
 		final List<DemandDetail> demandDetails = new LinkedList<>();
@@ -105,8 +123,8 @@ public class CalculationService {
 		//Demand for which tax is applicable is stored
 		List<CalculationType> taxableFeeType = new ArrayList<>();
 		
-		BigDecimal hallCodeBookingDays = new BigDecimal(hallCodeBookingDaysMap.get(bookingRequest.getHallsBookingApplication().getBookingSlotDetails().get(0).getHallCode()));
-		
+		BigDecimal hallCodeBookingHours = hallCodeBookingHoursMap.get(bookingRequest.getVenueBookingApplication().getBookingSlotDetails().get(0).getUnitCode());
+		Long venueBookingDates = hallCodeBookingDaysMap.get(bookingRequest.getVenueBookingApplication().getBookingSlotDetails().get(0).getUnitCode()); 
 		//We have two type of fee 1.taxable(Booking fee, electricity fee etc) and 2.fixed( Security deposit)
 		for (CalculationType type : calculationTypes) {
 			if (taxHeadCodes.contains(type.getFeeType())) {
@@ -124,11 +142,23 @@ public class CalculationService {
 		
 		log.info("taxable fee type : " + taxableFeeType);
 
-		//Calculating taxable demand as per no of days for taxable fee
-		List<DemandDetail> taxableDemands = taxableFeeType.stream().map(data ->
-		// log.info("data :" + data);
-		DemandDetail.builder().taxAmount(data.getAmount().multiply(hallCodeBookingDays))
-				.taxHeadMasterCode(data.getFeeType()).tenantId(tenantId).build()).collect(Collectors.toList());
+		//Calculating taxable demand as per no of hours/day for taxable fee
+		List<DemandDetail> taxableDemands = taxableFeeType.stream().map(data -> {
+
+			BigDecimal multiplier;
+
+			if ("HOURLY".equalsIgnoreCase(data.getCalculationDurationType())) {
+				multiplier = hallCodeBookingHours;
+			} else if ("DAY".equalsIgnoreCase(data.getCalculationDurationType())) {
+				multiplier = BigDecimal.valueOf(venueBookingDates);
+			} else {
+				multiplier = BigDecimal.ONE; // fallback
+			}
+
+			return DemandDetail.builder().taxAmount(data.getAmount().multiply(multiplier))
+					.taxHeadMasterCode(data.getFeeType()).tenantId(tenantId).build();
+		}).collect(Collectors.toList());
+		
 		
 		log.info("taxableDemands : " + taxableDemands);
 		
@@ -145,10 +175,10 @@ public class CalculationService {
 		return demandDetails;
 	}
 	
-	private void calculateTaxDemands(CommunityHallBookingRequest bookingRequest, String tenantId,
+	private void calculateTaxDemands(VenueBookingRequest bookingRequest, String tenantId,
 			List<DemandDetail> demandDetails, BigDecimal totalTaxableAmount) {
 		List<CalculationType> taxRates = mdmsUtil.getTaxRatesMasterList(bookingRequest.getRequestInfo(), tenantId,
-				config.getModuleName(), bookingRequest.getHallsBookingApplication());
+				config.getModuleName(), bookingRequest.getVenueBookingApplication());
 		taxRates.stream().forEach(tax -> {
 			DemandDetail demandDetail = DemandDetail.builder()
 					.taxAmount(calculateAmount(totalTaxableAmount, tax.getAmount())).taxHeadMasterCode(tax.getFeeType())
@@ -160,6 +190,20 @@ public class CalculationService {
 	//Tax is in percentage
 	private BigDecimal calculateAmount(BigDecimal amount, BigDecimal tax) {
 		return amount.multiply(tax).divide(CommunityHallBookingConstants.ONE_HUNDRED, RoundingMode.FLOOR);
+	}
+
+	/**
+	 * Calculates the number of hours between {@code bookingFromTime} and {@code bookingToTime}.
+	 *
+	 * @param bookingSlotDetail booking slot containing from/to times
+	 * @return duration in hours as {@link BigDecimal}
+	 */
+	private BigDecimal calculateHours(BookingSlotDetail bookingSlotDetail) {
+		long minutesDifference = java.time.temporal.ChronoUnit.MINUTES.between(
+				bookingSlotDetail.getBookingFromTime(), 
+				bookingSlotDetail.getBookingToTime());
+		// Convert minutes to hours with decimal precision
+		return BigDecimal.valueOf(minutesDifference).divide(new BigDecimal(60), 2, RoundingMode.HALF_UP);
 	}
 
 }

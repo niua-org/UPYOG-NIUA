@@ -63,8 +63,8 @@ public interface BookingRepository {
 
 	//Map<String, Long> getRemainingTimerValues(List<BookingDetail> bookingDetails);
 	
-	void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteria, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail availabiltityDetailsResponse, String preGeneratedDraftId);
+	long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteria, RequestInfo requestInfo,
+			String preGeneratedDraftId);
 
 	String fetchDraftIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId);
 
@@ -99,14 +99,6 @@ public interface BookingRepository {
 
 	List<AdvertisementSlotAvailabilityDetail> getBookedSlots(AdvertisementSlotSearchCriteria criteria,
 			RequestInfo requestInfo);
-
-	void getTimerData(String draftId, AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail detail,  List<AdvertisementSlotSearchCriteria> criteriaList);
-	
-	void getAndInsertTimerData(String draftId, 
-            List<AdvertisementSlotSearchCriteria> criteriaList, 
-            RequestInfo requestInfo, 
-            AdvertisementSlotAvailabilityDetail availabilityDetailsResponse);
 
 	void deleteDataFromTimerAndDraft(String uuid, String draftId, String bookingId);
 	

@@ -20,7 +20,7 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.web.models.CalculationType;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -75,9 +75,9 @@ public class CalculationTypeCache {
 	private static Map<String, List<CalculationType>> feeTypeCache = new HashMap<>();
 
 	public List<CalculationType> getcalculationType(RequestInfo requestInfo, String tenantId, String moduleName,
-			CommunityHallBookingDetail bookingDetail) {
+			VenueBookingDetail bookingDetail) {
 
-		String hallCode = bookingDetail.getCommunityHallCode();
+		String hallCode = bookingDetail.getVenueCode();
 
 		if (feeTypeCache.isEmpty() || !feeTypeCache.containsKey(hallCode)) {
 
@@ -86,7 +86,7 @@ public class CalculationTypeCache {
 			uri.append(config.getMdmsHost()).append(config.getMdmsPath());
 
 			MdmsCriteriaReq mdmsCriteriaReq = getMdmsRequestCalculationType(requestInfo, tenantId, moduleName,
-					bookingDetail.getCommunityHallCode());
+					bookingDetail.getVenueCode());
 			
 			MdmsResponse mdmsResponse = mapper.convertValue(serviceRequestRepository.fetchResult(uri, mdmsCriteriaReq),
 					MdmsResponse.class);

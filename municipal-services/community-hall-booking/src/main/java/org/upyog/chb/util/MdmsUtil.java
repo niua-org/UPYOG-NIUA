@@ -18,7 +18,7 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.web.models.CalculationType;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.billing.TaxHeadMaster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -90,14 +90,48 @@ public class MdmsUtil {
 	}
 
 	/**
-	 * makes mdms call with the given criteria and reutrn mdms data
-	 * 
-	 * @param requestInfo
-	 * @param tenantId
-	 * @return
+	 * Makes an MDMS call using the provided request information and tenant ID.
+	 * Constructs the criteria request specific to general MDMS data and fetches the results.
+	 * * @param requestInfo The authentication and metadata information for the request.
+	 * @param tenantId    The unique identifier of the tenant.
+	 * @return The MDMS data object fetched from the repository or cache.
 	 */
 	public Object mDMSCall(RequestInfo requestInfo, String tenantId) {
 		MdmsCriteriaReq mdmsCriteriaReq = getMDMSRequest(requestInfo, tenantId);
+		return mDMSCommonCall(mdmsCriteriaReq);
+	}
+	
+	/**
+	 * Makes an MDMS call specifically for Venue Type configurations using the provided 
+	 * request information and tenant ID.
+	 * * @param requestInfo The authentication and metadata information for the request.
+	 * @param tenantId    The unique identifier of the tenant.
+	 * @return The MDMS Venue Type data object fetched from the repository or cache.
+	 */
+	public Object mDMSVenueTypeCall(RequestInfo requestInfo , String tenantId) {
+		MdmsCriteriaReq mdmsCriteriaReq = getMDMSVenueTypeRequest(requestInfo, tenantId);
+		return mDMSCommonCall(mdmsCriteriaReq);
+	}
+	
+	/**
+	 * Executes the common MDMS API call logic. It logs the request payload, 
+	 * and serves the data from an in-memory map cache if available; 
+	 * otherwise, it fetches fresh data from the remote MDMS repository.
+	 * * @param mdmsCriteriaReq The prepared MDMS criteria request payload wrapper.
+	 * @return The raw Master Data Management System (MDMS) response object.
+	 */
+	public Object mDMSCommonCall(MdmsCriteriaReq mdmsCriteriaReq) {
+		ObjectMapper mapper = new ObjectMapper();
+
+		try {
+			System.out.println(
+			    mapper.writerWithDefaultPrettyPrinter()
+			          .writeValueAsString(mdmsCriteriaReq)
+			);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Object result = null;
 		if (mdmsMap == null) {
 			result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
@@ -111,7 +145,6 @@ public class MdmsUtil {
 
 		return result;
 	}
-
 	/**
 	 * Returns the URL for MDMS search end point
 	 *
@@ -122,15 +155,14 @@ public class MdmsUtil {
 	}
 
 	/**
-	 * prepares the mdms request object
-	 * 
-	 * @param requestInfo
-	 * @param tenantId
-	 * @return
+	 * Prepares a common MDMS criteria request object by combining the specified 
+	 * module details, tenant ID, and request metadata.
+	 * * @param moduleRequest The list of modules and their specific master data details to fetch.
+	 * @param tenantId      The unique identifier of the tenant.
+	 * @param requestInfo   The authentication and metadata information for the request.
+	 * @return A constructed {@link MdmsCriteriaReq} instance populated with the criteria.
 	 */
-	public MdmsCriteriaReq getMDMSRequest(RequestInfo requestInfo, String tenantId) {
-		List<ModuleDetail> moduleRequest = getCHBModuleRequest();
-
+	public MdmsCriteriaReq getCommonMDMSRequest(List<ModuleDetail> moduleRequest,String tenantId,RequestInfo requestInfo) {
 		log.info("Module details data needs to be fetched from MDMS : " + moduleRequest);
 
 		List<ModuleDetail> moduleDetails = new LinkedList<>();
@@ -143,6 +175,59 @@ public class MdmsUtil {
 		return mdmsCriteriaReq;
 	}
 
+	/**
+	 * Constructs the standard MDMS request for general CHB (Community Hall Booking) modules.
+	 * It automatically retrieves the default CHB module configurations before building the request.
+	 * * @param requestInfo The authentication and metadata information for the request.
+	 * @param tenantId    The unique identifier of the tenant.
+	 * @return A configured {@link MdmsCriteriaReq} instance for general CHB data.
+	 */
+	public MdmsCriteriaReq getMDMSRequest(RequestInfo requestInfo, String tenantId) {
+		List<ModuleDetail> moduleRequest = getCHBModuleRequest();
+
+		return getCommonMDMSRequest(moduleRequest, tenantId,requestInfo);
+	}
+	
+	/**
+	 * Constructs the MDMS request specifically for CHB Venue Type configurations.
+	 * It retrieves the dedicated Venue Type module requirements before building the request.
+	 * * @param requestInfo The authentication and metadata information for the request.
+	 * @param tenantId    The unique identifier of the tenant.
+	 * @return A configured {@link MdmsCriteriaReq} instance tailored for Venue Type data.
+	 */
+	public MdmsCriteriaReq getMDMSVenueTypeRequest(RequestInfo requestInfo, String tenantId) {
+		List<ModuleDetail> moduleRequest = getCHBVenueTypeModuleRequest();
+
+		return getCommonMDMSRequest(moduleRequest, tenantId,requestInfo);
+	}
+
+	/**
+	 * Generates the specific list of {@link ModuleDetail} objects required to fetch 
+	 * Venue Type data and Common Masters data for the Community Hall Booking system.
+	 * * @return A {@link List} of configured {@link ModuleDetail} objects representing the requested masters.
+	 */
+	public List<ModuleDetail> getCHBVenueTypeModuleRequest() {
+
+		// master details for CHB module
+		List<MasterDetail> chbMasterDtls = new ArrayList<>();
+
+		
+		chbMasterDtls
+				.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_VENUE_TYPE_DATA).build());
+
+
+		ModuleDetail moduleDetail = ModuleDetail.builder().masterDetails(chbMasterDtls)
+				.moduleName(config.getModuleName()).build();
+
+		// master details for common-masters module
+		List<MasterDetail> commonMasterDetails = new ArrayList<>();
+		ModuleDetail commonMasterMDtl = ModuleDetail.builder().masterDetails(commonMasterDetails)
+				.moduleName(CommunityHallBookingConstants.COMMON_MASTERS_MODULE).build();
+
+		return Arrays.asList(moduleDetail, commonMasterMDtl);
+
+	}
+	
 	/**
 	 * Creates request to search ApplicationType and etc from MDMS
 	 * 
@@ -165,6 +250,40 @@ public class MdmsUtil {
 				.filter(filterCode).build());
 		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_COMMNUITY_HALLS)
 				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_GUEST_HOUSE_CODES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_GUEST_HOUSES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_STADIUM_CODES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_STADIUMS)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_PARK_CODES)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_PARKS)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_CREMATORIUMS)
+				.filter(filterCode).build());
+		
+
+		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_CREMATORIUM_CODES)
+				.filter(filterCode).build());
+		
+		
 		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_HALL_CODES)
 				.filter("$.[?(@.active==true)].HallCode").build());
 		chbMasterDtls.add(
@@ -217,7 +336,7 @@ public class MdmsUtil {
 	}
 
 	public List<CalculationType> getTaxRatesMasterList(RequestInfo requestInfo, String tenantId, String moduleName,
-			CommunityHallBookingDetail bookingDetail) {
+			VenueBookingDetail bookingDetail) {
 		List<CalculationType> taxRates = null;
 		String taxRatesMasterName = "TaxRates";
 

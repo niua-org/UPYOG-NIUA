@@ -12,8 +12,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.service.CHBNotificationService;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,12 +39,12 @@ class NotificationConsumerTest {
         HashMap<String, Object> record = new HashMap<>();
         record.put("key", "value");
 
-        CommunityHallBookingRequest bookingRequest = new CommunityHallBookingRequest();
-        CommunityHallBookingDetail bookingDetail = new CommunityHallBookingDetail();
+        VenueBookingRequest bookingRequest = new VenueBookingRequest();
+        VenueBookingDetail bookingDetail = new VenueBookingDetail();
         bookingDetail.setBookingStatus("APPROVED");
-        bookingRequest.setHallsBookingApplication(bookingDetail);
+        bookingRequest.setVenueBookingApplication(bookingDetail);
 
-        when(mapper.convertValue(record, CommunityHallBookingRequest.class)).thenReturn(bookingRequest);
+        when(mapper.convertValue(record, VenueBookingRequest.class)).thenReturn(bookingRequest);
 
         // Act
         notificationConsumer.listen(record, "test-topic");
@@ -59,12 +59,12 @@ class NotificationConsumerTest {
         HashMap<String, Object> record = new HashMap<>();
         record.put("key", "value");
 
-        CommunityHallBookingRequest bookingRequest = new CommunityHallBookingRequest();
-        CommunityHallBookingDetail bookingDetail = new CommunityHallBookingDetail();
+        VenueBookingRequest bookingRequest = new VenueBookingRequest();
+        VenueBookingDetail bookingDetail = new VenueBookingDetail();
         bookingDetail.setBookingStatus(BookingStatusEnum.PENDING_FOR_PAYMENT.toString());
-        bookingRequest.setHallsBookingApplication(bookingDetail);
+        bookingRequest.setVenueBookingApplication(bookingDetail);
 
-        when(mapper.convertValue(record, CommunityHallBookingRequest.class)).thenReturn(bookingRequest);
+        when(mapper.convertValue(record, VenueBookingRequest.class)).thenReturn(bookingRequest);
 
         // Act
         notificationConsumer.listen(record, "test-topic");
@@ -79,7 +79,7 @@ class NotificationConsumerTest {
         HashMap<String, Object> record = new HashMap<>();
         record.put("key", "value");
 
-        when(mapper.convertValue(record, CommunityHallBookingRequest.class)).thenThrow(new RuntimeException("Error"));
+        when(mapper.convertValue(record, VenueBookingRequest.class)).thenThrow(new RuntimeException("Error"));
 
         // Act
         notificationConsumer.listen(record, "test-topic");

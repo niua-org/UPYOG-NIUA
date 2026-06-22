@@ -16,9 +16,9 @@ import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.kafka.producer.Producer;
 import org.upyog.chb.repository.querybuilder.CommunityHallBookingQueryBuilder;
 import org.upyog.chb.repository.rowmapper.CommunityHallBookingRowmapper;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
 public class CommunityHallBookingRepositoryImplTest {
 
@@ -48,8 +48,8 @@ public class CommunityHallBookingRepositoryImplTest {
     @Test
     void testSaveCommunityHallBookingWithNullApplication() {
         // Arrange
-        CommunityHallBookingRequest bookingRequest = mock(CommunityHallBookingRequest.class);
-        when(bookingRequest.getHallsBookingApplication()).thenReturn(null);
+        VenueBookingRequest bookingRequest = mock(VenueBookingRequest.class);
+        when(bookingRequest.getVenueBookingApplication()).thenReturn(null);
 
         // Act & Assert
         assertThrows(NullPointerException.class, () -> repository.saveCommunityHallBooking(bookingRequest));
@@ -58,7 +58,7 @@ public class CommunityHallBookingRepositoryImplTest {
     @Test
     void testGetBookingDetails() {
         // Arrange
-        CommunityHallBookingSearchCriteria criteria = new CommunityHallBookingSearchCriteria();
+        VenueBookingSearchCriteria criteria = new VenueBookingSearchCriteria();
         List<Object> preparedStmtList = new ArrayList<>();
         String query = "SELECT * FROM bookings";
         when(queryBuilder.getCommunityHallBookingSearchQuery(criteria, preparedStmtList)).thenReturn(query);
@@ -66,7 +66,7 @@ public class CommunityHallBookingRepositoryImplTest {
             .thenReturn(new ArrayList<>());
 
         // Act
-        List<CommunityHallBookingDetail> result = repository.getBookingDetails(criteria);
+        List<VenueBookingDetail> result = repository.getBookingDetails(criteria);
 
         // Assert
         verify(jdbcTemplate).query(eq(query), any(Object[].class), eq(bookingRowmapper));
@@ -76,8 +76,8 @@ public class CommunityHallBookingRepositoryImplTest {
     @Test
     void testUpdateBookingWithNullApplication() {
         // Arrange
-        CommunityHallBookingRequest bookingRequest = mock(CommunityHallBookingRequest.class);
-        when(bookingRequest.getHallsBookingApplication()).thenReturn(null);
+        VenueBookingRequest bookingRequest = mock(VenueBookingRequest.class);
+        when(bookingRequest.getVenueBookingApplication()).thenReturn(null);
 
         // Act & Assert
         assertThrows(NullPointerException.class, () -> repository.updateBooking(bookingRequest));
