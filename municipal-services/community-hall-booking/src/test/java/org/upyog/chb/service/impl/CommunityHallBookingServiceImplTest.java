@@ -41,7 +41,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@Ignore("This test class is ignored due to the complexity of mocking all dependencies and the need for refactoring the service for better testability. It can be re-enabled after refactoring.")
+// @Ignore("This test class is ignored due to the complexity of mocking all dependencies and the need for refactoring the service for better testability. It can be re-enabled after refactoring.")
 public class CommunityHallBookingServiceImplTest {
 
     @InjectMocks
@@ -98,14 +98,14 @@ public class CommunityHallBookingServiceImplTest {
 
         // Mocking dependencies
         when(mdmsUtil.mDMSCall(any(RequestInfo.class), anyString())).thenReturn(new Object());
-        lenient().doNothing().when(hallBookingValidator).validateCreate(any(VenueBookingRequest.class), any(),"PARKS");
+        lenient().doNothing().when(hallBookingValidator)
+                .validateCreate(any(VenueBookingRequest.class), any(), eq("PARKS"));
         lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any(VenueBookingRequest.class));
-        // The original error was here. The encryptObject method should return the processed object, which is likely the request itself after encryption.
-        // The previous error indicated it was trying to return a CommunityHallBookingRequest where a CommunityHallBookingDetail was expected.
-        // Based on the error message, the method `encryptObject` for a `CommunityHallBookingRequest` was expected to return a `CommunityHallBookingRequest`.
+
         lenient().when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
                 .thenReturn(request.getVenueBookingApplication());
         lenient().when(demandService.createDemand(eq(request), any(), eq(true))).thenReturn(Collections.emptyList());
+
         lenient().doAnswer(invocation -> {
             VenueBookingRequest req = invocation.getArgument(0);
             req.getVenueBookingApplication().setBookingNo("BOOKING-123");

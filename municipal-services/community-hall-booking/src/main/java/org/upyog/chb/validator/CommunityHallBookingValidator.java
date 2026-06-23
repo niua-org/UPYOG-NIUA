@@ -75,8 +75,18 @@ public class CommunityHallBookingValidator {
 	 * @param mdmsData
 	 */
 	public void validateCreate(VenueBookingRequest bookingRequest, Object mdmsData,Object venueOTypeMasterData) {
-		log.info("validating master data for create booking request for applicant mobile no : "
-				+ bookingRequest.getVenueBookingApplication().getApplicantDetail().getApplicantMobileNo());
+		// Avoid NPEs in tests where applicant details may not be populated
+		String mobileNo = null;
+		try {
+			if (bookingRequest != null && bookingRequest.getVenueBookingApplication() != null
+					&& bookingRequest.getVenueBookingApplication().getApplicantDetail() != null) {
+				mobileNo = bookingRequest.getVenueBookingApplication().getApplicantDetail().getApplicantMobileNo();
+			}
+		} catch (Exception ex) {
+			// ignore
+		}
+		log.info("validating master data for create booking request for applicant mobile no : " + mobileNo);
+
 		if (!isSameHallCode(bookingRequest.getVenueBookingApplication().getBookingSlotDetails())) {
 			throw new CustomException(CommunityHallBookingConstants.MULTIPLE_HALL_CODES_ERROR,
 					"Booking of multiple halls are not allowed.");

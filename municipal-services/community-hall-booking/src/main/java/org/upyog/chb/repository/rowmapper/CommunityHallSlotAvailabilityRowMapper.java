@@ -60,6 +60,7 @@ public class CommunityHallSlotAvailabilityRowMapper implements ResultSetExtracto
 					.slotStaus(rs.getString("status"))
 					.tenantId(rs.getString("tenant_id"))
 					.build();
+
 			availabiltityDetails.add(availabiltityDetail);
 		}
 		return availabiltityDetails;

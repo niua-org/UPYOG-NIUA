@@ -427,8 +427,10 @@ public class CommunityHallBookingQueryBuilder {
 				&& StringUtils.isNotBlank(searchCriteria.getToTime())) {
 
 			builder.append(
-					" AND ecsd.booking_from_time < CAST(? AS TIME) " + " AND ecsd.booking_to_time > CAST(? AS TIME) ");
+					" AND ecsd.booking_to_time >= CAST(? AS TIME) "
+							+ " AND ecsd.booking_from_time <= CAST(? AS TIME) ");
 
+			// Placeholder order must match the query above
 			paramsList.add(searchCriteria.getToTime());
 			paramsList.add(searchCriteria.getFromTime());
 
@@ -442,6 +444,7 @@ public class CommunityHallBookingQueryBuilder {
 			builder.append(" AND ecsd.booking_from_time < CAST(? AS TIME) ");
 			paramsList.add(searchCriteria.getToTime());
 		}
+
 	}
 
 }

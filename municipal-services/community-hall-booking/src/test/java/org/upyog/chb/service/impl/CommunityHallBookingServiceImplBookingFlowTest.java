@@ -85,7 +85,9 @@ class CommunityHallBookingServiceImplBookingFlowTest {
 		var request = VenueBookingRequest.builder().requestInfo(citizenRequest).venueBookingApplication(detail)
 				.build();
 
-		when(mdmsUtil.mDMSCall(any(), eq("pg"))).thenReturn(new Object());
+		// Production passes (requestInfo, tenantId). tenantId here is "pg.citya".
+		when(mdmsUtil.mDMSCall(eq(citizenRequest), eq("pg.citya"))).thenReturn(new Object());
+
 		lenient().doNothing().when(hallBookingValidator).validateCreate(any(), any(),any());
 		lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any());
 		when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
