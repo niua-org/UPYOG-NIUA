@@ -1,0 +1,17 @@
+{
+  "moduleName": "COMMUNITY_HALL_BOOKING",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "COMMUNITY_HALL_BOOKING"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "COMMUNITY_HALL_BOOKING",
+      "role": "CHB_CEMP"
+    }
+  ]
+}

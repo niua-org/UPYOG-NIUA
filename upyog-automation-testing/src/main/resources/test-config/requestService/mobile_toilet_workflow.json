@@ -1,0 +1,21 @@
+{
+  "moduleName": "MOBILE_TOILET",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "MOBILE_TOILET"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "MOBILE_TOILET",
+      "role": "MTCEMP"
+    },
+    {
+      "type": "VENDOR",
+      "module": "MOBILE_TOILET"
+    }
+  ]
+}

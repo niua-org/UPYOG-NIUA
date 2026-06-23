@@ -76,4 +76,53 @@ public class ReportController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
+    @GetMapping("/list")
+    public ResponseEntity<String[]> getReports() {
+
+        File reportDir =
+                new File("target/reports");
+
+        File[] files =
+                reportDir.listFiles(
+                        (dir, name) ->
+                                name.startsWith("Execution_")
+                                        && name.endsWith(".html")
+                );
+
+        if (files == null) {
+            return ResponseEntity.ok(new String[0]);
+        }
+        Arrays.sort(
+                files,
+                Comparator.comparingLong(File::lastModified)
+                        .reversed()
+        );
+
+
+        String[] reportNames =
+                Arrays.stream(files)
+                        .map(File::getName)
+                        .toArray(String[]::new);
+
+        return ResponseEntity.ok(reportNames);
+    }
+
+    @GetMapping("/view/{fileName}")
+    public ResponseEntity<Resource> viewReport(
+            @PathVariable String fileName
+    ) {
+
+        File report =
+                new File(
+                        "target/reports/" + fileName
+                );
+
+        if (!report.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_HTML)
+                .body(new FileSystemResource(report));
+    }
 }

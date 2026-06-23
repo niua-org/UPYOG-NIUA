@@ -4,6 +4,7 @@ public class EmployeeData {
 
     private String username;
     private String password;
+    private String city;
 
     public EmployeeData() {
     }
@@ -22,5 +23,13 @@ public class EmployeeData {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 }

@@ -1,5 +1,5 @@
 {
-  "moduleName": "PET_REGISTRATION",
+  "moduleName": "WATER_TANKER",
 
   "citizen": {
     "mobile": "7906413996",
@@ -8,14 +8,14 @@
   },
 
   "employee": {
-
-    "username": "PET_CEMP",
+    "username": "WTCEMP",
     "password": "eGov@123",
     "city": "City A"
   },
 
   "vendor": {
-    "mobile": "",
-    "otp": ""
+    "mobile": "7000000000",
+    "otp": "123456",
+    "city": "City A"
   }
 }

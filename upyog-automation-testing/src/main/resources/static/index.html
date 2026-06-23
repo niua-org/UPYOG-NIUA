@@ -176,7 +176,7 @@
 <body>
     <div class="container">
         <h1>UPYOG Automation Testing Portal</h1>
-        
+
         <div class="tabs">
             <div class="tab active" onclick="switchTab('module')">Module Testing</div>
             <div class="tab" onclick="switchTab('citizen')">Citizen Testing</div>
@@ -250,6 +250,7 @@
                 <div id="moduleResult" class="result"></div>
             <div id="moduleReportButtons"
                  style="display:none; margin-top:15px;">
+                <div id="reportListContainer" style="margin-top:15px;"></div>
 
                 <button type="button"
                         onclick="viewLatestReport()">
@@ -602,7 +603,7 @@ const data = Object.fromEntries(formData);
 
 // Send comma-separated values to backend
 data.moduleName = selectedModules.join(",");
-            
+
             const resultDiv = document.getElementById('citizenResult');
             resultDiv.style.display = 'block';
             resultDiv.className = 'result';
@@ -613,7 +614,7 @@ data.moduleName = selectedModules.join(",");
 
             try {
                 window.open('http://65.0.8.57:8000', '_blank');
-                
+
                 const response = await fetch('/api/test/citizen', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -636,7 +637,7 @@ data.moduleName = selectedModules.join(",");
             e.preventDefault();
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
-            
+
             const resultDiv = document.getElementById('employeeResult');
             resultDiv.style.display = 'block';
             resultDiv.className = 'result';
@@ -862,12 +863,38 @@ document.addEventListener("click", function(e) {
 
         // Result Output
 
-        function viewLatestReport() {
+      async function viewLatestReport() {
 
-    window.open(
-        '/api/report/view',
-        '_blank'
-    );
+    const response =
+            await fetch('/api/report/list');
+
+    const reports =
+            await response.json();
+
+    let html = `
+        <h3>Available Reports</h3>
+    `;
+
+    reports.forEach(report => {
+
+        html += `
+            <div style="
+                margin:8px 0;
+                padding:8px;
+                border:1px solid #ddd;
+                border-radius:5px;
+            ">
+                <a href="/api/report/view/${report}"
+                   target="_blank">
+                    ${report}
+                </a>
+            </div>
+        `;
+    });
+
+    document.getElementById(
+            "reportListContainer"
+    ).innerHTML = html;
 }
 
 function downloadLatestReport() {

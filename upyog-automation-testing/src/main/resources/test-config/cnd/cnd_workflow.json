@@ -1,0 +1,21 @@
+{
+  "moduleName": "CONSTRUCTION_AND_DEMOLITION",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "CONSTRUCTION_AND_DEMOLITION"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "CONSTRUCTION_AND_DEMOLITION",
+      "role": "CND_SUPERUSER"
+    },
+    {
+      "type": "VENDOR",
+      "module": "CONSTRUCTION_AND_DEMOLITION"
+    }
+  ]
+}

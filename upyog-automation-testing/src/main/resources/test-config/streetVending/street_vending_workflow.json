@@ -1,0 +1,17 @@
+{
+  "moduleName": "STREET_VENDING",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "STREET_VENDING"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "STREET_VENDING",
+      "role": "SV_EMP"
+    }
+  ]
+}

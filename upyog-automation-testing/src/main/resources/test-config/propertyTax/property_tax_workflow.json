@@ -1,0 +1,17 @@
+{
+  "moduleName": "PROPERTY_TAX",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "PROPERTY_TAX"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "PROPERTY_TAX",
+      "role": "PTEMP"
+    }
+  ]
+}

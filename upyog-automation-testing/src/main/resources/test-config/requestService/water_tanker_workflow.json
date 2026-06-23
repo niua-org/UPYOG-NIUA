@@ -1,0 +1,21 @@
+{
+  "moduleName": "WATER_TANKER",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "WATER_TANKER"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "WATER_TANKER",
+      "role": "WTCEMP"
+    },
+    {
+      "type": "VENDOR",
+      "module": "WATER_TANKER"
+    }
+  ]
+}

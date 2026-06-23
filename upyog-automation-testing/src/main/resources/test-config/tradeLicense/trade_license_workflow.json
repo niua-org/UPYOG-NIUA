@@ -1,0 +1,17 @@
+{
+  "moduleName": "TRADE_LICENSE",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "TRADE_LICENSE"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "TRADE_LICENSE",
+      "role": "TLEMP"
+    }
+  ]
+}

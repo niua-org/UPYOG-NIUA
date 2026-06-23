@@ -1,4 +1,5 @@
 package org.upyog.Automation.config;
+import java.util.Map;
 
 public class ModuleData {
 
@@ -9,6 +10,8 @@ public class ModuleData {
     private EmployeeData employee;
 
     private VendorData vendor;
+
+    private Map<String, EmployeeData> employees;
 
     public ModuleData() {
     }
@@ -29,8 +32,20 @@ public class ModuleData {
         this.citizen = citizen;
     }
 
-    public EmployeeData getEmployee() {
-        return employee;
+    public EmployeeData getEmployeeByRole(String role) {
+
+        if (employees != null &&
+                employees.containsKey(role)) {
+
+            return employees.get(role);
+        }
+
+        if (employee != null) {
+
+            return employee;
+        }
+
+        return null;
     }
 
     public void setEmployee(EmployeeData employee) {
@@ -43,5 +58,13 @@ public class ModuleData {
 
     public void setVendor(VendorData vendor) {
         this.vendor = vendor;
+    }
+
+    public Map<String, EmployeeData> getEmployees() {
+        return employees;
+    }
+
+    public void setEmployees(Map<String, EmployeeData> employees) {
+        this.employees = employees;
     }
 }

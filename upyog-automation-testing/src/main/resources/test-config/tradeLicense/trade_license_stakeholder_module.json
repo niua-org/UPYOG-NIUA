@@ -1,5 +1,5 @@
 {
-  "moduleName": "PET_REGISTRATION",
+  "moduleName": "TRADE_LICENSE",
 
   "citizen": {
     "mobile": "7906413996",
@@ -8,8 +8,7 @@
   },
 
   "employee": {
-
-    "username": "PET_CEMP",
+    "username": "TLCEMP",
     "password": "eGov@123",
     "city": "City A"
   },

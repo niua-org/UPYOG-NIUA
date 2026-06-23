@@ -1,5 +1,5 @@
 {
-  "moduleName": "PET_REGISTRATION",
+  "moduleName": "PUBLIC_GRIEVANCE_REDRESSAL",
 
   "citizen": {
     "mobile": "7906413996",
@@ -8,10 +8,8 @@
   },
 
   "employee": {
-
-    "username": "PET_CEMP",
-    "password": "eGov@123",
-    "city": "City A"
+    "username": "UPYOGADMIN",
+    "password": "eGov@123"
   },
 
   "vendor": {

@@ -5,38 +5,84 @@ import com.aventstack.extentreports.ExtentTest;
 
 public class ReportManager {
 
-    private static final ExtentReports extent =
-            ExtentManager.getInstance();
+    private static ExtentReports extent;
 
-    private static final ThreadLocal<ExtentTest> test =
-            new ThreadLocal<>();
+    private static ExtentTest test;
 
-    public static void startTest(String moduleName) {
+    public static void startTest(
+            String reportName,
+            String testName
+    ) {
 
-        ExtentTest extentTest =
-                extent.createTest(moduleName);
+        extent =
+                ExtentManager.getInstance(
+                        reportName
+                );
 
-        test.set(extentTest);
+        test =
+                extent.createTest(
+                        testName
+                );
+
+        System.out.println(
+                "REPORT INSTANCE = " + extent
+        );
+
+        System.out.println(
+                "TEST INSTANCE = " + test
+        );
     }
 
     public static ExtentTest getTest() {
-        return test.get();
+        return test;
     }
 
     public static boolean hasActiveTest() {
-        return test.get() != null;
+        return test != null;
+    }
+
+    public static void clearTest() {
+        test = null;
     }
 
     public static void flush() {
-        extent.flush();
+
+        if (extent != null) {
+            extent.flush();
+        }
     }
 
     public static void logStep(String stepName) {
 
+        System.out.println(
+                "LOG STEP CALLED = " + stepName
+        );
+
         ExtentTest extentTest = getTest();
+
+        System.out.println(
+                "CURRENT TEST = " + extentTest
+        );
 
         if (extentTest != null) {
             extentTest.pass(stepName);
+        }
+    }
+    public static void logFlow(String flowName) {
+
+        ExtentTest extentTest = getTest();
+
+        if (extentTest != null) {
+
+            extentTest.info(
+                    "===================="
+            );
+
+            extentTest.info(flowName);
+
+            extentTest.info(
+                    "===================="
+            );
         }
     }
 }

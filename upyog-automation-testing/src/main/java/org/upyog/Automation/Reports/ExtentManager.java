@@ -11,11 +11,15 @@ public class ExtentManager {
 
     private static ExtentReports extent;
 
-    public static synchronized ExtentReports getInstance() {
+    public static synchronized ExtentReports getInstance(
+            String reportName
+    ) {
 
         if (extent == null) {
 
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+            String timestamp = new SimpleDateFormat(
+                    "yyyyMMdd_HHmmss_SSS"
+            )
                     .format(new Date());
 
             String reportsDir =
@@ -24,10 +28,17 @@ public class ExtentManager {
 
             new File(reportsDir).mkdirs();
 
-            String reportPath = reportsDir
-                    + "/Execution_"
-                    + timestamp
-                    + ".html";
+            String reportPath =
+                    reportsDir
+                            + "/Execution_"
+                            + reportName
+                            + "_"
+                            + timestamp
+                            + ".html";
+            System.out.println(
+                    "Creating Report At : "
+                            + reportPath
+            );
 
             ExtentSparkReporter spark =
                     new ExtentSparkReporter(reportPath);
@@ -60,5 +71,8 @@ public class ExtentManager {
         }
 
         return extent;
+    }
+    public static synchronized void reset() {
+        extent = null;
     }
 }

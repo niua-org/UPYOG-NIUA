@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.Automation.Common.CommonVendorTest;
+import org.upyog.Automation.Reports.ExtentManager;
+import org.upyog.Automation.Reports.ReportManager;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 
 @Service
@@ -23,6 +25,17 @@ public class VendorTestService {
             String otp,
             String cityName,
             String applicationNumber) {
+
+        final boolean standaloneRun =
+                !ReportManager.hasActiveTest();
+
+        if (standaloneRun) {
+
+            ReportManager.startTest(
+                    moduleName,
+                    moduleName
+            );
+        }
 
         WorkflowDataStore.put("selected.mobile", mobileNumber);
         WorkflowDataStore.put("selected.otp", otp);
@@ -49,10 +62,24 @@ public class VendorTestService {
                         applicationNumber
                 );
             } catch (Exception e) {
+
                 logger.error("Error in vendor test", e);
             }
+            finally {
+
+                if (standaloneRun) {
+
+                    ReportManager.flush();
+
+                    ReportManager.clearTest();
+
+                    ExtentManager.reset();
+                }
+            }
+
         }).start();
 
         return moduleName + " vendor test started successfully.";
     }
+
 }

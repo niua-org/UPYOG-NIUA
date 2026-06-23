@@ -40,9 +40,10 @@ public class ModuleWrapper {
     private static void runModule(String moduleName,
                                   Runnable moduleLogic) {
 
-        if (!ReportManager.hasActiveTest()) {
-            ReportManager.startTest(moduleName);
-        }
+        System.out.println(
+                "MODULE WRAPPER TEST = "
+                        + ReportManager.getTest()
+        );
 
         logger.info("============================");
         logger.info("STARTING: {}", moduleName);
@@ -56,15 +57,19 @@ public class ModuleWrapper {
 
             logger.info("PASSED: {}", moduleName);
 
-            ReportManager.getTest()
-                    .pass("Module Executed Successfully");
+            ReportManager.logStep(
+                    "PASSED : " + moduleName
+            );
 
         } catch (Exception e) {
 
             logger.error("FAILED: " + moduleName, e);
 
-            ReportManager.getTest()
-                    .fail(e);
+            ReportManager.logStep(
+                    "FAILED : " + moduleName
+            );
+
+            throw e;
 
         } finally {
 
@@ -76,8 +81,6 @@ public class ModuleWrapper {
             logger.info("============================");
             logger.info("FINISHED: {}", moduleName);
             logger.info("============================");
-
-            //ReportManager.flush();
         }
     }
 }

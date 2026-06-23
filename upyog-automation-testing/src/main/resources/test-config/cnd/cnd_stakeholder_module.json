@@ -1,5 +1,5 @@
 {
-  "moduleName": "PET_REGISTRATION",
+  "moduleName": "CONSTRUCTION_AND_DEMOLITION",
 
   "citizen": {
     "mobile": "7906413996",
@@ -8,14 +8,14 @@
   },
 
   "employee": {
-
-    "username": "PET_CEMP",
+    "username": "CND_SUPERUSER",
     "password": "eGov@123",
     "city": "City A"
   },
 
   "vendor": {
-    "mobile": "",
-    "otp": ""
+    "mobile": "9000000001",
+    "otp": "123456",
+    "city": "City A"
   }
 }

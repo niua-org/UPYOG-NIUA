@@ -3,13 +3,9 @@ package org.upyog.Automation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.Automation.Controller.ModuleTestController;
-import org.upyog.Automation.Utils.JsonConfigLoader;
-import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.upyog.Automation.Reports.ReportManager;
-import org.upyog.Automation.config.ModuleData;
-import org.upyog.Automation.config.StakeholderConfigLoader;
+
 
 @Service
 public class ModuleTestService {
@@ -18,10 +14,7 @@ public class ModuleTestService {
             LoggerFactory.getLogger(ModuleTestService.class);
 
     @Autowired
-    private CitizenTestService citizenTestService;
-
-    @Autowired
-    private EmployeeTestService employeeTestService;
+    private WorkflowExecutor workflowExecutor;
 
     public String runModule(ModuleTestController.ModuleRequest request) {
 
@@ -29,96 +22,94 @@ public class ModuleTestService {
 
         String citizenUrl = request.getBaseUrl();
 
-        String employeeUrl =
-                citizenUrl.replace(
-                        "/citizen/login",
-                        "/employee/login"
-                );
-
         System.out.println(
                 "Module Received: " + moduleName
         );
 
+        if (moduleName.contains(",")) {
+
+            String[] modules = moduleName.split(",");
+
+            for (String module : modules) {
+
+                System.out.println(
+                        "RUNNING MODULE = "
+                                + module
+                );
+
+                executeSingleModule(
+                        module.trim(),
+                        citizenUrl
+                );
+                System.out.println(
+                        "COMPLETED MODULE = "
+                                + module
+                );
+            }
+
+            return "Multiple Workflows Executed";
+        }
+
+        return executeSingleModule(
+                moduleName,
+                citizenUrl
+        );
+    }
+
+    private String executeSingleModule(
+            String moduleName,
+            String citizenUrl
+    ) {
+
         switch (moduleName.toUpperCase()) {
 
+            case "DESLUDGING_SERVICE":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/desludging/desludging_workflow.json",
+                        "test-config/desludging/desludging_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
             case "PET_REGISTRATION":
-                ModuleData moduleData =
-                        StakeholderConfigLoader.load(
-                                "test-config/pet/pet_stakeholder_module.json"
-                        );
 
-                logger.info(
-                        "Citizen Mobile : {}",
-                        moduleData.getCitizen().getMobile()
+                workflowExecutor.executeWorkflow(
+                        "test-config/pet/pet_workflow.json",
+                        "test-config/pet/pet_stakeholder_module.json",
+                        citizenUrl
                 );
 
-                logger.info(
-                        "Employee Username : {}",
-                        moduleData.getEmployee().getUsername()
+                return "Workflow Executed";
+
+            case "EWASTE_MANAGEMENT_SYSTEM":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/ewaste/ewaste_workflow.json",
+                        "test-config/ewaste/ewaste_stakeholder_module.json",
+                        citizenUrl
                 );
 
-                if (moduleData == null) {
-                    return "No configuration found for PET_REGISTRATION";
-                }
+                return "Workflow Executed";
 
-                // Step 1 Citizen
-                ReportManager.startTest("Pet Registration - Full Flow");
+            case "WATER_TANKER":
 
-                ReportManager.logStep("CITIZEN FLOW STARTED");
-
-                logger.info("CITIZEN FLOW STARTED");
-                citizenTestService.runCitizenSideTest(
-                        citizenUrl,
-                        "PET_REGISTRATION",
-                        moduleData.getCitizen().getMobile(),
-                        moduleData.getCitizen().getOtp(),
-                        moduleData.getCitizen().getCity(),
-                        null
-                );
-                ReportManager.logStep("CITIZEN FLOW COMPLETED");
-
-                logger.info("CITIZEN FLOW COMPLETED");
-
-                // Step 2 Get Application Number
-                String applicationNo =
-                        WorkflowDataStore.get("APPLICATION_NO");
-
-                logger.info(
-                        "APPLICATION_NO = {}",
-                        applicationNo
+                workflowExecutor.executeWorkflow(
+                        "test-config/requestService/water_tanker_workflow.json",
+                        "test-config/requestService/water_tanker_stakeholder_module.json",
+                        citizenUrl
                 );
 
-                ReportManager.logStep(
-                        "Application Number : " + applicationNo
-                );
+                return "Workflow Executed";
 
-                // Safety Check
-                if (applicationNo == null || applicationNo.isEmpty()) {
-                    return "Application Number not captured";
-                }
-
-                // Step 3 Employee
-                ReportManager.logStep("EMPLOYEE FLOW STARTED");
-
-                logger.info("EMPLOYEE FLOW STARTED");
-                employeeTestService.runEmployeeTest(
-                        employeeUrl,
-                        "PET_REGISTRATION",
-                        moduleData.getEmployee().getUsername(),
-                        moduleData.getEmployee().getPassword(),
-                        applicationNo
-                );
-                ReportManager.logStep("EMPLOYEE FLOW COMPLETED");
-
-                logger.info("EMPLOYEE FLOW COMPLETED");
-
-                ReportManager.flush();
-
-                return "PET Module Citizen + Employee Flow Started";
             default:
 
-                System.out.println("DEFAULT CASE HIT");
+                System.out.println(
+                        "DEFAULT CASE HIT : " + moduleName
+                );
+
+                return "Unsupported Module : " + moduleName;
         }
-        return "Unsupported Module : " + moduleName;
     }
 }

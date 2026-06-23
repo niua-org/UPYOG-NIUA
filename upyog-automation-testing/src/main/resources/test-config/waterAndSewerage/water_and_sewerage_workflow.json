@@ -1,0 +1,23 @@
+{
+  "moduleName": "WATER_AND_SEWERAGE",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "WATER_AND_SEWERAGE"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "WATER",
+      "role": "UPYOGADMIN"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "SEWERAGE",
+      "role": "UPYOGADMIN"
+    }
+  ]
+}

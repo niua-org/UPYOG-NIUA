@@ -23,6 +23,16 @@ public class LoginHelper {
 
         driver.get(baseUrl);
 
+        System.out.println(
+                "CURRENT URL = "
+                        + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+                "PAGE TITLE = "
+                        + driver.getTitle()
+        );
+
         // ==========================
         // MOBILE
         // ==========================

@@ -10,7 +10,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/module")
-@CrossOrigin(origins = "*")
 public class ModuleTestController {
 
     @Autowired

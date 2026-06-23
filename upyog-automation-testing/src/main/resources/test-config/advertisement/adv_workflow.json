@@ -1,0 +1,17 @@
+{
+  "moduleName": "ADVERTISEMENT",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "ADVERTISEMENT"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "ADVERTISEMENT",
+      "role": "ADS_CEMP"
+    }
+  ]
+}

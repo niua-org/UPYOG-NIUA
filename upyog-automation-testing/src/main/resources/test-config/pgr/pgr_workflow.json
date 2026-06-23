@@ -1,0 +1,17 @@
+{
+  "moduleName": "PUBLIC_GRIEVANCE_REDRESSAL",
+
+  "steps": [
+
+    {
+      "type": "CITIZEN",
+      "module": "PUBLIC_GRIEVANCE_REDRESSAL"
+    },
+
+    {
+      "type": "EMPLOYEE",
+      "module": "PUBLIC_GRIEVANCE_REDRESSAL",
+      "role": "UPYOGADMIN"
+    }
+  ]
+}

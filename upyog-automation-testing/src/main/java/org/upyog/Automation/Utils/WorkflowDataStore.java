@@ -30,4 +30,7 @@ public class WorkflowDataStore {
 
         store.clear();
     }
+
+    public static void remove(String applicationNo) {
+    }
 }
