@@ -7,7 +7,7 @@ import CNDApplicationTimeLine from "../../components/CNDApplicationTimeLine";
 import ApplicationTable from "../../components/inbox/ApplicationTable";
 import cndAcknowledgementData from "../../utils/cndAcknowledgementData";
 import { cndStyles } from "../../utils/cndStyles";
-import "../../css/cnd-inline-auto.css";
+import "../../css/cnd-inline-auto.scss";
 import { CNDDocumnetPreview, getOrderDocuments } from "../../utils";
 
 

@@ -69,7 +69,7 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, optionKey, pla
         {dropdownStatus && (
           <div className="server" id="jk-dropdown-unique">
             {options.map((option, index) => (
-              <div key={index} className="option-item" style={index % 2 !== 0 ? { background: "#EEEEEE" } : {}}>
+              <div key={index} className={`option-item ${index % 2 !== 0 ? "cnd-multi-select-dropdown-zebra" : ""}`}>
                 <input
                   type="checkbox"
                   value={option[optionKey]}
@@ -78,7 +78,7 @@ const MultiSelectDropdown = ({ options, selectedValues, onChange, optionKey, pla
                   className="cnd-multi-select-dropdown-input"
                 />
                 <div className="custom-checkbox">
-                  <CheckSvg style={{ innerWidth: "24px", width: "24px" }} />
+                  <CheckSvg className="cnd-multi-select-dropdown-checkmark" />
                 </div>
                 <p className="label">{t(option[optionKey])}</p>
               </div>

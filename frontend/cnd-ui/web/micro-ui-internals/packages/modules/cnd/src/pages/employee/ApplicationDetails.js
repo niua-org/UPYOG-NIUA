@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
 import cndAcknowledgementData from "../../utils/cndAcknowledgementData";
 import { cndStyles } from "../../utils/cndStyles";
-import "../../css/cnd-inline-auto.css";
+import "../../css/cnd-inline-auto.scss";
 
 /**
 * ApplicationDetails component displays the details of a CND application

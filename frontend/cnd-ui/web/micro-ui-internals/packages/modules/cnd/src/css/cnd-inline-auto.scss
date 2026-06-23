@@ -170,6 +170,10 @@
 }
 
 /* pageComponents/MultiSelectDropdown.js */
+.cnd-multi-select-dropdown-checkmark {
+  width: 24px;
+}
+
 .cnd-multi-select-dropdown-container {
   width: 58%;
   margin-bottom: 25px;
@@ -178,6 +182,10 @@
 .cnd-multi-select-dropdown-input {
   min-width: 24px;
   width: 100%;
+}
+
+.cnd-multi-select-dropdown-zebra {
+  background-color: #eeeeee;
 }
 
 /* pageComponents/PickupArrivalDetails.js */
