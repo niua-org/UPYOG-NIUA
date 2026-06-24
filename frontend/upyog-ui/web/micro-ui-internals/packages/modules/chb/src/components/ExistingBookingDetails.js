@@ -53,11 +53,13 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
     tenantId:tenantId,
     filters: {
       bookingId:"",
-      communityHallCode:Searchdata.communityHallCode,
+      venueCode:Searchdata.venueCode,
       bookingStartDate:Searchdata.bookingStartDate,
       bookingEndDate:Searchdata.bookingEndDate,
-      hallCode:Searchdata.hallCode,
+      unitCode:Searchdata.unitCode,
       isTimerRequired:true,
+      fromTime: Searchdata.fromTime,
+      toTime: Searchdata.toTime
     },
     enabled:false,
   });

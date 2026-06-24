@@ -1,0 +1,99 @@
+import React, { useState, useEffect } from 'react';
+import { Modal, CardLabel, CardLabelDesc, CardSubHeader } from "@nudmcdgnpm/digit-ui-react-components";
+
+// Close button component
+const Close = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFFFFF">
+    <path d="M0 0h24v24H0V0z" fill="none" />
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+  </svg>
+);
+
+const CloseBtn = (props) => {
+  return (
+    <div className="icon-bg-secondary" onClick={props.onClick}>
+      <Close />
+    </div>
+  );
+};
+
+
+const VenueDetails = ({ hallId,venueData, setShowDetails }) => {
+ 
+  const handleClosePopup = () => {
+    setShowDetails(false);
+  };
+
+  const renderList = (text) => {
+    return text
+      .split('\n')
+      .filter(line => line.trim() !== '')
+      .map((line, index) => <li key={index} style={{ marginBottom: '10px' }}>{line.trim()}</li>);
+  };
+
+  return (
+    <div>
+      {venueData && (
+        <Modal
+          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '35px' }}>Community Hall Details</CardSubHeader>}
+          headerBarEnd={<CloseBtn onClick={handleClosePopup} />}
+          popupStyles={{ backgroundColor: "#fff", position: 'relative', width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto' }}
+          children={
+            <div style={{ padding: '15px', paddingTop: '1px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ flex: '1 1 45%' }}>
+                  <CardLabel style={{ fontSize: '20px' }}>Name</CardLabel>
+                  <CardLabelDesc>{venueData.value}</CardLabelDesc>
+                </div>
+                <div style={{ flex: '1 1 45%' }}>
+                  <CardLabel style={{ fontSize: '20px' }}>Geo Location</CardLabel>
+                  <CardLabelDesc>{venueData.geoLocation}</CardLabelDesc>
+                </div>
+                <div style={{ flex: '1 1 45%' }}>
+                  <CardLabel style={{ fontSize: '20px' }}>Address</CardLabel>
+                  <CardLabelDesc>{venueData.address}</CardLabelDesc>
+                </div>
+                <div style={{ flex: '1 1 45%' }}>
+                  <CardLabel style={{ fontSize: '20px' }}>Contact Details</CardLabel>
+                  <CardLabelDesc>{venueData.contactDetails}</CardLabelDesc>
+                </div>
+                <div style={{ flex: '1 1 45%' }}>
+                  <CardLabel style={{ fontSize: '20px' }}>Description</CardLabel>
+                  <CardLabelDesc>{venueData.venueDescription}</CardLabelDesc>
+                </div>
+                {/* <div style={{ flex: '1 1 45%' }}>
+                  <CardLabel style={{ fontSize: '20px' }}>Type</CardLabel>
+                  <CardLabelDesc>{venueData.type}</CardLabelDesc>
+                </div> */}
+              </div>
+              <CardLabel style={{ fontSize: '20px', marginTop: '10px' }}>Terms and Conditions</CardLabel>
+              <CardLabelDesc>
+                <ul>{renderList(venueData.termsAndCondition)}</ul>
+              </CardLabelDesc>
+            </div>
+          }
+          actionCancelLabel={null}  // Hide Cancel button
+          actionCancelOnSubmit={null}  // No action for Cancel
+          actionSaveLabel={null}  // Hide Save button
+          actionSaveOnSubmit={null}  // No action for Save
+          actionSingleLabel={null}  // Hide Submit button
+          actionSingleSubmit={null}  // No action for Submit
+          error={null}
+          setError={() => {}}
+          formId="modalForm"
+          isDisabled={false}
+          hideSubmit={true}  // Ensure submit is hidden
+          style={{}}
+          popupModuleMianStyles={{ padding: "10px" }}
+          headerBarMainStyle={{ position: "sticky",top: 0,backgroundColor: "#f5f5f5" }}
+          isOBPSFlow={false}
+          popupModuleActionBarStyles={{ display: 'none' }}  // Hide Action Bar
+          isOpen={true}  // Pass isOpen prop
+          onClose={handleClosePopup}  // Pass onClose prop
+        />
+      )}
+    </div>
+  );
+};
+
+export default VenueDetails;
