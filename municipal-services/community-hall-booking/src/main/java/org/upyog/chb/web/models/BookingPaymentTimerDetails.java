@@ -1,7 +1,6 @@
 package org.upyog.chb.web.models;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

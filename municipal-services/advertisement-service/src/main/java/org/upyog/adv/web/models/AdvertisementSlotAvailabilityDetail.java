@@ -1,6 +1,5 @@
 package org.upyog.adv.web.models;
 
-import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -43,9 +42,6 @@ public class AdvertisementSlotAvailabilityDetail {
 	
 	private String bookingEndDate;
 
-//	private String fromTime;
-//
-//	private String toTime;
 
 	private String tenantId;
 

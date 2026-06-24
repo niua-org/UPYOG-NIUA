@@ -16,38 +16,101 @@ public final class PaymentTimerKeyBuilder {
 	private PaymentTimerKeyBuilder() {
 	}
 
-	/** One Redis key per timer row (matches DB uniqueness: hall + booking code + date+time). */
-	public static String toRedisTimerRowKey(BookingPaymentTimerDetails detail,String startTime , String endTime) {
-		return toRedisTimerRowKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
-				detail.getBookingDate(), startTime , endTime,detail.getBookingId());
+	/**
+	 * Builds a Redis timer-row key from {@link BookingPaymentTimerDetails}.
+	 * One key per timer row (matches DB uniqueness: hall + booking code + date+time).
+	 *
+	 * @param detail timer row attributes (tenant, venue, unit, booking date/id)
+	 * @param slotStartTime slot start time segment used in the key
+	 * @param slotEndTime slot end time segment used in the key
+	 * @return Redis key for the payment timer row
+	 */
+	public static String toRedisTimerRowKey(BookingPaymentTimerDetails detail, String slotStartTime, String slotEndTime) {
+		validate(detail.getTenantId(), detail.getVenuecode(), detail.getCode(), detail.getBookingDate(),
+				detail.getBookingId());
+		return REDIS_TIMER_PREFIX + String.join(":", detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
+				detail.getBookingDate().toString(), detail.getBookingId(), slotStartTime, slotEndTime);
 	}
 
+	/**
+	 * Builds a Redis timer-row key from explicit timer attributes.
+	 *
+	 * @param tenantId tenant identifier
+	 * @param communityHallCode parent venue/community hall code
+	 * @param hallCode booked unit/hall code
+	 * @param bookingDate booking date
+	 * @param bookingId booking or draft reference id
+	 * @param startTime slot start time segment used in the key
+	 * @param endTime slot end time segment used in the key
+	 * @return Redis key for the payment timer row
+	 * @throws IllegalArgumentException when required key parts are blank or null
+	 */
 	public static String toRedisTimerRowKey(String tenantId, String communityHallCode, String hallCode,
-			LocalDate bookingDate, String bookingId,String startTime , String endTime) {
+			LocalDate bookingDate, String bookingId, String startTime, String endTime) {
 		validate(tenantId, communityHallCode, hallCode, bookingDate, bookingId);
 		return REDIS_TIMER_PREFIX + String.join(":", tenantId, communityHallCode, hallCode, bookingDate.toString(),
-				bookingId,startTime, endTime);
+				bookingId, startTime, endTime);
 	}
 
-	/** Slot hold key (tenant + hall + date) — prevents double booking on the same physical slot. */
-	public static String toRedisSlotKey(BookingPaymentTimerDetails detail,String startTime , String endTime) {
-		return toRedisSlotKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
-				detail.getBookingDate(),startTime , endTime);
+	/**
+	 * Builds a Redis slot-hold key from {@link BookingPaymentTimerDetails}.
+	 * Slot holds prevent double booking on the same physical slot (tenant + hall + date + time).
+	 *
+	 * @param detail timer row attributes (tenant, venue, unit, booking date)
+	 * @param startTime slot start time segment used in the key
+	 * @param endTime slot end time segment used in the key
+	 * @return Redis key used to hold a slot during payment timer
+	 */
+	public static String toRedisSlotKey(BookingPaymentTimerDetails detail, String startTime, String endTime) {
+		return toRedisSlotKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(), detail.getBookingDate(),
+				startTime, endTime);
 	}
 
-	public static String toRedisSlotKey(String tenantId, String communityHallCode, String hallCode,
-			LocalDate bookingDate,String startTime , String endTime) {
+	/**
+	 * Builds a Redis slot-hold key from explicit slot attributes.
+	 *
+	 * @param tenantId tenant identifier
+	 * @param communityHallCode parent venue/community hall code
+	 * @param hallCode booked unit/hall code
+	 * @param bookingDate booking date
+	 * @param startTime slot start time segment used in the key
+	 * @param endTime slot end time segment used in the key
+	 * @return Redis key used to hold a slot during payment timer
+	 * @throws IllegalArgumentException when required key parts are blank or null
+	 */
+	public static String toRedisSlotKey(String tenantId, String communityHallCode, String hallCode, LocalDate bookingDate,
+			String startTime, String endTime) {
 		if (StringUtils.isBlank(tenantId) || StringUtils.isBlank(communityHallCode) || StringUtils.isBlank(hallCode)
 				|| bookingDate == null || startTime == null || endTime == null) {
 			throw new IllegalArgumentException("tenantId, communityHallCode, hallCode and bookingDate are required");
 		}
-		return REDIS_SLOT_PREFIX + String.join(":", tenantId, communityHallCode, hallCode, bookingDate.toString(),startTime , endTime);
+		return REDIS_SLOT_PREFIX + String.join(":", tenantId, communityHallCode, hallCode, bookingDate.toString(),
+				startTime, endTime);
 	}
 
+	/**
+	 * Serializes the Redis value stored for a timer or slot hold.
+	 *
+	 * @param createdBy UUID of the user who created the timer hold
+	 * @param bookingId booking or draft reference id
+	 * @return value in the form {@code createdBy|bookingId}
+	 */
 	public static String toRedisValue(String createdBy, String bookingId) {
 		return createdBy + "|" + bookingId;
 	}
 
+	/**
+	 * Creates a {@link BookingPaymentTimerDetails} instance for timer persistence and Redis mirroring.
+	 *
+	 * @param tenantId tenant identifier
+	 * @param communityHallCode parent venue/community hall code
+	 * @param hallCode booked unit/hall code
+	 * @param bookingDate booking date
+	 * @param bookingId booking or draft reference id
+	 * @param userId UUID of the user creating the timer
+	 * @param createdTime creation timestamp in epoch milliseconds
+	 * @return populated timer details with {@code ACTIVE} status
+	 */
 	public static BookingPaymentTimerDetails toTimerDetails(String tenantId, String communityHallCode, String hallCode,
 			LocalDate bookingDate, String bookingId, String userId, long createdTime) {
 		var details = new BookingPaymentTimerDetails();

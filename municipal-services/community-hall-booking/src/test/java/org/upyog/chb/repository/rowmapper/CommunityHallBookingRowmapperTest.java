@@ -34,7 +34,7 @@ class CommunityHallBookingRowmapperTest {
         when(resultSet.getString("booking_id")).thenReturn("B001");
         when(resultSet.getString("booking_no")).thenReturn("BN001");
         when(resultSet.getString("tenant_id")).thenReturn("T001");
-        when(resultSet.getString("community_hall_code")).thenReturn("CH001");
+        when(resultSet.getString("venue_code")).thenReturn("CH001");
         when(resultSet.getString("booking_status")).thenReturn("CONFIRMED");
         when(resultSet.getString("special_category")).thenReturn("CATEGORY1");
         when(resultSet.getString("purpose")).thenReturn("Wedding");

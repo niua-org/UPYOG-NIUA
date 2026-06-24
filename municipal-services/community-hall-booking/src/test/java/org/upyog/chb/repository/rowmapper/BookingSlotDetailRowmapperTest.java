@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Month;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,7 +46,7 @@ class BookingSlotDetailRowmapperTest {
 
         try (var mockedUtil = mockStatic(CommunityHallBookingUtil.class)) {
             mockedUtil.when(() -> CommunityHallBookingUtil.parseStringToLocalDate("2023-11-01"))
-                    .thenReturn(LocalDate.of(2023, 11, 1));
+                    .thenReturn(LocalDate.of(2023, Month.NOVEMBER, 1));
             mockedUtil.when(() -> CommunityHallBookingUtil.getAuditDetails(resultSet))
                     .thenReturn(null);
 
@@ -59,7 +60,7 @@ class BookingSlotDetailRowmapperTest {
             assertEquals("slot1", slotDetail.getSlotId());
             assertEquals("booking1", slotDetail.getBookingId());
             assertEquals("hall1", slotDetail.getUnitCode());
-            assertEquals(LocalDate.of(2023, 11, 1), slotDetail.getBookingDate());
+            assertEquals(LocalDate.of(2023, Month.NOVEMBER, 1), slotDetail.getBookingDate());
             assertEquals(LocalTime.of(10, 0), slotDetail.getBookingFromTime());
             assertEquals(LocalTime.of(12, 0), slotDetail.getBookingToTime());
             assertEquals("CONFIRMED", slotDetail.getStatus());

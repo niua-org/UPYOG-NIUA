@@ -44,7 +44,14 @@ import org.upyog.chb.web.models.VenueSlotAvailabilityDetail;
 @Component
 public class CommunityHallSlotAvailabilityRowMapper implements ResultSetExtractor<List<VenueSlotAvailabilityDetail>> {
 
+	/**
+	 * Maps slot availability rows for the queried tenant, venue, and date window.
+	 *
+	 * @param rs JDBC result set positioned before the first row
+	 * @return slot availability rows, never {@code null}
+	 */
 	@Override
+	@SuppressWarnings("java:S2638")
 	public List<VenueSlotAvailabilityDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
 		List<VenueSlotAvailabilityDetail> availabiltityDetails = new ArrayList<>();
 		while (rs.next()) {
@@ -60,6 +67,7 @@ public class CommunityHallSlotAvailabilityRowMapper implements ResultSetExtracto
 					.slotStaus(rs.getString("status"))
 					.tenantId(rs.getString("tenant_id"))
 					.build();
+
 			availabiltityDetails.add(availabiltityDetail);
 		}
 		return availabiltityDetails;

@@ -26,6 +26,9 @@ import java.math.BigDecimal;
 
 public class CommunityHallBookingConstants {
 
+	private CommunityHallBookingConstants() {
+	}
+
 	public static final String COMMUNITY_HALL_BOOKING_INIT_CREATED = "Your community hall booking details saved successfully";
 	
 	public static final String COMMUNITY_HALL_BOOKING_CREATED = "Your community hall booking created successfully";

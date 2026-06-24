@@ -4,10 +4,8 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.enums.BookingStatusEnum;
@@ -82,14 +80,16 @@ import io.swagger.v3.oas.annotations.Parameter;
 @RequestMapping("/booking")
 public class CommunityHallBookingController {
 
-	@Autowired
-	private CommunityHallBookingService bookingService;
-	
-	@Autowired
-	private DemandService demandService;
-	
-	@Autowired
-	private SchedulerService schedulerService;
+	private final CommunityHallBookingService bookingService;
+	private final DemandService demandService;
+	private final SchedulerService schedulerService;
+
+	public CommunityHallBookingController(CommunityHallBookingService bookingService, DemandService demandService,
+			SchedulerService schedulerService) {
+		this.bookingService = bookingService;
+		this.demandService = demandService;
+		this.schedulerService = schedulerService;
+	}
 	
 	/**
 	 * Creates a new community hall booking.

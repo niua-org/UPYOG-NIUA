@@ -1,6 +1,7 @@
 package org.upyog.chb.repository.impl;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.kafka.producer.Producer;
 import org.upyog.chb.repository.querybuilder.CommunityHallBookingQueryBuilder;
@@ -20,7 +22,7 @@ import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.VenueBookingRequest;
 import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
-public class CommunityHallBookingRepositoryImplTest {
+class CommunityHallBookingRepositoryImplTest {
 
     @Mock
     private Producer producer;
@@ -59,18 +61,17 @@ public class CommunityHallBookingRepositoryImplTest {
     void testGetBookingDetails() {
         // Arrange
         VenueBookingSearchCriteria criteria = new VenueBookingSearchCriteria();
-        List<Object> preparedStmtList = new ArrayList<>();
         String query = "SELECT * FROM bookings";
-        when(queryBuilder.getCommunityHallBookingSearchQuery(criteria, preparedStmtList)).thenReturn(query);
-        when(jdbcTemplate.query(eq(query), any(Object[].class), eq(bookingRowmapper)))
-            .thenReturn(new ArrayList<>());
+        when(queryBuilder.getCommunityHallBookingSearchQuery(eq(criteria), any())).thenReturn(query);
+        when(jdbcTemplate.query(eq(query), any(PreparedStatementSetter.class), eq(bookingRowmapper)))
+                .thenReturn(new ArrayList<>());
 
         // Act
         List<VenueBookingDetail> result = repository.getBookingDetails(criteria);
 
         // Assert
-        verify(jdbcTemplate).query(eq(query), any(Object[].class), eq(bookingRowmapper));
-        assert result.isEmpty();
+        verify(jdbcTemplate).query(eq(query), any(PreparedStatementSetter.class), eq(bookingRowmapper));
+        assertEquals(0, result.size());
     }
 
     @Test
