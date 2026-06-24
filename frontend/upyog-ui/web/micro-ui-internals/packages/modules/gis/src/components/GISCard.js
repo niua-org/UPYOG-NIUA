@@ -26,6 +26,10 @@ const GISCard = () => {
                         link: `/upyog-ui/employee/gis/servicetype`
                 },
                 {
+                        label: t("MAP_PROPERTY_TAX"),
+                        link: `/upyog-ui/employee/gis/ptmap`
+                },
+                {
                         label: t("MAP_POLYGON_ASSET"),
                         link: `/upyog-ui/employee/gis/viewpolygon`
                 },
