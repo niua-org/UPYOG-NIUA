@@ -57,7 +57,7 @@ const CloseBtn = (props) => {
 const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
   const [showCancellationPolicy, setShowCancellationPolicy] = useState(false);
   const [showPriceBreakup, setShowPriceBreakup] = useState(false);
-  // const [showdemandEstimation,setShowDemandEstimation]=useState(false);
+  const [showdemandEstimation,setShowDemandEstimation]=useState(false);
   const { t } = useTranslation();
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
@@ -93,10 +93,11 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
       };
 
   useEffect(() => {
-    if (hallDetails?.length) {
+    if (showdemandEstimation===false && hallDetails?.length) {
       mutation.mutate(formdata);
+      setShowDemandEstimation(true);
     }
-  }, []);
+  }, [showdemandEstimation]);
   
   const handleCancellationPolicyClick = () => {
     setShowCancellationPolicy(!showCancellationPolicy);
