@@ -12,13 +12,11 @@ import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.MdmsResponse;
 import org.egov.mdms.model.ModuleDetail;
 import org.egov.tracer.model.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.ServiceRequestRepository;
 import org.upyog.chb.web.models.CalculationType;
-import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.billing.TaxHeadMaster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -68,25 +66,17 @@ import net.minidev.json.JSONArray;
 @Component
 public class MdmsUtil {
 
-	@Autowired
-	private CommunityHallBookingConfiguration config;
-
-	@Autowired
-	private ServiceRequestRepository serviceRequestRepository;
-
-	@Autowired
-	private ObjectMapper mapper;
+	private final CommunityHallBookingConfiguration config;
+	private final ServiceRequestRepository serviceRequestRepository;
+	private final ObjectMapper mapper;
 
 	private static Object mdmsMap = null;
 
-	/*
-	 * @Autowired private MDMSClient mdmsClient;
-	 */
-
-	@Autowired
-	public MdmsUtil(CommunityHallBookingConfiguration config, ServiceRequestRepository serviceRequestRepository) {
+	public MdmsUtil(CommunityHallBookingConfiguration config, ServiceRequestRepository serviceRequestRepository,
+			ObjectMapper mapper) {
 		this.config = config;
 		this.serviceRequestRepository = serviceRequestRepository;
+		this.mapper = mapper;
 	}
 
 	/**
@@ -121,27 +111,19 @@ public class MdmsUtil {
 	 * @return The raw Master Data Management System (MDMS) response object.
 	 */
 	public Object mDMSCommonCall(MdmsCriteriaReq mdmsCriteriaReq) {
-		ObjectMapper mapper = new ObjectMapper();
-
 		try {
-			System.out.println(
-			    mapper.writerWithDefaultPrettyPrinter()
-			          .writeValueAsString(mdmsCriteriaReq)
-			);
+			log.debug("MDMS request payload: {}",
+					mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mdmsCriteriaReq));
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.warn("Failed to serialize MDMS request for logging", e);
 		}
-		Object result = null;
+		Object result;
 		if (mdmsMap == null) {
 			result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
 			setMDMSDataMap(result);
 		} else {
 			result = getMDMSDataMap();
 		}
-
-		// Object result = mdmsClient.getMDMSData(mdmsCriteriaReq);
-		// log.info("Master data fetched from MDMSfrom feign client : " + result);
 
 		return result;
 	}
@@ -170,9 +152,8 @@ public class MdmsUtil {
 
 		MdmsCriteria mdmsCriteria = MdmsCriteria.builder().moduleDetails(moduleDetails).tenantId(tenantId).build();
 
-		MdmsCriteriaReq mdmsCriteriaReq = MdmsCriteriaReq.builder().mdmsCriteria(mdmsCriteria).requestInfo(requestInfo)
+		return MdmsCriteriaReq.builder().mdmsCriteria(mdmsCriteria).requestInfo(requestInfo)
 				.build();
-		return mdmsCriteriaReq;
 	}
 
 	/**
@@ -335,8 +316,7 @@ public class MdmsUtil {
 		return headMasters;
 	}
 
-	public List<CalculationType> getTaxRatesMasterList(RequestInfo requestInfo, String tenantId, String moduleName,
-			VenueBookingDetail bookingDetail) {
+	public List<CalculationType> getTaxRatesMasterList(RequestInfo requestInfo, String tenantId, String moduleName) {
 		List<CalculationType> taxRates = null;
 		String taxRatesMasterName = "TaxRates";
 

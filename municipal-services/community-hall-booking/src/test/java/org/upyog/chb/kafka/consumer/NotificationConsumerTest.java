@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.service.CHBNotificationService;
 import org.upyog.chb.web.models.VenueBookingDetail;
@@ -36,18 +35,18 @@ class NotificationConsumerTest {
     @Test
     void testListenWithValidRecord() throws Exception {
         // Arrange
-        HashMap<String, Object> record = new HashMap<>();
-        record.put("key", "value");
+        HashMap<String, Object> kafkaMessage = new HashMap<>();
+        kafkaMessage.put("key", "value");
 
         VenueBookingRequest bookingRequest = new VenueBookingRequest();
         VenueBookingDetail bookingDetail = new VenueBookingDetail();
         bookingDetail.setBookingStatus("APPROVED");
         bookingRequest.setVenueBookingApplication(bookingDetail);
 
-        when(mapper.convertValue(record, VenueBookingRequest.class)).thenReturn(bookingRequest);
+        when(mapper.convertValue(kafkaMessage, VenueBookingRequest.class)).thenReturn(bookingRequest);
 
         // Act
-        notificationConsumer.listen(record, "test-topic");
+        notificationConsumer.listen(kafkaMessage, "test-topic");
 
         // Assert
         verify(notificationService).process(bookingRequest, "APPROVED");
@@ -56,18 +55,18 @@ class NotificationConsumerTest {
     @Test
     void testListenWithPendingForPaymentStatus() throws Exception {
         // Arrange
-        HashMap<String, Object> record = new HashMap<>();
-        record.put("key", "value");
+        HashMap<String, Object> kafkaMessage = new HashMap<>();
+        kafkaMessage.put("key", "value");
 
         VenueBookingRequest bookingRequest = new VenueBookingRequest();
         VenueBookingDetail bookingDetail = new VenueBookingDetail();
         bookingDetail.setBookingStatus(BookingStatusEnum.PENDING_FOR_PAYMENT.toString());
         bookingRequest.setVenueBookingApplication(bookingDetail);
 
-        when(mapper.convertValue(record, VenueBookingRequest.class)).thenReturn(bookingRequest);
+        when(mapper.convertValue(kafkaMessage, VenueBookingRequest.class)).thenReturn(bookingRequest);
 
         // Act
-        notificationConsumer.listen(record, "test-topic");
+        notificationConsumer.listen(kafkaMessage, "test-topic");
 
         // Assert
         verify(notificationService, never()).process(any(), any());
@@ -76,13 +75,13 @@ class NotificationConsumerTest {
     @Test
     void testListenWithInvalidRecord() {
         // Arrange
-        HashMap<String, Object> record = new HashMap<>();
-        record.put("key", "value");
+        HashMap<String, Object> kafkaMessage = new HashMap<>();
+        kafkaMessage.put("key", "value");
 
-        when(mapper.convertValue(record, VenueBookingRequest.class)).thenThrow(new RuntimeException("Error"));
+        when(mapper.convertValue(kafkaMessage, VenueBookingRequest.class)).thenThrow(new RuntimeException("Error"));
 
         // Act
-        notificationConsumer.listen(record, "test-topic");
+        notificationConsumer.listen(kafkaMessage, "test-topic");
 
         // Assert
         verify(notificationService, never()).process(any(), any());

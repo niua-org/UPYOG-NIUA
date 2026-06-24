@@ -34,8 +34,8 @@ class CommunityHallSlotAvailabilityRowMapperTest {
         // Arrange
         when(resultSet.next()).thenReturn(true, false); // Simulate one row
         when(resultSet.getString("booking_date")).thenReturn("2023-11-01");
-        when(resultSet.getString("community_hall_code")).thenReturn("CH001");
-        when(resultSet.getString("hall_code")).thenReturn("H001");
+        when(resultSet.getString("venue_code")).thenReturn("CH001");
+        when(resultSet.getString("unit_code")).thenReturn("H001");
         when(resultSet.getString("status")).thenReturn("AVAILABLE");
         when(resultSet.getString("tenant_id")).thenReturn("T001");
 

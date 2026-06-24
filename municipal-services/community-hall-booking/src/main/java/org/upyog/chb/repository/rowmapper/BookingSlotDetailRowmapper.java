@@ -47,7 +47,14 @@ import org.upyog.chb.web.models.BookingSlotDetail;
 @Component
 public class BookingSlotDetailRowmapper implements ResultSetExtractor<List<BookingSlotDetail>> {
 
+	/**
+	 * Maps slot-detail rows for the booking ids supplied in the query.
+	 *
+	 * @param rs JDBC result set positioned before the first row
+	 * @return list of slot rows for the queried booking ids, never {@code null}
+	 */
 	@Override
+	@SuppressWarnings("java:S2638")
 	public List<BookingSlotDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
 		List<BookingSlotDetail> bookingSlotDetails = new ArrayList<>();
 		while (rs.next()) {

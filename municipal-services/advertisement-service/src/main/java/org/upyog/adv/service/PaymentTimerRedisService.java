@@ -3,7 +3,6 @@ package org.upyog.adv.service;
 import java.time.Duration;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -22,11 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "adv.payment.timer.redis.enabled", havingValue = "true")
 public class PaymentTimerRedisService {
 
-	@Autowired
-	private StringRedisTemplate redis;
+	private final StringRedisTemplate redis;
+	private final BookingConfiguration bookingConfiguration;
 
-	@Autowired
-	private BookingConfiguration bookingConfiguration;
+	public PaymentTimerRedisService(StringRedisTemplate redis, BookingConfiguration bookingConfiguration) {
+		this.redis = redis;
+		this.bookingConfiguration = bookingConfiguration;
+	}
 
 	/**
 	 * Attempts to acquire a Redis-based slot hold for the given timer detail.

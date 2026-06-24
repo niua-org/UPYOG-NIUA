@@ -61,7 +61,6 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-             <!--   <version>0.8.11</version>-->
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -171,14 +170,6 @@
             <version>2.3.0</version>
         </dependency>
 
-        <!-- Feign API-->
-
-        <!--<dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-            <version>2.0.1.RELEASE</version>
-        </dependency>-->
-
         <dependency>
             <groupId>org.egov</groupId>
             <artifactId>enc-client</artifactId>
@@ -221,12 +212,6 @@
             <artifactId>spring-data-redis</artifactId>
         </dependency>
 
-       <!-- <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>5.4.0</version> &lt;!&ndash; Use a stable version &ndash;&gt;
-            <scope>test</scope>
-        </dependency>-->
     </dependencies>
     <repositories>
         <repository>
@@ -257,11 +242,6 @@
                 https://upyog-nexus.niua.org/nexus/content/repositories/snapshots/
             </url>
         </repository>
-
-        <!--<repository>
-            <id>central</id>
-            <url>https://repo.maven.apache.org/maven2</url>
-        </repository>-->
     </repositories>
 
 

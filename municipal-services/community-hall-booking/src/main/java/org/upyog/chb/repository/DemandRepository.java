@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.web.models.billing.Demand;
@@ -44,14 +43,16 @@ import java.util.List;
 @Slf4j
 public class DemandRepository {
 
-	@Autowired
-	private ServiceRequestRepository serviceRequestRepository;
+	private final ServiceRequestRepository serviceRequestRepository;
+	private final CommunityHallBookingConfiguration config;
+	private final ObjectMapper mapper;
 
-	@Autowired
-	private CommunityHallBookingConfiguration config;
-
-	@Autowired
-	private ObjectMapper mapper;
+	public DemandRepository(ServiceRequestRepository serviceRequestRepository,
+			CommunityHallBookingConfiguration config, ObjectMapper mapper) {
+		this.serviceRequestRepository = serviceRequestRepository;
+		this.config = config;
+		this.mapper = mapper;
+	}
 
 	/**
 	 * Creates demand
