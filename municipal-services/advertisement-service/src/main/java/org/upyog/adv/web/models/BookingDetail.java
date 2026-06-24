@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.upyog.adv.validator.CreateApplicationGroup;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.Valid;
@@ -51,9 +52,10 @@ public class BookingDetail {
 
 	private String paymentReceiptFilestoreId;
 
-	@NotNull
+	@NotNull(groups = CreateApplicationGroup.class)
 	@Valid
-	@JsonProperty("CartDetails")
+	@JsonProperty("cartDetails")
+	@JsonAlias("CartDetails")
 	private List<CartDetail> cartDetails;
 
 	@JsonProperty("documents")
