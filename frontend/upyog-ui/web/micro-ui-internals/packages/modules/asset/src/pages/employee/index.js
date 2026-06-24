@@ -50,14 +50,7 @@ const EmployeeApp = ({
       content: t("ES_TITLE_INBOX"),
       show: location.pathname.includes("asset/assetservice/inbox") ? false : false
     }];
-    return <BreadCrumb style={isMobile ? {
-      display: "flex"
-    } : {
-      margin: "0 0 4px",
-      color: "#000000"
-    }} spanStyle={{
-      maxWidth: "min-content"
-    }} crumbs={crumbs} />;
+    return <BreadCrumb style={isMobile ? { display: "flex"} : { margin: "0 0 4px", color: "#000000" }} spanStyle={{ maxWidth: "min-content" }} crumbs={crumbs} />;
   };
   const NewAssetAssignApplication = Digit?.ComponentRegistryService?.getComponent("AssignAssetApplication");
   const DisposeApplication = Digit?.ComponentRegistryService?.getComponent("DisposeApplication");
@@ -83,7 +76,7 @@ const EmployeeApp = ({
       <React.Fragment>
         <div className="ground-container">
           {!isRes ? (
-            <div style={isNewRegistration ? { marginLeft: "12px", display: "flex", alignItems: "center" } : { marginLeft: "-4px", display: "flex", alignItems: "center" }}>
+            <div className={`registration-form ${isNewRegistration ?  "default" : "compact"}`}>
               <BackButton location={location} />
               <span className="asset-auto-224">|</span>
               <AssetBreadCrumbs location={location} />
