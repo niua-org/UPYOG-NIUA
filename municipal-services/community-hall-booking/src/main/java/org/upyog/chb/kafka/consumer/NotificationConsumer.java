@@ -2,16 +2,14 @@ package org.upyog.chb.kafka.consumer;
 
 import java.util.HashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.service.CHBNotificationService;
-import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.VenueBookingRequest;
-import org.springframework.kafka.support.KafkaHeaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -48,23 +46,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NotificationConsumer {
 
-	@Autowired
-	private CHBNotificationService notificationService;
+	private final CHBNotificationService notificationService;
+	private final ObjectMapper mapper;
 
-	@Autowired
-	private ObjectMapper mapper;
+	public NotificationConsumer(CHBNotificationService notificationService, ObjectMapper mapper) {
+		this.notificationService = notificationService;
+		this.mapper = mapper;
+	}
 
 	@KafkaListener(topics = { "${persister.save.communityhall.booking.topic}", "${persister.update.communityhall.booking.topic}" })
-	public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+	public void listen(final HashMap<String, Object> message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
 
 		VenueBookingRequest bookingRequest = new VenueBookingRequest();
 		try {
 
-			log.info("Consuming record in CHB for notification: " + record.toString() + " from topic: " + topic);
-			//log.info("Strigifed json : " + CommunityHallBookingUtil.beuatifyJson(record));
-			bookingRequest = mapper.convertValue(record, VenueBookingRequest.class);
+			log.info("Consuming record in CHB for notification: " + message.toString() + " from topic: " + topic);
+			bookingRequest = mapper.convertValue(message, VenueBookingRequest.class);
 		} catch (final Exception e) {
-			log.error("Error while processing CHB notification to value: " + record + " on topic: " + topic + ": " + e);
+			log.error("Error while processing CHB notification to value: " + message + " on topic: " + topic + ": " + e);
 		}
 
 		if (bookingRequest.getVenueBookingApplication() == null) {

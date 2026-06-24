@@ -2,9 +2,7 @@ package org.upyog.adv.util;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.upyog.adv.web.models.AdvertisementSlotSearchCriteria;
 import org.upyog.adv.web.models.BookingPaymentTimerDetails;
 
@@ -27,7 +25,7 @@ public final class PaymentTimerKeyBuilder {
 	public static String toRedisTimerRowKey(String tenantId, String addType, String location, String faceArea,
 			Boolean nightLight, LocalDate bookingDate, String bookingId) {
 		validateSlotDimensions(tenantId, addType, location, faceArea, bookingDate);
-		if (StringUtils.isBlank(bookingId)) {
+		if (org.apache.commons.lang.StringUtils.isBlank(bookingId)) {
 			throw new IllegalArgumentException("bookingId is required");
 		}
 		return REDIS_TIMER_PREFIX + String.join(":", tenantId, addType, location, faceArea, nightLightValue(nightLight),
@@ -50,34 +48,34 @@ public final class PaymentTimerKeyBuilder {
 		return createdBy + "|" + bookingId;
 	}
 
-	public static List<BookingPaymentTimerDetails> buildTimerDetailsList(
-			List<AdvertisementSlotSearchCriteria> criteriaList, String draftId, String userId, String tenantId,
+	public static java.util.List<BookingPaymentTimerDetails> buildTimerDetailsList(
+			java.util.List<AdvertisementSlotSearchCriteria> criteriaList, String draftId, String userId, String tenantId,
 			long createdTime) {
 		var timerDetails = new ArrayList<BookingPaymentTimerDetails>();
 		for (var criteria : criteriaList) {
 			var startDate = LocalDate.parse(criteria.getBookingStartDate());
 			var endDate = LocalDate.parse(criteria.getBookingEndDate());
 			while (!startDate.isAfter(endDate)) {
-				timerDetails.add(toTimerDetails(tenantId, criteria.getAddType(), criteria.getLocation(),
-						criteria.getFaceArea(), criteria.getNightLight(), startDate, draftId, userId, createdTime));
+				timerDetails.add(toTimerDetails(criteria, tenantId, startDate, draftId, userId, createdTime));
 				startDate = startDate.plusDays(1);
 			}
 		}
 		return timerDetails;
 	}
 
-	public static BookingPaymentTimerDetails toTimerDetails(String tenantId, String addType, String location,
-			String faceArea, Boolean nightLight, LocalDate bookingDate, String bookingId, String userId,
-			long createdTime) {
-		return BookingPaymentTimerDetails.builder().tenantId(tenantId).addType(addType).location(location)
-				.faceArea(faceArea).nightLight(nightLight).bookingDate(bookingDate).bookingId(bookingId)
-				.createdBy(userId).createdTime(createdTime).status("ACTIVE").build();
+	public static BookingPaymentTimerDetails toTimerDetails(AdvertisementSlotSearchCriteria criteria, String tenantId,
+			LocalDate bookingDate, String bookingId, String userId, long createdTime) {
+		return BookingPaymentTimerDetails.builder().tenantId(tenantId).addType(criteria.getAddType())
+				.location(criteria.getLocation()).faceArea(criteria.getFaceArea()).nightLight(criteria.getNightLight())
+				.bookingDate(bookingDate).bookingId(bookingId).createdBy(userId).createdTime(createdTime)
+				.status("ACTIVE").build();
 	}
 
 	private static void validateSlotDimensions(String tenantId, String addType, String location, String faceArea,
 			LocalDate bookingDate) {
-		if (StringUtils.isBlank(tenantId) || StringUtils.isBlank(addType) || StringUtils.isBlank(location)
-				|| StringUtils.isBlank(faceArea) || bookingDate == null) {
+		if (org.apache.commons.lang.StringUtils.isBlank(tenantId) || org.apache.commons.lang.StringUtils.isBlank(addType)
+				|| org.apache.commons.lang.StringUtils.isBlank(location)
+				|| org.apache.commons.lang.StringUtils.isBlank(faceArea) || bookingDate == null) {
 			throw new IllegalArgumentException("tenantId, addType, location, faceArea and bookingDate are required");
 		}
 	}

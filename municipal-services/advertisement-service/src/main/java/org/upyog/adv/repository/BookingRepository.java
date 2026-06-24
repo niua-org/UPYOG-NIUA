@@ -1,14 +1,9 @@
 package org.upyog.adv.repository;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 
 import org.egov.common.contract.request.RequestInfo;
@@ -61,8 +56,6 @@ public interface BookingRepository {
 	
 	void deleteBookingIdForTimer(String bookingId);
 
-	//Map<String, Long> getRemainingTimerValues(List<BookingDetail> bookingDetails);
-	
 	long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteria, RequestInfo requestInfo,
 			String preGeneratedDraftId);
 

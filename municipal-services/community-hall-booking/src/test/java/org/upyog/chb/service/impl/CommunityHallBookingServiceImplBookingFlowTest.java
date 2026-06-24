@@ -25,7 +25,6 @@ import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.service.BookingTimerService;
 import org.upyog.chb.service.CHBEncryptionService;
-import org.upyog.chb.service.CommunityHallBookingService;
 import org.upyog.chb.service.DemandService;
 import org.upyog.chb.service.EnrichmentService;
 import org.upyog.chb.service.WorkflowService;
@@ -43,7 +42,7 @@ import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 class CommunityHallBookingServiceImplBookingFlowTest {
 
 	@InjectMocks
-	private CommunityHallBookingService bookingService = new CommunityHallBookingServiceImpl();
+	private CommunityHallBookingServiceImpl bookingService;
 
 	@Mock
 	private CommunityHallBookingRepository bookingRepository;
@@ -86,18 +85,18 @@ class CommunityHallBookingServiceImplBookingFlowTest {
 				.build();
 
 		// Production passes (requestInfo, tenantId). tenantId here is "pg.citya".
-		when(mdmsUtil.mDMSCall(eq(citizenRequest), eq("pg.citya"))).thenReturn(new Object());
+		when(mdmsUtil.mDMSCall(citizenRequest, "pg.citya")).thenReturn(new Object());
 
 		lenient().doNothing().when(hallBookingValidator).validateCreate(any(), any(),any());
 		lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any());
 		when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
 				.thenReturn(request.getVenueBookingApplication());
-		when(demandService.createDemand(eq(request), any(), eq(true))).thenReturn(Collections.emptyList());
+		when(demandService.createDemand(request, true)).thenReturn(Collections.emptyList());
 
 		var result = bookingService.createBooking(request);
 
 		assertThat(result.getBookingNo()).isEqualTo("CHB-001");
-		verify(demandService).createDemand(eq(request), any(), eq(true));
+		verify(demandService).createDemand(request, true);
 		verify(bookingRepository).saveCommunityHallBooking(request);
 	}
 

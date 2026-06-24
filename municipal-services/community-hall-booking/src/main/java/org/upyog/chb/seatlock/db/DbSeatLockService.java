@@ -87,10 +87,10 @@ public class DbSeatLockService implements SeatLockService {
 	public ExtendLockResult extendLock(String seatId, String userId, Duration ttl) {
 		var v = validate(seatId, userId, ttl);
 		if (v != null) {
-			if (v instanceof LockSeatResult.InvalidArgument) {
-				return new ExtendLockResult.InvalidArgument(((LockSeatResult.InvalidArgument) v).message());
-			} else if (v instanceof LockSeatResult.RateLimited) {
-				return new ExtendLockResult.InvalidArgument(((LockSeatResult.RateLimited) v).message());
+			if (v instanceof LockSeatResult.InvalidArgument invalidArgument) {
+				return new ExtendLockResult.InvalidArgument(invalidArgument.message());
+			} else if (v instanceof LockSeatResult.RateLimited rateLimited) {
+				return new ExtendLockResult.InvalidArgument(rateLimited.message());
 			} else if (v instanceof LockSeatResult.Acquired || v instanceof LockSeatResult.AlreadyLocked) {
 				return new ExtendLockResult.InvalidArgument("unexpected validation outcome");
 			}

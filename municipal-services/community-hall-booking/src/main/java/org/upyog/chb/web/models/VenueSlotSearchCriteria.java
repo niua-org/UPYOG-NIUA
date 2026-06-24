@@ -1,6 +1,5 @@
 package org.upyog.chb.web.models;
 
-import java.time.LocalTime;
 import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;

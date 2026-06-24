@@ -3,14 +3,15 @@ package org.upyog.chb.validator;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
@@ -22,60 +23,20 @@ import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * This class is responsible for validating requests and data in the
- * Community Hall Booking module.
- * 
- * Purpose:
- * - To ensure that booking requests, search criteria, and other inputs meet the required
- *   business rules and validation criteria.
- * - To validate data against configurations and master data (MDMS).
- * 
- * Dependencies:
- * - MDMSValidator: Validates data against master data from the MDMS service.
- * - CommunityHallBookingConfiguration: Provides configuration properties for validation.
- * - CommunityHallBookingUtil: Utility class for common validation-related operations.
- * 
- * Features:
- * - Validates booking requests for required fields, date ranges, and slot availability.
- * - Ensures that search criteria are valid and meet the required constraints.
- * - Logs validation errors and throws CustomException for invalid inputs.
- * 
- * Methods:
- * 1. validateCreateRequest:
- *    - Validates the booking creation request for required fields and business rules.
- *    - Ensures that the requested slots are available and valid.
- * 
- * 2. validateUpdateRequest:
- *    - Validates the booking update request for consistency and required fields.
- *    - Ensures that the updated data adheres to business rules.
- * 
- * 3. validateSearchCriteria:
- *    - Validates the search criteria for retrieving bookings.
- *    - Ensures that the criteria are valid and do not violate constraints.
- * 
- * Usage:
- * - This class is automatically managed by Spring and injected wherever validation
- *   operations are required.
- * - It ensures consistent and reusable logic for validating inputs across the module.
- */
 @Component
 @Slf4j
 public class CommunityHallBookingValidator {
 
-	@Autowired
-	private MDMSValidator mdmsValidator;
+	private final MDMSValidator mdmsValidator;
+	private final CommunityHallBookingConfiguration config;
 
-	@Autowired
-	private CommunityHallBookingConfiguration config;
+	public CommunityHallBookingValidator(MDMSValidator mdmsValidator,
+			CommunityHallBookingConfiguration config) {
+		this.mdmsValidator = mdmsValidator;
+		this.config = config;
+	}
 
-	/**
-	 * 
-	 * @param bookingRequest
-	 * @param mdmsData
-	 */
 	public void validateCreate(VenueBookingRequest bookingRequest, Object mdmsData,Object venueOTypeMasterData) {
-		// Avoid NPEs in tests where applicant details may not be populated
 		String mobileNo = null;
 		try {
 			if (bookingRequest != null && bookingRequest.getVenueBookingApplication() != null
@@ -103,24 +64,19 @@ public class CommunityHallBookingValidator {
 
 	
 	public void validateUpdate(VenueBookingDetail bookingDetailFromRequest, VenueBookingDetail bookingDetailFromDB) {
-		log.info("validating master data for update  booking request for  booking no : " + bookingDetailFromRequest.getBookingNo());
-		//TODO: Add condition for status from to 
+		log.info("validating master data for update booking request for booking no : {} with current status : {}",
+				bookingDetailFromRequest.getBookingNo(), bookingDetailFromDB.getBookingStatus());
 	}
 	
 	private boolean validateBookingDate(List<BookingSlotDetail> bookingSlotDetails) {
 		LocalDate currentDate = CommunityHallBookingUtil.getCurrentDate();
-		boolean isBookingDateValid = bookingSlotDetails.stream().anyMatch(slotDetail ->
+		return bookingSlotDetails.stream().anyMatch(slotDetail ->
 		currentDate.isBefore(slotDetail.getBookingDate()));
-		return isBookingDateValid;
 	}
 
-	/**
-	 * 
-	 * @param bookingRequest
-	 */
 	private void validateDuplicateDocuments(VenueBookingRequest bookingRequest) {
 		if (bookingRequest.getVenueBookingApplication().getUploadedDocumentDetails() != null) {
-			List<String> documentFileStoreIds = new LinkedList<String>();
+			List<String> documentFileStoreIds = new LinkedList<>();
 			bookingRequest.getVenueBookingApplication().getUploadedDocumentDetails().forEach(document -> {
 				if (documentFileStoreIds.contains(document.getFileStoreId()))
 					throw new CustomException(CommunityHallBookingConstants.DUPLICATE_DOCUMENT_UPLOADED, "Same document cannot be used multiple times");
@@ -133,17 +89,28 @@ public class CommunityHallBookingValidator {
 	}
 
 	/**
-	 * Validates if the search parameters are valid
-	 * 
-	 * @param requestInfo The requestInfo of the incoming request
-	 * @param criteria    The CommunityHallBookingSearchCriteria Criteria
+	 * Validates booking search requests for role-based access, allowed parameters, and date range.
+	 *
+	 * @param requestInfo caller context (citizen vs employee)
+	 * @param criteria search filters supplied by the API consumer
+	 * @throws CustomException when search parameters are invalid or not permitted
 	 */
-	// TODO need to make the changes in the data
 	public void validateSearch(RequestInfo requestInfo, VenueBookingSearchCriteria criteria) {
 		log.info("Validating search request for criteria " + criteria);
-		String userType = requestInfo.getUserInfo().getType();
-		
-		
+
+		validateSearchAccess(requestInfo, criteria);
+		validateAllowedSearchConfiguration(criteria);
+		validateSearchDateRange(criteria);
+	}
+	
+	/**
+	 * Enforces tenant and empty-search rules based on the caller type.
+	 *
+	 * @param requestInfo caller context (citizen vs employee)
+	 * @param criteria search filters supplied by the API consumer
+	 * @throws CustomException when mandatory tenant information is missing or search is too broad
+	 */
+	private void validateSearchAccess(RequestInfo requestInfo, VenueBookingSearchCriteria criteria) {
 		if (!requestInfo.getUserInfo().getType().equalsIgnoreCase(CommunityHallBookingConstants.CITIZEN) && criteria.isEmpty())
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH, "Search without any paramters is not allowed");
 
@@ -154,33 +121,48 @@ public class CommunityHallBookingValidator {
 		if (requestInfo.getUserInfo().getType().equalsIgnoreCase(CommunityHallBookingConstants.CITIZEN) && !criteria.isEmpty()
 				&& !criteria.tenantIdOnly() && criteria.getTenantId() == null)
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH, "TenantId is mandatory in search");
-			
-
-		String allowedParamStr = null;
-
-		if (!userType.equalsIgnoreCase(CommunityHallBookingConstants.EMPLOYEE))
-			allowedParamStr = config.getAllowedEmployeeSearchParameters();
-		else if (userType.equalsIgnoreCase(CommunityHallBookingConstants.EMPLOYEE))
-			allowedParamStr = config.getAllowedEmployeeSearchParameters();
-		else
-			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
-					"The userType: " + requestInfo.getUserInfo().getType() + " does not have any search config");
-
-		if (StringUtils.isEmpty(allowedParamStr) && !criteria.isEmpty())
-			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
-					"No search parameters are expected");
-		else {
-			List<String> allowedParams = Arrays.asList(allowedParamStr.split(","));
-			validateSearchParams(criteria, allowedParams);
-		}
 	}
 
 	/**
-	 * Validates if the paramters coming in search are allowed
-	 * 
-	 * @param criteria      CHB search criteria
-	 * @param allowedParams Allowed Params for search
+	 * Validates employee search criteria against configured allowed parameter names.
+	 *
+	 * @param criteria search filters supplied by the API consumer
+	 * @throws CustomException when unsupported search parameters are provided
 	 */
+	private void validateAllowedSearchConfiguration(VenueBookingSearchCriteria criteria) {
+		String allowedParamStr = config.getAllowedEmployeeSearchParameters();
+
+		if (StringUtils.isEmpty(allowedParamStr) && !criteria.isEmpty()) {
+			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
+					"No search parameters are expected");
+		}
+		List<String> allowedParams = Arrays.asList(allowedParamStr.split(","));
+		validateSearchParams(criteria, allowedParams);
+	}
+
+	private void validateSearchDateRange(VenueBookingSearchCriteria criteria) {
+		if (criteria.getFromDate() != null) {
+			LocalDate fromDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getFromDate());
+			if (fromDate.isAfter(LocalDate.now(ZoneId.systemDefault()))) {
+				throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
+						"From date cannot be a future date");
+			}
+			if (fromDate.isBefore(CommunityHallBookingUtil.getMonthsAgo(6))) {
+				throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
+						"From date cannot be prior 6 months");
+			}
+		}
+
+		if (criteria.getToDate() != null && criteria.getFromDate() != null) {
+			LocalDate fromDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getFromDate());
+			LocalDate toDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getToDate());
+			if (toDate.isBefore(fromDate)) {
+				throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
+						"To date cannot be prior to from date");
+			}
+		}
+	}
+
 	private void validateSearchParams(VenueBookingSearchCriteria criteria, List<String> allowedParams) {
 		log.info("Validating search params for allowedParams " + allowedParams);
 
@@ -205,38 +187,11 @@ public class CommunityHallBookingValidator {
 		
 		if (criteria.getCommunityHallCode() != null && !allowedParams.contains("communityHallCode"))
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH, "Search on community hall name is not allowed");
-
-		if (criteria.getFromDate() != null) {
-			LocalDate fromDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getFromDate());
-			if (fromDate.isAfter(LocalDate.now())) {
-				throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
-						"From date cannot be a future date");
-			}
-		}
-		
-		if(criteria.getFromDate() != null) {
-			LocalDate fromDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getFromDate());
-			 if (fromDate.isBefore(CommunityHallBookingUtil.getMonthsAgo(6))) {
-				 throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
-							"From date cannot be prior 6 months");
-		     }
-		}
-
-		if (criteria.getToDate() != null && criteria.getFromDate() != null) {
-			LocalDate fromDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getFromDate());
-			LocalDate toDate = CommunityHallBookingUtil.parseStringToLocalDate(criteria.getToDate());
-			if (toDate.isBefore(fromDate)) {
-				throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
-						"To date cannot be prior to from date");
-			}
-		}
 	}
 	
 	public boolean isSameHallCode(List<BookingSlotDetail> bookingSlotDetails) {
 		String hallCode = bookingSlotDetails.get(0).getUnitCode();
-		boolean allSameCode = bookingSlotDetails.stream().allMatch(x -> x.getUnitCode().equals(hallCode));
-		return allSameCode;
-
+		return bookingSlotDetails.stream().allMatch(x -> x.getUnitCode().equals(hallCode));
 	}
 
 }

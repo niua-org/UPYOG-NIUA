@@ -10,7 +10,6 @@ import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 import org.upyog.chb.web.models.VenueSlotSearchCriteria;
 
 import java.lang.reflect.Method;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,21 +82,6 @@ class CommunityHallBookingQueryBuilderTest {
 
     @Test
     void testGetCommunityHallSlotAvailabilityQueryWithStartEndTime() {
-        VenueSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
-        criteria.setFromTime("09:00");
-        criteria.setToTime("12:00");
-        List<Object> paramsList = new ArrayList<>();
-
-        StringBuilder query = queryBuilder.getCommunityHallSlotAvailabilityQuery(criteria, paramsList);
-
-        assertNotNull(query);
-        assertTrue(query.toString().contains("ecsd.booking_to_time >= CAST(? AS TIME)"));
-        assertTrue(query.toString().contains("ecsd.booking_from_time <= CAST(? AS TIME)"));
-        assertEquals(6, paramsList.size());
-    }
-
-    @Test
-    void testGetCommunityHallSlotAvailabilityQueryWithFromToTime() {
         VenueSlotSearchCriteria criteria = createSlotSearchCriteria("test-tenant", "hall-code", "2023-01-01", "2023-01-02");
         criteria.setFromTime("09:00");
         criteria.setToTime("12:00");

@@ -3,7 +3,6 @@ package org.upyog.chb.service.impl;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.service.BookingTimerService;
 import org.upyog.chb.service.CHBEncryptionService;
-import org.upyog.chb.service.CommunityHallBookingService;
 import org.upyog.chb.service.DemandService;
 import org.upyog.chb.service.EnrichmentService;
 import org.upyog.chb.service.WorkflowService;
@@ -41,11 +39,10 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-// @Ignore("This test class is ignored due to the complexity of mocking all dependencies and the need for refactoring the service for better testability. It can be re-enabled after refactoring.")
-public class CommunityHallBookingServiceImplTest {
+class CommunityHallBookingServiceImplTest {
 
     @InjectMocks
-    private CommunityHallBookingService communityHallBookingService = new CommunityHallBookingServiceImpl();
+    private CommunityHallBookingServiceImpl communityHallBookingService;
 
     @Mock
     private CommunityHallBookingRepository bookingRepository;
@@ -92,10 +89,6 @@ public class CommunityHallBookingServiceImplTest {
                         .build())
                 .build();
 
-        VenueBookingDetail createdBooking = VenueBookingDetail.builder()
-                .bookingNo("BOOKING-123")
-                .build();
-
         // Mocking dependencies
         when(mdmsUtil.mDMSCall(any(RequestInfo.class), anyString())).thenReturn(new Object());
         lenient().doNothing().when(hallBookingValidator)
@@ -104,7 +97,7 @@ public class CommunityHallBookingServiceImplTest {
 
         lenient().when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
                 .thenReturn(request.getVenueBookingApplication());
-        lenient().when(demandService.createDemand(eq(request), any(), eq(true))).thenReturn(Collections.emptyList());
+        lenient().when(demandService.createDemand(eq(request), eq(true))).thenReturn(Collections.emptyList());
 
         lenient().doAnswer(invocation -> {
             VenueBookingRequest req = invocation.getArgument(0);
@@ -208,7 +201,6 @@ public class CommunityHallBookingServiceImplTest {
                 .build();
 
         // Mocking dependencies
-        VenueBookingSearchCriteria searchCriteria = VenueBookingSearchCriteria.builder().bookingNo("BOOKING-123").build();
         List<VenueBookingDetail> bookingDetails = new ArrayList<>();
         bookingDetails.add(existingBooking);
         when(bookingRepository.getBookingDetails(any(VenueBookingSearchCriteria.class))).thenReturn(bookingDetails);

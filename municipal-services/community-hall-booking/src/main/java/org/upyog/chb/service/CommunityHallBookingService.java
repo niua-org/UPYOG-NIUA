@@ -5,7 +5,6 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.egov.common.contract.request.RequestInfo;
-import org.springframework.stereotype.Service;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.web.models.VenueBookingDetail;
 import org.upyog.chb.web.models.VenueBookingRequest;

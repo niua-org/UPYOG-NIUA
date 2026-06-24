@@ -28,45 +28,45 @@ class PaymentUpdateConsumerTest {
     @Test
     void testPaymentSuccess() throws Exception {
         // Arrange
-        HashMap<String, Object> record = new HashMap<>();
-        record.put("key", "value");
+        HashMap<String, Object> paymentRecord = new HashMap<>();
+        paymentRecord.put("key", "value");
         String topic = "receipt-create-topic";
 
         // Act
-        paymentUpdateConsumer.paymentSuccess(record, topic);
+        paymentUpdateConsumer.paymentSuccess(paymentRecord, topic);
 
         // Assert
-        verify(paymentNotificationService).process(record, topic);
+        verify(paymentNotificationService).process(paymentRecord, topic);
     }
 
     @Test
     void testPaymentUpdate() {
         // Arrange
-        HashMap<String, Object> record = new HashMap<>();
-        record.put("key", "value");
+        HashMap<String, Object> paymentRecord = new HashMap<>();
+        paymentRecord.put("key", "value");
         String topic = "update-pg-txns-topic";
 
         // Act
-        paymentUpdateConsumer.paymentUpdate(record, topic);
+        paymentUpdateConsumer.paymentUpdate(paymentRecord, topic);
 
         // Assert
-        verify(paymentNotificationService).processTransaction(record, topic, null);
+        verify(paymentNotificationService).processTransaction(paymentRecord, topic, null);
     }
 
     @Test
     void testPaymentSuccessWithException() throws Exception {
         // Arrange
-        HashMap<String, Object> record = new HashMap<>();
-        record.put("key", "value");
+        HashMap<String, Object> paymentRecord = new HashMap<>();
+        paymentRecord.put("key", "value");
         String topic = "receipt-create-topic";
 
-        doThrow(new RuntimeException("Processing error")).when(paymentNotificationService).process(record, topic);
+        doThrow(new RuntimeException("Processing error")).when(paymentNotificationService).process(paymentRecord, topic);
 
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> paymentUpdateConsumer.paymentSuccess(record, topic));
+        assertThrows(RuntimeException.class, () -> paymentUpdateConsumer.paymentSuccess(paymentRecord, topic));
 
         // Assert
-        verify(paymentNotificationService).process(record, topic);
+        verify(paymentNotificationService).process(paymentRecord, topic);
     }
 }
