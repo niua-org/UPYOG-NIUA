@@ -156,12 +156,7 @@ const OwnerForm = _props => {
       type: errors
     });else if (!Object.keys(errors).length && formState.errors[config.key]) clearErrors(config.key);
   }, [errors]);
-  const errorStyle = {
-    width: "70%",
-    marginLeft: "30%",
-    fontSize: "12px",
-    marginTop: "-21px"
-  };
+
   return <React.Fragment>
             <div className="asset-auto-39">
                 <div className="asset-auto-40">
@@ -203,7 +198,7 @@ const OwnerForm = _props => {
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState?.touched?.assignedUser ? errors?.assignedUser?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message" >{localFormState?.touched?.assignedUser ? errors?.assignedUser?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_EMP_CODE")}</CardLabel>
                         <div className="field">
@@ -236,7 +231,7 @@ const OwnerForm = _props => {
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message"> {localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_DESIGNATION")}</CardLabel>
@@ -259,7 +254,7 @@ const OwnerForm = _props => {
                         />
                     </LabelFieldPair>
 
-                    <CardLabelError style={errorStyle}>{localFormState?.touched?.designation ? errors?.designation?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState?.touched?.designation ? errors?.designation?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_ALLOCATED_DEPARTMENT")}</CardLabel>
@@ -281,7 +276,7 @@ const OwnerForm = _props => {
                             )}
                         />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState?.touched?.allocatedDepartment ? errors?.allocatedDepartment?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message"> {localFormState?.touched?.allocatedDepartment ? errors?.allocatedDepartment?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_TRANSFER_DATE")}</CardLabel>
@@ -307,15 +302,7 @@ const OwnerForm = _props => {
                             />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""}</CardLabelError>
-
-
-
-
-
-
-
-
+                    <CardLabelError className="error-message"> {localFormState?.touched?.employeeCode ? errors?.employeeCode?.message : ""} </CardLabelError>
                 </div>
             </div>
             {showToast?.label && <Toast label={showToast?.label} onClose={w => {
