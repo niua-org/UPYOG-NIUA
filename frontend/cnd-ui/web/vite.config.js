@@ -260,7 +260,7 @@ export default defineConfig(({ mode }) => {
      */
     const sharedPackages = [
       path.join(packagesRoot, "libraries"),
-      path.join(packagesRoot, "react-components"),
+      // path.join(packagesRoot, "react-components"),
     ];
 
     sharedPackages.filter(pkgDir => fs.existsSync(pkgDir)).forEach(register);
