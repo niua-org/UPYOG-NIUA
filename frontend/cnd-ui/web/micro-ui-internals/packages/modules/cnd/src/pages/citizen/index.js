@@ -3,6 +3,7 @@ import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import Inbox from "../employee/Inbox";
 import { cndStyles } from "../../utils/cndStyles";
+import "../../css/cnd-inline-auto.scss";
 
 /**
  * Component to handle all the routings of Citizen Side.

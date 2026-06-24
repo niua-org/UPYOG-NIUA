@@ -150,7 +150,7 @@ const EnhancedReport = (props) => {
   }
 
   return SearchApplication ? (
-    <div style={{ margin: "8px" }}>
+    <div className="cnd-enhanced-report-container">
       <style>{`
         .report-scroll-container {
           width: 100%;
