@@ -60,7 +60,7 @@ const ProcessDepreciationResponse = props => {
               successful={true}
             />
             <div className="asset-auto-222">
-              <Link to={`${moduleBasePath}/assetservice/applicationsearch/application-details/${applicationDetail}`} >
+              <Link to={`${moduleBasePath?.path}/assetservice/applicationsearch/application-details/${applicationDetail}`} >
                 <SubmitBar label={t("AST_DEPRECIATION_LIST")} />
               </Link>
             </div>

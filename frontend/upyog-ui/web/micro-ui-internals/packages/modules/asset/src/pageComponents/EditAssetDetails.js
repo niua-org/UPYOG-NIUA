@@ -35,20 +35,6 @@ const EditAssetDetails = ({
     onSelect(config?.key, editNewAssetDetails);
   }, [editNewAssetDetails]);
 
-  // const { data: warrantyperiod } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "ASSET", [{ name: "Warranty" }], {
-  //   select: (data) => {
-  //     const formattedData = data?.["ASSET"]?.["Warranty"];
-  //     return formattedData;
-  //   },
-  // });
-
-  // let warrantyTime = [];
-
-  // warrantyperiod &&
-  //   warrantyperiod.map((warrantytime) => {
-  //     warrantyTime.push({ i18nKey: `${warrantytime.name}`, code: `${warrantytime.code}`, value: `${warrantytime.name}` });
-  //   });
-
   const commonProps = {
     focusIndex,
     allAssets: editNewAssetDetails,
@@ -181,12 +167,7 @@ const OwnerForm = _props => {
       alert("Geolocation is not supported by your browser.");
     }
   };
-  const errorStyle = {
-    width: "70%",
-    marginLeft: "30%",
-    fontSize: "12px",
-    marginTop: "-21px"
-  };
+
   return <React.Fragment>
       <div className="asset-auto-101">
         <div className="asset-auto-102">
@@ -228,9 +209,6 @@ const OwnerForm = _props => {
                             />
                           </div>
                         </LabelFieldPair>
-                        {/* <CardLabelError style={errorStyle}>
-                          {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
-                        </CardLabelError> */}
                       </div>
                     )
                     : row.type == "dropdown" ?
@@ -256,9 +234,7 @@ const OwnerForm = _props => {
                             />
 
                           </LabelFieldPair>
-                          {/* <CardLabelError style={errorStyle}>
-  {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
-</CardLabelError> */}
+                          
                         </div>
                       ) : row.addCurrentLocationButton === true ?
                         (
@@ -296,9 +272,7 @@ const OwnerForm = _props => {
                                 />
                               </div>
                             </LabelFieldPair>
-                            {/* <CardLabelError style={errorStyle}>
-  {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
-</CardLabelError> */}
+                            
                           </div>
                         ) :
                         (
@@ -332,300 +306,14 @@ const OwnerForm = _props => {
                                 />
                               </div>
                             </LabelFieldPair>
-                            {/* <CardLabelError style={errorStyle}>
-  {row?.name && localFormState?.touched[row.name] ? errors[row.name]?.message : ""}
-</CardLabelError> */}
+                            
                           </div>
                         )
                   }
                 </div>
               ))}
 
-            {/* <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_INVOICE_DATE") + " *"}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"invoiceDate"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.invoiceDate}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        type="date"
-                        value={field.value}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                        }}
-                        max={new Date().toISOString().split("T")[0]}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.invoiceDate ? errors?.invoiceDate?.message : ""}</CardLabelError>
-
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_MANUFACTURER")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"manufacturer"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.manufacturer}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validate: { pattern: (val) => (/^[a-zA-Z/-]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={false}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "manufacturer"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "manufacturer" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.manufacturer ? errors?.manufacturer?.message : ""}</CardLabelError>
-
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_PURCHASE_COST")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"purchaseCost"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.purchaseCost}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validate: { pattern: (val) => (/^[0-9]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={false}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "purchaseCost"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "purchaseCost" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError>
-
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_PURCHASE_ORDER")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"purchaseOrderNumber"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.purchaseOrderNumber}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validate: { pattern: (val) => (/^[a-zA-Z0-9/-]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={false}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "purchaseOrderNumber"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "purchaseOrderNumber" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>
-                {localFormState?.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
-              </CardLabelError>
-               <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_PURCHASE_DATE") + " *"}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"purchaseDate"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.purchaseDate}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        type="date"
-                        value={field.value}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                        }}
-                        max={new Date().toISOString().split("T")[0]}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError>
-
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_CURRENT_LOCATION")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"currentLocation"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.currentLocation}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validate: { pattern: (val) => (/^[0-9]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={true}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "currentLocation"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "currentLocation" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>
-                {localFormState?.touched.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}
-              </CardLabelError>
-               <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_ASSET_AGE")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"assetAge"}
-                    defaultValue={comingDataFromAPI?.additionalDetails?.assetAge}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={false}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "assetAge"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "assetAge" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.assetAge ? errors?.assetAge?.message : ""}</CardLabelError>
-
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_WARRANTY")}</CardLabel>
-                <Controller
-                  control={control}
-                  name={"warranty"}
-                  defaultValue={comingDataFromAPI?.additionalDetails?.warranty}
-                  render={({field}) => (
-                    <Dropdown
-                      className="form-field"
-                      selected={field.value}
-                      select={field.onChange}
-                      onBlur={field.onBlur}
-                      disable={isEdit}
-                      option={warrantyTime}
-                      optionKey="i18nKey"
-                      t={t}
-                    />
-                  )}
-                />
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.assettype ? errors?.assettype?.message : ""}</CardLabelError>
-
-              <br></br>
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("AST_PINCODE")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"pincode"}
-                    defaultValue={comingDataFromAPI?.addressDetails?.pincode}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={true}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "pincode"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "pincode" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.pincode ? errors?.pincode?.message : ""}</CardLabelError>
-
-              <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("MYCITY_CODE_LABEL")}</CardLabel>
-                <div className="field">
-                  <Controller
-                    control={control}
-                    name={"city"}
-                    defaultValue={comingDataFromAPI?.addressDetails?.city}
-                    rules={{
-                      required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                      validate: { pattern: (val) => (/^[a-zA-Z/-]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                    }}
-                    render={({field}) => (
-                      <TextInput
-                        value={field.value}
-                        disable={true}
-                        autoFocus={focusIndex.index === editNewAssetDetails?.key && focusIndex.type === "city"}
-                        onChange={(e) => {
-                          field.onChange(e.target.value);
-                          setFocusIndex({ index: editNewAssetDetails.key, type: "city" });
-                        }}
-                        onBlur={(e) => {
-                          setFocusIndex({ index: -1 });
-                          field.onBlur(e);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-              </LabelFieldPair>
-              <CardLabelError style={errorStyle}>{localFormState?.touched.city ? errors?.city?.message : ""}</CardLabelError> */}
+           
           </React.Fragment>
 
         </div>
