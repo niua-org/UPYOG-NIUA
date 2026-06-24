@@ -129,7 +129,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                       )}
                     </span>
                     {formState?.errors?.[input.name] && (
-                      <CardLabelError style={{ marginTop: "-10px", marginBottom: "10px" }}>
+                      <CardLabelError className="cnd-search-field-error">
                         {formState?.errors?.[input.name]?.message}
                       </CardLabelError>
                     )}
@@ -137,19 +137,18 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                 ))}
 
               {type === "desktop" && !mobileView && (
-                <div style={cndStyles.searchWrapper} className="search-submit-wrapper">
+                <div className="search-submit-wrapper cnd-search-wrapper">
                   <SubmitBar
-                    className="submit-bar-search"
+                    className="submit-bar-search cnd-search-submit-bar"
                     label={t("ES_COMMON_SEARCH")}
                     disabled={!!Object.keys(formState.errors).length || formValueEmpty()}
-                    style={cndStyles.searchSubmitBar}
                     submit
                   />
                   {!isInboxPage && <div>{clearAll()}</div>}
                 </div>
               )}
               {isInboxPage && (
-                <div style={cndStyles.inboxClearButton} className="input-fields">
+                <div className="input-fields cnd-inbox-clear-btn">
                   <div>{clearAll()}</div>
                 </div>
               )}
@@ -158,10 +157,10 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
         </div>
         {(type === "mobile" || mobileView) && (
           <ActionBar className="clear-search-container">
-            <button className="clear-search" style={cndStyles.submitBarFlex}>
+            <button className="clear-search cnd-submit-bar-flex">
               {clearAll(mobileView)}
             </button>
-            <SubmitBar disabled={!!Object.keys(formState.errors).length} label={t("ES_COMMON_SEARCH")} style={cndStyles.submitBarFlex} submit={true} />
+            <SubmitBar disabled={!!Object.keys(formState.errors).length} label={t("ES_COMMON_SEARCH")} className="cnd-submit-bar-flex" submit={true} />
           </ActionBar>
         )}
       </React.Fragment>
