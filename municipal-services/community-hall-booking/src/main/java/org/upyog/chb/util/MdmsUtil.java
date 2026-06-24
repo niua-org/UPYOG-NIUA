@@ -266,7 +266,7 @@ public class MdmsUtil {
 		
 		
 		chbMasterDtls.add(MasterDetail.builder().name(CommunityHallBookingConstants.CHB_HALL_CODES)
-				.filter("$.[?(@.active==true)].HallCode").build());
+				.filter(filterCode).build());
 		chbMasterDtls.add(
 				MasterDetail.builder().name(CommunityHallBookingConstants.CHB_DOCUMENTS).filter(filterCode).build());
 
