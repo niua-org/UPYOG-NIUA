@@ -1,13 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
 import { DateRangePicker } from "react-date-range";
-import {
-  differenceInCalendarDays,
-  addMonths,
-  format,
-} from "date-fns";
+import { differenceInCalendarDays, addMonths, format} from "date-fns";
 import { Calender } from "@nudmcdgnpm/digit-ui-react-components";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
+
+/**
+ * 
+ * Reusable Date Range Filter component.
+ *
+ * Supports single-date and date-range selection with configurable
+ * maximum booking days. Useful for booking/search screens where
+ * users should not be allowed to select more than a specified
+ * number of consecutive days.
+ *
+ * Example:
+ * <DateRangeFilter
+ *   value={bookingDate}
+ *   maxDays={3}
+ *   onChange={setBookingDate}
+ *   setShowToast={setShowToast}
+ * />
+ * 
+ * 
+ * TODO - Later Move to React Component Library
+ */
 
 const DateRangeFilter = ({
   value,

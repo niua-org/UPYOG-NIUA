@@ -76,7 +76,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
     return `${year}-${month}-${day}`; // For the <input type="date" /> format
   };
 
-  let hallDetails = slotDetail?.map((slot) => ({
+  const hallDetails = slotDetail?.map((slot) => ({
       unitCode: SlotSearchData?.searchData?.unitCode,
       bookingDate: DateConvert(slot.bookingDate),
       bookingFromTime: SlotSearchData?.searchData?.fromTime,
@@ -93,7 +93,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
       };
 
   useEffect(() => {
-    if (showdemandEstimation===false && hallDetails?.length) {
+    if (!showdemandEstimation && hallDetails?.length) {
       mutation.mutate(formdata);
       setShowDemandEstimation(true);
     }
@@ -130,7 +130,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
   return (
     <div>
       <CardSubHeader style={{ color: '#a82227', fontSize: '18px'}}>
-        Total Booking Amount
+        {t("CHB_TOTAL_BOOKING_AMOUNT")}
       </CardSubHeader>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <div style={{ marginLeft: '30px', marginRight: '60px', fontSize: '16px', fontWeight: 'bold' }}>
@@ -140,13 +140,13 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
           onClick={handlePriceBreakupClick} 
           style={{ cursor: 'pointer', margin: '0 18px', color: '#a82227', fontSize: '20px', textDecoration: 'none' }}
         >
-          Estimate Price Breakup
+          {t("CHB_PRICE_BREAKUP")}
         </div>
         <div 
           onClick={handleCancellationPolicyClick} 
           style={{ cursor: 'pointer', color: '#a82227', fontSize: '20px', textDecoration: 'none' }}
         >
-          Terms and Conditions
+          {t("CHB_TERMS_CONDITION")}
         </div>
       </div>
 
@@ -193,7 +193,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
           popupStyles={{ backgroundColor: "#fff", position: 'relative', maxHeight: '60vh', width: '60%', overflowY: 'auto' }}
           children={
             <div>
-              <CardLabelDesc style={{ marginBottom: '15px' }}>Estimate Price Details</CardLabelDesc>
+              <CardLabelDesc style={{ marginBottom: '15px' }}>{t("CHB_ESTIMATE_PRICE_DETAILS)")}</CardLabelDesc>
               <ul>
                 {mutation.data?.demands[0]?.demandDetails && mutation.data?.demands[0]?.demandDetails.map((demands, index) => (
                   <li key={index} style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -204,7 +204,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
               </ul>
               <hr />
               <div style={{ fontWeight: 'bold', marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
-                <CardLabelDesc>Total</CardLabelDesc>
+                <CardLabelDesc>{t("CHB_TOTAL")}</CardLabelDesc>
                 <CardLabelDesc>Rs {mutation.data?.demands[0]?.demandDetails && calculateTotalAmount(mutation.data?.demands[0]?.demandDetails)}</CardLabelDesc>
               </div>
             </div>
