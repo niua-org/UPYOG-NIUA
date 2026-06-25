@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BackButton } from "@nudmcdgnpm/digit-ui-react-components";
 import { MAP_TILE_URL } from "../utils";
+import "../css/gis-inline.css";
 
 // Vite's ?raw suffix loads the GeoJSON file as a plain text string at build time.
 // We then JSON.parse() it ourselves.
-import block05Raw from "../data/block05.geojson?raw";
+import hoshiarpurRaw from "../data/hoshiarpur.geojson?raw";
 import karolbaghRaw from "../data/karolbagh.geojson?raw";
 
 /**
@@ -19,8 +20,6 @@ import karolbaghRaw from "../data/karolbagh.geojson?raw";
  * To go live with real backend data: replace each area's `raw` field with an API response.
  */
 
-// The UPYOG top header is 56px tall. The map uses position:fixed and starts just below it.
-const HEADER_OFFSET = 56;
 
 /**
  * Cleans a single raw field value from the shapefile.
@@ -56,7 +55,7 @@ const AREAS = [
   {
     id: "hoshiarpur",
     label: "Hoshiarpur · Block 05-A1",
-    raw: block05Raw,
+    raw: hoshiarpurRaw,
     legendTitle: "Property Type",
     // One colour per property type. "Unspecified" catches anything not in this list.
     colors: {
@@ -212,8 +211,7 @@ const LayerView = () => {
       .filter(([, value]) => value !== null && value !== undefined && value !== "")
       .map(([label, value]) => `<b>${t(label)}:</b> ${value}`)
       .join("<br/>");
-    return `<div style="font-size:13px;line-height:1.5;min-width:230px">
-      <b>${featureProps.title}</b><br/>${rowsHtml}</div>`;
+    return `<div class="gis-popup"><b>${featureProps.title}</b><br/>${rowsHtml}</div>`;
   };
 
   /**
@@ -323,60 +321,22 @@ const LayerView = () => {
     return () => window.removeEventListener("resize", onResize); // cleanup on unmount
   }, []);
 
-  // Shared style for the floating white panels (info card, filters, legend).
-  const panelStyle = {
-    position: "absolute",
-    zIndex: 1000,         // sits above the map tiles (zIndex 1) but below popups (zIndex 1100+)
-    background: "#fff",
-    borderRadius: "10px",
-    boxShadow: "0 4px 18px rgba(0,0,0,.18)",
-    padding: "12px 16px",
-  };
-
-  // Returns the style for one filter chip button. Active chip gets the dark purple fill.
-  const filterBtnStyle = (active) => ({
-    border: active ? "1px solid #2b2350" : "1px solid #ddd",
-    background: active ? "#2b2350" : "#fafafa",
-    color: active ? "#fff" : "#444",
-    borderRadius: "16px",
-    padding: "5px 12px",
-    fontSize: "12px",
-    cursor: "pointer",
-    marginRight: "6px",
-    marginTop: "2px",
-  });
-
   return (
-    /*
-     * The outer div uses position:fixed so the map breaks out of the UPYOG AppContainer
-     * padding and fills the full viewport below the header. Without this, the page's
-     * normal layout adds gaps on all four sides of the map.
-     */
-    <div
-      style={{
-        position: "fixed",
-        top: HEADER_OFFSET, // start just below the UPYOG header bar
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 1,
-        overflow: "hidden",
-      }}
-    >
+    <div className="gis-map-wrapper">
       {/* Leaflet draws into this div. It must be 100% height/width of its parent. */}
-      <div ref={mapRef} style={{ height: "100%", width: "100%" }} />
+      <div ref={mapRef} className="gis-map-container" />
 
       {/* Back button — overlaid top-right so it doesn't affect page layout */}
-      <div style={{ position: "absolute", top: 40, right: 12, zIndex: 1100 }}>
+      <div className="gis-back-button">
         <BackButton />
       </div>
 
       {/* ── LEFT INFO PANEL: title + area switcher dropdown + summary counts ── */}
-      <div style={{ ...panelStyle, top: 40, left: 60, width: 230 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: "#2b2350" }}>{t("Property Map")}</div>
-        <div style={{ fontSize: 11, color: "#888", marginBottom: 8 }}>UPYOG GIS</div>
+      <div className="gis-panel gis-panel--info">
+        <div className="gis-panel__title">{t("Property Map")}</div>
+        <div className="gis-panel__subtitle">UPYOG GIS</div>
 
-        <label style={{ fontSize: 11, color: "#888" }}>{t("Area")}</label>
+        <label className="gis-panel__label">{t("Area")}</label>
         {/* Switching area resets the filter to ALL so stale filters don't carry over */}
         <select
           value={areaId}
@@ -384,7 +344,7 @@ const LayerView = () => {
             setAreaId(e.target.value);
             setFilter("ALL");
           }}
-          style={{ width: "100%", padding: "6px", margin: "4px 0 10px", borderRadius: 6, border: "1px solid #ccc", fontSize: 13 }}
+          className="gis-panel__select"
         >
           {AREAS.map((areaOption) => (
             <option key={areaOption.id} value={areaOption.id}>
@@ -394,48 +354,44 @@ const LayerView = () => {
         </select>
 
         {/* Summary row: total parcel count */}
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0" }}>
+        <div className="gis-summary-row">
           <span>{t("Total Properties")}</span>
           <b>{total}</b>
         </div>
         {/* Summary row: what the colours represent for this area */}
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0" }}>
+        <div className="gis-summary-row">
           <span>{t("Coloured by")}</span>
-          <b style={{ color: "#2b2350" }}>{t(area.legendTitle)}</b>
+          <b className="gis-accent">{t(area.legendTitle)}</b>
         </div>
       </div>
 
       {/* ── FILTER CHIPS: one button per category + "All" ── */}
-      <div style={{ ...panelStyle, top: 40, left: 306, display: "flex", alignItems: "center", flexWrap: "wrap", maxWidth: "55vw" }}>
-        <span style={{ fontSize: 11, color: "#888", marginRight: 6 }}>{t(area.legendTitle)}:</span>
+      <div className="gis-panel gis-panel--filters">
+        <span className="gis-filter__label">{t(area.legendTitle)}:</span>
         {area.filters.map((chip) => (
-          <button key={chip.code} style={filterBtnStyle(filter === chip.code)} onClick={() => setFilter(chip.code)}>
+          <button
+            key={chip.code}
+            className={`gis-filter-btn${filter === chip.code ? " gis-filter-btn--active" : ""}`}
+            onClick={() => setFilter(chip.code)}
+          >
             {t(chip.label)}
           </button>
         ))}
       </div>
 
       {/* ── LEGEND: colour swatch + label + parcel count for each category ── */}
-      <div style={{ ...panelStyle, bottom: 20, left: 60, width: 230 }}>
-        <div style={{ fontSize: 11, letterSpacing: ".5px", color: "#888", textTransform: "uppercase", marginBottom: 8 }}>
-          {t(area.legendTitle)}
-        </div>
+      <div className="gis-panel gis-panel--legend">
+        <div className="gis-legend__title">{t(area.legendTitle)}</div>
         {/* Skip the "ALL" chip — it has no colour of its own */}
         {area.filters
           .filter((chip) => chip.code !== "ALL")
           .map((chip) => (
-            <div key={chip.code} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "3px 0" }}>
-              <span style={{ display: "flex", alignItems: "center" }}>
-                {/* Colour swatch — matches the polygon fill colour on the map */}
+            <div key={chip.code} className="gis-summary-row">
+              <span className="gis-legend__label">
+                {/* Colour swatch — background stays inline since it's data-driven per category */}
                 <span
-                  style={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: 3,
-                    background: area.colors[chip.code],
-                    border: "1px solid rgba(0,0,0,.25)",
-                    marginRight: 8,
-                  }}
+                  className="gis-legend__swatch"
+                  style={{ background: area.colors[chip.code] }}
                 />
                 {t(chip.label)}
               </span>
