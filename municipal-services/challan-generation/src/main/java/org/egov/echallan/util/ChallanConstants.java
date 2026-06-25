@@ -1,5 +1,8 @@
 package org.egov.echallan.util;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class ChallanConstants {
 
     public static final String STATUS_ACTIVE = "ACTIVE";
@@ -105,9 +108,6 @@ public class ChallanConstants {
 
     public static final String TOTAL_SERVICES = "totalServices";
 
-    // Utility class - prevent instantiation
-    private ChallanConstants() {
-        throw new IllegalStateException("Utility class");
-    }
+    public ChallanConstants() {}
 
 }

@@ -1,5 +1,7 @@
 package org.egov.asset.calculator.web.models;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.egov.common.contract.response.ResponseInfo;

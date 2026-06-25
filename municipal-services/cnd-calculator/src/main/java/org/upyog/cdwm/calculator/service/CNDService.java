@@ -4,7 +4,9 @@ import java.util.LinkedHashMap;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.upyog.cdwm.calculator.config.CalculatorConfig;
 import org.upyog.cdwm.calculator.config.CalculatorConfig;
 import org.upyog.cdwm.calculator.repository.ServiceRequestRepository;
 import org.upyog.cdwm.calculator.util.CalculatorConstants;
@@ -23,18 +25,14 @@ import digit.models.coremodels.RequestInfoWrapper;
 @Service
 public class CNDService {
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final ObjectMapper mapper;
+	@Autowired
+	private ObjectMapper mapper;
 
-	private final CalculatorConfig config;
-
-	public CNDService(ServiceRequestRepository serviceRequestRepository, ObjectMapper mapper,
-			CalculatorConfig config) {
-		this.serviceRequestRepository = serviceRequestRepository;
-		this.mapper = mapper;
-		this.config = config;
-	}
+	@Autowired
+	private CalculatorConfig config;
 
 	/**
      * Fetches the CND application details for the given application number.
@@ -51,8 +49,8 @@ public class CNDService {
 		url.append("applicationNumber=");
 		url.append(applicationNo);
 
-		LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) serviceRequestRepository
-				.fetchResult(url, new RequestInfoWrapper(requestInfo));
+		LinkedHashMap responseMap = null;
+		responseMap = (LinkedHashMap) serviceRequestRepository.fetchResult(url, new RequestInfoWrapper(requestInfo));
 
 		CNDResponse cndResponse = null;
 

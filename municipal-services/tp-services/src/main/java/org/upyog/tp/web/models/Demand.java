@@ -103,4 +103,9 @@ public class Demand {
 	@JsonProperty("status")
 	private StatusEnum status;
 
+//    public Demand addDemandDetailsItem(DemandDetail demandDetailsItem) {
+//        this.demandDetails.add(demandDetailsItem);
+//        return this;
+//    }
+
 }

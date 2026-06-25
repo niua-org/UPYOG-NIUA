@@ -37,7 +37,7 @@ public class PGRUtils {
      */
     public AuditDetails getAuditDetails(String by, Service service, Boolean isCreate) {
         Long time = System.currentTimeMillis();
-        if (Boolean.TRUE.equals(isCreate)) {
+        if (isCreate) {
             return AuditDetails.builder()
                     .createdBy(by)
                     .lastModifiedBy(by)

@@ -5,9 +5,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class NDCConstants {
 
-	private NDCConstants() {
-	}
-
 	public static final String SEARCH_MODULE = "rainmaker-ndc";
 	
 	public static final String NDC_MODULE = "NDC";

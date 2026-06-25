@@ -1,4 +1,4 @@
-package org.upyog.rs.web.models.waterTanker; // NOSONAR java:S120 - package name kept to preserve imports/API
+package org.upyog.rs.web.models.waterTanker;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +15,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SuppressWarnings("java:S120")
 public class WaterTankerBookingSearchResponse {
 
     @JsonProperty("ResponseInfo")

@@ -5,17 +5,24 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.egov.ewst.config.EwasteConfiguration;
 import org.egov.ewst.models.Applicant;
 import org.egov.ewst.models.EwasteApplication;
 import org.egov.ewst.models.EwasteApplicationSearchCriteria;
 import org.egov.ewst.models.EwasteDetails;
 import org.egov.ewst.models.EwasteRegistrationRequest;
 import org.egov.ewst.repository.EwasteApplicationRepository;
+import org.egov.ewst.service.EwasteService;
+import org.egov.ewst.service.WorkflowService;
 import org.egov.ewst.util.EwasteConstants;
 import org.egov.ewst.util.EwasteUtil;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,14 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class EwasteRequestValidator {
+	@Autowired
+	private EwasteApplicationRepository repository;
 
-	private final EwasteApplicationRepository repository;
-	private final EwasteUtil ewasteUtil;
-
-	public EwasteRequestValidator(EwasteApplicationRepository repository, EwasteUtil ewasteUtil) {
-		this.repository = repository;
-		this.ewasteUtil = ewasteUtil;
-	}
+	@Autowired
+	private EwasteUtil ewasteUtil;
 
 	/**
 	 * Validate the masterData and ctizenInfo of the given ewaste request
@@ -66,7 +70,7 @@ public class EwasteRequestValidator {
 		Map<String, List<String>> codes = ewasteUtil.getAttributeValues(tenantId, EwasteConstants.MDMS_EW_MOD_NAME,
 				masterNames, "$.*.name", EwasteConstants.JSONPATH_CODES, request.getRequestInfo());
 
-		if (!codes.isEmpty()) {
+		if (null != codes) {
 			validateMDMSData(masterNames, codes);
 			validateCodes(ewasteApplication, codes, errorMap);
 		} else {
@@ -93,8 +97,8 @@ public class EwasteRequestValidator {
 	/**
 	 * Validates if MasterData is properly fetched for the given MasterData names
 	 * 
-	 * @param masterNames master data names to validate
-	 * @param codes       fetched master data codes
+	 * @param masterNames
+	 * @param codes
 	 */
 	private void validateMDMSData(List<String> masterNames, Map<String, List<String>> codes) {
 
@@ -112,7 +116,7 @@ public class EwasteRequestValidator {
 	 * Checks if the codes of all fields are in the list of codes obtain from master
 	 * data
 	 *
-	 * @param ewasteApplication Ewaste from EwasteRequest which are to validated
+	 * @param Ewaste   Ewaste from EwasteRequest which are to validated
 	 * @param codes    Map of MasterData name to List of codes in that MasterData
 	 * @param errorMap Map to fill all errors caught to send as custom Exception
 	 * @return Error map containing error if existed
@@ -159,12 +163,16 @@ public class EwasteRequestValidator {
 	 * @param mobileNumber The mobileNumber to be validated
 	 * @return True if valid mobileNumber else false
 	 */
-	private boolean isMobileNumberValid(String mobileNumber) {
+	private Boolean isMobileNumberValid(String mobileNumber) {
 
-		if (mobileNumber == null || mobileNumber.length() != 10) {
+		if (mobileNumber == null)
 			return false;
-		}
-		return Character.getNumericValue(mobileNumber.charAt(0)) >= 5;
+		else if (mobileNumber.length() != 10)
+			return false;
+		else if (Character.getNumericValue(mobileNumber.charAt(0)) < 5)
+			return false;
+		else
+			return true;
 	}
 
 }

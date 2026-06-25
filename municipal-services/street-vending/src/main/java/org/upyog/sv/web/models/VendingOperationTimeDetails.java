@@ -8,7 +8,7 @@ import org.upyog.sv.web.models.common.AuditDetails;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import jakarta.validation.constraints.NotNull;
+import io.micrometer.core.lang.NonNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,11 +31,11 @@ public class VendingOperationTimeDetails {
 	
 	private DayOfWeek dayOfWeek;
 	
-	@NotNull
+	@NonNull
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime fromTime;
 	
-	@NotNull
+	@NonNull
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime  toTime;
 	

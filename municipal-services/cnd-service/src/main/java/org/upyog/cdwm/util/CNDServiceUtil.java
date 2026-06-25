@@ -26,12 +26,7 @@ import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 @Component
 public class CNDServiceUtil {
 
-	private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();
-
-	private CNDServiceUtil() {
-	}
-
-	public static final String DATE_FORMAT = "yyyy-MM-dd";
+	public final static String DATE_FORMAT = "yyyy-MM-dd";
 
 	/**
      * Creates a ResponseInfo object from RequestInfo.
@@ -46,8 +41,10 @@ public class CNDServiceUtil {
 			ts = requestInfo.getTs();
 		final String msgId = requestInfo != null ? requestInfo.getMsgId() : StringUtils.EMPTY;
 
-		return ResponseInfo.builder().apiId(apiId).ver(ver).ts(ts).msgId(msgId).resMsgId(resMsg)
+		ResponseInfo responseInfo = ResponseInfo.builder().apiId(apiId).ver(ver).ts(ts).msgId(msgId).resMsgId(resMsg)
 				.status(status).build();
+
+		return responseInfo;
 	}
 
 	public static Long getCurrentTimestamp() {
@@ -55,17 +52,23 @@ public class CNDServiceUtil {
 	}
 
 	public static LocalDate getCurrentDate() {
-		return LocalDate.now(SYSTEM_ZONE);
+		return LocalDate.now();
 	}
 
-	public static AuditDetails getAuditDetails(String by, boolean isCreate) {
+	public static AuditDetails getAuditDetails(String by, Boolean isCreate) {
 		Long time = getCurrentTimestamp();
 		if (isCreate)
+			// TODO: check if we can set lastupdated details to empty
 			return AuditDetails.builder().createdBy(by).lastModifiedBy(by).createdTime(time).lastModifiedTime(time)
 					.build();
 		else
 			return AuditDetails.builder().lastModifiedBy(by).lastModifiedTime(time).build();
 	}
+
+	/*
+	 * Commented and used Instant public static Long getCurrentTimestamp() { return
+	 * System.currentTimeMillis(); }
+	 */
 
 	public static String getRandomUUID() {
 		return UUID.randomUUID().toString();
@@ -73,11 +76,12 @@ public class CNDServiceUtil {
 
 	public static LocalDate parseStringToLocalDate(String date) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
-		return LocalDate.parse(date, formatter);
+		LocalDate localDate = LocalDate.parse(date, formatter);
+		return localDate;
 	}
 
 	public static Long minusOneDay(LocalDate date) {
-		return date.atStartOfDay(SYSTEM_ZONE).toInstant().toEpochMilli();
+		return date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
 	}
 
 	public static boolean isDateWithinRange(String startDate, String endDate, String bookingDate) {
@@ -103,22 +107,28 @@ public class CNDServiceUtil {
 			dateFormat = DATE_FORMAT;
 		}
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
-		return date.format(formatter);
+		// Format the LocalDate
+		String formattedDate = date.format(formatter);
+		return formattedDate;
 	}
 
 	public static AuditDetails getAuditDetails(ResultSet rs) throws SQLException {
-		return AuditDetails.builder().createdBy(rs.getString("created_by"))
+		AuditDetails auditdetails = AuditDetails.builder().createdBy(rs.getString("created_by"))
 				.createdTime(rs.getLong("created_time")).lastModifiedBy(rs.getString("last_modified_by"))
 				.lastModifiedTime(rs.getLong("last_modified_time")).build();
+		return auditdetails;
 	}
 
 	public static String beuatifyJson(Object result) {
 		ObjectMapper mapper = new ObjectMapper();
+		String data = null;
 		try {
-			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+			data = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
 		} catch (JsonProcessingException e) {
-			return null;
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return data;
 	}
 
 	public static String getTenantId(String tenantId) {
@@ -126,14 +136,18 @@ public class CNDServiceUtil {
 	}
 
 	public static LocalDate getMonthsAgo(int month) {
-		return LocalDate.now(SYSTEM_ZONE).minusMonths(month);
+		LocalDate currentDate = LocalDate.now();
+		// Calculate the date given months ago
+		LocalDate monthsAgo = currentDate.minusMonths(month);
+
+		return monthsAgo;
 	}
 
 	// To get the current financial year end date in epoch to set in Tax to in
 	// demand
 	public static long getFinancialYearEnd() {
 
-		YearMonth currentYearMonth = YearMonth.now(SYSTEM_ZONE);
+		YearMonth currentYearMonth = YearMonth.now();
 		int year = currentYearMonth.getYear();
 		int month = currentYearMonth.getMonthValue();
 
@@ -143,7 +157,7 @@ public class CNDServiceUtil {
 		}
 
 		LocalDateTime endOfYear = LocalDateTime.of(year + 1, Month.MARCH, 31, 23, 59, 59, 999000000);
-		return endOfYear.atZone(SYSTEM_ZONE).toInstant().toEpochMilli();
+		return endOfYear.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 
 	}
 
@@ -164,10 +178,10 @@ public class CNDServiceUtil {
 		// If format includes time, use LocalDateTime; otherwise, use LocalDate
 		if (format.contains("H") || format.contains("m") || format.contains("s")) {
 			LocalDateTime dateTime = LocalDateTime.parse(date, formatter);
-			return dateTime.atZone(SYSTEM_ZONE).toInstant().toEpochMilli();
+			return dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		} else {
 			LocalDate localDate = LocalDate.parse(date, formatter);
-			return localDate.atStartOfDay(SYSTEM_ZONE).toInstant().toEpochMilli();
+			return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		}
 	}
 
@@ -183,7 +197,11 @@ public class CNDServiceUtil {
 	public static boolean isCurrentUserApplicant(CNDApplicationRequest applicationRequest){
 		String userMobileNumber = applicationRequest.getRequestInfo().getUserInfo().getMobileNumber();
 		String applicationMobileNumber = applicationRequest.getCndApplication().getApplicantDetail().getMobileNumber();
-		return userMobileNumber.equals(applicationMobileNumber);
+		if (userMobileNumber.equals(applicationMobileNumber)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }

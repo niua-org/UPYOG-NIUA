@@ -1,6 +1,7 @@
 package org.upyog.tp.kafka.consumer;
-import java.util.Map;
+import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -21,56 +22,64 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NotificationConsumer {
 
-    private final NotificationService notificationService;
-    private final ObjectMapper mapper;
+    @Autowired
+    private NotificationService notificationService;
 
-    public NotificationConsumer(NotificationService notificationService, ObjectMapper mapper) {
-        this.notificationService = notificationService;
-        this.mapper = mapper;
-    }
+    @Autowired
+    private ObjectMapper mapper;
 
 
     /**
      * Listens to Kafka topics for updates and creation events of tree pruning bookings.
      *
-     * @param kafkaRecord the incoming Kafka message containing booking details
-     * @param topic       the name of the Kafka topic from which the message was received
+     * @param record the incoming Kafka message containing booking details
+     * @param topic  the name of the Kafka topic from which the message was received
      */
+
+
     @KafkaListener(topics = {
+            "${persister.update.tree-pruning.topic}",
             "${persister.create.tree-pruning.topic}",
-            "${persister.create.tree-pruning.with.profile.topic}",
-            "${persister.update.tree-pruning.topic}"
+            "${persister.create.tree-pruning.with.profile.topic}"
     })
-    public void listen(final Map<String, Object> kafkaRecord, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
-        String applicationStatus;
-        String bookingNo;
+    public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        Object request = null;
+        String applicationStatus = null;
+        String bookingNo = null;
 
         try {
-            if (!topic.contains("tree-pruning")) {
+            if (topic.contains("tree-pruning")) {
+                TreePruningBookingRequest treePruningRequest = mapper.convertValue(record, TreePruningBookingRequest.class);
+                request = treePruningRequest;
+                applicationStatus = treePruningRequest.getTreePruningBookingDetail().getBookingStatus();
+                bookingNo = treePruningRequest.getTreePruningBookingDetail().getBookingNo();
+            } else {
                 log.error("Unknown topic: " + topic);
                 return;
             }
-            TreePruningBookingRequest treePruningRequest = mapper.convertValue(kafkaRecord, TreePruningBookingRequest.class);
-            applicationStatus = treePruningRequest.getTreePruningBookingDetail().getBookingStatus();
-            bookingNo = treePruningRequest.getTreePruningBookingDetail().getBookingNo();
-            log.info("Tree Pruning Application Received with booking no: " + bookingNo + " and status: " + applicationStatus);
+        } catch (final Exception e) {
+            log.error("Error processing tree pruning notification: " + record + " on topic: " + topic, e);
+            return;
+        }
+
+        log.info("Tree Pruning Application Received with booking no: " + bookingNo + " and status: " + applicationStatus);
+
+        if (request instanceof TreePruningBookingRequest) {
+            TreePruningBookingRequest treePruningRequest = (TreePruningBookingRequest) request;
             applicationStatus = extractApplicationStatus(treePruningRequest.getTreePruningBookingDetail().getBookingStatus(),
                     treePruningRequest.getTreePruningBookingDetail().getWorkflow());
-            log.info("Final Application Status: " + applicationStatus);
-            notificationService.process(treePruningRequest, applicationStatus);
-        } catch (final Exception e) {
-            log.error("Error processing tree pruning notification: " + kafkaRecord + " on topic: " + topic, e);
         }
+
+        log.info("Final Application Status: " + applicationStatus);
+        notificationService.process(request, applicationStatus);
     }
 
 
     private String extractApplicationStatus(String bookingStatus, Workflow workflow) {
-        if (workflow == null) {
-            return bookingStatus;
-        }
+        if (workflow == null) return bookingStatus;
         try {
             String action = workflow.getAction();
-            return action != null ? action : bookingStatus;
+            return action != null ? action.toString() : bookingStatus;
         } catch (Exception e) {
             log.error("Error extracting workflow action: ", e);
             return bookingStatus;

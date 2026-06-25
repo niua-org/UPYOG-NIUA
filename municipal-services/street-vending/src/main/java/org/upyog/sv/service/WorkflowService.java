@@ -3,9 +3,11 @@ package org.upyog.sv.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.sv.config.StreetVendingConfiguration;
@@ -27,27 +29,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class WorkflowService {
 
-	private final StreetVendingConfiguration configs;
-	private final ServiceRequestRepository restRepo;
-	private final ObjectMapper mapper;
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	private StreetVendingConfiguration configs;
 
-	public WorkflowService(StreetVendingConfiguration configs, ServiceRequestRepository restRepo,
-			ObjectMapper mapper, ServiceRequestRepository serviceRequestRepository) {
-		this.configs = configs;
-		this.restRepo = restRepo;
-		this.mapper = mapper;
-		this.serviceRequestRepository = serviceRequestRepository;
-	}
+	@Autowired
+	private ServiceRequestRepository restRepo;
+
+	@Autowired
+	private ObjectMapper mapper;
+
+	@Autowired
+	ServiceRequestRepository serviceRequestRepository;
 
 	public State updateWorkflowStatus(StreetVendingRequest streetVendingRequest) {
-		ProcessInstance processInstance = getProcessInstanceForSV(streetVendingRequest.getStreetVendingDetail());
-		ProcessInstanceRequest workflowRequest = new ProcessInstanceRequest(streetVendingRequest.getRequestInfo(),
-				Collections.singletonList(processInstance));
-		return callWorkFlow(workflowRequest);
+		
+			ProcessInstance processInstance = getProcessInstanceForSV(streetVendingRequest.getStreetVendingDetail(),
+					streetVendingRequest.getRequestInfo());
+			ProcessInstanceRequest workflowRequest = new ProcessInstanceRequest(streetVendingRequest.getRequestInfo(),
+					Collections.singletonList(processInstance));
+			State state = callWorkFlow(workflowRequest);
+			
+			return state; 
+		
 	}
 
-	private ProcessInstance getProcessInstanceForSV(StreetVendingDetail application) {
+	private ProcessInstance getProcessInstanceForSV(StreetVendingDetail application, RequestInfo requestInfo) {
 		Workflow workflow = application.getWorkflow();
 
 		ProcessInstance processInstance = new ProcessInstance();
@@ -169,7 +175,7 @@ public class WorkflowService {
 	/**
 	 * Fetches the workflow object for the given assessment
 	 * 
-	 * @return current workflow state
+	 * @return
 	 */
 	public State getCurrentState(RequestInfo requestInfo, String tenantId, String businessId) {
 

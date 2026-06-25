@@ -1,9 +1,6 @@
 package org.upyog.cdwm.notification.constants;
 
 public class NotificationConstants {
-
-	private NotificationConstants() {
-	}
 	
     public static final String ACTION_STATUS_APPLY = "APPLY";
 	
@@ -23,7 +20,7 @@ public class NotificationConstants {
 	
 	public static final String MESSAGE_TEXT = "MESSAGE_TEXT";
 	
-	public static final String URL = "url";
+	private final String URL = "url";
 	
 	public static final String NOTIFICATION_LOCALE = "en_IN";
 	

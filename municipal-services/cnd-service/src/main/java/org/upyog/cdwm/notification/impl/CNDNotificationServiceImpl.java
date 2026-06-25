@@ -2,6 +2,7 @@ package org.upyog.cdwm.notification.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.cdwm.config.CNDConfiguration;
@@ -22,18 +23,14 @@ import java.util.*;
 @Slf4j
 public class CNDNotificationServiceImpl implements CNDNotificationService {
 
-    private final NotificationUtil util;
+    @Autowired
+    private NotificationUtil util;
 
-    private final CNDConfiguration config;
+    @Autowired
+    private CNDConfiguration config;
 
-    private final MessageServiceImpl messageService;
-
-    public CNDNotificationServiceImpl(NotificationUtil util, CNDConfiguration config,
-            MessageServiceImpl messageService) {
-        this.util = util;
-        this.config = config;
-        this.messageService = messageService;
-    }
+    @Autowired
+    private MessageServiceImpl messageService;
 
     /**
      * Processes the CND application request and sends notifications via different channels.
@@ -86,4 +83,17 @@ public class CNDNotificationServiceImpl implements CNDNotificationService {
             util.sendEmail(emailRequests);
         }
     }
+    
+    /**
+     * Checks if a specific notification type is enabled.
+     *
+     * @param isEnabled        the flag indicating if the notification type is enabled
+     * @param channels         the list of configured channels
+     * @param notificationType the notification type to check
+     * @return true if the notification is enabled, false otherwise
+     */
+    private boolean isNotificationEnabled(Boolean isEnabled, List<String> channels, String notificationType) {
+        return Boolean.TRUE.equals(isEnabled) && channels.contains(notificationType);
+    }
 }
+

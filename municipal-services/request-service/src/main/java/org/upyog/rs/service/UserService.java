@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.Role;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -27,7 +28,6 @@ import org.upyog.rs.web.models.waterTanker.WaterTankerBookingRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.upyog.rs.web.models.waterTanker.WaterTankerBookingSearchCriteria;
 
@@ -35,17 +35,16 @@ import jakarta.validation.Valid;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
-	private final ObjectMapper mapper;
+	@Autowired
+	private ObjectMapper mapper;
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final RequestServiceConfiguration requestConfig;
-
-	private static final String LAST_MODIFIED_DATE = "lastModifiedDate";
-	private static final String PWD_EXPIRY_DATE = "pwdExpiryDate";
+	@Autowired
+	private RequestServiceConfiguration requestConfig;
 
 	/**
 	 * Retrieves an existing user or creates a new user if not found.
@@ -68,7 +67,7 @@ public class UserService {
 		return existingUsers.get(0);
 	}
 
-	private UserDetailResponse createUser(RequestInfo requestInfo, User user) {
+	private UserDetailResponse createUser(RequestInfo requestInfo, User user, String tenantId) {
 
 		StringBuilder uri = new StringBuilder(requestConfig.getUserHost())
 				.append(requestConfig.getUserCreateEndpointV2());
@@ -122,7 +121,7 @@ public class UserService {
 		User user = convertApplicantToUserRequest(applicantDetail, role, tenantId);
 		AddressV2 addressV2 = convertApplicantAddressToUserAddress(address, tenantId);
 		user.addAddressItem(addressV2);
-		UserDetailResponse userDetailResponse = createUser(requestInfo, user);
+		UserDetailResponse userDetailResponse = createUser(requestInfo, user, tenantId);
 		String newUuid = userDetailResponse.getUser().get(0).getUuid();
 		log.info("New user uuid returned from user service: {}", newUuid);
 		return userDetailResponse.getUser().get(0);
@@ -160,7 +159,8 @@ public class UserService {
 
 		StringBuilder uri = new StringBuilder(requestConfig.getUserHost())
 				.append(requestConfig.getUserSearchEndpointV2());
-		return userServiceCall(userSearchRequest, uri);
+		UserDetailResponse userDetailResponse = userServiceCall(userSearchRequest, uri);
+		return userDetailResponse;
 	}
 
 	/**
@@ -184,7 +184,8 @@ public class UserService {
 			if (response != null) {
 				LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) response;
 				parseResponse(responseMap, dobFormat);
-				return mapper.convertValue(responseMap, UserDetailResponse.class);
+				UserDetailResponse userDetailResponse = mapper.convertValue(responseMap, UserDetailResponse.class);
+				return userDetailResponse;
 			} else {
 				return new UserDetailResponse();
 			}
@@ -213,13 +214,13 @@ public class UserService {
 			users.forEach(map -> {
 
 				map.put("createdDate", RequestServiceUtil.dateTolong((String) map.get("createdDate"), format1));
-				if ((String) map.get(LAST_MODIFIED_DATE) != null)
-					map.put(LAST_MODIFIED_DATE,
-							RequestServiceUtil.dateTolong((String) map.get(LAST_MODIFIED_DATE), format1));
+				if ((String) map.get("lastModifiedDate") != null)
+					map.put("lastModifiedDate",
+							RequestServiceUtil.dateTolong((String) map.get("lastModifiedDate"), format1));
 				if ((String) map.get("dob") != null)
 					map.put("dob", RequestServiceUtil.dateTolong((String) map.get("dob"), dobFormat));
-				if ((String) map.get(PWD_EXPIRY_DATE) != null)
-					map.put(PWD_EXPIRY_DATE, RequestServiceUtil.dateTolong((String) map.get(PWD_EXPIRY_DATE), format1));
+				if ((String) map.get("pwdExpiryDate") != null)
+					map.put("pwdExpiryDate", RequestServiceUtil.dateTolong((String) map.get("pwdExpiryDate"), format1));
 			});
 		}
 	}
@@ -240,9 +241,7 @@ public class UserService {
 	/**
 	 * Converts a user object to an applicant detail object.
 	 *
-	 * @param user         The user object.
-	 * @param applicantUuid The UUID of the applicant.
-	 * @param bookingId    The booking ID associated with the applicant.
+	 * @param user The user object.
 	 * @return The converted applicant detail.
 	 */
 	public ApplicantDetail convertUserToApplicantDetail(User user, String applicantUuid, String bookingId) {
@@ -357,7 +356,7 @@ public class UserService {
 		if (address == null) {
 			log.info("The address details are empty or null");
 		}
-		return AddressV2.builder().
+		AddressV2 addressdetails = AddressV2.builder().
 				address(address.getAddressLine1()).
 				address2(address.getAddressLine2()).
 				city(address.getCity()).
@@ -368,6 +367,8 @@ public class UserService {
 				tenantId(tenantId).
 				type(address.getAddressType()).
 				build();
+
+		return addressdetails;
 	}
 
 	/**

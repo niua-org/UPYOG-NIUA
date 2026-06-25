@@ -1,7 +1,6 @@
 package org.upyog.sv.validator;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,6 +8,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.sv.config.StreetVendingConfiguration;
 import org.upyog.sv.constants.LocalizationConstants;
@@ -25,26 +25,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StreetVendingValidator {
 
-	private static final ZoneId DEFAULT_ZONE = ZoneId.systemDefault();
+	@Autowired
+	private MDMSValidator mdmsValidator;
 
-	private final MDMSValidator mdmsValidator;
+	@Autowired
+	private StreetVendingConfiguration config;
 
-	private final StreetVendingConfiguration config;
-
-	private final StreetVendingRepository repository;
-
-	public StreetVendingValidator(MDMSValidator mdmsValidator, StreetVendingConfiguration config,
-			StreetVendingRepository repository) {
-		this.mdmsValidator = mdmsValidator;
-		this.config = config;
-		this.repository = repository;
-	}
+	@Autowired
+	private StreetVendingRepository repository;
 
 	/**
-	 * Validates create street vending request against master data and document rules.
-	 *
-	 * @param bookingRequest street vending create request
-	 * @param mdmsData       master data from MDMS
+	 * 
+	 * @param bookingRequest
+	 * @param mdmsData
 	 */
 	public void validateCreate(StreetVendingRequest bookingRequest, Object mdmsData) {
 		log.info("validating master data for create street vending request for applicant mobile no : "
@@ -55,17 +48,18 @@ public class StreetVendingValidator {
 	}
 
 	public void validateUpdate(StreetVendingRequest bookingDetailFromRequest, StreetVendingDetail detailFromDB) {
-		// update validation to be implemented when status transition rules are finalized
+		// log.info("validating master data for update booking request for booking no :
+		// " + bookingDetailFromRequest.getBookingNo());
+		// TODO: Add condition for status from to
 	}
 
 	/**
-	 * Validates that uploaded documents are unique and present.
-	 *
-	 * @param streetVendingRequest street vending request
+	 * 
+	 * @param bookingRequest
 	 */
 	private void validateDuplicateDocuments(StreetVendingRequest streetVendingRequest) {
 		if (streetVendingRequest.getStreetVendingDetail().getDocumentDetails() != null) {
-			List<String> documentFileStoreIds = new LinkedList<>();
+			List<String> documentFileStoreIds = new LinkedList<String>();
 			streetVendingRequest.getStreetVendingDetail().getDocumentDetails().forEach(document -> {
 				if (documentFileStoreIds.contains(document.getFileStoreId()))
 					throw new CustomException(StreetVendingConstants.DUPLICATE_DOCUMENT_UPLOADED,
@@ -140,15 +134,15 @@ public class StreetVendingValidator {
 		if (criteria.getMobileNumber() != null && !allowedParams.contains("mobileNumber"))
 			throw new CustomException(LocalizationConstants.INVALID_SEARCH, "Search on mobile number is not allowed");
 
-		validateSearchDates(criteria);
-	}
-
-	private void validateSearchDates(StreetVendingSearchCriteria criteria) {
 		if (criteria.getFromDate() != null) {
 			LocalDate fromDate = StreetVendingUtil.parseStringToLocalDate(criteria.getFromDate());
-			if (fromDate.isAfter(LocalDate.now(DEFAULT_ZONE))) {
+			if (fromDate.isAfter(LocalDate.now())) {
 				throw new CustomException(StreetVendingConstants.INVALID_SEARCH, "From date cannot be a future date");
 			}
+		}
+
+		if (criteria.getFromDate() != null) {
+			LocalDate fromDate = StreetVendingUtil.parseStringToLocalDate(criteria.getFromDate());
 			if (fromDate.isBefore(StreetVendingUtil.getMonthsAgo(6))) {
 				throw new CustomException(StreetVendingConstants.INVALID_SEARCH, "From date cannot be prior 6 months");
 			}
@@ -165,8 +159,10 @@ public class StreetVendingValidator {
 	}
 
 	public StreetVendingDetail validateApplicationExistence(StreetVendingDetail streetVendingDetail) {
-		return repository.getStreetVendingApplications(StreetVendingSearchCriteria.builder()
+		StreetVendingDetail streetVendingDetail2 = repository.getStreetVendingApplications(StreetVendingSearchCriteria.builder()
 				.applicationNumber(streetVendingDetail.getApplicationNo()).build()).get(0);
+
+		return streetVendingDetail2;
 	}
 
 }

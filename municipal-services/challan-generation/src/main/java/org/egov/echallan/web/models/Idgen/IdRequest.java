@@ -1,4 +1,4 @@
-package org.egov.echallan.web.models.idgen;
+package org.egov.echallan.web.models.Idgen;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

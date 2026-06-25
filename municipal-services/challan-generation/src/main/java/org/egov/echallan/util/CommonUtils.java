@@ -10,6 +10,7 @@ import org.egov.mdms.model.MasterDetail;
 import org.egov.mdms.model.MdmsCriteria;
 import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.ModuleDetail;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -28,19 +29,20 @@ import java.util.Map;
 @Slf4j
 public class CommonUtils {
 
-	private final ObjectMapper mapper;
+	
+	@Autowired
+	private ObjectMapper mapper;
+	
+	@Autowired
+	private ChallanConfiguration configs;
 
-	private final ChallanConfiguration configs;
+    @Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final ServiceRequestRepository serviceRequestRepository;
+    private ChallanConstants constants;
+	
 
-	public CommonUtils(ObjectMapper mapper, ChallanConfiguration configs,
-			ServiceRequestRepository serviceRequestRepository) {
-		this.mapper = mapper;
-		this.configs = configs;
-		this.serviceRequestRepository = serviceRequestRepository;
-	}
-
+  
     /**
      * Method to return auditDetails for create/update flows
      *
@@ -48,12 +50,14 @@ public class CommonUtils {
      * @param isCreate
      * @return AuditDetails
      */
-    public AuditDetails getAuditDetails(String by, boolean isCreate) {
+    public AuditDetails getAuditDetails(String by, Boolean isCreate) {
+    	
         Long time = System.currentTimeMillis();
-        if (isCreate) {
+        
+        if(isCreate)
             return AuditDetails.builder().createdBy(by).lastModifiedBy(by).createdTime(time).lastModifiedTime(time).build();
-        }
-        return AuditDetails.builder().lastModifiedBy(by).lastModifiedTime(time).build();
+        else
+            return AuditDetails.builder().lastModifiedBy(by).lastModifiedTime(time).build();
     }
 
     public Object mDMSCall(ChallanRequest request){
@@ -61,21 +65,23 @@ public class CommonUtils {
         String tenantId = request.getChallan().getTenantId();
         String service = request.getChallan().getBusinessService();
         MdmsCriteriaReq mdmsCriteriaReq = getMDMSRequest(requestInfo, tenantId, service);
-        return serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
+        Object result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
+        return result;
     }
 
     public StringBuilder getMdmsSearchUrl() {
         return new StringBuilder().append(configs.getMdmsHost()).append(configs.getMdmsEndPoint());
     }
 
-    private MdmsCriteriaReq getMDMSRequest(RequestInfo requestInfo, String tenantId, String service){
+    private MdmsCriteriaReq getMDMSRequest(RequestInfo requestInfo,String tenantId, String service){
         List<ModuleDetail> moduleDetails = getModuleDeatilRequest(service);
 
         MdmsCriteria mdmsCriteria = MdmsCriteria.builder().moduleDetails(moduleDetails).tenantId(tenantId)
                 .build();
 
-        return MdmsCriteriaReq.builder().mdmsCriteria(mdmsCriteria)
+        MdmsCriteriaReq mdmsCriteriaReq = MdmsCriteriaReq.builder().mdmsCriteria(mdmsCriteria)
                 .requestInfo(requestInfo).build();
+        return mdmsCriteriaReq;
     }
 
     private List<ModuleDetail> getModuleDeatilRequest(String service) {
@@ -250,4 +256,5 @@ public class CommonUtils {
 		return null;
 	}
 
+ 
 }

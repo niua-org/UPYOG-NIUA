@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Import;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,11 +37,10 @@ public class EwasteMainApplication {
 	 */
 	@Bean
 	public ObjectMapper objectMapper() {
-		return JsonMapper.builder()
-				.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
+		return new ObjectMapper()
+				.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
 				.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-				.defaultTimeZone(TimeZone.getTimeZone(timeZone))
-				.build();
+				.setTimeZone(TimeZone.getTimeZone(timeZone));
 	}
 
 	/**

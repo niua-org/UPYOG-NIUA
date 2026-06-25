@@ -2,8 +2,10 @@ package org.upyog.sv.service;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.sv.constants.StreetVendingConstants;
 import org.upyog.sv.util.MdmsUtil;
@@ -20,15 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class CalculationService {
 
-	private final MdmsUtil mdmsUtil;
-
-	public CalculationService(MdmsUtil mdmsUtil) {
-		this.mdmsUtil = mdmsUtil;
-	}
+	@Autowired
+	private MdmsUtil mdmsUtil;
 
 	/**
-	 * @param bookingRequest street vending request used for demand calculation
-	 * @return calculated demand details
+	 * @param bookingRequest
+	 * @return
 	 */
 	public List<DemandDetail> calculateDemand(StreetVendingRequest bookingRequest) {
 
@@ -61,10 +60,10 @@ public class CalculationService {
 	    //Filter the list of calculation types to include only those matching the derived application type
 	    List<CalculationType> filteredCalculationType = calculationTypes.stream()
 	            .filter(type -> requiredApplicationType.equalsIgnoreCase(type.getApplicationType()))
-	            .toList();
+	            .collect(Collectors.toList());
 
 		List<DemandDetail> demandDetails = processCalculationForDemandGeneration(tenantId, filteredCalculationType,
-				headMasters);
+				bookingRequest, headMasters);
 		
 		log.info("demandDetails : " + demandDetails);
 		
@@ -75,11 +74,12 @@ public class CalculationService {
 	}
 
 	private List<DemandDetail> processCalculationForDemandGeneration(String tenantId,
-			List<CalculationType> calculationTypes, List<TaxHeadMaster> headMasters) {
+			List<CalculationType> calculationTypes, StreetVendingRequest vendingRequest,
+			List<TaxHeadMaster> headMasters) {
 
 		List<DemandDetail> demandDetails = new LinkedList<>();
 
-		List<String> taxHeadMasters = headMasters.stream().map(TaxHeadMaster::getCode).toList();
+		List<String> taxHeadMasters = headMasters.stream().map(head -> head.getCode()).collect(Collectors.toList());
 
 		log.info("tax head masters  : " + taxHeadMasters);
 

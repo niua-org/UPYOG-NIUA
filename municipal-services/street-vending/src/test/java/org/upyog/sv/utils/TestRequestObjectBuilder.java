@@ -36,7 +36,7 @@ public class TestRequestObjectBuilder {
      * @return StreetVendingDetail object with minimal required fields.
      */
     public static StreetVendingDetail createMinimalValidStreetVendingDetail() {
-        return StreetVendingDetail.builder()
+        StreetVendingDetail detail = StreetVendingDetail.builder()
                 .tenantId("pb.amritsar")
                 .vendingActivity("FOOD")
                 .vendingZone("ZONE1")
@@ -45,6 +45,7 @@ public class TestRequestObjectBuilder {
                 .addressDetails(createSampleAddressDetails())
                 .vendorDetail(createSampleVendorDetails())
                 .build();
+        return detail;
     }
 
     private static List<Address> createSampleAddressDetails() {
@@ -85,11 +86,12 @@ public class TestRequestObjectBuilder {
      * @return StreetVendingRequest object with valid data.
      */
     public static StreetVendingRequest createValidStreetVendingRequest() {
-        return StreetVendingRequest.builder()
+        StreetVendingRequest request = StreetVendingRequest.builder()
                 .requestInfo(createSampleRequestInfo())
                 .streetVendingDetail(createMinimalValidStreetVendingDetail())
                 .isDraftApplication(false)
                 .build();
+        return request;
     }
 
     /**
@@ -100,11 +102,12 @@ public class TestRequestObjectBuilder {
     public static StreetVendingRequest createInvalidStreetVendingRequest() {
         StreetVendingDetail detail = createMinimalValidStreetVendingDetail();
         detail.setVendorDetail(null); // This will trigger validation error
-
-        return StreetVendingRequest.builder()
+        
+        StreetVendingRequest request = StreetVendingRequest.builder()
                 .requestInfo(createSampleRequestInfo())
                 .streetVendingDetail(detail)
                 .isDraftApplication(false)
                 .build();
+        return request;
     }
 } 

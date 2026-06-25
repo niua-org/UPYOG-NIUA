@@ -1,4 +1,4 @@
-package org.upyog.tp.repository.rowMapper; // NOSONAR java:S120
+package org.upyog.tp.repository.rowMapper;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.egov.tracer.model.CustomException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.upyog.tp.web.models.Address;
 import org.upyog.tp.web.models.ApplicantDetail;
@@ -34,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  * @param <T>
  */
 @Slf4j
-@SuppressWarnings({"java:S3437", "java:S2143", "java:S6212", "java:S6213", "java:S2638", "java:S3011", "java:S3776", "java:S120"})
 public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
 
     private final Class<T> mappedClass;
@@ -44,99 +41,101 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
     }
 
     @Override
-    public List<T> extractData(ResultSet tp) throws SQLException, DataAccessException {
+    public List<T> extractData(ResultSet tp) {
         List<T> results = new ArrayList<>();
 
         try {
+            // Get metadata for column names
             ResultSetMetaData metaData = tp.getMetaData();
             int columnCount = metaData.getColumnCount();
 
             while (tp.next()) {
-                results.add(mapRow(tp, metaData, columnCount));
+                T instance = mappedClass.getDeclaredConstructor().newInstance();
+
+                // Map to hold column values
+                Map<String, Object> columnValueMap = new HashMap<>();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i).toLowerCase(); // Column name in lowercase
+                    Object columnValue = tp.getObject(i);
+                    columnName = columnName.replace("_", "");
+                    columnValueMap.put(columnName, columnValue);
+                }
+
+                // Map fields to column values
+                for (Field field : mappedClass.getDeclaredFields()) {
+
+                    String fieldName = field.getName().toLowerCase(); // Match field name to column name
+                    if (columnValueMap.containsKey(fieldName)) {
+                        field.setAccessible(true);
+                        Object value = columnValueMap.get(fieldName);
+
+                        value = convertValueToFieldType(field, value);
+
+                        field.set(instance, value);
+                    }
+
+
+                }
+                if (instance instanceof TreePruningBookingDetail) {
+                    TreePruningBookingDetail bookingDetail = (TreePruningBookingDetail) instance;
+
+                    // Audit Details
+                    AuditDetails auditDetails = extractAuditDetails(tp);
+                    bookingDetail.setAuditDetails(auditDetails);
+                    // Set DocumentDetails
+                    DocumentDetail documentDetail = extractDocumentDetails(tp, bookingDetail);
+                    if (documentDetail != null) {
+                        List<DocumentDetail> documentDetails = new ArrayList<>();
+                        documentDetails.add(documentDetail);
+                        bookingDetail.setDocumentDetails(documentDetails);
+                    }
+                    /*
+                     * Extract applicant and address details only when isUserProfileEnabled=false.
+                     * When user profile is disabled, booking needs complete applicant and address info
+                     * from request payload since user service integration is not available.
+                     */
+                    // Extract applicant and address details if available
+                    ApplicantDetail applicantDetail = extractApplicantDetails(tp);
+                    if (applicantDetail != null) {
+                        bookingDetail.setApplicantDetail(applicantDetail);
+                        bookingDetail.getApplicantDetail().setAuditDetails(auditDetails);
+                    }
+                    Address address = extractAddressDetails(tp);
+                    if (address != null) {
+                        bookingDetail.setAddress(address);
+                    }
+                }
+                results.add(instance);
             }
 
-        } catch (ReflectiveOperationException e) {
-            throw new CustomException("ROW_MAPPING_ERROR",
-                    "Failed to extract data to class: " + mappedClass.getName());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract data to class: " + mappedClass.getName(), e);
         }
 
         return results;
     }
 
-    private T mapRow(ResultSet tp, ResultSetMetaData metaData, int columnCount) throws ReflectiveOperationException, SQLException {
-        T instance = mappedClass.getDeclaredConstructor().newInstance();
-        Map<String, Object> columnValueMap = buildColumnValueMap(tp, metaData, columnCount);
-        mapFieldsToInstance(instance, columnValueMap);
-
-        if (instance instanceof TreePruningBookingDetail bookingDetail) {
-            enrichTreePruningBookingDetail(tp, bookingDetail);
-        }
-        return instance;
-    }
-
-    private Map<String, Object> buildColumnValueMap(ResultSet tp, ResultSetMetaData metaData, int columnCount)
-            throws SQLException {
-        Map<String, Object> columnValueMap = new HashMap<>();
-        for (int i = 1; i <= columnCount; i++) {
-            String columnName = metaData.getColumnLabel(i).toLowerCase().replace("_", "");
-            columnValueMap.put(columnName, tp.getObject(i));
-        }
-        return columnValueMap;
-    }
-
-    private void mapFieldsToInstance(T instance, Map<String, Object> columnValueMap)
-            throws IllegalAccessException {
-        for (Field field : mappedClass.getDeclaredFields()) {
-            String fieldName = field.getName().toLowerCase();
-            if (!columnValueMap.containsKey(fieldName)) {
-                continue;
-            }
-            field.setAccessible(true);
-            Object value = convertValueToFieldType(field, columnValueMap.get(fieldName));
-            field.set(instance, value);
-        }
-    }
-
-    private void enrichTreePruningBookingDetail(ResultSet tp, TreePruningBookingDetail bookingDetail) throws SQLException {
-        AuditDetails auditDetails = extractAuditDetails(tp);
-        bookingDetail.setAuditDetails(auditDetails);
-
-        DocumentDetail documentDetail = extractDocumentDetails(tp, bookingDetail);
-        if (documentDetail != null) {
-            List<DocumentDetail> documentDetails = new ArrayList<>();
-            documentDetails.add(documentDetail);
-            bookingDetail.setDocumentDetails(documentDetails);
-        }
-
-        ApplicantDetail applicantDetail = extractApplicantDetails(tp);
-        if (applicantDetail != null) {
-            bookingDetail.setApplicantDetail(applicantDetail);
-            bookingDetail.getApplicantDetail().setAuditDetails(auditDetails);
-        }
-        Address address = extractAddressDetails(tp);
-        if (address != null) {
-            bookingDetail.setAddress(address);
-        }
-    }
-
     private Object convertValueToFieldType(Field field, Object value) {
+        // Handle null values
         if (value == null) {
+            // Return null for nullable fields
             return null;
         }
 
         Class<?> fieldType = field.getType();
 
-        if (fieldType.equals(LocalDate.class) && value instanceof java.sql.Date date) {
-            return date.toLocalDate();
+        // Handle LocalDate conversion
+        if (fieldType.equals(LocalDate.class) && value instanceof java.sql.Date) {
+            return ((java.sql.Date) value).toLocalDate();
         }
 
+        // Handle LocalTime conversion
         if (fieldType.equals(LocalTime.class)) {
-            if (value instanceof Time time) {
-                return time.toLocalTime();
-            }
-            if (value instanceof String string) {
+            if (value instanceof Time) {
+                return ((Time) value).toLocalTime();
+            } else if (value instanceof String) {
                 try {
-                    return LocalTime.parse(string);
+                    return LocalTime.parse((String) value);
                 } catch (Exception e) {
                     log.warn("Could not parse LocalTime from string: {}", value);
                     return null;
@@ -144,6 +143,7 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
             }
         }
 
+        // Default case: return original value
         return value;
     }
 
@@ -159,9 +159,10 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
     private DocumentDetail extractDocumentDetails(ResultSet tp, TreePruningBookingDetail bookingDetail) throws SQLException {
         String documentDetailId = tp.getString("document_detail_id");
         if (documentDetailId == null) {
-            return null;
+            return null; // No document found
         }
 
+        // Build and return DocumentDetail with audit details
         return DocumentDetail.builder()
                 .documentDetailId(documentDetailId)
                 .bookingId(tp.getString("booking_id"))
@@ -183,7 +184,7 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
         try {
             String applicantId = tp.getString("applicant_id");
             if (applicantId == null) {
-                return null;
+                return null; // No applicant details available
             }
 
             ApplicantDetail applicantDetail = new ApplicantDetail();
@@ -195,6 +196,7 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
             applicantDetail.setAlternateNumber(tp.getString("alternate_number"));
             return applicantDetail;
         } catch (SQLException e) {
+            // Column not found, return null
             return null;
         }
     }
@@ -222,7 +224,12 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
             address.setPincode(tp.getString("pincode"));
             return address;
         } catch (SQLException e) {
+            // Column not found, return null
             return null;
         }
     }
+
+
+
+
 }

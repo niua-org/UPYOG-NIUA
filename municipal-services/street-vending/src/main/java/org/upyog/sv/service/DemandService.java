@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.egov.common.contract.request.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.sv.config.StreetVendingConfiguration;
 import org.upyog.sv.constants.StreetVendingConstants;
@@ -21,16 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DemandService {
 
-	private final StreetVendingConfiguration config;
-	private final CalculationService calculationService;
-	private final DemandRepository demandRepository;
+	@Autowired
+	private StreetVendingConfiguration config;
 
-	public DemandService(StreetVendingConfiguration config, CalculationService calculationService,
-			DemandRepository demandRepository) {
-		this.config = config;
-		this.calculationService = calculationService;
-		this.demandRepository = demandRepository;
-	}
+	@Autowired
+	private CalculationService calculationService;
+
+	@Autowired
+	private DemandRepository demandRepository;
 
 	/**
 	 * 1. Fetch tax heads from mdms tax-heads.json 2. Map amount to tax heads from
@@ -38,11 +37,11 @@ public class DemandService {
 	 * automatically generated when fetch bill api is called for demand created by
 	 * this API
 	 * 
-	 * @param streetVendingRequest street vending request for demand creation
-	 * @return List of created demands
+	 * @param streetVendingRequest, mdmsData
+	 * @return List<Demand>
 	 */
 
-	public List<Demand> createDemand(StreetVendingRequest streetVendingRequest) {
+	public List<Demand> createDemand(StreetVendingRequest streetVendingRequest, Object mdmsData) {
 		String tenantId = streetVendingRequest.getStreetVendingDetail().getTenantId();
 		String consumerCode = streetVendingRequest.getStreetVendingDetail().getApplicationNo();
 				
@@ -63,7 +62,7 @@ public class DemandService {
 		
 		String businessService = config.getModuleName(); 
 		long taxPeriodFrom = StreetVendingUtil.getCurrentTimestamp();
-		long taxPeriodTo = taxPeriodFrom + Duration.ofDays(365).toMillis();
+		long taxPeriodTo = taxPeriodFrom + Duration.ofDays(365).toMillis();;
 		
 		// If demand details are present, determine the business service based on tax head code
 		if (demandDetails != null && !demandDetails.isEmpty()) {
@@ -81,6 +80,7 @@ public class DemandService {
 		    	taxPeriodTo = taxPeriodFrom + Duration.ofDays(90).toMillis();
 		    } 
 		}
+		// TODO: change from date and to date from MDMS
 		Demand demand = Demand.builder().consumerCode(consumerCode).demandDetails(demandDetails).payer(user)
 				.tenantId(tenantId).taxPeriodFrom(taxPeriodFrom).taxPeriodTo(taxPeriodTo)
 				.consumerType(config.getModuleName()).businessService(businessService).additionalDetails(null)

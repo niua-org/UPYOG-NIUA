@@ -1,9 +1,10 @@
-package org.upyog.rs.repository.rowMapper; // NOSONAR java:S120 - package name kept to preserve imports/API // NOSONAR
+package org.upyog.rs.repository.rowMapper;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -29,9 +30,10 @@ import lombok.extern.slf4j.Slf4j;
  * mobileNUmber    mobileNo                     No
  *
  * @param <T>
+ *
+ *     TODO: Need to refactor it and Handle Applicant detail and Address Details
  */
 @Slf4j
-@SuppressWarnings({ "java:S2638", "java:S120", "java:S3776", "java:S3011", "java:S112" })
 public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
 
     private final Class<T> mappedClass;
@@ -70,6 +72,10 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
                         Object value = columnValueMap.get(fieldName);
 
                         // Handle LocalDate conversion
+//                        if (field.getType().equals(LocalDate.class) && value instanceof java.sql.Date) {
+//                            value = ((java.sql.Date) value).toLocalDate();
+//                        }
+
                         value = convertValueToFieldType(field, value);
 
                         field.set(instance, value);
@@ -79,7 +85,8 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
                 }
 
                 // Special handling for WaterTankerBookingDetail
-                if (instance instanceof WaterTankerBookingDetail bookingDetail) {
+                if (instance instanceof WaterTankerBookingDetail) {
+                    WaterTankerBookingDetail bookingDetail = (WaterTankerBookingDetail) instance;
 
                     // Audit Details
                     AuditDetails auditDetails = extractAuditDetails(rs);
@@ -103,7 +110,8 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
                     }
                 }
                 
-                if (instance instanceof MobileToiletBookingDetail bookingDetail) {
+                if (instance instanceof MobileToiletBookingDetail) {
+                    MobileToiletBookingDetail bookingDetail = (MobileToiletBookingDetail) instance;
                     // Audit Details
                     AuditDetails auditDetails = extractAuditDetails(rs);
                     bookingDetail.setAuditDetails(auditDetails);
@@ -144,23 +152,22 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
 
         Class<?> fieldType = field.getType();
 
-        // Handle LocalDate conversion (JDBC date values expose an ISO yyyy-MM-dd string form)
-        if (fieldType.equals(LocalDate.class)) {
-            try {
-                return LocalDate.parse(value.toString());
-            } catch (Exception e) {
-                log.warn("Could not parse LocalDate from value: {}", value);
-                return value;
-            }
+        // Handle LocalDate conversion
+        if (fieldType.equals(LocalDate.class) && value instanceof java.sql.Date) {
+            return ((java.sql.Date) value).toLocalDate();
         }
 
-        // Handle LocalTime conversion (JDBC time values expose an ISO HH:mm:ss string form)
+        // Handle LocalTime conversion
         if (fieldType.equals(LocalTime.class)) {
-            try {
-                return LocalTime.parse(value.toString());
-            } catch (Exception e) {
-                log.warn("Could not parse LocalTime from value: {}", value);
-                return null;
+            if (value instanceof Time) {
+                return ((Time) value).toLocalTime();
+            } else if (value instanceof String) {
+                try {
+                    return LocalTime.parse((String) value);
+                } catch (Exception e) {
+                    log.warn("Could not parse LocalTime from string: {}", value);
+                    return null;
+                }
             }
         }
 

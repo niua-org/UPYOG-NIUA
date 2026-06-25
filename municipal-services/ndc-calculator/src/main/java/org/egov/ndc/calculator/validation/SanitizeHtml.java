@@ -1,4 +1,4 @@
-package org.egov.ndc.calculator.validation;
+package org.egov.ndc.calculator.Validation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

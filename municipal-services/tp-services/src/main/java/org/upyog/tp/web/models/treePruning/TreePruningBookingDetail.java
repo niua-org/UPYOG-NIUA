@@ -1,4 +1,4 @@
-package org.upyog.tp.web.models.treePruning; // NOSONAR java:S120
+package org.upyog.tp.web.models.treePruning;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -23,7 +23,6 @@ import java.util.List;
 @Schema(description = "Details for new booking of Tree Pruning")
 @Validated
 @jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-04-19T11:17:29.419+05:30")
-@SuppressWarnings("java:S120")
 @Getter
 @Setter
 @AllArgsConstructor

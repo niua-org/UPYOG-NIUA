@@ -13,6 +13,7 @@ import org.egov.mdms.model.MasterDetail;
 import org.egov.mdms.model.MdmsCriteria;
 import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.ModuleDetail;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MDMSService {
 
-	private final ServiceRequestRepository serviceRequestRepository;
-	private final CalculatorConfig config;
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	public MDMSService(ServiceRequestRepository serviceRequestRepository, CalculatorConfig config) {
-		this.serviceRequestRepository = serviceRequestRepository;
-		this.config = config;
-	}
+	@Autowired
+	private CalculatorConfig config;
 
 	public Object mDMSCall(CalculationReq calculationReq, String tenantId) {
 		MdmsCriteriaReq mdmsCriteriaReq = getMDMSRequest(calculationReq, tenantId);
@@ -41,6 +40,9 @@ public class MDMSService {
 	 * @return MDMS Search URL
 	 */
 	public Object mDMSCall(RequestInfo requestInfo, String tenantId) {
+		List<ModuleDetail> moduleRequest = getAssetModuleRequest();
+		List<ModuleDetail> moduleDetails = new ArrayList<>();
+		moduleDetails.addAll(moduleRequest);
 		MdmsCriteriaReq mdmsCriteriaReq = getAdvanceMDMSRequest(requestInfo, tenantId);
 
 		StringBuilder url = getMdmsSearchUrl();

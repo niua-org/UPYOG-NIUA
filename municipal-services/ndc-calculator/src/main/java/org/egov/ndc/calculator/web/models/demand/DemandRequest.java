@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.egov.common.contract.request.RequestInfo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.egov.ndc.calculator.web.models.demand.Demand;
 
 @Data
 @NoArgsConstructor

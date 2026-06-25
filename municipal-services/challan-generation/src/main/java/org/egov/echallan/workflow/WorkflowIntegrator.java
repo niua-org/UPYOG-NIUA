@@ -84,7 +84,7 @@ public class WorkflowIntegrator {
           && responseBody.getProcessInstances().get(0).getState() != null) {
         // Extract workflow returned statuses
         String applicationStatus = responseBody.getProcessInstances().get(0).getState().getApplicationStatus();
-        String state = responseBody.getProcessInstances().get(0).getState().getStateCode();
+        String state = responseBody.getProcessInstances().get(0).getState().getState();
 
         log.info("Workflow response - Action: {}, ApplicationStatus: {}, State: {}", 
                  action, applicationStatus, state);
@@ -121,7 +121,7 @@ public class WorkflowIntegrator {
     }
     
     // Priority 3: Default fallback for INITIATE action only
-    if (action != null && "INITIATE".equalsIgnoreCase(action.trim())) {
+    if (action != null && action.trim().toUpperCase().equals("INITIATE")) {
       log.debug("Using default INITIATE status: CHALLAN_CREATED");
       return ChallanStatusEnum.CHALLAN_CREATED.toString();
     }

@@ -23,9 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class EncryptionDecryptionUtil {
 
-	private static final String PURPOSE_KEY = "purpose";
-	private static final String DECRYPTION_KEY = "key";
-
+	
     private EncryptionService encryptionService;
 
     @Value(("${state.level.tenant.id}"))
@@ -70,10 +68,10 @@ public class EncryptionDecryptionUtil {
             }
 
             Map<String, String> keyPurposeMap = getKeyToDecrypt(objectToDecrypt, key);
-            String purpose = keyPurposeMap.get(PURPOSE_KEY);
+            String purpose = keyPurposeMap.get("purpose");
 
             if (key.equalsIgnoreCase(StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY))
-                key = keyPurposeMap.get(DECRYPTION_KEY);
+                key = keyPurposeMap.get("key");
 
             P decryptedObject = (P) encryptionService.decryptJson(requestInfo, objectToDecrypt, key, purpose, classType);
             if (decryptedObject == null) {
@@ -93,19 +91,18 @@ public class EncryptionDecryptionUtil {
         }
     }
 
-    @SuppressWarnings("java:S1172")
     public Map<String, String> getKeyToDecrypt(Object objectToDecrypt, String key) {
         Map<String, String> keyPurposeMap = new HashMap<>();
 
         if (!abacEnabled) {
-			if (key.equals(StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY)) {
-                keyPurposeMap.put(DECRYPTION_KEY, StreetVendingConstants.SV_APPLICANT_DETAIL_PLAIN_DECRYPTION_KEY);
-                keyPurposeMap.put(PURPOSE_KEY, StreetVendingConstants.SV_APPLICANT_DETAIL_PLAIN_DECRYPTION_PURPOSE);
+			if (key.equals(StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY)/* || key == null */) {
+                keyPurposeMap.put("key", StreetVendingConstants.SV_APPLICANT_DETAIL_PLAIN_DECRYPTION_KEY);
+                keyPurposeMap.put("purpose", StreetVendingConstants.SV_APPLICANT_DETAIL_PLAIN_DECRYPTION_PURPOSE);
             } 
         } else {
-            if (key.equals(StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY)) {
-                keyPurposeMap.put(DECRYPTION_KEY, StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY);
-                keyPurposeMap.put(PURPOSE_KEY, "ADVBookingSearch");
+            if (key.equals(StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY) || key == null) {
+                keyPurposeMap.put("key", StreetVendingConstants.SV_APPLICANT_DETAIL_ENCRYPTION_KEY);
+                keyPurposeMap.put("purpose", "ADVBookingSearch");
             }
         }
 

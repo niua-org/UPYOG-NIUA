@@ -3,6 +3,7 @@ package org.upyog.cdwm.service;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.cdwm.config.CNDConfiguration;
 import org.upyog.cdwm.repository.ServiceRequestRepository;
@@ -16,14 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class CalculationService {
+	
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final ServiceRequestRepository serviceRequestRepository;
-	private final CNDConfiguration config;
-
-	public CalculationService(ServiceRequestRepository serviceRequestRepository, CNDConfiguration config) {
-		this.serviceRequestRepository = serviceRequestRepository;
-		this.config = config;
-	}
+	@Autowired
+	private CNDConfiguration config;
 	
 	
 	/**

@@ -11,40 +11,48 @@ import org.egov.asset.util.AssetValidator;
 import org.egov.asset.util.MdmsUtil;
 import org.egov.asset.web.models.*;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.Role;
 import org.egov.tracer.model.CustomException;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+
+
 
 @Service
 @Slf4j
 public class AssetService {
 
-    private final MdmsUtil util;
-    private final AssetRepository assetRepository;
-    private final AssetValidator assetValidator;
-    private final EnrichmentService enrichmentService;
-    private final WorkflowService workflowService;
-    private final ModelMapper modelMapper;
-    private final ObjectMapper objectMapper;
+    @Autowired
+    MdmsUtil util;
 
-    public AssetService(MdmsUtil util, AssetRepository assetRepository, AssetValidator assetValidator,
-                        EnrichmentService enrichmentService, WorkflowService workflowService,
-                        ModelMapper modelMapper, ObjectMapper objectMapper) {
-        this.util = util;
-        this.assetRepository = assetRepository;
-        this.assetValidator = assetValidator;
-        this.enrichmentService = enrichmentService;
-        this.workflowService = workflowService;
-        this.modelMapper = modelMapper;
-        this.objectMapper = objectMapper;
-    }
+    @Autowired
+    AssetRepository assetRepository;
+
+    @Autowired
+    AssetValidator assetValidator;
+
+    @Autowired
+    EnrichmentService enrichmentService;
+
+    @Autowired
+    WorkflowService workflowService;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Validates and creates a new Asset record in the system.
@@ -58,18 +66,27 @@ public class AssetService {
         String tenantId = assetRequest.getAsset().getTenantId().split("\\.")[0];
         Object mdmsData = util.mDMSCall(requestInfo, tenantId);
 
+        // Application cannot be created at the state level
         if (assetRequest.getAsset().getTenantId().split("\\.").length == 1) {
             throw new CustomException(AssetErrorConstants.INVALID_TENANT,
                     "Application cannot be created at StateLevel");
         }
 
+        // Approval number should not be set during asset creation
         if (!StringUtils.isEmpty(assetRequest.getAsset().getApprovalNo())) {
             assetRequest.getAsset().setApprovalNo(null);
         }
 
-        assetValidator.validateCreate(mdmsData);
+        // Validate the asset creation request
+        assetValidator.validateCreate(assetRequest, mdmsData);
+
+        // Enrich the asset creation request with necessary details
         enrichmentService.enrichAssetCreateRequest(assetRequest, mdmsData);
-        workflowService.updateWorkflow(assetRequest);
+
+        // Update the workflow for asset creation
+        workflowService.updateWorkflow(assetRequest, CreationReason.CREATE);
+
+        // Save the asset data to the repository
         assetRepository.save(assetRequest);
 
         return assetRequest.getAsset();
@@ -83,30 +100,50 @@ public class AssetService {
      * @return A list of AssetDTO objects matching the search criteria.
      */
     public List<AssetDTO> search(AssetSearchCriteria criteria, RequestInfo requestInfo) {
+        List<Asset> assets = new LinkedList<>();
+
+        // Validate the search request
         assetValidator.validateSearch(requestInfo, criteria);
 
-        List<Asset> assets;
+        List<String> roles = new ArrayList<>();
+        if (requestInfo.getUserInfo() != null) {
+            for (Role role : requestInfo.getUserInfo().getRoles()) {
+                roles.add(role.getCode());
+            }
+        }
+
+        // If isInterServiceCall flag is true, skip user-based filtering and get all matching assets
         if (Boolean.TRUE.equals(criteria.getIsInterServiceCall())) {
             log.debug("Inter-service call detected, fetching assets without user-based filtering");
             assets = getAssetsFromCriteria(criteria);
             log.debug("Number of assets returned by the search query: " + assets.size());
-        } else if (criteria.tenantIdOnly() || criteria.isEmpty()) {
+        }
+        // If tenant ID is the only criteria or no criteria is provided
+        else if ((criteria.tenantIdOnly() || criteria.isEmpty())) {
             log.debug("Loading data of assets created by the current user");
-            assets = getAssetCreatedForByMe(criteria, requestInfo);
+            assets = this.getAssetCreatedForByMe(criteria, requestInfo);
             log.debug("Number of assets returned by the search query: " + assets.size());
         } else {
             assets = getAssetsFromCriteria(criteria);
         }
 
+        // Convert the assets to the appropriate DTOs
         if (criteria.getApplicationNo() != null) {
             return assets.stream()
-                    .<AssetDTO>map(asset -> modelMapper.map(asset, AssetDTO.class))
-                    .toList();
+                    .map(asset -> modelMapper.map(asset, AssetDTO.class))
+                    .collect(Collectors.toList());
+        } else {
+            return assets.stream()
+                    .map(this::convertToAssetSearchDTO)
+                    .collect(Collectors.toList());
         }
-        return assets.stream()
-                .<AssetDTO>map(this::convertToAssetSearchDTO)
-                .toList();
+        //
+//        return assets.stream()
+//                .map(asset -> modelMapper.map(asset, AssetDTO.class))
+//                .collect(Collectors.toList());
     }
+
+
 
     /**
      * Converts an Asset entity to an AssetSearchDTO object.
@@ -114,16 +151,33 @@ public class AssetService {
      * @param asset The Asset entity to be converted.
      * @return The AssetSearchDTO object.
      */
+//    private AssetSearchDTO convertToAssetSearchDTO(Asset asset) {
+//        AssetSearchDTO assetSearchDTO = modelMapper.map(asset, AssetSearchDTO.class);
+//        if (asset.getAssetAssignment() != null) {
+//            assetSearchDTO.setAssetAssignment(modelMapper.map(asset.getAssetAssignment(), AssetAssignmentDTO.class));
+//        }
+//        return assetSearchDTO;
+//    }
     private AssetSearchDTO convertToAssetSearchDTO(Asset asset) {
-        AssetSearchDTO assetSearchDTO = modelMapper.map(asset, AssetSearchDTO.class);
 
+        AssetSearchDTO assetSearchDTO =
+                modelMapper.map(asset, AssetSearchDTO.class);
+
+        // Assignment mapping
         if (asset.getAssetAssignment() != null) {
             assetSearchDTO.setAssetAssignment(
-                    modelMapper.map(asset.getAssetAssignment(), AssetAssignmentDTO.class));
+                    modelMapper.map(
+                            asset.getAssetAssignment(),
+                            AssetAssignmentDTO.class
+                    )
+            );
         }
 
+        // IMPORTANT FIX: Object → JsonNode
         if (asset.getAdditionalDetails() != null) {
-            assetSearchDTO.setAdditionalDetails(objectMapper.valueToTree(asset.getAdditionalDetails()));
+            assetSearchDTO.setAdditionalDetails(
+                    objectMapper.valueToTree(asset.getAdditionalDetails())
+            );
         }
 
         return assetSearchDTO;
@@ -137,8 +191,9 @@ public class AssetService {
      * @return A list of assets created by the current user.
      */
     private List<Asset> getAssetCreatedForByMe(AssetSearchCriteria criteria, RequestInfo requestInfo) {
+        List<Asset> assets;
+        UserSearchCriteria userSearchRequest = new UserSearchCriteria();
         if (criteria.getTenantId() != null) {
-            UserSearchCriteria userSearchRequest = new UserSearchCriteria();
             userSearchRequest.setTenantId(criteria.getTenantId());
         }
         List<String> uuids = new ArrayList<>();
@@ -147,7 +202,8 @@ public class AssetService {
             criteria.setCreatedBy(uuids);
         }
         log.debug("Loading data of assets created by user: " + uuids);
-        return getAssetsFromCriteria(criteria);
+        assets = getAssetsFromCriteria(criteria);
+        return assets;
     }
 
     /**
@@ -177,12 +233,18 @@ public class AssetService {
         Object mdmsData = util.mDMSCall(requestInfo, tenantId);
         Asset asset = assetRequest.getAsset();
 
+        // Check if the asset exists
         if (asset.getId() == null) {
             throw new CustomException(AssetErrorConstants.UPDATE_ERROR, "Asset Not found in the System: " + asset);
         }
 
+        // Enrich the asset update request with necessary details
         enrichmentService.enrichAssetUpdateRequest(assetRequest, mdmsData);
-        workflowService.updateWorkflow(assetRequest);
+
+        // Update the workflow for asset update
+        workflowService.updateWorkflow(assetRequest, CreationReason.UPDATE);
+
+        // Update the asset data in the repository
         assetRepository.update(assetRequest);
 
         return assetRequest.getAsset();
@@ -201,11 +263,15 @@ public class AssetService {
         Object mdmsData = util.mDMSCall(requestInfo, tenantId);
         Asset asset = assetRequest.getAsset();
 
+        // Check if the asset exists
         if (asset.getId() == null) {
             throw new CustomException(AssetErrorConstants.UPDATE_ERROR, "Asset Not found in the System: " + asset);
         }
 
+        // Enrich the asset update request with necessary details
         enrichmentService.enrichAssetUpdateRequest(assetRequest, mdmsData);
+
+        // Update the asset data in the repository
         assetRepository.updateAssetInSystem(assetRequest);
 
         return assetRequest.getAsset();
@@ -220,12 +286,16 @@ public class AssetService {
     public Asset assignment(@Valid AssetRequest assetRequest) {
         log.debug("Asset assignment service method called");
 
+        // Application cannot be created at the state level
         if (assetRequest.getAsset().getTenantId().split("\\.").length == 1) {
             throw new CustomException(AssetErrorConstants.INVALID_TENANT,
                     "Application cannot be created at StateLevel");
         }
 
+        // Enrich the asset assignment request
         enrichmentService.enrichAssetOtherOperationsCreateRequest(assetRequest);
+
+        // Save the asset assignment data to the repository
         assetRepository.saveAssignment(assetRequest);
 
         return assetRequest.getAsset();
@@ -233,25 +303,29 @@ public class AssetService {
 
     /**
      * Updates an existing asset assignment.
-     *
+     * This method validates the tenant ID to ensure that the application is not created at the state level.
      * @param assetRequest The request containing asset assignment details to be updated.
      * @return The updated Asset object.
      */
     public Asset updateAssignment(@Valid AssetRequest assetRequest) {
         log.debug("Asset assignment service method called");
 
+        // Validate that the application is not created at the state level
         if (assetRequest.getAsset().getTenantId().split("\\.").length == 1) {
             throw new CustomException(AssetErrorConstants.INVALID_TENANT,
                     "Application cannot be created at StateLevel");
         }
 
+        // Enrich the asset assignment update request
         enrichmentService.enrichAssetOtherOperationsUpdateRequest(assetRequest);
+
+        // Update the asset assignment in the repository
         assetRepository.updateAssignment(assetRequest);
 
         return assetRequest.getAsset();
     }
 
-    public List<AssetAssignment> getAssetAssignmentDetails(String assetId) {
-        return assetRepository.getAssetAssignmentDetails(assetId);
+    public List<AssetAssignment> getAssetAssignmentDetails(String tenantId, String assetId) {
+        return assetRepository.getAssetAssignmentDetails(tenantId, assetId);
     }
 }

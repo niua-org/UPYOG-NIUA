@@ -17,6 +17,7 @@ import org.egov.mdms.model.MasterDetail;
 import org.egov.mdms.model.MdmsCriteria;
 import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.ModuleDetail;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -47,30 +48,23 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class NotificationUtil {
 
-	private static final String REQUEST_INFO_KEY = "RequestInfo";
-	private static final String TENANT_ID_KEY = "tenantId";
-	private static final String USER_TYPE_KEY = "userType";
-	private static final String CITIZEN_USER_TYPE = "CITIZEN";
-	private static final String USER_NAME_KEY = "userName";
-	private static final String EXCEPTION_FETCHING_USER = "Exception while fetching user for username - ";
-	private static final String SERVICE_RETURNED_NULL_USER = "Service returned null while fetching user for username - ";
-	private static final String EXCEPTION_TRACE = "Exception trace: ";
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	private CNDConfiguration config;
+	
+	@Autowired
+	@Lazy
+	private MessageServiceImpl messageService;
 
-	private final CNDConfiguration config;
+	private Producer producer;
 
-	private final MessageServiceImpl messageService;
+	private RestTemplate restTemplate;
 
-	private final Producer producer;
-
-	private final RestTemplate restTemplate;
-
+	@Autowired
 	public NotificationUtil(ServiceRequestRepository serviceRequestRepository, CNDConfiguration config,
-			@Lazy MessageServiceImpl messageService, Producer producer, RestTemplate restTemplate) {
+			Producer producer, RestTemplate restTemplate) {
 		this.serviceRequestRepository = serviceRequestRepository;
 		this.config = config;
-		this.messageService = messageService;
 		this.producer = producer;
 		this.restTemplate = restTemplate;
 	}
@@ -80,9 +74,9 @@ public class NotificationUtil {
 	 *
 	 * @return The uri for localization search call
 	 */
-	public StringBuilder getUri(String tenantId, String locale) {
+	public StringBuilder getUri(String tenantId, RequestInfo requestInfo, String locale) {
 
-		if (Boolean.TRUE.equals(config.getIsLocalizationStateLevel()))
+		if (config.getIsLocalizationStateLevel())
 			tenantId = tenantId.split("\\.")[0];
 
 		StringBuilder uri = new StringBuilder();
@@ -204,7 +198,7 @@ public class NotificationUtil {
 	 */
 	public void sendSMS(List<SMSRequest> smsRequestList) {
 
-		if (Boolean.TRUE.equals(config.getIsSMSNotificationEnabled())) {
+		if (config.getIsSMSNotificationEnabled()) {
 			if (CollectionUtils.isEmpty(smsRequestList))
 				log.info("Messages from localization couldn't be fetched!");
 			for (SMSRequest smsRequest : smsRequestList) {
@@ -229,22 +223,23 @@ public class NotificationUtil {
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getUserHost()).append(config.getUserV2SearchEndpoint());
 		Map<String, Object> userSearchRequest = new HashMap<>();
-		userSearchRequest.put(REQUEST_INFO_KEY, requestInfo);
-		userSearchRequest.put(TENANT_ID_KEY, tenantId);
-		userSearchRequest.put(USER_TYPE_KEY, CITIZEN_USER_TYPE);
+		userSearchRequest.put("RequestInfo", requestInfo);
+		userSearchRequest.put("tenantId", tenantId);
+		userSearchRequest.put("userType", "CITIZEN");
 		for (String mobileNo : mobileNumbers) {
-			userSearchRequest.put(USER_NAME_KEY, mobileNo);
+			userSearchRequest.put("userName", mobileNo);
 			try {
 				Object user = serviceRequestRepository.fetchResult(uri, userSearchRequest);
 				if (null != user) {
 					String uuid = JsonPath.read(user, "$.user[0].uuid");
 					mapOfPhnoAndUUIDs.put(mobileNo, uuid);
 				} else {
-					log.error(SERVICE_RETURNED_NULL_USER + mobileNo);
+					log.error("Service returned null while fetching user for username - " + mobileNo);
 				}
 			} catch (Exception e) {
-				log.error(EXCEPTION_FETCHING_USER + mobileNo);
-				log.error(EXCEPTION_TRACE, e);
+				log.error("Exception while fetching user for username - " + mobileNo);
+				log.error("Exception trace: ", e);
+				continue;
 			}
 		}
 		return mapOfPhnoAndUUIDs;
@@ -264,10 +259,10 @@ public class NotificationUtil {
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getUserHost()).append(config.getUserV2SearchEndpoint());
 		Map<String, Object> userSearchRequest = new HashMap<>();
-		userSearchRequest.put(REQUEST_INFO_KEY, requestInfo);
-		userSearchRequest.put(TENANT_ID_KEY, tenantId);
-		userSearchRequest.put(USER_TYPE_KEY, CITIZEN_USER_TYPE);
-		userSearchRequest.put(USER_NAME_KEY, mobileNumber);
+		userSearchRequest.put("RequestInfo", requestInfo);
+		userSearchRequest.put("tenantId", tenantId);
+		userSearchRequest.put("userType", "CITIZEN");
+		userSearchRequest.put("userName", mobileNumber);
 		try {
 
 			Object user = serviceRequestRepository.fetchResult(uri, userSearchRequest);
@@ -278,8 +273,8 @@ public class NotificationUtil {
 				log.info("mapOfPhoneNoAndUUIDs : " + mapOfPhoneNoAndUUIDs);
 			}
 		} catch (Exception e) {
-			log.error(EXCEPTION_FETCHING_USER + mobileNumber);
-			log.error(EXCEPTION_TRACE, e);
+			log.error("Exception while fetching user for username - " + mobileNumber);
+			log.error("Exception trace: ", e);
 		}
 
 		return mapOfPhoneNoAndUUIDs;
@@ -329,7 +324,7 @@ public class NotificationUtil {
 	 */
 	public void sendEmail(List<EmailRequest> emailRequestList) {
 
-		if (Boolean.TRUE.equals(config.getIsEmailNotificationEnabled())) {
+		if (config.getIsEmailNotificationEnabled()) {
 			if (CollectionUtils.isEmpty(emailRequestList))
 				log.info("Messages from localization couldn't be fetched!");
 			for (EmailRequest emailRequest : emailRequestList) {
@@ -359,11 +354,11 @@ public class NotificationUtil {
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getUserHost()).append(config.getUserV2SearchEndpoint());
 		Map<String, Object> userSearchRequest = new HashMap<>();
-		userSearchRequest.put(REQUEST_INFO_KEY, requestInfo);
-		userSearchRequest.put(TENANT_ID_KEY, tenantId);
-		userSearchRequest.put(USER_TYPE_KEY, CITIZEN_USER_TYPE);
+		userSearchRequest.put("RequestInfo", requestInfo);
+		userSearchRequest.put("tenantId", tenantId);
+		userSearchRequest.put("userType", "CITIZEN");
 		for (String mobileNo : mobileNumbers) {
-			userSearchRequest.put(USER_NAME_KEY, mobileNo);
+			userSearchRequest.put("userName", mobileNo);
 			try {
 				Object user = serviceRequestRepository.fetchResult(uri, userSearchRequest);
 				if (null != user) {
@@ -372,11 +367,12 @@ public class NotificationUtil {
 						mapOfPhnoAndEmailIds.put(mobileNo, email);
 					}
 				} else {
-					log.error(SERVICE_RETURNED_NULL_USER + mobileNo);
+					log.error("Service returned null while fetching user for username - " + mobileNo);
 				}
 			} catch (Exception e) {
-				log.error(EXCEPTION_FETCHING_USER + mobileNo);
-				log.error(EXCEPTION_TRACE, e);
+				log.error("Exception while fetching user for username - " + mobileNo);
+				log.error("Exception trace: ", e);
+				continue;
 			}
 		}
 		return mapOfPhnoAndEmailIds;
@@ -398,7 +394,7 @@ public class NotificationUtil {
 		uri.append(config.getMdmsHost()).append(config.getMdmsPath());
 		if (StringUtils.isEmpty(tenantId))
 			return masterData;
-		MdmsCriteriaReq mdmsCriteriaReq = getMdmsRequestForChannelList(requestInfo, tenantId);
+		MdmsCriteriaReq mdmsCriteriaReq = getMdmsRequestForChannelList(requestInfo, tenantId, moduleName, action);
 		//Can create filter as string using this
 		Filter masterDataFilter = filter(where(NotificationConstants.MODULE).is(moduleName)
 				.and(NotificationConstants.ACTION).is(action));
@@ -432,10 +428,11 @@ public class NotificationUtil {
 	 * - Wraps the criteria in an {@link MdmsCriteriaReq} and returns it.
 	 */
 	
-	private MdmsCriteriaReq getMdmsRequestForChannelList(RequestInfo requestInfo, String tenantId) {
+	private MdmsCriteriaReq getMdmsRequestForChannelList(RequestInfo requestInfo, String tenantId, String moduleName, String action) {
 
 		MasterDetail masterDetail = new MasterDetail();
 		masterDetail.setName(NotificationConstants.CHANNEL_LIST);
+	//	masterDetail.setFilter("[?(@['module'] == 'CND' && @['action'] == '"+ action +"')]");
 		List<MasterDetail> masterDetailList = new ArrayList<>();
 		masterDetailList.add(masterDetail);
 
@@ -469,7 +466,7 @@ public class NotificationUtil {
 	public String getShortenedUrl(String url) {
 		String res = null;
 		HashMap<String, String> body = new HashMap<>();
-		body.put(NotificationConstants.URL, url);
+		body.put("url", url);
 		StringBuilder builder = new StringBuilder(config.getUrlShortnerHost());
 		builder.append(config.getShortenerEndpoint());
 		try {
@@ -482,8 +479,9 @@ public class NotificationUtil {
 		if (StringUtils.isEmpty(res)) {
 			log.error("URL_SHORTENING_ERROR", "Unable to shorten url: " + url);
 			return url;
+		} else {
+			return res;
 		}
-		return res;
 	}
 	
 	/**

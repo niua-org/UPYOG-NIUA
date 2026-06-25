@@ -1,7 +1,8 @@
 package org.upyog.cdwm.service;
 
-import java.util.Map;
+import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.cdwm.config.CNDConfiguration;
 import org.upyog.cdwm.service.impl.CNDServiceImpl;
@@ -18,18 +19,17 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class PaymentService {
 
-	private final ObjectMapper mapper;
-	private final CNDConfiguration configs;
-	private final WorkflowService workflowService;
-	private final CNDServiceImpl cndService;
+	@Autowired
+	private ObjectMapper mapper;
 
-	public PaymentService(ObjectMapper mapper, CNDConfiguration configs, WorkflowService workflowService,
-			CNDServiceImpl cndService) {
-		this.mapper = mapper;
-		this.configs = configs;
-		this.workflowService = workflowService;
-		this.cndService = cndService;
-	}
+	@Autowired
+	private CNDConfiguration configs;
+
+	@Autowired
+	private WorkflowService workflowService;
+
+	@Autowired
+	private CNDServiceImpl cndService;
 
 	/**
 	 * Processes a payment notification received from the Kafka topic. This method is triggered 
@@ -40,16 +40,16 @@ public class PaymentService {
 	 * <p>If the business service in the payment matches the configured module name, it updates the 
 	 * workflow status and invokes the CND application update logic accordingly.</p>
 	 *
-	 * @param paymentRecord the payment record received from the Kafka topic, containing the payment information.
+	 * @param record the payment record received from the Kafka topic, containing the payment information.
 	 * @param topic the Kafka topic name from which the payment event was consumed.
 	 * @throws JsonProcessingException if the record cannot be processed into a valid {@link PaymentRequest} object.
 	 */
 	
-	public void process(Map<String, Object> paymentRecord, String topic) throws JsonProcessingException {
-		log.info("Receipt consumer class entry: {}", paymentRecord);
+	public void process(HashMap<String, Object> record, String topic) throws JsonProcessingException {
+		log.info("Receipt consumer class entry: {}", record);
 
 		try {
-			PaymentRequest paymentRequest = mapper.convertValue(paymentRecord, PaymentRequest.class);
+			PaymentRequest paymentRequest = mapper.convertValue(record, PaymentRequest.class);
 			log.info("paymentRequest: {}", paymentRequest);
 
 			PaymentDetail paymentDetail = paymentRequest.getPayment().getPaymentDetails().get(0);

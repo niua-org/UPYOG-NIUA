@@ -13,27 +13,25 @@ import org.egov.asset.web.models.disposal.AssetDisposalRequest;
 import org.egov.asset.web.models.maintenance.AssetMaintenanceRequest;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class EnrichmentService {
 
-    private static final String ENRICHING_OTHER_OPERATIONS_REQUEST = "Enriching Other Operations Request";
+    @Autowired
+    private AssetConfiguration config;
 
-    private final AssetConfiguration config;
-    private final AssetUtil assetUtil;
-    private final IdGenRepository idGenRepository;
+    @Autowired
+    private AssetUtil assetUtil;
 
-    public EnrichmentService(AssetConfiguration config, AssetUtil assetUtil, IdGenRepository idGenRepository) {
-        this.config = config;
-        this.assetUtil = assetUtil;
-        this.idGenRepository = idGenRepository;
-    }
+    @Autowired
+    private IdGenRepository idGenRepository;
 
     /**
      * Enriches the Asset create request by adding audit details and unique identifiers (UUIDs).
@@ -45,11 +43,15 @@ public class EnrichmentService {
         log.info("Enriching Asset Create Request");
         RequestInfo requestInfo = assetRequest.getRequestInfo();
 
+        // Set audit details for the asset
         AuditDetails auditDetails = assetUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
         assetRequest.getAsset().setAuditDetails(auditDetails);
         assetRequest.getAsset().setId(UUID.randomUUID().toString());
+
+        // Set the account ID to the creator's user ID
         assetRequest.getAsset().setAccountId(assetRequest.getAsset().getAuditDetails().getCreatedBy());
 
+        // Enrich documents with unique identifiers if present
         if (!CollectionUtils.isEmpty(assetRequest.getAsset().getDocuments())) {
             assetRequest.getAsset().getDocuments().forEach(document -> {
                 if (document.getDocumentId() == null) {
@@ -59,10 +61,12 @@ public class EnrichmentService {
             });
         }
 
+        // Enrich address details with a unique address ID if present
         if (assetRequest.getAsset().getAddressDetails() != null) {
             assetRequest.getAsset().getAddressDetails().setAddressId(UUID.randomUUID().toString());
         }
 
+        // Generate and set ID generation fields for the asset
         setIdgenIds(assetRequest);
     }
 
@@ -75,6 +79,7 @@ public class EnrichmentService {
         log.info("Enriching Other Asset Operations Request");
         RequestInfo requestInfo = assetRequest.getRequestInfo();
 
+        // Set audit details for the asset assignment
         AuditDetails auditDetails = assetUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
         assetRequest.getAsset().getAssetAssignment().setAuditDetails(auditDetails);
         assetRequest.getAsset().getAssetAssignment().setAssignmentId(UUID.randomUUID().toString());
@@ -89,6 +94,7 @@ public class EnrichmentService {
         log.info("Enriching Asset Assignment Update Request");
         RequestInfo requestInfo = assetRequest.getRequestInfo();
 
+        // Set audit details for the asset assignment
         AuditDetails auditDetails = assetUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
         assetRequest.getAsset().getAssetAssignment().setAuditDetails(auditDetails);
     }
@@ -103,6 +109,7 @@ public class EnrichmentService {
         String tenantId = request.getAsset().getTenantId();
         Asset asset = request.getAsset();
 
+        // Generate application numbers using ID generation service
         List<String> applicationNumbers = getIdList(requestInfo, tenantId, config.getApplicationNoIdgenName(),
                 config.getApplicationNoIdgenFormat(), 1);
 
@@ -110,6 +117,7 @@ public class EnrichmentService {
             throw new CustomException(AssetErrorConstants.IDGEN_ERROR, "No IDs returned from ID generation service");
         }
 
+        // Set the application number for the asset
         asset.setApplicationNo(AssetUtil.improveAssetID(applicationNumbers.get(0), request));
     }
 
@@ -131,7 +139,8 @@ public class EnrichmentService {
             throw new CustomException(AssetErrorConstants.IDGEN_ERROR, "No IDs returned from ID generation service");
         }
 
-        return idResponses.stream().map(IdResponse::getId).toList();
+        // Extract and return IDs from the response
+        return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
     }
 
     /**
@@ -142,9 +151,12 @@ public class EnrichmentService {
      */
     public void enrichAssetUpdateRequest(AssetRequest assetRequest, Object mdmsData) {
         RequestInfo requestInfo = assetRequest.getRequestInfo();
+
+        // Set audit details for the asset
         AuditDetails auditDetails = assetUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
         assetRequest.getAsset().setAuditDetails(auditDetails);
     }
+
 
     /**
      * Enriches other Asset operations (e.g., assignment, disposal) by adding audit details and unique identifiers.
@@ -152,7 +164,8 @@ public class EnrichmentService {
      * @param requestInfo The request object containing asset operation details to be enriched.
      */
     public AuditDetails enrichOtherOperations(RequestInfo requestInfo) {
-        log.info(ENRICHING_OTHER_OPERATIONS_REQUEST);
+        log.info("Enriching Other Operations Request");
+        // Set audit details for the asset assignment
         return assetUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
     }
 
@@ -162,9 +175,10 @@ public class EnrichmentService {
      * @param request The AssetDisposalRequest object containing asset operation details to be enriched.
      */
     public void enrichDisposalCreateOperations(AssetDisposalRequest request) {
-        log.info(ENRICHING_OTHER_OPERATIONS_REQUEST);
+        log.info("Enriching Other Operations Request");
         AuditDetails auditDetails = assetUtil.getAuditDetails(request.getRequestInfo().getUserInfo().getUuid(), true);
 
+        // Enrich documents with unique identifiers if present
         if (!CollectionUtils.isEmpty(request.getAssetDisposal().getDocuments())) {
             request.getAssetDisposal().getDocuments().forEach(document -> {
                 if (document.getDocumentId() == null) {
@@ -183,9 +197,10 @@ public class EnrichmentService {
      * @param request The AssetDisposalRequest object containing asset operation details to be enriched.
      */
     public void enrichDisposalUpdateOperations(AssetDisposalRequest request) {
-        log.info(ENRICHING_OTHER_OPERATIONS_REQUEST);
+        log.info("Enriching Other Operations Request");
         AuditDetails auditDetails = assetUtil.getAuditDetails(request.getRequestInfo().getUserInfo().getUuid(), false);
 
+        // Enrich documents with unique identifiers if present
         if (!CollectionUtils.isEmpty(request.getAssetDisposal().getDocuments())) {
             request.getAssetDisposal().getDocuments().forEach(document -> {
                 if (document.getDocumentId() == null) {
@@ -206,8 +221,10 @@ public class EnrichmentService {
     public void enrichMaintenanceCreateOperations(AssetMaintenanceRequest request) {
         log.info("Enriching Asset Maintenance Create Request");
 
+        // Generate audit details
         AuditDetails auditDetails = assetUtil.getAuditDetails(request.getRequestInfo().getUserInfo().getUuid(), true);
 
+        // Enrich documents with unique identifiers if present
         if (!CollectionUtils.isEmpty(request.getAssetMaintenance().getDocuments())) {
             request.getAssetMaintenance().getDocuments().forEach(document -> {
                 if (document.getDocumentId() == null) {
@@ -217,6 +234,7 @@ public class EnrichmentService {
             });
         }
 
+        // Set audit details and unique identifier for the maintenance record
         request.getAssetMaintenance().setAuditDetails(auditDetails);
         request.getAssetMaintenance().setMaintenanceId(UUID.randomUUID().toString());
     }
@@ -229,7 +247,10 @@ public class EnrichmentService {
     public void enrichMaintenanceUpdateOperations(AssetMaintenanceRequest request) {
         log.info("Enriching Asset Maintenance Update Request");
 
+        // Generate audit details
         AuditDetails auditDetails = assetUtil.getAuditDetails(request.getRequestInfo().getUserInfo().getUuid(), false);
+
+        // Set audit details for the maintenance record
         request.getAssetMaintenance().setAuditDetails(auditDetails);
     }
 }

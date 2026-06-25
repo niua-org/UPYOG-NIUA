@@ -2,17 +2,14 @@ package org.egov.ndc.calculator.web.models.ndc;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class NdcMdms {
-    @JsonProperty("NdcFee")
-    private List<NdcFee> ndcFee;
+    private List<NdcFee> NdcFee; // Note: case-sensitive based on your JSON
 
     public List<NdcFee> getNdcFee() {
-        return ndcFee;
+        return NdcFee;
     }
 
-    public void setNdcFee(List<NdcFee> ndcFee) {
-        this.ndcFee = ndcFee;
+    public void setNdcFee(List<NdcFee> NdcFee) {
+        this.NdcFee = NdcFee;
     }
 }

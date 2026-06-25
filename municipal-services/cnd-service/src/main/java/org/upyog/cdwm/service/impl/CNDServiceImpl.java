@@ -13,6 +13,7 @@ import org.egov.common.contract.request.Role;
 import org.egov.tracer.model.CustomException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.cdwm.config.CNDConfiguration;
@@ -40,23 +41,23 @@ public class CNDServiceImpl implements CNDService {
 
     private static final Logger log = LoggerFactory.getLogger(CNDServiceImpl.class);
 
-    private final EnrichmentService enrichmentService;
-    private final WorkflowService workflowService;
-    private final CalculationService calculationService;
-    private final CNDServiceRepositoryImpl cndApplicationRepository;
-    private final UserService userService;
-    private final CNDConfiguration config;
+    @Autowired
+    private EnrichmentService enrichmentService;
 
-    public CNDServiceImpl(EnrichmentService enrichmentService, WorkflowService workflowService,
-            CalculationService calculationService, CNDServiceRepositoryImpl cndApplicationRepository,
-            UserService userService, CNDConfiguration config) {
-        this.enrichmentService = enrichmentService;
-        this.workflowService = workflowService;
-        this.calculationService = calculationService;
-        this.cndApplicationRepository = cndApplicationRepository;
-        this.userService = userService;
-        this.config = config;
-    }
+    @Autowired
+    private WorkflowService workflowService;
+    
+    @Autowired
+    private CalculationService calculationService;
+
+    @Autowired
+    private CNDServiceRepositoryImpl cndApplicationRepository;
+
+	@Autowired
+	private UserService userService;
+
+	@Autowired
+	private CNDConfiguration config;
 	
     /**
      * Creates a new Construction and Demolition (CND) application request.
@@ -152,7 +153,7 @@ public class CNDServiceImpl implements CNDService {
     @Override
     public Integer getApplicationsCount(CNDServiceSearchCriteria cndServiceSearchCriteria, RequestInfo requestInfo) {
         cndServiceSearchCriteria.setCountCall(true);
-        addCreatedByMeToCriteria(cndServiceSearchCriteria, requestInfo);
+        cndServiceSearchCriteria = addCreatedByMeToCriteria(cndServiceSearchCriteria, requestInfo);
         return cndApplicationRepository.getCNDApplicationsCount(cndServiceSearchCriteria);
     }
 
@@ -173,7 +174,7 @@ public class CNDServiceImpl implements CNDService {
 		for (Role role : requestInfo.getUserInfo().getRoles()) {
 			roles.add(role.getCode());
 		}
-		log.info("user roles for searching : {}", roles);
+		log.info("user roles for searching : " + roles);
 		/**
 		 * Citizen can see booking details only booked by him
 		 */
@@ -182,7 +183,7 @@ public class CNDServiceImpl implements CNDService {
 				&& !StringUtils.isEmpty(requestInfo.getUserInfo().getUuid())) {
 			uuids.add(requestInfo.getUserInfo().getUuid());
 			criteria.setCreatedBy(uuids);
-			log.debug("loading data of created and by me {}", uuids);
+			log.debug("loading data of created and by me" + uuids.toString());
 		}
 		return criteria;
 	}
@@ -303,10 +304,10 @@ public class CNDServiceImpl implements CNDService {
 	    
 	    // Merge new and existing details before sending to Kafka
 	    cndApplicationRequest.getCndApplication().setWasteTypeDetails(
-	        Stream.concat(existingWasteDetails.stream(), newWasteDetails.stream()).toList()
+	        Stream.concat(existingWasteDetails.stream(), newWasteDetails.stream()).collect(Collectors.toList())
 	    );
 	    cndApplicationRequest.getCndApplication().setDocumentDetails(
-	        Stream.concat(existingDocumentDetails.stream(), newDocumentDetails.stream()).toList()
+	        Stream.concat(existingDocumentDetails.stream(), newDocumentDetails.stream()).collect(Collectors.toList())
 	    );
 	}
 

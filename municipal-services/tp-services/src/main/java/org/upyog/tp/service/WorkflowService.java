@@ -2,9 +2,11 @@ package org.upyog.tp.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.tp.config.TreePruningConfiguration;
@@ -25,26 +27,27 @@ import digit.models.coremodels.PaymentRequest;
 @Service
 public class WorkflowService {
 
-    private final TreePruningConfiguration configs;
-    private final ServiceRequestRepository serviceRequestRepository;
-    private final ObjectMapper mapper;
+    @Autowired
+    private TreePruningConfiguration configs;
 
-    public WorkflowService(TreePruningConfiguration configs, ServiceRequestRepository serviceRequestRepository,
-                           ObjectMapper mapper) {
-        this.configs = configs;
-        this.serviceRequestRepository = serviceRequestRepository;
-        this.mapper = mapper;
-    }
+    @Autowired
+    private ServiceRequestRepository restRepo;
+
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Autowired
+    ServiceRequestRepository serviceRequestRepository;
 
     public State updateWorkflowStatus(PaymentRequest paymentRequest, TreePruningBookingRequest treePruningRequest) {
         ProcessInstance processInstance;
         RequestInfo requestInfo;
 
         if (paymentRequest != null) {
-            processInstance = getProcessInstanceForTP(paymentRequest, null);
+            processInstance = getProcessInstanceForTP(paymentRequest, null, null);
             requestInfo = paymentRequest.getRequestInfo();
         } else if (treePruningRequest != null) {
-            processInstance = getProcessInstanceForTP(null, treePruningRequest.getTreePruningBookingDetail());
+            processInstance = getProcessInstanceForTP(null, treePruningRequest.getTreePruningBookingDetail(), treePruningRequest.getRequestInfo());
             requestInfo = treePruningRequest.getRequestInfo();
         } else {
             throw new IllegalArgumentException("Both PaymentRequest and TreePruningBookingRequest cannot be null");
@@ -54,7 +57,7 @@ public class WorkflowService {
         return callWorkFlow(workflowRequest);
     }
 
-    private ProcessInstance getProcessInstanceForTP(PaymentRequest paymentRequest, TreePruningBookingDetail application) {
+    private ProcessInstance getProcessInstanceForTP(PaymentRequest paymentRequest, TreePruningBookingDetail application, RequestInfo requestInfo) {
         ProcessInstance processInstance = new ProcessInstance();
 
         if (paymentRequest != null) {
@@ -81,7 +84,7 @@ public class WorkflowService {
                     User user = new User();
                     user.setUuid(uuid);
                     return user;
-                }).toList();
+                }).collect(Collectors.toList());
 
                 processInstance.setAssignes(users);
             }
@@ -102,9 +105,10 @@ public class WorkflowService {
      */
     public State callWorkFlow(ProcessInstanceRequest workflowReq) {
 
+        ProcessInstanceResponse response = null;
         StringBuilder url = new StringBuilder(configs.getWfHost().concat(configs.getWfTransitionPath()));
         Object optional = serviceRequestRepository.fetchResult(url, workflowReq);
-        ProcessInstanceResponse response = mapper.convertValue(optional, ProcessInstanceResponse.class);
+        response = mapper.convertValue(optional, ProcessInstanceResponse.class);
         return response.getProcessInstances().get(0).getState();
     }
 

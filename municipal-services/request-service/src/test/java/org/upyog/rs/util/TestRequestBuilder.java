@@ -11,7 +11,6 @@ import org.upyog.rs.web.models.waterTanker.WaterTankerBookingRequest;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Month;
 import java.util.UUID;
 
 /**
@@ -36,7 +35,7 @@ public class TestRequestBuilder {
                 .waterQuantity(5000)
                 .description("Water tanker booking for construction site")
                 .applicantUuid("applicant-uuid-123")
-                .deliveryDate(LocalDate.of(2025, Month.MAY, 15))
+                .deliveryDate(LocalDate.of(2025, 5, 15))
                 .deliveryTime(LocalTime.of(10, 30))
                 .extraCharge("200")
                 .vendorId("vendor-001")
@@ -77,11 +76,14 @@ public class TestRequestBuilder {
                         .lastModifiedTime(System.currentTimeMillis())
                         .build())
                 .build();
-        // Set request detail and return
-        return WaterTankerBookingRequest.builder()
+        // Set request detail
+        WaterTankerBookingRequest request = WaterTankerBookingRequest.builder()
                 .requestInfo(requestInfo)
                 .waterTankerBookingDetail(waterTankerBookingDetail)
                 .build();
+
+        // Create and return the request
+        return request;
     }
     
     /**

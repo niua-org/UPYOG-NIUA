@@ -2,9 +2,6 @@ package org.upyog.rs.constant;
 
 public class RequestServiceConstants {
 
-	private RequestServiceConstants() {
-	}
-
 	public static final String BOOKING_CREATED = "Your Water Tanker booking created successfully";
 
 	public static final String MT_BOOKING_CREATED = "Your Mobile Toilet booking created successfully";

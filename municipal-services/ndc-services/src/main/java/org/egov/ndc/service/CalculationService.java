@@ -3,10 +3,12 @@ package org.egov.ndc.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.ndc.config.ResponseInfoFactory;
 import org.egov.ndc.web.model.calculator.Calculation;
 import org.egov.ndc.web.model.calculator.CalculationCriteria;
 import org.egov.ndc.web.model.calculator.CalculationReq;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -16,15 +18,18 @@ import java.util.List;
 @Slf4j
 public class CalculationService {
 
-    private final ObjectMapper mapper;
-    private final MDMSService mdmsService;
-    private final DemandService demandService;
+    @Autowired
+    private ObjectMapper mapper;
 
-    public CalculationService(ObjectMapper mapper, MDMSService mdmsService, DemandService demandService) {
-        this.mapper = mapper;
-        this.mdmsService = mdmsService;
-        this.demandService = demandService;
-    }
+    @Autowired
+    private MDMSService mdmsService;
+
+
+    @Autowired
+    private ResponseInfoFactory responseInfoFactory;
+
+    @Autowired
+    private DemandService demandService;
 
     public List<Calculation> calculate(CalculationReq calculationReq){
         List<Calculation> calculations = getCalculations(calculationReq);
@@ -38,7 +43,7 @@ public class CalculationService {
             Calculation calculation = new Calculation();
             calculation.setApplicationNumber(calculationCriteria.getApplicationNumber());
             calculation.setTenantId(calculationCriteria.getTenantId());
-            calculation.setTotalAmount(getFlatFee(calculationReq));
+            calculation.setTotalAmount(Double.valueOf(getFlatFee(calculationReq)));
             calculations.add(calculation);
         }
         return calculations;
@@ -52,12 +57,13 @@ public class CalculationService {
             String jsonResponse = mapper.writeValueAsString(mdmsData);
             Number flatFee = JsonPath.read(jsonResponse, jsonPathExpression);
             Double flatFeeValue = flatFee.doubleValue();
-            log.debug("Flat Fee (extracted with JsonPath): {}", flatFeeValue);
+            System.out.println("Flat Fee (extracted with JsonPath): " + flatFeeValue);
             return flatFeeValue;
         } catch (Exception e) {
             log.error("Error extracting flatFee: " + e.getMessage());
             throw new CustomException("ERROR_FETCHING_FEE_FROM_MDMS","Error extracting flatFee: " + e.getMessage());
         }
     }
+
 
 }

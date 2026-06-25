@@ -1,9 +1,7 @@
 package org.egov.gis.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.egov.tracer.config.TracerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,15 +31,15 @@ public class MainConfiguration {
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
 
-        ObjectMapper customMapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES)
-                .configure(MapperFeature.USE_ANNOTATIONS, false)
-                .defaultTimeZone(TimeZone.getTimeZone(timeZone))
-                .build();
+        ObjectMapper customMapper = new ObjectMapper();
+        customMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        customMapper.setTimeZone(TimeZone.getTimeZone(timeZone));
+
+        customMapper.disable(com.fasterxml.jackson.databind.MapperFeature.USE_ANNOTATIONS);
+        customMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
 
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(customMapper);
-        restTemplate.getMessageConverters().removeIf(MappingJackson2HttpMessageConverter.class::isInstance);
+        restTemplate.getMessageConverters().removeIf(c -> c instanceof MappingJackson2HttpMessageConverter);
         restTemplate.getMessageConverters().add(0, converter);
         
         return restTemplate;
@@ -54,3 +52,4 @@ public class MainConfiguration {
                 .setTimeZone(TimeZone.getTimeZone(timeZone));
     }
 }
+

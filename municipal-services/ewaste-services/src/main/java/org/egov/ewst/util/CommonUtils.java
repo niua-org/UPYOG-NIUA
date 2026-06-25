@@ -3,11 +3,11 @@ package org.egov.ewst.util;
 import static java.util.Objects.isNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.ewst.config.EwasteConfiguration;
@@ -22,6 +22,7 @@ import org.egov.mdms.model.MdmsCriteria;
 import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.ModuleDetail;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,35 +35,34 @@ import lombok.Getter;
 @Getter
 public class CommonUtils {
 
-	private final ObjectMapper mapper;
-	private final EwasteConfiguration configs;
-	private final ServiceRequestRepository restRepo;
+	@Autowired
+	private ObjectMapper mapper;
 
-	protected CommonUtils(ObjectMapper mapper, EwasteConfiguration configs, ServiceRequestRepository restRepo) {
-		this.mapper = mapper;
-		this.configs = configs;
-		this.restRepo = restRepo;
-	}
+	@Autowired
+	private EwasteConfiguration configs;
+
+	@Autowired
+	private ServiceRequestRepository restRepo;
 
 	/**
 	 * Method to return auditDetails for create/update flows
 	 *
-	 * @param by       user identifier performing the action
-	 * @param isCreate whether the audit details are for a create flow
+	 * @param by
+	 * @param isCreate
 	 * @return AuditDetails
 	 */
 	public AuditDetails getAuditDetails(String by, Boolean isCreate) {
 
 		Long time = System.currentTimeMillis();
 
-		if (Boolean.TRUE.equals(isCreate))
+		if (isCreate)
 			return AuditDetails.builder().createdBy(by).lastModifiedBy(by).createdTime(time).lastModifiedTime(time)
 					.build();
 		else
 			return AuditDetails.builder().lastModifiedBy(by).lastModifiedTime(time).build();
 	}
 
-	/* **************************** ID GEN **************************** */
+	/**************************** ID GEN ****************************/
 
 	/**
 	 * Returns a list of numbers generated from idgen
@@ -93,20 +93,17 @@ public class CommonUtils {
 		if (CollectionUtils.isEmpty(idResponses))
 			throw new CustomException("IDGEN ERROR", "No ids returned from idgen Service");
 
-		return idResponses.stream().map(IdResponse::getId).toList();
+		return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
 	}
 
-	/* *********************** MDMS Utitlity Methods ***************************** */
+	/*********************** MDMS Utitlity Methods *****************************/
 
 	/**
 	 * Fetches all the values of particular attribute as map of fieldname to list
 	 *
 	 * @param tenantId    tenantId from ewaste request
-	 * @param moduleName  MDMS module name to query
 	 * @param names       List of String containing the names of all masterdata
 	 *                    whose code has to be extracted
-	 * @param filter      filter expression for master data
-	 * @param jsonpath    json path to extract values from MDMS response
 	 * @param requestInfo RequestInfo of the received Ewaste request
 	 * @return Map of MasterData name to the list of code in the MasterData
 	 *
@@ -127,7 +124,7 @@ public class CommonUtils {
 					ErrorConstants.INVALID_TENANT_ID_MDMS_MSG);
 		}
 
-		return Collections.emptyMap();
+		return null;
 	}
 
 	public MdmsCriteriaReq prepareMdMsRequest(String tenantId, String moduleName, List<String> names, String filter,
@@ -135,7 +132,9 @@ public class CommonUtils {
 
 		List<MasterDetail> masterDetails = new ArrayList<>();
 
-		names.forEach(name -> masterDetails.add(MasterDetail.builder().name(name).filter(filter).build()));
+		names.forEach(name -> {
+			masterDetails.add(MasterDetail.builder().name(name).filter(filter).build());
+		});
 
 		ModuleDetail moduleDetail = ModuleDetail.builder().moduleName(moduleName).masterDetails(masterDetails).build();
 		List<ModuleDetail> moduleDetails = new ArrayList<>();
@@ -144,14 +143,16 @@ public class CommonUtils {
 		return MdmsCriteriaReq.builder().requestInfo(requestInfo).mdmsCriteria(mdmsCriteria).build();
 	}
 
-	/* JSON MERGE UTILITY METHODS */
+	/**************************
+	 * JSON MERGE UTILITY METHODS
+	 ****************************************/
 
 	/**
 	 * Method to merge additional details during update
 	 * 
-	 * @param mainNode   base JSON node
-	 * @param updateNode JSON node containing updates
-	 * @return merged JSON node
+	 * @param mainNode
+	 * @param updateNode
+	 * @return
 	 */
 	public JsonNode jsonMerge(JsonNode mainNode, JsonNode updateNode) {
 
@@ -165,11 +166,15 @@ public class CommonUtils {
 
 			String fieldName = fieldNames.next();
 			JsonNode jsonNode = mainNode.get(fieldName);
+			// if field exists and is an embedded object
 			if (jsonNode != null && jsonNode.isObject()) {
 				jsonMerge(jsonNode, updateNode.get(fieldName));
-			} else if (mainNode instanceof ObjectNode objectNode) {
-				JsonNode value = updateNode.get(fieldName);
-				objectNode.set(fieldName, value);
+			} else {
+				if (mainNode instanceof ObjectNode) {
+					// Overwrite field
+					JsonNode value = updateNode.get(fieldName);
+					((ObjectNode) mainNode).set(fieldName, value);
+				}
 			}
 
 		}

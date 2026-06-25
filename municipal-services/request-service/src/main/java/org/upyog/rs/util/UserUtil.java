@@ -1,13 +1,10 @@
 package org.upyog.rs.util;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.egov.common.contract.request.Role;
 import org.egov.common.contract.request.User;
@@ -27,21 +24,17 @@ import org.upyog.rs.web.models.waterTanker.WaterTankerBookingRequest;
 public class UserUtil {
 
 
-    private final ObjectMapper mapper;
+    private ObjectMapper mapper;
 
-    private final ServiceRequestRepository serviceRequestRepository;
-
-    private final RequestServiceConfiguration config;
-
-    private static final String LAST_MODIFIED_DATE = "lastModifiedDate";
-    private static final String PWD_EXPIRY_DATE = "pwdExpiryDate";
+    private ServiceRequestRepository serviceRequestRepository;
+    
+    @Autowired
+    private RequestServiceConfiguration config;
 
     @Autowired
-    public UserUtil(ObjectMapper mapper, ServiceRequestRepository serviceRequestRepository,
-                    RequestServiceConfiguration config) {
+    public UserUtil(ObjectMapper mapper, ServiceRequestRepository serviceRequestRepository) {
         this.mapper = mapper;
         this.serviceRequestRepository = serviceRequestRepository;
-        this.config = config;
     }
 
     /**
@@ -58,9 +51,10 @@ public class UserUtil {
         else if(uri.toString().contains(config.getUserCreateEndpoint()))
             dobFormat = "dd/MM/yyyy";
         try{
-            LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>)serviceRequestRepository.fetchResult(uri, userRequest);
+            LinkedHashMap responseMap = (LinkedHashMap)serviceRequestRepository.fetchResult(uri, userRequest);
             parseResponse(responseMap,dobFormat);
-            return mapper.convertValue(responseMap,UserDetailResponse.class);
+            UserDetailResponse userDetailResponse = mapper.convertValue(responseMap,UserDetailResponse.class);
+            return userDetailResponse;
         }
         catch(IllegalArgumentException  e)
         {
@@ -72,21 +66,20 @@ public class UserUtil {
     /**
      * Parses date formats to long for all users in responseMap
      * @param responeMap LinkedHashMap got from user api response
-     * @param dobFormat dob format used to parse the date of birth value
      */
 
-    public void parseResponse(Map<String, Object> responeMap, String dobFormat){
-        List<Map<String, Object>> users = (List<Map<String, Object>>)responeMap.get("user");
+    public void parseResponse(LinkedHashMap responeMap, String dobFormat){
+        List<LinkedHashMap> users = (List<LinkedHashMap>)responeMap.get("user");
         String format1 = "dd-MM-yyyy HH:mm:ss";
         if(users!=null){
             users.forEach( map -> {
                         map.put("createdDate",dateTolong((String)map.get("createdDate"),format1));
-                        if((String)map.get(LAST_MODIFIED_DATE)!=null)
-                            map.put(LAST_MODIFIED_DATE,dateTolong((String)map.get(LAST_MODIFIED_DATE),format1));
+                        if((String)map.get("lastModifiedDate")!=null)
+                            map.put("lastModifiedDate",dateTolong((String)map.get("lastModifiedDate"),format1));
                         if((String)map.get("dob")!=null)
                             map.put("dob",dateTolong((String)map.get("dob"),dobFormat));
-                        if((String)map.get(PWD_EXPIRY_DATE)!=null)
-                            map.put(PWD_EXPIRY_DATE,dateTolong((String)map.get(PWD_EXPIRY_DATE),format1));
+                        if((String)map.get("pwdExpiryDate")!=null)
+                            map.put("pwdExpiryDate",dateTolong((String)map.get("pwdExpiryDate"),format1));
                     }
             );
         }
@@ -99,36 +92,41 @@ public class UserUtil {
      * @return Long value of date
      */
     private Long dateTolong(String date,String format){
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        SimpleDateFormat f = new SimpleDateFormat(format);
+        Date d = null;
         try {
-            if (format.contains("H") || format.contains("m") || format.contains("s")) {
-                return LocalDateTime.parse(date, formatter).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            }
-            return LocalDate.parse(date, formatter).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        } catch (DateTimeParseException e) {
+            d = f.parse(date);
+        } catch (ParseException e) {
             throw new CustomException("INVALID_DATE_FORMAT","Failed to parse date format in user");
         }
+        return  d.getTime();
     }
 
     /**
      * enriches the userInfo with statelevel tenantId and other fields
      * @param mobileNumber
+     * @param tenantId
      * @param userInfo
      */
-    public void addUserDefaultFields(String mobileNumber, User userInfo){
-        Role role = getCitizenRole();
+    public void addUserDefaultFields(String mobileNumber,String tenantId, User userInfo){
+        Role role = getCitizenRole(tenantId);
         userInfo.setRoles(Collections.singletonList(role));
         userInfo.setType("CITIZEN");
         userInfo.setUserName(mobileNumber);
+//        userInfo.setTenantId(getStateLevelTenant(tenantId));
+//        userInfo.setActive(true);
     }
 
     /**
      * Returns role object for citizen
+     * @param tenantId
      * @return
      */
-    private Role getCitizenRole(){
+    private Role getCitizenRole(String tenantId){
         Role role = new Role();
+      // role.setCode("CITIZEN");
         role.setName("Citizen");
+       // role.setTenantId(getStateLevelTenant(tenantId));
         return role;
     }
 
@@ -148,7 +146,11 @@ public class UserUtil {
     public static boolean isCurrentUserApplicant(WaterTankerBookingRequest waterTankerRequest){
         String userMobileNumber = waterTankerRequest.getRequestInfo().getUserInfo().getMobileNumber();
         String applicationMobileNumber = waterTankerRequest.getWaterTankerBookingDetail().getApplicantDetail().getMobileNumber();
-        return userMobileNumber.equals(applicationMobileNumber);
+        if (userMobileNumber.equals(applicationMobileNumber)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -163,6 +165,10 @@ public class UserUtil {
     public static boolean isCurrentUserApplicant(MobileToiletBookingRequest mobileToiletRequest){
         String userMobileNumber = mobileToiletRequest.getRequestInfo().getUserInfo().getMobileNumber();
         String applicationMobileNumber = mobileToiletRequest.getMobileToiletBookingDetail().getApplicantDetail().getMobileNumber();
-        return userMobileNumber.equals(applicationMobileNumber);
+        if (userMobileNumber.equals(applicationMobileNumber)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

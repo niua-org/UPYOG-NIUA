@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.Role;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.rs.config.RequestServiceConfiguration;
@@ -24,21 +25,21 @@ import org.upyog.rs.web.models.waterTanker.WaterTankerBookingRequest;
 import org.apache.commons.lang3.StringUtils;
 
 import digit.models.coremodels.IdResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class EnrichmentService {
 
-	private final RequestServiceConfiguration config;
+	@Autowired
+	private RequestServiceConfiguration config;
 
-	private final IdGenRepository idGenRepository;
+	@Autowired
+	private IdGenRepository idGenRepository;
 
-	private final UserService userService;
+	@Autowired
+	private UserService userService;
 
-	@SuppressWarnings("java:S5411")
 	public void enrichCreateWaterTankerRequest(WaterTankerBookingRequest waterTankerRequest) {
 		String bookingId = RequestServiceUtil.getRandonUUID();
 		log.info("Enriching water tanker booking id :" + bookingId);
@@ -196,7 +197,6 @@ public class EnrichmentService {
 	 *
 	 * @param mobileToiletRequest The request object containing necessary data for mobile toilet booking.
 	 */
-	@SuppressWarnings("java:S5411")
 	public void enrichCreateMobileToiletRequest(MobileToiletBookingRequest mobileToiletRequest) {
 		String bookingId = RequestServiceUtil.getRandonUUID();
 		log.info("Enriching water tanker booking id :" + bookingId);
@@ -361,7 +361,7 @@ public class EnrichmentService {
 		if (CollectionUtils.isEmpty(idResponses))
 			throw new CustomException("IDGEN_ERROR", "No ids returned from idgen Service");
 
-		return idResponses.stream().map(IdResponse::getId).toList();
+		return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
 	}
 	
 	public void enrichWaterTankerBookingUponUpdate(String bookingStatus, WaterTankerBookingRequest waterTankerRequest) {

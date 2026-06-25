@@ -3,6 +3,7 @@ package org.upyog.tp.repository.querybuilder;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.upyog.tp.config.TreePruningConfiguration;
@@ -13,11 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class TreePruningQueryBuilder {
 
-    private final TreePruningConfiguration treePruningConfiguration;
-
-    public TreePruningQueryBuilder(TreePruningConfiguration treePruningConfiguration) {
-        this.treePruningConfiguration = treePruningConfiguration;
-    }
+    @Autowired
+    private TreePruningConfiguration treePruningConfiguration;
 
     private static final String TREE_PRUNING_BOOKING_DETAILS_SEARCH_QUERY_WITH_PROFILE = (
             "SELECT uptbd.booking_id, booking_no, applicant_uuid, mobile_number, locality_code, reason_for_pruning, " +
@@ -44,11 +42,11 @@ public class TreePruningQueryBuilder {
                     "INNER JOIN public.upyog_rs_tree_pruning_address_details uraddr ON urad.applicant_id = uraddr.applicant_id"
     );
 
-    private static final String PAGINATION_WRAPPER =
+    private final String paginationWrapper =
             "SELECT * FROM (SELECT *, ROW_NUMBER() OVER (ORDER BY createdtime DESC) AS offset_ FROM ({}) result) result_offset " +
                     "WHERE offset_ > ? AND offset_ <= ?";
 
-    private static final String TREE_PRUNING_BOOKING_COUNT =
+    private static final String treePruningBookingCount =
             "SELECT count(uptbd.booking_id) FROM upyog_rs_tree_pruning_booking_detail uptbd";
 
 
@@ -57,13 +55,14 @@ public class TreePruningQueryBuilder {
         StringBuilder query;
 
         if (!criteria.isCountCall()) {
-            if (Boolean.TRUE.equals(treePruningConfiguration.getIsUserProfileEnabled())) {
+            // Use different query based on isProfileEnabled
+            if (treePruningConfiguration.getIsUserProfileEnabled()) {
                 query = new StringBuilder(TREE_PRUNING_BOOKING_DETAILS_SEARCH_QUERY_WITH_PROFILE);
             } else {
                 query = new StringBuilder(TREE_PRUNING_BOOKING_DETAILS_SEARCH_QUERY);
             }
         } else {
-            query = new StringBuilder(TREE_PRUNING_BOOKING_COUNT);
+            query = new StringBuilder(treePruningBookingCount);
         }
 
         if (!ObjectUtils.isEmpty(criteria.getTenantId())) {
@@ -71,19 +70,22 @@ public class TreePruningQueryBuilder {
             query.append(" uptbd.tenant_id LIKE ? ");
             preparedStmtList.add("%" + criteria.getTenantId() + "%");
         }
-        if (Boolean.TRUE.equals(treePruningConfiguration.getIsUserProfileEnabled())) {
+        if (treePruningConfiguration.getIsUserProfileEnabled()) {
             addClauseIfRequired(query, preparedStmtList);
             query.append(" uptbd.applicant_uuid IS NOT NULL ");
         } else {
+            // If user profile is not enabled, we don't need to filter by applicant UUID
             addClauseIfRequired(query, preparedStmtList);
             query.append(" uptbd.applicant_uuid IS NULL ");
         }
         if (!ObjectUtils.isEmpty(criteria.getBookingNo())) {
             addClauseIfRequired(query, preparedStmtList);
 
+            // Create a comma-separated string of placeholders
             String bookingNosPlaceholders = String.join(",", Collections.nCopies(criteria.getBookingNo().split(",").length, "?"));
             query.append(" uptbd.booking_no IN (").append(bookingNosPlaceholders).append(")");
 
+            // Add the booking numbers to the preparedStmtList
             String[] bookingNumbers = criteria.getBookingNo().split(",");
             Collections.addAll(preparedStmtList, bookingNumbers);
         }
@@ -106,10 +108,12 @@ public class TreePruningQueryBuilder {
             preparedStmtList.add(criteria.getStatus());
         }
 
+        // Return count query directly without applying pagination
         if (criteria.isCountCall()) {
             return query.toString();
         }
 
+        // Apply pagination for non-count queries
         return addPaginationWrapper(query.toString(), preparedStmtList, criteria);
 
     }
@@ -127,7 +131,7 @@ public class TreePruningQueryBuilder {
 
         int limit = treePruningConfiguration.getDefaultLimit();
         int offset = treePruningConfiguration.getDefaultOffset();
-        String finalQuery = PAGINATION_WRAPPER.replace("{}", query);
+        String finalQuery = paginationWrapper.replace("{}", query);
 
         if (criteria.getLimit() == null && criteria.getOffset() == null) {
             limit = treePruningConfiguration.getMaxSearchLimit();
@@ -141,9 +145,8 @@ public class TreePruningQueryBuilder {
             limit = treePruningConfiguration.getMaxSearchLimit();
         }
 
-        if (criteria.getOffset() != null) {
+        if (criteria.getOffset() != null)
             offset = criteria.getOffset();
-        }
 
         if (limit == -1) {
             finalQuery = finalQuery.replace("WHERE offset_ > ? AND offset_ <= ?", "");
@@ -156,4 +159,5 @@ public class TreePruningQueryBuilder {
 
     }
 
-}
+
+    }

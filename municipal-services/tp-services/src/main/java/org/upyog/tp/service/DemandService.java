@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.egov.common.contract.request.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.tp.config.TreePruningConfiguration;
 import org.upyog.tp.repository.DemandRepository;
@@ -21,16 +22,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DemandService {
 
-    private final CalculationService calculationService;
-    private final DemandRepository demandRepository;
-    private final TreePruningConfiguration config;
 
-    public DemandService(CalculationService calculationService, DemandRepository demandRepository,
-                         TreePruningConfiguration config) {
-        this.calculationService = calculationService;
-        this.demandRepository = demandRepository;
-        this.config = config;
-    }
+    @Autowired
+    private CalculationService calculationService;
+
+    @Autowired
+    private DemandRepository demandRepository;
+
+    @Autowired
+    private TreePruningConfiguration config;
+
+
 
     /**
      * Create demand by bringing Tree Pruning price from mdms

@@ -3,6 +3,7 @@ package org.upyog.cdwm.repository.querybuilder;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.upyog.cdwm.config.CNDConfiguration;
@@ -14,19 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class CNDServiceQueryBuilder {
 
-    private static final String TENANT_ID_LIKE_CLAUSE = " ucad.tenant_id LIKE ? ";
-    private static final String APPLICATION_STATUS_CLAUSE = " ucad.application_status = ? ";
-    private static final String APPLICANT_MOBILE_NUMBER_CLAUSE = " ucad.applicant_mobile_number = ? ";
-    private static final String LOCALITY_CLAUSE = " ucad.locality = ? ";
-    private static final String APPLICATION_NUMBER_IN_PREFIX = " ucad.application_number IN (";
-    private static final String APPLICANT_DETAIL_ID_NOT_NULL_CLAUSE = " ucad.applicant_detail_id IS NOT NULL ";
-    private static final String APPLICANT_DETAIL_ID_NULL_CLAUSE = " ucad.applicant_detail_id IS NULL ";
-
-    private final CNDConfiguration cndServiceConfiguration;
-
-    public CNDServiceQueryBuilder(CNDConfiguration cndServiceConfiguration) {
-        this.cndServiceConfiguration = cndServiceConfiguration;
-    }
+    @Autowired
+    private CNDConfiguration cndServiceConfiguration;
 
     
     private static final String CND_APPLICATION_DETAILS_QUERY_WITH_PROFILE =
@@ -102,7 +92,7 @@ public class CNDServiceQueryBuilder {
         
     	StringBuilder query;
     	if (!criteria.isCountCall()) {
-            if (Boolean.TRUE.equals(cndServiceConfiguration.getIsUserProfileEnabled())) {
+            if( cndServiceConfiguration.getIsUserProfileEnabled()) {
                 query = new StringBuilder(CND_APPLICATION_DETAILS_QUERY_WITH_PROFILE);
             } else {
                 query = new StringBuilder(CND_APPLICATION_DETAILS_QUERY);
@@ -114,7 +104,7 @@ public class CNDServiceQueryBuilder {
         
         if (!ObjectUtils.isEmpty(criteria.getTenantId())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(TENANT_ID_LIKE_CLAUSE);
+            query.append(" ucad.tenant_id LIKE ? ");
             preparedStmtList.add("%" + criteria.getTenantId() + "%");
         }
         
@@ -124,26 +114,26 @@ public class CNDServiceQueryBuilder {
             // Creating placeholders for multiple application numbers
             String[] applicationNumbers = criteria.getApplicationNumber().split(",");
             String placeholders = String.join(",", Collections.nCopies(applicationNumbers.length, "?"));
-            query.append(APPLICATION_NUMBER_IN_PREFIX).append(placeholders).append(")");
+            query.append(" ucad.application_number IN (").append(placeholders).append(")");
             
             Collections.addAll(preparedStmtList, applicationNumbers);
         }
         
         if (!ObjectUtils.isEmpty(criteria.getStatus())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICATION_STATUS_CLAUSE);
+            query.append(" ucad.application_status = ? ");
             preparedStmtList.add(criteria.getStatus());
         }
 
         if (!ObjectUtils.isEmpty(criteria.getMobileNumber())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICANT_MOBILE_NUMBER_CLAUSE);
+            query.append(" ucad.applicant_mobile_number = ? ");
             preparedStmtList.add(criteria.getMobileNumber());
         }
         
         if (!ObjectUtils.isEmpty(criteria.getLocality())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(LOCALITY_CLAUSE);
+            query.append(" ucad.locality = ? ");
             preparedStmtList.add(criteria.getLocality());
         }
         
@@ -157,13 +147,13 @@ public class CNDServiceQueryBuilder {
          * If enabled → fetch records with applicant_detail_id.
          * If disabled → fetch records without applicant_detail_id.
          */
-        if (Boolean.TRUE.equals(cndServiceConfiguration.getIsUserProfileEnabled())) {
+        if (cndServiceConfiguration.getIsUserProfileEnabled()) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICANT_DETAIL_ID_NOT_NULL_CLAUSE);
+            query.append(" ucad.applicant_detail_id IS NOT NULL ");
         } else {
             // If user profile is not enabled, we don't need to filter by applicant UUID
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICANT_DETAIL_ID_NULL_CLAUSE);
+            query.append(" ucad.applicant_detail_id IS NULL ");
         }
         // Apply pagination for non-count queries
         return addPaginationWrapper(query.toString(), preparedStmtList, criteria);
@@ -189,31 +179,31 @@ public class CNDServiceQueryBuilder {
             addClauseIfRequired(query, preparedStmtList);
             String[] appNumbers = criteria.getApplicationNumber().split(",");
             String placeholders = String.join(",", Collections.nCopies(appNumbers.length, "?"));
-            query.append(APPLICATION_NUMBER_IN_PREFIX).append(placeholders).append(") ");
+            query.append(" ucad.application_number IN (").append(placeholders).append(") ");
             Collections.addAll(preparedStmtList, appNumbers);
         }
 
         if (!ObjectUtils.isEmpty(criteria.getTenantId())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(TENANT_ID_LIKE_CLAUSE);
+            query.append(" ucad.tenant_id LIKE ? ");
             preparedStmtList.add("%" + criteria.getTenantId() + "%");
         }
 
         if (!ObjectUtils.isEmpty(criteria.getStatus())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICATION_STATUS_CLAUSE);
+            query.append(" ucad.application_status = ? ");
             preparedStmtList.add(criteria.getStatus());
         }
 
         if (!ObjectUtils.isEmpty(criteria.getMobileNumber())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICANT_MOBILE_NUMBER_CLAUSE);
+            query.append(" ucad.applicant_mobile_number = ? ");
             preparedStmtList.add(criteria.getMobileNumber());
         }
         
         if (!ObjectUtils.isEmpty(criteria.getLocality())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(LOCALITY_CLAUSE);
+            query.append(" ucad.locality = ? ");
             preparedStmtList.add(criteria.getLocality());
         }
 
@@ -243,31 +233,31 @@ public class CNDServiceQueryBuilder {
             addClauseIfRequired(query, preparedStmtList);
             String[] appNumbers = criteria.getApplicationNumber().split(",");
             String placeholders = String.join(",", Collections.nCopies(appNumbers.length, "?"));
-            query.append(APPLICATION_NUMBER_IN_PREFIX).append(placeholders).append(") ");
+            query.append(" ucad.application_number IN (").append(placeholders).append(") ");
             Collections.addAll(preparedStmtList, appNumbers);
         }
 
         if (!ObjectUtils.isEmpty(criteria.getTenantId())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(TENANT_ID_LIKE_CLAUSE);
+            query.append(" ucad.tenant_id LIKE ? ");
             preparedStmtList.add("%" + criteria.getTenantId() + "%");
         }
 
         if (!ObjectUtils.isEmpty(criteria.getStatus())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICATION_STATUS_CLAUSE);
+            query.append(" ucad.application_status = ? ");
             preparedStmtList.add(criteria.getStatus());
         }
 
         if (!ObjectUtils.isEmpty(criteria.getMobileNumber())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICANT_MOBILE_NUMBER_CLAUSE);
+            query.append(" ucad.applicant_mobile_number = ? ");
             preparedStmtList.add(criteria.getMobileNumber());
         }
         
         if (!ObjectUtils.isEmpty(criteria.getLocality())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(LOCALITY_CLAUSE);
+            query.append(" ucad.locality = ? ");
             preparedStmtList.add(criteria.getLocality());
         }
 
@@ -295,31 +285,31 @@ public class CNDServiceQueryBuilder {
             addClauseIfRequired(query, preparedStmtList);
             String[] appNumbers = criteria.getApplicationNumber().split(",");
             String placeholders = String.join(",", Collections.nCopies(appNumbers.length, "?"));
-            query.append(APPLICATION_NUMBER_IN_PREFIX).append(placeholders).append(") ");
+            query.append(" ucad.application_number IN (").append(placeholders).append(") ");
             Collections.addAll(preparedStmtList, appNumbers);
         }
 
         if (!ObjectUtils.isEmpty(criteria.getTenantId())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(TENANT_ID_LIKE_CLAUSE);
+            query.append(" ucad.tenant_id LIKE ? ");
             preparedStmtList.add("%" + criteria.getTenantId() + "%");
         }
 
         if (!ObjectUtils.isEmpty(criteria.getStatus())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICATION_STATUS_CLAUSE);
+            query.append(" ucad.application_status = ? ");
             preparedStmtList.add(criteria.getStatus());
         }
 
         if (!ObjectUtils.isEmpty(criteria.getMobileNumber())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(APPLICANT_MOBILE_NUMBER_CLAUSE);
+            query.append(" ucad.applicant_mobile_number = ? ");
             preparedStmtList.add(criteria.getMobileNumber());
         }
         
         if (!ObjectUtils.isEmpty(criteria.getLocality())) {
             addClauseIfRequired(query, preparedStmtList);
-            query.append(LOCALITY_CLAUSE);
+            query.append(" ucad.locality = ? ");
             preparedStmtList.add(criteria.getLocality());
         }
 

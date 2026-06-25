@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.egov.asset.web.models.disposal.AssetDisposal;
 import org.egov.common.contract.request.RequestInfo;
 
 import jakarta.validation.Valid;

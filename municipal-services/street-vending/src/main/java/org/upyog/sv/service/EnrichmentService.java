@@ -1,9 +1,12 @@
 package org.upyog.sv.service;
 
+import java.sql.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.sv.config.StreetVendingConfiguration;
@@ -20,16 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
-@SuppressWarnings({"java:S3437", "java:S2143"})
 public class EnrichmentService {
 
-	private final StreetVendingConfiguration config;
-	private final IdGenRepository idGenRepository;
+	@Autowired
+	private StreetVendingConfiguration config;
 
-	public EnrichmentService(StreetVendingConfiguration config, IdGenRepository idGenRepository) {
-		this.config = config;
-		this.idGenRepository = idGenRepository;
-	}
+	@Autowired
+	private IdGenRepository idGenRepository;
 
 	public void enrichCreateStreetVendingRequest(StreetVendingRequest vendingRequest) {
 		String applicationId = StreetVendingUtil.getRandonUUID();
@@ -51,7 +51,7 @@ public class EnrichmentService {
 		streetVendingDetail.setApplicationNo(customIds.get(0));
 
 		// Updating id in documents
-		streetVendingDetail.getDocumentDetails().forEach(document -> {
+		streetVendingDetail.getDocumentDetails().stream().forEach(document -> {
 			document.setApplicationId(applicationId);
 			document.setDocumentDetailId(StreetVendingUtil.getRandonUUID());
 			document.setAuditDetails(auditDetails);
@@ -59,7 +59,7 @@ public class EnrichmentService {
 
 		String vendorId = StreetVendingUtil.getRandonUUID();
 
-		streetVendingDetail.getVendorDetail().forEach(vendorDetail -> {
+		streetVendingDetail.getVendorDetail().stream().forEach(vendorDetail -> {
 			if (!vendorDetail.getRelationshipType().equals(VendorRelationshipType.VENDOR.toString())) {
 				vendorDetail.setVendorId(vendorId);
 				vendorDetail.setId(StreetVendingUtil.getRandonUUID());
@@ -70,7 +70,7 @@ public class EnrichmentService {
 			vendorDetail.setAuditDetails(auditDetails);
 		});
 
-		streetVendingDetail.getAddressDetails().forEach(address -> {
+		streetVendingDetail.getAddressDetails().stream().forEach(address -> {
 			address.setAddressId(StreetVendingUtil.getRandonUUID());
 			address.setVendorId(vendorId);
 		});
@@ -81,7 +81,7 @@ public class EnrichmentService {
 		
 		
 		// Updating id and status for vending operation details
-		streetVendingDetail.getVendingOperationTimeDetails().forEach(timedetails -> {
+		streetVendingDetail.getVendingOperationTimeDetails().stream().forEach(timedetails -> {
 			timedetails.setApplicationId(applicationId);
 			timedetails.setId(StreetVendingUtil.getRandonUUID());
 		});
@@ -116,7 +116,7 @@ public class EnrichmentService {
 		if (CollectionUtils.isEmpty(idResponses))
 			throw new CustomException("IDGEN_ERROR", "No ids returned from idgen Service");
 
-		return idResponses.stream().map(IdResponse::getId).toList();
+		return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
 	}
 
 	public void enrichStreetVendingApplicationUponUpdate(String applicationStatus, StreetVendingRequest vendingRequest) {

@@ -22,44 +22,50 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(VerificationServiceController.class)
 @Import(TestConfiguration.class)
-class V1ApiControllerTest {
+public class V1ApiControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    void v1RegistrationCreatePostSuccess() throws Exception {
-        mockMvc.perform(post("/birth-services/v1/registration/_create").contentType(MediaType.APPLICATION_JSON))
+    public void v1RegistrationCreatePostSuccess() throws Exception {
+        mockMvc.perform(post("/birth-services/v1/registration/_create").contentType(MediaType
+        .APPLICATION_JSON_UTF8))
         .andExpect(status().isOk());
     }
 
     @Test
-    void v1RegistrationCreatePostFailure() throws Exception {
-        mockMvc.perform(post("/birth-services/v1/registration/_create").contentType(MediaType.APPLICATION_JSON))
+    public void v1RegistrationCreatePostFailure() throws Exception {
+        mockMvc.perform(post("/birth-services/v1/registration/_create").contentType(MediaType
+        .APPLICATION_JSON_UTF8))
         .andExpect(status().isBadRequest());
     }
 
     @Test
-    void v1RegistrationSearchPostSuccess() throws Exception {
-        mockMvc.perform(post("/birth-services/v1/registration/_search").contentType(MediaType.APPLICATION_JSON))
+    public void v1RegistrationSearchPostSuccess() throws Exception {
+        mockMvc.perform(post("/birth-services/v1/registration/_search").contentType(MediaType
+        .APPLICATION_JSON_UTF8))
         .andExpect(status().isOk());
     }
 
     @Test
-    void v1RegistrationSearchPostFailure() throws Exception {
-        mockMvc.perform(post("/birth-services/v1/registration/_search").contentType(MediaType.APPLICATION_JSON))
+    public void v1RegistrationSearchPostFailure() throws Exception {
+        mockMvc.perform(post("/birth-services/v1/registration/_search").contentType(MediaType
+        .APPLICATION_JSON_UTF8))
         .andExpect(status().isBadRequest());
     }
 
     @Test
-    void v1RegistrationUpdatePostSuccess() throws Exception {
-        mockMvc.perform(post("/birth-services/v1/registration/_update").contentType(MediaType.APPLICATION_JSON))
+    public void v1RegistrationUpdatePostSuccess() throws Exception {
+        mockMvc.perform(post("/birth-services/v1/registration/_update").contentType(MediaType
+        .APPLICATION_JSON_UTF8))
         .andExpect(status().isOk());
     }
 
     @Test
-    void v1RegistrationUpdatePostFailure() throws Exception {
-        mockMvc.perform(post("/birth-services/v1/registration/_update").contentType(MediaType.APPLICATION_JSON))
+    public void v1RegistrationUpdatePostFailure() throws Exception {
+        mockMvc.perform(post("/birth-services/v1/registration/_update").contentType(MediaType
+        .APPLICATION_JSON_UTF8))
         .andExpect(status().isBadRequest());
     }
 

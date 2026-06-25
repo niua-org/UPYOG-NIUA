@@ -1,5 +1,6 @@
 package org.upyog.pgrai.web.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.upyog.pgrai.util.HRMSUtil;
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Controller for handling mock API requests.
@@ -30,9 +32,9 @@ import jakarta.validation.Valid;
 @Slf4j
 public class MockController {
 
-    private static final String MOCK_DATA_CLASSPATH = "classpath:mockData.json";
+    private final ObjectMapper objectMapper;
 
-    private static final String MOCK_FILE_LOG_PREFIX = "mock file: ";
+    private final HttpServletRequest request;
 
     private ResourceLoader resourceLoader;
 
@@ -41,11 +43,15 @@ public class MockController {
     /**
      * Constructor for MockController.
      *
+     * @param objectMapper ObjectMapper for JSON operations.
+     * @param request HttpServletRequest for accessing request details.
      * @param resourceLoader ResourceLoader for loading resources.
      * @param hrmsUtil Utility for HRMS-related operations.
      */
     @Autowired
-    public MockController(ResourceLoader resourceLoader, HRMSUtil hrmsUtil) {
+    public MockController(ObjectMapper objectMapper, HttpServletRequest request, ResourceLoader resourceLoader, HRMSUtil hrmsUtil) {
+        this.objectMapper = objectMapper;
+        this.request = request;
         this.resourceLoader = resourceLoader;
         this.hrmsUtil = hrmsUtil;
     }
@@ -56,9 +62,20 @@ public class MockController {
      * @return A ResponseEntity containing the mock data as a string.
      * @throws IOException If an error occurs while reading the mock data file.
      */
-    @PostMapping("/requests/_create")
+    @RequestMapping(value = "/requests/_create", method = RequestMethod.POST)
     public ResponseEntity<String> requestsCreatePost() throws IOException {
-        return readMockDataResponse();
+        InputStream mockDataFile = null;
+        try {
+            Resource resource = resourceLoader.getResource("classpath:mockData.json");
+            mockDataFile = resource.getInputStream();
+            log.info("mock file: " + mockDataFile.toString());
+            String res = IOUtils.toString(mockDataFile, StandardCharsets.UTF_8.name());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            throw new CustomException("FILEPATH_ERROR", "Failed to read file for mock data");
+        } finally {
+            mockDataFile.close();
+        }
     }
 
     /**
@@ -68,14 +85,14 @@ public class MockController {
      * @param criteria Search criteria for the mock requests.
      * @return A ResponseEntity containing the mock data as a string.
      */
-    @PostMapping("/requests/_search")
+    @RequestMapping(value = "/requests/_search", method = RequestMethod.POST)
     public ResponseEntity<String> requestsSearchPost(@Valid @RequestBody RequestInfoWrapper requestInfoWrapper,
                                                      @Valid @ModelAttribute RequestSearchCriteria criteria) {
         InputStream mockDataFile = null;
         try {
-            Resource resource = resourceLoader.getResource(MOCK_DATA_CLASSPATH);
+            Resource resource = resourceLoader.getResource("classpath:mockData.json");
             mockDataFile = resource.getInputStream();
-            log.info(MOCK_FILE_LOG_PREFIX + mockDataFile.toString());
+            log.info("mock file: " + mockDataFile.toString());
             String res = IOUtils.toString(mockDataFile, StandardCharsets.UTF_8.name());
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
@@ -95,23 +112,13 @@ public class MockController {
      * @return A ResponseEntity containing the mock data as a string.
      * @throws IOException If an error occurs while reading the mock data file.
      */
-    @PostMapping("/requests/_update")
+    @RequestMapping(value = "/requests/_update", method = RequestMethod.POST)
     public ResponseEntity<String> requestsUpdatePost() throws IOException {
-        return readMockDataResponse();
-    }
-
-    /**
-     * Reads the classpath mock data file and returns it as a response payload.
-     *
-     * @return A ResponseEntity containing the mock data as a string.
-     * @throws IOException If an error occurs while closing the mock data file.
-     */
-    private ResponseEntity<String> readMockDataResponse() throws IOException {
         InputStream mockDataFile = null;
         try {
-            Resource resource = resourceLoader.getResource(MOCK_DATA_CLASSPATH);
+            Resource resource = resourceLoader.getResource("classpath:mockData.json");
             mockDataFile = resource.getInputStream();
-            log.info(MOCK_FILE_LOG_PREFIX + mockDataFile.toString());
+            log.info("mock file: " + mockDataFile.toString());
             String res = IOUtils.toString(mockDataFile, StandardCharsets.UTF_8.name());
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
@@ -129,7 +136,7 @@ public class MockController {
      * @param uuids List of UUIDs for which departments are to be fetched.
      * @return A ResponseEntity containing the list of departments.
      */
-    @PostMapping("/requests/_test")
+    @RequestMapping(value = "/requests/_test", method = RequestMethod.POST)
     public ResponseEntity<List<String>> requestsTest(@RequestBody RequestInfoWrapper requestInfoWrapper,
                                                      @RequestParam String tenantId, @RequestParam List<String> uuids) {
 
