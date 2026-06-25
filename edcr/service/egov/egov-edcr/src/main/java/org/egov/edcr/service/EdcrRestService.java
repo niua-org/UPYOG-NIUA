@@ -514,7 +514,7 @@ public class EdcrRestService {
                     LOG.info("**************** Plan detail object **************" + pl1);
                 edcrDetail.setPlanDetail(pl1);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.log(Level.ERROR, e);
         }
 
