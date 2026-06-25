@@ -47,6 +47,7 @@
 
 package org.egov.common.entity.edcr;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OccupancyType {
@@ -80,5 +81,19 @@ public enum OccupancyType {
 
     public String getOccupancyTypeVal() {
         return occupancyTypeVal;
+    }
+
+    // Accept both the display value (e.g. "Residential") and the enum constant
+    // name (e.g. "OCCUPANCY_A1") when deserializing, to stay compatible with
+    // payloads/files that store either representation.
+    @JsonCreator
+    public static OccupancyType fromValue(String value) {
+        if (value == null)
+            return null;
+        for (OccupancyType type : values()) {
+            if (type.occupancyTypeVal.equalsIgnoreCase(value) || type.name().equalsIgnoreCase(value))
+                return type;
+        }
+        throw new IllegalArgumentException("Unknown OccupancyType: " + value);
     }
 }

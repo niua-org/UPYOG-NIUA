@@ -1,4 +1,4 @@
-package org.upyog.cdwm.repository.rowMapper;
+package org.upyog.cdwm.repository.row_mapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@SuppressWarnings("java:S2638")
 public class WasteTypeDetailsRowMapper implements ResultSetExtractor<List<WasteTypeDetail>> {
 
     @Override
