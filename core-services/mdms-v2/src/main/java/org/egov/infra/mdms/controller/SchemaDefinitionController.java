@@ -66,6 +66,7 @@ public ResponseEntity<SchemaDefinitionResponse> delete(
                 schemaDefinitions,
                 schemaDefinitions.size()),
         HttpStatus.OK);
+    }
 
     /**
      * Request handler for serving schema update requests - NOT implemented as of now.
