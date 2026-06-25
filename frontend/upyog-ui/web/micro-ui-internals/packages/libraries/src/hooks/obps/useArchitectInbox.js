@@ -35,7 +35,7 @@ const useArchitectInbox = ({ tenantId, filters, withEDCRData = true, isTotalCoun
         if (withEDCRData === true) {
           const promises = data?.items?.map((application) => {
             const filters = { edcrNumber: application?.businessObject?.edcrNumber };
-            return Search.scrutinyDetails("pb.amritsar", filters);
+            return Search.scrutinyDetails(tenantId, filters);
           });
           try {
             const edcrData = await Promise.all(promises);
