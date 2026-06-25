@@ -5,7 +5,7 @@ import CitizenApp from "./pages";
 import EmployeeApp from "./pages/employee";
 import ServiceTypes from "./components/ServiceTypes";
 import MapView from "./components/MapView";
-import PropertyTaxMap from "./components/PropertyTaxMap";
+import LayerView from "./components/LayerView";
 import MarkOnMap from "./components/MarkOnMap";
 import ViewOnMap from "./components/ViewOnMap";
 import GISCard from "./components/GISCard";
@@ -15,7 +15,7 @@ import ViewOnMapAsset from "./components/ViewOnMapAsset";
 const componentsToRegister = {
     ServiceTypes,
     MapView,
-    PropertyTaxMap,
+    LayerView,
     ViewOnMapAsset,
     MarkOnMap,
     ViewOnMap,
