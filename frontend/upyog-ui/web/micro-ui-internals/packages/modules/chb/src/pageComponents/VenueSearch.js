@@ -343,7 +343,7 @@ const VenueSearch = ({ t, config, onSelect, userType, formData }) => {
                     <InfoIcon/>
                 </div>
                 {showDetails &&(
-                <VenueDetails venueData={venueName} setShowDetails={setShowDetails}/>
+                <VenueDetails venueData={venueName} setShowDetails={setShowDetails} t={t}/>
                 )}
                 </div>
                 <CardLabel>{t("CHB_HALL_CODE_LABEL")}<span className="astericColor"> *</span></CardLabel>
