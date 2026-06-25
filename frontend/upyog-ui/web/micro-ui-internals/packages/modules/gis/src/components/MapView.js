@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { CardLabel, SubmitBar, Dropdown, BackButton } from '@nudmcdgnpm/digit-ui-react-components';
 import { MAP_TILE_URL, createMapIcons, LEAFLET_DEFAULT_ICON_OPTIONS } from '../utils';
 import { getDigiPin } from '../../../../libraries/src/utils/digipin';
+import "../css/gis-inline.css";
 
 /**
 This MapView defines the MapView component, which is responsible for rendering and managing the map interface in the GIS module.
@@ -278,7 +279,7 @@ const MapView = () => {
       
       const popupContent = businessService === "PT" ? `
         <div>
-          <div style="margin-right: 85px;">
+          <div class="gis-mapview-popup-body">
             <b>${props.propertyType}</b><br>
             <b>Property ID:</b> ${props.applicationNumber}</br>
             <b>Status:</b> ${props.status || "N/A"}<br>
@@ -291,7 +292,7 @@ const MapView = () => {
         </div>
       ` : `
         <div>
-          <div style="margin-right: 85px;">
+          <div class="gis-mapview-popup-body">
             <b>${props.assetName}</b><br>
             <b>Status:</b> ${props.status || "N/A"}<br>
             <b>Asset Category:</b> ${props.assetCategory || "N/A"}<br>
@@ -320,12 +321,12 @@ const MapView = () => {
   };
 
   return (
-    <div style={{ overflow: "hidden", height: "100vh" }}>
-      <div style={{ marginLeft: "10px", marginRight: "10px" }}>
+    <div className="gis-mapview-root">
+      <div className="gis-mapview-body">
         <BackButton />
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", position: "relative", zIndex: 2000 }}>
-          <div style={{ display: "flex", gap: "16px" }}>
-            <div style={{ width: "200px" }}>
+        <div className="gis-mapview-toolbar">
+          <div className="gis-mapview-filters">
+            <div className="gis-mapview-field">
               <CardLabel>{t("Financial_Year")}</CardLabel>
               <Dropdown
                 className="form-field"
@@ -339,7 +340,7 @@ const MapView = () => {
             </div>
             {getBusinessService() === "PT" && (
               <React.Fragment>
-                <div style={{ width: "200px" }}>
+                <div className="gis-mapview-field">
                   <CardLabel>{t("Payment_Status")}</CardLabel>
                   <Dropdown
                     className="form-field"
@@ -351,7 +352,7 @@ const MapView = () => {
                     style={{ width: "100%", position: "relative", zIndex: 2001 }}
                   />
                 </div>
-                <div style={{ width: "200px" }}>
+                <div className="gis-mapview-field">
                   <CardLabel>{t("Usage_Category")}</CardLabel>
                   <Dropdown
                     className="form-field"
@@ -366,7 +367,7 @@ const MapView = () => {
               </React.Fragment>
             )}
             {getBusinessService() !== "PT" && (
-              <div style={{ width: "200px" }}>
+              <div className="gis-mapview-field">
                 <CardLabel>{t("Asset_Classification")}</CardLabel>
                 <Dropdown
                   className="form-field"
@@ -380,8 +381,8 @@ const MapView = () => {
               </div>
             )}
           </div>
-          <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-            <div style={{ width: "200px" }}>
+          <div className="gis-mapview-search">
+            <div className="gis-mapview-field">
               <CardLabel>{getBusinessService() === "PT" ? t("SEARCH_BY_PROPERTYID") : t("SEARCH_BY_ASSETID")}</CardLabel>
               <Dropdown
                 className="form-field"
@@ -395,11 +396,11 @@ const MapView = () => {
                 t={t}
               />
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div className="gis-mapview-actions">
               <CardLabel style={{ visibility: "hidden" }}>{t("Actions")}</CardLabel>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <div className="gis-mapview-actions-row">
                 <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
-                <p className="link" style={{ cursor: "pointer" }} onClick={() => {
+                <p className="link gis-mapview-clear" onClick={() => {
                   setSearchTerm("");
                   setInputValue("");
                   setSelectedPaymentStatus({ code: 'ALL', value: 'ALL', i18nKey: 'All' });
@@ -414,9 +415,9 @@ const MapView = () => {
         </div>
 
         {geoJsonData.features.length > 0 ? (
-          <div ref={mapRef} style={{ height: '86vh', width: '100%', border: '1px solid #ccc', marginTop: "0px" }} />
+          <div ref={mapRef} className="gis-mapview-map" />
         ) : (
-          <p style={{ textAlign: "center", marginTop: "20px" }}>
+          <p className="gis-mapview-empty">
             {getBusinessService() === "PT" ? t("NO_PROPERTY_FOUND") : t("NO_ASSET_FOUND")}
           </p>
         )}
