@@ -61,11 +61,11 @@ public ResponseEntity<SchemaDefinitionResponse> delete(
             schemaDefinitionService.delete(request);
 
     return new ResponseEntity<>(
-            ResponseUtil.getSchemaDefinitionResponse(
-                    request.getRequestInfo(),
-                    schemaDefinitions),
-            HttpStatus.OK);
-    }
+        ResponseUtil.getSchemaDefinitionResponse(
+                request.getRequestInfo(),
+                schemaDefinitions,
+                schemaDefinitions.size()),
+        HttpStatus.OK);
 
     /**
      * Request handler for serving schema update requests - NOT implemented as of now.
