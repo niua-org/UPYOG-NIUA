@@ -2,7 +2,7 @@ import { Card, KeyNote, SubmitBar, Toast,CardSubHeader } from "@nudmcdgnpm/digit
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  } from "react-router-dom";
-import { getSlotSearchCriteria } from "../../../../utils";
+import { getSlotSearchCriteria } from "../../../utils";
 
 /*
  * AdsApplication component displays the details of a specific advertisement application.
