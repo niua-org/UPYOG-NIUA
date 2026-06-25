@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Loader, Card, KeyNote } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
+import { getSlotSearchCriteria } from "../utils";
 
 /**
  * ExistingBookingDetails fetches and displays existing booking applications.
@@ -26,24 +27,12 @@ export const ExistingBookingDetails = ({
   // Slot search data for Ads (Advertisement)
   const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
 
-  // Prepare form data for Advertisement Service
   const formdata = {
-    advertisementSlotSearchCriteria: Searchdata?.map((item) => ({
-      bookingId: "",
-      addType: item?.addTypeCode,
-      bookingStartDate: item?.bookingDate,
-      bookingEndDate: item?.bookingDate,
-      faceArea: item?.faceAreaCode,
-      tenantId: tenantId,
-      // Map the location to the raw location code (e.g. HAUZ_KHAS) rather than display strings
-      location: selectedLocation?.code || item?.locationCode || item?.location,
-      nightLight: item?.nightLight,
-      isTimerRequired: true
-    }))
+    advertisementSlotSearchCriteria: getSlotSearchCriteria(Searchdata, tenantId, selectedLocation)
   };
   const setchbData = async application => {
     const result = await slotSearchData.mutateAsync(formdata);
-    // timerValue is resolved directly from top-level of response payload per backend contract
+    /* timerValue is resolved directly from top-level of response payload per backend contract */
     const timerValue = result?.timerValue;
     const newSessionData = {
       documents: {
@@ -83,13 +72,13 @@ export const ExistingBookingDetails = ({
       },
       timervalue: {
         timervalue: timerValue || 0,
-        // Store lock start timestamp to calculate elapsed offset during navigation remounts
+        /* Store lock start timestamp to calculate elapsed offset during navigation remounts */
         timerStartedAt: Date.now()
       },
       draftId: result?.draftId || ""
     };
     setExistingDataSet(newSessionData);
-    // Propagate sessionData synchronously to avoid React state batching race conditions in goNext
+    /* Propagate sessionData synchronously to avoid React state batching race conditions in goNext */
     onSubmit(newSessionData);
   };
 

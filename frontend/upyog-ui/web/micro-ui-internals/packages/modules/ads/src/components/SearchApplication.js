@@ -3,6 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { TextInput, SubmitBar, LinkLabel, ActionBar, CloseSvg, DatePicker, CardLabelError, SearchForm, SearchField, Dropdown, Table, Card, MobileNumber, Loader, CardText, Header } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link  } from "react-router-dom";
 import ADSCancelBooking from "./ADSCancelBooking";
+import { getSlotSearchCriteria } from "../utils";
 
 /** 
  * ADSSearchApplication is used for searching ADS bookings and displaying results in a table format.
@@ -151,22 +152,11 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
               };
                 const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
                 let formdata = {
-                  advertisementSlotSearchCriteria:application?.cartDetails?.map((item) => ({
-                    bookingId: application?.bookingId,
-                    addType: item?.addType,
-                    bookingStartDate: item?.bookingDate,
-                    bookingEndDate: item?.bookingDate,
-                    faceArea: item?.faceArea,
-                    tenantId: tenantId,
-                    // Map target location to raw location code (e.g. HAUZ_KHAS) rather than display strings
-                    location: item?.locationCode || item?.location,
-                    nightLight: item?.nightLight,
-                    isTimerRequired: true,
-                  })),
+                  advertisementSlotSearchCriteria: getSlotSearchCriteria(application?.cartDetails, tenantId, {}, undefined, application?.bookingId)
                 };
                 const handleMakePayment = async () => {
                   try {
-                    // Await the mutation and capture the result directly
+                    /* Await the mutation and capture the result directly */
                     const result = await slotSearchData.mutateAsync(formdata);
                     let SlotSearchData={
                       bookingId:application?.bookingId,
@@ -174,7 +164,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
                       cartDetails:application?.cartDetails,
                     };
                     const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-                    // timerValue is resolved directly from top-level of response payload per backend contract
+                    /* timerValue is resolved directly from top-level of response payload per backend contract */
                     const timerValue = result?.timerValue;
 
                     if (isSlotBooked) {

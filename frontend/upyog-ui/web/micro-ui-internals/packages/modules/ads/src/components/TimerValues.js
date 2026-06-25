@@ -1,63 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
+import { getSlotSearchCriteria, calculateRemainingTime } from "../utils";
 
 export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
   const { t } = useTranslation();
-  // Fetch session storage parameters to retrieve the timer start timestamp
+  /* Fetch session storage parameters to retrieve the timer start timestamp */
   const [params] = Digit.Hooks.useSessionStorage("ADS_CREATE", {});
   const timerStartedAt = params?.adslist?.existingDataSet?.timervalue?.timerStartedAt;
 
-  // Initialize remaining time, subtracting elapsed seconds since lock creation to prevent resets on remounts
-  const [timeRemaining, setTimeRemaining] = useState(() => {
-    if (timerValues && timerStartedAt) {
-      const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
-      const remaining = timerValues - elapsed;
-      return remaining > 0 ? remaining : 0;
-    }
-    return timerValues || 0;
-  });
+  /* Initialize remaining time, subtracting elapsed seconds since lock creation to prevent resets on remounts */
+  const [timeRemaining, setTimeRemaining] = useState(() => calculateRemainingTime(timerValues, timerStartedAt));
   const [showToast, setShowToast] = useState(null);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
+  const [hasFetched, setHasFetched] = useState(false); /* To track if data has been fetched once */
 
-  // Sync remaining time with prop updates, accounting for the elapsed time offset
+  /* Sync remaining time with prop updates, accounting for the elapsed time offset */
   useEffect(() => {
     if (timerValues) {
-      const elapsed = timerStartedAt ? Math.floor((Date.now() - timerStartedAt) / 1000) : 0;
-      const remaining = timerValues - elapsed;
-      setTimeRemaining(remaining > 0 ? remaining : 0);
+      setTimeRemaining(calculateRemainingTime(timerValues, timerStartedAt));
     }
   }, [timerValues, timerStartedAt]);
 
   // Slot search data for Ads (Advertisement)
   const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
 
-  // Prepare form data for Advertisement Service
   const formdata = {
-    advertisementSlotSearchCriteria: SlotSearchData?.map((item) => ({
-      bookingId: "",
-      addType: item?.addTypeCode,
-      bookingStartDate: item?.bookingDate,
-      bookingEndDate: item?.bookingDate,
-      faceArea: item?.faceAreaCode,
-      tenantId: tenantId,
-      // Map the location to the raw location code (e.g. HAUZ_KHAS) rather than display strings
-      location: item?.locationCode || item?.location,
-      nightLight: item?.nightLight,
-      draftId:draftId,
-      isTimerRequired: true,
-    })),
+    advertisementSlotSearchCriteria: getSlotSearchCriteria(SlotSearchData, tenantId, {}, draftId)
   };
 
 
   useEffect(() => {
     const fetchSlotData = async () => {
       try {
-        // Fetching data for Advertisement Service
+        /* Fetching data for Advertisement Service */
         const result = await slotSearchData.mutateAsync(formdata);
         const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-        // timerValue is resolved directly from top-level of response payload per backend contract
+        /* timerValue is resolved directly from top-level of response payload per backend contract */
         const timerValue = result?.timerValue;
         if (isSlotBooked) {
           setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
@@ -69,15 +48,15 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
       }
     };
 
-    // Only fetch if timeRemaining is 0 and data hasn't been fetched before
+    /* Only fetch if timeRemaining is 0 and data hasn't been fetched before */
     if (timeRemaining === 0 && !hasFetched) {
       fetchSlotData();
-      setHasFetched(true); // Mark that the data has been fetched once
+      setHasFetched(true); /* Mark that the data has been fetched once */
     }
 
   }, [t, timeRemaining, hasFetched]);
 
-  // Timer decrement logic (every second)
+  /* Timer decrement logic (every second) */
   useEffect(() => {
     if (timeRemaining > 0) {
       const interval = setInterval(() => {
@@ -90,12 +69,12 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
         });
       }, 1000);
 
-      // Cleanup interval when the timer is cleared or component unmounts
+      /* Cleanup interval when the timer is cleared or component unmounts */
       return () => clearInterval(interval);
     }
   }, [timeRemaining]);
 
-  // Toast cleanup (hide after 2 seconds)
+  /* Toast cleanup (hide after 2 seconds) */
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => {

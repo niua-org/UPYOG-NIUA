@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", setTime }) => {
-  // Initialize with timerValues or fallback to 0
+  /* Initialize with timerValues or fallback to 0 */
   const [timeRemaining, setTimeRemaining] = useState(timerValues || 0); 
   const [showToast, setShowToast] = useState(null);
-  const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
+  const [hasFetched, setHasFetched] = useState(false); /* To track if data has been fetched once */
 
-  // Synchronize timeRemaining with incoming timerValues changes (e.g. page navigation/updates)
+  /* Synchronize timeRemaining with incoming timerValues changes (e.g. page navigation/updates) */
   useEffect(() => {
     if (timerValues) {
       setTimeRemaining(timerValues);
@@ -55,7 +55,7 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
           // Fetching data for Advertisement Service
           const result = await slotSearchData.mutateAsync(formdata);
           const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-          // Extract timerValue as top-level property per backend contract
+          /* Extract timerValue as top-level property per backend contract */
           const timerValue = result?.timerValue;
 
           if (isSlotBooked) {
@@ -81,15 +81,15 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
       }
     };
 
-    // Only fetch if timeRemaining is 0 and data hasn't been fetched before
+    /* Only fetch if timeRemaining is 0 and data hasn't been fetched before */
     if (timeRemaining === 0 && !hasFetched) {
       fetchSlotData();
-      setHasFetched(true); // Mark that the data has been fetched once
+      setHasFetched(true); /* Mark that the data has been fetched once */
     }
 
   }, [businessService, SlotSearchData, refetch, t, timeRemaining, hasFetched, slotSearchData]);
 
-  // Timer decrement logic (every second)
+  /* Timer decrement logic (every second) */
   useEffect(() => {
     if (timeRemaining > 0) {
       const interval = setInterval(() => {
@@ -102,7 +102,7 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
         });
       }, 1000);
       setTime(timeRemaining);
-      // Cleanup interval when the timer is cleared or component unmounts
+      /* Cleanup interval when the timer is cleared or component unmounts */
       return () => clearInterval(interval);
     }
   }, [timeRemaining]);

@@ -2,6 +2,7 @@ import { Card, KeyNote, SubmitBar, Toast,CardSubHeader } from "@nudmcdgnpm/digit
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  } from "react-router-dom";
+import { getSlotSearchCriteria } from "../../../../utils";
 
 /*
  * AdsApplication component displays the details of a specific advertisement application.
@@ -38,18 +39,7 @@ const AdsApplication = ({ application, tenantId, buttonLabel }) => {
   */
   const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
     let formdata = {
-      advertisementSlotSearchCriteria:application?.cartDetails?.map((item) => ({
-        bookingId: application?.bookingId,
-        addType: item?.addType,
-        bookingStartDate: item?.bookingDate,
-        bookingEndDate: item?.bookingDate,
-        faceArea: item?.faceArea,
-        tenantId: tenantId,
-        // Map target location to raw location code (e.g. HAUZ_KHAS) rather than display strings
-        location: item?.locationCode || item?.location,
-        nightLight: item?.nightLight,
-        isTimerRequired: true,
-      })),
+      advertisementSlotSearchCriteria: getSlotSearchCriteria(application?.cartDetails, tenantId, {}, undefined, application?.bookingId)
     };
    
   const getBookingDateRange = (bookingSlotDetails) => {
@@ -68,7 +58,7 @@ const AdsApplication = ({ application, tenantId, buttonLabel }) => {
 
       const handleMakePayment = async () => {
         try {
-          // Await the mutation and capture the result directly
+          /* Await the mutation and capture the result directly */
           const result = await slotSearchData.mutateAsync(formdata);
           let SlotSearchData={
             bookingId:application?.bookingId,
@@ -76,7 +66,7 @@ const AdsApplication = ({ application, tenantId, buttonLabel }) => {
             cartDetails:application?.cartDetails,
           };
           const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-          // timerValue is resolved directly from top-level of response payload per backend contract
+          /* timerValue is resolved directly from top-level of response payload per backend contract */
           const timerValue = result?.timerValue;
           if (isSlotBooked) {
             setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
