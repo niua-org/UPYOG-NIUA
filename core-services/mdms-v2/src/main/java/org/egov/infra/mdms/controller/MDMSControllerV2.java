@@ -48,20 +48,18 @@ public class MDMSControllerV2 {
     }
 
     @RequestMapping(value="_delete/{schemaCode}", method = RequestMethod.POST)
-    public ResponseEntity<MdmsResponseV2> delete(
+public ResponseEntity<MdmsResponseV2> delete(
         @Valid @RequestBody MdmsRequest mdmsRequest,
         @PathVariable("schemaCode") String schemaCode) {
 
     List<Mdms> masterDataList = mdmsServiceV2.delete(mdmsRequest, schemaCode);
 
     return new ResponseEntity<>(
-            ResponseUtil.getSchemaDefinitionResponse(
-                    request.getRequestInfo(),
-                    schemaDefinitions,
-                    schemaDefinitions.size()),
-            HttpStatus.OK
-        );
-    }
+            ResponseUtil.getMasterDataV2Response(
+                    mdmsRequest.getRequestInfo(),
+                    masterDataList),
+            HttpStatus.OK);
+}
 
     /**
      * Request handler for serving update requests
