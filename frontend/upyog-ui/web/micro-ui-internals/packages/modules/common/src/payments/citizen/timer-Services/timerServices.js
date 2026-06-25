@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", setTime }) => {
+
   const [timeRemaining, setTimeRemaining] = useState(0); // Initialize with `timerValues`
   const [showToast, setShowToast] = useState(null);
   const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
@@ -11,11 +12,14 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
     tenantId: SlotSearchData?.tenantId,
     filters: {
       bookingId: SlotSearchData?.bookingId,
-      communityHallCode: SlotSearchData?.communityHallCode,
-      bookingStartDate: SlotSearchData?.bookingStartDate,
-      bookingEndDate: SlotSearchData?.bookingEndDate,
-      hallCode: SlotSearchData?.hallCode,
+      draftId:SlotSearchData?.draftId,
+      venueCode: SlotSearchData?.venueCode,
+      bookingStartDate: SlotSearchData?.bookingSlotDetails?.[0]?.bookingDate,
+      bookingEndDate: SlotSearchData?.bookingSlotDetails?.[0]?.bookingDate,
+      unitCode: SlotSearchData?.bookingSlotDetails?.[0]?.unitCode,
       isTimerRequired: true,
+      fromTime:SlotSearchData?.bookingSlotDetails?.[0]?.bookingFromTime,
+      toTime:SlotSearchData?.bookingSlotDetails?.[0]?.bookingToTime,
     },
     enabled: false,
   });
