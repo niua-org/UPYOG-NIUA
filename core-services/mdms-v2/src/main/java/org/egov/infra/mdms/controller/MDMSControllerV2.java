@@ -55,10 +55,12 @@ public class MDMSControllerV2 {
     List<Mdms> masterDataList = mdmsServiceV2.delete(mdmsRequest, schemaCode);
 
     return new ResponseEntity<>(
-            ResponseUtil.getMasterDataV2Response(
-                    mdmsRequest.getRequestInfo(),
-                    masterDataList),
-            HttpStatus.OK);
+            ResponseUtil.getSchemaDefinitionResponse(
+                    request.getRequestInfo(),
+                    schemaDefinitions,
+                    schemaDefinitions.size()),
+            HttpStatus.OK
+        );
     }
 
     /**
