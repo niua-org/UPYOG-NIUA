@@ -50,7 +50,7 @@ const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceArea,
       tenantId: tenantId,
-      location: item?.location,
+      location: item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       isTimerRequired: true
     }))
@@ -66,7 +66,7 @@ const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
           cartDetails: mutation.data?.bookingApplication[0]?.cartDetails,
         };
         const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-        const timerValue=result?.advertisementSlotAvailabiltityDetails[0].timerValue;
+        const timerValue = result?.timerValue;
         console.log("Slot Search Result:", result);
         if (isSlotBooked) {
           setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });

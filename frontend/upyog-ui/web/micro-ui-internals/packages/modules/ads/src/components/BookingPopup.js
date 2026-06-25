@@ -26,10 +26,10 @@ const BookingPopup = ({
   closeModal,
   onSubmit,
   setExistingDataSet,
-  Searchdata
+  Searchdata,
+  selectedLocation
 }) => {
   const [showExistingBookingDetails, setShowExistingBookingDetails] = useState(false);
-  const [isDataSet, setIsDataSet] = useState(false); // State to track if data has been set
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const handleExistingDetailsClick = () => {
     setShowExistingBookingDetails(true); // Show the BookingSearchDetails component
@@ -49,34 +49,28 @@ const BookingPopup = ({
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceAreaCode,
       tenantId: tenantId,
-      location: item?.location,
+      location: selectedLocation?.code || item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       isTimerRequired: true
     }))
   };
   const setchbData = async () => {
     const result = await slotSearchData.mutateAsync(formdata);
-    const timerValue = result?.advertisementSlotAvailabiltityDetails[0].timerValue;
+    const timerValue = result?.timerValue;
     const newSessionData = {
       timervalue: {
-        timervalue: timerValue || 10
+        timervalue: timerValue || 0,
+        timerStartedAt: Date.now()
       },
       draftId: result?.draftId || ""
     };
     setExistingDataSet(newSessionData);
-    setIsDataSet(true); // Set the flag to true after data is set
+    onSubmit(newSessionData);
   };
-  useEffect(() => {
-    if (isDataSet) {
-      // If data is set, call onSubmit
-      onSubmit();
-      setIsDataSet(false); // Reset the flag after onSubmit is called
-    }
-  }, [isDataSet, onSubmit]);
   return <React.Fragment>
         <Modal headerBarMain={<Heading t={t} />} headerBarEnd={<CloseBtn onClick={closeModal} />} actionCancelLabel={showExistingBookingDetails && t("CS_COMMON_BACK")} actionCancelOnSubmit={() => setShowExistingBookingDetails(false)} hideSubmit={true} formId="modal-action">
             <Card className="ads-auto-41">
-            {showExistingBookingDetails && <ExistingBookingDetails onSubmit={onSubmit} setExistingDataSet={setExistingDataSet} Searchdata={Searchdata} />}
+            {showExistingBookingDetails && <ExistingBookingDetails onSubmit={onSubmit} setExistingDataSet={setExistingDataSet} Searchdata={Searchdata} selectedLocation={selectedLocation} />}
             <div className="ads-auto-42">
                     {!showExistingBookingDetails && <SubmitBar label={t("USE_EXISTING_DETAILS")} onSubmit={handleExistingDetailsClick} />}
                     {!showExistingBookingDetails && <SubmitBar label={t("FILL_NEW_DETAILS")} onSubmit={setchbData} />}

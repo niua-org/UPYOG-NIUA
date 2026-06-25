@@ -158,7 +158,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
                     bookingEndDate: item?.bookingDate,
                     faceArea: item?.faceArea,
                     tenantId: tenantId,
-                    location: item?.location,
+                    location: item?.locationCode || item?.location,
                     nightLight: item?.nightLight,
                     isTimerRequired: true,
                   })),
@@ -173,7 +173,7 @@ const ADSSearchApplication = ({tenantId, isLoading, t, onSubmit, onClear, data, 
                       cartDetails:application?.cartDetails,
                     };
                     const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-                    const timerValue=result?.advertisementSlotAvailabiltityDetails[0]?.timerValue;
+                    const timerValue = result?.timerValue;
 
                     if (isSlotBooked) {
                       setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });

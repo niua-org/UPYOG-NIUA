@@ -4,16 +4,35 @@ import { useTranslation } from "react-i18next";
 
 export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
   const { t } = useTranslation();
-  const [timeRemaining, setTimeRemaining] = useState(0); // Initialize with `timerValues`
+  const [params] = Digit.Hooks.useSessionStorage("ADS_CREATE", {});
+  const timerStartedAt = params?.adslist?.existingDataSet?.timervalue?.timerStartedAt;
+
+  const [timeRemaining, setTimeRemaining] = useState(() => {
+    if (timerValues && timerStartedAt) {
+      const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
+      const remaining = timerValues - elapsed;
+      return remaining > 0 ? remaining : 0;
+    }
+    return timerValues || 0;
+  });
   const [showToast, setShowToast] = useState(null);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
 
-   // Slot search data for Ads (Advertisement)
-   const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
-   
-   // Prepare form data for Advertisement Service
-   const formdata = {
+  // Sync remaining time with prop updates
+  useEffect(() => {
+    if (timerValues) {
+      const elapsed = timerStartedAt ? Math.floor((Date.now() - timerStartedAt) / 1000) : 0;
+      const remaining = timerValues - elapsed;
+      setTimeRemaining(remaining > 0 ? remaining : 0);
+    }
+  }, [timerValues, timerStartedAt]);
+
+  // Slot search data for Ads (Advertisement)
+  const slotSearchData = Digit.Hooks.ads.useADSSlotSearch();
+
+  // Prepare form data for Advertisement Service
+  const formdata = {
     advertisementSlotSearchCriteria: SlotSearchData?.map((item) => ({
       bookingId: "",
       addType: item?.addTypeCode,
@@ -21,26 +40,26 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceAreaCode,
       tenantId: tenantId,
-      location: item?.location,
+      location: item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       draftId:draftId,
       isTimerRequired: true,
     })),
-   };
-    
+  };
+
 
   useEffect(() => {
     const fetchSlotData = async () => {
       try {
-            // Fetching data for Advertisement Service
-            const result = await slotSearchData.mutateAsync(formdata);
-            const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-            const timerValue = result?.advertisementSlotAvailabiltityDetails[0].timerValue;
-            if (isSlotBooked) {
-            setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
-            } else {
-            setTimeRemaining(timerValue || 0);
-            }
+        // Fetching data for Advertisement Service
+        const result = await slotSearchData.mutateAsync(formdata);
+        const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
+        const timerValue = result?.timerValue;
+        if (isSlotBooked) {
+          setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
+        } else {
+          setTimeRemaining(timerValue || 0);
+        }
       } catch (error) {
         setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
       }
@@ -92,19 +111,19 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
 
   return (
     <div>
-       <span className="astericColor">{formatTime(timeRemaining)}</span>
-      
+      <span className="astericColor">{formatTime(timeRemaining)}</span>
+
       {/* Show Toast Message */}
       {showToast && (
-          <Toast
-            error={showToast.error}
-            warning={showToast.warning}
-            label={t(showToast.label)}
-            onClose={() => {
-              setShowToast(null);
-            }}
-          />
-        )}
+        <Toast
+          error={showToast.error}
+          warning={showToast.warning}
+          label={t(showToast.label)}
+          onClose={() => {
+            setShowToast(null);
+          }}
+        />
+      )}
     </div>
   );
 };

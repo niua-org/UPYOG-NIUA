@@ -13,14 +13,14 @@ import { useTranslation } from "react-i18next";
 export const ExistingBookingDetails = ({
   onSubmit,
   setExistingDataSet,
-  Searchdata
+  Searchdata,
+  selectedLocation
 }) => {
   const {
     t
   } = useTranslation();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [filters, setFilters] = useState(null);
-  const [isDataSet, setIsDataSet] = useState(false); // State to track if data has been set
   const user = Digit.UserService.getUser().info;
 
   // Slot search data for Ads (Advertisement)
@@ -35,14 +35,14 @@ export const ExistingBookingDetails = ({
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceAreaCode,
       tenantId: tenantId,
-      location: item?.location,
+      location: selectedLocation?.code || item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       isTimerRequired: true
     }))
   };
   const setchbData = async application => {
     const result = await slotSearchData.mutateAsync(formdata);
-    const timerValue = result?.advertisementSlotAvailabiltityDetails[0].timerValue;
+    const timerValue = result?.timerValue;
     const newSessionData = {
       documents: {
         documents: application?.documents?.map(doc => ({
@@ -80,20 +80,14 @@ export const ExistingBookingDetails = ({
         emailId: application?.applicantDetail?.applicantEmailId
       },
       timervalue: {
-        timervalue: timerValue || 0
+        timervalue: timerValue || 0,
+        timerStartedAt: Date.now()
       },
       draftId: result?.draftId || ""
     };
     setExistingDataSet(newSessionData);
-    setIsDataSet(true); // Set the flag to true after data is set
+    onSubmit(newSessionData);
   };
-  useEffect(() => {
-    if (isDataSet) {
-      // If data is set, call onSubmit
-      onSubmit();
-      setIsDataSet(false); // Reset the flag after onSubmit is called
-    }
-  }, [isDataSet, onSubmit]);
 
   // URL parsing for dynamic filter values
   let filter = window.location.href.split("/").pop();
