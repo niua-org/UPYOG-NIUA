@@ -651,9 +651,10 @@ const ADSSearch = ({
     {showModal && <BookingPopup t={t} closeModal={() => setShowModal(false)} // Close modal when "BACK" is clicked
       actionCancelOnSubmit={() => setShowModal(false)} // Close modal when "BACK" is clicked
       onSubmit={(sessionData) => {
-        goNext(sessionData); // Ensure action is called only when submitting
+        // Pass sessionData synchronously to avoid React state batching race condition in writing to session storage
+        goNext(sessionData); 
         setShowModal(false); // Close modal after action
-      }} setExistingDataSet={setExistingDataSet} Searchdata={cartDetails} selectedLocation={selectedLocation} />}
+      }} setExistingDataSet={setExistingDataSet} Searchdata={cartDetails} selectedLocation={selectedLocation} /* Pass selectedLocation to map raw location codes */ />}
   </React.Fragment>;
 };
 export default ADSSearch;

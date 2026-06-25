@@ -45,6 +45,7 @@ const AdsApplication = ({ application, tenantId, buttonLabel }) => {
         bookingEndDate: item?.bookingDate,
         faceArea: item?.faceArea,
         tenantId: tenantId,
+        // Map target location to raw location code (e.g. HAUZ_KHAS) rather than display strings
         location: item?.locationCode || item?.location,
         nightLight: item?.nightLight,
         isTimerRequired: true,
@@ -75,6 +76,7 @@ const AdsApplication = ({ application, tenantId, buttonLabel }) => {
             cartDetails:application?.cartDetails,
           };
           const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
+          // timerValue is resolved directly from top-level of response payload per backend contract
           const timerValue = result?.timerValue;
           if (isSlotBooked) {
             setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });

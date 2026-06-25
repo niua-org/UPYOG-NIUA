@@ -27,7 +27,7 @@ const BookingPopup = ({
   onSubmit,
   setExistingDataSet,
   Searchdata,
-  selectedLocation
+  selectedLocation // Added selectedLocation to map raw location codes instead of translated strings
 }) => {
   const [showExistingBookingDetails, setShowExistingBookingDetails] = useState(false);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
@@ -49,6 +49,7 @@ const BookingPopup = ({
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceAreaCode,
       tenantId: tenantId,
+      // Map the location to the raw location code (e.g. HAUZ_KHAS) rather than display strings
       location: selectedLocation?.code || item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       isTimerRequired: true
@@ -56,15 +57,18 @@ const BookingPopup = ({
   };
   const setchbData = async () => {
     const result = await slotSearchData.mutateAsync(formdata);
+    // timerValue is resolved directly from top-level of response payload per backend contract
     const timerValue = result?.timerValue;
     const newSessionData = {
       timervalue: {
         timervalue: timerValue || 0,
+        // Store lock start timestamp to calculate elapsed offset during navigation remounts
         timerStartedAt: Date.now()
       },
       draftId: result?.draftId || ""
     };
     setExistingDataSet(newSessionData);
+    // Propagate sessionData synchronously to avoid React state batching race conditions in goNext
     onSubmit(newSessionData);
   };
   return <React.Fragment>

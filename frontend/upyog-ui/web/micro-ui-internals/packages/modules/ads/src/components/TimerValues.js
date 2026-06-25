@@ -4,9 +4,11 @@ import { useTranslation } from "react-i18next";
 
 export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
   const { t } = useTranslation();
+  // Fetch session storage parameters to retrieve the timer start timestamp
   const [params] = Digit.Hooks.useSessionStorage("ADS_CREATE", {});
   const timerStartedAt = params?.adslist?.existingDataSet?.timervalue?.timerStartedAt;
 
+  // Initialize remaining time, subtracting elapsed seconds since lock creation to prevent resets on remounts
   const [timeRemaining, setTimeRemaining] = useState(() => {
     if (timerValues && timerStartedAt) {
       const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
@@ -19,7 +21,7 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
 
-  // Sync remaining time with prop updates
+  // Sync remaining time with prop updates, accounting for the elapsed time offset
   useEffect(() => {
     if (timerValues) {
       const elapsed = timerStartedAt ? Math.floor((Date.now() - timerStartedAt) / 1000) : 0;
@@ -40,6 +42,7 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceAreaCode,
       tenantId: tenantId,
+      // Map the location to the raw location code (e.g. HAUZ_KHAS) rather than display strings
       location: item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       draftId:draftId,
@@ -54,6 +57,7 @@ export const TimerValues = ({timerValues, SlotSearchData,draftId=""}) => {
         // Fetching data for Advertisement Service
         const result = await slotSearchData.mutateAsync(formdata);
         const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
+        // timerValue is resolved directly from top-level of response payload per backend contract
         const timerValue = result?.timerValue;
         if (isSlotBooked) {
           setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });

@@ -50,6 +50,7 @@ const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceArea,
       tenantId: tenantId,
+      // Map target location to raw location code (e.g. HAUZ_KHAS) rather than display strings
       location: item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       isTimerRequired: true
@@ -66,6 +67,7 @@ const ADSAcknowledgement = ({ data, onSuccess,mutation }) => {
           cartDetails: mutation.data?.bookingApplication[0]?.cartDetails,
         };
         const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
+        // timerValue is resolved directly from top-level of response payload per backend contract
         const timerValue = result?.timerValue;
         console.log("Slot Search Result:", result);
         if (isSlotBooked) {

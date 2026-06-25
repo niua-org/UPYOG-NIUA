@@ -14,7 +14,7 @@ export const ExistingBookingDetails = ({
   onSubmit,
   setExistingDataSet,
   Searchdata,
-  selectedLocation
+  selectedLocation // Added selectedLocation prop to allow map to raw location code
 }) => {
   const {
     t
@@ -35,6 +35,7 @@ export const ExistingBookingDetails = ({
       bookingEndDate: item?.bookingDate,
       faceArea: item?.faceAreaCode,
       tenantId: tenantId,
+      // Map the location to the raw location code (e.g. HAUZ_KHAS) rather than display strings
       location: selectedLocation?.code || item?.locationCode || item?.location,
       nightLight: item?.nightLight,
       isTimerRequired: true
@@ -42,6 +43,7 @@ export const ExistingBookingDetails = ({
   };
   const setchbData = async application => {
     const result = await slotSearchData.mutateAsync(formdata);
+    // timerValue is resolved directly from top-level of response payload per backend contract
     const timerValue = result?.timerValue;
     const newSessionData = {
       documents: {
@@ -81,11 +83,13 @@ export const ExistingBookingDetails = ({
       },
       timervalue: {
         timervalue: timerValue || 0,
+        // Store lock start timestamp to calculate elapsed offset during navigation remounts
         timerStartedAt: Date.now()
       },
       draftId: result?.draftId || ""
     };
     setExistingDataSet(newSessionData);
+    // Propagate sessionData synchronously to avoid React state batching race conditions in goNext
     onSubmit(newSessionData);
   };
 

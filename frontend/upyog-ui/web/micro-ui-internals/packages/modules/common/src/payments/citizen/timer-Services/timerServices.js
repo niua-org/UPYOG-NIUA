@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", setTime }) => {
-  const [timeRemaining, setTimeRemaining] = useState(timerValues || 0); // Initialize with `timerValues`
+  // Initialize with timerValues or fallback to 0
+  const [timeRemaining, setTimeRemaining] = useState(timerValues || 0); 
   const [showToast, setShowToast] = useState(null);
   const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
 
@@ -54,6 +55,7 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
           // Fetching data for Advertisement Service
           const result = await slotSearchData.mutateAsync(formdata);
           const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
+          // Extract timerValue as top-level property per backend contract
           const timerValue = result?.timerValue;
 
           if (isSlotBooked) {
