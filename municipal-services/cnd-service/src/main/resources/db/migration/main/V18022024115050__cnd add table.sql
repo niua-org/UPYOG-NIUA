@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS ug_cnd_application_details (
 );
 
 
-CREATE TABLE ug_cnd_waste_detail (
+CREATE TABLE IF NOT EXISTS ug_cnd_waste_detail (
     application_id VARCHAR(64),
     waste_type_id VARCHAR(64),
     entered_by_user_type VARCHAR(50),
@@ -48,7 +48,7 @@ CREATE TABLE ug_cnd_waste_detail (
 );
 
 
-CREATE TABLE ug_cnd_document_detail (
+CREATE TABLE IF NOT EXISTS ug_cnd_document_detail (
     document_detail_id VARCHAR(64) PRIMARY KEY,
     application_id VARCHAR(64),
     document_type VARCHAR(100),
@@ -64,7 +64,7 @@ CREATE TABLE ug_cnd_document_detail (
 );
 
 
-CREATE TABLE ug_cnd_disposal_deposit_centre_detail (
+CREATE TABLE IF NOT EXISTS ug_cnd_disposal_deposit_centre_detail (
     disposal_id VARCHAR(64) PRIMARY KEY,
     application_id VARCHAR(64),
     vehicle_id VARCHAR(64),
@@ -84,7 +84,7 @@ CREATE TABLE ug_cnd_disposal_deposit_centre_detail (
 );
 
 
-CREATE TABLE ug_cnd_application_details_audit (
+CREATE TABLE IF NOT EXISTS ug_cnd_application_details_audit (
     application_id VARCHAR(64) PRIMARY KEY,  -- Using application_id as the primary key
     tenant_id VARCHAR(64) NOT NULL,
     application_number VARCHAR(64) UNIQUE NOT NULL,
@@ -117,7 +117,7 @@ CREATE TABLE ug_cnd_application_details_audit (
 );
 
 
-CREATE TABLE ug_cnd_waste_detail_audit (
+CREATE TABLE IF NOT EXISTS ug_cnd_waste_detail_audit (
     application_id VARCHAR(64),
     waste_type_id VARCHAR(64),
     entered_by_user_type VARCHAR(50),
@@ -134,7 +134,7 @@ CREATE TABLE ug_cnd_waste_detail_audit (
 );
 
 
-CREATE TABLE ug_cnd_document_detail_audit (
+CREATE TABLE IF NOT EXISTS ug_cnd_document_detail_audit (
     document_detail_id VARCHAR(64) PRIMARY KEY,
     application_id VARCHAR(64),
     document_type VARCHAR(100),
@@ -150,7 +150,7 @@ CREATE TABLE ug_cnd_document_detail_audit (
 );
 
 
-CREATE TABLE ug_cnd_disposal_deposit_centre_detail_audit (
+CREATE TABLE IF NOT EXISTS ug_cnd_disposal_deposit_centre_detail_audit (
     disposal_id VARCHAR(64) PRIMARY KEY,
     application_id VARCHAR(64),
     vehicle_id VARCHAR(64),
