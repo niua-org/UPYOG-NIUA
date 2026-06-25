@@ -16,6 +16,7 @@ const CloseBtn = ({ onClick }) => (
   </div>
 );
 
+
 const MODAL_HIDDEN_ACTIONS = {
   actionCancelLabel: null,
   actionCancelOnSubmit: null,
@@ -36,16 +37,19 @@ function parseTermsToList(text = '') {
     ));
 }
 
-const VENUE_FIELDS = [
-  { label: t("CHB_VENUE_NAME"),         key: 'value'},
-  { label: t("CHB_GEO_LOCATION"),       key: 'geoLocation'},
-  { label: t("CHB_ADDRESS"),            key: 'address'},
-  { label: t("CHB_CONTACT"),            key: 'contactDetails'},
-  { label: t("CHB_DESCRIPTION"),        key: 'venueDescription'},
-];
 
-const VenueDetails = ({ venueData, setShowDetails }) => {
+
+const VenueDetails = ({ venueData, setShowDetails, t }) => {
   if (!venueData) return null;
+
+  const VENUE_FIELDS = [
+    { label: t("CHB_VENUE_NAME"),         key: 'value'},
+    { label: t("CHB_GEO_LOCATION"),       key: 'geoLocation'},
+    { label: t("CHB_ADDRESS"),            key: 'address'},
+    { label: t("CHB_CONTACT"),            key: 'contactDetails'},
+    { label: t("CHB_DESCRIPTION"),        key: 'venueDescription'},
+  ];
+
 
   return (
     /* can't use className here, Modal prop expects object */

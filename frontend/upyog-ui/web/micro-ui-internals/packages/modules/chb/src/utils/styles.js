@@ -1,4 +1,4 @@
-export default styles = {
+const styles = {
   popup: {
     backgroundColor: '#fff',
     position: 'relative',
@@ -17,3 +17,5 @@ export default styles = {
     margin: '35px',
   }
 };
+
+export default styles;
