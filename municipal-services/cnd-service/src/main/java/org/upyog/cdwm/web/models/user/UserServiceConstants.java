@@ -5,6 +5,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class UserServiceConstants {
 
+    private UserServiceConstants() {
+    }
+
     public static final String PATTERN_NAME = "^[^\\\\$\\\"<>?\\\\\\\\~`!@#$%^()+={}\\\\[\\\\]*,:;“”‘’]*$";
 
     public static final String PATTERN_MOBILE = "(^$|[0-9]{10})";

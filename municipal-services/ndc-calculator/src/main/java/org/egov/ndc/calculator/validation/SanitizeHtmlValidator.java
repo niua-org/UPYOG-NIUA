@@ -1,4 +1,4 @@
-package org.egov.ndc.calculator.Validation;
+package org.egov.ndc.calculator.validation;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.owasp.html.PolicyFactory;
