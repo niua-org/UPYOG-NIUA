@@ -4,6 +4,7 @@ public class VendorData {
 
     private String mobile;
     private String otp;
+    private String city;
 
     public VendorData() {
     }
@@ -22,5 +23,13 @@ public class VendorData {
 
     public void setOtp(String otp) {
         this.otp = otp;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 }

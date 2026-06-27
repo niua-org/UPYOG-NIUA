@@ -112,17 +112,51 @@ public class ReportController {
             @PathVariable String fileName
     ) {
 
-        File report =
-                new File(
-                        "target/reports/" + fileName
-                );
+        try {
 
-        if (!report.exists()) {
-            return ResponseEntity.notFound().build();
+            if (fileName.contains("..")
+                    || fileName.contains("/")
+                    || fileName.contains("\\")) {
+
+                return ResponseEntity
+                        .badRequest()
+                        .build();
+            }
+
+            File reportDir =
+                    new File("target/reports");
+
+            File report =
+                    new File(reportDir, fileName);
+
+            String basePath =
+                    reportDir.getCanonicalPath();
+
+            String targetPath =
+                    report.getCanonicalPath();
+
+            if (!targetPath.startsWith(basePath)) {
+
+                return ResponseEntity
+                        .badRequest()
+                        .build();
+            }
+
+            if (!report.exists()) {
+
+                return ResponseEntity
+                        .notFound()
+                        .build();
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(new FileSystemResource(report));
+
+        } catch (Exception e) {
+
+            return ResponseEntity.internalServerError()
+                    .build();
         }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_HTML)
-                .body(new FileSystemResource(report));
     }
 }

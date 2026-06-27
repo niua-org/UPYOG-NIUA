@@ -4,11 +4,13 @@
   "steps": [
 
     {
+      "name": "Citizen Application",
       "type": "CITIZEN",
       "module": "STREET_VENDING"
     },
 
     {
+      "name": "Citizen Flow",
       "type": "EMPLOYEE",
       "module": "STREET_VENDING",
       "role": "SV_EMP"

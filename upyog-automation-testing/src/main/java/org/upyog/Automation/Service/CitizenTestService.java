@@ -57,6 +57,8 @@ public class CitizenTestService {
 
         WorkflowDataStore.put("base.url", baseUrl);
         WorkflowDataStore.put("selected.url", baseUrl);
+        WorkflowDataStore.put("selected.module", moduleName);
+
         String env = baseUrl.contains("niuatt")
                 ? "NIUATT"
                 : "UPYOG";

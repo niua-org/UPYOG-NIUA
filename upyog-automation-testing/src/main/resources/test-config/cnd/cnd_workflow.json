@@ -4,16 +4,19 @@
   "steps": [
 
     {
+      "name": "Citizen Application",
       "type": "CITIZEN",
       "module": "CONSTRUCTION_AND_DEMOLITION"
     },
 
     {
+      "name": "Employee Flow",
       "type": "EMPLOYEE",
       "module": "CONSTRUCTION_AND_DEMOLITION",
       "role": "CND_SUPERUSER"
     },
     {
+      "name": "Vendor Flow",
       "type": "VENDOR",
       "module": "CONSTRUCTION_AND_DEMOLITION"
     }

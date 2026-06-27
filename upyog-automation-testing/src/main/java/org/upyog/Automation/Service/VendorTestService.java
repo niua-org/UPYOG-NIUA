@@ -41,7 +41,9 @@ public class VendorTestService {
         WorkflowDataStore.put("selected.otp", otp);
         WorkflowDataStore.put("selected.city", cityName);
         WorkflowDataStore.put("selected.applicationNumber", applicationNumber);
+        System.out.println("BASE URL RECEIVED = " + baseUrl);
         WorkflowDataStore.put("selected.url", baseUrl);
+        WorkflowDataStore.put("selected.module", moduleName);
 
         String env = baseUrl.contains("niuatt")
                 ? "NIUATT"
@@ -51,35 +53,35 @@ public class VendorTestService {
 
         logger.info("Selected ENV: {}", env);
 
-        new Thread(() -> {
-            try {
-                commonVendorTest.runVendorTest(
-                        baseUrl,
-                        moduleName,
-                        mobileNumber,
-                        otp,
-                        cityName,
-                        applicationNumber
-                );
-            } catch (Exception e) {
+        try {
 
-                logger.error("Error in vendor test", e);
+            commonVendorTest.runVendorTest(
+                    baseUrl,
+                    moduleName,
+                    mobileNumber,
+                    otp,
+                    cityName,
+                    applicationNumber
+            );
+
+        } catch (Exception e) {
+
+            logger.error("Error in vendor test", e);
+
+            throw new RuntimeException(
+                    "Vendor Test Failed : " + moduleName,
+                    e
+            );
+
+        } finally {
+
+            if (standaloneRun) {
+
+                ReportManager.flush();
+
             }
-            finally {
+        }
 
-                if (standaloneRun) {
-
-                    ReportManager.flush();
-
-                    ReportManager.clearTest();
-
-                    ExtentManager.reset();
-                }
-            }
-
-        }).start();
-
-        return moduleName + " vendor test started successfully.";
+        return moduleName + " vendor test completed successfully.";
     }
-
 }

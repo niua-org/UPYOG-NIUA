@@ -3,6 +3,7 @@ package org.upyog.Automation.engine;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.upyog.Automation.Reports.ReportManager;
 import org.upyog.Automation.Utils.TestDataStore;
@@ -208,6 +209,7 @@ public class ActionExecutor {
                         logger.info("Optional dropdown step skipped");
                     }
                     break;
+
                 case "OPTIONAL_TYPE":
                     try {
                         executeType(instruction);
@@ -215,6 +217,10 @@ public class ActionExecutor {
                     } catch (Exception e) {
                         logger.info("Optional type skipped");
                     }
+                    break;
+
+                case "SELECT_BY_VALUE":
+                    executeSelectByValue(instruction);
                     break;
 
 
@@ -234,15 +240,17 @@ public class ActionExecutor {
             );
 
         } catch (NoSuchElementException e) {
-            ReportManager.getTest()
-                    .fail("FAILED : " + stepName);
+            ReportManager.logFailure(
+                    "FAILED : " + stepName
+            );
             logger.error("✗ Element not found for step '{}': {}", stepName, e.getMessage());
             throw new RuntimeException("Step failed - element not found: " + stepName, e);
 
 
         } catch (TimeoutException e) {
-            ReportManager.getTest()
-                    .fail("TIMEOUT : " + stepName);
+            ReportManager.logFailure(
+                    "TIMEOUT : " + stepName
+            );
             logger.error("✗ Timeout waiting for element in step '{}': {}", stepName, e.getMessage());
             throw new RuntimeException("Step failed - timeout: " + stepName, e);
 
@@ -259,8 +267,9 @@ public class ActionExecutor {
         }
         catch (Exception e) {
 
-            ReportManager.getTest()
-                    .fail("FAILED : " + stepName);
+            ReportManager.logFailure(
+                    "FAILED : " + stepName
+            );
 
             throw e;
         }
@@ -1300,5 +1309,32 @@ public class ActionExecutor {
         logger.debug("Typed '{}' into label '{}'",
                 instruction.getInputValue(),
                 instruction.getLocatorValue());
+    }
+    private void executeSelectByValue(TestInstruction instruction) {
+
+        By locator = locatorResolver.resolveLocator(instruction);
+
+        WebElement element =
+                wait.until(
+                        ExpectedConditions.elementToBeClickable(locator)
+                );
+
+        // Scroll into view
+        js.executeScript(
+                "arguments[0].scrollIntoView({block:'center'});",
+                element
+        );
+
+        Select select =
+                new Select(element);
+
+        select.selectByValue(
+                instruction.getInputValue()
+        );
+
+        logger.debug(
+                "Selected value '{}' from dropdown",
+                instruction.getInputValue()
+        );
     }
 }

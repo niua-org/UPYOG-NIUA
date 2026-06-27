@@ -85,4 +85,16 @@ public class ReportManager {
             );
         }
     }
+    public static void logFailure(String stepName) {
+
+        ExtentTest extentTest = getTest();
+
+        if (extentTest != null) {
+            extentTest.fail(stepName);
+        } else {
+            System.out.println(
+                    "NO ACTIVE TEST : " + stepName
+            );
+        }
+    }
 }

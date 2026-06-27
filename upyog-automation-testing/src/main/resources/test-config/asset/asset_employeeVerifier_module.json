@@ -46,8 +46,8 @@
       "stepName": "Enter Asset Unique ID",
       "locatorStrategy": "XPATH",
       "locatorValue": "//h4[contains(text(),'Asset Unique ID')]/following::input[1]",
-      "action": "TYPE",
-      "inputValue": "${selected.applicationNumber}",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
       "dynamicSleep": 1000
     },
     {

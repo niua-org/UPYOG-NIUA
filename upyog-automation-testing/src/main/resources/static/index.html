@@ -186,7 +186,7 @@
 
         <!-- Module Testing Form -->
         <div>
-        <div id="module" class="tab-content active">
+         <div id="module" class="tab-content active">
             <h2>Full Module Testing</h2>
                 <form id="moduleForm">
                     <div class="form-group">
@@ -253,7 +253,7 @@
                 <div id="reportListContainer" style="margin-top:15px;"></div>
 
                 <button type="button"
-                        onclick="viewLatestReport()">
+                        onclick="viewLatestReport('reportListContainer')">
                     📄 View Report
                 </button>
 
@@ -361,9 +361,12 @@
             <div id="citizenResult" class="result"></div>
             <div id="citizenReportButtons"
                  style="display:none; margin-top:15px;">
+                <div id="citizenReportListContainer"
+                     style="margin-top:15px;">
+
 
                 <button type="button"
-                        onclick="viewLatestReport()">
+                        onclick="viewLatestReport('citizenReportListContainer')">
                     📄 View Report
                 </button>
 
@@ -372,6 +375,7 @@
                     ⬇ Download Report
                 </button>
 
+            </div>
             </div>
         </div>
 
@@ -443,9 +447,12 @@
             <div id="employeeResult" class="result"></div>
             <div id="employeeReportButtons"
                  style="display:none; margin-top:15px;">
+                <div id="employeeReportListContainer"
+                     style="margin-top:15px;">
+
 
                 <button type="button"
-                        onclick="viewLatestReport()">
+                        onclick="viewLatestReport('employeeReportListContainer')">
                     📄 View Report
                 </button>
 
@@ -455,6 +462,7 @@
                 </button>
 
             </div>
+        </div>
         </div>
 
         <!-- Vendor Testing Form -->
@@ -480,8 +488,8 @@
                     <select name="moduleName" required>
 
 
-                        <option value="WATER_TANKER_VENDOR">Water Tanker Vendor</option>
-                        <option value="MOBILE_TOILET_VENDOR">Mobile Toilet Vendor</option>
+                        <option value="WATER_TANKER">Water Tanker Vendor</option>
+                        <option value="MOBILE_TOILET">Mobile Toilet Vendor</option>
                         <option value="CONSTRUCTION_AND_DEMOLITION">Construction and Demolition Vendor</option>
 
 
@@ -524,13 +532,15 @@
                 <button type="submit">Run Test</button>
             </form>
             <div id="vendorResult" class="result"></div>
-        </div>
-    </div>
+
     <div id="vendorReportButtons"
          style="display:none; margin-top:15px;">
+        <div id="vendorReportListContainer"
+             style="margin-top:15px;">
+
 
         <button type="button"
-                onclick="viewLatestReport()">
+                onclick="viewLatestReport('vendorReportListContainer')">
             📄 View Report
         </button>
 
@@ -539,6 +549,9 @@
             ⬇ Download Report
         </button>
 
+    </div>
+    </div>
+    </div>
     </div>
 
     <script>
@@ -863,27 +876,18 @@ document.addEventListener("click", function(e) {
 
         // Result Output
 
-      async function viewLatestReport() {
+     async function viewLatestReport(containerId) {
 
-    const response =
-            await fetch('/api/report/list');
+    const response = await fetch('/api/report/list');
 
-    const reports =
-            await response.json();
+    const reports = await response.json();
 
-    let html = `
-        <h3>Available Reports</h3>
-    `;
+    let html = "";
 
     reports.forEach(report => {
 
         html += `
-            <div style="
-                margin:8px 0;
-                padding:8px;
-                border:1px solid #ddd;
-                border-radius:5px;
-            ">
+            <div>
                 <a href="/api/report/view/${report}"
                    target="_blank">
                     ${report}
@@ -892,9 +896,7 @@ document.addEventListener("click", function(e) {
         `;
     });
 
-    document.getElementById(
-            "reportListContainer"
-    ).innerHTML = html;
+    document.getElementById(containerId).innerHTML = html;
 }
 
 function downloadLatestReport() {

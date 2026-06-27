@@ -347,7 +347,7 @@
     {
       "stepName":"Capture Application Number",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Application Number')]/following-sibling::p",
+      "locatorValue":"//*[contains(text(),'Application No') or contains(text(),'Application Number')]/following-sibling::*[1]",
       "action":"CAPTURE_TEXT",
       "inputValue":"APPLICATION_NO",
       "dynamicSleep":3000

@@ -55,9 +55,9 @@
     {
       "stepName":"Enter Property ID",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//label[normalize-space()='Property ID']/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
+      "locatorValue":"//label[normalize-space()='Application No.']/following::input[1]",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
       "dynamicSleep":1000
     },
 

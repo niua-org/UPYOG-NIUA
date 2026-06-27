@@ -4,16 +4,19 @@
   "steps": [
 
     {
+      "name": "Citizen Application",
       "type": "CITIZEN",
       "module": "WATER_TANKER"
     },
 
     {
+      "name": "Employee Flow",
       "type": "EMPLOYEE",
       "module": "WATER_TANKER",
       "role": "WTCEMP"
     },
     {
+      "name": "Vendor Flow",
       "type": "VENDOR",
       "module": "WATER_TANKER"
     }

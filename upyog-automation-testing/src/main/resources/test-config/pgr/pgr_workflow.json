@@ -4,11 +4,13 @@
   "steps": [
 
     {
+      "name": "Citizen Application",
       "type": "CITIZEN",
       "module": "PUBLIC_GRIEVANCE_REDRESSAL"
     },
 
     {
+      "name": "Employee Flow",
       "type": "EMPLOYEE",
       "module": "PUBLIC_GRIEVANCE_REDRESSAL",
       "role": "UPYOGADMIN"

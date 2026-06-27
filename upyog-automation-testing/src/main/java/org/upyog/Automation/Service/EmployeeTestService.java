@@ -56,6 +56,7 @@ public class EmployeeTestService {
         logger.info("Starting {} employee test", moduleName);
 
         try {
+
             commonEmployeeTest.runEmployeeTest(
                     baseUrl,
                     moduleName,
@@ -63,17 +64,28 @@ public class EmployeeTestService {
                     password,
                     applicationNumber
             );
+
         } catch (Exception e) {
-            logger.error("Error in employee test: {}", e.getMessage());
-            e.printStackTrace();
-        }
-        finally {
+
+            logger.error(
+                    "Error in employee test",
+                    e
+            );
+
+            throw new RuntimeException(
+                    "Employee Test Failed : "
+                            + moduleName,
+                    e
+            );
+
+        } finally {
 
             if (standaloneRun) {
                 ReportManager.flush();
             }
         }
 
-        return moduleName + " employee test started successfully.";
+        return moduleName
+                + " employee test completed successfully.";
     }
 }

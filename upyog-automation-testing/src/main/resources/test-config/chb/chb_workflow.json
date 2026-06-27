@@ -4,11 +4,13 @@
   "steps": [
 
     {
+      "name": "Citizen Application",
       "type": "CITIZEN",
       "module": "COMMUNITY_HALL_BOOKING"
     },
 
     {
+      "name": "Employee Flow",
       "type": "EMPLOYEE",
       "module": "COMMUNITY_HALL_BOOKING",
       "role": "CHB_CEMP"

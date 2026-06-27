@@ -4,17 +4,20 @@
   "steps": [
 
     {
+      "name": "Citizen Application",
       "type": "CITIZEN",
       "module": "WATER_AND_SEWERAGE"
     },
 
     {
+      "name": "Employee Water Flow",
       "type": "EMPLOYEE",
       "module": "WATER",
       "role": "UPYOGADMIN"
     },
 
     {
+      "name": "Employee Sewerage Flow",
       "type": "EMPLOYEE",
       "module": "SEWERAGE",
       "role": "UPYOGADMIN"

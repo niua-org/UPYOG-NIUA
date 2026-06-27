@@ -268,7 +268,7 @@
     {
       "stepName":"Capture Application Number",
       "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Desludging Request Number ')]/following-sibling::p",
+      "locatorValue":"//*[contains(text(),'Desludging Request Number ') or contains(text(),'Application Number')]/following-sibling::*[1]",
       "action":"CAPTURE_TEXT",
       "inputValue":"APPLICATION_NO",
       "dynamicSleep":3000

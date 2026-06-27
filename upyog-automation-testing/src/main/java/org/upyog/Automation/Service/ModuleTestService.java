@@ -103,6 +103,120 @@ public class ModuleTestService {
 
                 return "Workflow Executed";
 
+            case "TREE_PRUNING":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/requestService/tree_pruning_workflow.json",
+                        "test-config/requestService/tree_pruning_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "MOBILE_TOILET":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/requestService/mobile_toilet_workflow.json",
+                        "test-config/requestService/mobile_toilet_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "STREET_VENDING":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/streetVending/street_vending_workflow.json",
+                        "test-config/streetVending/street_vending_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "TRADE_LICENSE":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/tradeLicense/trade_license_workflow.json",
+                        "test-config/tradeLicense/trade_license_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "ADVERTISEMENT":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/advertisement/adv_workflow.json",
+                        "test-config/advertisement/adv_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "PROPERTY_TAX":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/propertyTax/property_tax_workflow.json",
+                        "test-config/propertyTax/property_tax_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "PUBLIC_GRIEVANCE_REDRESSAL":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/pgr/pgr_workflow.json",
+                        "test-config/pgr/pgr_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/obpas/obpas_workflow.json",
+                        "test-config/obpas/obpas_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+
+            case "COMMUNITY_HALL_BOOKING":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/chb/chb_workflow.json",
+                        "test-config/chb/chb_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+
+            case "CONSTRUCTION_AND_DEMOLITION":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/cnd/cnd_workflow.json",
+                        "test-config/cnd/cnd_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+
+            case "WATER_AND_SEWERAGE":
+
+                workflowExecutor.executeWorkflow(
+                        "test-config/waterAndSewerage/water_and_sewerage_workflow.json",
+                        "test-config/waterAndSewerage/water_and_sewerage_stakeholder_module.json",
+                        citizenUrl
+                );
+
+                return "Workflow Executed";
+
+
             default:
 
                 System.out.println(

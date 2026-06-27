@@ -53,8 +53,8 @@
       "stepName":"Search Application",
       "locatorStrategy":"XPATH",
       "locatorValue":"(//input[@type='text'])[1]",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
       "dynamicSleep": 3000
     },
 
