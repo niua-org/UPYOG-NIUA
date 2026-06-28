@@ -129,9 +129,7 @@ public class CommonCitizenTest extends BaseTest {
 
                     break;
 
-
                 case "PET_REGISTRATION":
-
                     ModuleWrapper.execute(
                             "PET_REGISTRATION",
                             () -> petCreateApplication.petApptest(
@@ -312,7 +310,7 @@ public class CommonCitizenTest extends BaseTest {
                 case "DESLUDGING_SERVICE_PAYMENT":
 
                     ModuleWrapper.execute(
-                            "DESLUDGING",
+                            "DESLUDGING_SERVICE",
                             () -> desludgingCitizenPayment.desludgingPaymentReg(
                                     driver,
                                     wait,
@@ -325,7 +323,7 @@ public class CommonCitizenTest extends BaseTest {
                 case "DESLUDGING_SERVICE_PAYMENT2":
 
                     ModuleWrapper.execute(
-                            "DESLUDGING",
+                            "DESLUDGING_SERVICE",
                             () -> desludgingCitizenPayment2.desludgingPayment2Reg(
                                     driver,
                                     wait,

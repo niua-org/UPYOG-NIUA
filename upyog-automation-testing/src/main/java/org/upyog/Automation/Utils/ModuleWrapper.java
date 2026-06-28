@@ -2,6 +2,7 @@ package org.upyog.Automation.Utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.upyog.Automation.Reports.ReportManager;
 
 import java.util.List;
 
@@ -39,6 +40,11 @@ public class ModuleWrapper {
     private static void runModule(String moduleName,
                                   Runnable moduleLogic) {
 
+        System.out.println(
+                "MODULE WRAPPER TEST = "
+                        + ReportManager.getTest()
+        );
+
         logger.info("============================");
         logger.info("STARTING: {}", moduleName);
         logger.info("============================");
@@ -51,10 +57,19 @@ public class ModuleWrapper {
 
             logger.info("PASSED: {}", moduleName);
 
+            ReportManager.logStep(
+                    "PASSED : " + moduleName
+            );
+
         } catch (Exception e) {
 
             logger.error("FAILED: " + moduleName, e);
-            //logger.error("Reason: {}", e.getMessage());
+
+            ReportManager.logStep(
+                    "FAILED : " + moduleName
+            );
+
+            throw e;
 
         } finally {
 

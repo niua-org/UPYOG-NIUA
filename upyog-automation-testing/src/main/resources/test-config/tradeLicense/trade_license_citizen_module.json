@@ -376,7 +376,6 @@
       "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
-
     {
       "stepName":"Property Proceed",
       "locatorStrategy":"CSS",
@@ -511,6 +510,14 @@
       "locatorValue":"//button[@class='submit-bar ' and @type='button'][.//header[text()='Submit Application']]",
       "action":"CLICK_JS",
       "dynamicSleep": 5000
+    },
+    {
+      "stepName":"Capture Application Number",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'Reference No') or contains(text(),'Application Number')]/following-sibling::*[1]",
+      "action":"CAPTURE_TEXT",
+      "inputValue":"APPLICATION_NO",
+      "dynamicSleep":3000
     }
   ]
 }

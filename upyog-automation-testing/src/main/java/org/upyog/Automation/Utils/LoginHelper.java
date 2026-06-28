@@ -12,16 +12,35 @@ public class LoginHelper {
     private static final Logger logger =
             LoggerFactory.getLogger(LoginHelper.class);
 
-    public static void citizenLogin(WebDriver driver,
-                                    WebDriverWait wait,
-                                    JavascriptExecutor js,
-                                    String baseUrl,
-                                    String mobile,
-                                    String otp,
-                                    String city)
+    public static void login(WebDriver driver,
+                             WebDriverWait wait,
+                             JavascriptExecutor js,
+                             String baseUrl,
+                             String mobile,
+                             String otp,
+                             String city,
+                             String moduleName)
             throws InterruptedException {
 
         driver.get(baseUrl);
+
+        String loginMobile = mobile;
+
+        if ("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM"
+                .equalsIgnoreCase(moduleName)) {
+
+            loginMobile = ConfigReader.get("architect.mobile.number");
+        }
+
+        System.out.println(
+                "CURRENT URL = "
+                        + driver.getCurrentUrl()
+        );
+
+        System.out.println(
+                "PAGE TITLE = "
+                        + driver.getTitle()
+        );
 
         // ==========================
         // MOBILE
@@ -29,9 +48,8 @@ public class LoginHelper {
         CommonActions.fillInput(
                 wait,
                 "mobileNumber",
-                mobile
+                loginMobile
         );
-
 
         // ==========================
         // CHECKBOX

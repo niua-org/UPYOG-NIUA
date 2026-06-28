@@ -64,8 +64,8 @@
       "stepName":"Enter Grievance ID",
       "locatorStrategy":"NAME",
       "locatorValue":"serviceRequestId",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}"
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO"
     },
 
     {

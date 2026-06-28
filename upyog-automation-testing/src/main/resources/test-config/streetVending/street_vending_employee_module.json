@@ -59,8 +59,8 @@
       "stepName":"Enter Application Number",
       "locatorStrategy":"CSS",
       "locatorValue":"input.employee-card-input",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
       "dynamicSleep": 1000
     },
 

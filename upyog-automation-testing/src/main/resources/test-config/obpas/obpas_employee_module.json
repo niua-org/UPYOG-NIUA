@@ -47,8 +47,8 @@
       "stepName":"Search Application",
       "locatorStrategy":"NAME",
       "locatorValue":"applicationNo",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
       "dynamicSleep": 3000
     },
     {

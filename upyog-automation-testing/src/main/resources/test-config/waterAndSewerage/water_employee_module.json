@@ -54,12 +54,12 @@
 
 
     {
-      "stepName":"Enter Application Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"applicationNumber",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
-      "dynamicSleep":2000
+      "stepName": "Enter Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='text'])[1]",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 1000
     },
 
     {
@@ -409,12 +409,12 @@
 
 
     {
-      "stepName":"Enter Application Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"applicationNumber",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
-      "dynamicSleep":2000
+      "stepName": "Enter Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='text'])[1]",
+      "action": "TYPE",
+      "inputValue": "${selected.applicationNumber}",
+      "dynamicSleep": 1000
     },
 
     {

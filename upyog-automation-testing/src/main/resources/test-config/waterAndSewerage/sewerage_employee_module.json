@@ -54,13 +54,14 @@
 
 
     {
-      "stepName":"Enter Application Number",
-      "locatorStrategy":"NAME",
-      "locatorValue":"applicationNumber",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
-      "dynamicSleep":2000
+      "stepName": "Enter Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='text'])[1]",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 1000
     },
+
 
     {
       "stepName":"Search Application",
@@ -173,34 +174,7 @@
       "locatorStrategy":"CSS",
       "locatorValue":"div.select svg.cp",
       "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:0",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber License Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber License Number')]/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"7876776712345",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber Name",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber Name')]/following::input[1]",
-      "action":"TYPE",
-      "inputValue":"Ramesh Kumar",
-      "dynamicSleep":2000
-    },
-
-    {
-      "stepName":"Plumber Mobile",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//h2[contains(text(),'Plumber Mobile Number')]/following::input[@type='text'][1]",
-      "action":"TYPE",
-      "inputValue":"9999997669",
+      "inputValue":"0:1",
       "dynamicSleep":2000
     },
 
@@ -222,16 +196,6 @@
       "dynamicSleep":2000
     },
 
-
-
-    {
-      "stepName":"Evidence Type 1",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"2:0"
-    },
-
     {
       "stepName":"Upload Evidence 1",
       "locatorStrategy": "XPATH",
@@ -239,14 +203,6 @@
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
-    },
-
-    {
-      "stepName":"Evidence Type 2",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"3:0"
     },
 
     {
@@ -259,28 +215,12 @@
     },
 
     {
-      "stepName":"Evidence Type 3",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"4:0"
-    },
-
-    {
       "stepName":"Upload Evidence 3",
       "locatorStrategy": "XPATH",
       "locatorValue":"(//input[@type='file'])[3]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
-    },
-
-    {
-      "stepName":"Evidence Type 4",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"5:0"
     },
 
     {

@@ -59,8 +59,8 @@
       "stepName":"Enter Booking Number",
       "locatorStrategy":"NAME",
       "locatorValue":"bookingNo",
-      "action":"TYPE",
-      "inputValue":"${selected.applicationNumber}",
+      "action": "TYPE_FROM_STORE",
+      "inputValue": "APPLICATION_NO",
       "dynamicSleep": 1000
     },
 
@@ -224,7 +224,7 @@
       "locatorStrategy":"XPATH",
       "locatorValue":"//button[contains(.,'TAKE ACTION')]",
       "action":"CLICK_JS",
-      "dynamicSleep": 3000
+      "dynamicSleep": 5000
     },
 
     {
@@ -232,20 +232,8 @@
       "locatorStrategy":"XPATH",
       "locatorValue":"//p[normalize-space()='Assign Vendor']",
       "action":"CLICK_JS",
-      "dynamicSleep": 3000
+      "dynamicSleep": 5000
     },
-
-
-
-    {
-      "stepName":"Select Vendor",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select svg.cp",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"0:5",
-      "dynamicSleep": 3000
-    },
-
     {
       "stepName":"Assign Comment",
       "locatorStrategy":"NAME",
@@ -253,6 +241,22 @@
       "action":"TYPE",
       "inputValue":"Assigned",
       "dynamicSleep": 3000
+    },
+    {
+      "stepName":"Select First Vendor",
+      "locatorStrategy":"CSS",
+      "locatorValue":"div.select svg.cp",
+      "action":"SELECT_DROPDOWN_BY_INDEX",
+      "inputValue":"0:5",
+      "dynamicSleep": 2000
+    },
+    {
+      "stepName":"Assign Comment",
+      "locatorStrategy":"NAME",
+      "locatorValue":"comments",
+      "action":"TYPE",
+      "inputValue":"Assigned",
+      "dynamicSleep": 1000
     },
 
     {
