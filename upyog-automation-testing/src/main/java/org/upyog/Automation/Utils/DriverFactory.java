@@ -25,7 +25,12 @@ public class DriverFactory {
                 ConfigReader.get("selenium.grid.url"));
 
         // Execution mode (local / headless / vnc)
-        String executionMode = System.getProperty("executionMode", "local");
+
+        String executionMode = System.getProperty(
+                "executionMode",
+                ConfigReader.get("executionMode")
+        );
+
 
         ChromeOptions options = new ChromeOptions();
 
@@ -67,6 +72,12 @@ public class DriverFactory {
         WebDriver driver;
 
         try {
+            System.out.println("=================================");
+            System.out.println("Grid Enabled : " + isGrid);
+            System.out.println("Grid URL     : " + gridUrl);
+            System.out.println("Execution    : " + executionMode);
+            System.out.println("Chrome Opts  : " + options.asMap());
+            System.out.println("=================================");
             if (isGrid) {
 
                 System.out.println("Running on Selenium Grid: " + gridUrl);
@@ -87,6 +98,9 @@ public class DriverFactory {
             }
 
         } catch (Exception e) {
+
+            e.printStackTrace();
+
             throw new RuntimeException("Driver initialization failed", e);
         }
 
