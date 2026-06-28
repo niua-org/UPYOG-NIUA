@@ -21,16 +21,16 @@ import lombok.ToString;
 @Setter
 @Builder
 @ToString
-public class CommunityHallSlotSearchCriteria {
+public class VenueSlotSearchCriteria {
 	@JsonProperty("tenantId")
 	private String tenantId;
 
 	@NotBlank
-	private String communityHallCode;
+	private String venueCode;
 
-	private String hallCode;
+	private String unitCode;
 	
-	private List<String> hallCodes;
+	private List<String> unitCodes;
 
 	@NotBlank
 	@ValidDate

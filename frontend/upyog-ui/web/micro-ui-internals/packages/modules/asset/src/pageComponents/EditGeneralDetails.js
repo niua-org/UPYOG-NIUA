@@ -297,12 +297,7 @@ const OwnerForm = _props => {
       type: errors
     });else if (!Object.keys(errors).length && localFormState.errors[config.key]) clearErrors(config.key);
   }, [errors]);
-  const errorStyle = {
-    width: "70%",
-    marginLeft: "30%",
-    fontSize: "12px",
-    marginTop: "-21px"
-  };
+
   return <React.Fragment>
       <div className="asset-auto-133">
         <div className="asset-auto-134">
@@ -326,7 +321,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.financialYear ? errors?.financialYear?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.financialYear ? errors?.financialYear?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_SOURCE_FINANCE")}</CardLabel>
             <Controller
@@ -346,7 +341,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.sourceOfFinance ? errors?.sourceOfFinance?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.sourceOfFinance ? errors?.sourceOfFinance?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_CATEGORY")}</CardLabel>
             <Controller
@@ -367,7 +362,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetclassification ? errors?.assetclassification?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.assetclassification ? errors?.assetclassification?.message : ""}</CardLabelError>
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PARENT_CATEGORY")}</CardLabel>
             <Controller
@@ -388,7 +383,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.assettype ? errors?.assettype?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.assettype ? errors?.assettype?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_SUB_CATEGORY")}</CardLabel>
@@ -410,7 +405,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetsubtype ? errors?.assetsubtype?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.assetsubtype ? errors?.assetsubtype?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_CATEGORY_SUB_CATEGORY")}</CardLabel>
@@ -432,7 +427,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>
+          <CardLabelError className="error-message">
             {localFormState?.touched?.assetparentsubCategory ? errors?.assetparentsubCategory?.message : ""}
           </CardLabelError>
 
@@ -465,7 +460,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.BookPagereference ? errors?.BookPagereference?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.BookPagereference ? errors?.BookPagereference?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_NAME")}</CardLabel>
@@ -498,7 +493,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.AssetName ? errors?.AssetName?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.AssetName ? errors?.AssetName?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("ASSET_DESCRIPTION")}</CardLabel>
@@ -531,7 +526,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_DEPARTMENT")}</CardLabel>
@@ -553,7 +548,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.Department ? errors?.Department?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.Department ? errors?.Department?.message : ""}</CardLabelError>
           <br />
           <CardCaption>Asset Common Details </CardCaption>
           <br />
@@ -578,7 +573,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetType ? errors?.assetType?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.assetType ? errors?.assetType?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_USAGE")}</CardLabel>
@@ -600,7 +595,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.assetUsage ? errors?.assetUsage?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.assetUsage ? errors?.assetUsage?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_MODE_OF_POSSESSION_OR_ACQUISITION")}</CardLabel>
@@ -622,7 +617,7 @@ const OwnerForm = _props => {
               )}
             />
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>
+          <CardLabelError className="error-message">
             {localFormState?.touched?.modeOfPossessionOrAcquisition ? errors?.modeOfPossessionOrAcquisition?.message : ""}
           </CardLabelError>
 
@@ -658,7 +653,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{localFormState?.touched?.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
+          <CardLabelError className="error-message">{localFormState?.touched?.Assetdescription ? errors?.Assetdescription?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_INVOICE_NUMBER")}</CardLabel>
@@ -691,7 +686,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.invoiceNumber ? errors?.invoiceNumber?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.invoiceNumber ? errors?.invoiceNumber?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PURCHASE_DATE")}</CardLabel>
@@ -725,7 +720,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.purchaseDate ? errors?.purchaseDate?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PURCHASE_ORDER")}</CardLabel>
@@ -758,7 +753,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.purchaseOrderNumber ? errors?.purchaseOrderNumber?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_LIFE")}</CardLabel>
@@ -824,7 +819,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.location ? errors?.location?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.location ? errors?.location?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_PURCHASE_COST")}</CardLabel>
@@ -857,7 +852,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.purchaseCost ? errors?.purchaseCost?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_ACQUISITION_COST")}</CardLabel>
@@ -890,7 +885,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.acquisitionCost ? errors?.acquisitionCost?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.acquisitionCost ? errors?.acquisitionCost?.message : ""}</CardLabelError> */}
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("AST_BOOK_VALUE")}</CardLabel>
@@ -923,7 +918,7 @@ const OwnerForm = _props => {
               />
             </div>
           </LabelFieldPair>
-          {/* <CardLabelError style={errorStyle}>{localFormState?.touched?.bookValue ? errors?.bookValue?.message : ""}</CardLabelError> */}
+          {/* <CardLabelError className="error-message">{localFormState?.touched?.bookValue ? errors?.bookValue?.message : ""}</CardLabelError> */}
         </div>
       </div>
       {showToast?.label && <Toast label={showToast?.label} onClose={w => {

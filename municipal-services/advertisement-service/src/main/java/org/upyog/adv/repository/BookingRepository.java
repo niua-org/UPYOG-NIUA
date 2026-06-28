@@ -1,14 +1,9 @@
 package org.upyog.adv.repository;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 
 import org.egov.common.contract.request.RequestInfo;
@@ -61,10 +56,8 @@ public interface BookingRepository {
 	
 	void deleteBookingIdForTimer(String bookingId);
 
-	//Map<String, Long> getRemainingTimerValues(List<BookingDetail> bookingDetails);
-	
-	void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteria, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail availabiltityDetailsResponse, String preGeneratedDraftId);
+	long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteria, RequestInfo requestInfo,
+			String preGeneratedDraftId);
 
 	String fetchDraftIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId);
 
@@ -99,14 +92,6 @@ public interface BookingRepository {
 
 	List<AdvertisementSlotAvailabilityDetail> getBookedSlots(AdvertisementSlotSearchCriteria criteria,
 			RequestInfo requestInfo);
-
-	void getTimerData(String draftId, AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo,
-			AdvertisementSlotAvailabilityDetail detail,  List<AdvertisementSlotSearchCriteria> criteriaList);
-	
-	void getAndInsertTimerData(String draftId, 
-            List<AdvertisementSlotSearchCriteria> criteriaList, 
-            RequestInfo requestInfo, 
-            AdvertisementSlotAvailabilityDetail availabilityDetailsResponse);
 
 	void deleteDataFromTimerAndDraft(String uuid, String draftId, String bookingId);
 	

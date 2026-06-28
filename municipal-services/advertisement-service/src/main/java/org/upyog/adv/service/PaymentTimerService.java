@@ -7,7 +7,6 @@ import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,6 @@ import org.springframework.util.CollectionUtils;
 import org.upyog.adv.repository.BookingRepository;
 import org.upyog.adv.util.BookingUtil;
 import org.upyog.adv.util.PaymentTimerKeyBuilder;
-import org.upyog.adv.web.models.AdvertisementSlotAvailabilityDetail;
 import org.upyog.adv.web.models.AdvertisementSlotSearchCriteria;
 import org.upyog.adv.web.models.BookingPaymentTimerDetails;
 
@@ -29,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PaymentTimerService {
 
-	@Autowired
-	@Lazy
-	private BookingRepository bookingRepository;
+	private final BookingRepository bookingRepository;
+	private final ObjectProvider<PaymentTimerRedisService> paymentTimerRedis;
 
-	@Autowired
-	private ObjectProvider<PaymentTimerRedisService> paymentTimerRedis;
+	public PaymentTimerService(@Lazy BookingRepository bookingRepository,
+			ObjectProvider<PaymentTimerRedisService> paymentTimerRedis) {
+		this.bookingRepository = bookingRepository;
+		this.paymentTimerRedis = paymentTimerRedis;
+	}
 
 	/**
 	 * Creates payment timer holds for the requested advertisement slots.
@@ -47,11 +47,9 @@ public class PaymentTimerService {
 	 *
 	 * @param criteriaList                 slot search criteria used to build timer rows
 	 * @param requestInfo                  request metadata and authenticated user details
-	 * @param availabiltityDetailsResponse slot availability response to receive timer details
 	 */
 	@Transactional
-	public void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
-			List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse) {
+	public long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo) {
 		var uuid = requestInfo.getUserInfo().getUuid();
 		var tenantId = criteriaList.stream().map(AdvertisementSlotSearchCriteria::getTenantId)
 				.filter(StringUtils::isNotBlank).findFirst()
@@ -64,38 +62,37 @@ public class PaymentTimerService {
 		var redis = paymentTimerRedis.getIfAvailable();
 
 		if (willInsertNewTimer) {
-			/*
-			 * Generate the hold id before touching Redis or the DB so the same value is used
-			 * consistently across both stores.
-			 */
 			preGeneratedDraftId = BookingUtil.getRandonUUID();
 			var createdTime = BookingUtil.getCurrentTimestamp();
 			timerDetails = PaymentTimerKeyBuilder.buildTimerDetailsList(criteriaList, preGeneratedDraftId, uuid,
 					tenantId, createdTime);
-
-			if (redis != null) {
-				for (var detail : timerDetails) {
-					if (!redis.tryAcquireSlot(detail)) {
-						throw new CustomException("SLOT_PAYMENT_TIMER_LOCKED",
-								"Advertisement slot is held by another booking. addType=" + detail.getAddType()
-										+ " location=" + detail.getLocation() + " bookingDate="
-										+ detail.getBookingDate());
-					}
-				}
-			}
+			acquireRedisSlotHolds(redis, timerDetails);
 		}
 
 		try {
-			bookingRepository.insertBookingIdForTimer(criteriaList, requestInfo,
-					availabiltityDetailsResponse.get(0), preGeneratedDraftId);
+			long timerValue = bookingRepository.insertBookingIdForTimer(criteriaList, requestInfo, preGeneratedDraftId);
 			if (redis != null && !CollectionUtils.isEmpty(timerDetails)) {
 				redis.syncTimerRows(timerDetails);
 			}
+			return timerValue;
 		} catch (RuntimeException ex) {
 			if (redis != null && !CollectionUtils.isEmpty(timerDetails)) {
 				redis.removeTimerRows(timerDetails);
 			}
 			throw ex;
+		}
+	}
+
+	private void acquireRedisSlotHolds(PaymentTimerRedisService redis, List<BookingPaymentTimerDetails> timerDetails) {
+		if (redis == null) {
+			return;
+		}
+		for (var detail : timerDetails) {
+			if (!redis.tryAcquireSlot(detail)) {
+				throw new CustomException("SLOT_PAYMENT_TIMER_LOCKED",
+						"Advertisement slot is held by another booking. addType=" + detail.getAddType()
+								+ " location=" + detail.getLocation() + " bookingDate=" + detail.getBookingDate());
+			}
 		}
 	}
 

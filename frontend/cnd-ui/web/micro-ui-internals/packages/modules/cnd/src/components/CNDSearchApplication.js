@@ -117,7 +117,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
         <div>
             <Header>{t("CND_SEARCH_APPLICATIONS")}</Header>
             < Card className={"card-search-heading"}>
-                <span style={cndStyles.searchApplicationWarning}>{t("Provide at least one parameter to search for an application")}</span>
+                <span className="cnd-search-app-warning">{t("Provide at least one parameter to search for an application")}</span>
             </Card>
             <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
@@ -184,7 +184,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                 <SearchField></SearchField>
                 <SearchField className="submit">
                     <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
-                    <p style={cndStyles.clearButton}
+                    <p className="cnd-search-app-clear-btn"
                         onClick={() => {
                             reset({
                                 applicationNumber: "",
@@ -202,12 +202,12 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                         }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>
-            {!isLoading && data?.display ? <Card style={{ marginTop: 20 }}>
+            {!isLoading && data?.display ? <Card className="cnd-search-app-no-data-card">
                 {
                     t(data.display)
                         .split("\\n")
                         .map((text, index) => (
-                            <p key={index} style={cndStyles.noInboxApplication}>
+                            <p key={index} className="cnd-search-app-no-data-text">
                                 {text}
                             </p>
                         ))

@@ -87,7 +87,8 @@ public class RedisSeatLockService implements SeatLockService {
 		requireIds(seatId, userId);
 		String key = redisKey(seatId);
 		Long deleted = redis.execute(unlockScript, List.of(key), userId);
-		if (deleted > 0) {
+		long deletedCount = deleted == null ? 0L : deleted;
+		if (deletedCount > 0) {
 			return new ReleaseSeatResult.Released(seatId);
 		}
 		if (Boolean.FALSE.equals(redis.hasKey(key))) {
@@ -123,10 +124,10 @@ public class RedisSeatLockService implements SeatLockService {
 		Optional<LockSeatResult> validationResult = validate(seatId, userId, ttl);
 		if (validationResult.isPresent()) {
 			LockSeatResult result = validationResult.get();
-			if (result instanceof LockSeatResult.InvalidArgument) {
-				return new ExtendLockResult.InvalidArgument(((LockSeatResult.InvalidArgument) result).message());
-			} else if (result instanceof LockSeatResult.RateLimited) {
-				return new ExtendLockResult.InvalidArgument(((LockSeatResult.RateLimited) result).message());
+			if (result instanceof LockSeatResult.InvalidArgument invalidArgument) {
+				return new ExtendLockResult.InvalidArgument(invalidArgument.message());
+			} else if (result instanceof LockSeatResult.RateLimited rateLimited) {
+				return new ExtendLockResult.InvalidArgument(rateLimited.message());
 			} else {
 				return new ExtendLockResult.InvalidArgument("Unexpected validation branch");
 			}

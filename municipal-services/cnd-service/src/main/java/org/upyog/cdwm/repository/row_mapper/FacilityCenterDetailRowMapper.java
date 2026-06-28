@@ -1,4 +1,4 @@
-package org.upyog.cdwm.repository.rowMapper;
+package org.upyog.cdwm.repository.row_mapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
+@SuppressWarnings("java:S2638")
 public class FacilityCenterDetailRowMapper implements ResultSetExtractor <List<FacilityCenterDetail>> {
 
 	  /**
@@ -38,7 +39,7 @@ public class FacilityCenterDetailRowMapper implements ResultSetExtractor <List<F
     @Override
     public List<FacilityCenterDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
     	
-    	List<FacilityCenterDetail> facilityCenterDetails = new ArrayList<FacilityCenterDetail>();
+    	List<FacilityCenterDetail> facilityCenterDetails = new ArrayList<>();
 		while (rs.next()) {
 		
 			FacilityCenterDetail details = FacilityCenterDetail.builder() 
