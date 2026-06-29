@@ -1,6 +1,5 @@
 package org.upyog.adv.web.models;
 
-import org.springframework.validation.annotation.Validated;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +11,6 @@ import lombok.ToString;
 /**
  * Domain model class used by advertisement service requests and responses.
  */
-@Validated
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

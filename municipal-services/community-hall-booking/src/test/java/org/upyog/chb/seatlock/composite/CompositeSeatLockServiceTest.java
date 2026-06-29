@@ -25,6 +25,9 @@ import org.upyog.chb.seatlock.redis.RedisSeatLockService;
 @DisplayName("CompositeSeatLockService (Redis → DB fallback)")
 class CompositeSeatLockServiceTest {
 
+	private static final Instant FIXED_EXPIRY = Instant.parse("2030-06-15T12:00:30Z");
+	private static final Duration LOCK_TTL = Duration.ofMinutes(1);
+
 	@Mock
 	private RedisSeatLockService redis;
 
@@ -41,9 +44,9 @@ class CompositeSeatLockServiceTest {
 	@Test
 	@DisplayName("Given Redis succeeds When lockSeat Then returns Redis outcome")
 	void lockSeat_primaryRedis() {
-		var acquired = new LockSeatResult.Acquired("S1", "u1", Instant.now().plusSeconds(30));
-		when(redis.lockSeat("S1", "u1", Duration.ofMinutes(1))).thenReturn(acquired);
-		assertThat(composite.lockSeat("S1", "u1", Duration.ofMinutes(1))).isSameAs(acquired);
+		var acquired = new LockSeatResult.Acquired("S1", "u1", FIXED_EXPIRY);
+		when(redis.lockSeat("S1", "u1", LOCK_TTL)).thenReturn(acquired);
+		assertThat(composite.lockSeat("S1", "u1", LOCK_TTL)).isSameAs(acquired);
 	}
 
 	@Test
@@ -51,16 +54,16 @@ class CompositeSeatLockServiceTest {
 	void lockSeat_fallbackDb() {
 		when(redis.lockSeat(eq("S1"), eq("u1"), any(Duration.class)))
 				.thenThrow(new RedisConnectionFailureException("simulated outage"));
-		var acquired = new LockSeatResult.Acquired("S1", "u1", Instant.now().plusSeconds(30));
-		when(db.lockSeat("S1", "u1", Duration.ofMinutes(1))).thenReturn(acquired);
-		assertThat(composite.lockSeat("S1", "u1", Duration.ofMinutes(1))).isSameAs(acquired);
+		var acquired = new LockSeatResult.Acquired("S1", "u1", FIXED_EXPIRY);
+		when(db.lockSeat("S1", "u1", LOCK_TTL)).thenReturn(acquired);
+		assertThat(composite.lockSeat("S1", "u1", LOCK_TTL)).isSameAs(acquired);
 	}
 
 	@Test
 	@DisplayName("Given Redis throws non-infra error When lockSeat Then propagates")
 	void lockSeat_nonInfraPropagates() {
 		when(redis.lockSeat(any(), any(), any())).thenThrow(new IllegalStateException("bug"));
-		assertThatThrownBy(() -> composite.lockSeat("S1", "u1", Duration.ofMinutes(1)))
+		assertThatThrownBy(() -> composite.lockSeat("S1", "u1", LOCK_TTL))
 				.isInstanceOf(IllegalStateException.class);
 	}
 

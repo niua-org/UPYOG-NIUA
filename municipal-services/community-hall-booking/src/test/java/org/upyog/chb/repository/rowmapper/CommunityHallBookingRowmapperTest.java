@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.dao.DataAccessException;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.VenueBookingDetail;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,7 +34,7 @@ class CommunityHallBookingRowmapperTest {
         when(resultSet.getString("booking_id")).thenReturn("B001");
         when(resultSet.getString("booking_no")).thenReturn("BN001");
         when(resultSet.getString("tenant_id")).thenReturn("T001");
-        when(resultSet.getString("community_hall_code")).thenReturn("CH001");
+        when(resultSet.getString("venue_code")).thenReturn("CH001");
         when(resultSet.getString("booking_status")).thenReturn("CONFIRMED");
         when(resultSet.getString("special_category")).thenReturn("CATEGORY1");
         when(resultSet.getString("purpose")).thenReturn("Wedding");
@@ -46,16 +46,16 @@ class CommunityHallBookingRowmapperTest {
         when(resultSet.getString("payment_receipt_filestore_id")).thenReturn("PR001");
 
         // Act
-        List<CommunityHallBookingDetail> result = rowmapper.extractData(resultSet);
+        List<VenueBookingDetail> result = rowmapper.extractData(resultSet);
 
         // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
-        CommunityHallBookingDetail bookingDetail = result.get(0);
+        VenueBookingDetail bookingDetail = result.get(0);
         assertEquals("B001", bookingDetail.getBookingId());
         assertEquals("BN001", bookingDetail.getBookingNo());
         assertEquals("T001", bookingDetail.getTenantId());
-        assertEquals("CH001", bookingDetail.getCommunityHallCode());
+        assertEquals("CH001", bookingDetail.getVenueCode());
         assertEquals("CONFIRMED", bookingDetail.getBookingStatus());
         assertEquals("CATEGORY1", bookingDetail.getSpecialCategory().getCategory());
         assertEquals("Wedding", bookingDetail.getPurpose().getPurpose());

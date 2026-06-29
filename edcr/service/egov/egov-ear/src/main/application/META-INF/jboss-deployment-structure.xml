@@ -18,6 +18,10 @@
     <ear-subdeployments-isolated>false</ear-subdeployments-isolated>
 
     <deployment>
+        <dependencies>
+            <module name="org.egov.settings"/>
+        </dependencies>
+
         <exclude-subsystems>
             <subsystem name="jpa"/>
             <subsystem name="infinispan"/>
@@ -41,6 +45,9 @@
         </exclusions>
     </deployment>
     <sub-deployment name="org.egov.edcr-egov-edcrweb-2.1.1-SNAPSHOT.war">
+        <dependencies>
+            <module name="org.egov.settings"/>
+        </dependencies>
         <exclusions>
             <module name="com.fasterxml.jackson.core.jackson-core"/>
             <module name="com.fasterxml.jackson.core.jackson-databind"/>
@@ -53,6 +60,9 @@
         </exclusions>
     </sub-deployment>
     <sub-deployment name="org.egov.edcr-egov-egiweb-2.1.1-SNAPSHOT.war">
+        <dependencies>
+            <module name="org.egov.settings"/>
+        </dependencies>
         <exclusions>
             <module name="com.fasterxml.jackson.core.jackson-core"/>
             <module name="com.fasterxml.jackson.core.jackson-databind"/>

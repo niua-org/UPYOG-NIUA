@@ -25,6 +25,10 @@ import org.upyog.chb.seatlock.model.ReleaseSeatResult;
 @DisplayName("DbSeatLockService (unit)")
 class DbSeatLockServiceTest {
 
+	private static final Instant FUTURE_EXPIRY = Instant.parse("2031-06-15T12:00:00Z");
+	private static final Instant PAST_EXPIRY = Instant.parse("2020-06-15T12:00:00Z");
+	private static final Instant RECENT_PAST_EXPIRY = Instant.parse("2020-06-15T11:59:00Z");
+
 	@Mock
 	private DbSeatLockRepository repository;
 
@@ -47,7 +51,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given active lock by other When lockSeat Then AlreadyLocked")
 	void lockSeat_conflict() {
-		var future = Instant.now().plus(Duration.ofHours(1));
+		var future = FUTURE_EXPIRY;
 		when(repository.findForUpdate("S1"))
 				.thenReturn(Optional.of(new SeatLockRow("S1", "other", future, 0L)));
 		var result = service.lockSeat("S1", "u1", Duration.ofMinutes(5));
@@ -57,7 +61,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given expired lock by other When lockSeat Then takeover Acquired")
 	void lockSeat_takeoverAfterExpiry() {
-		var past = Instant.now().minus(Duration.ofHours(1));
+		var past = PAST_EXPIRY;
 		when(repository.findForUpdate("S1")).thenReturn(Optional.of(new SeatLockRow("S1", "other", past, 1L)));
 		var result = service.lockSeat("S1", "u1", Duration.ofMinutes(5));
 		assertThat(result).isInstanceOf(LockSeatResult.Acquired.class);
@@ -67,7 +71,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given same user active lock When lockSeat Then renew Acquired")
 	void lockSeat_sameUserRenew() {
-		var future = Instant.now().plus(Duration.ofHours(1));
+		var future = FUTURE_EXPIRY;
 		when(repository.findForUpdate("S1")).thenReturn(Optional.of(new SeatLockRow("S1", "u1", future, 2L)));
 		var result = service.lockSeat("S1", "u1", Duration.ofMinutes(5));
 		assertThat(result).isInstanceOf(LockSeatResult.Acquired.class);
@@ -89,7 +93,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given active owner When releaseSeat Then delete and Released")
 	void releaseSeat_success() {
-		var future = Instant.now().plus(Duration.ofHours(1));
+		var future = FUTURE_EXPIRY;
 		when(repository.findForUpdate("S1")).thenReturn(Optional.of(new SeatLockRow("S1", "u1", future, 0L)));
 		when(repository.deleteActiveForUser(eq("S1"), eq("u1"), any(Instant.class))).thenReturn(1);
 		var result = service.releaseSeat("S1", "u1");
@@ -99,7 +103,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given expired lock When releaseSeat Then NotLocked")
 	void releaseSeat_expired() {
-		var past = Instant.now().minus(Duration.ofMinutes(1));
+		var past = RECENT_PAST_EXPIRY;
 		when(repository.findForUpdate("S1")).thenReturn(Optional.of(new SeatLockRow("S1", "u1", past, 0L)));
 		var result = service.releaseSeat("S1", "u1");
 		assertThat(result).isInstanceOf(ReleaseSeatResult.NotLocked.class);
@@ -108,7 +112,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given wrong user When releaseSeat Then NotOwner")
 	void releaseSeat_wrongUser() {
-		var future = Instant.now().plus(Duration.ofHours(1));
+		var future = FUTURE_EXPIRY;
 		when(repository.findForUpdate("S1")).thenReturn(Optional.of(new SeatLockRow("S1", "other", future, 0L)));
 		var result = service.releaseSeat("S1", "u1");
 		assertThat(result).isInstanceOf(ReleaseSeatResult.NotOwner.class);
@@ -124,7 +128,7 @@ class DbSeatLockServiceTest {
 	@Test
 	@DisplayName("Given owner active When extendLock Then Extended")
 	void extendLock_success() {
-		var future = Instant.now().plus(Duration.ofHours(1));
+		var future = FUTURE_EXPIRY;
 		when(repository.findForUpdate("S1")).thenReturn(Optional.of(new SeatLockRow("S1", "u1", future, 0L)));
 		var result = service.extendLock("S1", "u1", Duration.ofMinutes(10));
 		assertThat(result).isInstanceOf(ExtendLockResult.Extended.class);

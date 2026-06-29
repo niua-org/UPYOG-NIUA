@@ -62,6 +62,21 @@ public class SchemaDefinitionService {
         return Arrays.asList(schemaDefinitionRequest.getSchemaDefinition());
     }
 
+    public List<SchemaDefinition> delete(SchemaDeleteRequest request) {
+
+        String tenantId =
+                multiStateInstanceUtil.getStateLevelTenant(request.getTenantId());
+
+        schemaDefinitionRepository.delete(tenantId, request.getCode());
+
+        return Arrays.asList(
+                SchemaDefinition.builder()
+                        .tenantId(tenantId)
+                        .code(request.getCode())
+                        .build()
+        );
+    }
+
     /**
      * This method processes the requests for schema definition search.
      * @param schemaDefSearchRequest

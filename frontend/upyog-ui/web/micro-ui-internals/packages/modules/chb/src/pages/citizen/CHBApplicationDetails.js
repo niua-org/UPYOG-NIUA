@@ -300,15 +300,16 @@ const CHBApplicationDetails = () => {
   //     return startTime ? `${startTime} - ${defaultEndTime}` : t("CS_NA");
   //   };
   const columns = [
-    { Header: `${t("CHB_HALL_NAME")}` + "/" + `${t("CHB_PARK")}`, accessor: "communityHallCode" },
-    { Header: `${t("CHB_HALL_CODE")}`, accessor: "hallCode" },
+    { Header: `${t("CHB_HALL_NAME")}` + "/" + `${t("CHB_PARK")}`, accessor: "venueCode" },
+    { Header: `${t("CHB_HALL_CODE")}`, accessor: "unitCode" },
     { Header: `${t("CHB_BOOKING_DATE")}`, accessor: "bookingDate" },
     { Header: `${t("PT_COMMON_TABLE_COL_STATUS_LABEL")}`, accessor: "bookingStatus" }
   ];
+
   const slotlistRows = chb_details?.bookingSlotDetails?.map((slot) => (
     {
-      communityHallCode: `${t(chb_details?.communityHallCode)}`,
-      hallCode: slot.hallCode + " - " + slot.capacity,
+      venueCode: `${t(chb_details?.venueCode)}`,
+      unitCode: slot.unitCode,
       bookingDate: slot.bookingDate + " (" + slot.bookingFromTime + " - " + slot.bookingToTime + ")",
       bookingStatus: `${t(slot.status)}`
     }
