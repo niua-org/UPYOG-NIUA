@@ -627,15 +627,9 @@ const ADSSearch = ({
               <div> {cartDetails.length}</div>
             </div>
           </div>
-<<<<<<< HEAD
           {showCartDetails && <ADSCartDetails onClose={handleCloseCart} cartDetails={cartDetails} setCartDetails={setCartDetails} />}
           <SubmitBar label={t("ADS_BOOK_NOW")} onSubmit={handleBookClick} />
-=======
->>>>>>> 6ccd6d40d21a1df4a325668788ac0d683ce5e699
         </div>
-
-        {showCartDetails && <ADSCartDetails onClose={handleCloseCart} cartDetails={cartDetails} setCartDetails={setCartDetails} />}
-        <SubmitBar label={t("ADS_BOOK_NOW")} onSubmit={handleBookClick} />
       </div>
 
     </FormStep>
