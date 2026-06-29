@@ -1,0 +1,344 @@
+/* ============================================================
+   LayerView — src/components/LayerView.js
+   ============================================================ */
+
+/* Full-viewport fixed wrapper that sits just below the UPYOG header bar */
+.gis-map-wrapper {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Leaflet map canvas — must fill 100% of the wrapper so tiles render edge-to-edge */
+.gis-map-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Back button overlaid in the top-right corner above the map */
+.gis-back-button {
+  position: absolute;
+  top: 40px;
+  right: 12px;
+  z-index: 1100;
+}
+
+/* Base style shared by all three floating white panels (info, filters, legend) */
+.gis-panel {
+  position: absolute;
+  z-index: 1000;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+  padding: 12px 16px;
+}
+
+/* Positions the info panel (Property Map title + area dropdown + counts) top-left */
+.gis-panel--info {
+  top: 40px;
+  left: 60px;
+  width: 230px;
+}
+
+/* Positions the filter chip strip to the right of the info panel, top of map */
+.gis-panel--filters {
+  top: 40px;
+  left: 306px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 55vw;
+}
+
+/* Positions the legend panel (colour swatches + counts) bottom-left */
+.gis-panel--legend {
+  bottom: 20px;
+  left: 60px;
+  width: 230px;
+}
+
+/* "Property Map" heading inside the info panel */
+.gis-panel__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2b2350;
+}
+
+/* "UPYOG GIS" sub-heading below the title */
+.gis-panel__subtitle {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* "Area" label above the area-switcher dropdown */
+.gis-panel__label {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Area-switcher <select> element inside the info panel */
+.gis-panel__select {
+  width: 100%;
+  padding: 6px;
+  margin: 4px 0 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+/* Each key-value row in the info panel and legend (flex, space-between layout) */
+.gis-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+}
+
+/* Brand accent colour used on highlighted text (e.g. the "Coloured by" value) */
+.gis-accent {
+  color: #2b2350;
+}
+
+/* "Tax Status:" / "Property Type:" label that precedes the filter chip row */
+.gis-filter__label {
+  font-size: 11px;
+  color: #888;
+  margin-right: 6px;
+}
+
+/* Default (inactive) filter chip button */
+.gis-filter-btn {
+  border: 1px solid #ddd;
+  background: #fafafa;
+  color: #444;
+  border-radius: 16px;
+  padding: 5px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-right: 6px;
+  margin-top: 2px;
+}
+
+/* Active filter chip — dark purple fill when the category is selected */
+.gis-filter-btn--active {
+  border-color: #2b2350;
+  background: #2b2350;
+  color: #fff;
+}
+
+/* Section heading inside the legend panel (e.g. "TAX STATUS") */
+.gis-legend__title {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* Flex row inside legend that holds the swatch + label on the left and count on the right */
+.gis-legend__label {
+  display: flex;
+  align-items: center;
+}
+
+/* Small colour square next to each legend label — background colour is set inline per category */
+.gis-legend__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* Content div injected into Leaflet popups when a parcel polygon is clicked */
+.gis-popup {
+  font-size: 13px;
+  line-height: 1.5;
+  min-width: 230px;
+}
+
+
+/* ============================================================
+   SHARED — used by more than one component 
+   ============================================================ */
+
+/* Map canvas that fills a modal body — used by ViewOnMap & ViewOnMapAsset */
+.gis-modal-map {
+  height: 75vh;
+  width: 100%;
+}
+
+/* "Asset Details" popup card injected into Leaflet popups — used by ViewOnMap & ViewOnMapAsset */
+.gis-asset-popup {
+  width: 280px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-family: Arial, sans-serif;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* "Asset Details" heading inside the asset popup card */
+.gis-asset-popup__title {
+  text-align: center;
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+}
+
+
+/* ============================================================
+   MapView — src/components/MapView.js
+   ============================================================ */
+
+/* Full-height page root that hides overflow so the map doesn't scroll the page */
+.gis-mapview-root {
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Horizontal padding wrapper around the toolbar + map */
+.gis-mapview-body {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+/* Top toolbar row: filters on the left, search on the right */
+.gis-mapview-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  z-index: 2000;
+}
+
+/* Left group holding the filter dropdowns */
+.gis-mapview-filters {
+  display: flex;
+  gap: 16px;
+}
+
+/* Fixed-width wrapper around each labelled dropdown field */
+.gis-mapview-field {
+  width: 200px;
+}
+
+/* Right group holding the search dropdown + action buttons */
+.gis-mapview-search {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* Vertical stack for the search-action buttons */
+.gis-mapview-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Row holding the Search button and the Clear-all link */
+.gis-mapview-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Clear-all link — pointer cursor */
+.gis-mapview-clear {
+  cursor: pointer;
+}
+
+/* The main Leaflet map canvas */
+.gis-mapview-map {
+  height: 86vh;
+  width: 100%;
+  border: 1px solid #ccc;
+  margin-top: 0;
+}
+
+/* Centered "no property/asset found" empty-state message */
+.gis-mapview-empty {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Inner wrapper inside a marker popup that reserves space on the right */
+.gis-mapview-popup-body {
+  margin-right: 85px;
+}
+
+
+/* ============================================================
+   MarkOnMap — src/components/MarkOnMap.js
+   ============================================================ */
+
+/* Modal body wrapper that gives the map a minimum height */
+.gis-markmap-wrapper {
+  height: 100%;
+  min-height: 500px;
+}
+
+/* The Leaflet map canvas (fills the wrapper) */
+.gis-markmap-map {
+  height: 100%;
+  width: 100%;
+}
+
+
+/* ============================================================
+   ViewOnMap — src/components/ViewOnMap.js
+   (map uses shared .gis-modal-map; popup uses shared .gis-asset-popup)
+   ============================================================ */
+
+
+/* ============================================================
+   ViewOnMapAsset — src/components/ViewOnMapAsset.js
+   (map uses shared .gis-modal-map; popup uses shared .gis-asset-popup)
+   ============================================================ */
+
+/* Close button in the modal header — sits above the map controls */
+.gis-viewasset-close {
+  cursor: pointer;
+  z-index: 9999;
+  position: relative;
+}
+
+/* Centered loading / empty-state message filling the modal body */
+.gis-viewasset-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 75vh;
+}
+
+
+/* ============================================================
+   pages/index — src/pages/index.js
+   ============================================================ */
+
+/* Root span wrapper for the GIS app routes */
+.gis-citizen {
+  width: 100%;
+}
+
+
+/* ============================================================
+   utils / createMapIcons — src/utils/index.js
+   ============================================================ */
+
+/* Glyph (⦿) for the user's current-location marker (Leaflet divIcon html) */
+.gis-user-marker {
+  font-size: 24px;
+  color: blue;
+}

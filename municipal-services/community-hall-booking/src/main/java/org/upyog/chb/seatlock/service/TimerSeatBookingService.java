@@ -93,15 +93,12 @@ public class TimerSeatBookingService {
 	private Optional<LockSeatResult> mapRateLimit(RateLimitDecision decision) {
 		if (decision instanceof RateLimitDecision.Allowed) {
 			return Optional.empty();
-		} else if (decision instanceof RateLimitDecision.DeniedTooManyLocks) {
-			RateLimitDecision.DeniedTooManyLocks d = (RateLimitDecision.DeniedTooManyLocks) decision;
+		} else if (decision instanceof RateLimitDecision.DeniedTooManyLocks d) {
 			return Optional.of(new LockSeatResult.RateLimited(
 					"Too many lock attempts (%d / %d per minute)".formatted(d.currentCount(), d.maxPerWindow())));
-		} else if (decision instanceof RateLimitDecision.DeniedCooldown) {
-			RateLimitDecision.DeniedCooldown c = (RateLimitDecision.DeniedCooldown) decision;
+		} else if (decision instanceof RateLimitDecision.DeniedCooldown c) {
 			return Optional.of(new LockSeatResult.RateLimited("Cooldown active until " + c.retryAfter()));
-		} else if (decision instanceof RateLimitDecision.DeniedBanned) {
-			RateLimitDecision.DeniedBanned b = (RateLimitDecision.DeniedBanned) decision;
+		} else if (decision instanceof RateLimitDecision.DeniedBanned b) {
 			return Optional.of(new LockSeatResult.RateLimited("Temporarily banned until " + b.bannedUntil()));
 		}
 		throw new IllegalStateException("Unexpected rate limit decision: " + decision);

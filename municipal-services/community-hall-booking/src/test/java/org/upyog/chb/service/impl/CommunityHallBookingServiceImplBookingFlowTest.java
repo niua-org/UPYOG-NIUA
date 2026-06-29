@@ -25,15 +25,14 @@ import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.service.BookingTimerService;
 import org.upyog.chb.service.CHBEncryptionService;
-import org.upyog.chb.service.CommunityHallBookingService;
 import org.upyog.chb.service.DemandService;
 import org.upyog.chb.service.EnrichmentService;
 import org.upyog.chb.service.WorkflowService;
 import org.upyog.chb.util.MdmsUtil;
 import org.upyog.chb.validator.CommunityHallBookingValidator;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
 /**
  * Additional booking-service scenarios (Given / When / Then) with fully mocked infrastructure.
@@ -43,7 +42,7 @@ import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
 class CommunityHallBookingServiceImplBookingFlowTest {
 
 	@InjectMocks
-	private CommunityHallBookingService bookingService = new CommunityHallBookingServiceImpl();
+	private CommunityHallBookingServiceImpl bookingService;
 
 	@Mock
 	private CommunityHallBookingRepository bookingRepository;
@@ -81,35 +80,37 @@ class CommunityHallBookingServiceImplBookingFlowTest {
 	@Test
 	@DisplayName("Given valid tenant and user When createBooking Then demand is created and booking persisted")
 	void createBooking_persistsAfterDemand() {
-		var detail = CommunityHallBookingDetail.builder().tenantId("pg.citya").bookingNo("CHB-001").build();
-		var request = CommunityHallBookingRequest.builder().requestInfo(citizenRequest).hallsBookingApplication(detail)
+		var detail = VenueBookingDetail.builder().tenantId("pg.citya").bookingNo("CHB-001").build();
+		var request = VenueBookingRequest.builder().requestInfo(citizenRequest).venueBookingApplication(detail)
 				.build();
 
-		when(mdmsUtil.mDMSCall(any(), eq("pg"))).thenReturn(new Object());
-		lenient().doNothing().when(hallBookingValidator).validateCreate(any(), any());
+		// Production passes (requestInfo, tenantId). tenantId here is "pg.citya".
+		when(mdmsUtil.mDMSCall(citizenRequest, "pg.citya")).thenReturn(new Object());
+
+		lenient().doNothing().when(hallBookingValidator).validateCreate(any(), any(),any());
 		lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any());
-		when(encryptionService.encryptObject(any(CommunityHallBookingRequest.class)))
-				.thenReturn(request.getHallsBookingApplication());
-		when(demandService.createDemand(eq(request), any(), eq(true))).thenReturn(Collections.emptyList());
+		when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
+				.thenReturn(request.getVenueBookingApplication());
+		when(demandService.createDemand(request, true)).thenReturn(Collections.emptyList());
 
 		var result = bookingService.createBooking(request);
 
 		assertThat(result.getBookingNo()).isEqualTo("CHB-001");
-		verify(demandService).createDemand(eq(request), any(), eq(true));
+		verify(demandService).createDemand(request, true);
 		verify(bookingRepository).saveCommunityHallBooking(request);
 	}
 
 	@Test
 	@DisplayName("Given citizen role When getBookingDetails Then search criteria includes createdBy filter")
 	void getBookingDetails_citizenScope() {
-		var criteria = CommunityHallBookingSearchCriteria.builder().bookingNo("CHB-1").build();
+		var criteria = VenueBookingSearchCriteria.builder().bookingNo("CHB-1").build();
 		lenient().doNothing().when(hallBookingValidator).validateSearch(eq(citizenRequest), any());
-		when(bookingRepository.getBookingDetails(any(CommunityHallBookingSearchCriteria.class)))
+		when(bookingRepository.getBookingDetails(any(VenueBookingSearchCriteria.class)))
 				.thenReturn(Collections.emptyList());
 
 		bookingService.getBookingDetails(criteria, citizenRequest);
 
-		var captor = ArgumentCaptor.forClass(CommunityHallBookingSearchCriteria.class);
+		var captor = ArgumentCaptor.forClass(VenueBookingSearchCriteria.class);
 		verify(bookingRepository).getBookingDetails(captor.capture());
 		assertThat(captor.getValue().getCreatedBy()).containsExactly("citizen-uuid-99");
 	}

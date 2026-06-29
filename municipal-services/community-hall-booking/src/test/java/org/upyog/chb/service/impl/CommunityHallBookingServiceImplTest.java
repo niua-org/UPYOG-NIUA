@@ -3,7 +3,6 @@ package org.upyog.chb.service.impl;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,16 +14,15 @@ import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.repository.CommunityHallBookingRepository;
 import org.upyog.chb.service.BookingTimerService;
 import org.upyog.chb.service.CHBEncryptionService;
-import org.upyog.chb.service.CommunityHallBookingService;
 import org.upyog.chb.service.DemandService;
 import org.upyog.chb.service.EnrichmentService;
 import org.upyog.chb.service.WorkflowService;
 import org.upyog.chb.util.MdmsUtil;
 import org.upyog.chb.validator.CommunityHallBookingValidator;
 import org.upyog.chb.web.models.ApplicantDetail;
-import org.upyog.chb.web.models.CommunityHallBookingDetail;
-import org.upyog.chb.web.models.CommunityHallBookingRequest;
-import org.upyog.chb.web.models.CommunityHallBookingSearchCriteria;
+import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.VenueBookingSearchCriteria;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,11 +39,10 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@Ignore("This test class is ignored due to the complexity of mocking all dependencies and the need for refactoring the service for better testability. It can be re-enabled after refactoring.")
-public class CommunityHallBookingServiceImplTest {
+class CommunityHallBookingServiceImplTest {
 
     @InjectMocks
-    private CommunityHallBookingService communityHallBookingService = new CommunityHallBookingServiceImpl();
+    private CommunityHallBookingServiceImpl communityHallBookingService;
 
     @Mock
     private CommunityHallBookingRepository bookingRepository;
@@ -85,34 +82,30 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should create booking successfully")
     void createBooking_Success() {
-        CommunityHallBookingRequest request = CommunityHallBookingRequest.builder()
+        VenueBookingRequest request = VenueBookingRequest.builder()
                 .requestInfo(requestInfo)
-                .hallsBookingApplication(CommunityHallBookingDetail.builder()
-                        .tenantId("tenant.001")
+                .venueBookingApplication(VenueBookingDetail.builder()
+                        .tenantId("tenant.001").venueType("PARKS")
                         .build())
-                .build();
-
-        CommunityHallBookingDetail createdBooking = CommunityHallBookingDetail.builder()
-                .bookingNo("BOOKING-123")
                 .build();
 
         // Mocking dependencies
         when(mdmsUtil.mDMSCall(any(RequestInfo.class), anyString())).thenReturn(new Object());
-        lenient().doNothing().when(hallBookingValidator).validateCreate(any(CommunityHallBookingRequest.class), any());
-        lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any(CommunityHallBookingRequest.class));
-        // The original error was here. The encryptObject method should return the processed object, which is likely the request itself after encryption.
-        // The previous error indicated it was trying to return a CommunityHallBookingRequest where a CommunityHallBookingDetail was expected.
-        // Based on the error message, the method `encryptObject` for a `CommunityHallBookingRequest` was expected to return a `CommunityHallBookingRequest`.
-        lenient().when(encryptionService.encryptObject(any(CommunityHallBookingRequest.class)))
-                .thenReturn(request.getHallsBookingApplication());
-        lenient().when(demandService.createDemand(eq(request), any(), eq(true))).thenReturn(Collections.emptyList());
-        lenient().doAnswer(invocation -> {
-            CommunityHallBookingRequest req = invocation.getArgument(0);
-            req.getHallsBookingApplication().setBookingNo("BOOKING-123");
-            return null;
-        }).when(bookingRepository).saveCommunityHallBooking(any(CommunityHallBookingRequest.class));
+        lenient().doNothing().when(hallBookingValidator)
+                .validateCreate(any(VenueBookingRequest.class), any(), eq("PARKS"));
+        lenient().doNothing().when(enrichmentService).enrichCreateBookingRequest(any(VenueBookingRequest.class));
 
-        CommunityHallBookingDetail result = communityHallBookingService.createBooking(request);
+        lenient().when(encryptionService.encryptObject(any(VenueBookingRequest.class)))
+                .thenReturn(request.getVenueBookingApplication());
+        lenient().when(demandService.createDemand(eq(request), eq(true))).thenReturn(Collections.emptyList());
+
+        lenient().doAnswer(invocation -> {
+            VenueBookingRequest req = invocation.getArgument(0);
+            req.getVenueBookingApplication().setBookingNo("BOOKING-123");
+            return null;
+        }).when(bookingRepository).saveCommunityHallBooking(any(VenueBookingRequest.class));
+
+        VenueBookingDetail result = communityHallBookingService.createBooking(request);
 
         assertNotNull(result);
         assertEquals("BOOKING-123", result.getBookingNo());
@@ -121,9 +114,9 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should throw CustomException for invalid tenant ID")
     void createBooking_InvalidTenantId() {
-        CommunityHallBookingRequest request = CommunityHallBookingRequest.builder()
+        VenueBookingRequest request = VenueBookingRequest.builder()
                 .requestInfo(requestInfo)
-                .hallsBookingApplication(CommunityHallBookingDetail.builder()
+                .venueBookingApplication(VenueBookingDetail.builder()
                         .tenantId("tenant") // Invalid tenant ID format
                         .build())
                 .build();
@@ -135,25 +128,25 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should get booking details successfully")
     void getBookingDetails_Success() {
-        CommunityHallBookingSearchCriteria criteria = CommunityHallBookingSearchCriteria.builder()
+        VenueBookingSearchCriteria criteria = VenueBookingSearchCriteria.builder()
                 .bookingNo("BOOKING-123")
                 .build();
 
-        List<CommunityHallBookingDetail> expectedBookings = new ArrayList<>();
-        expectedBookings.add(CommunityHallBookingDetail.builder()
+        List<VenueBookingDetail> expectedBookings = new ArrayList<>();
+        expectedBookings.add(VenueBookingDetail.builder()
                 .bookingNo("BOOKING-123")
                 .applicantDetail(ApplicantDetail.builder().applicantMobileNo("1234567890").build())
                 .build());
 
         // Mocking dependencies
-        lenient().doNothing().when(hallBookingValidator).validateSearch(any(RequestInfo.class), any(CommunityHallBookingSearchCriteria.class));
-        when(bookingRepository.getBookingDetails(any(CommunityHallBookingSearchCriteria.class))).thenReturn(expectedBookings);
+        lenient().doNothing().when(hallBookingValidator).validateSearch(any(RequestInfo.class), any(VenueBookingSearchCriteria.class));
+        when(bookingRepository.getBookingDetails(any(VenueBookingSearchCriteria.class))).thenReturn(expectedBookings);
         // The original error was here. The decryptObject method is expected to return a List of CommunityHallBookingDetail.
         // The method signature for decryptObject in CHBEncryptionService likely takes an object to decrypt and returns a T.
         // Here, we are decrypting a List of objects, and it's expected to return a List of CommunityHallBookingDetail.
         lenient().when(encryptionService.decryptObject(any(List.class), any(RequestInfo.class))).thenReturn(expectedBookings);
 
-        List<CommunityHallBookingDetail> result = communityHallBookingService.getBookingDetails(criteria, requestInfo);
+        List<VenueBookingDetail> result = communityHallBookingService.getBookingDetails(criteria, requestInfo);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -163,16 +156,16 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should return empty list when no bookings found")
     void getBookingDetails_NoBookingsFound() {
-        CommunityHallBookingSearchCriteria criteria = CommunityHallBookingSearchCriteria.builder()
+        VenueBookingSearchCriteria criteria = VenueBookingSearchCriteria.builder()
                 .bookingNo("NONEXISTENT-BOOKING")
                 .build();
 
         // Mocking dependencies
-        lenient().doNothing().when(hallBookingValidator).validateSearch(any(RequestInfo.class), any(CommunityHallBookingSearchCriteria.class));
-        when(bookingRepository.getBookingDetails(any(CommunityHallBookingSearchCriteria.class))).thenReturn(Collections.emptyList());
+        lenient().doNothing().when(hallBookingValidator).validateSearch(any(RequestInfo.class), any(VenueBookingSearchCriteria.class));
+        when(bookingRepository.getBookingDetails(any(VenueBookingSearchCriteria.class))).thenReturn(Collections.emptyList());
         lenient().when(encryptionService.decryptObject(any(List.class), any(RequestInfo.class))).thenReturn(Collections.emptyList());
 
-        List<CommunityHallBookingDetail> result = communityHallBookingService.getBookingDetails(criteria, requestInfo);
+        List<VenueBookingDetail> result = communityHallBookingService.getBookingDetails(criteria, requestInfo);
 
         assertNotNull(result);
         assertEquals(0, result.size());
@@ -181,13 +174,13 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should get booking count successfully")
     void getBookingCount_Success() {
-        CommunityHallBookingSearchCriteria criteria = CommunityHallBookingSearchCriteria.builder()
+        VenueBookingSearchCriteria criteria = VenueBookingSearchCriteria.builder()
                 .tenantId("tenant.001")
                 .build();
         Integer expectedCount = 5;
 
         // Mocking dependencies
-        when(bookingRepository.getBookingCount(any(CommunityHallBookingSearchCriteria.class))).thenReturn(expectedCount);
+        when(bookingRepository.getBookingCount(any(VenueBookingSearchCriteria.class))).thenReturn(expectedCount);
 
         Integer result = communityHallBookingService.getBookingCount(criteria, requestInfo);
 
@@ -198,25 +191,24 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should update booking successfully")
     void updateBooking_Success() {
-        CommunityHallBookingDetail existingBooking = CommunityHallBookingDetail.builder()
+        VenueBookingDetail existingBooking = VenueBookingDetail.builder()
                 .bookingId("booking-id-1")
                 .bookingNo("BOOKING-123")
                 .build();
-        CommunityHallBookingRequest request = CommunityHallBookingRequest.builder()
+        VenueBookingRequest request = VenueBookingRequest.builder()
                 .requestInfo(requestInfo)
-                .hallsBookingApplication(existingBooking)
+                .venueBookingApplication(existingBooking)
                 .build();
 
         // Mocking dependencies
-        CommunityHallBookingSearchCriteria searchCriteria = CommunityHallBookingSearchCriteria.builder().bookingNo("BOOKING-123").build();
-        List<CommunityHallBookingDetail> bookingDetails = new ArrayList<>();
+        List<VenueBookingDetail> bookingDetails = new ArrayList<>();
         bookingDetails.add(existingBooking);
-        when(bookingRepository.getBookingDetails(any(CommunityHallBookingSearchCriteria.class))).thenReturn(bookingDetails);
-        lenient().doNothing().when(hallBookingValidator).validateUpdate(any(CommunityHallBookingDetail.class), any(CommunityHallBookingDetail.class));
-        lenient().doNothing().when(enrichmentService).enrichUpdateBookingRequest(any(CommunityHallBookingRequest.class), any());
-        lenient().doNothing().when(bookingRepository).updateBooking(any(CommunityHallBookingRequest.class));
+        when(bookingRepository.getBookingDetails(any(VenueBookingSearchCriteria.class))).thenReturn(bookingDetails);
+        lenient().doNothing().when(hallBookingValidator).validateUpdate(any(VenueBookingDetail.class), any(VenueBookingDetail.class));
+        lenient().doNothing().when(enrichmentService).enrichUpdateBookingRequest(any(VenueBookingRequest.class), any());
+        lenient().doNothing().when(bookingRepository).updateBooking(any(VenueBookingRequest.class));
 
-        CommunityHallBookingDetail result = communityHallBookingService.updateBooking(request, null, null);
+        VenueBookingDetail result = communityHallBookingService.updateBooking(request, null, null);
 
         assertNotNull(result);
         assertEquals("BOOKING-123", result.getBookingNo());
@@ -225,9 +217,9 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should throw CustomException for invalid booking number on update")
     void updateBooking_InvalidBookingNumber() {
-        CommunityHallBookingRequest request = CommunityHallBookingRequest.builder()
+        VenueBookingRequest request = VenueBookingRequest.builder()
                 .requestInfo(requestInfo)
-                .hallsBookingApplication(CommunityHallBookingDetail.builder()
+                .venueBookingApplication(VenueBookingDetail.builder()
                         .bookingNo(null) // Invalid booking number
                         .build())
                 .build();
@@ -239,18 +231,57 @@ public class CommunityHallBookingServiceImplTest {
     @Test
     @DisplayName("Should throw CustomException if booking not found on update")
     void updateBooking_BookingNotFound() {
-        CommunityHallBookingRequest request = CommunityHallBookingRequest.builder()
+        VenueBookingRequest request = VenueBookingRequest.builder()
                 .requestInfo(requestInfo)
-                .hallsBookingApplication(CommunityHallBookingDetail.builder()
+                .venueBookingApplication(VenueBookingDetail.builder()
                         .bookingNo("NONEXISTENT-BOOKING")
                         .build())
                 .build();
 
         // Use ArgumentMatchers to avoid strict stubbing issues
-        when(bookingRepository.getBookingDetails(any(CommunityHallBookingSearchCriteria.class)))
+        when(bookingRepository.getBookingDetails(any(VenueBookingSearchCriteria.class)))
                 .thenReturn(Collections.emptyList());
 
         CustomException exception = assertThrows(CustomException.class, () -> communityHallBookingService.updateBooking(request, null, null));
         assertEquals("INVALID_BOOKING_CODE", exception.getCode());
+    }
+
+    @Test
+    @DisplayName("Should get community hall slot availability and set fromTime and toTime correctly from database slot details")
+    void getCommunityHallSlotAvailability_SetsTimesFromDB() {
+        org.upyog.chb.web.models.VenueSlotSearchCriteria criteria = org.upyog.chb.web.models.VenueSlotSearchCriteria.builder()
+                .tenantId("tenant.001")
+                .venueCode("VENUE-001")
+                .unitCode("HALL-001")
+                .bookingStartDate("2026-06-18")
+                .bookingEndDate("2026-06-18")
+                .fromTime("09:00")
+                .toTime("18:00")
+                .isTimerRequired(false)
+                .build();
+
+        List<org.upyog.chb.web.models.VenueSlotAvailabilityDetail> dbSlots = new ArrayList<>();
+        dbSlots.add(org.upyog.chb.web.models.VenueSlotAvailabilityDetail.builder()
+                .tenantId("tenant.001")
+                .venueCode("VENUE-001")
+                .code("HALL-001")
+                .bookingDate("18-06-2026")
+                .fromTime("10:00")
+                .toTime("17:00")
+                .slotStaus("BOOKED")
+                .build());
+
+        when(bookingRepository.getCommunityHallSlotAvailability(any(org.upyog.chb.web.models.VenueSlotSearchCriteria.class)))
+                .thenReturn(dbSlots);
+
+        org.upyog.chb.web.models.VenueSlotAvailabilityResponse response = communityHallBookingService.getCommunityHallSlotAvailability(criteria, requestInfo);
+
+        assertNotNull(response);
+        assertNotNull(response.getHallSlotAvailabiltityDetails());
+        assertEquals(1, response.getHallSlotAvailabiltityDetails().size());
+        org.upyog.chb.web.models.VenueSlotAvailabilityDetail detail = response.getHallSlotAvailabiltityDetails().get(0);
+        assertEquals("BOOKED", detail.getSlotStaus());
+        assertEquals("10:00", detail.getFromTime());
+        assertEquals("17:00", detail.getToTime());
     }
 }

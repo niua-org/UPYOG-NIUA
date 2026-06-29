@@ -149,7 +149,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
       <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
         <CardHeader>{t("CHB_CHECK_YOUR_DETAILS")}</CardHeader>
         <CardSubHeader>
-          <TimerValues timerValues={slotlist?.existingDataSet?.timervalue?.timervalue} SlotSearchData={slotlist?.Searchdata} draftId={slotlist?.existingDataSet?.draftId} />
+          <TimerValues timerValues={slotlist?.existingDataSet?.timervalue?.timervalue} SlotSearchData={slotlist?.searchData} draftId={slotlist?.existingDataSet?.draftId} />
         </CardSubHeader>
       </div>
       <div>

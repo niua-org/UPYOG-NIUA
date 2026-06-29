@@ -30,6 +30,10 @@ import org.upyog.chb.seatlock.ratelimit.SeatLockRateLimiter;
 @DisplayName("TimerSeatBookingService (unit)")
 class TimerSeatBookingServiceTest {
 
+	private static final Instant FIXED_LOCK_EXPIRY = Instant.parse("2030-01-01T00:01:00Z");
+	private static final Duration DEFAULT_LOCK_TTL = Duration.ofMinutes(5);
+	private static final Duration CUSTOM_LOCK_TTL = Duration.ofMinutes(2);
+
 	@Mock
 	private SeatLockService seatLockService;
 
@@ -55,8 +59,8 @@ class TimerSeatBookingServiceTest {
 	void acquireLock_success() {
 		when(rateLimiter.beforeLock("u1")).thenReturn(new RateLimitDecision.Allowed());
 		when(seatLockService.lockSeat(eq("S1"), eq("u1"), any(Duration.class)))
-				.thenReturn(new LockSeatResult.Acquired("S1", "u1", Instant.now().plusSeconds(60)));
-		var result = service.acquireLock("S1", "u1", Optional.of(Duration.ofMinutes(2)));
+				.thenReturn(new LockSeatResult.Acquired("S1", "u1", FIXED_LOCK_EXPIRY));
+		var result = service.acquireLock("S1", "u1", Optional.of(CUSTOM_LOCK_TTL));
 		assertThat(result).isInstanceOf(LockSeatResult.Acquired.class);
 		verify(rateLimiter).onLockAcquired("u1");
 	}
@@ -75,10 +79,10 @@ class TimerSeatBookingServiceTest {
 	@DisplayName("Given default ttl When acquireLock Then uses property default")
 	void acquireLock_defaultTtl() {
 		when(rateLimiter.beforeLock("u1")).thenReturn(new RateLimitDecision.Allowed());
-		when(seatLockService.lockSeat(eq("S1"), eq("u1"), eq(Duration.ofMinutes(5))))
-				.thenReturn(new LockSeatResult.Acquired("S1", "u1", Instant.now().plusSeconds(10)));
+		when(seatLockService.lockSeat("S1", "u1", DEFAULT_LOCK_TTL))
+				.thenReturn(new LockSeatResult.Acquired("S1", "u1", FIXED_LOCK_EXPIRY));
 		service.acquireLock("S1", "u1", Optional.empty());
-		verify(seatLockService).lockSeat("S1", "u1", Duration.ofMinutes(5));
+		verify(seatLockService).lockSeat("S1", "u1", DEFAULT_LOCK_TTL);
 	}
 
 	@Test

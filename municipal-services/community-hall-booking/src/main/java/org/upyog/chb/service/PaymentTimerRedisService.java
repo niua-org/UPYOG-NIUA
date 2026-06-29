@@ -3,7 +3,6 @@ package org.upyog.chb.service;
 import java.time.Duration;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -14,28 +13,33 @@ import org.upyog.chb.web.models.BookingPaymentTimerDetails;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Optional Redis mirror of {@code eg_chb_payment_timer} rows — keys use the same hall + booking + date dimensions.
- * Not used when {@code chb.payment-timer.redis.enabled=false} (DB is the source of truth).
+ * Optional Redis mirror for payment timer rows and slot holds.
+ * Enabled when {@code chb.payment.timer.redis.enabled=true}; complements {@code eg_chb_payment_timer}.
  */
 @Service
 @Slf4j
 @ConditionalOnProperty(name = "chb.payment.timer.redis.enabled", havingValue = "true")
 public class PaymentTimerRedisService {
 
-	@Autowired
-	private StringRedisTemplate redis;
+	private final StringRedisTemplate redis;
+	private final CommunityHallBookingConfiguration bookingConfiguration;
 
-	@Autowired
-	private CommunityHallBookingConfiguration bookingConfiguration;
+	public PaymentTimerRedisService(StringRedisTemplate redis,
+			CommunityHallBookingConfiguration bookingConfiguration) {
+		this.redis = redis;
+		this.bookingConfiguration = bookingConfiguration;
+	}
 
 	/**
-	 * Attempts to acquire a Redis slot hold for a payment timer detail.
+	 * Attempts to acquire a Redis slot hold for the given timer detail and time window.
 	 *
-	 * @param detail timer details identifying the slot and booking reference
-	 * @return true when the Redis slot hold was acquired or renewed; false when held by another booking
+	 * @param detail timer attributes used to build the slot key
+	 * @param startTime slot start time segment
+	 * @param endTime slot end time segment
+	 * @return {@code true} when the slot is held by the caller (new or renewed), {@code false} when another user holds it
 	 */
-	public boolean tryAcquireSlot(BookingPaymentTimerDetails detail) {
-		var key = PaymentTimerKeyBuilder.toRedisSlotKey(detail);
+	public boolean tryAcquireSlot(BookingPaymentTimerDetails detail,String startTime , String endTime) {
+		var key = PaymentTimerKeyBuilder.toRedisSlotKey(detail,startTime , endTime);
 		var value = PaymentTimerKeyBuilder.toRedisValue(detail.getCreatedBy(), detail.getBookingId());
 		var ttl = paymentTimerDuration();
 		var acquired = Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(key, value, ttl));
@@ -52,14 +56,16 @@ public class PaymentTimerRedisService {
 	}
 
 	/**
-	 * Synchronizes persisted payment timer rows into the Redis mirror store.
+	 * Writes timer-row keys to Redis with the configured payment-timer TTL.
 	 *
-	 * @param details list of timer rows to mirror in Redis
+	 * @param details timer rows persisted in the database
+	 * @param fromTime slot start time segment used in Redis keys
+	 * @param toTime slot end time segment used in Redis keys
 	 */
-	public void syncTimerRows(List<BookingPaymentTimerDetails> details) {
+	public void syncTimerRows(List<BookingPaymentTimerDetails> details, String fromTime, String toTime) {
 		var ttl = paymentTimerDuration();
 		for (var detail : details) {
-			var rowKey = PaymentTimerKeyBuilder.toRedisTimerRowKey(detail);
+			var rowKey = PaymentTimerKeyBuilder.toRedisTimerRowKey(detail,fromTime,toTime);
 			var value = PaymentTimerKeyBuilder.toRedisValue(detail.getCreatedBy(), detail.getBookingId());
 			redis.opsForValue().set(rowKey, value, ttl);
 			log.debug("Redis timer row key synced: {}", rowKey);
@@ -67,14 +73,16 @@ public class PaymentTimerRedisService {
 	}
 
 	/**
-	 * Removes Redis mirror rows for the provided timer details.
+	 * Removes timer-row and slot-hold keys from Redis for the supplied timer details.
 	 *
-	 * @param details list of timer rows to remove from Redis
+	 * @param details timer rows whose Redis mirrors should be deleted
+	 * @param fromTime slot start time segment used in Redis keys
+	 * @param toTime slot end time segment used in Redis keys
 	 */
-	public void removeTimerRows(List<BookingPaymentTimerDetails> details) {
+	public void removeTimerRows(List<BookingPaymentTimerDetails> details, String fromTime, String toTime) {
 		for (var detail : details) {
-			redis.delete(PaymentTimerKeyBuilder.toRedisTimerRowKey(detail));
-			redis.delete(PaymentTimerKeyBuilder.toRedisSlotKey(detail));
+			redis.delete(PaymentTimerKeyBuilder.toRedisTimerRowKey(detail,fromTime , toTime));
+			redis.delete(PaymentTimerKeyBuilder.toRedisSlotKey(detail,fromTime,toTime));
 		}
 	}
 

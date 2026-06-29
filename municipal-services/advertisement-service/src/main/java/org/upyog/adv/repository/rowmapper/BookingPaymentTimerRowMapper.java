@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
 import org.upyog.adv.web.models.BookingPaymentTimerDetails;
 
+@SuppressWarnings("java:S2638")
 @Component
 public class BookingPaymentTimerRowMapper implements ResultSetExtractor<List<BookingPaymentTimerDetails>> {
 

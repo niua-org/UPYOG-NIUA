@@ -209,12 +209,7 @@ const OwnerForm = _props => {
       type: errors
     });else if (!Object.keys(errors).length && formState.errors[config.key]) clearErrors(config.key);
   }, [errors]);
-  const errorStyle = {
-    width: "70%",
-    marginLeft: "30%",
-    fontSize: "12px",
-    marginTop: "-21px"
-  };
+ 
   useEffect(() => {
     if (assetData.warrantyStatus || assetData.isLifeOfAssetAffected) {
       setWarrantyExp({
@@ -446,7 +441,7 @@ const OwnerForm = _props => {
               }} />} />
                                     </div>
                                 </LabelFieldPair>
-                                <CardLabelError style={errorStyle}>{localFormState.touched.assetWarrantyDescription ? errors?.assignedUser?.assetWarrantyDescription : ""}</CardLabelError>
+                                <CardLabelError className="error-message">{localFormState.touched.assetWarrantyDescription ? errors?.assignedUser?.assetWarrantyDescription : ""}</CardLabelError>
                             </div>}
                     {warrantyExp.code === "IN_AMC" && <div>
 
@@ -472,7 +467,7 @@ const OwnerForm = _props => {
               }} />} />
                                     </div>
                                 </LabelFieldPair>
-                                <CardLabelError style={errorStyle}>{localFormState.touched.amcDetails ? errors?.assignedUser?.amcDetails : ""}</CardLabelError>
+                                <CardLabelError className="error-message">{localFormState.touched.amcDetails ? errors?.assignedUser?.amcDetails : ""}</CardLabelError>
 
                             </div>}
 
@@ -531,7 +526,7 @@ const OwnerForm = _props => {
           }} onBlur={props.onBlur} option={maintenanceCycleOpt} optionKey="i18nKey" t={t} />} />
                     </LabelFieldPair>
 
-                    <CardLabelError style={errorStyle}>{localFormState.touched.maintenanceCycle ? errors?.maintenanceCycle?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.maintenanceCycle ? errors?.maintenanceCycle?.message : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller asset-auto-123">
                                 {t("AST_NEXT_MAINTENANCE_DATE")}
@@ -568,7 +563,7 @@ const OwnerForm = _props => {
             i18nKey: assetData?.paymentType
           }} render={props => <Dropdown className="form-field" selected={props.value} select={props.onChange} onBlur={props.onBlur} option={paymentTypeOpt} optionKey="i18nKey" t={t} />} />
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.paymentType ? errors?.paymentType?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.paymentType ? errors?.paymentType?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller asset-auto-127">
@@ -599,7 +594,7 @@ const OwnerForm = _props => {
             }} />} />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.amcDetails ? errors?.amcDetails?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.amcDetails ? errors?.amcDetails?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_MAINTENANCE_DESCRIPTION")}</CardLabel>
@@ -623,7 +618,7 @@ const OwnerForm = _props => {
             }} />} />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.description ? errors?.assignedUser?.description : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.description ? errors?.assignedUser?.description : ""}</CardLabelError>
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_VENDOR")}</CardLabel>
                         <div className="field">
@@ -648,7 +643,7 @@ const OwnerForm = _props => {
             }} />} />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.vendor ? errors?.vendor?.message : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.vendor ? errors?.vendor?.message : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_PARTS_TO_BE_ADDED")}</CardLabel>
@@ -672,7 +667,7 @@ const OwnerForm = _props => {
             }} />} />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.partsAddedOrReplaced ? errors?.assignedUser?.partsAddedOrReplaced : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.partsAddedOrReplaced ? errors?.assignedUser?.partsAddedOrReplaced : ""}</CardLabelError>
 
                     <LabelFieldPair>
                         <CardLabel className="card-label-smaller">{t("AST_SUPPORTING_DOCUMENTS")}</CardLabel>
@@ -717,7 +712,7 @@ const OwnerForm = _props => {
             }} />} />
                         </div>
                     </LabelFieldPair>
-                    <CardLabelError style={errorStyle}>{localFormState.touched.preConditionRemarks ? errors?.assignedUser?.preConditionRemarks : ""}</CardLabelError>
+                    <CardLabelError className="error-message">{localFormState.touched.preConditionRemarks ? errors?.assignedUser?.preConditionRemarks : ""}</CardLabelError>
                     <div className="asset-auto-130">
 
 
@@ -753,7 +748,7 @@ const OwnerForm = _props => {
               }} />} />
                             </div>
                         </LabelFieldPair>
-                        <CardLabelError style={errorStyle}>{localFormState.touched.postConditionRemarks ? errors?.assignedUser?.postConditionRemarks : ""}</CardLabelError>
+                        <CardLabelError className="error-message">{localFormState.touched.postConditionRemarks ? errors?.assignedUser?.postConditionRemarks : ""}</CardLabelError>
                         <LabelFieldPair>
                             <CardLabel className="card-label-smaller asset-auto-131">
                                 {t("AST_IS_LIFE_OF__ASSET_AFFECTED")}
@@ -782,7 +777,7 @@ const OwnerForm = _props => {
                                         <CardLabel className="card-label-smaller">{t("AST_MAINTENANCE_INCREASED_NO_OF_YEAR")}</CardLabel>
                                         <Controller control={control} name={"assetMaintenanceIncreasedYear"} defaultValue={editMaintenanceDetails?.assetMaintenanceIncreasedYear || null} render={props => <Dropdown className="form-field" selected={props.value} select={props.onChange} onBlur={props.onBlur} option={maintenanceIncreasedHandle} optionKey="i18nKey" t={t} />} />
                                     </LabelFieldPair>
-                                    <CardLabelError style={errorStyle}>{localFormState.touched.assetMaintenanceIncreasedYear ? errors?.assetMaintenanceIncreasedYear?.message : ""}</CardLabelError>
+                                    <CardLabelError className="error-message">{localFormState.touched.assetMaintenanceIncreasedYear ? errors?.assetMaintenanceIncreasedYear?.message : ""}</CardLabelError>
                                 </div>}
                     </div>
                 </div>
