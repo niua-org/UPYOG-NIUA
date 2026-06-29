@@ -626,7 +626,6 @@ const ADSSearch = ({
               </div>
             </div>
           </div>
-
           {showCartDetails && <ADSCartDetails onClose={handleCloseCart} cartDetails={cartDetails} setCartDetails={setCartDetails} />}
           <SubmitBar label={t("ADS_BOOK_NOW")} onSubmit={handleBookClick} />
         </div>
