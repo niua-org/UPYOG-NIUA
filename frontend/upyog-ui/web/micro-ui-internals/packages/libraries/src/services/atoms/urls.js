@@ -1,5 +1,5 @@
 const Urls = {
-  MDMS: `/egov-mdms-service/v1/_search`,
+  MDMS: `http://localhost:8094/egov-mdms-service/v1/_search`,
   MDMSV2: `/mdms-v2/v1/_search`,
   WorkFlow: `/egov-workflow-v2/egov-wf/businessservice/_search`,
   WorkFlowProcessSearch: `/egov-workflow-v2/egov-wf/process/_search`,
@@ -322,7 +322,7 @@ eSign:{
   bills: {
     cancelBill: "/billing-service/bill/v2/_cancelbill",
   },
-  access_control: "/access/v1/actions/mdms/_get",
+  access_control: "http://localhost:8091/access/v1/actions/mdms/_get",
   billgenie: "/egov-searcher",
   audit: "/inbox/v1/elastic/_search",
 

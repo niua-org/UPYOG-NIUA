@@ -1,3 +1,15 @@
+/**
+ * SearchFormFieldsComponent.js
+ *
+ * Purpose:
+ * Dynamic inputs generator for reports query forms.
+ *
+ * Responsibilities:
+ * - Resolves metadata schemas into input controls (e.g. TextInput, Dropdown, MultiSelectDropdown, DatePicker).
+ * - Binds input values and error notifications to form validation controllers.
+ * - Implements form submission and filters reset triggers.
+ */
+
 import React, { Fragment } from "react";
 import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, CardLabelError, MobileNumber,MultiSelectDropdown,FilterFormField } from "@nudmcdgnpm/digit-ui-react-components";
 import { useWatch } from "react-hook-form";
@@ -8,22 +20,22 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
 
     switch (field.type) {
         case "string":
-    return (
-        <SearchField>
-            <label>{t(`${field.label}${field.isMandatory ? "*" : ""}`)}</label>
-            <TextInput
-                name={field.name}
-                type="text"
-                inputRef={register(field.name, {
-                    maxLength: {
-                        value: 60,
-                        message: t("EXCEEDS_60_CHAR_LIMIT"),
-                    },
-                    required: field.isMandatory
-                })}
-            />
-        </SearchField>
-    )
+            return (
+                <SearchField>
+                    <label>{t(`${field.label}${field.isMandatory ? "*" : ""}`)}</label>
+                    <TextInput
+                        name={field.name}
+                        type="text"
+                        inputRef={register({
+                            maxLength: {
+                                value: 60,
+                                message: t("EXCEEDS_60_CHAR_LIMIT"),
+                            },
+                            required: field.isMandatory
+                        })}
+                    />
+                </SearchField>
+            )
 
         case "singlevaluelist":
             var optionsArr = Object.values(field.defaultValue)?.map(el => t(el))
@@ -60,10 +72,13 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
                 }
             })
             optionsArr.unshift(t('ALL'))
-           const selectMulti = (listOfSelections, controllerField) => {
-    const res = listOfSelections.map((item) => item[1]);
-    controllerField.onChange(res);
-};
+            const selectMulti = (listOfSelections, props) => {
+                const res = listOfSelections.map((propsData) => {
+                    const data = propsData[1]
+                    return data
+                })
+                return props.onChange(res);
+            };
             return (
             <SearchField>
                 <label>{t(`${field.label}${field.isMandatory ? "*" : ""}`)}</label>
@@ -73,17 +88,17 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
                     rules={{
                         required: field.isMandatory
                     }}
-                    render={({ field: controllerField }) => (
-    <MultiSelectDropdown
-        options={optionsObjArr}
-        props={controllerField}
-        isPropsNeeded={true}
-        onSelect={selectMulti}
-        selected={controllerField.value}
-        optionsKey="name"
-        defaultUnit={t("BPA_SELECTED_TEXT")}
-    />
-)}
+                    render={(props) => (
+                        <MultiSelectDropdown
+                            options={optionsObjArr}
+                            props={props}
+                            isPropsNeeded={true}
+                            onSelect={selectMulti}
+                            selected={props?.value}
+                            optionsKey="name"
+                            defaultUnit={t("BPA_SELECTED_TEXT")}
+                        />
+                    )}
                 />
                 {formErrors && formErrors?.[field.name] && formErrors?.[field.name]?.type === "required" && (
                     <CardLabelError>{t(`This field is required`)}</CardLabelError>
@@ -95,19 +110,17 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
                 <>
                 <SearchField>
                         <label>{`${t(field.label)}${field.isMandatory ? "*" : ""}`}</label>
-                    <Controller
-  name={field.name}
-  control={control}
-  rules={{
-    required: field.isMandatory
-  }}
-  render={({ field: controllerField }) => (
+                    <Controller 
+                    rules = {{
+                        required:field.isMandatory
+                    }}
+render={({ field: controllerField }) => (
     <DatePicker
-      date={controllerField.value}
-      onChange={(value) => controllerField.onChange(value)}
+        date={controllerField.value}
+        onChange={controllerField.onChange}
     />
-  )}
-/>
+)}                    name={field.name} 
+                    control={control} />
                         {formErrors && formErrors?.[field.name] && formErrors?.[field.name]?.type === "required" && (
                             <CardLabelError>{t(`This field is required`)}</CardLabelError>
                         )}
