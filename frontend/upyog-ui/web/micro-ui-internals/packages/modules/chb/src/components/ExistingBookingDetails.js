@@ -102,7 +102,7 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
         purposeDescription: application?.purposeDescription,
       },
       timervalue:{
-        timervalue:result?.data?.timerValue || 0
+        timervalue: 0
       },
       draftId:result?.data?.draftId || ""
     };
