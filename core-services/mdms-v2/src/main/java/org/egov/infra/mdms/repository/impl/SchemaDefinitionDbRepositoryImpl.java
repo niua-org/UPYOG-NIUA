@@ -66,6 +66,22 @@ public class SchemaDefinitionDbRepositoryImpl implements SchemaDefinitionReposit
         return jdbcTemplate.query(query, preparedStatementList.toArray(), rowMapper);
     }
 
+    @Override
+    public void delete(String tenantId, String code) {
+
+    String sql =
+            "DELETE FROM eg_mdms_schema_definition WHERE tenantid = ? AND code = ?";
+
+    int deletedRows = jdbcTemplate.update(sql, tenantId, code);
+
+    log.info(
+            "Deleted {} schema definition(s) for tenantId={}, code={}",
+            deletedRows,
+            tenantId,
+            code
+    );
+}
+
     /**
      * Skeleton method for update as update API has not been implemented
      * @param schemaDefinitionRequest

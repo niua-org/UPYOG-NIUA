@@ -152,7 +152,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
 
       {showCancellationPolicy && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>Terms and Conditions</CardSubHeader>}
+          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>{t('CHB_TERMS_AND_CONDITIONS')}</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handleCancellationPolicyClick} />}
           popupStyles={{ backgroundColor: "#fff", position: 'relative', maxHeight: '90vh', width: '80%', overflowY: 'auto' }}
           children={
@@ -188,7 +188,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
       )}
       {showPriceBreakup && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>Price Breakup</CardSubHeader>}
+          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>{t('CHB_PRICE_BREAKUP')}</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handlePriceBreakupClick} />}
           popupStyles={{ backgroundColor: "#fff", position: 'relative', maxHeight: '60vh', width: '60%', overflowY: 'auto' }}
           children={

@@ -259,7 +259,7 @@ const CitizenApplicationOverview = () => {
       <div className="ndc-application-overview">
         {/* <Header styles={{ fontSize: "32px" }}>{t("NDC_APP_OVER_VIEW_HEADER")}</Header> */}
 
-        <div style={{ display: "flex", justifyContent: "end", alignItems: "center", padding: "16px" }}>
+        <div className="ndc-flex-end">
           <div className="cardHeaderWithOptions ral-app-details-header">
             { getLoader && <Loader />}
             {dowloadOptions && dowloadOptions.length > 0 && (
@@ -321,21 +321,8 @@ const CitizenApplicationOverview = () => {
                 {/* <Row label={t("Name")} text={t(`${detail.businessService}`) || detail.businessService} /> */}
                 <Row label={t("NDC_CONSUMER_CODE")} text={detail.consumerCode || "N/A"} />
                 {/* <Row label={t("NDC_STATUS")} text={t(detail.status) || detail.status} /> */}
-                <div
-                  style={{
-                    background: isRed ? "red" : "none",
-                    color: isRed ? "white" : "black",
-                    paddingTop: isRed ? "8px" : "0",
-                    paddingLeft: isRed ? "10px" : "0",
-                  }}
-                >
-                  <Row
-                    rowContainerStyle={{
-                      backgroundColor: isRed ? "red" : "none",
-                    }}
-                    label={t("NDC_DUE_AMOUNT")}
-                    text={detail.dueAmount?.toString() || "0"}
-                  />
+                <div className={isRed ? 'ndc-due-red' : 'ndc-due-default'}>
+                  <Row label={t("NDC_DUE_AMOUNT")} text={detail.dueAmount?.toString() || "0"} />
                 </div>
                 <Row label={t("NDC_PROPERTY_TYPE")} text={t(detail.propertyType) || detail.propertyType} />
                 {detail?.businessService == "NDC_PROPERTY_TAX" && propertyDetailsFetch?.Properties && (
