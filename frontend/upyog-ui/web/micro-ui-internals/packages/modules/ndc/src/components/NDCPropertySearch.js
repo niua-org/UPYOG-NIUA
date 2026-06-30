@@ -3,7 +3,7 @@ import { CardLabel, LabelFieldPair, TextInput, Toast } from "@nudmcdgnpm/digit-u
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import _ from "lodash";
-import { resetNDCForm, updateNDCForm } from "../redux/actions/NDCFormActions";
+import { updateNDCForm } from "../redux/actions/NDCFormActions";
 import { useLocation,Link } from "react-router-dom";
 import { Loader } from "../components/Loader";
 
@@ -172,11 +172,6 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
   if (propertyDetails && propertyDetails?.Properties?.length) {
     propertyAddress = getAddress(propertyDetails?.Properties?.[0]?.address, t);
   }
-  const getInputStyles = () => {
-    if (window.location.href.includes("/ws/")) {
-      return { fontWeight: "700" };
-    } else return {};
-  };
 
   let clns = "";
   if (window.location.href.includes("/ws/")) clns = ":";
