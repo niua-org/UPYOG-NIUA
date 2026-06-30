@@ -250,15 +250,6 @@ config:
           dockerfile: "build/maven/Dockerfile"
         - work-dir: "community-hall-booking/src/main/resources/db"
           image-name: "community-hall-booking-db"
-
-
-   - name: 'builds/upyog/municipal-services/cnd-calculator'
-    build:
-      - work-dir: 'municipal-services/cnd-calculator'
-        image-name: 'cnd-calculator'
-        dockerfile: 'build/maven/Dockerfile'
-    #  - work-dir: 'municipal-services/cnd-calculator/src/main/resources/db'
-    #    image-name: 'cnd-calculator-db'
  # Utilities
  
   - name: "builds/upyog/utilities/egov-weekly-impact-notifier"
@@ -553,8 +544,8 @@ config:
       - work-dir: 'municipal-services/cnd-calculator'
         image-name: 'cnd-calculator'
         dockerfile: 'build/maven/Dockerfile'
-      - work-dir: "municipal-services/cnd-calculator/src/main/resources/db"
-        image-name: "cnd-calculate-db"
+      # - work-dir: "municipal-services/cnd-calculator/src/main/resources/db"
+      #   image-name: "cnd-calculate-db"
 
   - name: 'builds/upyog/municipal-services/pgr-ai-services'
     build:
@@ -571,4 +562,21 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/tp-services/src/main/resources/db"
         image-name: "tp-services-db"       
+
+  - name: "builds/upyog/municipal-services/ndc-services"
+    build:
+      - work-dir: "municipal-services/ndc-services"
+        image-name: "ndc-services"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "municipal-services/ndc-services/src/main/resources/db"
+        image-name: "ndc-services-db"
+
+  - name: "builds/upyog/municipal-services/ndc-calculator"
+    build:
+      - work-dir: "municipal-services/ndc-calculator"
+        image-name: "ndc-calculator"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "municipal-services/ndc-calculator/src/main/resources/db"
+        image-name: "ndc-calculator-db"
+ 
           

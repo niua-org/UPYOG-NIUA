@@ -974,3 +974,20 @@ config:
         dockerfile: "build/maven/Dockerfile"  
       - work-dir: "municipal-services/vendor-management/src/main/resources/db"
         image-name: "vendor-management-db" 
+  
+  - name: "builds/upyog/municipal-services/ndc-services"
+    build:
+      - work-dir: "municipal-services/ndc-services"
+        image-name: "ndc-services"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "municipal-services/ndc-services/src/main/resources/db"
+        image-name: "ndc-services-db"
+
+  - name: "builds/upyog/municipal-services/ndc-calculator"
+    build:
+      - work-dir: "municipal-services/ndc-calculator"
+        image-name: "ndc-calculator"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "municipal-services/ndc-calculator/src/main/resources/db"
+        image-name: "ndc-calculator-db"
+ 
