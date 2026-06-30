@@ -340,14 +340,33 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		log.info("Updating payment status of booking id : {} to status : {}", bookingId, status);
 		
 		if(paymentDetail != null) {
+			log.info("Executing UPDATE_BOOKING_DETAIL_QUERY");
+			log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_DETAIL_QUERY);
+			log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, receiptNo: {}, receiptDate: {}, bookingId: {}",
+					status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
 			jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_DETAIL_QUERY, status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
 		} else {
+			log.info("Executing UPDATE_BOOKING_STATUS");
+			log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS);
+			log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, bookingId: {}",
+					status, lastUpdateBy, lastUpdatedTime, bookingId);
 			jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS, status, lastUpdateBy, lastUpdatedTime, bookingId);
 		}
 		
+		log.info("Executing UPDATE_BOOKING_SLOT_QUERY");
+		log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_SLOT_QUERY);
+		log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, bookingId: {}",
+				status, lastUpdateBy, lastUpdatedTime, bookingId);
 		jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_SLOT_QUERY, status, lastUpdateBy, lastUpdatedTime, bookingId);
-		
+
+		log.info("Executing INSERT_BOOKING_DETAIL_AUDIT_QUERY");
+		log.info("Query: {}", CommunityHallBookingQueryBuilder.INSERT_BOOKING_DETAIL_AUDIT_QUERY);
+		log.info("Params -> bookingId: {}", bookingId);
 		jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_BOOKING_DETAIL_AUDIT_QUERY, bookingId);
+
+		log.info("Executing INSERT_SLOT_DETAIL_AUDIT_QUERY");
+		log.info("Query: {}", CommunityHallBookingQueryBuilder.INSERT_SLOT_DETAIL_AUDIT_QUERY);
+		log.info("Params -> bookingId: {}", bookingId);
 		jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_SLOT_DETAIL_AUDIT_QUERY, bookingId);
 	}
 
