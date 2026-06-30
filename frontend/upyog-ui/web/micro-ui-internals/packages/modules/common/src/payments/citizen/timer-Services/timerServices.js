@@ -2,17 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", setTime }) => {
+
   /* Initialize with timerValues or fallback to 0 */
-  const [timeRemaining, setTimeRemaining] = useState(timerValues || 0); 
+  const [timeRemaining, setTimeRemaining] = useState(0); 
   const [showToast, setShowToast] = useState(null);
   const [hasFetched, setHasFetched] = useState(false); /* To track if data has been fetched once */
 
-  /* Synchronize timeRemaining with incoming timerValues changes (e.g. page navigation/updates) */
-  useEffect(() => {
-    if (timerValues) {
-      setTimeRemaining(timerValues);
-    }
-  }, [timerValues]);
 
   // Refetch logic for CHB (Community Hall Booking)
   const { refetch } = Digit.Hooks.chb.useChbSlotSearch({

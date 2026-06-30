@@ -246,9 +246,9 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
 
   return (
     <React.Fragment>
-      <div style={{ marginBottom: "16px" }}>
+      <div className="ndc-margin-bottom-16">
         <LabelFieldPair>
-          <CardLabel className="card-label-smaller ndc_card_labels" style={getInputStyles()}>
+          <CardLabel className={`card-label-smaller ndc_card_labels ${window.location.href.includes("/ws/") ? 'ndc-strong-label' : ''}`}>
             {`${t(propertyIdInput.label)} *`}
           </CardLabel>
           <div className="field ndc_property_search" ref={myElementRef} id="search-property-field">
@@ -299,7 +299,7 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
         {showToast && (
           <Toast
             isDleteBtn={true}
-            labelstyle={{ width: "100%" }}
+            labelClassName="ndc-label-width-100"
             error={showToast.error}
             warning={showToast.warning}
             label={t(showToast.label)}
