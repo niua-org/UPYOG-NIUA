@@ -348,6 +348,13 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 					status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
 			Integer updatedRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_DETAIL_QUERY, status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
 			log.info("Updated rows in booking detail table: {}", updatedRows);
+			// TODO : Remove this query after testing
+			String dbStatus = jdbcTemplate.queryForObject(
+					"select booking_status from eg_chb_booking_detail where booking_id=?",
+					String.class,
+					bookingId
+			);
+			log.info("Status after update in same transaction: {}", dbStatus);
 		} else {
 			log.info("Executing UPDATE_BOOKING_STATUS");
 			log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS);
@@ -356,7 +363,13 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 			Integer updatedRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS, status, lastUpdateBy, lastUpdatedTime, bookingId);
 			log.info("Updated rows in booking detail table: {}", updatedRows);
 		}
-
+		// TODO : Remove this query after testing
+		String dbStatus = jdbcTemplate.queryForObject(
+				"select booking_status from eg_chb_booking_detail where booking_id=?",
+				String.class,
+				bookingId
+		);
+		log.info("Status after update in same transaction: {}", dbStatus);
 		log.info("Executing UPDATE_BOOKING_SLOT_QUERY");
 		log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_SLOT_QUERY);
 		log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, bookingId: {}",
@@ -375,6 +388,14 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		log.info("Params -> bookingId: {}", bookingId);
 		Integer updatedSlotAuditQueryRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_SLOT_DETAIL_AUDIT_QUERY, bookingId);
 		log.info("Updated rows in slot detail audit table: {}", updatedSlotAuditQueryRows);
+
+		// TODO : Remove this query after testing
+		String dbStatus1 = jdbcTemplate.queryForObject(
+				"select booking_status from eg_chb_booking_detail where booking_id=?",
+				String.class,
+				bookingId
+		);
+		log.info("Status after update in same transaction: {}", dbStatus1);
 	}
 
 	@Override
