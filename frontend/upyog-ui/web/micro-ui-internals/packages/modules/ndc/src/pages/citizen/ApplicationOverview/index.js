@@ -7,13 +7,10 @@ import {
   SubmitBar,
   MultiLink
 } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { Fragment, useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { businessServiceList, convertEpochToDate, stringReplaceAll } from "../../../utils";
-import { format } from "date-fns";
 import NDCDocument from "../../../pageComponents/NDCDocument";
-import { set } from "lodash";
 import getAcknowledgementData from "../../../getAcknowlegment";
 import NewApplicationTimeline from "../../../../../templates/ApplicationDetails/components/NewApplicationTimeline";
 import { EmployeeData } from "../../../utils";
@@ -28,23 +25,18 @@ const CitizenApplicationOverview = () => {
   const { id } = useParams();
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  // const tenantId = Digit.ULBService.getCurrentTenantId();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const state = tenantId?.split(".")[0];
   const [appDetails, setAppDetails] = useState({});
-  const [showToast, setShowToast] = useState(null);
   const [approver, setApprover] = useState(null);
   const[approverStatement, setApproverStatement]= useState(null)
   const [showOptions, setShowOptions] = useState(false);
   
-  const [ndcDatils, setNdcDetails] = useState([]);
   const [displayData, setDisplayData] = useState({});
   const [getLoader, setLoader] = useState(false);
 
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
-  const isMobile = window.Digit.Utils.browser.isMobile();
 
-  const { isLoading: nocDocsLoading, data: nocDocs } = Digit.Hooks.pt.usePropertyMDMS(state, "NDC", ["Documents"]);
 
   const { isLoading, data: applicationDetails } = Digit.Hooks.ndc.useSearchEmployeeApplication({ applicationNo: id }, tenantId);
 
@@ -130,7 +122,6 @@ const CitizenApplicationOverview = () => {
     });
   }
   
-  const userRoles = user?.info?.roles?.map((e) => e.code);
   const removeDuplicatesByUUID = (arr) => {
     const seen = new Set();
     return arr.filter((item) => {

@@ -16,7 +16,7 @@ const useNDCInbox = ({ tenantId, filters, config = {} }) => {
     processSearchCriteria: {
       assignee: assignee === "ASSIGNED_TO_ME" ? user?.info?.uuid : "",
       moduleName: "NDC",
-      businessService: ["ndc-services"],
+      businessService: ["ndc-services"]
     },
 
     moduleSearchCriteria:
