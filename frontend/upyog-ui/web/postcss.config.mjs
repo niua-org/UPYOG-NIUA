@@ -5,6 +5,8 @@ import postcssPresetEnv from "postcss-preset-env";
 import autoprefixer from "autoprefixer";
 import cssnano from "cssnano";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export default {
   parser: "postcss-scss",
 
@@ -22,8 +24,6 @@ export default {
       },
     }),
     autoprefixer(),
-    ...(process.env.NODE_ENV === "production"
-      ? [cssnano()]
-      : []),
+    ...(isProd ? [cssnano()] : []),
   ],
 };
