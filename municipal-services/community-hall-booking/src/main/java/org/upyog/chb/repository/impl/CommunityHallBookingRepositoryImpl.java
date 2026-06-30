@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.kafka.producer.Producer;
@@ -324,6 +325,7 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	}
 
 	@Override
+	@Transactional
 	public void updateBookingSynchronously(String bookingId, String uuid, PaymentDetail paymentDetail, String status) {
 		
 		log.info("updateBookingSynchronously for booking id : {} by uuid : ", bookingId, uuid);
@@ -344,30 +346,35 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 			log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_DETAIL_QUERY);
 			log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, receiptNo: {}, receiptDate: {}, bookingId: {}",
 					status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
-			jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_DETAIL_QUERY, status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
+			Integer updatedRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_DETAIL_QUERY, status, lastUpdateBy, lastUpdatedTime, receiptNo, receiptDate, bookingId);
+			log.info("Updated rows in booking detail table: {}", updatedRows);
 		} else {
 			log.info("Executing UPDATE_BOOKING_STATUS");
 			log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS);
 			log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, bookingId: {}",
 					status, lastUpdateBy, lastUpdatedTime, bookingId);
-			jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS, status, lastUpdateBy, lastUpdatedTime, bookingId);
+			Integer updatedRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_STATUS, status, lastUpdateBy, lastUpdatedTime, bookingId);
+			log.info("Updated rows in booking detail table: {}", updatedRows);
 		}
-		
+
 		log.info("Executing UPDATE_BOOKING_SLOT_QUERY");
 		log.info("Query: {}", CommunityHallBookingQueryBuilder.UPDATE_BOOKING_SLOT_QUERY);
 		log.info("Params -> status: {}, lastUpdateBy: {}, lastUpdatedTime: {}, bookingId: {}",
 				status, lastUpdateBy, lastUpdatedTime, bookingId);
-		jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_SLOT_QUERY, status, lastUpdateBy, lastUpdatedTime, bookingId);
+		Integer updatedSlotQueryRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.UPDATE_BOOKING_SLOT_QUERY, status, lastUpdateBy, lastUpdatedTime, bookingId);
+		log.info("Updated rows in booking slot table: {}", updatedSlotQueryRows);
 
 		log.info("Executing INSERT_BOOKING_DETAIL_AUDIT_QUERY");
 		log.info("Query: {}", CommunityHallBookingQueryBuilder.INSERT_BOOKING_DETAIL_AUDIT_QUERY);
 		log.info("Params -> bookingId: {}", bookingId);
-		jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_BOOKING_DETAIL_AUDIT_QUERY, bookingId);
+		Integer updatedAuditQueryRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_BOOKING_DETAIL_AUDIT_QUERY, bookingId);
+		log.info("Updated rows in booking detail audit table: {}", updatedAuditQueryRows);
 
 		log.info("Executing INSERT_SLOT_DETAIL_AUDIT_QUERY");
 		log.info("Query: {}", CommunityHallBookingQueryBuilder.INSERT_SLOT_DETAIL_AUDIT_QUERY);
 		log.info("Params -> bookingId: {}", bookingId);
-		jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_SLOT_DETAIL_AUDIT_QUERY, bookingId);
+		Integer updatedSlotAuditQueryRows=jdbcTemplate.update(CommunityHallBookingQueryBuilder.INSERT_SLOT_DETAIL_AUDIT_QUERY, bookingId);
+		log.info("Updated rows in slot detail audit table: {}", updatedSlotAuditQueryRows);
 	}
 
 	@Override
