@@ -129,7 +129,7 @@ const ChbApplication = ({ application, tenantId, buttonLabel }) => {
       (slot) => slot.slotStaus === "BOOKED"
     );
 
-    console.log("result",result)
+
     if (isSlotBooked) {
       setShowToast({ error: true, label: t("CHB_COMMUNITY_HALL_ALREADY_BOOKED") });
     } else {
@@ -152,13 +152,12 @@ const ChbApplication = ({ application, tenantId, buttonLabel }) => {
     }
   }, [showToast]);
 
-
   return (
     <Card>
 
       <KeyNote keyValue={t("CHB_BOOKING_NO")} note={application?.bookingNo} />
       <KeyNote keyValue={t("CHB_APPLICANT_NAME")} note={application?.applicantDetail?.applicantName} />
-      <KeyNote keyValue={t("CHB_COMMUNITY_HALL_NAME")} note={t(`${application?.venueCode}`)} />
+      <KeyNote keyValue={t("CHB_VENUE_NAME")} note={t(`${application?.venueCode}`)} />
       <KeyNote keyValue={t("CHB_BOOKING_DATE")} note={getBookingDateRange(application?.bookingSlotDetails)} />
       <KeyNote keyValue={t("PT_COMMON_TABLE_COL_STATUS_LABEL")} note={t(`${application?.bookingStatus}`)} />
       {isCancelled && (
