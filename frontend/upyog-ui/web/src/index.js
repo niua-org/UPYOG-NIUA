@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { initLibraries } from "@upyog/digit-ui-libraries";
 // import "@upyog/digit-ui-css/dist/index.css";
 // import "./index.css";
-/* if you want to run the css locally, then you have to add import "@nudmcdgnpm/upyog-css/src/index.scss" and comment out the import "@nudmcdgnpm/upyog-css/upyog-css.css"
-If you want the npm published css to run here, then you have to add   import "@nudmcdgnpm/upyog-css/upyog-css.css" and comment out the import "@nudmcdgnpm/upyog-css/src/index.scss" */
+/* if you want to run the css locally, then you have to add import "@nudmcdgnpm/upyog-css/src/index.scss" and comment out the import "@nudmcdgnpm/upyog-css/index.css"
+If you want the npm published css to run here, then you have to add   import "@nudmcdgnpm/upyog-css/index.css" and comment out the import "@nudmcdgnpm/upyog-css/src/index.scss" */
 // import "@nudmcdgnpm/upyog-css/src/index.scss";
 import "@nudmcdgnpm/upyog-css/index.css";
 import App from './App';
