@@ -32,7 +32,7 @@ serviceMaps:
               type: JSON
               dbType: JSONB
 
-        - query: INSERT INTO public.upyog_rs_tree_pruning_booking_detail_audit(booking_id, booking_no, tenant_id, applicant_uuid, reason_for_pruning, latitude, longitude, payment_date, application_date, booking_createdby, booking_status, address_detail_id, payment_receipt_filestore_id, mobile_number, locality_code, createdby, lastmodifiedby, createdtime, lastmodifiedtime, audit_timestamp, additional_details) SELECT booking_id, booking_no, tenant_id, applicant_uuid, reason_for_pruning, latitude, longitude, payment_date, application_date, booking_createdby, booking_status, address_detail_id, payment_receipt_filestore_id, mobile_number, locality_code, createdby, lastmodifiedby, createdtime, lastmodifiedtime, CURRENT_TIMESTAMP, additional_details FROM public.upyog_rs_tree_pruning_booking_detail WHERE booking_id = ?;
+        - query: INSERT INTO public.upyog_rs_tree_pruning_booking_detail_audit SELECT *, CURRENT_TIMESTAMP FROM public.upyog_rs_tree_pruning_booking_detail WHERE booking_id = ?;
           basePath: treePruningBookingDetail
           jsonMaps:
             - jsonPath: $.treePruningBookingDetail.bookingId
@@ -110,7 +110,7 @@ serviceMaps:
             - jsonPath: $.treePruningBookingDetail.address.localityCode
             - jsonPath: $.treePruningBookingDetail.address.pincode
 
-        - query: INSERT INTO public.upyog_rs_tree_pruning_booking_detail_audit(booking_id, booking_no, tenant_id, applicant_uuid, reason_for_pruning, latitude, longitude, payment_date, application_date, booking_createdby, booking_status, address_detail_id, payment_receipt_filestore_id, mobile_number, locality_code, createdby, lastmodifiedby, createdtime, lastmodifiedtime, audit_timestamp, additional_details) SELECT booking_id, booking_no, tenant_id, applicant_uuid, reason_for_pruning, latitude, longitude, payment_date, application_date, booking_createdby, booking_status, address_detail_id, payment_receipt_filestore_id, mobile_number, locality_code, createdby, lastmodifiedby, createdtime, lastmodifiedtime, CURRENT_TIMESTAMP, additional_details FROM public.upyog_rs_tree_pruning_booking_detail WHERE booking_id = ?;
+        - query: INSERT INTO public.upyog_rs_tree_pruning_booking_detail_audit SELECT *, CURRENT_TIMESTAMP FROM public.upyog_rs_tree_pruning_booking_detail WHERE booking_id = ?;
           basePath: treePruningBookingDetail
           jsonMaps:
             - jsonPath: $.treePruningBookingDetail.bookingId
@@ -141,7 +141,7 @@ serviceMaps:
             - jsonPath: $.treePruningBookingDetail.auditDetails.lastModifiedTime
             - jsonPath: $.treePruningBookingDetail.bookingId
 
-        - query: INSERT INTO public.upyog_rs_tree_pruning_booking_detail_audit(booking_id, booking_no, tenant_id, applicant_uuid, reason_for_pruning, latitude, longitude, payment_date, application_date, booking_createdby, booking_status, address_detail_id, payment_receipt_filestore_id, mobile_number, locality_code, createdby, lastmodifiedby, createdtime, lastmodifiedtime, audit_timestamp, additional_details) SELECT booking_id, booking_no, tenant_id, applicant_uuid, reason_for_pruning, latitude, longitude, payment_date, application_date, booking_createdby, booking_status, address_detail_id, payment_receipt_filestore_id, mobile_number, locality_code, createdby, lastmodifiedby, createdtime, lastmodifiedtime, CURRENT_TIMESTAMP, additional_details FROM public.upyog_rs_tree_pruning_booking_detail WHERE booking_id = ?;
+        - query: INSERT INTO public.upyog_rs_tree_pruning_booking_detail_audit SELECT *, CURRENT_TIMESTAMP FROM public.upyog_rs_tree_pruning_booking_detail WHERE booking_id = ?;
           basePath: treePruningBookingDetail
           jsonMaps:
             - jsonPath: $.treePruningBookingDetail.bookingId
