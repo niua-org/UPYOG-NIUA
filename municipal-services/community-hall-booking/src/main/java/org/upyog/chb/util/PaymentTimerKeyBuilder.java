@@ -36,26 +36,6 @@ public final class PaymentTimerKeyBuilder {
 	}
 
 	/**
-	 * Builds a Redis timer-row key from explicit timer attributes.
-	 *
-	 * @param tenantId tenant identifier
-	 * @param venueCode parent venue/community hall code
-	 * @param unitCode booked unit/hall code
-	 * @param bookingDate booking date
-	 * @param bookingId booking or draft reference id
-	 * @param startTime slot start time segment used in the key
-	 * @param endTime slot end time segment used in the key
-	 * @return Redis key for the payment timer row
-	 * @throws IllegalArgumentException when required key parts are blank or null
-	 */
-//	public static String toRedisTimerRowKey(String tenantId, String venueCode, String unitCode,
-//			LocalDate bookingDate, String bookingId, String startTime, String endTime) {
-//		validate(tenantId, venueCode, unitCode, bookingDate, bookingId);
-//		return REDIS_TIMER_PREFIX + String.join(":", tenantId, venueCode, unitCode, bookingDate.toString(),
-//				bookingId, startTime, endTime);
-//	}
-
-	/**
 	 * Builds a Redis slot-hold key from {@link BookingPaymentTimerDetails}.
 	 * Slot holds prevent double booking on the same physical slot (tenant + hall + date + time).
 	 *
