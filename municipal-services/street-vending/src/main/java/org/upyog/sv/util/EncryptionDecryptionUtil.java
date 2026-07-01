@@ -26,7 +26,7 @@ public class EncryptionDecryptionUtil {
 	private static final String PURPOSE_KEY = "purpose";
 	private static final String DECRYPTION_KEY = "key";
 
-    private EncryptionService encryptionService;
+    private final EncryptionService encryptionService;
 
     @Value(("${state.level.tenant.id}"))
     private String stateLevelTenantId;
