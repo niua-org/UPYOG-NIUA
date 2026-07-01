@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FormStep, CardLabel, TextInput, UploadFile, Dropdown, LocationIcon } from "@nudmcdgnpm/digit-ui-react-components";
-import { getDigiPin } from "../../../../libraries/src/utils/digipin";
+import { getDigiPin, DigipinDisplay } from "../../../../libraries/src/utils/digipin";
 
 const TreePruningRequestDetails = ({ t, config, onSelect, userType, formData }) => {
   const user = Digit.UserService.getUser().info;
@@ -29,7 +29,8 @@ const TreePruningRequestDetails = ({ t, config, onSelect, userType, formData }) 
       geoTagLocation,
       supportingDocumentFile,
       latitude,
-      longitude
+      longitude,
+      digipin
     };
     onSelect(config.key, Service, false);
   };
@@ -130,24 +131,7 @@ const TreePruningRequestDetails = ({ t, config, onSelect, userType, formData }) 
             <LocationIcon className="fill-path-primary-main" />
           </div>
         </div>
-        {digipin && (
-          <div style={{ 
-            marginTop: "10px", 
-            marginBottom: "16px",
-            padding: "12px 16px",
-            backgroundColor: "#f0f0f0",
-            borderRadius: "8px",
-            border: "1px solid #d4d4d4",
-            width: user.type === "EMPLOYEE" ? "50%" : "100%",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}>
-            <div>
-              <strong>Digipin:</strong> {digipin}
-            </div>
-          </div>
-        )}
+        <DigipinDisplay digipin={digipin} style={{ marginBottom: "16px", width: user.type === "EMPLOYEE" ? "50%" : "100%" }} />
 
         {/* Upload Site Photograph */}
         <CardLabel>

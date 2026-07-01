@@ -2,7 +2,7 @@ import { CardLabel, CardLabelError, FormStep, LabelFieldPair, TextInput, Locatio
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Timeline from "../components/TLTimeline";
-import { getDigiPin } from "../../../../libraries/src/utils/digipin";
+import { getDigiPin, DigipinDisplay } from "../../../../libraries/src/utils/digipin";
 
 const PTSelectPincode = ({ t, config, onSelect, formData = {}, userType, register, errors, setError, formState, clearErrors }) => {
   const tenants = Digit.Hooks.pt.useTenants();
@@ -135,53 +135,6 @@ const PTSelectPincode = ({ t, config, onSelect, formData = {}, userType, registe
     <React.Fragment>
     {window.location.href.includes("/citizen") ? <Timeline currentStep={1}/> : null}
     
-    {/* Location Input with Fetch Button */}
-    <div style={{ marginBottom: "20px" }}>
-      <div style={{ position: "relative", width: "50%" }}>
-        <TextInput
-          t={t}
-          type="text"
-          name="currentLocation"
-          value={locationText}
-          onChange={handleLocationTextChange}
-          placeholder="Click location icon to fetch current location"
-          style={{ paddingRight: "40px" }}
-        />
-        <div
-          className="butt-icon"
-          onClick={fetchCurrentLocation}
-          style={{
-            position: "absolute",
-            left: "333px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            padding: "5px"
-          }}
-        >
-          <LocationIcon styles={{ width: "16px", border: "none" }} className="fill-path-primary-main" />
-        </div>
-      </div>
-      {digipin && (
-        <div style={{ 
-          marginTop: "10px", 
-          padding: "19px 78px",
-          backgroundColor: "#f0f0f0",
-          borderRadius: "37px",
-          border: "1px solid #d4d4d4",
-          width: "50%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
-        }}>
-          <div>
-            <strong>Digipin:</strong> {digipin}
-          </div>
-        </div>
-      )}
-    </div>
     <FormStep
       t={t}
       config={{ ...config, inputs }}
@@ -191,7 +144,30 @@ const PTSelectPincode = ({ t, config, onSelect, formData = {}, userType, registe
       onSkip={onSkip}
       forcedError={t(pincodeServicability)}
       isDisabled={!pincode && !locationText || isEditProperty}
-    ></FormStep>
+    >
+      {/* Location Input with Fetch Button */}
+      <div style={{ marginBottom: "20px" }}>
+        <div style={{ display: "flex", alignItems: "stretch", gap: "8px" }}>
+          <TextInput
+            t={t}
+            type="text"
+            name="currentLocation"
+            value={locationText}
+            onChange={handleLocationTextChange}
+            placeholder="Click location icon to fetch current location"
+            style={{ flex: 1 }}
+          />
+          <div
+            className="butt-icon"
+            onClick={fetchCurrentLocation}
+            style={{ cursor: "pointer", display: "flex", alignItems: "center", padding: "5px" }}
+          >
+            <LocationIcon styles={{ width: "16px", border: "none" }} className="fill-path-primary-main" />
+          </div>
+        </div>
+        <DigipinDisplay digipin={digipin} />
+      </div>
+    </FormStep>
             </React.Fragment>
   );
 };

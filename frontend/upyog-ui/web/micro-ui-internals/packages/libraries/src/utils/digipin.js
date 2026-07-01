@@ -1,3 +1,5 @@
+import React from "react";
+
 // Digipin utility functions - India Post official algorithm
 const DIGIPIN_GRID = [
   ['F', 'C', '9', '8'],
@@ -38,4 +40,37 @@ export function getDigiPin(lat, lon) {
     maxLon = minLon + lonDiv;
   }
   return digiPin;
+}
+
+// Shared UI to display a generated Digipin along with a link to view it on MapMyIndia.
+// `style` lets callers tweak layout (e.g. width / marginBottom) without duplicating the markup.
+export function DigipinDisplay({ digipin, style = {} }) {
+  if (!digipin) return null;
+  return (
+    <div
+      style={{
+        marginTop: "10px",
+        padding: "12px 16px",
+        backgroundColor: "#f0f0f0",
+        borderRadius: "8px",
+        border: "1px solid #d4d4d4",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        ...style,
+      }}
+    >
+      <div>
+        <strong>Digipin:</strong> {digipin}
+      </div>
+      <a
+        href={`https://mappls.com/digipin/${digipin}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ fontSize: "13px", color: "#a82227", textDecoration: "underline", whiteSpace: "nowrap" }}
+      >
+        View on MapMyIndia
+      </a>
+    </div>
+  );
 }
