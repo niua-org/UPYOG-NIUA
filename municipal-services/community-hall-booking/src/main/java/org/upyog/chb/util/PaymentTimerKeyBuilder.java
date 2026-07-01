@@ -26,9 +26,9 @@ public final class PaymentTimerKeyBuilder {
 	 * @return Redis key for the payment timer row
 	 */
 	public static String toRedisTimerRowKey(BookingPaymentTimerDetails detail, String slotStartTime, String slotEndTime) {
-		validate(detail.getTenantId(), detail.getVenuecode(), detail.getCode(), detail.getBookingDate(),
+		validate(detail.getTenantId(), detail.getVenueCode(), detail.getUnitCode(), detail.getBookingDate(),
 				detail.getBookingId());
-		return REDIS_TIMER_PREFIX + String.join(":", detail.getTenantId(), detail.getVenuecode(), detail.getCode(),
+		return REDIS_TIMER_PREFIX + String.join(":", detail.getTenantId(), detail.getVenueCode(), detail.getUnitCode(),
 				detail.getBookingDate().toString(), detail.getBookingId(), slotStartTime, slotEndTime);
 	}
 
@@ -62,7 +62,7 @@ public final class PaymentTimerKeyBuilder {
 	 * @return Redis key used to hold a slot during payment timer
 	 */
 	public static String toRedisSlotKey(BookingPaymentTimerDetails detail, String startTime, String endTime) {
-		return toRedisSlotKey(detail.getTenantId(), detail.getVenuecode(), detail.getCode(), detail.getBookingDate(),
+		return toRedisSlotKey(detail.getTenantId(), detail.getVenueCode(), detail.getUnitCode(), detail.getBookingDate(),
 				startTime, endTime);
 	}
 
@@ -115,8 +115,8 @@ public final class PaymentTimerKeyBuilder {
 			LocalDate bookingDate, String bookingId, String userId, long createdTime) {
 		var details = new BookingPaymentTimerDetails();
 		details.setTenantId(tenantId);
-		details.setVenuecode(communityHallCode);
-		details.setCode(hallCode);
+		details.setVenueCode(communityHallCode);
+		details.setUnitCode(hallCode);
 		details.setBookingDate(bookingDate);
 		details.setBookingId(bookingId);
 		details.setCreatedBy(userId);
