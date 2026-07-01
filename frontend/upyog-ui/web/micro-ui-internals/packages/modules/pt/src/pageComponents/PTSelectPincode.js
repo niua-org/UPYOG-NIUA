@@ -165,7 +165,7 @@ const PTSelectPincode = ({ t, config, onSelect, formData = {}, userType, registe
             <LocationIcon styles={{ width: "16px", border: "none" }} className="fill-path-primary-main" />
           </div>
         </div>
-        <DigipinDisplay digipin={digipin} />
+        <DigipinDisplay t={t} digipin={digipin} />
       </div>
     </FormStep>
             </React.Fragment>
