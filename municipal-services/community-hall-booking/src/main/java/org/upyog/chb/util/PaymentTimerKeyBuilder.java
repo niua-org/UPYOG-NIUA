@@ -48,12 +48,12 @@ public final class PaymentTimerKeyBuilder {
 	 * @return Redis key for the payment timer row
 	 * @throws IllegalArgumentException when required key parts are blank or null
 	 */
-	public static String toRedisTimerRowKey(String tenantId, String venueCode, String unitCode,
-			LocalDate bookingDate, String bookingId, String startTime, String endTime) {
-		validate(tenantId, venueCode, unitCode, bookingDate, bookingId);
-		return REDIS_TIMER_PREFIX + String.join(":", tenantId, venueCode, unitCode, bookingDate.toString(),
-				bookingId, startTime, endTime);
-	}
+//	public static String toRedisTimerRowKey(String tenantId, String venueCode, String unitCode,
+//			LocalDate bookingDate, String bookingId, String startTime, String endTime) {
+//		validate(tenantId, venueCode, unitCode, bookingDate, bookingId);
+//		return REDIS_TIMER_PREFIX + String.join(":", tenantId, venueCode, unitCode, bookingDate.toString(),
+//				bookingId, startTime, endTime);
+//	}
 
 	/**
 	 * Builds a Redis slot-hold key from {@link BookingPaymentTimerDetails}.
@@ -83,9 +83,11 @@ public final class PaymentTimerKeyBuilder {
 	 */
 	public static String toRedisSlotKey(String tenantId, String venueCode, String unitCode, LocalDate bookingDate,
 			String startTime, String endTime) {
+		log.info("validate : tenantId - {}, venueCode - {}, unitCode - {}, bookingDate - {}, startTime - {} , endTime - {} ",
+				safe(tenantId), safe(venueCode), safe(unitCode), safe(bookingDate),safe(startTime),safe(endTime));
 		if (StringUtils.isBlank(tenantId) || StringUtils.isBlank(venueCode) || StringUtils.isBlank(unitCode)
 				|| bookingDate == null || startTime == null || endTime == null) {
-			throw new IllegalArgumentException("tenantId, venueCode, hallCode and bookingDate are required");
+			throw new IllegalArgumentException("tenantId, venueCode, unitCode and bookingDate , startTime , endTime are required");
 		}
 		return REDIS_SLOT_PREFIX + String.join(":", tenantId, venueCode, unitCode, bookingDate.toString(),
 				startTime, endTime);

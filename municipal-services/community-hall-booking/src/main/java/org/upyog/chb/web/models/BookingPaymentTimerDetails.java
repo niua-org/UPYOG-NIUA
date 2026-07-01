@@ -1,5 +1,6 @@
 package org.upyog.chb.web.models;
 
+import java.sql.Time;
 import java.time.LocalDate;
 
 import lombok.AllArgsConstructor;
@@ -29,5 +30,7 @@ public class BookingPaymentTimerDetails {
 	private String status;
 	private LocalDate bookingDate;
 	private String tenantId;
+	private Time startTime;
+	private Time endTime;
 
 }

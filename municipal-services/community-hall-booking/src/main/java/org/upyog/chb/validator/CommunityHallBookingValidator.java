@@ -131,11 +131,11 @@ public class CommunityHallBookingValidator {
 	 */
 	private void validateAllowedSearchConfiguration(VenueBookingSearchCriteria criteria) {
 		String allowedParamStr = config.getAllowedEmployeeSearchParameters();
-
 		if (StringUtils.isEmpty(allowedParamStr) && !criteria.isEmpty()) {
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH,
 					"No search parameters are expected");
 		}
+		log.info("allowedParamStr {} in validateAllowedSearchConfiguration", allowedParamStr);
 		List<String> allowedParams = Arrays.asList(allowedParamStr.split(","));
 		validateSearchParams(criteria, allowedParams);
 	}
