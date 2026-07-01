@@ -15,9 +15,9 @@ import java.util.Map;
 @Slf4j
 public class ServiceRequestRepository {
 
-	private ObjectMapper mapper;
+	private final ObjectMapper mapper;
 
-	private RestTemplate restTemplate;
+	private final RestTemplate restTemplate;
 
 	@Autowired
 	public ServiceRequestRepository(ObjectMapper mapper, RestTemplate restTemplate) {

@@ -123,9 +123,9 @@ module.exports = plugin(function ({ addUtilities, theme }) {
     },
 
     ".text-legend": {
-      fontSize: "12px",
-      lineHeight: "16px",
-      fontWeight: "400",
+      fontSize: "19px",
+      lineHeight: "32px",
+      fontWeight: "500",
     },
 
     ".text-text-btn": {
