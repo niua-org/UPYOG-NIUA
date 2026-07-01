@@ -92,9 +92,7 @@ const StakeholderAcknowledgement = ({ data, onSuccess }) => {
           {mutation.isSuccess && !isOpenLinkFlow && (
             <Link
               to={`/upyog-ui/citizen/payment/collect/${mutation.data.Licenses[0].businessService}/${mutation.data.Licenses[0].applicationNumber}?tenantId=${mutation.data.Licenses[0].tenantId}`}
-              state={{
-                tenantId: mutation.data.Licenses[0].tenantId,
-              }}
+              state={{ tenantId: mutation.data.Licenses[0].tenantId }}
             >
               <SubmitBar label={t("COMMON_MAKE_PAYMENT")} />
             </Link>
