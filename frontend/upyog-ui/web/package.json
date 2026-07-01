@@ -34,7 +34,7 @@
     "micro-ui-internals/packages/modules/est",
     "micro-ui-internals/packages/modules/ndc",
     "micro-ui-internals/packages/modules/challanGeneration",
-    "micro-ui-internals/packages/libraries/react-components",
+    "micro-ui-internals/packages/react-components",
     "micro-ui-internals/packages/modules/ads"
   ],
   "engines": {
@@ -44,7 +44,7 @@
     "@nudmcdgnpm/digit-ui-module-challangeneration": "1.0.3",
     "@nudmcdgnpm/digit-ui-module-reports": "1.0.0",
     "@nudmcdgnpm/digit-ui-react-components": "4.0.5",
-    "@nudmcdgnpm/upyog-css": "3.0.7",
+    "@nudmcdgnpm/upyog-css": "3.0.8",
     "@nudmcdgnpm/upyog-ui-module-ads": "3.11.1",
     "@nudmcdgnpm/upyog-ui-module-asset-v2": "1.0.1",
     "@nudmcdgnpm/upyog-ui-module-est": "1.0.3",

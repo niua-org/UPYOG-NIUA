@@ -162,11 +162,7 @@
   }
 
   header {
-    font-family: "Roboto Condensed", sans-serif;
-    font-size: 19px;
-    font-weight: 500;
-    line-height: 32px;
-    color: #fff;
+    @apply font-rc text-legend text-white;
   }
 }
 
@@ -179,11 +175,7 @@
   }
 
   header {
-    font-family: "Roboto Condensed", sans-serif;
-    font-size: 19px;
-    font-weight: 500;
-    line-height: 32px;
-    color: #fff;
+    @apply font-rc text-legend text-white;
   }
 }
 

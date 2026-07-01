@@ -6,11 +6,7 @@
   }
 
   h2 {
-    font-family: "Roboto Condensed", sans-serif;
-    font-size: 19px;
-    font-weight: 500;
-    line-height: 32px;
-    color: #fff;
+    @apply font-rc text-legend text-white;
   }
 }
 
@@ -22,11 +18,7 @@
   }
 
   h2 {
-    font-family: "Roboto Condensed", sans-serif;
-    font-size: 19px;
-    font-weight: 500;
-    line-height: 32px;
-    color: #fff;
+    @apply font-rc text-legend text-white;
   }
 }
 
