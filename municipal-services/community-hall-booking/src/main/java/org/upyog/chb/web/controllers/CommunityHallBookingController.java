@@ -1,7 +1,6 @@
 package org.upyog.chb.web.controllers;
 
 import java.util.List;
-import java.util.Map;
 
 import jakarta.validation.Valid;
 
@@ -12,7 +11,6 @@ import org.upyog.chb.constants.CommunityHallBookingConstants;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.service.CommunityHallBookingService;
 import org.upyog.chb.service.DemandService;
-import org.upyog.chb.service.PaymentNotificationService;
 import org.upyog.chb.service.SchedulerService;
 import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.VenueBookingDetail;
@@ -85,14 +83,12 @@ public class CommunityHallBookingController {
 	private final CommunityHallBookingService bookingService;
 	private final DemandService demandService;
 	private final SchedulerService schedulerService;
-	private final PaymentNotificationService paymentNotificationService;
 
 	public CommunityHallBookingController(CommunityHallBookingService bookingService, DemandService demandService,
-			SchedulerService schedulerService,PaymentNotificationService paymentNotificationService) {
+			SchedulerService schedulerService) {
 		this.bookingService = bookingService;
 		this.demandService = demandService;
 		this.schedulerService = schedulerService;
-		this.paymentNotificationService = paymentNotificationService;
 	}
 	
 	/**
@@ -275,23 +271,5 @@ public class CommunityHallBookingController {
                     .body("Failed to trigger scheduler: " + e.getMessage());
         }
     }
-	
-	/**
-	 * Exposes an endpoint to manually process a payment request.
-	 * This mirrors the processing that occurs via the Kafka consumer.
-	 *
-	 * @param paymentRecord the JSON payment request containing RequestInfo and Payment
-	 * @return success message when payment is processed, or error status on failure
-	 */
-	@RequestMapping(value = "/payment/_process", method = RequestMethod.POST)
-	public ResponseEntity<String> processPayment(@RequestBody Map<String, Object> paymentRecord) {
-	    try {
-	       paymentNotificationService.process(paymentRecord, "egov.collection.payment-create");
-	       return ResponseEntity.ok("Payment processed successfully.");
-	    } catch (Exception e) {
-	       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	             .body("Failed to process payment: " + e.getMessage());
-	    }
-	}
 	
 }
