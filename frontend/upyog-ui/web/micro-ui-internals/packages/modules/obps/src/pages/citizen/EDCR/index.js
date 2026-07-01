@@ -119,7 +119,7 @@ const CreateEDCR = ({ parentRoute }) => {
           />
         );
       })}
-      <Route path={`/acknowledgement`} element={<EDCRAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="acknowledgement" element={<EDCRAcknowledgement data={params} onSuccess={onSuccess} />} />
     </Routes>
   );
 };

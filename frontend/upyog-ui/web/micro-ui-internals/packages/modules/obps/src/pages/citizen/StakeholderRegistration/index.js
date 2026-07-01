@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, Route,  Routes, Navigate } from "react-router-dom";
@@ -20,14 +20,20 @@ const StakeholderRegistration = () => {
   const stateId = Digit.ULBService.getStateId();
   let { data: newConfig } = Digit.Hooks.obps.SearchMdmsTypes.getFormConfig(stateId, []);
 
+  const { path: modulePath } = Digit.Hooks.useModuleBasePath();
+  const basePath = useMemo(
+    () => pathname.includes("/openlink") ? `${modulePath}/openlink/stakeholder/apply` : `${modulePath}/stakeholder/apply`,
+    [modulePath, pathname]
+  );
+
   const goNext = (skipStep) => {
     const currentPath = pathname.split("/").pop();
     const { nextStep } = config.find((routeObj) => routeObj.route === currentPath);
     let redirectWithHistory = navigate;
     if (nextStep === null) {
-      return redirectWithHistory(`/check`);
+      return redirectWithHistory(`${basePath}/check`);
     }
-    redirectWithHistory(`/${nextStep}`);
+    redirectWithHistory(`${basePath}/${nextStep}`);
 
   }
 
@@ -36,7 +42,7 @@ const StakeholderRegistration = () => {
     queryClient.invalidateQueries("PT_CREATE_PROPERTY");
   };
   const createApplication = async () => {
-    navigate(`/acknowledgement`);
+    navigate(`${basePath}/acknowledgement`);
   };
 
   const handleSelect = (key, data, skipStep, isFromCreateApi) => {
@@ -73,15 +79,15 @@ const StakeholderRegistration = () => {
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={`/${routeObj.route}`}
+            path={routeObj.route}
             key={index}
             element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />}
           />
         );
       })}
-      <Route path={`/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
-      <Route path={`/acknowledgement`} element={<StakeholderAcknowledgement data={params} onSuccess={onSuccess} />} />
-      <Route path="*" element={<Navigate to={`/${config.indexRoute}`} replace />} />
+      <Route path="check" element={<CheckPage onSubmit={createApplication} value={params} />} />
+      <Route path="acknowledgement" element={<StakeholderAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="*" element={<Navigate to={`${basePath}/${config.indexRoute}`} replace />} />
     </Routes>
   );
 };
