@@ -85,6 +85,9 @@ public class TreePruningBookingDetail {
 	@NotNull
 	private List<DocumentDetail> documentDetails;
 
+	@JsonProperty("additionalDetails")
+	private Object additionalDetails;
+
 	private AuditDetails auditDetails;
 
 }

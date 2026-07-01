@@ -22,7 +22,7 @@ public class TreePruningQueryBuilder {
     private static final String TREE_PRUNING_BOOKING_DETAILS_SEARCH_QUERY_WITH_PROFILE = (
             "SELECT uptbd.booking_id, booking_no, applicant_uuid, mobile_number, locality_code, reason_for_pruning, " +
                     "latitude, longitude, payment_date, application_date, payment_receipt_filestore_id, " +
-                    "address_detail_id, booking_status, uptbd.createdby, uptbd.lastmodifiedby, uptbd.createdtime, " +
+                    "address_detail_id, booking_status, uptbd.additional_details, uptbd.createdby, uptbd.lastmodifiedby, uptbd.createdtime, " +
                     "uptbd.lastmodifiedtime, uptbd.tenant_id, " +
                     "doc.document_detail_id, doc.document_type, doc.filestore_id " +
                     "FROM public.upyog_rs_tree_pruning_booking_detail uptbd " +
@@ -32,7 +32,7 @@ public class TreePruningQueryBuilder {
     private static final String TREE_PRUNING_BOOKING_DETAILS_SEARCH_QUERY = (
             "SELECT uptbd.booking_id, uptbd.booking_no, uptbd.applicant_uuid, uptbd.mobile_number, uptbd.locality_code, uptbd.reason_for_pruning, " +
                     "uptbd.latitude, uptbd.longitude, uptbd.payment_date, uptbd.application_date, uptbd.payment_receipt_filestore_id, " +
-                    "uptbd.address_detail_id, uptbd.booking_status, uptbd.createdby, uptbd.lastmodifiedby, uptbd.createdtime, " +
+                    "uptbd.address_detail_id, uptbd.booking_status, uptbd.additional_details, uptbd.createdby, uptbd.lastmodifiedby, uptbd.createdtime, " +
                     "uptbd.lastmodifiedtime, uptbd.tenant_id, " +
                     "doc.document_detail_id, doc.document_type, doc.filestore_id, " +
                     "urad.applicant_id, urad.name, urad.mobile_number as applicant_mobile, urad.email_id, urad.alternate_number, " +

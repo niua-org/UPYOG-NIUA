@@ -13,8 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.egov.tracer.model.CustomException;
+import org.postgresql.util.PGobject;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.upyog.tp.web.models.Address;
 import org.upyog.tp.web.models.ApplicantDetail;
 import org.upyog.tp.web.models.AuditDetails;
@@ -36,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SuppressWarnings({"java:S3437", "java:S2143", "java:S6212", "java:S6213", "java:S2638", "java:S3011", "java:S3776", "java:S120"})
 public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Class<T> mappedClass;
 
@@ -122,6 +126,21 @@ public class GenericRowMapper<T> implements ResultSetExtractor<List<T>> {
     private Object convertValueToFieldType(Field field, Object value) {
         if (value == null) {
             return null;
+        }
+
+        // Handle JSONB / JSON columns (returned as PGobject) -> parse to JsonNode so they
+        // serialize back as proper JSON instead of a raw PGobject wrapper.
+        if (value instanceof PGobject pgObject) {
+            String json = pgObject.getValue();
+            if (json == null) {
+                return null;
+            }
+            try {
+                return OBJECT_MAPPER.readTree(json);
+            } catch (Exception e) {
+                log.warn("Could not parse JSON from column value: {}", json);
+                return null;
+            }
         }
 
         Class<?> fieldType = field.getType();

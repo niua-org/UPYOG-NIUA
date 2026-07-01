@@ -61,6 +61,7 @@ export const TPSearch = {
           { title: t("REASON_FOR_PRUNING"), value: t(response?.reasonForPruning) || t("CS_NA") },
           { title: t("LATITUDE_GEOTAG"), value: response?.latitude || t("CS_NA") },
           { title: t("LONGITUDE_GEOTAG"), value: response?.longitude  || t("CS_NA") },
+          { title: t("DIGIPIN"), value: response?.additionalDetails?.digipin || t("CS_NA") },
         ],
       },
       {
