@@ -44,7 +44,7 @@ export function getDigiPin(lat, lon) {
 
 // Shared UI to display a generated Digipin along with a link to view it on MapMyIndia.
 // `style` lets callers tweak layout (e.g. width / marginBottom) without duplicating the markup.
-export function DigipinDisplay({ digipin, style = {} }) {
+export function DigipinDisplay({ t, digipin, style = {} }) {
   if (!digipin) return null;
   return (
     <div
@@ -61,7 +61,7 @@ export function DigipinDisplay({ digipin, style = {} }) {
       }}
     >
       <div>
-        <strong>Digipin:</strong> {digipin}
+        <strong>{t("CS_DIGIPIN_LABEL")}:</strong> {digipin}
       </div>
       <a
         href={`https://mappls.com/digipin/${digipin}`}
@@ -69,7 +69,7 @@ export function DigipinDisplay({ digipin, style = {} }) {
         rel="noopener noreferrer"
         style={{ fontSize: "13px", color: "#a82227", textDecoration: "underline", whiteSpace: "nowrap" }}
       >
-        View on MapMyIndia
+        {t("CS_VIEW_ON_MAPMYINDIA")}
       </a>
     </div>
   );
