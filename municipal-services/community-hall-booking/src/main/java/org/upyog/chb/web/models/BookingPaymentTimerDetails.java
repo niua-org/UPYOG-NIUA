@@ -15,7 +15,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@EqualsAndHashCode(of = { "tenantId", "hallcode", "communityHallcode", "bookingDate", "bookingId"})
+@EqualsAndHashCode(of = { "tenantId", "code", "venuecode", "bookingDate", "bookingId"})
 @ToString
 public class BookingPaymentTimerDetails {
 
