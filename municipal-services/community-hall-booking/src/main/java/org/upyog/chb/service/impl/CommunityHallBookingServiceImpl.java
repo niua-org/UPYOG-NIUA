@@ -324,7 +324,7 @@ private List<VenueSlotAvailabilityDetail> checkTimerTableForAvailaibility(
 			Map<VenueSlotAvailabilityDetail, VenueSlotAvailabilityDetail> slotDetailsMap,
 			BookingPaymentTimerDetails detail) {
 		VenueSlotAvailabilityDetail availabilityDetail = VenueSlotAvailabilityDetail.builder()
-				.venueCode(detail.getVenuecode()).code(detail.getCode())
+				.venueCode(detail.getVenueCode()).code(detail.getUnitCode())
 				.bookingDate(CommunityHallBookingUtil.parseLocalDateToString(detail.getBookingDate(),
 						CommunityHallBookingConstants.DATE_FORMAT))
 				.tenantId(detail.getTenantId()).build();

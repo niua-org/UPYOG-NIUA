@@ -254,8 +254,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 		if (timerDetails != null && !timerDetails.isEmpty()) {
 			for (BookingPaymentTimerDetails detail : timerDetails) {
 				batchArgs.add(new Object[] { detail.getBookingId(), detail.getCreatedBy(), detail.getCreatedTime(),
-						detail.getStatus() != null ? detail.getStatus() : TIMER_STATUS_ACTIVE, null, detail.getVenuecode(),
-						detail.getCode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
+						detail.getStatus() != null ? detail.getStatus() : TIMER_STATUS_ACTIVE, null, detail.getVenueCode(),
+						detail.getUnitCode(), detail.getBookingDate(), detail.getTenantId(), lastModifiedBy,
 						lastModifiedTime,startTime , endTime });
 			}
 		} else {
@@ -457,8 +457,8 @@ public class CommunityHallBookingRepositoryImpl implements CommunityHallBookingR
 	            details.setCreatedBy(rs.getString("createdby"));
 	            details.setCreatedTime(rs.getLong("createdtime"));
 	            details.setStatus(rs.getString("status"));
-	            details.setVenuecode(rs.getString("venue_code"));
-	            details.setCode(rs.getString("unit_code"));
+	            details.setVenueCode(rs.getString("venue_code"));
+	            details.setUnitCode(rs.getString("unit_code"));
 	            details.setLastModifiedBy(rs.getString("lastmodifiedby"));
 	            details.setLastModifiedTime(rs.getObject("lastmodifiedtime", Long.class));
 	            details.setTenantId(rs.getString("tenant_id"));
