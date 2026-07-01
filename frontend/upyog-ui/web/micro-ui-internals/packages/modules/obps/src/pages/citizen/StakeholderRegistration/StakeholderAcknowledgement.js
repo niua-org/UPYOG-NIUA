@@ -2,11 +2,11 @@ import { BackButton, Banner, Card, CardText, LinkButton, Loader, SubmitBar } fro
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { Link,  } from "react-router-dom";
+import { Link, } from "react-router-dom";
 import { convertToStakeholderObject } from "../../../utils/index";
 import getAcknowledgementData from "../../../../getAcknowlegment";
-const GetActionMessage = ( props) => {
-  const LicenseType=props?.data?.Licenses?.[0]?.tradeLicenseDetail?.tradeUnits?.[0]?.tradeType?.split(".")[0] || "ARCHITECT";
+const GetActionMessage = (props) => {
+  const LicenseType = props?.data?.Licenses?.[0]?.tradeLicenseDetail?.tradeUnits?.[0]?.tradeType?.split(".")[0] || "ARCHITECT";
   const { t } = useTranslation();
   if (props.isSuccess) {
     return !window.location.href.includes("edit-application") ? `${t(`TRADELICENSE_TRADETYPE_${LicenseType}`)}${t(`CS_STAKEHOLDER_APPLICATION_SUCCESS`)}` : t("CS_PROPERTY_UPDATE_APPLICATION_SUCCESS");
@@ -23,7 +23,7 @@ const rowContainerStyle = {
 };
 
 const BannerPicker = (props) => {
-  const LicenseType=props?.data?.Licenses?.[0]?.tradeLicenseDetail?.tradeUnits?.[0]?.tradeType?.split(".")[0] || "ARCHITECT";
+  const LicenseType = props?.data?.Licenses?.[0]?.tradeLicenseDetail?.tradeUnits?.[0]?.tradeType?.split(".")[0] || "ARCHITECT";
   return (
     <Banner
       message={GetActionMessage(props)}
@@ -38,7 +38,7 @@ const BannerPicker = (props) => {
 
 const StakeholderAcknowledgement = ({ data, onSuccess }) => {
   const { t } = useTranslation();
-  const {id}= useParams();
+  const { id } = useParams();
   //const isPropertyMutation = window.location.href.includes("property-mutation");
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const mutation = Digit.Hooks.obps.useStakeholderAPI(data?.address?.city ? data.address?.city?.code : tenantId, true);
@@ -66,15 +66,15 @@ const StakeholderAcknowledgement = ({ data, onSuccess }) => {
     id: id,
     moduleCode: "BPAREG",
   });
-  const {  data: applicationDetails } = Digit.Hooks.obps.useLicenseDetails(state, { applicationNumber: id, tenantId: state }, {});
+  const { data: applicationDetails } = Digit.Hooks.obps.useLicenseDetails(state, { applicationNumber: id, tenantId: state }, {});
   const handleDownloadPdf = async () => {
-    const Property = applicationDetails ;
-    const tenantInfo  = tenants.find((tenant) => tenant.code === Property.tenantId);
+    const Property = applicationDetails;
+    const tenantInfo = tenants.find((tenant) => tenant.code === Property.tenantId);
 
     const acknowledgementData = await getAcknowledgementData(Property, tenantInfo, t);
-   
+
     Digit.Utils.pdf.generate(acknowledgementData);
-    
+
   };
 
   return mutation.isPending || mutation.isIdle ? (
@@ -89,7 +89,7 @@ const StakeholderAcknowledgement = ({ data, onSuccess }) => {
           <BannerPicker t={t} data={mutation.data} isSuccess={mutation.isSuccess} isLoading={mutation.isIdle || mutation.isLoading} />
           {mutation.isSuccess && <CardText>{`${t(`TRADELICENSE_TRADETYPE_${licenseType}`)}${t(`CS_FILE_STAKEHOLDER_RESPONSE`)}`}</CardText>}
           {!mutation.isSuccess && <CardText>{t("CS_FILE_PROPERTY_FAILED_RESPONSE")}</CardText>}
-{mutation.isSuccess && !isOpenLinkFlow && (
+          {mutation.isSuccess && !isOpenLinkFlow && (
             <Link
               to={`/upyog-ui/citizen/payment/collect/${mutation.data.Licenses[0].businessService}/${mutation.data.Licenses[0].applicationNumber}?tenantId=${mutation.data.Licenses[0].tenantId}`}
               state={{ tenantId: mutation.data.Licenses[0].tenantId }}
@@ -97,10 +97,10 @@ const StakeholderAcknowledgement = ({ data, onSuccess }) => {
               <SubmitBar label={t("COMMON_MAKE_PAYMENT")} />
             </Link>
           )}
-          {mutation.isSuccess &&(
-              <div style={{marginTop:"10px"}}>
-              <SubmitBar label={t("CS_COMMON_DOWNLOAD")} onSubmit={handleDownloadPdf}/>
-              </div>
+          {mutation.isSuccess && (
+            <div style={{ marginTop: "10px" }}>
+              <SubmitBar label={t("CS_COMMON_DOWNLOAD")} onSubmit={handleDownloadPdf} />
+            </div>
           )}
           {!isOpenLinkFlow && (
             <Link to={`/upyog-ui/citizen`}>

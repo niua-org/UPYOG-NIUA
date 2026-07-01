@@ -14,7 +14,7 @@ const PlotDetails = ({ formData, onSelect, config }) => {
   const checkingFlow = formData?.uiFlow?.flow ? formData?.uiFlow?.flow :formData?.selectedPlot||formData?.businessService==="BPA-PAP" ? "PRE_APPROVE":"";
   const state = Digit.ULBService.getStateId();
   const { data, isLoading } = Digit.Hooks.obps.useScrutinyDetails(state, formData?.data?.scrutinyNumber, {
-    enabled:formData?.data?.scrutinyNumber.length!==8?true:false
+    enabled: formData?.data?.scrutinyNumber && formData?.data?.scrutinyNumber?.length !== 8 ? true : false
   })
   
   const handleSubmit = (data) => {

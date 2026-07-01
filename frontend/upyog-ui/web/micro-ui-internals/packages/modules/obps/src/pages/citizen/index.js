@@ -62,10 +62,10 @@ const App = ({ path }) => {
         <Route path="/edcr/inbox" element={<PrivateRoute><EdcrInbox parentRoute={path} /></PrivateRoute>} />
         <Route path="/stakeholder/:id" element={<PrivateRoute><ApplicationDetails /></PrivateRoute>} />
         <Route path="/bpa/:id" element={<PrivateRoute><BpaApplicationDetail /></PrivateRoute>} />
-        <Route path="/editApplication/bpa/:tenantId/:applicationNo" element={<PrivateRoute><BPASendToArchitect /></PrivateRoute>} />
-        <Route path="/editApplication/ocbpa/:tenantId/:applicationNo" element={<PrivateRoute><OCSendToArchitect /></PrivateRoute>} />
-        <Route path="/sendbacktocitizen/bpa/:tenantId/:applicationNo" element={<PrivateRoute><BPASendBackToCitizen /></PrivateRoute>} />
-        <Route path="/sendbacktocitizen/ocbpa/:tenantId/:applicationNo" element={<PrivateRoute><OCSendBackToCitizen /></PrivateRoute>} />
+        <Route path="/editApplication/bpa/:tenantId/:applicationNo/*" element={<PrivateRoute><BPASendToArchitect /></PrivateRoute>} />
+        <Route path="/editApplication/ocbpa/:tenantId/:applicationNo/*" element={<PrivateRoute><OCSendToArchitect /></PrivateRoute>} />
+        <Route path="/sendbacktocitizen/bpa/:tenantId/:applicationNo/*" element={<PrivateRoute><BPASendBackToCitizen /></PrivateRoute>} />
+        <Route path="/sendbacktocitizen/ocbpa/:tenantId/:applicationNo/*" element={<PrivateRoute><OCSendBackToCitizen /></PrivateRoute>} />
         <Route path="/response" element={<PrivateRoute><OBPSResponse /></PrivateRoute>} />
       </Routes>
       </div>
