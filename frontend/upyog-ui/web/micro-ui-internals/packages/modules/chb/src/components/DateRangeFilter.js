@@ -154,6 +154,8 @@ const DateRangeFilter = ({
             editableDateInputs={false}
             minDate={new Date()}
             maxDate={addMonths(new Date(), 3)}
+            staticRanges={[]} // Remove predefined ranges like "Yesterday", "Last 7 Days", etc.
+            inputRanges={[]}
           />
         </div>
       )}
