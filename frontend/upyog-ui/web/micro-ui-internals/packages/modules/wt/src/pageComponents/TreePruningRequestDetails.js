@@ -131,7 +131,7 @@ const TreePruningRequestDetails = ({ t, config, onSelect, userType, formData }) 
             <LocationIcon className="fill-path-primary-main" />
           </div>
         </div>
-        <DigipinDisplay digipin={digipin} style={{ marginBottom: "16px", width: user.type === "EMPLOYEE" ? "50%" : "100%" }} />
+        <DigipinDisplay t={t} digipin={digipin} style={{ marginBottom: "16px", width: user.type === "EMPLOYEE" ? "50%" : "100%" }} />
 
         {/* Upload Site Photograph */}
         <CardLabel>
