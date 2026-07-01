@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.egov.common.contract.request.RequestInfo;
-import org.springframework.stereotype.Component;
 import org.upyog.cdwm.web.models.CNDApplicationRequest;
 import org.upyog.cdwm.web.models.ResponseInfo;
 import org.upyog.cdwm.web.models.ResponseInfo.StatusEnum;
@@ -23,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import digit.models.coremodels.AuditDetails;
 import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 
-@Component
 public class CNDServiceUtil {
 
 	private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();

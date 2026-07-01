@@ -1,8 +1,5 @@
 package org.egov.ndc.util;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class NDCConstants {
 
 	private NDCConstants() {
