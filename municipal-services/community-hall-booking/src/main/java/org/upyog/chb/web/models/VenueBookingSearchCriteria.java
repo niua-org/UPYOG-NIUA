@@ -30,7 +30,7 @@ public class VenueBookingSearchCriteria {
 	@JsonProperty("status")
 	private String status;
 	
-	private String communityHallCode;
+	private String venueCode;
 
 	@JsonProperty("bookingNo")
 	private String bookingNo;

@@ -185,8 +185,8 @@ public class CommunityHallBookingValidator {
 		if (criteria.getMobileNumber() != null && !allowedParams.contains("mobileNumber"))
 			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH, "Search on mobile number is not allowed");
 		
-		if (criteria.getCommunityHallCode() != null && !allowedParams.contains("communityHallCode"))
-			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH, "Search on community hall name is not allowed");
+		if (criteria.getVenueCode() != null && !allowedParams.contains("venueCode"))
+			throw new CustomException(CommunityHallBookingConstants.INVALID_SEARCH, "Search on venue name is not allowed");
 	}
 	
 	public boolean isSameHallCode(List<BookingSlotDetail> bookingSlotDetails) {
