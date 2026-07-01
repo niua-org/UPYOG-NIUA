@@ -2,24 +2,16 @@ import React, { useState, useEffect, useMemo, useCallback, useRef, use } from "r
 import {
   CardLabel,
   LabelFieldPair,
-  Dropdown,
   TextInput,
-  LinkButton,
-  CardLabelError,
-  MobileNumber,
-  DatePicker,
   Loader,
   Toast,
   DeleteIcon,
-  Table,
-  RadioOrSelect,
+  Table
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useForm, Controller } from "react-hook-form";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
-import _, { add, first, last, set } from "lodash";
-import { useLocation } from "react-router-dom";
-import isUndefined from "lodash/isUndefined";
+import _ from "lodash";
 
 export const PropertyDetailsForm = ({ config, onSelect, userType, formData, formState, clearErrors }) => {
   const { control, formState: localFormState, watch, setValue, trigger, getValues } = useForm();
@@ -46,7 +38,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
       propertyId: propertyId,
     },
     config: {
-      enabled: !!propertyId, // ✅ Only run if propertyId is defined
+      enabled: !!propertyId, //  Only run if propertyId is defined
     },
     bussinessService: "WS",
     t,
@@ -59,7 +51,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
       propertyId: propertyId,
     },
     config: {
-      enabled: !!propertyId, // ✅ Only run if propertyId is defined
+      enabled: !!propertyId, //  Only run if propertyId is defined
     },
     bussinessService: "SW",
     t,
@@ -136,7 +128,6 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
       });
 
       waterConnection =
-        // item?.billData?.totalAmount
         resData?.map((item) => ({
           connectionNo: item?.consumerCode,
           isEdit: false,

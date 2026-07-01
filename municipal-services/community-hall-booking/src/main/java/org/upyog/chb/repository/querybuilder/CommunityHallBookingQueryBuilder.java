@@ -164,7 +164,7 @@ public class CommunityHallBookingQueryBuilder {
 		appendBookingIdsFilter(criteria, builder, preparedStmtList);
 		appendBookingNoFilter(criteria, builder, preparedStmtList);
 		appendStatusFilter(criteria, builder, preparedStmtList);
-		appendCommunityHallCodeFilter(criteria, builder, preparedStmtList);
+		appendVenueCodeFilter(criteria, builder, preparedStmtList);
 		appendMobileNumberFilter(criteria, builder, preparedStmtList);
 		appendCreatedByFilter(criteria, builder, preparedStmtList);
 		appendBookingDateRangeFilter(criteria, builder, preparedStmtList);
@@ -220,14 +220,14 @@ public class CommunityHallBookingQueryBuilder {
 		preparedStmtList.add(status);
 	}
 
-	private void appendCommunityHallCodeFilter(VenueBookingSearchCriteria criteria, StringBuilder builder,
+	private void appendVenueCodeFilter(VenueBookingSearchCriteria criteria, StringBuilder builder,
 			List<Object> preparedStmtList) {
-		if (criteria.getCommunityHallCode() == null) {
+		if (criteria.getVenueCode() == null) {
 			return;
 		}
 		addClauseIfRequired(preparedStmtList, builder);
 		builder.append(" ecbd.venue_code =  ? ");
-		preparedStmtList.add(criteria.getCommunityHallCode());
+		preparedStmtList.add(criteria.getVenueCode());
 	}
 
 	private void appendMobileNumberFilter(VenueBookingSearchCriteria criteria, StringBuilder builder,

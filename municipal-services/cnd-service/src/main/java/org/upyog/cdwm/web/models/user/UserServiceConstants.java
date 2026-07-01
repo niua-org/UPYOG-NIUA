@@ -1,8 +1,5 @@
 package org.upyog.cdwm.web.models.user;
 
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
 public class UserServiceConstants {
 
     private UserServiceConstants() {

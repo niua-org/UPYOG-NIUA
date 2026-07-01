@@ -30,6 +30,7 @@ export const PTSearch = {
       asSectionHeader: true,
       values: [
         { title: "PT_PROPERTY_ADDRESS_PINCODE", value: property?.address?.pincode },
+        { title: "DIGIPIN", value: property?.additionalDetails?.digipin || t("CS_NA") },
         { title: "PT_PROPERTY_ADDRESS_CITY", value: property?.address?.city },
         {
           title: "PT_PROPERTY_ADDRESS_MOHALLA",
@@ -203,6 +204,7 @@ export const PTSearch = {
         asSectionHeader: true,
         values: [
           { title: "PT_PROPERTY_ADDRESS_PINCODE", value: response?.address?.pincode },
+          { title: "DIGIPIN", value: response?.additionalDetails?.digipin || t("CS_NA") },
           { title: "PT_PROPERTY_ADDRESS_CITY", value: response?.address?.city },
           {
             title: "PT_PROPERTY_ADDRESS_MOHALLA",
