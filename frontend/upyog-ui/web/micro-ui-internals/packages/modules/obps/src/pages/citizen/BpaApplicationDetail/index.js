@@ -104,7 +104,7 @@ const BpaApplicationDetail = () => {
 
 
   useEffect(() => {
-    setCheckBoxVisible((isCitizenApprovalInProcess || isInProgress) && !(isCitizenApprovalInProcess && isArchitect));
+    setCheckBoxVisible((isCitizenApprovalInProcess || isInProgress) && isActionBarVisible);
   }, [isCitizenApprovalInProcess, isInProgress, isArchitect]);
 
   const getTranslatedValues = (dataValue, isNotTranslated) => {
