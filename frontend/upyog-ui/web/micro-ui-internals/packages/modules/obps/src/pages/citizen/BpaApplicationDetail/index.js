@@ -49,8 +49,8 @@ const BpaApplicationDetail = () => {
 
   const userInfo = Digit.UserService.getUser();
   const rolearray = userInfo?.info?.roles;
-  const isCitizenApprovalInProcess = data?.applicationData?.status === WF_CITIZEN_APPROVAL_INPROCESS;
-  const isInProgress = data?.applicationData?.status === "INPROGRESS";
+  const isCitizenApprovalInProcess = data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS;
+  const isInProgress = data?.applicationData?.status == "INPROGRESS";
   const isArchitect = rolearray?.some(role => role?.code === "BPA_ARCHITECT");
   
   let workflowDetails = Digit.Hooks.useWorkflowDetails({
@@ -104,7 +104,7 @@ const BpaApplicationDetail = () => {
 
   useEffect(() => {
     setCheckBoxVisible((isCitizenApprovalInProcess || isInProgress) && !(isCitizenApprovalInProcess && isArchitect));
-  },[isCitizenApprovalInProcess, isInProgress, isArchitect]);
+  }, [isCitizenApprovalInProcess, isInProgress, isArchitect]);
 
   const getTranslatedValues = (dataValue, isNotTranslated) => {
     if(dataValue) {
@@ -254,15 +254,15 @@ const BpaApplicationDetail = () => {
     );
   }
 
-  if (workflowDetails?.data?.nextActions?.length > 0 && data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS) {
-    if (data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS) {
+  if (workflowDetails?.data?.nextActions?.length > 0 && isCitizenApprovalInProcess) {
+    if (isCitizenApprovalInProcess) {
       if (rolearray?.some(role => role?.code === "CITIZEN")) {
         workflowDetails.data.nextActions = workflowDetails?.data?.nextActions;
       } else {
         workflowDetails.data.nextActions = [];
       }
     }
-     else if (data?.applicationData?.status == "INPROGRESS") {
+     else if (isInProgress) {
       let isArchitect = false;
       stakeHolderDetails?.StakeholderRegistraition?.TradeTypetoRoleMapping?.map(type => {
         type?.role?.map(role => { roles.push(role); });
