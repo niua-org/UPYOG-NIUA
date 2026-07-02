@@ -52,6 +52,7 @@ const BpaApplicationDetail = () => {
   const isCitizenApprovalInProcess = data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS;
   const isInProgress = data?.applicationData?.status == "INPROGRESS";
   const isArchitect = rolearray?.some(role => role?.code === "BPA_ARCHITECT");
+  const isActionBarVisible = !(isCitizenApprovalInProcess && isArchitect);
   
   let workflowDetails = Digit.Hooks.useWorkflowDetails({
     tenantId: data?.applicationData?.tenantId,
@@ -223,9 +224,6 @@ const BpaApplicationDetail = () => {
   }
 
   function checkForSubmitDisable () {
-    if (isCitizenApprovalInProcess && isArchitect)
-      return true;
-
     if(checkBoxVisible) return isFromSendBack ? !isFromSendBack : !isTocAccepted;
     else return false;
   }
@@ -548,7 +546,7 @@ const BpaApplicationDetail = () => {
                     />
                   )}
                   </div>
-                  {!workflowDetails?.isLoading && workflowDetails?.data?.nextActions?.length > 1 && (
+                  {!workflowDetails?.isLoading && workflowDetails?.data?.nextActions?.length > 1 && isActionBarVisible && (
                     //removed this styles to fix the action button in application details UM-5347
                     <ActionBar /*style={{ position: "relative", boxShadow: "none", minWidth: "240px", maxWidth: "310px", padding: "0px" }}*/>
                       <div style={{ width: "100%" }}>
