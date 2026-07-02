@@ -31,6 +31,8 @@ public class VenueBookingSearchCriteria {
 	private String status;
 	
 	private String venueCode;
+	
+	private String venueType;
 
 	@JsonProperty("bookingNo")
 	private String bookingNo;
