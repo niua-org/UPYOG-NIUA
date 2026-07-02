@@ -1,0 +1,54 @@
+// DynamicForm.scss
+// Place this in your module's CSS folder and import it in index.js
+
+.dynamic-form {
+  &-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+  }
+
+  // ── Unit label next to field label ──────────────────────────────────
+  &-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: #505a5f;
+    margin-left: 4px;
+  }
+
+  // ── Required asterisk ───────────────────────────────────────────────
+  &-required {
+    color: #d4351c;
+    margin-left: 2px;
+  }
+
+  // ── Wraps the input + its error message ─────────────────────────────
+  &-field-wrap {
+    width: 100%;
+  }
+
+  // ── GROUP: side-by-side children (e.g. Length / Width) ──────────────
+  &-group {
+    margin-bottom: 24px;
+
+    &-children {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      > * {
+        flex: 1 1 160px;
+      }
+    }
+  }
+
+  // ── Submit / action button row ──────────────────────────────────────
+  &-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 32px;
+    padding-bottom: 24px;
+  }
+}

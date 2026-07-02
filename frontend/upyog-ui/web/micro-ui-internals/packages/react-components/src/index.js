@@ -234,8 +234,12 @@ import ApplicantDetails from "./molecules/ApplicantDetails";
 import Stepper from "./customComponents/Stepper";
 import Timeline from "./molecules/Timeline";
 
+import FormFields from "./form/molecules/FormFields"
+import DynamicForm from "./molecules/DynamicForm"
+
 export {
   Phone,
+  FormFields,
   Body,
   Loader,
   TopBar,
@@ -475,7 +479,7 @@ export {
   ApplicantDetails,
   Stepper,
   Timeline,
-  SuccessSvg
-
+  SuccessSvg,
+  DynamicForm
   
 };
