@@ -44,6 +44,10 @@ const BpaApplicationDetail = () => {
   const { data, isLoading } = useBPADetailsPage(tenantId, { applicationNo: id });
   const { isMdmsLoading, data: mdmsData } = Digit.Hooks.obps.useMDMS(stateCode, "BPA", ["RiskTypeComputation"]);
   const mutation = Digit.Hooks.obps.useObpsAPI(data?.applicationData?.tenantId, false);
+
+  const userInfo = Digit.UserService.getUser();
+  const rolearray = userInfo?.info?.roles;
+  
   let workflowDetails = Digit.Hooks.useWorkflowDetails({
     tenantId: data?.applicationData?.tenantId,
     id: id,
@@ -94,7 +98,8 @@ const BpaApplicationDetail = () => {
 
 
   useEffect(() => {
-    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" || data?.applicationData?.status == "INPROGRESS") setCheckBoxVisible(true);
+    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" && rolearray?.some(role => role?.code === "BPA_ARCHITECT")) setCheckBoxVisible(false);
+    else if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" || data?.applicationData?.status == "INPROGRESS") setCheckBoxVisible(true);
     else setCheckBoxVisible(false);
   },[data]);
 
@@ -196,11 +201,11 @@ const BpaApplicationDetail = () => {
   }
 
   function onActionSelect(action) {
-    let path = data?.applicationData?.businessService == "BPA_OC" ? "ocbpa" : "bpa";
+    let path = data?.applicationData?.businessService == "BPA_OC" ? "ocbpa" : "bpa";  
     if(action === "FORWARD") {
       navigate(`/upyog-ui/citizen/obps/sendbacktocitizen/ocbpa/${data?.applicationData?.tenantId}/${data?.applicationData?.applicationNo}/check`, { replace: true, state: { data: data?.applicationData, edcrDetails: data?.edcrDetails } });
     }
-if (action === "PAY") {
+    if (action === "PAY") {
       window.location.assign(`${window.location.origin}/upyog-ui/citizen/payment/collect/${`${getBusinessServices(data?.businessService, data?.applicationStatus)}/${id}?tenantId=${data?.tenantId}`}`);
     }
     if (action === "SEND_TO_CITIZEN"){
@@ -215,6 +220,10 @@ if (action === "PAY") {
   }
 
   function checkForSubmitDisable () {
+
+    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" && rolearray?.some(role => role?.code === "BPA_ARCHITECT"))
+      return true;
+
     if(checkBoxVisible) return isFromSendBack ? !isFromSendBack : !isTocAccepted;
     else return false;
   }
@@ -244,8 +253,6 @@ if (action === "PAY") {
   }
 
   if (workflowDetails?.data?.nextActions?.length > 0 && data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS") {
-    const userInfo = Digit.UserService.getUser();
-    const rolearray = userInfo?.info?.roles;
     if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS") {
       if (rolearray?.some(role => role?.code === "CITIZEN")) {
         workflowDetails.data.nextActions = workflowDetails?.data?.nextActions;
@@ -278,8 +285,6 @@ if (action === "PAY") {
   if (workflowDetails?.data?.processInstances?.[0]?.action === "SEND_BACK_TO_CITIZEN") {
       if(isTocAccepted) setIsTocAccepted(true);
       isFromSendBack = true;
-      const userInfo = Digit.UserService.getUser();
-      const rolearray = userInfo?.info?.roles;
       if (rolearray?.some(role => role?.code === "CITIZEN")) {
         workflowDetails.data.nextActions = workflowDetails?.data?.nextActions;
       } else {
