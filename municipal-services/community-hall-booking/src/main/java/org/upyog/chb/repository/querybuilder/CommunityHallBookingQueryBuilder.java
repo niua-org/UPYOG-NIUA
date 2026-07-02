@@ -51,7 +51,7 @@ public class CommunityHallBookingQueryBuilder {
 	private static final String DATE_CAST = " ?::DATE ";
 
 	private static final String BOOKING_DETAILS_QUERY = """
-			SELECT ecbd.booking_id, booking_no, payment_date, application_date, tenant_id, venue_code,
+			SELECT ecbd.booking_id, booking_no, payment_date, application_date, tenant_id, venue_code,venue_type,
 			booking_status, special_category, purpose, purpose_description, receipt_no, ecbd.createdby, ecbd.createdtime,
 			ecbd.lastmodifiedby, ecbd.lastmodifiedtime,ecbd.permission_letter_filestore_id, ecbd.payment_receipt_filestore_id,
 			appl.applicant_detail_id, applicant_name, applicant_email_id, applicant_mobile_no,
@@ -168,8 +168,22 @@ public class CommunityHallBookingQueryBuilder {
 		appendMobileNumberFilter(criteria, builder, preparedStmtList);
 		appendCreatedByFilter(criteria, builder, preparedStmtList);
 		appendBookingDateRangeFilter(criteria, builder, preparedStmtList);
+		appendVenueTypeFilter(criteria,builder,preparedStmtList);
+		
 	}
 
+	
+	private void appendVenueTypeFilter(VenueBookingSearchCriteria criteria, StringBuilder builder,
+			List<Object> preparedStmtList) {
+		if (criteria.getVenueType() == null) {
+			return;
+		}
+
+		addClauseIfRequired(preparedStmtList, builder);
+		builder.append(" ecbd.venue_type=? ");
+		preparedStmtList.add(criteria.getVenueType());
+	}
+	
 	private void appendTenantFilter(VenueBookingSearchCriteria criteria, StringBuilder builder,
 			List<Object> preparedStmtList) {
 		if (criteria.getTenantId() == null) {

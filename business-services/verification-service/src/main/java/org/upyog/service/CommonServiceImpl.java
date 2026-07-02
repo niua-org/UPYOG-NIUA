@@ -87,7 +87,14 @@ public class CommonServiceImpl implements CommonService {
 			log.info("API call successful for URL: {}", urlBuilder.toString());
 			JsonNode jsonNode = objectMapper.valueToTree(result);
 			CommonDetailsMapper mapper = mapperFactory.getMapper(moduleName);
-			return mapper.mapJsonToCommonDetails(jsonNode);
+			CommonDetails commonDetails = mapper.mapJsonToCommonDetails(jsonNode);
+			if(commonDetails.getStatus().equalsIgnoreCase("Pending")) {
+				return null;
+			}
+			else{
+				return commonDetails;
+			}
+			
 		} catch (Exception e) {
 			log.error("API call failed for URL: {}, Error: {}", urlBuilder.toString(), e.getMessage());
 			throw new CustomException("Error fetching details for module: " + moduleName, "MODULE_API_ERROR");
