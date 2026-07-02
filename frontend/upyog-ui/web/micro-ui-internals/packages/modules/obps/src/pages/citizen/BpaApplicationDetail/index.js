@@ -45,8 +45,13 @@ const BpaApplicationDetail = () => {
   const { isMdmsLoading, data: mdmsData } = Digit.Hooks.obps.useMDMS(stateCode, "BPA", ["RiskTypeComputation"]);
   const mutation = Digit.Hooks.obps.useObpsAPI(data?.applicationData?.tenantId, false);
 
+  const WF_CITIZEN_APPROVAL_INPROCESS = "CITIZEN_APPROVAL_INPROCESS";
+
   const userInfo = Digit.UserService.getUser();
   const rolearray = userInfo?.info?.roles;
+  const isCitizenApprovalInProcess = data?.applicationData?.status === WF_CITIZEN_APPROVAL_INPROCESS;
+  const isInProgress = data?.applicationData?.status === "INPROGRESS";
+  const isArchitect = rolearray?.some(role => role?.code === "BPA_ARCHITECT");
   
   let workflowDetails = Digit.Hooks.useWorkflowDetails({
     tenantId: data?.applicationData?.tenantId,
@@ -98,9 +103,7 @@ const BpaApplicationDetail = () => {
 
 
   useEffect(() => {
-    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" && rolearray?.some(role => role?.code === "BPA_ARCHITECT")) setCheckBoxVisible(false);
-    else if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" || data?.applicationData?.status == "INPROGRESS") setCheckBoxVisible(true);
-    else setCheckBoxVisible(false);
+    setCheckBoxVisible((isCitizenApprovalInProcess || isInProgress) && !(isCitizenApprovalInProcess && isArchitect));
   },[data]);
 
   const getTranslatedValues = (dataValue, isNotTranslated) => {
@@ -220,8 +223,7 @@ const BpaApplicationDetail = () => {
   }
 
   function checkForSubmitDisable () {
-
-    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" && rolearray?.some(role => role?.code === "BPA_ARCHITECT"))
+    if (isCitizenApprovalInProcess && isArchitect)
       return true;
 
     if(checkBoxVisible) return isFromSendBack ? !isFromSendBack : !isTocAccepted;
@@ -252,8 +254,8 @@ const BpaApplicationDetail = () => {
     );
   }
 
-  if (workflowDetails?.data?.nextActions?.length > 0 && data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS") {
-    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS") {
+  if (workflowDetails?.data?.nextActions?.length > 0 && data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS) {
+    if (data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS) {
       if (rolearray?.some(role => role?.code === "CITIZEN")) {
         workflowDetails.data.nextActions = workflowDetails?.data?.nextActions;
       } else {
