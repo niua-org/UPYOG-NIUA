@@ -178,7 +178,6 @@ const ApplicationDetails = () => {
       return true;
     }
   };
-  const { applicationDetails: _, ...serializableDetails } = applicationDetails || {};
   let dowloadOptions = [],
     appStatus = applicationDetails?.applicationData?.applicationStatus || "";
   workflowDetails?.data?.actionState?.nextActions?.forEach(action => {
@@ -203,10 +202,10 @@ const ApplicationDetails = () => {
         pathName = `/upyog-ui/employee/ws/edit-application-by-config?applicationNumber=${applicationNumber}&service=${serviceType}&propertyId=${applicationDetails?.propertyDetails?.propertyId}`;
       }
       action.redirectionUrll = {
-        action: "ACTIVATE_CONNECTION",
+        action: "RE-SUBMIT-APPLICATION",
         pathname: pathName,
         state: {
-          applicationDetails: serializableDetails,
+          applicationDetails: applicationDetails,
           action: "RESUBMIT_APPLICATION"
         }
       };
@@ -215,7 +214,7 @@ const ApplicationDetails = () => {
       action.redirectionUrll = {
         action: "ACTIVATE_CONNECTION",
         pathname: `/upyog-ui/employee/ws/modify-application-edit?applicationNumber=${applicationNumber}&service=${serviceType}&propertyId=${applicationDetails?.propertyDetails?.propertyId}`,
-        state: serializableDetails
+        state: applicationDetails
       };
     }
   });
@@ -242,7 +241,7 @@ const ApplicationDetails = () => {
         action: "ACTIVATE_CONNECTION",
         pathname: pathName,
         state: {
-          applicationDetails: serializableDetails,
+          applicationDetails: applicationDetails,
           action: "VERIFY_AND_FORWARD"
         }
       };
