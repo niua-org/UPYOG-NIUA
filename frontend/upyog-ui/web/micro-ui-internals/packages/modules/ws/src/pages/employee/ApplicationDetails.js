@@ -202,10 +202,10 @@ const ApplicationDetails = () => {
         pathName = `/upyog-ui/employee/ws/edit-application-by-config?applicationNumber=${applicationNumber}&service=${serviceType}&propertyId=${applicationDetails?.propertyDetails?.propertyId}`;
       }
       action.redirectionUrll = {
-        action: "RE-SUBMIT-APPLICATION",
+        action: "ACTIVATE_CONNECTION",
         pathname: pathName,
         state: {
-          applicationDetails: applicationDetails,
+          applicationDetails: serializableDetails,
           action: "RESUBMIT_APPLICATION"
         }
       };
@@ -214,7 +214,7 @@ const ApplicationDetails = () => {
       action.redirectionUrll = {
         action: "ACTIVATE_CONNECTION",
         pathname: `/upyog-ui/employee/ws/modify-application-edit?applicationNumber=${applicationNumber}&service=${serviceType}&propertyId=${applicationDetails?.propertyDetails?.propertyId}`,
-        state: applicationDetails
+        state: serializableDetails
       };
     }
   });
@@ -241,7 +241,7 @@ const ApplicationDetails = () => {
         action: "ACTIVATE_CONNECTION",
         pathname: pathName,
         state: {
-          applicationDetails: applicationDetails,
+          applicationDetails: serializableDetails,
           action: "VERIFY_AND_FORWARD"
         }
       };

@@ -12,7 +12,15 @@ const WhatsNewCard = ({header, actions, eventNotificationText, timePastAfterEven
     return <div className="WhatsNewCard">
         <h2>{t(header)}</h2>
         <p>{eventNotificationText}</p>
-        {actions?.map(i => <a href={i?.actionUrl.replace("digit-ui", "upyog-ui")}>{`${t(`CS_COMMON_${getTransformedLocale(i?.code)}`)}`}</a>)}
+        {actions?.map((i) => (
+            <a
+            key={i.code} // or i.id or i.actionUrl
+                href={i?.actionUrl?.replace("digit-ui", "upyog-ui")}
+            >
+                {t(`CS_COMMON_${getTransformedLocale(i?.code)}`)}
+            </a>
+        ))}
+
         <p>{timePastAfterEventCreation + ` ${t(timeApproxiamationInUnits)}`}</p>
     </div>
 }
