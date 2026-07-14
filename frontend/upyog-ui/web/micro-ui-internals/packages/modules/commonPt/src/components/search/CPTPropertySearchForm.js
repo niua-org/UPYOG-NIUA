@@ -20,6 +20,7 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
       ...payload,
         }
   });
+  const navigate = Digit.Hooks.useCustomNavigate();
   const formValue = watch();
   const fields = PTSearchFields?.[searchBy] || {};
 
@@ -51,14 +52,15 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 defaultValue={formValue?.[key]}
                 rules= {field.validation}
                 control={control}
-                render={({ field }, customProps) => (
+                render={({ field: controllerField }, customProps) => (
                   <field.customComponent
                     selectLocality={(d) => {
-                      field.onChange(d);
+                      controllerField.onChange(d);
                     }}
                     tenantId={tenantId}
                     selected={formValue?.[key]}
                     {...field.customCompProps}
+                    {...controllerField}
                   />
                 )}
                 />
@@ -69,15 +71,20 @@ const SearchPTID = ({ tenantId, t, onSubmit, onReset, searchBy, PTSearchFields, 
                 {field?.componentInFront}
               </span>
             ) : null}
-                <TextInput
+              <TextInput
                   name={key}
                   type={field?.type}
+                  inputRef={register(key, {
+                    value: getValues(key),
+                    shouldUnregister: true,
+                    ...validation,
+                  }).ref}
                   {...register(key, {
                     value: getValues(key),
                     shouldUnregister: true,
                     ...validation,
                   })}
-                />
+                />  
                 </div>}
                 <CardLabelError style={{ marginTop: "-10px", marginBottom: "-10px" }}>{t(formState?.errors?.[key]?.message)}</CardLabelError>
               </SearchField>

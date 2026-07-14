@@ -178,7 +178,6 @@ const ApplicationDetails = () => {
       return true;
     }
   };
-  const { applicationDetails: _, ...serializableDetails } = applicationDetails || {};
   let dowloadOptions = [],
     appStatus = applicationDetails?.applicationData?.applicationStatus || "";
   workflowDetails?.data?.actionState?.nextActions?.forEach(action => {
