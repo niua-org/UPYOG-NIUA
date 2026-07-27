@@ -1,0 +1,86 @@
+@use "../utils/mixins" as *;
+
+.ui-rewamp {
+  .languages {
+    display: flex;
+    gap: 8px;
+
+    @include desktop {
+      gap: 14px;
+    }
+
+    & > button {
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: var(--theme-border-radius-sm);
+      background: var(--theme-border-languages);
+      border: 1.5px solid var(--theme-border-languages);
+
+      img {
+        width: 18px;
+
+        @include desktop {
+          width: auto;
+        }
+      }
+
+      @include desktop {
+        width: 48px;
+        height: 48px;
+      }
+    }
+
+    ul {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 8px;
+
+      @include desktop {
+        gap: 14px;
+      }
+      li {
+        width: calc(100% / 3);
+
+        button {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          text-transform: none;
+          line-height: normal;
+          outline: none;
+          border-radius: var(--theme-border-radius-sm);
+          background: var(--theme-color-light);
+          border: 1.5px solid var(--theme-border-languages);
+          font-weight: 500;
+          color: var(--theme-text-primary);
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          justify-content: center;
+          cursor: pointer;
+          position: relative;
+          height: 40px;
+
+          @include desktop {
+            font-size: 15px;
+            height: 48px;
+          }
+        }
+
+        &.selected {
+          button {
+            background: var(--theme-gradient-button-languages);
+            color: var(--theme-color-light);
+            pointer-events: none;
+            border-color: transparent;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,282 @@
+@use "../utils/mixins" as *;
+
+.ui-rewamp {
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .error-message {
+      margin: 0;
+      color: var(--theme-text-error);
+      font-size: 12px;
+      line-height: normal;
+      width: 100%;
+    }
+
+    @include desktop {
+      gap: 10px;
+    }
+
+    // The parent error class supports field-level styling and gives tests or
+    // custom renderers one consistent invalid-state hook.
+    &.error {
+      label {
+        color: var(--theme-text-error);
+      }
+
+      .form-field {
+        border-color: var(--theme-text-error);
+      }
+    }
+
+    & + .form-group {
+      margin-top: 12px;
+
+      @include desktop {
+        margin-top: 22px;
+      }
+    }
+
+    label {
+      font-weight: 500;
+      display: flex;
+      line-height: 26px;
+      color: var(--theme-text-primary);
+      font-size: 14px;
+
+      @include desktop {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .otp-field {
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+
+    .input-otp-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .input-otp {
+      display: block;
+      height: 100%;
+      border: none;
+      font-size: 18px;
+      font-weight: 400;
+      width: calc(100% / 6);
+      background: transparent;
+      border-radius: var(--theme-border-radius-sm);
+      text-align: center;
+      line-height: normal;
+      height: 46px;
+      padding: 0;
+      margin: 0;
+      font-weight: 900;
+      color: var(--theme-text-primary);
+      background-color: var(--theme-color-light);
+      border: 1px solid var(--theme-border-input);
+
+      @include desktop {
+        font-size: 32px;
+        height: 69px;
+        border-width: 1.5px;
+      }
+    }
+  }
+
+  .form-field {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border-radius: var(--theme-border-radius-sm);
+    height: 40px;
+    background-color: var(--theme-color-light);
+    border: 1px solid var(--theme-border-input);
+
+    @include desktop {
+      height: 56px;
+      border-width: 1.5px;
+    }
+
+    span {
+      font-size: 12px;
+      color: var(--theme-text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      font-weight: 700;
+
+      &.citizen-card-input {
+        width: auto !important;
+        border: none;
+        background: transparent;
+        margin: 0 !important;
+        line-height: normal !important;
+        height: 100% !important;
+        padding: 0 !important;
+      }
+
+      @include desktop {
+        font-size: 16px;
+        min-width: 70px;
+      }
+
+      & + .text-input {
+        border-left: 1px solid var(--theme-border-input);
+
+        @include desktop {
+          border-left-width: 1.5px;
+        }
+      }
+    }
+
+    .select-wrap,
+    .employee-select-wrap {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+
+      &:active {
+        background-color: transparent;
+      }
+
+      .select,
+      .select-active {
+        border: none !important;
+        height: 100% !important;
+        background: transparent !important;
+
+        svg {
+          float: none;
+          margin: 0;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        input.employee-select-wrap--elipses {
+          display: block;
+          width: 100% !important;
+          height: 100%;
+          border: none;
+          font-size: 12px;
+          font-weight: 400;
+          color: var(--theme-text-primary);
+          background: rgba(0, 0, 0, 0);
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          position: static;
+          overflow: hidden;
+          border-radius: var(--theme-border-radius-sm);
+          line-height: normal;
+          padding: 0 10px;
+          outline: none;
+
+          @include desktop {
+            font-size: 15px;
+            padding: 0 45px 0 10px;
+          }
+        }
+      }
+
+      .options-card {
+        max-height: 217px;
+        overflow: auto;
+
+        .profile-dropdown--item {
+          span {
+            min-width: 1px;
+            font-weight: normal;
+            font-size: 12px;
+            padding: 10px 16px;
+            justify-content: flex-start;
+            font-weight: 500;
+          }
+          &:not(:first-of-type) {
+            border-top: 1px solid var(--theme-border-input);
+          }
+        }
+      }
+    }
+
+    em {
+      position: absolute;
+      font-style: normal;
+      min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @include desktop {
+        min-width: 50px;
+      }
+
+      img {
+        width: 16px;
+
+        @include desktop {
+          width: auto;
+        }
+      }
+
+      & + .employee-select-wrap,
+      & + .select-wrap {
+        .select input.employee-select-wrap--elipses,
+        .select-active input.employee-select-wrap--elipses {
+          padding: 0 35px;
+
+          @include desktop {
+            padding-left: 45px;
+          }
+        }
+      }
+    }
+
+    .text-input {
+      height: 100%;
+    }
+
+    .employee-card-input {
+      margin: 0 !important;
+      height: 100% !important;
+
+      display: block;
+      border: none;
+      font-size: 12px;
+      font-weight: 400;
+      width: 100%;
+      color: var(--theme-text-primary);
+      background: rgba(0, 0, 0, 0);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      border-radius: var(--theme-border-radius-sm);
+      line-height: normal;
+      padding: 0 10px;
+
+      @include desktop {
+        font-size: 15px;
+        padding: 0 20px;
+      }
+
+      &:hover {
+        border: none;
+      }
+    }
+
+    .field-container {
+      flex: 1;
+      height: 100%;
+    }
+  }
+}
+
+// border-left: 1.5px solid var(--theme-border-input);

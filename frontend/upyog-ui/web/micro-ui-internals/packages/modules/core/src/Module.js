@@ -16,7 +16,7 @@ import EmployeeDashboard from "./components/EmployeeDashboard";
 import { useState } from "react";
 import EDCRAcknowledgement from "./pages/citizen/Home/EDCR/EDCRAcknowledgement"
 import CreateAnonymousEDCR from "./pages/citizen/Home/EDCR";
-const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
+const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers, isV2 }) => {
   const { isLoading, data: initData } = Digit.Hooks.useInitStore(stateCode, enabledModules);
   if (isLoading) {
     return <Loader page={true} />;
@@ -25,7 +25,7 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
   const i18n = getI18n();
   return (
     <Provider store={getStore(initData, moduleReducers(initData))}>
-      <Router>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Body>
           <DigitApp
             initData={initData}
@@ -33,6 +33,7 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
             modules={initData?.modules || []}
             appTenants={initData?.tenants || []}
             logoUrl={initData?.stateInfo?.logoUrl || ""}
+            isV2={isV2}
           />
         </Body>
       </Router>
@@ -40,7 +41,7 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
   );
 };
 
-export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers }) => {
+export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers, isV2 = false }) => {
   const userType = Digit.UserService.getType();
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -69,10 +70,9 @@ export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers })
   const DSO = Digit.UserService.hasAccess(["FSM_DSO"]);
 
   return (
-    <div>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <TanstackQueryClientProvider client={tanstackQueryClient}>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TanstackQueryClientProvider client={tanstackQueryClient}>
           <ComponentProvider.Provider value={registry}>
             <PrivacyProvider.Provider
               value={{
@@ -108,13 +108,12 @@ export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers })
                 },
               }}
             >
-              <DigitUIWrapper stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />
+              <DigitUIWrapper isV2={isV2} stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />
             </PrivacyProvider.Provider>
           </ComponentProvider.Provider>
-          </TanstackQueryClientProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </div>
+        </TanstackQueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

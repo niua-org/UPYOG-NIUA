@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { initLibraries } from "@upyog/digit-ui-libraries";
+import { initLibraries, initializeTheme, ThemeProvider } from "@upyog/digit-ui-libraries";
 /* if you want to run the css locally, then you have to add import "@nudmcdgnpm/upyog-css/src/index.scss" and comment out the import "@nudmcdgnpm/upyog-css/index.css"
 If you want the npm published css to run here, then you have to add   import "@nudmcdgnpm/upyog-css/index.css" and comment out the import "@nudmcdgnpm/upyog-css/src/index.scss" */
 // import "@nudmcdgnpm/upyog-css/src/index.scss";
@@ -50,12 +50,19 @@ if (!user || !user.access_token || !user.info) {
   window.Digit.SessionStorage.set("Employee.tenantId", employeeTenantId);
 }
 
-// ✅ React 18+ root API
-const root = createRoot(document.getElementById('root'));
+const bootstrap = () => {
+  const stateCode = window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") || process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
 
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+  const initialThemeState = initializeTheme({ tenantId: stateCode });
 
+  const root = createRoot(document.getElementById("root"));
+  root.render(
+    <React.StrictMode>
+      <ThemeProvider initialState={initialThemeState}>
+        <App />
+      </ThemeProvider>
+    </React.StrictMode>,
+  );
+};
+
+bootstrap();

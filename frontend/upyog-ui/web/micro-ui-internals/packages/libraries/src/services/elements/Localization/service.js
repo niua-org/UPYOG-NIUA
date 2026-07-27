@@ -74,15 +74,26 @@ export const LocalizationService = {
     LocalizationStore.updateResources(locale, messages);
     return messages;
   },
-  changeLanguage: (locale, tenantId) => {
+  changeLanguage: async (locale, tenantId) => {
     const modules = LocalizationStore.getList(locale);
     const allModules = LocalizationStore.getAllList();
     const uniqueModules = allModules.filter((module) => !modules.includes(module));
-    LocalizationService.getLocale({ modules: uniqueModules, locale, tenantId });
     localStorage.setItem("Employee.locale", locale);
     localStorage.setItem("Citizen.locale", locale);
     Digit.SessionStorage.set("locale", locale);
-    i18next.changeLanguage(locale);
+
+    try {
+      // Load and register the selected locale before emitting languageChanged.
+      // Otherwise react-i18next can render before runtime resources are ready
+      // and will not receive another event after addResources completes.
+      await LocalizationService.getLocale({ modules: uniqueModules, locale, tenantId });
+    } catch (error) {
+      // Preserve the existing ability to select a locale when its refresh
+      // fails; cached/fallback translations may still be available.
+      console.error(`Unable to load localization resources for ${locale}`, error);
+    }
+
+    return i18next.changeLanguage(locale);
   },
   updateResources: (locale = "en_IN", messages) => {
     if (locale.indexOf("_IN") === -1) {

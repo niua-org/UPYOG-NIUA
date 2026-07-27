@@ -204,6 +204,7 @@ function App() {
       stateCode={stateCode}
       enabledModules={enabledModules}
       moduleReducers={moduleReducers}
+      isV2
     />
   );
 }

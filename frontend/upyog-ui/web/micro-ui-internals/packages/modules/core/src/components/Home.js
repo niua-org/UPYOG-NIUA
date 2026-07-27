@@ -17,11 +17,12 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import EmployeeDashboard from "./EmployeeDashboard";
+import { getCitizenOnboardingPaths } from "../pages/citizen/onboardingRoutes";
 
 /* 
 Feature :: Citizen All service screen cards
 */
-export const processLinkData = (newData, code, t) => {
+export const processLinkData = (newData, code, t, isV2 = false) => {
   const obj = newData?.[`${code}`];
   if (obj) {
     obj.map((link) => {
@@ -51,7 +52,9 @@ export const processLinkData = (newData, code, t) => {
         });
       else
         newObj?.links?.push({
-          link: `/upyog-ui/citizen/login`,
+          // Authentication links follow the active citizen onboarding version;
+          // service-card navigation remains otherwise unchanged.
+          link: getCitizenOnboardingPaths(isV2).login,
           state: { role: "FSM_DSO", from },
           i18nKey: t(loginLink),
         });
@@ -88,7 +91,7 @@ const iconSelector = (code) => {
       return <PTIcon className="fill-path-primary-main" />;
   }
 };
-const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => {
+const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading, isV2 = false }) => {
   const paymentModule = modules.filter(({ code }) => code === "Payment")[0];
   const moduleArr = modules.filter(({ code }) => code !== "Payment");
   const moduleArray = [paymentModule, ...moduleArr];
@@ -106,7 +109,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
             .filter((mod) => mod)
             .map(({ code }, index) => {
               let mdmsDataObj;
-              if (fetchedCitizen) mdmsDataObj = fetchedCitizen ? processLinkData(getCitizenMenu, code, t) : undefined;
+              if (fetchedCitizen) mdmsDataObj = fetchedCitizen ? processLinkData(getCitizenMenu, code, t, isV2) : undefined;
               if (mdmsDataObj?.links?.length > 0) {
                 return (
                   <CitizenHomeCard

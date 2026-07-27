@@ -21,13 +21,18 @@ import { CitizenSideBar } from "../../../components/TopBarSideBar/SideBar/Citize
 import StaticCitizenSideBar from "../../../components/TopBarSideBar/SideBar/StaticCitizenSideBar";
 // import ChatBot from "./ChatBot";
 import UpyogBot from "./UpyogBot";
-const Home = () => {
+import { getCitizenOnboardingPaths } from "../onboardingRoutes";
+
+const Home = ({ isV2 = false }) => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true);
   const [user, setUser] = useState(null);
   const DEFAULT_REDIRECT_URL = "/upyog-ui/citizen";
+  // Use the shared route selector so Home cannot re-enter legacy language or
+  // location onboarding while the V2 flow is enabled.
+  const citizenOnboardingPaths = getCitizenOnboardingPaths(isV2);
   const { data: { stateInfo, uiHomePage } = {}, isLoading } = Digit.Hooks.useStore.getInitData();
   let isMobile = window.Digit.Utils.browser.isMobile();
   if(window.Digit.SessionStorage.get("TL_CREATE_TRADE")) window.Digit.SessionStorage.set("TL_CREATE_TRADE",{})
@@ -53,11 +58,16 @@ const Home = () => {
    */
     useEffect(() => {
       if (!tenantId) {
+        if (isV2) {
+          navigate(citizenOnboardingPaths.entry, { replace: true });
+          return;
+        }
+        // Preserve V1's existing locale-aware language/location selection.
         Digit.SessionStorage.get("locale") === null
           ? navigate(`/upyog-ui/citizen/select-language`)
           : navigate(`/upyog-ui/citizen/select-location`);
       }
-  }, [tenantId, navigate]);
+  }, [citizenOnboardingPaths.entry, isV2, tenantId, navigate]);
 
   const appBannerWebObj = uiHomePage?.appBannerDesktop;
   const appBannerMobObj = uiHomePage?.appBannerMobile;
@@ -129,13 +139,15 @@ useEffect(() => {
   setCitizenDetail(user?.info, user?.access_token, "pg");
   const redirectPath = location.state?.from || DEFAULT_REDIRECT_URL;
   if (!Digit.ULBService.getCitizenCurrentTenant(true)) {
-    navigate("/upyog-ui/citizen/select-location", { replace: true, state: {
+    // V2 never exposes the legacy location page; V1 keeps the original SSO fallback.
+    const missingTenantPath = isV2 ? citizenOnboardingPaths.entry : "/upyog-ui/citizen/select-location";
+    navigate(missingTenantPath, { replace: true, state: {
       redirectBackTo: redirectPath,
     } });
   } else {
     navigate(redirectPath, { replace: true });
   }
-}, [user]);
+}, [citizenOnboardingPaths.entry, isV2, location.state, navigate, user]);
 
   const allCitizenServicesProps = {
     header: t(citizenServicesObj?.headerLabel),

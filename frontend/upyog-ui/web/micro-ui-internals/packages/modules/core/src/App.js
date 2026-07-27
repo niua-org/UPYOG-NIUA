@@ -2,8 +2,9 @@ import React, { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import EmployeeApp from "./pages/employee";
 import CitizenApp from "./pages/citizen";
+import { getCitizenOnboardingPaths } from "./pages/citizen/onboardingRoutes";
 
-export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData }) => {
+export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData, isV2 }) => {
   const location = useLocation();
   const { pathname } = location;
 
@@ -49,7 +50,10 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData }) 
   };
 
   const mobileView = innerWidth <= 640;
-  let sourceUrl = `${window.location.origin}/citizen`;
+  const sourceUrl = isV2 ? `${window.location.origin}/citizen/v2` : `${window.location.origin}/citizen`;
+  // Select the citizen entry point once so root and unknown top-level URLs enter
+  // V2 at login when enabled while V1 continues to start at language selection.
+  const citizenOnboardingPaths = getCitizenOnboardingPaths(isV2);
   const commonProps = {
     stateInfo,
     userDetails,
@@ -65,6 +69,8 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData }) 
     sourceUrl,
     pathname,
     initData,
+    // Forward the same flag to the citizen router; shared citizen and employee routes remain unchanged.
+    isV2,
   };
   return (
     <Routes>
@@ -78,7 +84,7 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData }) 
       />
       <Route
         path="*"
-        element={<Navigate to="/upyog-ui/citizen" />}
+        element={<Navigate to={citizenOnboardingPaths.entry} replace />}
       />
     </Routes>
   );
