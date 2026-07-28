@@ -23,6 +23,8 @@ import StaticCitizenSideBar from "../../../components/TopBarSideBar/SideBar/Stat
 import UpyogBot from "./UpyogBot";
 import { getCitizenOnboardingPaths } from "../onboardingRoutes";
 
+// Default to the legacy tenant-selection behavior unless the route boundary
+// explicitly enables the V2 onboarding flow.
 const Home = ({ isV2 = false }) => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -67,6 +69,8 @@ const Home = ({ isV2 = false }) => {
           ? navigate(`/upyog-ui/citizen/select-language`)
           : navigate(`/upyog-ui/citizen/select-location`);
       }
+  // Re-run if the selected flow changes so the missing-tenant redirect cannot
+  // remain pointed at an onboarding page from the other version.
   }, [citizenOnboardingPaths.entry, isV2, tenantId, navigate]);
 
   const appBannerWebObj = uiHomePage?.appBannerDesktop;
@@ -147,6 +151,8 @@ useEffect(() => {
   } else {
     navigate(redirectPath, { replace: true });
   }
+// Keep the post-SSO fallback synchronized with the selected route version and
+// any router state containing the originally requested destination.
 }, [citizenOnboardingPaths.entry, isV2, location.state, navigate, user]);
 
   const allCitizenServicesProps = {

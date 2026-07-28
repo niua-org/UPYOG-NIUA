@@ -14,12 +14,15 @@ const getTenants = (codes, tenants) => {
   return tenants.filter((tenant) => codes?.map?.((item) => item.code).includes(tenant.code));
 };
 
+// The default preserves existing V1 consumers; V2 callers pass the flag so
+// expired or missing employee sessions return to the matching login screen.
 export const AppModules = ({ stateCode, userType, modules, appTenants, isV2 = false }) => {
   const ComponentProvider = Digit.Contexts.ComponentProvider;
   const { path } = Digit.Hooks.useModuleBasePath();
   const location = useLocation();
 
   const user = Digit.UserService.getUser();
+  // Resolve once and reuse below instead of hardcoding a V1 employee login URL.
   const employeeAuthPaths = getEmployeeAuthPaths(isV2);
 
   if (!user || !user?.access_token || !user?.info) {
@@ -93,6 +96,8 @@ return (
   <div className="ground-container">
     <Routes>
       {appRoutes}
+      {/* Normalize module-level login URLs to the employee login belonging to
+          the active version while retaining the requested return location. */}
       <Route path="login" element={<Navigate to={employeeAuthPaths.login} state={{ from: location.pathname + location.search }} replace />} />
       <Route path="forgot-password" element={<ForgotPassword />} />
       <Route path="change-password" element={<ChangePassword />} />

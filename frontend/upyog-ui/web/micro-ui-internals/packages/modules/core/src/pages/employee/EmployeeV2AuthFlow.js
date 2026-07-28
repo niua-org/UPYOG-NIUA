@@ -7,6 +7,8 @@ import { useOnboarding } from "../onboarding/OnboardingContext";
 import { maskMobileNumber } from "../onboarding/formUtils";
 import { getEmployeeAuthPaths } from "./employeeAuthRoutes";
 
+// Normalize the different error envelopes returned by employee login, OTP and
+// password-reset APIs into one message contract for the shared Toast.
 const getEmployeeAuthError = (error) =>
   error?.response?.data?.error_description ||
   error?.response?.data?.error?.fields?.[0]?.message ||
@@ -28,6 +30,8 @@ const EmployeeConfiguredStepV2 = ({ step, onSubmit, onSecondaryAction, onResend,
   );
 };
 
+// Persist the V2 login result under the same keys used by V1 and existing
+// employee modules so changing the authentication UI does not change sessions.
 const persistEmployeeSession = (user) => {
   const locale = Digit.SessionStorage.get("locale") || "en_IN";
   const tenantId = user?.info?.tenantId;
@@ -48,6 +52,8 @@ const persistEmployeeSession = (user) => {
   localStorage.setItem("Employee.user-info", JSON.stringify(user?.info));
 };
 
+// Retain the legacy role-specific landing pages and honor a protected route's
+// saved `from` destination for all other successfully authenticated employees.
 const getPostLoginPath = (user, requestedPath) => {
   const roles = user?.info?.roles || [];
   if (roles.length && roles.every((role) => role.code === "NATADMIN")) {
@@ -59,10 +65,14 @@ const getPostLoginPath = (user, requestedPath) => {
   return requestedPath || "/upyog-ui/employee";
 };
 
+// Bind the configured employee login step to the existing password-grant API
+// and version-aware forgot-password navigation.
 export const EmployeeLoginV2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState(null);
+  // This screen exists only under /user/v2, so its secondary and success paths
+  // must always be selected from the V2 employee route set.
   const employeeAuthPaths = getEmployeeAuthPaths(true);
 
   const handleLogin = async (data) => {
@@ -95,6 +105,8 @@ export const EmployeeLoginV2 = () => {
 
   return (
     <>
+      {/* The shared form renders MDMS fields; this adapter supplies employee
+          login and makes forgot-password the configured secondary action. */}
       <EmployeeConfiguredStepV2
         step="login"
         onSubmit={handleLogin}
@@ -105,10 +117,13 @@ export const EmployeeLoginV2 = () => {
   );
 };
 
+// Request a password-reset OTP from the configured mobile/city fields, then
+// persist only the non-sensitive continuation values needed by the next step.
 export const EmployeeForgotPasswordV2 = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const { updateFormData } = useOnboarding();
+  // Keep forgot-password and change-password navigation within /user/v2.
   const employeeAuthPaths = getEmployeeAuthPaths(true);
 
   const handleForgotPassword = async (data) => {
@@ -135,6 +150,8 @@ export const EmployeeForgotPasswordV2 = () => {
       // Keep reset identity/location in the persisted onboarding state rather
       // than exposing mobile_number and tenantId in the browser URL.
       updateFormData({ mobileNumber, city });
+      // Do not replace this entry: Back may intentionally return the user to
+      // the configured forgot-password form to correct their details.
       navigate(employeeAuthPaths.changePassword);
     } catch (forgotPasswordError) {
       // OTP API failures are global feedback; required mobile/city validation
@@ -145,12 +162,16 @@ export const EmployeeForgotPasswordV2 = () => {
 
   return (
     <>
+      {/* EmployeeConfiguredStepV2 resolves the forgot-password MDMS schema and
+          delegates its validated submission to the OTP request above. */}
       <EmployeeConfiguredStepV2 step="forgot-password" onSubmit={handleForgotPassword} />
       {error && <Toast error isDleteBtn label={error} onClose={() => setError(null)} />}
     </>
   );
 };
 
+// Complete the guarded, non-logged-in employee password reset using the mobile
+// and tenant context created by EmployeeForgotPasswordV2.
 export const EmployeeChangePasswordV2 = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -158,6 +179,7 @@ export const EmployeeChangePasswordV2 = () => {
   const { clearFormData, formData } = useOnboarding();
   const mobileNumber = formData.mobileNumber;
   const tenantId = formData.city?.code;
+  // Direct-access guards, resend requests and completion all use V2 auth paths.
   const employeeAuthPaths = getEmployeeAuthPaths(true);
   // Keep the full mobile number in onboarding state and expose only its
   // masked form in the configured OTP description.
@@ -186,6 +208,8 @@ export const EmployeeChangePasswordV2 = () => {
       );
     } catch (resendError) {
       setError(getEmployeeAuthError(resendError));
+      // Re-throw so OnboardingForm/Otp field logic knows the resend failed and
+      // does not present it as a successful timer reset.
       throw resendError;
     }
   };
@@ -223,6 +247,8 @@ export const EmployeeChangePasswordV2 = () => {
         tenantId,
         { withoutLogin: true }
       );
+      // Reset context is no longer valid after success; clearing it also keeps
+      // passwords/OTP data out of future onboarding sessions.
       clearFormData();
       navigate(employeeAuthPaths.login, { replace: true });
     } catch (changePasswordError) {
@@ -232,6 +258,8 @@ export const EmployeeChangePasswordV2 = () => {
 
   return (
     <>
+      {/* The shared form supplies password and OTP fields plus resend UI; this
+          adapter supplies Employee-specific reset and validation behavior. */}
       <EmployeeConfiguredStepV2
         step="change-password"
         onSubmit={handleChangePassword}

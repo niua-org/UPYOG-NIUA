@@ -22,6 +22,7 @@ import { getCitizenOnboardingPaths } from "../pages/citizen/onboardingRoutes";
 /* 
 Feature :: Citizen All service screen cards
 */
+// isV2 is optional because existing callers still expect V1 login links.
 export const processLinkData = (newData, code, t, isV2 = false) => {
   const obj = newData?.[`${code}`];
   if (obj) {
@@ -91,6 +92,8 @@ const iconSelector = (code) => {
       return <PTIcon className="fill-path-primary-main" />;
   }
 };
+// Carry the version flag into MDMS link processing so only authentication links
+// change version; ordinary citizen service links remain untouched.
 const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading, isV2 = false }) => {
   const paymentModule = modules.filter(({ code }) => code === "Payment")[0];
   const moduleArr = modules.filter(({ code }) => code !== "Payment");
@@ -109,6 +112,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading, isV2 
             .filter((mod) => mod)
             .map(({ code }, index) => {
               let mdmsDataObj;
+              // Generate any role-based login link for the active V1/V2 flow.
               if (fetchedCitizen) mdmsDataObj = fetchedCitizen ? processLinkData(getCitizenMenu, code, t, isV2) : undefined;
               if (mdmsDataObj?.links?.length > 0) {
                 return (

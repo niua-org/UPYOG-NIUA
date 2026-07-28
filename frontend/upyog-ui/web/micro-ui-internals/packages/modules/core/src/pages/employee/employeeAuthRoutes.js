@@ -5,6 +5,8 @@ const EMPLOYEE_AUTH_BASE_PATH = "/upyog-ui/employee/user";
  * auth-page navigation cannot accidentally cross between V1 and V2.
  */
 export const getEmployeeAuthPaths = (isV2 = false) => {
+  // Insert /v2 only for the new auth screens; the employee application base
+  // path remains stable for dashboards, modules and existing deep links.
   const versionSegment = isV2 ? "/v2" : "";
   const authBasePath = `${EMPLOYEE_AUTH_BASE_PATH}${versionSegment}`;
 

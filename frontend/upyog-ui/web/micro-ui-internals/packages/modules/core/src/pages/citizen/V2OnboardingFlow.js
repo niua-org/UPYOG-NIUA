@@ -24,17 +24,27 @@ import { CITIZEN_BASE_PATH, CITIZEN_DASHBOARD_PATH, getCitizenOnboardingPaths, i
 // a distinct location when future configs provide one without persisting a
 // duplicate alias containing the same tenant object.
 const getCitizenLocation = ({ city, location }) => location || city;
+// Login/register continuation is safe only when the configured form supplied
+// both the mobile identity and a tenant-aware city/location selection.
 const hasRequiredLoginContext = (data) =>
   Boolean(data.mobileNumber && data.city?.code && getCitizenLocation(data)?.code);
 
+// Connect the shared configuration-driven login form to Citizen-specific OTP
+// discovery, registration fallback and DigiLocker authentication behavior.
 export const CitizenLoginV2 = ({ stateCode }) => {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const { t } = useTranslation();
   const { clearFormData, formData, updateFormData } = useOnboarding();
   const [error, setError] = useState(null);
+  // Navigation waits for the registration marker to be committed to provider
+  // state because CitizenRegisterV2 guards against direct entry.
   const [isRegistrationNavigationPending, setIsRegistrationNavigationPending] = useState(false);
+  // Consent is local UI state; it is intentionally not persisted as onboarding
+  // continuation data.
   const [showDigiLockerConsent, setShowDigiLockerConsent] = useState(false);
+  // This component is mounted only below the V2 route branch, so select the V2
+  // route set directly instead of accepting another version flag.
   const onboardingPaths = getCitizenOnboardingPaths(true);
 
   useEffect(() => {
@@ -52,6 +62,11 @@ export const CitizenLoginV2 = ({ stateCode }) => {
     // below the field; Toast is reserved for API/authentication failures.
     if (!mobileNumber || !city?.code || !language) return;
 
+    // Internal underscore-prefixed fields describe continuation state rather
+    // than user-entered form values:
+    // - _from preserves the originally requested protected destination.
+    // - _otpSent/_otpFlow prove which OTP route may be opened.
+    // - _registrationAllowed proves the backend identified a new citizen.
     const loginContext = {
       ...data,
       _from: routerLocation.state?.from,
@@ -97,6 +112,8 @@ export const CitizenLoginV2 = ({ stateCode }) => {
   };
 
   useEffect(() => {
+    // DigiLocker returns its authorization result to the login URL. Complete
+    // the exchange here because this route owns both the consent and callback.
     const searchParams = new URLSearchParams(routerLocation.search);
     const code = searchParams.get("code");
     if (!code) {
@@ -119,6 +136,8 @@ export const CitizenLoginV2 = ({ stateCode }) => {
 
   return (
     <>
+      {/* The shared LoginV2 component renders MDMS fields; this adapter supplies
+          Citizen API behavior and opens DigiLocker as its secondary action. */}
       <LoginV2 onSubmit={onSubmit} onSecondaryAction={() => setShowDigiLockerConsent(true)} />
       <DigiLockerConsentModal
         isOpen={showDigiLockerConsent}
@@ -131,11 +150,15 @@ export const CitizenLoginV2 = ({ stateCode }) => {
   );
 };
 
+// Continue a backend-approved new citizen from LoginV2 through the configured
+// registration fields and into the registration-specific OTP route.
 export const CitizenRegisterV2 = ({ stateCode }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { formData, updateFormData } = useOnboarding();
   const [error, setError] = useState(null);
+  // Registration is V2-only, so all guard failures and success navigation stay
+  // inside the immutable V2 onboarding path set.
   const onboardingPaths = getCitizenOnboardingPaths(true);
 
   // Registration is intentionally protected because V2 always begins at
@@ -177,12 +200,17 @@ export const CitizenRegisterV2 = ({ stateCode }) => {
   );
 };
 
+// Verify the OTP for either the login or registration branch while sharing one
+// configured OTP screen and enforcing branch-specific continuation context.
 export const CitizenOtpV2 = ({ stateCode }) => {
   const { flow } = useParams();
   const { t } = useTranslation();
   const { clearFormData, formData } = useOnboarding();
   const [error, setError] = useState(null);
+  // Invalid OTP deep links always return to V2 login, never to a legacy route.
   const onboardingPaths = getCitizenOnboardingPaths(true);
+  // Match the route parameter to the exact OTP request that was successfully
+  // issued; a marker for login cannot authorize the registration OTP URL.
   const hasOtpContext =
     hasRequiredLoginContext(formData) && formData._otpSent === true && formData._otpFlow === flow;
 
@@ -233,6 +261,8 @@ export const CitizenOtpV2 = ({ stateCode }) => {
         stateCode,
         flow,
         mobileNumber: formData.mobileNumber,
+        // Registration resend needs the identity fields used by the original
+        // registration OTP request; login resend needs only the mobile number.
         ...(flow === "register" ? { name: formData.fullName, dob: formData.dob } : {}),
       });
     } catch (resendError) {
@@ -242,6 +272,8 @@ export const CitizenOtpV2 = ({ stateCode }) => {
 
   return (
     <>
+      {/* OtpV2 owns input/timer presentation; this adapter owns Citizen
+          verification, resend requests, session persistence and routing. */}
       <OtpV2 mobileNumber={formData.mobileNumber} onSubmit={handleOtpSubmit} onResend={handleResend} />
       {/* OTP verification and resend failures remain visible until dismissed. */}
       {error && <Toast isDleteBtn error label={t(error)} onClose={() => setError(null)} />}

@@ -80,6 +80,8 @@ const Home = (props) => {
     initData,
     isV2,
   } = props;
+  // Authentication status is checked with isV2 at the index route so a signed-in
+  // V2 citizen reaches Home instead of being sent back to onboarding.
   const isCitizenAuthenticated = Boolean(userDetails?.access_token && userDetails?.info);
 
   // Derive all onboarding destinations from the single application flag. This
@@ -164,6 +166,8 @@ const Home = (props) => {
   const Advertisement = advertisement || [];
 
   const ModuleLevelLinkHomePages = modules.map(({ code, bannerImage }, index) => {
+    // Pass the version into service-link normalization so login-required cards
+    // point to V2 login when the V2 route family is active.
     let mdmsDataObj = isLinkDataFetched ? processLinkData(linkData, code, t, isV2) : undefined;
     mdmsDataObj?.links && mdmsDataObj?.links.sort((a, b) => a.orderNumber - b.orderNumber);
 
@@ -295,6 +299,8 @@ const Home = (props) => {
           <Route
             path="all-services"
             element={
+              // AppHome also creates role-based login links, so it must receive
+              // the same version choice as this citizen router.
               <AppHome
                 userType="citizen"
                 modules={modules}
@@ -357,6 +363,9 @@ const Home = (props) => {
             <>
               <Route
                 element={
+                  // OnboardingLayout loads the Citizen MDMS master, keeps
+                  // non-sensitive values across its Outlet steps, and supplies
+                  // the common background/card shell for login, register and OTP.
                   <OnboardingLayout
                     stateCode={stateCode}
                     moduleName="CITIZEN_ONBOARDING"
@@ -366,10 +375,14 @@ const Home = (props) => {
                   />
                 }
               >
+                {/* All three steps remain under the same provider/layout so
+                    continuation markers survive route changes within V2. */}
                 <Route path="v2/:flow/otp" element={<CitizenOtpV2 stateCode={stateCode} />} />
                 <Route path="v2/login" element={<CitizenLoginV2 stateCode={stateCode} />} />
                 <Route path="v2/register" element={<CitizenRegisterV2 stateCode={stateCode} />} />
               </Route>
+              {/* Normalize malformed V2 URLs and every disabled legacy entry to
+                  V2 login; replace prevents redirect loops in browser history. */}
               <Route path="v2/*" element={<Navigate to={citizenOnboardingPaths.entry} replace />} />
               <Route path="login/*" element={<OnboardingEntryRedirect to={citizenOnboardingPaths.entry} />} />
               <Route path="register/*" element={<Navigate to={citizenOnboardingPaths.entry} replace />} />
@@ -382,6 +395,8 @@ const Home = (props) => {
               A V2-shaped deep link falls back to V1 entry without forming a loop. */}
           {!isV2 && (
             <>
+              {/* These legacy components are deliberately absent from the V2
+                  branch so both onboarding implementations cannot mount together. */}
               <Route path="login/*" element={<Login stateCode={stateCode} />} />
               <Route path="register/*" element={<Login stateCode={stateCode} isUserRegistered={false} />} />
               <Route path="select-language" element={<LanguageSelection />} />

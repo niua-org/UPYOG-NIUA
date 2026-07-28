@@ -200,6 +200,8 @@ function App() {
     return <h1>stateCode is not defined</h1>;
   }
   return (
+    // Enable the configuration-driven V2 citizen and employee authentication
+    // routes for this application; omit isV2 to retain the V1 flow.
     <DigitUI
       stateCode={stateCode}
       enabledModules={enabledModules}

@@ -29,6 +29,8 @@ const EmployeeAuthRedirect = ({ to }) => {
   return <Navigate to={`${to}${location.search}`} state={location.state} replace />;
 };
 
+// Default to the legacy employee auth screens. The application bootstrap opts
+// in explicitly, allowing other consumers of this module to remain on V1.
 const EmployeeApp = ({
   stateInfo,
   userDetails,
@@ -72,6 +74,8 @@ const EmployeeApp = ({
           <Route
             path="user/v2"
             element={
+              // Employee onboarding uses its own MDMS master and persistence
+              // namespace while reusing the shared layout/provider implementation.
               <OnboardingLayout
                 stateCode={stateCode}
                 moduleName="EMPLOYEE_ONBOARDING"
@@ -83,6 +87,8 @@ const EmployeeApp = ({
           >
             {/* Relative child routes make the active Outlet step explicit while
                 the provider/layout remains mounted across the reset flow. */}
+            {/* Login is independent; forgot-password stores the continuation
+                context consumed and guarded by change-password. */}
             <Route path="login" element={<EmployeeLoginV2 />} />
             <Route path="forgot-password" element={<EmployeeForgotPasswordV2 />} />
             <Route path="change-password" element={<EmployeeChangePasswordV2 />} />
@@ -147,6 +153,8 @@ const EmployeeApp = ({
                         Under V2, legacy auth URLs redirect to their V2 peers. */}
                     {isV2 ? (
                       <>
+                        {/* Preserve old bookmarks without mounting legacy forms;
+                            query parameters and route state survive the handoff. */}
                         <Route path="login" element={<EmployeeAuthRedirect to={employeeAuthPaths.login} />} />
                         <Route path="forgot-password" element={<EmployeeAuthRedirect to={employeeAuthPaths.forgotPassword} />} />
                         <Route path="change-password" element={<EmployeeAuthRedirect to={employeeAuthPaths.changePassword} />} />
@@ -179,10 +187,12 @@ const EmployeeApp = ({
                         />
                       }
                     />
-                    <Route
-                      path="*"
-                      element={
-                        <Navigate
+                      <Route
+                        path="*"
+                        element={
+                          // Unknown legacy auth URLs stay in the current flow:
+                          // V2 goes to V2 login, while V1 keeps language selection.
+                          <Navigate
                           to={isV2 ? employeeAuthPaths.login : "/upyog-ui/employee/user/language-selection"}
                           replace
                         />
@@ -224,6 +234,8 @@ const EmployeeApp = ({
                       <Route
                         path="*"
                         element={
+                          // Protected modules need the version flag so session
+                          // expiry returns users to the matching employee login.
                           <AppModules
                             stateCode={stateCode}
                             userType="employee"

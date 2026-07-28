@@ -20,6 +20,8 @@ const V2_ONBOARDING_PATHS = Object.freeze({
 
 // Return one immutable route set for the active onboarding version. Callers
 // derive it once and reuse it for entry, login, registration, OTP and fallback navigation.
+// false selects the legacy language-first path set; true selects V2 login,
+// registration and OTP paths backed by the configuration-driven layout.
 export const getCitizenOnboardingPaths = (isV2) => (isV2 ? V2_ONBOARDING_PATHS : V1_ONBOARDING_PATHS);
 
 // OTP is valid only for the two supported V2 entry flows. This keeps a route
