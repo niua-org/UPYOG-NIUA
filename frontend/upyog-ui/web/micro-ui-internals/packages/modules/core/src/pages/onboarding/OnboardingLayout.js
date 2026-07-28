@@ -40,7 +40,9 @@ const OnboardingShell = ({ homePath }) => {
           <div className="onboarding__fallback" role="alert">
             <h1>Unable to load onboarding</h1>
             <p>We could not load the onboarding configuration. Please try again.</p>
-            <button type="button" className="button secondary" onClick={refetch}>Retry</button>
+            <button type="button" className="button secondary" onClick={refetch}>
+              Retry
+            </button>
           </div>
         </main>
       </section>

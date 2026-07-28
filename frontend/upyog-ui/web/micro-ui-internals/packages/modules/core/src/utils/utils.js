@@ -57,7 +57,6 @@ export const createBackgroundStyle = (
   // Section configs use showBackgroundColor while older root/card configs use
   // showColor. Color and image are independent layers when both are enabled.
   const shouldShowColor = showBackgroundColor ?? showColor ?? Boolean(backgroundColor);
-  const shouldShowImage = showBackgroundImage ?? true;
   const style = shouldShowColor && backgroundColor ? { backgroundColor } : {};
 
   const responsiveBackground = getResponsiveConfig(
@@ -65,7 +64,7 @@ export const createBackgroundStyle = (
     screenType
   );
 
-  if (!shouldShowImage || !responsiveBackground?.image) return style;
+  if (!showBackgroundImage || !responsiveBackground?.image) return style;
 
   return {
     ...style,
