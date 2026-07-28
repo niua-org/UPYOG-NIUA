@@ -38,11 +38,13 @@ const ConfigurableFormFooter = memo(
               <button
                 type="button"
                 key={action.type || action.label}
-                className={`button ${action.actionType === "link" ? "link" : "secondary"}`}
+                className={`button ${action.actionType === "link" ? "text" : "secondary"}`}
                 onClick={() => onConfiguredAction(action)}
               >
-                {action.icon && <img src={action.icon} alt="" />}
-                {t(action.label)}
+                <span>
+                  {action.icon && <img src={action.icon} alt="" />}
+                  {t(action.label)}
+                </span>
               </button>
             ))}
           </div>

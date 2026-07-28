@@ -46,13 +46,21 @@ const OnboardingForm = ({
   };
 
   if (isConfigLoading || arePlatformSourcesLoading || isOptionSourcesLoading) {
-    return <div className="onboarding__status">Loading {step} configuration…</div>;
+    return (
+      <div className="onboarding__status">
+        Loading <strong>{step}</strong> configuration…
+      </div>
+    );
   }
 
   if (!config) {
     // Missing MDMS is a valid temporary V2 state. Keep the requested route
     // mounted instead of falling back to a legacy component.
-    return <div className="onboarding__status">Configuration missing for {step} step.</div>;
+    return (
+      <div className="onboarding__status">
+        Configuration missing for <strong>{step}</strong> step.
+      </div>
+    );
   }
 
   return (

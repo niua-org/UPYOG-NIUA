@@ -1,5 +1,3 @@
-import defaultTheme from "./defaultTheme";
-
 /** Supported remote tokens and the CSS variables exposed to application CSS. */
 export const themeTokenMap = Object.freeze({
   "colors.text.default": { cssVariable: "--theme-text-default", type: "color" },
@@ -104,10 +102,10 @@ export const validateThemeConfig = (config) => {
   return { theme, errors };
 };
 
-/** Merge a validated partial remote theme over complete local defaults. */
+/** Resolve only the validated theme supplied by MDMS. */
 export const resolveTheme = (config = {}) => {
   const { theme, errors } = validateThemeConfig(config);
-  return { theme: mergeThemeConfig(defaultTheme, theme), errors };
+  return { theme, errors };
 };
 
 /** Convert nested theme tokens into the flat CSS custom-property contract. */
@@ -123,7 +121,19 @@ export const applyThemeVariables = (theme, target) => {
   const variables = createThemeVariables(theme);
   if (!root?.style) return variables;
 
+  // A refreshed MDMS theme may omit a value that existed in the previous
+  // response. Remove the old remote values before applying the current one.
+  Object.values(themeTokenMap).forEach(({ cssVariable }) => root.style.removeProperty(cssVariable));
   Object.entries(variables).forEach(([property, value]) => root.style.setProperty(property, value));
   root.dataset.themeReady = "true";
   return variables;
+};
+
+/** Remove the active MDMS theme when the master itself is no longer available. */
+export const clearThemeVariables = (target) => {
+  const root = target || (typeof document !== "undefined" ? document.documentElement : null);
+  if (!root?.style) return;
+
+  Object.values(themeTokenMap).forEach(({ cssVariable }) => root.style.removeProperty(cssVariable));
+  delete root.dataset.themeReady;
 };

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { fetchEnabledMDMS } from "../hooks/useEnabledMDMS";
 import {
   applyThemeVariables,
+  clearThemeVariables,
   createThemeVariables,
   mergeThemeConfig,
   resolveTheme,
@@ -13,9 +14,14 @@ const ThemeContext = createContext(null);
 const REQUEST_TIMEOUT = 2500;
 let tenantId;
 let refreshPromise = null;
-// Keep the raw defaults private to themeUtils. Consumers receive the resolved
-// theme state instead of maintaining another public reference to defaultTheme.
-let currentState = { theme: resolveTheme().theme, isThemeLoading: false, themeError: null, source: "default" };
+let currentState = {
+  theme: null,
+  validationErrors: [],
+  isThemeLoading: false,
+  isThemeMissing: false,
+  themeError: null,
+  source: "uninitialized",
+};
 
 /** Fetch the enabled tenant theme without caching so runtime refreshes are current. */
 export const fetchThemeConfig = async () => {
@@ -30,12 +36,27 @@ const publish = (state) => {
   return state;
 };
 
-/** Validate, merge, apply, and publish a theme in one consistent operation. */
+const publishMissingTheme = () => {
+  clearThemeVariables();
+  return publish({
+    theme: null,
+    validationErrors: [],
+    isThemeLoading: false,
+    isThemeMissing: true,
+    themeError: null,
+    source: "missing",
+  });
+};
+
+/** Validate, apply, and publish an MDMS theme in one consistent operation. */
 export const updateTheme = (config, source = "runtime") => {
   const { theme, errors: validationErrors } = resolveTheme(config);
   if (validationErrors.length) console.warn("Invalid theme values were ignored:", validationErrors);
+  // An existing but empty/invalid master is equivalent to a missing theme:
+  // the application must never continue with browser or stylesheet fallbacks.
+  if (Object.keys(createThemeVariables(theme)).length === 0) return publishMissingTheme();
   applyThemeVariables(theme);
-  return publish({ theme, validationErrors, isThemeLoading: false, themeError: null, source });
+  return publish({ theme, validationErrors, isThemeLoading: false, isThemeMissing: false, themeError: null, source });
 };
 
 const withTimeout = (promise, timeoutMs) =>
@@ -44,20 +65,20 @@ const withTimeout = (promise, timeoutMs) =>
     promise.then(resolve, reject).finally(() => clearTimeout(timeout));
   });
 
-/** Refresh the remote theme while retaining the last usable theme on failure. */
+/** Refresh the remote theme while retaining the last MDMS theme on request failure. */
 export const refreshTheme = async () => {
-  if (!tenantId) return currentState;
+  if (!tenantId) return publishMissingTheme();
   if (refreshPromise) return refreshPromise;
 
-  publish({ ...currentState, isThemeLoading: true, themeError: null });
+  publish({ ...currentState, isThemeLoading: true, isThemeMissing: false, themeError: null });
 
   refreshPromise = (async () => {
     try {
       const config = await withTimeout(fetchThemeConfig(), REQUEST_TIMEOUT);
-      if (!config) throw new Error("Theme configuration was empty");
+      if (!config) return publishMissingTheme();
       return updateTheme(config, "remote");
     } catch (themeError) {
-      console.warn("Using the default theme:", themeError.message);
+      console.warn("Unable to refresh the MDMS theme:", themeError.message);
       return publish({ ...currentState, isThemeLoading: false, themeError });
     } finally {
       refreshPromise = null;
@@ -67,10 +88,69 @@ export const refreshTheme = async () => {
   return refreshPromise;
 };
 
-/** Apply defaults synchronously; ThemeProvider refreshes remote tokens after mount. */
+/** Record the tenant synchronously; ThemeProvider loads its theme from MDMS. */
 export const initializeTheme = ({ tenantId: initialTenantId } = {}) => {
   tenantId = initialTenantId;
-  return updateTheme({}, "default");
+  clearThemeVariables();
+  return publish({
+    theme: null,
+    validationErrors: [],
+    isThemeLoading: Boolean(tenantId),
+    isThemeMissing: !tenantId,
+    themeError: null,
+    source: tenantId ? "initial" : "missing",
+  });
+};
+
+const statusContainerStyle = {
+  alignItems: "center",
+  background: "#f5f5f5",
+  color: "#242424",
+  display: "flex",
+  justifyContent: "center",
+  minHeight: "100vh",
+  padding: "24px",
+  textAlign: "center",
+};
+
+const statusCardStyle = {
+  background: "#ffffff",
+  border: "1px solid #d6d6d6",
+  borderRadius: "8px",
+  maxWidth: "480px",
+  padding: "32px",
+  width: "100%",
+  display: "flex",
+  flexDirection: 'column',
+  gap: '0.5rem'
+};
+
+/** Theme status UI cannot depend on theme variables because none are active yet. */
+const ThemeStatus = ({ state }) => {
+  const isLoading = state.isThemeLoading;
+  const isMissing = state.isThemeMissing;
+  const heading = isLoading ? "Loading theme" : isMissing ? "Theme missing" : "Unable to load theme";
+  const message = isLoading
+    ? "Loading the theme configuration from MDMS…"
+    : isMissing
+      ? "No enabled theme configuration was found in MDMS."
+      : "The theme configuration could not be loaded. Please try again.";
+
+  return (
+    <main className="ui-rewamp" style={statusContainerStyle}>
+      <section style={statusCardStyle} role={isLoading ? "status" : "alert"}>
+        <h1>
+          <strong>{heading}</strong>
+        </h1>
+        <p>{message}</p>
+        {!isLoading && (
+          <button className="button primary" type="button" onClick={() => void refreshTheme()}>
+            Retry
+          </button>
+        )}
+      </section>
+    </main>
+  );
 };
 
 /** React bridge for the event-based theme service used by window.Digit.Theme. */
@@ -80,15 +160,19 @@ export const ThemeProvider = ({ children, initialState = currentState }) => {
     if (typeof window === "undefined") return undefined;
     const listener = ({ detail }) => setState(detail);
     window.addEventListener("digit:theme-changed", listener);
-    // Render with safe defaults first; remote MDMS must never block the app
-    // bootstrap. The shared promise also deduplicates React Strict Mode mounts.
-    if (tenantId && initialState.source === "default") {
+    // The shared promise deduplicates React Strict Mode mounts.
+    if (initialState.source === "initial") {
       void refreshTheme();
     }
     return () => window.removeEventListener("digit:theme-changed", listener);
   }, []);
   const value = useMemo(() => ({ ...state, refreshTheme, updateTheme }), [state]);
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  const canRenderApplication = Boolean(state.theme) && !state.isThemeMissing;
+  return (
+    <ThemeContext.Provider value={value}>
+      {canRenderApplication ? children : <ThemeStatus state={state} />}
+    </ThemeContext.Provider>
+  );
 };
 
 export const useTheme = () => {
@@ -97,7 +181,15 @@ export const useTheme = () => {
   return context;
 };
 
-export { applyThemeVariables, createThemeVariables, mergeThemeConfig, resolveTheme, themeTokenMap, validateThemeConfig };
+export {
+  applyThemeVariables,
+  clearThemeVariables,
+  createThemeVariables,
+  mergeThemeConfig,
+  resolveTheme,
+  themeTokenMap,
+  validateThemeConfig,
+};
 
 const Theme = {
   fetchThemeConfig,
