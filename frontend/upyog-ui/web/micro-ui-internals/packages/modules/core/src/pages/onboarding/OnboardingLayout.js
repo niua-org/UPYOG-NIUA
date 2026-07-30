@@ -4,6 +4,7 @@ import { useScreenSize } from "../../hooks/useScreenSize";
 import { createBackgroundCardStyle, createBackgroundStyle } from "../../utils/utils";
 import { OnboardingProvider, useOnboarding } from "./OnboardingContext";
 import OnboardingFeatures from "./OnboardingFeatures";
+import { useTranslation } from "react-i18next";
 
 /**
  * Configuration-driven visual shell. The active form step is rendered through
@@ -12,6 +13,7 @@ import OnboardingFeatures from "./OnboardingFeatures";
 const OnboardingShell = ({ homePath }) => {
   const { content, error, logo, refetch } = useOnboarding();
   const screenType = useScreenSize();
+  const { t } = useTranslation();
   const {
     background: { root: backgroundConfig, sections: { left: leftBackgroundConfig, right: rightBackgroundConfig } = {} } = {},
     brand: brandConfig = {},
@@ -41,10 +43,10 @@ const OnboardingShell = ({ homePath }) => {
       <section className="upyog-ui">
         <main className="onboarding onboarding--fallback">
           <div className="onboarding__fallback" role="alert">
-            <h1>Unable to load onboarding</h1>
-            <p>We could not load the onboarding configuration. Please try again.</p>
+            <h1>{t(CORE_ONBOARDING_LOAD_FAILED)}</h1> // Unable to load onboarding
+            <p>{t(CORE_ONBOARDING_CONFIG_LOAD_ERROR)}</p>
             <button type="button" className="button secondary" onClick={refetch}>
-              Retry
+              {t(RETRY)}
             </button>
           </div>
         </main>
@@ -63,17 +65,17 @@ const OnboardingShell = ({ homePath }) => {
 
             {brandConfig?.title?.isVisible && (
               <h1 className="onboarding__title">
-                {brandConfig.title.default} <span>{brandConfig.title.highlight}</span>
+                {t(brandConfig.title.default)} <span>{t(brandConfig.title.highlight)}</span>
               </h1>
             )}
 
             {brandConfig?.subtitle?.isVisible && (
               <p className="onboarding__subtitle">
-                {brandConfig.subtitle.primary} <span>{brandConfig.subtitle.secondary}</span>
+                {t(brandConfig.subtitle.primary)} <span>{t(brandConfig.subtitle.secondary)}</span>
               </p>
             )}
 
-            <OnboardingFeatures config={featuresConfig} />
+            <OnboardingFeatures t={t} config={featuresConfig} />
           </div>
         </aside>
 
