@@ -78,15 +78,15 @@ const Home = (props) => {
     sourceUrl,
     pathname,
     initData,
-    isV2,
+    isConfigBased,
   } = props;
-  // Authentication status is checked with isV2 at the index route so a signed-in
+  // Authentication status is checked with isConfigBased at the index route so a signed-in
   // V2 citizen reaches Home instead of being sent back to onboarding.
   const isCitizenAuthenticated = Boolean(userDetails?.access_token && userDetails?.info);
 
   // Derive all onboarding destinations from the single application flag. This
   // value is reused by entry, fallback, header/sidebar and form navigation.
-  const citizenOnboardingPaths = getCitizenOnboardingPaths(isV2);
+  const citizenOnboardingPaths = getCitizenOnboardingPaths(isConfigBased);
 
   const {
     isLoading: islinkDataLoading,
@@ -168,7 +168,7 @@ const Home = (props) => {
   const ModuleLevelLinkHomePages = modules.map(({ code, bannerImage }, index) => {
     // Pass the version into service-link normalization so login-required cards
     // point to V2 login when the V2 route family is active.
-    let mdmsDataObj = isLinkDataFetched ? processLinkData(linkData, code, t, isV2) : undefined;
+    let mdmsDataObj = isLinkDataFetched ? processLinkData(linkData, code, t, isConfigBased) : undefined;
     mdmsDataObj?.links && mdmsDataObj?.links.sort((a, b) => a.orderNumber - b.orderNumber);
 
     return (
@@ -307,7 +307,7 @@ const Home = (props) => {
                 getCitizenMenu={linkData}
                 fetchedCitizen={isLinkDataFetched}
                 isLoading={islinkDataLoading}
-                isV2={isV2}
+                isConfigBased={isConfigBased}
               />
             }
           />
@@ -351,15 +351,15 @@ const Home = (props) => {
           <Route
             index
             element={
-              isV2 && !isCitizenAuthenticated
+              isConfigBased && !isCitizenAuthenticated
                 ? <Navigate to={citizenOnboardingPaths.entry} replace />
-                : <CitizenHome isV2={isV2} />
+                : <CitizenHome isConfigBased={isConfigBased} />
             }
           />
 
           {/* Render only the configuration-driven V2 onboarding routes. Explicit
               fallbacks keep invalid V2 URLs and disabled V1 deep links out of the old flow. */}
-          {isV2 && (
+          {isConfigBased && (
             <>
               <Route
                 element={
@@ -393,7 +393,7 @@ const Home = (props) => {
 
           {/* Preserve every legacy onboarding route only while V2 is disabled.
               A V2-shaped deep link falls back to V1 entry without forming a loop. */}
-          {!isV2 && (
+          {!isConfigBased && (
             <>
               {/* These legacy components are deliberately absent from the V2
                   branch so both onboarding implementations cannot mount together. */}
@@ -410,11 +410,11 @@ const Home = (props) => {
 
           {/* Successful V2 authentication uses a stable dashboard URL because
               the citizen index itself is reserved as the onboarding entry. */}
-          <Route path="home" element={<CitizenHome isV2={isV2} />} />
+          <Route path="home" element={<CitizenHome isConfigBased={isConfigBased} />} />
 
           {/* Keep non-onboarding citizen URLs on the existing home fallback; the
               version-specific patterns above win first and prevent onboarding loops. */}
-          <Route path="*" element={<CitizenHome isV2={isV2} />} />
+          <Route path="*" element={<CitizenHome isConfigBased={isConfigBased} />} />
         </Routes>
       </div>
     </div>

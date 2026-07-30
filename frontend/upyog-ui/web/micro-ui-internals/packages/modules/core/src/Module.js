@@ -18,7 +18,7 @@ import EDCRAcknowledgement from "./pages/citizen/Home/EDCR/EDCRAcknowledgement"
 import CreateAnonymousEDCR from "./pages/citizen/Home/EDCR";
 // Receive the version flag at the initialized-store boundary so routing starts
 // only after the same application configuration and module data are available.
-const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers, isV2 }) => {
+const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers, isConfigBased }) => {
   const { isLoading, data: initData } = Digit.Hooks.useInitStore(stateCode, enabledModules);
   if (isLoading) {
     return <Loader page={true} />;
@@ -47,7 +47,7 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers, isV2 }) => 
             modules={initData?.modules || []}
             appTenants={initData?.tenants || []}
             logoUrl={initData?.stateInfo?.logoUrl || ""}
-            isV2={isV2}
+            isConfigBased={isConfigBased}
           />
         </Body>
       </Router>
@@ -57,7 +57,7 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers, isV2 }) => 
 
 // Default to V1 for backward compatibility with applications that consume
 // DigitUI without explicitly opting in to the V2 authentication experience.
-export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers, isV2 = false }) => {
+export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers, isConfigBased = false }) => {
   const userType = Digit.UserService.getType();
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -126,7 +126,7 @@ export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers, i
             >
               {/* Forward the caller's version choice unchanged through the
                   providers so every downstream router uses one source of truth. */}
-              <DigitUIWrapper isV2={isV2} stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />
+              <DigitUIWrapper isConfigBased={isConfigBased} stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />
             </PrivacyProvider.Provider>
           </ComponentProvider.Provider>
         </TanstackQueryClientProvider>

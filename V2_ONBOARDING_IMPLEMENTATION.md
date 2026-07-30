@@ -4,7 +4,7 @@
 
 V2 onboarding provides configuration-driven Citizen and Employee authentication screens while preserving the existing V1 components and business APIs.
 
-The `isV2` prop is passed from `frontend/upyog-ui/web/src/App.js` through `DigitUI`, `DigitApp`, `CitizenApp`, `EmployeeApp`, and protected module routing. The route components default the flag to `false`, so callers that do not enable V2 retain the legacy flow. The current web application explicitly enables V2 at its bootstrap boundary.
+The `isConfigBased` prop is passed from `frontend/upyog-ui/web/src/App.js` through `DigitUI`, `DigitApp`, `CitizenApp`, `EmployeeApp`, and protected module routing. The route components default the flag to `false`, so callers that do not enable V2 retain the legacy flow. The current web application explicitly enables V2 at its bootstrap boundary.
 
 V2 changes presentation, route selection, and continuation guards. Authentication still uses the existing `Digit.UserService`, DigiLocker service, tenant sources, localization service, and session keys so authenticated modules remain backward-compatible.
 
@@ -46,7 +46,7 @@ All paths below include the `/upyog-ui` application prefix.
 | Register OTP | `/citizen/register/otp` | `/citizen/v2/register/otp` |
 | Authenticated entry | `/citizen` | `/citizen` |
 
-`getCitizenOnboardingPaths(isV2)` is the source of truth for entry, login, registration, and OTP destinations. When V2 is enabled, legacy onboarding URLs redirect with `replace`; DigiLocker query parameters are preserved when its callback lands on the legacy login route.
+`getCitizenOnboardingPaths(isConfigBased)` is the source of truth for entry, login, registration, and OTP destinations. When V2 is enabled, legacy onboarding URLs redirect with `replace`; DigiLocker query parameters are preserved when its callback lands on the legacy login route.
 
 ## Citizen flow
 
@@ -111,7 +111,7 @@ Registration is not a secondary action. It is selected only by the primary login
 | Forgot password | `/upyog-ui/employee/user/forgot-password` | `/upyog-ui/employee/user/v2/forgot-password` |
 | Change password | `/upyog-ui/employee/user/change-password` | `/upyog-ui/employee/user/v2/change-password` |
 
-`getEmployeeAuthPaths(isV2)` derives all three destinations. `AppModules` uses its version-aware login destination for unauthenticated protected routes. When V2 is active, direct legacy authentication links redirect to their V2 equivalents while preserving router state and query parameters.
+`getEmployeeAuthPaths(isConfigBased)` derives all three destinations. `AppModules` uses its version-aware login destination for unauthenticated protected routes. When V2 is active, direct legacy authentication links redirect to their V2 equivalents while preserving router state and query parameters.
 
 Employee V2 reset context is stored under `EMPLOYEE.V2.ONBOARDING`. Forgot password stores the submitted mobile number and selected city after the reset OTP API succeeds, then navigates to the clean V2 change-password URL. Direct change-password access without this context returns to V2 forgot-password.
 
@@ -159,11 +159,11 @@ When no fields exist, the primary action is hidden, secondary actions remain ava
 | Citizen OTP success | Persist the standard session and reload `/upyog-ui/citizen` |
 | Employee password reset success | Redirect to Employee V2 login |
 | Logout | Existing `UserService.logout` clears storage; the Employee legacy language URL is normalized by V2 routing on reload |
-| Session expiry/protected access | `AppModules` redirects through `getEmployeeAuthPaths(isV2)` |
+| Session expiry/protected access | `AppModules` redirects through `getEmployeeAuthPaths(isConfigBased)` |
 
 ## V1/V2 decision table
 
-| User type | `isV2` | Authentication UI | Configuration source |
+| User type | `isConfigBased` | Authentication UI | Configuration source |
 | --- | --- | --- | --- |
 | Citizen | `false` | Existing language/location/Login routes | Existing V1 configuration |
 | Citizen | `true` | Citizen V2 Login/Register/OTP | `CITIZEN_ONBOARDING.OnboardingConfig` |
@@ -182,7 +182,7 @@ When no fields exist, the primary action is hidden, secondary actions remain ava
 
 ## Development guidelines
 
-- Keep the `isV2` decision at routing boundaries; do not mix V1 and V2 components on one auth route.
+- Keep the `isConfigBased` decision at routing boundaries; do not mix V1 and V2 components on one auth route.
 - Use `getCitizenOnboardingPaths` and `getEmployeeAuthPaths` instead of hardcoded login destinations.
 - Reuse `Digit.UserService` and shared authentication helpers rather than duplicating request contracts.
 - Reserve Citizen `onSecondaryAction` for alternate authentication; never use it for registration.

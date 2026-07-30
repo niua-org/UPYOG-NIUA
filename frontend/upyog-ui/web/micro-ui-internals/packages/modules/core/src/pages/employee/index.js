@@ -46,7 +46,7 @@ const EmployeeApp = ({
   sourceUrl,
   pathname,
   initData,
-  isV2 = false,
+  isConfigBased = false,
 }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation();
@@ -56,7 +56,7 @@ const EmployeeApp = ({
   const isUserProfile = userScreensExempted.some((url) => location?.pathname?.includes(url));
   // Employee authentication routes are version-aware so all unauthenticated
   // navigation stays consistently within either V1 or V2.
-  const employeeAuthPaths = getEmployeeAuthPaths(isV2);
+  const employeeAuthPaths = getEmployeeAuthPaths(isConfigBased);
 
   useEffect(() => {
     Digit.UserService.setType("employee");
@@ -70,7 +70,7 @@ const EmployeeApp = ({
       <Routes>
         {/* Employee V2 authentication routes share the configuration-driven
             layout and never fall back to legacy screens when a step is absent. */}
-        {isV2 && (
+        {isConfigBased && (
           <Route
             path="user/v2"
             element={
@@ -151,7 +151,7 @@ const EmployeeApp = ({
                   <Routes>
                     {/* V1 components remain mounted only when V1 is active.
                         Under V2, legacy auth URLs redirect to their V2 peers. */}
-                    {isV2 ? (
+                    {isConfigBased ? (
                       <>
                         {/* Preserve old bookmarks without mounting legacy forms;
                             query parameters and route state survive the handoff. */}
@@ -192,7 +192,7 @@ const EmployeeApp = ({
                       element={
                         // Unknown legacy auth URLs stay in the current flow:
                         // V2 goes to V2 login, while V1 keeps language selection.
-                        <Navigate to={isV2 ? employeeAuthPaths.login : "/upyog-ui/employee/user/language-selection"} replace />
+                        <Navigate to={isConfigBased ? employeeAuthPaths.login : "/upyog-ui/employee/user/language-selection"} replace />
                       }
                     />
                   </Routes>
@@ -233,7 +233,7 @@ const EmployeeApp = ({
                         element={
                           // Protected modules need the version flag so session
                           // expiry returns users to the matching employee login.
-                          <AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} isV2={isV2} />
+                          <AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} isConfigBased={isConfigBased} />
                         }
                       />
                     </Routes>

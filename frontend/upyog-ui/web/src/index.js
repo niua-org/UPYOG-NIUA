@@ -50,17 +50,31 @@ if (!user || !user.access_token || !user.info) {
   window.Digit.SessionStorage.set("Employee.tenantId", employeeTenantId);
 }
 
-const bootstrap = () => {
-  const stateCode = window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") || process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
+const AppProviders = ({ children, isConfigBased }) => {
+  if (!isConfigBased) {
+    return children;
+  }
+
+  const stateCode =
+    window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") ||
+    process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
 
   const initialThemeState = initializeTheme({ tenantId: stateCode });
 
+  return (
+    <ThemeProvider initialState={initialThemeState}>{children}</ThemeProvider>
+  );
+};
+
+const bootstrap = () => {
   const root = createRoot(document.getElementById("root"));
+  // We have to add this `CONFIG_BASED_UI` key in config, so that we can remove hardcoded boolean `true`
+  const isConfigBased = window.globalConfigs?.getConfig("CONFIG_BASED_UI") || false;
   root.render(
     <React.StrictMode>
-      <ThemeProvider initialState={initialThemeState}>
-        <App />
-      </ThemeProvider>
+      <AppProviders isConfigBased={isConfigBased}>
+        <App isConfigBased={isConfigBased} />
+      </AppProviders>
     </React.StrictMode>,
   );
 };

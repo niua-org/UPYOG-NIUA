@@ -22,7 +22,7 @@ const V2_ONBOARDING_PATHS = Object.freeze({
 // derive it once and reuse it for entry, login, registration, OTP and fallback navigation.
 // false selects the legacy language-first path set; true selects V2 login,
 // registration and OTP paths backed by the configuration-driven layout.
-export const getCitizenOnboardingPaths = (isV2) => (isV2 ? V2_ONBOARDING_PATHS : V1_ONBOARDING_PATHS);
+export const getCitizenOnboardingPaths = (isConfigBased) => (isConfigBased ? V2_ONBOARDING_PATHS : V1_ONBOARDING_PATHS);
 
 // OTP is valid only for the two supported V2 entry flows. This keeps a route
 // such as /v2/unknown/otp from being treated as a real onboarding deep link.

@@ -4,9 +4,9 @@ import EmployeeApp from "./pages/employee";
 import CitizenApp from "./pages/citizen";
 import { getCitizenOnboardingPaths } from "./pages/citizen/onboardingRoutes";
 
-// isV2 selects only the authentication/onboarding route family. The same
+// isConfigBased selects only the authentication/onboarding route family. The same
 // initialized modules, tenants and authenticated application routes are reused.
-export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData, isV2 }) => {
+export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData, isConfigBased }) => {
   const location = useLocation();
   const { pathname } = location;
 
@@ -54,10 +54,10 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData, is
   const mobileView = innerWidth <= 640;
   // Keep the source URL aligned with the selected citizen route namespace so
   // downstream redirects do not send a V2 request back through a V1 entry.
-  const sourceUrl = isV2 ? `${window.location.origin}/citizen/v2` : `${window.location.origin}/citizen`;
+  const sourceUrl = isConfigBased ? `${window.location.origin}/citizen/v2` : `${window.location.origin}/citizen`;
   // Select the citizen entry point once so root and unknown top-level URLs enter
   // V2 at login when enabled while V1 continues to start at language selection.
-  const citizenOnboardingPaths = getCitizenOnboardingPaths(isV2);
+  const citizenOnboardingPaths = getCitizenOnboardingPaths(isConfigBased);
   const commonProps = {
     stateInfo,
     userDetails,
@@ -75,7 +75,7 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData, is
     initData,
     // Forward the same flag to both user-type routers so they select matching
     // auth routes while sharing the existing application/module route setup.
-    isV2,
+    isConfigBased,
   };
   return (
     <Routes>

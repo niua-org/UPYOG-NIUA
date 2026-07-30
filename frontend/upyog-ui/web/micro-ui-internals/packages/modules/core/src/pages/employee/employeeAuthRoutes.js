@@ -4,10 +4,10 @@ const EMPLOYEE_AUTH_BASE_PATH = "/upyog-ui/employee/user";
  * Centralize employee authentication URLs so unauthenticated redirects and
  * auth-page navigation cannot accidentally cross between V1 and V2.
  */
-export const getEmployeeAuthPaths = (isV2 = false) => {
+export const getEmployeeAuthPaths = (isConfigBased = false) => {
   // Insert /v2 only for the new auth screens; the employee application base
   // path remains stable for dashboards, modules and existing deep links.
-  const versionSegment = isV2 ? "/v2" : "";
+  const versionSegment = isConfigBased ? "/v2" : "";
   const authBasePath = `${EMPLOYEE_AUTH_BASE_PATH}${versionSegment}`;
 
   return {
