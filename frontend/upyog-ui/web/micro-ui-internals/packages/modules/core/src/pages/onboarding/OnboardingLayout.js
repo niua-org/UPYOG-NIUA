@@ -3,6 +3,7 @@ import { Link, Outlet } from "react-router-dom";
 import { useScreenSize } from "../../hooks/useScreenSize";
 import { createBackgroundCardStyle, createBackgroundStyle } from "../../utils/utils";
 import { OnboardingProvider, useOnboarding } from "./OnboardingContext";
+import OnboardingFeatures from "./OnboardingFeatures";
 
 /**
  * Configuration-driven visual shell. The active form step is rendered through
@@ -72,21 +73,7 @@ const OnboardingShell = ({ homePath }) => {
               </p>
             )}
 
-            {featuresConfig?.isVisible && featuresConfig?.items?.length > 0 && (
-              <ul className="onboarding__features">
-                {featuresConfig.items.map((feature, index) => (
-                  <li className="onboarding__feature" key={`${feature.title}-${index}`}>
-                    <div className="onboarding__feature-icon">
-                      <img src={feature.icon} alt={feature.title} />
-                    </div>
-                    <div className="onboarding__feature-info">
-                      <h3 className="onboarding__feature-title">{feature.title}</h3>
-                      <p className="onboarding__feature-text">{feature.description}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <OnboardingFeatures config={featuresConfig} />
           </div>
         </aside>
 
