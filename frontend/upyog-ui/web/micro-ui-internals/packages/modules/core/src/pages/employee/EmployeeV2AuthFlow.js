@@ -172,10 +172,10 @@ export const EmployeeChangePasswordV2 = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [error, setError] = useState(null);
-  const { clearFormData, formData } = useOnboarding();
+  const { formData } = useOnboarding();
   const mobileNumber = formData.mobileNumber;
   const tenantId = formData.city?.code;
-  // Direct-access guards, resend requests and completion all use V2 auth paths.
+  // Direct-access guards and reset navigation stay within the configured flow.
   const employeeAuthPaths = getEmployeeAuthPaths(true);
   // Keep the full mobile number in onboarding state and expose only its
   // masked form in the configured OTP description.
@@ -202,53 +202,36 @@ export const EmployeeChangePasswordV2 = () => {
         },
         tenantId
       );
+      setError(t("ES_OTP_RESEND"));
     } catch (resendError) {
-      setError(getEmployeeAuthError(resendError));
-      // Re-throw so OnboardingForm/Otp field logic knows the resend failed and
-      // does not present it as a successful timer reset.
+      setError(resendError?.response?.data?.error_description || t("ES_INVALID_LOGIN_CREDENTIALS"));
+      // Notify the configurable OTP field that resend failed so its timer stays
+      // available for another attempt.
       throw resendError;
+    } finally {
+      window.setTimeout(() => setError(null), 5000);
     }
   };
 
-  const handleChangePassword = async (data, _config, { setFieldError } = {}) => {
-    const userName = data.userName || data.username || mobileNumber;
-    // Accept common MDMS field aliases, then normalize them to the backend's
-    // fixed non-logged-in password-reset contract.
-    const otpReference = data.otpReference || data.otp || data.otpNumber;
-    const newPassword = data.newPassword || data.password;
-    const confirmPassword = data.confirmPassword || data.confirmNewPassword;
-    const confirmPasswordField = data.confirmPassword !== undefined ? "confirmPassword" : "confirmNewPassword";
-
-    if (!userName || !otpReference || !newPassword || !confirmPassword) return;
-    if (newPassword !== confirmPassword) {
-      // A password mismatch is a field validation problem, so keep it inline
-      // and focus the confirm field instead of displaying an API-error Toast.
-      setFieldError?.(confirmPasswordField, t("ERR_PASSWORD_DO_NOT_MATCH"));
-      return;
-    }
-
-    setError(null);
+  const handleChangePassword = async (data) => {
     try {
-      // Submit only fields accepted by /user/password/nologin/_update. In
-      // particular, do not let an existing session switch this reset flow to
-      // the authenticated password endpoint.
-      await Digit.UserService.changePassword(
-        {
-          userName,
-          otpReference,
-          newPassword,
-          tenantId,
-          type: "EMPLOYEE",
-        },
+      if (data.newPassword !== data.confirmPassword) {
+        return setError(t("ERR_PASSWORD_DO_NOT_MATCH"));
+      }
+
+      const { otpReference: submittedOtpReference, otp, otpNumber, ...passwordData } = data;
+      const requestData = {
+        ...passwordData,
+        otpReference: submittedOtpReference || otp || otpNumber,
         tenantId,
-        { withoutLogin: true }
-      );
-      // Reset context is no longer valid after success; clearing it also keeps
-      // passwords/OTP data out of future onboarding sessions.
-      clearFormData();
-      navigate(employeeAuthPaths.login, { replace: true });
+        type: Digit.UserService.getType().toUpperCase(),
+      };
+
+      await Digit.UserService.changePassword(requestData, tenantId);
+      navigate("/upyog-ui/employee/user/login", { replace: true });
     } catch (changePasswordError) {
-      setError(getEmployeeAuthError(changePasswordError));
+      setError(changePasswordError?.response?.data?.error?.fields?.[0]?.message || t("ES_SOMETHING_WRONG"));
+      window.setTimeout(() => setError(null), 5000);
     }
   };
 

@@ -113,20 +113,16 @@ export const UserService = {
     return roles && Array.isArray(roles) && roles.filter((role) => accessTo.includes(role.code)).length;
   },
 
-  changePassword: (details, stateCode, { withoutLogin = false } = {}) => {
-    // Existing callers retain session-based endpoint selection. Forgot-password
-    // callers can explicitly require the non-logged-in endpoint so stale
-    // session data cannot switch the API contract.
-    const hasLoggedInUser = Boolean(Digit.SessionStorage.get("User")?.info);
-
-    return ServiceRequest({
+  changePassword: (details, stateCode) =>
+    ServiceRequest({
       serviceName: "changePassword",
-      url: withoutLogin || !hasLoggedInUser ? Urls.ChangePassword : Urls.ChangePassword1,
-      data: { ...details },
-      auth: !withoutLogin,
+      url: Digit.SessionStorage.get("User")?.info ? Urls.ChangePassword1 : Urls.ChangePassword,
+      data: {
+        ...details,
+      },
+      auth: true,
       params: { tenantId: stateCode },
-    });
-  },
+    }),
 
   employeeSearch: (tenantId, filters) => {
     return Request({
