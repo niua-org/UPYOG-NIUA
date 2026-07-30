@@ -41,38 +41,38 @@ export const getResponsiveConfig = (responsive, screenType) => {
   return matchedScreen ? responsive[matchedScreen] : null;
 };
 
-export const createBackgroundStyle = (
-  backgroundConfig,
-  screenType
-) => {
+export const createBackgroundStyle = (backgroundConfig, screenType) => {
   if (!backgroundConfig) return {};
 
-  const {
-    showColor,
-    showBackgroundColor,
-    showBackgroundImage,
-    backgroundColor,
-    responsive,
-  } = backgroundConfig;
-  // Section configs use showBackgroundColor while older root/card configs use
-  // showColor. Color and image are independent layers when both are enabled.
-  const shouldShowColor = showBackgroundColor ?? showColor ?? Boolean(backgroundColor);
-  const style = shouldShowColor && backgroundColor ? { backgroundColor } : {};
+  const { showColor, showBackgroundColor, showBackgroundImage, backgroundColor, responsive, attachment, showShadow = false } = backgroundConfig;
 
-  const responsiveBackground = getResponsiveConfig(
-    responsive,
-    screenType
-  );
+  const backgroundStyle = {
+    showShadow,
+  };
 
-  if (!showBackgroundImage || !responsiveBackground?.image) return style;
+  const shouldShowBackgroundColor = showBackgroundColor ?? showColor ?? Boolean(backgroundColor);
+
+  if (shouldShowBackgroundColor && backgroundColor) {
+    backgroundStyle.backgroundColor = backgroundColor;
+  }
+
+  if (!showBackgroundImage) {
+    return backgroundStyle;
+  }
+
+  const responsiveBackground = getResponsiveConfig(responsive, screenType);
+
+  if (!responsiveBackground?.image) {
+    return backgroundStyle;
+  }
 
   return {
-    ...style,
+    ...backgroundStyle,
     backgroundImage: `url("${responsiveBackground.image}")`,
-    backgroundPosition: responsiveBackground.position || "center center",
-    backgroundSize: responsiveBackground.size || "cover",
-    backgroundAttachment: responsiveBackground.attachment || backgroundConfig.attachment || "scroll",
-    backgroundRepeat: "no-repeat",
+    backgroundPosition: responsiveBackground.position ?? "center center",
+    backgroundSize: responsiveBackground.size ?? "cover",
+    backgroundAttachment: responsiveBackground.attachment ?? attachment ?? "scroll",
+    backgroundRepeat: responsiveBackground.repeat ?? "no-repeat",
   };
 };
 
@@ -80,6 +80,5 @@ export const createBackgroundStyle = (
 export const createBackgroundCardStyle = (cardConfig, screenType) => {
   if (!cardConfig) return {};
 
-  const style = createBackgroundStyle(cardConfig, screenType);
-  return cardConfig.showShadow === false ? { ...style, boxShadow: "none" } : style;
+  return createBackgroundStyle(cardConfig, screenType);
 };

@@ -30,12 +30,14 @@ const OnboardingShell = ({ homePath }) => {
     [backgroundConfig, leftBackgroundConfig, rightBackgroundConfig, screenType]
   );
 
+  const { showShadow: showRightCardShadow, ...rightCardStyle } = rightCardBackground ?? {};
+
   // Configuration failure affects the complete onboarding experience, not an
   // individual form step. Replace the whole shell so the fallback is centered
   // across the viewport rather than constrained to the right-hand form panel.
   if (error) {
     return (
-      <section className="ui-rewamp">
+      <section className="upyog-ui">
         <main className="onboarding onboarding--fallback">
           <div className="onboarding__fallback" role="alert">
             <h1>Unable to load onboarding</h1>
@@ -50,7 +52,7 @@ const OnboardingShell = ({ homePath }) => {
   }
 
   return (
-    <section className="ui-rewamp">
+    <section className="upyog-ui">
       <section className="onboarding" style={background}>
         <aside className="onboarding__content" style={leftBackground}>
           <div className="onboarding__content-wrapper" style={leftCardBackground}>
@@ -89,7 +91,7 @@ const OnboardingShell = ({ homePath }) => {
         </aside>
 
         <aside className="onboarding__form" style={rightBackground}>
-          <div className="onboarding__form-wrapper" style={rightCardBackground}>
+          <div className={`onboarding__form-wrapper${showRightCardShadow ? " shadow" : ""}`} style={rightCardStyle}>
             <Outlet />
           </div>
         </aside>

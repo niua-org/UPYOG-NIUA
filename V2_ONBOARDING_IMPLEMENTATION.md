@@ -189,7 +189,7 @@ When no fields exist, the primary action is hidden, secondary actions remain ava
 - Keep Register and OTP routes guarded by the minimum context required by their APIs.
 - Do not persist OTP or password values.
 - Use Toast for API failures and inline messages for field validation.
-- Keep onboarding styles scoped beneath `.ui-rewamp` to avoid changing V1 pages.
+- Keep onboarding styles scoped beneath `.upyog-ui` to avoid changing V1 pages.
 - Keep missing configuration inside V2; never silently render the legacy page.
 - Add comments for routing, guards, and non-obvious authentication branching, not for self-explanatory JSX.
 

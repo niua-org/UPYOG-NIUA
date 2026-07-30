@@ -42,7 +42,7 @@ const ConfigurableFormFooter = memo(
                 onClick={() => onConfiguredAction(action)}
               >
                 <span>
-                  {action.icon && <img src={action.icon} alt="" />}
+                  {action.icon && <img src={action.icon} alt={t(action.label)} />}
                   {t(action.label)}
                 </span>
               </button>
@@ -51,7 +51,7 @@ const ConfigurableFormFooter = memo(
         )}
         {showSecureInfo && (
           <p>
-            {common.secureInfo.icon && <img src={common.secureInfo.icon} alt="" />}
+            {common.secureInfo.icon && <img src={common.secureInfo.icon} alt={t(common.secureInfo.text)} />}
             {t(common.secureInfo.text)}
           </p>
         )}

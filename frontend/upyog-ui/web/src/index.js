@@ -69,7 +69,7 @@ const AppProviders = ({ children, isConfigBased }) => {
 const bootstrap = () => {
   const root = createRoot(document.getElementById("root"));
   // We have to add this `CONFIG_BASED_UI` key in config, so that we can remove hardcoded boolean `true`
-  const isConfigBased = window.globalConfigs?.getConfig("CONFIG_BASED_UI") || false;
+  const isConfigBased = window.globalConfigs?.getConfig("CONFIG_BASED_UI") || true;
   root.render(
     <React.StrictMode>
       <AppProviders isConfigBased={isConfigBased}>

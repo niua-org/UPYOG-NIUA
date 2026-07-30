@@ -137,7 +137,7 @@ const ThemeStatus = ({ state }) => {
       : "The theme configuration could not be loaded. Please try again.";
 
   return (
-    <main className="ui-rewamp" style={statusContainerStyle}>
+    <main className="upyog-ui" style={statusContainerStyle}>
       <section style={statusCardStyle} role={isLoading ? "status" : "alert"}>
         <h1>
           <strong>{heading}</strong>

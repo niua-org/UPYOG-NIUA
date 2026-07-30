@@ -1,6 +1,6 @@
 @use "../utils/mixins" as *;
 
-.ui-rewamp {
+.upyog-ui {
   .onboarding {
     position: relative;
     z-index: 0;
@@ -212,6 +212,10 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+
+      &.shadow {
+        box-shadow: var(--theme-shadow-default);
+      }
 
       @include tablet {
         width: 560px;
