@@ -14,11 +14,11 @@ import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import EmployeeDashboard from "../../components/EmployeeDashboard";
 import OnboardingLayout from "../onboarding/OnboardingLayout";
 import {
-  EmployeeChangePasswordV2,
-  EmployeeForgotPasswordV2,
-  EmployeeLoginV2,
-} from "./EmployeeV2AuthFlow";
-import { EMPLOYEE_V2_ONBOARDING_STORAGE_KEY, getEmployeeAuthPaths } from "./employeeAuthRoutes";
+  ChangePasswordV2,
+  ForgotPasswordV2,
+  LoginV2,
+} from "./V2AuthFlow";
+import { EMPLOYEE_V2_ONBOARDING_STORAGE_KEY, getEmployeeAuthPaths } from "./AuthRoutes";
 
 const userScreensExempted = ["user/profile", "user/error"];
 
@@ -89,9 +89,9 @@ const EmployeeApp = ({
                 the provider/layout remains mounted across the reset flow. */}
             {/* Login is independent; forgot-password stores the continuation
                 context consumed and guarded by change-password. */}
-            <Route path="login" element={<EmployeeLoginV2 />} />
-            <Route path="forgot-password" element={<EmployeeForgotPasswordV2 />} />
-            <Route path="change-password" element={<EmployeeChangePasswordV2 />} />
+            <Route path="login" element={<LoginV2 />} />
+            <Route path="forgot-password" element={<ForgotPasswordV2 />} />
+            <Route path="change-password" element={<ChangePasswordV2 />} />
             <Route path="*" element={<Navigate to={employeeAuthPaths.login} replace />} />
           </Route>
         )}

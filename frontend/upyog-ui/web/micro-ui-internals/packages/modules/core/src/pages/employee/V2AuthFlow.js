@@ -6,7 +6,7 @@ import OnboardingForm from "../onboarding/OnboardingForm";
 import { useOnboarding } from "../onboarding/OnboardingContext";
 import { maskMobileNumber } from "../onboarding/formUtils";
 import { persistAuthSession } from "../onboarding/authSession";
-import { getEmployeeAuthPaths } from "./employeeAuthRoutes";
+import { getEmployeeAuthPaths } from "./AuthRoutes";
 
 // Normalize the different error envelopes returned by employee login, OTP and
 // password-reset APIs into one message contract for the shared Toast.
@@ -17,7 +17,7 @@ const getEmployeeAuthError = (error) =>
   error?.message ||
   "Invalid login credentials!";
 
-const EmployeeConfiguredStepV2 = ({ step, onSubmit, onSecondaryAction, onResend, descriptionSuffix }) => {
+const ConfiguredStepV2 = ({ step, onSubmit, onSecondaryAction, onResend, descriptionSuffix }) => {
   // OnboardingForm owns the reusable loading and missing-config states. This
   // adapter only connects Employee authentication actions to a configured step.
   return (
@@ -63,7 +63,7 @@ const getPostLoginPath = (user, requestedPath) => {
 
 // Bind the configured employee login step to the existing password-grant API
 // and version-aware forgot-password navigation.
-export const EmployeeLoginV2 = () => {
+export const LoginV2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState(null);
@@ -103,7 +103,7 @@ export const EmployeeLoginV2 = () => {
     <>
       {/* The shared form renders MDMS fields; this adapter supplies employee
           login and makes forgot-password the configured secondary action. */}
-      <EmployeeConfiguredStepV2
+      <ConfiguredStepV2
         step="login"
         onSubmit={handleLogin}
         onSecondaryAction={() => navigate(employeeAuthPaths.forgotPassword)}
@@ -115,7 +115,7 @@ export const EmployeeLoginV2 = () => {
 
 // Request a password-reset OTP from the configured mobile/city fields, then
 // persist only the non-sensitive continuation values needed by the next step.
-export const EmployeeForgotPasswordV2 = () => {
+export const ForgotPasswordV2 = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const { updateFormData } = useOnboarding();
@@ -158,9 +158,9 @@ export const EmployeeForgotPasswordV2 = () => {
 
   return (
     <>
-      {/* EmployeeConfiguredStepV2 resolves the forgot-password MDMS schema and
+      {/* ConfiguredStepV2 resolves the forgot-password MDMS schema and
           delegates its validated submission to the OTP request above. */}
-      <EmployeeConfiguredStepV2 step="forgot-password" onSubmit={handleForgotPassword} />
+      <ConfiguredStepV2 step="forgot-password" onSubmit={handleForgotPassword} />
       {error && <Toast error isDleteBtn label={error} onClose={() => setError(null)} />}
     </>
   );
@@ -168,7 +168,7 @@ export const EmployeeForgotPasswordV2 = () => {
 
 // Complete the guarded, non-logged-in employee password reset using the mobile
 // and tenant context created by EmployeeForgotPasswordV2.
-export const EmployeeChangePasswordV2 = () => {
+export const ChangePasswordV2 = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [error, setError] = useState(null);
@@ -239,7 +239,7 @@ export const EmployeeChangePasswordV2 = () => {
     <>
       {/* The shared form supplies password and OTP fields plus resend UI; this
           adapter supplies Employee-specific reset and validation behavior. */}
-      <EmployeeConfiguredStepV2
+      <ConfiguredStepV2
         step="change-password"
         onSubmit={handleChangePassword}
         onResend={handleResend}

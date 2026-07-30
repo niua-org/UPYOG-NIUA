@@ -7,7 +7,7 @@ import EmployeeLogin from "../pages/employee/Login/index";
 import ChangePassword from "../pages/employee/ChangePassword/index";
 import ForgotPassword from "../pages/employee/ForgotPassword/index";
 import LanguageSelection from "../pages/employee/LanguageSelection";
-import { getEmployeeAuthPaths } from "../pages/employee/employeeAuthRoutes";
+import { getEmployeeAuthPaths } from "../pages/employee/AuthRoutes";
 // import UserProfile from "./userProfile";
 
 const getTenants = (codes, tenants) => {
