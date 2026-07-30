@@ -58,7 +58,7 @@ const OnboardingForm = ({
     // mounted instead of falling back to a legacy component.
     return (
       <div className="onboarding__status">
-        Configuration missing for <strong>{step}</strong> step.
+        {t("CORE_ONBOARDING_CONFIG_MISSING_FOR")} <strong>{step}</strong> {t("CORE_ONBOARDING_STEP")}.
       </div>
     );
   }
