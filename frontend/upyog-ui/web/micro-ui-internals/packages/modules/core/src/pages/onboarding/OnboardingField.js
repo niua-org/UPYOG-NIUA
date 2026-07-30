@@ -139,7 +139,7 @@ const OnboardingField = ({
     onBlur,
   };
   const input =
-    // DIGIT controls expose different change signatures, normalized here for React Hook Form.
+    // UPYOG controls expose different change signatures, normalized here for React Hook Form.
     fieldType === "tel" ? (
       <MobileNumber {...commonInputProps} onChange={onChange} />
     ) : fieldType === "date" ? (

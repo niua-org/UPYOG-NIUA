@@ -5,6 +5,7 @@ import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import OnboardingForm from "../onboarding/OnboardingForm";
 import { useOnboarding } from "../onboarding/OnboardingContext";
 import { maskMobileNumber } from "../onboarding/formUtils";
+import { persistAuthSession } from "../onboarding/authSession";
 import { getEmployeeAuthPaths } from "./employeeAuthRoutes";
 
 // Normalize the different error envelopes returned by employee login, OTP and
@@ -36,20 +37,15 @@ const persistEmployeeSession = (user) => {
   const locale = Digit.SessionStorage.get("locale") || "en_IN";
   const tenantId = user?.info?.tenantId;
 
-  // Retain the same DIGIT and backward-compatible storage keys consumed by
-  // existing employee modules after authentication.
-  Digit.SessionStorage.set("citizen.userRequestObject", user);
-  Digit.SessionStorage.set("Employee.tenantId", tenantId);
-  Digit.UserService.setUser(user);
-  localStorage.setItem("Employee.tenant-id", tenantId);
-  localStorage.setItem("tenant-id", tenantId);
-  localStorage.setItem("citizen.userRequestObject", JSON.stringify(user?.info));
-  localStorage.setItem("locale", locale);
-  localStorage.setItem("Employee.locale", locale);
-  localStorage.setItem("token", user?.access_token);
-  localStorage.setItem("Employee.token", user?.access_token);
-  localStorage.setItem("user-info", JSON.stringify(user?.info));
-  localStorage.setItem("Employee.user-info", JSON.stringify(user?.info));
+  // Reuse the common key map and request Employee's additional session tenant
+  // entry, which existing employee modules still consume.
+  persistAuthSession({
+    user,
+    tenantId,
+    locale,
+    storageNamespace: "Employee",
+    sessionTenantKey: "Employee.tenantId",
+  });
 };
 
 // Retain the legacy role-specific landing pages and honor a protected route's

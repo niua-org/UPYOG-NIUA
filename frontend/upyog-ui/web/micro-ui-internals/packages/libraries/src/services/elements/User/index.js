@@ -122,7 +122,7 @@ export const UserService = {
     return ServiceRequest({
       serviceName: "changePassword",
       url: withoutLogin || !hasLoggedInUser ? Urls.ChangePassword : Urls.ChangePassword1,
-      data: details,
+      data: { ...details },
       auth: !withoutLogin,
       params: { tenantId: stateCode },
     });

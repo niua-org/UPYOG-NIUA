@@ -16,7 +16,7 @@ export const getDataSourceKey = (field) => {
   return field.name;
 };
 
-// Option sources can customize their value property while common DIGIT shapes remain supported.
+// Option sources can customize their value property while common UPYOG shapes remain supported.
 export const getOptionValue = (option, field = {}) => {
   if (option === null || option === undefined || typeof option !== "object") return option;
   return option[field.valueKey] ?? option.value ?? option.code;

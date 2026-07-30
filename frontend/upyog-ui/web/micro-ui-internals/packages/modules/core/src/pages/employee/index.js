@@ -62,8 +62,8 @@ const EmployeeApp = ({
     Digit.UserService.setType("employee");
   }, []);
   sourceUrl = "https://s3.ap-south-1.amazonaws.com/egov-qa-assets";
-  const pdfUrl = "https://pg-egov-assets.s3.ap-south-1.amazonaws.com/Upyog+Code+and+Copyright+License_v1.pdf";
-
+  // Commented `pdfUrl` as we are not using it anywhere
+  // const pdfUrl = "https://pg-egov-assets.s3.ap-south-1.amazonaws.com/Upyog+Code+and+Copyright+License_v1.pdf";
 
   return (
     <div className="employee">
@@ -187,15 +187,12 @@ const EmployeeApp = ({
                         />
                       }
                     />
-                      <Route
-                        path="*"
-                        element={
-                          // Unknown legacy auth URLs stay in the current flow:
-                          // V2 goes to V2 login, while V1 keeps language selection.
-                          <Navigate
-                          to={isV2 ? employeeAuthPaths.login : "/upyog-ui/employee/user/language-selection"}
-                          replace
-                        />
+                    <Route
+                      path="*"
+                      element={
+                        // Unknown legacy auth URLs stay in the current flow:
+                        // V2 goes to V2 login, while V1 keeps language selection.
+                        <Navigate to={isV2 ? employeeAuthPaths.login : "/upyog-ui/employee/user/language-selection"} replace />
                       }
                     />
                   </Routes>
@@ -236,13 +233,7 @@ const EmployeeApp = ({
                         element={
                           // Protected modules need the version flag so session
                           // expiry returns users to the matching employee login.
-                          <AppModules
-                            stateCode={stateCode}
-                            userType="employee"
-                            modules={modules}
-                            appTenants={appTenants}
-                            isV2={isV2}
-                          />
+                          <AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} isV2={isV2} />
                         }
                       />
                     </Routes>

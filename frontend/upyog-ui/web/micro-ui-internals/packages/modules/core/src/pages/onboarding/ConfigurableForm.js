@@ -100,7 +100,7 @@ const ConfigurableForm = ({
     defaultValues,
     mode: "onBlur",
     reValidateMode: "onChange",
-    // Custom DIGIT controls expose different ref structures. Disable React
+    // Custom UPYOG controls expose different ref structures. Disable React
     // Hook Form's automatic focus so it cannot override the ordered handler
     // below (for example, focusing mobile after Select city was chosen).
     shouldFocusError: false,
@@ -248,7 +248,7 @@ const ConfigurableForm = ({
                     onChange={(value) => {
                       // Explicitly revalidate an already-invalid field on its
                       // first value change. This is important for controlled
-                      // DIGIT dropdowns whose value is also mirrored to context;
+                      // UPYOG dropdowns whose value is also mirrored to context;
                       // untouched fields still follow the form's onBlur mode.
                       setValue(field.name, value, {
                         shouldDirty: true,
