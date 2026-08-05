@@ -224,6 +224,36 @@ export const GCDataConvert = (data) => {
     return formData;
 };
 
+export const getGCStatusOptions = (t) => [
+  { i18nKey: t("GC_STATUS_INITIATED"), value: t("GC_STATUS_INITIATED"), code: "INITIATED" },
+  { i18nKey: t("GC_STATUS_PENDING_FOR_VERIFICATION"), value: t("GC_STATUS_PENDING_FOR_VERIFICATION"), code: "PENDING_FOR_VERIFICATION" },
+  { i18nKey: t("GC_STATUS_PENDING_FOR_APPROVAL"), value: t("GC_STATUS_PENDING_FOR_APPROVAL"), code: "PENDING_FOR_APPROVAL" },
+  { i18nKey: t("GC_STATUS_EDIT_APPLICATION"), value: t("GC_STATUS_EDIT_APPLICATION"), code: "EDIT_APPLICATION" },
+  { i18nKey: t("GC_STATUS_APPROVED"), value: t("GC_STATUS_APPROVED"), code: "APPROVED" },
+  { i18nKey: t("GC_STATUS_REJECTED"), value: t("GC_STATUS_REJECTED"), code: "REJECTED" },
+  { i18nKey: t("GC_STATUS_PENDING_FOR_PAYMENT"), value: t("GC_STATUS_PENDING_FOR_PAYMENT"), code: "PENDING_FOR_PAYMENT" },
+  { i18nKey: t("GC_STATUS_PAID"), value: t("GC_STATUS_PAID"), code: "PAID" },
+];
+
+export const downloadGCReceipt = async (tenantId, payments) => {
+  const paymentList = Array.isArray(payments) ? payments : [payments];
+  let response;
+  if (paymentList[0]?.fileStoreId) {
+    response = { filestoreIds: [paymentList[0].fileStoreId] };
+  } else {
+    response = await Digit.PaymentService.generatePdf(tenantId, { Payments: paymentList }, "garbage-service-receipt");
+  }
+  const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: response.filestoreIds[0] });
+  window.open(fileStore[response.filestoreIds[0]], "_blank");
+};
+
+export const downloadGCAcknowledgement = async (application, tenants, t) => {
+  const tenantInfo = tenants?.find((tenant) => tenant.code === application?.tenantId);
+  const getGcAcknowledgementData = (await import("../getGcAcknowledgementData")).default;
+  const ackData = await getGcAcknowledgementData({ garbageAccounts: [application] }, tenantInfo, t);
+  Digit.Utils.pdf.generate(ackData);
+};
+
 export const GCAPIToFormData = (application, params) => {
   const updatedApplication = { ...application };
 
@@ -241,20 +271,20 @@ export const GCAPIToFormData = (application, params) => {
   // Basic Details
   updatedApplication.name = params?.gcspecifications?.name;
   updatedApplication.mobileNumber = params?.gcspecifications?.phoneNumber;
-  updatedApplication.gender = params?.gcspecifications?.gender?.value || "";
+  updatedApplication.gender = params?.gcspecifications?.gender?.code || "";
   updatedApplication.emailId = params?.gcspecifications?.email;
 
   // Address
   updatedApplication.addresses = [
     {
       ...application?.addresses?.[0],
-      city: params?.gcpropertylocdetails?.city?.value,
+      city: params?.gcpropertylocdetails?.city?.code,
       pincode: params?.gcpropertylocdetails?.pincode,
       address1: params?.gcpropertylocdetails?.addressline1,
       address2: params?.gcpropertylocdetails?.addressline2,
       additionalDetail: {
         ...application?.addresses?.[0]?.additionalDetail,
-        locality: params?.gcpropertylocdetails?.locality?.value,
+        locality: params?.gcpropertylocdetails?.locality?.code,
         houseNo: params?.gcpropertylocdetails?.houseNo,
         houseName: params?.gcpropertylocdetails?.houseName,
         streetName: params?.gcpropertylocdetails?.streetName,
@@ -267,16 +297,14 @@ export const GCAPIToFormData = (application, params) => {
   updatedApplication.grbgCollectionUnits = [
     {
       ...application?.grbgCollectionUnits?.[0],
-      ownerType: params?.gcspecifications?.propertyOwnerType?.value,
-      unitType: params?.gcspecifications?.typeOfCollection?.value,
-      category: params?.gcspecifications?.category?.value,
-      subCategory: params?.gcspecifications?.subCategory?.value,
-      subCategoryType: params?.gcspecifications?.subCategoryType?.value,
-      specialCategory:
-        params?.gcspecialcategory?.specialCategory?.value || "",
+      ownerType: params?.gcspecifications?.propertyOwnerType?.code,
+      unitType: params?.gcspecifications?.typeOfCollection?.code,
+      category: params?.gcspecifications?.category?.code,
+      subCategory: params?.gcspecifications?.subCategory?.code,
+      subCategoryType: params?.gcspecifications?.subCategoryType?.code,
+      specialCategory: params?.gcspecialcategory?.specialCategory?.code || "",
       oldGarbageId: params?.gcspecifications?.oldGarbageId,
-      isVariableCalculation:
-        params?.gcspecifications?.isVariableCalculation,
+      isVariableCalculation: params?.gcspecifications?.isVariableCalculation,
       isbulkgeneration: params?.gcspecifications?.isbulkgeneration,
       no_of_units: Number(params?.gcspecifications?.no_of_units || 0),
       isInheritance: params?.gcspecifications?.isInheritance,
@@ -299,3 +327,5 @@ export const GCAPIToFormData = (application, params) => {
 
   return updatedApplication;
 };
+
+export const multiUnits = ["HOUSEHOLD_MULTI_COLLECTION", "COMMERCIAL_MULTI_COLLECTION", "MIX_PROPERTY"];
