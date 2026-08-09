@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class MultiTenantSchemaConnectionProvider implements MultiTenantConnectionProvider {
+public class MultiTenantSchemaConnectionProvider implements MultiTenantConnectionProvider<String> {
     private static final long serialVersionUID = -6022082859572861041L;
     private static final Logger LOG = LoggerFactory.getLogger(MultiTenantSchemaConnectionProvider.class);
 
@@ -37,7 +37,7 @@ public class MultiTenantSchemaConnectionProvider implements MultiTenantConnectio
             return connection;
         } catch (SQLException e) {
             LOG.error("Error occurred while switching tenant schema upon getting connection. " +
-                      "Could not alter JDBC connection to specified schema [" + tenantId + "]", e);
+                    "Could not alter JDBC connection to specified schema [" + tenantId + "]", e);
         }
         return null;
     }
@@ -55,8 +55,8 @@ public class MultiTenantSchemaConnectionProvider implements MultiTenantConnectio
             try {
                 connection.setSchema("public");
             } catch (SQLException e) {
-                LOG.debug("Could not reset schema on connection release (JTA already committed) - ignoring: {}", 
-                          e.getMessage());
+                LOG.debug("Could not reset schema on connection release (JTA already committed) - ignoring: {}",
+                        e.getMessage());
             }
             releaseAnyConnection(connection);
         } catch (SQLException e) {
@@ -66,16 +66,11 @@ public class MultiTenantSchemaConnectionProvider implements MultiTenantConnectio
 
     @Override
     public boolean supportsAggressiveRelease() {
-        /*
-          FIX: Must be FALSE in JTA/WildFly environment.
-          TRUE causes Hibernate to release connections mid-transaction,
-          leading to "Transaction cannot proceed: STATUS_COMMITTED" errors.
-        */
-        return Boolean.FALSE;
+        return false;
     }
 
     @Override
-    public boolean isUnwrappableAs(Class unwrapType) {
+    public boolean isUnwrappableAs(Class<?> unwrapType) {
         return MultiTenantConnectionProvider.class.equals(unwrapType)
                 || AbstractMultiTenantConnectionProvider.class.isAssignableFrom(unwrapType);
     }
