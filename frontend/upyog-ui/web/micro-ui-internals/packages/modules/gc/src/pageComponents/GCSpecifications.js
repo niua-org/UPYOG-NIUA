@@ -32,9 +32,6 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
     const convertToObject = (params) => ({ i18nKey: params, code: params, value: params });
 
     const user = Digit.UserService.getUser().info;
-    const inputStyles = {
-        width: user?.type === "EMPLOYEE" ? "50%" : "100%",
-    };
     const stateId = Digit.ULBService.getStateId();
 
     // --- MDMS fetches: master names now match your MDMS files exactly ---
@@ -199,151 +196,173 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
                     (multiUnits.includes(typeOfCollection?.code) && !no_of_units)
                 }
             >
-                <div>
-                    <CardLabel>{t("GC_OLD_GARBAGE_ID")}</CardLabel>
-                    <TextInput
-                        value={oldGarbageId}
-                        style={inputStyles}
-                        onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, "");
-                            setOldGarbageId(value);
-                            if (!value) setIsInheritance(false);
-                        }}
-                    />
+                <div className="gc-form-step-wrapper">
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>{t("GC_OLD_GARBAGE_ID")}</CardLabel>
+                        <TextInput
+                            value={oldGarbageId}
+                            placeholder="Enter Old Garbage ID (optional)"
+                            onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, "");
+                                setOldGarbageId(value);
+                                if (!value) setIsInheritance(false);
+                            }}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_TYPE_OF_COLLECTION")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <Dropdown
-                        option={CollectionTypes}
-                        optionKey="i18nKey"
-                        selected={typeOfCollection}
-                        select={(val) => {
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_TYPE_OF_COLLECTION")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <Dropdown
+                            option={CollectionTypes}
+                            optionKey="i18nKey"
+                            selected={typeOfCollection}
+                            select={(val) => {
                                 setTypeOfCollection(val);
                                 if (!multiUnits.includes(val?.code)) setNoOfUnits("");
                             }}
-                        placeholder={t("GC_SELECT_TYPE")}
-                        style={inputStyles}
-                        t={t}
-                    />
+                            placeholder={t("GC_SELECT_TYPE")}
+                            t={t}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_OWNER_OR_TENANT")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <Dropdown
-                        option={OwnerTypes}
-                        optionKey="i18nKey"
-                        selected={propertyOwnerType}
-                        select={(val) => {
-                            setPropertyOwnerType(val);
-                            // Owners use the contact number entered in Applicant Details;
-                            // tenants must provide their own contact number.
-                            setPhoneNumber(isOwner(val) ? applicantPhoneNumber : "");
-                        }}
-                        style={inputStyles}
-                        t={t}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_OWNER_OR_TENANT")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <Dropdown
+                            option={OwnerTypes}
+                            optionKey="i18nKey"
+                            selected={propertyOwnerType}
+                            select={(val) => {
+                                setPropertyOwnerType(val);
+                                setPhoneNumber(isOwner(val) ? applicantPhoneNumber : "");
+                            }}
+                            placeholder="Select Owner or Tenant"
+                            t={t}
+                        />
+                    </div>
 
                     {multiUnits.includes(typeOfCollection?.code) && (
-                        <>
+                        <div className="gc-form-field-wrap">
                             <CardLabel>
-                                {t("GC_NO_OF_UNITS")} <span className="astericColor">*</span>
+                                {t("GC_NO_OF_UNITS")} <span className="gc-required-star">*</span>
                             </CardLabel>
                             <TextInput
                                 value={no_of_units}
-                                style={inputStyles}
+                                placeholder="Enter Number of Units"
                                 onChange={(e) => setNoOfUnits(e.target.value.replace(/\D/g, ""))}
                             />
-                        </>
+                        </div>
                     )}
 
-                    <CardLabel>
-                        {t("GC_NAME")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <TextInput
-                        value={name}
-                        style={inputStyles}
-                        onChange={(e) => setName(e.target.value.replace(/[^A-Za-z ]/g, ""))}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_NAME")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <TextInput
+                            value={name}
+                            placeholder="Enter Name"
+                            onChange={(e) => setName(e.target.value.replace(/[^A-Za-z ]/g, ""))}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_PHONE_NUMBER")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <TextInput
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={10}
-                        value={phoneNumber}
-                        placeholder={t("GC_PHONE_NO_DISCLAIMER")}
-                        style={inputStyles}
-                        onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                            if (value.length > 0 && !/^[5-9]/.test(value)) value = "";
-                            setPhoneNumber(value);
-                        }}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_PHONE_NUMBER")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <TextInput
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={10}
+                            value={phoneNumber}
+                            placeholder={t("GC_PHONE_NO_DISCLAIMER") || "Enter 10 digit mobile number"}
+                            onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                if (value.length > 0 && !/^[5-9]/.test(value)) value = "";
+                                setPhoneNumber(value);
+                            }}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_GENDER")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <Dropdown
-                        option={Genders}
-                        optionKey="i18nKey"
-                        selected={gender}
-                        select={setGender}
-                        style={inputStyles}
-                        t={t}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_GENDER")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <Dropdown
+                            option={Genders}
+                            optionKey="i18nKey"
+                            selected={gender}
+                            select={setGender}
+                            placeholder="Select Gender"
+                            t={t}
+                        />
+                    </div>
 
-                    <CardLabel>{t("GC_EMAIL")}</CardLabel>
-                    <TextInput value={email} style={inputStyles} onChange={(e) => setEmail(e.target.value.trim())} />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>{t("GC_EMAIL")}</CardLabel>
+                        <TextInput
+                            value={email}
+                            placeholder="Enter Email Address"
+                            onChange={(e) => setEmail(e.target.value.trim())}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_CATEGORY")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <Dropdown
-                        option={UniqueCategories}
-                        optionKey="i18nKey"
-                        selected={category}
-                        select={handleCategoryChange}
-                        style={inputStyles}
-                        t={t}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_CATEGORY")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <Dropdown
+                            option={UniqueCategories}
+                            optionKey="i18nKey"
+                            selected={category}
+                            select={handleCategoryChange}
+                            placeholder="Select Category"
+                            t={t}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_SUB_CATEGORY")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <Dropdown
-                        option={UniqueSubCategories}
-                        optionKey="i18nKey"
-                        selected={subCategory}
-                        select={handleSubCategoryChange}
-                        style={inputStyles}
-                        t={t}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_SUB_CATEGORY")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <Dropdown
+                            option={UniqueSubCategories}
+                            optionKey="i18nKey"
+                            selected={subCategory}
+                            select={handleSubCategoryChange}
+                            placeholder="Select Sub Category"
+                            t={t}
+                        />
+                    </div>
 
-                    <CardLabel>
-                        {t("GC_SUB_CATEGORY_TYPE")} <span className="astericColor">*</span>
-                    </CardLabel>
-                    <Dropdown
-                        option={UniqueSubCategoryTypes}
-                        optionKey="i18nKey"
-                        selected={subCategoryType}
-                        select={handleSubCategoryTypeChange}
-                        style={inputStyles}
-                        t={t}
-                    />
+                    <div className="gc-form-field-wrap">
+                        <CardLabel>
+                            {t("GC_SUB_CATEGORY_TYPE")} <span className="gc-required-star">*</span>
+                        </CardLabel>
+                        <Dropdown
+                            option={UniqueSubCategoryTypes}
+                            optionKey="i18nKey"
+                            selected={subCategoryType}
+                            select={handleSubCategoryTypeChange}
+                            placeholder="Select Sub Category Type"
+                            t={t}
+                        />
+                    </div>
 
                     {oldGarbageId && oldGarbageId.trim().length > 0 && (
-                        <CheckBox
-                            label={t("GC_IS_INHERITANCE")}
-                            checked={isInheritance}
-                            onChange={(e) => setIsInheritance(e.target.checked)}
-                        />
+                        <div className="gc-form-field-wrap">
+                            <CheckBox
+                                label={t("GC_IS_INHERITANCE")}
+                                checked={isInheritance}
+                                onChange={(e) => setIsInheritance(e.target.checked)}
+                            />
+                        </div>
                     )}
 
                     {isAdditional && (
-                        <>
+                        <div className="gc-form-field-wrap">
                             <CardLabel>{t("GC_CALCULATION_TYPE")}</CardLabel>
                             <div style={{ display: "flex", gap: "16px", marginBottom: "16px" }}>
                                 <CheckBox
@@ -363,18 +382,18 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
                                     }}
                                 />
                             </div>
-                        </>
+                        </div>
                     )}
 
                     {isAdditional && isVariableCalculation && (
-                        <>
+                        <div className="gc-form-field-wrap">
                             <CardLabel>{t("GC_NO_OF_UNITS")}</CardLabel>
                             <TextInput
                                 value={no_of_units}
-                                style={inputStyles}
+                                placeholder="Enter Number of Units"
                                 onChange={(e) => setNoOfUnits(e.target.value.replace(/\D/g, ""))}
                             />
-                        </>
+                        </div>
                     )}
                 </div>
             </FormStep>
