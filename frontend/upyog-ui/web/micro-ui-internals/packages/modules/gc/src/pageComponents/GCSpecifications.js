@@ -146,7 +146,6 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
 
         setIsvariablecalculation(false);
         setIsbulkgeneration(false);
-        setNoOfUnits("");
     };
 
     const goNext = () => {
