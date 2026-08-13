@@ -77,6 +77,9 @@ public class CollectionDocument {
     @Id
     private String id;
 
+    // Migrated from FieldType.String + FieldIndex.not_analyzed to FieldType.Keyword (PR #1798 / Java 17 LTS upgrade).
+    // ES 5.x split the generic string type into 'text' (analyzed) and 'keyword' (not analyzed, exact match).
+    // FieldIndex.not_analyzed no longer exists in the updated Spring Data ES API; FieldType.Keyword is its direct equivalent.
     @Field(type = FieldType.Keyword)
     private String receiptNumber;
 
