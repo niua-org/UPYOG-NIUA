@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.egov.garbageservice.model.*;
+import org.egov.garbageservice.web.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -91,6 +91,7 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                         .businessService(rs.getString("business_service"))
                         .approvalDate(rs.getLong("approval_date"))
                         .channel(rs.getString("channel"))
+                        .dueDate(rs.getDate("due_date") != null ? rs.getDate("due_date").toLocalDate() : null)
                         .build();
 
                 accountsMap.put(accountId, garbageAccount);

@@ -1,12 +1,10 @@
-import { Card, CardSubHeader, Header, Loader, Row, StatusTable, SubmitBar, ActionBar, Modal, Toast, TextArea, CardText, CloseSvg } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { useEffect, useState, useRef } from "react";
+import { Card, CardSubHeader, CardSectionHeader, Header, Loader, Row, StatusTable, SubmitBar, ActionBar, Modal, Toast, TextArea, CardText, CloseSvg, MultiLink } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-// GC Application Details Component
-// This component displays detailed information about a specific GC application,
-// including applicant details, property location, garbage specifications, and payment status.
+import GCWFApplicationTimeline from "../../pageComponents/GCWFApplicationTimeline";
+import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits } from "../../utils";
 
 /**
  * GCApplicationDetails Component (Citizen)
@@ -25,7 +23,7 @@ const GCApplicationDetails = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const params = useParams();
-  
+
   // Reconstruct application number from URL params
   let reconstructedAppNo = params.applicationNo;
   if (params["*"]) {
@@ -34,11 +32,7 @@ const GCApplicationDetails = () => {
   const applicationNo = decodeURIComponent(reconstructedAppNo);
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
-  const [userType, setUserType] = useState("citizen");
-  const [billData, setBillData] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState("CHECKING");
-  const isMountedRef = useRef(true);
-
+  const [showOptions, setShowOptions] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
   const [comments, setComments] = useState("");
   const [showToast, setShowToast] = useState(null);
@@ -49,18 +43,6 @@ const GCApplicationDetails = () => {
       return () => clearTimeout(timer);
     }
   }, [showToast]);
-
-  useEffect(() => {
-    const currentPath = navigate.location?.pathname || window.location.pathname;
-    if (currentPath.includes("/employee/")) {
-      setUserType("employee");
-    } else {
-      setUserType("citizen");
-    }
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [navigate.location?.pathname]);
 
   const searchCriteria = {
     searchCriteriaGarbageAccount: {
@@ -78,6 +60,16 @@ const GCApplicationDetails = () => {
   const application = applicationList.length > 0 ? applicationList[0] : null;
 
   const businessService = application?.businessService || "garbage-service";
+
+  const { data: storeData } = Digit.Hooks.useStore.getInitData();
+  const { tenants } = storeData || {};
+
+  const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
+    { tenantId, businessService: "garbage-service", consumerCodes: applicationNo},
+    { enabled: !!applicationNo }
+  );
+
+  const GCDocuments = Digit?.ComponentRegistryService?.getComponent("GCDocuments");
 
   const { isLoading: isWorkflowLoading, data: workflowDetails } = Digit.Hooks.useWorkflowDetails({
     tenantId: tenantId,
@@ -153,40 +145,24 @@ const GCApplicationDetails = () => {
     appData?.applicationStatus ||
     t("CS_NA");
 
-  useEffect(() => {
-    const fetchBillData = async () => {
-      if (!isMountedRef.current) return;
-      try {
-        const result = await Digit.PaymentService.fetchBill(tenantId, {
-          businessService: "gc-services",
-          consumerCode: applicationNo,
-        });
-        if (isMountedRef.current) {
-          setBillData(result);
-          if (result?.Bill?.[0]?.totalAmount > 0) {
-            setPaymentStatus("PENDING");
-          } else {
-            setPaymentStatus("PAID");
-          }
-        }
-      } catch (error) {
-        if (isMountedRef.current) {
-          setPaymentStatus("UNKNOWN");
-        }
-      }
-    };
+  const dueDate = appData?.dueDate || null;
 
-    if (application && appStatus === "PENDINGPAYMENT") {
-      fetchBillData();
-    } else if (application) {
-      setPaymentStatus(appStatus === "APPROVED" ? "PAID" : "NA");
-    }
-  }, [application, appStatus, tenantId]);
+  const downloadOptions = [];
+  downloadOptions.push({
+    label: t("GC_DOWNLOAD_ACKNOWLEDGEMENT"),
+    onClick: () => downloadGCAcknowledgement(appData, tenants, t),
+  });
+  if (reciept_data?.Payments?.length > 0 && !recieptDataLoading) {
+    downloadOptions.push({
+      label: t("GC_FEE_RECEIPT"),
+      onClick: () => downloadGCReceipt(reciept_data.Payments[0].tenantId, reciept_data.Payments[0]),
+    });
+  }
+
+  const docs = appData?.documents || [];
 
   const handleMakePayment = () => {
-    navigate({
-      pathname: `/upyog-ui/citizen/payment/collect/gc-services/${encodeURIComponent(appNo)}/${tenantId}?tenantId=${tenantId}`,
-    });
+    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
   };
 
   if (isLoading || isWorkflowLoading) {
@@ -249,115 +225,52 @@ const GCApplicationDetails = () => {
     additionalDetails?.alternateNumber;
 
   // ---------- Address ----------
-  let address = appData?.addresses?.[0] || appData?.address || appData?.propertyLocation || {};
-  if (Array.isArray(address)) address = address[0] || {};
+  const address = appData?.addresses?.[0] || {};
+  const addressAdditional = address?.additionalDetail || {};
+  const propertyLocation = appData?.propertyLocation || {};
 
-  const addressAdditional = address?.additionalDetail || address?.additionalDetails || {};
-
-  const propertyId = address?.propertyId || appData?.propertyId || additionalDetails?.propertyId;
-  const pincode = address?.pincode || address?.pinCode || address?.zipCode || appData?.pincode;
-  const city =
-    address?.city ||
-    address?.cityCode ||
-    address?.cityName ||
-    appData?.city ||
-    appData?.tenantId?.split(".")?.[1] ||
-    appData?.tenantId;
-
-  const localityObj =
-    address?.locality ||
-    addressAdditional?.locality ||
-    address?.mohalla ||
-    address?.mohallaObj ||
-    appData?.locality;
-  const localityText = localityObj?.name
-    ? t(localityObj.name)
-    : localityObj?.code
-      ? t(localityObj.code)
-      : typeof localityObj === "string"
-        ? t(localityObj)
-        : null;
-
-  const street =
-    address?.street ||
-    addressAdditional?.streetName ||
-    address?.streetName ||
-    address?.roadName ||
-    appData?.streetName ||
-    appData?.street;
-
-  const houseNo =
-    address?.doorNo ||
-    addressAdditional?.houseNo ||
-    address?.houseNo ||
-    address?.buildingNo ||
-    address?.plotNo ||
-    appData?.doorNo ||
-    appData?.houseNo;
-
-  const buildingName =
-    address?.buildingName ||
-    addressAdditional?.houseName ||
-    address?.premise ||
-    address?.premiseName ||
-    appData?.buildingName;
-
-  const addressLine1 = address?.addressLine1 || address?.address1 || appData?.addressLine1;
-  const addressLine2 = address?.addressLine2 || address?.address2 || appData?.addressLine2;
-  const landmark = address?.landmark || addressAdditional?.landmark || address?.landMark || appData?.landmark;
+  const propertyId = appData?.propertyId || propertyLocation?.propertyId;
+  const pincode = address?.pincode || propertyLocation?.pincode;
+  const city = address?.city || propertyLocation?.city || appData?.tenantId;
+  const localityRaw = addressAdditional?.locality || propertyLocation?.locality;
+  const localityText = typeof localityRaw === "string" ? t(localityRaw) : localityRaw?.name ? t(localityRaw.name) : null;
+  const street = addressAdditional?.streetName || propertyLocation?.streetName;
+  const houseNo = addressAdditional?.houseNo || propertyLocation?.houseNo;
+  const buildingName = addressAdditional?.houseName || propertyLocation?.houseName;
+  const addressLine1 = address?.address1 || propertyLocation?.addressline1;
+  const addressLine2 = address?.address2 || propertyLocation?.addressline2;
+  const landmark = addressAdditional?.landmark || propertyLocation?.landmark;
 
   // ---------- Garbage Specs ----------
-  let specs = appData?.grbgCollectionUnits?.[0] || appData?.garbageSpecification || {};
-  if (Array.isArray(specs)) specs = specs[0] || {};
-
-  const typeOfCollection =
-    specs?.typeOfCollection ||
-    specs?.unitType ||
-    specs?.collectionType ||
-    specs?.collectionMethod ||
-    specs?.type;
-
-  const category = specs?.category || specs?.propertyCategory || specs?.garbageCategory;
-  const subCategory = specs?.subCategory || specs?.propertySubCategory || specs?.garbageSubCategory;
-
-  const ownerOrTenant =
-    appData?.isOwner !== undefined
-      ? appData.isOwner
-        ? "Owner"
-        : "Tenant"
-      : specs?.propertyOwnerType ||
-      specs?.ownerOrTenant ||
-      specs?.occupancyType ||
-      specs?.ownershipType ||
-      specs?.tenantOrOwner;
-
-  const estimatedQuantity =
-    specs?.estimatedQuantity ??
-    specs?.no_of_units ??
-    specs?.wasteQuantity ??
-    specs?.quantity ??
-    specs?.expectedQuantity ??
-    specs?.wasteSize ??
-    specs?.totalWeight;
-
-  const collectionFrequency =
-    specs?.collectionFrequency || specs?.frequency || specs?.pickupFrequency || specs?.duration;
-
-  const wasteType =
-    specs?.wasteType || specs?.typeOfWaste || specs?.garbageType || specs?.wasteCategory;
-
-  const specialRequest =
-    specs?.specialRequest ||
-    specs?.remarks ||
-    specs?.description ||
-    specs?.comments ||
-    specs?.specialInstructions;
+  const specs = appData?.grbgCollectionUnits?.[0] || {};
+  const garbageSpec = appData?.garbageSpecification || {};
+  const oldGarbageId = appData?.grbgOldDetails?.oldGarbageId || garbageSpec?.oldGarbageId;
+  const typeOfCollection = specs?.unitType || garbageSpec?.typeOfCollection;
+  const ownerOrTenant = specs?.ownerType || garbageSpec?.propertyOwnerType;
+  const category = specs?.category || garbageSpec?.category;
+  const subCategory = specs?.subCategory || garbageSpec?.subCategory;
+  const subCategoryType = specs?.subCategoryType || garbageSpec?.subCategoryType;
+  const no_of_units = specs?.no_of_units || garbageSpec?.no_of_units;
+  const specialCategory = specs?.specialCategory || garbageSpec?.specialCategory;
+  const isInheritance = specs?.isInheritance || garbageSpec?.isInheritance;
+  const specName = garbageSpec?.name || appData?.name;
+  const specPhone = garbageSpec?.phoneNumber || appData?.mobileNumber;
+  const specGender = garbageSpec?.gender || appData?.gender;
+  const specEmail = garbageSpec?.email || appData?.emailId;
   // ---------- Render ----------
   return (
     <React.Fragment>
       <div>
         <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
           <Header styles={{ fontSize: "32px" }}>{t("GC_APPLICATION_DETAILS")}</Header>
+          {downloadOptions.length > 0 && (
+            <MultiLink
+              className="multilinkWrapper"
+              onHeadClick={() => setShowOptions(!showOptions)}
+              displayOptions={showOptions}
+              options={downloadOptions}
+            />
+          )}
         </div>
 
         <Card>
@@ -370,6 +283,7 @@ const GCApplicationDetails = () => {
               label={t("GC_APPLICATION_STATUS_LABEL")}
               text={appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA")}
             />
+            {dueDate && <Row className="border-none" label={t("GC_DUE_DATE")} text={dueDate} />}
           </StatusTable>
 
           {/* Applicant Details */}
@@ -399,70 +313,48 @@ const GCApplicationDetails = () => {
           {/* Garbage Specifications */}
           <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_GARBAGE_SPECIFICATIONS")}</CardSubHeader>
           <StatusTable>
-            <Row
-              className="border-none"
-              label={t("GC_TYPE_OF_COLLECTION")}
-              text={typeOfCollection ? t(typeOfCollection) : t("CS_NA")}
-            />
+            <Row className="border-none" label={t("GC_OLD_GARBAGE_ID")} text={oldGarbageId || t("CS_NA")} />
+            <Row className="border-none" label={t("GC_TYPE_OF_COLLECTION")} text={typeOfCollection ? t(typeOfCollection) : t("CS_NA")} />
+            <Row className="border-none" label={t("GC_OWNER_OR_TENANT")} text={ownerOrTenant ? t(ownerOrTenant) : t("CS_NA")} />
+            <Row className="border-none" label={t("GC_NAME")} text={specName || t("CS_NA")} />
+            <Row className="border-none" label={t("GC_PHONE_NUMBER")} text={specPhone || t("CS_NA")} />
+            <Row className="border-none" label={t("GC_GENDER")} text={specGender ? t(specGender) : t("CS_NA")} />
+            <Row className="border-none" label={t("GC_EMAIL")} text={specEmail || t("CS_NA")} />
             <Row className="border-none" label={t("GC_CATEGORY")} text={category ? t(category) : t("CS_NA")} />
-            <Row
-              className="border-none"
-              label={t("GC_SUB_CATEGORY")}
-              text={subCategory ? t(subCategory) : t("CS_NA")}
-            />
-            <Row
-              className="border-none"
-              label={t("GC_OWNER_OR_TENANT")}
-              text={ownerOrTenant ? t(ownerOrTenant) : t("CS_NA")}
-            />
-            <Row
-              className="border-none"
-              label={t("GC_ESTIMATED_QUANTITY")}
-              text={
-                estimatedQuantity !== null && estimatedQuantity !== undefined
-                  ? estimatedQuantity
-                  : t("CS_NA")
-              }
-            />
-            <Row
-              className="border-none"
-              label={t("GC_COLLECTION_FREQUENCY")}
-              text={collectionFrequency ? t(collectionFrequency) : t("CS_NA")}
-            />
-            <Row
-              className="border-none"
-              label={t("GC_WASTE_TYPE")}
-              text={wasteType ? t(wasteType) : t("CS_NA")}
-            />
-            <Row className="border-none" label={t("GC_SPECIAL_REQUEST")} text={specialRequest || t("CS_NA")} />
+            <Row className="border-none" label={t("GC_SUB_CATEGORY")} text={subCategory ? t(subCategory) : t("CS_NA")} />
+            <Row className="border-none" label={t("GC_SUB_CATEGORY_TYPE")} text={subCategoryType ? t(subCategoryType) : t("CS_NA")} />
+            {multiUnits.includes(typeOfCollection) && (
+              <Row className="border-none" label={t("GC_NO_OF_UNITS")} text={no_of_units || t("CS_NA")} />
+            )}
+            <Row className="border-none" label={t("GC_SPECIAL_CATEGORY")} text={specialCategory ? t(specialCategory) : t("CS_NA")} />
+            <Row className="border-none" label={t("GC_IS_INHERITANCE")} text={isInheritance ? t("YES") : t("NO")} />
           </StatusTable>
 
-          {/* Payment Details — only shown when pending */}
-          {appStatus === "PENDINGPAYMENT" && (
+          {/* Documents */}
+          {docs.length > 0 && (
             <>
-              <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_PAYMENT_DETAILS")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_GARBAGE_DOCUMENTS")}</CardSubHeader>
               <StatusTable>
-                <Row
-                  className="border-none"
-                  label={t("GC_TOTAL_AMOUNT")}
-                  text={
-                    paymentStatus === "PENDING" ? (
-                      <span>
-                        ₹ {billData?.Bill?.[0]?.totalAmount || t("CS_NA")}{" "}
-                        <strong style={{ color: "#a82227" }}>({t("PENDING_PAYMENT")})</strong>
-                      </span>
-                    ) : (
-                      t("CS_NA")
-                    )
-                  }
-                />
+                <Card className="chb-doc-card">
+                  {docs.map((doc, index) => (
+                    <div key={`doc-${index}`} className="chb-doc-item">
+                      <div>
+                        <CardSectionHeader>{t("GC_" + (doc?.documentType?.split(".").slice(0, 2).join("_")))}</CardSectionHeader>
+                        <GCDocuments value={docs} Code={doc?.documentType} index={index} />
+                      </div>
+                    </div>
+                  ))}
+                </Card>
               </StatusTable>
             </>
           )}
+
+          <GCWFApplicationTimeline application={appData} />
+
+
         </Card>
 
-        {/* Edit Application action bar — citizen only, when status is EDIT_APPLICATION */}
-        {appStatus === "EDIT_APPLICATION" && userType === "citizen" && (
+        {appStatus === "EDIT_APPLICATION" && (
           <ActionBar>
             <SubmitBar
               label={t("GC_EDIT_APPLICATION")}
@@ -473,19 +365,9 @@ const GCApplicationDetails = () => {
           </ActionBar>
         )}
 
-        {/* Make Payment action bar — citizen only */}
-        {appStatus === "PENDINGPAYMENT" && userType === "citizen" && (
+        {appStatus === "PENDING_FOR_PAYMENT" && (
           <ActionBar>
             <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
-          </ActionBar>
-        )}
-
-        {/* Workflow Action Bar — employee only */}
-        {userType === "employee" && workflowDetails?.actionState?.nextActions?.length > 0 && (
-          <ActionBar>
-            {workflowDetails.actionState.nextActions.map((action, index) => (
-              <SubmitBar key={index} label={t(`WF_EMPLOYEE_GC_${action.action}`)} onSubmit={() => setSelectedAction(action)} />
-            ))}
           </ActionBar>
         )}
 

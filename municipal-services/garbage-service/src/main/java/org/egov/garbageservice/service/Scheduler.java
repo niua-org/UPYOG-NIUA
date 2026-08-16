@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.egov.common.contract.request.RequestInfo;
-import org.egov.garbageservice.model.GarbageAccount;
-import org.egov.garbageservice.model.SearchCriteriaGarbageAccount;
+import org.egov.garbageservice.web.models.GarbageAccount;
+import org.egov.garbageservice.web.models.SearchCriteriaGarbageAccount;
 import org.egov.garbageservice.repository.GarbageAccountRepository;
 import org.egov.garbageservice.util.ServiceConstants;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,7 +69,7 @@ public class Scheduler {
      *
      * <p>The process follows these steps:
      * <ol>
-     *   <li>Queries the repository for all garbage accounts with an APPROVED status.</li>
+     *   <li>Queries the repository for all garbage accounts with APPROVED, PENDING_FOR_PAYMENT, or PAID status.</li>
      *   <li>Filters the accounts down to those that are due for billing on the given date using {@link #isBillingDue}.</li>
      *   <li>Iterates through the eligible accounts and delegates to {@link DemandService#generateDemand}.</li>
      *   <li>Accumulates the successful generation count and returns a summary message.</li>
@@ -84,14 +83,17 @@ public class Scheduler {
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
 
         SearchCriteriaGarbageAccount criteria = SearchCriteriaGarbageAccount.builder()
-                .status(Arrays.asList(ServiceConstants.STATUS_APPROVED, ServiceConstants.STATUS_PAID))
+                .status(Arrays.asList(
+                        ServiceConstants.STATUS_APPROVED,
+                        ServiceConstants.STATUS_PENDING_FOR_PAYMENT,
+                        ServiceConstants.STATUS_PAID))
                 .build();
 
         List<GarbageAccount> garbageAccounts =
                 garbageAccountRepository.searchV2(criteria);
 
         if (garbageAccounts.isEmpty()) {
-            return "No approved garbage accounts found";
+            return "No garbage accounts found with status APPROVED, PENDING_FOR_PAYMENT, or PAID";
         }
 
         List<GarbageAccount> activeGarbageAccounts =

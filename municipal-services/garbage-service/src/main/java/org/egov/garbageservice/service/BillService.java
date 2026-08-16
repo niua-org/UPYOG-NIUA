@@ -2,7 +2,7 @@ package org.egov.garbageservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
-import org.egov.garbageservice.contract.bill.*;
+import org.egov.garbageservice.web.models.bill.*;
 import org.egov.garbageservice.util.ResponseInfoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,19 +52,7 @@ public class BillService {
                 .bill(bills).build();
     }
 
-    /**
-     * Issues a cancellation request to the billing microservice.
-     *
-     * <p>Used in scenarios where a demand needs to be invalidated, such as administrative
-     * reversals or error corrections on a garbage account.
-     *
-     * @param updateBillCriteria the criteria defining which bills to cancel
-     * @param requestInfo        the contextual information for the API request
-     */
 
-    public void cancelBill(UpdateBillCriteria updateBillCriteria, RequestInfo requestInfo) {
-        billRepository.cancelBill(updateBillCriteria, requestInfo);
-    }
 
     /**
      * Updates an existing bill record through the billing repository.

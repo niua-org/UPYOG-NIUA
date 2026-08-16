@@ -8,6 +8,7 @@ import {
     CloseSvg,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import i18next from "i18next";
+import {multiUnits} from "../utils";
 
 
 /**
@@ -84,12 +85,17 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
     })) || [];
 
     const specsData = formData?.[config?.key] || formData?.gcspecifications || formData?.GCSpecifications || {};
+    const applicantPhoneNumber = formData?.owner?.mobileNumber || formData?.owners?.[0]?.mobileNumber || "";
+
+    const isOwner = (ownerType) => String(ownerType?.code || ownerType?.i18nKey || "").toUpperCase() === "OWNER";
 
     const [oldGarbageId, setOldGarbageId] = useState(specsData.oldGarbageId || renewApplication?.grbgOldDetails?.oldGarbageId || "");
     const [typeOfCollection, setTypeOfCollection] = useState(specsData.typeOfCollection || convertToObject(renewApplication?.grbgCollectionUnits?.[0]?.unitType) || "");
     const [propertyOwnerType, setPropertyOwnerType] = useState(specsData.propertyOwnerType || convertToObject(renewApplication?.grbgCollectionUnits?.[0]?.ownerType) || "");
     const [name, setName] = useState(specsData.name || renewApplication?.name || "");
-    const [phoneNumber, setPhoneNumber] = useState(specsData.phoneNumber || renewApplication?.mobileNumber || "");
+    // This field intentionally starts blank. It is populated from Applicant Details
+    // only when the user explicitly selects Owner.
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [gender, setGender] = useState(specsData.gender || convertToObject(renewApplication?.gender) || "");
     const [email, setEmail] = useState(specsData.email || renewApplication?.emailId || "");
     const [category, setCategory] = useState(specsData.category || convertToObject(renewApplication?.grbgCollectionUnits?.[0]?.category) || "");
@@ -97,7 +103,7 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
     const [subCategoryType, setSubCategoryType] = useState(specsData.subCategoryType ||convertToObject(renewApplication?.grbgCollectionUnits?.[0]?.subCategoryType) || "");
     const [isVariableCalculation, setIsvariablecalculation] = useState(specsData.isVariableCalculation || renewApplication?.isVariableCalculation || false);
     const [isbulkgeneration, setIsbulkgeneration] = useState(specsData.isbulkgeneration || renewApplication?.isbulkgeneration || false);
-    const [no_of_units, setNoOfUnits] = useState(specsData.no_of_units || renewApplication?.no_of_units || "");
+    const [no_of_units, setNoOfUnits] = useState(specsData.no_of_units || renewApplication?.grbgCollectionUnits?.[0]?.no_of_units || "");
     const [isAdditional, setIsAdditional] = useState(specsData.isAdditional || renewApplication?.isAdditional || false);
     const [isInheritance, setIsInheritance] = useState(specsData.isInheritance || renewApplication?.grbgCollectionUnits?.[0]?.isInheritance || false);
 
@@ -143,7 +149,6 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
 
         setIsvariablecalculation(false);
         setIsbulkgeneration(false);
-        setNoOfUnits("");
     };
 
     const goNext = () => {
@@ -189,7 +194,8 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
                     !gender ||
                     !category ||
                     !subCategory ||
-                    !subCategoryType
+                    !subCategoryType ||
+                    (multiUnits.includes(typeOfCollection?.code) && !no_of_units)
                 }
             >
                 <div>
@@ -211,7 +217,10 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
                         option={CollectionTypes}
                         optionKey="i18nKey"
                         selected={typeOfCollection}
-                        select={setTypeOfCollection}
+                        select={(val) => {
+                                setTypeOfCollection(val);
+                                if (!multiUnits.includes(val?.code)) setNoOfUnits("");
+                            }}
                         placeholder={t("GC_SELECT_TYPE")}
                         style={inputStyles}
                         t={t}
@@ -224,10 +233,28 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
                         option={OwnerTypes}
                         optionKey="i18nKey"
                         selected={propertyOwnerType}
-                        select={setPropertyOwnerType}
+                        select={(val) => {
+                            setPropertyOwnerType(val);
+                            // Owners use the contact number entered in Applicant Details;
+                            // tenants must provide their own contact number.
+                            setPhoneNumber(isOwner(val) ? applicantPhoneNumber : "");
+                        }}
                         style={inputStyles}
                         t={t}
                     />
+
+                    {multiUnits.includes(typeOfCollection?.code) && (
+                        <>
+                            <CardLabel>
+                                {t("GC_NO_OF_UNITS")} <span className="astericColor">*</span>
+                            </CardLabel>
+                            <TextInput
+                                value={no_of_units}
+                                style={inputStyles}
+                                onChange={(e) => setNoOfUnits(e.target.value.replace(/\D/g, ""))}
+                            />
+                        </>
+                    )}
 
                     <CardLabel>
                         {t("GC_NAME")} <span className="astericColor">*</span>
@@ -246,6 +273,7 @@ const GCSpecifications = ({ t, config, onSelect, formData, renewApplication }) =
                         inputMode="numeric"
                         maxLength={10}
                         value={phoneNumber}
+                        placeholder={t("GC_PHONE_NO_DISCLAIMER")}
                         style={inputStyles}
                         onChange={(e) => {
                             let value = e.target.value.replace(/\D/g, "").slice(0, 10);

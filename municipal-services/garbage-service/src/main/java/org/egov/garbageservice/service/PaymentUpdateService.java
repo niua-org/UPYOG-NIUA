@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import digit.models.coremodels.PaymentRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.garbageservice.config.GarbageServiceConfig;
-import org.egov.garbageservice.model.GarbageAccount;
-import org.egov.garbageservice.model.GarbageAccountRequest;
-import org.egov.garbageservice.model.GarbagePaymentDetails;
-import org.egov.garbageservice.model.SearchCriteriaGarbageAccount;
+import org.egov.garbageservice.web.models.GarbageAccount;
+import org.egov.garbageservice.web.models.GarbageAccountRequest;
+import org.egov.garbageservice.web.models.GarbagePaymentDetails;
+import org.egov.garbageservice.web.models.SearchCriteriaGarbageAccount;
 import org.egov.garbageservice.repository.GarbageAccountRepository;
 import org.egov.garbageservice.util.GrbgUtils;
 import org.egov.garbageservice.util.ServiceConstants;
@@ -114,6 +114,9 @@ public class PaymentUpdateService {
                 if (garbageAccounts != null && !garbageAccounts.isEmpty()) {
                     GarbageAccount garbageAccount = garbageAccounts.get(0);
                     garbageAccount.setStatus(ServiceConstants.STATUS_PAID);
+                    if (garbageAccount.getGrbgApplication() != null) {
+                        garbageAccount.getGrbgApplication().setStatus(ServiceConstants.STATUS_PAID);
+                    }
 
                     // Update last modified audit details
                     if (garbageAccount.getAuditDetails() != null) {

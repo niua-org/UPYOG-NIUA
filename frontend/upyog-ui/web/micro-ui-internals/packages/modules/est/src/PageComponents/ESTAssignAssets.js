@@ -30,8 +30,30 @@ const ESTAssignAssets = ({ onSelect, onDraftSave, onDraftClear, config, formData
     [sessionDraft, assetDisplay]
   );
 
+  // Cancel → blank editable allotment fields; keep read-only asset summary only.
+  // Do not merge rentRate/assetRate or other editable defaults back in.
+  // Explicitly clear file fields so UploadFile receives null (not leftover draft values).
   const resetBaseline = useMemo(
-    () => mergeAllotmentPrefill({}, {}, assetDisplay),
+    () => ({
+      estateNo: assetDisplay.estateNo || "",
+      buildingName: assetDisplay.buildingName || "",
+      localityDisplay:
+        assetDisplay.localityDisplay || assetDisplay.locality || "",
+      totalFloorArea: assetDisplay.totalFloorArea || "",
+      buildingFloor:
+        assetDisplay.buildingFloor || assetDisplay.floor || "",
+      assetRate: assetDisplay.assetRate || "",
+      assetRefNumber: assetDisplay.assetRefNumber || "",
+      fileReferenceNumber: assetDisplay.fileReferenceNumber || "",
+      monthlyRent: "0",
+      advancePayment: "0",
+      billingCycle: null,
+      advancePaymentDate: "",
+      rentRate: "",
+      citizenLetter: null,
+      allotmentLetter: null,
+      signedDeed: null,
+    }),
     [assetDisplay]
   );
 
@@ -58,7 +80,8 @@ const ESTAssignAssets = ({ onSelect, onDraftSave, onDraftClear, config, formData
       resetBaseline={resetBaseline}
       t={t}
       wrapperClassName={`employeeCard ${styles.estAssignAssets}`}
-      defaultHeaderCode="EST_COMMMON_ASSIGN_ASSETS"
+      defaultHeaderCode="EST_ALLOT_ESTATE"
+      confirmCancel
       draft={
         onDraftSave
           ? {
