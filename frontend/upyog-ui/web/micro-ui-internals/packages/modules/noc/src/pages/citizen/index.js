@@ -1,3 +1,8 @@
+/**
+ * Main entry point and sub-router for the NOC Citizen module.
+ * Handles sub-routing for Citizen Home, New NOC Application creation flow, My Applications listing,
+ * Application Details view, and conditional back navigation.
+ */
 import { AppContainer, BackButton, PrivateRoute, ArrowLeft } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -9,11 +14,10 @@ const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const CreateNoc = Digit?.ComponentRegistryService?.getComponent("NOCCreateApplication") || (() => <div>NOCCreateApplication Placeholder</div>);
-  const MyApplications = Digit?.ComponentRegistryService?.getComponent("NOCMyApplications") || (() => <div>NOCMyApplications Placeholder</div>);
-  const ApplicationDetails = Digit?.ComponentRegistryService?.getComponent("NOCApplicationDetails") || (() => <div>NOCApplicationDetails Placeholder</div>);
-  const CitizenHome = Digit?.ComponentRegistryService?.getComponent("NOCCitizenHome") || (() => <div>NOCCitizenHome Placeholder</div>);
-  console.log("path", path);
+  const CreateNoc = Digit?.ComponentRegistryService?.getComponent("NOCCreateApplication");
+  const MyApplications = Digit?.ComponentRegistryService?.getComponent("NOCMyApplications");
+  const ApplicationDetails = Digit?.ComponentRegistryService?.getComponent("NOCApplicationDetails");
+  const CitizenHome = Digit?.ComponentRegistryService?.getComponent("NOCCitizenHome");
 
   const isAcknowledgementPage = location.pathname.includes("/acknowledgement");
   const isNewApplication = location.pathname.includes("noc/new-application");

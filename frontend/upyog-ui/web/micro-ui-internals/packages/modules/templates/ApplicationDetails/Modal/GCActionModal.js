@@ -22,8 +22,10 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
   const [file, setFile] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [error, setError] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   function selectFile(e) {
+    setIsUploading(true);
     setFile(e.target.files[0]);
   }
 
@@ -43,6 +45,8 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
             }
           } catch (err) {
             setError(t("CS_FILE_UPLOAD_ERROR"));
+          } finally {
+            setIsUploading(false);
           }
         }
       }
@@ -52,16 +56,18 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
   useEffect(() => {
     if (action) {
       setConfig(
-        configGCApproverApplication({ t, action, selectFile, uploadedFile, setUploadedFile })
+        configGCApproverApplication({ t, action, selectFile, uploadedFile, setUploadedFile, isUploading })
       );
     }
-  }, [action, uploadedFile]);
+  }, [action, uploadedFile, isUploading]);
 
   function submit(data) {
     const workflowAction=action?.action;
+    const workflowComment=data?.comments;
     const isOnlyWorkflowCall=true;
     const workflow = {
       action: action?.action,
+      comment: data?.comments,
       comments: data?.comments,
       assignes: [],
       businessService,
@@ -81,6 +87,7 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
         {
           ...applicationData,
           workflowAction,
+          workflowComment,
           isOnlyWorkflowCall,
           workflow,
         },

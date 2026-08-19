@@ -9,9 +9,18 @@ import CheckPage from "../citizen/Create/CheckPage";
 import GCAcknowledgement from "../citizen/Create/GCAcknowledgement";
 
 /**
- * CreateApplication Component
- * Renders the exact same Step-by-Step wizard from the citizen side,
- * formatted and routed for the Employee dashboard.
+ * CreateApplication Component (Employee)
+ * 
+ * Renders the same step-by-step wizard from the citizen side,
+ * formatted and routed for the Employee dashboard. Reuses the citizen config
+ * and check/acknowledgement pages but injects `userType="employee"` to adjust
+ * field layout widths (50% instead of 86%).
+ * 
+ * Handles employee-specific payload transformations:
+ * - Unwraps nested garbageAccount objects
+ * - Sets tenantId on the account and property location
+ * - Adds workflow action "APPLY" on submission
+ * - Clears session on first visit to applicant-details to prevent stale data
  */
 const CreateApplication = () => {
   const queryClient = useQueryClient();

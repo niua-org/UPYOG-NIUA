@@ -364,10 +364,7 @@ import { useCustomBackNavigation } from "./UseCustomBackNavigationProps";
 import useESTCreateAPI from "./estate/useESTCreateAPI";
 import useESTAssetSearch from "./estate/useESTAssetSearch";
 import useESTApplicationSearch from "./estate/useESTApplicationSearch";
-import useTenantsEST from "./estate/useTenants";
-import useESTAllotAsset from "./estate/useESTAllotAsset";
 import useESTAssetsAllotment from "./estate/useESTAssetsAllotment";
-import useESTBillSearch from "./estate/useESTBillSearch";
 import { useNDCSearchApplication, useNDCSearchApplicationEmployee } from "./ndc/useNDCSearchApplication";
 import useNDCDocumentSearch from "./ndc/useNDCDocumentSearch";
 import useNDCInbox from "./ndc/useInbox";
@@ -378,6 +375,7 @@ import useCustomNavigate from "./useCustomNavigate";
 
 import useGCCreateAPI from "./gc/useGCCreateAPI";
 import useGCSearch from "./gc/useGCSearch";
+import useGCApplicationDetail from "./gc/useGCApplicationDetail";
 import useTenantsGC from "./gc/useTenants";
 import useGCDocumentSearch from "./gc/useGCDocumentSearch";
 import useGCApplicationAction from "./gc/useGCApplicationAction";
@@ -750,10 +748,7 @@ const estate = {
   useESTCreateAPI,
   useESTAssetSearch,
   useESTApplicationSearch,
-  useESTAllotAsset,
   useESTAssetsAllotment,
-  useESTBillSearch,
-  useTenants: useTenantsEST
 };
 const ndc = {
   useInbox: useNDCInbox,
@@ -766,6 +761,7 @@ const ndc = {
 const gc = {
   useGCCreateAPI,
   useGCSearch,
+  useGCApplicationDetail,
   useTenants: useTenantsGC,
   useGCDocumentSearch,
   useGCApplicationAction,
@@ -858,5 +854,6 @@ const Hooks = {
   useCustomNavigate,
   useModuleBasePath
 };
+
 
 export default Hooks;

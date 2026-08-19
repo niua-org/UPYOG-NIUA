@@ -2,7 +2,9 @@ import { Banner, Card, LinkButton, Loader, Row, StatusTable, SubmitBar, Toast } 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
+import getGcAcknowledgementData from "../../../getGcAcknowledgementData";
 
+// Resolves the banner message based on the current submission state
 const GetActionMessage = (props) => {
   const { t } = useTranslation();
   if (props?.isSuccess) {
@@ -31,10 +33,13 @@ const BannerPicker = (props) => {
 };
 
 /**
- * GCAcknowledgement component displays the acknowledgment of a Garbage Collection 
- * registration request. It shows the status of the operation, including 
- * success or failure messages. The component handles the mutation of 
- * GC data and manages loading states effectively.
+ * GCAcknowledgement Component
+ * 
+ * Displays the acknowledgment/receipt after a GC application is submitted or updated.
+ * Shows a success or failure banner with the application number. Provides navigation
+ * back to the home page and a download acknowledgement button for successful applications.
+ * 
+ * Handles both citizen and employee user types with appropriate navigation paths.
  */
 const GCAcknowledgement = () => {
   const { t } = useTranslation();
@@ -43,6 +48,8 @@ const GCAcknowledgement = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const user = Digit.UserService.getUser().info;
   const [showToast, setShowToast] = useState(null);
+  const { data: storeData } = Digit.Hooks.useStore.getInitData();
+  const { tenants = [] } = storeData || {};
  
   const handleMakePayment = async () => {
     try {
@@ -76,6 +83,17 @@ const GCAcknowledgement = () => {
   const isLoading = !state;
   const isSuccess = state?.isSuccess;
 
+  const handleDownloadPdf = async () => {
+    try {
+      const application = state?.data?.garbageAccounts?.[0];
+      const tenantInfo = tenants.find((tenant) => tenant.code === application?.tenantId);
+      const acknowledgementData = await getGcAcknowledgementData(application, tenantInfo, t);
+      Digit.Utils.pdf.generate(acknowledgementData);
+    } catch (error) {
+      setShowToast({ error: true, label: "CS_SOMETHING_WENT_WRONG" });
+    }
+  };
+
   if (!state) {
     return <Loader />;
   }
@@ -88,10 +106,8 @@ const GCAcknowledgement = () => {
       <StatusTable>
         {isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />}
       </StatusTable>
-      
-      {isSuccess && (
-        <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
-      )}
+
+      {isSuccess && <SubmitBar label={t("CS_COMMON_DOWNLOAD_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />}
 
       {user?.type === "CITIZEN" ? (
         <Link to={`/upyog-ui/citizen`}>

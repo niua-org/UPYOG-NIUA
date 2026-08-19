@@ -9,12 +9,17 @@ import CheckPage from "../Create/CheckPage";
 import GCAcknowledgement from "../Create/GCAcknowledgement";
 
 /**
- * GC Edit Wizard
+ * GCEdIt Component — GC Edit Wizard
+ * 
+ * Handles the edit flow for an existing GC application in an editable status.
  * Flow:
- *  - Read applicationNo from URL
- *  - Search existing application
- *  - Pre-fill wizard (using session storage)
- *  - Submit updated payload via GC update service
+ *  - Reads applicationNo from URL params
+ *  - Searches the existing application via API
+ *  - Pre-fills the wizard form using session storage
+ *  - Submits updated payload via GC update service
+ *  - Handles workflow actions (resubmit via "EDIT" action) for applications in "EDIT_APPLICATION" status
+ * 
+ * Reuses the same wizard config and check/acknowledgement pages from the create flow.
  */
 const GCEdIt = () => {
   const queryClient = useQueryClient();
