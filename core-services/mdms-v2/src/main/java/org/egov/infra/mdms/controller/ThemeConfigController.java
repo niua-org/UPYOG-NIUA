@@ -3,6 +3,10 @@ package org.egov.infra.mdms.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.Map;
+
 import org.egov.infra.mdms.model.ThemeConfig;
 import org.egov.infra.mdms.model.ThemeConfigWorkflowRequest;
 import org.egov.infra.mdms.service.ThemeConfigService;
@@ -39,23 +43,35 @@ public class ThemeConfigController {
      * @return created theme configuration
      */
     @RequestMapping(
-            value = "/_create",
-            method = RequestMethod.POST
-    )
-    public ResponseEntity<?> create(
+        value = "/_create",
+        method = RequestMethod.POST
+)
+public ResponseEntity<?> create(
         @Valid @RequestBody ThemeConfigWorkflowRequest request) {
 
-    ThemeConfig response =
-            themeConfigService.create(
-                    request.getThemeConfig(),
-                    request.getRequestInfo()
-            );
-
-        return new ResponseEntity<>(
-                response,
-                HttpStatus.OK
+    try {
+        ThemeConfig response = themeConfigService.create(
+        request.getThemeConfig(),
+        request.getRequestInfo()
         );
+
+        return ResponseEntity.ok(
+        Map.of(
+                "Status", "Theme has been created successfully",
+                "id", response.getId()
+        )
+);
+
+    } catch (Exception e) {
+        log.error("Failed to create theme configuration", e);
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "success", false,
+                        "error", e.getMessage()
+                ));
     }
+}
 
 
     /**
@@ -101,13 +117,14 @@ public class ThemeConfigController {
             method = RequestMethod.POST
     )
     public ResponseEntity<?> search(
-          @Valid @RequestBody ThemeConfig request) {
+        @Valid @RequestBody ThemeConfigWorkflowRequest request) {
 
-        ThemeConfig response =
-                themeConfigService.search(
-                        request.getTenantId(),
-                        request.getThemeType()
-                );
+        List<ThemeConfig> response =
+        themeConfigService.search(
+                request.getThemeConfig().getTenantId(),
+                request.getThemeConfig().getThemeType(),
+                request.getThemeConfig().getIsActive()
+        );
 
         return new ResponseEntity<>(
                 response,

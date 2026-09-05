@@ -90,4 +90,8 @@ public class ThemeConfig {
      * Timestamp when configuration was last modified.
      */
     private Long lastModifiedTime;
+
+    private String themeName;
+    
+    private Boolean setAsDefault;
 }

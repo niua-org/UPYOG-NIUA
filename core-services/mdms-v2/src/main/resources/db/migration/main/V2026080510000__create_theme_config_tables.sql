@@ -60,3 +60,6 @@ CREATE TABLE IF NOT EXISTS ug_theme_config_audit (
 
     operation VARCHAR(50) NOT NULL
 );
+
+ALTER TABLE ug_theme_config ADD COLUMN themename VARCHAR(255);
+ALTER TABLE ug_theme_config_audit ADD COLUMN themename VARCHAR(255);

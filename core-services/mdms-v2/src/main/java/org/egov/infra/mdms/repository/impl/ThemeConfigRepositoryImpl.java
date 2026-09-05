@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 
 
 /**
@@ -123,20 +124,144 @@ public class ThemeConfigRepositoryImpl implements ThemeConfigRepository {
         return count != null && count > 0;
     }
 
+    @Override
+public boolean existsTheme(String tenantId, String themeType) {
+
+    String query =
+            "SELECT COUNT(*) FROM ug_theme_config " +
+            "WHERE tenantid=? AND themetype=?";
+
+    Integer count = jdbcTemplate.queryForObject(
+            query,
+            Integer.class,
+            tenantId,
+            themeType
+    );
+
+    return count != null && count > 0;
+}
+
+
+@Override
+public void deactivateAllThemes(
+        String tenantId,
+        String themeType) {
+
+    String query =
+            "UPDATE ug_theme_config " +
+            "SET isactive=false " +
+            "WHERE tenantid=? " +
+            "AND themetype=? " +
+            "AND isactive=true";
+
+    jdbcTemplate.update(
+            query,
+            tenantId,
+            themeType
+    );
+}
+
+        @Override
+public boolean existsThemeName(String tenantId, String themeType, String themeName) {
+
+    String query =
+            "SELECT COUNT(*) FROM ug_theme_config " +
+            "WHERE tenantid=? " +
+            "AND themetype=? " +
+            "AND LOWER(themename)=LOWER(?)";
+
+    Integer count = jdbcTemplate.queryForObject(
+            query,
+            Integer.class,
+            tenantId,
+            themeType,
+            themeName
+    );
+
+    return count != null && count > 0;
+}
+
+
+@Override
+public boolean existsActiveTheme(String tenantId, String themeType) {
+
+    String query =
+            "SELECT COUNT(*) FROM ug_theme_config " +
+            "WHERE tenantid=? " +
+            "AND themetype=? " +
+            "AND isactive=true";
+
+    Integer count = jdbcTemplate.queryForObject(
+            query,
+            Integer.class,
+            tenantId,
+            themeType
+    );
+
+    return count != null && count > 0;
+}
+
+
+@Override
+public void activateOldestTheme(
+        String tenantId,
+        String themeType) {
+
+    String query =
+            "UPDATE ug_theme_config " +
+            "SET isactive=true " +
+            "WHERE id = (" +
+            "SELECT id FROM ug_theme_config " +
+            "WHERE tenantid=? " +
+            "AND themetype=? " +
+            "AND status IN ('DEFAULT','APPROVED') " +
+            "ORDER BY createdtime ASC " +
+            "LIMIT 1" +
+            ")";
+
+    jdbcTemplate.update(
+            query,
+            tenantId,
+            themeType
+    );
+}
+
+
+@Override
+public void setDefaultTheme(
+        String id,
+        String tenantId,
+        String themeType) {
+
+    deactivateAllThemes(tenantId, themeType);
+
+    String query =
+            "UPDATE ug_theme_config " +
+            "SET isactive=true " +
+            "WHERE id=? " +
+            "AND tenantid=? " +
+            "AND themetype=? " +
+            "AND status IN ('DEFAULT','APPROVED')";
+
+    jdbcTemplate.update(
+            query,
+            id,
+            tenantId,
+            themeType
+    );
+}
 
     @Override
-    public ThemeConfig search(String tenantId, String themeType) {
+public List<ThemeConfig> search(String tenantId, String themeType, Boolean isActive) {
 
         String query =
-                "SELECT * FROM ug_theme_config " +
-                "WHERE tenantid=? " +
-                "AND themetype=? " +
-                "AND status IN ('APPROVED','DEFAULT') " +
-                "AND isactive=true " +
-                "ORDER BY CASE WHEN status='APPROVED' THEN 1 ELSE 2 END " +
-                "LIMIT 1";
+        "SELECT * FROM ug_theme_config " +
+        "WHERE tenantid=? " +
+        "AND themetype=? " +
+        (Boolean.TRUE.equals(isActive) ? "AND isactive=true " : "") +
+        "ORDER BY createdtime ASC";
 
-        return jdbcTemplate.queryForObject(
+        return jdbcTemplate.query(
                 query,
                 (rs, rowNum) -> {
 
@@ -145,6 +270,7 @@ public class ThemeConfigRepositoryImpl implements ThemeConfigRepository {
                     theme.setId(rs.getString("id"));
                     theme.setTenantId(rs.getString("tenantid"));
                     theme.setThemeType(rs.getString("themetype"));
+                    theme.setThemeName(rs.getString("themename"));
                     theme.setStatus(rs.getString("status"));
                     theme.setWorkflowId(rs.getString("workflowid"));
                     theme.setIsActive(rs.getBoolean("isactive"));
