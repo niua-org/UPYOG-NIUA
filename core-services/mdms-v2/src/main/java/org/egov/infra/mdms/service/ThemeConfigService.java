@@ -1,5 +1,7 @@
 package org.egov.infra.mdms.service;
 
+import java.util.List;
+
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.infra.mdms.model.ThemeConfig;
 
@@ -65,8 +67,5 @@ public interface ThemeConfigService {
      * @param themeType EMPLOYEE/CITIZEN
      * @return theme configuration
      */
-    ThemeConfig search(
-            String tenantId,
-            String themeType
-    );
+    List<ThemeConfig> search(String tenantId, String themeType, Boolean isActive);
 }

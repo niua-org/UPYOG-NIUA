@@ -10,6 +10,7 @@ import org.egov.infra.mdms.service.WorkflowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -34,34 +35,93 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
      * @return created theme configuration
      */
     @Override
-    public ThemeConfig create(
+public ThemeConfig create(
         ThemeConfig themeConfig,
         RequestInfo requestInfo) {
 
-        log.info(
-                "Creating theme configuration for tenantId: {} and themeType: {}",
+    log.info(
+            "Creating theme configuration for tenantId: {} and themeType: {}",
+            themeConfig.getTenantId(),
+            themeConfig.getThemeType()
+    );
+
+    if (themeConfig.getId() == null) {
+        themeConfig.setId(UUID.randomUUID().toString());
+    }
+
+    long currentTime = System.currentTimeMillis();
+
+    if (themeConfig.getCreatedTime() == null) {
+        themeConfig.setCreatedTime(currentTime);
+    }
+
+    if (themeConfig.getLastModifiedTime() == null) {
+        themeConfig.setLastModifiedTime(currentTime);
+    }
+
+    boolean hasThemes = themeConfigRepository.existsTheme(
+            themeConfig.getTenantId(),
+            themeConfig.getThemeType()
+    );
+
+    boolean hasActiveTheme = themeConfigRepository.existsActiveTheme(
+            themeConfig.getTenantId(),
+            themeConfig.getThemeType()
+    );
+
+    boolean makeDefault =
+            !hasThemes ||
+            Boolean.TRUE.equals(themeConfig.getSetAsDefault());
+
+    if (!hasThemes) {
+        themeConfig.setThemeName("System Default");
+    } else {
+        if (themeConfig.getThemeName() == null ||
+                themeConfig.getThemeName().trim().isEmpty()) {
+            throw new RuntimeException("Theme name is mandatory");
+        }
+
+        if (themeConfigRepository.existsThemeName(
+                themeConfig.getTenantId(),
+                themeConfig.getThemeType(),
+                themeConfig.getThemeName())) {
+            throw new RuntimeException("Theme name already exists");
+        }
+    }
+
+    if ("System Default".equalsIgnoreCase(themeConfig.getThemeName()) && hasThemes) {
+        throw new RuntimeException("Theme name 'System Default' is reserved");
+    }
+
+    if (makeDefault) {
+        themeConfigRepository.deactivateAllThemes(
                 themeConfig.getTenantId(),
                 themeConfig.getThemeType()
         );
 
-        if (themeConfig.getId() == null) {
-            themeConfig.setId(UUID.randomUUID().toString());
+        themeConfig.setIsActive(true);
+    } else {
+        themeConfig.setIsActive(false);
+
+        if (!hasActiveTheme) {
+            themeConfigRepository.activateOldestTheme(
+                    themeConfig.getTenantId(),
+                    themeConfig.getThemeType()
+            );
         }
+    }
 
-        long currentTime = System.currentTimeMillis();
+    if (!hasThemes) {
+        themeConfig.setStatus("DEFAULT");
+    } else {
+        themeConfig.setStatus("APPROVED");
+    }
 
-        if (themeConfig.getCreatedTime() == null) {
-            themeConfig.setCreatedTime(currentTime);
-        }
-
-        if (themeConfig.getLastModifiedTime() == null) {
-            themeConfig.setLastModifiedTime(currentTime);
-        }
-
+    log.info("THEME CONFIG BEFORE PUBLISH: {}", themeConfig);
         themeConfigRepository.create(themeConfig);
 
-        return themeConfig;
-    }
+    return themeConfig;
+}
 
 
     /**
@@ -85,7 +145,27 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
                 themeConfig.getThemeType()
         );
 
-        // Prevent duplicate pending modification requests for same tenant and theme type
+        // Theme name is mandatory for update.
+        if (themeConfig.getThemeName() == null ||
+                themeConfig.getThemeName().trim().isEmpty()) {
+
+            throw new RuntimeException(
+                    "Theme name is mandatory for update"
+            );
+        }
+
+        if ("System Default".equalsIgnoreCase(themeConfig.getThemeName())) {
+            throw new RuntimeException("Theme name 'System Default' is reserved");
+        }
+
+        if (themeConfigRepository.existsThemeName(
+                themeConfig.getTenantId(),
+                themeConfig.getThemeType(),
+                themeConfig.getThemeName())) {
+            throw new RuntimeException("Theme name already exists");
+        }
+
+        // Prevent duplicate pending modification requests.
         if (themeConfigRepository.existsPendingTheme(
                 themeConfig.getTenantId(),
                 themeConfig.getThemeType())) {
@@ -95,21 +175,19 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
             );
         }
 
-        // Generate new id so existing configuration remains untouched.
-        if (themeConfig.getId() == null) {
-            themeConfig.setId(UUID.randomUUID().toString());
-        }
+        // Always create a NEW row for update.
+        themeConfig.setId(UUID.randomUUID().toString());
 
         long currentTime = System.currentTimeMillis();
 
-        if (themeConfig.getCreatedTime() == null) {
-            themeConfig.setCreatedTime(currentTime);
-        }
-
+        themeConfig.setCreatedTime(currentTime);
         themeConfig.setLastModifiedTime(currentTime);
 
-        // New changes require workflow approval.
+        // Updated theme must wait for workflow approval.
         themeConfig.setStatus("PENDING");
+
+        // Updated theme must never become default automatically.
+        themeConfig.setIsActive(false);
 
         log.info("THEME CONFIG BEFORE WORKFLOW : {}", themeConfig);
 
@@ -122,12 +200,11 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
 
         log.info("THEME CONFIG AFTER WORKFLOW : {}", themeConfig);
 
-        // Store pending configuration in the same theme config table.
+        // Store pending configuration as a new row.
         themeConfigRepository.createStaging(themeConfig);
 
         return themeConfig;
     }
-
 
     /**
      * Updates theme configuration workflow status.
@@ -143,10 +220,31 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
             String action,
             RequestInfo requestInfo) {
 
+        if ("SET_DEFAULT".equals(action)) {
+
+            if (themeConfig.getId() == null) {
+                throw new RuntimeException(
+                        "Theme id is mandatory for setting default theme"
+                );
+            }
+
+            themeConfigRepository.setDefaultTheme(
+                    themeConfig.getId(),
+                    themeConfig.getTenantId(),
+                    themeConfig.getThemeType()
+            );
+
+            themeConfig.setIsActive(true);
+
+            return themeConfig;
+        }
+
         if ("APPROVE".equals(action)) {
             themeConfig.setStatus("APPROVED");
+            themeConfig.setIsActive(false);
         } else if ("REJECT".equals(action)) {
             themeConfig.setStatus("REJECTED");
+            themeConfig.setIsActive(false);
         }
 
         themeConfig.setLastModifiedTime(System.currentTimeMillis());
@@ -154,7 +252,6 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
         themeConfig.setLastModifiedBy(
                 requestInfo.getUserInfo().getUuid()
         );
-
 
         String workflowId = workflowService.transitionWorkflow(
                 themeConfig,
@@ -178,13 +275,7 @@ public class ThemeConfigServiceImpl implements ThemeConfigService {
      * @return theme configuration
      */
     @Override
-    public ThemeConfig search(
-            String tenantId,
-            String themeType) {
-
-        return themeConfigRepository.search(
-                tenantId,
-                themeType
-        );
-    }
+public List<ThemeConfig> search(String tenantId, String themeType, Boolean isActive) {
+    return themeConfigRepository.search(tenantId, themeType, isActive);
+}
 }
