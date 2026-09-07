@@ -38,7 +38,7 @@
 }
 
 .pickerShadow {
-  box-shadow: 0 var(--spacing-sm) 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
 }
 
 .filter-close {
@@ -73,9 +73,9 @@
   .clearText {
     display: block;
     text-align: right;
-    color: var(--focus);
-    margin-top: 20px;
-    margin-left: 10px;
+    color: var(--primary-main);
+    margin-top: var(--spacing-lg);
+    margin-left: var(--spacing-sm);
   }
 }
 
@@ -88,7 +88,7 @@
     left: 0;
     top: 130px;
     padding: var(--spacing-md);
-    background-color: #fff;
+    background-color: var(--white);
     z-index: 99;
   }
 

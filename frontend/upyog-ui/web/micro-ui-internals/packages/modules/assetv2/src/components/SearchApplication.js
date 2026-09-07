@@ -230,7 +230,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
               <React.Fragment>
                 <SubmitBar label={t("WF_TAKE_ACTION")} onSubmit={toggleMenu} />
                 {isMenuOpen && (
-                  <div className="bg-white rounded-sm p-sm" style={{ position: 'absolute', border: '1px solid #ccc', zIndex: 1000 }}>
+                  <div className="bg-white rounded-sm p-sm absolute border border-solid border-border z-50">
                     {actionOptions
                   .filter(option => {
                     // Only show AST_CERTIFICATE if assetStatus is "0"
@@ -243,7 +243,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
                         <div
                           key={index}  // Ensure each element has a unique key
                           onClick={() => printReport(row.original?.["applicationNo"])}  // Wrap printReport in an arrow function
-                          className="p-sm" style={{ display: 'block', textDecoration: 'none', color: 'black', cursor: 'pointer' }}
+                          className="p-sm block text-black cursor-pointer"
                         >
                           {option.label}
                         </div>
@@ -251,7 +251,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
                         (<div
                           key={index}  // Ensure each element has a unique key
                           onClick={() => processDepreciation(row.original?.["applicationNo"], row.original?.["id"])}  // Wrap printReport in an arrow function
-                          className="p-sm" style={{ display: 'block', textDecoration: 'none', color: 'black', cursor: 'pointer' }}
+                          className="p-sm block text-black cursor-pointer"
                         >
                           {option.label}
                         </div>)
@@ -259,7 +259,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
                           <Link
                             key={index}  // Add key for the Link element as well
                             to={option.link}
-                            className="p-sm block" style={{ textDecoration: 'none', color: 'black' }}
+                            className="p-sm block text-black"
                           >
                             {option.label}
                           </Link>
@@ -427,7 +427,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
         </SearchField>
         <SearchField className="submit">
           <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
-          <p style={{ marginTop: "10px" }}
+          <p className="mt-sm cursor-pointer"
             onClick={() => {
               reset({
                 applicationNo: "",
@@ -447,16 +447,16 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
 
       <br></br>
       {data !== "" ?
-        <div className="flex justify-end" style={{ marginTop: "10px" }}>
-          {/* <button onClick={downloadXLS} style = {{ color: "maroon", border: "2px solid #333", padding: "10px 20px",cursor: "pointer"}}>Download XLS</button>  */}
-          <button onClick={downloadQRReport} className="cursor-pointer" style={{ color: "maroon", border: "2px solid #333", padding: "10px 20px", marginLeft: "15px" }}>Download QR Report</button>
+        <div className="flex justify-end mt-sm">
+          {/* <button onClick={downloadXLS} className="text-primary-main border-2 border-solid border-text-primary px-lg py-sm cursor-pointer">Download XLS</button>  */}
+          <button onClick={downloadQRReport} className="cursor-pointer text-primary-main border-2 border-solid border-text-primary px-lg py-sm ml-md">Download QR Report</button>
 
         </div>
         : ""}
 
       <br></br>
       {!isLoading && data?.display ?
-        <Card style={{ marginTop: 20 }}>
+        <Card className="mt-md">
           {
             t(data.display)
               .split("\\n")
@@ -467,6 +467,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
               ))
           }
         </Card>
+
         :
         (!isLoading && data !== "" ?
           <Table

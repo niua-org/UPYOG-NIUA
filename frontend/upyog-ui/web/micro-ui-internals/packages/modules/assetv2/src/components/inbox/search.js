@@ -144,10 +144,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                       )}
                     </span>
                     {formState?.dirtyFields?.[input.name] ? (
-                      <span
-                        className="font-bold text-xs" style={{ color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px" }}
-                        className="inbox-search-form-error"
-                      >
+                      <span className="inbox-search-form-error font-bold text-xs text-error">
                         {formState?.errors?.[input.name]?.message}
                       </span>
                     ) : null}
@@ -155,13 +152,13 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                 ))}
 
               {isInboxPage && (
-                <div className="text-right" style={{ gridColumn: "2/3", paddingTop: "10px" }} className="input-fields">
+                <div className="input-fields text-right">
                   <div>{clearAll()}</div>
                 </div>
               )}
 
               {type === "desktop" && !mobileView && (
-                <div style={{ maxWidth: "unset", marginLeft: "unset" }} className="search-submit-wrapper">
+                <div className="search-submit-wrapper">
                   <SubmitBar
                     className="submit-bar-search"
                     label={t("ES_COMMON_SEARCH")}

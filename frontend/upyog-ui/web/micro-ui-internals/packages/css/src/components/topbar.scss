@@ -128,8 +128,8 @@
 .profile-dropdown--item {
   display: flex;
   flex-direction: row;
-  padding: 10px;
-  column-gap: 10px;
+  padding: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
   color: var(--text-secondary);
 
   &:hover {

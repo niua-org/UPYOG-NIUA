@@ -29,19 +29,24 @@
 
 import { queryTemplate } from "../common/queryTemplate";
 import ThemeService from "../services/elements/Theme";
+import { ThemeTypes, ThemeStatus } from "../enums/Theme";
 
 /**
  * @param {Object} [params={}] - Query parameters
  * @param {string} [params.tenantId] - Specific tenantId (defaults to active stateId)
- * @param {string} [params.themeType] - "CITIZEN" or "EMPLOYEE" (auto-detected from path)
- * @param {string} [params.status="DEFAULT"] - Theme status
+ * @param {string} [params.themeType] - ThemeTypes.CITIZEN or ThemeTypes.EMPLOYEE (auto-detected from path)
+ * @param {string} [params.status=ThemeStatus.DEFAULT] - Theme status
  * @param {Object} [config={}] - React Query configuration options
  * @returns {Object} React Query hook response object
  */
 const useThemeConfig = (params = {}, config = {}) => {
   const tenantId = params?.tenantId || Digit.ULBService.getStateId();
-  const themeType = params?.themeType || (window.location.pathname.includes("employee") ? "EMPLOYEE" : "CITIZEN");
-  const status = params?.status || "DEFAULT";
+  const themeType =
+    params?.themeType ||
+    (typeof window !== "undefined" && window.location.pathname.includes("employee")
+      ? ThemeTypes.EMPLOYEE
+      : ThemeTypes.CITIZEN);
+  const status = params?.status || ThemeStatus.DEFAULT;
 
   return queryTemplate({
     queryKey: [tenantId, themeType, status],
@@ -51,3 +56,4 @@ const useThemeConfig = (params = {}, config = {}) => {
 };
 
 export default useThemeConfig;
+

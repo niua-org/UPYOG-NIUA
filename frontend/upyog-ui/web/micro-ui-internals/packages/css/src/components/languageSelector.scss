@@ -3,7 +3,7 @@
 }
 
 .language-selector div:not(:first-child) {
-  margin-left: 10px;
+  margin-left: var(--spacing-sm);
 }
 .bannerCard .language-button-container button {
   width: 6.2rem;
@@ -17,8 +17,8 @@
 }
 .bannerCard .customBtn-selected {
   border-color: transparent;
-  background-color: var(--purple) !important;
+  background-color: var(--primary-main) !important;
 }
 .bannerCard .bannerHeader p {
-  font-size: 19px;
+  font-size: var(--font-size-xl);
 }

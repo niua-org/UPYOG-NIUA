@@ -59,23 +59,23 @@
 .notice_and_circular_heading_mb header {
   font-weight: var(--weight-bold);
   font-size: var(--font-size-md) !important;
-  line-height: var(--spacing-lg);
+  line-height: 24px;
   margin-right: 50px;
 }
 .notice_and_circular_heading_mb .card-caption {
   padding-left: 30px;
   font-weight: var(--weight-regular);
   font-size: var(--font-size-xs);
-  line-height: var(--spacing-lg);
+  line-height: 24px;
   color: var(--text-secondary);
-  padding-right: 5px;
-  padding-left: 15px;
+  padding-right: var(--spacing-xs);
+  padding-left: var(--spacing-md);
   min-width: 80px;
   position: absolute;
-  right: 20px;
+  right: var(--spacing-lg);
 }
 .notice_and_circular_text {
-  padding-bottom: 20px;
+  padding-bottom: var(--spacing-lg);
 }
 .notice_and_circular_text p {
   font-weight: var(--weight-regular);
@@ -84,8 +84,8 @@
   color: var(--text-secondary);
 }
 .notice_and_circular_caption {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 .notice_and_circular_caption .card-caption {
   font-weight: var(--weight-regular);
@@ -99,13 +99,13 @@
   gap:var(--spacing-sm);
   align-items: end;
   span {
-    padding-right: 20px;
+    padding-right: var(--spacing-lg);
     & .views {
       display: flex;
       justify-content: space-between;
       align-items: center;
       p {
-        padding-left: 10px;
+        padding-left: var(--spacing-sm);
         font-weight: var(--weight-regular);
         font-size: var(--font-size-md);
         line-height: 19px;
@@ -125,7 +125,7 @@
         justify-content: space-between;
         align-items: center;
         p {
-          padding-left: 10px;
+          padding-left: var(--spacing-sm);
           font-weight: var(--weight-regular);
           font-size: var(--font-size-md);
           line-height: 19px;
@@ -137,7 +137,7 @@
 
   .notice_and_circular_heading_mb .card-caption {
     font-size: var(--font-size-md);
-    line-height: var(--spacing-lg);
+    line-height: 24px;
     min-width : 150px;
     padding-left: 50px;
   }

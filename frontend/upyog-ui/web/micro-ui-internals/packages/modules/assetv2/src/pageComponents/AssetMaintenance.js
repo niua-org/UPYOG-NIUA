@@ -302,10 +302,7 @@ const OwnerForm = (_props) => {
                 }}
             >
                 {children}
-                <span
-                    className="rounded-sm text-center" style={{ visibility: "hidden", position: "absolute", backgroundColor: "#555", color: "#fff", padding: "5px", fontSize: "small", wordWrap: "break-word", width: "300px", top: "100%", left: "50%", transform: "translateX(-50%)", marginTop: "5px", zIndex: "1", opacity: 0, transition: "opacity 0.3s ease-in-out" }}
-                    className="tooltiptext"
-                >
+                <span className="tooltiptext">
                     {message}
                 </span>
             </div>
@@ -314,7 +311,7 @@ const OwnerForm = (_props) => {
     return (
         <React.Fragment>
             <div className="mb-md">
-                <div className="p-md mt-sm" style={{ border: "1px solid #E3E3E3" }}>
+                <div className="p-md mt-sm border border-solid border-grey-bg">
                     {allAssets?.length > 2 ? (
                         <div className="mb-md cursor-pointer text-right" style={{ padding: "5px" }}>
                             X

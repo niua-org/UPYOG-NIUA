@@ -157,7 +157,7 @@ console.log("data",data)
         headingStyle={{ textAlign: "center" }}
         cardStyle={{ margin: "auto", minWidth: "408px" }}
         className="loginFormStyleEmployee"
-        buttonStyle={{ maxWidth: "100%", width: "100%" ,backgroundColor:"var(--purple)"}}
+        buttonStyle={{ maxWidth: "100%", width: "100%" }}
       >
         {/* <Header /> */}
       </FormComposer>

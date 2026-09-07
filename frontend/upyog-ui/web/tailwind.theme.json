@@ -44,7 +44,7 @@
             "error": "#D4351C",
             "success": "#00703C",
             "black": "#000000",
-            "purple": "#5a1166",
+            "disabled": "#5a1166",
             "grey": {
               "dark": "#9E9E9E",
               "mid": "#EEEEEE",

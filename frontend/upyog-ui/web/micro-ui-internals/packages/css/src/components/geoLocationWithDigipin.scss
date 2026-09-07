@@ -5,19 +5,19 @@
 /* DigipinDisplay — chip that shows the generated DIGIPIN */
 .digipin-display {
   padding: 12px var(--spacing-md);
-  background-color: #f0f0f0;
+  background-color: var(--grey-bg);
   border-radius: var(--border-radius-md);
   border: var(--border-width-sm) solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-sm);
 }
 
 /* External Mappls link inside the digipin chip */
 .digipin-display__map-link {
-  font-size: 13px;
-  color: var(--focus);
+  font-size: var(--font-size-xs);
+  color: var(--primary-main);
   text-decoration: underline;
   white-space: nowrap;
 }
@@ -36,5 +36,5 @@
 
 /* Spacing when DigipinDisplay appears below the input row */
 .digipin-display--below-input {
-  margin-top: 10px;
+  margin-top: var(--spacing-sm);
 }

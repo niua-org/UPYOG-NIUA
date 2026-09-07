@@ -35,8 +35,8 @@
 
     .delete {
       position: absolute;
-      height: var(--spacing-lg);
-      width: var(--spacing-lg);
+      height: 24px;
+      width: 24px;
       border-radius: 100%;
       top: 2px;
       right: 2px;
@@ -84,7 +84,7 @@
     line-height: 1.42857143;
     border-radius: var(--border-radius-sm);
     user-select: none;
-    background: #f0f0f0c9;
+    background: var(--grey-mid);
     display: flex;
     font-weight: var(--weight-bold);
 }

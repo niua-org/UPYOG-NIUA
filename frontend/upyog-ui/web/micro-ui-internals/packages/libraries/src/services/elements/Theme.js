@@ -36,7 +36,12 @@
 
 import Urls from "../atoms/urls";
 import { Request } from "../atoms/Utils/Request";
+import { ThemeTypes, ThemeStatus } from "../../enums/Theme";
+
+// Temporary fallback until dynamic theme configurations are fully available from MDMS API across all environments.
+// Once MDMS Theme API is deployed everywhere, this local JSON import will be replaced with API-only data.
 import defaultTheme from "../../../../../../tailwind.theme.json";
+
 
 /**
  * Helper to convert camelCase keys into kebab-case
@@ -138,15 +143,22 @@ export const ThemeService = {
    * @param {Object} params - { tenantId, themeType, status }
    * @returns {Promise<Object>} The resolved theme object
    */
-  getTheme: async ({ tenantId, themeType, status = "DEFAULT" } = {}) => {
+  getTheme: async ({ tenantId, themeType, status = ThemeStatus.DEFAULT } = {}) => {
     try {
+      const resolvedThemeType =
+        themeType ||
+        (typeof window !== "undefined" && window.location.pathname.includes("employee")
+          ? ThemeTypes.EMPLOYEE
+          : ThemeTypes.CITIZEN);
+
       const payload = {
         themeConfig: {
           tenantId: tenantId || Digit.ULBService.getStateId(),
-          themeType: themeType || (window.location.pathname.includes("employee") ? "EMPLOYEE" : "CITIZEN"),
+          themeType: resolvedThemeType,
           status,
         },
       };
+
 
       const response = await Request({
         url: Urls.ThemeConfig,
