@@ -41,7 +41,7 @@ public class GenericLegacyBatchExtractor implements LegacyBatchExtractor {
 
         while (!currentDate.isAfter(endDate)) {
             try {
-                Object extractedData = extractor.extractData(currentDate);
+                Object extractedData = extractor.extractData(tenantId, currentDate);
                 if (extractedData != null) {
                     if (extractedData instanceof List<?> list) {
                         if (!list.isEmpty()) {

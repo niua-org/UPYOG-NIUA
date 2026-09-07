@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +44,7 @@ import org.upyog.dashboard.extractor.impl.PtModuleExtractor;
 import org.upyog.dashboard.loader.impl.DashboardDataLoaderImpl;
 import org.upyog.dashboard.model.IngestionResult;
 import org.upyog.dashboard.producer.DashboardProducer;
+import org.upyog.dashboard.service.TenantSyncService;
 
 import org.upyog.dashboard.registry.ExtractorRegistry;
 import org.upyog.dashboard.registry.TransformerRegistry;
@@ -178,7 +180,9 @@ class DateIngestionFlowIntegrationTest {
         dashboardClient = new DashboardClientImpl(transformerRegistry, dataLoaderFactory, commonValidator);
 
         // 7. Setup DailyIngestionService
-        dailyIngestionService = new DailyIngestionService(dashboardClient, extractorRegistry, schemaMappingConfig, summaryRepository, dashboardProperties, objectMapper);
+        TenantSyncService tenantSyncService = mock(TenantSyncService.class);
+        when(tenantSyncService.getActiveTenants(any())).thenReturn(List.of("pg"));
+        dailyIngestionService = new DailyIngestionService(dashboardClient, extractorRegistry, schemaMappingConfig, summaryRepository, dashboardProperties, objectMapper, tenantSyncService);
         dailyIngestionService.init();
 
         // 8. Setup Controller
@@ -247,7 +251,7 @@ class DateIngestionFlowIntegrationTest {
         assertThat(result.getResponseData()).isEqualTo(apiResponseBody);
 
         // Verify state tracking was updated for the passed date
-        verify(summaryRepository).saveOrUpdateLastSuccessfulDate("pg", "PT", targetDate);
+        verify(summaryRepository).saveOrUpdateLastSuccessfulDate("pg.citya", "PT", targetDate);
 
         // Verify HTTP POST request payload sent to the API
         String sentJsonPayload = payloadCaptor.getValue();
@@ -297,7 +301,7 @@ class DateIngestionFlowIntegrationTest {
         assertThat(controllerResponse.getBody()).hasSize(1);
         assertThat(controllerResponse.getBody().get(0).getIngestionStatus()).isEqualTo(DashboardExtractorConstants.STATUS_SUCCESS);
 
-        verify(summaryRepository).saveOrUpdateLastSuccessfulDate("pg", "PT", targetDate);
+        verify(summaryRepository).saveOrUpdateLastSuccessfulDate("pg.citya", "PT", targetDate);
     }
 
     @Test

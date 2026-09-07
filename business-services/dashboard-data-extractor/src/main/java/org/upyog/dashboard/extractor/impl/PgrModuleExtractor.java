@@ -76,7 +76,14 @@ public class PgrModuleExtractor implements ModuleExtractor<List<DashboardData>> 
 	 *         returns an empty list when no query config is found or a database error occurs
 	 */
 	@Override
-	public List<DashboardData> extractData(LocalDate targetDate) {
+	public List<DashboardData> extractData(List<String> tenantIds, LocalDate targetDate) {
+		String effectiveTenantId;
+		if (tenantIds != null && !tenantIds.isEmpty()) {
+			effectiveTenantId = String.join(",", tenantIds);
+		} else {
+			effectiveTenantId = this.dbTenantId;
+		}
+
 		String dateStr = targetDate.format(DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT));
 		long startTime = targetDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
 		long endTime = targetDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() - 1;
@@ -84,7 +91,7 @@ public class PgrModuleExtractor implements ModuleExtractor<List<DashboardData>> 
 		MapSqlParameterSource params = new MapSqlParameterSource()
 				.addValue(DashboardExtractorConstants.PARAM_START_TIME, startTime)
 				.addValue(DashboardExtractorConstants.PARAM_END_TIME, endTime)
-				.addValue(DashboardExtractorConstants.PARAM_TENANT_ID, dbTenantId);
+				.addValue(DashboardExtractorConstants.PARAM_TENANT_ID, effectiveTenantId);
 		List<DashboardData> results = new ArrayList<>();
 
 		SchemaMappingConfig.ModuleQueries pgrQueries = schemaMappingConfig.getQueriesForModule(Module.PGR);
@@ -98,11 +105,13 @@ public class PgrModuleExtractor implements ModuleExtractor<List<DashboardData>> 
 				results.add(buildDashboardData(combinedResult, dateStr));
 			}
 		} catch (Exception exception) {
-			log.warn("Exception during DB metrics extraction, utilizing empty defaults: {}", exception.getMessage());
+			log.warn("Exception during DB metrics extraction for tenants [{}], utilizing empty defaults: {}", effectiveTenantId, exception.getMessage());
 		}
 
 		return results;
 	}
+
+
 
 	/**
 	 * Builds a {@link org.upyog.dashboard.model.DashboardData} from a raw combined-metrics result-set row.

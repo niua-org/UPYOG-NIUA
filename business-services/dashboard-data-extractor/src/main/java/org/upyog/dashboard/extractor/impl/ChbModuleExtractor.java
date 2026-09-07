@@ -67,15 +67,23 @@ public class ChbModuleExtractor implements ModuleExtractor<List<CHBDTO>> {
      * @return a list of {@link CHBDTO} payloads, one per tenant row returned by the query
      */
     @Override
-    public List<CHBDTO> extractData(LocalDate targetDate) {
-        String dateStr = targetDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    public List<CHBDTO> extractData(List<String> tenantIds, LocalDate targetDate) {
+        String effectiveTenantId;
+        if (tenantIds != null && !tenantIds.isEmpty()) {
+            effectiveTenantId = String.join(",", tenantIds);
+        } else {
+            effectiveTenantId = this.dbTenantId;
+        }
+        String dateStr = targetDate.format(DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT));
+        log.info("Starting Community Hall Booking (CHB) metrics extraction for tenants [{}] date: {}", effectiveTenantId, dateStr);
+
         long startTime = targetDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
         long endTime = targetDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() - 1;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue(DashboardExtractorConstants.PARAM_START_TIME, startTime)
                 .addValue(DashboardExtractorConstants.PARAM_END_TIME, endTime)
-                .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, dbTenantId);
+                .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, effectiveTenantId);
         List<CHBDTO> results = new ArrayList<>();
 
         SchemaMappingConfig.ModuleQueries chbQueries = schemaMappingConfig.getQueriesForModule(Module.CHB);
@@ -89,6 +97,7 @@ public class ChbModuleExtractor implements ModuleExtractor<List<CHBDTO>> {
         }
         return results;
     }
+
 
     /**
      * Converts a single raw row map into a populated {@link CHBDTO}.

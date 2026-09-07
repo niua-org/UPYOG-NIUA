@@ -5,6 +5,7 @@ import org.upyog.dashboard.util.CommonUtils;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -74,25 +75,43 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
      */
     @Override
     public void saveOrUpdateLastAttemptedDate(String tenantId, String moduleName, LocalDate attemptedDate) {
+        saveOrUpdateLastAttemptedDatesBatch(List.of(tenantId), moduleName, attemptedDate);
+    }
+
+    /**
+     * Batch inserts or updates the {@code last_attempted_date} column in
+     * {@code ingestion_module_summary} for a list of tenants and module.
+     *
+     * @param tenantIds the list of tenant identifiers
+     * @param moduleName the module short code
+     * @param attemptedDate the date for which ingestion was attempted
+     */
+    @Override
+    public void saveOrUpdateLastAttemptedDatesBatch(List<String> tenantIds, String moduleName, LocalDate attemptedDate) {
+        if (tenantIds == null || tenantIds.isEmpty()) {
+            return;
+        }
         try {
-            String id = CommonUtils.generateUUID();
             LocalDate fallbackSuccessDate = LocalDate.of(1970, 1, 1);
-
-            MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue(DashboardExtractorConstants.PARAM_ID, id)
-                    .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, tenantId)
-                    .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(fallbackSuccessDate))
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(attemptedDate))
-                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
-            namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.UPSERT_LAST_ATTEMPTED_DATE_QUERY, params);
-
-            log.info("Saved last_attempted_date to {} for tenant {} module {}",
-                    attemptedDate, tenantId, moduleName);
+            MapSqlParameterSource[] batchParams = new MapSqlParameterSource[tenantIds.size()];
+            for (int index = 0; index < tenantIds.size(); index++) {
+                String tenantId = tenantIds.get(index);
+                String id = CommonUtils.generateUUID();
+                batchParams[index] = new MapSqlParameterSource()
+                        .addValue(DashboardExtractorConstants.PARAM_ID, id)
+                        .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, tenantId)
+                        .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(fallbackSuccessDate))
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(attemptedDate))
+                        .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
+            }
+            namedParameterJdbcTemplate.batchUpdate(IngestionSummaryQueryBuilder.UPSERT_LAST_ATTEMPTED_DATE_QUERY, batchParams);
+            log.info("Batch saved last_attempted_date to {} for {} tenants in module {}",
+                    attemptedDate, tenantIds.size(), moduleName);
         } catch (Exception exception) {
-            log.error("Failed to save last_attempted_date to {} for tenant {} module {}",
-                    attemptedDate, tenantId, moduleName, exception);
+            log.error("Failed to batch save last_attempted_date to {} for tenants {} in module {}",
+                    attemptedDate, tenantIds, moduleName, exception);
         }
     }
 

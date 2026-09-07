@@ -70,9 +70,15 @@ public class PtModuleExtractor implements ModuleExtractor<List<PTDTO>> {
      * @return the extracted metrics payload wrapped in a {@link PTDTO} list
      */
     @Override
-    public List<PTDTO> extractData(LocalDate targetDate) {
-        String dateStr = targetDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-        log.info("Starting Property Tax (PT) metrics extraction for date: {}", dateStr);
+    public List<PTDTO> extractData(List<String> tenantIds, LocalDate targetDate) {
+        String effectiveTenantId;
+        if (tenantIds != null && !tenantIds.isEmpty()) {
+            effectiveTenantId = String.join(",", tenantIds);
+        } else {
+            effectiveTenantId = this.dbTenantId;
+        }
+        String dateStr = targetDate.format(DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT));
+        log.info("Starting Property Tax (PT) metrics extraction for tenants [{}] date: {}", effectiveTenantId, dateStr);
 
         long startTime = targetDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
         long endTime = targetDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() - 1;
@@ -86,13 +92,14 @@ public class PtModuleExtractor implements ModuleExtractor<List<PTDTO>> {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue(DashboardExtractorConstants.PARAM_START_TIME, startTime)
                 .addValue(DashboardExtractorConstants.PARAM_END_TIME, endTime)
-                .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, dbTenantId);
+                .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, effectiveTenantId);
 
         List<RawPtMetric> combinedRowsRaw = queryExecutor.executeQueryWithRetry(ptQueries.getCombinedMetricsQuery(), params, PTRowmapper.COMBINED_ROW_MAPPER, "PtModuleExtractor");
         List<RawPtCollection> collectionRowsRaw = queryExecutor.executeQueryWithRetry(ptQueries.getCollectionMetricsQuery(), params, PTRowmapper.COLLECTION_ROW_MAPPER, "PtModuleExtractor");
 
         return transformToDTO(combinedRowsRaw, collectionRowsRaw, dateStr);
     }
+
 
     @Override
     public boolean isZeroMetrics(Object item) {

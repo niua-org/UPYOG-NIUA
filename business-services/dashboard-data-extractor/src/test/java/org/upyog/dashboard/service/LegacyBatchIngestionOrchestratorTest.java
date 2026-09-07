@@ -40,6 +40,9 @@ import net.javacrumbs.shedlock.core.LockConfiguration;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.core.SimpleLock;
 
+/**
+ * Unit tests for {@link LegacyBatchIngestionOrchestrator} testing async job execution and distributed locking.
+ */
 @ExtendWith(MockitoExtension.class)
 class LegacyBatchIngestionOrchestratorTest {
 

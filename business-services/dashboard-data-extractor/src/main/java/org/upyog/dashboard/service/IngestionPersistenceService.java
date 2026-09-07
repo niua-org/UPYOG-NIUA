@@ -27,6 +27,15 @@ public interface IngestionPersistenceService {
     void saveOrUpdateLastAttemptedDate(String tenantId, String moduleName, LocalDate attemptedDate);
 
     /**
+     * Records or updates the date for which an ingestion attempt was made for a batch of tenants.
+     *
+     * @param tenantIds     the list of tenant identifiers
+     * @param moduleName    the module short code
+     * @param attemptedDate the date for which ingestion was attempted
+     */
+    void saveOrUpdateLastAttemptedDatesBatch(java.util.List<String> tenantIds, String moduleName, LocalDate attemptedDate);
+
+    /**
      * Submits a request to process legacy data ingestion for the given tenant, module, and date range.
      *
      * @param jobId      the unique identifier of the legacy job
