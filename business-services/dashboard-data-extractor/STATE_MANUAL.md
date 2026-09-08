@@ -41,40 +41,55 @@ Both `SUCCESS`, `SUCCESS_ZERO_METRICS`, and `SUCCESS_DUPLICATE` return `isSucces
 
 | Table | Purpose |
 |-------|---------|
-| `ingestion_module_detail` | ULB-module configuration and schedule metadata |
+| `ingestion_module_detail` | Active ULB-module mapping registry synchronized from MDMS |
 | `ingestion_detail` | Daily ingestion detail records per module/date |
 | `legacy_data_ingestion_detail` | Legacy (historical daily) ingestion detail records |
 | `ingestion_module_summary` | Tracks last successful and last attempted date per tenant/module |
 | `adapter_ingestion_error_log` | Error log for ingestion pipeline issues |
 
-### `exception_code` Column (Added: V20260818140000)
+### Schema Evolutions & Migrations
 
-Both `ingestion_detail` and `legacy_data_ingestion_detail` now carry an `exception_code VARCHAR(128)` column. It stores a short error/exception code captured when `ingestion_status = FAILURE`. This was added via migration `V20260818140000__add_exception_code_to_ingestion_detail.sql` using `ADD COLUMN IF NOT EXISTS` (safe for existing deployments).
+- **`exception_code` Column (`V20260818140000`):** Both `ingestion_detail` and `legacy_data_ingestion_detail` carry an `exception_code VARCHAR(128)` column to record short failure codes when `ingestion_status = FAILURE`.
+- **Streamlined `ingestion_module_detail` (`V20260907150000`):** Dropped legacy flags (`is_legacy_data_ingested`, `last_ingested_date`, `ulb_name`, `schedule_cron`). The table now functions purely as an active registry mapping ULBs to enabled modules, with legacy progress tracked directly in `legacy_data_ingestion_detail` and `ingestion_module_summary`.
+
+## Multi-Tenant & MDMS Synchronization
+
+### `TenantSyncService` & `TenantController`
+- Synchronizes active city/ULB tenant IDs from eGov MDMS (`tenant` module, `nationalInfo` master) into `ingestion_module_detail`.
+- Manages in-memory caching via `@Cacheable` and `@CacheEvict` using centralized cache names (`active_tenants`, `tenant_module_details`).
+- Provides REST endpoints:
+  - `POST /tenant/sync?stateTenantId={state}` — Triggers MDMS pull and atomically refreshes `ingestion_module_detail`.
+  - `GET /tenant/search` (or `/_search`) — Returns active tenants and module mappings from cache/database.
 
 ## Key Service Classes
 
 ### `DailyIngestionService`
-- Iterates over all enabled modules (from `SchemaMappingConfig`) and determines the next date to ingest using `IngestionSummaryRepository.findLastSuccessfulDate(...)`.
-- Performs **catch-up ingestion**: if the last success date is more than one day behind yesterday, it fills in the gap date-by-date until it either catches up or a failure halts the loop.
-- Enforces a configurable catch-up limit (`dashboard-data.daily-catch-up-limit-days`); if the gap exceeds the limit, it logs an error and recommends using legacy migration.
-- Supports two overloads: `ingestDailyData()` (uses yesterday) and `ingestDailyData(LocalDate targetDate)` (for on-demand backfill).
+- Fetches active ULB tenants per module via `TenantSyncService.getActiveTenants(...)`.
+- Queries `ingestion_module_summary.findAllLastSuccessfulDatesByModule(...)` to bulk fetch checkpoints for all tenants in a single query.
+- Executes **multi-tenant batch extraction** (`ModuleExtractor.extractData(List<String> tenantIds, LocalDate targetDate)`) using parameterized SQL queries with `UNNEST(string_to_array(:tenantId, ','))` across configured batch chunks (`dashboard-data.extractor.tenant-batch-size`).
+- Performs **catch-up ingestion** across missing date ranges up to yesterday, automatically handling and advancing zero-metric tenants.
+- Employs reflection caching (`ConcurrentHashMap`) in `extractTenantId` to eliminate runtime reflection overhead.
+- Uses `saveOrUpdateLastAttemptedDatesBatch` to eliminate N+1 database roundtrips during catch-up iterations.
 
 ### `LegacyIngestionService`
 - Manages bulk historical ingestion via a **two-phase scheduler** approach:
   1. **Populate phase** (`populateLegacyJobs` / `populateLegacyJobsForRange`): Determines which dates in the given range have not yet been ingested and creates `NOT_STARTED` rows in `legacy_data_ingestion_detail`.
   2. **Execute phase** (`executeLegacyJobs`): Fetches pending/failed legacy job rows and runs them through the extractor + dashboard client pipeline.
+- Checks legacy completion via `IngestionSummaryRepository.isLegacyIngestionComplete(...)` querying `legacy_data_ingestion_detail`.
 - Extracts logic into private helpers: `processLegacyJob(...)` for ingestion execution, `serializeRequest(...)` for JSON payload, and `sanitizeResponse(...)`/`sanitizeJson(...)` for safe JSONB storage.
 - Uses `@RequiredArgsConstructor` constructor injection instead of `@Autowired` field injection.
-- Removed `DashboardProducer` direct dependency; persistence is now fully delegated to `IngestionPersistenceService`.
+- Persistence is fully delegated to `IngestionPersistenceService` (supporting both Kafka and direct JDBC modes).
 
 ### `IngestionSummaryRepository`
 - Queries `ingestion_module_summary` for the last successful date and last attempted date per tenant/module.
 - `findSuccessfullyIngestedDates(...)` performs a UNION query across both `ingestion_detail` and `legacy_data_ingestion_detail` to determine already-ingested dates in a range.
+- `isLegacyIngestionComplete(...)` verifies legacy completion status from `legacy_data_ingestion_detail`.
+- Supports batch attempted date updates via `saveOrUpdateLastAttemptedDatesBatch(...)`.
 - All persistence side-effects are delegated to `IngestionPersistenceService` (not direct JDBC writes).
 
 ### `IngestionSummaryQueryBuilder`
-- Central SQL query factory for all queries against `ingestion_module_summary` and the legacy job tables.
-- All query builder methods are documented with Javadoc describing parameter order and behaviour.
+- Central SQL query factory for all queries against `ingestion_module_summary`, `ingestion_module_detail`, and `legacy_data_ingestion_detail`.
+- All query builder methods and constants are documented with Javadoc describing parameters and behavior.
 
 ## Utility Classes
 

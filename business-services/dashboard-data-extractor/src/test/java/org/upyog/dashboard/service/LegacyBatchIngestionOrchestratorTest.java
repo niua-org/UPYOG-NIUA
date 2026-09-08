@@ -24,7 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.upyog.dashboard.api.DashboardIngestionClient;
 import org.upyog.dashboard.common.constants.Module;
-import org.upyog.dashboard.config.DashboardProperties;
+import org.upyog.dashboard.config.DashboardExtractorProperties;
 import org.upyog.dashboard.entity.DailyIngestionData;
 import org.upyog.dashboard.extractor.LegacyBatchExtractor;
 import org.upyog.dashboard.extractor.ModuleExtractor;
@@ -40,6 +40,9 @@ import net.javacrumbs.shedlock.core.LockConfiguration;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.core.SimpleLock;
 
+/**
+ * Unit tests for {@link LegacyBatchIngestionOrchestrator} testing async job execution and distributed locking.
+ */
 @ExtendWith(MockitoExtension.class)
 class LegacyBatchIngestionOrchestratorTest {
 
@@ -53,7 +56,7 @@ class LegacyBatchIngestionOrchestratorTest {
     private DashboardIngestionClient ingestionClient;
 
     @Mock
-    private DashboardProperties dashboardProperties;
+    private DashboardExtractorProperties dashboardProperties;
 
     @Mock
     private LockProvider lockProvider;
@@ -70,6 +73,9 @@ class LegacyBatchIngestionOrchestratorTest {
     @Mock
     private ModuleExtractor<Object> ptExtractor;
 
+    @Mock
+    private TenantSyncService tenantSyncService;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private LegacyBatchIngestionOrchestrator orchestrator;
@@ -85,7 +91,8 @@ class LegacyBatchIngestionOrchestratorTest {
                 persistenceService,
                 summaryRepository,
                 extractorRegistry,
-                objectMapper
+                objectMapper,
+                tenantSyncService
         );
     }
 
@@ -95,6 +102,7 @@ class LegacyBatchIngestionOrchestratorTest {
     void processLegacyBatchIngest_persistsDateWiseStatuses() throws Exception {
         when(dashboardProperties.getTenantId()).thenReturn("pg.citya");
         when(dashboardProperties.getEffectiveLegacyUploadMode()).thenReturn("S3");
+        when(dashboardProperties.getLegacyBatchSize()).thenReturn(500);
 
         SimpleLock mockLock = mock(SimpleLock.class);
         when(lockProvider.lock(any(LockConfiguration.class))).thenReturn(Optional.of(mockLock));

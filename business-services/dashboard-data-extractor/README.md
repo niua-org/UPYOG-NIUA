@@ -37,12 +37,17 @@ mvn clean install
    mvn spring-boot:run
    ```
 
-## Tenant Hierarchy and Multiple ULBs Support
+## Tenant Hierarchy & Multi-Tenant Support
 
-The extractor service natively handles dot-notation tenant IDs representing the geographical hierarchy (e.g., `state.ulb.region.ward`).
+The extractor service natively handles dot-notation tenant IDs representing the geographical hierarchy (e.g., `state.ulb.region.ward`). Multi-tenant batch extraction queries ULBs in configurable batches via `UNNEST(string_to_array(:tenantId, ','))`.
+
+### MDMS Tenant Synchronization Endpoints
+- `POST /tenant/sync?stateTenantId={stateCode}`: Fetches active city tenants from MDMS (`tenant` module) and synchronizes them into `ingestion_module_detail`.
+- `GET /tenant/search` (or `/_search`): Returns active tenant IDs and module mappings currently loaded in cache/database.
+
 ## Configuration Parameters Reference
 
-The service can be configured via `application.properties` (or environment-specific files like `application-local.properties`):
+The service can be configured via `application.properties` (or environment-specific files like `application-local.properties`, `application-qa.properties`, `application-prod.properties`):
 
 | Configuration Key | Default Value | Description |
 | :--- | :--- | :--- |
@@ -53,6 +58,9 @@ The service can be configured via `application.properties` (or environment-speci
 | `state.level.tenant.id` | `pg` | State-level tenant ID fallback used for summary tracker records. |
 | `dashboard-data.daily.catch-up-limit-days` | `7` | Maximum number of days allowed for daily catch-up before halting. |
 | `dashboard-data.ingestion.batch-size` | `10` | Ingestion batch size for HTTP API payloads and database inserts. |
+| `dashboard-data.extractor.tenant-batch-size` | `50` | Maximum number of ULBs grouped together in a single SQL extraction query. |
+| `egov.mdms.host` | `http://localhost:8181` | eGov MDMS service host URL. |
+| `egov.mdms.search.endpoint` | `/egov-mdms-service/v1/_search` | eGov MDMS search endpoint. |
 
 ## egov-persister Integration Setup
 

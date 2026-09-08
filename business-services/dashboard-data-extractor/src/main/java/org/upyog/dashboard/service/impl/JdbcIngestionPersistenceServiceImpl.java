@@ -1,10 +1,13 @@
 package org.upyog.dashboard.service.impl;
 
 import org.upyog.dashboard.constants.DashboardExtractorConstants;
+import org.upyog.dashboard.entity.DailyIngestionData;
 import org.upyog.dashboard.util.CommonUtils;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -25,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "dashboard-data.persister.enabled", havingValue = "false")
 public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistenceService {
-
-    private static final String SYSTEM_USER = "SYSTEM";
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -51,8 +52,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                     .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
                     .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(successfulDate))
                     .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(successfulDate))
-                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
+                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, DashboardExtractorConstants.SYSTEM_USER)
+                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, DashboardExtractorConstants.SYSTEM_USER);
             namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.UPSERT_LAST_SUCCESSFUL_DATE_QUERY, params);
 
             log.info("Saved last_successful_date to {} for tenant {} module {}",
@@ -74,25 +75,43 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
      */
     @Override
     public void saveOrUpdateLastAttemptedDate(String tenantId, String moduleName, LocalDate attemptedDate) {
+        saveOrUpdateLastAttemptedDatesBatch(List.of(tenantId), moduleName, attemptedDate);
+    }
+
+    /**
+     * Batch inserts or updates the {@code last_attempted_date} column in
+     * {@code ingestion_module_summary} for a list of tenants and module.
+     *
+     * @param tenantIds the list of tenant identifiers
+     * @param moduleName the module short code
+     * @param attemptedDate the date for which ingestion was attempted
+     */
+    @Override
+    public void saveOrUpdateLastAttemptedDatesBatch(List<String> tenantIds, String moduleName, LocalDate attemptedDate) {
+        if (tenantIds == null || tenantIds.isEmpty()) {
+            return;
+        }
         try {
-            String id = CommonUtils.generateUUID();
             LocalDate fallbackSuccessDate = LocalDate.of(1970, 1, 1);
-
-            MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue(DashboardExtractorConstants.PARAM_ID, id)
-                    .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, tenantId)
-                    .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(fallbackSuccessDate))
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(attemptedDate))
-                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
-            namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.UPSERT_LAST_ATTEMPTED_DATE_QUERY, params);
-
-            log.info("Saved last_attempted_date to {} for tenant {} module {}",
-                    attemptedDate, tenantId, moduleName);
+            MapSqlParameterSource[] batchParams = new MapSqlParameterSource[tenantIds.size()];
+            for (int index = 0; index < tenantIds.size(); index++) {
+                String tenantId = tenantIds.get(index);
+                String id = CommonUtils.generateUUID();
+                batchParams[index] = new MapSqlParameterSource()
+                        .addValue(DashboardExtractorConstants.PARAM_ID, id)
+                        .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, tenantId)
+                        .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(fallbackSuccessDate))
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(attemptedDate))
+                        .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, DashboardExtractorConstants.SYSTEM_USER)
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, DashboardExtractorConstants.SYSTEM_USER);
+            }
+            namedParameterJdbcTemplate.batchUpdate(IngestionSummaryQueryBuilder.UPSERT_LAST_ATTEMPTED_DATE_QUERY, batchParams);
+            log.info("Batch saved last_attempted_date to {} for {} tenants in module {}",
+                    attemptedDate, tenantIds.size(), moduleName);
         } catch (Exception exception) {
-            log.error("Failed to save last_attempted_date to {} for tenant {} module {}",
-                    attemptedDate, tenantId, moduleName, exception);
+            log.error("Failed to batch save last_attempted_date to {} for tenants {} in module {}",
+                    attemptedDate, tenantIds, moduleName, exception);
         }
     }
 
@@ -117,6 +136,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
 
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue(DashboardExtractorConstants.PARAM_ID, legacyJobId)
+                    .addValue(DashboardExtractorConstants.PARAM_MODULE_DETAIL_ID, null)
+                    .addValue(DashboardExtractorConstants.PARAM_SCHEDULER_ID, null)
                     .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, tenantId)
                     .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
                     .addValue(DashboardExtractorConstants.PARAM_PUSH_DATE, Date.valueOf(effectivePushDate))
@@ -124,8 +145,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                     .addValue(DashboardExtractorConstants.PARAM_END_DATE, Date.valueOf(effectiveEndDate))
                     .addValue(DashboardExtractorConstants.PARAM_STATUS, DashboardExtractorConstants.STATUS_NOT_STARTED)
                     .addValue(DashboardExtractorConstants.PARAM_EXCEPTION_CODE, null)
-                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
+                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, DashboardExtractorConstants.SYSTEM_USER)
+                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, DashboardExtractorConstants.SYSTEM_USER);
             namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.INSERT_LEGACY_JOB_QUERY, params);
 
             log.debug("Inserted legacy job {} for tenant {} module {} range [{} to {}]", legacyJobId, tenantId, moduleName, effectiveStartDate, effectiveEndDate);
@@ -169,17 +190,17 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
      * @param details list of daily ingestion data objects
      */
     @Override
-    public void saveIngestionDetailsBatch(java.util.List<?> details) {
+    public void saveIngestionDetailsBatch(List<?> details) {
         try {
             if (details == null || details.isEmpty()) {
                 return;
             }
             MapSqlParameterSource[] batchParams = new MapSqlParameterSource[details.size()];
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
 
             for (int detailIndex = 0; detailIndex < details.size(); detailIndex++) {
                 Object detailItem = details.get(detailIndex);
-                if (detailItem instanceof org.upyog.dashboard.entity.DailyIngestionData dailyIngestionRecord) {
+                if (detailItem instanceof DailyIngestionData dailyIngestionRecord) {
                     // pushDate is formatted as dd-MM-yyyy by DailyIngestionService and LegacyBatchIngestionOrchestrator;
                     // fallback to LocalDate.now() only if pushDate string is not provided.
                     LocalDate effectivePushDate = (dailyIngestionRecord.getPushDate() != null)
@@ -187,19 +208,20 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                             : LocalDate.now();
 
                     batchParams[detailIndex] = new MapSqlParameterSource()
-                            .addValue("moduleIngestionId", (dailyIngestionRecord.getModuleIngestionId() != null)
+                            .addValue(DashboardExtractorConstants.PARAM_MODULE_INGESTION_ID, (dailyIngestionRecord.getModuleIngestionId() != null)
                                     ? dailyIngestionRecord.getModuleIngestionId()
                                     : CommonUtils.generateUUID())
-                            .addValue("moduleDetailId", dailyIngestionRecord.getModuleDetailId())
-                            .addValue("tenantId", dailyIngestionRecord.getTenantId())
-                            .addValue("moduleName", dailyIngestionRecord.getModuleName())
-                            .addValue("pushDate", Date.valueOf(effectivePushDate))
-                            .addValue("requestData", dailyIngestionRecord.getRequestData())
-                            .addValue("responseData", dailyIngestionRecord.getResponseData())
-                            .addValue("ingestionStatus", dailyIngestionRecord.getIngestionStatus())
-                            .addValue("exceptionCode", null)
-                            .addValue("createdBy", (dailyIngestionRecord.getCreatedBy() != null) ? dailyIngestionRecord.getCreatedBy() : SYSTEM_USER)
-                            .addValue("lastModifiedBy", (dailyIngestionRecord.getLastModifiedBy() != null) ? dailyIngestionRecord.getLastModifiedBy() : SYSTEM_USER);
+                            .addValue(DashboardExtractorConstants.PARAM_MODULE_DETAIL_ID, dailyIngestionRecord.getModuleDetailId())
+                            .addValue(DashboardExtractorConstants.PARAM_SCHEDULER_ID, dailyIngestionRecord.getSchedulerId())
+                            .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, dailyIngestionRecord.getTenantId())
+                            .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, dailyIngestionRecord.getModuleName())
+                            .addValue(DashboardExtractorConstants.PARAM_PUSH_DATE, Date.valueOf(effectivePushDate))
+                            .addValue(DashboardExtractorConstants.PARAM_REQUEST_DATA, dailyIngestionRecord.getRequestData())
+                            .addValue(DashboardExtractorConstants.PARAM_RESPONSE_DATA, dailyIngestionRecord.getResponseData())
+                            .addValue(DashboardExtractorConstants.PARAM_INGESTION_STATUS, dailyIngestionRecord.getIngestionStatus())
+                            .addValue(DashboardExtractorConstants.PARAM_EXCEPTION_CODE, null)
+                            .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, (dailyIngestionRecord.getCreatedBy() != null) ? dailyIngestionRecord.getCreatedBy() : DashboardExtractorConstants.SYSTEM_USER)
+                            .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, (dailyIngestionRecord.getLastModifiedBy() != null) ? dailyIngestionRecord.getLastModifiedBy() : DashboardExtractorConstants.SYSTEM_USER);
                 }
             }
 
