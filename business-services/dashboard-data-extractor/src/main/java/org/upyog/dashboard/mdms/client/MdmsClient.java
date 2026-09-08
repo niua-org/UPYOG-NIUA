@@ -7,14 +7,13 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.upyog.dashboard.config.DashboardProperties;
+import org.upyog.dashboard.config.DashboardExtractorProperties;
 import org.upyog.dashboard.constants.DashboardExtractorConstants;
 import org.upyog.dashboard.mdms.model.MasterDetail;
 import org.upyog.dashboard.mdms.model.MdmsCriteria;
@@ -35,13 +34,7 @@ public class MdmsClient {
 
     private final RestTemplate restTemplate;
     private final OAuthTokenService oauthTokenService;
-    private final DashboardProperties dashboardProperties;
-
-    @Value("${egov.mdms.host}")
-    private String mdmsHost;
-
-    @Value("${egov.mdms.search.endpoint}")
-    private String mdmsSearchEndpoint;
+    private final DashboardExtractorProperties dashboardProperties;
 
     /**
      * Fetches all active ULB/City tenants for the specified state tenant from
@@ -52,9 +45,15 @@ public class MdmsClient {
      */
     public List<String> fetchCityTenants(String stateTenantId) {
         String rootTenantId = StringUtils.isNotBlank(dashboardProperties.getTenantId())
-                ? dashboardProperties.getTenantId().toLowerCase()
-                : (StringUtils.isNotBlank(stateTenantId) ? stateTenantId.toLowerCase() : "pg");
-        String url = mdmsHost + mdmsSearchEndpoint + DashboardExtractorConstants.QUERY_PARAM_TENANT_ID + rootTenantId;
+                ? dashboardProperties.getTenantId().trim().toLowerCase()
+                : (StringUtils.isNotBlank(stateTenantId) ? stateTenantId.trim().toLowerCase() : null);
+
+        if (StringUtils.isBlank(rootTenantId)) {
+            log.error("State tenant ID is not provided or configured for MDMS tenant lookup");
+            throw new IllegalArgumentException("State tenant ID must not be blank for MDMS tenant lookup");
+        }
+
+        String url = dashboardProperties.getMdmsHost() + dashboardProperties.getMdmsSearchEndpoint() + DashboardExtractorConstants.QUERY_PARAM_TENANT_ID + rootTenantId;
 
         log.info("Fetching tenant list from MDMS url: {} for tenantId: {}", url, rootTenantId);
 

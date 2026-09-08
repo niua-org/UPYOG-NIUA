@@ -1,10 +1,12 @@
 package org.upyog.dashboard.service.impl;
 
 import org.upyog.dashboard.constants.DashboardExtractorConstants;
+import org.upyog.dashboard.entity.DailyIngestionData;
 import org.upyog.dashboard.util.CommonUtils;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "dashboard-data.persister.enabled", havingValue = "false")
 public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistenceService {
-
-    private static final String SYSTEM_USER = "SYSTEM";
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -52,8 +52,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                     .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
                     .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(successfulDate))
                     .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(successfulDate))
-                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
+                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, DashboardExtractorConstants.SYSTEM_USER)
+                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, DashboardExtractorConstants.SYSTEM_USER);
             namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.UPSERT_LAST_SUCCESSFUL_DATE_QUERY, params);
 
             log.info("Saved last_successful_date to {} for tenant {} module {}",
@@ -103,8 +103,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                         .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
                         .addValue(DashboardExtractorConstants.PARAM_LAST_SUCCESSFUL_DATE, Date.valueOf(fallbackSuccessDate))
                         .addValue(DashboardExtractorConstants.PARAM_LAST_ATTEMPTED_DATE, Date.valueOf(attemptedDate))
-                        .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                        .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
+                        .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, DashboardExtractorConstants.SYSTEM_USER)
+                        .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, DashboardExtractorConstants.SYSTEM_USER);
             }
             namedParameterJdbcTemplate.batchUpdate(IngestionSummaryQueryBuilder.UPSERT_LAST_ATTEMPTED_DATE_QUERY, batchParams);
             log.info("Batch saved last_attempted_date to {} for {} tenants in module {}",
@@ -143,8 +143,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                     .addValue(DashboardExtractorConstants.PARAM_END_DATE, Date.valueOf(effectiveEndDate))
                     .addValue(DashboardExtractorConstants.PARAM_STATUS, DashboardExtractorConstants.STATUS_NOT_STARTED)
                     .addValue(DashboardExtractorConstants.PARAM_EXCEPTION_CODE, null)
-                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, SYSTEM_USER)
-                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, SYSTEM_USER);
+                    .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, DashboardExtractorConstants.SYSTEM_USER)
+                    .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, DashboardExtractorConstants.SYSTEM_USER);
             namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.INSERT_LEGACY_JOB_QUERY, params);
 
             log.debug("Inserted legacy job {} for tenant {} module {} range [{} to {}]", legacyJobId, tenantId, moduleName, effectiveStartDate, effectiveEndDate);
@@ -188,17 +188,17 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
      * @param details list of daily ingestion data objects
      */
     @Override
-    public void saveIngestionDetailsBatch(java.util.List<?> details) {
+    public void saveIngestionDetailsBatch(List<?> details) {
         try {
             if (details == null || details.isEmpty()) {
                 return;
             }
             MapSqlParameterSource[] batchParams = new MapSqlParameterSource[details.size()];
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
 
             for (int detailIndex = 0; detailIndex < details.size(); detailIndex++) {
                 Object detailItem = details.get(detailIndex);
-                if (detailItem instanceof org.upyog.dashboard.entity.DailyIngestionData dailyIngestionRecord) {
+                if (detailItem instanceof DailyIngestionData dailyIngestionRecord) {
                     // pushDate is formatted as dd-MM-yyyy by DailyIngestionService and LegacyBatchIngestionOrchestrator;
                     // fallback to LocalDate.now() only if pushDate string is not provided.
                     LocalDate effectivePushDate = (dailyIngestionRecord.getPushDate() != null)
@@ -206,19 +206,19 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                             : LocalDate.now();
 
                     batchParams[detailIndex] = new MapSqlParameterSource()
-                            .addValue("moduleIngestionId", (dailyIngestionRecord.getModuleIngestionId() != null)
+                            .addValue(DashboardExtractorConstants.PARAM_MODULE_INGESTION_ID, (dailyIngestionRecord.getModuleIngestionId() != null)
                                     ? dailyIngestionRecord.getModuleIngestionId()
                                     : CommonUtils.generateUUID())
-                            .addValue("moduleDetailId", dailyIngestionRecord.getModuleDetailId())
-                            .addValue("tenantId", dailyIngestionRecord.getTenantId())
-                            .addValue("moduleName", dailyIngestionRecord.getModuleName())
-                            .addValue("pushDate", Date.valueOf(effectivePushDate))
-                            .addValue("requestData", dailyIngestionRecord.getRequestData())
-                            .addValue("responseData", dailyIngestionRecord.getResponseData())
-                            .addValue("ingestionStatus", dailyIngestionRecord.getIngestionStatus())
-                            .addValue("exceptionCode", null)
-                            .addValue("createdBy", (dailyIngestionRecord.getCreatedBy() != null) ? dailyIngestionRecord.getCreatedBy() : SYSTEM_USER)
-                            .addValue("lastModifiedBy", (dailyIngestionRecord.getLastModifiedBy() != null) ? dailyIngestionRecord.getLastModifiedBy() : SYSTEM_USER);
+                            .addValue(DashboardExtractorConstants.PARAM_MODULE_DETAIL_ID, dailyIngestionRecord.getModuleDetailId())
+                            .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, dailyIngestionRecord.getTenantId())
+                            .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, dailyIngestionRecord.getModuleName())
+                            .addValue(DashboardExtractorConstants.PARAM_PUSH_DATE, Date.valueOf(effectivePushDate))
+                            .addValue(DashboardExtractorConstants.PARAM_REQUEST_DATA, dailyIngestionRecord.getRequestData())
+                            .addValue(DashboardExtractorConstants.PARAM_RESPONSE_DATA, dailyIngestionRecord.getResponseData())
+                            .addValue(DashboardExtractorConstants.PARAM_INGESTION_STATUS, dailyIngestionRecord.getIngestionStatus())
+                            .addValue(DashboardExtractorConstants.PARAM_EXCEPTION_CODE, null)
+                            .addValue(DashboardExtractorConstants.PARAM_CREATED_BY, (dailyIngestionRecord.getCreatedBy() != null) ? dailyIngestionRecord.getCreatedBy() : DashboardExtractorConstants.SYSTEM_USER)
+                            .addValue(DashboardExtractorConstants.PARAM_LAST_MODIFIED_BY, (dailyIngestionRecord.getLastModifiedBy() != null) ? dailyIngestionRecord.getLastModifiedBy() : DashboardExtractorConstants.SYSTEM_USER);
                 }
             }
 

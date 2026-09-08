@@ -4,13 +4,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.upyog.dashboard.constants.DashboardExtractorConstants;
 import org.upyog.dashboard.util.CommonUtils;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.upyog.dashboard.api.DashboardClient;
 import org.upyog.dashboard.common.constants.Module;
@@ -22,7 +30,7 @@ import org.upyog.dashboard.model.DashboardData;
 import org.upyog.dashboard.model.IngestionResult;
 import org.upyog.dashboard.registry.ExtractorRegistry;
 import org.upyog.dashboard.repository.IngestionSummaryRepository;
-import org.upyog.dashboard.config.DashboardProperties;
+import org.upyog.dashboard.config.DashboardExtractorProperties;
 import org.upyog.dashboard.enums.IngestionStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -51,21 +59,18 @@ public class DailyIngestionService {
     private static final String STATUS_SUCCESS_ZERO_METRICS = IngestionStatus.SUCCESS_ZERO_METRICS.getValue();
     private static final String STATUS_SUCCESS_DUPLICATE = IngestionStatus.SUCCESS_DUPLICATE.getValue();
 
-    private static final java.util.Map<Class<?>, Optional<java.lang.reflect.Method>> ULB_METHOD_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
-    private static final java.util.Map<Class<?>, Optional<java.lang.reflect.Method>> TENANT_ID_METHOD_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final Map<Class<?>, Optional<Method>> ULB_METHOD_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Optional<Method>> TENANT_ID_METHOD_CACHE = new ConcurrentHashMap<>();
 
     private final DashboardClient dashboardClient;
     private final ExtractorRegistry extractorRegistry;
     private final SchemaMappingConfig schemaMappingConfig;
     private final IngestionSummaryRepository summaryRepository;
-    private final DashboardProperties dashboardProperties;
+    private final DashboardExtractorProperties dashboardProperties;
     private final ObjectMapper objectMapper;
     private final TenantSyncService tenantSyncService;
 
-    @Value("${dashboard-data.ingestion.batch-size}")
     private int batchSize;
-
-    @Value("${dashboard-data.extractor.tenant-batch-size}")
     private int tenantBatchSize;
 
     private String tenantId;
@@ -73,13 +78,15 @@ public class DailyIngestionService {
 
     /**
      * Initialises service-level configuration values from
-     * {@link DashboardProperties}. This method is called after bean
+     * {@link DashboardExtractorProperties}. This method is called after bean
      * construction.
      */
     @PostConstruct
     public void init() {
         this.tenantId = dashboardProperties.getTenantId();
         this.defaultStartDateStr = dashboardProperties.getDefaultStartDateStr();
+        this.batchSize = dashboardProperties.getIngestionBatchSize();
+        this.tenantBatchSize = dashboardProperties.getTenantBatchSize();
     }
 
     /**
@@ -102,7 +109,6 @@ public class DailyIngestionService {
 
         LocalDate yesterday = LocalDate.now().minusDays(1);
         LocalDate defaultStartDate = parseDefaultStartDate();
-        int effectiveTenantBatchSize = (this.tenantBatchSize > 0) ? this.tenantBatchSize : 50;
 
         for (Module module : enabledModules) {
             ModuleExtractor<?> extractor = extractorRegistry.get(module);
@@ -120,7 +126,7 @@ public class DailyIngestionService {
             }
 
             // Bulk fetch last successful dates for all tenants in 1 single query
-            java.util.Map<String, LocalDate> lastSuccessMap = summaryRepository.findAllLastSuccessfulDatesByModule(module.name());
+            Map<String, LocalDate> lastSuccessMap = summaryRepository.findAllLastSuccessfulDatesByModule(module.name());
 
             List<String> pendingTenants = new ArrayList<>();
             for (String currentTenant : activeTenants) {
@@ -143,10 +149,10 @@ public class DailyIngestionService {
             }
 
             log.info("Processing daily catch-up ingestion for module {} across {} pending tenants (total active: {}, batch size: {})",
-                    module, pendingTenants.size(), activeTenants.size(), effectiveTenantBatchSize);
+                    module, pendingTenants.size(), activeTenants.size(), this.tenantBatchSize);
 
-            for (int offset = 0; offset < pendingTenants.size(); offset += effectiveTenantBatchSize) {
-                List<String> tenantBatch = pendingTenants.subList(offset, Math.min(offset + effectiveTenantBatchSize, pendingTenants.size()));
+            for (int offset = 0; offset < pendingTenants.size(); offset += this.tenantBatchSize) {
+                List<String> tenantBatch = pendingTenants.subList(offset, Math.min(offset + this.tenantBatchSize, pendingTenants.size()));
                 processCatchUpForTenantBatch(tenantBatch, module, extractor, defaultStartDate, yesterday, lastSuccessMap, allResults);
             }
         }
@@ -167,8 +173,8 @@ public class DailyIngestionService {
      * @param allResults accumulator list for results
      */
     private void processCatchUpForTenantBatch(List<String> tenantBatch, Module module, ModuleExtractor<?> extractor,
-            LocalDate defaultStartDate, LocalDate yesterday, java.util.Map<String, LocalDate> lastSuccessMap, List<IngestionResult> allResults) {
-        java.util.Map<String, LocalDate> tenantStartDates = new java.util.HashMap<>();
+            LocalDate defaultStartDate, LocalDate yesterday, Map<String, LocalDate> lastSuccessMap, List<IngestionResult> allResults) {
+        Map<String, LocalDate> tenantStartDates = new HashMap<>();
         LocalDate minStartDate = yesterday;
 
         for (String currentTenant : tenantBatch) {
@@ -182,7 +188,7 @@ public class DailyIngestionService {
                 continue;
             }
 
-            long daysToIngest = java.time.temporal.ChronoUnit.DAYS.between(startDate, yesterday) + 1;
+            long daysToIngest = ChronoUnit.DAYS.between(startDate, yesterday) + 1;
             int catchUpLimit = dashboardProperties.getDailyCatchUpLimitDays();
             if (daysToIngest > catchUpLimit) {
                 log.error("Catch-up gap of {} days exceeds max limit of {} days for tenant {} module {}. Please use legacy migration.",
@@ -205,7 +211,7 @@ public class DailyIngestionService {
         LocalDate currentDate = minStartDate;
         while (!currentDate.isAfter(yesterday) && !tenantStartDates.isEmpty()) {
             List<String> tenantsNeedingDate = new ArrayList<>();
-            for (java.util.Map.Entry<String, LocalDate> entry : tenantStartDates.entrySet()) {
+            for (Map.Entry<String, LocalDate> entry : tenantStartDates.entrySet()) {
                 if (!entry.getValue().isAfter(currentDate)) {
                     tenantsNeedingDate.add(entry.getKey());
                 }
@@ -237,8 +243,8 @@ public class DailyIngestionService {
 
     /**
      * Executes ingestion for all enabled modules for a specific target date
-     * across all active ULB tenants in batched multi-ULB queries, skipping tenants
-     * that have already completed ingestion for that date.
+     * across all active ULB tenants in batched multi-ULB queries, skipping
+     * tenants that have already completed ingestion for that date.
      *
      * @param targetDate the date for which data should be ingested
      * @return a list of {@link IngestionResult} objects representing the
@@ -252,8 +258,6 @@ public class DailyIngestionService {
             log.warn("No modules enabled under extractor.enabled-modules in schema-mapping.yml");
             return results;
         }
-
-        int effectiveTenantBatchSize = (this.tenantBatchSize > 0) ? this.tenantBatchSize : 50;
 
         for (Module module : enabledModules) {
             ModuleExtractor<?> extractor = extractorRegistry.get(module);
@@ -271,7 +275,7 @@ public class DailyIngestionService {
             }
 
             // Bulk check which tenants have already completed targetDate
-            java.util.Set<String> alreadyCompletedTenants = summaryRepository.findTenantsSuccessfullyIngestedForDate(module.name(), targetDate);
+            Set<String> alreadyCompletedTenants = summaryRepository.findTenantsSuccessfullyIngestedForDate(module.name(), targetDate);
 
             List<String> pendingTenants = activeTenants.stream()
                     .filter(tenant -> !alreadyCompletedTenants.contains(tenant))
@@ -299,10 +303,10 @@ public class DailyIngestionService {
             }
 
             log.info("Processing target date ({}) ingestion for module {} across {} pending tenants (total active: {}, batch size: {})",
-                    targetDate, module, pendingTenants.size(), activeTenants.size(), effectiveTenantBatchSize);
+                    targetDate, module, pendingTenants.size(), activeTenants.size(), this.tenantBatchSize);
 
-            for (int offset = 0; offset < pendingTenants.size(); offset += effectiveTenantBatchSize) {
-                List<String> tenantBatch = pendingTenants.subList(offset, Math.min(offset + effectiveTenantBatchSize, pendingTenants.size()));
+            for (int offset = 0; offset < pendingTenants.size(); offset += this.tenantBatchSize) {
+                List<String> tenantBatch = pendingTenants.subList(offset, Math.min(offset + this.tenantBatchSize, pendingTenants.size()));
                 summaryRepository.saveOrUpdateLastAttemptedDatesBatch(tenantBatch, module.name(), targetDate);
 
                 List<IngestionResult> batchResults = ingestModuleBatchForDate(tenantBatch, module, extractor, targetDate);
@@ -383,13 +387,12 @@ public class DailyIngestionService {
             return results;
         }
 
-        int effectiveBatchSize = (this.batchSize > 0) ? this.batchSize : 10;
         List<DailyIngestionData> batchDetailRecords = new ArrayList<>();
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
-        java.util.Set<String> processedTenants = new java.util.HashSet<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
+        Set<String> processedTenants = new HashSet<>();
 
-        for (int batchOffset = 0; batchOffset < dataList.size(); batchOffset += effectiveBatchSize) {
-            List<?> batchSubList = dataList.subList(batchOffset, Math.min(batchOffset + effectiveBatchSize, dataList.size()));
+        for (int batchOffset = 0; batchOffset < dataList.size(); batchOffset += this.batchSize) {
+            List<?> batchSubList = dataList.subList(batchOffset, Math.min(batchOffset + this.batchSize, dataList.size()));
 
             for (Object item : batchSubList) {
                 String itemTenantId = extractTenantId(item);
@@ -455,13 +458,15 @@ public class DailyIngestionService {
     }
 
     /**
-     * Checks whether a tenant from the requested batch is covered by the processed items.
+     * Checks whether a tenant from the requested batch is covered by the
+     * processed items.
      *
      * @param tenant requested tenant ID (e.g. "pg" or "pg.citya")
      * @param processedTenants set of tenant IDs extracted from items
-     * @return true if exact match or hierarchical parent/child match exists, false otherwise
+     * @return true if exact match or hierarchical parent/child match exists,
+     * false otherwise
      */
-    private boolean isTenantProcessed(String tenant, java.util.Set<String> processedTenants) {
+    private boolean isTenantProcessed(String tenant, Set<String> processedTenants) {
         if (processedTenants.contains(tenant)) {
             return true;
         }
@@ -582,7 +587,8 @@ public class DailyIngestionService {
     }
 
     /**
-     * Helper to extract tenant ID (ULB) dynamically from an extracted item using cached reflection.
+     * Helper to extract tenant ID (ULB) dynamically from an extracted item
+     * using cached reflection.
      *
      * @param item extracted metric DTO or DashboardData object
      * @return tenant ID string (e.g. "pg.citya") or configured tenant fallback
@@ -624,9 +630,10 @@ public class DailyIngestionService {
      * @param cache map holding cached method reflection lookups
      * @param clazz class being inspected
      * @param methodName name of the getter method
-     * @return the resolved {@link java.lang.reflect.Method} or {@code null} if not present
+     * @return the resolved {@link java.lang.reflect.Method} or {@code null} if
+     * not present
      */
-    private java.lang.reflect.Method getCachedMethod(java.util.Map<Class<?>, Optional<java.lang.reflect.Method>> cache, Class<?> clazz, String methodName) {
+    private Method getCachedMethod(Map<Class<?>, Optional<Method>> cache, Class<?> clazz, String methodName) {
         return cache.computeIfAbsent(clazz, c -> {
             try {
                 return Optional.of(c.getMethod(methodName));
@@ -687,14 +694,14 @@ public class DailyIngestionService {
             } catch (Exception ignored) {
             }
         }
-        if (value instanceof java.util.Collection<?> collection) {
+        if (value instanceof Collection<?> collection) {
             for (Object element : collection) {
                 if (isNonZero(element)) {
                     return true;
                 }
             }
         }
-        if (value instanceof java.util.Map<?, ?> map) {
+        if (value instanceof Map<?, ?> map) {
             for (Object mapEntryValue : map.values()) {
                 if (isNonZero(mapEntryValue)) {
                     return true;

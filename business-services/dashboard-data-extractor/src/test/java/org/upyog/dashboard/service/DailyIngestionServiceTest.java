@@ -35,7 +35,7 @@ import org.upyog.dashboard.model.IngestionResult;
 import org.upyog.dashboard.registry.ExtractorRegistry;
 import org.upyog.dashboard.repository.IngestionSummaryRepository;
 
-import org.upyog.dashboard.config.DashboardProperties;
+import org.upyog.dashboard.config.DashboardExtractorProperties;
 import static org.mockito.Mockito.lenient;
 
 /**
@@ -57,7 +57,7 @@ class DailyIngestionServiceTest {
     private IngestionSummaryRepository summaryRepository;
 
     @Mock
-    private DashboardProperties dashboardProperties;
+    private DashboardExtractorProperties dashboardProperties;
 
     @Mock
     private TenantSyncService tenantSyncService;
@@ -73,12 +73,16 @@ class DailyIngestionServiceTest {
         lenient().when(dashboardProperties.getTenantId()).thenReturn("pg");
         lenient().when(dashboardProperties.getDefaultStartDateStr()).thenReturn(LocalDate.now().minusDays(2).toString());
         lenient().when(dashboardProperties.getDailyCatchUpLimitDays()).thenReturn(7);
+        lenient().when(dashboardProperties.getIngestionBatchSize()).thenReturn(10);
+        lenient().when(dashboardProperties.getTenantBatchSize()).thenReturn(50);
         lenient().when(tenantSyncService.getActiveTenants(any())).thenReturn(List.of("pg"));
         lenient().when(summaryRepository.findAllLastSuccessfulDatesByModule(any())).thenReturn(java.util.Collections.emptyMap());
         lenient().when(summaryRepository.findTenantsSuccessfullyIngestedForDate(any(), any())).thenReturn(java.util.Collections.emptySet());
 
         TestUtils.setField(service, "tenantId", "pg");
         TestUtils.setField(service, "defaultStartDateStr", LocalDate.now().minusDays(2).toString());
+        TestUtils.setField(service, "batchSize", 10);
+        TestUtils.setField(service, "tenantBatchSize", 50);
     }
 
 

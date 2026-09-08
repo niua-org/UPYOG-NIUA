@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.upyog.dashboard.model.IngestionModuleDetail;
 import org.upyog.dashboard.repository.querybuilder.IngestionSummaryQueryBuilder;
 import org.upyog.dashboard.util.CommonUtils;
 
@@ -96,8 +98,8 @@ public Optional<LocalDate> findLastSuccessfulDate(String tenantId, String module
 	 * @param targetDate the date to check
 	 * @return set of tenant IDs that already succeeded on or up to targetDate
 	 */
-	public java.util.Set<String> findTenantsSuccessfullyIngestedForDate(String moduleName, LocalDate targetDate) {
-		java.util.Set<String> resultSet = new java.util.HashSet<>();
+	public Set<String> findTenantsSuccessfullyIngestedForDate(String moduleName, LocalDate targetDate) {
+		Set<String> resultSet = new HashSet<>();
 		try {
 			MapSqlParameterSource params = new MapSqlParameterSource()
 					.addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
@@ -406,11 +408,11 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 	}
 
 	/**
-	 * Upserts a list of {@link org.upyog.dashboard.model.IngestionModuleDetail} records into the database.
+	 * Upserts a list of {@link IngestionModuleDetail} records into the database.
 	 *
 	 * @param moduleDetails list of module details to save or update
 	 */
-	public void upsertModuleDetails(List<org.upyog.dashboard.model.IngestionModuleDetail> moduleDetails) {
+	public void upsertModuleDetails(List<IngestionModuleDetail> moduleDetails) {
 		if (moduleDetails == null || moduleDetails.isEmpty()) {
 			return;
 		}
@@ -418,19 +420,19 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 			long now = CommonUtils.getCurrentEpochMillis();
 			MapSqlParameterSource[] batchParams = new MapSqlParameterSource[moduleDetails.size()];
 			for (int index = 0; index < moduleDetails.size(); index++) {
-				org.upyog.dashboard.model.IngestionModuleDetail detail = moduleDetails.get(index);
+				IngestionModuleDetail detail = moduleDetails.get(index);
 				String detailId = detail.getDetailId();
 				if (detailId == null || detailId.isBlank()) {
-					detailId = java.util.UUID.nameUUIDFromBytes((detail.getTenantId() + ":" + detail.getModuleName()).getBytes()).toString();
+					detailId = UUID.nameUUIDFromBytes((detail.getTenantId() + ":" + detail.getModuleName()).getBytes()).toString();
 				}
 				batchParams[index] = new MapSqlParameterSource()
 						.addValue("detailId", detailId)
 						.addValue("tenantId", detail.getTenantId())
 						.addValue("moduleName", detail.getModuleName())
 						.addValue("isActive", detail.isActive())
-						.addValue("createdBy", detail.getCreatedBy() != null ? detail.getCreatedBy() : "SYSTEM")
+						.addValue("createdBy", detail.getCreatedBy() != null ? detail.getCreatedBy() : DashboardExtractorConstants.SYSTEM_USER)
 						.addValue("createdTime", detail.getCreatedTime() != null ? detail.getCreatedTime() : now)
-						.addValue("lastModifiedBy", detail.getLastModifiedBy() != null ? detail.getLastModifiedBy() : "SYSTEM")
+						.addValue("lastModifiedBy", detail.getLastModifiedBy() != null ? detail.getLastModifiedBy() : DashboardExtractorConstants.SYSTEM_USER)
 						.addValue("lastModifiedTime", now);
 			}
 			namedParameterJdbcTemplate.batchUpdate(IngestionSummaryQueryBuilder.UPSERT_MODULE_DETAIL_QUERY, batchParams);
@@ -461,7 +463,7 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 	 * @param moduleDetails the new list of module details to persist
 	 */
 	@Transactional
-	public void replaceAllModuleDetails(List<org.upyog.dashboard.model.IngestionModuleDetail> moduleDetails) {
+	public void replaceAllModuleDetails(List<IngestionModuleDetail> moduleDetails) {
 		deleteAllModuleDetails();
 		if (moduleDetails != null && !moduleDetails.isEmpty()) {
 			upsertModuleDetails(moduleDetails);
@@ -502,16 +504,16 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 	}
 
 	/**
-	 * Retrieves all active {@link org.upyog.dashboard.model.IngestionModuleDetail} records.
+	 * Retrieves all active {@link IngestionModuleDetail} records.
 	 *
 	 * @return list of active module details
 	 */
-	public List<org.upyog.dashboard.model.IngestionModuleDetail> findAllActiveModuleDetails() {
+	public List<IngestionModuleDetail> findAllActiveModuleDetails() {
 		try {
 			return namedParameterJdbcTemplate.query(
 					IngestionSummaryQueryBuilder.SELECT_ALL_ACTIVE_MODULE_DETAILS_QUERY,
 					new MapSqlParameterSource(),
-					(rs, rowNum) -> org.upyog.dashboard.model.IngestionModuleDetail.builder()
+					(rs, rowNum) -> IngestionModuleDetail.builder()
 							.detailId(rs.getString("detail_id"))
 							.tenantId(rs.getString("tenant_id"))
 							.moduleName(rs.getString("module_name"))

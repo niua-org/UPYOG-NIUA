@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "dashboard-data.persister.enabled", havingValue = "true", matchIfMissing = true)
 public class KafkaIngestionPersistenceServiceImpl implements IngestionPersistenceService {
 
-    private static final String SYSTEM_USER = "SYSTEM";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
 
     private final DashboardProducer producer;
@@ -59,9 +58,9 @@ public class KafkaIngestionPersistenceServiceImpl implements IngestionPersistenc
                 .moduleName(moduleName)
                 .lastSuccessfulDate(successfulDate.format(DATE_FORMATTER))
                 .lastAttemptedDate(successfulDate.format(DATE_FORMATTER))
-                .createdBy(SYSTEM_USER)
+                .createdBy(DashboardExtractorConstants.SYSTEM_USER)
                 .createdTime(now)
-                .lastModifiedBy(SYSTEM_USER)
+                .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
                 .lastModifiedTime(now)
                 .build();
 
@@ -117,9 +116,9 @@ public class KafkaIngestionPersistenceServiceImpl implements IngestionPersistenc
                         .moduleName(moduleName)
                         .lastSuccessfulDate(fallbackSuccessDate.format(DATE_FORMATTER))
                         .lastAttemptedDate(attemptedDate.format(DATE_FORMATTER))
-                        .createdBy(SYSTEM_USER)
+                        .createdBy(DashboardExtractorConstants.SYSTEM_USER)
                         .createdTime(now)
-                        .lastModifiedBy(SYSTEM_USER)
+                        .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
                         .lastModifiedTime(now)
                         .build());
             }
@@ -165,9 +164,9 @@ public class KafkaIngestionPersistenceServiceImpl implements IngestionPersistenc
                 .startDate(effectiveStartDate.format(DATE_FORMATTER))
                 .endDate(effectiveEndDate.format(DATE_FORMATTER))
                 .ingestionStatus(DashboardExtractorConstants.STATUS_NOT_STARTED)
-                .createdBy(SYSTEM_USER)
+                .createdBy(DashboardExtractorConstants.SYSTEM_USER)
                 .createdTime(now)
-                .lastModifiedBy(SYSTEM_USER)
+                .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
                 .lastModifiedTime(now)
                 .build();
                 
@@ -199,7 +198,7 @@ public class KafkaIngestionPersistenceServiceImpl implements IngestionPersistenc
                 .moduleIngestionId(jobId)
                 .responseData(responseData)
                 .ingestionStatus(status)
-                .lastModifiedBy(SYSTEM_USER)
+                .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
                 .lastModifiedTime(now)
                 .build();
                 
@@ -221,7 +220,7 @@ public class KafkaIngestionPersistenceServiceImpl implements IngestionPersistenc
      * @param details list of daily ingestion data objects
      */
     @Override
-    public void saveIngestionDetailsBatch(java.util.List<?> details) {
+    public void saveIngestionDetailsBatch(List<?> details) {
         try {
             if (details == null || details.isEmpty()) {
                 return;

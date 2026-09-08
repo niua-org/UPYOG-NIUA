@@ -3,6 +3,7 @@ package org.upyog.dashboard.mdms.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -16,10 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-import org.upyog.dashboard.config.DashboardProperties;
+import org.upyog.dashboard.config.DashboardExtractorProperties;
 import org.upyog.dashboard.mdms.model.MdmsTenantResponse;
 import org.upyog.dashboard.service.OAuthTokenService;
-import org.upyog.dashboard.util.TestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,7 +36,7 @@ class MdmsClientTest {
     private OAuthTokenService oauthTokenService;
 
     @Mock
-    private DashboardProperties dashboardProperties;
+    private DashboardExtractorProperties dashboardProperties;
 
     @InjectMocks
     private MdmsClient mdmsClient;
@@ -44,10 +44,10 @@ class MdmsClientTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         objectMapper = new ObjectMapper();
-        TestUtils.setField(mdmsClient, "mdmsHost", "http://localhost:8181");
-        TestUtils.setField(mdmsClient, "mdmsSearchEndpoint", "/egov-mdms-service/v1/_search");
+        lenient().when(dashboardProperties.getMdmsHost()).thenReturn("http://localhost:8181");
+        lenient().when(dashboardProperties.getMdmsSearchEndpoint()).thenReturn("/egov-mdms-service/v1/_search");
     }
 
     @Test

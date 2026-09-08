@@ -344,8 +344,8 @@ public class LegacyBatchIngestionOrchestrator {
                     .requestData(targetDateData.samplePayloadJson)
                     .responseData(responseData)
                     .ingestionStatus(finalStatus)
-                    .createdBy("SYSTEM")
-                    .lastModifiedBy("SYSTEM")
+                    .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                    .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
                     .build();
 
             detailRecords.add(detail);

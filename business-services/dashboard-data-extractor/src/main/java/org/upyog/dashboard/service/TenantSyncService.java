@@ -44,7 +44,11 @@ public class TenantSyncService {
     @CacheEvict(value = {DashboardExtractorConstants.CACHE_ACTIVE_TENANTS, DashboardExtractorConstants.CACHE_TENANT_MODULE_DETAILS}, allEntries = true)
     public List<IngestionModuleDetail> syncTenantsFromMdms(String stateTenantId) {
         String effectiveState = StringUtils.isNotBlank(stateTenantId) ? stateTenantId
-                : dashboardProperties.getMetricState();
+                : dashboardProperties.getTenantId();
+        if (StringUtils.isBlank(effectiveState)) {
+            log.error("State tenant ID is not provided or configured. MDMS sync aborted.");
+            throw new IllegalArgumentException("State tenant ID must not be blank for MDMS tenant synchronization");
+        }
         log.info("Starting tenant sync from MDMS for state: {}", effectiveState);
 
         List<String> cityTenants = mdmsClient.fetchCityTenants(effectiveState);
@@ -56,6 +60,7 @@ public class TenantSyncService {
         List<Module> enabledModules = schemaMappingConfig.getEnabledModules();
         if (enabledModules.isEmpty()) {
             log.warn("No modules enabled in SchemaMappingConfig. Defaulting to all known modules.");
+            enabledModules = List.of(Module.values());
         }
 
         List<IngestionModuleDetail> detailsToUpsert = new ArrayList<>();
@@ -76,6 +81,11 @@ public class TenantSyncService {
                         .build();
                 detailsToUpsert.add(detail);
             }
+        }
+
+        if (detailsToUpsert.isEmpty()) {
+            log.warn("No module details built to upsert for state {}. Sync aborted without modifying database.", effectiveState);
+            return Collections.emptyList();
         }
 
         summaryRepository.replaceAllModuleDetails(detailsToUpsert);

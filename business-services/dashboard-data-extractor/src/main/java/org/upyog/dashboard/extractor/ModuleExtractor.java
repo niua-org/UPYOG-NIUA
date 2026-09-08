@@ -34,7 +34,7 @@ public interface ModuleExtractor<T> {
      * @param targetDate the date for metric extraction
      * @return T object containing the extracted metrics payload
      */
-    T extractData(java.util.List<String> tenantIds, LocalDate targetDate);
+    T extractData(List<String> tenantIds, LocalDate targetDate);
 
     /**
      * Extracts daily dashboard metrics for the specified tenant and target date

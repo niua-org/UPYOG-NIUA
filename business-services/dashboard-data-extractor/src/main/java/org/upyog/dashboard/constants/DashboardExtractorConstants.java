@@ -27,6 +27,8 @@ public final class DashboardExtractorConstants extends DashboardConstants {
     public static final String PARAM_START_TIME = "startTime";
     /** Named parameter key for end timestamp in SQL extraction queries. */
     public static final String PARAM_END_TIME = "endTime";
+    /** Named parameter key for module detail ID in ingestion detail queries. */
+    public static final String PARAM_MODULE_DETAIL_ID = "moduleDetailId";
 
     /** Audit user identifier for MDMS tenant synchronization events. */
     public static final String MDMS_SYNC_USER = "MDMS_SYNC";

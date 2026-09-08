@@ -16,18 +16,20 @@ import org.upyog.dashboard.model.IngestionModuleDetail;
 import org.upyog.dashboard.service.TenantSyncService;
 
 /**
- * REST Controller exposing endpoints for MDMS tenant synchronization and search.
+ * REST Controller exposing endpoints for MDMS tenant synchronization and
+ * search.
  */
 @Slf4j
 @RestController
-@RequestMapping({"/extractor/v1/tenants", "/api/v1/tenants"})
+@RequestMapping({"/extractor/v1/tenants"})
 @RequiredArgsConstructor
 public class TenantController {
 
     private final TenantSyncService tenantSyncService;
 
     /**
-     * Synchronizes tenant metadata from MDMS and persists them to {@code ingestion_module_detail}.
+     * Synchronizes tenant metadata from MDMS and persists them to
+     * {@code ingestion_module_detail}.
      *
      * @param stateTenantId optional state tenant identifier (e.g. {@code "pg"})
      * @return response entity with synced record count and details
@@ -48,7 +50,8 @@ public class TenantController {
     }
 
     /**
-     * Retrieves currently active module details and tenant IDs from the database/cache.
+     * Retrieves currently active module details and tenant IDs from the
+     * database/cache.
      *
      * @return response entity containing active tenants and module details
      */

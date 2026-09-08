@@ -147,7 +147,7 @@ class DateIngestionFlowIntegrationTest {
         commonValidator = new CommonValidator();
 
         // 5. Setup HttpLoader
-        DashboardProperties dashboardProperties = Mockito.mock(DashboardProperties.class);
+        org.upyog.dashboard.config.DashboardExtractorProperties dashboardProperties = Mockito.mock(org.upyog.dashboard.config.DashboardExtractorProperties.class);
         lenient().when(dashboardProperties.getDashboardIngestUrl()).thenReturn(targetApiUrl);
         lenient().when(dashboardProperties.getIngestMaxAttempts()).thenReturn(3);
         lenient().when(dashboardProperties.getIngestBaseDelayMs()).thenReturn(1L);
@@ -156,6 +156,8 @@ class DateIngestionFlowIntegrationTest {
         lenient().when(dashboardProperties.getMetricState()).thenReturn("pg");
         lenient().when(dashboardProperties.getMetricUlb()).thenReturn("pg.citya");
         lenient().when(dashboardProperties.getDefaultStartDateStr()).thenReturn("2026-06-01");
+        lenient().when(dashboardProperties.getIngestionBatchSize()).thenReturn(10);
+        lenient().when(dashboardProperties.getTenantBatchSize()).thenReturn(50);
         lenient().when(dashboardProperties.getPtUsageCategories()).thenReturn(List.of("RESIDENTIAL", "COMMERCIAL", "INDUSTRIAL"));
         lenient().when(dashboardProperties.getPtTaxHeads()).thenReturn(List.of("PT_TAX"));
         lenient().when(dashboardProperties.getPtCessHeads()).thenReturn(List.of("PT_FIRE_CESS", "PT_CANCER_CESS"));
