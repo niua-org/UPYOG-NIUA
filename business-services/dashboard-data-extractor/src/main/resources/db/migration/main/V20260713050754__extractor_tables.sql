@@ -124,6 +124,10 @@ CREATE TABLE IF NOT EXISTS ingestion_detail (
         ON DELETE SET NULL
 );
 
+-- Ensure columns exist if ingestion_detail table pre-existed from an earlier schema version
+ALTER TABLE ingestion_detail ADD COLUMN IF NOT EXISTS module_detail_id VARCHAR(64);
+ALTER TABLE ingestion_detail ADD COLUMN IF NOT EXISTS scheduler_id VARCHAR(64);
+
 -- Index for tenant and module date range queries (e.g. SELECT_SUCCESSFUL_DATES_IN_RANGE_QUERY)
 CREATE INDEX IF NOT EXISTS idx_ingestion_detail_tenant_module_date_status
     ON ingestion_detail (tenant_id, module_name, push_date DESC, ingestion_status);
@@ -201,6 +205,10 @@ CREATE TABLE IF NOT EXISTS legacy_data_ingestion_detail (
         REFERENCES ingestion_scheduler_detail (scheduler_id)
         ON DELETE SET NULL
 );
+
+-- Ensure columns exist if legacy_data_ingestion_detail table pre-existed from an earlier schema version
+ALTER TABLE legacy_data_ingestion_detail ADD COLUMN IF NOT EXISTS module_detail_id VARCHAR(64);
+ALTER TABLE legacy_data_ingestion_detail ADD COLUMN IF NOT EXISTS scheduler_id VARCHAR(64);
 
 -- Index for tenant, module, push_date and status queries (e.g. SELECT_SUCCESSFUL_DATES_IN_RANGE_QUERY, SELECT_LEGACY_JOB_DATES_QUERY)
 CREATE INDEX IF NOT EXISTS idx_legacy_ingestion_detail_tenant_module_date_status
