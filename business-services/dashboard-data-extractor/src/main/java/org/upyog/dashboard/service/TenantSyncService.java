@@ -138,14 +138,15 @@ public class TenantSyncService {
             return null;
         }
         List<IngestionModuleDetail> details = getActiveModuleDetails();
-        if (details != null) {
+        if (details != null && !details.isEmpty()) {
             for (IngestionModuleDetail detail : details) {
                 if (tenantId.equalsIgnoreCase(detail.getTenantId()) && moduleName.equalsIgnoreCase(detail.getModuleName())) {
                     return detail.getDetailId();
                 }
             }
         }
-        return UUID.nameUUIDFromBytes((tenantId + ":" + moduleName).getBytes()).toString();
+        throw new IllegalStateException("No active module configuration found in ingestion_module_detail table for tenant: " 
+                + tenantId + " and module: " + moduleName + ". Please run tenant sync API (POST /extractor/v1/tenants/_sync) first.");
     }
 }
 

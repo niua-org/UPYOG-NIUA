@@ -26,6 +26,9 @@ public class LegacyBatchIngestRequest {
     @NotNull(message = "Module name is required")
     private String moduleName;
 
+    @JsonProperty("tenantId")
+    private String tenantId;
+
     @JsonProperty("startDate")
     @NotNull(message = "Start date is required")
     private String startDate;

@@ -1,5 +1,6 @@
 package org.upyog.dashboard.service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.upyog.dashboard.constants.DashboardExtractorConstants;
 import org.upyog.dashboard.repository.IngestionSummaryRepository;
 import java.io.File;
@@ -72,14 +73,43 @@ public class LegacyBatchIngestionOrchestrator {
      * @return LegacyIngestionResponse summarizing execution outcome
      */
     public LegacyIngestionResponse processLegacyBatchIngest(LegacyBatchIngestRequest request) {
-        String tenantId = dashboardProperties.getTenantId();
         LocalDate start = LocalDate.parse(request.getStartDate());
         LocalDate end = LocalDate.parse(request.getEndDate());
         String moduleName = request.getModuleName();
 
+        String tempTenantId = request.getTenantId();
+        if (StringUtils.isBlank(tempTenantId) && tenantSyncService != null) {
+            try {
+                Module module = Module.valueOf(moduleName.toUpperCase());
+                List<String> activeTenants = tenantSyncService.getActiveTenants(module);
+                if (activeTenants != null && !activeTenants.isEmpty()) {
+                    tempTenantId = activeTenants.get(0);
+                }
+            } catch (Exception exception) {
+                log.warn("Could not resolve active tenant for module {}: {}", moduleName, exception.getMessage());
+            }
+        }
+        if (StringUtils.isBlank(tempTenantId)) {
+            tempTenantId = dashboardProperties.getTenantId();
+        }
+        final String tenantId = tempTenantId;
+
         if (start.isAfter(end)) {
             String errorMsg = "Invalid date range: startDate (" + start + ") cannot be after endDate (" + end + ")";
             log.warn(errorMsg);
+            return LegacyIngestionResponse.builder()
+                    .totalDatesRequested(0)
+                    .datesFailed(1)
+                    .processedResults(List.of(IngestionResult.builder()
+                            .ingestionStatus(DashboardExtractorConstants.STATUS_FAILURE)
+                            .failureReason(errorMsg)
+                            .build()))
+                    .build();
+        }
+
+        if (!summaryRepository.hasAnyModuleDetails()) {
+            String errorMsg = "No tenant configuration found in ingestion_module_detail table. Please run MDMS tenant sync API (POST /extractor/v1/tenants/_sync) first.";
+            log.error(errorMsg);
             return LegacyIngestionResponse.builder()
                     .totalDatesRequested(0)
                     .datesFailed(1)
