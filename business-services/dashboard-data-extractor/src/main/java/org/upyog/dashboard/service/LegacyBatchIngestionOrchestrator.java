@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.upyog.dashboard.api.DashboardIngestionClient;
-import org.upyog.dashboard.config.DashboardProperties;
+import org.upyog.dashboard.config.DashboardExtractorProperties;
 import org.upyog.dashboard.common.constants.Module;
 import org.upyog.dashboard.extractor.LegacyBatchExtractor;
 import org.upyog.dashboard.model.IngestionResult;
@@ -54,18 +54,13 @@ public class LegacyBatchIngestionOrchestrator {
     private final LegacyBatchExtractor batchExtractor;
     private final SXSSFExcelGeneratorService excelGeneratorService;
     private final DashboardIngestionClient ingestionClient;
-    private final DashboardProperties dashboardProperties;
+    private final DashboardExtractorProperties dashboardProperties;
     private final LockProvider lockProvider;
     private final IngestionPersistenceService persistenceService;
     private final IngestionSummaryRepository summaryRepository;
     private final ExtractorRegistry extractorRegistry;
     private final ObjectMapper objectMapper;
-
-    @Value("${dashboard-data.legacy.batch-size:500}")
-    private int batchSize;
-
-    @Value("${dashboard-data.legacy.keep-excel-file:true}")
-    private boolean keepExcelFile;
+    private final TenantSyncService tenantSyncService;
 
     /**
      * Executes legacy extraction into a single Excel file by streaming DB
@@ -117,6 +112,7 @@ public class LegacyBatchIngestionOrchestrator {
 
         String jobId = "JOB-" + moduleName.toUpperCase() + "-" + UUID.randomUUID().toString().substring(0, 8);
 
+        int batchSize = dashboardProperties.getLegacyBatchSize();
         log.info("Processing legacy batch ingestion job {} for module {} (date range: {} to {}, tenantId: {}, batchChunkSize: {})",
                 jobId, moduleName, start, end, tenantId, batchSize);
 
@@ -235,7 +231,7 @@ public class LegacyBatchIngestionOrchestrator {
                 // MISSED_DATE detail entries are persisted into the ingestion_detail table.
                 // This explicitly records that the pipeline attempted extraction for that date but found no business transactions/rows,
                 // differentiating an empty/inactive date from an extraction failure or an unattempted run.
-                persistDateWiseDetails(targetDateDataMap, moduleName, emptyResponse, false);
+                persistDateWiseDetails(jobId, targetDateDataMap, moduleName, emptyResponse, false);
 
                 return LegacyIngestionResponse.builder()
                         .totalDatesRequested((int) start.until(end.plusDays(1)).getDays())
@@ -266,7 +262,7 @@ public class LegacyBatchIngestionOrchestrator {
             persistenceService.updateLegacyJobStatus(jobId, ingestionResult.getIngestionStatus(), null, responseJson);
 
             // Persist per-date detail entries into ingestion_detail
-            persistDateWiseDetails(targetDateDataMap, moduleName, responseJson, isSuccess);
+            persistDateWiseDetails(jobId, targetDateDataMap, moduleName, responseJson, isSuccess);
 
             return LegacyIngestionResponse.builder()
                     .totalDatesRequested((int) start.until(end.plusDays(1)).getDays())
@@ -283,7 +279,7 @@ public class LegacyBatchIngestionOrchestrator {
             persistenceService.updateLegacyJobStatus(jobId, DashboardExtractorConstants.STATUS_FAILURE, null, errResponse);
 
             // Persist per-date failure detail entries into ingestion_detail
-            persistDateWiseDetails(targetDateDataMap, moduleName, errResponse, false);
+            persistDateWiseDetails(jobId, targetDateDataMap, moduleName, errResponse, false);
 
             return LegacyIngestionResponse.builder()
                     .totalDatesRequested((int) start.until(end.plusDays(1)).getDays())
@@ -295,7 +291,7 @@ public class LegacyBatchIngestionOrchestrator {
                     .build();
         } finally {
             if (generatedExcelFile != null && generatedExcelFile.exists()) {
-                if (keepExcelFile) {
+                if (dashboardProperties.isLegacyKeepExcelFile()) {
                     log.info("PRESERVED single legacy Excel file at: {}", generatedExcelFile.getAbsolutePath());
                 } else {
                     boolean deleted = generatedExcelFile.delete();
@@ -309,16 +305,15 @@ public class LegacyBatchIngestionOrchestrator {
 
     /**
      * Persists per-date entries into the ingestion_detail table for every
-     * individual day in the legacy batch range, reflecting whether each date
-     * was SUCCESS, MISSED_DATE, or FAILURE.
+     * calendar date requested in the legacy date range.
      *
-     * @param targetDateDataMap tracking map of candidate statuses per date
-     * @param moduleName module short code
-     * @param responseData JSON response received from upstream or error details
-     * @param overallSuccess boolean flag indicating if the overall batch
-     * succeeded
+     * @param schedulerId the unique identifier of the legacy batch job
+     * @param targetDateDataMap map of date -> sample payload JSON and status
+     * @param moduleName module short code (e.g. "PT")
+     * @param responseData overall response string or error JSON
+     * @param overallSuccess whether the batch push succeeded
      */
-    private void persistDateWiseDetails(Map<LocalDate, TargetDateData> targetDateDataMap, String moduleName, String responseData, boolean overallSuccess) {
+    private void persistDateWiseDetails(String schedulerId, Map<LocalDate, TargetDateData> targetDateDataMap, String moduleName, String responseData, boolean overallSuccess) {
         if (targetDateDataMap == null || targetDateDataMap.isEmpty()) {
             return;
         }
@@ -336,8 +331,15 @@ public class LegacyBatchIngestionOrchestrator {
                 finalStatus = targetDateData.status;
             }
 
+            String moduleDetailId = (tenantSyncService != null)
+                    ? tenantSyncService.getModuleDetailId(targetDateData.tenantId, moduleName)
+                    : null;
+            long now = CommonUtils.getCurrentEpochMillis();
+
             DailyIngestionData detail = DailyIngestionData.builder()
                     .moduleIngestionId(CommonUtils.generateUUID())
+                    .moduleDetailId(moduleDetailId)
+                    .schedulerId(schedulerId)
                     .tenantId(targetDateData.tenantId)
                     .moduleName(moduleName)
                     .pushDate(date.format(formatter))
@@ -345,7 +347,9 @@ public class LegacyBatchIngestionOrchestrator {
                     .responseData(responseData)
                     .ingestionStatus(finalStatus)
                     .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                    .createdTime(now)
                     .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
+                    .lastModifiedTime(now)
                     .build();
 
             detailRecords.add(detail);

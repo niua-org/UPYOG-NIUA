@@ -28,6 +28,7 @@ import org.upyog.dashboard.extractor.ModuleExtractor;
 import org.upyog.dashboard.model.DashboardRequest;
 import org.upyog.dashboard.model.DashboardData;
 import org.upyog.dashboard.model.IngestionResult;
+import org.upyog.dashboard.model.IngestionSchedulerDetail;
 import org.upyog.dashboard.registry.ExtractorRegistry;
 import org.upyog.dashboard.repository.IngestionSummaryRepository;
 import org.upyog.dashboard.config.DashboardExtractorProperties;
@@ -90,6 +91,63 @@ public class DailyIngestionService {
     }
 
     /**
+     * Executes the daily scheduled ingestion pipeline wrapped with full execution lifecycle tracking.
+     * Records the initial RUNNING status in ingestion_scheduler_detail, processes all enabled modules,
+     * and updates the run with COMPLETED or FAILED status and processed counts using constant values.
+     *
+     * @param cronExpression the active cron expression driving this scheduler run
+     */
+    public void executeScheduledIngestion(String cronExpression) {
+        String schedulerId = CommonUtils.generateUUID();
+        long startTime = CommonUtils.getCurrentEpochMillis();
+        log.info("Daily Ingestion Scheduler triggered with schedulerId: {}", schedulerId);
+
+        IngestionSchedulerDetail schedulerDetail = IngestionSchedulerDetail.builder()
+                .schedulerId(schedulerId)
+                .schedulerName(DashboardExtractorConstants.SCHEDULER_NAME_DAILY_INGESTION)
+                .cronExpression(cronExpression)
+                .startTime(startTime)
+                .status(DashboardExtractorConstants.STATUS_RUNNING)
+                .totalRecordsProcessed(0)
+                .successRecordsCount(0)
+                .failureRecordsCount(0)
+                .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                .createdTime(startTime)
+                .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
+                .lastModifiedTime(startTime)
+                .build();
+        summaryRepository.createSchedulerRun(schedulerDetail);
+
+        int totalCount = 0;
+        int successCount = 0;
+        int failureCount = 0;
+        String finalStatus = DashboardExtractorConstants.STATUS_COMPLETED;
+        String errorMessage = null;
+
+        try {
+            List<IngestionResult> results = ingestDailyData(schedulerId);
+            if (results != null) {
+                totalCount = results.size();
+                for (IngestionResult result : results) {
+                    if (result != null && IngestionStatus.fromValue(result.getIngestionStatus()).isSuccess()) {
+                        successCount++;
+                    } else {
+                        failureCount++;
+                    }
+                }
+            }
+            log.info("Daily Ingestion Scheduler finished for schedulerId: {}. Processed: {}, Success: {}, Failure: {}",
+                    schedulerId, totalCount, successCount, failureCount);
+        } catch (Exception exception) {
+            log.error("Daily Ingestion Scheduler encountered an error for schedulerId: {}", schedulerId, exception);
+            finalStatus = DashboardExtractorConstants.STATUS_FAILED;
+            errorMessage = exception.getMessage();
+        } finally {
+            summaryRepository.completeSchedulerRun(schedulerId, startTime, totalCount, successCount, failureCount, finalStatus, errorMessage);
+        }
+    }
+
+    /**
      * Executes daily ingestion for all enabled modules across all active ULB
      * tenants using the default date range (yesterday). The method batches
      * active tenants and determines the appropriate start date for each module
@@ -99,12 +157,29 @@ public class DailyIngestionService {
      * outcome of each module's ingestion attempt.
      */
     public List<IngestionResult> ingestDailyData() {
+        return ingestDailyData((String) null);
+    }
+
+    /**
+     * Executes daily ingestion for all enabled modules across all active ULB
+     * tenants using the default date range (yesterday) with an optional scheduler ID.
+     *
+     * @param schedulerId optional unique identifier for the triggering scheduler run
+     * @return a list of {@link IngestionResult} objects representing the outcome
+     */
+    public List<IngestionResult> ingestDailyData(String schedulerId) {
         List<IngestionResult> allResults = new ArrayList<>();
         List<Module> enabledModules = schemaMappingConfig.getEnabledModules();
 
         if (enabledModules.isEmpty()) {
             log.warn("No modules enabled under extractor.enabled-modules in schema-mapping.yml");
             return allResults;
+        }
+
+        if (!summaryRepository.hasAnyModuleDetails()) {
+            String errorMsg = "No tenant configuration found in ingestion_module_detail table. Please run the MDMS tenant sync API (POST /api/v1/tenant/_sync) or configure tenants manually.";
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
         }
 
         LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -119,9 +194,7 @@ public class DailyIngestionService {
 
             List<String> activeTenants = tenantSyncService.getActiveTenants(module);
             if (activeTenants.isEmpty()) {
-                activeTenants = StringUtils.isNotBlank(this.tenantId) ? List.of(this.tenantId) : List.of();
-            }
-            if (activeTenants.isEmpty()) {
+                log.warn("No active tenants configured for module {} in ingestion_module_detail table. Skipping module.", module);
                 continue;
             }
 
@@ -153,7 +226,7 @@ public class DailyIngestionService {
 
             for (int offset = 0; offset < pendingTenants.size(); offset += this.tenantBatchSize) {
                 List<String> tenantBatch = pendingTenants.subList(offset, Math.min(offset + this.tenantBatchSize, pendingTenants.size()));
-                processCatchUpForTenantBatch(tenantBatch, module, extractor, defaultStartDate, yesterday, lastSuccessMap, allResults);
+                processCatchUpForTenantBatch(tenantBatch, module, extractor, defaultStartDate, yesterday, lastSuccessMap, allResults, schedulerId);
             }
         }
 
@@ -171,9 +244,11 @@ public class DailyIngestionService {
      * @param yesterday catch-up target end date
      * @param lastSuccessMap cached map of tenant last successful dates
      * @param allResults accumulator list for results
+     * @param schedulerId optional scheduler run identifier
      */
     private void processCatchUpForTenantBatch(List<String> tenantBatch, Module module, ModuleExtractor<?> extractor,
-            LocalDate defaultStartDate, LocalDate yesterday, Map<String, LocalDate> lastSuccessMap, List<IngestionResult> allResults) {
+            LocalDate defaultStartDate, LocalDate yesterday, Map<String, LocalDate> lastSuccessMap,
+            List<IngestionResult> allResults, String schedulerId) {
         Map<String, LocalDate> tenantStartDates = new HashMap<>();
         LocalDate minStartDate = yesterday;
 
@@ -224,7 +299,7 @@ public class DailyIngestionService {
 
             summaryRepository.saveOrUpdateLastAttemptedDatesBatch(tenantsNeedingDate, module.name(), currentDate);
 
-            List<IngestionResult> dateResults = ingestModuleBatchForDate(tenantsNeedingDate, module, extractor, currentDate);
+            List<IngestionResult> dateResults = ingestModuleBatchForDate(tenantsNeedingDate, module, extractor, currentDate, schedulerId);
             allResults.addAll(dateResults);
 
             // Check for failures and halt subsequent catch-up dates only for failed tenants
@@ -245,18 +320,40 @@ public class DailyIngestionService {
      * Executes ingestion for all enabled modules for a specific target date
      * across all active ULB tenants in batched multi-ULB queries, skipping
      * tenants that have already completed ingestion for that date.
+    /**
+     * Executes ingestion for all enabled modules for a specific target date
+     * across all active ULB tenants in batched multi-ULB queries, skipping
+     * tenants that have already completed ingestion for that date.
      *
      * @param targetDate the date for which data should be ingested
      * @return a list of {@link IngestionResult} objects representing the
      * outcome of each module's ingestion attempt.
      */
     public List<IngestionResult> ingestDailyData(LocalDate targetDate) {
+        return ingestDailyData(targetDate, null);
+    }
+
+    /**
+     * Executes ingestion for all enabled modules for a specific target date
+     * with an optional scheduler ID.
+     *
+     * @param targetDate the date for which data should be ingested
+     * @param schedulerId optional scheduler run identifier
+     * @return list of {@link IngestionResult} objects
+     */
+    public List<IngestionResult> ingestDailyData(LocalDate targetDate, String schedulerId) {
         List<IngestionResult> results = new ArrayList<>();
         List<Module> enabledModules = schemaMappingConfig.getEnabledModules();
 
         if (enabledModules.isEmpty()) {
             log.warn("No modules enabled under extractor.enabled-modules in schema-mapping.yml");
             return results;
+        }
+
+        if (!summaryRepository.hasAnyModuleDetails()) {
+            String errorMsg = "No tenant configuration found in ingestion_module_detail table. Please run the MDMS tenant sync API (POST /api/v1/tenant/_sync) or configure tenants manually.";
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
         }
 
         for (Module module : enabledModules) {
@@ -268,9 +365,7 @@ public class DailyIngestionService {
 
             List<String> activeTenants = tenantSyncService.getActiveTenants(module);
             if (activeTenants.isEmpty()) {
-                activeTenants = StringUtils.isNotBlank(this.tenantId) ? List.of(this.tenantId) : List.of();
-            }
-            if (activeTenants.isEmpty()) {
+                log.warn("No active tenants configured for module {} in ingestion_module_detail table. Skipping module.", module);
                 continue;
             }
 
@@ -309,7 +404,7 @@ public class DailyIngestionService {
                 List<String> tenantBatch = pendingTenants.subList(offset, Math.min(offset + this.tenantBatchSize, pendingTenants.size()));
                 summaryRepository.saveOrUpdateLastAttemptedDatesBatch(tenantBatch, module.name(), targetDate);
 
-                List<IngestionResult> batchResults = ingestModuleBatchForDate(tenantBatch, module, extractor, targetDate);
+                List<IngestionResult> batchResults = ingestModuleBatchForDate(tenantBatch, module, extractor, targetDate, schedulerId);
                 results.addAll(batchResults);
             }
         }
@@ -327,7 +422,7 @@ public class DailyIngestionService {
      * @return an {@link IngestionResult} describing success or failure
      */
     public IngestionResult ingestModuleForDate(String currentTenant, Module module, ModuleExtractor<?> extractor, LocalDate date) {
-        List<IngestionResult> results = ingestModuleBatchForDate(List.of(currentTenant), module, extractor, date);
+        List<IngestionResult> results = ingestModuleBatchForDate(List.of(currentTenant), module, extractor, date, null);
         return (!results.isEmpty()) ? results.get(0) : buildResult(STATUS_FAILURE, module, date, "No result produced", null);
     }
 
@@ -339,9 +434,11 @@ public class DailyIngestionService {
      * @param module the module to ingest
      * @param extractor the extractor implementation
      * @param date the target date
+     * @param schedulerId optional scheduler run identifier
      * @return list of {@link IngestionResult}s corresponding to the tenants
      */
-    private List<IngestionResult> ingestModuleBatchForDate(List<String> tenantBatch, Module module, ModuleExtractor<?> extractor, LocalDate date) {
+    private List<IngestionResult> ingestModuleBatchForDate(List<String> tenantBatch, Module module, ModuleExtractor<?> extractor,
+            LocalDate date, String schedulerId) {
         try {
             log.info("Starting batch extraction for module {} on date {} across {} tenants", module, date, tenantBatch.size());
             Object rawData = extractor.extractData(tenantBatch, date);
@@ -354,7 +451,7 @@ public class DailyIngestionService {
                 dataList = List.of();
             }
 
-            return processBatchDataList(tenantBatch, module, extractor, dataList, date);
+            return processBatchDataList(tenantBatch, module, extractor, dataList, date, schedulerId);
         } catch (Exception exception) {
             log.error("Batch extraction failed for module {} on date {} across tenants {}: {}", module, date, tenantBatch, exception.getMessage(), exception);
             List<IngestionResult> failureResults = new ArrayList<>();
@@ -374,21 +471,48 @@ public class DailyIngestionService {
      * @param extractor the extractor instance
      * @param dataList the list of extracted data items
      * @param date the ingestion date
+     * @param schedulerId optional scheduler run identifier
      * @return list of {@link IngestionResult}s
      */
-    private List<IngestionResult> processBatchDataList(List<String> tenantBatch, Module module, ModuleExtractor<?> extractor, List<?> dataList, LocalDate date) {
+    private List<IngestionResult> processBatchDataList(List<String> tenantBatch, Module module, ModuleExtractor<?> extractor,
+            List<?> dataList, LocalDate date, String schedulerId) {
         List<IngestionResult> results = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
+        long now = CommonUtils.getCurrentEpochMillis();
+
         if (dataList.isEmpty()) {
             log.info("No data returned for module {} on date {} across tenants {}", module, date, tenantBatch);
+            List<DailyIngestionData> emptyDetailRecords = new ArrayList<>();
             for (String tenant : tenantBatch) {
                 summaryRepository.saveOrUpdateLastSuccessfulDate(tenant, module.name(), date);
-                results.add(buildResult(STATUS_SUCCESS, module, date, null, null));
+                String responseDataJson = "{\"message\":\"No data returned for tenant. Marked as zero-metrics success.\"}";
+                results.add(buildResult(STATUS_SUCCESS_ZERO_METRICS, module, date, null, responseDataJson));
+
+                String moduleDetailId = tenantSyncService.getModuleDetailId(tenant, module.name());
+                DailyIngestionData detailData = DailyIngestionData.builder()
+                        .moduleIngestionId(CommonUtils.generateUUID())
+                        .moduleDetailId(moduleDetailId)
+                        .schedulerId(schedulerId)
+                        .tenantId(tenant)
+                        .moduleName(module.name())
+                        .pushDate(date.format(formatter))
+                        .requestData(null)
+                        .responseData(responseDataJson)
+                        .ingestionStatus(STATUS_SUCCESS_ZERO_METRICS)
+                        .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                        .createdTime(now)
+                        .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
+                        .lastModifiedTime(now)
+                        .build();
+                emptyDetailRecords.add(detailData);
+            }
+            if (!emptyDetailRecords.isEmpty()) {
+                summaryRepository.saveIngestionDetailsBatch(emptyDetailRecords);
             }
             return results;
         }
 
         List<DailyIngestionData> batchDetailRecords = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
         Set<String> processedTenants = new HashSet<>();
 
         for (int batchOffset = 0; batchOffset < dataList.size(); batchOffset += this.batchSize) {
@@ -405,6 +529,33 @@ public class DailyIngestionService {
                 if (isAllZeroMetrics(extractor, item)) {
                     log.info("All metrics for tenant {} module {} on date {} are zero. Skipping downstream API push.", itemTenantId, module, date);
                     result = buildResult(STATUS_SUCCESS_ZERO_METRICS, module, date, null, "{\"message\":\"All metrics are zero. Downstream API push skipped.\"}");
+
+                    String itemRequestJson = null;
+                    try {
+                        itemRequestJson = objectMapper != null ? objectMapper.writeValueAsString(item) : item.toString();
+                    } catch (Exception serializationException) {
+                        log.error("Failed to serialize item request payload for tenant {} module {} on date {}: {}",
+                                itemTenantId, module, date, serializationException.getMessage());
+                        itemRequestJson = item.toString();
+                    }
+
+                    String moduleDetailId = tenantSyncService.getModuleDetailId(itemTenantId, module.name());
+                    DailyIngestionData detailData = DailyIngestionData.builder()
+                            .moduleIngestionId(CommonUtils.generateUUID())
+                            .moduleDetailId(moduleDetailId)
+                            .schedulerId(schedulerId)
+                            .tenantId(itemTenantId)
+                            .moduleName(module.name())
+                            .pushDate(date.format(formatter))
+                            .requestData(itemRequestJson)
+                            .responseData(result != null ? result.getResponseData() : null)
+                            .ingestionStatus(STATUS_SUCCESS_ZERO_METRICS)
+                            .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                            .createdTime(now)
+                            .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
+                            .lastModifiedTime(now)
+                            .build();
+                    batchDetailRecords.add(detailData);
                 } else {
                     result = executeIngestion(module, item, date);
                 }
@@ -414,28 +565,6 @@ public class DailyIngestionService {
                 }
 
                 results.add(result);
-
-                String itemRequestJson = null;
-                try {
-                    itemRequestJson = objectMapper != null ? objectMapper.writeValueAsString(item) : item.toString();
-                } catch (Exception serializationException) {
-                    log.error("Failed to serialize item request payload for tenant {} module {} on date {}: {}",
-                            itemTenantId, module, date, serializationException.getMessage());
-                    itemRequestJson = item.toString();
-                }
-
-                DailyIngestionData detailData = DailyIngestionData.builder()
-                        .moduleIngestionId(CommonUtils.generateUUID())
-                        .tenantId(itemTenantId)
-                        .moduleName(module.name())
-                        .pushDate(date.format(formatter))
-                        .requestData(itemRequestJson)
-                        .responseData(result != null ? result.getResponseData() : null)
-                        .ingestionStatus(result != null ? result.getIngestionStatus() : STATUS_FAILURE)
-                        .createdBy(DashboardExtractorConstants.SYSTEM_USER)
-                        .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
-                        .build();
-                batchDetailRecords.add(detailData);
             }
 
             if (!batchDetailRecords.isEmpty()) {
@@ -449,9 +578,32 @@ public class DailyIngestionService {
             if (!isTenantProcessed(tenant, processedTenants)) {
                 log.info("Tenant {} in batch had no data returned for module {} on date {}. Checkpointing as zero-metrics success.", tenant, module, date);
                 summaryRepository.saveOrUpdateLastSuccessfulDate(tenant, module.name(), date);
-                results.add(buildResult(STATUS_SUCCESS_ZERO_METRICS, module, date, null,
-                        "{\"message\":\"No activity recorded for tenant. Checkpointed as zero-metrics success.\"}"));
+                String responseDataJson = "{\"message\":\"No activity recorded for tenant. Checkpointed as zero-metrics success.\"}";
+                results.add(buildResult(STATUS_SUCCESS_ZERO_METRICS, module, date, null, responseDataJson));
+
+                String moduleDetailId = tenantSyncService.getModuleDetailId(tenant, module.name());
+                DailyIngestionData detailData = DailyIngestionData.builder()
+                        .moduleIngestionId(CommonUtils.generateUUID())
+                        .moduleDetailId(moduleDetailId)
+                        .schedulerId(schedulerId)
+                        .tenantId(tenant)
+                        .moduleName(module.name())
+                        .pushDate(date.format(formatter))
+                        .requestData(null)
+                        .responseData(responseDataJson)
+                        .ingestionStatus(STATUS_SUCCESS_ZERO_METRICS)
+                        .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                        .createdTime(now)
+                        .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
+                        .lastModifiedTime(now)
+                        .build();
+                batchDetailRecords.add(detailData);
             }
+        }
+
+        if (!batchDetailRecords.isEmpty()) {
+            summaryRepository.saveIngestionDetailsBatch(batchDetailRecords);
+            batchDetailRecords.clear();
         }
 
         return results;
@@ -499,7 +651,7 @@ public class DailyIngestionService {
 
     /**
      * Executes the dashboard client for a single extracted item. Utilises
-     * Java 16 pattern matching to wrap {@link DashboardData} items in a
+     * Java 16 pattern matching to wrap {@link DashboardData} items in a
      * singleton list.
      *
      * @param module the module associated with the item
@@ -514,8 +666,9 @@ public class DailyIngestionService {
         log.info("Executing dashboardClient for item: {}", item);
         IngestionResult result = dashboardClient.execute(request);
         if (result != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
             if (result.getDate() == null) {
-                result.setDate(date.toString());
+                result.setDate(date != null ? date.format(formatter) : null);
             }
             String errorDetails = (result.getFailureReason() != null ? result.getFailureReason() : "")
                     + (result.getResponseData() != null ? result.getResponseData() : "");
@@ -541,7 +694,8 @@ public class DailyIngestionService {
         DashboardRequest request = DashboardRequest.builder().module(module).rawData(rawData).build();
         IngestionResult result = dashboardClient.execute(request);
         if (result != null && result.getDate() == null) {
-            result.setDate(date.toString());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
+            result.setDate(date != null ? date.format(formatter) : null);
         }
         log.info("Ingestion status for module {} on date {}: {}", module, date, result != null ? result.getIngestionStatus() : null);
         return result;
@@ -559,9 +713,10 @@ public class DailyIngestionService {
      * @return a fully populated {@link IngestionResult}
      */
     private IngestionResult buildResult(String status, Module module, LocalDate date, String failureReason, String responseData) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
         return IngestionResult.builder()
                 .ingestionStatus(status)
-                .date(date.toString())
+                .date(date != null ? date.format(formatter) : null)
                 .moduleName(module.name())
                 .failureReason(failureReason)
                 .responseData(responseData)

@@ -76,6 +76,7 @@ class DailyIngestionServiceTest {
         lenient().when(dashboardProperties.getIngestionBatchSize()).thenReturn(10);
         lenient().when(dashboardProperties.getTenantBatchSize()).thenReturn(50);
         lenient().when(tenantSyncService.getActiveTenants(any())).thenReturn(List.of("pg"));
+        lenient().when(summaryRepository.hasAnyModuleDetails()).thenReturn(true);
         lenient().when(summaryRepository.findAllLastSuccessfulDatesByModule(any())).thenReturn(java.util.Collections.emptyMap());
         lenient().when(summaryRepository.findTenantsSuccessfullyIngestedForDate(any(), any())).thenReturn(java.util.Collections.emptySet());
 
@@ -289,5 +290,15 @@ class DailyIngestionServiceTest {
         // Inactive tenant cityb
         verify(summaryRepository).saveOrUpdateLastSuccessfulDate("pg.cityb", "PT", targetDate);
         assertThat(results).anyMatch(r -> org.upyog.dashboard.enums.IngestionStatus.SUCCESS_ZERO_METRICS.getValue().equals(r.getIngestionStatus()));
+    }
+
+    @Test
+    @DisplayName("ingestDailyData throws IllegalStateException when ingestion_module_detail has no records")
+    void ingestDailyData_throwsWhenNoModuleDetails() {
+        when(schemaMappingConfig.getEnabledModules()).thenReturn(List.of(Module.PT));
+        when(summaryRepository.hasAnyModuleDetails()).thenReturn(false);
+
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                service.ingestDailyData());
     }
 }

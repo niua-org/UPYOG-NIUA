@@ -48,6 +48,20 @@ class TenantControllerTest {
     }
 
     @Test
+    @DisplayName("syncTenants endpoint returns 400 Bad Request when sync rejected because data already exists")
+    void syncTenants_whenAlreadySynced_returnsBadRequest() {
+        when(tenantSyncService.syncTenantsFromMdms("pg")).thenThrow(
+                new IllegalStateException("This API is allowed to be used only once as tenant data is already present in the table. If you want, you can insert the data directly into the table or you can first delete the data of this table manually and then retry to hit the API."));
+
+        ResponseEntity<Map<String, Object>> response = controller.syncTenants("pg");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("status")).isEqualTo("FAILURE");
+        assertThat(response.getBody().get("message")).toString().contains("allowed to be used only once");
+    }
+
+    @Test
     @DisplayName("searchTenants endpoint returns 200 OK with active tenants list")
     void searchTenants_returnsOk() {
         when(tenantSyncService.getActiveTenants(null)).thenReturn(List.of("pg.citya"));

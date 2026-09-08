@@ -51,6 +51,7 @@ class TenantSyncServiceTest {
     @Test
     @DisplayName("syncTenantsFromMdms fetches city tenants, builds module details and calls upsert")
     void syncTenantsFromMdms_successfulSync() {
+        when(summaryRepository.hasAnyModuleDetails()).thenReturn(false);
         when(mdmsClient.fetchCityTenants("pg")).thenReturn(List.of("pg.citya"));
         when(schemaMappingConfig.getEnabledModules()).thenReturn(List.of(Module.PGR, Module.PT));
 
@@ -64,6 +65,15 @@ class TenantSyncServiceTest {
     }
 
     @Test
+    @DisplayName("syncTenantsFromMdms throws IllegalStateException if module details already exist in DB")
+    void syncTenantsFromMdms_throwsWhenDataAlreadyExists() {
+        when(summaryRepository.hasAnyModuleDetails()).thenReturn(true);
+
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                tenantSyncService.syncTenantsFromMdms("pg"));
+    }
+
+    @Test
     @DisplayName("getActiveTenants returns cached DB tenants or falls back to properties")
     void getActiveTenants_returnsFromDbOrFallback() {
         when(summaryRepository.findActiveTenantsByModule("PT")).thenReturn(List.of("pg.citya", "pg.cityb"));
@@ -74,12 +84,12 @@ class TenantSyncServiceTest {
     }
 
     @Test
-    @DisplayName("getActiveTenants falls back to configured tenantId if DB is empty")
-    void getActiveTenants_fallbackToConfiguredTenant() {
+    @DisplayName("getActiveTenants returns empty list if DB is empty")
+    void getActiveTenants_returnsEmptyWhenDbIsEmpty() {
         when(summaryRepository.findActiveTenantsByModule("PT")).thenReturn(List.of());
 
         List<String> tenants = tenantSyncService.getActiveTenants(Module.PT);
 
-        assertThat(tenants).containsExactly("pg");
+        assertThat(tenants).isEmpty();
     }
 }

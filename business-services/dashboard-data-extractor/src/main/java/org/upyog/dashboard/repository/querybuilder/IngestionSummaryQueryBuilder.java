@@ -97,8 +97,8 @@ public final class IngestionSummaryQueryBuilder {
      */
     public static final String INSERT_LEGACY_JOB_QUERY
             = "INSERT INTO legacy_data_ingestion_detail ("
-            + "   module_ingestion_id, tenant_id, module_name, push_date, start_date, end_date, ingestion_status, exception_code, created_by, last_modified_by"
-            + ") VALUES (:id, :tenantId, :moduleName, :pushDate, :startDate, :endDate, :status, :exceptionCode, :createdBy, :lastModifiedBy)";
+            + "   module_ingestion_id, module_detail_id, scheduler_id, tenant_id, module_name, push_date, start_date, end_date, ingestion_status, exception_code, created_by, last_modified_by"
+            + ") VALUES (:id, :moduleDetailId, :schedulerId, :tenantId, :moduleName, :pushDate, :startDate, :endDate, :status, :exceptionCode, :createdBy, :lastModifiedBy)";
 
     /**
      * Query to select pending or failed legacy jobs ordered by push date
@@ -141,8 +141,38 @@ public final class IngestionSummaryQueryBuilder {
      */
     public static final String INSERT_INGESTION_DETAIL_QUERY
             = "INSERT INTO ingestion_detail ("
-            + "   module_ingestion_id, module_detail_id, tenant_id, module_name, push_date, request_data, response_data, ingestion_status, exception_code, created_by, last_modified_by"
-            + ") VALUES (:moduleIngestionId, :moduleDetailId, :tenantId, :moduleName, :pushDate, :requestData::jsonb, :responseData::jsonb, :ingestionStatus, :exceptionCode, :createdBy, :lastModifiedBy)";
+            + "   module_ingestion_id, module_detail_id, scheduler_id, tenant_id, module_name, push_date, request_data, response_data, ingestion_status, exception_code, created_by, last_modified_by"
+            + ") VALUES (:moduleIngestionId, :moduleDetailId, :schedulerId, :tenantId, :moduleName, :pushDate, :requestData::jsonb, :responseData::jsonb, :ingestionStatus, :exceptionCode, :createdBy, :lastModifiedBy)";
+
+    /**
+     * Query to insert a new scheduler execution record into ingestion_scheduler_detail.
+     */
+    public static final String INSERT_SCHEDULER_DETAIL_QUERY
+            = "INSERT INTO ingestion_scheduler_detail ("
+            + "   scheduler_id, scheduler_name, cron_expression, start_time, status, "
+            + "   total_records_processed, success_records_count, failure_records_count, "
+            + "   created_by, created_time, last_modified_by, last_modified_time"
+            + ") VALUES ("
+            + "   :schedulerId, :schedulerName, :cronExpression, :startTime, :status, "
+            + "   :totalRecordsProcessed, :successRecordsCount, :failureRecordsCount, "
+            + "   :createdBy, :createdTime, :lastModifiedBy, :lastModifiedTime"
+            + ")";
+
+    /**
+     * Query to update a scheduler execution record on completion or failure.
+     */
+    public static final String UPDATE_SCHEDULER_DETAIL_QUERY
+            = "UPDATE ingestion_scheduler_detail SET "
+            + "   end_time = :endTime, "
+            + "   duration_ms = :durationMs, "
+            + "   status = :status, "
+            + "   total_records_processed = :totalRecordsProcessed, "
+            + "   success_records_count = :successRecordsCount, "
+            + "   failure_records_count = :failureRecordsCount, "
+            + "   error_message = :errorMessage, "
+            + "   last_modified_by = :lastModifiedBy, "
+            + "   last_modified_time = :lastModifiedTime "
+            + "WHERE scheduler_id = :schedulerId";
 
     /**
      * Query to upsert a module detail record into ingestion_module_detail.
@@ -178,6 +208,12 @@ public final class IngestionSummaryQueryBuilder {
      */
     public static final String DELETE_ALL_MODULE_DETAILS_QUERY
             = "DELETE FROM ingestion_module_detail";
+
+    /**
+     * Query to count all records in ingestion_module_detail.
+     */
+    public static final String COUNT_ALL_MODULE_DETAILS_QUERY
+            = "SELECT COUNT(1) FROM ingestion_module_detail";
 
     /**
      * Query to check if legacy ingestion has completed successfully for a given tenant and module.

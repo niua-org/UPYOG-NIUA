@@ -133,8 +133,7 @@ class DateIngestionFlowIntegrationTest {
 
         org.upyog.dashboard.util.HierarchyParser hp = new org.upyog.dashboard.util.HierarchyParser("Block 4", "Test");
         org.upyog.dashboard.util.DatabaseQueryExecutor queryExecutor = new org.upyog.dashboard.util.DatabaseQueryExecutor(namedParameterJdbcTemplate, ptDashboardProperties);
-        ptExtractor = new PtModuleExtractor(queryExecutor, schemaMappingConfig, ptDashboardProperties, hp);
-        ptExtractor.init();
+        ptExtractor = new PtModuleExtractor(queryExecutor, schemaMappingConfig, hp);
 
         extractorRegistry = new ExtractorRegistry(List.of(ptExtractor));
 
@@ -184,6 +183,7 @@ class DateIngestionFlowIntegrationTest {
         // 7. Setup DailyIngestionService
         TenantSyncService tenantSyncService = mock(TenantSyncService.class);
         when(tenantSyncService.getActiveTenants(any())).thenReturn(List.of("pg"));
+        when(summaryRepository.hasAnyModuleDetails()).thenReturn(true);
         dailyIngestionService = new DailyIngestionService(dashboardClient, extractorRegistry, schemaMappingConfig, summaryRepository, dashboardProperties, objectMapper, tenantSyncService);
         dailyIngestionService.init();
 

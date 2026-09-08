@@ -17,6 +17,8 @@ serviceMaps:
     - query: >
         INSERT INTO ingestion_detail (
           module_ingestion_id,
+          module_detail_id,
+          scheduler_id,
           tenant_id,
           module_name,
           push_date,
@@ -28,12 +30,16 @@ serviceMaps:
           created_time,
           last_modified_by,
           last_modified_time
-        ) VALUES (?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), ?::jsonb, ?::jsonb, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), ?::jsonb, ?::jsonb, ?, ?, ?, ?, ?, ?);
 
       basePath: dailyIngestionData.*
       jsonMaps:
 
       - jsonPath: $.dailyIngestionData.*.moduleIngestionId
+
+      - jsonPath: $.dailyIngestionData.*.moduleDetailId
+
+      - jsonPath: $.dailyIngestionData.*.schedulerId
 
       - jsonPath: $.dailyIngestionData.*.tenantId
 
@@ -72,6 +78,8 @@ serviceMaps:
     - query: >
         INSERT INTO legacy_data_ingestion_detail (
           module_ingestion_id,
+          module_detail_id,
+          scheduler_id,
           tenant_id,
           ulb_name,
           module_name,
@@ -87,12 +95,16 @@ serviceMaps:
           created_time,
           last_modified_by,
           last_modified_time
-        ) VALUES (?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), ?, ?::jsonb, ?::jsonb, ?, ?, ?, ?, ?, ?);
+        ) VALUES (?, ?, ?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), TO_DATE(?, 'DD-MM-YYYY'), ?, ?::jsonb, ?::jsonb, ?, ?, ?, ?, ?, ?);
 
       basePath: legacyIngestionData.*
       jsonMaps:
 
       - jsonPath: $.legacyIngestionData.*.moduleIngestionId
+
+      - jsonPath: $.legacyIngestionData.*.moduleDetailId
+
+      - jsonPath: $.legacyIngestionData.*.schedulerId
 
       - jsonPath: $.legacyIngestionData.*.tenantId
 

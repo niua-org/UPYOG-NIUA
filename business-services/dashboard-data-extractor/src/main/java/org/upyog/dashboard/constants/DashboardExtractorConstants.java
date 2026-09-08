@@ -29,6 +29,8 @@ public final class DashboardExtractorConstants extends DashboardConstants {
     public static final String PARAM_END_TIME = "endTime";
     /** Named parameter key for module detail ID in ingestion detail queries. */
     public static final String PARAM_MODULE_DETAIL_ID = "moduleDetailId";
+    /** Named parameter key for scheduler ID in ingestion detail queries. */
+    public static final String PARAM_SCHEDULER_ID = "schedulerId";
 
     /** Audit user identifier for MDMS tenant synchronization events. */
     public static final String MDMS_SYNC_USER = "MDMS_SYNC";
@@ -59,4 +61,14 @@ public final class DashboardExtractorConstants extends DashboardConstants {
     public static final String CACHE_ACTIVE_TENANTS = "active_tenants";
     /** Cache name for active module detail records. */
     public static final String CACHE_TENANT_MODULE_DETAILS = "tenant_module_details";
+
+    // Scheduler Audit Constants
+    /** Scheduler name for daily ingestion job audit logging. */
+    public static final String SCHEDULER_NAME_DAILY_INGESTION = "DAILY_INGESTION_SCHEDULER";
+    /** Scheduler run status for running execution. */
+    public static final String STATUS_RUNNING = "RUNNING";
+    /** Scheduler run status for completed execution. */
+    public static final String STATUS_COMPLETED = "COMPLETED";
+    /** Scheduler run status for failed execution. */
+    public static final String STATUS_FAILED = "FAILED";
 }

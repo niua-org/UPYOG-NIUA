@@ -43,6 +43,11 @@ public class TenantSyncService {
      */
     @CacheEvict(value = {DashboardExtractorConstants.CACHE_ACTIVE_TENANTS, DashboardExtractorConstants.CACHE_TENANT_MODULE_DETAILS}, allEntries = true)
     public List<IngestionModuleDetail> syncTenantsFromMdms(String stateTenantId) {
+        if (summaryRepository.hasAnyModuleDetails()) {
+            log.warn("MDMS tenant sync rejected: ingestion_module_detail table already contains data.");
+            throw new IllegalStateException("This API is allowed to be used only once as tenant data is already present in the table. If you want, you can insert the data directly in the table or you can first delete the data of this table manually and then retry to hit the API.");
+        }
+
         String effectiveState = StringUtils.isNotBlank(stateTenantId) ? stateTenantId
                 : dashboardProperties.getTenantId();
         if (StringUtils.isBlank(effectiveState)) {
@@ -105,18 +110,9 @@ public class TenantSyncService {
      */
     @Cacheable(value = DashboardExtractorConstants.CACHE_ACTIVE_TENANTS, key = "#module != null ? #module.name() : 'ALL'")
     public List<String> getActiveTenants(Module module) {
-        List<String> tenants = (module != null)
+        return (module != null)
                 ? summaryRepository.findActiveTenantsByModule(module.name())
                 : summaryRepository.findAllActiveTenants();
-
-        if (tenants.isEmpty()) {
-            log.warn("No active tenants found in ingestion_module_detail for module {}. Falling back to configured tenantId: {}",
-                    module, dashboardProperties.getTenantId());
-            if (StringUtils.isNotBlank(dashboardProperties.getTenantId())) {
-                return List.of(dashboardProperties.getTenantId());
-            }
-        }
-        return tenants;
     }
 
     /**
@@ -128,4 +124,28 @@ public class TenantSyncService {
     public List<IngestionModuleDetail> getActiveModuleDetails() {
         return summaryRepository.findAllActiveModuleDetails();
     }
+
+    /**
+     * Resolves the detail ID for a given tenant ID and module name from the cached
+     * module details or computes a deterministic UUID fallback.
+     *
+     * @param tenantId   the tenant identifier (e.g. "pg.citya")
+     * @param moduleName the module name (e.g. "PT")
+     * @return module detail ID string
+     */
+    public String getModuleDetailId(String tenantId, String moduleName) {
+        if (StringUtils.isAnyBlank(tenantId, moduleName)) {
+            return null;
+        }
+        List<IngestionModuleDetail> details = getActiveModuleDetails();
+        if (details != null) {
+            for (IngestionModuleDetail detail : details) {
+                if (tenantId.equalsIgnoreCase(detail.getTenantId()) && moduleName.equalsIgnoreCase(detail.getModuleName())) {
+                    return detail.getDetailId();
+                }
+            }
+        }
+        return UUID.nameUUIDFromBytes((tenantId + ":" + moduleName).getBytes()).toString();
+    }
 }
+

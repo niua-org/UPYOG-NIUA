@@ -5,8 +5,10 @@ import org.upyog.dashboard.service.IngestionPersistenceService;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -16,9 +18,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.upyog.dashboard.model.IngestionModuleDetail;
+import org.upyog.dashboard.model.IngestionSchedulerDetail;
 import org.upyog.dashboard.repository.querybuilder.IngestionSummaryQueryBuilder;
 import org.upyog.dashboard.util.CommonUtils;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Repository
-@lombok.RequiredArgsConstructor
+@RequiredArgsConstructor
 public class IngestionSummaryRepository {
 
 	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -69,8 +73,8 @@ public Optional<LocalDate> findLastSuccessfulDate(String tenantId, String module
 	 * @param moduleName the module short code (e.g. "PT")
 	 * @return map of tenantId to last successful LocalDate
 	 */
-	public java.util.Map<String, LocalDate> findAllLastSuccessfulDatesByModule(String moduleName) {
-		java.util.Map<String, LocalDate> resultMap = new java.util.HashMap<>();
+	public Map<String, LocalDate> findAllLastSuccessfulDatesByModule(String moduleName) {
+		Map<String, LocalDate> resultMap = new HashMap<>();
 		try {
 			MapSqlParameterSource params = new MapSqlParameterSource()
 					.addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName);
@@ -129,9 +133,9 @@ public Optional<LocalDate> findLastSuccessfulDate(String tenantId, String module
 	 * @param endDate    the end of the date range (inclusive)
 	 * @return a {@link Set} of {@link LocalDate} instances representing successful ingest dates
 	 */
-	public java.util.Set<LocalDate> findSuccessfullyIngestedDates(String tenantId, String moduleName,
+	public Set<LocalDate> findSuccessfullyIngestedDates(String tenantId, String moduleName,
 			LocalDate startDate, LocalDate endDate) {
-		java.util.Set<LocalDate> result = new java.util.HashSet<>();
+		Set<LocalDate> result = new HashSet<>();
 		try {
 			Date sqlStartDate = Date.valueOf(startDate);
 			Date sqlEndDate = Date.valueOf(endDate);
@@ -471,6 +475,24 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 	}
 
 	/**
+	 * Checks whether any records currently exist in the {@code ingestion_module_detail} table.
+	 *
+	 * @return {@code true} if table has at least one record, {@code false} otherwise
+	 */
+	public boolean hasAnyModuleDetails() {
+		try {
+			Integer count = namedParameterJdbcTemplate.queryForObject(
+					IngestionSummaryQueryBuilder.COUNT_ALL_MODULE_DETAILS_QUERY,
+					new MapSqlParameterSource(),
+					Integer.class);
+			return count != null && count > 0;
+		} catch (Exception exception) {
+			log.error("IngestionSummaryRepository | Failed to count ingestion_module_detail records", exception);
+			return false;
+		}
+	}
+
+	/**
 	 * Retrieves distinct active tenant IDs configured for a specific module.
 	 *
 	 * @param moduleName module short code (e.g. "PGR", "PT")
@@ -522,6 +544,78 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 		} catch (Exception exception) {
 			log.error("IngestionSummaryRepository | Failed to find all active module details", exception);
 			return List.of();
+		}
+	}
+
+	/**
+	 * Creates a new scheduler execution record in {@code ingestion_scheduler_detail}.
+	 *
+	 * @param schedulerDetail the scheduler detail entity to persist
+	 */
+	public void createSchedulerRun(IngestionSchedulerDetail schedulerDetail) {
+		if (schedulerDetail == null) {
+			return;
+		}
+		try {
+			long now = CommonUtils.getCurrentEpochMillis();
+			MapSqlParameterSource params = new MapSqlParameterSource()
+					.addValue("schedulerId", schedulerDetail.getSchedulerId())
+					.addValue("schedulerName", schedulerDetail.getSchedulerName())
+					.addValue("cronExpression", schedulerDetail.getCronExpression())
+					.addValue("startTime", schedulerDetail.getStartTime() != null ? schedulerDetail.getStartTime() : now)
+					.addValue("status", schedulerDetail.getStatus() != null ? schedulerDetail.getStatus() : "RUNNING")
+					.addValue("totalRecordsProcessed", schedulerDetail.getTotalRecordsProcessed() != null ? schedulerDetail.getTotalRecordsProcessed() : 0)
+					.addValue("successRecordsCount", schedulerDetail.getSuccessRecordsCount() != null ? schedulerDetail.getSuccessRecordsCount() : 0)
+					.addValue("failureRecordsCount", schedulerDetail.getFailureRecordsCount() != null ? schedulerDetail.getFailureRecordsCount() : 0)
+					.addValue("createdBy", schedulerDetail.getCreatedBy() != null ? schedulerDetail.getCreatedBy() : DashboardExtractorConstants.SYSTEM_USER)
+					.addValue("createdTime", schedulerDetail.getCreatedTime() != null ? schedulerDetail.getCreatedTime() : now)
+					.addValue("lastModifiedBy", schedulerDetail.getLastModifiedBy() != null ? schedulerDetail.getLastModifiedBy() : DashboardExtractorConstants.SYSTEM_USER)
+					.addValue("lastModifiedTime", now);
+
+			namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.INSERT_SCHEDULER_DETAIL_QUERY, params);
+			log.info("IngestionSummaryRepository | Created scheduler run record: {} ({})",
+					schedulerDetail.getSchedulerId(), schedulerDetail.getSchedulerName());
+		} catch (Exception exception) {
+			log.error("IngestionSummaryRepository | Failed to create scheduler run record {}", schedulerDetail.getSchedulerId(), exception);
+		}
+	}
+
+	/**
+	 * Updates an existing scheduler execution record upon completion or failure.
+	 *
+	 * @param schedulerId    the unique scheduler execution ID
+	 * @param startTime      the epoch milliseconds when the scheduler started
+	 * @param totalRecords   total count of ingestion records processed
+	 * @param successRecords count of successful ingestion records
+	 * @param failureRecords count of failed ingestion records
+	 * @param status         final execution status (e.g. COMPLETED or FAILED)
+	 * @param errorMessage   error message if failed, or null
+	 */
+	public void completeSchedulerRun(String schedulerId, long startTime, int totalRecords, int successRecords, int failureRecords,
+			String status, String errorMessage) {
+		if (schedulerId == null) {
+			return;
+		}
+		try {
+			long now = CommonUtils.getCurrentEpochMillis();
+			long duration = (startTime > 0) ? (now - startTime) : 0;
+			MapSqlParameterSource params = new MapSqlParameterSource()
+					.addValue("schedulerId", schedulerId)
+					.addValue("endTime", now)
+					.addValue("durationMs", duration)
+					.addValue("status", status)
+					.addValue("totalRecordsProcessed", totalRecords)
+					.addValue("successRecordsCount", successRecords)
+					.addValue("failureRecordsCount", failureRecords)
+					.addValue("errorMessage", errorMessage)
+					.addValue("lastModifiedBy", DashboardExtractorConstants.SYSTEM_USER)
+					.addValue("lastModifiedTime", now);
+
+			namedParameterJdbcTemplate.update(IngestionSummaryQueryBuilder.UPDATE_SCHEDULER_DETAIL_QUERY, params);
+			log.info("IngestionSummaryRepository | Completed scheduler run record: {} with status: {} in {}ms",
+					schedulerId, status, duration);
+		} catch (Exception exception) {
+			log.error("IngestionSummaryRepository | Failed to complete scheduler run record {}", schedulerId, exception);
 		}
 	}
 }

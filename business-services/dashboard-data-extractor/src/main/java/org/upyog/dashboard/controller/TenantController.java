@@ -34,19 +34,27 @@ public class TenantController {
      * @param stateTenantId optional state tenant identifier (e.g. {@code "pg"})
      * @return response entity with synced record count and details
      */
-    @PostMapping({"/_sync", "/sync"})
+    @PostMapping("/_sync")
     public ResponseEntity<Map<String, Object>> syncTenants(
             @RequestParam(required = false) String stateTenantId) {
         log.info("Received request to sync tenants from MDMS for stateTenantId: {}", stateTenantId);
-        List<IngestionModuleDetail> syncedDetails = tenantSyncService.syncTenantsFromMdms(stateTenantId);
+        try {
+            List<IngestionModuleDetail> syncedDetails = tenantSyncService.syncTenantsFromMdms(stateTenantId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "SUCCESS");
-        response.put("message", "Successfully synced " + syncedDetails.size() + " module details from MDMS");
-        response.put("totalRecordsSynced", syncedDetails.size());
-        response.put("details", syncedDetails);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "SUCCESS");
+            response.put("message", "Successfully synced " + syncedDetails.size() + " module details from MDMS");
+            response.put("totalRecordsSynced", syncedDetails.size());
+            response.put("details", syncedDetails);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalStateException | IllegalArgumentException exception) {
+            log.warn("Tenant sync rejected: {}", exception.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "FAILURE");
+            errorResponse.put("message", exception.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
     }
 
     /**
@@ -55,7 +63,7 @@ public class TenantController {
      *
      * @return response entity containing active tenants and module details
      */
-    @GetMapping({"/_search", "/search"})
+    @GetMapping("/_search")
     public ResponseEntity<Map<String, Object>> searchTenants() {
         List<IngestionModuleDetail> activeDetails = tenantSyncService.getActiveModuleDetails();
         List<String> activeTenants = tenantSyncService.getActiveTenants(null);

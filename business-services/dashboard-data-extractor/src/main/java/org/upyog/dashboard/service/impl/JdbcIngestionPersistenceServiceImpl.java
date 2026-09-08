@@ -136,6 +136,8 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
 
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue(DashboardExtractorConstants.PARAM_ID, legacyJobId)
+                    .addValue(DashboardExtractorConstants.PARAM_MODULE_DETAIL_ID, null)
+                    .addValue(DashboardExtractorConstants.PARAM_SCHEDULER_ID, null)
                     .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, tenantId)
                     .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, moduleName)
                     .addValue(DashboardExtractorConstants.PARAM_PUSH_DATE, Date.valueOf(effectivePushDate))
@@ -210,6 +212,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
                                     ? dailyIngestionRecord.getModuleIngestionId()
                                     : CommonUtils.generateUUID())
                             .addValue(DashboardExtractorConstants.PARAM_MODULE_DETAIL_ID, dailyIngestionRecord.getModuleDetailId())
+                            .addValue(DashboardExtractorConstants.PARAM_SCHEDULER_ID, dailyIngestionRecord.getSchedulerId())
                             .addValue(DashboardExtractorConstants.PARAM_TENANT_ID, dailyIngestionRecord.getTenantId())
                             .addValue(DashboardExtractorConstants.PARAM_MODULE_NAME, dailyIngestionRecord.getModuleName())
                             .addValue(DashboardExtractorConstants.PARAM_PUSH_DATE, Date.valueOf(effectivePushDate))
