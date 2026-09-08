@@ -71,11 +71,29 @@
       <artifactId>opentracing-spring-jaeger-starter</artifactId>
       <version>0.2.2</version>
     </dependency>-->
+
+    <!-- Jaeger / OpenTelemetry Tracing Dependencies -->
+    <!-- Exposes health & metrics endpoints (required by the tracing/metrics setup) -->
     <dependency>
-      <groupId>io.jaegertracing</groupId>
-      <artifactId>jaeger-client</artifactId>
-      <version>0.31.0</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- Publishes metrics in Prometheus format for scraping -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+    <!-- Bridges Micrometer tracing API to OpenTelemetry spans -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing-bridge-otel</artifactId>
+    </dependency>
+    <!-- Exports OpenTelemetry spans to the Jaeger collector via OTLP -->
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
+    <!-- End of Jaeger / OTel tracing dependencies -->
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
