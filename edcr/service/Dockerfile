@@ -1,3 +1,6 @@
+# EDCR Service Docker image
+# Build stage: compiles the EAR with JDK 17
+# Runtime stage: deploys to WildFly 26
 #FROM egovio/alpine-maven-builder-jdk-8:gcp AS build
 FROM amazoncorretto:17-alpine AS build
 
@@ -21,7 +24,8 @@ RUN cd ${WORK_DIR} && \
 #FROM egovio/wildfly:1-helm-fin-e6312078
 #FROM upyogio/wildfly:1-ed
 #FROM upyogio/wildfly:26.1.3
-FROM nudmcdg/edcr-wildfly26:07
+#FROM nudmcdg/edcr-wildfly26:07
+FROM nudmcdg/edcr-wildfly:40-v1
 COPY --from=build /app/egov/egov-ear/target/*.ear /opt/jboss/wildfly/standalone/deployments/
 USER jboss
 
