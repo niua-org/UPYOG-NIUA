@@ -1,8 +1,6 @@
 #FROM egovio/alpine-maven-builder-jdk-8:1-master-NA-6036091e AS build
 FROM amazoncorretto:17-alpine AS build
 
-RUN apk add --no-cache fontconfig ttf-dejavu
-
 ARG WORK_DIR
 WORKDIR /app
 
@@ -11,7 +9,8 @@ RUN apk add --no-cache maven
 
 # copy the project files
 COPY ${WORK_DIR}/pom.xml ./pom.xml
-COPY build/maven/start.sh ./start.sh
+
+COPY ${WORK_DIR}/build/start.sh ./start.sh
 
 # not useful for stateless builds
 # RUN mvn -B dependency:go-offline
@@ -26,16 +25,8 @@ RUN mvn -B -f /app/pom.xml package
 #FROM egovio/amazoncorretto:17-alpine
 
 FROM amazoncorretto:17-alpine
-
+RUN apk add --no-cache fontconfig ttf-dejavu
 WORKDIR /opt/egov
-
-# Set IST timezone (Asia/Kolkata)
-RUN apk add --no-cache tzdata \
-    && cp /usr/share/zoneinfo/Asia/Kolkata /etc/localtime \
-    && echo "Asia/Kolkata" > /etc/timezone \
-    && apk del tzdata
-
-ENV TZ=Asia/Kolkata
 
 COPY --from=build /app/target/*.jar /app/start.sh /opt/egov/
 
