@@ -39,7 +39,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "business-services/egov-apportion-service/src/main/resources/db"
         image-name: "egov-apportion-service-db"
-        
+
   - name: "builds/upyog/business-services/egov-hrms"
     build:
       - work-dir: "business-services/egov-hrms"
@@ -76,7 +76,7 @@ config:
       - work-dir: "business-services/employee-dashboard/src/main/resources/db"
         image-name: "employee-dashboard-db"
 
-        
+
   - name: "builds/upyog/core-services/egov-accesscontrol"
     build:
       - work-dir: "core-services/egov-accesscontrol"
@@ -89,7 +89,7 @@ config:
         image-name: "egov-pg-service"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/egov-pg-service/src/main/resources/db"
-        image-name: "egov-pg-service-db"      
+        image-name: "egov-pg-service-db"
 
   - name: "builds/upyog/core-services/audit-service"
     build:
@@ -137,7 +137,7 @@ config:
         image-name: "egov-location"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/egov-location/src/main/resources/db"
-        image-name: "egov-location-db"      
+        image-name: "egov-location-db"
 
   - name: "builds/upyog/core-services/egov-idgen"
     build:
@@ -273,7 +273,7 @@ config:
     build:
       - work-dir: "core-services/report"
         image-name: "report"
-        dockerfile: "build/maven/Dockerfile"   
+        dockerfile: "build/maven/Dockerfile"
 
   - name: "builds/upyog/core-services/tenant"
     build:
@@ -299,14 +299,14 @@ config:
     build:
       - work-dir: "core-services/gateway"
         image-name: "gateway"
-        dockerfile: "build/maven/Dockerfile"      
+        dockerfile: "build/maven/Dockerfile"
 
   - name: "builds/upyog/core-services/internal-gateway"
     build:
       - work-dir: "core-services/internal-gateway"
         image-name: "internal-gateway"
         dockerfile: "build/maven/Dockerfile"
-        
+
   - name: "builds/upyog/core-services/egov-user-event"
     build:
       - work-dir: "core-services/egov-user-event"
@@ -314,7 +314,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/egov-user-event/src/main/resources/db"
         image-name: "egov-user-event-db"
-        dockerfile: "build/maven/Dockerfile"       
+        dockerfile: "build/maven/Dockerfile"
 
   - name: "builds/upyog/core-services/pdf-service"
     build:
@@ -322,7 +322,7 @@ config:
         image-name: "pdf-service"
       - work-dir: "core-services/pdf-service/migration"
         image-name: "pdf-service-db"
-        
+
   - name: "builds/upyog/core-services/telemetry/egov-telemetry-kafka-streams"
     build:
       - work-dir: "core-services/egov-telemetry/egov-telemetry-kafka-streams"
@@ -333,7 +333,7 @@ config:
       - work-dir: "core-services/egov-telemetry/egov-telemetry-batch-process"
         image-name: "egov-telemetry-batch-process"
         dockerfile: "build/maven/Dockerfile"
-  
+
   - name: "builds/upyog/core-services/egov-url-shortening"
     build:
       - work-dir: "core-services/egov-url-shortening"
@@ -341,7 +341,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/egov-url-shortening/src/main/resources/db"
         image-name: "egov-url-shortening-db"
-  
+
   - name: "builds/upyog/core-services/chatbot"
     build:
       - work-dir: "core-services/chatbot"
@@ -349,7 +349,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/chatbot/src/main/resources/db"
         image-name: "chatbot-db"
-        
+
   - name: "builds/upyog/core-services/http-to-kafka-connector"
     build:
       - work-dir: "core-services/http-to-kafka-connector"
@@ -371,17 +371,17 @@ config:
     build:
       - work-dir: "core-services/libraries/enc-client"
         image-name: "enc-client"
-        
+
   - name: "builds/upyog/core-services/libraries/services-common"
     build:
       - work-dir: "core-services/libraries/services-common"
         image-name: "services-common"
-        
+
   - name: "builds/upyog/core-services/libraries/digit-models"
     build:
       - work-dir: "core-services/libraries/digit-models"
         image-name: "digit-models"
-                
+
   - name: "builds/upyog/core-services/libraries/tracer"
     build:
       - work-dir: "core-services/libraries/tracer"
@@ -399,7 +399,7 @@ config:
         image-name: "xstate-chatbot"
       - work-dir: "core-services/xstate-chatbot/nodejs/db"
         image-name: "xstate-chatbot-db"
-        
+
   - name: "builds/upyog/core-services/xstate-webchat"
     build:
       - work-dir: "core-services/xstate-webchat/nodejs"
@@ -412,14 +412,14 @@ config:
         image-name: "mdms-v2"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/mdms-v2/src/main/resources/db"
-        image-name: "mdms-v2-db"     
+        image-name: "mdms-v2-db"
   - name: "builds/upyog/core-services/individual"
     build:
       - work-dir: "core-services/individual"
         image-name: "individual"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/individual/src/main/resources/db"
-        image-name: "individual-db"    
+        image-name: "individual-db"
 
   - name: "builds/upyog/core-services/gis-service"
     build:
@@ -427,10 +427,10 @@ config:
         image-name: "gis-service"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/gis-service/src/main/resources/db"
-        image-name: "gis-service-db" 
-     
-                
-#Municipal Services
+        image-name: "gis-service-db"
+
+
+  #Municipal Services
 
   - name: "builds/upyog/municipal-services/egov-user-event"
     build:
@@ -479,7 +479,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/tl-calculator/src/main/resources/db"
         image-name: "tl-calculator-db"
-        
+
   - name: "builds/upyog/municipal-services/tl-services"
     build:
       - work-dir: "municipal-services/tl-services"
@@ -509,7 +509,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/ws-services/src/main/resources/db"
         image-name: "ws-services-db"
-        
+
   - name: "builds/upyog/municipal-services/property-services"
     build:
       - work-dir: "municipal-services/property-services"
@@ -540,7 +540,7 @@ config:
         image-name: "sw-calculator"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/sw-calculator/src/main/resources/db"
-        image-name: "sw-calculator-db"     
+        image-name: "sw-calculator-db"
 
   - name: "builds/upyog/municipal-services/bpa-services"
     build:
@@ -548,13 +548,13 @@ config:
         image-name: "bpa-services"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/bpa-services/src/main/resources/db"
-        image-name: "bpa-services-db"         
+        image-name: "bpa-services-db"
 
   - name: "builds/upyog/municipal-services/bpa-calculator"
     build:
       - work-dir: "municipal-services/bpa-calculator"
         image-name: "bpa-calculator"
-        dockerfile: "build/maven/Dockerfile"     
+        dockerfile: "build/maven/Dockerfile"
 
   - name: "builds/upyog/municipal-services/land-services"
     build:
@@ -578,14 +578,14 @@ config:
         image-name: "echallan-services"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/echallan-services/src/main/resources/db"
-        image-name: "echallan-services-db"         
+        image-name: "echallan-services-db"
 
   - name: "builds/upyog/municipal-services/echallan-calculator"
     build:
       - work-dir: "municipal-services/echallan-calculator"
         image-name: "echallan-calculator"
-        dockerfile: "build/maven/Dockerfile"  
-        
+        dockerfile: "build/maven/Dockerfile"
+
   - name: "builds/upyog/municipal-services/fsm"
     build:
       - work-dir: "municipal-services/fsm"
@@ -618,19 +618,19 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/fsm-calculator/src/main/resources/db"
         image-name: "fsm-calculator-db"
-        
+
   - name: "builds/upyog/municipal-services/turn-io-adapter"
     build:
       - work-dir: "municipal-services/turn-io-adapter"
         image-name: "turn-io-adapter"
         dockerfile: "build/maven/Dockerfile"
-        
+
   - name: "builds/upyog/municipal-services/inbox"
     build:
       - work-dir: "municipal-services/inbox"
         image-name: "inbox"
         dockerfile: "build/maven/Dockerfile"
- 
+
   - name: "builds/upyog/municipal-services/birth-death-services"
     build:
       - work-dir: "municipal-services/birth-death-services"
@@ -646,7 +646,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/birth-registration/src/main/resources/db"
         image-name: "birth-registration-db"
-        
+
   - name: 'builds/upyog/municipal-services/pqm'
     build:
       - work-dir: 'municipal-services/pqm'
@@ -668,17 +668,17 @@ config:
         dockerfile: 'build/maven/Dockerfile'
       - work-dir: 'municipal-services/pqm-anomaly-finder/src/main/resources/db'
         image-name: 'pqm-anomaly-finder-db'
- 
+
   - name: "builds/upyog/utilities/egov-weekly-impact-notifier"
     build:
       - work-dir: "utilities/egov-weekly-impact-notifier"
         image-name: "egov-weekly-impact-notifier"
         dockerfile: "build/maven/Dockerfile"
-        
+
   - name: "builds/upyog/utilities/zuul-kubernetes-discovery"
     build:
       - work-dir: "utilities/zuul-kubernetes-discovery"
-        image-name: "zuul-kubernetes-discovery"  
+        image-name: "zuul-kubernetes-discovery"
 
   - name: "builds/upyog/utilities/egov-api-cron-job"
     build:
@@ -694,7 +694,7 @@ config:
   - name: "builds/upyog/utilities/egov-pdf"
     build:
       - work-dir: "utilities/egov-pdf"
-        image-name: "egov-pdf"  
+        image-name: "egov-pdf"
 
   - name: "builds/upyog/utilities/epass-chatbot"
     build:
@@ -731,14 +731,14 @@ config:
     build:
       - work-dir: "utilities/certificate-verification"
         image-name: "certificate-verification"
-        
+
   - name: "builds/upyog/utilities/demo-utility"
     build:
       - work-dir: "utilities/demo-utility"
         image-name: "demo-utility"
         dockerfile: "build/maven/Dockerfile"
-        
-# Frontend
+
+  # Frontend
 
   - name: builds/upyog/frontend/mono-ui/citizen
     build:
@@ -774,7 +774,7 @@ config:
       - work-dir: frontend/mono-ui/web/dss-dashboard/
         dockerfile: frontend/mono-ui/web/dss-dashboard/docker/Dockerfile
         image-name: dss-dashboard
-      
+
   - name: builds/upyog/frontend/mono-ui/common-screen
     build:
       - work-dir: frontend/mono-ui/web/egov-common-screen/
@@ -786,18 +786,18 @@ config:
       - work-dir: frontend/micro-ui/
         dockerfile: frontend/micro-ui/web/docker/Dockerfile
         image-name: digit-ui
-        
+
   - name: builds/upyog/frontend/upyog-ui
     build:
       - work-dir: frontend/upyog-ui/
         dockerfile: frontend/upyog-ui/web/docker/Dockerfile
-        image-name: upyog-ui        
+        image-name: upyog-ui
 
   - name: builds/upyog/frontend/micro-ui/storybook
     build:
-    - work-dir: .
-      dockerfile: frontend/micro-ui/web/micro-ui-internals/packages/react-components/docker/Dockerfile
-      image-name: storybook
+      - work-dir: .
+        dockerfile: frontend/micro-ui/web/micro-ui-internals/packages/react-components/docker/Dockerfile
+        image-name: storybook
   - name: builds/upyog/frontend/micro-ui/workbench-ui
     build:
       - work-dir: frontend/workbench-ui/
@@ -818,48 +818,48 @@ config:
     build:
       - work-dir: frontend/cnd-ui/
         dockerfile: frontend/cnd-ui/web/docker/Dockerfile
-        image-name: cnd-ui    
+        image-name: cnd-ui
   #EDCR
-  
+
   - name: builds/upyog/edcr/dcr-client/egov-dcr
     build:
       - work-dir: edcr/client/egov
         dockerfile: edcr/client/Dockerfile
         image-name: egov-edcr
-        
+
   - name: builds/upyog/edcr/dcr-service/egov-dcr
     build:
       - work-dir: edcr/service/egov
         dockerfile: edcr/service/Dockerfile
         image-name: egov-edcr
-        
+
   - name: builds/upyog/finance/egov-finance
     build:
       - work-dir: finance/egov
         image-name: egov-finance
-        dockerfile: finance/Dockerfile  
-        
+        dockerfile: finance/Dockerfile
+
   #dx
-  
+
   - name: builds/upyog/dx-services/pt-services-dx
     build:
       - work-dir: dx-services/pt-services-dx
         image-name: pt-services-dx
         dockerfile: build/maven/Dockerfile
-  
+
   - name: builds/upyog/dx-services/gis-dx-service
     build:
       - work-dir: dx-services/gis-dx-service
         image-name: gis-dx-service
         dockerfile: build/maven/Dockerfile
-        
+
   - name: "builds/upyog/municipal-services/pet-services"
     build:
       - work-dir: "municipal-services/pet-services"
         image-name: "pet-services"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/pet-services/src/main/resources/db"
-        image-name: "pet-services-db"        
+        image-name: "pet-services-db"
 
   - name: builds/upyog/dx-services/requester-services-dx
     build:
@@ -872,7 +872,7 @@ config:
       - work-dir: "utilities/apply-workflow"
         image-name: "apply-workflow"
         dockerfile: "build/maven/Dockerfile"
-        
+
   - name: "builds/upyog/municipal-services/adv-services"
     build:
       - work-dir: "municipal-services/advertisement-service"
@@ -903,9 +903,9 @@ config:
         image-name: "ewaste-services"
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/ewaste-services/src/main/resources/db"
-        image-name: "ewaste-services-db" 
+        image-name: "ewaste-services-db"
 
-        
+
   - name: "builds/upyog/municipal-services/sv-services"
     build:
       - work-dir: "municipal-services/street-vending"
@@ -913,30 +913,30 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/street-vending/src/main/resources/db"
         image-name: "sv-services-db"
- 
-         
+
+
   - name: "builds/upyog/business-services/verification-service"
     build:
       - work-dir: "business-services/verification-service"
         image-name: "verification-service"
-        dockerfile: "build/maven/Dockerfile"  
+        dockerfile: "build/maven/Dockerfile"
       - work-dir: "business-services/verification-service/src/main/resources/db"
-        image-name: "verification-service-db" 
+        image-name: "verification-service-db"
 
   - name: "builds/upyog/municipal-services/asset-calculator"
     build:
       - work-dir: "municipal-services/asset-calculator"
         image-name: "asset-calculator"
-        dockerfile: "build/maven/Dockerfile"  
+        dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/asset-calculator/src/main/resources/db"
-        image-name: "asset-calculator-db" 
+        image-name: "asset-calculator-db"
 
   - name: builds/upyog/frontend/cnd-ui
     build:
       - work-dir: frontend/cnd-ui/
         dockerfile: frontend/cnd-ui/web/docker/Dockerfile
-        image-name: cnd-ui 
-  
+        image-name: cnd-ui
+
   - name: "builds/upyog/municipal-services/cnd-service"
     build:
       - work-dir: "municipal-services/cnd-service"
@@ -952,7 +952,7 @@ config:
         dockerfile: 'build/maven/Dockerfile'
       - work-dir: "municipal-services/cnd-calculator/src/main/resources/db"
         image-name: "cnd-calculate-db"
-        
+
   - name: 'builds/upyog/municipal-services/pgr-ai-services'
     build:
       - work-dir: 'municipal-services/pgr-ai-services'
@@ -973,17 +973,17 @@ config:
     build:
       - work-dir: "municipal-services/request-service"
         image-name: "request-service"
-        dockerfile: "build/maven/Dockerfile"  
+        dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/request-service/src/main/resources/db"
-        image-name: "request-service-db" 
-        
+        image-name: "request-service-db"
+
   - name: "builds/upyog/municipal-services/vendor-management"
     build:
       - work-dir: "municipal-services/vendor-management"
         image-name: "vendor-management"
-        dockerfile: "build/maven/Dockerfile"  
+        dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/vendor-management/src/main/resources/db"
-        image-name: "vendor-management-db" 
+        image-name: "vendor-management-db"
 
   - name: "builds/upyog/municipal-services/estate-management"
     build:
@@ -992,7 +992,7 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "municipal-services/estate-management/src/main/resources/db"
         image-name: "estate-management-db"
-  
+
 
   - name: "builds/upyog/municipal-services/challan-generation"
     build:

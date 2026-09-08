@@ -5,7 +5,7 @@
   "instructions": [
 
     {
-      "stepName": "Navigate to Garbage Collection module",
+      "stepName": "Navigate to No Due Certificate module",
       "locatorStrategy": "XPATH",
       "locatorValue": "//a[@href='${module.ndc.url}']",
       "action": "CLICK_JS",
@@ -31,7 +31,7 @@
     {
       "stepName": "Enter Property ID",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Property ID *",
+      "locatorValue":"Property ID",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${property.id}",
       "dynamicSleep": 500
@@ -39,7 +39,7 @@
     {
       "stepName": "Search Property",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//div[contains(@class,'ndc_property_search')]//button[contains(.,'Search')]",
+      "locatorValue": "//button[@aria-label='Search']",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 3000
@@ -47,7 +47,7 @@
     {
       "stepName": "Click Check Dues button",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//div[contains(@class,'ndc_property_search')]//button[contains(.,'Check Status for Property')]",
+      "locatorValue": "//button[contains(@class,'ndc-property-action-button') and contains(normalize-space(.),'Check Status for Property')]",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 3000
@@ -55,7 +55,7 @@
     {
       "stepName": "Click Pay Due button",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//div[contains(@class, 'ndc_property_search')//button[contains(.,'PAY_DUES')]",
+      "locatorValue": "//button[contains(@class,'ndc-property-action-button') and contains(normalize-space(.),'PAY_DUES')]",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 3000
@@ -63,10 +63,10 @@
     {
       "stepName": "Click Proceed To Pay",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(translate(.,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'Proceed to pay')]",
-      "action": "CLICK_JS",
+      "locatorValue": "//button[contains(@class, 'submit-bar') and .//header[normalize-space()='Proceed To Pay']]",
+      "action": "CLICK",
       "inputValue": null,
-      "dynamicSleep": 3000
+      "dynamicSleep": 2000
     },
     {
       "stepName": "Payer Details",
@@ -140,7 +140,7 @@
       "dynamicSleep": 1000
     },
     {
-      "stepName": "Navigate to Garbage Collection module",
+      "stepName": "Navigate to No Due Certificate module",
       "locatorStrategy": "XPATH",
       "locatorValue": "//a[@href='${module.ndc.url}']",
       "action": "CLICK_JS",
@@ -166,38 +166,39 @@
     {
       "stepName": "Enter Property ID",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Property ID *",
+      "locatorValue":"Property ID",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${property.id}",
       "dynamicSleep": 500
     },
     {
-      "stepName": "Click Search button",
+      "stepName": "Search Property",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(@class, 'submit-bar') and .//header[text()='Search']]",
-      "action": "CLICK",
+      "locatorValue": "//button[@aria-label='Search']",
+      "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 3000
     },
     {
-      "stepName": "Click Search button",
+      "stepName": "Click Check Dues button",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//button[contains(@class, 'submit-bar') and .//header[text()='Check Status for Property']]",
-      "action": "CLICK",
+      "locatorValue": "//button[contains(@class,'ndc-property-action-button') and contains(normalize-space(.),'Check Status for Property')]",
+      "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 3000
     },
     {
       "stepName": "Select Owner Name",
       "locatorStrategy": "XPATH",
-      "locatorValue":"//name[normalize-space()='applicationFee']/preceding-sibling::span/input[@type='radio']",
+      "locatorValue": "//table[contains(@class,'customTable')]//tbody/tr[1]//input[@type='radio']",
       "action": "CLICK_JS",
+      "inputValue": null,
       "dynamicSleep": 1000
     },
     {
-      "stepName": "Enter Mobile Number",
+      "stepName": "Enter Address",
       "locatorStrategy": "LABEL",
-      "locatorValue":"NDC_ADDRESS * ",
+      "locatorValue":"Address",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${address.line1}",
       "dynamicSleep": 2000
@@ -221,7 +222,7 @@
     {
       "stepName": "Upload Last Property Proof",
       "locatorStrategy": "XPATH",
-      "locatorValue": "(//input[@type='file'])[2]",
+      "locatorValue": "(//input[@type='file'])[4]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
@@ -229,7 +230,7 @@
     {
       "stepName": "Upload Identity Proof",
       "locatorStrategy": "XPATH",
-      "locatorValue": "(//input[@type='file'])[3]",
+      "locatorValue": "(//input[@type='file'])[6]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
@@ -237,7 +238,7 @@
     {
       "stepName": "Upload Address Proof",
       "locatorStrategy": "XPATH",
-      "locatorValue": "(//input[@type='file'])[4]",
+      "locatorValue": "(//input[@type='file'])[7]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
@@ -251,20 +252,29 @@
       "dynamicSleep": 1000
     },
     {
-      "stepName": "Click TAKE ACTION",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "//button[.//header[normalize-space()='TAKE ACTION']]",
-      "action": "CLICK_JS",
-      "inputValue": null,
+      "stepName":"Accept Declaration",
+      "locatorStrategy":"CSS",
+      "locatorValue":"input[type='checkbox'][value^='I hereby']",
+      "action":"CLICK_JS",
       "dynamicSleep": 2000
     },
     {
-      "stepName":"Click VERIFY",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//div[contains(@class,'menu-wrap')]//p[normalize-space()='WF_EMPLOYEE_NDC_APPLY']",
-      "action":"CLICK_JS",
-      "dynamicSleep": 1000
+      "stepName": "Submit Application",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[.//header[text()='Submit']]",
+      "action": "CLICK_JS",
+      "inputValue": null,
+      "dynamicSleep": 5000
     },
+    {
+      "stepName":"Capture Application Number",
+      "locatorStrategy":"XPATH",
+      "locatorValue":"//*[contains(text(),'NDC_APPLICATION_NO') or contains(text(),'Application Number')]/following-sibling::*[1]",
+      "action":"CAPTURE_TEXT",
+      "inputValue":"APPLICATION_NO",
+      "dynamicSleep":3000
+    },
+
     {
       "stepName":"Make Payment",
       "locatorStrategy":"XPATH",

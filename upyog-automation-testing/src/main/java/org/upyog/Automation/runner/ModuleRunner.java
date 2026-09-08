@@ -546,11 +546,11 @@ public class ModuleRunner {
 
 
             case "NO_DUE_CERTIFICATE_CITIZEN":
-                result = engine.executeModule("test-config/estateManagement/estateManagement_citizen_module.json");
+                result = engine.executeModule("test-config/noDueCertificate/ndc_citizen__module.json");
                 break;
 
             case "NO_DUE_CERTIFICATE_EMPLOYEE":
-                result = engine.executeModule("test-config/estateManagement/estateManagement_employee_module.json");
+                result = engine.executeModule("test-config/noDueCertificate/ndc_employee_module.json");
                 break;
 
 
