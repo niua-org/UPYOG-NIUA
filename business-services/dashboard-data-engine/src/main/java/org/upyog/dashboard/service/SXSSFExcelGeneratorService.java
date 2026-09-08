@@ -20,7 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Service for streaming large datasets into memory-safe Apache POI SXSSF Excel workbooks.
+ * Service for streaming large datasets into memory-safe Apache POI SXSSF Excel
+ * workbooks.
  */
 @Slf4j
 @Service
@@ -33,6 +34,7 @@ public class SXSSFExcelGeneratorService {
      * Session wrapper holding open SXSSFWorkbook and output destination.
      */
     public static class StreamingExcelSession implements AutoCloseable {
+
         private final String moduleName;
         private final SXSSFWorkbook workbook;
         private final Sheet sheet;
@@ -44,10 +46,12 @@ public class SXSSFExcelGeneratorService {
         private java.util.Set<String> columnHeaders;
 
         /**
-         * Initializes a streaming SXSSF Excel session with a temporary disk file.
+         * Initializes a streaming SXSSF Excel session with a temporary disk
+         * file.
          *
-         * @param moduleName   module short code used in file and sheet naming
-         * @param objectMapper ObjectMapper for serializing nested JSON column data
+         * @param moduleName module short code used in file and sheet naming
+         * @param objectMapper ObjectMapper for serializing nested JSON column
+         * data
          * @throws IOException on temporary file creation failure
          */
         public StreamingExcelSession(String moduleName, ObjectMapper objectMapper) throws IOException {
@@ -62,12 +66,13 @@ public class SXSSFExcelGeneratorService {
             headerFont.setBold(true);
             this.headerStyle.setFont(headerFont);
 
-            this.tempFile = Files.createTempFile("legacy_ingest_" + moduleName + "_", ".xlsx").toFile();
+            this.tempFile = Files.createTempFile("ingest_" + moduleName + "_", ".xlsx").toFile();
         }
 
         @SuppressWarnings("unchecked")
         /**
-         * Appends a chunk of extracted records directly to the streaming Excel worksheet.
+         * Appends a chunk of extracted records directly to the streaming Excel
+         * worksheet.
          *
          * @param records batch of record objects to serialize into Excel rows
          */
@@ -128,7 +133,8 @@ public class SXSSFExcelGeneratorService {
         }
 
         /**
-         * Writes buffered rows to the temporary file on disk and closes the stream.
+         * Writes buffered rows to the temporary file on disk and closes the
+         * stream.
          *
          * @return the generated File object
          * @throws IOException on file write error
@@ -149,7 +155,8 @@ public class SXSSFExcelGeneratorService {
     }
 
     /**
-     * Creates an active streaming Excel session for memory-safe chunked record generation.
+     * Creates an active streaming Excel session for memory-safe chunked record
+     * generation.
      *
      * @param moduleName module name used in sheet and temp file naming
      * @return initialized StreamingExcelSession instance
