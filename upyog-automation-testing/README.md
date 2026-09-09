@@ -1,7 +1,7 @@
 # UPYOG Config-Driven Selenium Automation Framework
 
 ![Java](https://img.shields.io/badge/Java-17-blue)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-2.7.x-brightgreen)
+![Spring Boot](https://img.shizelds.io/badge/Spring_Boot-2.7.x-brightgreen)
 ![Selenium](https://img.shields.io/badge/Selenium-4.x-success)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
 ![Maven](https://img.shields.io/badge/Maven-Build-red)

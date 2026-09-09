@@ -9,6 +9,7 @@ import org.upyog.Automation.Reports.ReportManager;
 import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
+import org.upyog.Automation.Utils.ScreenshotManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,15 @@ import java.util.List;
  */
 public class ActionExecutor {
 
+    /**
+     * Resolves an environment-specific value if piped syntax (value1||value2) is used.
+     *
+     * <p>If the input contains '||', the first segment is returned for NIUATT environment,
+     * and the second segment is returned for other environments.</p>
+     *
+     * @param value the raw configuration string (may contain '||')
+     * @return the resolved string according to the active environment
+     */
     private String resolveByEnv(String value) {
         if (value == null || !value.contains("||")) {
             return value;
@@ -61,6 +71,12 @@ public class ActionExecutor {
     private final Actions actions;
     private final org.upyog.Automation.engine.LocatorResolver locatorResolver;
 
+    /**
+     * Constructs a new {@link ActionExecutor} with the provided {@link WebDriver} and {@link WebDriverWait}.
+     *
+     * @param driver the Selenium WebDriver instance
+     * @param wait the explicit WebDriverWait instance
+     */
     public ActionExecutor(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
         this.wait = wait;
@@ -252,30 +268,104 @@ public class ActionExecutor {
                     );
             }
 
-            // Apply dynamic sleep after action (configured per-step in JSON)
+            // Apply dynamic sleep after action
             applyDynamicSleep(instruction);
 
             logger.info("✓ Completed step: {}", stepName);
 
-            ReportManager.logStep(
-                    "PASSED : " + stepName
-            );
+            String reportValue = getReportValue(instruction, action);
+
+            if (reportValue != null && !reportValue.isBlank()) {
+
+                ReportManager.logStep(
+                        "PASSED : " + stepName + " → " + reportValue
+                );
+
+            } else {
+
+                ReportManager.logStep(
+                        "PASSED : " + stepName
+                );
+            }
 
         } catch (NoSuchElementException e) {
-            ReportManager.logFailure(
-                    "FAILED : " + stepName
+
+        WorkflowDataStore.put(
+                "FAILED_STEP",
+                stepName
+        );
+
+        WorkflowDataStore.put(
+                "FAILED_ERROR",
+                e.getMessage()
+        );
+
+            String screenshotPath =
+                    ScreenshotManager.captureFailureScreenshot(
+                            driver,
+                            WorkflowDataStore.get("current.module"),
+                            WorkflowDataStore.get("current.test.case"),
+                            stepName
+                    );
+
+            WorkflowDataStore.put(
+                    "FAILED_SCREENSHOT",
+                    screenshotPath
             );
-            logger.error("✗ Element not found for step '{}': {}", stepName, e.getMessage());
-            throw new RuntimeException("Step failed - element not found: " + stepName, e);
 
+        ReportManager.logFailure(
+                "FAILED : " + stepName + " | " + e.getMessage()
+        );
 
+        logger.error(
+                "Element not found for step '{}': {}",
+                stepName,
+                e.getMessage()
+        );
+
+        throw new RuntimeException(
+                "Step failed - element not found: " + stepName,
+                e
+        );
         } catch (TimeoutException e) {
-            ReportManager.logFailure(
-                    "TIMEOUT : " + stepName
-            );
-            logger.error("✗ Timeout waiting for element in step '{}': {}", stepName, e.getMessage());
-            throw new RuntimeException("Step failed - timeout: " + stepName, e);
 
+            WorkflowDataStore.put(
+                    "FAILED_STEP",
+                    stepName
+            );
+
+            String screenshotPath =
+                    ScreenshotManager.captureFailureScreenshot(
+                            driver,
+                            WorkflowDataStore.get("current.module"),
+                            WorkflowDataStore.get("current.test.case"),
+                            stepName
+                    );
+
+            WorkflowDataStore.put(
+                    "FAILED_SCREENSHOT",
+                    screenshotPath
+            );
+
+            WorkflowDataStore.put(
+                    "FAILED_ERROR",
+                    e.getMessage()
+            );
+
+            ReportManager.logFailure(
+                    "TIMEOUT : " + stepName + " | " + e.getMessage()
+            );
+
+            logger.error(
+                    "Timeout waiting for element in step '{}': {}",
+                    stepName,
+                    e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "Step failed - timeout: " + stepName,
+                    e
+            );
         } catch (ElementClickInterceptedException e) {
             logger.warn("Click intercepted for step '{}', attempting JS click", stepName);
             // Fallback to JS click when standard click is intercepted
@@ -289,12 +379,26 @@ public class ActionExecutor {
         }
         catch (Exception e) {
 
-            ReportManager.logFailure(
-                    "FAILED : " + stepName
+            WorkflowDataStore.put(
+                    "FAILED_STEP",
+                    stepName
             );
 
-            throw new RuntimeException("Step execution failed", e);
+            WorkflowDataStore.put(
+                    "FAILED_ERROR",
+                    e.getMessage()
+            );
+
+            ReportManager.logFailure(
+                    "FAILED : " + stepName + " | " + e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "Step execution failed: " + stepName,
+                    e
+            );
         }
+
     }
 
     /**
@@ -828,6 +932,9 @@ public class ActionExecutor {
 
         WebElement option = options.get(optionIndex);
 
+// Capture the actual visible text BEFORE clicking
+        String selectedOptionText = option.getText().trim();
+
         js.executeScript(
                 "arguments[0].scrollIntoView({block:'center'});",
                 option
@@ -839,10 +946,17 @@ public class ActionExecutor {
 
         Thread.sleep(instruction.getDynamicSleep());
 
+// Store the actual selected dropdown value for reporting
+        WorkflowDataStore.put(
+                "REPORT_SELECTED_VALUE",
+                selectedOptionText
+        );
+
         logger.info(
-                "Selected dropdown {} option {}",
+                "Selected dropdown {} option {} = {}",
                 dropdownIndex,
-                optionIndex
+                optionIndex,
+                selectedOptionText
         );
     }
 
@@ -977,6 +1091,14 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * TYPE_FROM_STORE action: Reads a value previously stored in {@link WorkflowDataStore}
+     * and types it into the target input element.
+     *
+     * @param instruction the test instruction containing store key and locator
+     * @throws InterruptedException if thread sleep is interrupted
+     * @throws RuntimeException if key is not found in the workflow store
+     */
     private void typeFromStore(
             TestInstruction instruction)
             throws InterruptedException {
@@ -1297,6 +1419,11 @@ public class ActionExecutor {
         logger.info("React date set successfully: {}", dateValue);
     }
 
+    /**
+     * TYPE_BY_LABEL action: Finds an input element associated with a label text and types the input value into it.
+     *
+     * @param instruction the test instruction containing the label text locator and input value
+     */
     private void executeTypeByLabel(TestInstruction instruction) {
 
         WebElement input = wait.until(
@@ -1316,6 +1443,12 @@ public class ActionExecutor {
                 instruction.getInputValue(),
                 instruction.getLocatorValue());
     }
+
+    /**
+     * SELECT_BY_VALUE action: Selects an option from a native HTML select dropdown by its value attribute.
+     *
+     * @param instruction the test instruction containing locator and select value
+     */
     private void executeSelectByValue(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1344,6 +1477,11 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * SCROLL_TO_ELEMENT action: Scrolls the browser viewport until the specified element is centered.
+     *
+     * @param instruction the test instruction containing locator
+     */
     private void executeScrollToElement(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1359,6 +1497,12 @@ public class ActionExecutor {
 
         logger.info("Scrolled to element");
     }
+
+    /**
+     * WAIT_VISIBLE action: Waits until the target element is visible in the DOM.
+     *
+     * @param instruction the test instruction containing locator and optional sleep
+     */
     private void executeWaitVisible(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1380,6 +1524,10 @@ public class ActionExecutor {
             }
         }
     }
+
+    /**
+     * Clicks the date range calendar icon trigger on the page.
+     */
     private void clickCalendar() {
 
         WebElement calendar =
@@ -1388,6 +1536,10 @@ public class ActionExecutor {
 
         calendar.click();
     }
+
+    /**
+     * Clicks the continuous selection tab/item within the date range picker.
+     */
     private void clickContinuous() {
 
         WebElement continuous =
@@ -1396,23 +1548,38 @@ public class ActionExecutor {
 
         continuous.click();
     }
-    private void clickDate(int day) {
+
+    /**
+     * Clicks a specific date cell in the date range picker calendar.
+     *
+     * @param date the {@link LocalDate} to select
+     */
+    private void clickDate(LocalDate date) {
+
+        String day = String.valueOf(date.getDayOfMonth());
 
         By locator = By.xpath(
-                "//button[contains(@class,'rdrDay')][.//span[@class='rdrDayNumber']/span[text()='" + day + "']]"
+                "//button[contains(@class,'rdrDay')]" +
+                        "[not(contains(@class,'rdrDayPassive'))]" +
+                        "[.//span[@class='rdrDayNumber']/span[text()='" + day + "']]"
         );
 
-        WebElement date = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(locator)
+        WebElement dateElement = wait.until(
+                ExpectedConditions.elementToBeClickable(locator)
         );
 
-        actions.moveToElement(date)
+        actions.moveToElement(dateElement)
                 .click()
                 .perform();
 
-        logger.info("Clicked Date = {}", day);
+        logger.info("Clicked Date = {}", date);
     }
 
+    /**
+     * SELECT_DATE_RANGE action: Selects a continuous date range (from tomorrow to +3 days).
+     *
+     * @throws InterruptedException if thread sleep is interrupted
+     */
     private void executeSelectDateRange() throws InterruptedException {
 
         LocalDate start = LocalDate.now().plusDays(1);
@@ -1421,7 +1588,7 @@ public class ActionExecutor {
         // Calendar already open from JSON step "Open Calendar"
 
         // First date
-        clickDate(start.getDayOfMonth());
+        clickDate(start);
 
         logger.info("Start Date Selected");
 
@@ -1442,10 +1609,83 @@ public class ActionExecutor {
         Thread.sleep(500);
 
         // End date
-        clickDate(end.getDayOfMonth());
+        clickDate(end);
 
         logger.info("End Date Selected");
 
         logger.info("Date Range Selected : {} -> {}", start, end);
+    }
+
+    /**
+     * Extracts and returns the display value to be logged in the Extent/HTML test report for a step.
+     *
+     * @param instruction the executed test instruction
+     * @param action the action type string
+     * @return the resolved string value suitable for reporting, or null if not applicable
+     */
+    private String getReportValue(
+            TestInstruction instruction,
+            String action) {
+
+        try {
+
+            switch (action.toUpperCase()) {
+
+                case "TYPE":
+                case "TYPE_BY_LABEL":
+                case "CLEAR_AND_TYPE":
+                case "TYPE_FROM_STORE":
+
+                    return instruction.getInputValue();
+
+                case "SELECT_RADIO_BY_TEXT":
+                case "MULTI_SELECT_CHECKBOX":
+
+                    return instruction.getInputValue();
+
+                case "SELECT_DROPDOWN_BY_INDEX":
+
+                    return WorkflowDataStore.get("REPORT_SELECTED_VALUE");
+
+                case "UPLOAD_FILE":
+
+                    String filePath = instruction.getInputValue();
+
+                    if (filePath != null) {
+                        return new File(filePath).getName();
+                    }
+
+                    return null;
+
+                case "CAPTURE_TEXT":
+
+                    String key = instruction.getInputValue();
+
+                    return WorkflowDataStore.get(key);
+
+                case "SET_DATE_TODAY":
+                case "SET_DATE_PLUS_DAYS":
+                case "SET_DATE_TEXT":
+                case "SET_DATE_JS":
+                case "SET_CURRENT_TIME":
+                case "SET_CUSTOM_TIME":
+
+                    return instruction.getInputValue();
+
+                default:
+
+                    return null;
+            }
+
+        } catch (Exception e) {
+
+            logger.debug(
+                    "Could not determine report value for step '{}': {}",
+                    instruction.getStepName(),
+                    e.getMessage()
+            );
+
+            return null;
+        }
     }
 }

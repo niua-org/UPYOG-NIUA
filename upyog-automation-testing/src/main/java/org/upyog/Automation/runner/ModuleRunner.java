@@ -499,6 +499,62 @@ public class ModuleRunner {
 
                 break;
 
+            // =====================================================
+            // GARBAGE COLLECTION
+            // =====================================================
+
+
+            case "GC_CITIZEN":
+                result = engine.executeModule("test-config/garbageCollection/gc_citizen_module.json");
+                break;
+
+            case "GC_EMPLOYEE":
+                result = engine.executeModule("test-config/garbageCollection/gc_employee_module.json");
+                break;
+
+
+            // =====================================================
+            // ESTATE MANAGEMENT
+            // =====================================================
+
+
+            case "ESTATE_MANAGEMENT_CITIZEN":
+                result = engine.executeModule("test-config/estateManagement/estateManagement_citizen_module.json");
+                break;
+
+            case "ESTATE_MANAGEMENT_EMPLOYEE":
+                result = engine.executeModule("test-config/estateManagement/estateManagement_employee_module.json");
+                break;
+
+
+            // =====================================================
+            // CHALLAN GENERATION
+            // =====================================================
+
+
+            case "CHALLAN_GENERATION_CITIZEN":
+                result = engine.executeModule("test-config/challanGeneration/cg_citizen_module.json");
+                break;
+
+            case "CHALLAN_GENERATION_EMPLOYEE":
+                result = engine.executeModule("test-config/challanGeneration/cg_employee_module.json");
+                break;
+
+            // =====================================================
+            // NO DUE CERTIFICATE
+            // =====================================================
+
+
+            case "NO_DUE_CERTIFICATE_CITIZEN":
+                result = engine.executeModule("test-config/noDueCertificate/ndc_citizen__module.json");
+                break;
+
+            case "NO_DUE_CERTIFICATE_EMPLOYEE":
+                result = engine.executeModule("test-config/noDueCertificate/ndc_employee_module.json");
+                break;
+
+
+
 
             default:
 
