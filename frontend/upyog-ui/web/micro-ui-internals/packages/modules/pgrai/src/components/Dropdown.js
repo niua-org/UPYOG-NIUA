@@ -160,8 +160,8 @@ const Dropdown = (props) => {
 
   return (
     <div
-      className={`${user_type === "employee" ? "employee-select-wrap" : "select-wrap"} ${props?.className ? props?.className : ""}`}
-      className="rounded-md" style={{ ...props.style, width: "44%" }}
+      className={`${user_type === "employee" ? "employee-select-wrap" : "select-wrap"} ${props?.className ? props?.className : ""} rounded-md`}
+      style={{ ...props.style, width: "44%" }}
     >
       {hasCustomSelector && (
         <div className={props.showArrow ? "cp flex-right column-gap-5" : "cp"} onClick={dropdownSwitch}>
@@ -192,7 +192,7 @@ const Dropdown = (props) => {
             selectedVal={
               selectedOption
                 ? props.t
-                  ? props.isMultiSelectEmp
+                ? props.isMultiSelectEmp
                     ? `${selectedOption} ${t("BPA_SELECTED_TEXT")}`
                     : props.t(props.optionKey ? selectedOption[props.optionKey] : selectedOption)
                   : props.optionKey
@@ -218,8 +218,8 @@ const Dropdown = (props) => {
         props.optionKey ? (
           <div
             id="jk-dropdown-unique"
-            className={`${hasCustomSelector ? "margin-top-10 display: table" : ""} options-card`}
-            className="rounded-md" style={{ ...props.optionCardStyles, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
+            className={`${hasCustomSelector ? "margin-top-10 display: table" : ""} options-card rounded-md`}
+            style={{ ...props.optionCardStyles, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
             ref={optionRef}
           >
             {filteredOption &&

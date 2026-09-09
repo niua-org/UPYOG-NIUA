@@ -15,8 +15,9 @@ const CheckBox = ({ onChange, label, value, disable, ref, checked, inputRef, pag
         <div>
           <input
             type="checkbox"
-            className={userType === "employee" ? "input-emp" : ""}
-            onChange={onChange} className="cursor-pointer" style={{ left: "90%" }}
+            className={`${userType === "employee" ? "input-emp" : ""} cursor-pointer`}
+            onChange={onChange}
+            style={{ left: "90%" }}
             value={value || label}
             {...props}
             ref={inputRef}
@@ -35,9 +36,8 @@ const CheckBox = ({ onChange, label, value, disable, ref, checked, inputRef, pag
         <div>
           <input
             type="checkbox"
-            className={userType === "employee" ? "input-emp" : ""}
+            className={`${userType === "employee" ? "input-emp" : ""} cursor-pointer`}
             onChange={onChange}
-            className="cursor-pointer"
             value={value || label}
             {...props}
             ref={inputRef}

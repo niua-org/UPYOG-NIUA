@@ -248,7 +248,7 @@ const SelectCustomDateRange = ({ values, onFilterChange, t }) => {
           }
         }
         dispayRange.push(
-          <div className={`range-box ${className} ${monthCurrentYear}-${ele}`} onClick={(e)=>{onMonthSelect(e)}} className="rounded-sm" style={{ width: "50px", height: "50px", margin: "10px", lineHeight: "50px", textAlign: "center", border: "1px solid", cursor: "pointer", backgroundColor: className === "selected" ? "rgb(61, 145, 255)" : "white", color: className === "selected" ? "black" : "inherit", fontWeight: className === "selected" ? "bold" : "normal" }}>
+          <div className={`range-box ${className} ${monthCurrentYear}-${ele} rounded-sm`} onClick={(e)=>{onMonthSelect(e)}} style={{ width: "50px", height: "50px", margin: "10px", lineHeight: "50px", textAlign: "center", border: "1px solid", cursor: "pointer", backgroundColor: className === "selected" ? "rgb(61, 145, 255)" : "white", color: className === "selected" ? "black" : "inherit", fontWeight: className === "selected" ? "bold" : "normal" }}>
             {ele}
           </div>
         )
@@ -265,7 +265,7 @@ const SelectCustomDateRange = ({ values, onFilterChange, t }) => {
           className = "selected";
         }
         dispayRange.push(
-          <div className={`range-box ${className} ${year}`} onClick={(e)=>{onYearsSelect(e,year)}} className="rounded-sm" style={{ width: "50px", height: "50px", margin: "10px", lineHeight: "50px", textAlign: "center", border: "1px solid", cursor: "pointer", backgroundColor: className === "selected" ? "rgb(61, 145, 255)" : "white", color: className === "selected" ? "black" : "inherit", fontWeight: className === "selected" ? "bold" : "normal" }}>
+          <div className={`range-box ${className} ${year} rounded-sm`} onClick={(e)=>{onYearsSelect(e,year)}} style={{ width: "50px", height: "50px", margin: "10px", lineHeight: "50px", textAlign: "center", border: "1px solid", cursor: "pointer", backgroundColor: className === "selected" ? "rgb(61, 145, 255)" : "white", color: className === "selected" ? "black" : "inherit", fontWeight: className === "selected" ? "bold" : "normal" }}>
             {year}
           </div>
         )

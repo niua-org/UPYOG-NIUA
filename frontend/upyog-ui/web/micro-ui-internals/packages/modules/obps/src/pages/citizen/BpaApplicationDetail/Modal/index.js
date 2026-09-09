@@ -15,7 +15,7 @@ const Close = () => (
 
 const CloseBtn = (props) => {
   return (
-    <div className="icon-bg-secondary" onClick={props.onClick} className="bg-white">
+    <div className="icon-bg-secondary bg-white" onClick={props.onClick}>
       <Close />
     </div>
   );

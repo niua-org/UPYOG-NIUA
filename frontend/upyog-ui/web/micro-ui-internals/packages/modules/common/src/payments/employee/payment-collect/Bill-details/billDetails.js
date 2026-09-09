@@ -464,7 +464,7 @@ const BillDetails = ({ businessService, consumerCode, _amount, onChange }) => {
               ) : (
                 <div className="row last">
                   <h2></h2>
-                  <div className="text-right" style={{ maxWidth: "100px" }} onClick={() => setShowDetails(true)} className="filter-button value">
+                  <div className="text-right filter-button value" style={{ maxWidth: "100px" }} onClick={() => setShowDetails(true)}>
                     {t("ES_COMMON_VIEW_DETAILS")}
                   </div>
                 </div>

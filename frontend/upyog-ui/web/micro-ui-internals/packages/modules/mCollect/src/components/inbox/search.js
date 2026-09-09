@@ -105,7 +105,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                   </div>
                 ))}
                 {type === "desktop" && !mobileView && (
-                  <div className="text-right" style={{ gridColumn: "2/3", paddingTop: "10px" }} className="input-fields">
+                  <div className="text-right input-fields" style={{ gridColumn: "2/3", paddingTop: "10px" }}>
                   <div>{clearAll()}</div>
                   </div>
                 )}

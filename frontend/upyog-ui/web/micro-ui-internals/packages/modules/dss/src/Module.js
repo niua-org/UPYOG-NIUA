@@ -62,24 +62,24 @@ const Routes = ({ path, stateCode }) => {
   return (
     <div className="flex">
       <div className="chart-sidebar" style={{width:"300px",marginLeft:"-80px", backgroundImage:"url(https://in-egov-assets.s3.ap-south-1.amazonaws.com/images/top-green-card.png), url(https://in-egov-assets.s3.ap-south-1.amazonaws.com/images/top-red-card.png)", backgroundSize:"cover",backgroundBlendMode:"lighten",display:window.location.href.includes("main-dashboard-landing")?"":"none"}}>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3", marginTop:"10%" }}  onClick = {(e)=>handClick(e,"home")}className="dashBoard">View dashboard</div>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px" }} className="dashBoard" onClick = {(e)=>handClick(e,"national-propertytax")}>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3", marginTop:"10%" }} onClick={(e)=>handClick(e,"home")}>View dashboard</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px" }} onClick={(e)=>handClick(e,"national-propertytax")}>
 Property Tax Assessment and Payment</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px" }}className="dashBoard"  onClick = {(e)=>handClick(e,"national-tradelicense")}>Trade License Issuance and Payment</div>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} className="dashBoard" onClick = {(e)=>handClick(e,"national-pgr")}>Public Grievance Redressal</div>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px" }} className="dashBoard" onClick = {(e)=>handClick(e,"national-firenoc")}>No-Objection Certificate Issuance</div>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px" }} className="dashBoard" onClick = {(e)=>handClick(e,"national-ws")}>Water and Sewerage Connection Management</div>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} className="dashBoard" onClick = {(e)=>handClick(e,"nss-obps")}>Building Plan Approval</div>
-        <div className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} className="dashBoard" onClick = {(e)=>handClick(e,"national-mcollect")}>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px" }} onClick={(e)=>handClick(e,"national-tradelicense")}>Trade License Issuance and Payment</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-pgr")}>Public Grievance Redressal</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px" }} onClick={(e)=>handClick(e,"national-firenoc")}>No-Objection Certificate Issuance</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px" }} onClick={(e)=>handClick(e,"national-ws")}>Water and Sewerage Connection Management</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"nss-obps")}>Building Plan Approval</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-mcollect")}>
 Miscellaneous Collections</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-fssm")}>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-fssm")}>
 Desludging Service</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-sv")}>Street Vending</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-ptr")}>Pet Registration</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-ewaste")}>E-Waste Management</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-echallan")}>E-Challan</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-adv")}>Advertisement</div>
-        <div  className="bg-white font-bold text-center cursor-pointer" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }}className="dashBoard" onClick = {(e)=>handClick(e,"national-chb")}>Venue Bookings</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-sv")}>Street Vending</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-ptr")}>Pet Registration</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-ewaste")}>E-Waste Management</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-echallan")}>E-Challan</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-adv")}>Advertisement</div>
+        <div className="bg-white font-bold text-center cursor-pointer dashBoard" style={{ width:"90%", margin:"5%", height:"50px", lineHeight:"3" }} onClick={(e)=>handClick(e,"national-chb")}>Venue Bookings</div>
 
 
 

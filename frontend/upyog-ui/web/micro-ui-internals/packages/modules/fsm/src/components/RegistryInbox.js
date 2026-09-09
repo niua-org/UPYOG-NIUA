@@ -318,8 +318,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.allVehicles?.length ? "link" : "cell-text"}
-                    className="cursor-pointer"
+                    className={`${row.original?.allVehicles?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.allVehicles?.length)}
                   >
                     {row.original?.allVehicles?.length || 0}
@@ -343,8 +342,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.vehicles?.length ? "link" : "cell-text"}
-                    className="cursor-pointer"
+                    className={`${row.original?.vehicles?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.vehicles?.length)}
                   >
                     {row.original?.vehicles?.length || 0}
@@ -368,8 +366,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.drivers?.length ? "link" : "cell-text"}
-                    className="cursor-pointer"
+                    className={`${row.original?.drivers?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.drivers?.length)}
                   >
                     {row.original?.drivers?.length || 0}
@@ -393,8 +390,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.activeDrivers?.length ? "link" : "cell-text"}
-                    className="cursor-pointer"
+                    className={`${row.original?.activeDrivers?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.activeDrivers?.length)}
                   >
                     {row.original?.activeDrivers?.length || 0}

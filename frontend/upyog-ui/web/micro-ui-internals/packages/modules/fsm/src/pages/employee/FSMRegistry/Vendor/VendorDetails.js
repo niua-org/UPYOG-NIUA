@@ -324,7 +324,7 @@ const VendorDetails = (props) => {
                               </h2>
                               <div className="flex">
                                 <span onClick={() => onEdit(data, detail.type, data.id)}>
-                                  <EditIcon className="cursor-pointer" style={{ marginRight: "20px" }} className="edit" fill="var(--primary-main)" />
+                                  <EditIcon className="cursor-pointer edit" style={{ marginRight: "20px" }} fill="var(--primary-main)" />
                                 </span>
                                 <span onClick={() => onDelete(data, detail.type, data.id)}>
                                   <DeleteIcon className="cursor-pointer delete" fill="var(--primary-main)" />

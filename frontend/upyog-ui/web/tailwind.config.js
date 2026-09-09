@@ -141,7 +141,8 @@ module.exports = {
         "./src/**/*.{js,jsx,ts,tsx}",
         "./micro-ui-internals/packages/css/src/**/*.{scss,css}",
         "./micro-ui-internals/packages/react-components/src/**/*.{js,jsx,ts,tsx}",
-        "./micro-ui-internals/packages/modules/**/src/**/*.{js,jsx,ts,tsx}",
+        "./micro-ui-internals/packages/modules/*/src/**/*.{js,jsx,ts,tsx}",
+        "./micro-ui-internals/packages/modules/*/*/src/**/*.{js,jsx,ts,tsx}",
     ],
 
     theme,
