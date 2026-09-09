@@ -55,17 +55,17 @@ import org.egov.commons.Scheme;
 import org.egov.commons.SubScheme;
 import org.egov.infra.admin.master.entity.Boundary;
 import org.egov.infra.persistence.entity.AbstractPersistable;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "BANKENTRIES_MIS")
@@ -88,7 +88,7 @@ public class BrsEntrieMis extends AbstractPersistable<Long>
     @JoinColumn(name = "fundId")
     private Fund fund;
     
-    @SanitizeHtml
+    @SafeHtml
     private String departmentcode;
 
     @ManyToOne

@@ -55,25 +55,25 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.validation.constraints.NotNull;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
 
 import org.egov.infra.workflow.entity.StateAware;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Entity
 @Table(name = "VOUCHERHEADER")
@@ -86,20 +86,20 @@ public class CVoucherHeader extends StateAware implements java.io.Serializable {
     @GeneratedValue(generator = SEQ_VOUCHERHEADER, strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @Length(max = 50)
     private String name;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @Length(max = 100)
     private String type;
 
-    @SanitizeHtml
+    @SafeHtml
     private String description;
     private Date effectiveDate;
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 30)
     @Column(updatable = false)
     private String voucherNumber;
@@ -112,17 +112,17 @@ public class CVoucherHeader extends StateAware implements java.io.Serializable {
     private Long originalvcId;
     private Integer isConfirmed;
     private Long refvhId;
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 50)
     private String cgvn;
     private Integer moduleId;
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String voucherSubType;
     @Transient
     private Boolean isRestrictedtoOneFunctionCenter;
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String voucherNumberPrefix;
     @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "voucherHeaderId", targetEntity = CGeneralLedger.class)
     private Set<CGeneralLedger> generalLedger;
@@ -136,22 +136,22 @@ public class CVoucherHeader extends StateAware implements java.io.Serializable {
     private List<CGeneralLedgerDetail> subLedgerDetails = new ArrayList<>();
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String partyName;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String partyBillNumber;
 
     @Transient
     private Date partyBillDate;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String billNumber;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String departmentName;
 
     @Transient
@@ -161,15 +161,15 @@ public class CVoucherHeader extends StateAware implements java.io.Serializable {
     private Long approvalDepartment;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String approvalComent;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String voucherNumType;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String fiscalName;
 
     public CVoucherHeader() {

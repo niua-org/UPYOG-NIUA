@@ -1,7 +1,6 @@
 package org.upyog.pgrai.service;
 
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.User;
@@ -9,15 +8,16 @@ import org.upyog.pgrai.config.PGRConfiguration;
 import org.upyog.pgrai.producer.Producer;
 import org.upyog.pgrai.util.MigrationUtils;
 import org.upyog.pgrai.web.models.*;
-import org.upyog.pgrai.web.models.pgrv1.*;
+import org.upyog.pgrai.web.models.pgrV1.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.upyog.pgrai.web.models.pgrv1.Address;
-import org.upyog.pgrai.web.models.pgrv1.Service;
-import org.upyog.pgrai.web.models.pgrv1.ServiceResponse;
+import org.upyog.pgrai.web.models.pgrV1.Address;
+import org.upyog.pgrai.web.models.pgrV1.Service;
+import org.upyog.pgrai.web.models.pgrV1.ServiceResponse;
 import org.upyog.pgrai.web.models.workflow.ProcessInstance;
 import org.upyog.pgrai.web.models.workflow.ProcessInstanceRequest;
 import org.upyog.pgrai.web.models.workflow.State;
@@ -39,42 +39,52 @@ import static org.upyog.pgrai.util.PGRConstants.PGR_MODULENAME;
         matchIfMissing = false)
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class MigrationService {
 
 
     @Value("${pgr.statelevel.tenantid}")
     private String statelevelTenantIdForMigration;
 
-    private final MigrationUtils migrationUtils;
+    @Autowired
+    private MigrationUtils migrationUtils;
 
-    private final Producer producer;
+    @Autowired
+    private Producer producer;
 
-    private final PGRConfiguration config;
+    @Autowired
+    private PGRConfiguration config;
 
     private Map<String,String> statusToUUIDMap;
 
     private Map<String, Long> serviceCodeToSLA;
 
-    private final Map<String, String> oldToNewStatus = Map.of(
-            "open", "PENDINGFORASSIGNMENT",
-            "assigned", "PENDINGATLME",
-            "closed", "CLOSEDAFTERRESOLUTION",
-            "rejected", "REJECTED",
-            "resolved", "RESOLVED",
-            "reassignrequested", "PENDINGFORREASSIGNMENT"
-    );
+    private final Map<String, String> oldToNewStatus = new HashMap<String, String>() {
+        {
 
-    private final Map<String, String> oldToNewAction = Map.of(
-            "open", "APPLY",
-            "ropen", "REOPEN",
-            "assign", "ASSIGN",
-            "reassign", "REASSIGN",
-            "resolve", "RESOLVE",
-            "close", "PENDINGFORREASSIGNMENT",
-            "reject", "REJECT",
-            "requestforreassign", "ASSIGN"
-    );
+            put("open", "PENDINGFORASSIGNMENT");
+            put("assigned", "PENDINGATLME");
+            put("closed", "CLOSEDAFTERRESOLUTION");
+            put("rejected", "REJECTED");
+            put("resolved", "RESOLVED");
+            put("reassignrequested", "PENDINGFORREASSIGNMENT");
+
+        }
+    };
+
+    private final Map<String, String> oldToNewAction = new HashMap<String, String>() {
+        {
+
+            put("open", "APPLY");
+            put("ropen", "REOPEN");
+            put("assign", "ASSIGN");
+            put("reassign", "REASSIGN");
+            put("resolve", "RESOLVE");
+            put("close", "PENDINGFORREASSIGNMENT");
+            put("reject", "REJECT");
+            put("requestforreassign", "ASSIGN");
+
+        }
+    };
 
     /**
      * Initializes the status-to-UUID and service code-to-SLA mappings.
@@ -137,17 +147,29 @@ public class MigrationService {
             ids.add(service.getAccountId());
         });
 
-        actionHistories.forEach(actionHistory -> actionHistory.getActions().forEach(actionInfo -> {
+        actionHistories.forEach(actionHistory -> {
+            actionHistory.getActions().forEach(actionInfo -> {
 
-            if (actionInfo.getAssignee() != null)
-                ids.add(actionInfo.getAssignee());
+                if (actionInfo.getAssignee() != null)
+                    ids.add(actionInfo.getAssignee());
 
-            ids.add(actionInfo.getBy().split(":")[0]);
-        }));
+                ids.add(actionInfo.getBy().split(":")[0]);
+            });
+        });
 
         Map<Long, String> idToUuidMap = migrationUtils.getIdtoUUIDMap(new LinkedList<>(ids));
 
-        return transform(servicesV1, actionHistories, idToUuidMap);
+        /*############### FOR LOCAL TESTING ONLY ###########################################
+        Map<Long, String> idToUuidMap = new HashMap<>();
+        for(String id : ids){
+            if(id != null)
+                idToUuidMap.put(Long.parseLong(id), UUID.randomUUID().toString());
+        }
+        //##################################################################################*/
+
+        Map<String, Object> response = transform(servicesV1, actionHistories, idToUuidMap);
+
+        return response;
 
     }
 
@@ -175,7 +197,7 @@ public class MigrationService {
             idToActionMap.put(id, actions);
         }
 
-        // Include transformed entities in the response for migration verification.
+        // Temporary for testing
         List<org.upyog.pgrai.web.models.Service> services = new LinkedList<>();
         List<ProcessInstance> workflowResponse = new LinkedList<>();
 
@@ -200,10 +222,12 @@ public class MigrationService {
             service.setApplicationStatus(oldToNewStatus.get(serviceV1.getStatus().toString()));
             ProcessInstanceRequest processInstanceRequest = ProcessInstanceRequest.builder().processInstances(workflows).build();
             ServiceRequest serviceRequest = ServiceRequest.builder().service(service).build();
+            //log.info("Pushing service request: " + serviceRequest);
+            /*#################### TEMPORARY FOR TESTING, REMOVE THE COMMENTS*/
                producer.push(tenantId,config.getBatchCreateTopic(),serviceRequest);
                producer.push(tenantId,config.getBatchWorkflowSaveTopic(),processInstanceRequest);
 
-            // Capture transformed entities in the response while also publishing migration records.
+            // Temporary for testing
             services.add(service);
             workflowResponse.addAll(workflows);
         }
@@ -230,6 +254,7 @@ public class MigrationService {
         String tenantId = serviceV1.getTenantId();
         String serviceCode = serviceV1.getServiceCode();
         String serviceRequestId = serviceV1.getServiceRequestId();
+        String description = serviceV1.getDescription();
         String source = (!ObjectUtils.isEmpty(serviceV1.getSource())) ? serviceV1.getSource().toString() : null;
         String rating = serviceV1.getRating();
 
@@ -273,11 +298,15 @@ public class MigrationService {
          * Transform address and set geo location
          */
         GeoLocation geoLocation = GeoLocation.builder().longitude(longitutude).latitude(latitude).build();
-        org.upyog.pgrai.web.models.Address address = transformAddress(serviceV1.getAddressDetail());
+        //log.info("Address details: " + serviceV1.getAddressDetail());
+        org.upyog.pgrai.web.models.Address address = null;
+        address = transformAddress(serviceV1.getAddressDetail());
         address.setGeoLocation(geoLocation);
         address.setTenantId(tenantId);
 
         Boolean active = serviceV1.getActive();
+
+        // ACTIVE FLAG NEEDS TO BE ACCOUNTED FOR BELOW FOR POPULATING v2 POJO --->
 
         org.upyog.pgrai.web.models.Service service = org.upyog.pgrai.web.models.Service.builder()
                 .id(UUID.randomUUID().toString())
@@ -322,12 +351,11 @@ public class MigrationService {
         String landmark = addressV1.getLandmark();
         String houseNoAndStreetName = addressV1.getHouseNoAndStreetName();
 
-        /*
-         * Existing v1 migration maps houseNoAndStreetName to street and colony to region.
-         * Keep this mapping stable until a data migration spec defines a different contract.
+        /**
+         * FIXME : houseNoAndStreetName and colony mapping has to be corrected
          */
 
-        return org.upyog.pgrai.web.models.Address.builder()
+        org.upyog.pgrai.web.models.Address address = org.upyog.pgrai.web.models.Address.builder()
                 .id(id)
                 .locality(Boundary.builder().code(locality).build())
                 .city(city)
@@ -335,6 +363,9 @@ public class MigrationService {
                 .street(houseNoAndStreetName)
                 .region(colony)
                 .build();
+
+        return address;
+
     }
 
     /**
@@ -349,7 +380,7 @@ public class MigrationService {
 
         String uuid = actionInfo.getUuid();
 
-        // v1 stores creator metadata as "userId:role"; migration currently needs the user id only.
+        // FIXME Should the role be stored
         String createdBy = actionInfo.getBy().split(":")[0];
 
         String tenantId = actionInfo.getTenantId();

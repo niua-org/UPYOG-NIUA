@@ -52,7 +52,6 @@ import com.exilant.eGov.src.domain.BankReconciliationSummary;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;
@@ -145,7 +144,7 @@ public class BankReconciliationAction extends BaseFormAction {
 	
     @Action(value = "/brs/bankReconciliationDetails")
     public String brcDetails() {
-        resolveBrsSummaryCriteriaFromRequest();
+        bankSDate = parameters.get("bankStmtDate")[0];
         Date dt = new Date();
         try {
             dt = sdf.parse(bankSDate);
@@ -169,12 +168,6 @@ public class BankReconciliationAction extends BaseFormAction {
     }
 
 	public void prepare() {
-		/*
-		 * Struts 7: BaseFormAction.prepare() loads ActionContext parameters into
-		 * this.parameters (ParameterAware was removed). Must call super or brsSummary /
-		 * brcDetails NPE on parameters.get(...).
-		 */
-		super.prepare();
 
 		List<Bank> allBankHavingAccounts = bankHibernateDAO
 				.getAllBankHavingBranchAndAccounts();
@@ -202,7 +195,8 @@ public class BankReconciliationAction extends BaseFormAction {
 	@Action(value = "/brs/bankReconciliation-brsSummary")
 	public String brsSummary() {
 
-		resolveBrsSummaryCriteriaFromRequest();
+		bankSDate = parameters.get("bankStmtDate")[0];
+		balanceAsPerStatement = parameters.get("bankStBalance")[0];
 		
 		validateBrsSummary();
 		if (hasErrors()) {
@@ -257,64 +251,6 @@ public class BankReconciliationAction extends BaseFormAction {
 		}
 
 		return "result";
-	}
-
-	/**
-	 * Prefer bound action fields / BaseFormAction.parameters; fall back to the
-	 * servlet request when Struts 7 leaves values unbound.
-	 */
-	private void resolveBrsSummaryCriteriaFromRequest() {
-		if (StringUtils.isEmpty(bankSDate)) {
-			bankSDate = firstParam("bankStmtDate");
-		}
-		if (StringUtils.isEmpty(balanceAsPerStatement)) {
-			balanceAsPerStatement = firstParam("bankStBalance");
-		}
-		if (accountId == null) {
-			final String accountIdParam = firstParam("accountId");
-			if (StringUtils.isNotBlank(accountIdParam)) {
-				accountId = Integer.valueOf(accountIdParam.trim());
-			}
-		}
-		if (bankId == null) {
-			final String bankIdParam = firstParam("bankId");
-			if (StringUtils.isNotBlank(bankIdParam)) {
-				bankId = Integer.valueOf(bankIdParam.trim());
-			}
-		}
-		if (branchId == null) {
-			final String branchIdParam = firstParam("branchId");
-			if (StringUtils.isNotBlank(branchIdParam)) {
-				branchId = Integer.valueOf(branchIdParam.trim());
-			}
-		}
-		if (bankAccId == null) {
-			final String bankAccIdParam = firstParam("bankAccId");
-			if (StringUtils.isNotBlank(bankAccIdParam)) {
-				bankAccId = Long.valueOf(bankAccIdParam.trim());
-			} else if (accountId != null) {
-				bankAccId = accountId.longValue();
-			}
-		}
-		if (StringUtils.isEmpty(actionName)) {
-			actionName = firstParam("actionName");
-		}
-	}
-
-	private String firstParam(final String name) {
-		if (parameters != null) {
-			final String[] values = parameters.get(name);
-			if (values != null && values.length > 0 && StringUtils.isNotBlank(values[0])) {
-				return values[0].trim();
-			}
-		}
-		if (ServletActionContext.getRequest() != null) {
-			final String value = ServletActionContext.getRequest().getParameter(name);
-			if (StringUtils.isNotBlank(value)) {
-				return value.trim();
-			}
-		}
-		return null;
 	}
 
 	private void validateBrsSummary() {

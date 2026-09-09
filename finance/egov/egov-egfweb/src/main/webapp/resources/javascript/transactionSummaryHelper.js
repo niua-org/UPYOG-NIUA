@@ -1054,9 +1054,8 @@ $('#type').change(
 									+ '</option>';
 						});
 						$('#major').append(output);
-						// Spring 6 migration note: fire after async options are appended so dependent requests receive majorCode.
-						$('#major').trigger('change');
 					});
+			$('#major').trigger('change');
 		});
 
 $('#major')

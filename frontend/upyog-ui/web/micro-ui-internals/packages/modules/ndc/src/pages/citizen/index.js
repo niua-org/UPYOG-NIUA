@@ -36,10 +36,10 @@ const App = () => {
   const isMobile = window.Digit.Utils.browser.isMobile();
 
   return (
-    <span className={"chb-citizen ndc-width-100-pad"}>
+    <span className={"chb-citizen"} style={{ width: "100%", paddingRight: "25px", paddingLeft: "25px" }}>
       <AppContainer>
         {!isResponse ? (
-          <div className={window.location.href.includes("application-overview") || isMobile ? 'ndc-margin-left-10' : ''}>
+          <div style={window.location.href.includes("application-overview") || isMobile ? { marginLeft: "10px" } : {}}>
             <NDCBreadCrumbs location={location} />
           </div>
         ) : null}

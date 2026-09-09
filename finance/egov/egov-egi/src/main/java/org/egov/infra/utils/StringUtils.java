@@ -58,13 +58,14 @@ import static org.egov.infra.utils.DateUtils.currentDateToFileNameFormat;
 import static org.egov.infra.validation.regex.Constants.UNSIGNED_NUMERIC;
 
 import java.nio.charset.StandardCharsets;
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.text.RandomStringGenerator;
 import org.egov.infra.exception.ApplicationRuntimeException;
+import org.owasp.esapi.ESAPI;
+import org.owasp.esapi.errors.EncodingException;
 
 public class StringUtils extends org.apache.commons.lang.StringUtils {
 
@@ -129,8 +130,8 @@ public class StringUtils extends org.apache.commons.lang.StringUtils {
 
 	public static String encodeURL(String value) {
 		try {
-			return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-		} catch (Exception e) {
+			return ESAPI.encoder().encodeForURL(value);
+		} catch (EncodingException e) {
 			throw new ApplicationRuntimeException("Error occurred while encoding URL value", e);
 		}
 	}

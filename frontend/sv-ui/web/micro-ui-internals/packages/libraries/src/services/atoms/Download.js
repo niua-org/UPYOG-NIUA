@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import XLSX from "xlsx";
@@ -35,7 +36,7 @@ const Download = {
       }
     };
 
-    const element = node.current;
+    const element = ReactDOM.findDOMNode(node.current);
     html2canvas(element, {
       scrollY: -window.scrollY,
       scrollX: 0,
@@ -86,7 +87,7 @@ const Download = {
         changeClasses('dss-white-pre-line',"dss-white-pre-temp");
 
   applyCss();
-    const element = node.current;
+    const element = ReactDOM.findDOMNode(node.current);
 
 
     return domtoimage.toPng(element, {
@@ -188,7 +189,7 @@ const Download = {
       return new Blob([new Uint8Array(array)], { type: 'image/jpeg' });
     };
     changeClasses('dss-white-pre-line',"dss-white-pre-temp");
-    const element = node.current;
+    const element = ReactDOM.findDOMNode(node.current);
     return domtoimage.toJpeg(element, {
       quality: 1,
       bgcolor: 'white'

@@ -47,8 +47,6 @@
  */
 package org.egov.edcr.security.oauth2.config;
 
-// TODO: DEAD CODE - NOT USED IN UPYOG (WebSecurityConfigurerAdapter removed in Spring Security 6)
-/*
 import org.egov.edcr.security.oauth2.custom.CustomAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +61,12 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
+/**
+ * OAuth2 Security configuration
+ * 
+ * @author subhash
+ *
+ */
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
@@ -96,4 +100,3 @@ public class OAuth2SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
 }
-*/

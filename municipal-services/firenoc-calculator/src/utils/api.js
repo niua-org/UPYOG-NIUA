@@ -1,15 +1,6 @@
 import httpClient from "../config/httpClient";
 import { addQueryArg } from "./index";
 
-/**
- * Strip transport-level headers (host, content-length, transfer-encoding) from the incoming request
- * before forwarding to downstream services, as these headers describe the original HTTP connection
- * and would cause routing failures or malformed requests if forwarded as-is.
- */
-
-
-const STRIP_HEADERS = ["content-length", "host", "transfer-encoding"];
-
 export const httpRequest = async ({
   hostURL,
   endPoint,
@@ -20,12 +11,10 @@ export const httpRequest = async ({
 }) => {
   let instance = httpClient(hostURL);
   let errorReponse = {};
-  if (headers) {
-    const safeHeaders = Object.fromEntries(
-      Object.entries(headers).filter(([k]) => !STRIP_HEADERS.includes(k.toLowerCase()))
-    );
-    instance.defaults = Object.assign(instance.defaults, { headers: safeHeaders });
-  }
+  if (headers)
+    instance.defaults = Object.assign(instance.defaults, {
+      headers
+    });
   endPoint = addQueryArg(endPoint, queryObject);
   try {
     const response = await instance.post(endPoint, requestBody);
@@ -37,4 +26,5 @@ export const httpRequest = async ({
     errorReponse = error.response;
     throw errorReponse;
   }
+  // console.log("error from api utils:", errorReponse);
 };

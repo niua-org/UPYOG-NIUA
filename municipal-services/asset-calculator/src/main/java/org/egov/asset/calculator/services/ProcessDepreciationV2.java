@@ -1,5 +1,6 @@
 package org.egov.asset.calculator.services;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.asset.calculator.config.CalculatorConfig;
 import org.egov.asset.calculator.kafka.broker.Producer;
@@ -13,7 +14,6 @@ import org.egov.asset.calculator.web.models.AuditDetails;
 import org.egov.asset.calculator.web.models.DepreciationDetail;
 import org.egov.asset.calculator.web.models.DepreciationReq;
 import org.egov.asset.calculator.web.models.contract.Asset;
-import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,11 +22,14 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * ProcessDepreciationV2 - Enhanced depreciation processing service
@@ -42,19 +45,19 @@ import java.util.Optional;
  * - Comprehensive error handling and logging
  */
 @Service
+@AllArgsConstructor
 @Slf4j
 public class ProcessDepreciationV2 {
-
-    private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();
 
     private final AssetRepository assetRepository;
     private final DepreciationDetailRepository depreciationDetailRepository;
     private final MdmsDataRepository mdmsDataRepository;
     private final Producer producer;
     private final AssetCalculatorUtil assetCalculatorUtil;
-    private final int batchSize;
-    private final DepreciationReq depreciationReq;
-    private AuditDetails auditDetails;
+    private DepreciationReq depreciationReq ;
+
+    private static int BATCH_SIZE;
+    private AuditDetails auditDetails ;
     private String uuid;
 
     @Autowired
@@ -68,9 +71,10 @@ public class ProcessDepreciationV2 {
         this.mdmsDataRepository = mdmsDataRepository;
         this.producer = producer;
         this.assetCalculatorUtil = assetCalculatorUtil;
-        this.batchSize = config.getBatchSize();
-        this.depreciationReq = new DepreciationReq();
-        this.auditDetails = new AuditDetails();
+        depreciationReq = new DepreciationReq();
+        auditDetails = new AuditDetails();
+
+        BATCH_SIZE = config.getBatchSize();
     }
 
     /**
@@ -85,8 +89,9 @@ public class ProcessDepreciationV2 {
      */
     @Transactional
     public String calculateDepreciation(String tenantId, String assetId, boolean legacyData, String uuid) {
-        LocalDate currentDate = LocalDate.now(SYSTEM_ZONE);
+        LocalDate currentDate = LocalDate.now();
         int totalAssets;
+        String message;
         this.uuid = uuid;
 
         // If specific assetId is provided, treat it as legacy data for complete recalculation
@@ -110,15 +115,15 @@ public class ProcessDepreciationV2 {
         int pageIndex = 0;
 
         // Process assets in batches to avoid memory issues with large datasets
-        while (pageIndex * batchSize < totalAssets) {
+        while (pageIndex * BATCH_SIZE < totalAssets) {
             // Safety check to prevent infinite loops in case of data inconsistency
-            if (pageIndex > totalAssets / batchSize + 1) {
+            if (pageIndex > totalAssets / BATCH_SIZE + 1) {
                 log.error("Potential infinite loop detected in batch processing. Terminating.");
                 break;
             }
 
             // Create pagination object for current batch
-            Pageable pageable = PageRequest.of(pageIndex, batchSize);
+            Pageable pageable = PageRequest.of(pageIndex, BATCH_SIZE);
 
             // Fetch current batch of assets from database
             List<Asset> allAssets = assetRepository.findAssetsForDepreciation(
@@ -147,7 +152,8 @@ public class ProcessDepreciationV2 {
             pageIndex++;
         }
 
-        return CalculatorConstants.SUCCESS_MESSAGE;
+        message = CalculatorConstants.SUCCESS_MESSAGE;
+        return message;
     }
 
     /**
@@ -161,7 +167,7 @@ public class ProcessDepreciationV2 {
     private List<Asset> filterAssetsForAnniversary(List<Asset> assets, LocalDate currentDate) {
         return assets.stream()
                 .filter(asset -> isAnniversaryDate(asset, currentDate))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     /**
@@ -185,7 +191,7 @@ public class ProcessDepreciationV2 {
         try {
             // Convert stored epoch milliseconds to LocalDate for comparison
             LocalDate purchaseDate = Instant.ofEpochMilli(asset.getPurchaseDate())
-                    .atZone(SYSTEM_ZONE)
+                    .atZone(ZoneId.systemDefault())
                     .toLocalDate();
 
             // Check if month and day match (anniversary condition)
@@ -218,137 +224,147 @@ public class ProcessDepreciationV2 {
      * @param legacyData - Flag indicating processing mode
      */
     private void processAssetDepreciation(Asset asset, LocalDate currentDate, boolean legacyData) {
+        int yearsElapsed;
+        int remainingLife;
+
         if (legacyData) {
-            processLegacyAssetDepreciation(asset, currentDate);
-        } else {
-            processRegularAssetDepreciation(asset, currentDate);
-        }
-    }
+            log.info("Processing legacy Data, legacyData Flag = {}", legacyData );
 
-    private void processLegacyAssetDepreciation(Asset asset, LocalDate currentDate) {
-        log.info("Processing legacy Data, legacyData Flag = true");
+            // Reset book value to original for complete recalculation
+            // This ensures accurate historical depreciation calculation
+            asset.setBookValue(BigDecimal.valueOf(asset.getOriginalBookValue()).doubleValue());
 
-        // Reset book value to original for complete recalculation
-        asset.setBookValue(BigDecimal.valueOf(asset.getOriginalBookValue()).doubleValue());
+            // Convert stored epoch milliseconds to LocalDate for date calculations
+            LocalDate purchaseDate = LocalDate.ofEpochDay(asset.getPurchaseDate() / CalculatorConstants.SECONDS_IN_A_DAY);
+            if (purchaseDate == null || asset.getLifeOfAsset() == null) {
+                log.warn("Skipping asset due to missing mandatory fields: {}", asset.getId());
+                return;
+            }
 
-        LocalDate purchaseDate = LocalDate.ofEpochDay(asset.getPurchaseDate() / CalculatorConstants.SECONDS_IN_A_DAY);
-        if (asset.getLifeOfAsset() == null) {
-            log.warn("Skipping asset due to missing mandatory fields: {}", asset.getId());
-            return;
-        }
+            // Calculate when the asset's useful life ends
+            int totalLife = Integer.parseInt(asset.getLifeOfAsset());
+            LocalDate lifeEndDate = purchaseDate.plusYears(totalLife);
 
-        int totalLife = Integer.parseInt(asset.getLifeOfAsset());
-        LocalDate lifeEndDate = purchaseDate.plusYears(totalLife);
+            // Validate asset life calculation
+            if (lifeEndDate.isBefore(purchaseDate)) {
+                log.warn("Invalid asset life for asset: {}, purchaseDate: {}, lifeEndDate: {}",
+                    asset.getId(), purchaseDate, lifeEndDate);
+                return;
+            }
 
-        if (lifeEndDate.isBefore(purchaseDate)) {
-            log.warn("Invalid asset life for asset: {}, purchaseDate: {}, lifeEndDate: {}",
-                asset.getId(), purchaseDate, lifeEndDate);
-            return;
-        }
+            // Initialize year-by-year depreciation calculation
+            // Each iteration represents one year of depreciation
+            LocalDate startDate = purchaseDate;
+            LocalDate endDate = startDate.plusYears(1);
+            yearsElapsed = currentDate.getYear() - purchaseDate.getYear();
 
-        if (currentDate.isAfter(lifeEndDate)) {
-            log.info("Asset life expired. Calculating depreciation only until {}", lifeEndDate);
-        }
+            // Stop depreciation calculation if asset life has expired
+            if (currentDate.isAfter(lifeEndDate)) {
+                log.info("Asset life expired. Calculating depreciation only until {}", lifeEndDate);
+            }
 
-        processLegacyYearByYear(asset, purchaseDate, currentDate, lifeEndDate);
+            // Process depreciation year by year from purchase date to current date
+            while (endDate.isBefore(currentDate) || endDate.isEqual(currentDate)) {
+                // Stop if we've reached the end of asset's useful life
+                if (startDate.isAfter(lifeEndDate) || endDate.isAfter(lifeEndDate)) {
+                    break;
+                }
 
-        asset.setIsLegacyData(false);
-        assetRepository.save(asset);
-    }
+                // Fetch depreciation rate and method from master data
+                DepreciationRateDTO depreciationRateDTO = fetchDepreciationRateAndMethod(
+                    asset.getAssetCategory(), asset.getPurchaseDate());
 
-    private void processLegacyYearByYear(Asset asset, LocalDate purchaseDate, LocalDate currentDate,
-                                        LocalDate lifeEndDate) {
-        LocalDate startDate = purchaseDate;
-        LocalDate endDate = startDate.plusYears(1);
-        boolean continueProcessing = true;
+                if (depreciationRateDTO == null) {
+                    log.warn("Skipping depreciation due to missing rate/method for asset: {}", asset.getId());
+                    break;
+                }
 
-        while ((endDate.isBefore(currentDate) || endDate.isEqual(currentDate)) && continueProcessing) {
-            continueProcessing = processLegacyDepreciationYear(asset, startDate, endDate, lifeEndDate);
-            if (continueProcessing) {
+                BigDecimal depreciationRate = depreciationRateDTO.getRate();
+                BigDecimal depreciation = null;
+
+                // Apply appropriate depreciation calculation method
+                String depreciationMethod = depreciationRateDTO.getMethod();
+                if(depreciationMethod.equals(CalculatorConstants.SLM)){
+                    // Straight Line Method: Fixed percentage of original value
+                    depreciation = calculateDepreciationValueSLM(asset, depreciationRate);
+                }
+                else if (CalculatorConstants.DBM.equals(depreciationMethod)) {
+                    // Declining Balance Method: Percentage of current book value
+                    depreciation = calculateDepreciationValueDBM(asset, depreciationRate);
+                } else {
+                    log.warn("Unknown depreciation method: {}", depreciationMethod);
+                    break;
+                }
+
+                // Update asset's book value after depreciation
+                BigDecimal currentBookValue = BigDecimal.valueOf(asset.getBookValue()).subtract(depreciation);
+                asset.setBookValue(currentBookValue.doubleValue());
+
+                // Save depreciation record for this year
+                saveDepreciationDetail(asset, startDate, endDate, depreciation, depreciationRate, true, depreciationMethod);
+
+                // Move to next year
                 startDate = endDate;
                 endDate = startDate.plusYears(1);
             }
+
+            // Mark asset as processed (no longer legacy)
+            asset.setIsLegacyData(false);
+            assetRepository.save(asset);
+
+        } else {
+            // Regular processing mode: Calculate depreciation for current anniversary year only
+            log.info("Processing Non legacy Data, legacyData Flag = {}", legacyData);
+
+            // Convert purchase date from milliseconds to LocalDate
+            LocalDate purchaseDate = Instant.ofEpochMilli(asset.getPurchaseDate())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+            if (purchaseDate == null) {
+                log.warn("Skipping asset with null purchase date: {}", asset.getId());
+                return;
+            }
+
+            // Calculate this year's anniversary date
+            LocalDate anniversaryDate = LocalDate.of(currentDate.getYear(),
+                purchaseDate.getMonth(), purchaseDate.getDayOfMonth());
+
+            // Additional validation (this should already be filtered, but keeping for safety)
+            if (!anniversaryDate.equals(currentDate) || purchaseDate.equals(currentDate)) {
+                log.warn("Anniversary date / purchase date not applicable for assetId: {} Skipping processing.",
+                    asset.getId());
+                return;
+            }
+
+            // Fetch current depreciation rate and method
+            DepreciationRateDTO depreciationRateDTO = fetchDepreciationRateAndMethod(
+                asset.getAssetCategory(), asset.getPurchaseDate());
+            BigDecimal depreciationRate = depreciationRateDTO.getRate();
+            BigDecimal depreciation = null;
+
+            // Calculate depreciation if rate is valid
+            String depreciationMethod = depreciationRateDTO.getMethod();
+            if (depreciationRate != null && depreciationRate.compareTo(BigDecimal.ZERO) > 0) {
+                if (depreciationMethod.equals(CalculatorConstants.SLM)) {
+                    depreciation = calculateDepreciationValueSLM(asset, depreciationRate);
+                } else {
+                    depreciation = calculateDepreciationValueDBM(asset, depreciationRate);
+                }
+
+                // Update asset's book value
+                BigDecimal currentBookValue = BigDecimal.valueOf(asset.getBookValue()).subtract(depreciation);
+                asset.setBookValue(currentBookValue.doubleValue());
+
+                // Save depreciation record for this anniversary year
+                saveDepreciationDetail(asset, purchaseDate, anniversaryDate, depreciation,
+                    depreciationRate, false, depreciationMethod);
+                assetRepository.save(asset);
+            }
+            else {
+                log.info("Depreciation not processed for assetId : {} as rate is Zero", asset.getId());
+            }
         }
-    }
-
-    private boolean processLegacyDepreciationYear(Asset asset, LocalDate startDate, LocalDate endDate,
-                                                  LocalDate lifeEndDate) {
-        if (startDate.isAfter(lifeEndDate) || endDate.isAfter(lifeEndDate)) {
-            return false;
-        }
-
-        DepreciationRateDTO depreciationRateDTO = fetchDepreciationRateAndMethod(
-            asset.getAssetCategory(), asset.getPurchaseDate());
-
-        if (depreciationRateDTO == null) {
-            log.warn("Skipping depreciation due to missing rate/method for asset: {}", asset.getId());
-            return false;
-        }
-
-        BigDecimal depreciation = calculateDepreciationForMethod(asset, depreciationRateDTO);
-        if (depreciation == null) {
-            return false;
-        }
-
-        BigDecimal currentBookValue = BigDecimal.valueOf(asset.getBookValue()).subtract(depreciation);
-        asset.setBookValue(currentBookValue.doubleValue());
-
-        saveDepreciationDetail(asset, startDate, endDate, depreciation, depreciationRateDTO.getRate(),
-            true, depreciationRateDTO.getMethod());
-        return true;
-    }
-
-    private void processRegularAssetDepreciation(Asset asset, LocalDate currentDate) {
-        log.info("Processing Non legacy Data, legacyData Flag = false");
-
-        LocalDate purchaseDate = Instant.ofEpochMilli(asset.getPurchaseDate())
-                .atZone(SYSTEM_ZONE)
-                .toLocalDate();
-
-        LocalDate anniversaryDate = LocalDate.of(currentDate.getYear(),
-            purchaseDate.getMonth(), purchaseDate.getDayOfMonth());
-
-        if (!anniversaryDate.equals(currentDate) || purchaseDate.equals(currentDate)) {
-            log.warn("Anniversary date / purchase date not applicable for assetId: {} Skipping processing.",
-                asset.getId());
-            return;
-        }
-
-        DepreciationRateDTO depreciationRateDTO = fetchDepreciationRateAndMethod(
-            asset.getAssetCategory(), asset.getPurchaseDate());
-        BigDecimal depreciationRate = depreciationRateDTO.getRate();
-
-        if (depreciationRate == null || depreciationRate.compareTo(BigDecimal.ZERO) <= 0) {
-            log.info("Depreciation not processed for assetId : {} as rate is Zero", asset.getId());
-            return;
-        }
-
-        BigDecimal depreciation = calculateDepreciationForMethod(asset, depreciationRateDTO);
-        if (depreciation == null) {
-            return;
-        }
-
-        BigDecimal currentBookValue = BigDecimal.valueOf(asset.getBookValue()).subtract(depreciation);
-        asset.setBookValue(currentBookValue.doubleValue());
-
-        saveDepreciationDetail(asset, purchaseDate, anniversaryDate, depreciation,
-            depreciationRate, false, depreciationRateDTO.getMethod());
-        assetRepository.save(asset);
-    }
-
-    private BigDecimal calculateDepreciationForMethod(Asset asset, DepreciationRateDTO depreciationRateDTO) {
-        String depreciationMethod = depreciationRateDTO.getMethod();
-        BigDecimal depreciationRate = depreciationRateDTO.getRate();
-
-        if (CalculatorConstants.SLM.equals(depreciationMethod)) {
-            return calculateDepreciationValueSLM(asset, depreciationRate);
-        }
-        if (CalculatorConstants.DBM.equals(depreciationMethod)) {
-            return calculateDepreciationValueDBM(asset, depreciationRate);
-        }
-
-        log.warn("Unknown depreciation method: {}", depreciationMethod);
-        return null;
     }
 
     /**
@@ -363,14 +379,18 @@ public class ProcessDepreciationV2 {
         BigDecimal depreciationRate = null;
         String depreciationMethod = null;
 
+        // Query master data repository for depreciation configuration
+        // Convert milliseconds to seconds for database query
         Object[] result = mdmsDataRepository.findDepreciationRateByCategoryAndPurchaseDate(
-            category.trim(), purchaseDate * CalculatorConstants.MILLISECONDS_IN_A_SECOND);
+            category.trim(), purchaseDate*CalculatorConstants.MILLISECONDS_IN_A_SECOND);
         try {
             log.debug("Fetched depreciation rate for rate, method: {}", result[0]);
 
-            if (result.length > 0 && result[0] instanceof Object[] innerArray) {
-                depreciationRate = innerArray[0] instanceof BigDecimal bigdecimal ? bigdecimal : null;
-                depreciationMethod = innerArray[1] instanceof String string ? string : null;
+            // Parse the complex result structure from database
+            if (((Object[]) result).length > 0 && ((Object[]) result)[0] instanceof Object[]) {
+                Object[] innerArray = (Object[]) ((Object[]) result)[0];
+                depreciationRate = (innerArray[0] instanceof BigDecimal) ? (BigDecimal) innerArray[0] : null;
+                depreciationMethod = (innerArray[1] instanceof String) ? (String) innerArray[1] : null;
 
                 if (depreciationRate == null || depreciationMethod == null) {
                     throw new IllegalArgumentException("Depreciation details are incomplete.");
@@ -381,8 +401,7 @@ public class ProcessDepreciationV2 {
         }
         catch (Exception e) {
             log.error("Unexpected error while fetching depreciation rate: {}", e.getMessage(), e);
-            throw new CustomException(CalculatorConstants.DEPRECIATION_DATA_ERROR_KEY,
-                    CalculatorConstants.DEPRECIATION_DATA_ERROR_MSG);
+            throw new RuntimeException("An unexpected error occurred while processing depreciation data.", e);
         }
 
         log.info("Depreciation Rate is : {} and method is :{} ", depreciationRate, depreciationMethod);
@@ -461,10 +480,12 @@ public class ProcessDepreciationV2 {
     private void saveDepreciationDetail(Asset asset, LocalDate startDate, LocalDate endDate,
                                        BigDecimal depreciation, BigDecimal depreciationRate,
                                        boolean legacyData, String depreciationMethod) {
+        // Check if depreciation record already exists for this period
         Optional<DepreciationDetail> existingDetail = depreciationDetailRepository
             .findByAssetIdAndFromDateAndToDate(asset.getId(), startDate, endDate);
 
         if (existingDetail.isPresent()) {
+            // Record exists - update only if legacy processing
             if (legacyData) {
                 auditDetails = assetCalculatorUtil.getAuditDetails(uuid, false);
                 DepreciationDetail detail = existingDetail.get();
@@ -472,18 +493,22 @@ public class ProcessDepreciationV2 {
                 detail.setBookValue(asset.getBookValue());
                 detail.setRate(depreciationRate.doubleValue());
                 detail.setDepreciationMethod(depreciationMethod);
+                // Calculate old book value (before depreciation)
                 detail.setOldBookValue(BigDecimal.valueOf(asset.getBookValue()).add(depreciation).doubleValue());
                 detail.setUpdatedAt(auditDetails.getLastModifiedTime());
                 detail.setUpdatedBy(auditDetails.getLastModifiedBy());
                 depreciationReq.setDepreciation(detail);
 
-                log.info("Pushing message to Kafka: topic={}, data={}", "update-depreciation", detail);
-                producer.push("update-depreciation", depreciationReq);
+                // Send update message to Kafka for persistence
+                log.info("Pushing message to Kafka: topic={}, data={}", "update-depreciation",detail);
+                producer.push("update-depreciation",depreciationReq);
             } else {
+                // For regular processing, skip if record already exists to prevent duplicates
                 log.warn("Duplicate depreciation record found for asset {} from {} to {}. Skipping save as legacyData is false.",
                         asset.getId(), startDate, endDate);
             }
         } else {
+            // Create new depreciation record
             auditDetails = assetCalculatorUtil.getAuditDetails(uuid, true);
             DepreciationDetail detail = new DepreciationDetail();
             detail.setAssetId(asset.getId());
@@ -495,12 +520,14 @@ public class ProcessDepreciationV2 {
             detail.setCreatedBy(auditDetails.getCreatedBy());
             detail.setRate(depreciationRate.doubleValue());
             detail.setDepreciationMethod(depreciationMethod);
+            // Calculate old book value (before depreciation)
             detail.setOldBookValue(BigDecimal.valueOf(asset.getBookValue()).add(depreciation).doubleValue());
 
             depreciationReq.setDepreciation(detail);
 
-            log.info("Pushing message to Kafka: Create topic={}, data={}", "save-depreciation", detail);
-            producer.push("save-depreciation", depreciationReq);
+            // Send create message to Kafka for persistence
+            log.info("Pushing message to Kafka: Create topic={}, data={}", "save-depreciation",detail);
+            producer.push("save-depreciation",depreciationReq);
         }
     }
 }

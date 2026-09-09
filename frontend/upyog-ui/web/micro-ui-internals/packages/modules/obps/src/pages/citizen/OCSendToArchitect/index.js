@@ -135,24 +135,22 @@ const OCSendToArchitect = ({ parentRoute }) => {
   const editApplication = window.location.href.includes("editApplication");
   const tlTrade = JSON.parse(sessionStorage.getItem("tl-trade")) || {};
 
-  useEffect(() => {
-    async function load() {
-      let isAlready = sessionStorage.getItem("BPA_IS_ALREADY_WENT_OFF_DETAILS");
-      isAlready = isAlready ? JSON.parse(isAlready) : true;
-      if (!isAlready && !isNocLoading && !isBpaSearchLoading && !isLoading) {
-        application = bpaData ? bpaData[0]:{};
-        if (data1 && OCData) {
-         application = bpaData[0];
-          if (editApplication) {
-            application.isEditApplication = true;
-          }
-          sessionStorage.setItem("bpaInitialObject", JSON.stringify({ ...application }));
-          let bpaEditDetails = await getBPAEditDetails(application,data1,mdmsData,nocdata,t,OCData);
-          setParams({ ...params, ...bpaEditDetails });
+  useEffect(async () => {
+    let isAlready = sessionStorage.getItem("BPA_IS_ALREADY_WENT_OFF_DETAILS");
+    isAlready = isAlready ? JSON.parse(isAlready) : true;
+    if (!isAlready && !isNocLoading && !isBpaSearchLoading && !isLoading) {
+      application = bpaData ? bpaData[0]:{};
+      if (data1 && OCData) {
+       application = bpaData[0];
+        if (editApplication) {
+          application.isEditApplication = true;
         }
+        sessionStorage.setItem("bpaInitialObject", JSON.stringify({ ...application }));
+        let bpaEditDetails = await getBPAEditDetails(application,data1,mdmsData,nocdata,t,OCData);
+        setParams({ ...params, ...bpaEditDetails });
       }
     }
-    load();
+    
   }, [bpaData,data1,mdmsData,nocdata,OCData]);
 
 
@@ -168,7 +166,7 @@ const OCSendToArchitect = ({ parentRoute }) => {
   }
 
   const onSuccess = () => {
-    queryClient.invalidateQueries({ queryKey: ["PT_CREATE_PROPERTY"] });
+    queryClient.invalidateQueries("PT_CREATE_PROPERTY");
   };
   const createApplication = async () => {
     navigate(`${basePath}/acknowledgement`);
@@ -208,14 +206,14 @@ const OCSendToArchitect = ({ parentRoute }) => {
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
-            path={routeObj.route}
+            path={`${basePath}/${routeObj.route}`}
             key={index}
             element={<Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} />}
           />
         );
       })}
-      <Route path="check" element={<CheckPage onSubmit={createApplication} value={params} />} />
-      <Route path="acknowledgement" element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path={`${basePath}/check`} element={<CheckPage onSubmit={createApplication} value={params} />} />
+      <Route path={`${basePath}/acknowledgement`} element={<OBPSAcknowledgement data={params} onSuccess={onSuccess} />} />
       <Route path="*" element={data1 && OCData ? <Navigate to={`${basePath}/${config.indexRoute}`} replace /> : null} />
     </Routes>
   );

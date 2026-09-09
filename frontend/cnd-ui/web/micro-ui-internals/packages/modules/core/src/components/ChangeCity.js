@@ -1,6 +1,7 @@
 import { Dropdown } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { CustomButton, Menu } from "@nudmcdgnpm/digit-ui-react-components";
+import { useHistory } from "react-router-dom";
 
 const stringReplaceAll = (str = "", searcher = "", replaceWith = "") => {
   if (searcher == "") return str;
@@ -14,7 +15,7 @@ const ChangeCity = (prop) => {
   const [dropDownData, setDropDownData] = useState(null);
   const [selectCityData, setSelectCityData] = useState([]);
   const [selectedCity, setSelectedCity] = useState([]); //selectedCities?.[0]?.value
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
   const isDropdown = prop.dropdown || false;
   let selectedCities = [];
 
@@ -30,7 +31,7 @@ const ChangeCity = (prop) => {
     setDropDownData(city);
     if (window.location.href.includes("/cnd-ui/employee/")) {
       const redirectPath = location.state?.from || "/cnd-ui/employee";
-      navigate(redirectPath, { replace: true });
+      history.replace(redirectPath);
     }
     window.location.reload();
   };

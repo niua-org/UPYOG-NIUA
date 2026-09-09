@@ -9,8 +9,6 @@ import org.egov.commons.service.EntityTypeService;
 import org.egov.commons.utils.EntityType;
 import org.egov.eis.entity.Employee;
 import org.egov.infra.validation.exception.ValidationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class EmployeeService implements EntityTypeService {
-
-    private static final Logger log = LoggerFactory.getLogger(EmployeeService.class);
 
     @Autowired
     private AccountDetailKeyService accountDetailKeyService;
@@ -52,8 +48,7 @@ public class EmployeeService implements EntityTypeService {
        
         List<Accountdetailkey> accdetails = accountDetailKeyService.findByDetailName(accountDetailTypeId, filterKey);
         List<Employee> employees = new ArrayList<>();
-        // LTS Migration Fix (WildFly 40): System.out is discarded; use slf4j.
-        log.info("accdetails size {}", accdetails.size());
+        System.out.println("*********accdetails size"+accdetails.size());
         accdetails.forEach(accdetail->{
             Employee employee = new Employee();
             employee.setName(accdetail.getDetailname());

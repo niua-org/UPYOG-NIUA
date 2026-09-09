@@ -54,14 +54,14 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.egov.commons.EgPartytype;
 import org.egov.commons.EgwTypeOfWork;
 import org.egov.model.recoveries.EgDeductionDetails;
 import org.egov.model.recoveries.Recovery;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,7 +95,7 @@ public class EgDeductionDetailsHibernateDAO  {
     }
 
     public List<EgDeductionDetails> findAll() {
-        return (List<EgDeductionDetails>) getCurrentSession().createQuery("from EgDeductionDetails", EgDeductionDetails.class).list();
+        return (List<EgDeductionDetails>) getCurrentSession().createCriteria(EgDeductionDetails.class).list();
     }
 
     @PersistenceContext
@@ -112,7 +112,7 @@ public class EgDeductionDetailsHibernateDAO  {
     public List findByTds(final Recovery tds) {
         session = getCurrentSession();
         final Query qry = session.createQuery("from EgDeductionDetails ded where ded.recovery=:tds order by ded.id");
-        qry.setParameter("tds", tds);
+        qry.setEntity("tds", tds);
         return qry.list();
     }
 
@@ -146,15 +146,15 @@ public class EgDeductionDetailsHibernateDAO  {
 		qryStr.append(" order by id");
 		qry = session.createQuery(qryStr.toString());
 		if (tds != null)
-			qry.setParameter("tds", tds);
+			qry.setEntity("tds", tds);
 		if (date != null && !date.equals(""))
-			qry.setParameter("date", date);
+			qry.setString("date", date);
 		if (amount != null)
-			qry.setParameter("amount", amount);
+			qry.setBigDecimal("amount", amount);
 		if (egwTypeOfWork != null)
-			qry.setParameter("egwTypeOfWork", egwTypeOfWork);
+			qry.setEntity("egwTypeOfWork", egwTypeOfWork);
 		if (egwSubTypeOfWork != null)
-			qry.setParameter("egwSubTypeOfWork", egwSubTypeOfWork);
+			qry.setEntity("egwSubTypeOfWork", egwSubTypeOfWork);
 
 		egDeductionDetailsList = qry.list();
 		return egDeductionDetailsList;
@@ -179,13 +179,13 @@ public class EgDeductionDetailsHibernateDAO  {
 		qry = session.createQuery(qryStr.toString());
 
 		if (null != recovery)
-			qry.setParameter("recovery", recovery);
+			qry.setEntity("recovery", recovery);
 		if (null != egPartySubType)
-			qry.setParameter("egPartySubType", egPartySubType);
+			qry.setEntity("egPartySubType", egPartySubType);
 		if (null != docType)
-			qry.setParameter("docType", docType);
+			qry.setEntity("docType", docType);
 		if (null != date)
-			qry.setParameter("date", date);
+			qry.setDate("date", date);
 
 		egDeductionDetails = (EgDeductionDetails) qry.uniqueResult();
 

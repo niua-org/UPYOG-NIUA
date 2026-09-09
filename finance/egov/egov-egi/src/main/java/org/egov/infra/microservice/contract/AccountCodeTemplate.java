@@ -3,7 +3,7 @@ package org.egov.infra.microservice.contract;
 import java.util.List;
 
 import org.egov.infra.microservice.models.ChartOfAccounts;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,17 +20,17 @@ import lombok.ToString;
 public class AccountCodeTemplate {
 
     private int id;
-    @SanitizeHtml
+    @SafeHtml
     private String code;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String description;
-    @SanitizeHtml
+    @SafeHtml
     private String module;
-    @SanitizeHtml
+    @SafeHtml
     private String subModule;
-    @SanitizeHtml
+    @SafeHtml
     private String subledgerType;
     private List<ChartOfAccounts> debitCodeDetails;
     private List<ChartOfAccounts> creditCodeDetails;

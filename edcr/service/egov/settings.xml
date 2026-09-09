@@ -15,11 +15,6 @@
 	  <url>http://repo.egov.org.in/nexus/content/groups/public/</url>
 	  <blocked>false</blocked>
 	</mirror>
-    <mirror>
-        <id>upyog-releases</id>
-        <mirrorOf>upyog-releases</mirrorOf>
-        <url>https://upyog-nexus.niua.org/nexus/content/repositories/releases/</url>
-    </mirror>
     </mirrors>
 	
 	<servers>

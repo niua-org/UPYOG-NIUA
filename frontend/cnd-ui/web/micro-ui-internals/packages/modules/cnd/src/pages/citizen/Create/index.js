@@ -1,24 +1,23 @@
-import React from "react";
+
+import React ,{Children, Fragment}from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
-import { Route, useLocation, Routes, Navigate } from "react-router-dom";
+import { useQueryClient } from "react-query";
+import { Redirect, Route, Switch, useHistory, useLocation, useRouteMatch } from "react-router-dom";
 import { Config } from "../../../config/config";
 import { Timeline } from "@nudmcdgnpm/digit-ui-react-components";
-import { cndPayload } from "../../../utils";
 
 const CndCreate = ({ parentRoute }) => {
   const queryClient = useQueryClient();
+  const match = useRouteMatch();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
   const stateId = Digit.ULBService.getStateId();
   let config = [];
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
-  const mutation = Digit.Hooks.cnd.useCndCreateApi(tenantId);
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("CND_Creates", {});
 
   // function used for traversing through form screens 
-  const goNext = (skipStep, index, isAddMultiple, key) => {
+  const goNext = (skipStep, index, isAddMultiple, key) => {  
     let currentPath = pathname.split("/").pop(),
       lastchar = currentPath.charAt(currentPath.length - 1),
       isMultiple = false,
@@ -42,64 +41,35 @@ const CndCreate = ({ parentRoute }) => {
     let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
 
 
-    let redirectWithHistory = (to) => navigate(to);
+    let redirectWithHistory = history.push;
     if (skipStep) {
-      redirectWithHistory = (to) => navigate(to, { replace: true });
+      redirectWithHistory = history.replace;
     }
     if (isAddMultiple) {
       nextStep = key;
     }
     if (nextStep === null) {
-      return redirectWithHistory(`check`);
+      return redirectWithHistory(`${match.path}/check`);
     }
     if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${nextStep}`;
+      nextPage = `${match.path}/${nextStep}`;
     }
-    else {
-      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
+     else {
+      nextPage = isMultiple && nextStep !== "map" ? `${match.path}/${nextStep}/${index}` : `${match.path}/${nextStep}`;
     }
 
     redirectWithHistory(nextPage);
   };
 
   // to clear formdata if the data is present before coming to first page of form
-  if (params && Object.keys(params).length > 0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true") {
-    clearParams();
-    queryClient.invalidateQueries({ queryKey: ["CND_Creates"] });
-  }
+  if(params && Object.keys(params).length>0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true")
+    {
+      clearParams();
+      queryClient.invalidateQueries("CND_Creates");
+    }
 
   const cndCreate = async () => {
-    try {
-      params.tenantId = tenantId;
-      let formdata = cndPayload(params);
-      mutation.mutate(formdata, {
-        onSuccess: (response) => {
-          onSuccess();
-          navigate(`acknowledgement?applicationNumber=${response?.cndApplicationDetails?.applicationNumber}&tenantId=${response?.cndApplicationDetails?.tenantId}`, {
-            state: {
-              data: response,
-              isSuccess: true,
-            },
-          });
-        },
-        onError: (error) => {
-          navigate("acknowledgement", {
-            state: {
-              data: null,
-              isSuccess: false,
-              error: error,
-            },
-          });
-        },
-      });
-    } catch (err) {
-      navigate("acknowledgement", {
-        state: {
-          data: null,
-          isSuccess: false,
-        },
-      });
-    }
+    history.replace(`${match.path}/acknowledgement`);
   };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
@@ -116,8 +86,8 @@ const CndCreate = ({ parentRoute }) => {
     goNext(skipStep, index, isAddMultiple, key);
   }
 
-  const handleSkip = () => { };
-  const handleMultiple = () => { };
+  const handleSkip = () => {};
+  const handleMultiple = () => {};
 
 
   /**
@@ -127,44 +97,46 @@ const CndCreate = ({ parentRoute }) => {
    */
   const onSuccess = () => {
     clearParams();
-    queryClient.invalidateQueries({ queryKey: ["CND_Creates"] });
+    queryClient.invalidateQueries("CND_Creates");
   };
-
+  
   let commonFields = Config;
   commonFields.forEach((obj) => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
-
+  
   config.indexRoute = "info";
 
   const CndCheckPage = Digit?.ComponentRegistryService?.getComponent("CndCheckPage");
   const CndAcknowledgement = Digit?.ComponentRegistryService?.getComponent("CndAcknowledgement");
 
+  
+  
   return (
     <React.Fragment>
-      <Timeline config={config} />
-      <Routes>
-        {config.map((routeObj, index) => {
-          const { component, texts, inputs, key } = routeObj;
-          const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
-          const user = Digit.UserService.getUser().info.type;
-          return (
-            <Route path={`${routeObj.route}/*`} key={index} element={
-              <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} userType={user} />
-            } />
-          );
-        })}
+    <Timeline config={config}/>
+    <Switch>
+      {config.map((routeObj, index) => {
+        const { component, texts, inputs, key} = routeObj;
+        const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
+        const user = Digit.UserService.getUser().info.type;
+        return (
+          <Route path={`${match.path}/${routeObj.route}`} key={index}>
+            <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} userType={user}/>
+          </Route>
+        );
+      })}
 
-        <Route path={`check/*`} element={
-          <CndCheckPage onSubmit={cndCreate} value={params} />
-        } />
-        <Route path={`acknowledgement/*`} element={
-          <CndAcknowledgement />
-        } />
-        <Route path="*" element={
-          <Navigate to={`${config.indexRoute}`} replace />
-        } />
-      </Routes>
+      <Route path={`${match.path}/check`}>
+        <CndCheckPage onSubmit={cndCreate} value={params} /> 
+      </Route>
+      <Route path={`${match.path}/acknowledgement`}>
+        <CndAcknowledgement data={params} onSuccess={onSuccess}/>
+      </Route>
+      <Route>
+        <Redirect to={`${match.path}/${config.indexRoute}`} />
+      </Route>
+    </Switch>
     </React.Fragment>
   );
 };

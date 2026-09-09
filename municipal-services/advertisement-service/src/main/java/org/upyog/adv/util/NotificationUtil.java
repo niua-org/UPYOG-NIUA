@@ -33,20 +33,41 @@ import com.jayway.jsonpath.JsonPath;
 import digit.models.coremodels.SMSRequest;
 import lombok.extern.slf4j.Slf4j;
 /**
- * Utility class for notification operations in the Advertisement Booking Service.
+ * Utility class for interacting with the MDMS (Master Data Management System) in the Advertisement Booking Service.
+ * 
+ * Key Responsibilities:
+ * - Fetches master data from MDMS for various configurations such as tax heads, calculation types, and other metadata.
+ * - Constructs and sends requests to the MDMS service.
+ * - Processes responses from MDMS to extract required data.
+ * 
+ * Methods:
+ * - Builds MDMS request criteria for fetching specific master data.
+ * - Parses and maps MDMS responses to Java objects for further processing.
+ * 
+ * Dependencies:
+ * - BookingConfiguration: Provides configuration properties for MDMS interactions.
+ * - ServiceRequestRepository: Handles HTTP requests to the MDMS service.
+ * - ObjectMapper: Used for JSON serialization and deserialization.
+ * 
+ * Annotations:
+ * - @Component: Marks this class as a Spring-managed component.
+ * - @Slf4j: Enables logging for debugging and monitoring MDMS interactions.
  */
 @Slf4j
 @Component
 public class NotificationUtil {
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final BookingConfiguration config;
+	private BookingConfiguration config;
 
-	private final Producer producer;
+	private Producer producer;
 
-	private static final String URL_PARAM_KEY = "url";
+	private final String URL = "url";
+	private static final String PAYMENT_LINK = "PAYMENT_LINK";
 
+	private static final String PERMISSION_LETTER_LINK = "PERMISSION_LETTER_LINK";
+	private static final String VIEW_APPLICATION_LINK = "VIEW_APPLICATION_LINK";
 	public static final String MESSAGE_TEXT = "MESSAGE_TEXT";
 	public static final String ACTION_LINK = "ACTION_LINK";
 
@@ -90,9 +111,10 @@ public class NotificationUtil {
 	@SuppressWarnings("rawtypes")
 	public String getLocalizationMessages(String tenantId, RequestInfo requestInfo) {
 
-		LinkedHashMap<?, ?> responseMap = (LinkedHashMap<?, ?>) serviceRequestRepository.fetchResult(getUri(tenantId, requestInfo),
+		LinkedHashMap responseMap = (LinkedHashMap) serviceRequestRepository.fetchResult(getUri(tenantId, requestInfo),
 				requestInfo);
-		return new JSONObject(responseMap).toString();
+		String jsonString = new JSONObject(responseMap).toString();
+		return jsonString;
 	}
 
 	/**
@@ -124,9 +146,12 @@ public class NotificationUtil {
 	 * @param mobileNumberToOwnerName Map of mobileNumber to OwnerName
 	 * @return List of SMSRequest
 	 */
-	public List<SMSRequest> createSMSRequest(String message, Map<String, String> mobileNumberToOwnerName) {
+	public List<SMSRequest> createSMSRequest(BookingRequest bookingRequest, String message,
+			Map<String, String> mobileNumberToOwnerName) {
 
 		List<SMSRequest> smsRequest = new LinkedList<>();
+		// message = "Dear Citizen, Your OTP to complete your UPYOG Registration is
+		// 12345.\\n\\nUPYOG" + "#1207167462318135756#1207167462307097438" ;
 		for (Map.Entry<String, String> entryset : mobileNumberToOwnerName.entrySet()) {
 			smsRequest.add(new SMSRequest(entryset.getKey(), message));
 		}
@@ -171,8 +196,7 @@ public class NotificationUtil {
 	 */
 	public Map<String, String> getCustomizedMsg(BookingDetail bookingDetail, String localizationMessage,
 			String actionStatus, String eventType) {
-		String messageTemplate;
-		String link = null;
+		String messageTemplate = null, link = null;
 		String notificationEventType = actionStatus + "_" + eventType;
 		log.info(" booking status : " + bookingDetail.getBookingStatus());
 		log.info(" booking status ACTION_STATUS : " + actionStatus);
@@ -184,31 +208,40 @@ public class NotificationUtil {
 
 		case BOOKING_CREATED:
 			messageTemplate = getMessageTemplate(notificationEventType, localizationMessage);
+		//	link = getActionLink(bookingDetail, actionStatus);
 			break;
 
 		case BOOKED:
 			messageTemplate = getMessageTemplate(notificationEventType, localizationMessage);
+		//	link = getActionLink(bookingDetail, actionStatus);
 			break;
 
 		case CANCELLED:
 			messageTemplate = getMessageTemplate(notificationEventType, localizationMessage);
 			break;
 
+//		case PAYMENT_FAILED:
+//			messageTemplate = getMessageTemplate(notificationEventType, localizationMessage);
+//			link = getActionLink(bookingDetail, actionStatus);
+//			break;
+
 		default:
 			messageTemplate = "Localization message not available for  status : " + actionStatus;
 			break;
 
 		}
-
+		
 		if (messageTemplate.contains(BookingConstants.NOTIFICATION_PAY_NOW)) {
-			link = getPayUrl(bookingDetail, messageTemplate);
-		}
-
+			   
+		    link = getPayUrl(bookingDetail, messageTemplate);
+		}		
+		
 		if (messageTemplate.contains(BookingConstants.NOTIFICATION_DOWNLOAD_RECEIPT)) {
-			link = getReceiptDownloadLink(bookingDetail);
+			   
+		    link = getReceiptDownloadLink(bookingDetail);
 		}
 
-		Map<String, String> messageMap = new HashMap<>();
+		Map<String, String> messageMap = new HashMap<String, String>();
 		messageMap.put(ACTION_LINK, link);
 		messageMap.put(MESSAGE_TEXT, messageTemplate);
 
@@ -240,7 +273,7 @@ public class NotificationUtil {
 
 	private String getShortnerURL(String actualURL) {
 		net.minidev.json.JSONObject obj = new net.minidev.json.JSONObject();
-		obj.put(URL_PARAM_KEY, actualURL);
+		obj.put(URL, actualURL);
 		String url = config.getUrlShortnerHost() + config.getShortenerEndpoint();
 
 		Object response = serviceRequestRepository.getShorteningURL(new StringBuilder(url), obj);
@@ -255,16 +288,23 @@ public class NotificationUtil {
 	 * like business service name, application number, tenant ID, and mobile number. The constructed URL is then 
 	 * prefixed with the UI host and passed through a shortening service.
 	 *
-	 * @param bookingDetail The booking detail for which the pay URL is generated
-	 * @param message       The notification message used to determine link type
+	 * @param cndApplicationDetail The application detail object containing applicant and application metadata.
+	 * @param message              The notification message (not used in this method, but kept for signature consistency).
+     * We are redirecting the pay now link to myBookings page in ADV because in the normal flow we need timer value, 
+	 * and we get that timer value by hitting the make payment button
+	 * if timer value is not given then the proceed to pay button will be disabled
 	 * @return A shortened payment URL pointing to the citizen's "Pay Now" page.
 	 */
 	public String getPayUrl(BookingDetail bookingDetail, String message) {
 	    String payLinkTemplate = config.getPayNowLink();
+	   /* String actionLink = String.format(payLinkTemplate,
+	            config.getBusinessServiceName(),
+	            bookingDetail.getBookingNo()
+                cndApplicationDetail.getTenantId()
+	            ); */
 	    String finalUrl = config.getUiAppHost() + payLinkTemplate;
 	    
-	    log.info("Final url For pay link for booking {}: {}", bookingDetail.getBookingNo(), finalUrl);
-	    log.debug("Pay now message template: {}", message);
+	    log.info("Final url For pay link : " + finalUrl);
 
 	    return getShortnerURL(finalUrl);
 	}
@@ -337,6 +377,7 @@ public class NotificationUtil {
  			} catch (Exception e) {
  				log.error("Exception while fetching user for username - " + mobileNo);
  				log.error("Exception trace: ", e);
+ 				continue;
  			}
  		}
  		return mapOfPhnoAndUUIDs;
@@ -385,6 +426,7 @@ public class NotificationUtil {
 			} catch (Exception e) {
 				log.error("Exception while fetching user for username - " + mobileNo);
 				log.error("Exception trace: ", e);
+				continue;
 			}
 		}
 		return mapOfPhnoAndEmailIds;
@@ -440,7 +482,7 @@ public class NotificationUtil {
 	 */
 	public void sendEmail(List<EmailRequest> emailRequestList) {
 
-		if (Boolean.TRUE.equals(config.getIsEmailNotificationEnabled())) {
+		if (config.getIsEmailNotificationEnabled()) {
 			if (CollectionUtils.isEmpty(emailRequestList))
 				log.info("Messages from localization couldn't be fetched!");
 			for (EmailRequest emailRequest : emailRequestList) {

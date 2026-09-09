@@ -1,36 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { queryTemplate } from "../../common/queryTemplate";
+import { useQuery, useQueryClient } from "react-query";
 
-/**
- * Fetch audit logs.
- */
 const useAudit = ({ tenantId, filters }, config = {}) => {
   const client = useQueryClient();
-
-  const args = tenantId
-    ? { tenantId, filters }
-    : { filters };
-
-  const queryKey = [
-    "AUDIT_LIST",
-    tenantId,
-    JSON.stringify(filters),
-  ];
-
-  const queryFn = () =>
-    Digit.AuditService.audit_log(args);
-
-  const query = queryTemplate({
-    queryKey,
-    queryFn,
-    config,
-  });
-
-  return {
-    ...query,
-    revalidate: () =>
-      client.invalidateQueries({ queryKey }),
-  };
+  const args = tenantId ? { tenantId, filters } : { filters };
+  const { isLoading, error, data } = useQuery(["AuditList", tenantId, filters], () => Digit.AuditService.audit_log(args), config);
+  return { isLoading, error, data, revalidate: () => client.invalidateQueries(["AuditList", tenantId, filters]) };
 };
 
 export default useAudit;

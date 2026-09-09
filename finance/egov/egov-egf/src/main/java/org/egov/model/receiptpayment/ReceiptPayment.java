@@ -55,7 +55,7 @@ import org.egov.commons.CFinancialYear;
 import org.egov.commons.Fund;
 import org.egov.enums.FinancialPeriodEnum;
 import org.egov.infra.persistence.validator.annotation.Required;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class ReceiptPayment {
 
@@ -71,11 +71,11 @@ public class ReceiptPayment {
 
     @Required
     private FinancialPeriodEnum period;
-    @SanitizeHtml
+    @SafeHtml
     private String glcode;
-    @SanitizeHtml
+    @SafeHtml
     private String minorCode;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
 
     private BigDecimal creditAmount = BigDecimal.ZERO;

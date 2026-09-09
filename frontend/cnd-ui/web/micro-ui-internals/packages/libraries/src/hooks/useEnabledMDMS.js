@@ -1,4 +1,4 @@
-import { queryTemplate } from "../common/queryTemplate";
+import { useQuery } from "react-query";
 
 /**
  * Custom React Hook: useEnabledMDMS
@@ -23,7 +23,7 @@ import { queryTemplate } from "../common/queryTemplate";
  */
 
 const useEnabledMDMS = (tenantId, moduleName, masterDetails = [], config = {}) => {
-    return queryTemplate({ queryKey: [tenantId, moduleName, masterDetails], queryFn: () => Digit.Hooks.useSelectedMDMS().getMultipleTypesWithFilter(tenantId, moduleName, masterDetails), config });
+    return useQuery([tenantId, moduleName, masterDetails], () => Digit.Hooks.useSelectedMDMS().getMultipleTypesWithFilter(tenantId, moduleName, masterDetails), config);
 };
 
 

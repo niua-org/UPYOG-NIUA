@@ -14,16 +14,29 @@
 					"script": {
 						"exec": [
 							"var data=[",
+							"    {",
+							"        \"ComplainMaxIdleTime\": 3600000",
+							"      }",
+							"]",
 							"",
 							"pm.collectionVariables.set(\"raw\", data);",
 							"",
 							"var obj = pm.collectionVariables.get(\"raw\");",
 							"",
-							"if(pm.globals.get(\"i\") === undefined || pm.globals.get(\"i\") === null || pm.globals.get(\"i\") === \"\") {",
-							"    pm.globals.set(\"i\", 0);",
-							"}",
+							"pm.collectionVariables.set(\"req\", JSON.stringify(obj[pm.globals.get(\"i\")]))",
 							"",
-							"pm.collectionVariables.set(\"req\", JSON.stringify(obj[pm.globals.get(\"i\")]))"
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							"",
+							""
 						],
 						"type": "text/javascript"
 					}

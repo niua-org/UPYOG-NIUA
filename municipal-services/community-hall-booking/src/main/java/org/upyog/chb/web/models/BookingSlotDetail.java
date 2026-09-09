@@ -4,13 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 import org.upyog.chb.util.CommunityHallBookingUtil;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.micrometer.core.lang.NonNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,21 +34,21 @@ public class BookingSlotDetail {
 	private String bookingId = null;
 	
 	@NotBlank
-	@JsonProperty("unitCode")
-	private String unitCode;
+	@JsonProperty("hallCode")
+	private String hallCode;
 	
 	@NotBlank
 	private String capacity;
 	
-	@NotNull
+	@NonNull
 	@JsonFormat(pattern = CommunityHallBookingUtil.DATE_FORMAT)
 	private LocalDate bookingDate;
 	
-	@NotNull
+	@NonNull
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime bookingFromTime;
 	
-	@NotNull
+	@NonNull
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime bookingToTime;
 	

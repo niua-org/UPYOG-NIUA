@@ -21,7 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class Bill {
-    // Some fields are mandatory in yml; billDetail and billAccountDetail require further clarity.
+    // TODO some of the fields are mandatory in yml, lets discuss billDetail and billAccountDetail also for more clarity
 
 	  @JsonProperty("id")
 	  private String id = null;

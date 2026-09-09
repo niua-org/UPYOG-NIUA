@@ -234,13 +234,8 @@ function validateCancel()
 							<s:property value="%{billAmount}" />
 						</td>
 						<td style="text-align: center" class="<c:out value="${trclass}"/>">
-							<%-- LTS Migration Note [Struts 7 Checkbox Binding]:
-							     Struts 7 restricts indexed list property binding (billListDisplay[i].isSelected).
-							     Using standard HTML checkbox with name="selectedBillIds" and value="%{id}"
-							     allows CancelBillAction.bindSelectedBillsFromRequest() to receive the selected bill IDs. --%>
-							<input type="checkbox" name="selectedBillIds"
-								id="isSelected<s:property value='#s.index'/>"
-								value="<s:property value='id'/>" onclick="update(this);" />
+							<s:checkbox name="billListDisplay[%{#s.index}].isSelected"
+								id="isSelected%{#s.index}" onclick="update(this);" />
 						</td>
 						<c:choose>
 							<c:when test="${trclass=='greybox'}">

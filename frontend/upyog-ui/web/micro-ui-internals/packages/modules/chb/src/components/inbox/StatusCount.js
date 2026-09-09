@@ -8,7 +8,7 @@ const StatusCount = ({ status, searchParams, onAssignmentChange, statusMap, busi
 
   return (
     <CheckBox
-      className="chb-status-count-checkbox"
+      styles={{ height: "unset" }}
       onChange={(e) => onAssignmentChange({ ...e, state: status.state }, status)}
       checked={(() => {
         return searchParams?.applicationStatus.some((e) => e.uuid === status.uuid);

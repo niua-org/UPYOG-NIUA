@@ -1,4 +1,7 @@
-package org.upyog.rs.web.models.mobileToilet; // NOSONAR java:S120 - package name kept to preserve imports/API // NOSONAR
+package org.upyog.rs.web.models.mobileToilet;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 import jakarta.validation.Valid;
@@ -28,7 +31,6 @@ import org.upyog.rs.web.models.ResponseInfo;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SuppressWarnings("java:S120")
 public class MobileToiletBookingResponse {
 
 	private ResponseInfo responseInfo;

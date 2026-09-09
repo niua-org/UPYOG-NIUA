@@ -2,7 +2,7 @@ package org.egov.edcr.entity;
 
 import java.io.Serializable;
 
-import jakarta.persistence.Transient;
+import javax.persistence.Transient;
 
 import org.apache.pdfbox.printing.Orientation;
 

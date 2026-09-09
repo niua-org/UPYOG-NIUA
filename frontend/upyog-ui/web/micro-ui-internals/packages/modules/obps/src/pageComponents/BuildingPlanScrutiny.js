@@ -1,5 +1,5 @@
 import { CardLabel, FormStep, Dropdown, TextInput, Toast, SearchIcon,  Row, ImageViewer, StatusTable, LinkButton, Header, SubmitBar, CardHeader } from "@nudmcdgnpm/digit-ui-react-components";
-import {DisplayPhotos} from "@nudmcdgnpm/digit-ui-react-components";
+import DisplayPhotos from "../../../../react-components/src/atoms/DisplayPhotos";
 import React, { useEffect, useState } from "react";
 import { PreApprovedPlanService } from "../../../../libraries/src/services/elements/PREAPPROVEDPLAN";
 import  usePreApprovedSearch  from "../../../../libraries/src/hooks/obps/usePreApprovedSearch";
@@ -69,13 +69,13 @@ const BuildingPlanScrutiny = ({ t, config, onSelect, formData, isShowToast, isSu
             .filter(doc => doc?.additionalDetails?.fileName?.includes(".jpg"))
             .map(doc => doc?.fileStoreId)
         );
-         const thumbnails = fileStoreIds && fileStoreIds.length > 0 ? await getThumbnails(fileStoreIds, tenantId) : null;
+         const thumbnails = fileStoreIds ? await getThumbnails(fileStoreIds, tenantId) : null;
          
         setImagesToShowBelowComplaintDetails(thumbnails);
       }
     };
     fetchThumbnails();
-  }, [preApprovedResponse?.data]);
+  }, [preApprovedResponse]);
 
   const clearForm = () => {
     setIsPlanApproved(null);

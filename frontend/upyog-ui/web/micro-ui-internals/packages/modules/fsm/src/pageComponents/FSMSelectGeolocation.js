@@ -1,31 +1,17 @@
 import React, { useState, useEffect } from "react";
-// Added GeoLocationWithDigipin to replace the inline digipin display block
-import { LocationSearchCard, GeoLocationWithDigipin } from "@nudmcdgnpm/digit-ui-react-components";
+import { LocationSearchCard } from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../components/TLTimelineInFSM";
+import { getDigiPin } from "../../../../libraries/src/utils/digipin";
 
 const FSMSelectGeolocation = ({ t, config, onSelect, formData = {} }) => {
   const [pincode, setPincode] = useState(formData?.address?.pincode || "");
   const [geoLocation, setGeoLocation] = useState(formData?.address?.geoLocation || {});
   const tenants = Digit.Hooks.fsm.useTenants();
   const [pincodeServicability, setPincodeServicability] = useState(null);
-  // Initialise digipin from formData to preserve value on back-navigation
-  const [digipin, setDigipin] = useState(formData?.address?.digipin || "");
-
-  // Calls the backend Digipin API via TPService instead of the old local getDigiPin utility
-  const handleFetchDigipin = async (latitude, longitude) => {
-    try {
-      const res = await Digit.TPService.generateDigipin(latitude, longitude);
-      return res?.digipin || "";
-    } catch (e) {
-      console.error("Error fetching digipin in FSMSelectGeolocation:", e);
-      return "";
-    }
-  };
+  const [digipin, setDigipin] = useState("");
 
   const onSkip = () => onSelect();
-
-  // Made async to await digipin fetch after a valid pincode is entered
-  const onChange = async (code, location) => {
+  const onChange = (code, location) => {
     setPincodeServicability(null);
     const foundValue = tenants?.find((obj) => obj.pincode?.find((item) => item == code));
     if (!foundValue) {
@@ -35,23 +21,21 @@ const FSMSelectGeolocation = ({ t, config, onSelect, formData = {} }) => {
     } else {
       setPincode(code);
       setGeoLocation(location);
-      // Fetch and set digipin whenever a valid location is selected via pincode
-      if (location?.latitude && location?.longitude) {
-        const pin = await handleFetchDigipin(location.latitude, location.longitude);
-        setDigipin(pin || "");
-      }
     }
   };
-
-  // On mount, auto-detect browser geolocation and generate digipin for it
+  // On component mount, fetch user's current location and generate Digipin
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
           setGeoLocation({ latitude, longitude });
-          const pin = await handleFetchDigipin(latitude, longitude);
-          if (pin) setDigipin(pin);
+          try {
+            const pin = await getDigiPin(latitude, longitude);
+            setDigipin(pin);
+          } catch (err) {
+            console.error("Error generating digipin:", err);
+          }
         },
         (error) => console.error("Error getting location:", error)
       );
@@ -61,18 +45,23 @@ const FSMSelectGeolocation = ({ t, config, onSelect, formData = {} }) => {
   return (
     <React.Fragment>
       <Timeline currentStep={1} flow="APPLY" />
-      {/* Replaced inline digipin <div> block with the reusable GeoLocationWithDigipin component */}
-      <GeoLocationWithDigipin
-        t={t}
-        value={`${geoLocation?.latitude || ""}, ${geoLocation?.longitude || ""}`}
-        onChange={({ geoTagLocation, latitude, longitude, digipin: pin }) => {
-          setGeoLocation({ latitude, longitude });
-          setDigipin(pin);
-        }}
-        onFetchDigipin={handleFetchDigipin}
-        showDigipin
-        showMapLink={true}
-      />
+      {digipin && (
+        <div style={{ 
+          marginTop: "10px", 
+          padding: "19px 78px",
+          backgroundColor: "#f0f0f0",
+          borderRadius: "37px",
+          border: "1px solid #d4d4d4",
+          width: "50%",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <div>
+            <strong>Digipin:</strong> {digipin}
+          </div>
+        </div>
+      )}
       <LocationSearchCard
         header={t("CS_ADDCOMPLAINT_SELECT_GEOLOCATION_HEADER")}
         cardText={t("CS_ADDCOMPLAINT_SELECT_GEOLOCATION_TEXT")}
@@ -81,8 +70,7 @@ const FSMSelectGeolocation = ({ t, config, onSelect, formData = {} }) => {
         skip={onSkip}
         t={t}
         position={geoLocation}
-        // Now also persists digipin alongside geoLocation and pincode on save
-        onSave={() => onSelect(config.key, { ...formData.address, geoLocation, pincode, digipin })}
+        onSave={() => onSelect(config.key, { geoLocation, pincode })}
         onChange={(code, location) => onChange(code, location)}
         disabled={pincode === ""}
         forcedError={t(pincodeServicability)}

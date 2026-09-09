@@ -1,16 +1,16 @@
-import { AddFilled, Button, Header, InboxSearchComposer, Loader, Dropdown,Toast,WorkflowModal,ActionBar,SubmitBar } from "@upyog/workbench-ui-react-components";
+import { AddFilled, Button, Header, InboxSearchComposer, Loader, Dropdown,Toast,WorkflowModal,ActionBar,SubmitBar } from "@egovernments/digit-ui-react-components";
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useHistory, useParams } from "react-router-dom";
 import _, { drop } from "lodash";
 import { Config } from "../../configs/LocalisationSearchConfig";
 import getEditModalConfig from "../../configs/EditModalConfig";
-import { useQueryClient } from "../../../../../libraries/src/common/queryClientTemplate";
+import { useQueryClient } from "react-query";
 
 const LocalisationSearch = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient()
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [showToast, setShowToast] = useState(false);
   const [modalConfig, setModalConfig] = useState(null);
@@ -54,6 +54,10 @@ const LocalisationSearch = () => {
       setShowModal(null)
       setEditRow(null)
       setModalConfig(null)
+      // const queryCache = queryClient.getQueryCache()
+      // const queryKeys = queryCache.getAll().map(cache => cache.queryKey) // QueryKey[]
+      // queryClient.invalidateQueries([`/localization/messages/v1/_upsert`,`Random`])
+      // queryClient.invalidateQueries([`/localization/messages/v1/_upsert`,`Random`,`defaultLocale`])
       closeToast();
       setCallRefetch(true)
     };
@@ -71,6 +75,7 @@ const LocalisationSearch = () => {
       setEditRow(null)
       closeToast();
     };
+
 
     mutation.mutate(
       {
@@ -109,11 +114,23 @@ const LocalisationSearch = () => {
     <React.Fragment>
       <div className="jk-header-btn-wrapper">
       <Header className="works-header-search">{t(Config?.label)}</Header>
+      {/* {Config && Digit.Utils.didEmployeeHasRole(Config?.actionRole) && (
+          <Button
+            label={t(Config?.actionLabel)}
+            variation="secondary"
+            icon={<AddFilled style={{ height: "20px", width: "20px" }} />}
+            onButtonClick={() => {
+              history.push(`/${window?.contextPath}/employee/${Config?.actionLink}`);
+            }}
+            type="button"
+            className={'header-btn'}
+          />
+        )} */}
       {
         Config && Digit.Utils.didEmployeeHasRole(Config?.actionRole) &&
         <ActionBar >
           <SubmitBar disabled={false} onSubmit={() => {
-              navigate(`/${window?.contextPath}/employee/${Config?.actionLink}`);
+              history.push(`/${window?.contextPath}/employee/${Config?.actionLink}`);
             }} label={t("WBH_ADD_LOCALISATION")} />
         </ActionBar>
       }

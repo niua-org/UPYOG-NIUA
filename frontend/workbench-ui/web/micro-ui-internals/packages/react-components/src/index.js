@@ -208,23 +208,7 @@ import {
   UploadIcon,
   FileIcon,
   DeleteIconv2,
-  InfoIconOutline,
-  ThemeTextIcon,
-  ThemeBrandIcon,
-  ThemeCommonIcon,
-  ThemeBackgroundIcon,
-  ThemeBorderIcon,
-  ThemeDividerIcon,
-  ThemeShadowsIcon,
-  ThemeRadiusIcon,
-  ThemeSidebarIcon,
-  ThemeHeaderIcon,
-  ThemeGradientsIcon,
-  ThemeTypographyIcon,
-  ThemeLogoIcon,
-  ThemePreviewIcon,
-  CopyIcon,
-  CheckIcon
+  InfoIconOutline
 } from "./atoms/svgindex";
 import Table from "./atoms/Table";
 import TelePhone from "./atoms/TelePhone";
@@ -564,22 +548,6 @@ export {
   FileIcon,
   DeleteIconv2,
   InfoIconOutline,
-  ThemeTextIcon,
-  ThemeBrandIcon,
-  ThemeCommonIcon,
-  ThemeBackgroundIcon,
-  ThemeBorderIcon,
-  ThemeDividerIcon,
-  ThemeShadowsIcon,
-  ThemeRadiusIcon,
-  ThemeSidebarIcon,
-  ThemeHeaderIcon,
-  ThemeGradientsIcon,
-  ThemeTypographyIcon,
-  ThemeLogoIcon,
-  ThemePreviewIcon,
-  CopyIcon,
-  CheckIcon,
 
   /* Works Management  */
 

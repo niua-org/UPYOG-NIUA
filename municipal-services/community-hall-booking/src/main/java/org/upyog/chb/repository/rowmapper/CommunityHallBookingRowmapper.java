@@ -14,7 +14,7 @@ import org.upyog.chb.util.CommunityHallBookingUtil;
 import org.upyog.chb.web.models.Address;
 import org.upyog.chb.web.models.ApplicantDetail;
 import org.upyog.chb.web.models.BookingPurpose;
-import org.upyog.chb.web.models.VenueBookingDetail;
+import org.upyog.chb.web.models.CommunityHallBookingDetail;
 import org.upyog.chb.web.models.SpecialCategory;
 
 /**
@@ -52,24 +52,18 @@ import org.upyog.chb.web.models.SpecialCategory;
  * - It ensures consistency and reusability of mapping logic across the application.
  */
 @Component
-public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<VenueBookingDetail>> {
+public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<CommunityHallBookingDetail>> {
 
-	/**
-	 * Maps booking header rows and de-duplicates them by {@code booking_id}.
-	 *
-	 * @param rs JDBC result set positioned before the first row
-	 * @return de-duplicated booking header rows, never {@code null}
-	 */
 	@Override
-	@SuppressWarnings("java:S2638")
-	public List<VenueBookingDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
-		Map<String, VenueBookingDetail> bookingDetailMap = new LinkedHashMap<>();
-		List<VenueBookingDetail> bookingDetails = new ArrayList<>();
+	public List<CommunityHallBookingDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
+		//TODO: Remove this map
+		Map<String, CommunityHallBookingDetail> bookingDetailMap = new LinkedHashMap<>();
+		List<CommunityHallBookingDetail> bookingDetails = new ArrayList<CommunityHallBookingDetail>();
 		while (rs.next()) {
 			String bookingId = rs.getString("booking_id");
 			String bookingNo = rs.getString("booking_no");
 			String tenantId = rs.getString("tenant_id");
-			VenueBookingDetail currentBooking = bookingDetailMap.get(bookingId);
+			CommunityHallBookingDetail currentBooking = bookingDetailMap.get(bookingId);
 
 			if (currentBooking == null) {
 
@@ -78,11 +72,11 @@ public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<Ve
 
 				BookingPurpose bookingPurpose = BookingPurpose.builder().purpose(rs.getString("purpose")).build();
 				
-				currentBooking = VenueBookingDetail.builder().bookingId(bookingId).bookingNo(bookingNo)
+				currentBooking = CommunityHallBookingDetail.builder().bookingId(bookingId).bookingNo(bookingNo)
 						.applicationDate(rs.getLong("application_date"))
 						.tenantId(tenantId)
-						.venueCode(rs.getString("venue_code"))
-						.venueType(rs.getString("venue_type"))
+						//TODO : check payment_date
+						.communityHallCode(rs.getString("community_hall_code"))
 						.bookingStatus(rs.getString("booking_status"))
 						.specialCategory(specialCategory).purpose(bookingPurpose)
 						.purposeDescription(rs.getString("purpose_description"))
@@ -98,7 +92,7 @@ public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<Ve
 				currentBooking = bookingDetailMap.get(bookingId);
 			}
 
-			if (bookingDetailMap.isEmpty()) {
+			if (bookingDetailMap.values().size() == 0) {
 				return bookingDetails;
 			}
 
@@ -113,7 +107,8 @@ public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<Ve
 
 	
 	private ApplicantDetail addApplicantDetail(ResultSet rs) throws SQLException {
-		return ApplicantDetail.builder().applicantDetailId(rs.getString("applicant_detail_id"))
+		
+		ApplicantDetail applicantDetail = ApplicantDetail.builder().applicantDetailId(rs.getString("applicant_detail_id"))
 				.bookingId(rs.getString("booking_id"))
 				.applicantName(rs.getString("applicant_name"))
 				.applicantMobileNo(rs.getString("applicant_mobile_no"))
@@ -124,10 +119,21 @@ public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<Ve
 				.bankBranchName(rs.getString("bank_branch_name"))
 				.accountHolderName(rs.getString("account_holder_name"))
 				.auditDetails(CommunityHallBookingUtil.getAuditDetails(rs)).build();
+		
+
+		
+		return applicantDetail;
+		
 	}
 	
     private Address addApplicantAddress(ResultSet rs) throws SQLException {
-		return Address.builder()
+		
+		/**
+		 * address_id, applicant_detail_id, door_no, house_no, address_line_1, 
+	landmark, city, pincode, street_name, locality_code
+		 */
+		
+		Address address = Address.builder()
 				.addressId(rs.getString("address_id"))
 				.applicantDetailId(rs.getString("applicant_detail_id"))
 				.doorNo(rs.getString("door_no"))
@@ -141,6 +147,9 @@ public class CommunityHallBookingRowmapper implements ResultSetExtractor<List<Ve
 				.locality(rs.getString("locality"))
 				.localityCode(rs.getString("locality_code"))
 				.build();
+		
+		return address;
+		
 	}
 
 }

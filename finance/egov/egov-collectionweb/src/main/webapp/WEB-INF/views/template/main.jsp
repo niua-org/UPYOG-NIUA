@@ -50,35 +50,13 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 <%@ taglib uri="/WEB-INF/taglib/cdn.tld" prefix="cdn" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 	<head>
-<%--
-	========================================================================================
-	Spring 6 & Jakarta EE Migration Notice:
-	========================================================================================
-	1. Jakarta JSTL Core Taglib:
-	   - JSTL URI updated to 'jakarta.tags.core' to support Jakarta EE 9+ / Servlet 5.0+
-	     containers (e.g. WildFly 27+, Tomcat 10+).
-
-	2. Analytics Property Resolution:
-	   - Replaced legacy SpEL expression (<spring:eval expression="@environment.getProperty(...)"/>)
-	     with WebApplicationContextUtils lookup for reliable environment property resolution
-	     in Spring 6 context.
-	========================================================================================
---%>
-<%
-	org.springframework.web.context.WebApplicationContext _wac = org.springframework.web.context.support.WebApplicationContextUtils.getWebApplicationContext(application);
-	if (_wac != null && _wac.getEnvironment() != null) {
-		String _analyticsEnabled = _wac.getEnvironment().getProperty("analytics.enabled");
-		if (_analyticsEnabled != null) pageContext.setAttribute("analyticsEnabled", Boolean.valueOf(_analyticsEnabled));
-		String _analyticsConfig = _wac.getEnvironment().getProperty("analytics.config");
-		if (_analyticsConfig != null) pageContext.setAttribute("analyticsConfig", _analyticsConfig);
-	}
-%>
+		<spring:eval expression="@environment.getProperty('analytics.enabled')" scope="application" var="analyticsEnabled"/>
 		<c:if test="${analyticsEnabled}">
-			${analyticsConfig}
+			<spring:eval expression="@environment.getProperty('analytics.config')" scope="application"/>
 		</c:if>
 	    <meta charset="utf-8">
 	    <meta http-equiv="X-UA-Compatible" content="IE=edge">

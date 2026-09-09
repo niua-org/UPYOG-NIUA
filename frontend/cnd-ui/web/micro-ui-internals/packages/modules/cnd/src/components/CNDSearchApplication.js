@@ -8,7 +8,7 @@ import { cndStyles } from "../utils/cndStyles";
  * Gets data from its parent component through data prop
  * Displays table only when the data is available and on the click of search button
  */
-const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, setShowToast, onClear }) => {
+const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, setShowToast }) => {
 
     const isMobile = window.Digit.Utils.browser.isMobile();
     const todaydate = new Date();
@@ -19,7 +19,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
             limit: !isMobile && 10,
             sortBy: "commencementDate",
             sortOrder: "DESC",
-            isUserDetailRequired: "true",
+            isUserDetailRequired:"true",
             fromDate: today,
             toDate: today,
         }
@@ -117,21 +117,19 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
         <div>
             <Header>{t("CND_SEARCH_APPLICATIONS")}</Header>
             < Card className={"card-search-heading"}>
-                <span className="cnd-search-app-warning">{t("Provide at least one parameter to search for an application")}</span>
+                <span style={cndStyles.searchApplicationWarning}>{t("Provide at least one parameter to search for an application")}</span>
             </Card>
             <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
                     <label>{t("CND_APPLICATION_NUMBER")}</label>
-                    <TextInput name="applicationNumber" inputRef={register("applicationNumber").ref} {...register("applicationNumber")} />
+                    <TextInput name="applicationNumber" inputRef={register({})} />
                 </SearchField>
 
                 <SearchField>
                     <label>{t("CND_REGISTERED_MOB_NUMBER")}</label>
                     <MobileNumber
                         name="mobileNumber"
-                        maxlength={10}
-                        maxLength={10}
-                        inputRef={register("mobileNumber", {
+                        inputRef={register({
                             minLength: {
                                 value: 10,
                                 message: t("CORE_COMMON_MOBILE_ERROR"),
@@ -141,21 +139,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                                 message: t("CORE_COMMON_MOBILE_ERROR"),
                             },
                             pattern: {
-                                value: Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/,
-                                message: t("CORE_COMMON_MOBILE_ERROR"),
-                            },
-                        }).ref}
-                        {...register("mobileNumber", {
-                            minLength: {
-                                value: 10,
-                                message: t("CORE_COMMON_MOBILE_ERROR"),
-                            },
-                            maxLength: {
-                                value: 10,
-                                message: t("CORE_COMMON_MOBILE_ERROR"),
-                            },
-                            pattern: {
-                                value: Digit.Utils.getPattern("MobileNo") || /^[6789][0-9]{9}$/,
+                                value: /[6789][0-9]{9}/,
                                 message: t("CORE_COMMON_MOBILE_ERROR"),
                             },
                         })}
@@ -167,7 +151,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                 <SearchField>
                     <label>{t("ES_FROM_DATE")}</label>
                     <Controller
-                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} max={today} />}
+                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
                         name="fromDate"
                         control={control}
                     />
@@ -175,16 +159,16 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                 <SearchField>
                     <label>{t("ES_TO_DATE")}</label>
                     <Controller
-                        render={({ field }) => <DatePicker date={field.value} disabled={false} onChange={field.onChange} max={today} />}
+                        render={(props) => <DatePicker date={props.value} disabled={false} onChange={props.onChange} max={today} />}
                         name="toDate"
                         control={control}
                     />
                 </SearchField>
                 {/* Empty Field added for the formatting of the form */}
-                <SearchField></SearchField>
+                <SearchField></SearchField> 
                 <SearchField className="submit">
                     <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
-                    <p className="cnd-search-app-clear-btn"
+                    <p style={cndStyles.clearButton}
                         onClick={() => {
                             reset({
                                 applicationNumber: "",
@@ -198,16 +182,16 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                                 sortOrder: "DESC"
                             });
                             setShowToast(null);
-                            onClear();
+                            previousPage();
                         }}>{t(`ES_COMMON_CLEAR_ALL`)}</p>
                 </SearchField>
             </SearchForm>
-            {!isLoading && data?.display ? <Card className="cnd-search-app-no-data-card">
+            {!isLoading && data?.display ? <Card style={{ marginTop: 20 }}>
                 {
                     t(data.display)
                         .split("\\n")
                         .map((text, index) => (
-                            <p key={index} className="cnd-search-app-no-data-text">
+                            <p key={index} style={cndStyles.noInboxApplication}>
                                 {text}
                             </p>
                         ))
@@ -220,7 +204,7 @@ const CNDSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count, s
                     totalRecords={count}
                     columns={columns}
                     getCellProps={(cellInfo) => {
-                        return { style: cndStyles.applicationTable };
+                        return {style: cndStyles.applicationTable};
                     }}
                     onPageSizeChange={onPageSizeChange}
                     currentPage={getValues("offset") / getValues("limit")}

@@ -8,12 +8,14 @@ import digit.models.coremodels.IdResponse;
 import org.egov.asset.repository.ServiceRequestRepository;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class IdgenUtil {
@@ -24,13 +26,11 @@ public class IdgenUtil {
     @Value("${egov.idgen.path}")
     private String idGenPath;
 
-    private final ObjectMapper mapper;
-    private final ServiceRequestRepository restRepo;
+    @Autowired
+    private ObjectMapper mapper;
 
-    public IdgenUtil(ObjectMapper mapper, ServiceRequestRepository restRepo) {
-        this.mapper = mapper;
-        this.restRepo = restRepo;
-    }
+    @Autowired
+    private ServiceRequestRepository restRepo;
 
     public List<String> getIdList(RequestInfo requestInfo, String tenantId, String idName, String idformat, Integer count) {
         List<IdRequest> reqList = new ArrayList<>();
@@ -44,10 +44,9 @@ public class IdgenUtil {
 
         List<IdResponse> idResponses = response.getIdResponses();
 
-        if (CollectionUtils.isEmpty(idResponses)) {
+        if (CollectionUtils.isEmpty(idResponses))
             throw new CustomException("IDGEN ERROR", "No ids returned from idgen Service");
-        }
 
-        return idResponses.stream().map(IdResponse::getId).toList();
+        return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
     }
 }

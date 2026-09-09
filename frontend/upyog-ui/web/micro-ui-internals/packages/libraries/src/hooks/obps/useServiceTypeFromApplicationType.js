@@ -64,7 +64,7 @@ const useServiceTypeFromApplicationType = ({Applicationtype, tenantId}) => {
     })
     },[serviceTypes,applicationTypesWithStakeholder])
 
-    return { applicationTypes: applicationTypesWithStakeholder, ServiceTypes }
+    return { applicationTypes: filteredapplicationTypes, ServiceTypes }
 }
 
 export default useServiceTypeFromApplicationType

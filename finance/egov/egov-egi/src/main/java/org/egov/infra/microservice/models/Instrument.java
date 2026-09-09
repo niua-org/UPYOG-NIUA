@@ -44,16 +44,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class Instrument {
 
-    @SanitizeHtml
+    @SafeHtml
     private String id;
 
-    @SanitizeHtml
+    @SafeHtml
     private String transactionNumber;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
@@ -67,13 +67,13 @@ public class Instrument {
 
     private Long instrumentDate;
 
-    @SanitizeHtml
+    @SafeHtml
     private String instrumentNumber;
 
     private FinancialStatus financialStatus;
 
     private Bank bank;
-    @SanitizeHtml
+    @SafeHtml
     private String branchName;
 
     private BankAccount bankAccount;
@@ -82,22 +82,22 @@ public class Instrument {
 
     private TransactionType transactionType;
 
-    @SanitizeHtml
+    @SafeHtml
     private String payee;
-    @SanitizeHtml
+    @SafeHtml
     private String drawer;
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
-    @SanitizeHtml
+    @SafeHtml
     private String serialNo;
-    @SanitizeHtml
+    @SafeHtml
     private String payinSlipId;
 
     private BigDecimal reconciledAmount;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
     private Date reconciledOn;
-    @SanitizeHtml
+    @SafeHtml
     private String instrumentStatus;
 
     private List<InstrumentVoucher> instrumentVouchers = new ArrayList<>();

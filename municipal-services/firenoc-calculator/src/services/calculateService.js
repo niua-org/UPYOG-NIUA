@@ -2,7 +2,7 @@ import { requestInfoToResponseInfo } from "../utils";
 import { searchService } from "../controller/search";
 import { generateDemand } from "./demandService";
 import { getFireNoc } from "./firenocService";
-import { get, some, isEmpty } from "lodash";
+import isEmpty from "lodash/isEmpty";
 import envVariables from "../envVariables";
 import { mdmsData } from "./mdmsService";
 
@@ -39,7 +39,7 @@ const getCalculation = async (req, pool, next) => {
     if (!calculateCriteria.fireNOC || isEmpty(calculateCriteria.fireNOC)) {
       const applicationNumber = calculateCriteria.applicationNumber;
       const tenantId = calculateCriteria.tenantId;
-      let firefireNocSearchResponseNOC = await getFireNoc(
+      let firefireNocSearchResponseNOC = getFireNoc(
         requestInfo,
         applicationNumber,
         tenantId,

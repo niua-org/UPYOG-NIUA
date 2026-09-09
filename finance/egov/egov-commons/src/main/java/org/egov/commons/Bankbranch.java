@@ -51,19 +51,19 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import org.egov.commons.utils.CommonsConstants;
 import org.egov.infra.persistence.entity.AbstractPersistable;
@@ -71,7 +71,7 @@ import org.egov.infra.persistence.validator.annotation.OptionalPattern;
 import org.egov.infra.persistence.validator.annotation.Unique;
 import org.egov.infra.validation.regex.Constants;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -96,46 +96,46 @@ public class Bankbranch extends AbstractPersistable<Integer> {
 
     @NotNull
     @Length(max = 50)
-    @SanitizeHtml
+    @SafeHtml
     private String branchcode;
 
     @NotNull
     @Length(max = 50)
-    @SanitizeHtml
+    @SafeHtml
     private String branchname;
 
     @NotNull
     @Length(max = 50)
-    @SanitizeHtml
+    @SafeHtml
     private String branchaddress1;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 50)
     private String branchaddress2;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 50)
     private String branchcity;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 50)
     private String branchstate;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 50)
     @OptionalPattern(regex = CommonsConstants.alphaNumericwithoutspecialchar, message = "Special Characters are not allowed in EPF No")
     private String branchpin;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 15)
     @OptionalPattern(regex = Constants.MOBILE_NUM, message = "Please enter valid mobile number")
     private String branchphone;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 15)
     private String branchfax;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 50)
     private String contactperson;
 
@@ -143,12 +143,12 @@ public class Bankbranch extends AbstractPersistable<Integer> {
     private Boolean isactive;
 
     @Length(max = 250)
-    @SanitizeHtml
+    @SafeHtml
     private String narration;
 
     @Length(max = 50)
     @Column(name = "micr")
-    @SanitizeHtml
+    @SafeHtml
     private String branchMICR;
 
     @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "bankbranch", targetEntity = Bankaccount.class)

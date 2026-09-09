@@ -5,71 +5,71 @@ import java.util.Date;
 import java.util.List;
 
 import org.egov.infra.persistence.validator.annotation.DateFormat;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class RemittanceReportModel {
     private Long id;
     private int srNo;
     private Boolean selected;
-    @SanitizeHtml
+    @SafeHtml
     private String receiptId;
-    @SanitizeHtml
+    @SafeHtml
     private String receiptDate;
-    @SanitizeHtml
+    @SafeHtml
     private String receiptNumber;
     private BigDecimal instrumentAmount;
-    @SanitizeHtml
+    @SafeHtml
     private String service;
-    @SanitizeHtml
+    @SafeHtml
     private String instrumentType;
-    @SanitizeHtml
+    @SafeHtml
     private String instrumentNumber;
-    @SanitizeHtml
+    @SafeHtml
     private String instrumentDate;
-    @SanitizeHtml
+    @SafeHtml
     private String instrumentId;
-    @SanitizeHtml
+    @SafeHtml
     private String fund;
-    @SanitizeHtml
+    @SafeHtml
     private String department;
-    @SanitizeHtml
+    @SafeHtml
     private String fundName;
-    @SanitizeHtml
+    @SafeHtml
     private String departmentName;
-    @SanitizeHtml
+    @SafeHtml
     private String serviceName;
-    @SanitizeHtml
+    @SafeHtml
     private String bankBranch;
-    @SanitizeHtml
+    @SafeHtml
     private String bank;
-    @SanitizeHtml
+    @SafeHtml
     private String remittanceReferenceNumber;
-    @SanitizeHtml
+    @SafeHtml
     private String bankAccount;
     private Long financialYear;
     @DateFormat
     private Date fromDate;
     @DateFormat
     private Date toDate;
-    @SanitizeHtml
+    @SafeHtml
     private String remittedOn;
-    @SanitizeHtml
+    @SafeHtml
     private String remitterId;
-    @SanitizeHtml
+    @SafeHtml
     private String remittedBy;
-    @SanitizeHtml
+    @SafeHtml
     private String transactionNumber;
-    @SanitizeHtml
+    @SafeHtml
     private String payee;
-    @SanitizeHtml
+    @SafeHtml
     private String drawer;
-    @SanitizeHtml
+    @SafeHtml
     private String createdBy;
     private int totalCount;
     private List linkedRemittedList;
-    @SanitizeHtml
+    @SafeHtml
     private String receiptSourceUrl;
-    @SanitizeHtml
+    @SafeHtml
     private String ifscCode;
     public Boolean getSelected() {
         return selected;

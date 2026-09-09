@@ -44,16 +44,6 @@ const BpaApplicationDetail = () => {
   const { data, isLoading } = useBPADetailsPage(tenantId, { applicationNo: id });
   const { isMdmsLoading, data: mdmsData } = Digit.Hooks.obps.useMDMS(stateCode, "BPA", ["RiskTypeComputation"]);
   const mutation = Digit.Hooks.obps.useObpsAPI(data?.applicationData?.tenantId, false);
-
-  const WF_CITIZEN_APPROVAL_INPROCESS = "CITIZEN_APPROVAL_INPROCESS";
-
-  const userInfo = Digit.UserService.getUser();
-  const rolearray = userInfo?.info?.roles;
-  const isCitizenApprovalInProcess = data?.applicationData?.status == WF_CITIZEN_APPROVAL_INPROCESS;
-  const isInProgress = data?.applicationData?.status == "INPROGRESS";
-  const isArchitect = rolearray?.some(role => role?.code === "BPA_ARCHITECT");
-  const isActionBarVisible = !(isCitizenApprovalInProcess && isArchitect);
-  
   let workflowDetails = Digit.Hooks.useWorkflowDetails({
     tenantId: data?.applicationData?.tenantId,
     id: id,
@@ -104,8 +94,9 @@ const BpaApplicationDetail = () => {
 
 
   useEffect(() => {
-    setCheckBoxVisible((isCitizenApprovalInProcess || isInProgress) && isActionBarVisible);
-  }, [isCitizenApprovalInProcess, isInProgress, isArchitect]);
+    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS" || data?.applicationData?.status == "INPROGRESS") setCheckBoxVisible(true);
+    else setCheckBoxVisible(false);
+  },[data]);
 
   const getTranslatedValues = (dataValue, isNotTranslated) => {
     if(dataValue) {
@@ -205,11 +196,11 @@ const BpaApplicationDetail = () => {
   }
 
   function onActionSelect(action) {
-    let path = data?.applicationData?.businessService == "BPA_OC" ? "ocbpa" : "bpa";  
+    let path = data?.applicationData?.businessService == "BPA_OC" ? "ocbpa" : "bpa";
     if(action === "FORWARD") {
       navigate(`/upyog-ui/citizen/obps/sendbacktocitizen/ocbpa/${data?.applicationData?.tenantId}/${data?.applicationData?.applicationNo}/check`, { replace: true, state: { data: data?.applicationData, edcrDetails: data?.edcrDetails } });
     }
-    if (action === "PAY") {
+if (action === "PAY") {
       window.location.assign(`${window.location.origin}/upyog-ui/citizen/payment/collect/${`${getBusinessServices(data?.businessService, data?.applicationStatus)}/${id}?tenantId=${data?.tenantId}`}`);
     }
     if (action === "SEND_TO_CITIZEN"){
@@ -245,22 +236,24 @@ const BpaApplicationDetail = () => {
           setShowModal(false);
           setShowToast({ key: "success", action: selectedAction });
           setTimeout(closeToast, 5000);
-          queryClient.invalidateQueries({ queryKey: ["BPA_DETAILS_PAGE"] });
-          queryClient.invalidateQueries({ queryKey: ["workFlowDetails"] });
+          queryClient.invalidateQueries("BPA_DETAILS_PAGE");
+          queryClient.invalidateQueries("workFlowDetails");
         },
       }
     );
   }
 
-  if (workflowDetails?.data?.nextActions?.length > 0 && isCitizenApprovalInProcess) {
-    if (isCitizenApprovalInProcess) {
+  if (workflowDetails?.data?.nextActions?.length > 0 && data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS") {
+    const userInfo = Digit.UserService.getUser();
+    const rolearray = userInfo?.info?.roles;
+    if (data?.applicationData?.status == "CITIZEN_APPROVAL_INPROCESS") {
       if (rolearray?.some(role => role?.code === "CITIZEN")) {
         workflowDetails.data.nextActions = workflowDetails?.data?.nextActions;
       } else {
         workflowDetails.data.nextActions = [];
       }
     }
-     else if (isInProgress) {
+     else if (data?.applicationData?.status == "INPROGRESS") {
       let isArchitect = false;
       stakeHolderDetails?.StakeholderRegistraition?.TradeTypetoRoleMapping?.map(type => {
         type?.role?.map(role => { roles.push(role); });
@@ -285,6 +278,8 @@ const BpaApplicationDetail = () => {
   if (workflowDetails?.data?.processInstances?.[0]?.action === "SEND_BACK_TO_CITIZEN") {
       if(isTocAccepted) setIsTocAccepted(true);
       isFromSendBack = true;
+      const userInfo = Digit.UserService.getUser();
+      const rolearray = userInfo?.info?.roles;
       if (rolearray?.some(role => role?.code === "CITIZEN")) {
         workflowDetails.data.nextActions = workflowDetails?.data?.nextActions;
       } else {
@@ -546,7 +541,7 @@ const BpaApplicationDetail = () => {
                     />
                   )}
                   </div>
-                  {!workflowDetails?.isLoading && workflowDetails?.data?.nextActions?.length > 1 && isActionBarVisible && (
+                  {!workflowDetails?.isLoading && workflowDetails?.data?.nextActions?.length > 1 && (
                     //removed this styles to fix the action button in application details UM-5347
                     <ActionBar /*style={{ position: "relative", boxShadow: "none", minWidth: "240px", maxWidth: "310px", padding: "0px" }}*/>
                       <div style={{ width: "100%" }}>

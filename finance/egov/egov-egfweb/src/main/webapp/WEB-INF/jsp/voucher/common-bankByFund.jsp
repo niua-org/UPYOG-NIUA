@@ -44,7 +44,4 @@
   ~
   ~   In case of any queries, you can reach eGovernments Foundation at contact@egovernments.org.
   ~
-  --%><%--
-  LTS Migration Fix (Struts 7 OGNL): use #s.name / #s.id so Fund → Bank AJAX
-  (Bank Entries Not In Bank Book) returns options.
-  --%>{ "ResultSet": { "Result":[<s:iterator var="s" value="bankList" status="status"> {"Text":"<s:property value="%{#s.name}" />", "Value":"<s:property value="%{#s.id}" />" }<s:if test="!#status.last">,</s:if></s:iterator>] } }
+  --%>{ "ResultSet": { "Result":[<s:iterator var="s" value="bankList" status="status"> {"Text":"<s:property value="%{name}" />", "Value":"<s:property value="%{id}" />" }<s:if test="!#status.last">,</s:if></s:iterator>] } }

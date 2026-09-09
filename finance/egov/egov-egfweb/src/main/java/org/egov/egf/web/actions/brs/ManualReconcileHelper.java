@@ -79,13 +79,12 @@ import org.egov.services.instrument.InstrumentOtherDetailsService;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.query.Query;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.transform.Transformers;
-
-
-
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -182,12 +181,12 @@ public class ManualReconcileHelper {
 		
 		try
 		{
-			NativeQuery totalNativeQuery = persistenceService.getSession().createNativeQuery(totalQuery.toString());
-			totalNativeQuery.setParameter("bankAccountId",bankAccId);
-			totalNativeQuery.setParameter("fromDate",fromDate);
-			totalNativeQuery.setParameter("toDate",toDate);
+			SQLQuery totalSQLQuery = persistenceService.getSession().createSQLQuery(totalQuery.toString());
+			totalSQLQuery.setLong("bankAccountId",bankAccId);
+			totalSQLQuery.setDate("fromDate",fromDate);
+			totalSQLQuery.setDate("toDate",toDate);
 			
-			List list = totalNativeQuery.list();
+			List list = totalSQLQuery.list();
 			if (list.size()>0)
 			{
 				if(LOGGER.isDebugEnabled())     LOGGER.debug(list.get(0));
@@ -197,11 +196,11 @@ public class ManualReconcileHelper {
 			}
 
 			if(LOGGER.isInfoEnabled())     LOGGER.info("  query  for other than cheque/DD: "+otherTotalQuery);
-			totalNativeQuery = persistenceService.getSession().createNativeQuery(otherTotalQuery.toString());
-			totalNativeQuery.setParameter("bankAccountId",bankAccId);
-			totalNativeQuery.setParameter("fromDate",fromDate);
-			totalNativeQuery.setParameter("toDate",toDate);
-			list = totalNativeQuery.list();
+			totalSQLQuery = persistenceService.getSession().createSQLQuery(otherTotalQuery.toString());
+			totalSQLQuery.setLong("bankAccountId",bankAccId);
+			totalSQLQuery.setDate("fromDate",fromDate);
+			totalSQLQuery.setDate("toDate",toDate);
+			list = totalSQLQuery.list();
 			if (list.size()>0)
 			{
 				if(LOGGER.isDebugEnabled())     LOGGER.debug(list.get(0));
@@ -211,11 +210,11 @@ public class ManualReconcileHelper {
 			}
 			if(LOGGER.isInfoEnabled())     LOGGER.info("  query  for bankEntries: "+brsEntryQuery);
 
-			totalNativeQuery = persistenceService.getSession().createNativeQuery(brsEntryQuery.toString());
-			totalNativeQuery.setParameter("bankAccountId",bankAccId);
-			totalNativeQuery.setParameter("fromDate",fromDate);
-			totalNativeQuery.setParameter("toDate",toDate);
-			list = totalNativeQuery.list();
+			totalSQLQuery = persistenceService.getSession().createSQLQuery(brsEntryQuery.toString());
+			totalSQLQuery.setLong("bankAccountId",bankAccId);
+			totalSQLQuery.setDate("fromDate",fromDate);
+			totalSQLQuery.setDate("toDate",toDate);
+			list = totalSQLQuery.list();
 			if (list.size()>0)
 			{
 				if(LOGGER.isDebugEnabled())     LOGGER.debug(list.get(0));
@@ -321,26 +320,26 @@ public class ManualReconcileHelper {
 */
         
         
-		NativeQuery createNativeQuery = persistenceService.getSession().createNativeQuery(query.toString());
+		SQLQuery createSQLQuery = persistenceService.getSession().createSQLQuery(query.toString());
 		if (reconBean.getInstrumentNo() != null && !reconBean.getInstrumentNo().isEmpty()) {
-			createNativeQuery.setParameter("instrumentNo", reconBean.getInstrumentNo(), StandardBasicTypes.STRING)
-                    .setParameter("transactionNo", reconBean.getInstrumentNo(), StandardBasicTypes.STRING);
+			createSQLQuery.setParameter("instrumentNo", reconBean.getInstrumentNo(), StringType.INSTANCE)
+                    .setParameter("transactionNo", reconBean.getInstrumentNo(), StringType.INSTANCE);
         }
 		if (reconBean.getLimit() != null & reconBean.getLimit() != 0)
-			createNativeQuery.setParameter("limit", reconBean.getLimit(), StandardBasicTypes.INTEGER);
+			createSQLQuery.setParameter("limit", reconBean.getLimit(), IntegerType.INSTANCE);
 		
-		createNativeQuery.setParameter("bankAccId", reconBean.getAccountId());
-		createNativeQuery.setParameter("toDate", reconBean.getReconciliationDate());
-		createNativeQuery.addScalar("voucherNumber",StandardBasicTypes.STRING);
-		createNativeQuery.addScalar("ihId",StandardBasicTypes.STRING);
-		createNativeQuery.addScalar("chequeDate",StandardBasicTypes.STRING);
-		createNativeQuery.addScalar("chequeNumber",StandardBasicTypes.STRING);
-		createNativeQuery.addScalar("chequeAmount",StandardBasicTypes.BIG_DECIMAL);
-		createNativeQuery.addScalar("txnType",StandardBasicTypes.STRING);
-		createNativeQuery.addScalar("type",StandardBasicTypes.STRING);
-		createNativeQuery.addScalar("instrumentType",StandardBasicTypes.STRING);
-		createNativeQuery.setResultTransformer(Transformers.aliasToBean(ReconcileBean.class));
-	    list = (List<ReconcileBean>)createNativeQuery.list();
+		createSQLQuery.setLong("bankAccId", reconBean.getAccountId());
+		createSQLQuery.setDate("toDate", reconBean.getReconciliationDate());
+		createSQLQuery.addScalar("voucherNumber",StringType.INSTANCE);
+		createSQLQuery.addScalar("ihId",StringType.INSTANCE);
+		createSQLQuery.addScalar("chequeDate",StringType.INSTANCE);
+		createSQLQuery.addScalar("chequeNumber",StringType.INSTANCE);
+		createSQLQuery.addScalar("chequeAmount",BigDecimalType.INSTANCE);
+		createSQLQuery.addScalar("txnType",StringType.INSTANCE);
+		createSQLQuery.addScalar("type",StringType.INSTANCE);
+		createSQLQuery.addScalar("instrumentType",StringType.INSTANCE);
+		createSQLQuery.setResultTransformer(Transformers.aliasToBean(ReconcileBean.class));
+	    list = (List<ReconcileBean>)createSQLQuery.list();
 	        
 	        try {
 	            this.getUnreconsiledReceiptInstruments(reconBean,list);
@@ -361,8 +360,8 @@ public class ManualReconcileHelper {
 	        InstrumentSearchContract contract = new InstrumentSearchContract();
 	        if(reconBean.getAccountId() != null){
 	            StringBuilder query = new StringBuilder("from Bankaccount ba where ba.id=:bankAccountId and isactive=true");
-	            Query createNativeQuery = persistenceService.getSession().createQuery(query.toString());
-	            List<Bankaccount> bankAccount = createNativeQuery.setParameter("bankAccountId", reconBean.getAccountId()).list();
+	            Query createSQLQuery = persistenceService.getSession().createQuery(query.toString());
+	            List<Bankaccount> bankAccount = createSQLQuery.setLong("bankAccountId", reconBean.getAccountId()).list();
 	            contract.setBankAccountNumber(bankAccount.get(0).getAccountnumber());
 	        }
 	        if(StringUtils.isNotBlank(reconBean.getInstrumentNo())){

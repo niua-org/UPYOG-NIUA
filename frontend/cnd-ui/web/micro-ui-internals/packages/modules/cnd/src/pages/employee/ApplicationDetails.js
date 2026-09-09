@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
 import cndAcknowledgementData from "../../utils/cndAcknowledgementData";
 import { cndStyles } from "../../utils/cndStyles";
-import "../../css/cnd-inline-auto.scss";
 
 /**
 * ApplicationDetails component displays the details of a CND application
@@ -120,11 +119,11 @@ const ApplicationDetails = () => {
   
   return (
     <div>
-      <div className="employee-application-details cnd-employee-app-details-site-media">
-        <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>{t("CND_APPLICATION_DETAILS")}</Header>
-        <div className="cnd-employee-app-details-card">
+      <div className={"employee-application-details"} style={cndStyles.siteMediaPhotoEmployee}>
+        <Header styles={cndStyles.applicationDetailHeader}>{t("CND_APPLICATION_DETAILS")}</Header>
+        <div style={cndStyles.applicationDetailCard}>
          
-      <div className="cnd-employee-app-details-download-btn">
+      <div style={cndStyles.downloadButton}>
         {dowloadOptions && dowloadOptions.length > 0 && (
           <MultiLink
             className="multilinkWrapper"

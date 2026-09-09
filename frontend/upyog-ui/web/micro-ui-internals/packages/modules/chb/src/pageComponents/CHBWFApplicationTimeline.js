@@ -50,9 +50,6 @@ const CHBWFApplicationTimeline = (props) => {
     tenantId: props.application?.tenantId,
     id: props.application?.bookingNo,
     moduleCode: businessService,
-    config: {
-      enabled: !!(props.application?.tenantId && props.application?.bookingNo),
-    },
   });
 
 

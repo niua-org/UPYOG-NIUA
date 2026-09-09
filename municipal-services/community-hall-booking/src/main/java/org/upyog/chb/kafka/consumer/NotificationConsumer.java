@@ -2,14 +2,16 @@ package org.upyog.chb.kafka.consumer;
 
 import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import org.upyog.chb.enums.BookingStatusEnum;
 import org.upyog.chb.service.CHBNotificationService;
-import org.upyog.chb.web.models.VenueBookingDetail;
-import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.util.CommunityHallBookingUtil;
+import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.CommunityHallBookingRequest;
+import org.springframework.kafka.support.KafkaHeaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,38 +48,32 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NotificationConsumer {
 
-	private final CHBNotificationService notificationService;
-	private final ObjectMapper mapper;
+	@Autowired
+	private CHBNotificationService notificationService;
 
-	public NotificationConsumer(CHBNotificationService notificationService, ObjectMapper mapper) {
-		this.notificationService = notificationService;
-		this.mapper = mapper;
-	}
+	@Autowired
+	private ObjectMapper mapper;
 
 	@KafkaListener(topics = { "${persister.save.communityhall.booking.topic}", "${persister.update.communityhall.booking.topic}" })
-	public void listen(final HashMap<String, Object> message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+	public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
 
-		VenueBookingRequest bookingRequest = new VenueBookingRequest();
+		CommunityHallBookingRequest bookingRequest = new CommunityHallBookingRequest();
 		try {
 
-			log.info("Consuming record in CHB for notification: " + message.toString() + " from topic: " + topic);
-			bookingRequest = mapper.convertValue(message, VenueBookingRequest.class);
+			log.info("Consuming record in CHB for notification: " + record.toString() + " from topic: " + topic);
+			//log.info("Strigifed json : " + CommunityHallBookingUtil.beuatifyJson(record));
+			bookingRequest = mapper.convertValue(record, CommunityHallBookingRequest.class);
 		} catch (final Exception e) {
-			log.error("Error while processing CHB notification to value: " + message + " on topic: " + topic + ": " + e);
+			log.error("Error while processing CHB notification to value: " + record + " on topic: " + topic + ": " + e);
 		}
 
-		if (bookingRequest.getVenueBookingApplication() == null) {
-			log.warn("Received booking request with null hallsBookingApplication. Skipping notification processing.");
-			return;
-		}
-
-		String bookingStatus = bookingRequest.getVenueBookingApplication().getBookingStatus();
+		String bookingStatus = bookingRequest.getHallsBookingApplication().getBookingStatus();
 		log.info("CHB Appplication Received with booking no : "
-				+ bookingRequest.getVenueBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);
+				+ bookingRequest.getHallsBookingApplication().getBookingNo() + " and for status : " +  bookingStatus);
 		
 		//Send notification to user except PENDING_FOR_PAYMENT status
 		if (!BookingStatusEnum.PENDING_FOR_PAYMENT.toString().equals(bookingStatus)) {
-			VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
+			CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
 			if (bookingDetail.getWorkflow() == null || bookingDetail.getWorkflow().getAction() == null) {
 				bookingStatus = bookingDetail.getBookingStatus();
 			} else {

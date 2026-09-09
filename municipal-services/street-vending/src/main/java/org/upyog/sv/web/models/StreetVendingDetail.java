@@ -122,6 +122,8 @@ public class StreetVendingDetail {
 
 	private String validityDateForPersisterDate;
 
+//	private Boolean eligibleToRenew;
+
 	private Boolean expireFlag;
 
 	private String oldApplicationNo;

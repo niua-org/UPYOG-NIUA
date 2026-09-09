@@ -1,8 +1,7 @@
 "use strict";
 import envVariables from "../envVariables";
-import winston from "winston";
 
-const { createLogger, format, transports } = winston;
+const { createLogger, format, transports } = require("winston");
 
 const logger = createLogger({
   level: envVariables.LOG_LEVEL,

@@ -1,6 +1,6 @@
 /**
  * This component, `PetApplication`, displays the details of a single pet registration application.
- * It uses `Card` and `KeyNote` components from `@nudmcdgnpm/digit-ui-react-components` 
+ * It uses `Card` and `KeyNote` components from `@upyog/digit-ui-react-components` 
  * to present the application's information in a structured format.
  * 
  * Key Features:
@@ -37,8 +37,8 @@ const PetApplication = ({ application, tenantId, buttonLabel }) => {
     <Card>
       <KeyNote keyValue={t("PTR_APPLICATION_NO_LABEL")} note={application?.applicationNumber} />
       <KeyNote keyValue={t("PTR_APPLICANT_NAME")} note={application?.applicantName} />
-      <KeyNote keyValue={t("PTR_APPLICATION_TYPE")} note={t(application?.applicationType)} />
-      <KeyNote keyValue={t("PTR_APPLICATION_STATUS")} note={t(application?.status)} />
+      <KeyNote keyValue={t("PTR_APPLICATION_TYPE")} note={application?.applicationType} />
+      <KeyNote keyValue={t("PTR_APPLICATION_STATUS")} note={application?.status} />
       <KeyNote keyValue={t("PTR_SEARCH_PET_TYPE")} note={application?.petDetails?.petType} />
 
       {(application?.status == "Expired") && 

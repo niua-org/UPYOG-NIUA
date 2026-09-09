@@ -2,7 +2,7 @@ package org.egov.infra.microservice.models;
 
 import java.util.Set;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,19 +15,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class VoucherSearchCriteria {
     private Set<Long> ids;
-    @SanitizeHtml
+    @SafeHtml
     private String sortBy;
     private Integer pageSize;
     private Integer offset;
     private Set<String> voucherNumbers;
     private Long voucherFromDate;
     private Long voucherToDate;
-    @SanitizeHtml
+    @SafeHtml
     private String voucherType;
-    @SanitizeHtml
+    @SafeHtml
     private String voucherName;
-    @SanitizeHtml
+    @SafeHtml
     private String fundId;
-    @SanitizeHtml
+    @SafeHtml
     private String deptCode;
 }

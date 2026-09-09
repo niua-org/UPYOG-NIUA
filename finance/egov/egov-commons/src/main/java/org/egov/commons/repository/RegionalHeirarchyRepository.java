@@ -58,8 +58,8 @@ import java.util.List;
 
 @Repository
 public interface RegionalHeirarchyRepository extends JpaRepository<RegionalHeirarchy, Long>{
-
-    public RegionalHeirarchy findByCode(Long code);
+    
+    public RegionalHeirarchy findByCode(String code);
 
     @Query("from RegionalHeirarchy  where type=:heirarchyType order by name")
      public List<RegionalHeirarchy> getActiveRegionalHeirarchyByRegion(@Param("heirarchyType") RegionalHeirarchyType heirarchyType);

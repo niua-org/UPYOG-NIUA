@@ -36,17 +36,11 @@ const getName = (places) => {
 };
 
 const loadGoogleMaps = (callback) => {
-  // Google Maps API key must be provided through
-  // window.globalConfigs.getConfig("GMAPS_API_KEY")
-  const key = window.globalConfigs?.getConfig?.("GMAPS_API_KEY") || window.globalConfigs?.getConfig?.("GMAPS_API_KEY");
-  if (!key) {
-    console.error("Google Maps API key is not configured.");
-    return;
-  }
+  const key = globalConfigs?.getConfig("GMAPS_API_KEY");
   const loader = new Loader({
     apiKey: key,
     version: "weekly",
-    libraries: ["places", "geometry", "drawing"],
+    libraries: ["places"],
   });
 
   loader
@@ -220,7 +214,7 @@ const mapStyles = [
   },
 ];
 
-const setLocationText = (location, onChange, inputElement, isPlaceRequired = false) => {
+const setLocationText = (location, onChange, isPlaceRequired=false) => {
   const geocoder = new google.maps.Geocoder();
   geocoder.geocode(
     {
@@ -230,15 +224,13 @@ const setLocationText = (location, onChange, inputElement, isPlaceRequired = fal
       if (status === "OK") {
         if (results[0]) {
           let pincode = GetPinCode(results[0]);
-          if (inputElement) {
-            inputElement.value = getName(results[0]);
-          }
+          const infoWindowContent = document.getElementById("pac-input");
+          infoWindowContent.value = getName(results[0]);
           if (onChange) {
-            if (isPlaceRequired) {
-              onChange(pincode, { longitude: location.lng, latitude: location.lat }, inputElement ? inputElement.value : "");
-            } else {
-              onChange(pincode, { longitude: location.lng, latitude: location.lat });
-            }
+            if(isPlaceRequired)
+            onChange(pincode, { longitude: location.lng, latitude: location.lat }, infoWindowContent.value);
+            else
+            onChange(pincode, { longitude: location.lng, latitude: location.lat });
           }
         }
       }
@@ -246,7 +238,7 @@ const setLocationText = (location, onChange, inputElement, isPlaceRequired = fal
   );
 };
 
-const onMarkerDragged = (marker, onChange, inputElement, isPlaceRequired = false) => {
+const onMarkerDragged = (marker, onChange, isPlaceRequired = false) => {
   if (!marker) return;
   const { latLng } = marker;
   const currLat = latLng.lat();
@@ -255,23 +247,21 @@ const onMarkerDragged = (marker, onChange, inputElement, isPlaceRequired = false
     lat: currLat,
     lng: currLang,
   };
-  if (isPlaceRequired) {
-    setLocationText(location, onChange, inputElement, true);
-  } else {
-    setLocationText(location, onChange, inputElement);
-  }
+  if(isPlaceRequired)
+  setLocationText(location, onChange, true);
+  else
+  setLocationText(location, onChange);
 };
 
-const initAutocomplete = (onChange, position, mapElement, inputElement, isPlaceRequired = false) => {
-  if (!mapElement || !inputElement) return null;
-  const map = new window.google.maps.Map(mapElement, {
+const initAutocomplete = (onChange, position, isPlaceRequired=false) => {
+  const map = new window.google.maps.Map(document.getElementById("map"), {
     center: position,
     zoom: 15,
     mapTypeId: "roadmap",
     styles: mapStyles,
-  });
+  }); // Create the search box and link it to the UI element.
 
-  const input = inputElement;
+  const input = document.getElementById("pac-input");
   updateDefaultBounds(position);
   const options = {
     bounds: defaultBounds,
@@ -282,8 +272,9 @@ const initAutocomplete = (onChange, position, mapElement, inputElement, isPlaceR
     types: ["address"],
   };
   const searchBox = new window.google.maps.places.Autocomplete(input, options);
+  // map.controls[google.maps.ControlPosition.TOP_LEFT].push(input); // Bias the SearchBox results towards current map's viewport.
 
-  const boundsListener = map.addListener("bounds_changed", () => {
+  map.addListener("bounds_changed", () => {
     searchBox.setBounds(map.getBounds());
   });
 
@@ -297,20 +288,20 @@ const initAutocomplete = (onChange, position, mapElement, inputElement, isPlaceR
     }),
   ];
 
-  if (isPlaceRequired) {
-    setLocationText(position, onChange, input, true);
-  } else {
-    setLocationText(position, onChange, input);
-  }
+  if(isPlaceRequired)
+  setLocationText(position, onChange,true);
+  else
+  setLocationText(position, onChange);
 
-  const dragListener = markers[0].addListener("dragend", (marker) => onMarkerDragged(marker, onChange, input, isPlaceRequired));
-
-  const placeListener = searchBox.addListener("place_changed", () => {
+  // Listen for the event fired when the user selects a prediction and retrieve
+  // more details for that place.
+  markers[0].addListener("dragend", (marker) => onMarkerDragged(marker, onChange, isPlaceRequired));
+  searchBox.addListener("place_changed", () => {
     const place = searchBox.getPlace();
 
     if (!place) {
       return;
-    }
+    } // Clear out the old markers.
     let pincode = GetPinCode(place);
     if (pincode) {
       const { geometry } = place;
@@ -318,16 +309,15 @@ const initAutocomplete = (onChange, position, mapElement, inputElement, isPlaceR
         latitude: geometry.location.lat(),
         longitude: geometry.location.lng(),
       };
-      if (isPlaceRequired) {
-        onChange(pincode, geoLocation, place.name);
-      } else {
-        onChange(pincode, geoLocation);
-      }
+      if(isPlaceRequired)
+      onChange(pincode, geoLocation, place.name);
+      else
+      onChange(pincode, geoLocation);
     }
     markers.forEach((marker) => {
       marker.setMap(null);
     });
-    markers = [];
+    markers = []; // For each place, get the icon, name and location.
 
     const bounds = new window.google.maps.LatLngBounds();
     if (!place.geometry) {
@@ -343,8 +333,9 @@ const initAutocomplete = (onChange, position, mapElement, inputElement, isPlaceR
         clickable: true,
       })
     );
-    markers[0].addListener("dragend", (marker) => onMarkerDragged(marker, onChange, input, isPlaceRequired));
+    markers[0].addListener("dragend", (marker) => onMarkerDragged(marker, onChange, isPlaceRequired));
     if (place.geometry.viewport) {
+      // Only geocodes have viewport.
       bounds.union(place.geometry.viewport);
     } else {
       bounds.extend(place.geometry.location);
@@ -352,43 +343,15 @@ const initAutocomplete = (onChange, position, mapElement, inputElement, isPlaceR
 
     map.fitBounds(bounds);
   });
-
-  // Return cleanup function to unbind listeners
-  return () => {
-    if (boundsListener && typeof boundsListener.remove === "function") boundsListener.remove();
-    if (dragListener && typeof dragListener.remove === "function") dragListener.remove();
-    if (placeListener && typeof placeListener.remove === "function") placeListener.remove();
-  };
 };
 
 const LocationSearch = (props) => {
-  const mapRef = React.useRef(null);
-  const inputRef = React.useRef(null);
-
   useEffect(() => {
-    let active = true;
-    let cleanupListeners = null;
-
     async function mapScriptCall() {
       const getLatLng = (position) => {
-        if (!active) return;
-        const lat = parseFloat(position.coords?.latitude || position.latitude);
-        const lng = parseFloat(position.coords?.longitude || position.longitude);
-        if (isNaN(lat) || isNaN(lng)) {
-          getLatLngError();
-        } else {
-          cleanupListeners = initAutocomplete(
-            props.onChange,
-            { lat, lng },
-            mapRef.current,
-            inputRef.current,
-            props.isPlaceRequired
-          );
-        }
+        initAutocomplete(props.onChange, { lat: position.coords.latitude, lng: position.coords.longitude }, props.isPlaceRequired);
       };
-
       const getLatLngError = (error) => {
-        if (!active) return;
         let defaultLatLong = {};
         if (props?.isPTDefault) {
           defaultLatLong = props?.PTdefaultcoord?.defaultConfig || { lat: 31.6160638, lng: 74.8978579 };
@@ -398,17 +361,10 @@ const LocationSearch = (props) => {
             lng: 74.8978579,
           };
         }
-        cleanupListeners = initAutocomplete(
-          props.onChange,
-          defaultLatLong,
-          mapRef.current,
-          inputRef.current,
-          props.isPlaceRequired
-        );
+        initAutocomplete(props.onChange, defaultLatLong, props.isPlaceRequired);
       };
 
       const initMaps = () => {
-        if (!active) return;
         if (props.position?.latitude && props.position?.longitude) {
           getLatLng({ coords: props.position });
         } else if (navigator?.geolocation) {
@@ -420,29 +376,17 @@ const LocationSearch = (props) => {
 
       loadGoogleMaps(initMaps);
     }
-
     mapScriptCall();
-
-    return () => {
-      active = false;
-      if (cleanupListeners) cleanupListeners();
-    };
   }, []);
 
   return (
     <div className="map-wrap">
       <div className="map-search-bar-wrap">
+        {/* <img src={searchicon} className="map-search-bar-icon" alt=""/> */}
         <SearchIconSvg className="map-search-bar-icon" />
-        <input
-          ref={inputRef}
-          id="pac-input"
-          className="map-search-bar"
-          type="text"
-          placeholder="Search Address"
-          style={{ backgroundPosition: "left" }}
-        />
+        <input id="pac-input" className="map-search-bar" type="text" placeholder="Search Address"  style={{backgroundPosition: "left"}}/>
       </div>
-      <div ref={mapRef} id="map" className="map"></div>
+      <div id="map" className="map"></div>
     </div>
   );
 };

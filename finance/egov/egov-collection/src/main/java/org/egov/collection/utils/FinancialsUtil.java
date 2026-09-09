@@ -68,11 +68,7 @@ import org.egov.model.instrument.InstrumentType;
 import org.egov.model.instrument.InstrumentVoucher;
 import org.egov.services.contra.ContraService;
 import org.egov.services.instrument.InstrumentService;
-/*
- * Hibernate 6 Native Query Migration:
- * Replaced org.hibernate.SQLQuery with org.hibernate.query.NativeQuery per Hibernate 6 specifications.
- */
-import org.hibernate.query.NativeQuery;
+import org.hibernate.SQLQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Transactional;
@@ -267,11 +263,7 @@ public class FinancialsUtil {
             return true;
         if (purposeId != null)
             try {
-                /*
-                 * Hibernate 6 Native Query Execution:
-                 * Replaced legacy session.createSQLQuery() with createNativeQuery() and query.setParameter() for parameter binding.
-                 */
-                final NativeQuery query = persistenceService.getSession().createNativeQuery(
+                final SQLQuery query = persistenceService.getSession().createSQLQuery(
                         "SELECT NAME FROM EGF_ACCOUNTCODE_PURPOSE WHERE ID = :id");
                 query.setParameter("id", purposeId);
                 final List<String> purposeNames = query.list();

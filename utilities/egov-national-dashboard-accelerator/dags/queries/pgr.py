@@ -1,6 +1,6 @@
 
 import logging
-seen_citizen_uuids = []
+uuid = []
 def extract_pgr_closed_complaints(metrics, region_bucket):
     department_agg = region_bucket.get('department')
     department_buckets = department_agg.get('buckets')
@@ -203,13 +203,13 @@ def extract_pgr_unique_citizens(metrics, region_bucket):
     uuid_buckets = uuid_agg.get('buckets')
     for uuid_bucket in uuid_buckets:
         uuid_name = uuid_bucket.get('key')
-        if uuid_name in seen_citizen_uuids:
+        if uuid_name in uuid:
             value = 0
             logging.info("exists {0}".format(uuid_name))
         else:
             value = uuid_bucket.get('uniqueCitizens').get('value')
             metrics['uniqueCitizens'] += value
-            seen_citizen_uuids.append(uuid_name)
+            uuid.append(uuid_name)
     return metrics
 
 pgr_unique_citizens = {

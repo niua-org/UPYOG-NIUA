@@ -48,13 +48,13 @@
 package org.egov.commons.dao;
 
 import org.egov.commons.Scheme;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Repository
@@ -81,7 +81,7 @@ public class SchemeHibernateDAO implements SchemeDAO {
     }
 
     public List<Scheme> findAll() {
-        return getCurrentSession().createQuery("from Scheme", Scheme.class).list();
+        return (List<Scheme>) getCurrentSession().createCriteria(Scheme.class).list();
     }
 
     @PersistenceContext
@@ -96,29 +96,15 @@ public class SchemeHibernateDAO implements SchemeDAO {
     @Override
     public Scheme getSchemeById(final Integer id) {
         final Query query = getCurrentSession().createQuery("from Scheme s where s.id=:schemeid");
-        query.setParameter("schemeid", id);
+        query.setInteger("schemeid", id);
         return (Scheme) query.uniqueResult();
     }
 
     @Override
     public Scheme getSchemeByCode(final String code) {
         final Query query = getCurrentSession().createQuery("from Scheme s where s.code=:code");
-        query.setParameter("code", code);
+        query.setString("code", code);
         return (Scheme) query.uniqueResult();
-    }
-
-
-    @Override
-    public List<Scheme> getSchemeByNameOrCode(String queryParam) {
-        String hql = "from Scheme s " +
-                "where (lower(s.name) like :search or lower(s.code) like :search) " +
-                "and s.isactive = true " +
-                "and s.stateCode is not null";
-
-        Query query = getCurrentSession().createQuery(hql);
-        query.setParameter("search", "%" + queryParam.toLowerCase() + "%");
-
-        return (List<Scheme>) query.list();
     }
 
 }

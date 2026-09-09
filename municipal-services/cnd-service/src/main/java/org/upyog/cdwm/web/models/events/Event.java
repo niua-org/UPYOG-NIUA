@@ -3,6 +3,8 @@ package org.upyog.cdwm.web.models.events;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.Map;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 

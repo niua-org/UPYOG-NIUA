@@ -12,7 +12,7 @@ const useWSInbox = ({ tenantId, filters, config = {} }) => {
     if (mobileNumber || applicationNumber || consumerNo) {
       offset = 0;
     }
-  }, [filters?.searchForm?.applicationNumber, filters?.searchForm?.consumerNo, filters?.searchForm?.mobileNumber]);
+  },[filters?.searchForm?.applicationNumber,filters?.searchForm?.consumerNo,filters?.searchForm?.mobileNumber])
 
   if (!window.location.href.includes("upyog-ui/employee/")) {
     moduleName = moduleName;
@@ -43,6 +43,7 @@ const useWSInbox = ({ tenantId, filters, config = {} }) => {
       businessService: businessService,
       ...(applicationStatus?.length > 0 ? { status: applicationStatus } : {}),
     },
+
     moduleSearchCriteria: {
       businessService: businessService?.join(","),
       ...(mobileNumber ? { mobileNumber } : {}),
@@ -51,13 +52,14 @@ const useWSInbox = ({ tenantId, filters, config = {} }) => {
       ...(sortOrder ? { sortOrder } : {}),
       sortBy: "additionalDetails.appCreatedDate",
       ...(locality?.length > 0 ? { locality: locality.map((item) => item.code.split("_").pop()).join(",") } : {}),
+      // assignee: assignee === "ASSIGNED_TO_ME" ? user?.info?.uuid : "",
     },
     limit,
     offset,
   };
 
   if (assignee === "ASSIGNED_TO_ME") {
-    _filters.moduleSearchCriteria.assignee = user?.info?.uuid;
+    _filters.moduleSearchCriteria.assignee = user?.info?.uuid
   }
 
   return useInbox({
@@ -66,22 +68,18 @@ const useWSInbox = ({ tenantId, filters, config = {} }) => {
     config: {
       select: (data) => ({
         statuses: data.statusMap,
-        table: data?.items?.map((application) => {
-          const appData = application?.businessObject?.Data;
-          const latestHistory = appData?.history?.[0];
+        table: data?.items.map((application) => {
           return {
-            applicationNo: appData?.applicationNo || "NA",
-            applicationType: latestHistory?.businessService || "NA",
-            status: appData?.applicationStatus || latestHistory?.state?.applicationStatus || "NA",
-            owner: appData?.connectionHolders?.[0]?.name || appData?.additionalDetails?.ownerName || "NA",
-            sla: latestHistory?.businesssServiceSla
-              ? Math.round(latestHistory.businesssServiceSla / (24 * 60 * 60 * 1000))
-              : "NA",
-            connectionNo: appData?.connectionNo || "NA",
-          };
-        }) || [],
-        slaCount: data?.nearingSlaCount || 0,
-        totalCount: data?.totalCount || data?.items?.length || 0,
+            applicationNo: application?.businessObject?.Data?.applicationNo,
+            applicationType: application?.businessObject?.Data?.history?.[0]?.businessService || "NA",
+            status: application?.businessObject?.Data?.history?.[0]?.state?.state,
+            owner: application?.businessObject?.Data?.connectionHolders?.[0]?.name || application?.businessObject?.Data?.additionalDetails?.ownerName || "NA",
+            sla: application.businessObject.serviceSLA, //Math.round(application?.businessObject?.Data?.history?.[0]?.businesssServiceSla / (24 * 60 * 60 * 1000)),
+            connectionNo: application.businessObject.Data.connectionNo || "NA",
+          }
+        }),
+        slaCount: data.nearingSlaCount,
+        totalCount: data.totalCount,
       }),
       ...config,
     },

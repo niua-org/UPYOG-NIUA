@@ -49,7 +49,7 @@ package org.egov.portal.entity;
 
 import org.egov.infra.persistence.entity.AbstractAuditable;
 import org.egov.infra.persistence.validator.annotation.Unique;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -82,14 +82,14 @@ public class Firm extends AbstractAuditable {
     private Long id;
 
     @NotNull
-    @SanitizeHtml
+    @SafeHtml
     private String name;
 
     @NotNull
-    @SanitizeHtml
+    @SafeHtml
     private String pan;
 
-    @SanitizeHtml
+    @SafeHtml
     private String address;
 
     @OrderBy("id")

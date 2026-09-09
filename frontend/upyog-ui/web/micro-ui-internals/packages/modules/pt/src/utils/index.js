@@ -595,7 +595,6 @@ export const convertToProperty = (data = {}) => {
         ageOfProperty: data.propertyStructureDetails.ageOfProperty,
         structureType:data?.propertyStructureDetails?.structureType,
         owners: data.owners,
-        digipin: data?.address?.digipin || "",
       },
 
       creationReason: getCreationReason(data),
@@ -799,7 +798,6 @@ export const convertToUpdateProperty = (data = {}, t) => {
         basement2: basement2,
         ageOfProperty: data.propertyStructureDetails.ageOfProperty,
         structureType:data?.propertyStructureDetails?.structureType,
-        digipin: data?.address?.digipin || "",
       },
 
       creationReason: window.location.href.includes("edit-application")?"UPDATE":getCreationReason(data),

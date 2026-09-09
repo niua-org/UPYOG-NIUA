@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.upyog.rs.config.RequestServiceConfiguration;
 import org.upyog.rs.web.models.Demand;
@@ -12,19 +13,20 @@ import org.upyog.rs.web.models.DemandResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Repository
-@RequiredArgsConstructor
 public class DemandRepository {
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final RequestServiceConfiguration config;
+	@Autowired
+	private RequestServiceConfiguration config;
 
-	private final ObjectMapper mapper;
+	@Autowired
+	private ObjectMapper mapper;
 
 	/**
 	 * Creates demand

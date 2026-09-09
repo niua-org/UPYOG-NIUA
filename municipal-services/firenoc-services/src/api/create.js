@@ -10,7 +10,7 @@ import mdmsData from "../utils/mdmsData";
 import { addUUIDAndAuditDetails, updateStatus } from "../utils/create";
 import { calculate } from "../services/firenocCalculatorService";
 import { validateFireNOCModel } from "../utils/modelValidation";
-import { getStateSpecificTopicName } from "../utils/index";
+import { getUpdatedTopic, getStateSpecificTopicName} from "../utils/index";
 import set from "lodash/set";
 import get from "lodash/get";
 import { sendFireNOCSMSRequest } from "../utils/notificationUtil";
@@ -21,17 +21,16 @@ export default ({ config }) => {
   let api = Router();
   api.post(
     "/_create",
-    asyncHandler(async (request, res) => {
-      let response = await createApiResponse(request);
-      if (response.Errors)
+    asyncHandler(async (request, res, next) => {
+      let response = await createApiResponse(request, res, next);
+      if(response.Errors)
         res.status(400);
       res.json(response);
     })
   );
   return api;
 };
-
-export const createApiResponse = async (request) => {
+export const createApiResponse = async (request, res, next) => {
   var body = JSON.parse(JSON.stringify(request.body));
   var header = JSON.parse(JSON.stringify(request.headers));
   let payloads = [];
@@ -45,15 +44,23 @@ export const createApiResponse = async (request) => {
     header
   );
 
-  set(mdms, "MdmsRes.firenoc.boundary", get(locationResponse, "TenantBoundary.0.boundary"));
-
+  set(
+    mdms,
+    "MdmsRes.firenoc.boundary",
+    get(locationResponse, "TenantBoundary.0.boundary")
+  );
+  // console.log(JSON.stringify(locationResponse));
+  //model validator
   let errors = validateFireNOCModel(body, mdms);
   if (errors.length > 0) {
-    console.log("Validation errors:", JSON.stringify(errors, null, 2));
-    return {
-      ResponseInfo: requestInfoToResponseInfo(body.RequestInfo, true),
-      Errors: errors
-    };
+    next({
+      errorType: "custom",
+      errorReponse: {
+        ResponseInfo: requestInfoToResponseInfo(body.RequestInfo, true),
+        Errors: errors
+      }
+    });
+    return;
   }
 
   // console.log(JSON.stringify(mdms));
@@ -66,30 +73,35 @@ export const createApiResponse = async (request) => {
   //calculate call
   let { FireNOCs, RequestInfo } = body;
   for (var i = 0; i < FireNOCs.length; i++) {
-    await calculate(FireNOCs[i], RequestInfo, header);
+    let firenocResponse = await calculate(FireNOCs[i], RequestInfo, header);
   }
   body.FireNOCs = updateStatus(FireNOCs, workflowResponse);
-
+  
   let topic = envVariables.KAFKA_TOPICS_FIRENOC_CREATE;
   let tenantId = body.FireNOCs[0].tenantId;
+  
+  var isCentralInstance  = envVariables.IS_ENVIRONMENT_CENTRAL_INSTANCE;
+  if(typeof isCentralInstance =="string")
+  isCentralInstance = (isCentralInstance.toLowerCase() == "true");
 
-  var isCentralInstance = envVariables.IS_ENVIRONMENT_CENTRAL_INSTANCE;
-  if (typeof isCentralInstance == "string")
-    isCentralInstance = (isCentralInstance.toLowerCase() == "true");
-
-  if (isCentralInstance)
+  if(isCentralInstance)
     topic = getStateSpecificTopicName(tenantId, topic);
 
-  payloads.push({ topic, messages: JSON.stringify(body) });
-
+  payloads.push({
+    topic: topic,
+    messages: JSON.stringify(body)
+  });
+  
   sendFireNOCSMSRequest(body.FireNOCs, RequestInfo);
 
-  producer.send(payloads, function(err) {
-    if (err) console.log(err);
-  });
 
-  return {
+  let response = {
     ResponseInfo: requestInfoToResponseInfo(body.RequestInfo, true),
     FireNOCs: body.FireNOCs
   };
+
+  producer.send(payloads, function(err, data) {
+    if (err) console.log(err);
+  });
+  return response;
 };

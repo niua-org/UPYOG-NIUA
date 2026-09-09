@@ -49,14 +49,17 @@ package org.egov.commons.service;
 
 import org.egov.common.entity.Nationality;
 import org.egov.commons.repository.NationalityRepository;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Service
@@ -84,21 +87,19 @@ public class NationalityService {
     }
 
     public List<Nationality> findAll() {
-        return nationalityRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return nationalityRepository.findAll(new Sort(Sort.Direction.ASC, "name"));
     }
 
     public Nationality findOne(final Long id) {
-        return nationalityRepository.findById(id).orElse(null);
+        return nationalityRepository.findOne(id);
     }
 
     public List<Nationality> search(final Nationality nationality) {
-        StringBuilder hql = new StringBuilder("from Nationality where 1=1");
-        if (nationality.getName() != null)
-            hql.append(" and lower(name) like :name");
-        org.hibernate.query.Query<Nationality> query = getCurrentSession().createQuery(hql.toString(), Nationality.class);
-        if (nationality.getName() != null)
-            query.setParameter("name", "%" + nationality.getName().toLowerCase() + "%");
-        return query.list();
+        final Criteria criteria = getCurrentSession().createCriteria(
+                Nationality.class);
+        if (null != nationality.getName())
+            criteria.add(Restrictions.ilike("name", nationality.getName(), MatchMode.ANYWHERE));
+        return criteria.list();
     }
 
 }

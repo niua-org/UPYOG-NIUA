@@ -52,8 +52,8 @@ import org.egov.infra.exception.ApplicationRuntimeException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 public class BankbranchDAO {
 

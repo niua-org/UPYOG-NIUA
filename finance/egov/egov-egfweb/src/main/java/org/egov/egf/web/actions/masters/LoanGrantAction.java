@@ -71,12 +71,10 @@ import org.egov.infra.web.struts.annotation.ValidationErrorPage;
 import org.egov.infstr.services.PersistenceService;
 import org.egov.services.masters.BankService;
 import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.Query;
 import org.hibernate.transform.Transformers;
-
-
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -172,9 +170,9 @@ public class LoanGrantAction extends LoanGrantBaseAction {
         final String strQuery = new StringBuilder("select pc.id as id , pc.code as code, pc.name as name")
                 .append(" from egw_projectcode pc, egf_subscheme_project sp")
                 .append(" where pc.id= sp.projectcodeid and sp.subschemeid=:subSchemeId").toString();
-        query = persistenceService.getSession().createNativeQuery(strQuery)
-                .addScalar("id", StandardBasicTypes.LONG).addScalar("code").addScalar("name")
-                .setParameter("subSchemeId", subSchemeId, StandardBasicTypes.INTEGER)
+        query = persistenceService.getSession().createSQLQuery(strQuery)
+                .addScalar("id", LongType.INSTANCE).addScalar("code").addScalar("name")
+                .setParameter("subSchemeId", subSchemeId, IntegerType.INSTANCE)
                 .setResultTransformer(Transformers.aliasToBean(LoanGrantBean.class));
         projectCodeList = query.list();
         
@@ -414,7 +412,7 @@ public class LoanGrantAction extends LoanGrantBaseAction {
                     lgRecptDetail.setCreatedDate(currDate);
                     lgRecptDetail.setModifiedDate(currDate);
                 }
-            query = persistenceService.getSession().createNativeQuery(
+            query = persistenceService.getSession().createSQLQuery(
                     "delete from egf_subscheme_project where subschemeid= " + getSubSchemeId());
             query.executeUpdate();
             SubSchemeProject subSchemeProject;

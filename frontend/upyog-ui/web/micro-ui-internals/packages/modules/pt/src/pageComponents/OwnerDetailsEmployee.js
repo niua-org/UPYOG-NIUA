@@ -14,7 +14,6 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { stringReplaceAll, CompareTwoObjects } from "../utils";
-import "../css/pt-inline.css";
 
 const createOwnerDetails = () => ({
   name: "",
@@ -136,7 +135,7 @@ const PTEmployeeOwnershipDetails = ({ config, onSelect, userType, formData, setE
         <OwnerForm key={owner.key} index={index} owner={owner} {...commonProps} />
       ))}
       {!isEditScreen && formData?.ownershipCategory?.code === "INDIVIDUAL.MULTIPLEOWNERS" ? (
-        <LinkButton label="Add Owner" onClick={addNewOwner} className="pt-inline-add-owner-btn" />
+        <LinkButton label="Add Owner" onClick={addNewOwner} style={{ color: "orange" }} />
       ) : null}
     </React.Fragment>
   ) : null;
@@ -169,13 +168,11 @@ const OwnerForm = (_props) => {
   const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, unregister } = useForm({
     mode: "onChange",
   });
-
+  console.log("localstate", localFormState)
   const formValue = watch();
-  // Destructure touchedFields and touched from formState to register and track field-level interactions
-  // safely, guarding against undefined formState proxy properties.
-  const { errors, touchedFields, touched } = localFormState;
+  const { errors } = localFormState;
   const tenantId = Digit.ULBService.getCurrentTenantId();
-
+  
   // Only set institution fields for non-individual owners
   if (!formData?.ownershipCategory?.code.includes("INDIVIDUAL")) {
     owner["institution"] = { name: owner?.institution?.name ? formValue?.institution?.name : institution?.name };
@@ -226,13 +223,7 @@ const OwnerForm = (_props) => {
   }, [mdmsData, formData?.ownershipCategory]);
 
   useEffect(() => {
-    // Only trigger validation on mount if the owner is pre-populated (e.g., loaded from formData).
-    // Calling trigger() on a fresh/empty owner immediately marks all required fields as invalid,
-    // which propagates errors to the parent form and blocks the submit button even when
-    // the user has filled all the other form sections correctly.
-    if (owner?.name) {
-      trigger();
-    }
+    trigger();
   }, []);
 
   const [part, setPart] = React.useState({});
@@ -245,7 +236,7 @@ const OwnerForm = (_props) => {
       setOwners((prev) => prev.map((o) => (o.key && o.key === owner.key ? { ...o, ...formValue, ..._ownerType } : { ...o })));
     }
   }, [formValue]);
-
+  
   // Clear institution and designation errors for INDIVIDUAL owners
   useEffect(() => {
     if (isIndividualTypeOwner) {
@@ -261,13 +252,13 @@ const OwnerForm = (_props) => {
   //   else if(emailPattern.test(value)){
   //     console.log("condition met")
   //     setErrors("");
-
-
+      
+      
   //   }
   //   else{
   //     setErrors("Email shd be in correct fromat");
-
-
+      
+      
   //   }
   // }
   // const handleEmailChange=(e)=>{
@@ -275,19 +266,21 @@ const OwnerForm = (_props) => {
   //   const value=e.target.value;
   //   setEmail(value);
   //   validateEmail(value);
-
+      
   // }
   // useEffect(() => {
   //   if(email){
   //     validateEmail(email);
   //   }
-
+    
   // }, [email])
 
 
   useEffect(() => {
     updateOwnerErrors(owner.key, errors);
   }, [errors]);
+
+  const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
 
   useEffect(() => {
     const getData = setTimeout(async () => {
@@ -308,17 +301,17 @@ const OwnerForm = (_props) => {
 
   return (
     <React.Fragment>
-      <div className="pt-inline-owner-form-section">
+      <div style={{ marginBottom: "16px" }}>
         <div className="label-field-pair">
-          <h2 className="card-label card-label-smaller pt-inline-owner-form-heading">
+          <h2 className="card-label card-label-smaller" style={{ color: "#505A5F" }}>
             {isIndividualTypeOwner
               ? `Owner ${formData?.ownershipCategory?.code?.includes("MULTIPLE") ? index + 1 : ""}`
               : "Authorised Person Details"}
           </h2>
         </div>
-        <div className="pt-inline-owner-form-body">
+        <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
           {allOwners?.length > 2 ? (
-            <div onClick={() => removeOwner(owner)} className="pt-inline-owner-remove">
+            <div onClick={() => removeOwner(owner)} style={{ marginBottom: "16px", padding: "5px", cursor: "pointer", textAlign: "right" }}>
               X
             </div>
           ) : null}
@@ -331,7 +324,7 @@ const OwnerForm = (_props) => {
                   <Controller
                     control={control}
                     name={"institution.name"}
-                    defaultValue={isEditScreen ? (institution?.name ? institution.name : owner?.name) : null}
+                    defaultValue={isEditScreen ? ( institution?.name ? institution.name : owner?.name) : null}
                     rules={{
                       required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                       validate: {
@@ -357,8 +350,8 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">
-                {(localFormState?.touchedFields?.institution?.name || localFormState?.touched?.institution?.name) ? errors?.institution?.name?.message : ""}
+              <CardLabelError style={errorStyle}>
+                {localFormState.touchedFields.institution?.name ? errors?.institution?.name?.message : ""}
               </CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_INSTITUTION_TYPE")}<span className="check-page-link-button"> *</span></CardLabel>
@@ -368,11 +361,11 @@ const OwnerForm = (_props) => {
                   defaultValue={
                     isEditScreen
                       ? {
-                        active: true,
-                        code: institution?.type,
-                        i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`,
-                        name: t(`COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`),
-                      }
+                          active: true,
+                          code: institution?.type,
+                          i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`,
+                          name: t(`COMMON_MASTERS_OWNERSHIPCATEGORY_${stringReplaceAll(institution?.type || "")}`),
+                        }
                       : null
                   }
                   rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
@@ -390,8 +383,8 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">
-                {(localFormState?.touchedFields?.institution?.type || localFormState?.touched?.institution?.type) ? errors?.institution?.type?.message : ""}
+              <CardLabelError style={errorStyle}>
+                {localFormState.touchedFields.institution?.type ? errors?.institution?.type?.message : ""}
               </CardLabelError>
             </React.Fragment>
           ) : null}
@@ -405,7 +398,7 @@ const OwnerForm = (_props) => {
                 defaultValue={owner?.name}
                 rules={{
                   required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-
+                 
                 }}
                 render={({ field }) => (
                   <TextInput
@@ -425,7 +418,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.name || localFormState?.touched?.name) ? errors?.name?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields.name ? errors?.name?.message : ""}</CardLabelError>
 
           {isIndividualTypeOwner ? (
             <React.Fragment>
@@ -450,12 +443,12 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.gender || localFormState?.touched?.gender) ? errors?.gender?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.gender ? errors?.gender?.message : ""}</CardLabelError>
             </React.Fragment>
           ) : (
             <React.Fragment>
               <LabelFieldPair>
-                <CardLabel className="card-label-smaller">{t("PT_LANDLINE_NUMBER_FLOATING_LABEL")}{isIndividualTypeOwner ? "" : <span className="check-page-link-button"> *</span>}</CardLabel>
+                <CardLabel className="card-label-smaller">{t("PT_LANDLINE_NUMBER_FLOATING_LABEL")}{ isIndividualTypeOwner ?"": <span className="check-page-link-button"> *</span>}</CardLabel>
                 <div className="field">
                   <Controller
                     control={control}
@@ -465,9 +458,9 @@ const OwnerForm = (_props) => {
                       isIndividualTypeOwner
                         ? {}
                         : {
-                          required: t("CORE_COMMON_REQUIRED_ERRMSG"),
-                          validate: { pattern: (e) => (/^[0-9]{11}$/i.test(e) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
-                        }
+                            required: t("CORE_COMMON_REQUIRED_ERRMSG"),
+                            validate: { pattern: (e) => (/^[0-9]{11}$/i.test(e) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
+                          }
                     }
                     render={({ field }) => (
                       <MobileNumber
@@ -487,7 +480,7 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.altContactNumber || localFormState?.touched?.altContactNumber) ? errors?.altContactNumber?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.altContactNumber ? errors?.altContactNumber?.message : ""}</CardLabelError>
             </React.Fragment>
           )}
           <LabelFieldPair>
@@ -517,7 +510,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.mobileNumber || localFormState?.touched?.mobileNumber) ? errors?.mobileNumber?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
           {isIndividualTypeOwner ? (
             <React.Fragment>
               <LabelFieldPair>
@@ -546,8 +539,8 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">
-                {(localFormState?.touchedFields?.fatherOrHusbandName || localFormState?.touched?.fatherOrHusbandName) ? errors?.fatherOrHusbandName?.message : ""}
+              <CardLabelError style={errorStyle}>
+                {localFormState.touchedFields.fatherOrHusbandName ? errors?.fatherOrHusbandName?.message : ""}
               </CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_FORM3_RELATIONSHIP")} <span className="check-page-link-button"> *</span> </CardLabel>
@@ -573,7 +566,7 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.relationship || localFormState?.touched?.relationship) ? errors?.relationship?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.relationship ? errors?.relationship?.message : ""}</CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_FORM3_SPECIAL_CATEGORY")} <span className="check-page-link-button"> *</span> </CardLabel>
                 <Controller
@@ -595,7 +588,7 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.ownerType || localFormState?.touched?.ownerType) ? errors?.ownerType?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.ownerType ? errors?.ownerType?.message : ""}</CardLabelError>
             </React.Fragment>
           ) : (
             <React.Fragment>
@@ -605,7 +598,7 @@ const OwnerForm = (_props) => {
                   <Controller
                     control={control}
                     name={"designation"}
-                    defaultValue={isEditScreen ? (institution?.designation || "") : null}
+                    defaultValue={isEditScreen ? ( institution?.designation || "") : null}
                     rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                     render={({ field }) => (
                       <TextInput
@@ -622,7 +615,7 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">{(localFormState?.touchedFields?.designation || localFormState?.touched?.designation) ? errors?.designation?.message : ""}</CardLabelError>
+              <CardLabelError style={errorStyle}>{localFormState.touchedFields.designation ? errors?.designation?.message : ""}</CardLabelError>
             </React.Fragment>
           )}
 
@@ -649,8 +642,8 @@ const OwnerForm = (_props) => {
                   )}
                 />
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">
-                {(localFormState?.touchedFields?.documents?.documentType || localFormState?.touched?.documents?.documentType) ? errors?.documents?.documentType?.message : ""}
+              <CardLabelError style={errorStyle}>
+                {localFormState.touchedFields.documents?.documentType ? errors?.documents?.documentType?.message : ""}
               </CardLabelError>
               <LabelFieldPair>
                 <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_DOCUMENT_ID")} <span className="check-page-link-button"> *</span> </CardLabel>
@@ -677,48 +670,45 @@ const OwnerForm = (_props) => {
                   />
                 </div>
               </LabelFieldPair>
-              <CardLabelError className="pt-inline-owner-error">
-                {(localFormState?.touchedFields?.documents?.documentUid || localFormState?.touched?.documents?.documentUid) ? errors?.documents?.documentUid?.message : ""}
+              <CardLabelError style={errorStyle}>
+                {localFormState.touchedFields.documents?.documentUid ? errors?.documents?.documentUid?.message : ""}
               </CardLabelError>{" "}
             </React.Fragment>
           ) : null}
           <div>
-            <LabelFieldPair>
-              <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_EMAIL_ID")}</CardLabel>
-              <div className="field">
-                <Controller
-                  control={control}
-                  name={"emailId"}
-                  defaultValue={owner?.emailId}
-                  rules={{
-                    validate: (e) => {
-                      if (!e) return true;
-                      return /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(e) || t("CORE_INVALID_EMAIL_ID_PATTERN")
-                    }
-                  }
-                  }
-                  render={({ field }) => (
-                    <TextInput
-                      value={field.value}
-                      disable={isEditScreen}
-                      autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
-                      errorStyle={localFormState.touchedFields.emailId && errors?.emailId?.message ? true : false}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        setFocusIndex({ index: owner.key, type: "emailId" });
-                      }}
-                      labelStyle={{ marginTop: "unset" }}
-                      onBlur={field.onBlur}
-                    />
-                  )}
-                />
-              </div>
-            </LabelFieldPair>
-            <CardLabelError className="pt-inline-owner-error">{localFormState.touchedFields.emailId ? errors?.emailId?.message : ""}</CardLabelError>
+          <LabelFieldPair>
+            <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_EMAIL_ID")}</CardLabel>
+            <div className="field">
+              <Controller
+                control={control}
+                name={"emailId"}
+                defaultValue={owner?.emailId}
+                rules={{ validate: (e) => {
+                    if (!e) return true;
+                    return /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(e) || t("CORE_INVALID_EMAIL_ID_PATTERN")}}
+                }
+                render={({ field }) => (
+                  <TextInput
+                    value={field.value}
+                    disable={isEditScreen}
+                    autoFocus={focusIndex.index === owner?.key && focusIndex.type === "emailId"}
+                    errorStyle={localFormState.touchedFields.emailId && errors?.emailId?.message ? true : false}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setFocusIndex({ index: owner.key, type: "emailId" });
+                    }}
+                    labelStyle={{ marginTop: "unset" }}
+                    onBlur={field.onBlur}
+                  />
+                )}
+              />
+            </div>
+          </LabelFieldPair>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields.emailId ? errors?.emailId?.message : ""}</CardLabelError>
           </div>
 
           <LabelFieldPair>
-            <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_CORR_ADDR")}{isIndividualTypeOwner ? "" : <span className="check-page-link-button"> *</span>}</CardLabel>
+            <CardLabel className="card-label-smaller">{t("PT_OWNERSHIP_INFO_CORR_ADDR")}{isIndividualTypeOwner ? "": <span className="check-page-link-button"> *</span> }</CardLabel>
             <div className="field">
               <Controller
                 control={control}
@@ -740,8 +730,8 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="pt-inline-owner-error">
-            {(localFormState?.touchedFields?.correspondenceAddress || localFormState?.touched?.correspondenceAddress) ? errors?.correspondenceAddress?.message : ""}
+          <CardLabelError style={errorStyle}>
+            {localFormState.touchedFields.correspondenceAddress ? errors?.correspondenceAddress?.message : ""}
           </CardLabelError>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import Timeline from "../components/CHBTimeline";
 import { Controller, useForm } from "react-hook-form";
 import ChbCancellationPolicy from "../components/ChbCancellationPolicy";
-import { TimerValues } from "../components/TimerValues";
+// import { TimerValues } from "../components/TimerValues";
 
 
 /**
@@ -103,7 +103,7 @@ const CHBSlotDetails
         ownerStep = { ...owner,specialCategory,purpose,purposeDescription};
         onSelect(config.key, ownerStep, false, index);
       }
-
+      console.log(ownerStep);
     };
 
     const onSkip = () => onSelect();
@@ -141,10 +141,10 @@ const CHBSlotDetails
           {value?.bookingSlotDetails && value.bookingSlotDetails.length > 0
             ? formatSlotDetails(value.bookingSlotDetails)
             : null}
-           <TimerValues timerValues={value?.existingDataSet?.timervalue?.timervalue} SlotSearchData={value?.searchData} draftId={value?.existingDataSet?.draftId} />
+           {/* <TimerValues timerValues={value?.existingDataSet?.timervalue?.timervalue} SlotSearchData={value?.Searchdata} /> */}
           </div>
         </CardSubHeader>
-        <ChbCancellationPolicy slotDetail={value?.bookingSlotDetails} SlotSearchData={value}/>
+        <ChbCancellationPolicy slotDetail={value?.bookingSlotDetails}/>
       </Card>
         <FormStep
           config={config}

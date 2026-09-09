@@ -78,14 +78,19 @@ import org.egov.pims.model.PersonalInformation;
 import org.egov.pims.model.SearchEmpDTO;
 import org.egov.pims.model.ServiceHistory;
 import org.egov.pims.utils.EisManagersUtill;
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.IntegerType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javassist.tools.rmi.ObjectNotFoundException;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -188,17 +193,17 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             }
             // }
 
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             qry = getCurrentSession().createQuery(mainStr);
             LOGGER.info("qryqryqryqry" + qry.toString());
             if (code != null && !code.equals("")) {
-                qry.setParameter("employeeCode", code.trim().toUpperCase());
+                qry.setString("employeeCode", code.trim().toUpperCase());
             }
             if (departmentId.intValue() != 0) {
-                qry.setParameter("deptId", departmentId.longValue());
+                qry.setLong("deptId", departmentId.longValue());
             }
             if (designationId.intValue() != 0) {
-                qry.setParameter("designationId", designationId);
+                qry.setInteger("designationId", designationId);
             }
             employeeList = (List) qry.list();
 
@@ -261,20 +266,20 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             }
             // }
 
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             qry = getCurrentSession().createQuery(mainStr);
             LOGGER.info("qryqryqryqry" + qry.toString());
             if (code != null && !code.equals("")) {
-                qry.setParameter("employeeCode", code.trim().toUpperCase());
+                qry.setString("employeeCode", code.trim().toUpperCase());
             }
             if (departmentId.intValue() != 0) {
-                qry.setParameter("deptId", departmentId);
+                qry.setInteger("deptId", departmentId);
             }
             if (designationId.intValue() != 0) {
-                qry.setParameter("designationId", designationId);
+                qry.setInteger("designationId", designationId);
             }
             if (status.intValue() != 0) {
-                qry.setParameter("employeeStatus", status);
+                qry.setInteger("employeeStatus", status);
             }
             employeeList = (List) qry.list();
 
@@ -344,23 +349,23 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             }
             // }
 
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             qry = getCurrentSession().createQuery(mainStr);
             LOGGER.info("qryqryqryqry" + qry.toString());
             if (code != null && !code.equals("")) {
-                qry.setParameter("employeeCode", code.trim().toUpperCase());
+                qry.setString("employeeCode", code.trim().toUpperCase());
             }
             if (departmentId.intValue() != 0) {
-                qry.setParameter("deptId", departmentId);
+                qry.setInteger("deptId", departmentId);
             }
             if (designationId.intValue() != 0) {
-                qry.setParameter("designationId", designationId);
+                qry.setInteger("designationId", designationId);
             }
             if (functionaryId.intValue() != 0) {
-                qry.setParameter("functionaryId", functionaryId);
+                qry.setInteger("functionaryId", functionaryId);
             }
             if (status.intValue() != 0) {
-                qry.setParameter("employeeStatus", status);
+                qry.setInteger("employeeStatus", status);
             }
             employeeList = (List) qry.list();
 
@@ -394,7 +399,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
         Integer userId = finParams.get("userId") == null ? 0 : finParams.get("userId");
         Integer isActive = finParams.get("isActive") == null ? 0 : finParams.get("isActive");
         try {
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             if (code != null && !code.equals("")) {
                 logger.info(" Search by Code " + code);
                
@@ -469,25 +474,25 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
                 qry = getCurrentSession().createQuery(mainStr);
                 if (departmentId.intValue() != 0) {
-                    qry.setParameter("deptId", departmentId);
+                    qry.setInteger("deptId", departmentId);
                 }
                 if (designationId.intValue() != 0) {
-                    qry.setParameter("designationId", designationId);
+                    qry.setInteger("designationId", designationId);
                 }
                 if (functionaryId.intValue() != 0) {
-                    qry.setParameter("functionaryId", functionaryId);
+                    qry.setInteger("functionaryId", functionaryId);
                 }
                 if (status.intValue() != 0) {
-                    qry.setParameter("employeeStatus", status);
+                    qry.setInteger("employeeStatus", status);
                 }
                 if (empType.intValue() != 0) {
-                    qry.setParameter("employeeType", empType);
+                    qry.setInteger("employeeType", empType);
                 }
                 if (isActive.intValue() != 0) {
-                    qry.setParameter("isActive", isActive);
+                    qry.setInteger("isActive", isActive);
                 }
                 if (userId.intValue() != 0) {
-                    qry.setParameter("userId", userId);
+                    qry.setInteger("userId", userId);
                 }
                 employeeList = (List) qry.list();
             }
@@ -528,19 +533,19 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      * " WHERE evn.id = ev.id AND upper(ev.isPrimary)='Y' AND NOT EXISTS  (SELECT evn2.id FROM EmployeeView evn2 WHERE evn2.id = ev.id AND "
      * +
      * " ((evn2.toDate  IS NULL AND evn2.fromDate <= TO_DATE(SYSDATE,'dd-MM-yyy')) OR (evn2.fromDate <= TO_DATE(SYSDATE,'dd-MM-yyy') AND evn2.toDate >= TO_DATE(SYSDATE,'dd-MM-yyy'))) )))"
-     * + " ) "; org.hibernate.query.Query qry = null; qry =
+     * + " ) "; Query qry = null; qry =
      * getCurrentSession().createQuery(mainStr);
      * LOGGER.info("qryqryqryqry"+qry.toString());
-     * if(code!=null&&!code.equals("")) { qry.setParameter("employeeCode",
+     * if(code!=null&&!code.equals("")) { qry.setString("employeeCode",
      * code.trim().toUpperCase()); } if(name!= null && !name.equals("")) {
-     * qry.setParameter("empName","%"+name.trim().toUpperCase()+"%"); }
-     * if(departmentId.intValue() != 0) { qry.setParameter("deptId",
+     * qry.setString("empName","%"+name.trim().toUpperCase()+"%"); }
+     * if(departmentId.intValue() != 0) { qry.setInteger("deptId",
      * departmentId); } if(designationId.intValue() != 0) {
-     * qry.setParameter("designationId", designationId); }
-     * if(functionaryId.intValue() != 0) { qry.setParameter("functionaryId",
+     * qry.setInteger("designationId", designationId); }
+     * if(functionaryId.intValue() != 0) { qry.setInteger("functionaryId",
      * functionaryId); } if(status.intValue() != 0) {
-     * qry.setParameter("employeeStatus", status); } if(empType.intValue() != 0) {
-     * qry.setParameter("employeeType",empType); } employeeList =
+     * qry.setInteger("employeeStatus", status); } if(empType.intValue() != 0) {
+     * qry.setInteger("employeeType",empType); } employeeList =
      * (List)qry.list(); } catch (HibernateException he) { LOGGER.error(he);
      * ApplicationRuntimeException("Exception:" + he.getMessage(),he); } catch
      * throw new ApplicationRuntimeException("Exception:" + he.getMessage(),he); }
@@ -598,29 +603,29 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
                     + " WHERE evn.id = ev.id AND upper(ev.isPrimary)='Y' AND NOT EXISTS  (SELECT evn2.id FROM EmployeeView evn2 WHERE evn2.id = ev.id AND "
                     + " ((evn2.toDate  IS NULL AND evn2.fromDate <= TO_DATE(SYSDATE,'dd-MM-yyy')) OR (evn2.fromDate <= TO_DATE(SYSDATE,'dd-MM-yyy') AND evn2.toDate >= TO_DATE(SYSDATE,'dd-MM-yyy'))) )))) ";
 
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             qry = getCurrentSession().createQuery(mainStr);
             LOGGER.info("qryqryqryqry" + qry.toString());
             if (code != null && !code.equals("")) {
-                qry.setParameter("employeeCode", code.trim().toUpperCase());
+                qry.setString("employeeCode", code.trim().toUpperCase());
             }
             if (departmentId.intValue() != 0) {
-                qry.setParameter("deptId", departmentId);
+                qry.setInteger("deptId", departmentId);
             }
             if (name != null && !name.equals("")) {
-                qry.setParameter("empName", "%" + name.trim().toUpperCase() + "%");
+                qry.setString("empName", "%" + name.trim().toUpperCase() + "%");
             }
             if (designationId.intValue() != 0) {
-                qry.setParameter("designationId", designationId);
+                qry.setInteger("designationId", designationId);
             }
             if (functionaryId.intValue() != 0) {
-                qry.setParameter("functionaryId", functionaryId);
+                qry.setInteger("functionaryId", functionaryId);
             }
             if (status.intValue() != 0) {
-                qry.setParameter("employeeStatus", status);
+                qry.setInteger("employeeStatus", status);
             }
             if (empType.intValue() != 0) {
-                qry.setParameter("employeeType", empType);
+                qry.setInteger("employeeType", empType);
             }
             employeeList = (List) qry.list();
 
@@ -666,7 +671,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
             mainStr = mainStr + orderByStr;
 
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             qry = getCurrentSession().createQuery(mainStr);
 
             LOGGER.info("Query in search Employee by grouping==" + qry.toString());
@@ -691,10 +696,10 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
         try {
 
             StringBuilder mainStr = new StringBuilder("select ev.employeeCode,ev.employeeName,ev.id,ev.desigId.designationId, ev.deptId.id ,ev.fromDate,ev.toDate from EmployeeView ev where ev.id = :empId");
-            org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr.toString());
+            Query qry = getCurrentSession().createQuery(mainStr.toString());
 
             if (empId.intValue() != 0) {
-                qry.setParameter("empId", empId);
+                qry.setInteger("empId", empId);
 
             }
             employeeList = qry.list();
@@ -768,11 +773,11 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
             if (empId != null) {
                 String mainStr = " select 	ev.assignment  from EmployeeView ev  where ev.assignment.isPrimary = 'Y' and ev.id = :empId and ((ev.toDate is null and ev.fromDate <= :date1 ) OR (ev.fromDate <= :date2 AND ev.toDate >= :date3 ))";
-                org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr);
-                qry.setParameter("empId", empId);
-                qry.setParameter("date1", new java.sql.Date(date.getTime()));
-                qry.setParameter("date2", new java.sql.Date(date.getTime()));
-                qry.setParameter("date3", new java.sql.Date(date.getTime()));
+                Query qry = getCurrentSession().createQuery(mainStr);
+                qry.setInteger("empId", empId);
+                qry.setDate("date1", new java.sql.Date(date.getTime()));
+                qry.setDate("date2", new java.sql.Date(date.getTime()));
+                qry.setDate("date3", new java.sql.Date(date.getTime()));
 
                 if (qry.list() != null && !qry.list().isEmpty()) {
                     assignment = (Assignment) qry.list().get(0);
@@ -796,11 +801,11 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
         try {
             String mainStr = "";
             mainStr = " select ev.assignment from EmployeeView ev where ev.assignment.isPrimary = 'Y' and ev.id = :empId and ((ev.toDate is null and ev.fromDate <= :sysDate ) OR (ev.fromDate <= :sysDate AND ev.toDate >= :sysDate))";
-            org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr);
+            Query qry = getCurrentSession().createQuery(mainStr);
 
             if (empId != null) {
-                qry.setParameter("empId", empId);
-                qry.setParameter("sysDate", new java.sql.Date(currDate.getTime()));
+                qry.setInteger("empId", empId);
+                qry.setDate("sysDate", new java.sql.Date(currDate.getTime()));
             }
             if (qry.list() != null && !qry.list().isEmpty()) {
                 for (Iterator iter = qry.list().iterator(); iter.hasNext();) {
@@ -827,7 +832,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      * if(applicationNumber!=null&&!applicationNumber.equals("")) mainStr
      * +=" and upper(trim(dp.applicationNumber)) = :applicationNumber "; Query
      * qry = getCurrentSession().createQuery(mainStr); if(empId != null) {
-     * qry.setParameter("empId", empId); }
+     * qry.setInteger("empId", empId); }
      * if(chargeMemoNo!=null&&!chargeMemoNo.equals("")) {
      * qry.setString("chargeMemoNo", chargeMemoNo); }
      * if(applicationNumber!=null&&!applicationNumber.equals("")) {
@@ -863,9 +868,9 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      * (Long.valueOf(finId)); stFyDate = financialYear.getStartingDate(); }
      * String mainStr =
      * "select ev.desigId.designationId, ev.fromDate,ev.toDate  from EmployeeView ev  where ev.id = :empId and  ( ev.toDate is null or ev.toDate >= :startingFy ) and  ev.fromDate <  :givenDate "
-     * ; org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr); if(empId != null)
-     * { qry.setParameter("empId", empId); qry.setDate("startingFy", new
-     * java.sql.Date(stFyDate.getTime())); qry.setParameter("givenDate",
+     * ; Query qry = getCurrentSession().createQuery(mainStr); if(empId != null)
+     * { qry.setInteger("empId", empId); qry.setDate("startingFy", new
+     * java.sql.Date(stFyDate.getTime())); qry.setDate("givenDate",
      * myGivenDate); } List listOfHistory = qry.list();
      * if(qry.list()!=null&&!qry.list().isEmpty()) { for(Iterator iter =
      * listOfHistory.iterator();iter.hasNext();) { Object [] objArray = (Object
@@ -886,9 +891,9 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      * Long(finId)); java.util.Date stFyDate = financialYear.getStartingDate();
      * String mainStr =
      * "select ev.desigId.designationId, ev.fromDate,ev.toDate  from EmployeeView ev  where ev.id = :empId and  ( ev.toDate is null or ev.toDate >= :startingFy ) and  ev.fromDate <  :givenDate "
-     * ; org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr); if(empId != null)
-     * { qry.setParameter("empId", empId); qry.setDate("startingFy", new
-     * java.sql.Date(stFyDate.getTime())); qry.setParameter("givenDate", givenDate);
+     * ; Query qry = getCurrentSession().createQuery(mainStr); if(empId != null)
+     * { qry.setInteger("empId", empId); qry.setDate("startingFy", new
+     * java.sql.Date(stFyDate.getTime())); qry.setDate("givenDate", givenDate);
      * } List listOfHistory = qry.list();
      * if(qry.list()!=null&&!qry.list().isEmpty()) { for(Iterator iter =
      * listOfHistory.iterator();iter.hasNext();) { Object [] objArray = (Object
@@ -927,10 +932,10 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 			StringBuilder mainStr;
 			mainStr = new StringBuilder(
 					" select 	id  from EG_EIS_EMPLOYEEINFO ev  where ev.POS_ID = :pos and ((ev.to_Date is null and ev.from_Date <= SYSDATE ) OR (ev.from_Date <= SYSDATE AND ev.to_Date > SYSDATE))");
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery(mainStr.toString(), Integer.class);
+			Query qry = getCurrentSession().createSQLQuery(mainStr.toString()).addScalar("id", IntegerType.INSTANCE);
             
             if (pos != null) {
-                qry.setParameter("pos", pos.getId());
+                qry.setEntity("pos", pos);
             }
             if (qry.list() != null && !qry.list().isEmpty()) {
                 for (Iterator iter = qry.list().iterator(); iter.hasNext();) {
@@ -957,10 +962,11 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 			StringBuilder mainStr;
 			mainStr = new StringBuilder(
 					" select 	POS_ID  from EG_EIS_EMPLOYEEINFO ev  where ev.ID = :empId and ((ev.to_Date is null and ev.from_Date <= SYSDATE ) OR (ev.from_Date <= SYSDATE AND ev.to_Date >= SYSDATE))");
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery(mainStr.toString(), Integer.class);
+			Query qry = getCurrentSession().createSQLQuery(mainStr.toString()).addScalar("POS_ID",
+					IntegerType.INSTANCE);
 
             if (empId != null) {
-                qry.setParameter("empId", empId);
+                qry.setInteger("empId", empId);
             }
             list = qry.list();
             if (list != null && !list.isEmpty()) {
@@ -995,10 +1001,10 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
         boolean b = false;
         try {
-            org.hibernate.query.Query qry = getCurrentSession()
+            Query qry = getCurrentSession()
                     .createQuery("from " + className + " CA where trim(upper(CA.name)) = :name ");
-            qry.setParameter("name", name);
-            Iterator iter = qry.list().iterator();
+            qry.setString("name", name);
+            Iterator iter = qry.iterate();
 
             if (iter.hasNext()) {
 
@@ -1226,7 +1232,8 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
         Integer id = Integer.valueOf(0);
         try {
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery("SELECT SEQ_DIS_APP.nextval as id from dual", Integer.class);
+			Query qry = getCurrentSession().createSQLQuery("SELECT SEQ_DIS_APP.nextval as id from dual").addScalar("id",
+					IntegerType.INSTANCE);
 
             if (qry.list() != null && !qry.list().isEmpty()) {
                 Integer obj = null;
@@ -1251,7 +1258,9 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
         Integer id = Integer.valueOf(0);
         try {
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery("SELECT CODE AS id FROM EG_EMPLOYEE emp  WHERE emp.CODE =(SELECT MAX(code) FROM EG_EMPLOYEE )  FOR UPDATE ", Integer.class);
+			Query qry = getCurrentSession().createSQLQuery(
+					"SELECT CODE AS id FROM EG_EMPLOYEE emp  WHERE emp.CODE =(SELECT MAX(code) FROM EG_EMPLOYEE )  FOR UPDATE ")
+					.addScalar("id", IntegerType.INSTANCE);
             if (qry.list() != null && !qry.list().isEmpty()) {
                 Integer obj = null;
                 for (Iterator iter = qry.list().iterator(); iter.hasNext();) {
@@ -1283,7 +1292,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
         boolean b = false;
 
         try {
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
 
             if (fromDate != null && toDate != null) {
                 String main = "from Assignment ev  where ev.isPrimary =:isPrimary and ev.position.id = :posId and ";
@@ -1303,22 +1312,22 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
             }
             if (posId != null) {
-                qry.setParameter("posId", posId);
+                qry.setInteger("posId", posId);
 
             }
             if (empId != null) {
-                qry.setParameter("empId", empId);
+                qry.setInteger("empId", empId);
 
             }
             if (isPrimary != null) {
-                qry.setParameter("isPrimary", Character.valueOf(isPrimary.charAt(0)));
+                qry.setCharacter("isPrimary", Character.valueOf(isPrimary.charAt(0)));
             }
             if (fromDate != null && toDate != null) {
-                qry.setParameter("fromDate", new java.sql.Date(fromDate.getTime()));
-                qry.setParameter("toDate", new java.sql.Date(toDate.getTime()));
+                qry.setDate("fromDate", new java.sql.Date(fromDate.getTime()));
+                qry.setDate("toDate", new java.sql.Date(toDate.getTime()));
 
             } else if (fromDate != null && toDate == null) {
-                qry.setParameter("fromDate", new java.sql.Date(fromDate.getTime()));
+                qry.setDate("fromDate", new java.sql.Date(fromDate.getTime()));
             }
 
             if (qry.list() != null && !qry.list().isEmpty()) {
@@ -1442,9 +1451,9 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
         try {
             StringBuilder mainStr;
             mainStr = new StringBuilder("select ev.assignment from EmployeeView ev  where ev.id = :empId and nvl(ev.toDate,sysdate) in(select max(nvl(ev1.toDate,sysdate)) from EmployeeView ev1 where ev1.id = :empId)");
-            org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr.toString());
+            Query qry = getCurrentSession().createQuery(mainStr.toString());
             if (empId != null) {
-                qry.setParameter("empId", empId);
+                qry.setInteger("empId", empId);
             }
             if (qry.list() != null && !qry.list().isEmpty()) {
                 for (Iterator iter = qry.list().iterator(); iter.hasNext();) {
@@ -1463,8 +1472,8 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
     }
 
     public ServiceHistory getServiceId(Integer id) {
-        org.hibernate.query.Query qry = getCurrentSession().createQuery("from ServiceHistory S where S.idService =:id ");
-        qry.setParameter("id", id);
+        Query qry = getCurrentSession().createQuery("from ServiceHistory S where S.idService =:id ");
+        qry.setInteger("id", id);
         return (ServiceHistory) qry.uniqueResult();
 
     }
@@ -1487,7 +1496,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 
         PersonalInformation personalInformation = null;
         try {
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             if (dateEntered != null) {
                 qry = getCurrentSession()
                         .createQuery(
@@ -1499,11 +1508,11 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
                                 "select ev.id from EmployeeView ev  where ev.position = :posId and ((ev.toDate is null ) or (ev.fromDate <=  TO_DATE(SYSDATE,'dd-MM-yyy') AND ev.toDate >=  TO_DATE(SYSDATE,'dd-MM-yyy')))");
             }
             if (posId != null) {
-                qry.setParameter("posId", posId);
+                qry.setInteger("posId", posId);
 
             }
             if (dateEntered != null) {
-                qry.setParameter("fromDate", new java.sql.Date(dateEntered.getTime()));
+                qry.setDate("fromDate", new java.sql.Date(dateEntered.getTime()));
             }
 
             if (qry.list() != null && !qry.list().isEmpty()) {
@@ -1537,7 +1546,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
         PersonalInformation personalInformation = null;
         List<PersonalInformation> empList = null;
         try {
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             if (dateEntered != null) {
                 qry = getCurrentSession()
                         .createQuery(
@@ -1549,11 +1558,11 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
                                 "select distinct ev.id from EmployeeView ev  where ev.position = :posId and ((ev.toDate is null ) or (ev.fromDate <=  TO_DATE(SYSDATE,'dd-MM-yyy') AND ev.toDate >=  TO_DATE(SYSDATE,'dd-MM-yyy')))");
             }
             if (posId != null) {
-                qry.setParameter("posId", posId);
+                qry.setInteger("posId", posId);
 
             }
             if (dateEntered != null) {
-                qry.setParameter("fromDate", new java.sql.Date(dateEntered.getTime()));
+                qry.setDate("fromDate", new java.sql.Date(dateEntered.getTime()));
             }
 
             if (qry.list() != null && !qry.list().isEmpty()) {
@@ -1704,15 +1713,15 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             if (posId != null && posId != 0) {
                 mainStr += " and ev.position.id =:posId ";
             }
-            org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr);
+            Query qry = getCurrentSession().createQuery(mainStr);
             if (code != null && !code.equals("")) {
-                qry.setParameter("code", code);
+                qry.setString("code", code);
             }
             if (givenDate != null) {
-                qry.setParameter("givenDate", givenDate);
+                qry.setDate("givenDate", givenDate);
             }
             if (posId != null && posId != 0) {
-                qry.setParameter("posId", posId);
+                qry.setInteger("posId", posId);
             }
 
             assignment = qry.list();
@@ -1742,7 +1751,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      */
     public List<Integer> getAssignmentsForEmp(Integer empId, Date givenDate) throws ApplicationException {
         List list = null;
-        org.hibernate.query.Query query = null;
+        Query query = null;
         try {
 
 			StringBuffer stringbuffer = new StringBuffer(
@@ -1757,13 +1766,14 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
 			} else {
 				stringbuffer.append(" and  ev.from_Date <= :givenDate AND ev.to_Date >= :givenDate");
 			}
-			query = getCurrentSession().createNativeQuery(stringbuffer.toString(), Integer.class);
+			query = getCurrentSession().createSQLQuery(stringbuffer.toString()).addScalar("ASS_ID",
+					IntegerType.INSTANCE);
 
             if (query.getQueryString().contains(":givenDate")) {
-                query.setParameter("givenDate", givenDate);
+                query.setDate("givenDate", givenDate);
             }
 
-            query.setParameter("empId", empId);
+            query.setInteger("empId", empId);
 
         } catch (HibernateException hibException) {
             LOGGER.error(hibException.getMessage());
@@ -1801,12 +1811,12 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             } else {
             	mainStr.append(" and ((a.toDate is null and a.fromDate<= TO_DATE(SYSDATE,'dd-MM-yyy')) or (a.fromDate <= TO_DATE(SYSDATE,'dd-MM-yyy') and a.toDate >= TO_DATE(SYSDATE,'dd-MM-yyy')))");
             }
-            org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr.toString());
+            Query qry = getCurrentSession().createQuery(mainStr.toString());
             if (user != null) {
-                qry.setParameter("userId", user.getId());
+                qry.setLong("userId", user.getId());
             }
             if (date != null) {
-                qry.setParameter("date", date);
+                qry.setDate("date", date);
             }
 
             if (qry.list() != null && !qry.list().isEmpty()) {
@@ -1857,15 +1867,15 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             if (posId != null && posId != 0) {
                 mainStr += " and ev.position.id =:posId ";
             }
-            org.hibernate.query.Query qry = getCurrentSession().createQuery(mainStr);
+            Query qry = getCurrentSession().createQuery(mainStr);
             if (code != null && !code.equals("")) {
-                qry.setParameter("code", code);
+                qry.setString("code", code);
             }
             if (givenDate != null) {
-                qry.setParameter("givenDate", givenDate);
+                qry.setDate("givenDate", givenDate);
             }
             if (posId != null && posId != 0) {
-                qry.setParameter("posId", posId);
+                qry.setInteger("posId", posId);
             }
 
             assignment = qry.list();
@@ -1971,20 +1981,20 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
              * ; } }
              */
 
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
 
             qry = getCurrentSession().createQuery(mainStr);
             logger.info("Query----" + qry.toString());
 
             if (status.intValue() != 0) {
-                qry.setParameter("employeeStatus", status);
+                qry.setInteger("employeeStatus", status);
             }
             if (fromDate != null) {
-                qry.setParameter("fromDate", new java.sql.Date(fromDate.getTime()));
+                qry.setDate("fromDate", new java.sql.Date(fromDate.getTime()));
             }
 
             if (toDate != null) {
-                qry.setParameter("toDate", new java.sql.Date(toDate.getTime()));
+                qry.setDate("toDate", new java.sql.Date(toDate.getTime()));
             }
 
             employeeList = (List) qry.list();
@@ -2008,7 +2018,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
     public List getListOfDeptBasedOnUserDept(String userName) {
         List deptList = new ArrayList();
         try {
-            org.hibernate.query.Query qry = null;
+            Query qry = null;
             if (userName != null) {
                 qry = getCurrentSession().createQuery(
                         "from Department where id in (select deptId.id from Assignment where userName=:userName "
@@ -2016,7 +2026,7 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
             }
 
             if (userName != null) {
-                qry.setParameter("userName", userName);
+                qry.setString("userName", userName);
             }
 
             if (qry != null && qry.list() != null && !qry.list().isEmpty()) {
@@ -2060,12 +2070,15 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      * @return List of EmployeeView
      */
     public List<EmployeeView> getEmployeeInfoBasedOnDeptAndDesg(Integer deptId, Integer desgId) {
-        Date today = new Date();
-        return getCurrentSession().createQuery(
-            "from EmployeeView ev where ev.deptId.id = :deptId and ev.desigId.designationId = :desgId"
-            + " and ev.fromDate <= :today and ev.toDate >= :today and ev.isPrimary = 'Y' and ev.isActive = 1",
-            EmployeeView.class)
-            .setParameter("deptId", deptId).setParameter("desgId", desgId).setParameter("today", today).getResultList();
+        List<EmployeeView> employeeList = new ArrayList<EmployeeView>();
+        Criteria criteria = getCurrentSession().createCriteria(EmployeeView.class)
+                .createAlias("deptId", "department").createAlias("desigId", "designation")
+                .add(Restrictions.eq("department.id", deptId))
+                .add(Restrictions.eq("designation.designationId", desgId))
+                .add(Restrictions.and(Restrictions.le("fromDate", new Date()), Restrictions.ge("toDate", new Date())))
+                .add(Restrictions.eq("isPrimary", 'Y')).add(Restrictions.eq("isActive", 1));
+        return criteria.list();
+
     }
 
     /**
@@ -2079,12 +2092,15 @@ public class EmployeeServiceImpl implements EmployeeServiceOld {
      * @return List of EmployeeView
      */
     public List<EmployeeView> getEmployeeInfoBasedOnDeptAndDate(Integer deptId, Date date) {
-        if (date == null) date = new Date();
-        return getCurrentSession().createQuery(
-            "select distinct ev from EmployeeView ev where ev.deptId.id = :deptId"
-            + " and ev.isActive = 1 and ev.fromDate <= :date and ev.toDate >= :date",
-            EmployeeView.class)
-            .setParameter("deptId", deptId).setParameter("date", date).getResultList();
+        if (date == null)
+            date = new Date();
+        List<EmployeeView> employeeList = new ArrayList<EmployeeView>();
+        Criteria criteria = getCurrentSession().createCriteria(EmployeeView.class)
+                .createAlias("deptId", "department").add(Restrictions.eq("department.id", deptId))
+                .add(Restrictions.eq("isActive", 1))
+                .add(Restrictions.and(Restrictions.le("fromDate", date), Restrictions.ge("toDate", date)));
+        criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+        return criteria.list();
     }
 
     /**

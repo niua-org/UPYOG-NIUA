@@ -6,14 +6,14 @@ import org.egov.dx.web.models.Transaction;
 import org.springframework.validation.annotation.Validated;
 import org.egov.common.contract.response.ResponseInfo;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import java.util.List;
 
 /**
  * The payment response object, representing the status of the payment
  */
 @Validated
-@jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-06-05T12:58:12.679+05:30")
+@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-06-05T12:58:12.679+05:30")
 
 @Getter
 @Setter

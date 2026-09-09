@@ -1,6 +1,8 @@
 package org.egov.echallancalculation.web.models.demand;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.*;
 
 import java.math.BigDecimal;

@@ -334,7 +334,7 @@ const handleClick=()=>{
                   {(flrno !== unit?.floorNo ? (i = 1) : (i = i + 1)) && i === 1 && (
                     <CardSubHeader>{t(`PROPERTYTAX_FLOOR_${unit?.floorNo}`)}</CardSubHeader>
                   )}
-                  <div className="pt-auto-122">
+                  <div style={{ border: "groove", marginBottom:"10px" }}>
                     <CardSubHeader>
                       {t("ES_APPLICATION_DETAILS_UNIT")} {i}
                     </CardSubHeader>
@@ -427,24 +427,24 @@ const handleClick=()=>{
               </StatusTable>
             )}
           </div>
-          <div className="pt-auto-124">
+          <div style={{display:"flex"}}>
           {property?.status === "ACTIVE" && !enableAudit && (
-            <div  className="pt-auto-125">               
-            <button className="submit-bar pt-auto-126 " type="button" onClick={handleClickOnPtPgr} >{t("PT_PGR")}</button>
+            <div style={{ marginTop: "1em", bottom: "0px", width: "100%", marginBottom: "1.2em" }}>               
+            <button className="submit-bar" type="button" onClick={handleClickOnPtPgr} style={{fontFamily:"sans-serif", color:"white","fontSize":"19px"}}>{t("PT_PGR")}</button>
             </div>              
             )}
             {property?.status === "ACTIVE" && !enableAudit && (
-              <div className="pt-auto-127">
+              <div style={{ marginTop: "1em", bottom: "0px", width: "100%", marginBottom: "1.2em" }}>
                 <Link to={{ pathname: `/upyog-ui/citizen/pt/property/edit-application/action=UPDATE/${property.propertyId}` }}>
                   <SubmitBar label={t("PT_UPDATE_PROPERTY_BUTTON")} />
                 </Link>
               </div>
             )}
             {property?.status === "ACTIVE" && !enableAudit && (
-              <div className="pt-auto-128">
+              <div style={{ marginTop: "1em", bottom: "0px", width: "100%", marginBottom: "1.2em" }}>
                
                   {/* <SubmitBar label="Asses Property" onClick={handleClick} /> */}
-                  <button className="submit-bar pt-auto-129" type="button" onClick={handleClick} >{t("PT_SELF_ASSES_PROPERTY")}</button>
+                  <button className="submit-bar" type="button" onClick={handleClick} style={{fontFamily:"sans-serif", color:"white","fontSize":"19px"}}>{t("PT_SELF_ASSES_PROPERTY")}</button>
                
               </div>
             )}

@@ -55,7 +55,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.destination.JndiDestinationResolver;
 import org.springframework.jndi.JndiObjectFactoryBean;
 
-import jakarta.jms.ConnectionFactory;
+import javax.jms.ConnectionFactory;
 
 @Configuration("jmsConfiguration")
 public class MessagingConfiguration {

@@ -153,45 +153,34 @@ const BillDetails = ({ paymentRules, businessService }) => {
         : amount;
     if (window.location.href.includes("mcollect")) {
       navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}?workflow=mcollect`, {
-        state:{
-            paymentAmount,
-            tenantId: billDetails.tenantId
-        }
+        paymentAmount,
+        tenantId: billDetails.tenantId,
       });
     } else if (wrkflow === "WNS") {
       navigate(`/upyog-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}?workflow=WNS&ConsumerName=${ConsumerName}`, {
-        state: {
-          paymentAmount,
-          tenantId: billDetails.tenantId,
-          name: bill.payerName,
-          mobileNumber: bill.mobileNumber && bill.mobileNumber?.includes("*") ? userData?.user?.[0]?.mobileNumber : bill.mobileNumber,
-        }
+        paymentAmount,
+        tenantId: billDetails.tenantId,
+        name: bill.payerName,
+        mobileNumber: bill.mobileNumber && bill.mobileNumber?.includes("*") ? userData?.user?.[0]?.mobileNumber : bill.mobileNumber,
       });
     } else if (businessService === "PT") {
       navigate(`/upyog-ui/citizen/payment/billDetails/${businessService}/${consumerCode}/${paymentAmount}`, {
-        state: {
-          paymentAmount,
-          tenantId: billDetails.tenantId,
-          name: bill.payerName,
-          mobileNumber: bill.mobileNumber && bill.mobileNumber?.includes("*") ? userData?.user?.[0]?.mobileNumber : bill.mobileNumber,
-        }
-      });
-    }
+        paymentAmount,
+        tenantId: billDetails.tenantId,
+        name: bill.payerName,
+        mobileNumber: bill.mobileNumber && bill.mobileNumber?.includes("*") ? userData?.user?.[0]?.mobileNumber : bill.mobileNumber,      });
+    } 
     else if (timerEnabledForBusinessService(businessService)) {
       navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, {
-        state: {
         paymentAmount,
         tenantId: billDetails.tenantId,
         propertyId: propertyId,
         timerValue: state?.timerValue,
-        SlotSearchData: state?.SlotSearchData
-        }
+        SlotSearchData: state?.SlotSearchData,
       });
     }
     else {
-      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { 
-       state : {paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId}
-       });
+      navigate(`/upyog-ui/citizen/payment/collect/${businessService}/${consumerCode}`, { paymentAmount, tenantId: billDetails.tenantId, propertyId: propertyId });
     }
   };
 

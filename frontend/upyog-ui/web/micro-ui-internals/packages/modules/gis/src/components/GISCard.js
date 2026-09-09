@@ -26,10 +26,6 @@ const GISCard = () => {
                         link: `/upyog-ui/employee/gis/servicetype`
                 },
                 {
-                        label: t("MAP_LAYER_VIEW"),
-                        link: `/upyog-ui/employee/gis/layerview`
-                },
-                {
                         label: t("MAP_POLYGON_ASSET"),
                         link: `/upyog-ui/employee/gis/viewpolygon`
                 },

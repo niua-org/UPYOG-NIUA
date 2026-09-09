@@ -1,31 +1,12 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { queryTemplate } from "../../common/queryTemplate";
+import { useQuery, useQueryClient } from "react-query";
 import BillingService from "../../services/elements/Bill";
 
 const useCancelBill = ({ filters }) => {
-  const client = useQueryClient();
-
-  const queryKey = [
-    "CANCEL_BILL",
-    JSON.stringify(filters),
-  ];
-
-  const queryFn = () =>
-    BillingService.cancel_bill(filters);
-
-  const enabled = !!filters?.businessService;
-
-  const query = queryTemplate({
-    queryKey,
-    queryFn,
-    enabled,
-  });
-
-  return {
-    ...query,
-    revalidate: () =>
-      client.invalidateQueries({ queryKey }),
-  };
+    const client = useQueryClient();
+    const { isLoading, error, data } = useQuery(["CANCEL_BILL", filters], async () => await BillingService.cancel_bill(filters), {
+        enabled: filters?.businessService ? true : false,
+    });
+    return { isLoading, error, data, revalidate: () => client.invalidateQueries(["CANCEL_BILL", filters]) };
 };
 
 export default useCancelBill;

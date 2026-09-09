@@ -97,30 +97,24 @@ public class NotificationUtil {
 	public String getLocalizationMessages(String tenantId, RequestInfo requestInfo) {
 
 		String locale = NOTIFICATION_LOCALE;
-		boolean isRetryNeeded = false;
+		Boolean isRetryNeeded = false;
 		String jsonString = null;
-		LinkedHashMap<String, Object> responseMap = null;
+		LinkedHashMap responseMap = null;
 
 		if (!StringUtils.isEmpty(requestInfo.getMsgId()) && requestInfo.getMsgId().split("\\|").length >= 2) {
 			locale = requestInfo.getMsgId().split("\\|")[1];
 			isRetryNeeded = true;
 		}
 
-		Optional<Object> localizationResult = serviceRequestRepository
-				.fetchResult(getUri(tenantId, locale), requestInfo);
-		if (localizationResult.isPresent()) {
-			responseMap = (LinkedHashMap<String, Object>) localizationResult.get();
-			jsonString = new JSONObject(responseMap).toString();
-		}
+		responseMap = (LinkedHashMap) serviceRequestRepository
+				.fetchResult(getUri(tenantId, requestInfo, locale), requestInfo).get();
+		jsonString = new JSONObject(responseMap).toString();
 
 		if (StringUtils.isEmpty(jsonString) && isRetryNeeded) {
 
-			Optional<Object> fallbackResult = serviceRequestRepository
-					.fetchResult(getUri(tenantId, NOTIFICATION_LOCALE), requestInfo);
-			if (fallbackResult.isPresent()) {
-				responseMap = (LinkedHashMap<String, Object>) fallbackResult.get();
-				jsonString = new JSONObject(responseMap).toString();
-			}
+			responseMap = (LinkedHashMap) serviceRequestRepository
+					.fetchResult(getUri(tenantId, requestInfo, NOTIFICATION_LOCALE), requestInfo).get();
+			jsonString = new JSONObject(responseMap).toString();
 			if (StringUtils.isEmpty(jsonString))
 				throw new CustomException("EG_EW_LOCALE_ERROR", "Localisation values not found for Ewaste notifications");
 		}
@@ -132,9 +126,9 @@ public class NotificationUtil {
 	 *
 	 * @return The uri for localization search call
 	 */
-	public StringBuilder getUri(String tenantId, String locale) {
+	public StringBuilder getUri(String tenantId, RequestInfo requestInfo, String locale) {
 
-		if (Boolean.TRUE.equals(config.getIsLocalizationStateLevel()))
+		if (config.getIsLocalizationStateLevel())
 			tenantId = tenantId.split("\\.")[0];
 
 		StringBuilder uri = new StringBuilder();
@@ -168,7 +162,7 @@ public class NotificationUtil {
 	 */
 	public void sendSMS(List<SMSRequest> smsRequestList) {
 
-		if (Boolean.TRUE.equals(config.getIsSMSNotificationEnabled())) {
+		if (config.getIsSMSNotificationEnabled()) {
 			if (CollectionUtils.isEmpty(smsRequestList))
 				log.info("Messages from localization couldn't be fetched!");
 			for (SMSRequest smsRequest : smsRequestList) {
@@ -209,6 +203,7 @@ public class NotificationUtil {
 			} catch (Exception e) {
 				log.error("Exception while fetching user for username - " + mobileNo);
 				log.error("Exception trace: ", e);
+				continue;
 			}
 		}
 		return mapOfPhnoAndUUIDs;
@@ -257,7 +252,7 @@ public class NotificationUtil {
 	 */
 	public void sendEmail(List<EmailRequest> emailRequestList) {
 
-		if (Boolean.TRUE.equals(config.getIsEmailNotificationEnabled())) {
+		if (config.getIsEmailNotificationEnabled()) {
 			if (CollectionUtils.isEmpty(emailRequestList))
 				log.info("Messages from localization couldn't be fetched!");
 			for (EmailRequest emailRequest : emailRequestList) {
@@ -305,6 +300,7 @@ public class NotificationUtil {
 			} catch (Exception e) {
 				log.error("Exception while fetching user for username - " + mobileNo);
 				log.error("Exception trace: ", e);
+				continue;
 			}
 		}
 		return mapOfPhnoAndEmailIds;
@@ -364,11 +360,11 @@ public class NotificationUtil {
 		return mdmsCriteriaReq;
 	}
 
-	public String getCustomizedMsg(EwasteApplication ewasteApplication, String localizationMessage) {
-		String message = null;
-		String messageTemplate;
-		String actionStatus = ewasteApplication.getWorkflow().getAction();
-		switch (actionStatus) {
+	public String getCustomizedMsg(RequestInfo requestInfo, EwasteApplication ewasteApplication,
+			String localizationMessage) {
+		String message = null, messageTemplate;
+		String ACTION_STATUS = ewasteApplication.getWorkflow().getAction();
+		switch (ACTION_STATUS) {
 
 		case ACTION_STATUS_APPLY:
 			messageTemplate = getMessageTemplate(EwasteConstants.NOTIFICATION_SUBMIT, localizationMessage);
@@ -393,10 +389,6 @@ public class NotificationUtil {
 		case ACTION_STATUS_COMPLETEREQUEST:
 			messageTemplate = getMessageTemplate(EwasteConstants.NOTIFICATION_COMPLETE_REQUEST, localizationMessage);
 			message = getMessageWithNumberAndFinalDetails(ewasteApplication, messageTemplate);
-			break;
-
-		default:
-			log.warn("No notification template configured for action: {}", actionStatus);
 			break;
 		}
 

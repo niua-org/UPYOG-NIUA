@@ -56,7 +56,6 @@
 
     <context:component-scan base-package="org.egov.commons.web"/>
 
-    <!-- Replaced legacy CommonsMultipartResolver with StandardServletMultipartResolver for Jakarta EE 10 / Spring 6 multipart handling -->
-    <bean id="filterMultipartResolver" class="org.springframework.web.multipart.support.StandardServletMultipartResolver"/>
+    <bean id="filterMultipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
 
 </beans>

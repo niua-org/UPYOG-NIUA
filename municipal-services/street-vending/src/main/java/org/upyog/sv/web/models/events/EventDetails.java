@@ -30,8 +30,11 @@ public class EventDetails {
 	private String address;
 
 	public boolean isEmpty(EventDetails details) {
-		return null == details.getFromDate() || null == details.getToDate() || null == details.getLatitude()
-				|| null == details.getLongitude();
+		if (null == details.getFromDate() || null == details.getToDate() || null == details.getLatitude()
+				|| null == details.getLongitude()) {
+			return true;
+		}
+		return false;
 	}
 
 }

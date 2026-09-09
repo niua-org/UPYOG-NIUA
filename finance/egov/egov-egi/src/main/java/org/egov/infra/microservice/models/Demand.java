@@ -43,11 +43,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -55,26 +55,26 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public class Demand {
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("id")
     private String id;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @JsonProperty("tenantId")
     private String tenantId;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @JsonProperty("consumerCode")
     private String consumerCode;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @JsonProperty("consumerType")
     private String consumerType;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @JsonProperty("businessService")
     private String businessService;

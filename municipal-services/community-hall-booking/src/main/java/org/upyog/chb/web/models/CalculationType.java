@@ -23,5 +23,4 @@ public class CalculationType {
 	BigDecimal amount;
 	boolean taxApplicable;
 	String communityHallCode;
-	String calculationDurationType;
 }

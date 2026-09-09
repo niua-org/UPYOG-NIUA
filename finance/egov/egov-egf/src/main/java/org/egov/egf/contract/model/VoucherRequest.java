@@ -50,10 +50,10 @@ package org.egov.egf.contract.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import org.egov.infra.microservice.models.RequestInfo;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -61,7 +61,7 @@ public class VoucherRequest {
 
     @NotNull
     @JsonProperty("tenantId")
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
 
     @JsonProperty("RequestInfo")

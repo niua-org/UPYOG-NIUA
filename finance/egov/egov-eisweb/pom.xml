@@ -74,57 +74,35 @@
             <version>3.0.2-COE-SNAPSHOT</version>
         </dependency>
 
-        <!-- VIEWS RELATED START -->
-        <!-- Jakarta EE 10 / Servlet 6.0 Upgrade: Switched to Jakarta-compatible Apache Tiles 3 fork -->
+        <!-- VIEWS RELATED END -->
         <dependency>
-            <groupId>com.github.tntim96.apache.tiles</groupId>
+            <groupId>org.apache.tiles</groupId>
             <artifactId>tiles-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.tntim96.apache.tiles</groupId>
+            <groupId>org.apache.tiles</groupId>
             <artifactId>tiles-jsp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
         </dependency>
         <!-- VIEWS RELATED END -->
 
-        <!-- HIBERNATE & JAKARTA VALIDATION START -->
+        <!-- HIBERNATE START -->
         <dependency>
-            <groupId>org.hibernate.orm</groupId>
+            <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-            <version>3.0.2</version>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.validator</groupId>
+            <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
         </dependency>
         <!-- HIBERNATE END -->
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <!-- Excluded: depends on ES packages excluded in egov-eis (ES/JDK17 incompatibility) -->
-                        <exclude>**/web/controller/es/dashboard/EISDashboardController.java</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <sourceFileExcludes>
-                        <exclude>**/web/controller/es/dashboard/EISDashboardController.java</exclude>
-                    </sourceFileExcludes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

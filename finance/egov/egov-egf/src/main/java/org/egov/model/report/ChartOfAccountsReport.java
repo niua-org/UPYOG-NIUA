@@ -48,34 +48,34 @@
 package org.egov.model.report;
 
 import org.egov.commons.CChartOfAccounts;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class ChartOfAccountsReport {
 
-    @SanitizeHtml
+    @SafeHtml
     private String accountCode;
-    @SanitizeHtml
+    @SafeHtml
     private String accountName;
-    @SanitizeHtml
+    @SafeHtml
     private String majorCode;
     private Long majorCodeId;
     private Long minorCodeId;
-    @SanitizeHtml
+    @SafeHtml
     private String minorCode;
-    @SanitizeHtml
+    @SafeHtml
     private String majorName;
-    @SanitizeHtml
+    @SafeHtml
     private String minorName;
-    @SanitizeHtml
+    @SafeHtml
     private String type;
     private Long purposeId;
-    @SanitizeHtml
+    @SafeHtml
     private String purpose;
     private Boolean isActiveForPosting;
     private Boolean functionReqd;
     private Boolean budgetCheckReq;
     private Long detailTypeId;
-    @SanitizeHtml
+    @SafeHtml
     private String accountDetailType;
     private CChartOfAccounts detailChartOfAccounts;
     private CChartOfAccounts majorChartOfAccounts;

@@ -36,10 +36,6 @@ public class RequestSearchCriteria {
     @JsonProperty("serviceRequestId")
     private String serviceRequestId;
 
-    // Added for search by multiple service request ids
-    @JsonProperty("serviceRequestIds")
-    private Set<String> serviceRequestIds;
-
     @JsonProperty("sortBy")
     private SortBy sortBy;
 
@@ -83,14 +79,9 @@ public class RequestSearchCriteria {
     }
 
     public enum SortBy {
-        @JsonProperty("locality")
-        LOCALITY,
-
-        @JsonProperty("applicationStatus")
-        APPLICATION_STATUS,
-
-        @JsonProperty("serviceRequestId")
-        SERVICE_REQUEST_ID
+        locality,
+        applicationStatus,
+        serviceRequestId
     }
 
     @SanitizeHtml

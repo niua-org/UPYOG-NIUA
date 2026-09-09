@@ -86,10 +86,6 @@
 		<s:fielderror /></span>
 	<s:form name="chartOfAccountsForm" id="chartOfAccountsForm"
 		action="chartOfAccounts" theme="simple">
-		<%-- LTS Migration Fix (Struts 7): keep coa id on the form so Add can post
-		     parentId even when nested model.id binding fails. --%>
-		<s:hidden name="coaId" value="%{coaId}" />
-		<s:hidden name="parentId" value="%{coaId}" />
 		<div class="formmainbox">
 			<table width="100%" border="0" cellspacing="0" cellpadding="0"
 				id="chartOfAccountsTable">
@@ -150,7 +146,7 @@
 					<td width="10%" class="greybox"><strong><s:text
 								name="chartOfAccount.activeForPosting" />:</strong></td>
 					<td class="greybox"><s:if
-							test="%{activeForPosting || (model != null && model.isActiveForPosting) || getIsActiveForPosting()}">
+							test="%{getIsActiveForPosting() == true}">
 							<s:text name="yes" />
 						</s:if> <s:else>
 							<s:text name="no" />
@@ -161,14 +157,14 @@
 					<td width="10%" class="bluebox"><strong><s:text
 								name="chartOfAccount.functionRequired" />:</strong></td>
 					<td width="22%" class="bluebox"><s:if
-							test="%{functionRequired || (model != null && model.functionReqd) || getFunctionReqd()}">
+							test="%{getFunctionReqd() == true}">
 							<s:text name="yes" />
 						</s:if> <s:else>
 							<s:text name="no" />
 						</s:else></td>
 					<td width="10%" class="bluebox"><strong><s:text
 								name="chartOfAccount.budgetRequired" />:</strong></td>
-					<td class="bluebox"><s:if test="%{budgetCheckRequired || (model != null && model.budgetCheckReq) || budgetCheckReq()}">
+					<td class="bluebox"><s:if test="%{budgetCheckReq() == true}">
 							<s:text name="yes" />
 						</s:if> <s:else>
 							<s:text name="no" />

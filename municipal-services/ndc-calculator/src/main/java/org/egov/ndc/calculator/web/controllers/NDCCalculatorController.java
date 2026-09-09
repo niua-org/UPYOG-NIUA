@@ -2,6 +2,7 @@ package org.egov.ndc.calculator.web.controllers;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.egov.ndc.calculator.services.CalculationService;
@@ -18,6 +19,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
@@ -25,12 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NDCCalculatorController {
 
-	private final CalculationService calculationService;
+	private ObjectMapper objectMapper;
 
-	private final DemandService demandService;
+	private HttpServletRequest request;
+
+	private CalculationService calculationService;
+
+	private DemandService demandService;
 
 	@Autowired
-	public NDCCalculatorController(CalculationService calculationService, DemandService demandService) {
+	public NDCCalculatorController(ObjectMapper objectMapper, HttpServletRequest request,
+								CalculationService calculationService,DemandService demandService) {
+		this.objectMapper = objectMapper;
+		this.request = request;
 		this.calculationService=calculationService;
 		this.demandService=demandService;
 	}
@@ -40,8 +50,8 @@ public class NDCCalculatorController {
 	 * @param calculationReq The calculation Request
 	 * @return Calculation Response
 	 */
-	@PostMapping("/_calculate")
-	public ResponseEntity<CalculationRes> calculate(@Valid @RequestBody CalculationReq calculationReq, @RequestParam(required = false, defaultValue = "false") Boolean getCalculationOnly) {
+	@RequestMapping(value = "/_calculate", method = RequestMethod.POST)
+	public ResponseEntity<CalculationRes> calculate(@Valid @RequestBody CalculationReq calculationReq, @RequestParam(required = false) boolean getCalculationOnly) {
 		log.debug("CalculationReaquest:: " + calculationReq);
 		 List<Calculation> calculations = calculationService.calculate(calculationReq,getCalculationOnly);
 		 CalculationRes calculationRes = CalculationRes.builder().calculation(calculations).build();

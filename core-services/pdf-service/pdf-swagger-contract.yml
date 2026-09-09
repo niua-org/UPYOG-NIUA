@@ -4,8 +4,7 @@ info:
   description: |
     APIs available in PDF-Service
   contact:
-    name: UPYOG NUDM Team
-    email: cdg-contact@niua.org
+    name: eGovernments Foundation
   version: 1.1.0
 servers:
 - url: /pdf-service/v1/

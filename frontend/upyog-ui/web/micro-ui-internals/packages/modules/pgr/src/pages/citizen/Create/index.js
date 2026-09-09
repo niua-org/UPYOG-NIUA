@@ -94,12 +94,7 @@ export const CreateComplaint = () => {
         },
       };
 
-      const response = await dispatch(createComplaint(data));
-      // Persist the API response to sessionStorage so the Response page
-      // can render the success banner even after a browser refresh.
-      if (response) {
-        sessionStorage.setItem("PGR_COMPLAINT_RESPONSE", JSON.stringify(response));
-      }
+      await dispatch(createComplaint(data));
       await client.refetchQueries(["complaintsList"]);
       navigate(`response`);
     }

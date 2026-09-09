@@ -48,13 +48,13 @@
 package org.egov.commons.dao;
 
 import org.egov.commons.Bank;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -84,7 +84,8 @@ public class BankHibernateDAO {
     }
 
     public List<Bank> findAll() {
-        return getCurrentSession().createQuery("from Bank", Bank.class).list();
+        return (List<Bank>) getCurrentSession().createCriteria(Bank.class)
+                .list();
     }
 
     @PersistenceContext
@@ -97,14 +98,14 @@ public class BankHibernateDAO {
     public Bank getBankByCode(final String bankCode) {
         final Query qry = getCurrentSession().createQuery(
                 "from Bank where code=:bankCode");
-        qry.setParameter("bankCode", bankCode);
+        qry.setString("bankCode", bankCode);
         return (Bank) qry.uniqueResult();
     }
 
     public Bank getBankByName(final String bankCode) {
         final Query qry = getCurrentSession().createQuery(
                 "from Bank where name=:bankName");
-        qry.setParameter("bankName", bankCode);
+        qry.setString("bankName", bankCode);
         return (Bank) qry.uniqueResult();
     }
 
@@ -140,7 +141,7 @@ public class BankHibernateDAO {
                         "select distinct b from Bank b,Bankbranch bb , Bankaccount ba  where bb.bank=b"
                         + " and ba.bankbranch =bb and ba.type in ('RECEIPTS_PAYMENTS','PAYMENTS')"
                         + " and ba.fund.id=:fundId")
-                .setParameter("fundId", fundId);
+                .setLong("fundId", fundId);
         if (fundId != null) {
             List<Bank> list = (List<Bank>) createQuery.list();
             if (list != null && !list.isEmpty())

@@ -2,17 +2,17 @@ package org.egov.infra.microservice.models;
 
 import java.util.List;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class StorageRequest {
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
-    @SanitizeHtml
+    @SafeHtml
     private String module;
-    @SanitizeHtml
+    @SafeHtml
     private String tag;
     @JsonIgnore
     private List<MultipartFile> files;

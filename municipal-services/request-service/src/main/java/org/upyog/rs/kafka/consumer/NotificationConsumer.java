@@ -1,7 +1,8 @@
 package org.upyog.rs.kafka.consumer;
 
-import java.util.Map;
+import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -13,7 +14,6 @@ import org.upyog.rs.web.models.waterTanker.WaterTankerBookingRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -22,12 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class NotificationConsumer {
 
-    private final RequestServiceNotificationService notificationService;
+    @Autowired
+    private RequestServiceNotificationService notificationService;
 
-    private final ObjectMapper mapper;
+    @Autowired
+    private ObjectMapper mapper;
 
 
     /**
@@ -41,19 +42,19 @@ public class NotificationConsumer {
             "${persister.update.water-tanker.topic}", "${persister.create.water-tanker.topic}", "${persister.create.water-tanker.with.profile.topic}",
             "${persister.update.mobile-toilet.topic}", "${persister.create.mobile-toilet.topic}" , "${persister.create.mobile-toilet.with.profile.topic}"
     })
-    public void listen(final Map<String, Object> consumerRecord, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+    public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         Object request = null;
         String applicationStatus = null;
         String bookingNo = null;
 
         try {
             if (topic.contains("water-tanker")) {
-                WaterTankerBookingRequest waterTankerRequest = mapper.convertValue(consumerRecord, WaterTankerBookingRequest.class);
+                WaterTankerBookingRequest waterTankerRequest = mapper.convertValue(record, WaterTankerBookingRequest.class);
                 request = waterTankerRequest;
                 applicationStatus = waterTankerRequest.getWaterTankerBookingDetail().getBookingStatus();
                 bookingNo = waterTankerRequest.getWaterTankerBookingDetail().getBookingNo();
             } else if (topic.contains("mobile-toilet")) {
-                MobileToiletBookingRequest mobileToiletRequest = mapper.convertValue(consumerRecord, MobileToiletBookingRequest.class);
+                MobileToiletBookingRequest mobileToiletRequest = mapper.convertValue(record, MobileToiletBookingRequest.class);
                 request = mobileToiletRequest;
                 applicationStatus = mobileToiletRequest.getMobileToiletBookingDetail().getBookingStatus();
                 bookingNo = mobileToiletRequest.getMobileToiletBookingDetail().getBookingNo();
@@ -62,16 +63,18 @@ public class NotificationConsumer {
                 return;
             }
         } catch (final Exception e) {
-            log.error("Error processing RS notification: " + consumerRecord + " on topic: " + topic, e);
+            log.error("Error processing RS notification: " + record + " on topic: " + topic, e);
             return;
         }
 
         log.info("Request Service Application Received with booking no: " + bookingNo + " and status: " + applicationStatus);
 
-        if (request instanceof WaterTankerBookingRequest waterTankerRequest) {
+        if (request instanceof WaterTankerBookingRequest) {
+            WaterTankerBookingRequest waterTankerRequest = (WaterTankerBookingRequest) request;
             applicationStatus = extractApplicationStatus(waterTankerRequest.getWaterTankerBookingDetail().getBookingStatus(),
                     waterTankerRequest.getWaterTankerBookingDetail().getWorkflow());
-        } else if (request instanceof MobileToiletBookingRequest mobileToiletRequest) {
+        } else if (request instanceof MobileToiletBookingRequest) {
+            MobileToiletBookingRequest mobileToiletRequest = (MobileToiletBookingRequest) request;
             applicationStatus = extractApplicationStatus(mobileToiletRequest.getMobileToiletBookingDetail().getBookingStatus(),
                     mobileToiletRequest.getMobileToiletBookingDetail().getWorkflow());
         }
@@ -85,7 +88,7 @@ public class NotificationConsumer {
         if (workflow == null) return bookingStatus;
         try {
             String action = workflow.getAction();
-            return action != null ? action : bookingStatus;
+            return action != null ? action.toString() : bookingStatus;
         } catch (Exception e) {
             log.error("Error extracting workflow action: ", e);
             return bookingStatus;

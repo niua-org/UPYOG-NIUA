@@ -11,8 +11,8 @@ const EmployeeSideBar = () => {
   const [search, setSearch] = useState("");
   const { t } = useTranslation();
   useEffect(() => {
-    if (isLoading || !sidebarRef.current) {
-      return;
+    if (isLoading) {
+      return <Loader />;
     }
     sidebarRef.current.style.cursor = "pointer";
     collapseNav();

@@ -51,13 +51,13 @@ import org.apache.log4j.Logger;
 import org.egov.commons.CFinancialYear;
 import org.egov.infra.exception.ApplicationRuntimeException;
 import org.egov.infra.validation.exception.ValidationException;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -90,7 +90,7 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
     }
 
     public List<CFinancialYear> findAll() {
-        return getCurrentSession().createQuery("from CFinancialYear", CFinancialYear.class).list();
+        return (List<CFinancialYear>) getCurrentSession().createCriteria(CFinancialYear.class).list();
     }
 
     @PersistenceContext
@@ -104,38 +104,28 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
 
     public String getCurrYearFiscalId() {
         Date dt = new Date();
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+        String currentDate = formatter.format(dt);
         String result = "";
-        /*
-         * LTS Migration Fix (Hibernate 6 Upgrade & IndexOutOfBoundsException Fix):
-         * 1. Uses parameter binding (:currentDate) with Date object to prevent Hibernate 6 Date vs String comparison SemanticException.
-         * 2. Checks if query.list() is non-empty before invoking list.get(0) to prevent IndexOutOfBoundsException when system date has no matching fiscal year in database.
-         * 3. Implements a fallback query to fetch the latest active financial year (isActive = true order by startingDate desc) if the current system date does not fall within any financial year date range.
-         */
         Query query = getCurrentSession().createQuery(
-                "select cfinancialyear.id from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= :currentDate and cfinancialyear.endingDate >= :currentDate");
-        query.setParameter("currentDate", dt);
-        List list = query.list();
-        if (list != null && !list.isEmpty() && list.get(0) != null) {
-            result = list.get(0).toString();
-        } else {
-            Query fallbackQuery = getCurrentSession().createQuery(
-                    "select cfinancialyear.id from CFinancialYear cfinancialyear where cfinancialyear.isActive = true order by cfinancialyear.startingDate desc");
-            fallbackQuery.setMaxResults(1);
-            List fallbackList = fallbackQuery.list();
-            if (fallbackList != null && !fallbackList.isEmpty() && fallbackList.get(0) != null) {
-                result = fallbackList.get(0).toString();
-            }
-        }
+                "select cfinancialyear.id from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= '"
+                        + currentDate + "' and cfinancialyear.endingDate >= '" + currentDate + "' ");
+        ArrayList list = (ArrayList) query.list();
+        result = list.get(0).toString();
         return result;
     }
 
     public String getCurrYearStartDate() {
         Date dt = new Date();
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+        String currentDate = formatter.format(dt);
         logger.info("Obtained session");
         String result = "";
         Query query = getCurrentSession().createQuery(
-                "select cfinancialyear.startingDate from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= :currentDate and cfinancialyear.endingDate >= :currentDate");
-        query.setParameter("currentDate", dt);
+                "select cfinancialyear.startingDate from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= '"
+                        + currentDate + "' and cfinancialyear.endingDate >= '" + currentDate + "' ");
         ArrayList list = (ArrayList) query.list();
         if (list.size() > 0) {
             if (list.get(0) == null)
@@ -149,15 +139,18 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
 
     public String getPrevYearFiscalId() {
         Date dt = new Date();
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
         GregorianCalendar calendar = new GregorianCalendar();
         calendar.setTime(dt);
         int prevYear = calendar.get(Calendar.YEAR) - 1;
         calendar.set(Calendar.YEAR, prevYear);
+        String previousDate = formatter.format(calendar.getTime());
         logger.info("Obtained session");
         String result = "";
         Query query = getCurrentSession().createQuery(
-                "select cfinancialyear.id from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= :previousDate and cfinancialyear.endingDate >= :previousDate");
-        query.setParameter("previousDate", calendar.getTime());
+                "select cfinancialyear.id from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= '"
+                        + previousDate + "' and cfinancialyear.endingDate >= '" + previousDate + "' ");
         ArrayList list = (ArrayList) query.list();
         if (list.size() > 0) {
             if (list.get(0) == null)
@@ -186,7 +179,7 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
     public CFinancialYear getFinancialYearByFinYearRange(String finYearRange) {
         Query query = getCurrentSession().createQuery(
                 "from CFinancialYear cfinancialyear where cfinancialyear.finYearRange=:finYearRange");
-        query.setParameter("finYearRange", finYearRange);
+        query.setString("finYearRange", finYearRange);
         query.setCacheable(true);
         return (CFinancialYear) query.uniqueResult();
     }
@@ -213,7 +206,7 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
 
     public CFinancialYear getFinancialYearById(Long id) {
         Query query = getCurrentSession().createQuery("from CFinancialYear cfinancialyear where id=:id");
-        query.setParameter("id", id);
+        query.setLong("id", id);
         return (CFinancialYear) query.uniqueResult();
     }
 
@@ -247,8 +240,8 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
                 .createQuery(
                         ""
                                 + " from CFinancialYear cfinancialyear where cfinancialyear.isActiveForPosting=false and cfinancialyear.startingDate <=:sDate and cfinancialyear.endingDate >=:eDate  ");
-        query.setParameter("sDate", fromDate);
-        query.setParameter("eDate", toDate);
+        query.setDate("sDate", fromDate);
+        query.setDate("eDate", toDate);
         ArrayList list = (ArrayList) query.list();
         if (list.size() > 0)
             return false;
@@ -271,8 +264,8 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
                 .createQuery(
                         ""
                                 + " from ClosedPeriod cp where cp.isClosed=true and cp.startingDate <=:sDate and cp.endingDate >=:eDate  ");
-        query.setParameter("sDate", fromDate);
-        query.setParameter("eDate", toDate);
+        query.setDate("sDate", fromDate);
+        query.setDate("eDate", toDate);
         ArrayList list = (ArrayList) query.list();
         if (list.size() > 0)
             return false;
@@ -293,26 +286,11 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
         Query query = getCurrentSession()
                 .createQuery(
                         " from CFinancialYear cfinancialyear where cfinancialyear.startingDate <=:sDate and cfinancialyear.endingDate >=:eDate  and cfinancialyear.isActiveForPosting=true");
-        query.setParameter("sDate", date);
-        query.setParameter("eDate", date);
+        query.setDate("sDate", date);
+        query.setDate("eDate", date);
         ArrayList list = (ArrayList) query.list();
         if (list.size() > 0)
             cFinancialYear = (CFinancialYear) list.get(0);
-        if (null == cFinancialYear) {
-            /*
-             * LTS Migration Fix (ValidationException Fix):
-             * Fallback query to fetch the latest active posting financial year (isActiveForPosting = true order by startingDate desc)
-             * if the provided date does not match any financial year startingDate/endingDate range in the database.
-             * This prevents ValidationException/ApplicationRuntimeException when system date is outside configured DB fiscal year ranges.
-             */
-            Query fallbackQuery = getCurrentSession().createQuery(
-                    "from CFinancialYear cfinancialyear where cfinancialyear.isActiveForPosting=true order by cfinancialyear.startingDate desc");
-            fallbackQuery.setMaxResults(1);
-            List fallbackList = fallbackQuery.list();
-            if (fallbackList != null && !fallbackList.isEmpty()) {
-                cFinancialYear = (CFinancialYear) fallbackList.get(0);
-            }
-        }
         if (null == cFinancialYear)
            // throw new ApplicationRuntimeException("Financial Year is not active For Posting.");
             throw new ValidationException(EMPTY_STRING, "Financial Year is not active For Posting" );
@@ -329,25 +307,11 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
         Query query = getCurrentSession()
                 .createQuery(
                         " from CFinancialYear cfinancialyear where cfinancialyear.startingDate <=:sDate and cfinancialyear.endingDate >=:eDate");
-        query.setParameter("sDate", date);
-        query.setParameter("eDate", date);
+        query.setDate("sDate", date);
+        query.setDate("eDate", date);
         ArrayList list = (ArrayList) query.list();
         if (list.size() > 0)
             cFinancialYear = (CFinancialYear) list.get(0);
-        if (null == cFinancialYear) {
-            /*
-             * LTS Migration Fix (ApplicationRuntimeException Fix):
-             * Fallback query to fetch the latest active financial year (isActive = true order by startingDate desc)
-             * if the provided date does not match any financial year startingDate/endingDate range in the database.
-             */
-            Query fallbackQuery = getCurrentSession().createQuery(
-                    "from CFinancialYear cfinancialyear where cfinancialyear.isActive=true order by cfinancialyear.startingDate desc");
-            fallbackQuery.setMaxResults(1);
-            List fallbackList = fallbackQuery.list();
-            if (fallbackList != null && !fallbackList.isEmpty()) {
-                cFinancialYear = (CFinancialYear) fallbackList.get(0);
-            }
-        }
         if (null == cFinancialYear)
             throw new ApplicationRuntimeException("Financial Year Id does not exist.");
         return cFinancialYear;
@@ -390,7 +354,7 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
         Query query = getCurrentSession()
                 .createQuery(
                         " from CFinancialYear cfinancialyear where cfinancialyear.startingDate <:sDate and isActive=true order by finYearRange desc ");
-        query.setParameter("sDate", date);
+        query.setDate("sDate", date);
         return query.list();
     }
     
@@ -403,46 +367,8 @@ public class FinancialYearHibernateDAO implements FinancialYearDAO {
         Query query = getCurrentSession()
                 .createQuery(
                         " from CFinancialYear cfinancialyear where cfinancialyear.startingDate >=:sDate and isActive=true order by finYearRange desc ");
-        query.setParameter("sDate", date);
+        query.setDate("sDate", date);
         return query.list();
     }
-
-    //for ULB DASHBOARD
-
-    /**
-     * Retrieves the ending date of the current financial year based on today's date.
-     * <p>
-     * This method queries the {@code CFinancialYear} table to find the financial year
-     * whose start date is on or before today and whose end date is on or after today.
-     * The date is formatted as {@code dd-MMM-yyyy} before being used in the query.
-     * </p>
-     *
-     * @return the ending date of the current financial year as a {@code String}
-     *         in the format {@code dd-MMM-yyyy}, or {@code "0.0"} if no matching
-     *         financial year is found or the ending date is {@code null}.
-     */
-
-    public String getCurrFinancialYearEndDate() {
-        Date dt = new Date();
-        logger.info("Fetching current financial year's ending date");
-
-        String result = "";
-        Query query = getCurrentSession().createQuery(
-                "select cfinancialyear.endingDate from CFinancialYear cfinancialyear where cfinancialyear.startingDate <= :currentDate and cfinancialyear.endingDate >= :currentDate");
-        query.setParameter("currentDate", dt);
-
-        ArrayList list = (ArrayList) query.list();
-        if (list.size() > 0) {
-            if (list.get(0) == null)
-                return "0.0";
-            else
-                result = list.get(0).toString();
-        } else {
-            return "0.0";
-        }
-        return result;
-    }
-
-
 
 }

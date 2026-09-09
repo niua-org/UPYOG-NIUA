@@ -50,8 +50,8 @@
  */
 package org.egov.egf.web.actions.bill;
 
-import org.apache.struts2.validator.annotations.RequiredFieldValidator;
-import org.apache.struts2.validator.annotations.Validations;
+import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
+import com.opensymphony.xwork2.validator.annotations.Validations;
 import org.apache.log4j.Logger;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.ParentPackage;
@@ -94,9 +94,8 @@ import org.egov.utils.CheckListHelper;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.query.Query;
-import org.hibernate.type.StandardBasicTypes;
-
+import org.hibernate.Query;
+import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -184,9 +183,7 @@ public class ContingentBillAction extends BaseBillAction {
     @Override
     public void prepare() {
         super.prepare();
-        // LTS Migration Fix (WildFly 40): do not use System.out; it is discarded
-        // under the server log manager. Use the action logger instead.
-        LOGGER.info("New ExpenseBill received - prepare");
+        System.out.println("*********** New ExpenseBill recieved - Prepare *********************");
         accountDetailTypeList = persistenceService.findAllBy("from Accountdetailtype where isactive=true order by name");
         addDropdownData(ACCOUNT_DETAIL_TYPE_LIST, accountDetailTypeList);
         addDropdownData(BILL_SUB_TYPE_LIST, getBillSubTypes());
@@ -267,7 +264,7 @@ public class ContingentBillAction extends BaseBillAction {
     @SkipValidation
     @Action(value = "/bill/contingentBill-newform")
     public String newform() {
-    	LOGGER.info("New ExpenseBill received - newForm");
+    	System.out.println("*********** New ExpenseBill recieved- newForm*********************");
         List<AppConfigValues> cutOffDateconfigValue = appConfigValuesService.getConfigValuesByModuleAndKey("EGF",
                 "DataEntryCutOffDate");
         Date date;
@@ -363,7 +360,7 @@ public class ContingentBillAction extends BaseBillAction {
     public String create() {
         if (LOGGER.isInfoEnabled())
             LOGGER.info(billDetailsTableCreditFinal);
-        LOGGER.info("ExpenseBill creation started");
+        System.out.println("*********** ExpenseBill creation started*********************");
         try {
         	populateWorkflowBean();
             if (FinancialConstants.BUTTONFORWARD.equalsIgnoreCase(workflowBean.getWorkFlowAction())) {
@@ -551,8 +548,8 @@ public class ContingentBillAction extends BaseBillAction {
 		StringBuilder statusQuery =  new StringBuilder();
         statusQuery = statusQuery.append("from EgwStatus where upper(moduletype)=upper(:contigencyBill) and upper(description) = upper(:contigencyBillCancel)");
         final Query query = persistenceService.getSession().createQuery(statusQuery.toString())
-                .setParameter("contigencyBill",FinancialConstants.CONTINGENCYBILL_FIN, StandardBasicTypes.STRING)
-                .setParameter("contigencyBillCancel",FinancialConstants.CONTINGENCYBILL_CANCELLED_STATUS, StandardBasicTypes.STRING);
+                .setParameter("contigencyBill",FinancialConstants.CONTINGENCYBILL_FIN, StringType.INSTANCE)
+                .setParameter("contigencyBillCancel",FinancialConstants.CONTINGENCYBILL_CANCELLED_STATUS, StringType.INSTANCE);
         final EgwStatus egwStatus = (EgwStatus) persistenceService.find(query.toString());
         cbill.setStatus(egwStatus);
         cbill.setBillstatus(FinancialConstants.CONTINGENCYBILL_CANCELLED_STATUS);
@@ -1218,8 +1215,8 @@ public class ContingentBillAction extends BaseBillAction {
         StringBuilder statusQuery = new StringBuilder();
         statusQuery = statusQuery.append("from EgwStatus where upper(moduletype)=upper(:moduletype) and upper(description)=:description");
         final Query query = persistenceService.getSession().createQuery(statusQuery.toString())
-                .setParameter("moduletype" , FinancialConstants.CONTINGENCYBILL_FIN, StandardBasicTypes.STRING)
-                .setParameter("description" , FinancialConstants.CONTINGENCYBILL_CREATED_STATUS.toUpperCase(), StandardBasicTypes.STRING);
+                .setParameter("moduletype" , FinancialConstants.CONTINGENCYBILL_FIN, StringType.INSTANCE)
+                .setParameter("description" , FinancialConstants.CONTINGENCYBILL_CREATED_STATUS.toUpperCase(), StringType.INSTANCE);
         final EgwStatus egwStatus = (EgwStatus) query.uniqueResult();
         bill.setStatus(egwStatus);
         bill.setBilltype("Final Bill");
@@ -1280,7 +1277,7 @@ public class ContingentBillAction extends BaseBillAction {
     	StringBuilder billNumQuery = new StringBuilder();
     	billNumQuery = billNumQuery.append("select billnumber from EgBillregister where upper(billnumber)=:billnumber");
         final Query query = persistenceService.getSession().createQuery(billNumQuery.toString())
-                .setParameter("billnumber" , billNumber.toUpperCase(), StandardBasicTypes.STRING);
+                .setParameter("billnumber" , billNumber.toUpperCase(), StringType.INSTANCE);
         final String billNum = (String) query.uniqueResult();
         
         if (null == billNum)

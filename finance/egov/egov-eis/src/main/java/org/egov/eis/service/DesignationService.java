@@ -87,7 +87,7 @@ public class DesignationService {
     }
 
     public Designation getDesignationById(Long desigId) {
-        return designationRepository.findById(desigId).orElse(null);
+        return designationRepository.findOne(desigId);
     }
 
     public List<Designation> getAllDesignations() {

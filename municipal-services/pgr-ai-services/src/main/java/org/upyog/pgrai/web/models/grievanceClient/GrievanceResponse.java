@@ -1,6 +1,5 @@
-package org.upyog.pgrai.web.models.grievanceclient;
+package org.upyog.pgrai.web.models.grievanceClient;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.Map;
@@ -14,7 +13,6 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GrievanceResponse {
-    @JsonProperty("_shards")
-    private Map<String, Object> shards;
+    private Map<String, Object> _shards;
     private String result;
 }

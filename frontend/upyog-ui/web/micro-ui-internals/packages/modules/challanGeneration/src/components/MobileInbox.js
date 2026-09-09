@@ -106,7 +106,7 @@ const MobileInbox = ({
   };
 
   return (
-    <div className="cg-padding-0">
+    <div style={{ padding: 0 }}>
       <div className="inbox-container">
         <div className="filters-container">
           <ApplicationCard

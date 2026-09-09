@@ -3,6 +3,7 @@ package org.upyog.sv.service.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid;
 
@@ -10,6 +11,8 @@ import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.Role;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.sv.constants.StreetVendingConstants;
@@ -30,6 +33,7 @@ import org.upyog.sv.web.models.StreetVendingDetail;
 import org.upyog.sv.web.models.StreetVendingRequest;
 import org.upyog.sv.web.models.StreetVendingSearchCriteria;
 import org.upyog.sv.web.models.VendorDetail;
+import org.upyog.sv.web.models.billing.Demand;
 import org.upyog.sv.web.models.workflow.State;
 
 import lombok.NonNull;
@@ -39,28 +43,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StreetVendingServiceImpl implements StreetVendingService {
 
-	private final MdmsUtil util;
-	private final EnrichmentService enrichmentService;
-	private final StreetVendingRepository streetVendingRepository;
-	private final DemandService demandService;
-	private final WorkflowService workflowService;
-	private final StreetVendingValidator validator;
-	private final StreetVendingEncryptionService encryptionService;
-	private final MdmsCacheService mdmsCache;
+	@Autowired
+	private MdmsUtil util;
 
-	public StreetVendingServiceImpl(MdmsUtil util, EnrichmentService enrichmentService,
-			StreetVendingRepository streetVendingRepository, DemandService demandService,
-			WorkflowService workflowService, StreetVendingValidator validator,
-			StreetVendingEncryptionService encryptionService, MdmsCacheService mdmsCache) {
-		this.util = util;
-		this.enrichmentService = enrichmentService;
-		this.streetVendingRepository = streetVendingRepository;
-		this.demandService = demandService;
-		this.workflowService = workflowService;
-		this.validator = validator;
-		this.encryptionService = encryptionService;
-		this.mdmsCache = mdmsCache;
-	}
+	@Autowired
+	private EnrichmentService enrichmentService;
+
+	@Autowired
+	private StreetVendingRepository streetVendingRepository;
+
+	@Autowired
+	private DemandService demandService;
+
+	@Autowired
+	private WorkflowService workflowService;
+
+	@Autowired
+	private StreetVendingValidator validator;
+
+	@Autowired
+	private StreetVendingEncryptionService encryptionService;
+	
+	@Autowired
+	private MdmsCacheService mdmsCache;
 
 	@Override
 	public StreetVendingDetail createStreetVendingApplication(StreetVendingRequest vendingRequest) {
@@ -173,7 +178,7 @@ public class StreetVendingServiceImpl implements StreetVendingService {
 
 		// Create demand if action is APPROVE
 		if (StreetVendingConstants.ACTION_APPROVE.equals(detail.getWorkflow().getAction())) {
-			demandService.createDemand(vendingRequest);
+			demandService.createDemand(vendingRequest, extractTenantId(vendingRequest));
 		}
 		
 		// Handle encryption and update
@@ -205,9 +210,10 @@ public class StreetVendingServiceImpl implements StreetVendingService {
 	 */
 	private void handleRenewalInProgress(StreetVendingRequest vendingRequest) {
 		StreetVendingDetail detail = vendingRequest.getStreetVendingDetail();
+		String tenantId = extractTenantId(vendingRequest);
 		
 		// Create demand for renewal
-		demandService.createDemand(vendingRequest);
+		demandService.createDemand(vendingRequest, tenantId);
 		
 		// Update validity date and audit details
 		detail.setValidityDateForPersisterDate(
@@ -335,7 +341,7 @@ public class StreetVendingServiceImpl implements StreetVendingService {
 	private StreetVendingDetail copyFieldsToBeEncrypted(StreetVendingDetail detail) {
 		return StreetVendingDetail.builder()
 				.vendorDetail(detail.getVendorDetail() != null
-						? detail.getVendorDetail().stream().map(VendorDetail::new).toList()
+						? detail.getVendorDetail().stream().map(VendorDetail::new).collect(Collectors.toList())
 						: null)
 				.bankDetail(detail.getBankDetail() != null ? new BankDetail(detail.getBankDetail()) : null).build();
 	}

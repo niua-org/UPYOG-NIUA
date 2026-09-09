@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import;
 public class CNDApplication {
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         SpringApplication.run(CNDApplication.class, args);
     }
 

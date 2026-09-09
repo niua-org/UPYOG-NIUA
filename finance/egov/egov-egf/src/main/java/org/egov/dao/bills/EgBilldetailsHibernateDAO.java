@@ -49,13 +49,13 @@
 package org.egov.dao.bills;
 
 import org.egov.model.bills.EgBilldetails;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
@@ -92,7 +92,7 @@ public class EgBilldetailsHibernateDAO implements EgBilldetailsDAO {
     }
 
     public List<EgBilldetails> findAll() {
-        return getCurrentSession().createQuery("from EgBilldetails", EgBilldetails.class).getResultList();
+        return (List<EgBilldetails>) getCurrentSession().createCriteria(EgBilldetails.class).list();
     }
 
     public Session getCurrentSession() {
@@ -138,24 +138,24 @@ public class EgBilldetailsHibernateDAO implements EgBilldetailsDAO {
         qryStr.append(dateCond).append(funcStr).append(schStr).append(glcodeStr);
         Query qry = getCurrentSession().createQuery(qryStr.toString());
         if (isNotBlank(functionId))
-        	qry.setParameter("functionId", functionId);
+        	qry.setString("functionId", functionId);
         if (isNotBlank(schemeId) && isBlank(subSchemeId))
-        	qry.setParameter("schemeId", schemeId);
+        	qry.setString("schemeId", schemeId);
         if (isNotBlank(schemeId) && isNotBlank(subSchemeId)) {
-        	qry.setParameter("schemeId", schemeId);
-        	qry.setParameter("subSchemeId", subSchemeId);
+        	qry.setString("schemeId", schemeId);
+        	qry.setString("subSchemeId", subSchemeId);
         }
         if (isNotBlank(asOnDate))
-        	qry.setParameter("asOnDate", asOnDate);
+        	qry.setString("asOnDate", asOnDate);
         if (minGlCodeId != 0 && maxGlCodeId != 0) {
-        	qry.setParameter("minGlCodeId", minGlCodeId);
-        	qry.setParameter("maxGlCodeId", maxGlCodeId);
+        	qry.setLong("minGlCodeId", minGlCodeId);
+        	qry.setLong("maxGlCodeId", maxGlCodeId);
         } else if (maxGlCodeId != 0)
-        	qry.setParameter("maxGlCodeId", maxGlCodeId);
+        	qry.setLong("maxGlCodeId", maxGlCodeId);
         else if (majGlCodeId != 0)
-        	qry.setParameter("majGlCodeId", majGlCodeId);
-        qry.setParameter("finYearID", finYearID);
-        qry.setParameter("billType", billType);
+        	qry.setLong("majGlCodeId", majGlCodeId);
+        qry.setString("finYearID", finYearID);
+        qry.setString("billType", billType);
 
         if (qry.uniqueResult() != null)
         	return new BigDecimal(qry.uniqueResult().toString());
@@ -170,7 +170,7 @@ public class EgBilldetailsHibernateDAO implements EgBilldetailsDAO {
         qryStr.append("from EgBilldetails bd where bd.creditamount>0 AND bd.glcodeid IN (:glcodeIds) AND billid=:billId ");
         Query qry = getCurrentSession().createQuery(qryStr.toString());
         qry.setParameterList("glcodeIds", glcodeIdList);
-        qry.setParameter("billId", billId);
+        qry.setLong("billId", billId);
         return (EgBilldetails) qry.uniqueResult();
     }
 }

@@ -49,15 +49,10 @@ package org.egov.commons.dao;
 
 import org.egov.commons.Scheme;
 
-import java.util.List;
-
 public interface SchemeDAO {
 	
 	public Scheme getSchemeById(Integer id);
 
 	public Scheme getSchemeByCode(String code);
-
-
-	public List<Scheme> getSchemeByNameOrCode(String queryParam);
 
 }

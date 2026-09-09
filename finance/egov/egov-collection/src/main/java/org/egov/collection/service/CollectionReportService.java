@@ -55,12 +55,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-/*
- * Jakarta EE 10 Persistence Context Migration:
- * Updated javax.persistence (EntityManager, PersistenceContext) to jakarta.persistence.
- */
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -70,15 +66,11 @@ import org.egov.collection.entity.CollectionSummaryReportResult;
 import org.egov.collection.entity.OnlinePaymentResult;
 import org.egov.infra.config.core.EnvironmentSettings;
 import org.egov.infra.exception.ApplicationRuntimeException;
-/*
- * Hibernate 6 Native Query Refactoring:
- * Replaced legacy org.hibernate.SQLQuery with org.hibernate.query.NativeQuery and scalar types with StandardBasicTypes.
- */
-import org.hibernate.query.NativeQuery;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.BigDecimalType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -101,7 +93,7 @@ public class CollectionReportService {
         return entityManager.unwrap(Session.class);
     }
 
-    public NativeQuery getOnlinePaymentReportData(final String districtName, final String ulbName, final String fromDate,
+    public SQLQuery getOnlinePaymentReportData(final String districtName, final String ulbName, final String fromDate,
             final String toDate, final String transactionId) {
         final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
         final StringBuilder queryStr = new StringBuilder(500);
@@ -120,22 +112,22 @@ public class CollectionReportService {
             queryStr.append(" and opv.transactionnumber like :transactionnumber ");
         queryStr.append(" order by receiptdate desc ");
 
-        final NativeQuery query = getCurrentSession().createNativeQuery(queryStr.toString());
+        final SQLQuery query = getCurrentSession().createSQLQuery(queryStr.toString());
 
         if (StringUtils.isNotBlank(districtName))
-            query.setParameter("districtName", districtName);
+            query.setString("districtName", districtName);
         if (StringUtils.isNotBlank(ulbName))
-            query.setParameter("ulbName", ulbName);
+            query.setString("ulbName", ulbName);
         try {
             if (StringUtils.isNotBlank(fromDate))
-                query.setParameter("fromDate", dateFormatter.parse(fromDate));
+                query.setDate("fromDate", dateFormatter.parse(fromDate));
             if (StringUtils.isNotBlank(toDate))
-                query.setParameter("toDate", dateFormatter.parse(toDate));
+                query.setDate("toDate", dateFormatter.parse(toDate));
         } catch (final ParseException e) {
             LOGGER.error("Exception parsing Date" + e.getMessage());
         }
         if (StringUtils.isNotBlank(transactionId))
-            query.setParameter("transactionnumber", "%" + transactionId + "%");
+            query.setString("transactionnumber", "%" + transactionId + "%");
         queryStr.append(" order by opv.receiptdate desc");
         query.setResultTransformer(new AliasToBeanResultTransformer(OnlinePaymentResult.class));
         return query;
@@ -146,16 +138,16 @@ public class CollectionReportService {
                 environmentSettings.statewideSchemaName()).append(".onlinepayment_view opv where 1=1");
         if (StringUtils.isNotBlank(districtName))
             queryStr.append(" and opv.districtName=:districtName ");
-        final NativeQuery query = getCurrentSession().createNativeQuery(queryStr.toString());
+        final SQLQuery query = getCurrentSession().createSQLQuery(queryStr.toString());
         if (StringUtils.isNotBlank(districtName))
-            query.setParameter("districtName", districtName);
+            query.setString("districtName", districtName);
         return query.list();
     }
 
     public List<Object[]> getDistrictNames() {
         final StringBuilder queryStr = new StringBuilder("select distinct districtname from ").append(
                 environmentSettings.statewideSchemaName()).append(".onlinepayment_view");
-        final NativeQuery query = getCurrentSession().createNativeQuery(queryStr.toString());
+        final SQLQuery query = getCurrentSession().createSQLQuery(queryStr.toString());
         return query.list();
     }
 
@@ -240,41 +232,41 @@ public class CollectionReportService {
         finalUserwiseQuery.append(finalSelectQuery).append(userwiseQuery).append(finalGroupQuery);
         finalAggregateQuery.append(finalSelectQuery).append(aggregateQuery).append(finalGroupQuery);
 
-        final NativeQuery userwiseSqluery = createNativeQuery(finalUserwiseQuery.toString());
-        final NativeQuery aggregateSqlQuery = createNativeQuery(finalAggregateQuery.toString());
+        final SQLQuery userwiseSqluery = createSQLQuery(finalUserwiseQuery.toString());
+        final SQLQuery aggregateSqlQuery = createSQLQuery(finalAggregateQuery.toString());
 
         if (!source.isEmpty() && !source.equals(CollectionConstants.ALL)) {
-            userwiseSqluery.setParameter("source", source);
-            aggregateSqlQuery.setParameter("source", source);
+            userwiseSqluery.setString("source", source);
+            aggregateSqlQuery.setString("source", source);
         }
         if (serviceId != null && serviceId != -1) {
-            userwiseSqluery.setParameter("serviceId", serviceId);
-            aggregateSqlQuery.setParameter("serviceId", serviceId);
+            userwiseSqluery.setLong("serviceId", serviceId);
+            aggregateSqlQuery.setLong("serviceId", serviceId);
         }
         if (status != -1) {
-            userwiseSqluery.setParameter("searchStatus", status);
-            aggregateSqlQuery.setParameter("searchStatus", status);
+            userwiseSqluery.setLong("searchStatus", status);
+            aggregateSqlQuery.setLong("searchStatus", status);
         }
 
         if (!serviceType.equals(CollectionConstants.ALL)) {
-            userwiseSqluery.setParameter("serviceType", serviceType);
-            aggregateSqlQuery.setParameter("serviceType", serviceType);
+            userwiseSqluery.setString("serviceType", serviceType);
+            aggregateSqlQuery.setString("serviceType", serviceType);
         }
         
         if (fromDate != null && toDate != null) {
-        	userwiseSqluery.setParameter("fromDate", fromDateFormatter.format(fromDate));
-            aggregateSqlQuery.setParameter("fromDate", fromDateFormatter.format(fromDate));
-            userwiseSqluery.setParameter("toDate", toDateFormatter.format(toDate));
-            aggregateSqlQuery.setParameter("toDate", toDateFormatter.format(toDate));
+        	userwiseSqluery.setString("fromDate", fromDateFormatter.format(fromDate));
+            aggregateSqlQuery.setString("fromDate", fromDateFormatter.format(fromDate));
+            userwiseSqluery.setString("toDate", toDateFormatter.format(toDate));
+            aggregateSqlQuery.setString("toDate", toDateFormatter.format(toDate));
         }
 
         if (StringUtils.isNotBlank(paymentMode) && !paymentMode.equals(CollectionConstants.ALL))
             if (paymentMode.equals(CollectionConstants.INSTRUMENTTYPE_CHEQUEORDD)) {
-                userwiseSqluery.setParameter("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
-                aggregateSqlQuery.setParameter("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
+                userwiseSqluery.setParameterList("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
+                aggregateSqlQuery.setParameterList("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
             } else {
-                userwiseSqluery.setParameter("paymentMode", paymentMode);
-                aggregateSqlQuery.setParameter("paymentMode", paymentMode);
+                userwiseSqluery.setString("paymentMode", paymentMode);
+                aggregateSqlQuery.setString("paymentMode", paymentMode);
             }
         final List<CollectionSummaryReport> reportResults = populateQueryResults(userwiseSqluery.list());
         final List<CollectionSummaryReport> aggrReportResults = populateQueryResults(aggregateSqlQuery.list());
@@ -314,22 +306,22 @@ public class CollectionReportService {
         return queryString;
     }
 
-    public NativeQuery createNativeQuery(String query) {
-        return (NativeQuery) getCurrentSession().createNativeQuery(query)
-                .addScalar("cashCount", StandardBasicTypes.STRING)
-                .addScalar("cashAmount", StandardBasicTypes.BIG_DECIMAL)
-                .addScalar("chequeddCount", StandardBasicTypes.STRING)
-                .addScalar("chequeddAmount", StandardBasicTypes.BIG_DECIMAL)
-                .addScalar("onlineCount", StandardBasicTypes.STRING)
-                .addScalar("onlineAmount", StandardBasicTypes.BIG_DECIMAL)
-                .addScalar("source", StandardBasicTypes.STRING)
-                .addScalar("serviceName", StandardBasicTypes.STRING)
-                .addScalar("counterName", StandardBasicTypes.STRING)
-                .addScalar("employeeName", StandardBasicTypes.STRING)
-                .addScalar("bankCount", StandardBasicTypes.STRING)
-                .addScalar("bankAmount", StandardBasicTypes.BIG_DECIMAL).addScalar("cardAmount", StandardBasicTypes.BIG_DECIMAL)
-                .addScalar("cardCount", StandardBasicTypes.STRING)
-                .addScalar("totalReceiptCount", StandardBasicTypes.STRING)
+    public SQLQuery createSQLQuery(String query) {
+        return (SQLQuery) getCurrentSession().createSQLQuery(query)
+                .addScalar("cashCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("cashAmount", BigDecimalType.INSTANCE)
+                .addScalar("chequeddCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("chequeddAmount", BigDecimalType.INSTANCE)
+                .addScalar("onlineCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("onlineAmount", BigDecimalType.INSTANCE)
+                .addScalar("source", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("serviceName", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("counterName", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("employeeName", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("bankCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("bankAmount", BigDecimalType.INSTANCE).addScalar("cardAmount", BigDecimalType.INSTANCE)
+                .addScalar("cardCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("totalReceiptCount", org.hibernate.type.StringType.INSTANCE)
                 .setResultTransformer(Transformers.aliasToBean(CollectionSummaryReport.class));
     }
 

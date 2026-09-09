@@ -39,15 +39,15 @@
  */
 package org.egov.infra.microservice.models;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class InstrumentType {
 
-    @SanitizeHtml
+    @SafeHtml
     private String id;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String description;
 
     private Boolean active;

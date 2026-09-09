@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -32,19 +33,14 @@ import org.upyog.cdwm.web.models.user.enums.UserType;
 @Service
 public class UserService {
 
-    private static final String LAST_MODIFIED_DATE = "lastModifiedDate";
-    private static final String PWD_EXPIRY_DATE = "pwdExpiryDate";
+    @Autowired
+    private ObjectMapper mapper;
 
-    private final ObjectMapper mapper;
-    private final ServiceRequestRepository serviceRequestRepository;
-    private final CNDConfiguration config;
+    @Autowired
+    private ServiceRequestRepository serviceRequestRepository;
 
-    public UserService(ObjectMapper mapper, ServiceRequestRepository serviceRequestRepository,
-            CNDConfiguration config) {
-        this.mapper = mapper;
-        this.serviceRequestRepository = serviceRequestRepository;
-        this.config = config;
-    }
+    @Autowired
+    private CNDConfiguration config;
 
     /**
      * Retrieves an existing user or creates a new user if not found.
@@ -53,9 +49,14 @@ public class UserService {
      * @return The existing or newly created user.
      */
     public List<User> getUserDetails(CNDApplicationRequest bookingRequest) {
+
         CNDApplicationDetail applicationDetail = bookingRequest.getCndApplication();
-        return fetchUserByCriteria(applicationDetail.getApplicantDetail(),
-                bookingRequest.getRequestInfo(), applicationDetail.getTenantId()).getUser();
+        // Fetch existing user details
+        UserDetailResponseV2 userDetailResponse = fetchUserByCriteria(applicationDetail.getApplicantDetail(),
+                bookingRequest.getRequestInfo(), applicationDetail.getTenantId());
+        List<User> existingUsers = userDetailResponse.getUser();
+
+        return existingUsers;
     }
 
     /**
@@ -71,7 +72,7 @@ public class UserService {
         User user = convertApplicantToUserRequest(applicantDetail, role, tenantId);
         AddressV2 address = convertApplicantAddressToUserAddress(cndAddressDetail, tenantId);
         user.addAddressItem(address);
-        UserDetailResponseV2 userDetailResponse = createUser(requestInfo, user);
+        UserDetailResponseV2 userDetailResponse = createUser(requestInfo, user, tenantId);
         String newUuid = userDetailResponse.getUser().get(0).getUuid();
         log.info("New user uuid returned from user service: {}", newUuid);
         return userDetailResponse.getUser().get(0);
@@ -83,9 +84,10 @@ public class UserService {
      *
      * @param requestInfo The request information.
      * @param user        The user to be created.
+     * @param tenantId    The tenant ID.
      * @return The response containing the created user.
      */
-    private UserDetailResponseV2 createUser(RequestInfo requestInfo, User user) {
+    private UserDetailResponseV2 createUser(RequestInfo requestInfo, User user, String tenantId) {
 
         StringBuilder uri = new StringBuilder(config.getUserHost()).append(config.getUserV2CreateEndpoint());
         CreateUserRequestV2 userRequest = CreateUserRequestV2.builder().requestInfo(requestInfo).user(user).build();
@@ -136,10 +138,10 @@ public class UserService {
             log.info("The address details are empty or null");
         }
         // Check if address type is null or empty throw exception
-        if (!StringUtils.hasText(cndAddressDetail.getAddressType().toString())) {
+        if (StringUtils.isEmpty(cndAddressDetail.getAddressType().toString())) {
             throw new CustomException("INVALID ADDRESS TYPE", "The address type is empty or null");
         }
-        return AddressV2.builder().
+        AddressV2 address = AddressV2.builder().
                 address(cndAddressDetail.getAddressLine1()).
                 address2(cndAddressDetail.getAddressLine2()).
                 city(cndAddressDetail.getCity()).
@@ -150,6 +152,8 @@ public class UserService {
                 tenantId(tenantId).
                 type(cndAddressDetail.getAddressType()).
                 build();
+
+        return address;
     }
 
 
@@ -195,7 +199,8 @@ public class UserService {
 
         StringBuilder uri = new StringBuilder(config.getUserHost())
                 .append(config.getUserV2SearchEndpoint());
-        return userServiceCall(userSearchRequest, uri);
+        UserDetailResponseV2 userDetailResponse = userServiceCall(userSearchRequest, uri);
+        return userDetailResponse;
     }
 
     /**
@@ -221,9 +226,11 @@ public class UserService {
                 LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) response;
                 log.info("Response from user service: {}", responseMap);
                 parseResponse(responseMap, dobFormat);
-                return mapper.convertValue(responseMap, UserDetailResponseV2.class);
+                UserDetailResponseV2 userDetailResponse = mapper.convertValue(responseMap, UserDetailResponseV2.class);
+                return userDetailResponse;
+            } else {
+                return new UserDetailResponseV2();
             }
-            return new UserDetailResponseV2();
         } catch (IllegalArgumentException e) {
             throw new CustomException("IllegalArgumentException", "ObjectMapper not able to convertValue in userCall");
         }
@@ -247,13 +254,13 @@ public class UserService {
             users.forEach(map -> {
 
                 map.put("createdDate", UserUtil.dateTolong((String) map.get("createdDate"), format1));
-                if ((String) map.get(LAST_MODIFIED_DATE) != null)
-                    map.put(LAST_MODIFIED_DATE,
-                            UserUtil.dateTolong((String) map.get(LAST_MODIFIED_DATE), format1));
+                if ((String) map.get("lastModifiedDate") != null)
+                    map.put("lastModifiedDate",
+                            UserUtil.dateTolong((String) map.get("lastModifiedDate"), format1));
                 if ((String) map.get("dob") != null)
                     map.put("dob", UserUtil.dateTolong((String) map.get("dob"), dobFormat));
-                if ((String) map.get(PWD_EXPIRY_DATE) != null)
-                    map.put(PWD_EXPIRY_DATE, UserUtil.dateTolong((String) map.get(PWD_EXPIRY_DATE), format1));
+                if ((String) map.get("pwdExpiryDate") != null)
+                    map.put("pwdExpiryDate", UserUtil.dateTolong((String) map.get("pwdExpiryDate"), format1));
             });
         }
     }

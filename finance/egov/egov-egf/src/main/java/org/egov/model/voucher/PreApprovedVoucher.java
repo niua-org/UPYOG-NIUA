@@ -49,7 +49,7 @@ package org.egov.model.voucher;
 
 import org.egov.commons.Accountdetailtype;
 import org.egov.commons.CChartOfAccounts;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -57,12 +57,12 @@ import java.util.Date;
 public class PreApprovedVoucher {
 
     private Long functionIdDetail;
-    @SanitizeHtml
+    @SafeHtml
     private String functionDetail;
     private Long glcodeIdDetail;
-    @SanitizeHtml
+    @SafeHtml
     private String glcodeDetail;
-    @SanitizeHtml
+    @SafeHtml
     private String accounthead;
     private BigDecimal debitAmountDetail = BigDecimal.ZERO;
     private BigDecimal creditAmountDetail = BigDecimal.ZERO;
@@ -70,9 +70,9 @@ public class PreApprovedVoucher {
     private CChartOfAccounts glcode;
     private Accountdetailtype detailType;
     private Integer detailKeyId;
-    @SanitizeHtml
+    @SafeHtml
     private String detailKey;
-    @SanitizeHtml
+    @SafeHtml
     private String detailCode;
     private BigDecimal debitAmount = BigDecimal.ZERO;
     private BigDecimal creditAmount = BigDecimal.ZERO;

@@ -69,12 +69,10 @@ public class ActionService {
         return actionRepository.findByName(name);
     }
 
-    // LTS Migration Fix (Spring Data 3): findOne() was removed. Use findById()
-    // and unwrap Optional to null so callers keep the previous contract.
     public Action getActionById(Long id) {
-        return actionRepository.findById(id)
-                .orElse(null);
+        return actionRepository.findOne(id);
     }
+
     @Transactional
     public Action saveAction(Action action) {
         return actionRepository.save(action);

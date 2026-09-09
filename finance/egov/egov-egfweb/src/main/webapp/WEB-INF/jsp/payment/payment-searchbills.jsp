@@ -148,16 +148,14 @@ function check()
 	resetSelectedRowsId('contingentList','selectedContingentRows');
 	resetSelectedRowsId('contractorList','selectedContractorRows');
 	resetSelectedRowsId('supplierList','selectedSupplierRows');
-	var rtgsDefaultModeEl = document.getElementById("rtgsDefaultMode");
-	var rtgsMode = rtgsDefaultModeEl ? rtgsDefaultModeEl.value : '';
+	var rtgsMode = document.getElementById("rtgsDefaultMode").value;
 	//var restrictionDate = document.getElementById("paymentRestrictionDateForCJV").value;
-	var rtgsRestrictionEl = document.getElementById("rtgsModeRestrictionDateForCJV");
-	var restrictionDateForCJV = rtgsRestrictionEl ? rtgsRestrictionEl.value : '';
+	var restrictionDateForCJV = document.getElementById("rtgsModeRestrictionDateForCJV").value;
 	if(rtgsMode =='Y' || rtgsMode=='Yes' || rtgsMode=='YES')
 	{
 		var length=0;
 		var isAnyOneContratorBillChecked = false;
-		length = <s:property value="%{contractorList != null ? contractorList.size() : 0}"/>;
+		length = <s:property value="%{contractorList.size()}"/>;
 		for ( var i = 0; i < length; i++){
 			if(document.getElementsByName('contractorList['+i+'].isSelected')[0].checked)
 			{
@@ -188,9 +186,7 @@ function check()
 	        );
 		document.form2.submit();
 	}             
-	var miscountEl = document.getElementById('miscount');
-	var miscountVal = miscountEl ? parseInt(miscountEl.value, 10) : 0;
-	if(!miscountVal || miscountVal === 0)
+	if(document.getElementById('miscount').value==0)
 	{
 		bootbox.alert('Please select a bill before making the payment');
 		return false;
@@ -467,7 +463,7 @@ function checkcontractorForSameMisAttribs(obj,len)
 {
  document.getElementById("exp2").innerHTML="";
 var field='contingentList';
-var length=<s:property value="%{contingentList != null ? contingentList.size() : 0}"/>;
+var length=<s:property value="%{contingentList.size()}"/>;
 for (i = 0; i < length; i++){
   if(document.getElementsByName(field+'['+i+'].isSelected')[0].checked == true)
 {
@@ -479,7 +475,7 @@ document.getElementById("exp2").innerHTML=document.getElementById("exp2").innerH
 }
  document.getElementById("sup2").innerHTML="";
  field='supplierList';
- length=<s:property value="%{supplierList != null ? supplierList.size() : 0}"/>;
+ length=<s:property value="%{supplierList.size()}"/>;
 for (i = 0; i < length; i++){
   if(document.getElementsByName(field+'['+i+'].isSelected')[0].checked == true)
 {
@@ -492,7 +488,7 @@ document.getElementById("sup2").innerHTML=document.getElementById("sup2").innerH
 
  document.getElementById("con2").innerHTML="";
 field='contractorList';
- length=<s:property value="%{contractorList != null ? contractorList.size() : 0}"/>;
+ length=<s:property value="%{contractorList.size()}"/>;
 for (i = 0; i < length; i++){
   if(document.getElementsByName(field+'['+i+'].isSelected')[0].checked == true)
 {
@@ -655,68 +651,47 @@ function checkContingentForSameMisAttribs(obj,len)
 		   return expcount;
 }
 
-<%-- LTS Migration Note [Struts 7 JS Serialization & DOM Safety]:
-     1. Guarded OGNL list.size() checks against null lists to avoid invalid JS loop bounds.
-     2. In Struts 7, __checkbox_<name> companion elements are not emitted; reading .value directly
-        crashed with TypeError. Added safe val() helper and fallback 'true' marker to allow
-        'Generate Payment' serialization to execute cleanly. --%>
 function resetSelectedRowsId(billTypeObj,selectedRowsId){
 		var	length = 0;
 		if(billTypeObj == "contingentList"){
-			length = <s:property value="%{contingentList != null ? contingentList.size() : 0}"/>;
+			length = <s:property value="%{contingentList.size()}"/>;
 			}
 		if(billTypeObj == "contractorList"){
-			length = <s:property value="%{contractorList != null ? contractorList.size() : 0}"/>;
+			length = <s:property value="%{contractorList.size()}"/>;
 			}
 		if(billTypeObj == "supplierList"){
-			length = <s:property value="%{supplierList != null ? supplierList.size() : 0}"/>;
+			length = <s:property value="%{supplierList.size()}"/>;
 			}
 	selectedRowsArr = new Array();
 		for(var index=0;index<length;index++){
-			var isSelectedEl = document.getElementsByName(billTypeObj+"["+index+"].isSelected")[0];
-			if(!isSelectedEl || !isSelectedEl.checked)
-				continue;
-			/*
-			 * LTS / Struts 7: CheckboxInterceptor no longer reliably emits
-			 * __checkbox_<name> companion fields. prepareBillTypeList skips
-			 * columns[1], so use a literal placeholder instead of reading
-			 * a missing DOM node (which aborted Generate Payment with no request).
-			 */
-			var checkboxMarker = 'true';
-			var legacyCheckbox = document.getElementsByName("__checkbox_"+billTypeObj+"["+index+"].isSelected")[0];
-			if(legacyCheckbox && legacyCheckbox.value)
-				checkboxMarker = legacyCheckbox.value;
+			var isChecked = document.getElementsByName(billTypeObj+"["+index+"].isSelected")[0].checked;
+			if(isChecked){
 			var deptName = document.getElementsByName(billTypeObj+"["+index+"].deptName")[0];
-			deptName = deptName == undefined || deptName == 'undefined' ? '' : deptName.value;
+			deptName = deptName == undefined || deptName == 'undefined' == 'undefined'? '' : deptName.value;
 			var functionName = document.getElementsByName(billTypeObj+"["+index+"].functionName")[0];
 			functionName = functionName == undefined || functionName == 'undefined' ? '' : functionName.value;
 			var schemeName = document.getElementsByName(billTypeObj+"["+index+"].schemeName")[0];
 			schemeName = schemeName == undefined || schemeName == 'undefined'? '' : schemeName.value;
 			var subschemeName = document.getElementsByName(billTypeObj+"["+index+"].subschemeName")[0];
 			subschemeName = subschemeName == undefined || subschemeName == 'undefined'? '' : subschemeName.value;
-			var val = function(name){
-				var el = document.getElementsByName(name)[0];
-				return el ? el.value : '';
-			};
-			selectedRowsArr.push(
-			val(billTypeObj+"["+index+"].csBillId")+"~"+
-			checkboxMarker+"~"+
-			val(billTypeObj+"["+index+"].expType")+"~"+
-			val(billTypeObj+"["+index+"].billNumber")+"~"+
-			val(billTypeObj+"["+index+"].billDate")+"~"+
-			val(billTypeObj+"["+index+"].billVoucherNumber")+"~"+
-			val(billTypeObj+"["+index+"].billVoucherId")+"~"+
-			val(billTypeObj+"["+index+"].billVoucherDate")+"~"+
-			val(billTypeObj+"["+index+"].payTo")+"~"+
-			val(billTypeObj+"["+index+"].netAmt")+"~"+
-			val(billTypeObj+"["+index+"].earlierPaymentAmt")+"~"+
-			val(billTypeObj+"["+index+"].payableAmt")+"~"+
-			val(billTypeObj+"["+index+"].paymentAmt")+"~"+
+				selectedRowsArr.push(
+			document.getElementsByName(billTypeObj+"["+index+"].csBillId")[0].value+"~"+
+			document.getElementsByName("__checkbox_"+billTypeObj+"["+index+"].isSelected")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].expType")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].billNumber")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].billDate")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].billVoucherNumber")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].billVoucherId")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].billVoucherDate")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].payTo")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].netAmt")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].earlierPaymentAmt")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].payableAmt")[0].value+"~"+
+			document.getElementsByName(billTypeObj+"["+index+"].paymentAmt")[0].value+"~"+
 			deptName+"~"+functionName+"~"+schemeName+"~"+subschemeName+";");
+			}
 		}
-		var selectedEl = document.getElementById(selectedRowsId);
-		if(selectedEl)
-			selectedEl.value = selectedRowsArr;
+		document.getElementById(selectedRowsId).value = selectedRowsArr;
 }
 
 function disableSelectedRows()
@@ -833,10 +808,10 @@ function disableSelectedRows()
 																			Class="button" onclick="return search()" />
 																		<input type="button" value="<s:text name='lbl.close'/>"
 																			onclick="javascript:window.close()" class="button" />
-																		<s:hidden name="miscount" id="miscount" value="0" />
+																		<s:hidden name="miscount" id="miscount" />
 																		<s:hidden name="miscattributes" id="miscattributes"
 																			value="" />
-																		<s:hidden name="rtgsDefaultMode" id="rtgsDefaultMode" value="" />
+																		<s:hidden name="rtgsDefaultMode" id="rtgsDefaultMode" />
 																		<s:hidden name="rtgsModeRestrictionDateForCJV"
 																			id="rtgsModeRestrictionDateForCJV" />
 																		<s:hidden name="paymentRestrictionDateForCJV"

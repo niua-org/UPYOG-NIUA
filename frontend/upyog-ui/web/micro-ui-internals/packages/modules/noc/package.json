@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/Module.js",
   "source": "src/Module.js",
+
   "peerDependencies": {
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -12,7 +13,7 @@
     "react-i18next": "14.0.0"
   },
   "dependencies": {
-    "@nudmcdgnpm/digit-ui-react-components": "4.0.5",
+    "@nudmcdgnpm/digit-ui-react-components": "3.10.2",
     "react-hook-form": "^7.51.0"
   },
   "author": "",

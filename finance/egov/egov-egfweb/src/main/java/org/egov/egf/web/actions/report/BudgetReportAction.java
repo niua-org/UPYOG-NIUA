@@ -48,9 +48,8 @@
 package org.egov.egf.web.actions.report;
 
 
-import jakarta.persistence.FlushModeType;
-import org.apache.struts2.ActionContext;
-import org.apache.struts2.util.ValueStack;
+import com.opensymphony.xwork2.ActionContext;
+import com.opensymphony.xwork2.util.ValueStack;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -74,7 +73,7 @@ import org.egov.services.budget.BudgetService;
 import org.egov.utils.BudgetDetailHelper;
 import org.egov.utils.Constants;
 import org.egov.utils.ReportHelper;
-
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -148,7 +147,7 @@ public class BudgetReportAction extends BaseFormAction {
     @Override
     public void prepare() {
         persistenceService.getSession().setDefaultReadOnly(true);
-        persistenceService.getSession().setFlushMode(FlushModeType.COMMIT);
+        persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
         super.prepare();
         setupDropdownsInHeader();
     }

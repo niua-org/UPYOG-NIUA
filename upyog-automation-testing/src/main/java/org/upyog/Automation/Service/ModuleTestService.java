@@ -5,7 +5,11 @@ import org.springframework.stereotype.Service;
 import org.upyog.Automation.Controller.ModuleTestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.ModuleExecutionResult;
+import org.upyog.Automation.Utils.ExcelDataReader;
+
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +20,15 @@ public class ModuleTestService {
 
     private static final Logger logger =
             LoggerFactory.getLogger(ModuleTestService.class);
+    // =========================
+// EXECUTION PROGRESS
+// =========================
+
+    private volatile int totalTestCases = 0;
+    private volatile int completedTestCases = 0;
+    private volatile String currentTestCase = "";
+    private volatile String currentModule = "";
+    private volatile boolean executionRunning = false;
 
     @Autowired
     private WorkflowExecutor workflowExecutor;
@@ -34,27 +47,55 @@ public class ModuleTestService {
 
             String[] modules = moduleName.split(",");
 
-            List<ModuleExecutionResult> results = new ArrayList<>();
+            List<ModuleExecutionResult> results =
+                    new ArrayList<>();
 
             for (String module : modules) {
 
                 module = module.trim();
 
-                logger.info("RUNNING MODULE = " + module);
+                logger.info(
+                        "RUNNING MODULE = {}",
+                        module
+                );
 
                 try {
 
-                    executeSingleModule(module, citizenUrl);
-
-                    results.add(
-                            new ModuleExecutionResult(
+                    List<ModuleExecutionResult> excelResults =
+                            executeFromExcelIfAvailable(
                                     module,
-                                    "PASS",
-                                    "Executed Successfully"
-                            )
-                    );
+                                    citizenUrl
+                            );
+
+                    if (!excelResults.isEmpty()) {
+
+                        results.addAll(excelResults);
+
+                    } else {
+
+                        // No Excel sheet / no Execute = YES
+                        // existing dev.properties workflow
+                        executeSingleModule(
+                                module,
+                                citizenUrl
+                        );
+
+                        results.add(
+                                new ModuleExecutionResult(
+                                        module,
+                                        "PASS",
+                                        "Executed Successfully"
+                                )
+                        );
+                    }
 
                 } catch (Exception e) {
+
+                    logger.error(
+                            "FAILED TO EXECUTE MODULE = {}",
+                            module,
+                            e
+                    );
 
                     results.add(
                             new ModuleExecutionResult(
@@ -63,7 +104,6 @@ public class ModuleTestService {
                                     e.getMessage()
                             )
                     );
-
                 }
             }
 
@@ -72,6 +112,18 @@ public class ModuleTestService {
 
         try {
 
+            List<ModuleExecutionResult> excelResults =
+                    executeFromExcelIfAvailable(
+                            moduleName,
+                            citizenUrl
+                    );
+
+            if (!excelResults.isEmpty()) {
+                return excelResults;
+            }
+
+            // No Excel sheet / no Execute = YES
+            // Run normal workflow using dev.properties
             executeSingleModule(
                     moduleName,
                     citizenUrl
@@ -94,9 +146,320 @@ public class ModuleTestService {
                             e.getMessage()
                     )
             );
-
         }
     }
+
+    private List<ModuleExecutionResult> executeFromExcelIfAvailable(
+            String moduleName,
+            String citizenUrl
+    ) {
+
+        List<ModuleExecutionResult> results =
+                new ArrayList<>();
+
+        String sheetName = switch (moduleName.toUpperCase()) {
+
+            case "PET_REGISTRATION" ->
+                    "PET_Test_Data";
+
+            case "PUBLIC_GRIEVANCE_REDRESSAL" ->
+                    "PGR_Test_Data";
+
+            case "NO_DUE_CERTIFICATE" ->
+                    "NDC_Test_Data";
+
+            case "PROPERTY_TAX" ->
+                    "PT_Test_Data";
+
+            case "ADVERTISEMENT" ->
+                    "Advertisement_Test_Data";
+
+            case "STREET_VENDING" ->
+                    "StreetVending_Test_Data";
+
+            case "TRADE_LICENSE" ->
+                    "TradeLicense_Test_Data";
+
+            case "TREE_PRUNING" ->
+                    "TreePruning_Test_Data";
+
+            case "WATER_TANKER" ->
+                    "WaterTanker_Test_Data";
+
+            case "MOBILE_TOILET" ->
+                    "MobileToilet_Test_Data";
+
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ->
+                    "OBPAS_Test_Data";
+
+            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC" ->
+                    "OBPAS_OC_Create_Test_Data";
+
+            case "EWASTE_MANAGEMENT_SYSTEM" ->
+                    "EWaste_Test_Data";
+
+            case "COMMUNITY_HALL_BOOKING" ->
+                    "CHB_Test_Data";
+
+            case "CONSTRUCTION_AND_DEMOLITION" ->
+                    "CND_Test_Data";
+
+            case "DESLUDGING_SERVICE" ->
+                    "Desludging_Test_Data";
+
+            case "DESLUDGING_SERVICE_PAYMENT" ->
+                    "Desludging_Payment_Test_Data";
+
+            case "DESLUDGING_SERVICE_PAYMENT2" ->
+                    "Desludging_Payment2_Test_Data";
+
+            case "WATER_AND_SEWERAGE" ->
+                    "WaterAndSewerage_Test_Data";
+
+            case "GARBAGE_COLLECTION" ->
+                    "GC_Test_Data";
+
+            case "GARBAGE_COLLECTION_PAYMENT" ->
+                    "GC_Payment_Test_Data";
+
+            case "ESTATE_MANAGEMENT" ->
+                    "EstateManagement_Test_Data";
+
+            case "ASSET_MANAGEMENT_SYSTEM" ->
+                    "Asset_Test_Data";
+
+            case "CHALLAN_GENERATION" ->
+                    "Challan_Test_Data";
+
+            case "DESLUDGING_EMPLOYEE_UPDATE" ->
+                    "Desludging_Employee_Update_Test_Data";
+
+            case "DESLUDGING_EMPLOYEE_COMPLETE" ->
+                    "Desludging_Employee_Complete_Test_Data";
+
+            case "DESLUDGING_EMPLOYEE_PSSO" ->
+                    "Desludging_Employee_PSSO_Test_Data";
+
+            case "DESLUDGING_EMPLOYEE_FSTPO" ->
+                    "Desludging_Employee_FSTPO_Test_Data";
+
+            case "ASSET_MANAGEMENT_SYSTEM_VERIFIER" ->
+                    "Asset_Verifier_Test_Data";
+
+            case "ASSET_MANAGEMENT_SYSTEM_APPROVER" ->
+                    "Asset_Approver_Test_Data";
+
+            case "TRADE_LICENSE1" ->
+                    "TradeLicense1_Test_Data";
+
+            case "SEWERAGE_EMP" ->
+                    "Sewerage_Test_Data";
+
+            case "WATER_EMP" ->
+                    "Water_Test_Data";
+
+            default ->
+                    moduleName + "_Test_Data";
+        };
+
+        logger.info(
+                "Checking Excel sheet: {}",
+                sheetName
+        );
+
+        // Excel sheet does not exist
+        if (!ExcelDataReader.hasSheet(sheetName)) {
+
+            logger.info(
+                    "Excel sheet not found: {}. Using normal workflow.",
+                    sheetName
+            );
+
+            return results;
+        }
+
+        logger.info(
+                "Excel sheet found: {}",
+                sheetName
+        );
+
+        List<Map<String, String>> testCases =
+                ExcelDataReader.readSheet(sheetName);
+
+        // Sheet exists but no Execute = YES rows
+        if (testCases.isEmpty()) {
+
+            logger.info(
+                    "No executable Excel test cases found in {}. Using normal workflow.",
+                    sheetName
+            );
+
+            return results;
+        }
+
+        logger.info(
+                "Excel test cases found: {}",
+                testCases.size()
+        );
+
+        // Initialize execution progress
+        totalTestCases = testCases.size();
+        completedTestCases = 0;
+        currentModule = moduleName;
+        currentTestCase = "";
+        executionRunning = true;
+
+        for (Map<String, String> testData : testCases) {
+
+            String testCase =
+                    testData.getOrDefault(
+                            "TestCase",
+                            "UNKNOWN"
+                    );
+
+            currentTestCase = testCase;
+
+            logger.info(
+                    "EXECUTION PROGRESS: {} / {} | {}",
+                    completedTestCases + 1,
+                    totalTestCases,
+                    testCase
+            );
+
+            logger.info(
+                    "========== STARTING EXCEL TEST CASE: {} ==========",
+                    testCase
+            );
+
+            try {
+
+                // Clear previous Excel data
+                WorkflowDataStore.clear();
+
+                // Load current Excel row
+                for (Map.Entry<String, String> entry :
+                        testData.entrySet()) {
+
+                    String key =
+                            entry.getKey();
+
+                    String value =
+                            entry.getValue();
+
+                    if (value != null
+                            && !value.trim().isEmpty()) {
+
+                        WorkflowDataStore.put(
+                                key,
+                                value.trim()
+                        );
+
+                        logger.info(
+                                "Excel Data → {} = {}",
+                                key,
+                                value
+                        );
+                    }
+                }
+
+                // Execute the EXISTING workflow
+                executeSingleModule(
+                        moduleName,
+                        citizenUrl
+                );
+
+// Test case passed
+                results.add(
+                        new ModuleExecutionResult(
+                                moduleName,
+                                testCase,
+                                "PASS",
+                                "Executed Successfully",
+                                ""
+                        )
+                );
+
+                completedTestCases++;
+
+                logger.info(
+                        "========== COMPLETED EXCEL TEST CASE: {} ==========",
+                        testCase
+                );
+
+            } catch (Exception e) {
+
+            String errorMessage = e.getMessage();
+
+            if (errorMessage == null || errorMessage.trim().isEmpty()) {
+                errorMessage = e.getClass().getSimpleName();
+            }
+
+            String failedStep =
+                    WorkflowDataStore.get("FAILED_STEP");
+
+            String failedError =
+                    WorkflowDataStore.get("FAILED_ERROR");
+
+            if (failedStep == null || failedStep.trim().isEmpty()) {
+                failedStep = "Unknown Step";
+            }
+
+            if (failedError != null && !failedError.trim().isEmpty()) {
+                errorMessage = failedError;
+            }
+
+            logger.error(
+                    "FAILED TEST CASE: {} | Step: {} | Error: {}",
+                    testCase,
+                    failedStep,
+                    errorMessage,
+                    e
+            );
+
+            results.add(new ModuleExecutionResult(
+                    moduleName,
+                    testCase,
+                    "FAIL",
+                    errorMessage,
+                    failedStep
+            ));
+
+            completedTestCases++;
+        } finally {
+
+            WorkflowDataStore.clear();
+        }
+    }
+        executionRunning = false;
+        currentTestCase = "";
+
+    return results;
+}
+
+// =========================
+// EXECUTION PROGRESS GETTERS
+// =========================
+
+    public int getTotalTestCases() {
+        return totalTestCases;
+    }
+
+    public int getCompletedTestCases() {
+        return completedTestCases;
+    }
+
+    public String getCurrentTestCase() {
+        return currentTestCase;
+    }
+
+    public String getCurrentModule() {
+        return currentModule;
+    }
+
+    public boolean isExecutionRunning() {
+        return executionRunning;
+    }
+
 
     private String executeSingleModule(
             String moduleName,
@@ -268,6 +631,41 @@ public class ModuleTestService {
                 );
 
                 return "Workflow Executed";
+
+            case "GARBAGE_COLLECTION":
+                workflowExecutor.executeWorkflow(
+                        "test-config/garbageCollection/gc_workflow.json",
+                        "test-config/garbageCollection/gc_stakeholder_module.json",
+                        citizenUrl
+                );
+                return "Workflow Executed";
+
+            case "ESTATE_MANAGEMENT":
+                workflowExecutor.executeWorkflow(
+                        "test-config/estateManagement/estateManagement_workflow_module.json",
+                        "test-config/estateManagement/estateManagement_stakeholder_module.json",
+                        citizenUrl
+                );
+                return "Workflow Executed";
+
+            case "CHALLAN_GENERATION":
+                workflowExecutor.executeWorkflow(
+                        "test-config/challanGeneration/cg_workflow_module.json",
+                        "test-config/challanGeneration/cg_stakeholder_module.json",
+                        citizenUrl
+                );
+                return "Workflow Executed";
+
+
+            case "NO_DUE_CERTIFICATE":
+                workflowExecutor.executeWorkflow(
+                        "test-config/noDueCertificate/ndc_workflow.json",
+                        "test-config/noDueCertificate/ndc_stakeholder_module.json",
+                        citizenUrl
+                );
+                return "Workflow Executed";
+
+
 
 
             default:

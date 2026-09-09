@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.adv.constants.BookingConstants;
 import org.upyog.adv.util.EncryptionDecryptionUtil;
@@ -38,11 +39,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ADVEncryptionService {
 
-	private final EncryptionDecryptionUtil encryptionDecryptionUtil;
-
-	public ADVEncryptionService(EncryptionDecryptionUtil encryptionDecryptionUtil) {
-		this.encryptionDecryptionUtil = encryptionDecryptionUtil;
-	}
+	@Autowired
+	private EncryptionDecryptionUtil encryptionDecryptionUtil;
 
 	public BookingDetail encryptObject(BookingRequest bookingRequest) {
 		ApplicantDetail applicantDetail = bookingRequest.getBookingApplication().getApplicantDetail();
@@ -77,13 +75,14 @@ public class ADVEncryptionService {
 		applicantDetails = encryptionDecryptionUtil.decryptObject(applicantDetails, 
 				BookingConstants.ADV_APPLICANT_DETAIL_PLAIN_DECRYPTION_KEY, ApplicantDetail.class, requestInfo);
 		
-		applicantDetails.forEach(detail -> {
+		applicantDetails.stream().forEach( detail ->{
 			if(applicantDetailMap.containsKey(detail.getBookingId())) {
 				applicantDetailMap.get(detail.getBookingId()).setApplicantDetail(detail);
 			}
 		});
 				
 		log.info("Applicant detail after decryption : " + applicantDetails.get(0).getApplicantMobileNo());
+		//bookingDetail.setApplicantDetail(applicantDetail);
 
 		return bookingDetails;
 	}

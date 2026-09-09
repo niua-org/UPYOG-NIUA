@@ -192,7 +192,11 @@ const SearchReceipt = () => {
 
         // Clickable receipt → triggers PDF download
         return (
-          <span className="cell-text cg-link-blue-pointer" onClick={() => downloadPDF(row)}>
+          <span
+            className="cell-text"
+            style={{ color: "blue", cursor: "pointer" }}
+            onClick={() => downloadPDF(row)}
+          >
             {receiptNumber}
           </span>
         );

@@ -1,7 +1,7 @@
 import logger from "../config/logger";
 import envVariables from "../envVariables";
 
-export default function(options) {
+module.exports = function(options) {
   return function(req, res, next) {
     const TRACER_ENABLE_REQUEST_LOGGING =
       envVariables.TRACER_ENABLE_REQUEST_LOGGING === "true";

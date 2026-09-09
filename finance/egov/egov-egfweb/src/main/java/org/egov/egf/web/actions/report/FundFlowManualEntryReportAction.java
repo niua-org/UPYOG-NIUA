@@ -48,6 +48,7 @@
 package org.egov.egf.web.actions.report;
 
 
+import com.opensymphony.xwork2.validator.annotations.Validation;
 
 import net.sf.jasperreports.engine.JRException;
 
@@ -68,12 +69,11 @@ import org.egov.infstr.utils.EgovMasterDataCaching;
 import org.egov.model.report.FundFlowBean;
 import org.egov.utils.Constants;
 import org.egov.utils.ReportHelper;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.FlushModeType;
-import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
+import org.hibernate.Query;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -100,6 +100,7 @@ import java.util.Map;
 })
 @SuppressWarnings("serial")
 @ParentPackage("egov")
+@Validation
 
 public class FundFlowManualEntryReportAction extends BaseFormAction {
 
@@ -137,7 +138,7 @@ public class FundFlowManualEntryReportAction extends BaseFormAction {
     @Override
     public void prepare() {
         persistenceService.getSession().setDefaultReadOnly(true);
-        persistenceService.getSession().setFlushMode(FlushModeType.COMMIT);
+        persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
         super.prepare();
         addDropdownData("fundList", masterDataCache.get("egi-fund"));
         addDropdownData("bankList", Collections.EMPTY_LIST);
@@ -181,15 +182,13 @@ public class FundFlowManualEntryReportAction extends BaseFormAction {
         } catch (final ParseException e) {
             LOGGER.error("Error in parsing Date ");
         }
-        CriteriaBuilder cb = persistenceService.getSession().getCriteriaBuilder();
-        CriteriaQuery<FundFlowBean> cq = cb.createQuery(FundFlowBean.class);
-        Root<FundFlowBean> root = cq.from(FundFlowBean.class);
-        cq.where(
-            cb.between(root.get("reportDate"), startdt, enddt),
-            cb.notEqual(root.get("currentReceipt"), BigDecimal.ZERO),
-            cb.equal(root.get("bankAccountId"), BigDecimal.valueOf(reportSearch.getBankAccount().getId()))
-        ).orderBy(cb.asc(root.get("reportDate")));
-        entryReportList.addAll(persistenceService.getSession().createQuery(cq).getResultList());
+        final Criteria critQuery = persistenceService.getSession().createCriteria(FundFlowBean.class)
+
+                .add(Restrictions.between("reportDate", startdt, enddt))
+                .add(Restrictions.ne("currentReceipt", BigDecimal.ZERO))
+                .add(Restrictions.eq("bankAccountId", BigDecimal.valueOf(reportSearch.getBankAccount().getId())))
+                .addOrder(Order.asc("reportDate"));
+        entryReportList.addAll(critQuery.list());
 
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("No of Fund flow Manual entry during the period " + reportSearch.getStartDate()
@@ -254,7 +253,7 @@ public class FundFlowManualEntryReportAction extends BaseFormAction {
 
     @SuppressWarnings("unchecked")
     public String getUlbName() {
-        final Query query = persistenceService.getSession().createNativeQuery("select name from companydetail");
+        final Query query = persistenceService.getSession().createSQLQuery("select name from companydetail");
         final List<String> result = query.list();
         if (result != null)
             return result.get(0);

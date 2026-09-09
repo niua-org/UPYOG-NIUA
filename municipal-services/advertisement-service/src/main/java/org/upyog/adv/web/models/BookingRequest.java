@@ -1,7 +1,11 @@
 package org.upyog.adv.web.models;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
+
 import org.egov.common.contract.request.RequestInfo;
+import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

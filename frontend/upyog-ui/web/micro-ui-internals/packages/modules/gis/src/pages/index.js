@@ -2,7 +2,6 @@ import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-rea
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import "../css/gis-inline.css";
 
 
 const App = () => {
@@ -14,7 +13,7 @@ const App = () => {
   const ServiceType = Digit?.ComponentRegistryService?.getComponent("ServiceTypes");
  
   return (
-    <span className={"gis-citizen"}>
+    <span className={"chb-citizen"} style={{ width: "100%" }}>
       <AppContainer>
         <Routes>
           <Route path="/map/*" element={<PrivateRoute><ServiceType /></PrivateRoute>} />

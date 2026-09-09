@@ -40,18 +40,18 @@
 
 package org.egov.infra.microservice.models;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class FinancialStatus {
-    @SanitizeHtml
+    @SafeHtml
     private String id;
-    @SanitizeHtml
+    @SafeHtml
     private String moduleType;
-    @SanitizeHtml
+    @SafeHtml
     private String code;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String description;
 
     public String getId() {

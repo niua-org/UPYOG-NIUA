@@ -60,34 +60,19 @@ public class BillsService {
     
     @Autowired
     private EgBillRegisterHibernateDAO egBillRegisterHibernateDAO;
-    @Transactional
     public EgBillregister createBillRegister(final EgBillregister billregister)
     {
         return (EgBillregister) egBillRegisterHibernateDAO.create(billregister);
     }
 
-    @Transactional
     public EgBillregister updateBillRegister(final EgBillregister billregister)
     {
         return (EgBillregister) egBillRegisterHibernateDAO.update(billregister);
     }
 
-    @Transactional
-    public int updateBillStatus(final List<Long> ids, final Long statusId, final String billStatus)
-    {
-        return egBillRegisterHibernateDAO.updateBillStatus(ids, statusId, billStatus);
-    }
-
-    @Transactional
-    public int cancelBillRegister(final Long billId, final String billStatus, final String moduleType,
-            final String description)
-    {
-        return egBillRegisterHibernateDAO.cancelBillRegister(billId, billStatus, moduleType, description);
-    }
-
     public EgBillregister getBillRegisterById(final Integer billid)
     {
-        return (EgBillregister) egBillRegisterHibernateDAO.findById(Long.valueOf(billid), false);
+        return (EgBillregister) egBillRegisterHibernateDAO.findById(new Long(billid), false);
     }
 
     public List<String> getDistExpType()

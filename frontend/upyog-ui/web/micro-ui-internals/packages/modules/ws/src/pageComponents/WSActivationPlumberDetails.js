@@ -37,8 +37,7 @@ const WSActivationPlumberDetails = ({ config, onSelect, userType, formData, setE
 
 
     useEffect(() => {
-        const data = plumberDetails.map((e, index) => {
-            if (!e.key) e.key = Date.now() + index;
+        const data = plumberDetails.map((e) => {
             return e;
         });
         onSelect(config?.key, data);
@@ -67,104 +66,94 @@ const WSActivationPlumberDetails = ({ config, onSelect, userType, formData, setE
         <React.Fragment>
             {plumberDetails?.map((plumberDetail, index) =>
                  plumberDetail ? (
-                <PlumberDetails key={plumberDetail?.key || `ws-plumber-detail-${index}`} index={index} plumberDetail={plumberDetail} {...commonProps} />
+                <PlumberDetails key={plumberDetail.key} index={index} plumberDetail={plumberDetail} {...commonProps} />
                 ) : null
                 )}
         </React.Fragment>
     );
 };
-const PlumberDetails = _props => {
-  const {
-    plumberDetail,
-    index,
-    focusIndex,
-    allOwners,
-    setFocusIndex,
-    t,
-    formData,
-    config,
-    setError,
-    clearErrors,
-    formState,
-    isEdit,
-    plumberDetails,
-    setIsErrors,
-    isErrors,
-    filters,
-    options,
-    setPlumberDetails
-  } = _props;
-  const {
-    control,
-    formState: localFormState,
-    watch,
-    setError: setLocalError,
-    clearErrors: clearLocalErrors,
-    setValue,
-    trigger,
-    getValues
-  } = useForm();
-  const formValue = watch();
-  const {
-    errors
-  } = localFormState;
-  const isMobile = window.Digit.Utils.browser.isMobile();
-  let isEmployee = window.location.href.includes("/employee");
-  useEffect(() => {
-    trigger();
-  }, []);
-  useEffect(() => {
-    // if (plumberDetails?.[0]?.detailsProvidedBy !== "Self") {
-    //   clearErrors("PlumberDetails");
-    // } else {
-    //   trigger();
-    // }
-    trigger();
-  }, [plumberDetails?.[0]?.detailsProvidedBy, formData?.disConnectionDetails?.[0]]);
-  useEffect(() => {
-    if (Object.entries(formValue).length > 0) {
-      const keys = Object.keys(formValue);
-      const part = {};
-      keys.forEach(key => part[key] = plumberDetail?.[key]);
-      let plumbermobileCheck = window.location.href.includes("ws/config-by-disconnection-application") ? formValue?.plumberMobileNo !== undefined && part?.plumberMobileNo : true;
-      if (!_.isEqual(formValue, part) && plumbermobileCheck) {
-        let isErrorsFound = true;
-        Object.keys(formValue).map(data => {
-          if (!formValue[data] && isErrorsFound) {
-            isErrorsFound = false;
-            setIsErrors(false);
-          }
-        });
-        if (isErrorsFound) setIsErrors(true);
-        let ob = [{
-                    ...plumberDetail,
-                   
-          ...formValue
-               
-        }];
 
-        setPlumberDetails(ob);
+const PlumberDetails = (_props) => {
+    const {
+        plumberDetail,
+        index,
+        focusIndex,
+        allOwners,
+        setFocusIndex,
+        t,
+        formData,
+        config,
+        setError,
+        clearErrors,
+        formState,
+        isEdit,
+        plumberDetails,
+        setIsErrors,
+        isErrors,
+        filters,
+        options,
+        setPlumberDetails
+    } = _props;
+
+    const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, getValues } = useForm();
+    const formValue = watch();
+    const { errors } = localFormState;
+    const isMobile = window.Digit.Utils.browser.isMobile();
+    let isEmployee = window.location.href.includes("/employee")
+
+    useEffect(() => {
         trigger();
-      }
-    }
-  }, [formValue, plumberDetails]);
-  useEffect(() => {
-    if (Object.keys(errors).length && !_.isEqual(formState.errors[config.key]?.type || {}, errors)) {
-      setError(config.key, {
-        type: errors
-      });
-    } else if (!Object.keys(errors).length && formState.errors[config.key]) {
-      clearErrors(config.key);
-    }
-  }, [errors]);
-  const errorStyle = {
-    width: "70%",
-    marginLeft: "30%",
-    fontSize: "12px",
-    marginTop: "-21px"
-  };
-  return <div>
-            <div className="ws-auto-38">
+    }, []);
+
+    useEffect(() => {
+        // if (plumberDetails?.[0]?.detailsProvidedBy !== "Self") {
+        //   clearErrors("PlumberDetails");
+        // } else {
+        //   trigger();
+        // }
+        trigger();
+      }, [plumberDetails?.[0]?.detailsProvidedBy, formData?.disConnectionDetails?.[0]]);
+
+    useEffect(() => {
+        if (Object.entries(formValue).length > 0) {
+            const keys = Object.keys(formValue);
+            const part = {};
+            keys.forEach((key) => (part[key] = plumberDetail?.[key]));
+            let plumbermobileCheck = window.location.href.includes("ws/config-by-disconnection-application") ? (formValue?.plumberMobileNo !== undefined && part?.plumberMobileNo) : true;
+            if (!_.isEqual(formValue, part) && plumbermobileCheck) {
+                let isErrorsFound = true;
+                Object.keys(formValue).map(data => {
+                    if (!formValue[data] && isErrorsFound) {
+                        isErrorsFound = false;
+                        setIsErrors(false);
+                    }
+                });
+                if (isErrorsFound) setIsErrors(true);
+                let ob = [{
+                    ...plumberDetail,
+                    ...formValue
+                }];
+
+                setPlumberDetails(ob);
+                trigger();
+            }
+        }
+    }, [formValue, plumberDetails]);
+
+
+    useEffect(() => {
+        if (Object.keys(errors).length && !_.isEqual(formState.errors[config.key]?.type || {}, errors)) {
+            setError(config.key, { type: errors });
+        }
+        else if (!Object.keys(errors).length && formState.errors[config.key]) {
+            clearErrors(config.key);
+        }
+    }, [errors]);
+
+    const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
+    return (
+        <div >
+            <div style={{ marginBottom: "16px" }}>
                 <div>
                     <LabelFieldPair>
                         <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_ADDN_DETAILS_PLUMBER_PROVIDED_BY")}`}<span className="check-page-link-button"> *</span></CardLabel>
@@ -208,13 +197,7 @@ const PlumberDetails = _props => {
                     {!plumberDetail?.detailsProvidedBy?.code || plumberDetail?.detailsProvidedBy?.code == "ULB" ?
                         <div>
                             <LabelFieldPair>
-                                <CardLabel style={isMobile && isEmployee ? {
-              fontWeight: "700",
-              width: "100%"
-            } : {
-              marginTop: "-5px",
-              fontWeight: "700"
-            }} className="card-label-smaller">{`${t("WS_PLIMBER_LICENSE_NO_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
+                                <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PLIMBER_LICENSE_NO_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                 <div className="field">
                                     <Controller
                                         control={control}
@@ -241,13 +224,7 @@ const PlumberDetails = _props => {
                             </LabelFieldPair>
                             <CardLabelError style={errorStyle}>{localFormState.touchedFields.plumberLicenseNo ? errors?.plumberLicenseNo?.message : ""}</CardLabelError>
                             <LabelFieldPair>
-                                <CardLabel style={isMobile && isEmployee ? {
-              fontWeight: "700",
-              width: "100%"
-            } : {
-              marginTop: "-5px",
-              fontWeight: "700"
-            }} className="card-label-smaller">{`${t("WS_ADDN_DETAILS_PLUMBER_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
+                                <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_ADDN_DETAILS_PLUMBER_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                 <div className="field">
                                     <Controller
                                         control={control}
@@ -274,13 +251,7 @@ const PlumberDetails = _props => {
                             </LabelFieldPair>
                             <CardLabelError style={errorStyle}>{localFormState.touchedFields.plumberName ? errors?.plumberName?.message : ""}</CardLabelError>
                             <LabelFieldPair>
-                                <CardLabel style={isMobile && isEmployee ? {
-              fontWeight: "700",
-              width: "100%"
-            } : {
-              marginTop: "-5px",
-              fontWeight: "700"
-            }} className="card-label-smaller">{`${t("WS_PLUMBER_MOBILE_NO_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
+                                <CardLabel style={isMobile && isEmployee ? {fontWeight: "700", width:"100%"} : { marginTop: "-5px", fontWeight: "700" }} className="card-label-smaller">{`${t("WS_PLUMBER_MOBILE_NO_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                 <div className="field">
                                     <Controller
                                         control={control}
@@ -291,10 +262,10 @@ const PlumberDetails = _props => {
                                         type="mobileNumber"
                                         isMandatory={true}
                                         render={({ field }) => (
-                                            <div className="ws-auto-39">
-                                                <div className="ws-auto-40">+91</div>
+                                            <div style={{display:"flex",alignItems:"baseline",marginRight: "unset"}}>
+                                                <div style={{ position: "relative", zIndex: "1", left: "35px", marginTop: "-24.5px",marginLeft:"-26px" }}>+91</div>
                                                 <TextInput
-                                                    className="ws-auto-41"
+                                                    style={{ background: "#FAFAFA", padding: "0px 35px" }}
                                                     type="mobileNumber"
                                                     value={field.value}
                                                     autoFocus={focusIndex.index === plumberDetail?.key && focusIndex.type === "plumberMobileNo"}
@@ -332,13 +303,19 @@ const PlumberDetails = _props => {
                                             { /*privacy={{ uuid:plumberDetail?.applicationNo, fieldName: ["plumberInfoMobileNumber"], model: "WnSConnectionPlumber" }}*/}
                                             </WrapUnMaskComponent>
                                            </div>
-                                           </div>)} />
+                                           </div>
+                                            
+                                        )}
+                                    />
                                 </div>
                             </LabelFieldPair>
                             <CardLabelError style={errorStyle}>{localFormState.touchedFields.plumberMobileNo ? errors?.plumberMobileNo?.message : ""}</CardLabelError>
                         </div> : null}
                 </div>
             </div>
-        </div>;
+        </div>
+    );
 };
+
+
 export default WSActivationPlumberDetails;

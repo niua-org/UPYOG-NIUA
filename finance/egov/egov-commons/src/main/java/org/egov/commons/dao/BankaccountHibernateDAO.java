@@ -47,17 +47,16 @@
  */
 package org.egov.commons.dao;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.egov.commons.Bankaccount;
-import org.egov.commons.utils.BankAccountType;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +84,7 @@ public class BankaccountHibernateDAO {
     }
 
     public List<Bankaccount> findAll() {
-        return getCurrentSession().createQuery("from Bankaccount", Bankaccount.class).list();
+        return (List<Bankaccount>) getCurrentSession().createCriteria(Bankaccount.class).list();
     }
 
     @PersistenceContext
@@ -102,7 +101,7 @@ public class BankaccountHibernateDAO {
     public Bankaccount getByAccountNumber(final String bankAccNum) {
         final Query qry = getCurrentSession().createQuery(
                 "from Bankaccount bankacc where bankacc.accountnumber=:accNum");
-        qry.setParameter("accNum", bankAccNum);
+        qry.setString("accNum", bankAccNum);
         Bankaccount bankAccount = null;
         if (qry.list().size() != 0) {
             bankAccount = (Bankaccount) qry.list().get(0);
@@ -120,9 +119,9 @@ public class BankaccountHibernateDAO {
         final Query qry = getCurrentSession().createQuery(
                 "from Bankaccount bankacc where bankacc.accountnumber=:accNum "
                         + " and bankacc.bankbranch.branchcode=:branchCode and bankacc.bankbranch.bank.code=:bankCode");
-        qry.setParameter("accNum", bankAccNum);
-        qry.setParameter("branchCode", bankBranchCode);
-        qry.setParameter("bankCode", bankCode);
+        qry.setString("accNum", bankAccNum);
+        qry.setString("branchCode", bankBranchCode);
+        qry.setString("bankCode", bankCode);
         Bankaccount bankAccount = null;
         if (qry.list().size() != 0) {
             bankAccount = (Bankaccount) qry.list().get(0);
@@ -138,7 +137,7 @@ public class BankaccountHibernateDAO {
     public List<Bankaccount> getBankAccountByBankBranch(final Integer bankBranchId) {
         final Query qry = getCurrentSession().createQuery(
                 "from Bankaccount bankacc where bankacc.isactive=true and bankacc.bankbranch.id=:bankBranchId ");
-        qry.setParameter("bankBranchId", bankBranchId);
+        qry.setInteger("bankBranchId", bankBranchId);
         List<Bankaccount> bankAccount = null;
         if (qry.list().size() != 0) {
             bankAccount = qry.list();
@@ -147,19 +146,15 @@ public class BankaccountHibernateDAO {
     }
 
     public List<Bankaccount> getBankAccountByBankBranchForReceiptsPayments(final Integer bankBranchId, Long fundId) {
-        if (bankBranchId == null) {
-            return java.util.Collections.emptyList();
-        }
         final StringBuilder query = new StringBuilder(
-                "from Bankaccount bankacc where bankacc.isactive=true and bankacc.type in (:accTypes) and bankacc.bankbranch.id=:bankBranchId");
+                "from Bankaccount bankacc where bankacc.isactive=true and bankacc.type in ('RECEIPTS_PAYMENTS','RECEIPTS') and bankacc.bankbranch.id=:bankBranchId");
         if (fundId != null) {
             query.append(" and bankacc.fund.id=:fundId");
         }
         final Query qry = getCurrentSession().createQuery(query.toString());
-        qry.setParameterList("accTypes", Arrays.asList(BankAccountType.RECEIPTS_PAYMENTS, BankAccountType.RECEIPTS));
-        qry.setParameter("bankBranchId", bankBranchId);
+        qry.setInteger("bankBranchId", bankBranchId);
         if (fundId != null) {
-            qry.setParameter("fundId", fundId);
+            qry.setLong("fundId", fundId);
         }
         List<Bankaccount> bankAccount = null;
         if (qry.list().size() != 0) {
@@ -168,9 +163,7 @@ public class BankaccountHibernateDAO {
         return bankAccount;
     }
     
-    public List<Bankaccount> getBankAccountByAccountNumbers(Set<String> accNumbers) {
-        return getCurrentSession().createQuery(
-                "from Bankaccount where accountnumber in (:accNumbers)", Bankaccount.class)
-                .setParameterList("accNumbers", accNumbers).list();
+    public List<Bankaccount> getBankAccountByAccountNumbers(Set<String> accNumbers){
+        return getCurrentSession().createCriteria(Bankaccount.class).add(Restrictions.in("accountnumber", accNumbers)).list();
     }
 }

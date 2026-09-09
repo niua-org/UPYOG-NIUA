@@ -55,8 +55,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Path;
+import javax.validation.ConstraintViolation;
+import javax.validation.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

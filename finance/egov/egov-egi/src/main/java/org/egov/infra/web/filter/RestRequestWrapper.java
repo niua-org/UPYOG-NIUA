@@ -9,22 +9,14 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.TreeMap;
 
-import jakarta.servlet.ReadListener;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/**
- * LTS Migration Fix (WildFly 40): System.out is discarded under WildFly;
- * request-body diagnostics are logged with SLF4J instead.
- */
 public class RestRequestWrapper extends HttpServletRequestWrapper {
-
-    private static final Logger log = LoggerFactory.getLogger(RestRequestWrapper.class);
     
     private String  strBody;
     private Map<String,String[]> reqParamMap;
@@ -40,15 +32,15 @@ public class RestRequestWrapper extends HttpServletRequestWrapper {
     @Override
     public ServletInputStream getInputStream() throws IOException{
         final ByteArrayInputStream bsiStream = new ByteArrayInputStream(strBody.getBytes("UTF-8"));
-        log.info("getInputStream request");
+        System.out.println("********** getinputstream request************* ");
         
         return new ServletInputStream() {
             
             @Override
             public int read() throws IOException {
                 
-             /*   log.info("read()");
-                log.info(strBody);*/
+             /*   System.out.println("**************** read() ***************");
+                System.out.println(strBody);*/
                 return bsiStream.read();
             }
             

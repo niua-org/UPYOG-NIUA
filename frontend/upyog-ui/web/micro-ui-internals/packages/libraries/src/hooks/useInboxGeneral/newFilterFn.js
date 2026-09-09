@@ -57,18 +57,13 @@ export const filterFunctions = {
     const searchFilters = {};
     const workflowFilters = {};
 
-    const { applicationNumbers, mobileNumber, limit, offset, sortBy, sortOrder, total, applicationStatus, services, petType } = filtersArg || {};
-
+    const { applicationNumbers, mobileNumber, limit, offset, sortBy, sortOrder, total, applicationStatus, services } = filtersArg || {};
 
     if (filtersArg?.applicationNumber) {
       searchFilters.applicationNumber = filtersArg?.applicationNumber;
     }
     if (filtersArg?.applicationNumbers) {
       searchFilters.applicationNumber = applicationNumbers;
-    }
-
-    if(petType){
-      searchFilters.petType=petType;
     }
     
     if (applicationStatus && applicationStatus?.[0]?.applicationStatus) {
@@ -217,7 +212,7 @@ export const filterFunctions = {
     const workflowFilters = {};
 
 
-    const { bookingNo, mobileNumber,venueType, limit, offset, sortBy, sortOrder, total, services } = filtersArg || {};
+    const { bookingNo, mobileNumber,communityHallCode, limit, offset, sortBy, sortOrder, total, services } = filtersArg || {};
 
     if (filtersArg?.uuid && filtersArg?.uuid.code === "ASSIGNED_TO_ME") {
       workflowFilters.assignee = uuid;
@@ -228,8 +223,8 @@ export const filterFunctions = {
     if(bookingNo) {   
       searchFilters.bookingNo = bookingNo;
     }
-    if(venueType){
-      searchFilters.venueType = venueType.code;
+    if(communityHallCode){
+      searchFilters.communityHallCode = communityHallCode.code;
     }
 
     if (services) {
@@ -381,45 +376,6 @@ export const filterFunctions = {
     
     return { searchFilters, workflowFilters, limit, offset, sortBy, sortOrder };
   },
-
-   GC: (filtersArg) => {
-
-    let { uuid } = Digit.UserService.getUser()?.info || {};
-
-    const searchFilters = {};
-    const workflowFilters = {};
-
-
-    const { applicationNumber, mobileNumber, limit, offset, sortBy, sortOrder, total, applicationStatus, services, locality } = filtersArg || {};
-
-    if (filtersArg?.uuid && filtersArg?.uuid.code === "ASSIGNED_TO_ME") {
-      workflowFilters.assignee = uuid;
-    }
-    if (mobileNumber) {
-      searchFilters.mobileNumber = mobileNumber;
-    }
-    if(applicationNumber) {   
-      searchFilters.applicationNumber = applicationNumber;
-    }
-    if (applicationStatus && applicationStatus?.[0]?.applicationStatus) {
-      workflowFilters.status = applicationStatus.map((status) => status.uuid);
-      if (applicationStatus?.some((e) => e.nonActionableRole)) {
-        searchFilters.fetchNonActionableRecords = true;
-      }
-    }
-    if (services) {
-      workflowFilters.businessService = services;
-    }
-    if(locality?.length) {
-      searchFilters.localityCode = locality.map((item) => item.code.split("_").pop());
-    }
-
-    searchFilters["isInboxSearch"] = true;
-    searchFilters["creationReason"] = [""];
-    workflowFilters["moduleName"] = "garbage-service";
-    
-    return { searchFilters, workflowFilters, limit, offset, sortBy, sortOrder };
-  },
   /**
 
  * PGRAI Inbox Filter Builder
@@ -529,40 +485,4 @@ export const filterFunctions = {
     return { searchFilters, workflowFilters, limit, offset, sortOrder };
 
 },
-
-// payload it will send beloe details in the inbox api whichever condition gets true
-FireNoc: (filtersArg) => {
-
-    let { uuid } = Digit.UserService.getUser()?.info || {};
-
-    const searchFilters = {};
-    const workflowFilters = {};
-
-
-    const { applicationNumber, mobileNumber, limit, offset, total, applicationStatus, services,sortOrder,assignee } = filtersArg || {};
-
-    if (filtersArg?.uuid && filtersArg?.uuid.code === "ASSIGNED_TO_ME") {
-      workflowFilters.assignee = uuid;
-    }
-    if (assignee === "ASSIGNED_TO_ME") {
-    workflowFilters.assignee = uuid;
-  }
-    if (mobileNumber) {
-      searchFilters.mobileNumber = mobileNumber;
-    }
-    if(applicationNumber) {   
-      searchFilters.applicationNumber = applicationNumber;
-    }
-    if (applicationStatus?.length) {
-      workflowFilters.status = applicationStatus;
-    }
-    if (services) {
-      workflowFilters.businessService = services;
-    }
-
-    searchFilters["sortOrder"] = ["DESC"];
-    workflowFilters["moduleName"] = "fireNoc";
-    
-    return { searchFilters, workflowFilters, limit, offset, sortOrder };
-  },
 };

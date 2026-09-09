@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Card, Banner, CardText, SubmitBar, Loader, LinkButton, Toast, ActionBar } from "@nudmcdgnpm/digit-ui-react-components";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "react-query";
 
 /**
  * EditSubmissionResponse.js
@@ -46,7 +46,7 @@ const BannerPicker = (props) => {
 const EditSubmissionResponse = (props) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const location = useLocation();
+  const history = useHistory();
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(null);
   const [enableAudit, setEnableAudit] = useState(false);
@@ -60,13 +60,12 @@ const EditSubmissionResponse = (props) => {
   
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const { state } = location;
+  const { state } = props.location;
   const mutation = Digit.Hooks.cnd.useCndCreateApi(tenantId,false); 
 
   useEffect(() => {
     const onSuccess = async (successRes) => {
       setMutationHappened(true);
-      setsuccessData(successRes);
       queryClient.clear();
       if (successRes?.responseInfo?.status === "SUCCESSFUL") {
         setEnableAudit(true);
@@ -91,7 +90,7 @@ const EditSubmissionResponse = (props) => {
   }, []);
 
 
-  if (mutation.isPending || (mutation.isIdle && !mutationHappened)) {
+  if (mutation.isLoading || (mutation.isIdle && !mutationHappened)) {
     return <Loader />;
   }
 
@@ -103,7 +102,7 @@ const EditSubmissionResponse = (props) => {
           data={mutation?.data || successData}
           action={state?.action}
           isSuccess={!Object.keys(successData || {}).length ? mutation?.isSuccess : true}
-          isLoading={(mutation.isIdle && !mutationHappened) || mutation?.isPending}
+          isLoading={(mutation.isIdle && !mutationHappened) || mutation?.isLoading}
           isEmployee={props.parentRoute.includes("employee")}
         />
        

@@ -36,8 +36,7 @@ const FormStep = ({
   });
 // console.log("_defaultValues", _defaultValues);
   const goNext = (data) => {
-    if (isDisable) return;
-      onSelect(data); 
+    onSelect(data);
   };
 
   const isDisable =

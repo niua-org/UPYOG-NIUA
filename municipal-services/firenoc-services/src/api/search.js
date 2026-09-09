@@ -17,7 +17,7 @@ export default ({ config }) => {
     "/_search",
     asyncHandler(async (request, res, next) => {
       let response = await searchApiResponse(request, next);
-      if (response !== undefined) res.json(response);
+      res.json(response);
     })
   );
   return api;
@@ -91,8 +91,7 @@ export const searchApiResponse = async (request, next = {}) => {
     let userSearchResponse = await searchByMobileNumber(
       queryObj.mobileNumber,
       envVariables.EGOV_DEFAULT_STATE_ID,
-      header,
-      request.body.RequestInfo // added requestInfo so that, it gets the user info and authtoken
+      header
     );
 
     //console.log("User Search Response-> " + userSearchResponse);
@@ -207,19 +206,10 @@ export const searchApiResponse = async (request, next = {}) => {
           item != "ids" &&
           item != "mobileNumber" &&
           item != "offset" &&
-          item != "limit" &&
-          item != "sortOrder"
+          item != "limit"
         ) {
-          // queryObj[item]=queryObj[item].toUpperCase();
-          // sqlQuery = `${sqlQuery} AND ${item}='${queryObj[item]}' `;
-          const val = queryObj[item].toUpperCase();
-         
-          if (val.includes(",")) {
-            const list = val.split(",").map(v => `'${v.trim()}'`).join(",");
-            sqlQuery = `${sqlQuery} AND ${item} IN (${list}) `;
-          } else {
-            sqlQuery = `${sqlQuery} AND ${item}='${val}' `;
-          }
+          queryObj[item]=queryObj[item].toUpperCase();
+          sqlQuery = `${sqlQuery} AND ${item}='${queryObj[item]}' `;
         }
       }
     });

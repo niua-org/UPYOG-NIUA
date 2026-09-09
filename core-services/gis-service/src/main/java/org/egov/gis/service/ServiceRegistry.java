@@ -1,6 +1,7 @@
 package org.egov.gis.service;
 
 import org.egov.gis.interfaces.MunicipalServiceAdapter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -16,13 +17,10 @@ import java.util.Map;
 @Service
 public class ServiceRegistry {
 
-    private final List<MunicipalServiceAdapter> adapters;
+    @Autowired
+    private List<MunicipalServiceAdapter> adapters;
 
     private Map<String, MunicipalServiceAdapter> adapterMap = new HashMap<>();
-
-    public ServiceRegistry(List<MunicipalServiceAdapter> adapters) {
-        this.adapters = adapters;
-    }
 
     @PostConstruct
     public void initializeAdapters() {

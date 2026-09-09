@@ -76,10 +76,9 @@ public class UserAuditService {
     }
 
     public Page<Revision<Integer, User>> getPagedUserRevision(Long userId, DataTableSearchRequest dataTableSearchRequest) {
-        final Pageable pageable = PageRequest.of(dataTableSearchRequest.pageNumber(),
+        final Pageable pageable = new PageRequest(dataTableSearchRequest.pageNumber(),
                 dataTableSearchRequest.pageSize(),
                 dataTableSearchRequest.orderDir(), dataTableSearchRequest.orderBy());
-        //return userRepository.findRevisions(userId, pageable);
-        return new org.springframework.data.domain.PageImpl<>(java.util.Collections.emptyList());
+        return userRepository.findRevisions(userId, pageable);
     }
 }

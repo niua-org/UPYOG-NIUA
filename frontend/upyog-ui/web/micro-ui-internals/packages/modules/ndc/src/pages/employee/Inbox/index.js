@@ -1,40 +1,24 @@
-import "../../../../css/ndc.css";
-import React, { Fragment, useCallback, useMemo, useReducer, useState, useEffect } from "react";
-
+import React, { Fragment, useCallback, useMemo, useReducer, useState, useEffect, use } from "react";
 import { InboxComposer, ComplaintIcon, Header } from "@nudmcdgnpm/digit-ui-react-components";
-
 import { useTranslation } from "react-i18next";
-
 import SearchFormFieldsComponents from "./SearchFormFieldsComponent";
 import FilterFormFieldsComponent from "./FilterFormFieldsComponent";
 import useInboxTableConfig from "./useInboxTableConfig";
 import useInboxMobileCardsData from "./useInboxMobileCardsData";
-
 import { businessServiceList } from "../../../utils";
 
+// This component renders the main inbox page for NDC (Non-Domestic Connection) applications. It manages forms for searching, filtering, and sorting, and displays the inbox data in both desktop and mobile views.
 const Inbox = ({ parentRoute }) => {
   const { t } = useTranslation();
 
+  // const tenantId = Digit.ULBService.getCurrentTenantId();
   const tenantId = window.localStorage.getItem("Employee.tenant-id");
-
   const [getFilter, setFilter] = useState();
 
-  /*
-   * ------------------------------------------------------------
-   * SEARCH FORM DEFAULT VALUES
-   * ------------------------------------------------------------
-   */
-
   const searchFormDefaultValues = {
-    applicationNo: "",
-    mobileNumber: "",
+    // mobileNumber: "",
+    // applicationNumber
   };
-
-  /*
-   * ------------------------------------------------------------
-   * FILTER FORM DEFAULT VALUES
-   * ------------------------------------------------------------
-   */
 
   const filterFormDefaultValues = {
     moduleName: "ndc-services",
@@ -45,12 +29,6 @@ const Inbox = ({ parentRoute }) => {
     businessServiceArray: businessServiceList(true) || [],
   };
 
-  /*
-   * ------------------------------------------------------------
-   * TABLE DEFAULT VALUES
-   * ------------------------------------------------------------
-   */
-
   const tableOrderFormDefaultValues = {
     sortBy: "",
     limit: window.Digit.Utils.browser.isMobile() ? 50 : 10,
@@ -58,117 +36,43 @@ const Inbox = ({ parentRoute }) => {
     sortOrder: "DESC",
   };
 
-  /*
-   * ------------------------------------------------------------
-   * FORM REDUCER
-   * ------------------------------------------------------------
-   */
-
   function formReducer(state, payload) {
     switch (payload.action) {
       case "mutateSearchForm":
-        Digit.SessionStorage.set("NDC.INBOX", {
-          ...state,
-          searchForm: payload.data,
-        });
-
-        return {
-          ...state,
-          searchForm: payload.data,
-        };
-
+        Digit.SessionStorage.set("NDC.INBOX", { ...state, searchForm: payload.data });
+        return { ...state, searchForm: payload.data };
       case "mutateFilterForm":
-        Digit.SessionStorage.set("NDC.INBOX", {
-          ...state,
-          filterForm: payload.data,
-        });
-
-        return {
-          ...state,
-          filterForm: payload.data,
-        };
-
+        Digit.SessionStorage.set("NDC.INBOX", { ...state, filterForm: payload.data });
+        return { ...state, filterForm: payload.data };
       case "mutateTableForm":
-        Digit.SessionStorage.set("NDC.INBOX", {
-          ...state,
-          tableForm: payload.data,
-        });
-
-        return {
-          ...state,
-          tableForm: payload.data,
-        };
-
+        Digit.SessionStorage.set("NDC.INBOX", { ...state, tableForm: payload.data });
+        return { ...state, tableForm: payload.data };
       default:
-        return state;
+        break;
     }
   }
-
-  /*
-   * ------------------------------------------------------------
-   * SESSION STORAGE
-   * ------------------------------------------------------------
-   */
-
   const InboxObjectInSessionStorage = Digit.SessionStorage.get("NDC.INBOX");
 
-  /*
-   * ------------------------------------------------------------
-   * RESET SEARCH
-   * ------------------------------------------------------------
-   */
-
   const onSearchFormReset = (setSearchFormValue) => {
-    setSearchFormValue("applicationNo", "");
-    setSearchFormValue("mobileNumber", "");
-
-    dispatch({
-      action: "mutateSearchForm",
-      data: {
-        ...searchFormDefaultValues,
-      },
-    });
+    setSearchFormValue("sourceRefId", null);
+    setSearchFormValue("applicationNo", null);
+    setSearchFormValue("mobileNumber", null);
+    dispatch({ action: "mutateSearchForm", data: searchFormDefaultValues });
   };
-
-  /*
-   * ------------------------------------------------------------
-   * RESET FILTER
-   * ------------------------------------------------------------
-   */
 
   const onFilterFormReset = (setFilterFormValue) => {
-    setFilterFormValue("moduleName", "ndc-services");
-    setFilterFormValue("applicationStatus", []);
+    setFilterFormValue("moduleName", "bpa-services");
+    setFilterFormValue("applicationStatus", "");
     setFilterFormValue("locality", []);
     setFilterFormValue("assignee", "ASSIGNED_TO_ALL");
-    setFilterFormValue("businessService", null);
-
-    dispatch({
-      action: "mutateFilterForm",
-      data: filterFormDefaultValues,
-    });
+    setFilterFormValue("applicationType", []);
+    dispatch({ action: "mutateFilterForm", data: filterFormDefaultValues });
   };
-
-  /*
-   * ------------------------------------------------------------
-   * RESET SORT
-   * ------------------------------------------------------------
-   */
 
   const onSortFormReset = (setSortFormValue) => {
     setSortFormValue("sortOrder", "DESC");
-
-    dispatch({
-      action: "mutateTableForm",
-      data: tableOrderFormDefaultValues,
-    });
+    dispatch({ action: "mutateTableForm", data: tableOrderFormDefaultValues });
   };
-
-  /*
-   * ------------------------------------------------------------
-   * INITIAL FORM VALUE
-   * ------------------------------------------------------------
-   */
 
   const formInitValue = useMemo(() => {
     return (
@@ -178,113 +82,53 @@ const Inbox = ({ parentRoute }) => {
         tableForm: tableOrderFormDefaultValues,
       }
     );
-  }, [InboxObjectInSessionStorage?.filterForm, InboxObjectInSessionStorage?.searchForm, InboxObjectInSessionStorage?.tableForm]);
+  }, [
+    Object.values(InboxObjectInSessionStorage?.filterForm || {}),
+    Object.values(InboxObjectInSessionStorage?.searchForm || {}),
+    Object.values(InboxObjectInSessionStorage?.tableForm || {}),
+  ]);
 
   const [formState, dispatch] = useReducer(formReducer, formInitValue);
 
-  /*
-   * ------------------------------------------------------------
-   * PAGE SIZE
-   * ------------------------------------------------------------
-   */
-
   const onPageSizeChange = (e) => {
-    dispatch({
-      action: "mutateTableForm",
-      data: {
-        ...formState.tableForm,
-        limit: Number(e.target.value),
-        offset: 0,
-      },
-    });
+    dispatch({ action: "mutateTableForm", data: { ...formState.tableForm, limit: e.target.value } });
   };
 
-  /*
-   * ------------------------------------------------------------
-   * TABLE SORTING
-   * ------------------------------------------------------------
-   */
-
   const onSortingByData = (e) => {
-    if (e && e.length > 0) {
+    if (e.length > 0) {
       const [{ id, desc }] = e;
-
       const sortOrder = desc ? "DESC" : "ASC";
       const sortBy = id;
-
-      if (formState.tableForm.sortBy !== sortBy || formState.tableForm.sortOrder !== sortOrder) {
-        dispatch({
-          action: "mutateTableForm",
-          data: {
-            ...formState.tableForm,
-            sortBy,
-            sortOrder,
-          },
-        });
+      if (!(formState.tableForm.sortBy === sortBy && formState.tableForm.sortOrder === sortOrder)) {
+        dispatch({ action: "mutateTableForm", data: { ...formState.tableForm, sortBy: id, sortOrder: desc ? "DESC" : "ASC" } });
       }
     }
   };
 
-  /*
-   * ------------------------------------------------------------
-   * MOBILE SORTING
-   * ------------------------------------------------------------
-   */
-
   const onMobileSortOrderData = (data) => {
     const { sortOrder } = data;
-
-    dispatch({
-      action: "mutateTableForm",
-      data: {
-        ...formState.tableForm,
-        sortOrder,
-      },
-    });
+    dispatch({ action: "mutateTableForm", data: { ...formState.tableForm, sortOrder } });
   };
-
-  /*
-   * ------------------------------------------------------------
-   * LOCALITIES
-   * ------------------------------------------------------------
-   */
 
   const { data: localitiesForEmployeesCurrentTenant, isLoading: loadingLocalitiesForEmployeesCurrentTenant } = Digit.Hooks.useBoundaryLocalities(
     tenantId,
     "revenue",
     {},
-    t,
+    t
   );
-
-  /*
-   * ------------------------------------------------------------
-   * FILTER HANDLER
-   * ------------------------------------------------------------
-   */
 
   const handleFilter = (filterStatus) => {
     setFilter(filterStatus);
   };
 
-  /*
-   * ------------------------------------------------------------
-   * INBOX API
-   * ------------------------------------------------------------
-   */
-
   const { isLoading: isInboxLoading, data } = Digit.Hooks.ndc.useInbox({
     tenantId,
-    filters: {
-      ...formState,
-      getFilter,
-    },
+    filters: { ...formState, getFilter },
   });
 
-  /*
-   * ------------------------------------------------------------
-   * TABLE DATA
-   * ------------------------------------------------------------
-   */
+  // const { isLoading, data: testData, isError, error } = Digit.Hooks.ndc.useSearchApplication({ mobileNumber: "1234567890" }, tenantId);
+
+  // const { isLoading: isInboxLoading, data} = Digit.Hooks.ndc.useSearchEmployeeApplication({status: "CREATE"}, tenantId)
 
   const [table, setTable] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -298,17 +142,9 @@ const Inbox = ({ parentRoute }) => {
     }
   }, [data]);
 
-  /*
-   * ------------------------------------------------------------
-   * INBOX CARD
-   * ------------------------------------------------------------
-   */
-
   const PropsForInboxLinks = {
     logoIcon: <ComplaintIcon />,
-
-    headerText: t("MODULE_NKS_NO_DUE_CERTIFICATE_FEES"),
-
+    headerText: `${t("MODULE_NKS_NO_DUE_CERTIFICATE_FEES")}`,
     links: [
       {
         text: "",
@@ -318,31 +154,12 @@ const Inbox = ({ parentRoute }) => {
     ],
   };
 
-  /*
-   * ------------------------------------------------------------
-   * SEARCH FORM
-   * ------------------------------------------------------------
-   */
-
   const SearchFormFields = useCallback(
-    ({ registerRef, control, searchFormState, searchFieldComponents }) => (
-      <SearchFormFieldsComponents
-        {...{
-          registerRef,
-          control,
-          searchFormState,
-          searchFieldComponents,
-        }}
-      />
+    ({ registerRef, searchFormState, searchFieldComponents }) => (
+      <SearchFormFieldsComponents {...{ registerRef, searchFormState, searchFieldComponents }} />
     ),
-    [],
+    []
   );
-
-  /*
-   * ------------------------------------------------------------
-   * FILTER FORM
-   * ------------------------------------------------------------
-   */
 
   const FilterFormFields = useCallback(
     ({ registerRef, controlFilterForm, setFilterFormValue, getFilterFormValue }) => (
@@ -361,62 +178,20 @@ const Inbox = ({ parentRoute }) => {
         handleFilter={handleFilter}
       />
     ),
-    [statuses, isInboxLoading, localitiesForEmployeesCurrentTenant, loadingLocalitiesForEmployeesCurrentTenant, formState?.filterForm],
+    [statuses, isInboxLoading, localitiesForEmployeesCurrentTenant, loadingLocalitiesForEmployeesCurrentTenant]
   );
 
-  /*
-   * ------------------------------------------------------------
-   * SEARCH SUBMIT
-   * ------------------------------------------------------------
-   */
-
   const onSearchFormSubmit = (data) => {
-    if (data && Object.prototype.hasOwnProperty.call(data, "")) {
-      delete data[""];
-    }
-
-    dispatch({
-      action: "mutateTableForm",
-      data: {
-        ...tableOrderFormDefaultValues,
-      },
-    });
-
-    dispatch({
-      action: "mutateSearchForm",
-      data,
-    });
+    data.hasOwnProperty("") && delete data?.[""];
+    dispatch({ action: "mutateTableForm", data: { ...tableOrderFormDefaultValues } });
+    dispatch({ action: "mutateSearchForm", data });
   };
-
-  /*
-   * ------------------------------------------------------------
-   * FILTER SUBMIT
-   * ------------------------------------------------------------
-   */
 
   const onFilterFormSubmit = (data) => {
-    if (data && Object.prototype.hasOwnProperty.call(data, "")) {
-      delete data[""];
-    }
-
-    dispatch({
-      action: "mutateTableForm",
-      data: {
-        ...tableOrderFormDefaultValues,
-      },
-    });
-
-    dispatch({
-      action: "mutateFilterForm",
-      data,
-    });
+    data.hasOwnProperty("") && delete data?.[""];
+    dispatch({ action: "mutateTableForm", data: { ...tableOrderFormDefaultValues } });
+    dispatch({ action: "mutateFilterForm", data });
   };
-
-  /*
-   * ------------------------------------------------------------
-   * SEARCH PROPS
-   * ------------------------------------------------------------
-   */
 
   const propsForSearchForm = {
     SearchFormFields,
@@ -426,12 +201,6 @@ const Inbox = ({ parentRoute }) => {
     onSearchFormReset,
   };
 
-  /*
-   * ------------------------------------------------------------
-   * FILTER PROPS
-   * ------------------------------------------------------------
-   */
-
   const propsForFilterForm = {
     FilterFormFields,
     onFilterFormSubmit,
@@ -440,75 +209,30 @@ const Inbox = ({ parentRoute }) => {
     onFilterFormReset,
   };
 
-  /*
-   * ------------------------------------------------------------
-   * TABLE CONFIG
-   * ------------------------------------------------------------
-   */
+  const propsForInboxTable = useInboxTableConfig({ ...{ parentRoute, onPageSizeChange, formState, totalCount, table, dispatch, onSortingByData } });
 
-  const propsForInboxTable = useInboxTableConfig({
-    parentRoute,
-    onPageSizeChange,
-    formState,
-    totalCount,
-    table,
-    dispatch,
-    onSortingByData,
-  });
+  const propsForInboxMobileCards = useInboxMobileCardsData({ parentRoute, table });
 
-  /*
-   * ------------------------------------------------------------
-   * MOBILE CARDS
-   * ------------------------------------------------------------
-   */
-
-  const propsForInboxMobileCards = useInboxMobileCardsData({
-    parentRoute,
-    table,
-  });
-
-  /*
-   * ------------------------------------------------------------
-   * MOBILE SORT
-   * ------------------------------------------------------------
-   */
-
-  const propsForMobileSortForm = {
-    onMobileSortOrderData,
-    sortFormDefaultValues: formState?.tableForm,
-    onSortFormReset,
-  };
-
-  /*
-   * ------------------------------------------------------------
-   * UI
-   * ------------------------------------------------------------
-   */
+  const propsForMobileSortForm = { onMobileSortOrderData, sortFormDefaultValues: formState?.tableForm, onSortFormReset };
 
   return (
     <>
-      {/* =====================================================
-          NDC INBOX OVERRIDE CSS
-          ===================================================== */}
-<Header>
+      <Header>
         {t("ES_COMMON_INBOX")}
-
         {totalCount ? <p className="inbox-count">{totalCount}</p> : null}
       </Header>
-
+      {/* <section>
+      </section> */}
       <div className="NDCSection">
         <InboxComposer
           {...{
             isInboxLoading,
             PropsForInboxLinks,
-
             ...propsForSearchForm,
             ...propsForFilterForm,
             ...propsForMobileSortForm,
-
             propsForInboxTable,
             propsForInboxMobileCards,
-
             formState,
           }}
         />

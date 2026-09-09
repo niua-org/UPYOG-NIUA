@@ -1,0 +1,38 @@
+<!--
+  NOTE: index.html moved from /public (CRA) to project root (Vite)
+  - CRA: index.html was placed inside /public folder and treated as a static asset.
+  - Vite: index.html must be at the project root because Vite uses it as the
+    application entry point to discover, resolve, and bundle all JS/CSS assets.
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <link rel="icon" href="/browser-icon.png"/>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel='stylesheet' type='text/css'>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="theme-color" content="#00bcd1"/>
+    <!-- 
+      Fixed: Vite does not provide a global `process` object unlike CRA (Webpack).
+      Some third-party npm libraries internally reference `process.env` in browser code.
+      Without this fix, those libraries throw "ReferenceError: process is not defined".
+      This script must be placed before all other scripts so `process` is available
+      when any library tries to access it during initialization.
+    -->
+
+    <script>window.process = { env: {} };</script>
+    <title>Street-Vending</title>
+    <script src="https://s3.ap-south-1.amazonaws.com/in-egov-assets/globalConfigs.js" onerror="console.warn('globalConfigs failed to load')"></script>
+    <script src="https://pgtest.atomtech.in/staticdata/ots/js/atomcheckout.js" onerror="console.warn('atomcheckout failed to load')"></script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <!-- 
+      Updated: CRA used /public/index.html with auto-injected script tags.
+      Vite requires an explicit <script type="module"> tag pointing to the app entry point.
+    -->
+
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>

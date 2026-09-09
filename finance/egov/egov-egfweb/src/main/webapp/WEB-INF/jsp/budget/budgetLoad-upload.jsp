@@ -604,11 +604,9 @@
                                         />
                                     </td>                                
                                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                                        <%-- LTS Migration Fix (Struts 7 OGNL): do not concatenate
-                                             glcode+name in listValue; use dropdownLabel. --%>
                                         <s:select list="dropdownData.chartOfAccountList"
                                             listKey="glcode"
-                                            listValue="dropdownLabel"
+                                            listValue="%{glcode + ' - ' + name}"
                                             name="budgetData[new].chartOfAccountCode"
                                             headerKey="0"
                                             headerValue="%{getText('lbl.choose.options')}"

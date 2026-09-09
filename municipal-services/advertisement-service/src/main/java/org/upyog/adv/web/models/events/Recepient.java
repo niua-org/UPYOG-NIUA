@@ -1,9 +1,11 @@
 package org.upyog.adv.web.models.events;
 
-import java.util.List;
 import lombok.*;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 
+@Validated
 @AllArgsConstructor
 @EqualsAndHashCode
 @Getter

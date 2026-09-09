@@ -1,135 +1,203 @@
-/**
- * ESTAllotmentAcknowledgement
- * Displays allotment result with document thumbnails (click to preview).
- */
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Banner,
   Card,
-  CardSubHeader,
   LinkButton,
-  Loader,
   Row,
   StatusTable,
   SubmitBar,
+  Loader,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "react-router-dom";
-import { downloadESTAcknowledgement } from "../../../utils";
-import {
-  getEmployeeHomeFromModulePath,
-  getCitizenHomeFromModulePath,
-  getEmployeePaymentCollectPath,
-  getCitizenPaymentPath,
-} from "../../../utils/estRoutes";
+import { Link } from "react-router-dom";
+import getESTAllotmentAcknowledgementData from "../../../utils/getESTAllotmentAcknowledgementData";
+import { createAllotmentData, estPayloadData } from "../../../utils";
+
+/* ---------------- Styles ---------------- */
 
 const rowContainerStyle = {
   padding: "4px 0px",
   justifyContent: "space-between",
 };
+/**
+ * BannerPicker
+ * ---------------------------------------------------------
+ * Displays success or failure banner after allotment
+ */
 
 const BannerPicker = ({ t, isSuccess, data }) => {
-  const allotment = data?.Allotments?.[0];
-  // Display allotmentNo from create API (never allotmentId UUID).
-  const applicationNumber =
-    allotment?.allotmentNo ||
-    allotment?.additionalDetails?.allotmentNo ||
-    allotment?.assetNo ||
-    "";
+  const applicationNumber = data?.Allotments?.[0]?.assetNo || "";
+
   return (
     <Banner
-      message={isSuccess ? t("EST_ALLOTED_SUCCESSFULL") : t("EST_APPLICATION_FAILED")}
-      applicationNumber={applicationNumber}
-      info={
+      message={
         isSuccess
-          ? t(applicationNumber ? "EST_ALLOTMENT_NUMBER" : "EST_APPLICATION_NO")
-          : ""
+          ? t("EST_ALLOTED_SUCCESSFULL")
+          : t("EST_APPLICATION_FAILED")
       }
+      applicationNumber={applicationNumber}
+      info={isSuccess ? t("EST_APPLICATION_NO") : ""}
       successful={isSuccess}
       style={{ width: "100%" }}
     />
   );
 };
 
-const readAckState = (locationState) => {
-  if (locationState && (locationState.isSuccess != null || locationState.data)) {
-    return locationState;
-  }
-  // Recover when hard navigation dropped router state (non-serializable ack payload).
-  try {
-    const raw = sessionStorage.getItem("__upyog_nav_state__");
-    if (!raw) return locationState || {};
-    sessionStorage.removeItem("__upyog_nav_state__");
-    return JSON.parse(raw) || {};
-  } catch {
-    return locationState || {};
-  }
-};
 
-const ESTAllotmentAcknowledgement = ({ onSuccess }) => {
+/* =========================================================
+   Main Acknowledgement Component
+   ========================================================= */
+
+/**
+ * ESTAllotmentAcknowledgement
+ * ---------------------------------------------------------
+ * This component:
+ * - Calls final allotment API
+ * - Shows success/failure banner
+ * - Allows PDF acknowledgement download
+ * - Redirects user to home
+ * */
+
+const ESTAllotmentAcknowledgement = ({ data = {}, onSuccess }) => {
   const { t } = useTranslation();
-  const location = useLocation();
-  const { path: modulePath } = Digit.Hooks.useModuleBasePath();
+  const hasRun = useRef(false);
 
-  const { data: ackData, isSuccess = false, error } = readAckState(location?.state);
+  const tenantId =
+    Digit.ULBService.getCitizenCurrentTenant(true) ||
+    Digit.ULBService.getCurrentTenantId();
 
-  const user = Digit?.UserService?.getUser?.()?.info || {};
-  const initResponse = Digit?.Hooks?.useStore?.getInitData?.() || {};
-  const storeData = initResponse?.data || initResponse;
+  const user = Digit.UserService.getUser().info;
+
+  const [finalMutation, setFinalMutation] = useState({
+    isLoading: true,
+    isSuccess: false,
+    data: null,
+  });
+
+  const allotmentMutation =
+    Digit.Hooks.estate.useESTAssetsAllotment(tenantId);
+
+  const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const tenants = storeData?.tenants || [];
 
-  useEffect(() => {
-    if (isSuccess && typeof onSuccess === "function") {
-      onSuccess(ackData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  /* ---------------- API Call ---------------- */
 
-  if (error) console.error("EST Allotment Acknowledgement — error:", error);
+  useEffect(() => {
+    if (hasRun.current) return;
+    if (!data?.AssignAssetsData) return;
+
+  // Prevents API call from running multiple times
+    hasRun.current = true;
+
+    const allotmentPayload = createAllotmentData(data);
+    const assetsPayload = estPayloadData(data);
+
+    allotmentMutation.mutate(allotmentPayload, {
+      onSuccess: (allotmentRes) => {
+        const payloadAllotment =
+          allotmentPayload?.Allotments?.[0] || {};
+        const responseAllotment =
+          allotmentRes?.Allotments?.[0] || {};
+
+        const mergedResponse = {
+          Allotments: [
+            {
+              ...responseAllotment,
+              agreementStartDate:
+                payloadAllotment.agreementStartDate,
+              agreementEndDate:
+                payloadAllotment.agreementEndDate,
+              advancePaymentDate:
+                payloadAllotment.advancePaymentDate,
+            },
+          ],
+          Assets: assetsPayload?.Assets || [],
+        };
+
+        setFinalMutation({
+          isLoading: false,
+          isSuccess: true,
+          data: mergedResponse,
+        });
+
+        onSuccess && onSuccess(mergedResponse);
+      },
+      onError: (err) => {
+        // console.error("❌ Allotment API Error:", err);
+
+        setFinalMutation({
+          isLoading: false,
+          isSuccess: false,
+          data: null,
+        });
+      },
+    });
+  }, [data, tenantId]);
+
+   /* =========================================================
+     PDF Download Handler
+     ========================================================= */
+
+  /**
+   * Generates and downloads acknowledgement PDF
+   */
 
   const handleDownloadPdf = async () => {
     try {
-      await downloadESTAcknowledgement(ackData, tenants, t);
+      const allotment = finalMutation.data?.Allotments?.[0];
+      if (!allotment) return;
+
+      const tenantInfo =
+        tenants.find((t) => t.code === allotment.tenantId) || {};
+
+      const pdfData = await getESTAllotmentAcknowledgementData(
+        finalMutation.data,
+        tenantInfo,
+        t
+      );
+
+      Digit.Utils.pdf.generate(pdfData);
     } catch (err) {
-      console.error("PDF generation error:", err);
+      // console.error("❌ PDF generation error:", err);
     }
   };
 
-  const homePath =
-    user?.type === "CITIZEN"
-      ? getCitizenHomeFromModulePath(modulePath)
-      : getEmployeeHomeFromModulePath(modulePath);
+   /* =========================================================
+     UI Rendering
+     ========================================================= */
 
-  const allotmentNo =
-    ackData?.Allotments?.[0]?.allotmentNo ||
-    "";
+  // Show loader while API is in progress
 
-  const paymentPath = allotmentNo
-    ? user?.type === "CITIZEN"
-      ? getCitizenPaymentPath(allotmentNo)
-      : getEmployeePaymentCollectPath(allotmentNo)
-    : "";
+  if (finalMutation.isLoading) {
+    return <Loader />;
+  }
 
   return (
     <Card>
-      <BannerPicker t={t} isSuccess={isSuccess} data={ackData} />
+      <BannerPicker
+        t={t}
+        isSuccess={finalMutation.isSuccess}
+        data={finalMutation.data}
+      />
 
       <StatusTable>
         <Row rowContainerStyle={rowContainerStyle} last />
       </StatusTable>
 
-      {isSuccess && (
-        <SubmitBar label={t("EST_ALLOTMENT_ACKNOWLEDGEMENT")} onSubmit={handleDownloadPdf} />
+      {finalMutation.isSuccess && (
+        <SubmitBar
+          label={t("EST_ALLOTMENT_ACKNOWLEDGEMENT")}
+          onSubmit={handleDownloadPdf}
+        />
       )}
 
-      {isSuccess && paymentPath && (
-        <Link style={{marginLeft: "10px"}}  to={paymentPath}>
-          <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} />
-        </Link>
-      )}
-
-      <Link to={homePath}>
+      <Link
+        to={
+          user?.type === "CITIZEN"
+            ? "/upyog-ui/citizen"
+            : "/upyog-ui/employee"
+        }
+      >
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
       </Link>
     </Card>

@@ -128,17 +128,13 @@ const Dropdown = (props) => {
   }
 
   function onSelect(val) {
-    // Always clear typeahead filter so the input shows the selected label,
-    // not the leftover search text (e.g. "Bu" after picking Building).
-    setFilterVal("");
     if (val !== selectedOption || props.allowMultiselect) {
       props.select(val);
       setSelectedOption(val);
       setDropdownStatus(false);
-      setforceSet((n) => n + 1);
     } else {
       setSelectedOption(val);
-      setforceSet((n) => n + 1);
+      setforceSet(forceSet + 1);
     }
   }
 

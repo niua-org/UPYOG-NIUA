@@ -50,8 +50,8 @@ package org.egov.infra.persistence.entity;
 
 import org.egov.infra.persistence.entity.enums.AddressType;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "eg_permanent_address", schema = "state")

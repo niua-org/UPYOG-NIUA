@@ -166,7 +166,7 @@ export const ExistingBookingDetails = ({ onSubmit, setExistingDataSet }) => {
             </div>
           ))}
         {filteredApplications.length === 0 && !isLoading && (
-          <p className="cnd-existing-booking-details-empty-text">
+          <p style={{ marginLeft: "16px", marginTop: "16px" }}>
             {t("NO_APPLICATION_FOUND_MSG")}
           </p>
         )}

@@ -37,7 +37,7 @@ const NavItem = props => {
     collections: <CollectionIcon />,
   };
   const leftIconArray = icon?.split?.(":")?.[1];
-  let leftIcon = IconsObject[leftIconArray] || IconsObject.collections;
+  const leftIcon = IconsObject[leftIconArray] || IconsObject.collections;
   const iconArr=icon?.leftIcon?.split?.(":")|| leftIcon?.split?.(":");
   if(iconArr?.[0]=='dynamic'){
     var IconComp = require("@nudmcdgnpm/digit-ui-react-components")?.[iconArr?.[1]];

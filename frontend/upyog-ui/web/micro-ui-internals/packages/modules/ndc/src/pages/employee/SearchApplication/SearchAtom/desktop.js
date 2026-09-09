@@ -50,11 +50,11 @@ const SearchApplicationDesktopView = ({ columns, SearchFormFieldsComponent, onSu
       return <Loader />;
     } else {
       return data?.[0]?.display ? (
-        <Card className="ndc-card-margin-top-20">
+        <Card style={{ marginTop: 20 }}>
           {t(data?.[0]?.display)
             .split("\\n")
             .map((text, index) => (
-              <p key={index} className="ndc-text-center">
+              <p key={index} style={{ textAlign: "center" }}>
                 {text}
               </p>
             ))}

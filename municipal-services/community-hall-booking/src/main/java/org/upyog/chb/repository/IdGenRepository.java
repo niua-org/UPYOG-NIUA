@@ -39,7 +39,7 @@ import java.util.Map;
  * - Accepts RestTemplate and CommunityHallBookingConfiguration as dependencies.
  * 
  * Methods:
- * 1. getId:
+ * 1. getIdGenerationResponse:
  *    - Sends a request to the ID generation service to generate unique IDs.
  *    - Processes the response and returns the generated IDs.
  * 
@@ -52,9 +52,9 @@ public class IdGenRepository {
 
 
 
-    private final RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
-    private final CommunityHallBookingConfiguration config;
+    private CommunityHallBookingConfiguration config;
 
     @Autowired
     public IdGenRepository(RestTemplate restTemplate, CommunityHallBookingConfiguration config) {
@@ -64,16 +64,13 @@ public class IdGenRepository {
 
 
     /**
-     * Calls the eGov ID-generation service and returns the generated identifiers.
-     *
-     * @param requestInfo caller request metadata propagated to ID Gen
-     * @param tenantId tenant for which IDs are generated
-     * @param name ID name configured in ID Gen (for example booking number key)
-     * @param format ID format pattern configured in ID Gen
-     * @param count number of IDs to generate
-     * @return non-null {@link IdGenerationResponse} from the ID Gen service
-     * @throws ServiceCallException when the remote service returns an HTTP client error
-     * @throws CustomException when the call fails or the service returns a null body
+     * Call iDgen to generateIds
+     * @param requestInfo The rquestInfo of the request
+     * @param tenantId The tenantiD of the service request
+     * @param name Name of the foramt
+     * @param format Format of the ids
+     * @param count Total Number of idGen ids required
+     * @return
      */
     public IdGenerationResponse getId(RequestInfo requestInfo, String tenantId, String name, String format, int count) {
 
@@ -82,20 +79,15 @@ public class IdGenRepository {
             reqList.add(IdRequest.builder().idName(name).format(format).tenantId(tenantId).build());
         }
         IdGenerationRequest req = IdGenerationRequest.builder().idRequests(reqList).requestInfo(requestInfo).build();
-        IdGenerationResponse response;
+        IdGenerationResponse response = null;
         try {
-            response = restTemplate.postForObject(config.getIdGenHost() + config.getIdGenPath(), req,
-                    IdGenerationResponse.class);
+            response = restTemplate.postForObject( config.getIdGenHost()+ config.getIdGenPath(), req, IdGenerationResponse.class);
         } catch (HttpClientErrorException e) {
             throw new ServiceCallException(e.getResponseBodyAsString());
         } catch (Exception e) {
             Map<String, String> map = new HashMap<>();
-            Throwable cause = e.getCause();
-            map.put(cause != null ? cause.getClass().getName() : e.getClass().getName(), e.getMessage());
+            map.put(e.getCause().getClass().getName(),e.getMessage());
             throw new CustomException(map);
-        }
-        if (response == null) {
-            throw new CustomException("IDGEN_ERROR", "Null response from id generation service");
         }
         return response;
     }

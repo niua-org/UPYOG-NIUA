@@ -48,7 +48,6 @@
 package org.egov.egf.web.actions.report;
 
 import org.apache.log4j.Logger;
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;
@@ -79,12 +78,9 @@ import org.egov.infstr.services.PersistenceService;
 import org.egov.model.instrument.InstrumentHeader;
 import org.egov.utils.Constants;
 import org.egov.utils.FinancialConstants;
-
-import org.hibernate.query.Query;
-import jakarta.persistence.FlushModeType;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.type.StandardBasicTypes;
-
+import org.hibernate.FlushMode;
+import org.hibernate.Query;
+import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -160,7 +156,7 @@ public class BankAdviceReportAction extends BaseFormAction {
 	@Override
     public void prepare() {
         persistenceService.getSession().setDefaultReadOnly(true);
-        persistenceService.getSession().setFlushMode(FlushModeType.COMMIT);
+        persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
         super.prepare();
         addDropdownData(
                 "bankList",
@@ -189,13 +185,7 @@ public class BankAdviceReportAction extends BaseFormAction {
 			StringBuilder queryString = new StringBuilder(
 					"SELECT ih.id, ih.instrumentNumber FROM InstrumentHeader ih, InstrumentVoucher iv, Paymentheader ph ")
 							.append("WHERE ih.isPayCheque ='1' AND ih.bankAccountId.id = ? AND ih.statusId.description in ('New')")
-							/*
-							 * Hibernate 6 migration note:
-							 * InstrumentVoucher.instrumentHeaderId is an InstrumentHeader association.
-							 * Compare it with the InstrumentHeader alias rather than ih.id, because
-							 * Hibernate 6 rejects entity-vs-id comparisons in HQL.
-							 */
-							.append(" AND ih.statusId.moduletype='Instrument' AND iv.instrumentHeaderId = ih")
+							.append(" AND ih.statusId.moduletype='Instrument' AND iv.instrumentHeaderId = ih.id")
 							.append(" and ih.bankAccountId is not null ")
 							.append("AND iv.voucherHeaderId = ph.voucherheader AND ph.bankaccount = ih.bankAccountId AND ph.type =? ")
 							.append("GROUP BY ih.instrumentNumber,ih.id");
@@ -250,11 +240,11 @@ public class BankAdviceReportAction extends BaseFormAction {
 						.append(" AND gl.voucherheaderid =m.billvhid AND gl.id=gld.generalledgerid AND gl.debitamount!=0 ")
 						.append(" group by gld.detailtypeid ,gld.detailkeyid  ");
         
-        final Query WithNetPayableSubledgerQuery = persistenceService.getSession().createNativeQuery(query.toString());
-        WithNetPayableSubledgerQuery.setParameter("instHeaderId", instrumentHeader.getId(), StandardBasicTypes.LONG);
+        final Query WithNetPayableSubledgerQuery = persistenceService.getSession().createSQLQuery(query.toString());
+        WithNetPayableSubledgerQuery.setParameter("instHeaderId", instrumentHeader.getId(), LongType.INSTANCE);
 
         // Get without subledger one
-        final Query getDebitsideSubledgerQuery = persistenceService.getSession().createNativeQuery(withNoSubledgerQry.toString());
+        final Query getDebitsideSubledgerQuery = persistenceService.getSession().createSQLQuery(withNoSubledgerQry.toString());
         getDebitsideSubledgerQuery.setParameter("instHeaderId", instrumentHeader.getId());
 
         final List<Object[]> retList = WithNetPayableSubledgerQuery.list();
@@ -291,22 +281,7 @@ public class BankAdviceReportAction extends BaseFormAction {
     @ValidationErrorPage(NEW)
     @Action(value = "/report/bankAdviceReport-search")
     public String search() {
-        /*
-         * Struts 7 migration note:
-         * The selected instrument can arrive as instrumentnumber.id instead of a fully
-         * populated nested InstrumentHeader. Resolve and load it from the request before
-         * applying the existing mandatory selection validation.
-         */
-        if (instrumentnumber == null || instrumentnumber.getId() == null) {
-            String instId = ServletActionContext.getRequest().getParameter("instrumentnumber.id");
-            if (instId == null || instId.trim().isEmpty()) {
-                instId = ServletActionContext.getRequest().getParameter("instrumentnumber");
-            }
-            if (instId != null && !instId.trim().isEmpty() && !"-1".equals(instId.trim())) {
-                instrumentnumber = (InstrumentHeader) persistenceService.find("from InstrumentHeader where id=?", Long.valueOf(instId.trim()));
-            }
-        }
-        if (instrumentnumber == null || instrumentnumber.getId() == null || instrumentnumber.getId() == -1) {
+        if (instrumentnumber.getId() == -1) {
             addFieldError("searchCriteria", "Please select all search criteria");
             return NEW;
         }

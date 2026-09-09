@@ -5,7 +5,7 @@
 ## Install
 
 ```bash
-npm install --save @upyog/workbench-ui-module-core
+npm install --save @egovernments/digit-ui-module-core
 ```
 
 ## Limitation
@@ -23,7 +23,7 @@ frontend/micro-ui/web/package.json
 ```
 
 ```json
-"@upyog/workbench-ui-module-core":"^1.5.0",
+"@egovernments/digit-ui-module-core":"^1.5.0",
 ```
 
 then navigate to App.js
@@ -35,7 +35,7 @@ then navigate to App.js
 ```jsx
 /** add this import **/
 
-import { DigitUI } from "@upyog/workbench-ui-module-core";
+import { DigitUI } from "@egovernments/digit-ui-module-core";
 
 
 /** inside render Function add  the import for the component **/

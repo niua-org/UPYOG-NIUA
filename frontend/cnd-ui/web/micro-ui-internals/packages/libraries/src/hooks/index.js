@@ -51,8 +51,6 @@ import useSelectedMDMS from "./useSelectedMDMS";
 import useEmployeeSearch from "./useEmployeeSearch";
 import useRouteSubscription from "./useRouteSubscription";
 import useCndCreateApi from "./cnd/useCndCreateApi";
-import useCustomNavigate from "./useCustomNavigate";
-import useModuleBasePath from "./useModuleBasePath";
 import useCndSearchApplication from "./cnd/useCndSearchApplication";
 import useCndApplicationDetails from "./cnd/useCndApplicationDetails";
 import useCndApplicationAction from "./cnd/useCndApplicationAction";
@@ -124,9 +122,7 @@ const Hooks = {
   useCustomBackNavigation,
   useRouteSubscription,
   cnd,
-  reports,
-  useCustomNavigate,
-  useModuleBasePath
+  reports
 };
 
 

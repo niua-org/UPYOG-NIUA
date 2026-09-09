@@ -50,13 +50,13 @@ package org.egov.commons.dao;
 import org.apache.commons.lang.StringUtils;
 import org.egov.commons.CVoucherHeader;
 import org.egov.commons.Vouchermis;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 @Repository
 public class VouchermisHibernateDAO  {
@@ -82,7 +82,7 @@ public class VouchermisHibernateDAO  {
     }
 
     public List<Vouchermis> findAll() {
-        return getCurrentSession().createQuery("from Vouchermis", Vouchermis.class).list();
+        return (List<Vouchermis>) getCurrentSession().createCriteria(Vouchermis.class).list();
     }
 
     @PersistenceContext
@@ -96,7 +96,7 @@ public class VouchermisHibernateDAO  {
 
     public Vouchermis getVouchermisByVhId(final Integer vhId) {
         final Query qry = getCurrentSession().createQuery("from Vouchermis where voucherheaderid =:vhId");
-        qry.setParameter("vhId", vhId);
+        qry.setInteger("vhId", vhId);
         return (Vouchermis) qry.uniqueResult();
     }
     
@@ -109,9 +109,9 @@ public class VouchermisHibernateDAO  {
         builderQuery.append(" order by vh.createdDate desc ");
         final Query qry = getCurrentSession().createQuery(builderQuery.toString());
         if(!StringUtils.isBlank(serviceName)){
-            qry.setParameter("serviceName", serviceName);
+            qry.setString("serviceName", serviceName);
         }
-        qry.setParameter("referenceDocument", referenceDocument);
+        qry.setString("referenceDocument", referenceDocument);
         List<CVoucherHeader> list = qry.list();
         return list.isEmpty() ? null : list ;
     }

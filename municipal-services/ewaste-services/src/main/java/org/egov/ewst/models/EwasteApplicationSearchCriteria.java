@@ -50,10 +50,4 @@ public class EwasteApplicationSearchCriteria {
 	@JsonProperty("toDate")
 	private String toDate;
 
-	@JsonProperty("offset")
-	private Integer offset;
-
-	@JsonProperty("limit")
-	private Integer limit;
-
 }

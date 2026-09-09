@@ -42,11 +42,9 @@ public class MobileToiletDetails implements CommonDetailsMapper {
 
         // Extract address
         JsonNode address = mtDetailNode.path("address");
-        String fullAddress = CommonDetailUtil.normalizeCommaSeparatedAddress(String.format("%s, %s, %s",
-                address.path("addressLine1").asText(""),
-                address.path("locality").asText(""),
+        String fullAddress = String.format("%s, %s, %s", address.path("addressLine1").asText(""), address.path("locality").asText(""),
                 address.path("city").asText("")
-        ));
+        ).replaceAll("^,\\s*|,\\s*$", "").replaceAll(",\\s*,", ",");
 
         if (!"APPROVED".equalsIgnoreCase(status)) {
             // If not APPROVED, set status as Pending and other details as N/A

@@ -48,8 +48,11 @@ public class EventDetails {
 	 * @return true if any of the essential fields are null, false otherwise
 	 */
 	public boolean isEmpty(EventDetails details) {
-		return null == details.getFromDate() || null == details.getToDate() || null == details.getLatitude()
-				|| null == details.getLongitude();
+		if (null == details.getFromDate() || null == details.getToDate() || null == details.getLatitude()
+				|| null == details.getLongitude()) {
+			return true;
+		}
+		return false;
 	}
 
 }

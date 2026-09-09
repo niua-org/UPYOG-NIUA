@@ -49,10 +49,6 @@
 package org.egov.infstr.services;
 
 import java.io.Serializable;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -62,11 +58,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Path.Node;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.validation.ConstraintViolation;
+import javax.validation.Path.Node;
 
 import org.egov.infra.config.core.ApplicationThreadLocals;
 import org.egov.infra.persistence.entity.AbstractAuditable;
@@ -74,21 +69,13 @@ import org.egov.infra.persistence.utils.Page;
 import org.egov.infra.validation.exception.ValidationError;
 import org.egov.infra.validation.exception.ValidationException;
 import org.egov.infstr.models.BaseModel;
-
-
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Order;
-import org.hibernate.Hibernate;
-import org.hibernate.query.Query;
-
-
-
+import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
+import org.hibernate.Query;
 import org.hibernate.Session;
-
+import org.hibernate.criterion.Example;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,16 +84,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 /**
- * Typed Hibernate/JPA helper used by legacy Struts actions and services.
- * <p>
- * New code should use Spring Data repositories instead. This class unwraps the
- * JPA {@link EntityManager} to a Hibernate {@link Session} so existing HQL and
- * native queries continue to work on Hibernate 6.
- * </p>
- *
- * @param <T>  entity type
- * @param <ID> identifier type
- * @deprecated use Spring Data repositories
+ * Old persistence service
+ * 
+ * @deprecated use Repositories
  **/
 @Transactional(readOnly = true)
 @Deprecated
@@ -122,25 +102,14 @@ public class PersistenceService<T, ID extends Serializable> {
 	@Qualifier("entityValidator")
 	private LocalValidatorFactoryBean entityValidator;
 
-	/**
-	 * @param type entity class this service manages
-	 */
 	public PersistenceService(final Class<T> type) {
 		this.type = type;
 	}
 
-	/**
-	 * @return entity class managed by this service
-	 */
 	public Class<T> getType() {
 		return this.type;
 	}
 
-	/**
-	 * Unwraps the JPA entity manager to the Hibernate 6 {@link Session}.
-	 *
-	 * @return current Hibernate session
-	 */
 	public Session getSession() {
 		return entityManager.unwrap(Session.class);
 	}
@@ -179,36 +148,17 @@ public class PersistenceService<T, ID extends Serializable> {
 	}
 
 	public T find(final String query) {
-		final List<T> results = getQueryWithParams(query).getResultList();
-		return results.isEmpty() ? null : results.get(0);
+		final Query q = getSession().createQuery(query);
+		return (T) q.uniqueResult();
 	}
 
 	protected T findById(final ID id) {
 		return id == null ? null : getSession().get(this.type, id);
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<T> findAllBy(final String query, final Object... params) {
-		final List<T> list = getQueryWithParams(query, params).getResultList();
-		if (list != null) {
-			/*
-			 * LTS Migration Fix (Struts 7 / Hibernate 6 ByteBuddy Proxy Compatibility):
-			 * In Hibernate 6 and Struts 7, ByteBuddy proxies ($HibernateProxy$) block OGNL reflection/property evaluation
-			 * in Struts dropdown tags (e.g. <s:select list="schemeList" listKey="id" listValue="name"/>).
-			 * Calling Hibernate.initialize() and Hibernate.unproxy() extracts the actual entity instance 
-			 * from the proxy wrapper so Struts 7 UI tags render dropdown options correctly without throwing OGNL security exceptions.
-			 */
-			for (int i = 0; i < list.size(); i++) {
-				T item = list.get(i);
-				// Hibernate 6: scalar / Object[] projections are not proxies.
-				// initialize/unproxy on arrays throws and breaks AJAX bank dropdowns.
-				if (item != null && !(item instanceof Object[])) {
-					Hibernate.initialize(item);
-					list.set(i, (T) Hibernate.unproxy(item));
-				}
-			}
-		}
-		return list;
+		final Query q = getQueryWithParams(query, params);
+		return q.list();
 	}
 
 	/**
@@ -222,63 +172,24 @@ public class PersistenceService<T, ID extends Serializable> {
 	 * @return
 	 */
 	public Page findPageBy(final String query, final Integer pageNumber, final Integer pageSize,
-	                       final Object... params) {
-		final TypedQuery<T> q = getQueryWithParams(query, params);
-		return new Page(q, pageNumber, pageSize, 0);
+			final Object... params) {
+		final Query q = getQueryWithParams(query, params);
+		return new Page(q, pageNumber, pageSize);
 	}
 
-	@SuppressWarnings("unchecked")
-	private TypedQuery<T> getQueryWithParams(final String query, final Object... params) {
-		// LTS Migration Fix: Auto-normalize legacy unlabelled '?' parameters into numbered '?1', '?2'
-		// to prevent ParameterLabelException in Hibernate 6 HQL parser
-		String finalQuery = query;
-		boolean hasPositionalParams = false;
-		if (query != null && query.contains("?")) {
-			hasPositionalParams = true;
-			StringBuilder sb = new StringBuilder();
-			int paramCounter = 1;
-			char[] chars = query.toCharArray();
-			for (int i = 0; i < chars.length; i++) {
-				if (chars[i] == '?') {
-					if (i + 1 < chars.length && Character.isDigit(chars[i + 1])) {
-						sb.append('?');
-					} else {
-						sb.append('?').append(paramCounter++);
-					}
-				} else {
-					sb.append(chars[i]);
-				}
-			}
-			finalQuery = sb.toString();
-		}
-
-		// Hibernate 6: persistenceService is constructed with type=null for generic
-		// HQL. createQuery(ql, null) NPEs. Projection queries (concat id/name for
-		// AJAX dropdowns) also cannot use a typed entity result class.
-		TypedQuery<T> q;
-		if (this.type == null) {
-			q = (TypedQuery<T>) entityManager.createQuery(finalQuery);
-		} else {
-			try {
-				q = entityManager.createQuery(finalQuery, this.type);
-			} catch (final IllegalArgumentException typedQueryEx) {
-				q = (TypedQuery<T>) entityManager.createQuery(finalQuery);
-			}
-		}
+	private Query getQueryWithParams(final String query, final Object... params) {
+		final Query q = getSession().createQuery(query);
 		int index = 0;
 		for (final Object param : params) {
-			if (param instanceof Collection) {
-				q.setParameter(String.valueOf("param_" + index), (Collection) param);
-			} else {
-				q.setParameter(hasPositionalParams ? (index + 1) : index, param);
-			}
+			q.setParameter(index, param);
 			index++;
 		}
 		return q;
 	}
 
 	public List<T> findAllByNamedQuery(final String namedQuery, final Object... params) {
-		return getNamedQueryWithParams(namedQuery, params).getResultList();
+		final Query q = getNamedQueryWithParams(namedQuery, params);
+		return q.list();
 	}
 
 	/**
@@ -292,19 +203,19 @@ public class PersistenceService<T, ID extends Serializable> {
 	 * @return Page instance that can be used to implement pagination
 	 */
 	public Page findPageByNamedQuery(final String namedQuery, final Integer pageNumber, final Integer pageSize,
-	                                 final Object... params) {
-		final TypedQuery<T> q = getNamedQueryWithParams(namedQuery, params);
-		return new Page(q, pageNumber, pageSize, 0);
+			final Object... params) {
+		final Query q = getNamedQueryWithParams(namedQuery, params);
+		return new Page(q, pageNumber, pageSize);
 	}
 
-	private TypedQuery<T> getNamedQueryWithParams(final String namedQuery, final Object... params) {
-		final TypedQuery<T> q = entityManager.createNamedQuery(namedQuery, this.type);
+	private Query getNamedQueryWithParams(final String namedQuery, final Object... params) {
+		final Query q = getSession().getNamedQuery(namedQuery);
 		int index = 0;
 		for (final Object param : params) {
 			if (param instanceof Collection)
-				q.setParameter(String.valueOf("param_" + index), (Collection) param);
+				q.setParameterList(String.valueOf("param_" + index), (Collection) param);
 			else
-				q.setParameter(index + 1, param);
+				q.setParameter(index, param);
 			index++;
 		}
 		return q;
@@ -344,36 +255,13 @@ public class PersistenceService<T, ID extends Serializable> {
 		getSession().delete(entity);
 	}
 
-	/*
-	 * Spring 6 / JPA 3 / Hibernate 6 Migration Fix:
-	 * Added @Transactional flush() method to PersistenceService base class.
-	 * In Spring 6 / JPA 3, calling raw session.flush() directly from non-transactional action code throws
-	 * `TransactionRequiredException`. This method wraps session flushing inside a Spring-managed transaction context.
-	 */
-	@Transactional
-	public void flush() {
-		try {
-			getSession().flush();
-		} catch (final Exception e) {
-			LOG.warn("Flush ignored: {}", e.getMessage());
-		}
-	}
-
 	public List<T> findAll() {
-		final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		final CriteriaQuery<T> cq = cb.createQuery(this.type);
-		final Root<T> root = cq.from(this.type);
-		cq.select(root);
-		return entityManager.createQuery(cq).getResultList();
+		return getSession().createCriteria(this.type).list();
 	}
 
 	public List<T> findByExample(final T exampleT) {
-		final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		final CriteriaQuery<T> cq = cb.createQuery(this.type);
-		final Root<T> root = cq.from(this.type);
-		final List<Predicate> predicates = buildExamplePredicates(cb, root, exampleT);
-		cq.select(root).where(predicates.toArray(new Predicate[0]));
-		return entityManager.createQuery(cq).getResultList();
+		final Criteria criteria = getSession().createCriteria(this.type);
+		return criteria.add(Example.create(exampleT)).list();
 	}
 
 	public T findById(final ID id, final boolean lock) {
@@ -381,13 +269,8 @@ public class PersistenceService<T, ID extends Serializable> {
 	}
 
 	public T findByIdWithJoinFetch(final ID id, final String joinFetchPropertyName) {
-		final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		final CriteriaQuery<T> cq = cb.createQuery(this.type);
-		final Root<T> root = cq.from(this.type);
-		root.fetch(joinFetchPropertyName, JoinType.LEFT);
-		cq.select(root).where(cb.equal(root.get("id"), id));
-		final List<T> results = entityManager.createQuery(cq).getResultList();
-		return results.isEmpty() ? null : results.get(0);
+		return (T) getSession().createCriteria(type).setFetchMode(joinFetchPropertyName, FetchMode.JOIN)
+				.add(Restrictions.idEq(id)).uniqueResult();
 	}
 
 	@Transactional
@@ -398,20 +281,14 @@ public class PersistenceService<T, ID extends Serializable> {
 	}
 
 	public List<T> findAll(final String... orderByFields) {
-		final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		final CriteriaQuery<T> cq = cb.createQuery(this.type);
-		final Root<T> root = cq.from(this.type);
-		cq.select(root);
-		final List<Order> orders = new ArrayList<>();
+		final Criteria c = getSession().createCriteria(this.type);
 		for (final String orderBy : orderByFields)
-			orders.add(cb.asc(root.get(orderBy)));
-		if (!orders.isEmpty())
-			cq.orderBy(orders);
-		return entityManager.createQuery(cq).getResultList();
+			c.addOrder(Order.asc(orderBy).ignoreCase());
+		return c.list();
 	}
 
 	public String getNamedQuery(final String namedQuery) {
-		return entityManager.createNamedQuery(namedQuery).unwrap(org.hibernate.query.Query.class).getQueryString();
+		return getSession().getNamedQuery(namedQuery).getQueryString();
 	}
 
 	public void addIndexparams(final Map<String, List> indexparams, final String key, final Object... values) {
@@ -421,38 +298,15 @@ public class PersistenceService<T, ID extends Serializable> {
 		indexparams.put(key, objparams);
 	}
 
-	private List<Predicate> buildExamplePredicates(final CriteriaBuilder cb, final Root<T> root, final T exampleT) {
-		final List<Predicate> predicates = new ArrayList<>();
-		try {
-			final BeanInfo beanInfo = Introspector.getBeanInfo(exampleT.getClass(), Object.class);
-			for (final PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-				if (descriptor.getReadMethod() == null)
-					continue;
-				final Object value = descriptor.getReadMethod().invoke(exampleT);
-				if (value != null)
-					predicates.add(cb.equal(root.get(descriptor.getName()), value));
-			}
-		} catch (final IntrospectionException | ReflectiveOperationException e) {
-			throw new IllegalStateException("Failed to build example query for " + this.type.getName(), e);
-		}
-		return predicates;
-	}
-
-	public void addFilterCriteriaForObject(final Map<String, List> params, final CriteriaQuery<T> cq,
-	                                       final Root<T> root, final CriteriaBuilder cb, final String... orderbyFields) {
-		final List<Predicate> predicates = new ArrayList<>();
+	public void addFilterCriteriaForObject(final Map<String, List> params, final Criteria c,
+			final String... orderbyFields) {
 		for (final Map.Entry<String, List> entry : params.entrySet())
 			if (entry.getKey().contains("date") || entry.getKey().contains("Date"))
-				predicates.add(cb.between(root.get(entry.getKey()), (Comparable) entry.getValue().get(0),
-						(Comparable) entry.getValue().get(1)));
+				c.add(Restrictions.between(entry.getKey(), entry.getValue().get(0), entry.getValue().get(1)));
 			else
-				predicates.add(cb.equal(root.get(entry.getKey()), entry.getValue().get(0)));
-		cq.where(predicates.toArray(new Predicate[0]));
-		final List<Order> orders = new ArrayList<>();
+				c.add(Restrictions.eq(entry.getKey(), entry.getValue().get(0)));
 		for (final String orderBy : orderbyFields)
-			orders.add(cb.asc(root.get(orderBy)));
-		if (!orders.isEmpty())
-			cq.orderBy(orders);
+			c.addOrder(Order.asc(orderBy).ignoreCase());
 	}
 
 	/**
@@ -479,12 +333,12 @@ public class PersistenceService<T, ID extends Serializable> {
 		baseModel.setModifiedBy(ApplicationThreadLocals.getUserId());
 		baseModel.setModifiedDate(currentDate);
 	}
-
-	public jakarta.persistence.Query populateQueryWithParams(final jakarta.persistence.Query query, final Map<String, Object> params) {
+	
+	public Query populateQueryWithParams(final Query query, final Map<String, Object> params) {
 
 		for (Entry<String, Object> entry : params.entrySet()) {
 			if (entry.getValue() instanceof Collection)
-				query.setParameter(entry.getKey(), entry.getValue());
+				query.setParameterList(entry.getKey(), (Collection) entry.getValue());
 			else
 				query.setParameter(entry.getKey(), entry.getValue());
 		}

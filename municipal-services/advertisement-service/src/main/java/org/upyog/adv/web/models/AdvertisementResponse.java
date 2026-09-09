@@ -1,10 +1,13 @@
 package org.upyog.adv.web.models;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.ArrayList;
+import java.util.List;
 
 
+import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -35,7 +38,7 @@ public class AdvertisementResponse   {
 	
 	public void addNewBookingApplication(BookingDetail bookingDetail) {
 		if(this.bookingApplication == null) {
-			this.bookingApplication = new ArrayList<>();
+			this.bookingApplication = new ArrayList<BookingDetail>();
 		}
 		this.bookingApplication.add(bookingDetail);
 	}

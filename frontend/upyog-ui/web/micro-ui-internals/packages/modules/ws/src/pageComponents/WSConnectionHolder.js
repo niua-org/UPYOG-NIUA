@@ -4,14 +4,7 @@ import React, { useEffect, useState } from "react";
 import Timeline from "../components/Timeline";
 import { stringReplaceAll } from "../utils";
 
-const WSConnectionHolder = ({
-  t,
-  config,
-  onSelect,
-  userType,
-  formData,
-  ownerIndex
-}) => {
+const WSConnectionHolder = ({ t, config, onSelect, userType, formData, ownerIndex }) => {
   let validation = {};
   const [name, setName] = useState(formData?.ConnectionHolderDetails?.name || formData?.formData?.ConnectionHolderDetails?.name || "");
   const [guardian, setguardian] = useState(formData?.ConnectionHolderDetails?.guardian || formData?.formData?.ConnectionHolderDetails?.guardian || "");
@@ -20,68 +13,59 @@ const WSConnectionHolder = ({
   const [mobileNumber, setMobileNumber] = useState(formData?.ConnectionHolderDetails?.mobileNumber || formData?.formData?.ConnectionHolderDetails?.mobileNumber || "");
   const [address, setaddress] = useState(formData?.ConnectionHolderDetails?.address || formData?.formData?.ConnectionHolderDetails?.address || "");
   const [documentId, setdocumentId] = useState(formData?.ConnectionHolderDetails?.documentId || formData?.formData?.ConnectionHolderDetails?.documentId || "");
-  const [isOwnerSame, setisOwnerSame] = useState(formData?.ConnectionHolderDetails?.isOwnerSame == false || formData?.formData?.ConnectionHolderDetails?.isOwnerSame == false ? false : true);
+  const [isOwnerSame, setisOwnerSame] = useState((formData?.ConnectionHolderDetails?.isOwnerSame == false || formData?.formData?.ConnectionHolderDetails?.isOwnerSame == false) ? false : true);
   const [uploadedFile, setUploadedFile] = useState(formData?.[config.key]?.fileStoreId || null);
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
   const [dropdownValue, setDropdownValue] = useState(formData?.ConnectionHolderDetails?.documentType || "");
-  const [ownerType, setOwnerType] = useState(formData?.ConnectionHolderDetails?.specialCategoryType || {});
+  const [ownerType, setOwnerType] = useState( formData?.ConnectionHolderDetails?.specialCategoryType || {});
   let isMobile = window.Digit.Utils.browser.isMobile();
   const [emailId, setEmail] = useState(formData?.ConnectionHolderDetails?.emailId || formData?.formData?.ConnectionHolderDetails?.emailId || "");
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
   let dropdownData = [];
-  const {
-    data: Documentsob = {}
-  } = Digit.Hooks.pt.usePropertyMDMS(stateId, "PropertyTax", "Documents");
+  const { data: Documentsob = { } } = Digit.Hooks.pt.usePropertyMDMS(stateId, "PropertyTax", "Documents");
   const docs = Documentsob?.PropertyTax?.Documents;
-  const specialProofIdentity = Array.isArray(docs) && docs.filter(doc => doc.code.includes("SPECIALCATEGORYPROOF"));
+  const specialProofIdentity = Array.isArray(docs) && docs.filter((doc) => doc.code.includes("SPECIALCATEGORYPROOF"));
   if (specialProofIdentity.length > 0) {
     dropdownData = specialProofIdentity[0]?.dropdownData;
-    dropdownData.forEach(data => {
+    dropdownData.forEach((data) => {
       data.i18nKey = stringReplaceAll(data.code, ".", "_");
     });
-    dropdownData = dropdownData?.filter(dropdown => dropdown.parentValue.includes(ownerType?.code));
+    dropdownData = dropdownData?.filter((dropdown) => dropdown.parentValue.includes(ownerType?.code));
     if (dropdownData.length == 1 && dropdownValue != dropdownData[0]) {
       setTypeOfDropdownValue(dropdownData[0]);
     }
   }
-  const GuardianOptions = [{
-    name: "Father",
-    code: "FATHER",
-    i18nKey: "COMMON_MASTERS_OWNERTYPE_FATHER"
-  }, {
-    name: "HUSBAND",
-    code: "HUSBAND",
-    i18nKey: "COMMON_MASTERS_OWNERTYPE_HUSBAND"
-  }];
-  const {
-    isLoading,
-    data: genderTypeData
-  } = Digit.Hooks.obps.useMDMS(stateId, "common-masters", ["GenderType"]);
-  const {
-    data: Menu,
-    isLoading: isSpecialcategoryLoading
-  } = Digit.Hooks.pt.usePropertyMDMS(stateId, "PropertyTax", "OwnerType");
+
+  const GuardianOptions = [
+    { name: "Father", code: "FATHER", i18nKey: "COMMON_MASTERS_OWNERTYPE_FATHER" },
+    { name: "HUSBAND", code: "HUSBAND", i18nKey: "COMMON_MASTERS_OWNERTYPE_HUSBAND" },
+  ];
+
+  const { isLoading, data: genderTypeData } = Digit.Hooks.obps.useMDMS(stateId, "common-masters", ["GenderType"]);
+
+  const { data: Menu, isLoading : isSpecialcategoryLoading } = Digit.Hooks.pt.usePropertyMDMS(stateId, "PropertyTax", "OwnerType");
   Menu ? Menu.sort((a, b) => a.name.localeCompare(b.name)) : "";
+
   let menu = [];
-  genderTypeData && genderTypeData["common-masters"].GenderType.filter(data => data.active).map(genderDetails => {
-    menu.push({
-      i18nKey: `COMMON_GENDER_${genderDetails.code}`,
-      code: `${genderDetails.code}`,
-      value: `${genderDetails.code}`
+  genderTypeData &&
+    genderTypeData["common-masters"].GenderType.filter(data => data.active).map((genderDetails) => {
+      menu.push({ i18nKey: `COMMON_GENDER_${genderDetails.code}`, code: `${genderDetails.code}`, value: `${genderDetails.code}` });
     });
-  });
-  const validateEmail = value => {
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/;
-    if (value === "") {
-      setError("");
-    } else if (emailPattern.test(value)) {
-      setError("");
-    } else {
-      setError(t("CORE_INVALID_EMAIL_ID_PATTERN"));
+    const validateEmail=(value)=>{  
+      const emailPattern=/^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/;
+      if(value===""){
+        setError("");
+      }
+      else if(emailPattern.test(value)){
+        setError(""); 
+      }
+      else{
+        setError(t("CORE_INVALID_EMAIL_ID_PATTERN"));  
+      }
     }
-  };
+
   useEffect(() => {
     (async () => {
       setError(null);
@@ -104,9 +88,11 @@ const WSConnectionHolder = ({
       }
     })();
   }, [file]);
+
   function selectChecked(e) {
     setisOwnerSame(!isOwnerSame);
   }
+
   function setTypeOfDropdownValue(dropdownValue) {
     setDropdownValue(dropdownValue);
   }
@@ -137,142 +123,197 @@ const WSConnectionHolder = ({
   function setOwnerEmail(e) {
     setEmail(e.target.value);
   }
-  const handleEmailChange = e => {
-    const value = e.target.value;
+  const handleEmailChange=(e)=>{
+    const value=e.target.value;
     setEmail(value);
-    validateEmail(value);
-  };
+    validateEmail(value);   
+  }
   useEffect(() => {
-    if (emailId) {
+    if(emailId){
       validateEmail(emailId);
-    }
-  }, [emailId]);
+    } 
+  }, [emailId])
+  
   function selectfile(e) {
     setFile(e.target.files[0]);
   }
-  const reversedOwners = Array.isArray(formData?.cpt?.details?.owners) ? formData?.cpt?.details?.owners.slice().reverse() : [];
+  
+const reversedOwners= Array.isArray(formData?.cpt?.details?.owners) ? formData?.cpt?.details?.owners.slice().reverse():[];
+
   const goNext = () => {
-    if (!error) {
-      if (isOwnerSame == true) {
-        //need to add property data here from previous screen
-        let ConnectionDet = {
-          isOwnerSame: isOwnerSame,
-          name: reversedOwners?.[0]?.name,
-          mobileNumber: reversedOwners?.[0]?.mobileNumber,
-          gender: reversedOwners?.[0]?.gender ? {
-            code: reversedOwners?.[0]?.gender,
-            i18nKey: `COMMON_GENDER_${reversedOwners?.[0]?.gender}`
-          } : null,
-          guardian: reversedOwners?.[0]?.fatherOrHusbandName,
-          address: reversedOwners?.[0]?.permanentAddress,
-          emailId: reversedOwners?.[0]?.emailId,
-          relationship: reversedOwners?.[0]?.relationship ? {
-            code: reversedOwners?.[0]?.relationship,
-            i18nKey: `COMMON_MASTERS_OWNERTYPE_${reversedOwners?.[0]?.relationship}`
-          } : null,
-          specialCategoryType: ownerType,
-          documentId: documentId,
-          fileStoreId: uploadedFile,
-          documentType: dropdownValue
-        };
-        onSelect(config.key, ConnectionDet);
-      } else {
-        let ConnectionDet = {
-          isOwnerSame: isOwnerSame,
-          name: name,
-          mobileNumber: mobileNumber,
-          gender: gender,
-          guardian: guardian,
-          address: address,
-          relationship: relationship,
-          specialCategoryType: ownerType,
-          emailId: emailId,
-          documentId: documentId,
-          fileStoreId: uploadedFile,
-          documentType: dropdownValue
-        };
-        onSelect(config.key, ConnectionDet);
-      }
+    if(!error){
+
+    if(isOwnerSame == true)
+    {
+      //need to add property data here from previous screen
+      let ConnectionDet = {
+      isOwnerSame:isOwnerSame,
+      name: reversedOwners?.[0]?.name,
+      mobileNumber: reversedOwners?.[0]?.mobileNumber,
+      gender: reversedOwners?.[0]?.gender ? {code:reversedOwners?.[0]?.gender, i18nKey:`COMMON_GENDER_${reversedOwners?.[0]?.gender}`} : null,
+      guardian: reversedOwners?.[0]?.fatherOrHusbandName, 
+      address: reversedOwners?.[0]?.permanentAddress,
+      emailId: reversedOwners?.[0]?.emailId,
+      relationship:reversedOwners?.[0]?.relationship ? {code : reversedOwners?.[0]?.relationship, i18nKey:`COMMON_MASTERS_OWNERTYPE_${reversedOwners?.[0]?.relationship}`} : null,
+      specialCategoryType:ownerType,
+      documentId:documentId,
+      fileStoreId:uploadedFile,
+      documentType:dropdownValue   
     }
-    ;
+      onSelect(config.key, ConnectionDet);
+    }
+    else
+    {
+      let ConnectionDet = { isOwnerSame:isOwnerSame, name: name, mobileNumber: mobileNumber, gender: gender, guardian: guardian, address: address, relationship:relationship,specialCategoryType:ownerType, emailId:emailId, documentId:documentId, fileStoreId:uploadedFile, documentType:dropdownValue   }
+      onSelect(config.key, ConnectionDet);
+    }
   };
+}
+
   const onSkip = () => onSelect();
-  const ownerTypeDropdownStyle = isMobile ? {} : {
-    width: "540px"
-  };
-  return <div>
-       {userType === "citizen" && <Timeline currentStep={2} />}
-        {!isLoading ? <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={!isOwnerSame && (!name || !mobileNumber || !gender || !guardian || !relationship || !ownerType?.code || !address)}>
+
+  return (
+    <div>
+       {userType === "citizen" && (<Timeline currentStep={2} />)}
+        {!isLoading ? 
+        <FormStep
+          config={config}
+          onSelect={goNext}
+          onSkip={onSkip}
+          t={t}
+          isDisabled={!isOwnerSame && (!name || !mobileNumber || !gender || !guardian || !relationship || !(ownerType?.code) || !address)}
+        >
         <div>
-        <CheckBox label={t("WS_CONN_HOLDER_SAME_AS_OWNER_DETAILS")} onChange={e => selectChecked(e)}
+        <CheckBox
+        label={t("WS_CONN_HOLDER_SAME_AS_OWNER_DETAILS")}
+        onChange={(e) => selectChecked(e)}
         // value={field.isPrimaryOwner}
-        checked={isOwnerSame} className="ws-auto-48" />  
+        checked={isOwnerSame}
+        style={{ paddingBottom: "10px", paddingTop: "3px" }}
+        />  
         </div>
-        {!isOwnerSame && <div className="ws-auto-49">
+        {!isOwnerSame  && <div style={{border:"solid",borderRadius:"5px",padding:"10px",paddingTop:"20px",marginTop:"10px",borderColor:"#f3f3f3",background:"#FAFAFA"}}>
             <CardLabel>{`${t("WS_OWN_DETAIL_NAME")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <TextInput t={t} type={"text"} isMandatory={false} optionKey="i18nKey" name="name" value={name} onChange={SelectName}
-        //disable={name && !isOpenLinkFlow ? true : false}
-        {...validation = {
-          isRequired: true,
-          pattern: "^[a-zA-Z ]*$",
-          type: "text",
-          title: t("WS_NAME_ERROR_MESSAGE")
-        }} className="ws-auto-50" />
+            <TextInput
+              t={t}
+              type={"text"}
+              style={{background:"#FAFAFA"}}
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="name"
+              value={name}
+              onChange={SelectName}
+              //disable={name && !isOpenLinkFlow ? true : false}
+              {...(validation = {
+                isRequired: true,
+                pattern: "^[a-zA-Z ]*$",
+                type: "text",
+                title: t("WS_NAME_ERROR_MESSAGE"),
+              })}
+            />
             <CardLabel>{`${t("WS_OWN_DETAIL_GENDER_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <RadioButtons t={t} options={menu} optionsKey="code" name="gender" value={gender} selectedOption={gender} onSelect={setGenderName} isDependent={true} labelKey="COMMON_GENDER"
-        //disabled={isUpdateProperty || isEditProperty}
-        />
+            <RadioButtons
+              t={t}
+              options={menu}
+              optionsKey="code"
+              name="gender"
+              value={gender}
+              selectedOption={gender}
+              onSelect={setGenderName}
+              isDependent={true}
+              labelKey="COMMON_GENDER"
+            //disabled={isUpdateProperty || isEditProperty}
+            />
             <CardLabel>{`${t("WS_OWN_MOBILE_NO")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <MobileNumber value={mobileNumber} name="mobileNumber" onChange={value => setMobileNo({
-          target: {
-            value
-          }
-        })}
-        //disable={mobileNumber && !isOpenLinkFlow ? true : false}
-        {...{
-          required: true,
-          pattern: "[6-9]{1}[0-9]{9}",
-          type: "tel",
-          title: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID")
-        }} className="ws-auto-51" />
+            <MobileNumber
+              value={mobileNumber}
+              name="mobileNumber"
+              onChange={(value) => setMobileNo({ target: { value } })}
+              style={{background:"#FAFAFA"}}
+              //disable={mobileNumber && !isOpenLinkFlow ? true : false}
+              {...{ required: true, pattern: "[6-9]{1}[0-9]{9}", type: "tel", title: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID") }}
+            />
             <CardLabel>{`${t("WS_OWN_DETAIL_GUARDIAN_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <TextInput t={t} type={"text"} isMandatory={false} optionKey="i18nKey" name="guardian" value={guardian} onChange={selectguardian}
-        //disable={editScreen}
-        {...validation = {
-          isRequired: true,
-          pattern: "^[a-zA-Z ]*$",
-          type: "text",
-          title: t("WS_NAME_ERROR_MESSAGE")
-        }} className="ws-auto-52" />
+            <TextInput
+              t={t}
+              type={"text"}
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="guardian"
+              value={guardian}
+              style={{background:"#FAFAFA"}}
+              onChange={selectguardian}
+              //disable={editScreen}
+              {...(validation = {
+                isRequired: true,
+                pattern: "^[a-zA-Z ]*$",
+                type: "text",
+                title: t("WS_NAME_ERROR_MESSAGE"),
+              })}
+            />
             <CardLabel>{`${t("WS_OWN_DETAIL_RELATIONSHIP_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <RadioButtons t={t} optionsKey="i18nKey" name="relationship" options={GuardianOptions} value={relationship} selectedOption={relationship} onSelect={setRelationshipName} isDependent={true} labelKey="COMMON_MASTERS_OWNERTYPE"
-        //disabled={isUpdateProperty || isEditProperty}
-        />
+            <RadioButtons
+                t={t}
+                optionsKey="i18nKey"
+                name="relationship"
+                options={GuardianOptions}
+                value={relationship}
+                selectedOption={relationship}
+                onSelect={setRelationshipName}
+                isDependent={true}
+                labelKey="COMMON_MASTERS_OWNERTYPE"
+                //disabled={isUpdateProperty || isEditProperty}
+            />
             <CardLabel>{`${t("WS_COMMON_TABLE_COL_ADDRESS")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <TextInput t={t} type={"text"} isMandatory={false} optionKey="i18nKey" name="address" value={address} onChange={selectaddress} {...validation = {
-          isRequired: true,
-          title: t("WS_ADDR_ERROR_MESSAGE")
-        }} className="ws-auto-53" />
+            <TextInput
+              t={t}
+              type={"text"}
+              style={{background:"#FAFAFA"}}
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="address"
+              value={address}
+              onChange={selectaddress}
+              {...(validation = {
+                isRequired: true,
+                title: t("WS_ADDR_ERROR_MESSAGE"),
+              })}
+            />
             <CardLabel>{`${t("WS_OWN_SPECIAL_CAT_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
-            <Dropdown className="form-field" selected={ownerType} style={ownerTypeDropdownStyle}
-        //disable={Menu?.length === 1 || editScreen}
-        isMandatory={true} option={Menu} select={setTypeOfOwner} optionKey="i18nKey" t={t} />
+            <Dropdown
+                className="form-field"
+                selected={ownerType}
+                style={isMobile ? {} : {width:"540px"}}
+                //disable={Menu?.length === 1 || editScreen}
+                isMandatory={true}
+                option={Menu}
+                select={setTypeOfOwner}
+                optionKey="i18nKey"
+                t={t}
+            />
             <div>
             <CardLabel>{`${t("WS_EMAIL_ID")}`}</CardLabel>
-            <TextInput t={t} isMandatory={false} name="emailId" value={emailId} onChange={handleEmailChange} {...validation = {
-            //isRequired: true,
-            pattern: "[A-Za-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$",
-            type: "Email",
-            title: t("CORE_COMMON_APPLICANT_EMAILI_ID_INVALID")
-          }} />
-            {error && <span className="ws-auto-54">{error}</span>}
+            <TextInput
+              t={t}
+              isMandatory={false}
+              name="emailId"
+              value={emailId}
+              onChange={handleEmailChange}
+              {...(validation = {
+                //isRequired: true,
+                pattern: "[A-Za-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$",
+                type:"Email",                
+                title: t("CORE_COMMON_APPLICANT_EMAILI_ID_INVALID"),
+              })}
+            />
+            {error && <span style={{color:"red"}}>{error}</span>}
             </div>
             {/* {ownerType && Object.entries(ownerType).length>0 && ownerType?.code !== "NONE" && <div>
                 <CardLabel>{`${t("WS_DOCUMENT_ID_LABEL")}`}</CardLabel>
                 <TextInput
                     t={t}
                     type={"text"}
-                    style={undefined}
+                    style={{background:"#FAFAFA"}}
                     isMandatory={false}
                     optionKey="i18nKey"
                     name="documentId"
@@ -287,7 +328,7 @@ const WSConnectionHolder = ({
                     selected={dropdownValue}
                     optionKey="i18nKey"
                     select={setTypeOfDropdownValue}
-                    style={ownerTypeDropdownStyle}
+                    style={isMobile ? {} : {width:"540px"}}
                     //placeholder={t(`PT_MUTATION_SELECT_DOC_LABEL`)}
                     //disable={isUpdateProperty || isEditProperty}
                 />
@@ -302,10 +343,12 @@ const WSConnectionHolder = ({
                     message={uploadedFile ? `1 ${t(`WS_ACTION_FILEUPLOADED`)}` : t(`WS_ACTION_NO_FILEUPLOADED`)}
                     error={error}
                 />
-             {error ? <div>{error}</div> : ""}
-             </div>} */}
+            {error ? <div style={{ height: "20px", width: "100%", fontSize: "20px", color: "red", marginTop: "5px" }}>{error}</div> : ""}
+            </div>} */}
           </div>}
-        </FormStep> : <Loader />}
-    </div>;
+        </FormStep> : <Loader /> }
+    </div>
+  );
 };
+
 export default WSConnectionHolder;

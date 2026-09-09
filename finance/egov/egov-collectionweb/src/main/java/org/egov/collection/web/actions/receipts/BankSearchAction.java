@@ -47,7 +47,7 @@
  */
 package org.egov.collection.web.actions.receipts;
 
-import org.apache.struts2.action.Action;
+import com.opensymphony.xwork2.Action;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;

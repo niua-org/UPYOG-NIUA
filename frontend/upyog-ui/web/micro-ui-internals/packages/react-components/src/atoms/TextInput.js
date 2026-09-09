@@ -48,7 +48,6 @@ const TextInput = (props) => {
             step={props.step}
             autoFocus={props.autoFocus}
             onBlur={props.onBlur}
-            onKeyDown={props.onKeyDown}
             autoComplete="off"
             disabled={props.disabled}
           />
@@ -83,7 +82,6 @@ const TextInput = (props) => {
             autoFocus={props.autoFocus}
             onBlur={props.onBlur}
             onKeyPress={props.onKeyPress}
-            onKeyDown={props.onKeyDown}
             autoComplete="off"
             disabled={props.disabled}
           />

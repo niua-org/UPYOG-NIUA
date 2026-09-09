@@ -1,7 +1,7 @@
-import { CitizenHomeCard, PTIcon, ApplicantDetails } from "@nudmcdgnpm/digit-ui-react-components";
+import { CitizenHomeCard, PTIcon, ApplicantDetails,AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-
+import { useRouteMatch } from "react-router-dom";
 import CndCreate from "./pages/citizen/Create";
 import CitizenApp from "./pages/citizen";
 import CndRequirementDetails from "./pageComponents/CndRequirementDetails"; 
@@ -31,7 +31,6 @@ import DisposeDetails from "./pageComponents/DisposeDetails";
 import FacilitySubmissionResponse from "./pages/employee/FacilityCentre/FacilitySubmissionResponse";
 import Address from "./pageComponents/Address";
 import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
-import AddressDetails from "./pageComponents/AddressDetails";
 
 
 const componentsToRegister = {
@@ -73,21 +72,22 @@ const componentsToRegister = {
 
   // Parent component of module
   export const CNDModule = ({stateCode, userType, tenants }) => {
-    const { path, url } = Digit.Hooks.useModuleBasePath();
+    const { path, url } = useRouteMatch();
     const moduleCode = "CND";
     const language = Digit.StoreData.getCurrentLanguage();
     const { isLoading, data: store } = Digit.Services.useStore({ stateCode, moduleCode, language });
     addComponentsToRegistry();
     Digit.SessionStorage.set("CND_TENANTS", tenants);
-    useEffect(() => {
-      if (userType === "employee") {
+    useEffect(
+      () =>
+        userType === "employee" &&
         Digit.LocalizationService.getLocale({
           modules: [`rainmaker-${Digit.ULBService.getCurrentTenantId()}`],
           locale: Digit.StoreData.getCurrentLanguage(),
           tenantId: Digit.ULBService.getCurrentTenantId(),
-        });
-      }
-    }, [userType]);
+        }),
+      []
+    );
   
     if (userType === "employee") {
       return <EmployeeApp path={path} url={url} userType={userType} />;

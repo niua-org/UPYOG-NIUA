@@ -48,7 +48,7 @@
 
 package org.egov.infra.rest.support;
 
-import jakarta.servlet.ServletRequest;
+import javax.servlet.ServletRequest;
 
 public class DefaultAPIRequestEnricher implements APIRequestEnricher {
 

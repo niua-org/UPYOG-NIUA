@@ -1,19 +1,20 @@
 import React from "react";
-import { useParams, useLocation, Route, Routes } from "react-router-dom";
-import BillDetails from "./routes/bill-details/bill-details";
+import { useParams, useHistory, useRouteMatch, useLocation } from "react-router-dom";
+import Routes from "./routes";
+
 
 export const MyBills = ({ stateCode }) => {
   const { businessService } = useParams();
   const { tenantId: _tenantId, isDisoconnectFlow } = Digit.Hooks.useQueryParams();
 
-  const navigate = Digit.Hooks.useCustomNavigate();
-  const { url } = Digit.Hooks.useModuleBasePath();
+  const history = useHistory();
+  const { url } = useRouteMatch();
   const location = useLocation();
 
   const { tenantId } = Digit.UserService.getUser()?.info || location?.state || { tenantId: _tenantId } || {};
 
   if (!tenantId && !location?.state?.fromSearchResults) {
-    navigate(`/cnd-ui/citizen/login`, { replace: true, state: { from: url } });
+    history.replace(`/cnd-ui/citizen/login`, { from: url });
   }
 
   const { isLoading, data } = Digit.Hooks.useFetchCitizenBillsForBuissnessService(
@@ -23,18 +24,11 @@ export const MyBills = ({ stateCode }) => {
 
   const billsList = data?.Bill || [];
 
+  const getProps = () => ({ billsList, businessService });
+
   return (
     <React.Fragment>
-      <Routes>
-        <Route
-          path=":consumerCode"
-          element={
-            <BillDetails
-              businessService={businessService}
-            />
-          }
-        />
-      </Routes>
+      <Routes {...getProps()} />
     </React.Fragment>
   );
 };

@@ -15,28 +15,16 @@ const ChallanGenerationCard = () => {
   }
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-
-  const { data, isFetching, isSuccess, isLoading } = Digit.Hooks.challangeneration.useInbox({
-    tenantId: tenantId,
-    ModuleCode: "Challan_Generation",
-    filters: { limit: 10, offset: 0, services: ["Challan_Generation"] },
-
-    config: {
-      select: (data) => {
-        return { totalCount: data?.totalCount, nearingSlaCount: data?.nearingSlaCount } || "-";
-      },
-      enabled: Digit.Utils.challanAccess(),
-    },
-  });
+  const { isLoading, isError, error, data, ...rest } = Digit.Hooks.mcollect.useMCollectCount(tenantId);
 
   const propsForModuleCard = {
     Icon: <PTIcon />,
     moduleName: t("Challan_Generation"),
     kpis: [
       {
-        count: isLoading ? "-" : data?.totalCount,
+        count: isLoading ? "-" : data?.ChallanCount?.totalChallan,
         label: t("TOTAL_CHALLANS")
-      },
+      }, 
     ],
     links: [
       {
@@ -48,7 +36,6 @@ const ChallanGenerationCard = () => {
         link: `/upyog-ui/employee/challangeneration/generate-challan`
       },
     ]
-
   }
   return <EmployeeModuleCard {...propsForModuleCard} />
 };

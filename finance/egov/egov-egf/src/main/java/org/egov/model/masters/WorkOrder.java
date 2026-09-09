@@ -50,16 +50,16 @@ package org.egov.model.masters;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.validation.constraints.Min;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.Min;
 
 import org.egov.commons.EgwStatus;
 import org.egov.commons.Fund;
@@ -71,7 +71,7 @@ import org.egov.infra.persistence.validator.annotation.OptionalPattern;
 import org.egov.infra.persistence.validator.annotation.Unique;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Entity
 @Table(name = "EGF_WORKORDER")
@@ -89,12 +89,12 @@ public class WorkOrder extends AbstractAuditable implements EntityType {
 
     @Length(max = 100, message = "Maximum of 100 Characters allowed for Order Number")
     @OptionalPattern(regex = FinancialConstants.alphaNumericwithspecialcharForContraWOAndSupplierName, message = "Special Characters are not allowed in Order Number")
-    @SanitizeHtml
+    @SafeHtml
     private String orderNumber;
 
     @Length(max = 100, message = "Maximum of 100 Characters allowed for Name")
     @OptionalPattern(regex = FinancialConstants.alphaNumericwithspecialcharForContraWOAndSupplierName, message = "Special Characters are not allowed in Name")
-    @SanitizeHtml
+    @SafeHtml
     private String name;
 
     private Date orderDate;
@@ -115,7 +115,7 @@ public class WorkOrder extends AbstractAuditable implements EntityType {
     @JoinColumn(name = "fund")
     private Fund fund;
 
-    @SanitizeHtml
+    @SafeHtml
     private String department;
 
     @ManyToOne
@@ -126,7 +126,7 @@ public class WorkOrder extends AbstractAuditable implements EntityType {
     @JoinColumn(name = "subScheme")
     private SubScheme subScheme;
 
-    @SanitizeHtml
+    @SafeHtml
     private String sanctionNumber;
 
     private Date sanctionDate;
@@ -134,7 +134,7 @@ public class WorkOrder extends AbstractAuditable implements EntityType {
     private Boolean active;
 
     @Transient
-    @SanitizeHtml
+    @SafeHtml
     private String departmentName;
 
     @Transient

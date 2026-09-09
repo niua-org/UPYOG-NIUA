@@ -26,10 +26,6 @@ public class PetApplicationSearchCriteria {
 	@JsonProperty("applicationNumber")
 	private String applicationNumber;
 
-	// filter based on multiple application numbers
-	@JsonProperty("listOfApplicationNumbers")
-	private List<String> listOfApplicationNumbers;
-
 	@JsonProperty("mobileNumber")
 	private String mobileNumber;
 

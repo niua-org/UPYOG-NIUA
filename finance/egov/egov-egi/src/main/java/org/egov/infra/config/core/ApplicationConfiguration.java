@@ -53,8 +53,6 @@ import org.egov.infra.reporting.engine.ReportService;
 import org.egov.infra.reporting.engine.jasper.JasperReportService;
 import org.egov.infra.web.rest.handler.RestErrorHandler;
 import org.egov.infra.web.rest.handler.RestTemplateLoggerInterceptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,8 +71,8 @@ import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.CookieLocaleResolver;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.Resource;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,18 +92,9 @@ import static org.egov.infra.config.core.LocalizationSettings.DEFAULT_ENCODING_K
 import static org.egov.infra.config.core.LocalizationSettings.DEFAULT_LOCALE_KEY;
 import static org.egov.infra.config.core.LocalizationSettings.DEFAULT_TIME_ZONE_KEY;
 
-/**
- * LTS Migration Fix (Spring 6 / WildFly 40): core application beans shared
- * across EAR modules: file store, locale
- * resolution, Bean Validation factory, and outbound {@link RestTemplate}.
- * Tenant schema names are injected from the {@code tenants} list built during
- * property loading.
- */
 @Configuration
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 public class ApplicationConfiguration {
-
-    private static final Logger log = LoggerFactory.getLogger(ApplicationConfiguration.class);
 
     @Resource(name = "tenants")
     private List<String> tenants;
@@ -136,9 +125,8 @@ public class ApplicationConfiguration {
         return r;
     }
 
-    @Bean(name = "cities")
+    @Bean(name = "cities", autowire = Autowire.BY_NAME)
     @DependsOn(value = "tenants")
-    @Autowired
     public List<String> cities() {
         final List<String> cities = new ArrayList<>(tenants);
         if (!environmentSettings.devMode())
@@ -180,7 +168,7 @@ public class ApplicationConfiguration {
     
     @Bean
     public RestTemplate restTemplate(){
-        log.info("RestTemplate object created");
+        System.out.println("************************* RestTemplate object created*********************");
 
         SimpleClientHttpRequestFactory simpleCFactory = new  SimpleClientHttpRequestFactory();
         simpleCFactory.setOutputStreaming(false);

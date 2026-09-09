@@ -1,10 +1,13 @@
 package org.upyog.adv.web.models;
 
 import jakarta.validation.Valid;
-import java.util.List;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.ArrayList;
+import java.util.List;
 
 
+import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -33,7 +36,7 @@ public class AdvertisementSlotAvailabilityResponse   {
 	
 	public void addNewAdvertisementBookingApplication(AdvertisementSlotAvailabilityDetail slotAvailabiltityDetail) {
 		if(this.advertisementSlotAvailabiltityDetails == null) {
-			this.advertisementSlotAvailabiltityDetails = new ArrayList<>();
+			this.advertisementSlotAvailabiltityDetails = new ArrayList<AdvertisementSlotAvailabilityDetail>();
 		}
 		this.advertisementSlotAvailabiltityDetails.add(slotAvailabiltityDetail);
 	}
@@ -43,8 +46,6 @@ public class AdvertisementSlotAvailabilityResponse   {
 	private String draftId;
 	
 	private boolean slotBooked;
-	
-	private long timerValue;
 
 
 }

@@ -1,10 +1,11 @@
 import producer from "../kafka/producer";
 import { requestInfoToResponseInfo, upadteForAuditDetails } from "../utils";
-import { v4 as uuid4 } from "uuid";
+import uuid4 from "uuid/v4";
 import envVariables from "../envVariables";
 import { validateBillingSlabReq } from "../utils/modelValidation";
 import { mdmsData } from "../services/mdmsService";
-import { get, some, isEmpty } from "lodash";
+import get from "lodash/get";
+import some from "lodash/some";
 import { constants } from "../config/constants";
 
 const create = async (req, res, next) => {

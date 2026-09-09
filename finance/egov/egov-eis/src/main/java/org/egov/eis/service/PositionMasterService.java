@@ -105,7 +105,7 @@ public class PositionMasterService {
     }
 
     public Position getPositionById(final Long posId) {
-        return positionMasterRepository.findById(posId).orElse(null);
+        return positionMasterRepository.findOne(posId);
     }
 
     public List<Position> getAllPositions() {

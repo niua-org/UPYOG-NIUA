@@ -35,7 +35,7 @@ const NDCEmployeeHomeCard = () => {
     tableForm: tableOrderFormDefaultValues,
   };
 
-  const { isLoading: isInboxLoading, data: { table, statuses, totalCount, nearingSlaCount } = {} } = Digit.Hooks.ndc.useInbox({
+  const { isLoading: isInboxLoading, data: { table, statuses, totalCount, nearingSlaCount } = {} } = Digit.Hooks.noc.useInbox({
     tenantId,
     filters: { ...formInitValue },
     config: { enabled: formInitValue?.filterForm?.businessServiceArray?.length > 0 },
@@ -62,9 +62,9 @@ const NDCEmployeeHomeCard = () => {
         {
           count: !isInboxLoading ? totalCount : "",
           label: t("TOTAL_FSM"),
-          link: `/upyog-ui/employee/ndc/inbox`,
+          link: `/upyog-ui/employee/obps/inbox`,
         },
-        { count: !isInboxLoading ? nearingSlaCount : "-", label: t("TOTAL_NEARING_SLA"), link: `/upyog-ui/employee/ndc/inbox` },
+        { count: !isInboxLoading ? nearingSlaCount : "-", label: t("TOTAL_NEARING_SLA"), link: `/upyog-ui/employee/obps/inbox` },
       ],
       links: [
         {

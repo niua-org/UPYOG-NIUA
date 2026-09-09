@@ -2,20 +2,20 @@ package org.egov.infra.microservice.models;
 
 import java.util.List;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class TaxHeadMaster {
 
-    @SanitizeHtml
+    @SafeHtml
     private String id;
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
     private Category category;
-    @SanitizeHtml
+    @SafeHtml
     private String service;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String code;
     private List<GlCodeMaster> glCodes;
     private Boolean isDebit = false;

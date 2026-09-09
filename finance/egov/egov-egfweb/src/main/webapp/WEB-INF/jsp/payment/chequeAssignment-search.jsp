@@ -139,12 +139,9 @@
 		function loadBank(obj) {
 			var vTypeOfAccount = '<s:property value="%{typeOfAccount}"/>';
 			if (obj.options[obj.selectedIndex].value != -1)
-				<%-- LTS Migration Fix (Struts 7): pass asOnDate as its own
-				     query param. Concatenating '&asOnDate=' into fundId left
-				     the date unbound and the Bank AJAX empty. --%>
 				populatebank_branch({
-					fundId : obj.options[obj.selectedIndex].value,
-					asOnDate : date
+					fundId : obj.options[obj.selectedIndex].value
+							+ '&asOnDate=' + date
 				});
 		}
 		function loadBankAccount(obj) {
@@ -154,8 +151,7 @@
 				var x = obj.options[obj.selectedIndex].value.split("-");
 				document.getElementById("bankbranch").value = x[1];
 				populatebankaccount({
-					branchId : x[1],
-					asOnDate : date,
+					branchId : x[1] + '&asOnDate=' + date,
 					fundId : fund.options[fund.selectedIndex].value
 				});
 			}

@@ -65,14 +65,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.Resource;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.egov.infra.filestore.service.FileStoreService;
 import org.egov.infra.reporting.engine.ReportService;
 import org.egov.infra.reporting.engine.jasper.JasperReportService;
+import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.MethodInvokingFactoryBean;
@@ -113,7 +114,7 @@ public class ApplicationConfiguration {
         return new SessionLocaleResolver();
     }
 
-    @Bean(name = "cities")
+    @Bean(name = "cities", autowire = Autowire.BY_NAME)
     @DependsOn(value = "tenants")
     public List<String> cities() {
         final List<String> cities = new ArrayList<>(tenants);

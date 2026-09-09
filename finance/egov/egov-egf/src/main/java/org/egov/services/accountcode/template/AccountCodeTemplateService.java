@@ -25,7 +25,7 @@ import org.springframework.scheduling.quartz.AdaptableJobFactory;
 import org.springframework.stereotype.Service;
 
 import freemarker.template.TemplateNotFoundException;
-import org.hibernate.ObjectNotFoundException;
+import javassist.tools.rmi.ObjectNotFoundException;
 
 @Service
 public class AccountCodeTemplateService {

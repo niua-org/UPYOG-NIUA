@@ -28,14 +28,10 @@ public class SchemaDefinitionResponse {
 
     @Valid
     private ResponseInfo responseInfo = null;
-    
-    @JsonProperty("totalMasters")
-    private Integer totalMasters;
 
     @JsonProperty("SchemaDefinitions")
     @Valid
     private List<SchemaDefinition> schemaDefinitions = null;
-
 
 
     public SchemaDefinitionResponse addSchemaDefinitionsItem(SchemaDefinition schemaDefinitionsItem) {

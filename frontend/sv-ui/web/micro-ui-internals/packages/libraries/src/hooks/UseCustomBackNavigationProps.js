@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 /**
  * Custom hook to handle back button navigation
+ * @author Shivank - NIUA
  * 
  * @param {Object} config - Configuration object
  * @param {string} config.redirectPath - Path to redirect to when back button is clicked

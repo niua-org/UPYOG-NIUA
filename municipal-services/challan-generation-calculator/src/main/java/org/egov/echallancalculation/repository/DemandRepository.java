@@ -7,20 +7,24 @@ import org.egov.echallancalculation.web.models.demand.Demand;
 import org.egov.echallancalculation.web.models.demand.DemandRequest;
 import org.egov.echallancalculation.web.models.demand.DemandResponse;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 
 @Repository
-@RequiredArgsConstructor
 public class DemandRepository {
 
-    private final ServiceRequestRepository serviceRequestRepository;
-    private final ChallanConfiguration config;
-    private final ObjectMapper mapper;
+
+    @Autowired
+    private ServiceRequestRepository serviceRequestRepository;
+
+    @Autowired
+    private ChallanConfiguration config;
+
+    @Autowired
+    private ObjectMapper mapper;
 
 
     /**
@@ -33,7 +37,7 @@ public class DemandRepository {
         StringBuilder url = new StringBuilder(config.getBillingHost());
         url.append(config.getDemandCreateEndpoint());
         DemandRequest request = new DemandRequest(requestInfo,demands);
-        Object result = serviceRequestRepository.fetchResult(url,request).orElse(null);
+        Object result = serviceRequestRepository.fetchResult(url,request);
         DemandResponse response = null;
         try{
             response = mapper.convertValue(result,DemandResponse.class);
@@ -55,7 +59,7 @@ public class DemandRepository {
         StringBuilder url = new StringBuilder(config.getBillingHost());
         url.append(config.getDemandUpdateEndpoint());
         DemandRequest request = new DemandRequest(requestInfo,demands);
-        Object result = serviceRequestRepository.fetchResult(url,request).orElse(null);
+        Object result = serviceRequestRepository.fetchResult(url,request);
         DemandResponse response = null;
         try{
             response = mapper.convertValue(result,DemandResponse.class);

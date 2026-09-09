@@ -56,18 +56,16 @@ public class SubOccupancyService {
     private SubOccupancyRepository subOccupancyRepository;
 
     public SubOccupancy findById(final Long id) {
-        return subOccupancyRepository.findById(id).orElse(null);
+        return subOccupancyRepository.findOne(id);
     }
     
     public List<SubOccupancy> findAll() {
         return subOccupancyRepository.findAll();
     }
 
-    /*
     public List<SubOccupancy> findAllOrderByOrderNumber() {
-        return subOccupancyRepository.findAll(Sort.by(Sort.Direction.ASC, "orderNumber"));
+        return subOccupancyRepository.findAll(new Sort(Sort.Direction.ASC, "orderNumber"));
     }
-    */
     
     public List<SubOccupancy> findSubOccupanciesByOccupancy(String occupancy) {
         return subOccupancyRepository.findByOccupancyNameAndIsActiveTrueOrderByOrderNumberAsc(occupancy);

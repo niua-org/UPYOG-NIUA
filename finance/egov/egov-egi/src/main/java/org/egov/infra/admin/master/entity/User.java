@@ -63,12 +63,12 @@ import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 import org.joda.time.DateTime;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -108,16 +108,16 @@ public class User extends AbstractAuditable {
 
     private String salutation;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(min = 2, max = 64)
     private String guardian;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(min = 2, max = 64)
     private String guardianRelation;
 
     @NotNull
-    @SanitizeHtml
+    @SafeHtml
     @Length(min = 2, max = 100)
     @Audited
     private String name;
@@ -126,25 +126,25 @@ public class User extends AbstractAuditable {
     private Gender gender;
 
     @Pattern(regexp = Constants.MOBILE_NUM)
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 15)
     @Audited
     private String mobileNumber;
 
     @Email(regexp = Constants.EMAIL)
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 128)
     @Audited
     private String emailId;
 
-    @SanitizeHtml
+    @SafeHtml
     private String altContactNumber;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 10)
     private String pan;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 20)
     private String aadhaarNumber;
 

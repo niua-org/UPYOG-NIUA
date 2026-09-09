@@ -48,7 +48,6 @@ import java.util.Map;
 import jakarta.validation.Valid;
 
 import org.egov.collection.model.Payment;
-import org.egov.collection.model.PaymentRefundResponse;
 import org.egov.collection.model.PaymentRequest;
 import org.egov.collection.model.PaymentResponse;
 import org.egov.collection.model.PaymentSearchCriteria;
@@ -136,11 +135,7 @@ public class PaymentController {
    @ResponseBody
    public ResponseEntity<?> workflow(@RequestBody @Valid PaymentWorkflowRequest receiptWorkflowRequest, @PathVariable String moduleName) {
 
-        Object result = workflowService.performWorkflow(receiptWorkflowRequest);
-        if (result instanceof PaymentRefundResponse) {
-            return new ResponseEntity<>(result, HttpStatus.OK);
-        }
-        List<Payment> payments = (List<Payment>) result;
+        List<Payment> payments = workflowService.performWorkflow(receiptWorkflowRequest);
         return getSuccessResponse(payments, receiptWorkflowRequest.getRequestInfo());
     }
 

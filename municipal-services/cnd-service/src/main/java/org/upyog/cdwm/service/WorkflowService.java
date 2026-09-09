@@ -2,10 +2,12 @@ package org.upyog.cdwm.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.cdwm.config.CNDConfiguration;
@@ -29,15 +31,14 @@ import digit.models.coremodels.RequestInfoWrapper;
 @Service
 public class WorkflowService {
 
-	private final CNDConfiguration configs;
-	private final ServiceRequestRepository restRepo;
-	private final ObjectMapper mapper;
+	@Autowired
+	private CNDConfiguration configs;
 
-	public WorkflowService(CNDConfiguration configs, ServiceRequestRepository restRepo, ObjectMapper mapper) {
-		this.configs = configs;
-		this.restRepo = restRepo;
-		this.mapper = mapper;
-	}
+	@Autowired
+	private ServiceRequestRepository restRepo;
+
+	@Autowired
+	private ObjectMapper mapper;
 	
 	/**
 	 * Updates the workflow status based on the provided PaymentRequest or CNDApplicationRequest.
@@ -53,10 +54,11 @@ public class WorkflowService {
 		RequestInfo requestInfo;
 
 		if (paymentRequest != null) {
-			processInstance = getProcessInstanceForCnD(paymentRequest, null);
+			processInstance = getProcessInstanceForCnD(paymentRequest, null, null);
 			requestInfo = paymentRequest.getRequestInfo();
 		} else if (cndApplicationRequest != null) {
-			processInstance = getProcessInstanceForCnD(null, cndApplicationRequest.getCndApplication());
+			processInstance = getProcessInstanceForCnD(null, cndApplicationRequest.getCndApplication(),
+					cndApplicationRequest.getRequestInfo());
 			requestInfo = cndApplicationRequest.getRequestInfo();
 		} else {
 			throw new IllegalArgumentException("Both PaymentRequest and cndApplicationRequest cannot be null");
@@ -72,9 +74,11 @@ public class WorkflowService {
 	 * 
 	 * @param paymentRequest The payment request object
 	 * @param application The CND application detail
+	 * @param requestInfo The request information
 	 * @return A ProcessInstance object
 	 */
-	private ProcessInstance getProcessInstanceForCnD(PaymentRequest paymentRequest, CNDApplicationDetail application) {
+	private ProcessInstance getProcessInstanceForCnD(PaymentRequest paymentRequest, CNDApplicationDetail application,
+			RequestInfo requestInfo) {
 		ProcessInstance processInstance = new ProcessInstance();
 
 		if (paymentRequest != null) {
@@ -102,7 +106,7 @@ public class WorkflowService {
 					User user = new User();
 					user.setUuid(uuid);
 					return user;
-				}).toList();
+				}).collect(Collectors.toList());
 
 				processInstance.setAssignes(users);
 			}
@@ -121,9 +125,10 @@ public class WorkflowService {
 	 */
 	public State callWorkFlow(ProcessInstanceRequest workflowReq) {
 
+		ProcessInstanceResponse response = null;
 		StringBuilder url = new StringBuilder(configs.getWfHost().concat(configs.getWfTransitionPath()));
 		Object optional = restRepo.fetchResult(url, workflowReq);
-		ProcessInstanceResponse response = mapper.convertValue(optional, ProcessInstanceResponse.class);
+		response = mapper.convertValue(optional, ProcessInstanceResponse.class);
 		return response.getProcessInstances().get(0).getState();
 	}
 

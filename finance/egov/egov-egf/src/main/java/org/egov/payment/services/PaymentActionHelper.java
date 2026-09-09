@@ -99,21 +99,16 @@ import org.egov.services.payment.MiscbilldetailService;
 import org.egov.services.payment.PaymentService;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.HibernateException;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.SQLQuery;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * LTS Migration Notes:
- * 1. [Hibernate 6 Native Queries] Migrated deprecated SQLQuery to org.hibernate.query.NativeQuery.
- * 2. [Java 17 Defensive Null Safety] Added explicit null checks for EgBillregister and EgBillregistermis
- *    in setbillRegisterFunction() to prevent NullPointerExceptions.
- */
-@Service
+
 @Transactional(readOnly = true)
+@Service
 public class PaymentActionHelper {
 
     public static final String ZERO = "0";
@@ -313,18 +308,9 @@ public class PaymentActionHelper {
         return positionsForUser.contains(state.getOwnerPosition());
     }
 
-    /**
-     * LTS Migration Note [Java 17 Defensive Null Safety]:
-     * Added explicit validation checks for bill and bill.getEgBillregistermis() to prevent
-     * NullPointerExceptions when modifying function assignments on detached bills.
-     */
     @Transactional
     public EgBillregister setbillRegisterFunction(EgBillregister bill, CFunction function)
     {
-        if (bill == null)
-            throw new ValidationException("", "Bill register is required for payment");
-        if (bill.getEgBillregistermis() == null)
-            throw new ValidationException("", "Bill register MIS details are missing for payment");
         bill.getEgBillregistermis().setFunction(function);
         return bill;
     }
@@ -388,10 +374,8 @@ public class PaymentActionHelper {
                 remitDetail.setLastmodifieddate(currDate);
                 egRemittanceDetail.add(remitDetail);
             } else if (rbean.getRemittance_gl_Id() != null) {
-                // LTS Migration Note [Hibernate 6 Native Queries]:
-                // Migrated deprecated SQLQuery to org.hibernate.query.NativeQuery.
-				NativeQuery createSQLQuery = persistenceService.getSession()
-						.createNativeQuery("select * from eg_remittance_gl where id=:remGlid");
+				SQLQuery createSQLQuery = persistenceService.getSession()
+						.createSQLQuery("select * from eg_remittance_gl where id=:remGlid");
 				List<EgRemittanceGl> list = createSQLQuery.addEntity(EgRemittanceGl.class)
 						.setParameter("remGlid", rbean.getRemittance_gl_Id()).list();
                 if (!list.isEmpty()) {

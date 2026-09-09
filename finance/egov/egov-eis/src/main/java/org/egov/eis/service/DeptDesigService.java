@@ -65,7 +65,7 @@ public class DeptDesigService {
     }
 
     public DeptDesig findById(final Long id) {
-        return deptDesigRepository.findById(id).orElse(null);
+        return deptDesigRepository.findOne(id);
     }
 
     public DeptDesig findByDepartmentAndDesignation(final Long id, final Long designationId) {

@@ -8,6 +8,7 @@ import lombok.*;
 import org.egov.pg.constants.TransactionAdditionalFields;
 import org.egov.pg.web.models.User;
 import org.egov.tracer.annotations.CustomSafeHtml;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -182,8 +183,6 @@ public class Transaction {
     @JsonProperty("bankTransactionNo")
     private String bankTransactionNo;
 
-    @JsonProperty("atomTxnId")
-    private String atomTxnId;
 
     /**
      * Current status of the transaction

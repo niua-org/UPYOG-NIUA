@@ -11,6 +11,7 @@ import org.egov.ndc.web.model.demand.Demand;
 import org.egov.ndc.web.model.demand.DemandDetail;
 import org.egov.ndc.web.model.demand.DemandRequest;
 import org.egov.ndc.web.model.demand.DemandResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,16 +23,14 @@ import java.util.List;
 @Service
 public class DemandService {
 
-    private final NDCConfiguration ndcConfiguration;
-    private final ObjectMapper mapper;
-    private final ServiceRequestRepository repository;
+    @Autowired
+    private NDCConfiguration ndcConfiguration;
 
-    public DemandService(NDCConfiguration ndcConfiguration, ObjectMapper mapper,
-            ServiceRequestRepository repository) {
-        this.ndcConfiguration = ndcConfiguration;
-        this.mapper = mapper;
-        this.repository = repository;
-    }
+    @Autowired
+    private ObjectMapper mapper = new ObjectMapper();
+
+    @Autowired
+    private ServiceRequestRepository repository;
 
     public List<Demand> generateDemands(RequestInfo requestInfo, List<Calculation> calculations){
         List<Demand> demands = new ArrayList<>();

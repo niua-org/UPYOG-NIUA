@@ -51,7 +51,7 @@
 package org.egov.egf.web.actions.payment;
 
 import com.exilant.eGov.src.transactions.VoucherTypeForULB;
-import org.apache.struts2.validator.annotations.Validations;
+import com.opensymphony.xwork2.validator.annotations.Validations;
 
 import java.util.Date;
 import java.util.List;

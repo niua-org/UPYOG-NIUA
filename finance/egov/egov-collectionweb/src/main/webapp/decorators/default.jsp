@@ -94,28 +94,9 @@
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
 <html>
     <head>
-<%--
-	========================================================================================
-	Analytics Configuration Retrieval (Spring 6 / Servlet Context Compatibility):
-	========================================================================================
-	- Replaced legacy SpEL tag (<spring:eval expression="@environment.getProperty(...)"/>)
-	  with WebApplicationContextUtils lookup to avoid SpEL evaluation errors.
-	- Programmatically fetches Spring Environment properties ('analytics.enabled' and
-	  'analytics.config') from the WebApplicationContext and sets them as pageContext
-	  attributes for conditional rendering.
-	========================================================================================
---%>
-<%
-	org.springframework.web.context.WebApplicationContext _wac = org.springframework.web.context.support.WebApplicationContextUtils.getWebApplicationContext(application);
-	if (_wac != null && _wac.getEnvironment() != null) {
-		String _analyticsEnabled = _wac.getEnvironment().getProperty("analytics.enabled");
-		if (_analyticsEnabled != null) pageContext.setAttribute("analyticsEnabled", Boolean.valueOf(_analyticsEnabled));
-		String _analyticsConfig = _wac.getEnvironment().getProperty("analytics.config");
-		if (_analyticsConfig != null) pageContext.setAttribute("analyticsConfig", _analyticsConfig);
-	}
-%>
+		<spring:eval expression="@environment.getProperty('analytics.enabled')" scope="application" var="analyticsEnabled"/>
 		<c:if test="${analyticsEnabled}">
-			${analyticsConfig}
+			<spring:eval expression="@environment.getProperty('analytics.config')" scope="application"/>
 		</c:if>
         <%@ include file="/includes/meta.jsp" %>
         <meta name="_csrf" content="${_csrf.token}"/>

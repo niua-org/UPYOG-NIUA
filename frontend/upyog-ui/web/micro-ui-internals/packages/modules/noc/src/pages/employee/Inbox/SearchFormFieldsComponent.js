@@ -1,7 +1,3 @@
-/**
- * Renders search input fields for employee NOC Inbox.
- * Captures NOC Application Number and Source Reference (BPA) ID for inbox filtering.
- */
 import React, {Fragment} from "react"
 import { CardLabelError, SearchField, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";

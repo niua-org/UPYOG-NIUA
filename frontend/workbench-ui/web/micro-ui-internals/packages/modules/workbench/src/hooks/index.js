@@ -2,8 +2,6 @@ import { logoutV1 } from "./logout";
 import { UICreateConfigGenerator , getMDMSContextPath } from "./workbench";
 import utils from "../utils";
 import useLocalisationSearch from "./useLocalisationSearch";
-// Import the custom theme configuration editor hook to enable packages-wide override hooks mapping
-import { useThemeConfigEditor } from "./useThemeConfigEditor";
 
 const UserService = {
   logoutV1,
@@ -12,9 +10,7 @@ const UserService = {
 const workbench = {
   UICreateConfigGenerator,
   useLocalisationSearch,
-  getMDMSContextPath,
-  // Added useThemeConfigEditor to register the hook globally/locally in the workbench modules hook-mapping
-  useThemeConfigEditor
+  getMDMSContextPath
 };
 
 const contracts = {};

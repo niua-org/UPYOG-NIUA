@@ -134,7 +134,7 @@ public class OwnerInfo {
     @Size(max=300)
 	@CustomSafeHtml
     @JsonProperty("permanentAddress")
-    private Address permanentAddress;
+    private String permanentAddress;
 
     @Size(max=300)
 	@CustomSafeHtml

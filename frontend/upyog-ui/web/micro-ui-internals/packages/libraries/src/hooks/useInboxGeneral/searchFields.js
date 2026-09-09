@@ -35,7 +35,7 @@ const inboxSearchFields = {
     {
       label: "PTR_PET_TYPE",
       name: "petType",
-      type: "dropdown",
+      // minLength: "10",
       roles: [],
     },
     {
@@ -100,8 +100,8 @@ const inboxSearchFields = {
       roles: [],
     },
     {
-      label: "CHB_VENUE_TYPE_LABEL",
-      name: "venueType",
+      label: "CHB_COMMUNITY_HALL_NAME",
+      name: "communityHallCode",
       type: "Dropdown",
       roles: [],
     },
@@ -171,48 +171,6 @@ const inboxSearchFields = {
       },
       {
         label: "TP_MOBILE_NUMBER",
-        name: "mobileNumber",
-        type: "mobileNumber",
-        maxLength: 10,
-        minLength: 0,
-        roles: [],
-        pattern: "^$|[6-9][0-9]{9}",
-        errorMessages: {
-          pattern: "",
-          minLength: "",
-          maxLength: "",
-        },
-      },
-    ],
-    GC: [
-      {
-        label: "GC_APPLICATION_NUMBER_LABEL",
-        name: "applicationNumber",
-        roles: [],
-      },
-      {
-        label: "GC_MOBILE_NUMBER",
-        name: "mobileNumber",
-        type: "mobileNumber",
-        maxLength: 10,
-        minLength: 0,
-        roles: [],
-        pattern: "^$|[6-9][0-9]{9}",
-        errorMessages: {
-          pattern: "",
-          minLength: "",
-          maxLength: "",
-        },
-      },
-    ],
-    FIRENOC: [
-      {
-        label: "FN_APPLICATION_NUMBER_LABEL",
-        name: "applicationNumber",
-        roles: [],
-      },
-      {
-        label: "FN_MOBILE_NUMBER",
         name: "mobileNumber",
         type: "mobileNumber",
         maxLength: 10,

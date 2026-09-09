@@ -1,5 +1,6 @@
 package org.egov.asset.calculator.web.models;
 
+import java.util.List;
 import org.egov.asset.calculator.utils.CalculatorConstants;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,11 +24,14 @@ public class Calculation {
 	@JsonProperty("applicationNumber")
 	private String applicationNumber = null;
 
+//	@JsonProperty("fsm")
+//	private FSM fsm = null;
+
 	@NotNull
 	@JsonProperty("tenantId")
 	@Size(min = 2, max = 256)
 	private String tenantId = null;
 	
 	@JsonProperty("feeType")
-	private String feeType = CalculatorConstants.SUCCESS_MESSAGE;
+	String Message =  CalculatorConstants.SUCCESS_MESSAGE;
 }

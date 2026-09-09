@@ -47,20 +47,20 @@
  */
 package org.egov.commons;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
 import org.egov.infra.persistence.entity.AbstractAuditable;
 import org.egov.infra.persistence.validator.annotation.Unique;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Entity
 @Table(name = "Function")
@@ -76,15 +76,15 @@ public class CFunction extends AbstractAuditable {
     private Long id;
 
     @Length(max = 100, min = 2)
-    @SanitizeHtml
+    @SafeHtml
     private String name;
 
     @Length(max = 50, min = 2)
-    @SanitizeHtml
+    @SafeHtml
     private String code;
 
     @Length(max = 50)
-    @SanitizeHtml
+    @SafeHtml
     private String type;
 
     private int llevel;

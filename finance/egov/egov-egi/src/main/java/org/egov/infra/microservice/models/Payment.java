@@ -52,11 +52,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -73,12 +73,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @EqualsAndHashCode
 public class Payment {
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("id")
     private String id;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @Size(max=64)
     @JsonProperty("tenantId")
@@ -91,7 +91,7 @@ public class Payment {
     @JsonProperty("totalAmountPaid")
     private BigDecimal totalAmountPaid;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=128)
     @JsonProperty("transactionNumber")
     private String transactionNumber;
@@ -107,7 +107,7 @@ public class Payment {
     @JsonProperty("instrumentDate")
     private Long instrumentDate;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=128)
     @JsonProperty("instrumentNumber")
     private String instrumentNumber;
@@ -115,7 +115,7 @@ public class Payment {
     @JsonProperty("instrumentStatus")
     private InstrumentStatusEnum instrumentStatus;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("ifscCode")
     private String ifscCode;
@@ -130,34 +130,34 @@ public class Payment {
     @Valid
     private List<PaymentDetail> paymentDetails;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=128)
     @NotNull
     @JsonProperty("paidBy")
     private String paidBy = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @NotNull
     @JsonProperty("mobileNumber")
     private String mobileNumber = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=128)
     @JsonProperty("payerName")
     private String payerName = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=1024)
     @JsonProperty("payerAddress")
     private String payerAddress = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("payerEmail")
     private String payerEmail = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("payerId")
     private String payerId = null;

@@ -58,9 +58,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface FeatureRepository extends JpaRepository<Feature, Long> {
+public interface FeatureRepository extends JpaRepository<Feature, Long>, RevisionRepository<Feature, Long, Integer> {
 
-    Long countByRolesAndActions(Role role, Action action);
+    Long countByRolesInAndActionsIn(Role role, Action action);
 
     List<Feature> findByModuleId(Long moduleId);
 }

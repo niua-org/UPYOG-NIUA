@@ -51,7 +51,7 @@ package org.egov.model.masters;
 import org.egov.infra.persistence.validator.annotation.OptionalPattern;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 /**
  * 
@@ -60,12 +60,12 @@ import org.egov.infra.validation.SanitizeHtml;
  */
 public class WorkOrderSearchRequest {
 
-	@SanitizeHtml
+	@SafeHtml
 	@Length(max = 100, message = "Maximum of 100 Characters allowed for Order Number")
 	@OptionalPattern(regex = FinancialConstants.alphaNumericwithspecialcharForContraWOAndSupplierName, message = "Special Characters are not allowed in Order Number")
 	private String orderNumber;
 
-	@SanitizeHtml
+	@SafeHtml
 	@Length(max = 100, message = "Maximum of 100 Characters allowed for Name")
 	@OptionalPattern(regex = FinancialConstants.alphaNumericwithspecialcharForContraWOAndSupplierName, message = "Special Characters are not allowed in Name")
 	private String name;

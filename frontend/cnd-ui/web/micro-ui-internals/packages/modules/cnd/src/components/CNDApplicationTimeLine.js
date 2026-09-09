@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import PropTypes from 'prop-types';
 import Caption from "./Caption";
+import { cndStyles } from "../utils/cndStyles";
 
 
 /**
@@ -89,7 +90,7 @@ const CNDApplicationTimeLine = ({ application, id, userType }) => {
     switch (nextAction.action) {
       case "PAY":
         return userType === 'citizen' ? (
-          <div className="cnd-timeline-pay-btn-wrapper">
+          <div style={cndStyles.payButton}>
             <Link
               to={{
                 pathname: `/cnd-ui/citizen/payment/my-bills/cnd-service/${application?.applicationNumber}`,
@@ -127,7 +128,7 @@ const CNDApplicationTimeLine = ({ application, id, userType }) => {
       {!isLoading && (
         <Fragment>
           {data?.timeline?.length > 0 && (
-            <CardSectionHeader className="cnd-timeline-header">
+            <CardSectionHeader style={cndStyles.timelineHeader}>
               {t("CS_APPLICATION_DETAILS_APPLICATION_TIMELINE")}
             </CardSectionHeader>
           )}

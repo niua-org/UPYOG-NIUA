@@ -2,6 +2,8 @@ package org.upyog.cdwm.web.models.user;
 
 import lombok.*;
 
+import java.util.Date;
+
 @Getter
 @Setter
 @Builder

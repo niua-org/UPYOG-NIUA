@@ -52,21 +52,21 @@ import static org.egov.commons.Bankaccount.SEQ_BANKACCOUNT;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import org.egov.commons.utils.BankAccountType;
 import org.egov.commons.utils.CommonsConstants;
@@ -74,7 +74,7 @@ import org.egov.infra.persistence.entity.AbstractAuditable;
 import org.egov.infra.persistence.validator.annotation.OptionalPattern;
 import org.egov.infra.persistence.validator.annotation.Unique;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Entity
 @Table(name = "BANKACCOUNT")
@@ -106,21 +106,21 @@ public class Bankaccount extends AbstractAuditable implements java.io.Serializab
 
     @NotNull
     @Length(max = 20)
-    @SanitizeHtml
+    @SafeHtml
     @OptionalPattern(regex = CommonsConstants.numericwithoutspecialchar, message = "Special Characters are not allowed in Accountnumber")
     private String accountnumber;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     private String accounttype;
 
-    @SanitizeHtml
+    @SafeHtml
     private String narration;
 
     @NotNull
     private Boolean isactive;
 
-    @SanitizeHtml
+    @SafeHtml
     private String payTo;
 
     @NotNull

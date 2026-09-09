@@ -48,13 +48,13 @@
 package org.egov.commons.dao;
 
 import org.egov.commons.SubScheme;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Repository
@@ -81,7 +81,7 @@ public class SubSchemeHibernateDAO  implements SubSchemeDAO {
     }
 
     public List<SubScheme> findAll() {
-        return (List<SubScheme>) getCurrentSession().createQuery("from SubScheme", SubScheme.class).list();
+        return (List<SubScheme>) getCurrentSession().createCriteria(SubScheme.class).list();
     }
 
     @PersistenceContext
@@ -96,14 +96,14 @@ public class SubSchemeHibernateDAO  implements SubSchemeDAO {
     @Override
     public SubScheme getSubSchemeById(final Integer id) {
         final Query query = getCurrentSession().createQuery("from SubScheme s where s.id=:subschemeid");
-        query.setParameter("subschemeid", id);
+        query.setInteger("subschemeid", id);
         return (SubScheme) query.uniqueResult();
     }
 
     @Override
     public SubScheme getSubSchemeByCode(final String code) {
         final Query query = getCurrentSession().createQuery("from SubScheme s where s.code=:subschemecode");
-        query.setParameter("subschemecode", code);
+        query.setString("subschemecode", code);
         return (SubScheme) query.uniqueResult();
     }
 }

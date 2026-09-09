@@ -55,6 +55,7 @@ import org.egov.commons.utils.EntityType;
 import org.egov.infra.validation.exception.ValidationException;
 import org.egov.infstr.services.PersistenceService;
 import org.egov.masters.model.AccountEntity;
+import org.hibernate.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -63,10 +64,6 @@ import java.util.List;
 /**
  * @author mani
  *
- */
-/**
- * LTS Migration Notes:
- * 1. [Hibernate 6 Query API] Migrated from deprecated org.hibernate.Query to org.hibernate.query.Query.
  */
 @Deprecated
 @Transactional(readOnly = true)
@@ -123,7 +120,7 @@ public class AccountEntityService extends PersistenceService<AccountEntity, Inte
                 ids.add(id.intValue());
 
         List<EntityType> entities = new ArrayList<EntityType>();
-        final org.hibernate.query.Query entitysQuery = getSession().createQuery(" from AccountEntity where id in ( :IDS )");
+        final Query entitysQuery = getSession().createQuery(" from AccountEntity where id in ( :IDS )");
         entitysQuery.setParameterList("IDS", ids);
         entities = entitysQuery.list();
         return entities;

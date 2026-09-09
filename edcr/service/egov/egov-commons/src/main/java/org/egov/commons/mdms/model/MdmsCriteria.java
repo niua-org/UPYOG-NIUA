@@ -2,8 +2,8 @@ package org.egov.commons.mdms.model;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public class MdmsCriteria {
 

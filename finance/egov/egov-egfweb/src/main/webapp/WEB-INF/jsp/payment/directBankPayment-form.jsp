@@ -56,12 +56,9 @@
 	<td class="greybox"></td>
 	<td class="greybox"><s:text name="bank" /> <span class="greybox"><span
 			class="mandatory1">*</span></span></td>
-	<%-- LTS Migration Fix (Struts 7 / WildFly 40): do not prefix url with '/'.
-	     ajaxdropdown.tag concatenates contextPath + '/' + url; a leading slash
-	     produced //voucher/... and YUI failed ("Unable to load bankId"). --%>
 	<egov:ajaxdropdown id="bankId" fields="['Text','Value']"
 		dropdownId="bankId"
-		url="voucher/common-ajaxLoadBanksByFundAndType.action" />
+		url="/voucher/common-ajaxLoadBanksByFundAndType.action" />
 	<td class="greybox"><s:select name="commonBean.bankId" id="bankId"
 			list="dropdownData.bankList" listKey="bankBranchId"
 			listValue="bankBranchName" headerKey="" headerValue="%{getText('lbl.choose.options')}"
@@ -89,7 +86,7 @@
 		<s:textfield name="accnumnar" id="accnumnar"
 			value="%{commonBean.accnumnar}" readonly="true" tabindex="-1" /></td>
 	<egov:updatevalues id="availableBalance" fields="['Text']"
-		url="payment/payment-ajaxGetAccountBalance.action" />
+		url="/payment/payment-ajaxGetAccountBalance.action" />
 	<td class="bluebox" id="balanceText"><s:text
 			name="balance.available" /></td>
 	<td class="bluebox" id="balanceAvl"><s:textfield

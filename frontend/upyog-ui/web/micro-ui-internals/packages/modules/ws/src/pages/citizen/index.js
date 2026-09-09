@@ -4,14 +4,10 @@ import { Routes, useLocation, Route } from "react-router-dom";
 import { PrivateRoute, BackButton } from "@nudmcdgnpm/digit-ui-react-components";
 import TestAcknowledgment from "./TestAcknowledgment";
 import { WSMyApplications } from "./WSMyApplications";
-import "../../css/ws-inline-auto.css";
-const App = ({
-  path
-}) => {
+
+const App = ({ path }) => {
   const location = useLocation();
-  const {
-    t
-  } = useTranslation();
+  const { t } = useTranslation();
   let isCommonPTPropertyScreen = window.location.href.includes("/ws/create-application/property-details");
   let isAcknowledgement = window.location.href.includes("/acknowledgement") || window.location.href.includes("/disconnect-acknowledge");
   const WSDisconnectAcknowledgement = Digit?.ComponentRegistryService?.getComponent("WSDisconnectAcknowledgement");
@@ -24,6 +20,7 @@ const App = ({
     }
     return goBacktoFromProperty;
   };
+
   const WSCreate = Digit?.ComponentRegistryService?.getComponent("WSCreate");
   const WSDisconnection = Digit?.ComponentRegistryService?.getComponent("WSDisconnection");
   const WSRestoration = Digit?.ComponentRegistryService?.getComponent("WSRestoration");
@@ -38,9 +35,10 @@ const App = ({
   const WSReSubmitDisconnectionApplication = Digit?.ComponentRegistryService?.getComponent("WSReSubmitDisconnectionApplication");
   const WSMyConnections = Digit?.ComponentRegistryService?.getComponent("WSMyConnections");
   const WNSMyBillsComponent = Digit?.ComponentRegistryService?.getComponent("WNSMyBillsComponent");
-  return <React.Fragment>
+  return (
+    <React.Fragment>
       <div className="ws-citizen-wrapper">
-        {!isAcknowledgement && <BackButton /* isCommonPTPropertyScreen={isCommonPTPropertyScreen} */getBackPageNumber={getBackPageNumber} className="ws-auto-255">
+        {!isAcknowledgement && <BackButton style={{ border: "none" }} /* isCommonPTPropertyScreen={isCommonPTPropertyScreen} */ getBackPageNumber={getBackPageNumber}>
           {t("CS_COMMON_BACK")}
         </BackButton>}
         <Routes>
@@ -65,6 +63,8 @@ const App = ({
           <Route path={`/modify-connection/:tenantId`} element={<PrivateRoute><WSCitizenEditApplication /></PrivateRoute>} />
         </Routes>
       </div>
-    </React.Fragment>;
+    </React.Fragment>
+  );
 };
+
 export default App;

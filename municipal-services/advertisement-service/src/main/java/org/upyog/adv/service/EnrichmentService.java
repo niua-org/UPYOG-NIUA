@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -44,54 +45,65 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EnrichmentService {
 
-	private final BookingConfiguration config;
-	private final IdGenRepository idGenRepository;
-	private final BookingRepository bookingRepository;
+	@Autowired
+	private BookingConfiguration config;
 
-	public EnrichmentService(BookingConfiguration config, IdGenRepository idGenRepository,
-			@Lazy BookingRepository bookingRepository) {
-		this.config = config;
-		this.idGenRepository = idGenRepository;
-		this.bookingRepository = bookingRepository;
-	}
+	@Autowired
+	private IdGenRepository idGenRepository;
+	
+	@Autowired
+	@Lazy
+	private BookingRepository bookingRepository;
 
 	public void enrichCreateBookingRequest(BookingRequest bookingRequest) {
 		String bookingId = BookingUtil.getRandonUUID();
 		log.info("Enriching booking request for booking id :" + bookingId);
-
+		
 		BookingDetail bookingDetail = bookingRequest.getBookingApplication();
 		RequestInfo requestInfo = bookingRequest.getRequestInfo();
 		AuditDetails auditDetails = BookingUtil.getAuditDetails(
-				String.valueOf(bookingRequest.getRequestInfo().getUserInfo().getUuid()), true);
-
+			    String.valueOf(bookingRequest.getRequestInfo().getUserInfo().getUuid()), 
+			    true
+			);
+		
 		bookingDetail.setAuditDetails(auditDetails);
 		bookingDetail.setBookingId(bookingId);
 		bookingDetail.setApplicationDate(auditDetails.getCreatedTime());
 		bookingDetail.setBookingStatus(BookingStatusEnum.valueOf(bookingDetail.getBookingStatus()).toString());
-
-		bookingDetail.getCartDetails().forEach(cart -> {
+		
+		
+		//Updating id and status for cart details
+		bookingDetail.getCartDetails().stream().forEach(cart -> {
 			cart.setBookingId(bookingId);
+			
 			cart.setCartId(BookingUtil.getRandonUUID());
+			//Check cart staus before setting TODO: booking_created
 			cart.setStatus(BookingStatusEnum.valueOf(cart.getStatus()).toString());
 			cart.setAuditDetails(auditDetails);
+			
+			
 		});
-
-		bookingDetail.getUploadedDocumentDetails().forEach(document -> {
+		
+		//Updating id booking in documents
+		bookingDetail.getUploadedDocumentDetails().stream().forEach(document -> {
 			document.setBookingId(bookingId);
 			document.setDocumentDetailId(BookingUtil.getRandonUUID());
 			document.setAuditDetails(auditDetails);
+			
 		});
+
 
 		bookingDetail.getApplicantDetail().setBookingId(bookingId);
 		bookingDetail.getApplicantDetail().setApplicantDetailId(BookingUtil.getRandonUUID());
 		bookingDetail.getApplicantDetail().setAuditDetails(auditDetails);
-
+	
+		
 		bookingDetail.getAddress().setAddressId(BookingUtil.getRandonUUID());
 		bookingDetail.getAddress().setApplicantDetailId(bookingDetail.getApplicantDetail().getApplicantDetailId());
 
 		List<String> customIds = getIdList(requestInfo, bookingDetail.getTenantId(),
 				config.getAdvertisementBookingIdKey(), config.getAdvertisementBookingIdFromat(), 1);
-
+		
 		log.info("Enriched booking request for booking no :" + customIds.get(0));
 
 		bookingDetail.setBookingNo(customIds.get(0));
@@ -110,50 +122,57 @@ public class EnrichmentService {
 	 * @return List of ids generated using idGen service
 	 */
 	private List<String> getIdList(RequestInfo requestInfo, String tenantId, String idKey, String idformat, int count) {
-		List<IdResponse> idResponses = idGenRepository.getId(requestInfo, tenantId, idKey, idformat, count)
+		 List<IdResponse> idResponses = idGenRepository.getId(requestInfo, tenantId, idKey, idformat, count)
 				.getIdResponses();
+		
 
 		if (CollectionUtils.isEmpty(idResponses))
 			throw new CustomException("IDGEN ERROR", "No ids returned from idgen Service");
 
-		return idResponses.stream().map(IdResponse::getId).toList();
-
+		return idResponses.stream().map(IdResponse::getId).collect(Collectors.toList());
+	
 	}
 
+	//This enriches the booking request, if status is not null then it updates the booking status in booking detail and cart detail, also updates the payment date and audit details
 	public void enrichUpdateBookingRequest(BookingRequest bookingRequest, BookingStatusEnum statusEnum) {
 		AuditDetails auditDetails = BookingUtil.getAuditDetails(
-				String.valueOf(bookingRequest.getRequestInfo().getUserInfo().getUuid()), Boolean.FALSE);
+			    String.valueOf(bookingRequest.getRequestInfo().getUserInfo().getUuid()), 
+			    Boolean.FALSE
+			);
 
 		BookingDetail bookingDetail = bookingRequest.getBookingApplication();
-		if (statusEnum != null) {
+		if(statusEnum != null) {
 			bookingDetail.setBookingStatus(statusEnum.toString());
-			bookingDetail.getCartDetails().forEach(cart -> cart.setStatus(statusEnum.toString()));
+			bookingDetail.getCartDetails().stream().forEach(cart -> {
+				cart.setStatus(statusEnum.toString());
+			});
 		}
 		bookingRequest.getBookingApplication().setPaymentDate(auditDetails.getLastModifiedTime());
 		bookingRequest.getBookingApplication().setAuditDetails(auditDetails);
-
+		
 	}
-
+	
 	public void enrichCreateAdvertisementDraftApplicationRequest(BookingRequest bookingRequest) {
+	 
+	    List<AdvertisementDraftDetail> draftData = bookingRepository
+	            .getDraftData(bookingRequest.getRequestInfo().getUserInfo().getUuid());
 
-		List<AdvertisementDraftDetail> draftData = bookingRepository
-				.getDraftData(bookingRequest.getRequestInfo().getUserInfo().getUuid());
+	    if (draftData != null && !draftData.isEmpty()) {	      
+	        String draftId = draftData.get(0).getDraftId(); 
+	        log.info("Enriching create draft street vending application with draft id: " + draftId);
 
-		if (draftData != null && !draftData.isEmpty()) {
-			String draftId = draftData.get(0).getDraftId();
-			log.info("Enriching create draft street vending application with draft id: " + draftId);
+	        BookingDetail bookingDetail = bookingRequest.getBookingApplication();
+	        RequestInfo requestInfo = bookingRequest.getRequestInfo();
+	        AuditDetails auditDetails = BookingUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
 
-			BookingDetail bookingDetail = bookingRequest.getBookingApplication();
-			RequestInfo requestInfo = bookingRequest.getRequestInfo();
-			AuditDetails auditDetails = BookingUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), true);
-
-			bookingDetail.setDraftId(draftId);
-			bookingDetail.setAuditDetails(auditDetails);
-		} else {
-			log.warn("No draft data found for UUID: " + bookingRequest.getRequestInfo().getUserInfo().getUuid());
-		}
+	        bookingDetail.setDraftId(draftId);
+	        bookingDetail.setAuditDetails(auditDetails);
+	    } else {
+	        log.warn("No draft data found for UUID: " + bookingRequest.getRequestInfo().getUserInfo().getUuid());
+	    }
 	}
 
+	
 	public void enrichUpdateAdvertisementDraftApplicationRequest(BookingRequest bookingRequest) {
 		BookingDetail bookingDetail = bookingRequest.getBookingApplication();
 		log.info("Enriching update draft street vending application with draft id :" + bookingDetail.getDraftId());
@@ -161,7 +180,7 @@ public class EnrichmentService {
 		AuditDetails auditDetails = BookingUtil.getAuditDetails(requestInfo.getUserInfo().getUuid(), false);
 
 		bookingDetail.setAuditDetails(auditDetails);
-
+		
 	}
 
 }

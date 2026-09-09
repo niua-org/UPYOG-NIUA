@@ -1,6 +1,10 @@
-FROM node:22.0.0-alpine AS build
+FROM upyogio/alpine-node-builder-14:yarn AS build
+RUN apk update && apk upgrade
 RUN apk add --no-cache git>2.30.0
-
+RUN yarn add @nudmcdgnpm/digit-ui-libraries
+RUN yarn add @upyog/digit-ui-module-core
+RUN yarn add @upyog/digit-ui-module-common
+RUN yarn add @nudmcdgnpm/upyog-ui-module-cnd
 
 ARG WORK_DIR
 WORKDIR /app
@@ -12,9 +16,11 @@ RUN ls -lah
 
 #RUN node web/envs.js
 RUN cd web/ \
-    && node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1024*1024))' \
+    && node envs.js \
+    && node -e 'console.log(v8.getHeapStatistics().heap_size_limit/(1792*1792))' \
+    &&  ./install-deps.sh \
     && yarn install \
-    && yarn build  
+    && yarn build 
     
 
 FROM nginx:mainline-alpine

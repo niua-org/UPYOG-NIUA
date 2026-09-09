@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import upyog.service.EstateService;
 import upyog.util.ResponseInfoFactory;
-import upyog.service.RentScheduler;
 import upyog.web.models.*;
 
 import java.util.List;
@@ -26,9 +25,6 @@ public class EstateController {
 
     @Autowired
     private final ResponseInfoFactory responseInfoFactory;
-
-    @Autowired
-    private final RentScheduler rentScheduler;
 
     /**
      * Creates a new allotment in the estate management system.
@@ -133,11 +129,4 @@ public class EstateController {
 
 //    @PostMapping("/advancePayment")
 //    public ResponseEntity<PaymentResponse>
-
-    @PostMapping("/scheduler/v1/_trigger")
-    public ResponseEntity<String> triggerScheduler(@RequestBody SchedulerRequest request) {
-        log.info("Manual scheduler trigger requested for billingDate: {}", request.getBillingDate());
-        String result = rentScheduler.triggerManually(request.getRequestInfo(), request.getBillingDate());
-        return ResponseEntity.ok(result);
-    }
 }

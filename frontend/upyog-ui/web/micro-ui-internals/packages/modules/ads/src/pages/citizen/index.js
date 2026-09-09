@@ -3,8 +3,9 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { shouldHideBackButton } from "../../utils";
 import { useTranslation } from "react-i18next";
-import "../../css/ads-inline-auto.css";
+
 const hideBackButtonConfig = [];
+
 const App = () => {
   // const { path, url, ...match } = Digit.Hooks.useModuleBasePath();
   const { t } = useTranslation();
@@ -26,4 +27,5 @@ const ADSApplicationDetails = Digit?.ComponentRegistryService?.getComponent("ADS
     </span>
   );
 };
+
 export default App;

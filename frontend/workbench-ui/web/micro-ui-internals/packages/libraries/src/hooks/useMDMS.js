@@ -1,50 +1,30 @@
-import { queryTemplate } from "../common/queryTemplate"; 
 import { MdmsService } from "../services/elements/MDMS";
+import { useQuery } from "react-query";
 
 const useMDMS = (tenantId, moduleCode, type, config = {}, payload = []) => {
   const usePaymentGateway = () => {
-    return queryTemplate({
-      queryKey: ["PAYMENT_GATEWAY"],
-      queryFn: () => MdmsService.getPaymentGateway(tenantId, moduleCode, type),
-      config: {
-        select: (data) => {
-          return data?.[moduleCode]?.[type].filter((e) => e.active).map(({ gateway }) => gateway);
-        },
-        ...config,
-      },                                                  
+    return useQuery("PAYMENT_GATEWAY", () => MdmsService.getPaymentGateway(tenantId, moduleCode, type), {
+      select: (data) => {
+        return data?.[moduleCode]?.[type].filter((e) => e.active).map(({ gateway }) => gateway);
+      },
+      ...config,
     });
   };
 
   const useReceiptKey = () => {
-    return queryTemplate({
-      queryKey: ["RECEIPT_KEY"],
-      queryFn: () => MdmsService.getReceiptKey(tenantId, moduleCode, type),
-      config,
-    });
+    return useQuery("RECEIPT_KEY", () => MdmsService.getReceiptKey(tenantId, moduleCode, type), config);
   };
 
   const useBillsGenieKey = () => {
-    return queryTemplate({
-      queryKey: ["BILLS_GENIE_KEY"],
-      queryFn: () => MdmsService.getBillsGenieKey(tenantId, moduleCode, type),
-      config,
-    });
+    return useQuery("BILLS_GENIE_KEY", () => MdmsService.getBillsGenieKey(tenantId, moduleCode, type), config);
   };
 
   const useFSTPPlantInfo = () => {
-    return queryTemplate({
-      queryKey: ["FSTP_PLANTINFO"],
-      queryFn: () => MdmsService.getFSTPPlantInfo(tenantId, moduleCode, type),
-      config,
-    });
+    return useQuery("FSTP_PLANTINFO", () => MdmsService.getFSTPPlantInfo(tenantId, moduleCode, type), config);
   };
 
   const _default = () => {
-    return queryTemplate({
-      queryKey: ["DEFAULT"],
-      queryFn: () => MdmsService.getMultipleTypes(tenantId, moduleCode, type),
-      config,
-    });
+    return useQuery([tenantId, moduleCode, type], () => MdmsService.getMultipleTypes(tenantId, moduleCode, type), config);
   };
 
   switch (type) {

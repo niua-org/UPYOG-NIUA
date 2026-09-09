@@ -42,7 +42,7 @@ const getTimelineCaptions = (checkpoint, index, arr, t) => {
       {comment?.length > 0 && (
         <div className="TLComments">
           <h3>{t("WF_COMMON_COMMENTS")}</h3>
-          <p className="cg-overflow-x-scroll">{comment}</p>
+          <p style={{ overflowX: "scroll" }}>{comment}</p>
         </div>
       )}
 
@@ -56,7 +56,7 @@ const getTimelineCaptions = (checkpoint, index, arr, t) => {
         </div>
       )}
 
-      <div className="cg-margin-top-8">
+      <div style={{ marginTop: "8px" }}>
         {caption.date && <p>{caption.date}</p>}
         {caption.name && <p>{caption.name}</p>}
         {caption.source && <p>{t("ES_COMMON_FILED_VIA_" + caption?.source?.toUpperCase())}</p>}
@@ -221,7 +221,7 @@ const ChallanApplicationDetails = () => {
 
   if (reciept_data && reciept_data?.Payments.length > 0 && !recieptDataLoading) {
     dowloadOptions.push({
-      label: t("CG_FEE_RECIEPT"),
+      label: t("PTR_FEE_RECIEPT"),
       onClick: () => printChallanReceipt({ tenantId: reciept_data?.Payments[0]?.tenantId, payments: reciept_data?.Payments[0] }),
     });
   }

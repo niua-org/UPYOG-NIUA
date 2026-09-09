@@ -59,7 +59,7 @@ import org.springframework.data.repository.history.RevisionRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.QueryHint;
+import javax.persistence.QueryHint;
 import java.util.List;
 import java.util.Set;
 

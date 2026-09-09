@@ -52,15 +52,13 @@ import org.apache.commons.lang.StringUtils;
 import org.egov.commons.CChartOfAccounts;
 import org.egov.model.recoveries.Recovery;
 import org.egov.model.repository.RecoveryRepository;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import java.util.Collections;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Service("remittanceRecoveryService")
@@ -87,11 +85,11 @@ public class RecoveryService {
     }
 
     public List<Recovery> findAll() {
-        return recoveryRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return recoveryRepository.findAll(new Sort(Sort.Direction.ASC, "name"));
     }
 
     public Recovery findOne(Long id) {
-        return recoveryRepository.findById(id).orElse(null);
+        return recoveryRepository.findOne(id);
     }
 
     public List<Recovery> search(Recovery recovery) {
@@ -112,26 +110,8 @@ public class RecoveryService {
 				chartOfAccounts, type, recoveryName);
 	}
 
-    /**
-     * LTS Migration Fix (Struts 7 & Hibernate 6): fetch {@code chartofaccounts}
-     * and unproxy it while the session is open. Deduction Payments
-     * {@code s:select} cannot read a ByteBuddy GL-code proxy, which left
-     * Recovery Code as Choose only.
-     */
     public List<Recovery> getAllActiveRecoverys() {
-        final List<Recovery> recoveries = entityManager.createQuery(
-                "select distinct r from Recovery r left join fetch r.chartofaccounts where r.isactive = true order by r.type",
-                Recovery.class).getResultList();
-        if (recoveries == null)
-            return Collections.emptyList();
-        for (final Recovery recovery : recoveries) {
-            if (recovery.getChartofaccounts() != null) {
-                Hibernate.initialize(recovery.getChartofaccounts());
-                recovery.setChartofaccounts(
-                        (CChartOfAccounts) Hibernate.unproxy(recovery.getChartofaccounts()));
-            }
-        }
-        return recoveries;
+        return recoveryRepository.findByIsactive(true);
     }
 
     public List<Recovery> getByAccountCode(CChartOfAccounts chartOfAccounts) {

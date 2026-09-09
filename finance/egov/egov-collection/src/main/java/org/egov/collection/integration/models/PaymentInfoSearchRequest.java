@@ -47,12 +47,7 @@
  */
 package org.egov.collection.integration.models;
 
-/*
- * FasterXML Jackson 2.x Migration:
- * Replaced legacy org.codehaus.jackson.annotate.JsonIgnore with com.fasterxml.jackson.annotation.JsonIgnore
- * for JSON serialization control under Jackson 2.x.
- */
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.Date;
 

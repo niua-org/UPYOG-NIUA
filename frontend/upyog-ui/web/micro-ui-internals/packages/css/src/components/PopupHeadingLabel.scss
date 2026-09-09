@@ -1,9 +1,7 @@
 .popupModalHeading{
-    @apply flex mb-lg;
-    gap: 12px;
+    @apply flex gap-3 mb-lg;
     .headingIconAndLabel{
-        @apply flex items-center;
-        gap: 12px;
+        @apply flex gap-3 items-center;
         svg{
             @apply w-6 h-4;
         }

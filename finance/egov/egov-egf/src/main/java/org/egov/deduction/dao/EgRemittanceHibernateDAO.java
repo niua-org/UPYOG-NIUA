@@ -55,11 +55,12 @@ import org.egov.commons.CFinancialYear;
 import org.egov.commons.Fund;
 import org.egov.deduction.model.EgRemittance;
 import org.egov.model.recoveries.Recovery;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 /**
@@ -93,7 +94,7 @@ public class EgRemittanceHibernateDAO {
     }
 
     public List<EgRemittance> findAll() {
-        return getCurrentSession().createQuery("from EgRemittance", EgRemittance.class).list();
+        return (List<EgRemittance>) getCurrentSession().createCriteria(EgRemittance.class).list();
     }
 
     @PersistenceContext
@@ -109,7 +110,7 @@ public class EgRemittanceHibernateDAO {
 
     public List<EgRemittance> getEgRemittanceFilterBy(final Fund fund, final Recovery recovery, final String month,
             final CFinancialYear financialyear) {
-        org.hibernate.query.Query qry;
+        Query qry;
         final StringBuffer qryStr = new StringBuffer();
         List<EgRemittance> egRemittanceList = null;
         qryStr.append("From EgRemittance rmt where rmt.voucherheader.type='Payment' and rmt.voucherheader.status=0");
@@ -135,13 +136,13 @@ public class EgRemittanceHibernateDAO {
         qry = getCurrentSession().createQuery(qryStr.toString());
 
         if (fund != null)
-            qry.setParameter("fund", fund.getId());
+            qry.setEntity("fund", fund);
         if (recovery != null)
-            qry.setParameter("recovery", recovery.getId());
+            qry.setEntity("recovery", recovery);
         if (month != null)
-            qry.setParameter("month", month);
+            qry.setString("month", month);
         if (financialyear != null)
-            qry.setParameter("financialyear", financialyear.getId());
+            qry.setEntity("financialyear", financialyear);
 
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("qryStr " + qryStr.toString());

@@ -1,27 +1,27 @@
-import { queryTemplate } from "../common/queryTemplate";
 import { MdmsServiceV2 } from "../services/elements/MDMSV2";
+import { useQuery } from "react-query";
 
 const useMDMS = (tenantId, moduleCode, type, config = {}, payload = []) => {
   const usePaymentGateway = () => {
-    return queryTemplate({ queryKey: ["PAYMENT_GATEWAY"], queryFn: () => MdmsServiceV2.getPaymentGateway(tenantId, moduleCode, type), config: {
+    return useQuery("PAYMENT_GATEWAY", () => MdmsServiceV2.getPaymentGateway(tenantId, moduleCode, type), {
       select: (data) => {
         return data?.[moduleCode]?.[type].filter((e) => e.active).map(({ gateway }) => gateway);
       },
       ...config,
-    } });
+    });
   };
 
   const useReceiptKey = () => {
-    return queryTemplate({ queryKey: ["RECEIPT_KEY"], queryFn: () => MdmsServiceV2.getReceiptKey(tenantId, moduleCode, type), config });
+    return useQuery("RECEIPT_KEY", () => MdmsServiceV2.getReceiptKey(tenantId, moduleCode, type), config);
   };
 
   const useBillsGenieKey = () => {
-    return queryTemplate({ queryKey: ["BILLS_GENIE_KEY"], queryFn: () => MdmsServiceV2.getBillsGenieKey(tenantId, moduleCode, type), config });
+    return useQuery("BILLS_GENIE_KEY", () => MdmsServiceV2.getBillsGenieKey(tenantId, moduleCode, type), config);
   };
 
 
   const _default = () => {
-    return queryTemplate({ queryKey: [tenantId, moduleCode, type], queryFn: () => MdmsServiceV2.getMultipleTypes(tenantId, moduleCode, type), config });
+    return useQuery([tenantId, moduleCode, type], () => MdmsServiceV2.getMultipleTypes(tenantId, moduleCode, type), config);
   };
 
   switch (type) {

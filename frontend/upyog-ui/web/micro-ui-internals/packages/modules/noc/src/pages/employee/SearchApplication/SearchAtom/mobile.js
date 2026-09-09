@@ -1,7 +1,3 @@
-/**
- * Renders the mobile view for employee NOC application search.
- * Displays search trigger button, popup modal form, and mobile details card list.
- */
 import React, { Fragment, useCallback, useMemo, useEffect, useState, useReducer } from "react";
 import { useFormContext } from "react-hook-form";
 import {

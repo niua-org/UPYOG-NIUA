@@ -79,7 +79,6 @@ public class ReportService {
                 if (cd.getType() != null) {
                     TypeEnum te = TypeEnum.valueOf(cd.getType().toString().toUpperCase());
                     reportheader.setType(te);
-                    reportheader.setShowColumn(cd.getShowColumn());
                     reportheader.setRowTotal(cd.getRowTotal());
                     reportheader.setColumnTotal(cd.getColumnTotal());
                     reportHeaders.add(reportheader);

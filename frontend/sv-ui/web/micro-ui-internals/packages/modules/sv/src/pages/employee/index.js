@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import Inbox from "./Inbox";
 import SearchApp from "./SearchApp";
 
-
 /** The Main routes component for the employee side
  * Contains routes for every page there is to redirect in the employee side
  * Contains breadcrumbs for each page
@@ -30,7 +29,6 @@ const EmployeeApp = () => {
   const SVEmpCreate = Digit?.ComponentRegistryService?.getComponent("SVEmpCreate");
   const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
   const SVApplicationDetails = Digit?.ComponentRegistryService?.getComponent("SVApplicationDetails")
-  
   return (
     <span className={"sv-citizen"}style={{width:"100%"}}>
       <AppContainer>
@@ -83,7 +81,6 @@ const EmployeeApp = () => {
               </PrivateRoute>
             } 
           />
-        <Route path="StreetVendingReport/*" element={<PrivateRoute><EnhancedReport parentRoute="/sv-ui/employee/sv" moduleName="sv-report" reportName="StreetVendingReport" /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

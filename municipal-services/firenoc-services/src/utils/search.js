@@ -21,7 +21,6 @@ const fireNOCRowMapper = async (row, mapper = {}, header) => {
   fireNoc.provisionFireNOCNumber = row.provisionfirenocnumber;
   fireNoc.oldFireNOCNumber = row.oldfirenocnumber;
   fireNoc.dateOfApplied = intConversion(row.dateofapplied);
-  fireNoc.applicationNumber = row.applicationnumber;
   let auditDetails = {
     createdBy: row.createdby,
     lastModifiedBy: row.lastmodifiedby,
@@ -218,8 +217,8 @@ const searchUser = async (requestInfo, uuid, header, tenantId) => {
   let users = get(userSearchResponse, "user", []);
   return users.length ? users[0] : {};
 };
-// added requestInfo so that, it gets the user info and authtoken
-export const searchByMobileNumber = async (mobileNumber, tenantId, header, requestInfo) => {
+
+export const searchByMobileNumber = async (mobileNumber, tenantId, header) => {
   var userSearchReqCriteria = {};
   userSearchReqCriteria.userType = "CITIZEN";
   userSearchReqCriteria.tenantId = tenantId;

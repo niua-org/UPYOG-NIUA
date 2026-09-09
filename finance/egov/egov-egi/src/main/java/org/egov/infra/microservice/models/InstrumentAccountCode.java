@@ -39,18 +39,18 @@
  */
 package org.egov.infra.microservice.models;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class InstrumentAccountCode {
-    @SanitizeHtml
+    @SafeHtml
     private String id;
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty(value="instrumenttype")
     private String instrumentType;
     private ChartOfAccounts accountCode;
-    @SanitizeHtml
+    @SafeHtml
     private String glcode;
     private Long validFrom;
     private Long validTo;

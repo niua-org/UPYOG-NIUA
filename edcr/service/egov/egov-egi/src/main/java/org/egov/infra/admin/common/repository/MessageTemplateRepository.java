@@ -53,7 +53,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.QueryHint;
+import javax.persistence.QueryHint;
 
 @Repository
 public interface MessageTemplateRepository extends JpaRepository<MessageTemplate, Long> {

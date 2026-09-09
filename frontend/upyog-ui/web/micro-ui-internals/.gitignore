@@ -133,8 +133,6 @@ node_modules
 
 *.sublime*
 
-
-/.scannerwork/*
 psd
 thumb
 sketch

@@ -53,11 +53,12 @@ import org.egov.eis.entity.Assignment;
 import org.egov.eis.entity.EmployeeView;
 import org.egov.infra.exception.ApplicationRuntimeException;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Date;
 import java.util.List;
 
@@ -85,10 +86,10 @@ public class AssignmentHibernateDAO implements AssignmentDAO
 		StringBuffer query=new StringBuffer(" select distinct ev.id from EmployeeView ev where ev.isActive=1 and  " +
 		"(ev.fromDate > :fromdate OR ev.toDate < :fromdate) AND (ev.dateOfFirstAppointment <= :fromdate) and " + "(ev.id not in (select ev.id from  ev where (ev.fromDate <= :fromdate and ev.toDate >=:fromdate)))");
  
-			org.hibernate.query.Query qry = getCurrentSession().createQuery(query.toString());
+			Query qry = getCurrentSession().createQuery(query.toString());
 			
 			// qry.setString("date", formatter.format(todate.getTime()));
-			qry.setParameter("fromdate",fromdate);
+			qry.setDate("fromdate",fromdate);
 			employeeAssignList = qry.list();
 			
 	}catch (HibernateException he) {
@@ -107,11 +108,11 @@ public class AssignmentHibernateDAO implements AssignmentDAO
 		{
 			StringBuffer query=new StringBuffer(" select  ev.assignment from EmployeeView ev where ev.assignment.isPrimary = 'Y' and " +
 											"ev.id = :empid and ev.fromDate <= :todate and rownum=1 order by ev.toDate desc ");
-			org.hibernate.query.Query qry = getCurrentSession().createQuery(query.toString());
+			Query qry = getCurrentSession().createQuery(query.toString());
 			
 			// qry.setString("date", formatter.format(todate.getTime()));
-			qry.setParameter("todate",todate );
-			qry.setParameter("empid",empId );		
+			qry.setDate("todate",todate );
+			qry.setInteger("empid",empId );		
 			
 			assignment = (Assignment)qry.uniqueResult();
 			
@@ -153,14 +154,14 @@ public class AssignmentHibernateDAO implements AssignmentDAO
 			query.append(" and ev.position.id =:posId ");
 		}
  
-			org.hibernate.query.Query qry = getCurrentSession().createQuery(query.toString());
+			Query qry = getCurrentSession().createQuery(query.toString());
 			if(givenDate!=null)
 			{
-				qry.setParameter("givenDate",givenDate);
+				qry.setDate("givenDate",givenDate);
 			}
 			if(posId!=null && posId!=0)
 			{
-				qry.setParameter("posId", posId);
+				qry.setInteger("posId", posId);
 			}
 			
 			employeeAssignList = (List)qry.list();
@@ -222,18 +223,18 @@ public class AssignmentHibernateDAO implements AssignmentDAO
 			}
 			
 		
-			org.hibernate.query.Query qry = getCurrentSession().createQuery(query.toString());
+			Query qry = getCurrentSession().createQuery(query.toString());
 			if(givenDate!=null)
 			{
-				qry.setParameter("givenDate",givenDate);
+				qry.setDate("givenDate",givenDate);
 			}
 			if(posId!=null && posId!=0)
 			{
-				qry.setParameter("posId", posId);
+				qry.setInteger("posId", posId);
 			}
 			if(code!=null && !code.equals(""))
 			{
-				qry.setParameter("code", code);
+				qry.setString("code", code);
 			}
 			employeeAssignList = (List)qry.list();
 			

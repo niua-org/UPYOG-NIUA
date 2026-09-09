@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal } from "@nudmcdgnpm/digit-ui-react-components";
-import "../css/gis-inline.css";
 
 /**
  * Close icon SVG component for the modal
@@ -21,12 +20,13 @@ const Close = () => (
  * @param {Function} onClick - Function to call when close button is clicked
  */
 const CloseBtn = ({ onClick }) => (
-  <div
-    className="icon-bg-secondary gis-viewasset-close"
+  <div 
+    className="icon-bg-secondary" 
     onClick={(e) => {
       e.stopPropagation();
       if (onClick) onClick();
     }}
+    style={{ cursor: "pointer", zIndex: 9999, position: "relative" }}
   >
     <Close />
   </div>
@@ -130,8 +130,23 @@ const ViewOnMapAsset = ({ closeModal, applicationNumber }) => {
 
         // Create styled popup content with asset details
         const popupContent = `
-          <div class="gis-asset-popup">
-          <h3 class="gis-asset-popup__title">
+          <div style="
+          width: 280px; 
+          font-size: 13px; 
+          line-height: 1.5; 
+          font-family: Arial, sans-serif; 
+          border: 1px solid #ddd; 
+          border-radius: 6px; 
+          padding: 10px 12px; 
+          box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+          ">
+          <h3 style="
+              text-align: center; 
+              margin: 0 0 10px 0; 
+              font-size: 15px; 
+              font-weight: bold; 
+              color: #333;
+          ">
               Asset Details
           </h3>
           <div>
@@ -174,15 +189,15 @@ const ViewOnMapAsset = ({ closeModal, applicationNumber }) => {
     >
       {loading ? (
         // Loading state while fetching data
-        <div className="gis-viewasset-state">
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "75vh" }}>
           {t("LOADING_MAP_DATA")}
         </div>
       ) : geoJsonData ? (
         // Map container when data is available
-        <div ref={mapRef} className="gis-modal-map" />
+        <div ref={mapRef} style={{ height: "75vh", width: "100%" }} />
       ) : (
         // Error state when no data is found
-        <div className="gis-viewasset-state">
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "75vh" }}>
           {t("NO_LOCATION_DATA_FOUND")}
         </div>
       )}

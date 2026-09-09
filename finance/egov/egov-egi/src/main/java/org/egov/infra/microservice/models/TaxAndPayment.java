@@ -2,12 +2,12 @@ package org.egov.infra.microservice.models;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class TaxAndPayment {
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     private String businessService;
     

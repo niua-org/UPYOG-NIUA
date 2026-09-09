@@ -48,7 +48,6 @@
 package org.egov.egf.web.actions.report;
 
 
-import jakarta.persistence.FlushModeType;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
 import org.apache.struts2.convention.annotation.Action;
@@ -73,7 +72,7 @@ import org.egov.services.report.IncomeExpenditureScheduleService;
 import org.egov.services.report.IncomeExpenditureService;
 import org.egov.utils.Constants;
 import org.egov.utils.ReportHelper;
-
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -168,7 +167,7 @@ public class IncomeExpenditureReportAction extends BaseFormAction {
     @Override
     public void prepare() {
         persistenceService.getSession().setDefaultReadOnly(true);
-        persistenceService.getSession().setFlushMode(FlushModeType.COMMIT);
+        persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
         super.prepare();
         if (!parameters.containsKey("showDropDown")) {
             addDropdownData("departmentList", masterDataCache.get("egi-department"));

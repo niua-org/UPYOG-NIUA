@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.egov.asset.web.models.*;
 import org.postgresql.util.PGobject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
@@ -17,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@SuppressWarnings("java:S2638")
 public class AssetRowMapper implements ResultSetExtractor<List<Asset>> {
 
+    @Autowired
     private final ObjectMapper objectMapper;
 
     public AssetRowMapper(ObjectMapper objectMapper) {
@@ -31,8 +32,8 @@ public class AssetRowMapper implements ResultSetExtractor<List<Asset>> {
      *
      * @see org.springframework.jdbc.core.ResultSetExtractor#extractData(java.sql.ResultSet)
      */
-    @Override
     @SuppressWarnings("rawtypes")
+    @Override
     public List<Asset> extractData(ResultSet rs) throws SQLException, DataAccessException {
 
         Map<String, Asset> assetMap = new LinkedHashMap<>();
@@ -156,32 +157,44 @@ public class AssetRowMapper implements ResultSetExtractor<List<Asset>> {
             }
         }
 
+        // Mapping documents
+        //List<Document> documents = new ArrayList<>();
         try {
+            // Fetching document related columns from the result set
             String documentId = rs.getString("documentId");
             String documentType = rs.getString("documentType");
             String fileStoreId = rs.getString("fileStoreId");
             String documentUid = rs.getString("documentUid");
             String docDetailsStr = rs.getString("docDetails");
 
+            // Mapping docDetails to Object if available
             Object docDetails = null;
             if (docDetailsStr != null && !docDetailsStr.isEmpty()) {
                 docDetails = new Gson().fromJson(docDetailsStr, Object.class);
             }
 
+            // Creating Document object and adding it to the list
             document.setDocumentId(documentId);
             document.setDocumentType(documentType);
             document.setFileStoreId(fileStoreId);
             document.setDocumentUid(documentUid);
             document.setDocDetails(docDetails);
+            //documents.add(document);
 
         } catch (Exception e) {
+            // Handle exception
             e.printStackTrace();
         }
-        List<Document> assetDocuments = asset.getDocuments();
-        if (assetDocuments == null) {
-            assetDocuments = new ArrayList<>();
-            asset.setDocuments(assetDocuments);
+        //asset.setDocuments(documents);
+        //asset.getDocuments().add(document);
+        if (asset != null) {
+            // Process documents
+            List<Document> assetDocuments = asset.getDocuments();
+            if (assetDocuments == null) {
+                assetDocuments = new ArrayList<>();
+                asset.setDocuments(assetDocuments);
+            }
+            asset.getDocuments().add(document);
         }
-        assetDocuments.add(document);
     }
 }

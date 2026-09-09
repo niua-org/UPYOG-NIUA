@@ -1,4 +1,4 @@
-import { useQueryClient } from "../common/queryClientTemplate";
+import { useQueryClient } from "react-query";
 
 export const useRevalidateQuery = async (key) => {
   const client = useQueryClient();

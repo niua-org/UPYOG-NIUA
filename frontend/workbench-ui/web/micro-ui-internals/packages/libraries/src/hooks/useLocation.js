@@ -1,21 +1,12 @@
-import { queryTemplate } from "../common/queryTemplate";
-
+import { useQuery } from 'react-query';
 import { LocationService } from "../services/elements/Location";
 
 const useLocation = (tenantId, locationType, config = {}) => {
     switch(locationType) {
         case 'Locality':
-            return queryTemplate({
-                queryKey: ["LOCALITY_DETAILS", tenantId],
-                queryFn: () => LocationService.getLocalities(tenantId),
-                config
-            });
+            return useQuery(["LOCALITY_DETAILS", tenantId ], () => LocationService.getLocalities(tenantId), config);   
         case 'Ward':
-            return queryTemplate({
-                queryKey: ["WARD_DETAILS", tenantId],
-                queryFn: () => LocationService.getWards(tenantId),
-                config
-            });
+            return useQuery(["WARD_DETAILS", tenantId ], () => LocationService.getWards(tenantId), config);
         default:
             break
     } 

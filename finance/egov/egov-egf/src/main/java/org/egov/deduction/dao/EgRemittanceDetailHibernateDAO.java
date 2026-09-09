@@ -53,11 +53,12 @@ package org.egov.deduction.dao;
 import org.egov.deduction.model.EgRemittance;
 import org.egov.deduction.model.EgRemittanceDetail;
 import org.egov.deduction.model.EgRemittanceGldtl;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 /**
@@ -90,7 +91,7 @@ public class EgRemittanceDetailHibernateDAO {
     }
 
     public List<EgRemittanceDetail> findAll() {
-        return getCurrentSession().createQuery("from EgRemittanceDetail", EgRemittanceDetail.class).list();
+        return (List<EgRemittanceDetail>) getCurrentSession().createCriteria(EgRemittanceDetail.class).list();
     }
 
     @PersistenceContext
@@ -103,16 +104,16 @@ public class EgRemittanceDetailHibernateDAO {
    
 
     public List<EgRemittanceDetail> getEgRemittanceDetailByEgRmt(final EgRemittance egRmt) {
-        final org.hibernate.query.Query qry = getCurrentSession().createQuery("from EgRemittanceDetail erd where erd.egRemittance =:egRmt");
-        qry.setParameter("egRmt", egRmt.getId());
+        final Query qry = getCurrentSession().createQuery("from EgRemittanceDetail erd where erd.egRemittance =:egRmt");
+        qry.setEntity("egRmt", egRmt);
         return qry.list();
     }
 
     public EgRemittanceDetail getEgRemittanceDetailFilterBy(final EgRemittance egRmt, final EgRemittanceGldtl egRmtGldtl) {
-        final org.hibernate.query.Query qry = getCurrentSession().createQuery(
+        final Query qry = getCurrentSession().createQuery(
                 "from EgRemittanceDetail erd where erd.egRemittance =:egRmt and erd.egRemittanceGldtl =:egRmtGldtl");
-        qry.setParameter("egRmt", egRmt.getId());
-        qry.setParameter("egRmtGldtl", egRmtGldtl.getId());
+        qry.setEntity("egRmt", egRmt);
+        qry.setEntity("egRmtGldtl", egRmtGldtl);
         return (EgRemittanceDetail) qry.uniqueResult();
     }
 }

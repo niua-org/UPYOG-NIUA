@@ -72,7 +72,7 @@ public class LoginAuditService {
     }
 
     public Page<LoginAudit> getLoginAudits(LoginAuditReportRequest loginAuditReportRequest) {
-        Pageable pageable = PageRequest.of(loginAuditReportRequest.pageNumber(),
+        Pageable pageable = new PageRequest(loginAuditReportRequest.pageNumber(),
                 loginAuditReportRequest.pageSize(),
                 loginAuditReportRequest.orderDir(), loginAuditReportRequest.orderBy());
         return loginAuditRepository.findAll(LoginAuditSpec.loginAuditSearchSpec(loginAuditReportRequest), pageable);

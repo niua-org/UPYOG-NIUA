@@ -1,9 +1,9 @@
 package org.upyog.cdwm.web.models.user;
 
-public class UserServiceConstants {
+import org.springframework.context.annotation.Configuration;
 
-    private UserServiceConstants() {
-    }
+@Configuration
+public class UserServiceConstants {
 
     public static final String PATTERN_NAME = "^[^\\\\$\\\"<>?\\\\\\\\~`!@#$%^()+={}\\\\[\\\\]*,:;“”‘’]*$";
 

@@ -64,10 +64,10 @@ public class AccountPurposeService {
     private AccountPurposeRepository accountPurposeRepository;
 
     public EgfAccountcodePurpose getByPurposeId(final Long purposeId) {
-        return accountPurposeRepository.findById(Integer.valueOf(purposeId.toString())).orElse(null);
+        return accountPurposeRepository.findOne(Integer.valueOf(purposeId.toString()));
     }
 
     public List<EgfAccountcodePurpose> findAll() {
-        return accountPurposeRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return accountPurposeRepository.findAll(new Sort(Sort.Direction.ASC, "name"));
     }
 }

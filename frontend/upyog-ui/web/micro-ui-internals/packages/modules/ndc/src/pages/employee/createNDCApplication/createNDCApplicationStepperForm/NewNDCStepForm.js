@@ -1,11 +1,10 @@
-import "../../../../../css/ndc.css";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 //
-import {Stepper} from "@nudmcdgnpm/digit-ui-react-components";
+import Stepper from "../../../../../../../react-components/src/customComponents/Stepper";
 import { config } from "../../../../config/citizen/CitizenNDCApplicationConfig";
 import { setNDCStep, updateNDCForm, resetNDCForm } from "../../../../redux/actions/NDCFormActions";
 import { CardHeader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
@@ -82,6 +81,7 @@ export const NewNDCStepForm = () => {
   const setStep = (updatedStepNumber) => {
     dispatch(setNDCStep(updatedStepNumber));
   };
+console.log("formData in step form", formData);
   const handleSubmit = () => {};
 
   useEffect(() => {

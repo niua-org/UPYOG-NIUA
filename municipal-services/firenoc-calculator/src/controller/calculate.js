@@ -3,7 +3,8 @@ import { calculateService } from "../services/calculateService";
 import { validateCalculationReq } from "../utils/modelValidation";
 import { constants } from "../config/constants";
 import { mdmsData } from "../services/mdmsService";
-import { get, some, isEmpty } from "lodash";
+import get from "lodash/get";
+import some from "lodash/some";
 
 const calculalte = async (req, res, pool, next) => {
   console.log("calculalte");

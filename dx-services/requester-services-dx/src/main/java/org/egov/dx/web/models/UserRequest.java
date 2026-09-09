@@ -10,15 +10,15 @@ import org.egov.dx.web.models.User;
 import org.egov.dx.util.UserServiceConstants;
 import org.egov.dx.web.models.*;
 import org.hibernate.validator.constraints.Email;
-import org.egov.tracer.annotations.CustomSafeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 @Setter
 @Getter
@@ -29,15 +29,15 @@ public class UserRequest {
 
     private Long id;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 64)
     private String userName;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 40)
     private String access_token;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 5)
     private String salutation;
 
@@ -59,33 +59,33 @@ public class UserRequest {
     @Size(max = 128)
     private String emailId;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 50)
     private String altContactNumber;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 10)
     private String pan;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 20)
     private String aadhaarNumber;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 300)
     private String permanentAddress;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Pattern(regexp = UserServiceConstants.PATTERN_CITY)
     @Size(max = 50)
     private String permanentCity;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Pattern(regexp = UserServiceConstants.PATTERN_PINCODE)
     @Size(max = 10)
     private String permanentPinCode;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 300)
     private String correspondenceAddress;
 
@@ -98,7 +98,7 @@ public class UserRequest {
     private String correspondencePinCode;
     private Boolean active;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 16)
     private String locale;
 
@@ -111,19 +111,19 @@ public class UserRequest {
     private String fatherOrHusbandName;
     private GuardianRelation relationship;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 36)
     private String signature;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 32)
     private String bloodGroup;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 36)
     private String photo;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 300)
     private String identificationMark;
     private Long createdBy;
@@ -131,7 +131,7 @@ public class UserRequest {
     @Size(max = 64)
     private String password;
 
-    @CustomSafeHtml
+    @SafeHtml
     private String otpReference;
     private Long lastModifiedBy;
 
@@ -141,11 +141,11 @@ public class UserRequest {
 
     private Set<RoleRequest> roles;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 36)
     private String uuid;
 
-    @CustomSafeHtml
+    @SafeHtml
     @Size(max = 36)
     private String digilockerid;
 

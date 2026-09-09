@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -33,7 +33,6 @@ import org.upyog.adv.repository.rowmapper.AdvertisementUpdateSlotAvailabilityRow
 import org.upyog.adv.repository.rowmapper.BookingCartDetailRowmapper;
 import org.upyog.adv.repository.rowmapper.BookingDetailIdRowmapper;
 import org.upyog.adv.repository.rowmapper.BookingDetailRowmapper;
-import org.upyog.adv.repository.rowmapper.BookingPaymentTimerRowMapper;
 import org.upyog.adv.repository.rowmapper.DocumentDetailsRowMapper;
 import org.upyog.adv.util.BookingUtil;
 import org.upyog.adv.web.models.AdvertisementDraftDetail;
@@ -42,7 +41,6 @@ import org.upyog.adv.web.models.AdvertisementSlotAvailabilityDetail;
 import org.upyog.adv.web.models.AdvertisementSlotSearchCriteria;
 import org.upyog.adv.web.models.AuditDetails;
 import org.upyog.adv.web.models.BookingDetail;
-import org.upyog.adv.web.models.BookingPaymentTimerDetails;
 import org.upyog.adv.web.models.BookingRequest;
 import org.upyog.adv.web.models.CartDetail;
 import org.upyog.adv.web.models.DocumentDetail;
@@ -83,46 +81,29 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BookingRepositoryImpl implements BookingRepository {
 
-	private static final String EQUALS_PLACEHOLDER = " = ? ";
+	@Autowired
+	private Producer producer;
 
-	private final Producer producer;
-
-	private final BookingConfiguration bookingConfiguration;
-	private final BookingDetailRowmapper bookingRowmapper;
-	private final BookingCartDetailRowmapper cartDetailRowmapper;
-	private final DocumentDetailsRowMapper detailsRowMapper;
-	private final JdbcTemplate jdbcTemplate;
-	private final AdvertisementBookingQueryBuilder queryBuilder;
-	private final AdvertisementSlotAvailabilityRowMapper availabilityRowMapper;
-	private final AdvertisementUpdateSlotAvailabilityRowMapper availabilityUpdateRowMapper;
-	private final AdvertisementDraftApplicationRowMapper draftApplicationRowMapper;
-	private final BookingPaymentTimerRowMapper bookingPaymentTimerRowMapper;
-	private final ObjectMapper objectMapper;
-	private final BookingRepository self;
-
-	public BookingRepositoryImpl(Producer producer, BookingConfiguration bookingConfiguration,
-			BookingDetailRowmapper bookingRowmapper, BookingCartDetailRowmapper cartDetailRowmapper,
-			DocumentDetailsRowMapper detailsRowMapper, JdbcTemplate jdbcTemplate,
-			AdvertisementBookingQueryBuilder queryBuilder,
-			AdvertisementSlotAvailabilityRowMapper availabilityRowMapper,
-			AdvertisementUpdateSlotAvailabilityRowMapper availabilityUpdateRowMapper,
-			AdvertisementDraftApplicationRowMapper draftApplicationRowMapper,
-			BookingPaymentTimerRowMapper bookingPaymentTimerRowMapper, ObjectMapper objectMapper,
-			@Lazy BookingRepository self) {
-		this.producer = producer;
-		this.bookingConfiguration = bookingConfiguration;
-		this.bookingRowmapper = bookingRowmapper;
-		this.cartDetailRowmapper = cartDetailRowmapper;
-		this.detailsRowMapper = detailsRowMapper;
-		this.jdbcTemplate = jdbcTemplate;
-		this.queryBuilder = queryBuilder;
-		this.availabilityRowMapper = availabilityRowMapper;
-		this.availabilityUpdateRowMapper = availabilityUpdateRowMapper;
-		this.draftApplicationRowMapper = draftApplicationRowMapper;
-		this.bookingPaymentTimerRowMapper = bookingPaymentTimerRowMapper;
-		this.objectMapper = objectMapper;
-		this.self = self;
-	}
+	@Autowired
+	private BookingConfiguration bookingConfiguration;
+	@Autowired
+	private BookingDetailRowmapper bookingRowmapper;
+	@Autowired
+	private BookingCartDetailRowmapper cartDetailRowmapper;
+	@Autowired
+	private DocumentDetailsRowMapper detailsRowMapper;
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	@Autowired
+	private AdvertisementBookingQueryBuilder queryBuilder;
+	@Autowired
+	private AdvertisementSlotAvailabilityRowMapper availabilityRowMapper;
+	@Autowired
+	private AdvertisementUpdateSlotAvailabilityRowMapper availabilityUpdateRowMapper;
+	@Autowired
+	private AdvertisementDraftApplicationRowMapper draftApplicationRowMapper;
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@Override
 	public void saveBooking(BookingRequest bookingRequest) {
@@ -139,33 +120,33 @@ public class BookingRepositoryImpl implements BookingRepository {
 
 		log.info("getBookingDetails : Final query: " + query);
 		log.info("preparedStmtList :  " + preparedStmtList);
-		List<BookingDetail> bookingDetails = jdbcTemplate.query(query, bookingRowmapper,
-				preparedStmtList.toArray());
+		List<BookingDetail> bookingDetails = jdbcTemplate.query(query, preparedStmtList.toArray(), bookingRowmapper);
 
 		log.info("Fetched booking details size : " + bookingDetails.size());
 
-		if (bookingDetails.isEmpty()) {
+		if (bookingDetails.size() == 0) {
 			return bookingDetails;
 		}
 
 		HashMap<String, BookingDetail> bookingMap = bookingDetails.stream().collect(Collectors
 				.toMap(BookingDetail::getBookingId, Function.identity(), (left, right) -> left, HashMap::new));
 		log.info("Fetched booking details bookingMap : " + bookingMap);
-		List<String> bookingIds = new ArrayList<>();
+		List<String> bookingIds = new ArrayList<String>();
 		bookingIds.addAll(bookingMap.keySet());
 		log.info("Fetched booking details bookingIds : " + bookingIds);
 		List<CartDetail> cartDetails = jdbcTemplate.query(queryBuilder.getSlotDetailsQuery(bookingIds),
-				cartDetailRowmapper, bookingIds.toArray());
-		cartDetails.forEach(slotDetail -> {
+				bookingIds.toArray(), cartDetailRowmapper);
+		cartDetails.stream().forEach(slotDetail -> {
 			log.info("fetched cartDetails " + bookingMap.get(slotDetail.getBookingId()));
 			bookingMap.get(slotDetail.getBookingId()).addBookingSlots(slotDetail);
 		});
 		log.info("Fetched booking details cartDetails : " + cartDetails);
 		List<DocumentDetail> documentDetails = jdbcTemplate.query(queryBuilder.getDocumentDetailsQuery(bookingIds),
-				detailsRowMapper, bookingIds.toArray());
+				bookingIds.toArray(), detailsRowMapper);
 
-		documentDetails.forEach(documentDetail -> bookingMap.get(documentDetail.getBookingId())
-				.addUploadedDocumentDetailsItem(documentDetail));
+		documentDetails.stream().forEach(documentDetail -> {
+			bookingMap.get(documentDetail.getBookingId()).addUploadedDocumentDetailsItem(documentDetail);
+		});
 		return bookingDetails;
 	}
 
@@ -176,7 +157,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 
 		if (query == null)
 			return 0;
-		return jdbcTemplate.queryForObject(query, Integer.class, preparedStatement.toArray());
+		Integer count = jdbcTemplate.queryForObject(query, preparedStatement.toArray(), Integer.class);
+		return count;
 	}
 
 	@Override
@@ -185,7 +167,7 @@ public class BookingRepositoryImpl implements BookingRepository {
 		if (StringUtils.isBlank(draftId) && StringUtils.isBlank(bookingId)) {
 			log.info("Deleting Timer and draft entry: {}", bookingId);
 
-			String draftDeleteQuery = AdvertisementBookingQueryBuilder.DRAFT_DELETE_QUERY;
+			String draftDeleteQuery = AdvertisementBookingQueryBuilder.Draft_DELETE_QUERY;
 			String timerDeleteQuery = AdvertisementBookingQueryBuilder.TIMER_DELETE_QUERY_BY_UUID;
 
 			jdbcTemplate.update(draftDeleteQuery, uuid);
@@ -193,73 +175,43 @@ public class BookingRepositoryImpl implements BookingRepository {
 		}
 	}
 
-	@Override
-	public long insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
-			String preGeneratedDraftId) {
+	public void insertBookingIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo,
+			AdvertisementSlotAvailabilityDetail availabilityDetailsResponse) {
 
 		String tenantId = requestInfo.getUserInfo().getTenantId();
 		String uuid = requestInfo.getUserInfo().getUuid();
 
 		// Step 1: Fetch or create draft ID
-		String draftId = fetchDraftId(criteriaList, uuid);
+		String draftId = fetchDraftId(criteriaList, uuid, tenantId);
 
 		// Step 2: If no existing draft ID, perform the batch insert
 		if (draftId == null) {
-			draftId = preGeneratedDraftId != null ? preGeneratedDraftId : BookingUtil.getRandonUUID();
-			insertNewDraftId(draftId, uuid, tenantId);
-			processBatchInsert(criteriaList, draftId, uuid, tenantId);
+			draftId = insertNewDraftId(criteriaList, uuid, tenantId);
+			processBatchInsert(criteriaList, draftId, uuid);
+			setTimerValue(availabilityDetailsResponse);
 		}
 
-		long timerValue = 0;
-		Map<String, Long> remainingTime = getRemainingTimerValues(draftId);
-		if (!remainingTime.isEmpty() && remainingTime.containsKey(draftId)) {
-			long remainingTimeValue = remainingTime.get(draftId);
-			timerValue = remainingTimeValue / 1000;
-		} else {
-			timerValue = bookingConfiguration.getPaymentTimer() / 1000;
-		}
-		return timerValue;
+		// Step 3: getAndInsertTimerData timer data
+		getAndInsertTimerData(draftId, criteriaList, requestInfo, availabilityDetailsResponse);
 	}
 
-	@Override
-	public String fetchDraftIdForTimer(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid,
-			String tenantId) {
-		return fetchDraftId(criteriaList, uuid);
-	}
-
-	@Override
-	public List<BookingPaymentTimerDetails> getPaymentTimerByBookingId(String bookingId) {
-		if (StringUtils.isBlank(bookingId)) {
-			return Collections.emptyList();
-		}
-		return jdbcTemplate.query(AdvertisementBookingQueryBuilder.GET_PAYMENT_TIMER_BY_BOOKING_ID,
-				bookingPaymentTimerRowMapper, bookingId);
-	}
-
-	@Override
-	public List<BookingPaymentTimerDetails> getPaymentTimerByCreatedBy(String uuid) {
-		if (StringUtils.isBlank(uuid)) {
-			return Collections.emptyList();
-		}
-		return jdbcTemplate.query(AdvertisementBookingQueryBuilder.GET_PAYMENT_TIMER_BY_CREATED_BY,
-				bookingPaymentTimerRowMapper, uuid);
-	}
-
-	private String fetchDraftId(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid) {
+	private String fetchDraftId(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId) {
 
 		// To insert the same drfatId/bookingId in timer table
 		String draftId = criteriaList.stream()
 				.filter(criteria -> criteria.getBookingId() != null && !criteria.getBookingId().isEmpty())
 				.map(AdvertisementSlotSearchCriteria::getBookingId).findFirst().orElse(null);
 
-		if (draftId != null) {
-			// Check if the booking ID exists in the timer table
-			List<BookingDetail> bookingListFromTimer = jdbcTemplate.query(
-					AdvertisementBookingQueryBuilder.BOOKING_ID_EXISTS_CHECK, new BookingDetailIdRowmapper(), draftId);
+		// Check if the booking ID exists in the timer table
+		List<BookingDetail> bookingListFromTimer = jdbcTemplate.query(
+			    AdvertisementBookingQueryBuilder.BOOKING_ID_EXISTS_CHECK, 
+			    new Object[] { draftId }, 
+			    new BookingDetailIdRowmapper() 
+			);
 
-			if (bookingListFromTimer != null && !bookingListFromTimer.isEmpty()) {
-				return draftId;
-			}
+
+		if (!bookingListFromTimer.isEmpty()) {
+			return draftId;
 		}
 
 		// Check if draft ID exists in the draft table
@@ -271,15 +223,17 @@ public class BookingRepositoryImpl implements BookingRepository {
 		return null;
 	}
 
-	private void insertNewDraftId(String draftId, String uuid, String tenantId) {
+	private String insertNewDraftId(List<AdvertisementSlotSearchCriteria> criteriaList, String uuid, String tenantId) {
 		long createdTime = BookingUtil.getCurrentTimestamp();
+		String draftId = BookingUtil.getRandonUUID();
 
 		jdbcTemplate.update(AdvertisementBookingQueryBuilder.DRAFT_QUERY, draftId, tenantId, uuid, "{}", uuid, uuid,
 				createdTime, createdTime);
+
+		return draftId;
 	}
 
-	private void processBatchInsert(List<AdvertisementSlotSearchCriteria> criteriaList, String draftId, String uuid,
-			String tenantId) {
+	private void processBatchInsert(List<AdvertisementSlotSearchCriteria> criteriaList, String draftId, String uuid) {
 		long createdTime = BookingUtil.getCurrentTimestamp();
 		String status = BookingConstants.ACTIVE;
 
@@ -291,8 +245,7 @@ public class BookingRepositoryImpl implements BookingRepository {
 			while (!startDate.isAfter(endDate)) {
 				batchArgs.add(new Object[] { draftId, uuid, createdTime, status, "", uuid, createdTime,
 						criteria.getAddType(), criteria.getLocation(), criteria.getFaceArea(), criteria.getNightLight(),
-						criteria.getBookingStartDate(), criteria.getBookingEndDate(), startDate.toString(),
-						criteria.getTenantId() != null ? criteria.getTenantId() : tenantId });
+						criteria.getBookingStartDate(), criteria.getBookingEndDate(), startDate.toString() });
 				startDate = startDate.plusDays(1);
 			}
 		}
@@ -300,7 +253,71 @@ public class BookingRepositoryImpl implements BookingRepository {
 		jdbcTemplate.batchUpdate(AdvertisementBookingQueryBuilder.PAYMENT_TIMER_QUERY, batchArgs);
 	}
 
+	private void setTimerValue(AdvertisementSlotAvailabilityDetail availabilityDetailsResponse) {
+		long timerValue = bookingConfiguration.getPaymentTimer();
+		availabilityDetailsResponse.setTimerValue(timerValue / 1000); // Convert milliseconds to seconds
+	}
 
+	@Override
+	public void getAndInsertTimerData(String draftId, List<AdvertisementSlotSearchCriteria> criteriaList,
+			RequestInfo requestInfo, AdvertisementSlotAvailabilityDetail availabilityDetailsResponse) {
+
+		for (AdvertisementSlotSearchCriteria criteria : criteriaList) {
+			getTimerData(draftId, criteria, requestInfo, availabilityDetailsResponse, criteriaList);
+		}
+	}
+
+	@Override
+	public void getTimerData(String bookingId, AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo,
+			AdvertisementSlotAvailabilityDetail availabilityDetailsResponse,
+			List<AdvertisementSlotSearchCriteria> criteriaList) {
+		
+		
+		Map<String, Long> remainingTime = getRemainingTimerValues(bookingId);
+		if (!remainingTime.isEmpty() && remainingTime.containsKey(bookingId)) {
+			long remainingTimeValue = remainingTime.get(bookingId);
+			availabilityDetailsResponse.setTimerValue(remainingTimeValue / 1000);
+			
+		}
+		/*
+		 * List<AdvertisementSlotAvailabilityDetail> blockedSlots =
+		 * getBookedSlots(criteria, requestInfo);
+		 * 
+		 * if (!blockedSlots.isEmpty()) { log.info("Matched slot found: {}",
+		 * blockedSlots);
+		 * 
+		 * boolean dateMatched = blockedSlots.stream() .anyMatch(slot ->
+		 * slot.getBookingStartDate().equals(criteria.getBookingStartDate()) &&
+		 * slot.getBookingEndDate().equals(criteria.getBookingEndDate()));
+		 * 
+		 * if (!dateMatched) { log.info("Dates do not match, deleting old entry: {}",
+		 * bookingId);
+		 * 
+		 * String draftDeleteQuery =
+		 * AdvertisementBookingQueryBuilder.DraftID_DELETE_QUERY; String
+		 * timerDeleteQuery = AdvertisementBookingQueryBuilder.TIMER_DELETE_QUERY;
+		 * 
+		 * jdbcTemplate.update(draftDeleteQuery, bookingId);
+		 * jdbcTemplate.update(timerDeleteQuery, bookingId);
+		 * 
+		 * insertBookingIdForTimer(criteriaList, requestInfo,
+		 * availabilityDetailsResponse); } else {
+		 * 
+		 * } else { log.
+		 * info("No Matched slots found. Deleting non-matching booking entry with ID: {}"
+		 * , bookingId);
+		 * 
+		 * String draftDeleteQuery =
+		 * AdvertisementBookingQueryBuilder.DraftID_DELETE_QUERY; String
+		 * timerDeleteQuery = AdvertisementBookingQueryBuilder.TIMER_DELETE_QUERY;
+		 * 
+		 * jdbcTemplate.update(draftDeleteQuery, bookingId);
+		 * jdbcTemplate.update(timerDeleteQuery, bookingId);
+		 * 
+		 * insertBookingIdForTimer(criteriaList, requestInfo,
+		 * availabilityDetailsResponse); }
+		 */
+	}
 
 	@Override
 	public List<AdvertisementSlotAvailabilityDetail> getBookedSlots(AdvertisementSlotSearchCriteria criteria,
@@ -319,12 +336,13 @@ public class BookingRepositoryImpl implements BookingRepository {
 	}
 
 	public List<AdvertisementDraftDetail> getDraftData(String uuid) {
-		String query = queryBuilder.getDraftIdExistsCheckQuery();
-		return jdbcTemplate.query(query, new AdvertisementDraftIdRowMapper(), uuid);
+		String query = queryBuilder.checkDraftIdExists(uuid);
+		return jdbcTemplate.query(query, new Object[] { uuid }, new AdvertisementDraftIdRowMapper());
 	}
 
 	public void deleteBookingIdForTimer(String bookingId) {
-		String query = queryBuilder.getPaymentTimerDeleteQuery();
+		String query = queryBuilder.deleteBookingIdForTimer(bookingId);
+		// String draftQuery = queryBuilder.deleteDraftIdForTimer(bookingId);
 
 		jdbcTemplate.update(query, bookingId);
 
@@ -361,7 +379,7 @@ public class BookingRepositoryImpl implements BookingRepository {
 
 		long currentTimeMillis = BookingUtil.getCurrentTimestamp();
 		// Execute query only if booking IDs exist
-		List<Map<String, Object>> bookings = jdbcTemplate.queryForList(query, bookingId);
+		List<Map<String, Object>> bookings = jdbcTemplate.queryForList(query, new Object[] { bookingId });
 		Map<String, Long> remainingTimers = new HashMap<>();
 
 		for (Map<String, Object> booking : bookings) {
@@ -439,27 +457,27 @@ public class BookingRepositoryImpl implements BookingRepository {
 		String nightLight = " AND eacd.night_light ";
 
 		if (StringUtils.isNotBlank(criteria.getAddType())) {
-			query.append(addTypeQuery).append(EQUALS_PLACEHOLDER);
+			query.append(addTypeQuery).append(" = ? ");
 			paramsList.add(criteria.getAddType());
 
 		}
 		if (StringUtils.isNotBlank(criteria.getFaceArea())) {
-			query.append(faceAreaQuery).append(EQUALS_PLACEHOLDER);
+			query.append(faceAreaQuery).append(" = ? ");
 			paramsList.add(criteria.getFaceArea());
 		}
 		if (StringUtils.isNotBlank(criteria.getLocation())) {
-			query.append(location).append(EQUALS_PLACEHOLDER);
+			query.append(location).append(" = ? ");
 			paramsList.add(criteria.getLocation());
 		}
 		if (StringUtils.isNotBlank(criteria.getAddType())) {
-			query.append(nightLight).append(EQUALS_PLACEHOLDER);
+			query.append(nightLight).append(" = ? ");
 			paramsList.add(criteria.getNightLight());
 		}
 
 		log.info("getBookingDetails : Final query: " + query);
 		log.info("paramsList : " + paramsList);
 		List<AdvertisementSlotAvailabilityDetail> availabiltityDetails = jdbcTemplate.query(query.toString(),
-				availabilityRowMapper, paramsList.toArray());
+				paramsList.toArray(), availabilityRowMapper);
 
 		log.info("Fetched slot availabilty details : " + availabiltityDetails);
 		return availabiltityDetails;
@@ -488,11 +506,17 @@ public class BookingRepositoryImpl implements BookingRepository {
 			paramsList.add(criteria.getNightLight());
 		}
 
+//		if (criteria.getBookingStartDate() != null && criteria.getBookingEndDate() != null) {
+//			query.append(" AND booking_start_date <= ? AND booking_end_date >= ?");
+//			paramsList.add(java.sql.Date.valueOf(criteria.getBookingEndDate()));
+//			paramsList.add(java.sql.Date.valueOf(criteria.getBookingStartDate()));
+//		}
+
 		log.info("getBookedSlotsFromTimer: Final query: {}", query);
 		log.info("Parameters: {}", paramsList);
 
 		List<AdvertisementSlotAvailabilityDetail> availabiltityDetails = jdbcTemplate.query(query.toString(),
-				availabilityUpdateRowMapper, paramsList.toArray());
+				paramsList.toArray(), availabilityUpdateRowMapper);
 
 		log.info("Fetched slot availabilty details : " + availabiltityDetails);
 
@@ -503,7 +527,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 	@Override
 	public void saveDraftApplication(BookingRequest bookingRequest) {
 		AdvertisementDraftDetail advertisementDraftDetail = convertToDraftDetailsObject(bookingRequest);
-		PersisterWrapper<AdvertisementDraftDetail> persisterWrapper = new PersisterWrapper<>(advertisementDraftDetail);
+		PersisterWrapper<AdvertisementDraftDetail> persisterWrapper = new PersisterWrapper<AdvertisementDraftDetail>(
+				advertisementDraftDetail);
 		producer.push(bookingConfiguration.getAdvertisementDraftApplicationSaveTopic(), persisterWrapper);
 	}
 
@@ -517,13 +542,14 @@ public class BookingRepositoryImpl implements BookingRepository {
 
 		log.info("Final query for getAdvertisementApplications {} and paramsList {} : ", preparedStmtList);
 		log.info("Final query: " + query);
-		return jdbcTemplate.query(query, draftApplicationRowMapper, preparedStmtList.toArray());
+		return jdbcTemplate.query(query, preparedStmtList.toArray(), draftApplicationRowMapper);
 	}
 
 	@Override
 	public void updateDraftApplication(BookingRequest bookingRequest) {
 		AdvertisementDraftDetail advertisementDraftDetail = convertToDraftDetailsObject(bookingRequest);
-		PersisterWrapper<AdvertisementDraftDetail> persisterWrapper = new PersisterWrapper<>(advertisementDraftDetail);
+		PersisterWrapper<AdvertisementDraftDetail> persisterWrapper = new PersisterWrapper<AdvertisementDraftDetail>(
+				advertisementDraftDetail);
 		producer.push(bookingConfiguration.getAdvertisementDraftApplicationUpdateTopic(), persisterWrapper);
 
 	}
@@ -531,7 +557,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 	public void deleteDraftApplication(String draftId) {
 		AdvertisementDraftDetail advertisementDraftDetail = AdvertisementDraftDetail.builder().draftId(draftId).build();
 
-		PersisterWrapper<AdvertisementDraftDetail> persisterWrapper = new PersisterWrapper<>(advertisementDraftDetail);
+		PersisterWrapper<AdvertisementDraftDetail> persisterWrapper = new PersisterWrapper<AdvertisementDraftDetail>(
+				advertisementDraftDetail);
 		producer.push(bookingConfiguration.getAdvertisementDraftApplicationDeleteTopic(), persisterWrapper);
 
 	}
@@ -547,21 +574,22 @@ public class BookingRepositoryImpl implements BookingRepository {
 					bookingRequest.getBookingApplication().getTenantId(), e);
 
 		}
-		return AdvertisementDraftDetail.builder()
+		AdvertisementDraftDetail advertisementDraftDetail = AdvertisementDraftDetail.builder()
 				.draftId(advertisementDetail.getDraftId()).tenantId(advertisementDetail.getTenantId())
 				.userUuid(bookingRequest.getRequestInfo().getUserInfo().getUuid())
 				.draftApplicationData(draftApplicationData).auditDetails(advertisementDetail.getAuditDetails()).build();
+		return advertisementDraftDetail;
 	}
 
 	public String getStatusFromTimerTable(String bookingId) {
 		String status = null;
 		if (bookingId != null && !bookingId.isEmpty()) {
-			String checkQuery = queryBuilder.getBookingIdExistsCheckQuery();
+			String checkQuery = queryBuilder.checkBookingIdExists(bookingId);
 			List<Map<String, Object>> result = jdbcTemplate.queryForList(checkQuery, bookingId);
 			if (!result.isEmpty()) {
 				status = (String) result.get(0).get("status");
 			} else {
-				log.warn("No records found for bookingId: {}", bookingId);
+				System.out.println("No records found for bookingId: " + bookingId);
 			}
 		}
 		return status;
@@ -589,7 +617,7 @@ public class BookingRepositoryImpl implements BookingRepository {
 			if (rowsDeleted > 0) {
 				log.info(rowsDeleted + " expired entry(ies) deleted for booking ID: " + bookingId);
 
-				self.updateBookingSynchronously(bookingId, "", null, BookingStatusEnum.BOOKING_EXPIRED.toString());
+				updateBookingSynchronously(bookingId, "", null, BookingStatusEnum.BOOKING_EXPIRED.toString());
 
 			}
 		}
@@ -618,8 +646,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 		}
 
 		try {
-			return jdbcTemplate.queryForList(queryBookingId, String.class, currentTimeMillis,
-					bookingConfiguration.getPaymentTimer());
+			return jdbcTemplate.queryForList(queryBookingId,
+					new Object[] { currentTimeMillis, bookingConfiguration.getPaymentTimer() }, String.class);
 		} catch (DataAccessException e) {
 			log.warn("Error fetching booking IDs: " + e.getMessage());
 			return Collections.emptyList();
@@ -636,8 +664,8 @@ public class BookingRepositoryImpl implements BookingRepository {
 		}
 
 		try {
-			return jdbcTemplate.queryForList(queryDraftId, String.class, currentTimeMillis,
-					bookingConfiguration.getPaymentTimer());
+			return jdbcTemplate.queryForList(queryDraftId,
+					new Object[] { currentTimeMillis, bookingConfiguration.getPaymentTimer() }, String.class);
 		} catch (DataAccessException e) {
 			log.warn("Error fetching booking IDs: " + e.getMessage());
 			return Collections.emptyList();

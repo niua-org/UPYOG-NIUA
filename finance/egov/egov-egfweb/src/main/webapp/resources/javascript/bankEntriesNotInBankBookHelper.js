@@ -221,14 +221,9 @@ function setValue(obj) {
 function loadBankAccount(obj) {
 	if (obj.options[obj.selectedIndex].value != -1) {
 		var branchId = obj.options[obj.selectedIndex].value;
-		// LTS Migration Fix (Struts 7): also send fundId. The AJAX action does
-		// not bind query params onto fields; CommonAction reads them from the
-		// request. Fund filters accounts for Municipal Fund / etc.
-		var fundObj = document.getElementById('fundId');
-		var fundId = fundObj ? fundObj.options[fundObj.selectedIndex].value : '';
+		// bootbox.alert("heelo"+x);
 		populatebankaccount({
-			branchId : branchId,
-			fundId : fundId
+			branchId : branchId
 		});
 	}
 
@@ -237,13 +232,9 @@ function loadBankAccount(obj) {
 function loadBankBranch(obj) {
 	if (obj.options[obj.selectedIndex].value != -1) {
 		var bankId = obj.options[obj.selectedIndex].value;
-		// LTS Migration Fix (Struts 7): send fundId so branch AJAX can filter
-		// the same way as Bank (ajaxLoadBankBranchFromBank reads request params).
-		var fundObj = document.getElementById('fundId');
-		var fundId = fundObj ? fundObj.options[fundObj.selectedIndex].value : '';
+		// bootbox.alert("heelo"+x);
 		populatebank_branch({
-			bankId : bankId,
-			fundId : fundId
+			bankId : bankId
 		});
 	}
 

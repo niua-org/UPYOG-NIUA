@@ -46,18 +46,17 @@
  */
 package org.egov.common.entity.edcr;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
 import org.egov.infra.persistence.entity.AbstractAuditable;
-import org.egov.infra.validation.SanitizeHtml;
 import org.hibernate.validator.constraints.Length;
-import jakarta.validation.constraints.NotEmpty;
-
+import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Entity
 @Table(name = "EGDCR_LAYERNAME", schema = "state")
@@ -71,13 +70,11 @@ public class LayerName extends AbstractAuditable {
 	@Id
 	@GeneratedValue(generator = SEQ_LAYERNAME, strategy = GenerationType.SEQUENCE)
 	private Long id;
-
-	@SanitizeHtml
+	@SafeHtml
 	@NotEmpty
 	@Length(min = 1, max = 250)
 	private String key;
-	
-	@SanitizeHtml
+	@SafeHtml
 	@NotEmpty
 	@Length(min = 1, max = 250)
 	private String value;

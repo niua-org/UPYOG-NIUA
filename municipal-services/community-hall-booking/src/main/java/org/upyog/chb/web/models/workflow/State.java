@@ -33,6 +33,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Builder
 @ToString
+//@EqualsAndHashCode(of = {"tenantId","businessServiceId","state"})
 @EqualsAndHashCode
 public class State   {
 

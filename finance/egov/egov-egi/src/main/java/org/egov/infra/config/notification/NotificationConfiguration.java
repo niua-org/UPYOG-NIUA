@@ -55,7 +55,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.jndi.JndiObjectFactoryBean;
 
-import jakarta.jms.Destination;
+import javax.jms.Destination;
 
 @Configuration
 @DependsOn("jmsConfiguration")

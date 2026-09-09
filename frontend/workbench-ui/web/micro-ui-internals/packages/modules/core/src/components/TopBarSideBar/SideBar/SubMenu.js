@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useHistory, useLocation, Link } from "react-router-dom";
 import {
   ArrowForward,
   ArrowVectorDown,
@@ -16,7 +16,7 @@ import {
   CollectionsBookmarIcons,
   FinanceChartIcon,
   CollectionIcon,
-} from "@upyog/workbench-ui-react-components";
+} from "@egovernments/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import ReactTooltip from "react-tooltip";
 
@@ -25,7 +25,7 @@ const SubMenu = ({ item }) => {
   const location = useLocation();
   const { pathname } = location;
   const { t } = useTranslation();
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
 
   const showSubnav = () => setSubnav(!subnav);
   const IconsObject = {
@@ -47,7 +47,7 @@ const SubMenu = ({ item }) => {
   let leftIcon = IconsObject[leftIconArray] || IconsObject.collections;
   const iconArr = item?.icon?.leftIcon?.split?.(":") || item?.leftIcon?.split?.(":");
   if (iconArr?.[0] == "dynamic") {
-    var IconComp = require("@upyog/workbench-ui-react-components")?.[iconArr?.[1]];
+    var IconComp = require("@egovernments/digit-ui-react-components")?.[iconArr?.[1]];
     leftIcon = IconComp ? <IconComp /> : leftIcon;
   }
   const getModuleName = item?.moduleName?.replace(/[ -]/g, "_");
@@ -60,10 +60,10 @@ const SubMenu = ({ item }) => {
       <div className="submenu-container">
         <div className={`sidebar-link  ${pathname === item?.navigationURL ? "active" : ""}`}>
           <div className="actions">
-            <span style={{ marginLeft: "0px" }} onClick={() => navigate(`${item.navigationURL}`)}>
+            <span style={{ marginLeft: "0px" }} onClick={() => history.push(`${item.navigationURL}`)}>
               {leftIcon}
             </span>
-            {item.navigationURL?.indexOf(`/workbench-ui`) === -1 ? (
+            {item.navigationURL?.indexOf(`/${window?.contextPath}`) === -1 ? (
               <a
                 data-tip="React-tooltip"
                 data-for={`jk-side-${getModuleName}`}
@@ -141,7 +141,7 @@ const SubMenu = ({ item }) => {
               const appendTranslate = t(`ACTION_TEST_${getChildName}`);
               const trimModuleName = t(appendTranslate?.length > 20 ? appendTranslate.substring(0, 20) + "..." : appendTranslate);
 
-              if (item.navigationURL.indexOf(`/workbench-ui`) === -1) {
+              if (item.navigationURL.indexOf(`/${window?.contextPath}`) === -1) {
                 const getOrigin = window.location.origin;
                 return (
                   <a
@@ -157,6 +157,12 @@ const SubMenu = ({ item }) => {
                         </ReactTooltip>
                       )}
                     </div>
+                    {/* <div className="actions">
+                      <div className="tooltip">
+                        <p className="p1">{trimModuleName}</p>
+                        <span className="tooltiptext">{t(`ACTION_TEST_${getChildName}`)}</span>
+                      </div>{" "}
+                    </div> */}
                   </a>
                 );
               }

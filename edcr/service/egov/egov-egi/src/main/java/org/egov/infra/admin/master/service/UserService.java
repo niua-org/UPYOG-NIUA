@@ -87,7 +87,7 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+        return userRepository.findOne(id);
     }
 
     public User getUserRefById(Long id) {
@@ -95,7 +95,8 @@ public class UserService {
     }
 
     public User getCurrentUser() {
-    	return userRepository.findById(ApplicationThreadLocals.getUserId()).orElse(null);    }
+        return userRepository.findOne(ApplicationThreadLocals.getUserId());
+    }
 
     public User getUserByUsername(String userName) {
         if (ApplicationConstant.ANONYMOUS_USERNAME.equals(userName))

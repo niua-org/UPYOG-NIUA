@@ -2,20 +2,20 @@ package org.egov.egf.contract.model;
 
 import java.io.Serializable;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class Fund implements Serializable {
 
     private Long id;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String code;
     private Character identifier;
     private Long parent;
     private Boolean active;
     private Boolean isParent;
-    @SanitizeHtml
+    @SafeHtml
     private String level;
 
     private AuditDetails auditDetils;

@@ -55,8 +55,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Service
@@ -83,11 +83,11 @@ public class UOMCategoryService {
     }
 
     public List<UOMCategory> findAll() {
-        return uomCategoryRepository.findAll(Sort.by(Sort.Direction.ASC, "category"));
+        return uomCategoryRepository.findAll(new Sort(Sort.Direction.ASC, "category"));
     }
 
     public UOMCategory findOne(final Long id) {
-        return uomCategoryRepository.findById(id).orElse(null);
+        return uomCategoryRepository.findOne(id);
     }
 
     public List<UOMCategory> search(final UOMCategory uomCategory) {

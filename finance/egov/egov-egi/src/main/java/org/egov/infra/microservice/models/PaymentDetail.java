@@ -49,10 +49,10 @@
 package org.egov.infra.microservice.models;
 
 import java.math.BigDecimal;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -67,12 +67,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @EqualsAndHashCode
 public class PaymentDetail {
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("id")
     private String id;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("tenantId")
     private String tenantId;
@@ -84,12 +84,12 @@ public class PaymentDetail {
     @JsonProperty("totalAmountPaid")
     private BigDecimal totalAmountPaid;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("receiptNumber")
     private String receiptNumber;
     
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("manualReceiptNumber")
     private String manualReceiptNumber;
@@ -100,15 +100,15 @@ public class PaymentDetail {
     @JsonProperty("receiptDate")
     private Long receiptDate = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("receiptType")
     private String receiptType = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("businessService")
     private String businessService;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @Size(max=64)
     @JsonProperty("billId")

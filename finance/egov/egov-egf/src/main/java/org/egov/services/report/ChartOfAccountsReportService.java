@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.egov.commons.CChartOfAccounts;
@@ -18,8 +18,8 @@ import org.egov.infstr.services.PersistenceService;
 import org.egov.model.report.ChartOfAccountsReport;
 import org.egov.utils.Constants;
 import org.egov.utils.FinancialConstants;
-import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +78,7 @@ public class ChartOfAccountsReportService {
 		queryStr.append(" group by coa.glcode,minorcoa.glcode,majorcoa.glcode,parent.glcode,coa.name,minorcoa.name,")
 		.append("majorcoa.name,acp.name,coa.type,coa.isactiveforposting order by coa.glcode asc ");
 
-        NativeQuery queryResult = persistenceService.getSession().createNativeQuery(queryStr.toString());
+        SQLQuery queryResult = persistenceService.getSession().createSQLQuery(queryStr.toString());
         setParametersToQuery(coaSearchResultObj, queryResult);
         final List<Object[]> coaReportList = queryResult.list();
         List<ChartOfAccountsReport> coaReport = new ArrayList<ChartOfAccountsReport>();
@@ -140,28 +140,28 @@ public class ChartOfAccountsReportService {
 
     }
 
-	private NativeQuery setParametersToQuery(final ChartOfAccountsReport coaSearchResultObj, final NativeQuery queryResult) {
+	private SQLQuery setParametersToQuery(final ChartOfAccountsReport coaSearchResultObj, final SQLQuery queryResult) {
 
 		if (StringUtils.isNotBlank(coaSearchResultObj.getAccountCode()))
-			queryResult.setParameter("accountCode", coaSearchResultObj.getAccountCode());
+			queryResult.setString("accountCode", coaSearchResultObj.getAccountCode());
 		if (coaSearchResultObj.getMajorCodeId() != null)
-			queryResult.setParameter("majorCodeId", coaSearchResultObj.getMajorCodeId());
+			queryResult.setLong("majorCodeId", coaSearchResultObj.getMajorCodeId());
 
 		if (coaSearchResultObj.getMinorCodeId() != null)
-			queryResult.setParameter("minorCodeId", coaSearchResultObj.getMinorCodeId());
+			queryResult.setLong("minorCodeId", coaSearchResultObj.getMinorCodeId());
 
 		if (coaSearchResultObj.getType() != null)
-			queryResult.setParameter("type", coaSearchResultObj.getType());
+			queryResult.setString("type", coaSearchResultObj.getType());
 		if (coaSearchResultObj.getPurposeId() != null)
-			queryResult.setParameter("purposeId", coaSearchResultObj.getPurposeId());
+			queryResult.setLong("purposeId", coaSearchResultObj.getPurposeId());
 		if (coaSearchResultObj.getDetailTypeId() != null)
-			queryResult.setParameter("detailTypeId", coaSearchResultObj.getDetailTypeId());
+			queryResult.setLong("detailTypeId", coaSearchResultObj.getDetailTypeId());
 		if (coaSearchResultObj.getIsActiveForPosting() != null)
-			queryResult.setParameter("isActiveForPosting", coaSearchResultObj.getIsActiveForPosting());
+			queryResult.setBoolean("isActiveForPosting", coaSearchResultObj.getIsActiveForPosting());
 		if (coaSearchResultObj.getFunctionReqd() != null)
-			queryResult.setParameter("functionReqd", coaSearchResultObj.getFunctionReqd());
+			queryResult.setBoolean("functionReqd", coaSearchResultObj.getFunctionReqd());
 		if (coaSearchResultObj.getBudgetCheckReq() != null)
-			queryResult.setParameter("budgetCheckReq", coaSearchResultObj.getBudgetCheckReq());
+			queryResult.setBoolean("budgetCheckReq", coaSearchResultObj.getBudgetCheckReq());
 		return queryResult;
 	}
 

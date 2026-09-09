@@ -1,22 +1,22 @@
 package org.egov.infra.microservice.models;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class BusinessServiceMapping {
-    @SanitizeHtml
+    @SafeHtml
     private String code;
     private boolean voucherCreationEnabled;
-    @SanitizeHtml
+    @SafeHtml
     private String fund;
-    @SanitizeHtml
+    @SafeHtml
     private String function;
-    @SanitizeHtml
+    @SafeHtml
     private String department;
-    @SanitizeHtml
+    @SafeHtml
     private String functionary;
-    @SanitizeHtml
+    @SafeHtml
     private String scheme;
-    @SanitizeHtml
+    @SafeHtml
     private String subscheme;
     private Long validFrom;
     private Long validTo;

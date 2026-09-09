@@ -3,22 +3,26 @@ import { Request, ServiceRequest } from "../../atoms/Utils/Request";
 import { Storage } from "../../atoms/Utils/Storage";
 
 export const UserService = {
-  
-  authenticate: (details) => {
+  authenticate: async (details) => {
     const data = new URLSearchParams();
     Object.entries(details).forEach(([key, value]) => data.append(key, value));
     data.append("scope", "read");
     data.append("grant_type", "password");
-    return ServiceRequest({
+
+    let authResponse = await ServiceRequest({
       serviceName: "authenticate",
       url: Urls.Authenticate,
       data,
       headers: {
-        // TODO: Remove fallback once all environments have JWT_TOKEN configured in globalConfigs
-        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN")}`,
+        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN") || "ZWdvdi11c2VyLWNsaWVudDo="}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
+    const invalidRoles = window?.globalConfigs?.getConfig("INVALIDROLES") || [];
+    if (invalidRoles && invalidRoles.length > 0 && authResponse && authResponse?.UserRequest?.roles?.some((role) => invalidRoles.includes(role.code))) {
+      throw new Error("ES_ERROR_USER_NOT_PERMITTED");
+    }
+    return authResponse;
   },
   logoutUser: () => {
     let user = UserService.getUser();
@@ -69,6 +73,13 @@ export const UserService = {
   setUser: (data) => {
     return Digit.SessionStorage.set("User", data);
   },
+  setExtraRoleDetails: (data) => {
+    const userDetails = Digit.SessionStorage.get("User");
+    return Digit.SessionStorage.set("User", { ...userDetails, extraRoleInfo: data });
+  },
+  getExtraRoleDetails: () => {
+    return Digit.SessionStorage.get("User")?.extraRoleInfo;
+  },
   registerUser: (details, stateCode) =>
     ServiceRequest({
       serviceName: "registerUser",
@@ -114,11 +125,13 @@ export const UserService = {
     });
   },
   userSearch: async (tenantId, data, filters) => {
-    return Request({
+
+    return ServiceRequest({
       url: Urls.UserSearch,
       params: { ...filters },
       method: "POST",
       auth: true,
+      useCache: true,
       userService: true,
       data: data.pageSize ? { tenantId, ...data } : { tenantId, ...data, pageSize: "100" },
     });

@@ -136,6 +136,7 @@ public class TradeLicenseService {
                break;
        }
         repository.save(tradeLicenseRequest);
+       
 
         return tradeLicenseRequest.getLicenses();
 	}

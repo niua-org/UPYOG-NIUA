@@ -55,25 +55,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
- * Jakarta EE 10 Persistence Context Migration:
- * Replaced javax.persistence (EntityManager, PersistenceContext) with jakarta.persistence.
- */
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.egov.collection.constants.CollectionConstants;
 import org.egov.collection.entity.CollectionSummaryHeadWiseReport;
 import org.egov.collection.entity.CollectionSummaryHeadWiseReportResult;
-/*
- * Hibernate 6 Native Query Refactoring:
- * Replaced org.hibernate.SQLQuery with org.hibernate.query.NativeQuery and scalar type mappings with StandardBasicTypes.
- */
-import org.hibernate.query.NativeQuery;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.DoubleType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -204,61 +196,51 @@ public class CollectionReportHeadWiseService {
         final StringBuilder finalRebateQueryStr = new StringBuilder(finalSelectQueryStr).append(rebateQueryStr)
                 .append(finalGroupQuery);
 
-        /*
-         * Hibernate 6 NativeQuery & Scalar Type Mapping Migration:
-         * 1. Replaced legacy SQLQuery type-cast and session.createSQLQuery() with NativeQuery and session.createNativeQuery().
-         * 2. Replaced deprecated DoubleType.INSTANCE and org.hibernate.type.StringType.INSTANCE scalar type mappings
-         *    with StandardBasicTypes.DOUBLE and StandardBasicTypes.STRING as required by Hibernate 6.
-         */
-        final NativeQuery aggrQuery = (NativeQuery) getCurrentSession().createNativeQuery(finalRevQueryStr.toString())
-                .addScalar("cashCount", StandardBasicTypes.STRING).addScalar("cashAmount", StandardBasicTypes.DOUBLE)
-                .addScalar("chequeddCount", StandardBasicTypes.STRING)
-                .addScalar("chequeddAmount", StandardBasicTypes.DOUBLE)
-                .addScalar("onlineCount", StandardBasicTypes.STRING).addScalar("onlineAmount", StandardBasicTypes.DOUBLE)
-                .addScalar("source", StandardBasicTypes.STRING)
-                .addScalar("glCode", StandardBasicTypes.STRING)
-                .addScalar("cardAmount", StandardBasicTypes.DOUBLE).addScalar("cardCount", StandardBasicTypes.STRING)
-                .addScalar("totalReceiptCount", StandardBasicTypes.STRING)
+        final SQLQuery aggrQuery = (SQLQuery) getCurrentSession().createSQLQuery(finalRevQueryStr.toString())
+                .addScalar("cashCount", org.hibernate.type.StringType.INSTANCE).addScalar("cashAmount", DoubleType.INSTANCE)
+                .addScalar("chequeddCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("chequeddAmount", DoubleType.INSTANCE)
+                .addScalar("onlineCount", org.hibernate.type.StringType.INSTANCE).addScalar("onlineAmount", DoubleType.INSTANCE)
+                .addScalar("source", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("glCode", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("cardAmount", DoubleType.INSTANCE).addScalar("cardCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("totalReceiptCount", org.hibernate.type.StringType.INSTANCE)
                 .setResultTransformer(Transformers.aliasToBean(CollectionSummaryHeadWiseReport.class));
 
-        /*
-         * Hibernate 6 NativeQuery Migration for Rebate Query:
-         * Replaced legacy SQLQuery and DoubleType.INSTANCE scalar mappings with NativeQuery and StandardBasicTypes.
-         */
-        final NativeQuery rebateQuery = (NativeQuery) getCurrentSession().createNativeQuery(finalRebateQueryStr.toString())
-                .addScalar("cashCount", StandardBasicTypes.STRING).addScalar("cashAmount", StandardBasicTypes.DOUBLE)
-                .addScalar("chequeddCount", StandardBasicTypes.STRING)
-                .addScalar("chequeddAmount", StandardBasicTypes.DOUBLE)
-                .addScalar("onlineCount", StandardBasicTypes.STRING).addScalar("onlineAmount", StandardBasicTypes.DOUBLE)
-                .addScalar("source", StandardBasicTypes.STRING)
-                .addScalar("glCode", StandardBasicTypes.STRING)
-                .addScalar("cardAmount", StandardBasicTypes.DOUBLE).addScalar("cardCount", StandardBasicTypes.STRING)
-                .addScalar("totalReceiptCount", StandardBasicTypes.STRING)
+        final SQLQuery rebateQuery = (SQLQuery) getCurrentSession().createSQLQuery(finalRebateQueryStr.toString())
+                .addScalar("cashCount", org.hibernate.type.StringType.INSTANCE).addScalar("cashAmount", DoubleType.INSTANCE)
+                .addScalar("chequeddCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("chequeddAmount", DoubleType.INSTANCE)
+                .addScalar("onlineCount", org.hibernate.type.StringType.INSTANCE).addScalar("onlineAmount", DoubleType.INSTANCE)
+                .addScalar("source", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("glCode", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("cardAmount", DoubleType.INSTANCE).addScalar("cardCount", org.hibernate.type.StringType.INSTANCE)
+                .addScalar("totalReceiptCount", org.hibernate.type.StringType.INSTANCE)
                 .setResultTransformer(Transformers.aliasToBean(CollectionSummaryHeadWiseReport.class));
 		if (!source.isEmpty() && !source.equals(CollectionConstants.ALL)) {
-			aggrQuery.setParameter("source", source);
-			rebateQuery.setParameter("source", source);
+			aggrQuery.setString("source", source);
+			rebateQuery.setString("source", source);
 		}
 		if (glCode != null) {
-			aggrQuery.setParameter("glCode", glCode);
-			rebateQuery.setParameter("glCode", glCode);
+			aggrQuery.setString("glCode", glCode);
+			rebateQuery.setString("glCode", glCode);
 		}
 		if (status != -1) {
-			aggrQuery.setParameter("searchStatus", status);
-			rebateQuery.setParameter("searchStatus", status);
+			aggrQuery.setLong("searchStatus", status);
+			rebateQuery.setLong("searchStatus", status);
 		}
 
 		if (StringUtils.isNotBlank(paymentMode) && !paymentMode.equals(CollectionConstants.ALL))
 			if (paymentMode.equals(CollectionConstants.INSTRUMENTTYPE_CHEQUEORDD)) {
-				aggrQuery.setParameter("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
-				rebateQuery.setParameter("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
+				aggrQuery.setParameterList("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
+				rebateQuery.setParameterList("paymentMode", new ArrayList<>(Arrays.asList("cheque", "dd")));
 			} else {
-				aggrQuery.setParameter("paymentMode", paymentMode);
-				rebateQuery.setParameter("paymentMode", paymentMode);
+				aggrQuery.setString("paymentMode", paymentMode);
+				rebateQuery.setString("paymentMode", paymentMode);
 			}
 		if (branchId != null && branchId != -1) {
-			aggrQuery.setParameter("branchId", branchId);
-			rebateQuery.setParameter("branchId", branchId);
+			aggrQuery.setInteger("branchId", branchId);
+			rebateQuery.setInteger("branchId", branchId);
 		}
 		rebateQuery.setParameter("accountPurposeName", CollectionConstants.PURPOSE_NAME_REBATE);
 		whereQueryParams.entrySet().forEach(entry -> {

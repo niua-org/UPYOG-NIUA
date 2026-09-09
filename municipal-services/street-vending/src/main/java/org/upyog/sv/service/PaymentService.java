@@ -1,17 +1,15 @@
 package org.upyog.sv.service;
 
 import static org.upyog.sv.web.models.RenewalStatus.RENEWED;
-import static org.upyog.sv.web.models.RenewalStatus.RENEW_APPLICATION_CREATED;
-import static org.upyog.sv.web.models.RenewalStatus.RENEW_IN_PROGRESS;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.upyog.sv.config.StreetVendingConfiguration;
@@ -44,16 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class PaymentService {
 
-	private static final ZoneId SYSTEM_ZONE = ZoneId.systemDefault();
-
-	private final ObjectMapper mapper;
-	private final StreetVendingConfiguration configs;
-	private final ServiceRequestRepository serviceRequestRepository;
-	private final StreetVendingRepository streetVendingRepository;
-	private final IdgenUtil idgenUtil;
-	private final DemandService demandService;
-	private final UserService userService;
-	private final StreetyVendingNotificationService notificationService;
+	@Autowired
+	private ObjectMapper mapper;
 
 	@Value("${egov.mdms.host}")
 	private String mdmsHost;
@@ -61,28 +51,36 @@ public class PaymentService {
 	@Value("${egov.mdms.search.endpoint}")
 	private String mdmsUrl;
 
-	public PaymentService(ObjectMapper mapper, StreetVendingConfiguration configs,
-			ServiceRequestRepository serviceRequestRepository, StreetVendingRepository streetVendingRepository,
-			IdgenUtil idgenUtil, DemandService demandService, UserService userService,
-			StreetyVendingNotificationService notificationService) {
-		this.mapper = mapper;
-		this.configs = configs;
-		this.serviceRequestRepository = serviceRequestRepository;
-		this.streetVendingRepository = streetVendingRepository;
-		this.idgenUtil = idgenUtil;
-		this.demandService = demandService;
-		this.userService = userService;
-		this.notificationService = notificationService;
-	}
+	@Autowired
+	private StreetVendingConfiguration configs;
+
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
+
+	@Autowired
+	private StreetVendingRepository streetVendingRepository;
+
+	@Autowired
+	private IdgenUtil idgenUtil;
+	
+	@Autowired
+	private DemandService demandService;
+	
+	@Autowired
+	private UserService userService;
+	
+	@Autowired
+	private StreetyVendingNotificationService notificationService;
 
 	/**
-	 * Processes a payment update record from Kafka.
 	 *
-	 * @param paymentRecord payment payload map
+	 * @param record
+	 * @param topic
 	 */
-	public void process(Map<String, Object> paymentRecord) throws JsonProcessingException {
+
+	public void process(HashMap<String, Object> record, String topic) throws JsonProcessingException {
 		try {
-			PaymentRequest paymentRequest = mapper.convertValue(paymentRecord, PaymentRequest.class);
+			PaymentRequest paymentRequest = mapper.convertValue(record, PaymentRequest.class);
 			String businessService = paymentRequest.getPayment().getPaymentDetails().get(0).getBusinessService();
 			log.info("Payment request processing in Street Vending method for businessService : " + businessService);
 			if (configs.getModuleName().equals(businessService)) {
@@ -111,7 +109,9 @@ public class PaymentService {
 		log.info(" Process instance of street vending application " + processInstance.toString());
 		ProcessInstanceRequest workflowRequest = new ProcessInstanceRequest(paymentRequest.getRequestInfo(),
 				Collections.singletonList(processInstance));
-		return callWorkFlow(workflowRequest);
+		State state = callWorkFlow(workflowRequest);
+
+		return state;
 
 	}
 
@@ -174,10 +174,15 @@ public class PaymentService {
 		RenewalStatus renewalStatus = detail.getRenewalStatus();
 		if (renewalStatus == null) {
 			updatedStatus = updateNewApplication(detail, paymentRequest);
-		} else if (RENEW_IN_PROGRESS.equals(renewalStatus)) {
-			updatedStatus = updateOldApplicationForRenewal(detail);
-		} else if (RENEW_APPLICATION_CREATED.equals(renewalStatus)) {
-			updatedStatus = updateNewApplicationForRenewal(paymentRequest, detail);
+		} else {
+			switch (renewalStatus) {
+				case RENEW_IN_PROGRESS:
+					updatedStatus = updateOldApplicationForRenewal(detail);
+					break;
+				case RENEW_APPLICATION_CREATED:
+					updatedStatus = updateNewApplicationForRenewal(paymentRequest, detail);
+					break;
+			}
 		}
 
 		updateAuditFields(detail, requestInfo, StreetVendingUtil.getCurrentTimestamp(), updatedStatus);
@@ -329,7 +334,7 @@ public class PaymentService {
 				.vendorId(detail.getVendorDetail().get(0).getId())
 				.applicationNo(detail.getApplicationNo())
 				.lastPaymentDate(null)
-				.dueDate(LocalDate.now(SYSTEM_ZONE).plusMonths(1))
+				.dueDate(LocalDate.now().plusMonths(1))
 				.paymentReceiptNo(null)
 				.status(PaymentScheduleStatus.PENDING_DEMAND_GENERATION)
 				.auditDetails(detail.getAuditDetails())
@@ -356,7 +361,7 @@ public class PaymentService {
 		log.info("Payment Request " + paymentRequest);
 		
 	    List<VendorPaymentSchedule> dueSchedules = streetVendingRepository
-	            .getVendorPayScheduleForDueDateAndStatus(LocalDate.now(SYSTEM_ZONE), PaymentScheduleStatus.PENDING_DEMAND_GENERATION);
+	            .getVendorPayScheduleForDueDateAndStatus(LocalDate.now(), PaymentScheduleStatus.PENDING_DEMAND_GENERATION);
 
 	    for (VendorPaymentSchedule schedule : dueSchedules) {
 	        processSchedule(schedule, paymentRequest);
@@ -420,6 +425,14 @@ public class PaymentService {
 	 * @param detail   the {@link StreetVendingDetail} associated with the vendor's certificate. Must not be null.
 	 */
 	private void handleVendorPaymentSchedule(VendorPaymentSchedule schedule, StreetVendingDetail detail) {
+	    LocalDate currentDueDate = schedule.getDueDate();
+	    LocalDate validityDate = detail.getValidityDate();
+	    int paymentCycleInMonths = getPaymentCycleInMonths(detail.getVendorPaymentFrequency());
+	    LocalDate nextDueDate = currentDueDate.plusMonths(paymentCycleInMonths);
+
+	    boolean isPartialCycle = validityDate.isBefore(nextDueDate);
+	    LocalDate actualEndDate = isPartialCycle ? validityDate : nextDueDate;
+
 	    UserDetailResponse systemUser = userService.searchByUserName(
 	        StreetVendingConstants.SYSTEM_CITIZEN_USERNAME,
 	        StreetVendingConstants.SYSTEM_CITIZEN_TENANTID
@@ -435,7 +448,7 @@ public class PaymentService {
 	        .streetVendingDetail(detail)
 	        .build();
 
-	    demandService.createDemand(streetVendingRequest);
+	    demandService.createDemand(streetVendingRequest, null);
 
 	    schedule.setStatus(PaymentScheduleStatus.PENDING_PAYMENT);
 	    updateSchedule(schedule);
@@ -492,7 +505,7 @@ public class PaymentService {
 	            .vendorId(schedule.getVendorId())
 	            .certificateNo(schedule.getCertificateNo())
 	            .applicationNo(detail.getApplicationNo())
-	            .lastPaymentDate(LocalDate.now(SYSTEM_ZONE))
+	            .lastPaymentDate(LocalDate.now())
 	            .dueDate(nextDueDate)
 	            .status(PaymentScheduleStatus.PENDING_DEMAND_GENERATION)
 	            .build();

@@ -4,28 +4,28 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Receipt {
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     private String tenantId;
-    @SanitizeHtml
+    @SafeHtml
     private String transactionId;
 
     // Read only, populated during search
-    @SanitizeHtml
+    @SafeHtml
     private String receiptNumber;
 
     // Read only, populated during search
-    @SanitizeHtml
+    @SafeHtml
     private String consumerCode;
 
     // Read only, populated during search
@@ -43,38 +43,38 @@ public class Receipt {
     private Instrument instrument;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String paymentId;
     
     @JsonIgnore
     private Date remittedOn;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String remitterId;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String bankName;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String branchName;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String accNumber;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String payee;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String drawer;
     
     @JsonIgnore
-    @SanitizeHtml
+    @SafeHtml
     private String transactionNumber;
     
     private String service;

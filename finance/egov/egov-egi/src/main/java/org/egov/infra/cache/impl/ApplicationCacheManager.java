@@ -49,8 +49,6 @@
 package org.egov.infra.cache.impl;
 
 import org.egov.infra.config.core.ApplicationThreadLocals;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -58,22 +56,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ApplicationCacheManager {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationCacheManager.class);
-
-
 	@Autowired
 	private CacheManager cacheManager;
-
-	@Autowired
-	public void setCacheManager(CacheManager cacheManager) {
-		this.cacheManager = cacheManager;
-		LOGGER.info("========================================");
-		LOGGER.info("CacheManager Class: {}", cacheManager.getClass().getName());
-		LOGGER.info("CacheManager Instance: {}", cacheManager);
-		LOGGER.info("CacheManager toString: {}", cacheManager.toString());
-		LOGGER.info("Available Cache Names: {}", cacheManager.getCacheNames());
-
-	}
 
 	public void put(Object key, Object value) {
 		cacheManager.getCache(ApplicationThreadLocals.getTenantID()).put(key, value);
@@ -91,7 +75,5 @@ public class ApplicationCacheManager {
 
 	public void remove(Object key) {
 		cacheManager.getCache(ApplicationThreadLocals.getTenantID()).evict(key);
-		LOGGER.info("Removed key: " + key + " from cache for tenant: " + ApplicationThreadLocals.getTenantID());
-
 	}
 }

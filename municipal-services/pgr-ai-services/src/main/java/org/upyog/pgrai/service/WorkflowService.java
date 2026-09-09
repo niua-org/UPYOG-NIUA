@@ -129,19 +129,20 @@ public class WorkflowService {
      */
     public List<ServiceWrapper> enrichWorkflow(RequestInfo requestInfo, List<ServiceWrapper> serviceWrappers) {
 
-        // Group by tenant to query workflow instances per tenant-specific workflow context.
+        // FIX ME FOR BULK SEARCH
         Map<String, List<ServiceWrapper>> tenantIdToServiceWrapperMap = getTenantIdToServiceWrapperMap(serviceWrappers);
 
         List<ServiceWrapper> enrichedServiceWrappers = new ArrayList<>();
 
-        for(Map.Entry<String, List<ServiceWrapper>> entry : tenantIdToServiceWrapperMap.entrySet()) {
+        for(String tenantId : tenantIdToServiceWrapperMap.keySet()) {
 
-            String tenantId = entry.getKey();
             List<String> serviceRequestIds = new ArrayList<>();
 
-            List<ServiceWrapper> tenantSpecificWrappers = entry.getValue();
+            List<ServiceWrapper> tenantSpecificWrappers = tenantIdToServiceWrapperMap.get(tenantId);
 
-            tenantSpecificWrappers.forEach(pgrEntity -> serviceRequestIds.add(pgrEntity.getService().getServiceRequestId()));
+            tenantSpecificWrappers.forEach(pgrEntity -> {
+                serviceRequestIds.add(pgrEntity.getService().getServiceRequestId());
+            });
 
             RequestInfoWrapper requestInfoWrapper = RequestInfoWrapper.builder().requestInfo(requestInfo).build();
 
@@ -161,7 +162,9 @@ public class WorkflowService {
 
             Map<String, Workflow> businessIdToWorkflow = getWorkflow(processInstanceResponse.getProcessInstances());
 
-            tenantSpecificWrappers.forEach(pgrEntity -> pgrEntity.setWorkflow(businessIdToWorkflow.get(pgrEntity.getService().getServiceRequestId())));
+            tenantSpecificWrappers.forEach(pgrEntity -> {
+                pgrEntity.setWorkflow(businessIdToWorkflow.get(pgrEntity.getService().getServiceRequestId()));
+            });
 
             enrichedServiceWrappers.addAll(tenantSpecificWrappers);
         }
@@ -239,7 +242,7 @@ public class WorkflowService {
             List<String> userIds = null;
 
             if(!CollectionUtils.isEmpty(processInstance.getAssignes())){
-                userIds = processInstance.getAssignes().stream().map(User::getUuid).toList();
+                userIds = processInstance.getAssignes().stream().map(User::getUuid).collect(Collectors.toList());
             }
 
             Workflow workflow = Workflow.builder()

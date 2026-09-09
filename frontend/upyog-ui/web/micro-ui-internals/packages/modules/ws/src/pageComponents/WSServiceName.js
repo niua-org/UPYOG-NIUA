@@ -4,7 +4,7 @@ import {
     CardLabel
 } from "@nudmcdgnpm/digit-ui-react-components";
 import Timeline from "../components/Timeline";
-import {FormStep} from "@nudmcdgnpm/digit-ui-react-components"
+import FormStep from "../../../../react-components/src/molecules/FormStep"
 const WSServiceName = ({ t, config, onSelect, userType, formData }) => {
     const [serviceName, setServiceName] = useState(formData?.serviceName || "");
     const [formDetails, setFormDetails] = useState(formData || {});

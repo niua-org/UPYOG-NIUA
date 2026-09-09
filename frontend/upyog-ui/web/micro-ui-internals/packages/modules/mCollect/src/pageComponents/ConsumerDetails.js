@@ -11,13 +11,14 @@ import { stringReplaceAll, convertEpochToDate } from "../utils";
 const createConsumerDetails = () => ({
   ConsumerName: "",
   mobileNumber: "",
-  emailId: "",
+  emailId:"",
   // key: Date.now(),
 });
 
 const ConsumerDetails = ({ config, onSelect, userType, formData, setError, formState, clearErrors }) => {
   // console.log("formadata", formData)
-  if (window.location.href.includes("modify-challan") && sessionStorage.getItem("mcollectEditObject")) {
+  if(window.location.href.includes("modify-challan") && sessionStorage.getItem("mcollectEditObject"))
+  {
     formData = JSON.parse(sessionStorage.getItem("mcollectEditObject"))
   }
   const { t } = useTranslation();
@@ -30,7 +31,7 @@ const ConsumerDetails = ({ config, onSelect, userType, formData, setError, formS
   const [isErrors, setIsErrors] = useState(false);
   const stateCode = window?.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID");
   const data = Digit.Hooks.mcollect.useCommonMDMS(stateCode, "common-masters", ["HierarchyType"]);
-  const type = data && data.data && data.data[`common-masters`] && data.data[`common-masters`]["HierarchyType"] && data.data[`common-masters`]["HierarchyType"][0];
+  const type = data &&  data.data &&  data.data[`common-masters`] && data.data[`common-masters`]["HierarchyType"] && data.data[`common-masters`]["HierarchyType"][0];
 
 
 
@@ -69,7 +70,7 @@ const ConsumerDetails = ({ config, onSelect, userType, formData, setError, formS
   return (
     <React.Fragment>
       {consumerDetails.map((consumerdetail, index) => (
-        <OwnerForm1 key={consumerdetail.key || index} index={index} consumerdetail={consumerdetail} {...commonProps} />
+        <OwnerForm1 key={consumerdetail.key} index={index} consumerdetail={consumerdetail} {...commonProps} />
       ))}
     </React.Fragment>
   );
@@ -97,11 +98,11 @@ const OwnerForm1 = (_props) => {
 
   const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, getValues } = useForm();
   const formValue = watch();
-  const { errors, touchedFields } = localFormState;
+  const { errors } = localFormState;
   // console.log("errorssssss", errors)
   const isMobile = window.Digit.Utils.browser.isMobile();
 
-
+  
 
 
 
@@ -110,23 +111,23 @@ const OwnerForm1 = (_props) => {
   }, []);
 
   useEffect(() => {
-    if (Object.entries(formValue).length > 0) {
-      const keys = Object.keys(formValue);
-      const part = {};
-      keys.forEach((key) => (part[key] = consumerdetail[key]));
-      if (!_.isEqual(formValue, part)) {
-        Object.keys(formValue).map(data => {
-          if (data != "key" && formValue[data] != undefined && formValue[data] != "" && formValue[data] != null && !isErrors) {
-            setIsErrors(true);
-          }
-        });
-        let ob = [{ ...formValue }];
-        let mcollectFormValue = JSON.parse(sessionStorage.getItem("mcollectFormData"));
-        mcollectFormValue = { ...mcollectFormValue, ...ob[0] }
-        sessionStorage.setItem("mcollectFormData", JSON.stringify(mcollectFormValue));
-        setconsumerDetails(ob);
-        trigger();
-      }
+    if(Object.entries(formValue).length>0){
+    const keys = Object.keys(formValue);
+    const part = {};
+    keys.forEach((key) => (part[key] = consumerdetail[key]));
+    if (!_.isEqual(formValue, part)) {
+      Object.keys(formValue).map(data => {
+        if (data != "key" && formValue[data] != undefined && formValue[data] != "" && formValue[data] != null && !isErrors) {
+          setIsErrors(true);
+        }
+      });
+      let ob =[{...formValue}];
+      let mcollectFormValue = JSON.parse(sessionStorage.getItem("mcollectFormData"));
+      mcollectFormValue = {...mcollectFormValue,...ob[0]}
+      sessionStorage.setItem("mcollectFormData",JSON.stringify(mcollectFormValue));
+      setconsumerDetails(ob);
+      trigger();
+    }
     }
   }, [formValue]);
 
@@ -145,9 +146,9 @@ const OwnerForm1 = (_props) => {
     <React.Fragment>
       <div>
         <div>
-          <CardSectionHeader>{t("CONSUMERDETAILS")}</CardSectionHeader>
-          <LabelFieldPair>
-            <CardLabel className={isMobile ? "card-label-APK" : "card-label-smaller"}>{`${t("UC_CONS_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
+        <CardSectionHeader>{t("CONSUMERDETAILS")}</CardSectionHeader>
+        <LabelFieldPair>
+            <CardLabel className={isMobile?"card-label-APK":"card-label-smaller"}>{`${t("UC_CONS_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
             <div className="field">
               <Controller
                 control={control}
@@ -158,7 +159,7 @@ const OwnerForm1 = (_props) => {
                   <TextInput
                     value={field.value}
                     autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                    errorStyle={(touchedFields?.ConsumerName && errors?.ConsumerName?.message) ? true : false}
+                    errorStyle={(localFormState.touchedFields?.ConsumerName && errors?.ConsumerName?.message) ? true : false}
                     onChange={(e) => {
                       field.onChange(e.target.value);
                       //setFocusIndex({ index: consumerdetail.key, type: "ConsumerName" });
@@ -173,9 +174,9 @@ const OwnerForm1 = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError style={errorStyle}>{touchedFields?.ConsumerName ? errors?.ConsumerName?.message : ""}</CardLabelError>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields?.ConsumerName ? errors?.ConsumerName?.message : ""}</CardLabelError>
           <LabelFieldPair>
-            <CardLabel style={{ paddingTop: "10px" }} className="card-label-smaller">{`${t("UC_MOBILE_NUMBER")}`}<span className="check-page-link-button"> *</span></CardLabel>
+            <CardLabel style={{paddingTop:"10px"}} className="card-label-smaller">{`${t("UC_MOBILE_NUMBER")}`}<span className="check-page-link-button"> *</span></CardLabel>
             <div className="field">
               <Controller
                 control={control}
@@ -192,41 +193,41 @@ const OwnerForm1 = (_props) => {
                     }}
                     labelStyle={{ marginTop: "unset", border: "1px solid #464646", borderRight: "none" }}
                     onBlur={field.onBlur}
-                    errorStyle={(touchedFields?.mobileNumber && errors?.mobileNumber?.message) ? true : false}
+                    errorStyle={(localFormState.touchedFields?.mobileNumber && errors?.mobileNumber?.message) ? true : false}
                     disable={isEdit}
-                  //style={ isMulitpleOwners ? { background: "#FAFAFA" }: ""}
+                    //style={ isMulitpleOwners ? { background: "#FAFAFA" }: ""}
                   />
                 )}
               />
             </div>
-          </LabelFieldPair>
+          </LabelFieldPair>  
           <div>
-            <CardLabelError style={errorStyle}>{touchedFields?.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
-            <LabelFieldPair>
-              <CardLabel style={{ paddingTop: "10px" }} className="card-label-smaller">{`${t("UC_EMAIL_ID")}`}</CardLabel>
-              <div className="field">
-                <Controller
-                  control={control}
-                  name="emailId"
-                  defaultValue={consumerdetail?.emailId}
-                  rules={{ validate: { pattern: (val) => (/^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(val) ? true : t("CS_ADDCOMPLAINT_EMAIL_ERROR")) } }}
-                  render={({ field }) => (
-                    <TextInput
-                      t={t}
-                      isMandatory={false}
-                      value={field.value}
-                      onChange={(e) => {
-                        field.onChange(e.target.value)
-                      }}
-                      disable={isEdit}
-                    />
-                  )}
-                />
-              </div>
-            </LabelFieldPair>
-            {formData?.consomerDetails1 && formData?.consomerDetails1[0]?.emailId && errors && <span style={{ color: "red" }}>{errors?.emailId?.message}</span>}
-          </div>
-        </div>
+          <CardLabelError style={errorStyle}>{localFormState.touchedFields?.mobileNumber ? errors?.mobileNumber?.message : ""}</CardLabelError>
+          <LabelFieldPair>  
+          <CardLabel style={{paddingTop:"10px"}} className="card-label-smaller">{`${t("UC_EMAIL_ID")}`}</CardLabel>
+          <div className="field">
+          <Controller
+          control={control}
+          name="emailId"
+          defaultValue={consumerdetail?.emailId}
+          rules={{  validate: { pattern: (val) => (/^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/.test(val) ? true : t("CS_ADDCOMPLAINT_EMAIL_ERROR")) } }}
+          render={({ field }) => (
+            <TextInput
+              t={t}
+              isMandatory={false}
+              value={field.value}
+                            onChange={(e) => {
+                field.onChange(e.target.value)
+              }}
+              disable={isEdit}
+            />
+            )}
+            />
+            </div>
+            </LabelFieldPair> 
+            {formData?.consomerDetails1 && formData?.consomerDetails1[0]?.emailId && errors && <span style={{color:"red"}}>{errors?.emailId?.message}</span>}
+            </div> 
+      </div>
       </div>
     </React.Fragment>
   );

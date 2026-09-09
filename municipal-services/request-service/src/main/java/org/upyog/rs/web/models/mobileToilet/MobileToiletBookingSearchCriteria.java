@@ -1,4 +1,4 @@
-package org.upyog.rs.web.models.mobileToilet; // NOSONAR java:S120 - package name kept to preserve imports/API // NOSONAR
+package org.upyog.rs.web.models.mobileToilet;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +12,6 @@ import java.util.List;
 @Setter
 @Builder
 @ToString
-@SuppressWarnings("java:S120")
 public class MobileToiletBookingSearchCriteria {
     @JsonProperty("tenantId")
     private String tenantId;
@@ -52,12 +51,14 @@ public class MobileToiletBookingSearchCriteria {
     public boolean isEmpty() {
         return (this.tenantId == null && this.status == null && this.bookingNo == null
                 && this.mobileNumber == null
+                // && this.offset == null && this.limit == null
                 && this.fromDate == null && this.toDate == null && this.createdBy==null && localityCode==null);
     }
 
     public boolean tenantIdOnly() {
         return (this.tenantId != null && this.status == null && this.bookingNo == null
                 && this.mobileNumber == null
+                // && this.offset == null && this.limit == null
                 && this.fromDate == null && this.toDate == null && this.createdBy==null && this.localityCode==null);
     }
 }

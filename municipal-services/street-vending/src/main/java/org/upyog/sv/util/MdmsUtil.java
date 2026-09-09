@@ -14,6 +14,7 @@ import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.MdmsResponse;
 import org.egov.mdms.model.ModuleDetail;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.sv.config.StreetVendingConfiguration;
 import org.upyog.sv.constants.StreetVendingConstants;
@@ -31,38 +32,50 @@ import net.minidev.json.JSONArray;
 @Component
 public class MdmsUtil {
 
-	private final StreetVendingConfiguration config;
+	@Autowired
+	private StreetVendingConfiguration config;
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final ObjectMapper mapper;
+	@Autowired
+	private ObjectMapper mapper;
 
 	private static Object mdmsMap = null;
 
 	private static List<TaxHeadMaster> headMasters = null;
 
-	public MdmsUtil(StreetVendingConfiguration config, ServiceRequestRepository serviceRequestRepository,
-			ObjectMapper mapper) {
+	/*
+	 * @Autowired private MDMSClient mdmsClient;
+	 */
+
+	@Autowired
+	public MdmsUtil(StreetVendingConfiguration config, ServiceRequestRepository serviceRequestRepository) {
 		this.config = config;
 		this.serviceRequestRepository = serviceRequestRepository;
-		this.mapper = mapper;
 	}
 
 	/**
 	 * makes mdms call with the given criteria and reutrn mdms data
 	 * 
-	 * @param requestInfo request information
-	 * @param tenantId    tenant identifier
-	 * @return mdms response data
+	 * @param requestInfo
+	 * @param tenantId
+	 * @return
 	 */
 	public Object mDMSCall(RequestInfo requestInfo, String tenantId) {
 		MdmsCriteriaReq mdmsCriteriaReq = getMDMSRequest(requestInfo, tenantId);
+		Object result = null;
 		if (mdmsMap == null) {
-			Object result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
+			result = serviceRequestRepository.fetchResult(getMdmsSearchUrl(), mdmsCriteriaReq);
 			setMDMSDataMap(result);
-			return result;
+		} else {
+			result = getMDMSDataMap();
 		}
-		return getMDMSDataMap();
+
+		// Object result = mdmsClient.getMDMSData(mdmsCriteriaReq);
+		// log.info("Master data fetched from MDMSfrom feign client : " + result);
+
+		return result;
 	}
 
 	/**
@@ -77,9 +90,9 @@ public class MdmsUtil {
 	/**
 	 * prepares the mdms request object
 	 * 
-	 * @param requestInfo request information
-	 * @param tenantId    tenant identifier
-	 * @return mdms criteria request
+	 * @param requestInfo
+	 * @param tenantId
+	 * @return
 	 */
 	public MdmsCriteriaReq getMDMSRequest(RequestInfo requestInfo, String tenantId) {
 		List<ModuleDetail> moduleRequest = getModuleRequest();
@@ -91,12 +104,16 @@ public class MdmsUtil {
 
 		MdmsCriteria mdmsCriteria = MdmsCriteria.builder().moduleDetails(moduleDetails).tenantId(tenantId).build();
 
-		return MdmsCriteriaReq.builder().mdmsCriteria(mdmsCriteria).requestInfo(requestInfo).build();
+		MdmsCriteriaReq mdmsCriteriaReq = MdmsCriteriaReq.builder().mdmsCriteria(mdmsCriteria).requestInfo(requestInfo)
+				.build();
+		return mdmsCriteriaReq;
 	}
 
 	/**
 	 * Creates request to search ApplicationType and etc from MDMS
 	 * 
+	 * @param requestInfo The requestInfo of the request
+	 * @param tenantId    The tenantId of the Street Vending
 	 * @return request to search ApplicationType and etc from MDMS
 	 */
 	public List<ModuleDetail> getModuleRequest() {
@@ -132,10 +149,6 @@ public class MdmsUtil {
 		return mdmsMap;
 	}
 
-	private static synchronized void setHeadMasters(List<TaxHeadMaster> taxHeadMasters) {
-		headMasters = taxHeadMasters;
-	}
-
 	public List<TaxHeadMaster> getTaxHeadMasterList(RequestInfo requestInfo, String tenantId, String moduleName) {
 		if (headMasters != null) {
 			log.info("Returning cached value of tax head masters");
@@ -152,8 +165,8 @@ public class MdmsUtil {
 
 			JSONArray jsonArray = mdmsResponse.getMdmsRes().get("BillingService").get("TaxHeadMaster");
 
-			setHeadMasters(mapper.readValue(jsonArray.toJSONString(),
-					mapper.getTypeFactory().constructCollectionType(List.class, TaxHeadMaster.class)));
+			headMasters = mapper.readValue(jsonArray.toJSONString(),
+					mapper.getTypeFactory().constructCollectionType(List.class, TaxHeadMaster.class));
 		} catch (JsonProcessingException e) {
 			log.info("Exception occured while converting tax haead master list : " + e);
 		}
@@ -163,7 +176,7 @@ public class MdmsUtil {
 
 	public List<CalculationType> getcalculationType(RequestInfo requestInfo, String tenantId, String moduleName) {
 
-		List<CalculationType> calculationTypes = new ArrayList<>();
+		List<CalculationType> calculationTypes = new ArrayList<CalculationType>();
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getMdmsHost()).append(config.getMdmsPath());
 
@@ -263,7 +276,12 @@ public class MdmsUtil {
 	    Map<String, Object> requestMap = new HashMap<>();
 	    requestMap.put("RequestInfo", requestInfo);
 	    
-	    return serviceRequestRepository.fetchResult(url, requestMap);
+	    Object response = serviceRequestRepository.fetchResult(url, requestMap);
+
+	    return response;
 	}
+
+
+
 
 }

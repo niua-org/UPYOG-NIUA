@@ -1,5 +1,6 @@
-import { Dropdown } from "@upyog/workbench-ui-react-components";
+import { Dropdown } from "@egovernments/digit-ui-react-components";
 import React, { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 
 const stringReplaceAll = (str = "", searcher = "", replaceWith = "") => {
   if (searcher == "") return str;
@@ -13,7 +14,7 @@ const ChangeCity = (prop) => {
   const [dropDownData, setDropDownData] = useState(null);
   const [selectCityData, setSelectCityData] = useState([]);
   const [selectedCity, setSelectedCity] = useState([]); //selectedCities?.[0]?.value
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
   const isDropdown = prop.dropdown || false;
   let selectedCities = [];
 
@@ -29,7 +30,7 @@ const ChangeCity = (prop) => {
     setDropDownData(city);
     if (window.location.href.includes(`/${window?.contextPath}/employee/`)) {
       const redirectPath = location.state?.from || `/${window?.contextPath}/employee`;
-      navigate(redirectPath);
+      history.replace(redirectPath);
     }
     window.location.reload();
   };
@@ -68,7 +69,24 @@ const ChangeCity = (prop) => {
       />
     </div>
   );
-  
+  // } else {
+  //   return (
+  //     <React.Fragment>
+  //       <div style={{ marginBottom: "5px" }}>City</div>
+  //       <div className="language-selector" style={{display: "flex", flexWrap: "wrap"}}>
+  //         {selectCityData?.map((city, index) => (
+  //           <div className="language-button-container" key={index}>
+  //             <CustomButton
+  //               selected={city.value === Digit.SessionStorage.get("Employee.tenantId")}
+  //               text={city.label}
+  //               onClick={() => handleChangeCity(city)}
+  //             ></CustomButton>
+  //           </div>
+  //         ))}
+  //       </div>
+  //     </React.Fragment>
+  //   );
+  // }
 };
 
 export default ChangeCity;

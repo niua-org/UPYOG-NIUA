@@ -66,12 +66,11 @@ import org.egov.infstr.services.PersistenceService;
 import org.egov.infstr.utils.EgovMasterDataCaching;
 import org.egov.model.report.FundFlowBean;
 import org.egov.services.report.FundFlowService;
-import org.hibernate.query.Query;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.transform.Transformers;
-
-
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -166,10 +165,10 @@ public class FundFlowAction extends BaseFormAction {
             alreadyExistsQryStr.append(" and ba.fundId=:fund ");
         
         final Query alreadyExistsQry = persistenceService.getSession()
-                .createNativeQuery(alreadyExistsQryStr.toString())
-                .setParameter("reportDate", sqlformat.format(asOnDate), StandardBasicTypes.STRING);
+                .createSQLQuery(alreadyExistsQryStr.toString())
+                .setParameter("reportDate", sqlformat.format(asOnDate), StringType.INSTANCE);
         if (fund != null && fund != -1){
-            alreadyExistsQry.setParameter("fund", fund, StandardBasicTypes.LONG);
+            alreadyExistsQry.setParameter("fund", fund, LongType.INSTANCE);
         }
         final List existsList = alreadyExistsQry.list();
         if (existsList.size() > 0) {
@@ -448,10 +447,10 @@ public class FundFlowAction extends BaseFormAction {
         if (fund != null && fund != -1) {
             alreadyExistsQryStr.append("and ba.fundId=:fund ");
         }
-        final Query alreadyExistsQry = persistenceService.getSession().createNativeQuery(alreadyExistsQryStr.toString())
-                .setParameter("asOnDate",sqlformat.format(asOnDate),StandardBasicTypes.STRING);
+        final Query alreadyExistsQry = persistenceService.getSession().createSQLQuery(alreadyExistsQryStr.toString())
+                .setParameter("asOnDate",sqlformat.format(asOnDate),StringType.INSTANCE);
         if (fund != null && fund != -1){
-            alreadyExistsQry.setParameter("fund", fund, StandardBasicTypes.STRING);
+            alreadyExistsQry.setParameter("fund", fund, StringType.INSTANCE);
         }
         final List existsList = alreadyExistsQry.list();
         if (existsList.size() > 0)
@@ -629,12 +628,12 @@ public class FundFlowAction extends BaseFormAction {
                         + openingBalanceQryStr.toString());
             
 			final Query openingBalanceQry = persistenceService.getSession()
-					.createNativeQuery(openingBalanceQryStr.toString()).addScalar("bankAccountId")
+					.createSQLQuery(openingBalanceQryStr.toString()).addScalar("bankAccountId")
 					.addScalar("accountNumber").addScalar("openingBalance")
 					.setResultTransformer(Transformers.aliasToBean(FundFlowBean.class));
 			if (fundId != null && fundId != -1)
-				openingBalanceQry.setParameter("fundId", fundId, StandardBasicTypes.LONG);
-			openingBalanceQry.setParameter("reportDate", sqlformat.format(reportDate), StandardBasicTypes.STRING);
+				openingBalanceQry.setParameter("fundId", fundId, LongType.INSTANCE);
+			openingBalanceQry.setParameter("reportDate", sqlformat.format(reportDate), StringType.INSTANCE);
 			openingBalnaceList = openingBalanceQry.list();
             i++;
             if (i >= 100) {
@@ -679,14 +678,14 @@ public class FundFlowAction extends BaseFormAction {
             currentOpbAndRcptQryStr.append(" and ba.fundId=:fund2 ");
 
         final Query currentOpbAndRcptQry = persistenceService.getSession()
-                .createNativeQuery(currentOpbAndRcptQryStr.toString()).addScalar("openingBalance")
+                .createSQLQuery(currentOpbAndRcptQryStr.toString()).addScalar("openingBalance")
                         .addScalar("currentReceipt")
-                        .addScalar("id", StandardBasicTypes.LONG)
+                        .addScalar("id", LongType.INSTANCE)
                         .addScalar("accountNumber")
                         .addScalar("bankAccountId").setResultTransformer(Transformers.aliasToBean(FundFlowBean.class));
-        currentOpbAndRcptQry.setParameter("asOnDate2", sqlformat.format(asOnDate2), StandardBasicTypes.STRING);
+        currentOpbAndRcptQry.setParameter("asOnDate2", sqlformat.format(asOnDate2), StringType.INSTANCE);
         if (fund2 != null && fund2 != -1) {
-            currentOpbAndRcptQry.setParameter("fund2", fund2, StandardBasicTypes.STRING);
+            currentOpbAndRcptQry.setParameter("fund2", fund2, StringType.INSTANCE);
         }
         return currentOpbAndRcptQry.list();
     }
@@ -942,7 +941,7 @@ public class FundFlowAction extends BaseFormAction {
 
     @SuppressWarnings("unchecked")
     private String getUlbName() {
-        final NativeQuery query = persistenceService.getSession().createNativeQuery(
+        final SQLQuery query = persistenceService.getSession().createSQLQuery(
                 "select name from companydetail");
         final List<String> result = query.list();
         if (result != null)

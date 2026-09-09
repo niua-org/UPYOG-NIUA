@@ -47,12 +47,12 @@
  */
 package org.egov.commons.dao;
 
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Repository
@@ -67,7 +67,7 @@ public class StatusHibernateDAO  {
 
 	public List getStatusByModuleType(final String moduleType) {
 		final Query qry = getCurrentSession().createQuery("from Status st where st.moduleType =:moduleType order by id");
-		qry.setParameter("moduleType", moduleType);
+		qry.setString("moduleType", moduleType);
 		return qry.list();
 
 	}

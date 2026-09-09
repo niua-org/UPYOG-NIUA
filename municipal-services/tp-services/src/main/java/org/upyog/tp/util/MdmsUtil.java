@@ -8,6 +8,7 @@ import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.MdmsResponse;
 import org.egov.mdms.model.ModuleDetail;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.tp.config.TreePruningConfiguration;
 import org.upyog.tp.constant.TreePruningConstants;
@@ -24,19 +25,18 @@ import net.minidev.json.JSONArray;
 @Component
 public class MdmsUtil {
 
-    private final ServiceRequestRepository restRepo;
-    private final ObjectMapper mapper;
-    private final TreePruningConfiguration config;
+    @Autowired
+    private ServiceRequestRepository restRepo;
 
-    public MdmsUtil(ServiceRequestRepository restRepo, ObjectMapper mapper, TreePruningConfiguration config) {
-        this.restRepo = restRepo;
-        this.mapper = mapper;
-        this.config = config;
-    }
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Autowired
+    private TreePruningConfiguration config;
 
     public List<CalculationType> getCalculationType(RequestInfo requestInfo, String tenantId, String moduleName) {
 
-        List<CalculationType> calculationTypes = new ArrayList<>();
+        List<CalculationType> calculationTypes = new ArrayList<CalculationType>();
         StringBuilder uri = new StringBuilder();
         uri.append(config.getMdmsHost()).append(config.getMdmsEndpoint());
 

@@ -61,80 +61,80 @@ import java.util.Date;
 import static org.egov.infra.utils.ApplicationConstant.DEFAULT_TIMEZONE;
 import static org.egov.infra.utils.ApplicationConstant.ES_DATE_FORMAT;
 import static org.springframework.data.elasticsearch.annotations.DateFormat.date_optional_time;
+import static org.springframework.data.elasticsearch.annotations.FieldIndex.not_analyzed;
 
-
-@Document(indexName = "applications")
+@Document(indexName = "applications", type = "applications")
 public class ApplicationDocument {
 
     @Id
     private String id;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String moduleName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String applicationNumber;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ES_DATE_FORMAT, timezone = DEFAULT_TIMEZONE)
     @Field(type = FieldType.Date, format = date_optional_time, pattern = ES_DATE_FORMAT)
     private Date applicationDate;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String applicationType;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String applicantName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String)
     private String applicantAddress;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ES_DATE_FORMAT, timezone = DEFAULT_TIMEZONE)
     @Field(type = FieldType.Date, format = date_optional_time, pattern = ES_DATE_FORMAT)
     private Date disposalDate;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String status;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String)
     private String url;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String consumerCode;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String mobileNumber;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String ownerName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String aadharNumber;
 
     @Field(type = FieldType.Integer)
     private Integer elapsedDays;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String closed;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String approved;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String channel;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String cityCode;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String cityName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String cityGrade;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String districtName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = not_analyzed)
     private String regionName;
 
     @Field(type = FieldType.Integer)

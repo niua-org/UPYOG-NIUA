@@ -1,14 +1,10 @@
-import { queryTemplate } from "../common/queryTemplate"; // queryTemplate use karo
+import { useQuery } from "react-query";
 import StoreData from "../services/molecules/StoreData";
 
 const useStore = {
   getInitData: () =>
-    queryTemplate({
-      queryKey: ["STORE_DATA"],
-      queryFn: () => StoreData.getInitData(),
-      config: {
-        staleTime: Infinity,
-      },
+    useQuery(["STORE_DATA"], () => StoreData.getInitData(), {
+      staleTime: Infinity,
     }),
 };
 

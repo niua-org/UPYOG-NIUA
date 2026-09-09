@@ -1,4 +1,4 @@
-package org.upyog.rs.web.models.mobileToilet; // NOSONAR java:S120 - package name kept to preserve imports/API // NOSONAR
+package org.upyog.rs.web.models.mobileToilet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +16,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@SuppressWarnings("java:S120")
 public class MobileToiletBookingSearchResponse {
 
     @JsonProperty("ResponseInfo")

@@ -21,43 +21,43 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(RequestsApiController.class)
 @Import(TestConfiguration.class)
-class RequestsApiControllerTest {
+public class RequestsApiControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    void requestsCreatePostSuccess() throws Exception {
+    public void requestsCreatePostSuccess() throws Exception {
         mockMvc.perform(post("/requests/_create").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
     }
 
     @Test
-    void requestsCreatePostFailure() throws Exception {
+    public void requestsCreatePostFailure() throws Exception {
         mockMvc.perform(post("/requests/_create").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
     }
 
     @Test
-    void requestsSearchPostSuccess() throws Exception {
+    public void requestsSearchPostSuccess() throws Exception {
         mockMvc.perform(post("/requests/_search").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
     }
 
     @Test
-    void requestsSearchPostFailure() throws Exception {
+    public void requestsSearchPostFailure() throws Exception {
         mockMvc.perform(post("/requests/_search").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
     }
 
     @Test
-    void requestsUpdatePostSuccess() throws Exception {
+    public void requestsUpdatePostSuccess() throws Exception {
         mockMvc.perform(post("/requests/_update").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
     }
 
     @Test
-    void requestsUpdatePostFailure() throws Exception {
+    public void requestsUpdatePostFailure() throws Exception {
         mockMvc.perform(post("/requests/_update").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
     }

@@ -52,7 +52,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 import org.apache.commons.lang3.StringUtils;
 import org.egov.egf.web.adaptor.BudgetGroupJsonAdaptor;

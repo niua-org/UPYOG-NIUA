@@ -54,8 +54,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
 @Service
 @Transactional(readOnly = true)
 public class FunctionaryService {
@@ -68,10 +66,10 @@ public class FunctionaryService {
 	}
 
 	public Functionary findOne(final Long id) {
-		return functionaryRepository.findById(id.intValue()).orElse(null);
+		return functionaryRepository.findOne(id.intValue());
 	}
 
-	public Functionary findByCode(final BigDecimal code) {
+	public Functionary findByCode(final String code) {
 		return functionaryRepository.findByCode(code);
 	}
 }

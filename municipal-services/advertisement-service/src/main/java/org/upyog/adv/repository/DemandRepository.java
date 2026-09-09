@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.upyog.adv.config.BookingConfiguration;
 import org.upyog.adv.web.models.billing.Demand;
@@ -12,24 +13,17 @@ import org.upyog.adv.web.models.billing.DemandResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.extern.slf4j.Slf4j;
-
 @Repository
-@Slf4j
 public class DemandRepository {
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
-	private final BookingConfiguration config;
+	@Autowired
+	private BookingConfiguration config;
 
-	private final ObjectMapper mapper;
-
-	public DemandRepository(ServiceRequestRepository serviceRequestRepository, BookingConfiguration config,
-			ObjectMapper mapper) {
-		this.serviceRequestRepository = serviceRequestRepository;
-		this.config = config;
-		this.mapper = mapper;
-	}
+	@Autowired
+	private ObjectMapper mapper;
 
 	/**
 	 * Creates demand
@@ -42,14 +36,14 @@ public class DemandRepository {
 		StringBuilder url = new StringBuilder(config.getBillingHost());
 		url.append(config.getDemandCreateEndpoint());
 		DemandRequest request = new DemandRequest(requestInfo, demand);
-		log.debug("Request object for fetchResult: {}", request);
-		log.debug("URL for fetchResult: {}", url);
+		System.out.println("Request object for fetchResult: " + request);
+		System.out.println("URL for fetchResult: " + url);
 		Object result = serviceRequestRepository.fetchResult(url, request);
-		log.debug("Result from fetchResult method: {}", result);
+		System.out.println("Result from fetchResult method: " + result);
 		DemandResponse response = null;
 		try {
 			response = mapper.convertValue(result, DemandResponse.class);
-			log.debug("Demand response mapper: {}", response);
+			System.out.println("Demand response mapper: " + response);
 		} catch (IllegalArgumentException e) {
 			throw new CustomException("PARSING ERROR", "Failed to parse response of create demand");
 		}

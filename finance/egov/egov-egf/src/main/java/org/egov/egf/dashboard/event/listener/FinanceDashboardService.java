@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,8 +43,9 @@ import org.egov.model.bills.EgBillregistermis;
 import org.egov.model.payment.Paymentheader;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.HibernateException;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.DataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.hibernate.ObjectNotFoundException;
+import javassist.tools.rmi.ObjectNotFoundException;
 
 @Transactional(readOnly = true)
 @Service
@@ -226,8 +227,7 @@ public class FinanceDashboardService {
     private List<CVoucherHeader> getVoucherHeaderById(HashSet<Long> ids) {
         List<CVoucherHeader> list = null;
         try {
-            list = this.getSession().createQuery("from CVoucherHeader vh where vh.id in (:ids)",
-                    CVoucherHeader.class).setParameter("ids", ids).list();
+            list =  this.getSession().createCriteria(CVoucherHeader.class).add(Restrictions.in("id", ids)).list();
         } catch (HibernateException e) {
             LOG.error("ERROR occurred while fetching the voucherHeader for ID : {}",ids);
         }
@@ -328,9 +328,7 @@ public class FinanceDashboardService {
     @Transactional(propagation=Propagation.REQUIRED, readOnly=true)
     private Set<CGeneralLedger> getGeneralLedger(Long id) {
         try {
-            List<CGeneralLedger> list = this.getSession()
-                    .createQuery("from CGeneralLedger gl where gl.voucherHeaderId.id = :id", CGeneralLedger.class)
-                    .setParameter("id", id).list();
+            List<CGeneralLedger> list = this.getSession().createCriteria(CGeneralLedger.class).add(Restrictions.eq("voucherHeaderId.id", id)).list();
             return new HashSet<>(list);
         } catch (ApplicationRuntimeException e) {
             LOG.error("ERROR while fetching the generalLedger Data from Database for general ledger ID : {}",id);
@@ -370,8 +368,7 @@ public class FinanceDashboardService {
         if(data instanceof HashSet){
             HashSet<Long> billListId = (HashSet<Long>) data;
                 try {
-                    egbillList = this.getSession().createQuery("from EgBillregister bill where bill.id in (:billListId)",
-                            EgBillregister.class).setParameter("billListId", billListId).list();
+                    egbillList = this.getSession().createCriteria(EgBillregister.class).add(Restrictions.in("id", billListId)).list();
                 } catch (HibernateException e) {
                     LOG.error("ERROR while fetching bill for ID : {}",billListId);
                 }
@@ -529,9 +526,9 @@ public class FinanceDashboardService {
 				"select adk.detailname as detailkeyname,adt.name as detailtypename ")
 						.append("from accountdetailkey adk inner join accountdetailtype adt on adk.detailtypeid=adt.id")
 						.append(" where adk.detailtypeid=:detailtypeid and adk.detailkey=:detailkey");
-		NativeQuery sqlQuery = this.getSession().createNativeQuery(queryString.toString());
-		sqlQuery.setParameter("detailtypeid", accountDetailTypeId);
-		sqlQuery.setParameter("detailkey", accountDetailKeyId);
+		SQLQuery sqlQuery = this.getSession().createSQLQuery(queryString.toString());
+		sqlQuery.setInteger("detailtypeid", accountDetailTypeId);
+		sqlQuery.setInteger("detailkey", accountDetailKeyId);
 		return sqlQuery.list();
 	}
     
@@ -547,9 +544,7 @@ public class FinanceDashboardService {
     @Transactional(propagation=Propagation.REQUIRED,readOnly=true)
     private EgBillregister getEgBillRegisterByVoucherId(CVoucherHeader vh){
         try {
-            return this.getSession().createQuery("select mis.egBillregister from EgBillregistermis mis "
-                            + "where mis.voucherHeader = :voucherHeader", EgBillregister.class)
-                    .setParameter("voucherHeader", vh).uniqueResult();
+            return (EgBillregister) this.getSession().createCriteria(EgBillregistermis.class).add(Restrictions.eq("voucherHeader", vh)).uniqueResult();
         } catch (HibernateException e) {
             LOG.error("ERROR while fetching the EgBillRegister data for voucher ID : {}",vh.getId());
         }
@@ -558,8 +553,7 @@ public class FinanceDashboardService {
     
     private EgBillregister getBillRegisterByBillNumber(String billNumber){
         try {
-            return this.getSession().createQuery("from EgBillregister bill where bill.billnumber = :billNumber",
-                    EgBillregister.class).setParameter("billNumber", billNumber).uniqueResult();
+            return (EgBillregister) this.getSession().createCriteria(EgBillregister.class).add(Restrictions.eq("billnumber", billNumber)).uniqueResult();
         } catch (HibernateException e) {
             LOG.error("ERROR occurred while fetching the billRegister Data for billNumber :  {}",billNumber);
         }

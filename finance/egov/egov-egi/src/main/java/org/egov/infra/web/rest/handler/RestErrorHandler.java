@@ -16,9 +16,9 @@ public class RestErrorHandler implements ResponseErrorHandler {
 
 	@Override
 	public boolean hasError(ClientHttpResponse response) throws IOException {
-		HttpStatus.Series series = HttpStatus.Series.resolve(response.getStatusCode().value());
-		return (series == HttpStatus.Series.CLIENT_ERROR || 
-			   series == HttpStatus.Series.SERVER_ERROR);
+		
+		return (response.getStatusCode().series()==Series.CLIENT_ERROR || 
+			   response.getStatusCode().series()==Series.SERVER_ERROR);
 	}
 
 	  @Override
@@ -27,7 +27,7 @@ public class RestErrorHandler implements ResponseErrorHandler {
 	      
         LOGGER.info("HTTPResponse -" + httpResponse.getStatusCode() + ":" + httpResponse.getStatusText());
 
-        HttpStatus status = HttpStatus.resolve(httpResponse.getStatusCode().value());
+        HttpStatus status = httpResponse.getStatusCode();
         if (status == HttpStatus.UNAUTHORIZED)
             throw new MicroServiceInvalidTokenException();
         else if (status == HttpStatus.FORBIDDEN)

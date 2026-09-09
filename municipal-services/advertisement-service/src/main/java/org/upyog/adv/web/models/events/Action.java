@@ -1,10 +1,14 @@
 package org.upyog.adv.web.models.events;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
+
 import lombok.*;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 
+@Validated
 @AllArgsConstructor
 @EqualsAndHashCode
 @Getter

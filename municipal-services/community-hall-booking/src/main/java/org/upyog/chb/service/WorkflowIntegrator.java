@@ -13,8 +13,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.upyog.chb.config.CommunityHallBookingConfiguration;
 import org.upyog.chb.constants.CommunityHallBookingConstants;
-import org.upyog.chb.web.models.VenueBookingDetail;
-import org.upyog.chb.web.models.VenueBookingRequest;
+import org.upyog.chb.web.models.CommunityHallBookingDetail;
+import org.upyog.chb.web.models.CommunityHallBookingRequest;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -91,9 +91,9 @@ public class WorkflowIntegrator {
 
 	private static final String STATUSJSONKEY = "$.state.applicationStatus";
 
-	private final RestTemplate rest;
+	private RestTemplate rest;
 
-	private final CommunityHallBookingConfiguration config;
+	private CommunityHallBookingConfiguration config;
 
 	@Autowired
 	public WorkflowIntegrator(RestTemplate rest, CommunityHallBookingConfiguration config) {
@@ -101,10 +101,10 @@ public class WorkflowIntegrator {
 		this.config = config;
 	}
 
-	public void callWorkFlow(VenueBookingRequest bookingRequest) {
-		String wfTenantId = bookingRequest.getVenueBookingApplication().getTenantId();
+	public void callWorkFlow(CommunityHallBookingRequest bookingRequest) {
+		String wfTenantId = bookingRequest.getHallsBookingApplication().getTenantId();
 		JSONArray array = new JSONArray();
-		VenueBookingDetail bookingDetail = bookingRequest.getVenueBookingApplication();
+		CommunityHallBookingDetail bookingDetail = bookingRequest.getHallsBookingApplication();
 		JSONObject obj = new JSONObject();
 		obj.put(BUSINESSIDKEY, bookingDetail.getBookingNo());
 		obj.put(TENANTIDKEY, wfTenantId);

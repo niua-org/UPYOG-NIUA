@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
@@ -25,23 +26,18 @@ import lombok.extern.slf4j.Slf4j;
      * @throws SQLException If there is an error accessing the ResultSet.
      * @throws DataAccessException If there is an error during data access.
      */
-@SuppressWarnings("java:S2638")
 @Component
 @Slf4j
 public class AdvertisementDraftApplicationRowMapper implements ResultSetExtractor<List<BookingDetail>> {
 
-	private final ObjectMapper objectMapper;
+	@Autowired
+	private ObjectMapper objectMapper;
 
-	public AdvertisementDraftApplicationRowMapper(ObjectMapper objectMapper) {
-		this.objectMapper = objectMapper;
-	}
-
-	@Override
 	public List<BookingDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
 
-		List<BookingDetail> applicationList = new ArrayList<>();
+		List<BookingDetail> applicationList = new ArrayList<BookingDetail>();
 		while (rs.next()) {
-
+			
 			String draftId = rs.getString("draft_id");
 			String draftApplicationData = rs.getString("draft_application_data");
 
@@ -53,6 +49,7 @@ public class AdvertisementDraftApplicationRowMapper implements ResultSetExtracto
 			} catch (JsonProcessingException e) {
 				log.error("JsonProcessingException : Error coccure while parsing draft application for draftid {}", draftId, e);
 			}
+			;
 			applicationList.add(advertisementDetail);
 		}
 

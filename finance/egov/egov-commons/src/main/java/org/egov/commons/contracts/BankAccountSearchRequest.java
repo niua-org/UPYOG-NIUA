@@ -48,14 +48,14 @@
 
 package org.egov.commons.contracts;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 import org.egov.commons.utils.BankAccountType;
 import org.egov.commons.utils.CommonsConstants;
 import org.egov.infra.persistence.validator.annotation.OptionalPattern;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 /**
  * 
@@ -71,17 +71,17 @@ public class BankAccountSearchRequest {
 	private Long fundId;
 
 	@Length(max = 20)
-	@SanitizeHtml
+	@SafeHtml
 	@OptionalPattern(regex = CommonsConstants.numericwithoutspecialchar, message = "Special Characters are not allowed in Accountnumber")
 	private String accountnumber;
 
-	@SanitizeHtml
+	@SafeHtml
 	private String accounttype;
 
-	@SanitizeHtml
+	@SafeHtml
 	private String narration;
 
-	@SanitizeHtml
+	@SafeHtml
 	private String payTo;
 
 	@Enumerated(EnumType.STRING)
@@ -89,7 +89,7 @@ public class BankAccountSearchRequest {
 
 	private Boolean isactive;
 
-	@SanitizeHtml
+	@SafeHtml
 	@Length(max = 50)
 	private String glcode;
 

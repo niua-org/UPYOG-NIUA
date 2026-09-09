@@ -1,12 +1,10 @@
 import { DigiLockerService } from "../../services/elements/DigiLocker";
-import { mutationTemplate } from "../../common/mutationTemplate";
+import { useMutation } from "react-query";
 
+const createTokenAPI = (type) => {
 
-const useCreateToken = () => {
-  const mutationFn = (data) =>
-    DigiLockerService.token(data);
+  return useMutation((data) => {
+    DigiLockerService.token(data)});
+ }
 
-  return mutationTemplate({ mutationFn });
-};
-
-export default useCreateToken;
+export default createTokenAPI;

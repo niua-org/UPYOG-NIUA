@@ -50,17 +50,15 @@ package org.egov.infra.config.security.authentication.filter;
 
 import org.egov.infra.config.security.authentication.userdetail.CurrentUser;
 import org.egov.infra.security.utils.SecurityConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,13 +69,7 @@ import static org.egov.infra.utils.ApplicationConstant.USERID_KEY;
 import static org.egov.infra.utils.ApplicationConstant.USERNAME_KEY;
 import static org.egov.infra.utils.StringUtils.emptyIfNull;
 
-/**
- * LTS Migration Fix (WildFly 40): System.out is discarded under WildFly;
- * authentication attempts are logged with SLF4J instead.
- */
 public class ApplicationAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(ApplicationAuthenticationFilter.class);
 
     private List<String> credentialFields = new ArrayList<>();
 
@@ -110,7 +102,7 @@ public class ApplicationAuthenticationFilter extends UsernamePasswordAuthenticat
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) {
        
     	
-    	log.info("attemptAuthentication");
+    	System.out.println("***************************************attemptAuthentication*********");
     	
     	HashMap<String, String> credentials = new HashMap<>();
         for (String credential : credentialFields) {

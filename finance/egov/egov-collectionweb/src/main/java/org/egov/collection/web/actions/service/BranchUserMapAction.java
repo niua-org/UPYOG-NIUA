@@ -49,7 +49,6 @@
 package org.egov.collection.web.actions.service;
 
 import org.apache.log4j.Logger;
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;
@@ -65,9 +64,9 @@ import org.egov.infra.web.struts.actions.BaseFormAction;
 import org.egov.infstr.services.PersistenceService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.Query;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -121,8 +120,7 @@ public class BranchUserMapAction extends BaseFormAction {
     @Action(value = "/service/branchUserMap-newform")
     public String newform() {
         addDropdownData(BANK_NAME_LIST, bankHibernateDAO.getAllBankHavingBranchAndAccounts());
-        // LTS Migration Fix (WildFly 40): System.out is discarded; use LOGGER.
-        LOGGER.info("branchUserMap isActive: " + branchUserMap.getIsActive());
+        System.out.println(branchUserMap.getIsActive());
         addDropdownData(BANK_BRANCH_LIST, Collections.emptyList());
         addDropdownData(BANK_COLLECTION_OPERATOR_USER_LIST, getBankCollectionOperator());
         return NEW;
@@ -143,12 +141,6 @@ public class BranchUserMapAction extends BaseFormAction {
 
     @Action(value = "/service/branchUserMap-bankBranchsByBankForReceiptPayments")
     public String bankBranchsByBankForReceiptPayments() {
-        if (bankId == null && ServletActionContext.getRequest() != null) {
-            final String value = ServletActionContext.getRequest().getParameter("bankId");
-            if (value != null && !value.trim().isEmpty() && !"-1".equals(value.trim())) {
-                bankId = Integer.valueOf(value.trim());
-            }
-        }
         bankBranchArrayList = bankBranchHibernateDAO.getAllBankBranchsByBankForReceiptPayments(bankId);
         return BANKBRANCHLIST;
     }

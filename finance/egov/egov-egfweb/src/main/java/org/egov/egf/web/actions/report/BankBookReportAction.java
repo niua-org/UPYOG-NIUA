@@ -97,13 +97,11 @@ import org.egov.utils.FinancialConstants;
 import org.egov.utils.ReportHelper;
 import org.hibernate.FlushMode;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.Query;
 import org.hibernate.transform.Transformers;
-
-
-
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.DateType;
+import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
@@ -216,7 +214,7 @@ public class BankBookReportAction extends BaseFormAction {
 	@Override
 	public void prepare() {
 		persistenceService.getSession().setDefaultReadOnly(true);
-		persistenceService.getSession().setHibernateFlushMode(FlushMode.COMMIT);
+		persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
 		super.prepare();
 		if (!parameters.containsKey("skipPrepare")) {
 			addDropdownData("bankList", egovCommon.getBankBranchForActiveBanks());
@@ -226,13 +224,8 @@ public class BankBookReportAction extends BaseFormAction {
 			if (headerFields.contains(Constants.DEPARTMENT))
 				addDropdownData("departmentList", masterDataCache.get("egi-department"));
 			if (headerFields.contains(Constants.FUNCTION))
-				/*
-				 * LTS Migration Fix (Hibernate 6 Upgrade):
-				 * Changed field names from lowercase 'isactive' and 'isnotleaf' to camelCase 'isActive' and 'isNotLeaf' for CFunction HQL.
-				 * The CFunction Java entity uses 'isActive' and 'isNotLeaf' property names.
-				 */
 				addDropdownData("functionList", persistenceService
-						.findAllBy("from CFunction where isActive=true and isNotLeaf=false order by name"));
+						.findAllBy("from CFunction where isactive=true and isnotleaf=false  order by name"));
 			if (headerFields.contains(Constants.FUNCTIONARY))
 				addDropdownData("functionaryList",
 						persistenceService.findAllBy(" from Functionary where isactive=true order by name"));
@@ -572,7 +565,7 @@ public class BankBookReportAction extends BaseFormAction {
                 .append(queryFrom).append(")").toString();
         mainQuery = mainQuery.append(getInstrumentsByVoucherIdsQuery);
 
-        final Query query = persistenceService.getSession().createNativeQuery(mainQuery.toString());
+        final Query query = persistenceService.getSession().createSQLQuery(mainQuery.toString());
         queryFromParams.entrySet().forEach(entry -> query.setParameter(entry.getKey(), entry.getValue()));
         final List<Object[]> objs = query.list();
 		for (final Object[] obj : objs)
@@ -593,7 +586,7 @@ public class BankBookReportAction extends BaseFormAction {
                 .append(getInstrumentsByVoucherIdsQuery)
                 .append(")");
 
-        final Query query = persistenceService.getSession().createNativeQuery(queryString.toString());
+        final Query query = persistenceService.getSession().createSQLQuery(queryString.toString());
         queryFromParams.entrySet().forEach(entry -> query.setParameter(entry.getKey(), entry.getValue()));
         final List<Object[]> objs = query.list();
 		for (final Object[] obj : objs)
@@ -703,19 +696,19 @@ public class BankBookReportAction extends BaseFormAction {
 		if (LOGGER.isDebugEnabled())
 			LOGGER.debug("Main query :" + query1 + queryFrom + OrderBy);
 
-		final Query query = persistenceService.getSession().createNativeQuery(query1.append(queryFrom).append(OrderBy).toString())
-                .addScalar("voucherId", StandardBasicTypes.BIG_DECIMAL)
+		final Query query = persistenceService.getSession().createSQLQuery(query1.append(queryFrom).append(OrderBy).toString())
+                .addScalar("voucherId", new BigDecimalType())
                 .addScalar("voucherDate")
                 .addScalar("voucherNumber")
                 .addScalar("particulars")
-                .addScalar("amount", StandardBasicTypes.BIG_DECIMAL)
+                .addScalar("amount", new BigDecimalType())
                 .addScalar("type")
                 .addScalar("chequeDetail")
                 .addScalar("glCode")
                 .addScalar("instrumentStatus")
-                .setParameter("glCode", glCode1, StandardBasicTypes.STRING)
-                .setParameter("startDate", startDate, StandardBasicTypes.DATE)
-                .setParameter("endDate", endDate, StandardBasicTypes.DATE)
+                .setParameter("glCode", glCode1, StringType.INSTANCE)
+                .setParameter("startDate", startDate, DateType.INSTANCE)
+                .setParameter("endDate", endDate, DateType.INSTANCE)
                 .setResultTransformer(Transformers.aliasToBean(BankBookEntry.class));
         queryParams.entrySet().forEach(entry -> query.setParameter(entry.getKey(), entry.getValue()));
         final List<BankBookEntry> results = query.list();
@@ -779,7 +772,7 @@ public class BankBookReportAction extends BaseFormAction {
 	
 	/*
 	 * public String getUlbName() { final Query query =
-	 * persistenceService.getSession().createNativeQuery(
+	 * persistenceService.getSession().createSQLQuery(
 	 * "select name from companydetail"); final List<String> result =
 	 * query.list(); if (result != null) return result.get(0); return
 	 * EMPTY_STRING; }

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Route, Routes } from "react-router-dom";
+import { Route, Switch, useRouteMatch } from "react-router-dom";
 import { loginConfig as defaultLoginConfig } from "./config";
 import LoginComponent from "./login";
 
 const EmployeeLogin = () => {
   const { t } = useTranslation();
-  // useRouteMatch removed — path not needed
+  const { path } = useRouteMatch();
   const [loginConfig, setloginConfig] = useState(defaultLoginConfig);
 
   const { data: mdmsData, isLoading } = Digit.Hooks.useCommonMDMS(Digit.ULBService.getStateId(), "commonUiConfig", ["LoginConfig"], {
@@ -41,13 +41,11 @@ const EmployeeLogin = () => {
   );
 
   return (
-    <Routes>                                        // Switch → Routes 
-      <Route
-        index                                       // exact → index 
-        element={<LoginComponent config={loginParams[0]} t={t} />}  //children → element 
-      />
-    </Routes>
-
+    <Switch>
+      <Route path={`${path}`} exact>
+        <LoginComponent config={loginParams[0]} t={t} />
+      </Route>
+    </Switch>
   );
 };
 

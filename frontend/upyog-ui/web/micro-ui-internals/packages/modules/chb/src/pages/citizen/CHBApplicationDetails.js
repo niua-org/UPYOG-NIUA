@@ -26,7 +26,6 @@ import { pdfDownloadLink } from "../../utils";
 
 import get from "lodash/get";
 import { size } from "lodash";
-import "../../css/chb-inline.css";
 
 /**
 
@@ -68,7 +67,7 @@ const CHBApplicationDetails = () => {
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
 
-  const { isLoading, isError, error, data, refetch } = Digit.Hooks.chb.useChbSearch({
+  const { isLoading, isError, error, data,refetch } = Digit.Hooks.chb.useChbSearch({
     tenantId,
     filters: { bookingNo: acknowledgementIds },
   });
@@ -117,45 +116,6 @@ const CHBApplicationDetails = () => {
     },
     { enabled: acknowledgementIds ? true : false }
   );
-
-  const isCancelled = chb_details?.bookingStatus === "CANCELLED";
-  const isOnline = reciept_data?.Payments?.[0]?.paymentMode === "ONLINE";
-  const originalTxnId = reciept_data?.Payments?.[0]?.transactionNumber;
-  // instrumentStatus is the authoritative final state from the payment gateway
-  const instrumentStatus = reciept_data?.Payments?.[0]?.instrumentStatus;
-  const isRefunded = instrumentStatus === "REFUNDED";
-
-  const { data: refundData } = Digit.Hooks.useCustomAPIHook(
-    "/pg-service/refund/v1/_search",
-    {
-      originalTxnId: originalTxnId,
-      tenantId: reciept_data?.Payments?.[0]?.tenantId || tenantId,
-    },
-    {},
-    {},
-    {
-      enabled: !!(isCancelled && isOnline && originalTxnId),
-    }
-  );
-
-  const refund = refundData?.Refund?.[0] || refundData?.Refunds?.[0] || refundData?.[0];
-  // Show the exact refund pipeline status from the API (INITIATED, SUCCESS, etc.)
-  const refundStatus = refund?.status || refund?.refundStatus;
-
-  const isRefundSuccess = refundStatus?.toUpperCase() === "REFUNDED" ||
-    refundStatus?.toUpperCase() === "SUCCESS" ||
-    refundStatus?.toUpperCase() === "SUCCESSFUL" ||
-    refundStatus?.toUpperCase() === "COMPLETED";
-  const isRefundInProgress = !isRefundSuccess && refundStatus && (
-    refundStatus.toUpperCase() === "IN_PROGRESS" ||
-    refundStatus.toUpperCase() === "INPROGRESS" ||
-    refundStatus.toUpperCase() === "INITIATED"
-  );
-  const refundBannerStyle = isRefundSuccess
-    ? { backgroundColor: "#D4EDDA", border: "1px solid #C3E6CB", color: "#155724" }
-    : isRefundInProgress
-    ? { backgroundColor: "#FFF3CD", border: "1px solid #FFEBAA", color: "#856404" }
-    : { backgroundColor: "#E2E3E5", border: "1px solid #D6D8DB", color: "#383D41" };
   //WorkFlow
   // if (!chb_details.workflow) {
   //   let workflow = {
@@ -196,19 +156,19 @@ const CHBApplicationDetails = () => {
 
   async function getRecieptSearch({ tenantId, payments, ...params }) {
     let application = data?.hallsBookingApplication?.[0];
-    let fileStoreId = application?.paymentReceiptFilestoreId;
+    let fileStoreId = application?.paymentReceiptFilestoreId
     if (!fileStoreId) {
-      let response = { filestoreIds: [payments?.fileStoreId] };
-      response = await Digit.PaymentService.generatePdf(tenantId, { Payments: [{ ...payments }] }, "chbservice-receipt");
-      const updatedApplication = {
-        ...application,
-        paymentReceiptFilestoreId: response?.filestoreIds[0]
-      };
-      await mutation.mutateAsync({
-        venueBookingApplication: updatedApplication
-      });
-      fileStoreId = response?.filestoreIds[0];
-      refetch();
+    let response = { filestoreIds: [payments?.fileStoreId] };
+    response = await Digit.PaymentService.generatePdf(tenantId, { Payments: [{ ...payments }] }, "chbservice-receipt");
+    const updatedApplication = {
+      ...application,
+      paymentReceiptFilestoreId: response?.filestoreIds[0]
+    };
+    await mutation.mutateAsync({
+      hallsBookingApplication: updatedApplication
+    });
+    fileStoreId = response?.filestoreIds[0];
+    refetch();
     }
     const fileStore = await Digit.PaymentService.printReciept(tenantId, { fileStoreIds: fileStoreId });
     window.open(fileStore[fileStoreId], "_blank");
@@ -219,7 +179,7 @@ const CHBApplicationDetails = () => {
     if (!fileStoreId) {
       const response = await Digit.PaymentService.generatePdf(
         tenantId,
-        { hallsBookingApplication: [application] },
+        { hallsBookingApplication: [application] }, 
         "chbpermissionletter"
       );
       const updatedApplication = {
@@ -227,7 +187,7 @@ const CHBApplicationDetails = () => {
         permissionLetterFilestoreId: response?.filestoreIds[0]
       };
       await mutation.mutateAsync({
-        venueBookingApplication: updatedApplication
+        hallsBookingApplication: updatedApplication
       });
       fileStoreId = response?.filestoreIds[0];
       refetch();
@@ -269,7 +229,7 @@ const CHBApplicationDetails = () => {
   //     label: t("CHB_CERTIFICATE"),
   //     onClick: () => printCertificate(),
   //   });
-
+    
   //   const getBookingDateRange = (bookingSlotDetails) => {
   //     if (!bookingSlotDetails || bookingSlotDetails.length === 0) {
   //       return t("CS_NA");
@@ -299,28 +259,25 @@ const CHBApplicationDetails = () => {
   //     // Return formatted time range
   //     return startTime ? `${startTime} - ${defaultEndTime}` : t("CS_NA");
   //   };
-  const columns = [
-    { Header: t("CHB_VENUE_NAME_LABEL"), accessor: "venueCode" },
-    { Header: t("CHB_HALL_CODE_LABEL"), accessor: "unitCode" },
-    { Header: t("CHB_BOOKING_DATE"), accessor: "bookingDate" },
-    { Header: t("CHB_BOOKING_TIME"), accessor: "bookingTime" },
-    { Header: t("PT_COMMON_TABLE_COL_STATUS_LABEL"), accessor: "bookingStatus" }
-  ];
-
-  const slotlistRows = chb_details?.bookingSlotDetails?.map((slot) => (
-    {
-      venueCode: `${t(chb_details?.venueCode)}`,
-      unitCode: slot.unitCode,
-      bookingDate: slot.bookingDate,
-      bookingTime: slot.bookingFromTime && slot.bookingToTime ? `${slot.bookingFromTime} - ${slot.bookingToTime}` : (slot.bookingFromTime || t("CS_NA")),
-      bookingStatus: `${t(slot.status)}`
-    }
-  )) || [];
+    const columns = [
+      { Header: `${t("CHB_HALL_NAME")}` + "/" + `${t("CHB_PARK")}`, accessor: "communityHallCode" },
+      { Header: `${t("CHB_HALL_CODE")}`, accessor: "hallCode" },
+      { Header: `${t("CHB_BOOKING_DATE")}`, accessor: "bookingDate" },
+      { Header: `${t("PT_COMMON_TABLE_COL_STATUS_LABEL")}`, accessor: "bookingStatus" }
+    ];
+    const slotlistRows = chb_details?.bookingSlotDetails?.map((slot) => (
+      {
+        communityHallCode: `${t(chb_details?.communityHallCode)}`,
+        hallCode:slot.hallCode + " - " + slot.capacity,
+        bookingDate:slot.bookingDate + " (" + slot.bookingFromTime + " - " + slot.bookingToTime + ")",
+        bookingStatus:`${t(slot.status)}`
+      }
+    )) || [];
   return (
     <React.Fragment>
       <div>
-        <div className="cardHeaderWithOptions chb-card-header-max-width">
-          <Header className="chb-citizen-header">{t("CHB_BOOKING_DETAILS")}</Header>
+        <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
+          <Header styles={{ fontSize: "32px" }}>{t("CHB_BOOKING_DETAILS")}</Header>
           {dowloadOptions && dowloadOptions.length > 0 && (
             <MultiLink
               className="multilinkWrapper"
@@ -331,16 +288,11 @@ const CHBApplicationDetails = () => {
           )}
         </div>
         <Card>
-          {(isRefundInProgress || refundStatus || isRefunded) && (
-            <div style={{ padding: "10px 16px", borderRadius: "4px", marginBottom: "16px", fontWeight: "bold", fontSize: "16px", ...refundBannerStyle }}>
-              {t("CHB_REFUND_STATUS") || "Refund Status"} &mdash; {refundStatus || (isRefunded ? "REFUNDED" : "")}
-            </div>
-          )}
           <StatusTable>
             <Row className="border-none" label={t("CHB_BOOKING_NO")} text={chb_details?.bookingNo} />
           </StatusTable>
 
-          <CardSubHeader className="chb-subheader-lg">{t("CHB_APPLICANT_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_APPLICANT_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("CHB_APPLICANT_NAME")} text={chb_details?.applicantDetail?.applicantName || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_MOBILE_NUMBER")} text={chb_details?.applicantDetail?.applicantMobileNo || t("CS_NA")} />
@@ -348,7 +300,7 @@ const CHBApplicationDetails = () => {
             <Row className="border-none" label={t("CHB_EMAIL_ID")} text={chb_details?.applicantDetail?.applicantEmailId || t("CS_NA")} />
           </StatusTable>
 
-          <CardSubHeader className="chb-subheader-lg">{t("CHB_EVENT_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_EVENT_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("CHB_SPECIAL_CATEGORY")} text={chb_details?.specialCategory?.category || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_PURPOSE")} text={chb_details?.purpose?.purpose || t("CS_NA")} />
@@ -361,7 +313,7 @@ const CHBApplicationDetails = () => {
             <Row className="border-none" label={t("CHB_BOOKING_DATE")} text={getBookingDateRange(chb_details?.bookingSlotDetails) || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_BOOKING_TIME")} text={getBookingTimeRange(chb_details?.bookingSlotDetails) || t("CS_NA")} />
             </StatusTable> */}
-          <CardSubHeader className="chb-subheader-lg">{t("CHB_ADDRESS_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_ADDRESS_DETAILS")}</CardSubHeader>
             <StatusTable>
               <Row className="border-none" label={t("CHB_PINCODE")} text={chb_details?.address?.pincode || t("CS_NA")} />
               <Row className="border-none" label={t("CHB_CITY")} text={chb_details?.address?.city || t("CS_NA")}/>
@@ -370,7 +322,7 @@ const CHBApplicationDetails = () => {
               <Row className="border-none" label={t("CHB_HOUSE_NO")} text={chb_details?.address?.houseNo || t("CS_NA")} />
               <Row className="border-none" label={t("CHB_LANDMARK")} text={chb_details?.address?.landmark || t("CS_NA")} />
             </StatusTable>
-          <CardSubHeader className="chb-subheader-lg">{t("CHB_BANK_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_BANK_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("CHB_ACCOUNT_NUMBER")} text={chb_details?.applicantDetail?.accountNumber || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_IFSC_CODE")} text={chb_details?.applicantDetail?.ifscCode || t("CS_NA")} />
@@ -378,49 +330,42 @@ const CHBApplicationDetails = () => {
             <Row className="border-none" label={t("CHB_BANK_BRANCH_NAME")} text={chb_details?.applicantDetail?.bankBranchName || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_ACCOUNT_HOLDER_NAME")} text={chb_details?.applicantDetail?.accountHolderName || t("CS_NA")} />
           </StatusTable>
-          <CardSubHeader className="chb-subheader-lg">{t("SLOT_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("SLOT_DETAILS")}</CardSubHeader>
           <ApplicationTable
                 t={t}
                 data={slotlistRows}
                 columns={columns}
                 getCellProps={(cellInfo) => ({
-                  className: "chb-table-cell",
+                  style: {
+                    minWidth: "150px",
+                    padding: "10px",
+                    fontSize: "16px",
+                    paddingLeft: "20px",
+                  },
                 })}
                 isPaginationRequired={false}
                 totalRecords={slotlistRows.length}
               />
-          <CardSubHeader className="chb-subheader-lg">{t("CHB_DOCUMENTS_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_DOCUMENTS_DETAILS")}</CardSubHeader>
           <StatusTable>
-            <Card className="chb-doc-card">
+            <Card style={{display: "flex", flexDirection: "row" }}>
               {docs.map((doc, index) => (
-                <div key={`doc-${index}`} className="chb-doc-item">
+                <div key={`doc-${index}`} style={{ marginRight: "25px"}}>
                   <div>
-                    <CardSectionHeader>{t("CHB_" + (doc?.documentType?.split('.').slice(0, 2).join('_')))}</CardSectionHeader>
+                    <CardSectionHeader>{t("CHB_" + (doc?.documentType?.split('.').slice(0,2).join('_')))}</CardSectionHeader>
                     <CHBDocument value={docs} Code={doc?.documentType} index={index} />
                   </div>
                 </div>
               ))}
             </Card>
-          </StatusTable>
-
-          {refund && (
-            <React.Fragment>
-              <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_REFUND_DETAILS")}</CardSubHeader>
-              <StatusTable>
-                <Row className="border-none" label={t("CHB_REFUND_ID")} text={refund?.refundId || t("CS_NA")} />
-                <Row className="border-none" label={t("CHB_REFUND_AMOUNT")} text={refund?.refundAmount ? `₹${refund.refundAmount}` : t("CS_NA")} />
-                <Row className="border-none" label={t("CHB_REFUND_STATUS")} text={refundStatus || t("CS_NA")} />
-                {/* <Row className="border-none" label={t("CHB_REFUND_TXN_ID")} text={refund?.txnId || t("CS_NA")} /> */}
-              </StatusTable>
-            </React.Fragment>
-          )}
+         </StatusTable>
 
           <CHBWFApplicationTimeline application={application} id={application?.bookingNo} userType={"citizen"} />
           {showToast && (
             <Toast
               error={showToast.key}
               label={t(showToast.label)}
-              className="chb-toast-bottom"
+              style={{ bottom: "0px" }}
               onClose={() => {
                 setShowToast(null);
               }}

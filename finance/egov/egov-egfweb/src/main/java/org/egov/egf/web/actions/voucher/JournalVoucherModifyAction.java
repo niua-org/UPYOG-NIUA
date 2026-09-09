@@ -94,11 +94,9 @@ import org.egov.services.voucher.VoucherService;
 import org.egov.utils.Constants;
 import org.egov.utils.FinancialConstants;
 import org.egov.utils.VoucherHelper;
-import org.hibernate.query.Query;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.type.StandardBasicTypes;
-
-
+import org.hibernate.Query;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -405,11 +403,11 @@ public class JournalVoucherModifyAction extends BaseVoucherAction {
                 moduleType = FinancialConstants.CONTRACTORBILL;
             }
 
-            final Query billQry = persistenceService.getSession().createNativeQuery(cancelQuery.toString());
-            billQry.setParameter("module", moduleType, StandardBasicTypes.STRING)
-                    .setParameter("description", description, StandardBasicTypes.STRING)
-                    .setParameter("billstatus", billstatus, StandardBasicTypes.STRING)
-                    .setParameter("billId", (Long) bill[1], StandardBasicTypes.LONG);
+            final Query billQry = persistenceService.getSession().createSQLQuery(cancelQuery.toString());
+            billQry.setParameter("module", moduleType, StringType.INSTANCE)
+                    .setParameter("description", description, StringType.INSTANCE)
+                    .setParameter("billstatus", billstatus, StringType.INSTANCE)
+                    .setParameter("billId", (Long) bill[1], LongType.INSTANCE);
             billQry.executeUpdate();
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("Bill Cancelled Successfully" + bill[1]);

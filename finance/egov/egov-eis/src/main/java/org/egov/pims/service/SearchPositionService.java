@@ -54,12 +54,12 @@ import org.egov.infra.exception.ApplicationRuntimeException;
 import org.egov.pims.dao.PersonalInformationDAO;
 import org.egov.pims.dao.PersonalInformationHibernateDAO;
 import org.hibernate.HibernateException;
-
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -136,7 +136,7 @@ public class SearchPositionService {
 				//searchQuery +=" EV.userid = userrole.user and userrole.roleid = :roleId and userrole.from";
 			}
 
-			org.hibernate.query.Query query =getCurrentSession().createQuery(searchQuery.toString());
+			Query query =getCurrentSession().createQuery(searchQuery.toString());
 			logger.info("quey >>>"+query.toString());
 			
 			if(userListInJur!=null && !userListInJur.isEmpty())
@@ -145,20 +145,20 @@ public class SearchPositionService {
 			}
 			if(desId!= null&& desId.intValue() != 0)
 			{
-				query.setParameter("desId",desId);
+				query.setInteger("desId",desId);
 			}
 			if(deptId!= null&& deptId.intValue() != 0)
 			{
-				query.setParameter("deptId",deptId);
+				query.setInteger("deptId",deptId);
 			}
 
 			if(userDate!=null)
 			{
-				query.setParameter("userDate",userDate);
+				query.setDate("userDate",userDate);
 			}
 			if(roleId!=null && roleId!=null)
 			{
-				query.setParameter("roleId",roleId);
+				query.setInteger("roleId",roleId);
 			}
 			posList=(List)query.list();
 		}

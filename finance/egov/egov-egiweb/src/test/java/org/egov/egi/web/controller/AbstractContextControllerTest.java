@@ -47,6 +47,7 @@
  */
 package org.egov.egi.web.controller;
 
+import org.apache.tiles.request.render.StringRenderer;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +57,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.view.tiles3.TilesViewResolver;
 
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
@@ -75,14 +75,11 @@ public abstract class AbstractContextControllerTest<T> {
     public void setUpBase() throws Exception {
         this.controller = initController();
 
-        // Spring 6 removed Tiles integration (org.springframework.web.servlet.view.tiles3).
-        // Production rendering uses Struts' own Tiles result type + JSP taglib (see egov-egiweb
-        // web.xml / tiles.xml), which is untouched by this change. This test only needs a
-        // no-op ViewResolver so standaloneSetup doesn't fail to resolve a view name.
-        ViewResolver noOpViewResolver = (viewName, locale) -> (View) (model, request, response) -> { };
+        TilesViewResolver tilesViewResolver = new TilesViewResolver();
+        tilesViewResolver.setRenderer(new StringRenderer());
 
         mvcBuilder = standaloneSetup(controller).setValidator(validator)
-                .setViewResolvers(noOpViewResolver);
+                .setViewResolvers(tilesViewResolver);
 
     }
 

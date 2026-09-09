@@ -47,7 +47,6 @@
  */
 package org.egov.egf.web.actions.report;
 
-import jakarta.persistence.FlushModeType;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -73,15 +72,15 @@ import org.egov.infra.web.struts.annotation.ValidationErrorPage;
 import org.egov.infstr.services.PersistenceService;
 import org.egov.infstr.utils.EgovMasterDataCaching;
 import org.egov.utils.FinancialConstants;
-
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.exilant.eGov.src.reports.GeneralLedgerReport;
 import com.exilant.eGov.src.reports.GeneralLedgerReportBean;
 import com.exilant.exility.common.TaskFailedException;
-import org.apache.struts2.validator.annotations.RequiredFieldValidator;
-import org.apache.struts2.validator.annotations.Validations;
+import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
+import com.opensymphony.xwork2.validator.annotations.Validations;
 
 @ParentPackage("egov")
 @Results({
@@ -176,7 +175,7 @@ public class GeneralLedgerReportAction extends BaseFormAction {
 	public String ajaxSearch() {
 
 		persistenceService.getSession().setDefaultReadOnly(true);
-		persistenceService.getSession().setFlushMode(FlushModeType.COMMIT);
+		persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
 		if (LOGGER.isDebugEnabled())
 			LOGGER.debug("GeneralLedgerAction | Search | start");
 		try {
@@ -197,7 +196,7 @@ public class GeneralLedgerReportAction extends BaseFormAction {
 	@Action(value = "/report/generalLedgerReport-searchDrilldown")
 	public String searchDrilldown() {
 		persistenceService.getSession().setDefaultReadOnly(true);
-		persistenceService.getSession().setFlushMode(FlushModeType.COMMIT);
+		persistenceService.getSession().setFlushMode(FlushMode.MANUAL);
 		if (LOGGER.isDebugEnabled())
 			LOGGER.debug("GeneralLedgerAction | Search | start");
 		try {

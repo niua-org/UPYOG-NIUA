@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useApplicationDetails } from "../pages/employee/Edit/ApplicationContext";
+import { cndStyles } from "../utils/cndStyles";
 /**
  * PickupArrivalDetails Component
  * 
@@ -104,8 +105,8 @@ const OwnerForm = (_props) => {
 
   return (
     <React.Fragment>
-      <div className="cnd-pickup-arrival-site-media">
-        <div className="cnd-pickup-arrival-employee-container">
+      <div style={cndStyles.siteMediaPhotoEmployee}>
+        <div style={cndStyles.employeeSideContainer}>
             <StatusTable>
                 <Row
                     className="border-none"
@@ -183,7 +184,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.vehicleNumber ? errors?.vehicleNumber?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.vehicleNumber ? errors?.vehicleNumber?.message : ""}</CardLabelError>
  
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("CND_VEHICLE_DEPO")} <span className="astericColor">*</span></CardLabel>
@@ -214,7 +215,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.vehicleDepoNumber ? errors?.vehicleDepoNumber?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.vehicleDepoNumber ? errors?.vehicleDepoNumber?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("CND_DRIVER_NAME")} <span className="astericColor">*</span></CardLabel>
@@ -246,7 +247,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.driverName ? errors?.driverName?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.driverName ? errors?.driverName?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("CND_GROSS_WEIGHT")} <span className="astericColor">*</span></CardLabel>
@@ -278,7 +279,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.grossWeight ? errors?.grossWeight?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.grossWeight ? errors?.grossWeight?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("CND_NET_WEIGHT")} <span className="astericColor">*</span></CardLabel>
@@ -310,7 +311,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.netWeight ? errors?.netWeight?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.netWeight ? errors?.netWeight?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("CND_DUMPING_STATION")} <span className="astericColor">*</span></CardLabel>
@@ -342,7 +343,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.dumpingStation ? errors?.dumpingStation?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.dumpingStation ? errors?.dumpingStation?.message : ""}</CardLabelError>
 
           <LabelFieldPair>
             <CardLabel className="card-label-smaller">{t("CND_DISPOSE_DATE")} <span className="astericColor">*</span></CardLabel>
@@ -373,7 +374,7 @@ const OwnerForm = (_props) => {
               />
             </div>
           </LabelFieldPair>
-          <CardLabelError className="cnd-pickup-arrival-error">{localFormState.touched.disposeDate ? errors?.disposeDate?.message : ""}</CardLabelError>
+          <CardLabelError style={cndStyles.errorStyle}>{localFormState.touched.disposeDate ? errors?.disposeDate?.message : ""}</CardLabelError>
         </div>
       </div>
       {showToast?.label && (

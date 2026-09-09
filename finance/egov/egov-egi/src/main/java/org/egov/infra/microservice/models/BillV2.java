@@ -52,10 +52,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -81,41 +81,41 @@ public class BillV2 {
     // TODO some of the fields are mandatory in yml, lets discuss billdetail and
     // billaccountdetail also for more clarity
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("id")
     private String id = null;
     
 	@JsonProperty("userId")
 	private String userId;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("mobileNumber")
     private String mobileNumber = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("paidBy")
     private String paidBy = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("payerName")
     private String payerName = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("payerAddress")
     private String payerAddress = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("payerEmail")
     private String payerEmail = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("payerId")
     private String payerId = null;
 
     @JsonProperty("status")
     private StatusEnum status = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("reasonForCancellation")
     private String reasonForCancellation = null;
 
@@ -129,7 +129,7 @@ public class BillV2 {
     @Valid
     private List<BillDetailV2> billDetails = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("tenantId")
     private String tenantId = null;
 
@@ -154,11 +154,11 @@ public class BillV2 {
     @JsonProperty("totalAmount")
     private BigDecimal totalAmount = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("consumerCode")
     private String consumerCode = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("billNumber")
     private String billNumber = null;
 
@@ -168,7 +168,7 @@ public class BillV2 {
     @JsonProperty("amountPaid")
     private BigDecimal amountPaid;
 
-    @SanitizeHtml
+    @SafeHtml
     @JsonProperty("fileStoreId")
     private String fileStoreId;
 

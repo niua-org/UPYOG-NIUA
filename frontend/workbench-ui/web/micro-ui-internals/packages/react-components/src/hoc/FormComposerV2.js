@@ -173,13 +173,13 @@ export const FormComposer = (props) => {
             ) : null}
             <Controller
               defaultValue={formData?.[populators.name]}
-              render={({ field }) => (
+              render={({ onChange, ref, value }) => (
                 <TextInput
-                  value={field.value}
+                  value={formData?.[populators.name]}
                   type={type}
                   name={populators.name}
-                  onChange={field.onChange}
-                  inputRef={field.ref}
+                  onChange={onChange}
+                  inputRef={ref}
                   errorStyle={errors?.[populators.name]}
                   max={populators?.validation?.max}
                   min={populators?.validation?.min}
@@ -206,13 +206,13 @@ export const FormComposer = (props) => {
           ) : null}
           <Controller
             defaultValue={formData?.[populators.name]}
-            render={({ field }) => (
+            render={({ onChange, ref, value }) => (
               <InputTextAmount
-                value={field.value}
+                value={formData?.[populators.name]}
                 type={"text"}
                 name={populators.name}
-                onChange={field.onChange}
-                inputRef={field.ref}
+                onChange={onChange}
+                inputRef={ref}
                 errorStyle={errors?.[populators.name]}
                 max={populators?.validation?.max}
                 min={populators?.validation?.min}
@@ -237,14 +237,14 @@ export const FormComposer = (props) => {
         return (
           <Controller
             defaultValue={formData?.[populators.name]}
-            render={({ field }) => (
+            render={({ onChange, ref, value }) => (
               <TextArea
                 className="field fullWidth"
-                value={field.value}
+                value={formData?.[populators.name]}
                 type={type}
                 name={populators.name}
-                onChange={field.onChange}
-                inputRef={field.ref}
+                onChange={onChange}
+                inputRef={ref}
                 disable={disable}
                 errorStyle={errors?.[populators.name]}
                 style={{marginTop: 0}}
@@ -262,11 +262,11 @@ export const FormComposer = (props) => {
           <div className="field-container">
             <Controller
               defaultValue={formData?.[populators.name]}
-              render={({ field }) => (
+              render={({ onChange, ref, value }) => (
                 <Paragraph
-                  value={field.value}
+                  value={formData?.[populators.name]}
                   name={populators.name}
-                  inputRef={field.ref}
+                  inputRef={ref}
                   customClass={populators?.customClass}
                   customStyle={populators?.customStyle}
                 />
@@ -280,13 +280,14 @@ export const FormComposer = (props) => {
       case "mobileNumber":
         return (
           <Controller
-            render={({ field }) => (
+            render={(props) => (
               <MobileNumber
-                inputRef={field.ref}
+                inputRef={props.ref}
                 className="field fullWidth"
-                onChange={field.onChange}
-                value={field.value}
+                onChange={props.onChange}
+                value={props.value}
                 disable={disable}
+                {...props}
                 errorStyle={errors?.[populators.name]}
               />
             )}
@@ -299,7 +300,7 @@ export const FormComposer = (props) => {
       case "custom":
         return (
           <Controller
-            render={({ field }) => populators.component({ ...field, setValue }, populators.customProps)}
+            render={(props) => populators.component({ ...props, setValue }, populators.customProps)}
             defaultValue={populators.defaultValue}
             name={populators?.name}
             control={control}
@@ -313,13 +314,18 @@ export const FormComposer = (props) => {
             control={control}
             defaultValue={formData?.[populators.name]}
             rules={{ required: populators?.isMandatory }}
-            render={({ field }) => {
+            render={(props) => {
               
               return (
                 <div style={{ display: "grid", gridAutoFlow: "row" }}>
                   <CheckBox
                     onChange={(e) => {
-                      field.onChange(e.target.checked)
+                      // const obj = {
+                      //   ...props.value,
+                      //   [e.target.value]: e.target.checked
+                      // }
+                      
+                      props.onChange(e.target.checked)
                     }}
                     value={formData?.[populators.name] }
                     checked={formData?.[populators.name]}
@@ -339,7 +345,7 @@ export const FormComposer = (props) => {
             name={`${populators.name}`}
             control={control}
             rules={!disableFormValidation ? { required: false } : {}}
-            render={({ field }) => {
+            render={({ onChange, ref, value = [] }) => {
               function getFileStoreData(filesData) {
                 const numberOfFiles = filesData.length;
                 let finalDocumentData = [];
@@ -353,7 +359,7 @@ export const FormComposer = (props) => {
                   });
                 }
                 //here we need to update the form the same way as the state of the reducer in multiupload, since Upload component within the multiupload wrapper uses that same format of state so we need to set the form data as well in the same way. Previously we were altering it and updating the formData
-                field.onChange(numberOfFiles>0?filesData:[]);
+                onChange(numberOfFiles>0?filesData:[]);
               }
               return (
                 <MultiUploadWrapper
@@ -362,7 +368,7 @@ export const FormComposer = (props) => {
                   tenantId={Digit.ULBService.getCurrentTenantId()}
                   getFormState={getFileStoreData}
                   showHintBelow={populators?.showHintBelow ? true : false}
-                  setuploadedstate={field.value || []}
+                  setuploadedstate={value || []}
                   allowedFileTypesRegex={populators.allowedFileTypes}
                   allowedMaxSizeInMB={populators.allowedMaxSizeInMB}
                   hintText={populators.hintText}
@@ -382,14 +388,14 @@ export const FormComposer = (props) => {
       case "radioordropdown":
         return (
           <Controller
-            render={({ field }) =>(<CustomDropdown
+            render={(props) =>(<CustomDropdown
                 t={t}
                 label={config?.label}
                 type={type}
-                onBlur={field.onBlur}
-                value={field.value}
-                inputRef={field.ref}
-                onChange={field.onChange}
+                onBlur={props.onBlur}
+                value={props.value}
+                inputRef={props.ref}
+                onChange={props.onChange}
                 config={populators}
                 disable={config?.disable}
                 errorStyle={errors?.[populators.name]}
@@ -404,7 +410,7 @@ export const FormComposer = (props) => {
       case "component":
         return (
           <Controller
-            render={({ field }) => (
+            render={(props) => (
               <Component
                 userType={"employee"}
                 t={t}
@@ -415,11 +421,11 @@ export const FormComposer = (props) => {
                 formData={formData}
                 register={register}
                 errors={errors}
-                props={{...field, ...customProps}}
+                props={{...props, ...customProps}}
                 setError={setError}
                 clearErrors={clearErrors}
                 formState={formState}
-                onBlur={field.onBlur}
+                onBlur={props.onBlur}
                 control={control}
                 sectionFormCategory={sectionFormCategory}
                 selectedFormCategory={selectedFormCategory}
@@ -474,7 +480,7 @@ export const FormComposer = (props) => {
         control={control}
         defaultValue={formData?.[populators.name]}
         rules={{ required: populators?.isMandatory, ...populators.validation }}
-        render={({ field }) => {
+        render={(props) => {
           return (
             <div style={{ display: "grid", gridAutoFlow: "row" }}>
               object
@@ -488,7 +494,7 @@ export const FormComposer = (props) => {
         control={control}
         defaultValue={formData?.[populators.name]}
         rules={{ required: populators?.isMandatory, ...populators.validation }}
-        render={({ field }) => {
+        render={(props) => {
           return (
             <div style={{ display: "grid", gridAutoFlow: "row" }}>
               array
@@ -503,11 +509,11 @@ export const FormComposer = (props) => {
             control={control}
             defaultValue={formData?.[populators.name]}
             rules={{ required: populators?.isMandatory, ...populators.validation }}
-            render={({ field }) => {
+            render={(props) => {
               return (
                 <div style={{ display: "grid", gridAutoFlow: "row" }}>
                   <LocationDropdownWrapper
-                    props={field}
+                    props={props}
                     populators={populators}
                     formData={formData}
                     inputRef={props.ref}
@@ -527,21 +533,21 @@ export const FormComposer = (props) => {
             control={control}
             defaultValue={formData?.[populators.name]}
             rules={{ required: populators?.isMandatory, ...populators.validation }}
-            render={({ field }) => {
+            render={(props) => {
               return (
                 <div style={{ display: "grid", gridAutoFlow: "row" }}>
                   <ApiDropdown
-                    props={field}
+                    props={props}
                     populators={populators}
                     formData={formData}
-                    inputRef={field.ref}
+                    inputRef={props.ref}
                     errors={errors}
                     t={t}
                     label={config?.label}
                     type={type}
-                    onBlur={field.onBlur}
-                    value={field.value}
-                    onChange={field.onChange}
+                    onBlur={props.onBlur}
+                    value={props.value}
+                    onChange={props.onChange}
                     config={populators}
                     disable={config?.disable}
                     errorStyle={errors?.[populators.name]}
@@ -558,18 +564,18 @@ export const FormComposer = (props) => {
             control={control}
             defaultValue={formData?.[populators.name]}
             rules={{ required: isMandatory }}
-            render={({ field }) => {
+            render={(props) => {
               return (
                 <div style={{ display: "grid", gridAutoFlow: "row" }}>
                   <MultiSelectDropdown
                     options={populators?.options}
                     optionsKey={populators?.optionsKey}
-                    props={field}
+                    props={props}
                     isPropsNeeded={true}
                     onSelect={(e) => {
-                      field.onChange(e?.map(row=>{return row?.[1] ? row[1] : null}).filter(e=>e))
+                      props.onChange(e?.map(row=>{return row?.[1] ? row[1] : null}).filter(e=>e))
                     }}
-                    selected={field?.value || []}
+                    selected={props?.value || []}
                     defaultLabel={t(populators?.defaultText)}
                     defaultUnit={t(populators?.selectedText)}
                     config={populators}
@@ -710,8 +716,9 @@ export const FormComposer = (props) => {
               </React.Fragment>
             );
           return (
-            <Fragment key={index}>
+            <Fragment>
               <LabelFieldPair
+                key={index}
                 style={
                   props?.showWrapperContainers && !field.hideContainer
                     ? { ...wrapperStyles, ...field?.populators?.customStyle }
@@ -790,7 +797,7 @@ export const FormComposer = (props) => {
   },[props.horizontalNavConfig]);
   
   const renderFormFields = (props, section, index, array, sectionFormCategory) => (
-      <>
+      <React.Fragment key={index}>
           {!props.childrenAtTheBottom && props.children}
           {props.heading && <CardSubHeader className={props?.cardSubHeaderClassName ? props?.cardSubHeaderClassName : ""} style={{ ...props.headingStyle }}> {props.heading} </CardSubHeader>}
           {props.description && <CardLabelDesc className={"repos"}> {props.description} </CardLabelDesc>}
@@ -804,7 +811,7 @@ export const FormComposer = (props) => {
           <div className="primary-label-btn" style={{ margin: "20px auto 0 auto" }} onClick={onSecondayActionClick}>
             {props.secondaryActionLabel}
           </div>)}
-      </>  
+      </React.Fragment>  
   );
 
   return (
@@ -814,7 +821,7 @@ export const FormComposer = (props) => {
       {props?.showMultipleCardsWithoutNavs ? (
           props?.config?.map((section, index, array) => {
             return !section.navLink && (
-              <Card key={index} style={getCardStyles()} noCardStyle={props.noCardStyle} className={props.cardClassName}>
+              <Card style={getCardStyles()} noCardStyle={props.noCardStyle} className={props.cardClassName}>
                 {renderFormFields(props, section, index, array)}
               </Card>
             )
@@ -824,9 +831,9 @@ export const FormComposer = (props) => {
             {
               props?.config?.map((section, index, array) => {
                 return !section.navLink && (
-                    <React.Fragment key={index}>
+                    <>
                       {renderFormFields(props, section, index, array)}
-                    </React.Fragment>
+                    </>
                 )
               })
             }
@@ -838,7 +845,7 @@ export const FormComposer = (props) => {
            {props?.showMultipleCardsInNavs ? (
              props?.config?.map((section, index, array) => {
                return section.navLink ? (
-                 <Card key={index} style={section.navLink !== activeLink ? getCardStyles(false) : getCardStyles()} noCardStyle={props.noCardStyle}>
+                 <Card style={section.navLink !== activeLink ? getCardStyles(false) : getCardStyles()} noCardStyle={props.noCardStyle}>
                     {renderFormFields(props, section, index, array, section?.sectionFormCategory)}
                  </Card>
                ) : null
@@ -849,11 +856,11 @@ export const FormComposer = (props) => {
                    {
                      props?.config?.map((section, index, array) => {
                       return section.navLink ?  (
-                         <React.Fragment key={index}>
+                         <>
                             <div style={section.navLink !== activeLink ? {display : "none"} : {}}>
                               {renderFormFields(props, section, index, array, section?.sectionFormCategory)}
                             </div>
-                         </React.Fragment>
+                         </>
                        ) : null
                      })
                    }

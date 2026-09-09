@@ -2,8 +2,8 @@ package org.egov.edcr.service;
 
 import java.util.List;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.egov.common.entity.edcr.EdcrPdfDetail;
 import org.egov.edcr.repository.EdcrPdfDetailRepository;
@@ -31,7 +31,7 @@ public class EdcrPdfDetailService {
     }
 
     public void saveAll(List<org.egov.edcr.entity.EdcrPdfDetail> edcrPdfDetails) {
-        edcrPdfDetailRepository.saveAll(edcrPdfDetails);
+        edcrPdfDetailRepository.save(edcrPdfDetails);
     }
 
     public List<org.egov.edcr.entity.EdcrPdfDetail> findByDcrApplicationId(Long applicationDetailId) {

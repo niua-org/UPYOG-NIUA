@@ -100,6 +100,7 @@ const AssetAddress = ({ t, config, onSelect, userType, formData, formState }) =>
   const { control, formState: localFormState, watch, /*setError: setLocalError, clearErrors: clearLocalErrors,*/ setValue } = useForm();
   const formValue = watch();
   const { errors } = localFormState;
+  const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
 
   useEffect(() => {
     if (userType === "employee") {
@@ -148,7 +149,7 @@ const AssetAddress = ({ t, config, onSelect, userType, formData, formState }) =>
             )}
           />
         </LabelFieldPair>
-        <CardLabelError className="error-message"> {localFormState.touched.city ? errors?.city?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touched.city ? errors?.city?.message : ""}</CardLabelError>
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("AST_LOCALITY") + " *"}</CardLabel>
           <Controller
@@ -169,7 +170,7 @@ const AssetAddress = ({ t, config, onSelect, userType, formData, formState }) =>
             )}
           />
         </LabelFieldPair>
-        <CardLabelError className="error-message">{localFormState.touched.locality ? errors?.locality?.message : ""}</CardLabelError>
+        <CardLabelError style={errorStyle}>{localFormState.touched.locality ? errors?.locality?.message : ""}</CardLabelError>
       </div>
     );
   }
@@ -187,8 +188,22 @@ const AssetAddress = ({ t, config, onSelect, userType, formData, formState }) =>
               onSelect={selectCity}
               t={t}
               isPTFlow={true}
+              //isDependent={true}
+              //labelKey="TENANT_TENANTS"
               disabled={isEditAddress}
             />
+            {/* <Dropdown
+            options={tenantId}
+            selectedOption={selectedCity}
+            optionKey="i18nKey"
+            onSelect={selectCity}
+            t={t}
+            isPTFlow={true}
+            //isDependent={true}
+            //labelKey="TENANT_TENANTS"
+            disabled={isEditAddress}
+            /> */}
+
     
           </span>
           {selectedCity && localities && <CardLabel>{`${t("AST_LOCALITY")} `}</CardLabel>}
@@ -202,6 +217,7 @@ const AssetAddress = ({ t, config, onSelect, userType, formData, formState }) =>
                 optionKey="i18nkey"
                 onSelect={selectLocality}
                 t={t}
+                //isDependent={true}
                 labelKey=""
                 disabled={isEditAddress}
               />

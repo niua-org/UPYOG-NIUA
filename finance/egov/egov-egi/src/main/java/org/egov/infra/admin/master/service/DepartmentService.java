@@ -83,8 +83,7 @@ public class DepartmentService {
     }
 
     public Department getDepartmentById(final Long id) {
-        // LTS Migration Fix (Spring Data 3): findOne(id) was removed; findById returns Optional.
-        return departmentRepository.findById(id).orElse(null);
+        return departmentRepository.findOne(id);
     }
 
     public Department getDepartmentByName(final String name) {
@@ -92,8 +91,7 @@ public class DepartmentService {
     }
 
     public List<Department> getAllDepartments() {
-        // LTS Migration Fix (Spring Data 3): new Sort(...) constructor was removed; use Sort.by(...).
-        return departmentRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return departmentRepository.findAll(new Sort(Sort.Direction.ASC, "name"));
     }
 
     public Department getDepartmentByCode(final String code) {

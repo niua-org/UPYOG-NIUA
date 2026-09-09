@@ -50,17 +50,17 @@ package org.egov.model.masters;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.validation.constraints.Min;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.validation.constraints.Min;
 
 import org.egov.commons.EgwStatus;
 import org.egov.commons.Fund;
@@ -72,7 +72,7 @@ import org.egov.infra.persistence.validator.annotation.OptionalPattern;
 import org.egov.infra.persistence.validator.annotation.Unique;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 @Entity
 @Table(name = "EGF_PURCHASEORDER")
@@ -88,13 +88,13 @@ public class PurchaseOrder extends AbstractAuditable implements EntityType {
     @GeneratedValue(generator = SEQ_EGF_PURCHASEORDER, strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 100, message = "Maximum of 100 Characters allowed for Order Number")
     @OptionalPattern(regex = FinancialConstants.alphaNumericwithspecialcharForContraWOAndSupplierName, message = "Special Characters are not allowed in Order Number")
     @Column(updatable = false)
     private String orderNumber;
 
-    @SanitizeHtml
+    @SafeHtml
     @Length(max = 100, message = "Maximum of 100 Characters allowed for Name")
     @OptionalPattern(regex = FinancialConstants.alphaNumericwithspecialcharForContraWOAndSupplierName, message = "Special Characters are not allowed in Name")
     private String name;
@@ -111,14 +111,14 @@ public class PurchaseOrder extends AbstractAuditable implements EntityType {
     @Min(1)
     private BigDecimal advancePayable;
 
-    @SanitizeHtml
+    @SafeHtml
     private String description;
 
     @ManyToOne
     @JoinColumn(name = "fund")
     private Fund fund;
 
-    @SanitizeHtml
+    @SafeHtml
     private String department;
 
     @ManyToOne
@@ -129,7 +129,7 @@ public class PurchaseOrder extends AbstractAuditable implements EntityType {
     @JoinColumn(name = "subScheme")
     private SubScheme subScheme;
 
-    @SanitizeHtml
+    @SafeHtml
     private String sanctionNumber;
 
     private Date sanctionDate;

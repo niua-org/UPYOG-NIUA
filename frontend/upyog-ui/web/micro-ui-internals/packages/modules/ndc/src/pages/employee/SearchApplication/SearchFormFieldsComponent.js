@@ -27,19 +27,19 @@ const SearchFormFieldsComponent = (props) => {
     <>
       <SearchField>
         <label>{t("NOC_APP_NO_LABEL")}</label>
-        <TextInput name="applicationNo" {...register("applicationNo")} />
+        <TextInput name="applicationNo" inputRef={register({})} />
       </SearchField>
       <SearchField>
         <label>{t("NOC_SOURCE_MODULE_NUMBER")}</label>
-        <TextInput name="sourceRefId" {...register("sourceRefId")} />
+        <TextInput name="sourceRefId" inputRef={register({})} />
       </SearchField>
       <SearchField>
         <label>{t("NOC_TYPE_LABEL")}</label>
         <Controller
           control={control}
           name="nocType"
-          render={({ field }) => (
-            <Dropdown selected={nocTypeList?.length == 1 ? nocTypeList[0] : field.value} select={field.onChange} onBlur={field.onBlur} option={nocTypeList ? nocTypeList : []} optionKey="i18nKey" t={t} disable={nocTypeList?.length == 1 ? true : false}/>
+          render={(props) => (
+            <Dropdown selected={nocTypeList?.length == 1 ? nocTypeList[0] : props.value} select={props.onChange} onBlur={props.onBlur} option={nocTypeList ? nocTypeList : []} optionKey="i18nKey" t={t} disable={nocTypeList?.length == 1 ? true : false}/>
           )}
         />
       </SearchField>
@@ -47,7 +47,7 @@ const SearchFormFieldsComponent = (props) => {
         <label>{t("NOC_APP_MOBILE_NO_SEARCH_PARAM")}</label>
         <MobileNumber
           name="mobileNumber"
-          {...register("mobileNumber", {
+          inputRef={register({
             minLength: {
               value: 10,
               message: t("CORE_COMMON_MOBILE_ERROR"),
@@ -70,13 +70,13 @@ const SearchFormFieldsComponent = (props) => {
       </SearchField>
       <SearchField>
         <label>{t("NOC_NUMBER_LABEL")}</label>
-        <TextInput name="nocNo" {...register("nocNo")} />
+        <TextInput name="nocNo" inputRef={register({})} />
       </SearchField>
       {/* <SearchField></SearchField> */}
       <SearchField className="submit">
         <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
         <p
-          className="ndc-margin-top-24"
+          style={{ marginTop: "24px" }}
           onClick={() => {
             setValue("applicationNo", null);
             setValue("sourceRefId", null);

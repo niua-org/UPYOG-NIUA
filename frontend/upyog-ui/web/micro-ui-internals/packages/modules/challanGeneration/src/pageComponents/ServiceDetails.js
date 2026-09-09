@@ -43,9 +43,7 @@ const ServiceDetails = ({ config, onSelect, userType, formData, setError, formSt
   const [selectedLocality, setSelectedLocality] = useState("");
   const [TaxHeadMaster, setAPITaxHeadMaster] = useState([]);
 
-  const queryResult = Digit.Hooks.mcollect.useMCollectCategory(tenantId, "[?(@.type=='Adhoc' && @.isActive==true)]");
-  const categoires = queryResult?.data?.Categories;
-  const categoriesandTypes = queryResult?.data?.data;
+  const {Categories : categoires , data: categoriesandTypes} = Digit.Hooks.mcollect.useMCollectCategory(tenantId,"[?(@.type=='Adhoc' && @.isActive==true)]");
 
 
   const { data: fetchedLocalities } = Digit.Hooks.useBoundaryLocalities(
@@ -111,7 +109,7 @@ const ServiceDetails = ({ config, onSelect, userType, formData, setError, formSt
   return (
     <React.Fragment>
       {consumerDetails.map((consumerdetail, index) => (
-        <OwnerForm1 key={index} index={index} consumerdetail={consumerdetail} {...commonProps} />
+        <OwnerForm1 key={consumerdetail.key} index={index} consumerdetail={consumerdetail} {...commonProps} />
       ))}
     </React.Fragment>
   );
@@ -153,9 +151,7 @@ const OwnerForm1 = (_props) => {
 
   const { control, formState: localFormState, watch, setError: setLocalError, clearErrors: clearLocalErrors, setValue, trigger, getValues } = useForm();
   const formValue = watch();
-  // Destructure touchedFields and touched from formState to register and track field-level interactions
-  // safely, guarding against undefined formState proxy properties.
-  const { errors, touchedFields, touched } = localFormState;
+  const { errors } = localFormState;
   const isMobile = window.Digit.Utils.browser.isMobile();
 
   
@@ -165,13 +161,10 @@ const OwnerForm1 = (_props) => {
   const TaxHeadMasterFields = Digit.Hooks.mcollect.useMCollectTaxHeads(selectedCategoryType,categoriesandTypes);
   const selectedPincode = useWatch({control: control, name: "pincode", defaultValue:""});
 
-  // Watch the primitive category code instead of the category object to avoid triggering
-  // updates on reference changes. Only update categoryType if it is not already empty,
-  // preventing infinite render loops and the Maximum Update Depth Exceeded error.
   useEffect(() => {
-    if (!isEdit && getValues("categoryType") !== "")
-      setValue("categoryType", "");
-  }, [selectedCategory?.code])
+    if(!isEdit)
+    setValue("categoryType","");
+  },[selectedCategory])
 
   useEffect(() => {
     if(!isEdit){
@@ -248,7 +241,7 @@ const OwnerForm1 = (_props) => {
 
  
   return (
-    <div className={isMobile?"":"cg-margin-top-neg50"}>
+    <div  style={isMobile?{}:{marginTop:"-50px"}}>
       <div>
         <div>
         <CardSectionHeader>{t("SERVICEDETAILS")}</CardSectionHeader>
@@ -259,7 +252,7 @@ const OwnerForm1 = (_props) => {
               rules={{ required: t("REQUIRED_FIELD") }}
               defaultValue={consumerdetail?.city}
               control={control}
-              render={({ field: props }) => (
+              render={(props) => (
                 <Dropdown
                   className="form-field"
                   selected={props.value}
@@ -282,7 +275,7 @@ const OwnerForm1 = (_props) => {
               rules={{ required: t("REQUIRED_FIELD") }}
               defaultValue={consumerdetail?.category}
               control={control}
-              render={({ field: props }) => (
+              render={(props) => (
                 <Dropdown
                   isMandatory
                   className="form-field"
@@ -307,7 +300,7 @@ const OwnerForm1 = (_props) => {
               rules={{ required: t("REQUIRED_FIELD") }}
               defaultValue={consumerdetail?.categoryType}
               control={control}
-              render={({ field: props }) => (
+              render={(props) => (
                 <Dropdown
                   isMandatory
                   className="form-field"
@@ -333,7 +326,7 @@ const OwnerForm1 = (_props) => {
                 isMandatory={true}
                 defaultValue={consumerdetail?.fromDate}
                 control={control}
-                render={({ field: props }) => (
+                render={(props) => (
                   <DatePicker
                     date={props.value}
                     name="fromDate"
@@ -352,7 +345,7 @@ const OwnerForm1 = (_props) => {
                 isMandatory={true}
                 defaultValue={consumerdetail?.toDate}
                 control={control}
-                render={({ field: props }) => (
+                render={(props) => (
                   <DatePicker
                     date={props.value}
                     name="toDate"
@@ -374,22 +367,22 @@ const OwnerForm1 = (_props) => {
                 isMandatory={tax.isRequired}
                 componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
                 rules={tax.isRequired?{ required: t("REQUIRED_FIELD")}:"" }
-                render={({ field: props }) => (
-                  <div className="cg-display-flex">
-                    <div className="employee-card-input employee-card-input--front">₹</div>
-                    <TextInput
-                      value={props.value}
-                      componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
-                      autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                      onChange={(e) => {
-                        props.onChange(e.target.value);
-                        setFocusIndex({ index: consumerdetail.key, type: tax?.code });
-                      }}
-                      onBlur={(e) => {
-                        setFocusIndex({ index: -1 });
-                        props.onBlur(e);
-                      }}
-                    />
+                render={(props) => (
+                  <div style={{display:"flex"}}>
+                  <div className="employee-card-input employee-card-input--front">₹</div>
+                  <TextInput
+                    value={props.value}
+                    componentInFront={<div className="employee-card-input employee-card-input--front">₹</div>}
+                    autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
+                    onChange={(e) => {
+                      props.onChange(e.target.value);
+                      setFocusIndex({ index: consumerdetail.key, type: tax?.code });
+                    }}
+                    onBlur={(e) => {
+                      setFocusIndex({ index: -1 });
+                      props.onBlur(e);
+                    }}
+                  />
                   </div>
                 )}
               />
@@ -404,11 +397,11 @@ const OwnerForm1 = (_props) => {
                 control={control}
                 name={"Comment"}
                 defaultValue={consumerdetail?.Comment}
-                render={({ field: props }) => (
+                render={(props) => (
                   <TextArea
                     value={props.value}
                     autoFocus={focusIndex.index === consumerdetail?.key && focusIndex.type === "name"}
-                    errorStyle={((touchedFields?.Comment || touched?.Comment) && errors?.Comment?.message) ? true : false}
+                    errorStyle={(localFormState.touched.Comment && errors?.Comment?.message) ? true : false}
                     onChange={(e) => {
                       props.onChange(e.target.value);
                     }}

@@ -4,6 +4,8 @@ import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import org.upyog.rs.enums.AddressType;
 
+import java.util.Date;
+
 /**
  * AddressV2 is a model class that represents the structure of an address
  * in the system. It includes various fields to capture detailed address
@@ -44,7 +46,6 @@ import org.upyog.rs.enums.AddressType;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"id"})
-@SuppressWarnings("java:S116")
 public class AddressV2 {
     private String pinCode;
     private String city;
@@ -55,7 +56,7 @@ public class AddressV2 {
     private Long userId;
     private String addressType;
     private Long LastModifiedBy;
-    private Long LastModifiedDate;
+    private Date LastModifiedDate;
     //    Adding new fields in Address model for profile update as part of V2 api
     private String address2;
     private String houseNumber;

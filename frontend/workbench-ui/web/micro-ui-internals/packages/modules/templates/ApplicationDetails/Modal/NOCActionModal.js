@@ -1,6 +1,7 @@
-import { Loader, Modal, FormComposer } from "@upyog/workbench-ui-react-components";
+import { Loader, Modal, FormComposer } from "@egovernments/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "react-query";
+import { useHistory } from "react-router-dom";
 import { configNOCApproverApplication } from "../config";
 import * as predefinedConfig from "../config";
 
@@ -43,7 +44,7 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
   const [uploadedFile, setUploadedFile] = useState(null);
   const [error, setError] = useState(null);
   const mobileView = Digit.Utils.browser.isMobile() ? true : false;
-  
+  const history = useHistory();
 
   useEffect(() => {
     setApprovers(approverData?.Employees?.map((employee) => ({ uuid: employee?.uuid, name: employee?.user?.name })));

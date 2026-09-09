@@ -5,8 +5,8 @@
 
 # yarn $
 .yarn
-.yarnrc.yml
 yarn.lock
+.yarnrc.yml
 
 # dependencies
 node_modules
@@ -16,8 +16,6 @@ node_modules
 
 # testing
 /coverage
-/.scannerwork/*
-
 
 # production
 /web/build

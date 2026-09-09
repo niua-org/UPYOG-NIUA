@@ -53,13 +53,15 @@ import static org.egov.infra.utils.ApplicationConstant.CONTENT_DISPOSITION;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.egov.infra.exception.ApplicationRuntimeException;
 import org.egov.infra.reporting.engine.ReportConstants;
 import org.egov.infra.reporting.engine.ReportFormat;
 import org.egov.infra.reporting.engine.ReportOutput;
+import org.owasp.esapi.ESAPI;
+import org.owasp.esapi.HTTPUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -103,9 +105,11 @@ public class ReportViewer implements HttpRequestHandler {
 
 	private void renderReport(HttpServletRequest request, HttpServletResponse resp, ReportOutput reportOutput) {
 		try (BufferedOutputStream outputStream = new BufferedOutputStream(resp.getOutputStream())) {
-			resp.setHeader("Content-Type", ReportViewerUtil.getContentType(reportOutput.getReportFormat()));
+			HTTPUtilities httpUtilities = ESAPI.httpUtilities();
+			httpUtilities.setCurrentHTTP(request, resp);
+			httpUtilities.setHeader("Content-Type", ReportViewerUtil.getContentType(reportOutput.getReportFormat()));
 			resp.setContentLength(reportOutput.getReportOutputData().length);
-			resp.setHeader(CONTENT_DISPOSITION, reportOutput.reportDisposition());
+			httpUtilities.setHeader(CONTENT_DISPOSITION, reportOutput.reportDisposition());
 			outputStream.write(reportOutput.getReportOutputData());
 		} catch (IOException e) {
 			LOGGER.error("Exception in rendering report response with format [{}]!", reportOutput.getReportFormat(), e);
@@ -116,7 +120,9 @@ public class ReportViewer implements HttpRequestHandler {
 	private void renderError(HttpServletRequest request, HttpServletResponse resp, String error) {
 		byte[] errorResponse = String.format(REPORT_ERROR_RESPONSE, error).getBytes();
 		try (BufferedOutputStream outputStream = new BufferedOutputStream(resp.getOutputStream())) {
-			resp.setHeader("Content-Type", ReportViewerUtil.getContentType(ReportFormat.HTM));
+			HTTPUtilities httpUtilities = ESAPI.httpUtilities();
+			httpUtilities.setCurrentHTTP(request, resp);
+			httpUtilities.setHeader("Content-Type", ReportViewerUtil.getContentType(ReportFormat.HTM));
 			resp.setContentLength(errorResponse.length);
 			outputStream.write(errorResponse);
 		} catch (IOException e) {

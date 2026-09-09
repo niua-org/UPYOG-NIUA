@@ -1,7 +1,6 @@
 package org.upyog.rs.util;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +11,7 @@ import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.MdmsResponse;
 import org.egov.mdms.model.ModuleDetail;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.rs.config.RequestServiceConfiguration;
 import org.upyog.rs.constant.RequestServiceConstants;
@@ -22,27 +22,26 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONArray;
 import org.upyog.rs.web.models.billing.TankerDeliveryTimeCalculationType;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class MdmsUtil {
 
-	private final ServiceRequestRepository restRepo;
+	@Autowired
+	private ServiceRequestRepository restRepo;
 
-	private final ObjectMapper mapper;
+	@Autowired
+	private ObjectMapper mapper;
 
-	private final RequestServiceConfiguration config;
-
-	private static final String CALCULATION_TYPE_CONVERSION_ERROR = "Exception occured while converting calculation type  for tanker request: ";
+	@Autowired
+	private RequestServiceConfiguration config;
 
 	public List<CalculationType> getCalculationType(RequestInfo requestInfo, String tenantId, String moduleName) {
 
-		List<CalculationType> calculationTypes = new ArrayList<>();
+		List<CalculationType> calculationTypes = new ArrayList<CalculationType>();
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getMdmsHost()).append(config.getMdmsEndpoint());
 
@@ -59,7 +58,7 @@ public class MdmsUtil {
 			calculationTypes = mapper.readValue(jsonArray.toJSONString(),
 					mapper.getTypeFactory().constructCollectionType(List.class, CalculationType.class));
 		} catch (JsonProcessingException e) {
-			log.info(CALCULATION_TYPE_CONVERSION_ERROR + e);
+			log.info("Exception occured while converting calculation type  for tanker request: " + e);
 		}
 
 		return calculationTypes;
@@ -91,7 +90,7 @@ public class MdmsUtil {
 	 */
 	public List<TankerDeliveryTimeCalculationType> getImmediateDeliveryFee(RequestInfo requestInfo, String tenantId, String moduleName) {
 
-		List<TankerDeliveryTimeCalculationType> tankerDeliveryTimeCalculationType = new ArrayList<>();
+		List<TankerDeliveryTimeCalculationType> tankerDeliveryTimeCalculationType = new ArrayList<TankerDeliveryTimeCalculationType>();
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getMdmsHost()).append(config.getMdmsEndpoint());
 
@@ -108,7 +107,7 @@ public class MdmsUtil {
 			tankerDeliveryTimeCalculationType = mapper.readValue(jsonArray.toJSONString(),
 					mapper.getTypeFactory().constructCollectionType(List.class, TankerDeliveryTimeCalculationType.class));
 		} catch (JsonProcessingException e) {
-			log.info(CALCULATION_TYPE_CONVERSION_ERROR + e);
+			log.info("Exception occured while converting calculation type  for tanker request: " + e);
 		}
 
 		return tankerDeliveryTimeCalculationType;
@@ -164,7 +163,7 @@ public class MdmsUtil {
 	
 	public List<CalculationType> getMTCalculationType(RequestInfo requestInfo, String tenantId, String moduleName) {
 
-		List<CalculationType> calculationTypes = new ArrayList<>();
+		List<CalculationType> calculationTypes = new ArrayList<CalculationType>();
 		StringBuilder uri = new StringBuilder();
 		uri.append(config.getMdmsHost()).append(config.getMdmsEndpoint());
 
@@ -181,7 +180,7 @@ public class MdmsUtil {
 			calculationTypes = mapper.readValue(jsonArray.toJSONString(),
 					mapper.getTypeFactory().constructCollectionType(List.class, CalculationType.class));
 		} catch (JsonProcessingException e) {
-			log.info(CALCULATION_TYPE_CONVERSION_ERROR + e);
+			log.info("Exception occured while converting calculation type  for tanker request: " + e);
 		}
 
 		return calculationTypes;
@@ -212,7 +211,7 @@ public class MdmsUtil {
 		return mdmsCriteriaReq;
 	}
 
-	// =========================== MDMS Utility Methods ===========================
+	/*********************** MDMS Utitlity Methods *****************************/
 
 	/**
 	 * Fetches all the values of particular attribute as map of fieldname to list
@@ -240,7 +239,7 @@ public class MdmsUtil {
 					RequestServiceConstants.INVALID_TENANT_ID_MDMS_MSG);
 		}
 
-		return Collections.emptyMap();
+		return null;
 	}
 
 	public MdmsCriteriaReq prepareMdMsRequest(String tenantId, String moduleName, List<String> names, String filter,
@@ -248,7 +247,9 @@ public class MdmsUtil {
 
 		List<MasterDetail> masterDetails = new ArrayList<>();
 
-		names.forEach(name -> masterDetails.add(MasterDetail.builder().name(name).filter(filter).build()));
+		names.forEach(name -> {
+			masterDetails.add(MasterDetail.builder().name(name).filter(filter).build());
+		});
 
 		ModuleDetail moduleDetail = ModuleDetail.builder().moduleName(moduleName).masterDetails(masterDetails).build();
 		List<ModuleDetail> moduleDetails = new ArrayList<>();

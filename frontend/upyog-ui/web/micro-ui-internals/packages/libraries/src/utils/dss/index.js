@@ -47,9 +47,7 @@ export const formatter = (value, symbol, unit, commaSeparated = true, t, data,is
         };
       
         return `${formatValue(value)} %`;
-      
-      case "date":
-        return Digit.DateUtils.ConvertEpochToDate(value);
+             
        
       
     default:

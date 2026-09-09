@@ -1,5 +1,5 @@
 import { Fonts } from "./fonts";
-import pdfMake from "pdfmake/build/pdfmake.js";
+const pdfMake = require("pdfmake/build/pdfmake.js");
 
 let pdfFonts = {
   Hind: {

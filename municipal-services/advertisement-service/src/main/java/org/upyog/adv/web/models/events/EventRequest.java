@@ -40,20 +40,21 @@
 
 package org.upyog.adv.web.models.events;
 
-import java.util.List;
-
-import org.egov.common.contract.request.RequestInfo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.egov.common.contract.request.RequestInfo;
+import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
+
+@Validated
 @Data
 @Builder
 @NoArgsConstructor

@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Route, Routes } from "react-router-dom";
+import { Route, Switch, useRouteMatch } from "react-router-dom";
 import ChangePasswordComponent from "./changePassword";
 import { config } from "./config";
 
 const EmployeeChangePassword = () => {
   const { t } = useTranslation();
-  
+  const { path } = useRouteMatch();
 
   const params = useMemo(() =>
     config.map(
@@ -22,13 +22,11 @@ const EmployeeChangePassword = () => {
   );
 
   return (
-    <Routes>                                        // Switch → Routes 
-      <Route
-        index                                       // exact → index 
-        element={<ChangePasswordComponent config={params[0]} t={t} />}  //children → element 
-      />
-    </Routes>
-
+    <Switch>
+      <Route path={`${path}`} exact>
+        <ChangePasswordComponent config={params[0]} t={t} />
+      </Route>
+    </Switch>
   );
 };
 

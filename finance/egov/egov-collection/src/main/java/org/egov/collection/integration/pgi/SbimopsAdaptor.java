@@ -71,13 +71,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
-/*
- * FasterXML Jackson 2.x Migration:
- * Replaced legacy org.codehaus.jackson.map.ObjectMapper with com.fasterxml.jackson.databind.ObjectMapper
- * and com.fasterxml.jackson.core.type.TypeReference for Jackson 2.x JSON processing compatibility.
- */
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 import org.egov.collection.config.properties.CollectionApplicationProperties;
 import org.egov.collection.constants.CollectionConstants;
 import org.egov.collection.entity.OnlinePayment;

@@ -2,19 +2,19 @@ package org.egov.infra.microservice.models;
 
 import java.io.Serializable;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class BillDetailAdditional implements Serializable {
 
-    @SanitizeHtml
+    @SafeHtml
     private String scheme;
-    @SanitizeHtml
+    @SafeHtml
     private String subScheme;
-    @SanitizeHtml
+    @SafeHtml
     private String businessReason;
-    @SanitizeHtml
+    @SafeHtml
     private String narration;
-    @SanitizeHtml
+    @SafeHtml
     private String payeeaddress;
     
     public BillDetailAdditional(String scheme, String subScheme, String businessReason,String narration,String payeeaddress) {

@@ -1,12 +1,13 @@
 import { Card, CustomButton, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHistory } from "react-router-dom";
 import Background from "../../../components/Background";
 
 const LanguageSelection = () => {
   const { data: storeData, isLoading } = Digit.Hooks.useStore.getInitData();
   const { t } = useTranslation();
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
   const { languages, stateInfo } = storeData || {};
   const selectedLanguage = Digit.StoreData.getCurrentLanguage();
   const [selected, setselected] = useState(selectedLanguage);
@@ -18,7 +19,7 @@ const LanguageSelection = () => {
   const pdfUrl = "https://pg-egov-assets.s3.ap-south-1.amazonaws.com/Upyog+Code+and+Copyright+License_v1.pdf";
 
   const handleSubmit = (event) => {
-    navigate("/cnd-ui/employee/user/login");
+    history.push("/cnd-ui/employee/user/login");
   };
 
   if (isLoading) return null;

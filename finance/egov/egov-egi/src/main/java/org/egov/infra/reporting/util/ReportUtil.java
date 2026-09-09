@@ -175,8 +175,7 @@ public final class ReportUtil {
     }
 
     public static String amountInWords(BigDecimal amount) {
-        // LTS Migration Fix (WildFly 40): System.out is discarded; use LOGGER.
-        LOGGER.info("Report amount {}", amount);
+        System.out.println("************* Report amout********"+amount);
         return NumberUtil.amountInWords(amount);
     }
 

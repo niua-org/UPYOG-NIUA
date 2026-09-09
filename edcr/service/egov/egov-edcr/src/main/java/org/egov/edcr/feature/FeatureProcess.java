@@ -128,6 +128,7 @@ public abstract class FeatureProcess {
 
 	public String getLocaleMessage(String code, String... args) {
 		return edcrMessageSource.getMessage(code, args, LocaleContextHolder.getLocale());
+
 	}
 
 	public String getAmendmentsRefNumber(Date applicationDate) {

@@ -11,7 +11,6 @@ import PTCitizenFeedbackPopUp from "../../pageComponents/PTCitizenFeedbackPopUp"
 
 import get from "lodash/get";
 import { size } from "lodash";
-import "../../css/pt-inline.css";
 
 const PTApplicationDetails = () => {
   const { t } = useTranslation();
@@ -263,9 +262,9 @@ const PTApplicationDetails = () => {
   return (
     <React.Fragment>
       <div>
-        <div className="cardHeaderWithOptions pt-inline-card-header">
+        <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
           <Header styles={{ fontSize: "32px" }}>{t("PT_MUTATION_APPLICATION_DETAILS")}</Header>
-          <div className="pt-inline-card-header-actions">
+          <div style={{zIndex: "10",display:"flex",flexDirection:"row-reverse",alignItems:"center",marginTop:"-25px"}}>
        
           {dowloadOptions && dowloadOptions.length > 0 && (
             <MultiLink
@@ -275,7 +274,7 @@ const PTApplicationDetails = () => {
               options={dowloadOptions}
             />
           )}
-          <LinkButton label={t("VIEW_TIMELINE")} className="pt-inline-view-timeline-btn" onClick={handleViewTimeline}></LinkButton>
+          <LinkButton label={t("VIEW_TIMELINE")} style={{ color:"#A52A2A"}} onClick={handleViewTimeline}></LinkButton>
           </div>
           
         </div>
@@ -299,12 +298,12 @@ const PTApplicationDetails = () => {
 
             {isPropertyTransfer && (
               <React.Fragment>
-                <Row className="border-none" label={t("PT_FEE_AMOUNT")} text={billAmount || t("₹0")} />
-                <Row className="border-none" label={t("PT_PAYMENT_STATUS")} text={billStatus} />
+                <Row className="border-none" label={t("PT_FEE_AMOUNT")} text={billAmount || t("₹0")} textStyle={{ whiteSpace: "pre" }} />
+                <Row className="border-none" label={t("PT_PAYMENT_STATUS")} text={billStatus} textStyle={{ whiteSpace: "pre" }} />
               </React.Fragment>
             )}
           </StatusTable>
-          <CardSubHeader className="pt-inline-subheader">{t("PT_PROPERTY_ADDRESS_SUB_HEADER")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_PROPERTY_ADDRESS_SUB_HEADER")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("PT_PROPERTY_ADDRESS_PINCODE")} text={property?.address?.pincode || t("CS_NA")} />
             <Row className="border-none" label={t("PT_COMMON_CITY")} text={property?.address?.city || t("CS_NA")} />
@@ -323,7 +322,7 @@ const PTApplicationDetails = () => {
 
           {isPropertyTransfer ? (
             <React.Fragment>
-              <CardSubHeader className="pt-inline-subheader">{t("PT_MUTATION_TRANSFEROR_DETAILS")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_MUTATION_TRANSFEROR_DETAILS")}</CardSubHeader>
               <div>
                 {Array.isArray(transferorOwners) &&
                    transferorOwners.sort((item,item2)=>{return item?.additionalDetails?.ownerSequence - item2?.additionalDetails?.ownerSequence}).map((owner, index) => (
@@ -351,7 +350,7 @@ const PTApplicationDetails = () => {
                   ))}
               </div>
 
-              <CardSubHeader className="pt-inline-subheader">{t("PT_MUTATION_TRANSFEREE_DETAILS")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_MUTATION_TRANSFEREE_DETAILS")}</CardSubHeader>
               {isInstitution ? (
                 <div>
                   {Array.isArray(transfereeOwners) &&
@@ -419,7 +418,7 @@ const PTApplicationDetails = () => {
                     ))}
                 </div>
               )}
-              <CardSubHeader className="pt-inline-subheader">{t("PT_MUTATION_DETAILS")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_MUTATION_DETAILS")}</CardSubHeader>
               <StatusTable>
                 <Row
                   className="border-none"
@@ -435,7 +434,7 @@ const PTApplicationDetails = () => {
                 <Row className="border-none" label={t("PT_DETAILS_GOV_AQUISITION")} text={t("CS_NA")} />
               </StatusTable>
 
-              <CardSubHeader className="pt-inline-subheader">{t("PT_REGISTRATION_DETAILS")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_REGISTRATION_DETAILS")}</CardSubHeader>
               <StatusTable>
                 <Row
                   className="border-none"
@@ -451,7 +450,7 @@ const PTApplicationDetails = () => {
             </React.Fragment>
           ) : (
             <React.Fragment>
-              <CardSubHeader className="pt-inline-subheader"> {t("PT_PROPERTY_ASSESSMENT_DETAILS_HEADER")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}> {t("PT_PROPERTY_ASSESSMENT_DETAILS_HEADER")}</CardSubHeader>
               <StatusTable>
                 <Row
                   className="border-none"
@@ -503,7 +502,7 @@ const PTApplicationDetails = () => {
                       {(flrno !== unit?.floorNo ? (i = 1) : (i = i + 1)) && i === 1 && (
                         <CardSubHeader>{t(`PROPERTYTAX_FLOOR_${unit?.floorNo}`)}</CardSubHeader>
                       )}
-                      <div className="pt-inline-unit-card">
+                      <div style={{ border: "groove", padding: "7px", marginBottom: "10px" }}>
                         <CardSubHeader>
                           {t("ES_APPLICATION_DETAILS_UNIT")} {i}
                         </CardSubHeader>
@@ -543,7 +542,7 @@ const PTApplicationDetails = () => {
                     </div>
                   ))}
               </div>
-              <CardSubHeader className="pt-inline-subheader">{t("PT_COMMON_PROPERTY_OWNERSHIP_DETAILS_HEADER")}</CardSubHeader>
+              <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_COMMON_PROPERTY_OWNERSHIP_DETAILS_HEADER")}</CardSubHeader>
               <div className="owner-details">
                 {Array.isArray(owners) &&
                   reversedOwners.sort(()=>{return reversedOwners}).map((owner, index) => (
@@ -575,7 +574,7 @@ const PTApplicationDetails = () => {
             </React.Fragment>
           )}
 
-          <CardSubHeader className="pt-inline-subheader">{t("PT_COMMON_DOCS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("PT_COMMON_DOCS")}</CardSubHeader>
           <div>
             {Array.isArray(docs) ? (
               docs.length > 0 && <PropertyDocument property={property}></PropertyDocument>
@@ -592,15 +591,16 @@ const PTApplicationDetails = () => {
           <Toast
             error={showToast.key}
             label={t(showToast.label)}
-            className="pt-inline-toast-bottom"
+            style={{bottom:"0px"}}
             onClose={() => {
               setShowToast(null);
             }}
           />
         )}
         </Card>
+        {/* <LinkButton style={{marginLeft:"5%",color:"#a82227"}} label={t("CS_RATE_US")} onClick={() => setpopup(true)} /> */}
         {/* {popup && (<PopUp>
-          <div>
+          <div style={{margin:"0 auto", top:"15%", position:"relative"}}>
           <PTCitizenFeedback popup={true} onClose={setpopup} setShowToast={setShowToast} data={data}/>
           </div>
         </PopUp>)} */}

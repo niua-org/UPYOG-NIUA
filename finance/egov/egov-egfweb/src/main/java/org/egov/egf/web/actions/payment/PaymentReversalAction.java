@@ -69,9 +69,8 @@ import org.egov.infra.exception.ApplicationException;
 import org.egov.infra.validation.exception.ValidationError;
 import org.egov.infra.validation.exception.ValidationException;
 import org.egov.model.payment.Paymentheader;
-import org.hibernate.query.Query;
-import org.hibernate.type.StandardBasicTypes;
-
+import org.hibernate.Query;
+import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.ParseException;
@@ -168,7 +167,7 @@ public class PaymentReversalAction extends BaseVoucherAction {
         if (voucherHeaderList != null && voucherHeaderList.size() > 0) {
             if (bankAccount != null && bankAccount.getId() != null) {
                 query = persistenceService.getSession().createQuery(queryString.concat(" and bankaccount.id=:accId)"));
-                query.setParameter("accId", bankAccount.getId(), StandardBasicTypes.LONG);
+                query.setParameter("accId", bankAccount.getId(), LongType.INSTANCE);
             } else
                 query = persistenceService.getSession().createQuery(queryString);
             queryParams.entrySet().forEach(entry -> query.setParameter(entry.getKey(), entry.getValue()));

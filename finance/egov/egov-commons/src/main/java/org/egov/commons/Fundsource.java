@@ -50,19 +50,19 @@ package org.egov.commons;
 import org.egov.infra.persistence.entity.AbstractAuditable;
 import org.egov.infra.persistence.validator.annotation.Unique;
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -82,16 +82,16 @@ public class Fundsource extends AbstractAuditable {
 
     @Length(min = 1, max = 25)
     @NotNull
-    @SanitizeHtml
+    @SafeHtml
     private String code;
 
     @Length(min = 1, max = 25)
     @NotNull
-    @SanitizeHtml
+    @SafeHtml
     private String name;
 
     @Length(min = 1, max = 25)
-    @SanitizeHtml
+    @SafeHtml
     private String type;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -110,7 +110,7 @@ public class Fundsource extends AbstractAuditable {
 
     @Length(min = 1, max = 25)
     @Column(name = "funding_type")
-    @SanitizeHtml
+    @SafeHtml
     private String fundingType;
 
     @Column(name = "loan_percentage")
@@ -130,7 +130,7 @@ public class Fundsource extends AbstractAuditable {
 
     @Length(min = 1, max = 25)
     @Column(name = "repayment_frequency")
-    @SanitizeHtml
+    @SafeHtml
     private String repaymentFrequency;
 
     @Column(name = "no_of_installment")
@@ -142,7 +142,7 @@ public class Fundsource extends AbstractAuditable {
 
     @Length(min = 1, max = 25)
     @Column(name = "govt_order")
-    @SanitizeHtml
+    @SafeHtml
     private String govtOrder;
 
     @Column(name = "govt_date")
@@ -150,17 +150,17 @@ public class Fundsource extends AbstractAuditable {
 
     @Length(min = 1, max = 25)
     @Column(name = "dp_code_number")
-    @SanitizeHtml
+    @SafeHtml
     private String dpCodeNum;
 
     @Length(min = 1, max = 25)
     @Column(name = "dp_code_resg")
-    @SanitizeHtml
+    @SafeHtml
     private String dpCodeResistration;
 
     @Length(min = 1, max = 25)
     @Column(name = "fin_inst_letter_num")
-    @SanitizeHtml
+    @SafeHtml
     private String finInstLetterNum;
 
     @Column(name = "fin_inst_letter_date")
@@ -168,7 +168,7 @@ public class Fundsource extends AbstractAuditable {
 
     @Length(min = 1, max = 25)
     @Column(name = "fin_inst_schm_num")
-    @SanitizeHtml
+    @SafeHtml
     private String finInstSchmNum;
 
     @Column(name = "fin_inst_schm_date")

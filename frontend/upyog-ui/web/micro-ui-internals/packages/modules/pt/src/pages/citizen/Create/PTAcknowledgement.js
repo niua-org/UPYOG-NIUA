@@ -6,21 +6,30 @@ import getPTAcknowledgementData from "../../../getPTAcknowledgementData";
 
 const GetActionMessage = (props) => {
   const { t } = useTranslation();
-  const isEditOrMutation = window.location.href.includes("edit-application") || window.location.href.includes("property-mutation");
   if (props.isSuccess) {
-    return !isEditOrMutation ? t("CS_PROPERTY_APPLICATION_SUCCESS") : t("CS_PROPERTY_UPDATE_APPLICATION_SUCCESS");
+    return !window.location.href.includes("edit-application") ? t("CS_PROPERTY_APPLICATION_SUCCESS") : t("CS_PROPERTY_UPDATE_APPLICATION_SUCCESS");
   } else if (props.isLoading) {
-    return !isEditOrMutation ? t("CS_PROPERTY_APPLICATION_PENDING") : t("CS_PROPERTY_UPDATE_APPLICATION_PENDING");
+    return !window.location.href.includes("edit-application") ? t("CS_PROPERTY_APPLICATION_PENDING") : t("CS_PROPERTY_UPDATE_APPLICATION_PENDING");
   } else {
-    return !isEditOrMutation ? t("CS_PROPERTY_APPLICATION_FAILED") : t("CS_PROPERTY_UPDATE_APPLICATION_FAILED");
+    return !window.location.href.includes("edit-application") ? t("CS_PROPERTY_APPLICATION_FAILED") : t("CS_PROPERTY_UPDATE_APPLICATION_FAILED");
   }
 };
+
 const rowContainerStyle = {
   padding: "4px 0px",
-  justifyContent: "space-between"
+  justifyContent: "space-between",
 };
-const BannerPicker = props => {
-  return <Banner message={GetActionMessage(props)} applicationNumber={props.data?.Properties[0].acknowldgementNumber} info={props.isSuccess ? props.t("PT_APPLICATION_NO") : ""} successful={props.isSuccess} className="pt-auto-104" />;
+
+const BannerPicker = (props) => {
+  return (
+    <Banner
+      message={GetActionMessage(props)}
+      applicationNumber={props.data?.Properties?.[0]?.acknowldgementNumber}
+      info={props.isSuccess ? props.t("PT_APPLICATION_NO") : ""}
+      successful={props.isSuccess}
+      style={{ width: "100%" }}
+    />
+  );
 };
 
 /**
@@ -52,45 +61,33 @@ const PTAcknowledgement = ({ ackData, isPending, error, onSuccess }) => {
 
   if (showLoader) return <Loader />;
 
-  const isEditOrMutation = window.location.href.includes("edit-application") || window.location.href.includes("property-mutation");
-
   return (
     <Card>
       <BannerPicker t={t} data={ackData} isSuccess={isSuccess} isLoading={isPending} />
-
-      {/* Success/failure message — different text for new vs edit/mutation */}
-      {isSuccess && (
-        <CardText>{isEditOrMutation ? t("CS_FILE_PROPERTY_UPDATE_RESPONSE") : t("CS_FILE_PROPERTY_RESPONSE")}</CardText>
-      )}
+      {isSuccess && <CardText>{t("CS_FILE_PROPERTY_RESPONSE")}</CardText>}
       {!isSuccess && !isPending && (
         <CardText>
-          {isEditOrMutation ? t("CS_FILE_PROPERTY_UPDATE_FAILED_RESPONSE") : t("CS_FILE_PROPERTY_FAILED_RESPONSE")}
+          {t("CS_FILE_PROPERTY_FAILED_RESPONSE")}
           {error?.response?.data?.Errors?.[0]?.message ? `. ${error.response.data.Errors[0].message}` : ""}
         </CardText>
       )}
-
-      {/* Property ID row — only for new applications */}
-      {!isEditOrMutation && (
-        <StatusTable>
-          {isSuccess && (
-            <Row
-              rowContainerStyle={rowContainerStyle}
-              last
-              label={t("PT_COMMON_TABLE_COL_PT_ID")}
-              text={ackData?.Properties?.[0]?.propertyId}
-              textStyle={{ whiteSpace: "pre", width: "60%" }}
-            />
-          )}
-        </StatusTable>
-      )}
-
-      {/* Download button — shown for ALL flows on success */}
+      <StatusTable>
+        {isSuccess && (
+          <Row
+            rowContainerStyle={rowContainerStyle}
+            last
+            label={t("PT_COMMON_TABLE_COL_PT_ID")}
+            text={ackData?.Properties?.[0]?.propertyId}
+            textStyle={{ whiteSpace: "pre", width: "60%" }}
+          />
+        )}
+      </StatusTable>
       {isSuccess && <SubmitBar label={t("PT_DOWNLOAD_ACK_FORM")} onSubmit={handleDownloadPdf} />}
-
       <Link to={`/upyog-ui/citizen`}>
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} onClick={onSuccess} />
       </Link>
     </Card>
   );
 };
+
 export default PTAcknowledgement;

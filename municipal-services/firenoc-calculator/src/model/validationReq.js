@@ -541,11 +541,6 @@ const RequestInfo = {
       description: "unique API ID",
       maxLength: 128
     },
-    /*
-    * Below fields are not used / Mandatory for Micro-Ui
-    * If Anyone running this service in Mono-Ui Steup, please uncomment this
-
-
     ver: {
       type: "string",
       description:
@@ -573,7 +568,7 @@ const RequestInfo = {
       description:
         "API key (API key provided to the caller in case of server to server communication)",
       maxLength: 256
-    }, */
+    },
     msgId: {
       type: "string",
       description: "Unique request message id from the caller",
@@ -595,7 +590,7 @@ const RequestInfo = {
       readOnly: true
     }
   },
-  required: ["apiId", "msgId"]
+  required: ["apiId", "ver", "msgId", "action"]
 };
 
 const FireNOCRequest = {

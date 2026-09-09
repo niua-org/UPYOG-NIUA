@@ -1,7 +1,7 @@
 import { Loader, Modal, FormComposer } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect, act } from "react";
 import { configCNDApproverApplication } from "../config";
-
+import { useHistory } from "react-router-dom";
 
 /* This component, ActionModal, is responsible for displaying a modal dialog 
  that allows users to submit actions related to a specific application. 
@@ -40,7 +40,7 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
     },
     { enabled: true }
   );
-  const navigate = Digit.Hooks.useCustomNavigate(); // Initialize navigate
+  const history = useHistory(); // Initialize useHistory
 
     /* we have used it here to fetch vendor data when the state is "PENDING_FOR_VEHICLE_DRIVER_ASSIGN". */
    const { data: dsoData } = Digit.Hooks.cnd.useVendorSearch({
@@ -124,13 +124,13 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
 "COMPLETE_REQUEST"
   useEffect(() => {
     if(action?.action==="APPROVE"){
-      navigate(`/cnd-ui/employee/cnd/cnd-service/edit/`+ `${applicationData?.applicationNumber}`);
+      history.push(`/cnd-ui/employee/cnd/cnd-service/edit/`+ `${applicationData?.applicationNumber}`);
     }
     else if (action?.action==="COMPLETE_REQUEST"){
-      navigate(`/cnd-ui/employee/cnd/cnd-service/facility-centre/`+ `${applicationData?.applicationNumber}`);
+      history.push(`/cnd-ui/employee/cnd/cnd-service/facility-centre/`+ `${applicationData?.applicationNumber}`);
     }
     else if (action.action === "PAY") {
-      return navigate(`/cnd-ui/employee/payment/collect/cnd-service/${applicationData.applicationNumber}`);
+      return history.push(`/cnd-ui/employee/payment/collect/cnd-service/${applicationData.applicationNumber}`);
     }
     else{
     setConfig(

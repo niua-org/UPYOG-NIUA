@@ -1,30 +1,36 @@
 {
-  "name": "@upyog/workbench-ui-module-core",
+  "name": "@egovernments/digit-ui-module-core",
   "version": "1.8.2",
   "license": "MIT",
-  "main": "src/Module.js",
+  "main": "dist/index.js",
+  "module": "dist/index.modern.js",
   "source": "src/Module.js",
-
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-router-dom": "6.28.0",
-    "@tanstack/react-query": "^5.0.0",
-    "react-dom": "^19.0.0"
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "microbundle-crl watch --no-compress --format modern,cjs",
+    "build": "microbundle-crl --compress --no-sourcemap --format cjs",
+    "prepublish": "yarn build"
   },
   "dependencies": {
-    "@upyog/workbench-ui-react-components": "1.0.0",
-    "react-i18next": "14.0.0",
+    "@egovernments/digit-ui-react-components": "1.8.1",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-i18next": "11.16.2",
+    "react-query": "3.6.1",
     "react-redux": "7.2.8",
+    "react-router-dom": "5.3.0",
     "react-tooltip": "4.1.2",
     "redux": "4.1.2",
     "redux-thunk": "2.4.1"
   },
-  "author": "Internal Tech Team, NIUA",
+  "author": "JaganKumar <jagan.kumar@egov.org.in>",
   "keywords": [
-    "upyog",
-    "nudm",
-    "niua",
-    "workbench-ui",
+    "digit",
+    "egov",
+    "dpg",
+    "digit-ui",
     "core"
   ]
 }

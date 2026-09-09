@@ -76,6 +76,7 @@ import org.egov.model.budget.BudgetGroup;
 import org.egov.pims.commons.Position;
 import org.egov.pims.model.PersonalInformation;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Transactional;
@@ -196,7 +197,7 @@ public class BudgetService extends PersistenceService<Budget, Long> {
      * @return boolean Finds out whether RE is created and Approved for the given date
      */
 	public boolean hasApprovedReAsonDate(final Long finYearId, final Date budgetApprovedDate) {
-		final org.hibernate.query.Query qry = getSession().createQuery(
+		final Query qry = getSession().createQuery(
 				new StringBuilder("select name from  Budget where financialYear.id=:finYearId and isbere='RE' ").append(
 						"and isActiveBudget=true and parent is null and isPrimaryBudget=true and status.code='Approved'")
 						.append(" and to_date(state.createdDate)<=:budgetApprovedDate").toString());
@@ -393,11 +394,11 @@ public class BudgetService extends PersistenceService<Budget, Long> {
         return getByName(budgetName);
     }
 
-    public List<Budget> getBudgetsForUploadReport() {
-        return findAllBy(
-                new StringBuilder("select distinct b from Budget b where b.name like '%RE%' and b.materializedPath")
-                        .append(" in (select distinct substring(bd.materializedPath, 1, locate('.', bd.materializedPath)-1)")
-                        .append(" from BudgetDetail bd where bd.status.code = 'Created')").toString());
+	public List<Budget> getBudgetsForUploadReport() {
+		return findAllBy(
+				new StringBuilder("select distinct b from Budget b where b.name like '%RE%' and b.materializedPath")
+						.append(" in (select distinct substring(bd.materializedPath,  1 , 1)")
+						.append(" from BudgetDetail bd where bd.status.code = 'Created')").toString());
 	}
 
 	@Transactional
@@ -405,11 +406,11 @@ public class BudgetService extends PersistenceService<Budget, Long> {
 		EgwStatus approvedStatus = egwStatusDAO.getStatusByModuleAndCode("BUDGET", "Approved");
 		EgwStatus createdStatus = egwStatusDAO.getStatusByModuleAndCode("BUDGET", "Created");
 		persistenceService.getSession()
-				.createNativeQuery(
+				.createSQLQuery(
 						new StringBuilder("update egf_budget set status = :approvedStatus where status =:createdStatus")
 								.append(" and  materializedPath like :materializedPath").toString())
-				.setParameter("approvedStatus", approvedStatus.getId())
+				.setLong("approvedStatus", approvedStatus.getId())
 				.setParameter("materializedPath", materializedPath + "%")
-				.setParameter("createdStatus", createdStatus.getId()).executeUpdate();
+				.setLong("createdStatus", createdStatus.getId()).executeUpdate();
 	}
 }

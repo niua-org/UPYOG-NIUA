@@ -49,23 +49,23 @@ package org.egov.model.report;
 
 import java.util.Date;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class ReportBean {
 
     private Integer fundId;
     private Integer functionId;
-    @SanitizeHtml
+    @SafeHtml
     private String departmentCode;
     private Integer functionaryId;
     private Integer divisionId;
     private Date fromDate;
     private Date toDate;
-    @SanitizeHtml
+    @SafeHtml
     private String functionName;
-    @SanitizeHtml
+    @SafeHtml
     private String reportType;
-    @SanitizeHtml
+    @SafeHtml
     private String exportType;
 
     public String getExportType() {

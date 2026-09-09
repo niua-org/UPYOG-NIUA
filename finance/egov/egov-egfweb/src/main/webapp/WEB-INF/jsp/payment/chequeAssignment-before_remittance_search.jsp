@@ -168,14 +168,10 @@
 			}
 			var vTypeOfAccount = '<s:property value="%{typeOfAccount}"/>';
 			
-			<%-- LTS Migration Fix (Struts 7): pass asOnDate/recoveryId as their
-			     own query params. Concatenating them into fundId left the value
-			     unbound and broke dependent bank-account AJAX. --%>
 			if (obj.options[obj.selectedIndex].value != -1)
 				populatebank_branch({
-					fundId : obj.options[obj.selectedIndex].value,
-					asOnDate : date,
-					recoveryId : revocery
+					fundId : obj.options[obj.selectedIndex].value
+							+ '&asOnDate=' + date + '&recoveryId=' + revocery
 				});
 		}
 		function loadBankAccount(obj) {
@@ -190,10 +186,9 @@
 					var revocery = document.getElementById("recoveryId").value;
 				}
 				populatebankaccount({
-					branchId : x[1],
-					asOnDate : date,
-					fundId : fund.options[fund.selectedIndex].value,
-					recoveryId : revocery
+					branchId : x[1] + '&asOnDate=' + date,
+					fundId : fund.options[fund.selectedIndex].value
+							+ '&recoveryId=' + revocery
 				});
 			}
 

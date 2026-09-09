@@ -39,14 +39,14 @@
  */
 package org.egov.infra.microservice.models;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 ;
 
 public class BankAccount {
 
     private Long id;
-    @SanitizeHtml
+    @SafeHtml
     private String accountNumber;
 
     public Long getId() {

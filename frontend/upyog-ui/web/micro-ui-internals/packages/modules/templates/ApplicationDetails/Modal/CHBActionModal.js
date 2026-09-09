@@ -105,7 +105,7 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
           },
         ];
       submitAction({
-        venueBookingApplication: 
+        hallsBookingApplication: 
           {
             ...applicationData,
             workflow,

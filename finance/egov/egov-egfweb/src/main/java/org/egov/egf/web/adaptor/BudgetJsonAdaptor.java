@@ -52,26 +52,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import org.egov.commons.CFinancialYear;
-import org.egov.infra.persistence.utils.PersistenceUtils;
 import org.egov.model.budget.Budget;
 
 import java.lang.reflect.Type;
 
 public class BudgetJsonAdaptor implements JsonSerializer<Budget> {
-    /**
-     * LTS Migration Fix (Hibernate 6 / Gson): View Budget Definition search JSON.
-     * Gson reflecting on ByteBuddy HibernateProxy throws
-     * {@code UnsupportedOperationException: Attempted to serialize java.lang.Class:
-     * org.hibernate.proxy.HibernateProxy}, which left DataTables on "Loading...".
-     * Unproxy first and write only scalar fields.
-     */
     @Override
-    public JsonElement serialize(Budget budget, final Type type, final JsonSerializationContext jsc) {
+    public JsonElement serialize(final Budget budget, final Type type, final JsonSerializationContext jsc) {
         final JsonObject jsonObject = new JsonObject();
-        // LTS Migration Fix (Hibernate 6 / Gson): unproxy before reading fields so
-        // ByteBuddy HibernateProxy instances are not reflected by Gson.
-        budget = PersistenceUtils.unproxy(budget);
         if (budget != null) {
             if (budget.getName() != null)
                 jsonObject.addProperty("name", budget.getName());
@@ -81,24 +69,21 @@ public class BudgetJsonAdaptor implements JsonSerializer<Budget> {
                 jsonObject.addProperty("isbere", budget.getIsbere());
             else
                 jsonObject.addProperty("isbere", "");
-            final CFinancialYear financialYear = PersistenceUtils.unproxy(budget.getFinancialYear());
-            if (financialYear != null)
-                jsonObject.addProperty("financialYear", financialYear.getFinYearRange());
+            if (budget.getFinancialYear() != null)
+                jsonObject.addProperty("financialYear", budget.getFinancialYear().getFinYearRange());
             else
                 jsonObject.addProperty("financialYear", "");
-            final Budget parent = PersistenceUtils.unproxy(budget.getParent());
-            if (parent != null){
-                jsonObject.addProperty("parent", parent.getName());
-                jsonObject.addProperty("parentId", parent.getId());
+            if (budget.getParent() != null){
+                jsonObject.addProperty("parent", budget.getParent().getName());
+                jsonObject.addProperty("parentId", budget.getParent().getId());
             }
             else{
                 jsonObject.addProperty("parent", "");
                 jsonObject.addProperty("parentId","");
             }
-            final Budget referenceBudget = PersistenceUtils.unproxy(budget.getReferenceBudget());
-            if (referenceBudget != null){
-                jsonObject.addProperty("reference", referenceBudget.getName());
-                jsonObject.addProperty("referenceId", referenceBudget.getId());
+            if (budget.getReferenceBudget() != null){
+                jsonObject.addProperty("reference", budget.getReferenceBudget().getName());
+                jsonObject.addProperty("referenceId", budget.getReferenceBudget().getId());
             }
             else
             {

@@ -2,7 +2,7 @@ package org.egov.infra.microservice.models;
 
 import java.util.List;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class BusinessAccountDetails {
     private Long id;
@@ -12,7 +12,7 @@ public class BusinessAccountDetails {
     private Long chartOfAccounts;
 
     private Double amount;
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
 
     private List<BusinessAccountSubLedger> subledgerDetails;

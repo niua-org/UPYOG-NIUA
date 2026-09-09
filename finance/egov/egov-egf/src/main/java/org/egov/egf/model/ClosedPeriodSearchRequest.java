@@ -48,8 +48,8 @@
 
 package org.egov.egf.model;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 import org.egov.enums.CloseTypeEnum;
 

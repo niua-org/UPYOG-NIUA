@@ -2,7 +2,7 @@ package org.egov.egf.web.controller;
 
 import java.util.List;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import org.egov.commons.CChartOfAccounts;
 import org.egov.commons.dao.ChartOfAccountsHibernateDAO;
@@ -12,7 +12,7 @@ import org.egov.commons.service.ChartOfAccountsService;
 import org.egov.egf.web.adaptor.ChartOfAccountReportJsonAdaptor;
 import org.egov.model.report.ChartOfAccountsReport;
 import org.egov.services.report.ChartOfAccountsReportService;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -81,7 +81,7 @@ public class ChartOfAccountsReportController {
 	}
 
 	@GetMapping(value = "/ajax/getAccountCodeAndName")
-	public @ResponseBody List<CChartOfAccounts> getAccounts(@RequestParam("accountCode") @SanitizeHtml String accountCode) {
+	public @ResponseBody List<CChartOfAccounts> getAccounts(@RequestParam("accountCode") @SafeHtml String accountCode) {
 		return chartOfAccountsHibernateDAO.findDetailedAccountCodesByGlcodeOrNameLike(accountCode);
 	}
 

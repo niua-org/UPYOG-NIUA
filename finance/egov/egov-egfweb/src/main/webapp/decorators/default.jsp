@@ -51,17 +51,9 @@
 <%@ taglib uri="/WEB-INF/tags/cdn.tld" prefix="cdn" %>
 <html>
 <head>
-<%
-	org.springframework.web.context.WebApplicationContext _wac = org.springframework.web.context.support.WebApplicationContextUtils.getWebApplicationContext(application);
-	if (_wac != null && _wac.getEnvironment() != null) {
-		String _analyticsEnabled = _wac.getEnvironment().getProperty("analytics.enabled");
-		if (_analyticsEnabled != null) pageContext.setAttribute("analyticsEnabled", Boolean.valueOf(_analyticsEnabled));
-		String _analyticsConfig = _wac.getEnvironment().getProperty("analytics.config");
-		if (_analyticsConfig != null) pageContext.setAttribute("analyticsConfig", _analyticsConfig);
-	}
-%>
+	<spring:eval expression="@environment.getProperty('analytics.enabled')" scope="application" var="analyticsEnabled"/>
 	<c:if test="${analyticsEnabled}">
-		${analyticsConfig}
+		<spring:eval expression="@environment.getProperty('analytics.config')" scope="application"/>
 	</c:if>
  		<%@ include file="/includes/meta.jsp" %>  
  		<meta name="_csrf" content="${_csrf.token}"/>

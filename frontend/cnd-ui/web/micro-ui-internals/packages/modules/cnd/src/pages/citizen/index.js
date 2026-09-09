@@ -1,9 +1,8 @@
 import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import { Redirect, Switch, useRouteMatch } from "react-router-dom";
 import Inbox from "../employee/Inbox";
 import { cndStyles } from "../../utils/cndStyles";
-import "../../css/cnd-inline-auto.scss";
 
 /**
  * Component to handle all the routings of Citizen Side.
@@ -12,7 +11,7 @@ import "../../css/cnd-inline-auto.scss";
  */
 
 const App = () => {
-  const { path, url } = Digit.Hooks.useModuleBasePath();
+  const { path, url, ...match } = useRouteMatch();
   const CndCreate = Digit?.ComponentRegistryService?.getComponent("CndCreate");
   const MyRequests = Digit?.ComponentRegistryService?.getComponent("MyRequests");
   const CndApplicationDetails = Digit?.ComponentRegistryService?.getComponent("CndApplicationDetails");
@@ -28,43 +27,33 @@ const App = () => {
 
   return (
     <span style={cndStyles.wasteQuantityCitizen}>
-      <AppContainer>
-        <BackButton>Back</BackButton>
-        <Routes>
-          <Route path="apply/*" element={<PrivateRoute><CndCreate /></PrivateRoute>} />
-          <Route path="my-request" element={<PrivateRoute><MyRequests /></PrivateRoute>} />
-          <Route path="my-requests/:applicationNumber/:tenantId" element={<PrivateRoute><CndApplicationDetails /></PrivateRoute>} />
-          <Route
-            path="cnd-vendor"
-            element={
-              <PrivateRoute>
-                {Digit.UserService.hasAccess(["CND_VENDOR"]) ? (
-                  <CNDCard parentRoute={path} />
-                ) : (
-                  <Navigate to="/cnd-ui/citizen/login" state={{ from: `${path}/cnd-vendor`, role: "CND_VENDOR" }} replace />
-                )}
-              </PrivateRoute>
-            }
+      <Switch>
+        <AppContainer>
+          <BackButton>Back</BackButton>
+          <PrivateRoute path={`${path}/apply`} component={CndCreate} />
+          <PrivateRoute path={`${path}/my-request`} component={MyRequests} />
+          <PrivateRoute path={`${path}/my-requests/:applicationNumber/:tenantId`} component={CndApplicationDetails}></PrivateRoute>
+          <PrivateRoute path={`${path}/cnd-vendor`} component={() => Digit.UserService.hasAccess(["CND_VENDOR"]) ?  <CNDCard parentRoute={path} /> :<Redirect to={{
+            pathname: `/cnd-ui/citizen/login`,
+            state: { from: `${path}/cnd-vendor`, role:"CND_VENDOR" }
+          }} />} />
+          <PrivateRoute
+            path={`${path}/inbox`}
+            component={() => (
+              <Inbox
+                useNewInboxAPI={true}
+                parentRoute={path}
+                businessService="cnd"
+                filterComponent="CND_INBOX_FILTERS"
+                initialStates={inboxInitialState}
+                isInbox={true}
+              />
+            )}
           />
-          <Route
-            path="inbox"
-            element={
-              <PrivateRoute>
-                <Inbox
-                  useNewInboxAPI={true}
-                  parentRoute={path}
-                  businessService="cnd"
-                  filterComponent="CND_INBOX_FILTERS"
-                  initialStates={inboxInitialState}
-                  isInbox={true}
-                />
-              </PrivateRoute>
-            }
-          />
-          <Route path="application-details/:id" element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-          <Route path="applicationsearch/application-details/:id" element={<PrivateRoute><ApplicationDetails parentRoute={path} /></PrivateRoute>} />
-        </Routes>
-      </AppContainer>
+          <PrivateRoute path={`${path}/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
+          <PrivateRoute path={`${path}/applicationsearch/application-details/:id`} component={() => <ApplicationDetails parentRoute={path} />} />
+        </AppContainer>
+      </Switch>
     </span>
   );
 };

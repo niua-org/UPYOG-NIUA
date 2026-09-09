@@ -53,16 +53,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import static java.lang.String.format;
 
 @Service
 public class DatabaseSequenceCreator {
-
-    private static final String CREATE_SEQ_QUERY = 
-        "CREATE SEQUENCE IF NOT EXISTS %s START WITH 1 INCREMENT BY 1";
+    private static final String CREATE_SEQ_QUERY = "CREATE SEQUENCE %s";
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -70,7 +68,7 @@ public class DatabaseSequenceCreator {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createSequence(String sequenceName) {
         entityManager.unwrap(Session.class)
-                .createNativeQuery(format(CREATE_SEQ_QUERY, sequenceName))
+                .createSQLQuery(format(CREATE_SEQ_QUERY, sequenceName))
                 .executeUpdate();
     }
 }

@@ -53,34 +53,34 @@ import java.util.List;
 
 import org.egov.commons.CGeneralLedger;
 import org.egov.commons.CVoucherHeader;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class Voucher {
 
     private Long id;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String type;
-    @SanitizeHtml
+    @SafeHtml
     private String voucherNumber;
-    @SanitizeHtml
+    @SafeHtml
     private String description;
-    @SanitizeHtml
+    @SafeHtml
     private String voucherDate;
-    @SanitizeHtml
+    @SafeHtml
     private FundContract fund;
     private FunctionContract function;
     private FiscalPeriodContract fiscalPeriod;
     private EgwStatusContract status;
     private Long originalVhId;
     private Long refVhId;
-    @SanitizeHtml
+    @SafeHtml
     private String cgvn;
     private Long moduleId;
-    @SanitizeHtml
+    @SafeHtml
     private String department;
-    @SanitizeHtml
+    @SafeHtml
     private String source;
     private SchemeContract scheme;
     private SubSchemeContract subScheme;
@@ -88,11 +88,11 @@ public class Voucher {
     private FundsourceContract fundsource;
     private List<AccountDetailContract> ledgers = new ArrayList<>(0);
     // this is only to keep standard .As of now this field is not used
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
-    @SanitizeHtml
+    @SafeHtml
     private String serviceName;
-    @SanitizeHtml
+    @SafeHtml
     private String referenceDocument;
 
     public Voucher(final CVoucherHeader vh) {

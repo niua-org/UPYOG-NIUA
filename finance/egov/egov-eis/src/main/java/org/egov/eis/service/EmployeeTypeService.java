@@ -102,7 +102,7 @@ public class EmployeeTypeService {
      * @return Employee Type object
      */
     public EmployeeType getEmployeeTypeById(final Long id) {
-        return employeeTypeRepository.findById(id).orElse(null);
+        return employeeTypeRepository.findOne(id);
     }
 
     @Transactional

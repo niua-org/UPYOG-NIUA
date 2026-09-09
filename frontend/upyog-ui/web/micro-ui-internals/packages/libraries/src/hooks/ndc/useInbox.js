@@ -16,18 +16,20 @@ const useNDCInbox = ({ tenantId, filters, config = {} }) => {
     processSearchCriteria: {
       assignee: assignee === "ASSIGNED_TO_ME" ? user?.info?.uuid : "",
       moduleName: "NDC",
-      businessService: ["ndc-services"]
+      businessService: ["ndc-services"],
+      ...(status.length > 0 ? { status: status } : {}),
     },
 
     moduleSearchCriteria:
       status.length > 0
         ? {
-            applicationStatus: status,
+            status: status,
             ...(applicationNo ? { applicationNo } : {}),
             ...(mobileNumber ? { mobileNumber } : {}),
             sortOrder: "DESC",
           }
         : {
+            // status: status,
             ...(applicationNo ? { applicationNo } : {}),
             ...(mobileNumber ? { mobileNumber } : {}),
             sortOrder: "DESC",

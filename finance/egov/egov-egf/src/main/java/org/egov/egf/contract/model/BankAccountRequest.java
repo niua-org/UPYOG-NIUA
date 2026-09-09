@@ -2,7 +2,7 @@ package org.egov.egf.contract.model;
 
 import java.io.Serializable;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 public class BankAccountRequest implements Serializable {
 
@@ -10,11 +10,11 @@ public class BankAccountRequest implements Serializable {
      *
      */
     private static final long serialVersionUID = 2946252349035262831L;
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
     private Integer offset;
     private Integer pageSize;
-    @SanitizeHtml
+    @SafeHtml
     private String sortBy;
 
     public BankAccountRequest(final String tenantId, final Integer offset, final Integer pageSize,

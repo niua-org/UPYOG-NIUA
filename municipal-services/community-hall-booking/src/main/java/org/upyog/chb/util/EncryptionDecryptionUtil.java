@@ -57,10 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class EncryptionDecryptionUtil {
 
-    private static final String MAP_KEY = "key";
-    private static final String MAP_PURPOSE = "purpose";
-
-    private final EncryptionService encryptionService;
+    private EncryptionService encryptionService;
 
     @Value(("${state.level.tenant.id}"))
     private String stateLevelTenantId;
@@ -103,12 +100,11 @@ public class EncryptionDecryptionUtil {
                 objectToDecrypt = Collections.singletonList(objectToDecrypt);
             }
 
-            Map<String, String> keyPurposeMap = getKeyToDecrypt(key);
-            String purpose = keyPurposeMap.get(MAP_PURPOSE);
+            Map<String, String> keyPurposeMap = getKeyToDecrypt(objectToDecrypt, key);
+            String purpose = keyPurposeMap.get("purpose");
 
-            if (key.equalsIgnoreCase(CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY)) {
-                key = keyPurposeMap.get(MAP_KEY);
-            }
+            if (key.equalsIgnoreCase(CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY))
+                key = keyPurposeMap.get("key");
 
             P decryptedObject = (P) encryptionService.decryptJson(requestInfo, objectToDecrypt, key, purpose, classType);
             if (decryptedObject == null) {
@@ -128,17 +124,19 @@ public class EncryptionDecryptionUtil {
         }
     }
 
-    public Map<String, String> getKeyToDecrypt(String key) {
+    public Map<String, String> getKeyToDecrypt(Object objectToDecrypt, String key) {
         Map<String, String> keyPurposeMap = new HashMap<>();
 
         if (!abacEnabled) {
-            if (key.equals(CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY)) {
-                keyPurposeMap.put(MAP_KEY, CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_PLAIN_DECRYPTION_KEY);
-                keyPurposeMap.put(MAP_PURPOSE, CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_PLAIN_DECRYPTION_PURPOSE);
+			if (key.equals(CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY)/* || key == null */) {
+                keyPurposeMap.put("key", CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_PLAIN_DECRYPTION_KEY);
+                keyPurposeMap.put("purpose", CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_PLAIN_DECRYPTION_PURPOSE);
+            } 
+        } else {
+            if (key.equals(CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY) || key == null) {
+                keyPurposeMap.put("key", CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY);
+                keyPurposeMap.put("purpose", "CHBBookingSearch");
             }
-        } else if (key.equals(CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY)) {
-            keyPurposeMap.put(MAP_KEY, CommunityHallBookingConstants.CHB_APPLICANT_DETAIL_ENCRYPTION_KEY);
-            keyPurposeMap.put(MAP_PURPOSE, "CHBBookingSearch");
         }
 
         return keyPurposeMap;

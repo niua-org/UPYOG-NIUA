@@ -1,11 +1,13 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { AppContainer } from "@nudmcdgnpm/digit-ui-react-components";
 import { Route, Routes } from "react-router-dom";
 import { config } from "./config";
 import ChangePasswordComponent from "./changePassword";
 
 const EmployeeChangePassword = () => {
   const { t } = useTranslation();
+  const { path } = Digit.Hooks.useModuleBasePath();
 
   const params = useMemo(() =>
     config.map(
@@ -22,7 +24,9 @@ const EmployeeChangePassword = () => {
 
   return (
     <Routes>
-      <Route path={`*`} element={<ChangePasswordComponent config={params[0]} t={t} />} />
+      <Route path={`*`}>
+        <ChangePasswordComponent config={params[0]} t={t} />
+      </Route>
     </Routes>
   );
 };

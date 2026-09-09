@@ -135,7 +135,7 @@ const EmployeeChallan = (props) => {
 
   return (
     <React.Fragment>
-      <div className={"employee-application-details cg-employee-application-details"}>
+      <div className={"employee-application-details"} style={{ marginBottom: "15px" }}>
         <Header>{`${t("CHALLAN_DETAILS")}`} </Header>
         <MultiLink
           className="multilinkWrapper employee-mulitlink-main-div"
@@ -149,31 +149,36 @@ const EmployeeChallan = (props) => {
 
       <div>
         <Card>
-          <StatusTable className="cg-status-padding">
+          <StatusTable style={{ padding: "10px 0px" }}>
             <Row label={`${t("UC_CHALLAN_NO")}`} text={challanno} />
-              <hr className="cg-hr-small" />
+            <hr style={{ width: "35%", border: "1px solid #D6D5D4", marginTop: "1rem", marginBottom: "1rem" }} />
             {challanBillDetails?.map((data) => {
               return (
-                  <Row label={t(stringReplaceAll(data?.taxHeadCode, ".", "_"))} text={<span className="cg-white-space-pre">{`₹${data?.amount}` || 0}</span>} />
+                <Row label={t(stringReplaceAll(data?.taxHeadCode, ".", "_"))} text={`₹${data?.amount}` || 0} textStyle={{ whiteSpace: "pre" }} />
               );
             })}
-              <hr className="cg-hr-small" />
-              <Row label={<b className="cg-total-label">{t("PAYMENT_CS_TOTAL_AMOUNT_DUE")}</b>} text={<span className="cg-total-text">{`₹${totalDueAmount}`}</span>} />
+            <hr style={{ width: "35%", border: "1px solid #D6D5D4", marginTop: "1rem", marginBottom: "1rem" }} />
+            <Row
+              label={<b style={{ padding: "10px 0px" }}>{t("PAYMENT_CS_TOTAL_AMOUNT_DUE")}</b>}
+              text={`₹${totalDueAmount}`}
+              textStyle={{ fontSize: "24px", padding: "10px 0px", fontWeight: "700" }}
+            />
           </StatusTable>
-            <div className="cg-section-title">{t("SERVICEDETAILS")}</div>
+          <div style={{ fontSize: "24px", padding: "10px 0px", fontWeight: "700" }}>{t("SERVICEDETAILS")}</div>
           <StatusTable>
             <Row
               label={`${t("UC_SERVICE_CATEGORY_LABEL")}`}
-              text={<span className="cg-white-space-pre">{t(
+              text={`${t(
                 `BILLINGSERVICE_BUSINESSSERVICE_${stringReplaceAll(challanDetails?.businessService?.toUpperCase(), ".", "_")}` || t("CS_NA")
-              )}</span>}
+              )}`}
+              textStyle={{ whiteSpace: "pre" }}
             />
             <Row label={`${t("UC_FROM_DATE_LABEL")}`} text={convertEpochToDate(challanDetails?.taxPeriodFrom) || t("CS_NA")} />
             <Row label={`${t("UC_TO_DATE_LABEL")}`} text={convertEpochToDate(challanDetails?.taxPeriodTo) || t("CS_NA")} />
             <Row label={`${t("UC_COMMENT_LABEL")}`} text={`${challanDetails?.description || t("CS_NA")}`} />
             <Row label={`${t("CS_INBOX_STATUS_FILTER")}`} text={t(`UC_${challanDetails?.applicationStatus || t("CS_NA")}`)} />
           </StatusTable>
-          <div className="cg-section-title">{t("CONSUMERDETAILS")}</div>
+          <div style={{ fontSize: "24px", padding: "10px 0px", fontWeight: "700" }}>{t("CONSUMERDETAILS")}</div>
           <StatusTable>
             <Row label={`${t("UC_CONS_NAME_LABEL")}`} text={challanDetails?.citizen.name || t("CS_NA")} />
             <Row label={`${t("UC_MOBILE_NUMBER")}`} text={challanDetails?.citizen.mobileNumber || t("CS_NA")} />

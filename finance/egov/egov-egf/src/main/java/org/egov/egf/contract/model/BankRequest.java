@@ -3,7 +3,7 @@ package org.egov.egf.contract.model;
 import java.io.Serializable;
 import java.util.List;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -15,18 +15,18 @@ public class BankRequest implements Serializable {
      */
     private static final long serialVersionUID = -4973193018259908346L;
     // private RequestInfo requestInfo;
-    @SanitizeHtml
+    @SafeHtml
     private String tenantId;
     private List<Long> ids;
-    @SanitizeHtml
+    @SafeHtml
     private String name;
-    @SanitizeHtml
+    @SafeHtml
     private String code;
     private boolean active;
 
     private Integer offset;
     private Integer pageSize;
-    @SanitizeHtml
+    @SafeHtml
     private String sortBy;
 
     public BankRequest() {

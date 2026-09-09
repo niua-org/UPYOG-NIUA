@@ -49,7 +49,7 @@ package org.egov.services.masters;
 
 import org.egov.commons.SubScheme;
 import org.egov.infstr.services.PersistenceService;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import java.util.List;
 
@@ -64,24 +64,21 @@ public class SubSchemeService extends PersistenceService<SubScheme, Integer> {
     }
 
     public List<SubScheme> getBySchemeId(final Integer schemeId) {
-        final Query<SubScheme> query = getSession().createQuery(
-                " from SubScheme where isactive = true and scheme.id=:schemeId", SubScheme.class);
+        final Query query = getSession().createQuery(" from SubScheme where isactive = true and scheme.id=:schemeId");
 
-        query.setParameter("schemeId", schemeId);
+        query.setInteger("schemeId", schemeId);
         return query.list();
     }
 
     public SubScheme findByCode(final String code) {
-        final Query<SubScheme> query = getSession().createQuery(" from SubScheme where code = :code ",
-                SubScheme.class);
+        final Query query = getSession().createQuery(" from Scheme where code = :code ");
 
-        query.setParameter("code", code);
-        return query.uniqueResult();
+        query.setString("code", code);
+        return (SubScheme) query.uniqueResult();
     }
     
     public List<SubScheme> getByIsActive() {
-        final Query<SubScheme> query = getSession().createQuery(" from SubScheme where isactive = true",
-                SubScheme.class);
+        final Query query = getSession().createQuery(" from SubScheme where isactive = true");
         return query.list();
     }
 }

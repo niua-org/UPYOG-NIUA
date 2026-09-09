@@ -13,6 +13,5 @@ COPY ${WORK_DIR}/src ./src
 # RUN mvn -B dependency:go-offline
 RUN cd ${WORK_DIR} \
     && mvn -B -f /app/pom.xml test verify deploy -s settings.xml  \
-    -Dnexus.user=${nexusUsername} -Dnexus.password=${nexusPassword} \
-    -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
+    -Dnexus.user=${nexusUsername} -Dnexus.password=${nexusPassword}
 FROM scratch

@@ -66,7 +66,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.annotation.Resource;
+import javax.annotation.Resource;
 import org.apache.commons.lang.StringUtils;
 import org.egov.infra.admin.master.entity.City;
 import org.egov.infra.admin.master.repository.CityRepository;

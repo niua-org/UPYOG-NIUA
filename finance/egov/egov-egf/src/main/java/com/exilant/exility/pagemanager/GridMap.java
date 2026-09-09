@@ -50,7 +50,7 @@ package com.exilant.exility.pagemanager;
 import com.exilant.exility.common.DataCollection;
 import org.apache.log4j.Logger;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author raghu.bhandi, Exilant Consulting

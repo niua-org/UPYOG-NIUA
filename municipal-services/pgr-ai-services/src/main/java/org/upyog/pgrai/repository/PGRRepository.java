@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Repository class for handling database operations related to PGR services.
@@ -25,7 +26,6 @@ import java.util.Map;
  */
 @Repository
 @Slf4j
-@SuppressWarnings("java:S1874")
 public class PGRRepository {
 
     private PGRQueryBuilder queryBuilder;
@@ -57,6 +57,7 @@ public class PGRRepository {
      */
     public List<ServiceWrapper> getServiceWrappers(RequestSearchCriteria criteria) {
         List<Service> services = getServices(criteria);
+        List<String> serviceRequestIds = services.stream().map(Service::getServiceRequestId).collect(Collectors.toList());
         Map<String, Workflow> idToWorkflowMap = new HashMap<>();
         List<ServiceWrapper> serviceWrappers = new ArrayList<>();
 
@@ -86,7 +87,7 @@ public class PGRRepository {
             throw new CustomException("PGR_UPDATE_ERROR",
                     "TenantId length is not sufficient to replace query schema in a multi-state instance");
         }
-        return jdbcTemplate.query(query, rowMapper, preparedStmtList.toArray());
+        return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
     }
 
     /**
@@ -105,7 +106,7 @@ public class PGRRepository {
             throw new CustomException("PGR_REQUEST_COUNT_ERROR",
                     "TenantId length is not sufficient to replace query schema in a multi-state instance");
         }
-        return jdbcTemplate.queryForObject(query, Integer.class, preparedStmtList.toArray());
+        return jdbcTemplate.queryForObject(query, preparedStmtList.toArray(), Integer.class);
     }
 
     /**
@@ -123,8 +124,7 @@ public class PGRRepository {
             throw new CustomException("PGR_SEARCH_ERROR",
                     "TenantId length is not sufficient to replace query schema in a multi-state instance");
         }
-        Integer complaintsResolvedCount = jdbcTemplate.queryForObject(query, Integer.class, preparedStmtListComplaintsResolved.toArray());
-        int complaintsResolved = complaintsResolvedCount == null ? 0 : complaintsResolvedCount;
+        int complaintsResolved = jdbcTemplate.queryForObject(query, preparedStmtListComplaintsResolved.toArray(), Integer.class);
 
         List<Object> preparedStmtListAverageResolutionTime = new ArrayList<>();
         query = queryBuilder.getAverageResolutionTime(tenantId, preparedStmtListAverageResolutionTime);
@@ -136,8 +136,7 @@ public class PGRRepository {
         }
         int averageResolutionTime = 0;
         if (complaintsResolved > 0) {
-            Integer averageResolutionTimeCount = jdbcTemplate.queryForObject(query, Integer.class, preparedStmtListAverageResolutionTime.toArray());
-            averageResolutionTime = averageResolutionTimeCount == null ? 0 : averageResolutionTimeCount;
+            averageResolutionTime = jdbcTemplate.queryForObject(query, preparedStmtListAverageResolutionTime.toArray(), Integer.class);
         }
         Map<String, Integer> dynamicData = new HashMap<>();
         dynamicData.put(PGRConstants.COMPLAINTS_RESOLVED, complaintsResolved);

@@ -62,12 +62,14 @@ import org.egov.pims.dao.PersonalInformationHibernateDAO;
 import org.egov.pims.model.PersonalInformation;
 import org.egov.pims.utils.EisManagersUtill;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.type.IntegerType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -148,9 +150,10 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 			mainStr = new StringBuilder(
 					" select POS_ID from EG_EIS_EMPLOYEEINFO ev where ev.USER_ID = :userid and ((ev.to_Date is null and ev.from_Date <= :thisDate ) ")
 							.append(" OR (ev.from_Date <= :thisDate AND ev.to_Date >= :thisDate)) and ev.IS_PRIMARY ='Y'");
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery(mainStr.toString(), Integer.class);
-			qry.setParameter("userid", userId);
-			qry.setParameter("thisDate", currentDate);
+			Query qry = getCurrentSession().createSQLQuery(mainStr.toString()).addScalar("POS_ID",
+					IntegerType.INSTANCE);
+			qry.setLong("userid", userId);
+			qry.setDate("thisDate", currentDate);
 			List retList = qry.list();
 			if(retList!=null && !retList.isEmpty())
 			{
@@ -186,9 +189,10 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 			StringBuilder mainStr;
 			mainStr = new StringBuilder(
 					" select POS_ID from EG_EIS_EMPLOYEEINFO ev where ev.USER_ID = :userid and ((ev.to_Date is null and ev.from_Date <= :thisDate ) OR (ev.from_Date <= :thisDate AND ev.to_Date > :thisDate))");
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery(mainStr.toString(), Integer.class);
-			qry.setParameter("userid", userId);
-			qry.setParameter("thisDate", assignDate);
+			Query qry = getCurrentSession().createSQLQuery(mainStr.toString()).addScalar("POS_ID",
+					IntegerType.INSTANCE);
+			qry.setInteger ("userid", userId);
+			qry.setDate("thisDate", assignDate);
 			List retList = qry.list();
 			if(retList!=null && !retList.isEmpty())
 			{
@@ -223,11 +227,12 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 			StringBuilder mainStr;
 			mainStr = new StringBuilder(
 					" select 	USER_ID  from EG_EIS_EMPLOYEEINFO ev  where ev.POS_ID = :pos and ((ev.to_Date is null and ev.from_Date <= SYSDATE ) OR (ev.from_Date <= SYSDATE AND ev.to_Date > SYSDATE))");
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery(mainStr.toString(), Integer.class);
+			Query qry = getCurrentSession().createSQLQuery(mainStr.toString()).addScalar("USER_ID",
+					IntegerType.INSTANCE);
 
 			if(pos != null)
 			{
-				qry.setParameter("pos", pos.getId());
+				qry.setEntity("pos", pos);
 			}
 			if(qry.list()!=null&&!qry.list().isEmpty())
 			{
@@ -262,13 +267,13 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 	 public Boolean checkEmpCode(String empCode)
 	 {
 		 boolean checkEmpCode = false;
-		 org.hibernate.query.Query qry = null;
+		 Query qry = null;
 		 
 		 try
 		 {
 			String main="from PersonalInformation where employeeCode=:employeeCode";
 			qry=getCurrentSession().createQuery(main);
-			qry.setParameter("employeeCode", empCode);
+			qry.setString("employeeCode", empCode);
 			if(qry.list()!=null && !qry.list().isEmpty())
 			{
 				checkEmpCode = true;
@@ -287,14 +292,14 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 	 public  Position getPositionByName(String positionName){
 		 
 		    
-			org.hibernate.query.Query qry = null;
+			Query qry = null;
 			try
 			 {
 				String main= "from Position where name=:positionName";
 				qry=getCurrentSession().createQuery(main);
 				if(positionName!=null && !positionName.equals(""))
 				{
-					qry.setParameter("positionName", positionName);
+					qry.setString("positionName", positionName);
 				}
 				
 				return (Position)qry.uniqueResult();
@@ -342,9 +347,10 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 			StringBuilder mainStr;
 			mainStr = new StringBuilder(
 					" select USER_ID from EG_EIS_EMPLOYEEINFO ev where ev.pos_id = :posId and ((ev.to_Date is null and ev.from_Date <= :thisDate ) OR (ev.from_Date <= :thisDate AND ev.to_Date > :thisDate))");
-			org.hibernate.query.Query qry = getCurrentSession().createNativeQuery(mainStr.toString(), Integer.class);
-			qry.setParameter("posId", posId);
-			qry.setParameter("thisDate", date);
+			Query qry = getCurrentSession().createSQLQuery(mainStr.toString()).addScalar("USER_ID",
+					IntegerType.INSTANCE);
+			qry.setInteger ("posId", posId);
+			qry.setDate("thisDate", date);
 			List retList = qry.list();
 			if(retList!=null && !retList.isEmpty())
 			{
@@ -402,15 +408,15 @@ public class EisCommonsServiceImpl implements EisCommonsService {
 				subQry=	"select distinct ev.desigId.designationId "+subQry;
 				mainStr ="from Designation dm   where dm.id in( "+subQry+"  ) "; 
 					
-				org.hibernate.query.Query query = getCurrentSession().createQuery(mainStr);
+				Query query = getCurrentSession().createQuery(mainStr);
 				if(deptId!=null && deptId!=0)
 				{
-					query.setParameter("deptId", deptId);
+					query.setInteger("deptId", deptId);
 				}
 				
 				if(functionaryId!=null && functionaryId!=0)
 				{
-					query.setParameter("functionaryId", functionaryId);
+					query.setInteger("functionaryId", functionaryId);
 				}
 				
 				desgMstr=(List<Designation>)query.list();

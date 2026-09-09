@@ -1,4 +1,4 @@
-import { mutationTemplate } from "../../common/mutationTemplate";
+import { useMutation } from "react-query";
 import ApplicationUpdateActionsCND from "../../services/molecules/CND/ApplicationUpdateActionsCND";
 
 /**
@@ -12,9 +12,7 @@ import ApplicationUpdateActionsCND from "../../services/molecules/CND/Applicatio
 const useCndApplicationAction = (tenantId) => {
   // Create and return a mutation function that will call ApplicationUpdateActionsCND
   // when invoked with application data
-  return mutationTemplate({
-    mutationFn: (applicationData) => ApplicationUpdateActionsCND(applicationData, tenantId)
-  });
+  return useMutation((applicationData) => ApplicationUpdateActionsCND(applicationData, tenantId));
 };
 
 export default useCndApplicationAction;

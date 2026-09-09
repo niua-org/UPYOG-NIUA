@@ -48,10 +48,10 @@
 
 package org.egov.infra.microservice.models;
 
-import jakarta.validation.constraints.NotNull;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.Length;
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -69,7 +69,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @EqualsAndHashCode
 public class PaymentWorkflow {
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @Length(min = 1)
     private String paymentId;
@@ -77,11 +77,11 @@ public class PaymentWorkflow {
     @NotNull
     private PaymentAction action;
 
-    @SanitizeHtml
+    @SafeHtml
     @NotNull
     @Length(min = 1)
     private String tenantId;
-    @SanitizeHtml
+    @SafeHtml
     private String reason;
     private JsonNode additionalDetails;
 

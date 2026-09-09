@@ -44,8 +44,4 @@
   ~
   ~   In case of any queries, you can reach eGovernments Foundation at contact@egovernments.org.
   ~
-  --%><%--
-  LTS Migration Fix (Struts 7 OGNL): HashMap entries are not readable as
-  listKey/listValue. Use #s['bankBranchName'] / #s['bankBranchId'] so Fund → Bank
-  AJAX (BTB, cheque assignment, direct bank payment) returns JSON options.
-  --%>{ "ResultSet": { "Result":[<s:iterator var="s" value="bankBranchList" status="status">    {"Text":"<s:property value="%{#s['bankBranchName']}" />", "Value":"<s:property value="%{#s['bankBranchId']}" />"}<s:if test="!#status.last">,</s:if></s:iterator>] } }
+  --%>{ "ResultSet": { "Result":[<s:iterator var="s" value="bankBranchList" status="status">    {"Text":"<s:property value="%{bankBranchName}" />", "Value":"<s:property value="%{bankBranchId}" />"}<s:if test="!#status.last">,</s:if></s:iterator>] } }

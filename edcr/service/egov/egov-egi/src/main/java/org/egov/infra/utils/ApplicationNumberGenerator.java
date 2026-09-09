@@ -50,6 +50,7 @@ package org.egov.infra.utils;
 
 import org.egov.infra.persistence.utils.DatabaseSequenceCreator;
 import org.egov.infra.persistence.utils.DatabaseSequenceProvider;
+import org.hibernate.exception.SQLGrammarException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,7 +87,7 @@ public class ApplicationNumberGenerator {
         Serializable sequenceNumber;
         try {
             sequenceNumber = databaseSequenceProvider.getNextSequence(sequenceName);
-        } catch (Exception e) {
+        } catch (SQLGrammarException e) {
             databaseSequenceCreator.createSequence(sequenceName);
             sequenceNumber = databaseSequenceProvider.getNextSequence(sequenceName);
         }

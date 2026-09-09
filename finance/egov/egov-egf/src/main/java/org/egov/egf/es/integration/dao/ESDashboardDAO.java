@@ -1,11 +1,11 @@
 package org.egov.egf.es.integration.dao;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +27,7 @@ public class ESDashboardDAO {
             LOGGER.debug("ESDashboardDAO | getRolloutAdoptionData");
         session = getCurrentSession();
         String query = this.getRolloutAdoptionQuery();
-        final Query qry = session.createNativeQuery(query);
+        final Query qry = session.createSQLQuery(query);
         Object[] rollOutDatas = (Object[]) qry.uniqueResult();
         return rollOutDatas;
     }

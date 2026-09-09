@@ -78,7 +78,7 @@ public class EmployeeGrievanceTypeService {
     }
 
     public List<EmployeeGrievanceType> findAll() {
-        return employeeGrievanceTypeRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return employeeGrievanceTypeRepository.findAll(new Sort(Sort.Direction.ASC, "name"));
     }
 
     public EmployeeGrievanceType findByName(String name) {
@@ -90,7 +90,7 @@ public class EmployeeGrievanceTypeService {
     }
 
     public EmployeeGrievanceType findOne(Long id) {
-        return employeeGrievanceTypeRepository.findById(id).orElse(null);
+        return employeeGrievanceTypeRepository.findOne(id);
     }
 
     public List<EmployeeGrievanceType> search(EmployeeGrievanceType employeeGrievanceType) {

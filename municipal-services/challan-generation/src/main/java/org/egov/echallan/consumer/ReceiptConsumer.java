@@ -8,7 +8,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
-import java.util.Map;
+import java.util.HashMap;
 
 
 
@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class ReceiptConsumer {
 
-    private final PaymentUpdateService paymentUpdateService;
+    private PaymentUpdateService paymentUpdateService;
 
     @Autowired
     public ReceiptConsumer(PaymentUpdateService paymentUpdateService) {
@@ -24,11 +24,11 @@ public class ReceiptConsumer {
     }
 
     @KafkaListener(topics = {"${kafka.topics.receipt.create}"},concurrency = "${kafka.consumer.config.concurrency.count}")
-    public void listen(final Map<String, Object> messagePayload, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+    public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
         try {
-        paymentUpdateService.process(messagePayload);
+        paymentUpdateService.process(record);
         } catch (final Exception e) {
-            log.error("Error while listening to value: " + messagePayload + " on topic: " + topic + ": ", e.getMessage());
+            log.error("Error while listening to value: " + record + " on topic: " + topic + ": ", e.getMessage());
         }
     }
 }

@@ -19,11 +19,11 @@ const InboxLinks = () => {
   );
 
   return (
-    // <Card className="employeeCard filter inboxLinks">
+    // <Card style={{ paddingRight: 0, marginTop: 0 }} className="employeeCard filter inboxLinks">
     <Card className="employeeCard filter inboxLinks">
       <div className="complaint-links-container">
         {GetLogo()}
-        {/* <div className="body"> */}
+        {/* <div style={{ marginLeft: "unset", paddingLeft: "0px" }} className="body"> */}
         {/* <div className="body">
           {links.map(({ link, text, hyperlink = false, roles = [] }, index) => {
             return (

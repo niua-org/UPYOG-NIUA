@@ -8,7 +8,6 @@ import PaymentDetails from "./PaymentDetails";
 import Search from "./Search";
 import SearchApp from "./SearchApp";
 import UlbAssesment from "./UlbAssesment";
-import "../../css/pt-inline.css";
 
 
 const EmployeeApp = ({ path, url, userType }) => {
@@ -146,7 +145,7 @@ const EmployeeApp = ({ path, url, userType }) => {
       },
     ];
   
-    return <BreadCrumb className={`${isMobile ? "pt-employee-breadcrumb-mobile" : ""}`} spanStyle={{maxWidth:"min-content"}} crumbs={crumbs} />;
+    return <BreadCrumb style={isMobile?{display:"flex"}:{}}  spanStyle={{maxWidth:"min-content"}} crumbs={crumbs} />;
   }
 
   const NewApplication = Digit?.ComponentRegistryService?.getComponent("PTNewApplication");

@@ -202,12 +202,12 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
                     </PopUp>
                 ) : null}
                 {!isTableDataLoading && tableData?.display ? (
-                    <Card className="cnd-report-search-app-card">
+                    <Card style={{ marginTop: 20 }}>
                         {
                             t(tableData?.display)
                                 .split("\\n")
                                 .map((text, index) => (
-                                    <p key={index} className="cnd-report-search-app-text-center">
+                                    <p key={index} style={{ textAlign: "center" }}>
                                         {text}
                                     </p>
                                 ))
@@ -236,20 +236,20 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
                 </SearchForm>}
 
             {!isTableDataLoading && tableData?.display ? (
-                <Card className="cnd-report-search-app-card">
+                <Card style={{ marginTop: 20 }}>
                     {
                         t(tableData?.display)
                             .split("\\n")
                             .map((text, index) => (
-                                <p key={index} className="cnd-report-search-app-text-center">
+                                <p key={index} style={{ textAlign: "center" }}>
                                     {text}
                                 </p>
                             ))
                     }
                 </Card>
             ) : !isTableDataLoading ? (
-            <div className="cnd-report-search-app-flex-col">
-                <div className="cnd-report-search-app-align-self-end">
+            <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ alignSelf: "flex-end", marginBottom: "5px" }}>
                     <MultiLink
                         className="multilinkWrapper"
                         onHeadClick={() => setIsDisplayDownloadMenu(!isDisplayDownloadMenu)}
@@ -260,7 +260,7 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
                         reportStyles={{"position":"relative"}}
                     />
                 </div>
-            <div className="report-scroll-container cnd-report-search-app-scroll-container">
+            <div className="report-scroll-container" style={{ overflowX: "auto", width: "100%", display: "block" }}>
                 <Table
                 tableRef={tableRef}
                 t={t}

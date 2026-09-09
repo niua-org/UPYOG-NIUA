@@ -24,9 +24,9 @@ public class IdGenRepository {
 
 
 
-    private final RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
-    private final StreetVendingConfiguration config;
+    private StreetVendingConfiguration config;
 
     @Autowired
     public IdGenRepository(RestTemplate restTemplate, StreetVendingConfiguration config) {

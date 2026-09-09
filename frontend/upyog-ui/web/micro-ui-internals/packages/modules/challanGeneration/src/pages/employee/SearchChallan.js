@@ -122,7 +122,9 @@ const SearchChallan = (props) => {
         accessor: (row) => {
           const formattedStatus = row?.applicationStatus.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
           return (
-            <span className="cell-text cg-status-green">{formattedStatus}</span>
+            <span className="cell-text" style={{ color: "green" }}>
+              {formattedStatus}
+            </span>
           );
         },
       },
@@ -178,7 +180,9 @@ const SearchChallan = (props) => {
               <div className="surveydetailsform-wrapper">
                 <label>Mobile No</label>
                 <div className="field-container">
-                    <span className="citizen-card-input citizen-card-input--front cg-flex-none">+91</span>
+                  <span className="citizen-card-input citizen-card-input--front" style={{ flex: "none" }}>
+                    +91
+                  </span>
                   <TextInput
                     name="mobileNumber"
                     type="text"
@@ -213,9 +217,13 @@ const SearchChallan = (props) => {
               totalRecords={9}
               columns={columns}
               getCellProps={(cellInfo) => {
-                const classes = ["cg-table-cell"];
-                if (cellInfo.column.Header === t("ES_INBOX_APPLICATION_NO")) classes.push("cg-table-minwide");
-                return { className: classes.join(" ") };
+                return {
+                  style: {
+                    minWidth: cellInfo.column.Header === t("ES_INBOX_APPLICATION_NO") ? "240px" : "",
+                    padding: "20px 18px",
+                    fontSize: "16px",
+                  },
+                };
               }}
               currentPage={getValues("offset") / getValues("limit")}
               pageSizeLimit={getValues("limit")}

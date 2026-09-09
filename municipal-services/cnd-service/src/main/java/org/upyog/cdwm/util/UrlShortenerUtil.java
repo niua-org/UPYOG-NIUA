@@ -2,29 +2,24 @@ package org.upyog.cdwm.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.util.HashMap;
 
 @Slf4j
 @Component
 public class UrlShortenerUtil {
 
-    private final RestTemplate restTemplate;
+    @Autowired
+    private RestTemplate restTemplate;
 
-    private final String urlShortnerHost;
+    @Value("${egov.url.shortner.host}")
+    private String urlShortnerHost;
 
-    private final String urShortnerPath;
-
-    public UrlShortenerUtil(RestTemplate restTemplate,
-            @Value("${egov.url.shortner.host}") String urlShortnerHost,
-            @Value("${egov.url.shortner.endpoint}") String urShortnerPath) {
-        this.restTemplate = restTemplate;
-        this.urlShortnerHost = urlShortnerHost;
-        this.urShortnerPath = urShortnerPath;
-    }
+    @Value("${egov.url.shortner.endpoint}")
+    private String urShortnerPath;
 
     public String getShortenedUrl(String url){
 
@@ -35,7 +30,7 @@ public class UrlShortenerUtil {
         String res = restTemplate.postForObject(builder.toString(), body, String.class);
 
         if(StringUtils.isEmpty(res)){
-            log.error("URL_SHORTENING_ERROR", "Unable to shorten url: " + url);
+            log.error("URL_SHORTENING_ERROR", "Unable to shorten url: " + url); ;
             return url;
         }
         else return res;

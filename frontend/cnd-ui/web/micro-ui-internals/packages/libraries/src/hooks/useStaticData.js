@@ -1,7 +1,7 @@
-import { queryTemplate } from "../common/queryTemplate";
+import { useQuery } from "react-query";
 
 const useStaticData = (tenantId) => {
-    return queryTemplate({ queryKey: ["MODULE_LEVEL_HOME_PAGE_STATIC_DATA", tenantId], queryFn: () => Digit.MDMSService.getStaticDataJSON(tenantId) });
+    return useQuery(["MODULE_LEVEL_HOME_PAGE_STATIC_DATA", tenantId], () => Digit.MDMSService.getStaticDataJSON(tenantId));
   };
 
 export default useStaticData;

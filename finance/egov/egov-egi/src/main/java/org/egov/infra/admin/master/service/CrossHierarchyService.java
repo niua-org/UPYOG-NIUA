@@ -92,7 +92,7 @@ public class CrossHierarchyService {
         for (Boundary existingBoundary : existingBoundaries) {
             List<CrossHierarchy> existingCrossHierarchy = getAllByParentAndChildBoundaryId(boundary.getId(), existingBoundary.getId());
             if (!existingCrossHierarchy.isEmpty())
-                crossHierarchyRepository.deleteAll(existingCrossHierarchy);
+                crossHierarchyRepository.delete(existingCrossHierarchy);
         }
         for (Boundary mappedBoundary : new HashSet<>(mappedBoundaries)) {
             List<CrossHierarchy> existingCrossHierarchy = getAllByParentAndChildBoundaryId(boundary.getId(), mappedBoundary.getId());
@@ -129,8 +129,7 @@ public class CrossHierarchyService {
     }
 
     public CrossHierarchy findById(Long id) {
-        // LTS Migration Fix (Spring Data 3): findOne(id) was removed; findById returns Optional.
-        return crossHierarchyRepository.findById(id).orElse(null);
+        return crossHierarchyRepository.findOne(id);
     }
 
     public List<Boundary> findChildBoundariesByParentBoundary(String boundaryTypeName, String hierarchyTypeName,

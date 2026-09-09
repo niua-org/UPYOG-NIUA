@@ -49,20 +49,19 @@
 package org.egov.infra.workflow.matrix.entity;
 
 import org.egov.infra.persistence.entity.AbstractPersistable;
+import org.hibernate.validator.constraints.SafeHtml;
 
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import jakarta.validation.constraints.NotNull;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
-import org.egov.infra.validation.SanitizeHtml;
 
 import static org.egov.infra.workflow.matrix.entity.WorkFlowMatrix.SEQ_WF_MATRIX;
 
@@ -77,41 +76,41 @@ public class WorkFlowMatrix extends AbstractPersistable<Long> implements Cloneab
     @GeneratedValue(generator = SEQ_WF_MATRIX, strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @SanitizeHtml
+    @SafeHtml
     private String department;
 
     @NotNull
-    @SanitizeHtml
+    @SafeHtml
     private String objectType;
 
-    @SanitizeHtml
+    @SafeHtml
     private String currentState;
 
-    @SanitizeHtml
+    @SafeHtml
     private String currentStatus;
 
-    @SanitizeHtml
+    @SafeHtml
     private String pendingActions;
 
-    @SanitizeHtml
+    @SafeHtml
     private String currentDesignation;
 
-    @SanitizeHtml
+    @SafeHtml
     private String additionalRule;
 
-    @SanitizeHtml
+    @SafeHtml
     private String nextState;
 
-    @SanitizeHtml
+    @SafeHtml
     private String nextAction;
 
-    @SanitizeHtml
+    @SafeHtml
     private String nextDesignation;
 
-    @SanitizeHtml
+    @SafeHtml
     private String nextStatus;
 
-    @SanitizeHtml
+    @SafeHtml
     private String validActions;
 
     private BigDecimal fromQty;

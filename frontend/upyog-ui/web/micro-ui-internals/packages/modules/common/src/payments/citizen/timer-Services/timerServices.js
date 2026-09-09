@@ -2,26 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", setTime }) => {
-
-  /* Initialize with timerValues or fallback to 0 */
-  const [timeRemaining, setTimeRemaining] = useState(0); 
+  const [timeRemaining, setTimeRemaining] = useState(0); // Initialize with `timerValues`
   const [showToast, setShowToast] = useState(null);
-  const [hasFetched, setHasFetched] = useState(false); /* To track if data has been fetched once */
-
-
+  const [hasFetched, setHasFetched] = useState(false); // To track if data has been fetched once
+  
   // Refetch logic for CHB (Community Hall Booking)
   const { refetch } = Digit.Hooks.chb.useChbSlotSearch({
     tenantId: SlotSearchData?.tenantId,
     filters: {
       bookingId: SlotSearchData?.bookingId,
-      draftId: SlotSearchData?.draftId,
-      venueCode: SlotSearchData?.venueCode,
-      bookingStartDate: SlotSearchData?.bookingSlotDetails?.[0]?.bookingDate,
-      bookingEndDate: SlotSearchData?.bookingSlotDetails?.[0]?.bookingDate,
-      unitCode: SlotSearchData?.bookingSlotDetails?.[0]?.unitCode,
+      communityHallCode: SlotSearchData?.communityHallCode,
+      bookingStartDate: SlotSearchData?.bookingStartDate,
+      bookingEndDate: SlotSearchData?.bookingEndDate,
+      hallCode: SlotSearchData?.hallCode,
       isTimerRequired: true,
-      fromTime: SlotSearchData?.bookingSlotDetails?.[0]?.bookingFromTime,
-      toTime: SlotSearchData?.bookingSlotDetails?.[0]?.bookingToTime,
     },
     enabled: false,
   });
@@ -34,24 +28,23 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
       try {
         if (businessService === "adv-services") {
           // Prepare form data for Advertisement Service
-          const formdata = {
-            advertisementSlotSearchCriteria: SlotSearchData?.cartDetails.map((item) => ({
-              bookingId: SlotSearchData?.bookingId,
-              addType: item?.addType,
-              bookingStartDate: item?.bookingDate,
-              bookingEndDate: item?.bookingDate,
-              faceArea: item?.faceArea,
-              tenantId: SlotSearchData?.tenantId,
-              location: item?.location,
-              nightLight: item?.nightLight,
-              isTimerRequired: true,
-            })),
-          };
+            const formdata = {
+              advertisementSlotSearchCriteria:SlotSearchData?.cartDetails.map((item) => ({
+                bookingId: SlotSearchData?.bookingId,
+                addType: item?.addType,
+                bookingStartDate: item?.bookingDate,
+                bookingEndDate: item?.bookingDate,
+                faceArea: item?.faceArea,
+                tenantId: SlotSearchData?.tenantId,
+                location: item?.location,
+                nightLight: item?.nightLight,
+                isTimerRequired: true,
+              })),
+            };
           // Fetching data for Advertisement Service
           const result = await slotSearchData.mutateAsync(formdata);
           const isSlotBooked = result?.advertisementSlotAvailabiltityDetails?.some((slot) => slot.slotStaus === "BOOKED");
-          /* Extract timerValue as top-level property per backend contract */
-          const timerValue = result?.timerValue;
+          const timerValue = result?.advertisementSlotAvailabiltityDetails[0].timerValue;
 
           if (isSlotBooked) {
             setShowToast({ error: true, label: t("ADS_ADVERTISEMENT_ALREADY_BOOKED") });
@@ -76,15 +69,15 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
       }
     };
 
-    /* Only fetch if timeRemaining is 0 and data hasn't been fetched before */
+    // Only fetch if timeRemaining is 0 and data hasn't been fetched before
     if (timeRemaining === 0 && !hasFetched) {
       fetchSlotData();
-      setHasFetched(true); /* Mark that the data has been fetched once */
+      setHasFetched(true); // Mark that the data has been fetched once
     }
 
   }, [businessService, SlotSearchData, refetch, t, timeRemaining, hasFetched, slotSearchData]);
 
-  /* Timer decrement logic (every second) */
+  // Timer decrement logic (every second)
   useEffect(() => {
     if (timeRemaining > 0) {
       const interval = setInterval(() => {
@@ -96,12 +89,12 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
           return prevTime - 1;
         });
       }, 1000);
-      setTime(timeRemaining);
-      /* Cleanup interval when the timer is cleared or component unmounts */
+       setTime(timeRemaining);
+      // Cleanup interval when the timer is cleared or component unmounts
       return () => clearInterval(interval);
     }
   }, [timeRemaining]);
-
+    
   // Toast cleanup (hide after 2 seconds)
   useEffect(() => {
     if (showToast) {
@@ -123,18 +116,18 @@ const TimerServices = ({ businessService, t, timerValues, SlotSearchData = "", s
   return (
     <div>
       {t("CS_TIME_REMAINING")}: <span className="astericColor">{formatTime(timeRemaining)}</span>
-
+      
       {/* Show Toast Message */}
       {showToast && (
-        <Toast
-          error={showToast.error}
-          warning={showToast.warning}
-          label={t(showToast.label)}
-          onClose={() => {
-            setShowToast(null);
-          }}
-        />
-      )}
+          <Toast
+            error={showToast.error}
+            warning={showToast.warning}
+            label={t(showToast.label)}
+            onClose={() => {
+              setShowToast(null);
+            }}
+          />
+        )}
     </div>
   );
 };

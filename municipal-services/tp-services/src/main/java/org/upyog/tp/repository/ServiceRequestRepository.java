@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.tracer.model.ServiceCallException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -14,10 +15,12 @@ import java.util.Map;
 @Slf4j
 public class ServiceRequestRepository {
 
-    private final ObjectMapper mapper;
+    private ObjectMapper mapper;
 
-    private final RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
+
+    @Autowired
     public ServiceRequestRepository(ObjectMapper mapper, RestTemplate restTemplate) {
         this.mapper = mapper;
         this.restTemplate = restTemplate;

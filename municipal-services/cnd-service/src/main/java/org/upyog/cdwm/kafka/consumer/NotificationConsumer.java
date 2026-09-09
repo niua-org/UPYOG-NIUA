@@ -1,7 +1,8 @@
 package org.upyog.cdwm.kafka.consumer;
 
-import java.util.Map;
+import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -25,19 +26,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NotificationConsumer {
 
-	private final CNDNotificationService notificationService;
+	@Autowired
+	private CNDNotificationService notificationService;
 
-	private final ObjectMapper mapper;
-
-	public NotificationConsumer(CNDNotificationService notificationService, ObjectMapper mapper) {
-		this.notificationService = notificationService;
-		this.mapper = mapper;
-	}
+	@Autowired
+	private ObjectMapper mapper;
 
 	 /**
      * Listens to Kafka topics for CND application events and processes notifications.
      *
-     * @param consumerRecord The Kafka message payload containing application details.
+     * @param record The Kafka message payload containing application details.
      * @param topic  The name of the Kafka topic from which the message was received.
      * 
      * This method:
@@ -48,14 +46,14 @@ public class NotificationConsumer {
      */
 	
 	@KafkaListener(topics = { "${persister.update.cnd.service.topic}", "${persister.create.cnd.service.topic}","${persister.create.cnd.service.with.profile.topic}" })
-	public void listen(final Map<String, Object> consumerRecord, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+	public void listen(final HashMap<String, Object> record, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
 
 		CNDApplicationRequest cndRequest = new CNDApplicationRequest();
 		try {
 
-			cndRequest = mapper.convertValue(consumerRecord, CNDApplicationRequest.class);
+			cndRequest = mapper.convertValue(record, CNDApplicationRequest.class);
 		} catch (final Exception e) {
-			log.error("Error while processing cnd notification to value: " + consumerRecord + " on topic: " + topic + ": " + e);
+			log.error("Error while processing cnd notification to value: " + record + " on topic: " + topic + ": " + e);
 		}
 		
 		String applicationStatus = cndRequest.getCndApplication().getApplicationStatus();

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.upyog.rs.config.RequestServiceConfiguration;
@@ -32,31 +33,39 @@ import digit.models.coremodels.RequestInfoWrapper;
 @Service
 public class WorkflowService {
 
-	private final RequestServiceConfiguration configs;
+	@Autowired
+	private RequestServiceConfiguration configs;
 
-	private final ServiceRequestRepository restRepo;
+	@Autowired
+	private ServiceRequestRepository restRepo;
 
-	private final ObjectMapper mapper;
+	@Autowired
+	private ObjectMapper mapper;
 
-	private final ServiceRequestRepository serviceRequestRepository;
+	@Autowired
+	ServiceRequestRepository serviceRequestRepository;
 
-	public WorkflowService(RequestServiceConfiguration configs, ServiceRequestRepository restRepo,
-			ObjectMapper mapper, ServiceRequestRepository serviceRequestRepository) {
-		this.configs = configs;
-		this.restRepo = restRepo;
-		this.mapper = mapper;
-		this.serviceRequestRepository = serviceRequestRepository;
-	}
-
+/*	public State createWorkflowStatus(WaterTankerBookingRequest waterTankerRequest) {
+		
+			ProcessInstance processInstance = getProcessInstanceForRS(waterTankerRequest.getWaterTankerBookingDetail(),
+					waterTankerRequest.getRequestInfo());
+			ProcessInstanceRequest workflowRequest = new ProcessInstanceRequest(waterTankerRequest.getRequestInfo(),
+					Collections.singletonList(processInstance));
+			State state = callWorkFlow(workflowRequest);
+			
+			return state; 
+		
+	}*/
+	
 	public State updateWorkflowStatus(PaymentRequest paymentRequest, WaterTankerBookingRequest waterTankerRequest) {
 	    ProcessInstance processInstance;
 	    RequestInfo requestInfo;
 
 	    if (paymentRequest != null) {
-	        processInstance = getProcessInstanceForRS(paymentRequest, null);
+	        processInstance = getProcessInstanceForRS(paymentRequest, null, null);
 	        requestInfo = paymentRequest.getRequestInfo();
 	    } else if (waterTankerRequest != null) {
-	        processInstance = getProcessInstanceForRS(null, waterTankerRequest.getWaterTankerBookingDetail());
+	        processInstance = getProcessInstanceForRS(null, waterTankerRequest.getWaterTankerBookingDetail(), waterTankerRequest.getRequestInfo());
 	        requestInfo = waterTankerRequest.getRequestInfo();
 	    } else {
 	        throw new IllegalArgumentException("Both PaymentRequest and WaterTankerBookingRequest cannot be null");
@@ -71,10 +80,10 @@ public class WorkflowService {
 		RequestInfo requestInfo;
 
 		if (paymentRequest != null) {
-			processInstance = getProcessInstanceForMTRS(paymentRequest, null);
+			processInstance = getProcessInstanceForMTRS(paymentRequest, null, null);
 			requestInfo = paymentRequest.getRequestInfo();
 		} else if (mobileToiletRequest != null) {
-			processInstance = getProcessInstanceForMTRS(null, mobileToiletRequest.getMobileToiletBookingDetail());
+			processInstance = getProcessInstanceForMTRS(null, mobileToiletRequest.getMobileToiletBookingDetail(), mobileToiletRequest.getRequestInfo());
 			requestInfo = mobileToiletRequest.getRequestInfo();
 		} else {
 			throw new IllegalArgumentException("Both PaymentRequest and WaterTankerBookingRequest cannot be null");
@@ -85,7 +94,35 @@ public class WorkflowService {
 	}
 
 
-	private ProcessInstance getProcessInstanceForRS(PaymentRequest paymentRequest, WaterTankerBookingDetail application) {
+	/*private ProcessInstance getProcessInstanceForRS(WaterTankerBookingDetail application, RequestInfo requestInfo) {
+		Workflow workflow = application.getWorkflow();
+
+		ProcessInstance processInstance = new ProcessInstance();
+		processInstance.setBusinessId(application.getBookingNo());
+		processInstance.setAction(workflow.getAction());
+		processInstance.setModuleName(workflow.getModuleName());
+		processInstance.setTenantId(application.getTenantId());
+		processInstance.setBusinessService(workflow.getBusinessService());
+		processInstance.setDocuments(workflow.getDocuments());
+		processInstance.setComment(workflow.getComments());
+
+		if (!CollectionUtils.isEmpty(workflow.getAssignes())) {
+			List<User> users = new ArrayList<>();
+
+			workflow.getAssignes().forEach(uuid -> {
+				User user = new User();
+				user.setUuid(uuid);
+				users.add(user);
+			});
+
+			processInstance.setAssignes(users);
+		}
+
+		return processInstance;
+
+	} */
+	
+	private ProcessInstance getProcessInstanceForRS(PaymentRequest paymentRequest, WaterTankerBookingDetail application, RequestInfo requestInfo) {
 	    ProcessInstance processInstance = new ProcessInstance();
 
 	    if (paymentRequest != null) {
@@ -123,7 +160,7 @@ public class WorkflowService {
 	    return processInstance;
 	}
 
-	private ProcessInstance getProcessInstanceForMTRS(PaymentRequest paymentRequest, MobileToiletBookingDetail application) {
+	private ProcessInstance getProcessInstanceForMTRS(PaymentRequest paymentRequest, MobileToiletBookingDetail application, RequestInfo requestInfo) {
 		ProcessInstance processInstance = new ProcessInstance();
 
 		if (paymentRequest != null) {

@@ -68,10 +68,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -121,7 +119,7 @@ public class BankAccountAction extends JQueryGridActionSupport {
                 .getSession().load(Bankbranch.class, bankBranchId);
         new Date();
         final Bankaccount bankAccount = new Bankaccount();
-        final HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        final HttpServletRequest request = ServletActionContext.getRequest();
         bankAccount.setBankbranch(bankBranch);
         try {
             if (autoBankAccountGLCodeEnabled()) {
@@ -274,7 +272,7 @@ public class BankAccountAction extends JQueryGridActionSupport {
     }
 
     private void populateBankAccountDetail(final Bankaccount bankAccount) {
-        final HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        final HttpServletRequest request = ServletActionContext.getRequest();
         bankAccount.setAccountnumber(request.getParameter("accountnumber"));
         bankAccount.setAccounttype(getAccountType(request
                 .getParameter("glcode")));

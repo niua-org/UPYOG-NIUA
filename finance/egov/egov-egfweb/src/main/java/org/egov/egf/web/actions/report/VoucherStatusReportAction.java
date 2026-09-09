@@ -97,10 +97,11 @@ import org.egov.utils.Constants;
 import org.egov.utils.FinancialConstants;
 import org.egov.utils.ReportHelper;
 import org.egov.utils.VoucherHelper;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
+import com.opensymphony.xwork2.validator.annotations.Validation;
 
 import net.sf.jasperreports.engine.JRException;
 
@@ -112,6 +113,7 @@ import net.sf.jasperreports.engine.JRException;
 				"contentType", "application/xls", "contentDisposition",
 				"no-cache;filename=VoucherStatusReport.xls" }) })
 @ParentPackage("egov")
+@Validation
 public class VoucherStatusReportAction extends BaseFormAction {
 	private static final Logger LOGGER = Logger.getLogger(VoucherSearchAction.class);
 	public List<Map<String, Object>> voucherList;

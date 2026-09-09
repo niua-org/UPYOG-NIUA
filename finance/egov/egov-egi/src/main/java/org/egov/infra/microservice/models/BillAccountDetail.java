@@ -2,9 +2,9 @@ package org.egov.infra.microservice.models;
 
 import java.math.BigDecimal;
 
-import jakarta.validation.constraints.Size;
+import javax.validation.constraints.Size;
 
-import org.egov.infra.validation.SanitizeHtml;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,19 +24,19 @@ import lombok.ToString;
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"id"})
 public class BillAccountDetail {
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("id")
     private String id = null;
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("tenantId")
     private String tenantId = null;
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("billDetailId")
     private String billDetailId = null;
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("demandDetailId")
     private String demandDetailId = null;
@@ -53,7 +53,7 @@ public class BillAccountDetail {
     @JsonProperty("isActualDemand")
     private Boolean isActualDemand = null;
 
-    @SanitizeHtml
+    @SafeHtml
     @Size(max=64)
     @JsonProperty("taxHeadCode")
     private String taxHeadCode = null;
@@ -67,12 +67,12 @@ public class BillAccountDetail {
     @JsonProperty("auditDetails")
     private AuditDetails auditDetails;
     
-    @SanitizeHtml
+    @SafeHtml
     private String glcode;
 
-    @SanitizeHtml
+    @SafeHtml
     private String accountDescription;
-    @SanitizeHtml
+    @SafeHtml
     private String billDetail;
 
     private BigDecimal crAmountToBePaid = BigDecimal.ZERO;

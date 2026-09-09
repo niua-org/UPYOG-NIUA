@@ -1,15 +1,11 @@
 package org.upyog.adv.web.models.events;
 
+import lombok.*;
+import org.springframework.validation.annotation.Validated;
+
 import java.math.BigDecimal;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
+@Validated
 @AllArgsConstructor
 @EqualsAndHashCode
 @Getter
@@ -34,8 +30,11 @@ public class EventDetails {
 	private String address;
 
 	public boolean isEmpty(EventDetails details) {
-		return null == details.getFromDate() || null == details.getToDate() || null == details.getLatitude()
-				|| null == details.getLongitude();
+		if (null == details.getFromDate() || null == details.getToDate() || null == details.getLatitude()
+				|| null == details.getLongitude()) {
+			return true;
+		}
+		return false;
 	}
 
 }

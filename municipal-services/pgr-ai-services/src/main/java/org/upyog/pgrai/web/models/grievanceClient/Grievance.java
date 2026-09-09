@@ -1,4 +1,4 @@
-package org.upyog.pgrai.web.models.grievanceclient;
+package org.upyog.pgrai.web.models.grievanceClient;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

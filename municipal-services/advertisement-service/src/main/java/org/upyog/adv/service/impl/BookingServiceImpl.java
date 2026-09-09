@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,54 +43,36 @@ import digit.models.coremodels.PaymentDetail;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Implementation of booking operations for advertisement slot reservations.
- *
- * <p>This service contains timer-aware slot availability handling, draft cleanup,
- * and booking creation logic that reconciles draft timer holds with final
- * booking identifiers.</p>
- *
- * <p>Timer logic is used to keep slot holds active during payment and to
- * reflect held or booked slots when checking availability.</p>
- */
 @Service
 @Slf4j
 public class BookingServiceImpl implements BookingService {
 
-	private final MdmsUtil mdmsUtil;
-	private final BookingRepository bookingRepository;
-	private final BookingValidator bookingValidator;
-	private final EnrichmentService enrichmentService;
-	private final DemandService demandService;
-	private final PaymentTimerService paymentTimerService;
-	private final ADVEncryptionService encryptionService;
+	@Autowired
+	private MdmsUtil mdmsUtil;
 
-	public BookingServiceImpl(MdmsUtil mdmsUtil, @Lazy BookingRepository bookingRepository,
-			BookingValidator bookingValidator, EnrichmentService enrichmentService, DemandService demandService,
-			PaymentTimerService paymentTimerService, ADVEncryptionService encryptionService) {
-		this.mdmsUtil = mdmsUtil;
-		this.bookingRepository = bookingRepository;
-		this.bookingValidator = bookingValidator;
-		this.enrichmentService = enrichmentService;
-		this.demandService = demandService;
-		this.paymentTimerService = paymentTimerService;
-		this.encryptionService = encryptionService;
-	}
+	@Autowired
+	@Lazy
+	private BookingRepository bookingRepository;
+	@Autowired
+	private BookingValidator bookingValidator;
 
-	/**
-	 * Creates a new advertisement booking and reconciles draft timer holds.
-	 *
-	 * <p>After the booking is persisted, this method updates any existing timer
-	 * entries that were held against a draft id so they reference the final
-	 * booking identifier instead.</p>
-	 *
-	 * @param bookingRequest booking request containing applicant and slot data
-	 * @return created booking details with final identifiers
-	 */
+	@Autowired
+	private EnrichmentService enrichmentService;
+
+	@Autowired
+	private DemandService demandService;
+
+	@Autowired
+	private PaymentTimerService paymentTimerService;
+
+	@Autowired
+	private ADVEncryptionService encryptionService;
+
 	@Override
 	public BookingDetail createBooking(@Valid BookingRequest bookingRequest) {
 		log.info("Create advertisement booking for user : " + bookingRequest.getRequestInfo().getUserInfo().getId());
 		String uuid = bookingRequest.getRequestInfo().getUserInfo().getUuid();
+		// TODO move to util calss 
 		String tenantId = bookingRequest.getBookingApplication().getTenantId().split("\\.")[0];
 		if (bookingRequest.getBookingApplication().getTenantId().split("\\.").length == 1) {
 			throw new CustomException(BookingConstants.INVALID_TENANT,
@@ -113,6 +96,7 @@ public class BookingServiceImpl implements BookingService {
 		bookingRepository.saveBooking(bookingRequest);
 
 		String draftId = bookingRequest.getBookingApplication().getDraftId();
+		// 5
 
 		String bookingId = bookingRequest.getBookingApplication().getBookingId();
 
@@ -127,11 +111,6 @@ public class BookingServiceImpl implements BookingService {
 		     draftIdFromDraft = draftData.get(0).getDraftId(); 
 		}
 
-		/*
-		 * Slot-search stores the draft id in the timer table until the booking is
-		 * created. After enrichment generates the final booking id and booking number,
-		 * the timer rows are moved from draft id to the real booking reference.
-		 */
 		bookingRepository.updateTimerBookingId(bookingId, bookingDetails.getBookingNo(), draftIdFromDraft);
 
 		if (StringUtils.isNotBlank(draftId)) {
@@ -145,6 +124,10 @@ public class BookingServiceImpl implements BookingService {
 	@Override
 	public List<BookingDetail> getBookingDetails(AdvertisementSearchCriteria advertisementSearchCriteria,
 			RequestInfo info) {
+//	BookingValidator.validateSearch(info, advertisementSearchCriteria);
+		List<BookingDetail> bookingDetails = new ArrayList<BookingDetail>();
+//	advertisementSearchCriteria  = addCreatedByMeToCriteria(advertisementSearchCriteria, info);
+
 		log.info("loading data based on criteria" + advertisementSearchCriteria);
 
 		if (advertisementSearchCriteria.getMobileNumber() != null
@@ -166,7 +149,9 @@ public class BookingServiceImpl implements BookingService {
 
 		}
 
-		List<BookingDetail> bookingDetails = bookingRepository.getBookingDetails(advertisementSearchCriteria);
+		bookingDetails = bookingRepository.getBookingDetails(advertisementSearchCriteria);
+		// Fetch remaining timer values for the booking details
+		// paymentTimerService.getRemainingTimerValue(bookingDetails);
 
 		if (CollectionUtils.isEmpty(bookingDetails)) {
 			return bookingDetails;
@@ -179,20 +164,14 @@ public class BookingServiceImpl implements BookingService {
 	@Override
 	public Integer getBookingCount(@Valid AdvertisementSearchCriteria criteria, @NonNull RequestInfo requestInfo) {
 		criteria.setCountCall(true);
-		return bookingRepository.getBookingCount(criteria);
+		Integer bookingCount = 0;
+
+		// criteria = addCreatedByMeToCriteria(criteria, requestInfo);
+		bookingCount = bookingRepository.getBookingCount(criteria);
+
+		return bookingCount;
 	}
 
-	/**
-	 * Checks availability for a single advertisement slot criteria and adjusts
-	 * the response based on currently active timer holds.
-	 *
-	 * <p>Timer-held slots may remain available for the current user but are
-	 * marked booked for other users.</p>
-	 *
-	 * @param criteria slot search criteria
-	 * @param requestInfo request metadata and authenticated user details
-	 * @return availability details after applying timer status updates
-	 */
 	@Override
 	public List<AdvertisementSlotAvailabilityDetail> checkAdvertisementSlotAvailability(
 			AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo) {
@@ -202,7 +181,7 @@ public class BookingServiceImpl implements BookingService {
 		log.info("Fetched availability details: " + availabilityDetails);
 
 		List<AdvertisementSlotAvailabilityDetail> availabilityDetailsResponse = convertToAdvertisementAvailabilityResponse(
-				criteria, availabilityDetails);
+				criteria, availabilityDetails, requestInfo);
 
 		updateSlotAvailaibilityStatusFromTimer(availabilityDetailsResponse, criteria, requestInfo);
 		log.info("Updated availability details: " + availabilityDetailsResponse);
@@ -210,20 +189,8 @@ public class BookingServiceImpl implements BookingService {
 		return availabilityDetailsResponse;
 	}
 	
-	/**
-	 * Evaluates availability for multiple advertisement slot search criteria and
-	 * applies timer holds when necessary.
-	 *
-	 * <p>If any of the requested slot criteria require a timer, existing draft
-	 * timer holds are cleaned up and a new booking timer is inserted for the
-	 * requested availability details.</p>
-	 *
-	 * @param criteriaList list of slot search criteria
-	 * @param requestInfo request metadata and authenticated user details
-	 * @return merged availability details with timer-based booking status applied
-	 */
 	@Override
-	public AdvertisementSlotAvailabilityResponse getAdvertisementSlotAvailability(
+	public List<AdvertisementSlotAvailabilityDetail> getAdvertisementSlotAvailability(
 	        List<AdvertisementSlotSearchCriteria> criteriaList, RequestInfo requestInfo) {
 
 	    List<AdvertisementSlotAvailabilityDetail> allAvailabilityDetails = new ArrayList<>();
@@ -237,35 +204,21 @@ public class BookingServiceImpl implements BookingService {
 	    boolean isTimerRequiredForAnyCriteria = criteriaList.stream()
 	            .anyMatch(criteria -> criteria.getIsTimerRequired());
 	    
-	    boolean slotBookedFlag = setSlotBookedFlag(allAvailabilityDetails);
-	    log.info("Slot booked flag for criteria : " + slotBookedFlag);
-	    if (isTimerRequiredForAnyCriteria) {
-	        paymentTimerService.deleteDataFromTimerAndDraft(requestInfo.getUserInfo().getUuid(), criteriaList.get(0).getDraftId(), criteriaList.get(0).getBookingId());
-	    }
-	    
-	    long timerValue = 0;
+	   boolean slotBookedFlag = setSlotBookedFlag(allAvailabilityDetails);
+	   log.info("Slot booked flag for criteria : " + slotBookedFlag);
+	   if (isTimerRequiredForAnyCriteria) {
+	    bookingRepository.deleteDataFromTimerAndDraft(requestInfo.getUserInfo().getUuid(), criteriaList.get(0).getDraftId(), criteriaList.get(0).getBookingId());
+	   }
 	    if (isTimerRequiredForAnyCriteria && !slotBookedFlag) {
 	        // Insert the timer for all criteria at once
-	        timerValue = paymentTimerService.insertBookingIdForTimer(criteriaList, requestInfo);
-	        log.info("Inserted booking ID for timer for all criteria. Timer value: " + timerValue);
+	        paymentTimerService.insertBookingIdForTimer(criteriaList, requestInfo, allAvailabilityDetails);
+	        log.info("Inserted booking ID for timer for all criteria.");
 	    }
 
-	    String draftId = getDraftId(allAvailabilityDetails, requestInfo);
 	   
-	    return AdvertisementSlotAvailabilityResponse.builder()
-	            .advertisementSlotAvailabiltityDetails(allAvailabilityDetails)
-	            .slotBooked(slotBookedFlag)
-	            .draftId(draftId)
-	            .timerValue(timerValue)
-	            .build();
+	    return allAvailabilityDetails;
 	}
 
-	/**
-	 * Determines whether any slot in the availability response is already booked.
-	 *
-	 * @param details slot availability details to inspect
-	 * @return {@code true} if any slot is booked; otherwise {@code false}
-	 */
 	@Override
 	public boolean setSlotBookedFlag(List<AdvertisementSlotAvailabilityDetail> details) {
 	    // Check if any slot is booked and return true if so
@@ -275,7 +228,8 @@ public class BookingServiceImpl implements BookingService {
 
 
 	private List<AdvertisementSlotAvailabilityDetail> convertToAdvertisementAvailabilityResponse(
-			AdvertisementSlotSearchCriteria criteria, List<AdvertisementSlotAvailabilityDetail> availabiltityDetails) {
+			AdvertisementSlotSearchCriteria criteria, List<AdvertisementSlotAvailabilityDetail> availabiltityDetails,
+			RequestInfo requestInfo) {
 
 		List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse = new ArrayList<>();
 		LocalDate startDate = BookingUtil.parseStringToLocalDate(criteria.getBookingStartDate());
@@ -296,8 +250,9 @@ public class BookingServiceImpl implements BookingService {
 		}
 
 		// Create a slot availability detail for each date
-		totalDates.forEach(date -> availabiltityDetailsResponse
-				.add(createAdvertisementSlotAvailabiltityDetail(criteria, date)));
+		totalDates.forEach(date -> {
+			availabiltityDetailsResponse.add(createAdvertisementSlotAvailabiltityDetail(criteria, date));
+		});
 
 	
 		// Set advertisement status to 'BOOKED' if already booked
@@ -316,17 +271,6 @@ public class BookingServiceImpl implements BookingService {
 
 
 
-	/**
-	 * Updates availability details based on timer-held slot entries from the database.
-	 *
-	 * <p>If a timer entry belongs to the current user and matches the active draft or
-	 * booking id, the slot remains available. Otherwise, it is marked as booked.</p>
-	 *
-	 * @param availabilityDetailsResponse current availability response list
-	 * @param criteria slot search criteria used to query timer entries
-	 * @param requestInfo request metadata and authenticated user details
-	 * @return availability details with timer status updates applied
-	 */
 	public List<AdvertisementSlotAvailabilityDetail> updateSlotAvailaibilityStatusFromTimer(
 			List<AdvertisementSlotAvailabilityDetail> availabilityDetailsResponse,
 			AdvertisementSlotSearchCriteria criteria, RequestInfo requestInfo) { 
@@ -376,13 +320,6 @@ public class BookingServiceImpl implements BookingService {
 
 	}
 	
-	/**
-	 * Resolves the current draft id for the authenticated user.
-	 *
-	 * @param availabiltityDetailsResponse list of availability details (unused for lookup)
-	 * @param requestInfo request metadata and authenticated user details
-	 * @return the current draft id if present, otherwise {@code null}
-	 */
 	@Override
 	public String getDraftId(List<AdvertisementSlotAvailabilityDetail> availabiltityDetailsResponse,
             RequestInfo requestInfo) {
@@ -398,11 +335,12 @@ public class BookingServiceImpl implements BookingService {
 
 	private AdvertisementSlotAvailabilityDetail createAdvertisementSlotAvailabiltityDetail(
 			AdvertisementSlotSearchCriteria criteria, LocalDate date) {
-		return AdvertisementSlotAvailabilityDetail.builder()
+		AdvertisementSlotAvailabilityDetail availabiltityDetail = AdvertisementSlotAvailabilityDetail.builder()
 				.addType(criteria.getAddType()).faceArea(criteria.getFaceArea()).location(criteria.getLocation())
 				.nightLight(criteria.getNightLight()).slotStaus(BookingStatusEnum.AVAILABLE.toString())
 				.tenantId(criteria.getTenantId()).bookingDate(BookingUtil.parseLocalDateToString(date, "yyyy-MM-dd"))
 				.build();
+		return availabiltityDetail;
 	}
 
 	// This method updates booking from the booking number, searches the booking num
@@ -419,10 +357,14 @@ public class BookingServiceImpl implements BookingService {
 		AdvertisementSearchCriteria advertisementSearchCriteria = AdvertisementSearchCriteria.builder()
 				.bookingNo(bookingNo).build();
 		List<BookingDetail> bookingDetails = bookingRepository.getBookingDetails(advertisementSearchCriteria);
-		if (bookingDetails.isEmpty()) {
+		if (bookingDetails.size() == 0) {
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
+
+//		String tenantId = bookingDetails.get(0).getTenantId();		
+//		Object mdmsData = mdmsUtil.mDMSCall(advertisementBookingRequest.getRequestInfo(), tenantId);
+//		bookingValidator.validateUpdate(advertisementBookingRequest.getBookingApplication(), mdmsData, advertisementBookingRequest.getBookingApplication().getBookingStatus());
 
 		convertBookingRequest(advertisementBookingRequest, bookingDetails.get(0));
 
@@ -451,10 +393,14 @@ public class BookingServiceImpl implements BookingService {
 		AdvertisementSearchCriteria advertisementSearchCriteria = AdvertisementSearchCriteria.builder()
 				.bookingNo(bookingNo).build();
 		List<BookingDetail> bookingDetails = bookingRepository.getBookingDetails(advertisementSearchCriteria);
-		if (bookingDetails.isEmpty()) {
+		if (bookingDetails.size() == 0) {
 			throw new CustomException("INVALID_BOOKING_CODE",
 					"Booking no not valid. Failed to update booking status for : " + bookingNo);
 		}
+
+//		String tenantId = bookingDetails.get(0).getTenantId();		
+//		Object mdmsData = mdmsUtil.mDMSCall(advertisementBookingRequest.getRequestInfo(), tenantId);
+//		bookingValidator.validateUpdate(advertisementBookingRequest.getBookingApplication(), mdmsData, advertisementBookingRequest.getBookingApplication().getBookingStatus());
 
 		convertBookingRequest(advertisementBookingRequest, bookingDetails.get(0));
 
@@ -527,21 +473,14 @@ public class BookingServiceImpl implements BookingService {
 		return bookingRepository.getAdvertisementDraftApplications(requestInfo, criteria);
 	}
 
-	/**
-	 * Deletes a draft advertisement booking and removes any associated timer
-	 * mirror entries from Redis.
-	 *
-	 * @param draftId draft id to delete
-	 * @return confirmation message after draft discard
-	 */
 	public String deleteAdvertisementDraft(String draftId) {
 
 		if (StringUtils.isNotBlank(draftId)) {
 			log.info("Deleting draft entry for draft id: " + draftId);
-			paymentTimerService.removeRedisMirrorForDraft(draftId);
 			bookingRepository.deleteDraftApplication(draftId);
 		}
 		return BookingConstants.DRAFT_DISCARDED;
 	}
 
 }
+

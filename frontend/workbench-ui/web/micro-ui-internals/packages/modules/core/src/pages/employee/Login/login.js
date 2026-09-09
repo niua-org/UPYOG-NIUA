@@ -1,6 +1,7 @@
-import { BackButton, Dropdown, FormComposer, FormComposerV2, Loader, Toast } from "@upyog/workbench-ui-react-components";
+import { BackButton, Dropdown, FormComposer, FormComposerV2, Loader, Toast } from "@egovernments/digit-ui-react-components";
 import PropTypes from "prop-types";
 import React, { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 import Background from "../../../components/Background";
 import Header from "../../../components/Header";
 
@@ -26,7 +27,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
   const [showToast, setShowToast] = useState(null);
   const [disable, setDisable] = useState(false);
 
-  const navigate = Digit.Hooks.useCustomNavigate();
+  const history = useHistory();
   // const getUserType = () => "EMPLOYEE" || Digit.UserService.getType();
 
   useEffect(() => {
@@ -54,7 +55,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
       redirectPath = `/${window?.contextPath}/employee/dss/landing/home`;
     }
 
-    navigate(redirectPath);
+    history.replace(redirectPath);
   }, [user]);
 
   const onLogin = async (data) => {
@@ -90,7 +91,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
   };
 
   const onForgotPassword = () => {
-    navigate(`/${window?.contextPath}/employee/user/forgot-password`);
+    history.push(`/${window?.contextPath}/employee/user/forgot-password`);
   };
   const defaultValue = {
     code: Digit.ULBService.getStateId(),
@@ -133,6 +134,14 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
       </FormComposerV2>
       {showToast && <Toast error={true} label={t(showToast)} onClose={closeToast} />}
       <div className="employee-login-home-footer" style={{ backgroundColor: "unset" }}>
+        {/* <img
+          alt="Powered by DIGIT"
+          src={window?.globalConfigs?.getConfig?.("DIGIT_FOOTER_BW")}
+          style={{ cursor: "pointer" }}
+          onClick={() => {
+            window.open(window?.globalConfigs?.getConfig?.("DIGIT_HOME_URL"), "_blank").focus();
+          }}
+        />{" "} */}
       </div>
     </Background>
   );

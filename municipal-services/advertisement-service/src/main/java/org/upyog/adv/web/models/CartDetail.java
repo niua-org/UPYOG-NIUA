@@ -1,7 +1,15 @@
 package org.upyog.adv.web.models;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalTime;
+
 
 import org.upyog.adv.util.BookingUtil;
 import org.upyog.adv.validator.CreateApplicationGroup;
@@ -9,8 +17,7 @@ import org.upyog.adv.validator.CreateApplicationGroup;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.micrometer.core.lang.NonNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,39 +33,41 @@ import lombok.Setter;
  * Keeping cart details separately because it will be treated as booking item in booking
  */
 public class CartDetail {
-
+	
 	@JsonProperty("cartId")
 	private String cartId = null;
-
+	
 	@JsonProperty("bookingId")
-	private String bookingId = null;
-
+	private String bookingId = null; //foreign key
+	
 	@NotBlank(groups = CreateApplicationGroup.class)
 	private String addType;
-
+	
 	@NotBlank(groups = CreateApplicationGroup.class)
 	private String location;
-
+	
 	@NotBlank(groups = CreateApplicationGroup.class)
 	private String faceArea;
-
+	
 	@JsonProperty("nightLight")
-	private Boolean nightLight;
-
+    private Boolean nightLight;  
+	
+	
+	//@NonNull
 	@JsonFormat(pattern = BookingUtil.DATE_FORMAT)
 	private LocalDate bookingDate;
-
-	@NotNull
+	
+	@NonNull
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime bookingFromTime;
-
-	@NotNull
+	
+	@NonNull
 	@JsonFormat(pattern = "HH:mm")
 	private LocalTime bookingToTime;
-
+	
 	@JsonProperty("status")
 	private String status = null;
-
+	
 	private AuditDetails auditDetails;
-
+	
 }

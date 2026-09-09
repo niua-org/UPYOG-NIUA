@@ -4,72 +4,52 @@ import {
   CardSubHeader,
   CardText,
   SubmitBar,
-  Loader,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { useMemo } from "react";
-import styles from "../styles/ESTAssignAstRequiredDoc.module.scss";
-
-const FALLBACK_DOCUMENTS = [
-  { name: "Citizen Request Letter (Accepted PDF)" },
-  { name: "Allotment Letter (Accepted PDF)" },
-  { name: "Signed Deed (Accepted PDF)" },
-];
+import React from "react";
 
 /**
- * Informational wizard step — document list from MDMS step config or Estate.RequiredDocuments.
+ * ESTAssignAstRequiredDoc Component
+ * --------------------------------
+ * This is an informational step that informs the user:
+ * - Which documents are mandatory for asset allotment
+ * - This page is for information only (no user input is collected here)
  */
-const ESTAssignAstRequiredDoc = ({ t, onSelect, config }) => {
-  const { data: mdmsDocuments, isLoading } = Digit.Hooks.useCustomMDMS(
-    Digit.ULBService.getStateId(),
-    "Estate",
-    [{ name: "RequiredDocuments" }],
-    {
-      select: (data) => data?.Estate?.RequiredDocuments || [],
-    }
-  );
 
-  const hasStepDocuments =
-    Array.isArray(config?.requiredDocuments) && config.requiredDocuments.length > 0;
+const ESTAssignAstRequiredDoc = ({ t, config, onSelect, userType, formData }) => {
+  console.log("Info page props:", { t, config, onSelect, userType, formData });
+  
 
-  const documents = useMemo(() => {
-    if (hasStepDocuments) return config.requiredDocuments;
-
-    const active = (mdmsDocuments || []).filter(
-      (doc) => doc.active !== false && doc.active !== "false"
-    );
-    if (active.length > 0) return active;
-
-    return FALLBACK_DOCUMENTS;
-  }, [config, mdmsDocuments, hasStepDocuments]);
-
-  const goNext = () => onSelect(config?.key || "Documents", {});
-
-  if (isLoading && !hasStepDocuments) {
-    return <Loader />;
-  }
+  // 🔹 Go Next Function
+  function goNext() {
+   onSelect("Documents", {});
+}
 
   return (
-    <div className={styles.estAssignAstRequiredDoc}>
+    <React.Fragment>
       <Card>
-        <CardHeader>{t(config?.sectionHeading || "MODULE_EST")}</CardHeader>
+        <CardHeader>{t("MODULE_EST")}</CardHeader>
 
         <div>
-          <CardSubHeader>{t(config?.documentsHeading || "EST_REQUIRED_DOCUMENTS")}</CardSubHeader>
+          <CardSubHeader>{t("EST_REQUIRED_DOCUMENTS")}</CardSubHeader>
 
-          <div className={styles.documentList}>
-            {documents.map((doc, index) => (
-              <CardText key={doc.code || doc.i18nKey || index} className="primaryColor">
-                {doc.order ?? index + 1}. {t(doc.i18nKey || doc.name || doc.label || "")}
-              </CardText>
-            ))}
+          <div style={{ marginTop: "16px" }}>
+            <CardText className="primaryColor">
+              1. Citizen Request Letter (Accepted PDF)
+            </CardText>
+            <CardText className="primaryColor">
+              2. Allotment Letter (Accepted PDF)
+            </CardText>
+            <CardText className="primaryColor">
+              3. Signed Deed (Accepted PDF)
+            </CardText>
           </div>
         </div>
 
-        <span className={styles.submitBarWrap}>
+        <span style={{ marginTop: "24px", display: "block" }}>
           <SubmitBar label={t("COMMON_NEXT")} onSubmit={goNext} />
         </span>
       </Card>
-    </div>
+    </React.Fragment>
   );
 };
 

@@ -1,4 +1,4 @@
-import { queryTemplate } from "../common/queryTemplate";
+import { useQuery } from "react-query";
 import AccessControlService from "../services/elements/Access";
 const useAccessControl = (tenantId) => {
   const getUserRoles = Digit.SessionStorage.get("User")?.info?.roles;
@@ -7,7 +7,7 @@ const useAccessControl = (tenantId) => {
     return role.code;
   });
 
-  const response = queryTemplate({ queryKey: ["ACCESS_CONTROL", tenantId], queryFn: async () => await AccessControlService.getAccessControl(roles), config: {enabled:roles?true:false} });
+  const response = useQuery(["ACCESS_CONTROL", tenantId], async () => await AccessControlService.getAccessControl(roles),{enabled:roles?true:false});
   return response;
 };
 export default useAccessControl;

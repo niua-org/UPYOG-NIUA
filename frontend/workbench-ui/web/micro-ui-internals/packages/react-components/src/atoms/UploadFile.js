@@ -14,6 +14,7 @@ const getCitizenStyles = (value) => {
     citizenStyles = {
       textStyles: {
         whiteSpace: "nowrap",
+        width: "100%",
         overflow: "hidden",
         textOverflow: "ellipsis",
         width: "80%"
@@ -83,7 +84,8 @@ const getCitizenStyles = (value) => {
       },
       tagStyles: {
         height: "auto", 
-        padding: "5px",
+        padding: "5px", 
+        margin: 0,
         width: "100%",
         margin: "5px"
       },

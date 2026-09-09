@@ -49,7 +49,7 @@ package org.egov.services.masters;
 
 import org.egov.commons.Scheme;
 import org.egov.infstr.services.PersistenceService;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 
 import java.util.List;
 
@@ -64,41 +64,21 @@ public class SchemeService extends PersistenceService<Scheme, Integer> {
     }
 
     public List<Scheme> getByFundId(final Integer fundId) {
-        final Query<Scheme> query = getSession().createQuery(" from Scheme where isactive = true and fund.id=:fundId",
-                Scheme.class);
+        final Query query = getSession().createQuery(" from Scheme where isactive = true and fund.id=:fundId");
 
-        query.setParameter("fundId", fundId);
+        query.setInteger("fundId", fundId);
         return query.list();
     }
 
     public Scheme findByCode(final String code) {
-        final Query<Scheme> query = getSession().createQuery(" from Scheme where code = :code ", Scheme.class);
+        final Query query = getSession().createQuery(" from Scheme where code = :code ");
 
-        query.setParameter("code", code);
-        return query.uniqueResult();
+        query.setString("code", code);
+        return (Scheme) query.uniqueResult();
     }
     
     public List<Scheme> getByIsActive() {
-        final Query<Scheme> query = getSession().createQuery(" from Scheme where isactive = true", Scheme.class);
-        return query.list();
-    }
-
-
-    /**
-     * Retrieves all active {@link Scheme} records that have a non-null state code.
-     *
-     * <p>Queries the {@code Scheme} entity for records where {@code isactive} is {@code true}
-     * and {@code stateCode} is not {@code null}. Typically used to populate scheme dropdowns
-     * or filter schemes eligible for state-level operations.</p>
-     *
-     * @return a {@link List} of active {@link Scheme} records with a non-null state code;
-     *         returns an empty list if no matching records are found
-     */
-
-
-    public List<Scheme> getBySchemeCode() {
-        final Query<Scheme> query = getSession().createQuery(
-                " from Scheme where isactive = true and stateCode is not null", Scheme.class);
+        final Query query = getSession().createQuery(" from Scheme where isactive = true");
         return query.list();
     }
 }

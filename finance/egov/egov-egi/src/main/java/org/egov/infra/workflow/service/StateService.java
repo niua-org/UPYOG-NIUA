@@ -79,8 +79,7 @@ public class StateService {
     }
 
     public State getStateById(final Long id) {
-        // LTS Migration Fix (Spring Data 3): findOne(id) was removed; findById returns Optional.
-        return stateRepository.findById(id).orElse(null);
+        return stateRepository.findOne(id);
     }
 
     public Date getMaxCreatedDateByPositionId(final Long posId) {

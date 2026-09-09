@@ -9,7 +9,8 @@ import org.upyog.sv.web.models.StreetVendingDetail;
 import org.upyog.sv.web.models.StreetVendingRequest;
 import org.upyog.sv.web.models.StreetVendingSearchCriteria;
 
-import jakarta.validation.constraints.NotNull;
+import io.micrometer.core.lang.NonNull;
+import org.upyog.sv.web.models.billing.Demand;
 
 public interface StreetVendingService {
 
@@ -25,7 +26,7 @@ public interface StreetVendingService {
 
 	public StreetVendingDetail createStreetVendingDraftApplication(StreetVendingRequest vendingRequest);
 
-	public List<StreetVendingDetail> getStreetVendingDraftApplicationDetails(@NotNull RequestInfo requestInfo,
+	public List<StreetVendingDetail> getStreetVendingDraftApplicationDetails(@NonNull RequestInfo requestInfo,
 			@Valid StreetVendingSearchCriteria streetVendingSearchCriteria);
 
 	public String deleteStreetVendingDraft(String draftId);

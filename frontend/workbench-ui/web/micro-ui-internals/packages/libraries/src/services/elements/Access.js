@@ -10,10 +10,7 @@ const AccessControlService = {
       useCache: true,
       userService: true,
       data: {
-        roleCodes:  [
-        "LOC_ADMIN",
-        "MDMS_ADMIN",
-    ],     // static role codes for now, will be dynamic based on the logged in user
+        roleCodes: roles,
         tenantId: Digit.ULBService.getStateId(),
         actionMaster: "actions-test",
         enabled: true,

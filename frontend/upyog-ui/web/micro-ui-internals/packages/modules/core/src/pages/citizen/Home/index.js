@@ -19,8 +19,7 @@ import { useTranslation } from "react-i18next";
 import {  useLocation } from "react-router-dom";
 import { CitizenSideBar } from "../../../components/TopBarSideBar/SideBar/CitizenSideBar";
 import StaticCitizenSideBar from "../../../components/TopBarSideBar/SideBar/StaticCitizenSideBar";
-// import ChatBot from "./ChatBot";
-import UpyogBot from "./UpyogBot";
+import ChatBot from "./ChatBot";
 const Home = () => {
   const { t } = useTranslation();
   const location = useLocation();
@@ -46,18 +45,11 @@ const Home = () => {
     },
   });
 
-   /* Added below condition inside useEffect because
-      When the Home component renders, if !tenantId is true,
-      it immediately calls navigate(), which tries to update the BrowserRouter's state 
-      while the Home component is still in the middle of rendering.
-   */
-    useEffect(() => {
-      if (!tenantId) {
-        Digit.SessionStorage.get("locale") === null
-          ? navigate(`/upyog-ui/citizen/select-language`)
-          : navigate(`/upyog-ui/citizen/select-location`);
-      }
-  }, [tenantId, navigate]);
+  if (!tenantId) {
+    Digit.SessionStorage.get("locale") === null
+      ? navigate(`/upyog-ui/citizen/select-language`)
+      : navigate(`/upyog-ui/citizen/select-location`);
+  }
 
   const appBannerWebObj = uiHomePage?.appBannerDesktop;
   const appBannerMobObj = uiHomePage?.appBannerMobile;
@@ -246,7 +238,7 @@ useEffect(() => {
         {conditionsToDisableNotificationCountTrigger() ? (
           EventsDataLoading ? (
             <Loader />
-          ) : EventsData?.length > 0 ? (
+          ) : (
             <div className="WhatsNewSection">
               <div className="headSection">
                 <h2>{t(whatsNewSectionObj?.headerLabel)}</h2>
@@ -254,10 +246,9 @@ useEffect(() => {
               </div>
               <WhatsNewCard {...EventsData?.[0]} />
             </div>
-          ) : null
+          )
         ) : null}
-       {/* <ChatBot /> text bot commented as we are using new speech bot*/} 
-       <UpyogBot />
+        <ChatBot/>
       </div>
     </div>
   );

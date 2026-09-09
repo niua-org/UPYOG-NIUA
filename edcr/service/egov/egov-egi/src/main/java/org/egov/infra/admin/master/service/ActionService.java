@@ -70,7 +70,7 @@ public class ActionService {
     }
 
     public Action getActionById(Long id) {
-        return actionRepository.findById(id).orElse(null);
+        return actionRepository.findOne(id);
     }
 
     @Transactional

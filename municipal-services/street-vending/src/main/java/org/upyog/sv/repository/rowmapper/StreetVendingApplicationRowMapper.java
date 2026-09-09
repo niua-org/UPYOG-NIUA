@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Component;
@@ -27,16 +28,11 @@ import org.upyog.sv.web.models.VendorDetail;
 import org.upyog.sv.web.models.common.AuditDetails;
 
 @Component
-@SuppressWarnings({ "java:S3437", "java:S2143", "java:S2638" })
 public class StreetVendingApplicationRowMapper implements ResultSetExtractor<List<StreetVendingDetail>> {
 
-	private final StreetVendingUtil streetVendingUtil;
+	@Autowired
+	private StreetVendingUtil streetVendingUtil;
 
-	public StreetVendingApplicationRowMapper(StreetVendingUtil streetVendingUtil) {
-		this.streetVendingUtil = streetVendingUtil;
-	}
-
-	@SuppressWarnings("java:S2143")
 	public List<StreetVendingDetail> extractData(ResultSet rs) throws SQLException, DataAccessException {
 		Map<String, StreetVendingDetail> streetVendingApplicationMap = new LinkedHashMap<>();
 

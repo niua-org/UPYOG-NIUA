@@ -5,7 +5,6 @@ import { APPLICATION_PATH } from "../../utils";
 import SearchApp from "../employee/SearchApp";
 
 // Main Routing Page used for routing accorss the Water Tanker Module
-import "../../css/wt-inline-auto.css";
 const App = () => {
   const { path, url, ...match } = Digit.Hooks.useModuleBasePath();
   const WTCreate = Digit?.ComponentRegistryService?.getComponent("WTCreate");
@@ -17,23 +16,21 @@ const App = () => {
   const WTCard = Digit.ComponentRegistryService.getComponent("WTCitizenCard");
   const MTCard = Digit.ComponentRegistryService.getComponent("MTCitizenCard");
   const ApplicationDetails = Digit?.ComponentRegistryService?.getComponent("ApplicationDetails");
-  const getInboxInitialState = service => ({
+
+  const getInboxInitialState = (service) => ({
     searchParams: {
-      uuid: {
-        code: "ASSIGNED_TO_ME",
-        name: "ES_INBOX_ASSIGNED_TO_ALL"
-      },
+      uuid: { code: "ASSIGNED_TO_ME", name: "ES_INBOX_ASSIGNED_TO_ALL" },
       services: [service],
       applicationStatus: [],
-      locality: []
-    }
+      locality: [],
+    },
   });
   // Initial state for waterTanker inbox and mobileToilet inbox
   const inboxInitialStateWT = getInboxInitialState("watertanker");
   const inboxInitialStateMT = getInboxInitialState("mobileToilet");
 
   return (
-    <span className="wt-auto-71">
+    <span style={{ width: "100%" }}>
       <AppContainer>
         <BackButton>Back</BackButton>
         <Routes>
@@ -120,4 +117,5 @@ const App = () => {
     </span>
   );
 };
+
 export default App;

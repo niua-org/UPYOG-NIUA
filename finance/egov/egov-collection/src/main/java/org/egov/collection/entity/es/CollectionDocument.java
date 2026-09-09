@@ -48,22 +48,12 @@
 
 package org.egov.collection.entity.es;
 
-/*
- * Migrated from Spring Data ES 2.x to 5.x API (JDK 17 upgrade):
- * - FieldType.String + FieldIndex.not_analyzed → FieldType.Keyword
- * - FieldType.String (analyzed / free-text) → FieldType.Text
- * - FieldIndex enum removed entirely in ES 5+; import dropped
- * - @Document(type=...) attribute removed (mapping types dropped in ES 7)
- *
- * NOTE: This class is excluded from compilation via maven-compiler-plugin <excludes>.
- * It is kept in source form for historical reference and to satisfy the Javadoc tool.
- */
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.Date;
@@ -71,49 +61,49 @@ import java.util.Date;
 import static org.egov.infra.utils.ApplicationConstant.DEFAULT_TIMEZONE;
 import static org.egov.infra.utils.ApplicationConstant.ES_DATE_FORMAT;
 
-@Document(indexName = "receipts")
+@Document(indexName = "receipts", type = "receipts_bifurcation")
 public class CollectionDocument {
 
     @Id
     private String id;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String receiptNumber;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String cityCode;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String billingService;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String paymentMode;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String channel;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String paymentGateway;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String billNumber;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String cityName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String districtName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String regionName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String status;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String cityGrade;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String receiptCreator;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ES_DATE_FORMAT, timezone = DEFAULT_TIMEZONE)
@@ -144,32 +134,31 @@ public class CollectionDocument {
     @Field(type = FieldType.Double)
     private Double currentCess;
 
-    // Free-text fields (analyzed) — mapped to Text, not Keyword
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.String)
     private String installmentFrom;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.String)
     private String installmentTo;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String consumerName;
 
     @Field(type = FieldType.Double)
     private Double reductionAmount;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String consumerCode;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String revenueWard;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ES_DATE_FORMAT, timezone = DEFAULT_TIMEZONE)
     @Field(type = FieldType.Date, format = DateFormat.date_optional_time, pattern = ES_DATE_FORMAT)
     private Date createdDate;
-
-    @Field(type = FieldType.Keyword)
+    
+    @Field(type = FieldType.String, index = FieldIndex.not_analyzed)
     private String consumerType;
-
+    
     @Field(type = FieldType.Integer)
     private Integer conflict;
 

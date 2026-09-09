@@ -1,12 +1,10 @@
 package org.upyog.cdwm.web.models.user;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 import org.upyog.cdwm.web.models.user.enums.AddressType;
 
-import java.time.Instant;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -22,11 +20,8 @@ public class AddressV2 {
     private String tenantId;
     private Long userId;
     private String addressType;
-    @JsonProperty("LastModifiedBy")
-    private Long lastModifiedBy;
-    @JsonProperty("LastModifiedDate")
-    @JsonFormat(shape = JsonFormat.Shape.NUMBER, timezone = "UTC")
-    private Instant lastModifiedDate;
+    private Long LastModifiedBy;
+    private Date LastModifiedDate;
 //    Adding new fields in Address model for profile update as part of V2 api
     private String address2;
     private String houseNumber;

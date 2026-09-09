@@ -62,7 +62,7 @@ import org.egov.infra.admin.master.service.AppConfigValueService;
 import org.egov.infstr.services.PersistenceService;
 import org.egov.infstr.utils.EgovMasterDataCaching;
 import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
+import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Transactional;
@@ -277,16 +277,16 @@ public class ChartOfAccts {
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug(insertQuery);
 
-			persistenceService.getSession().createNativeQuery(insertQuery.toString()).setParameter(1, Integer.parseInt(id))
-					.setParameter(2, removeSingleQuotes(glCode)).setParameter(3, removeSingleQuotes(name))
-					.setParameter(4, removeSingleQuotes(description)).setParameter(5, removeSingleQuotes(isActiveForPosting))
-					.setParameter(6, removeSingleQuotes(parentId)).setParameter(7, removeSingleQuotes(lastModified))
-					.setParameter(8, removeSingleQuotes(modifiedBy)).setParameter(9, removeSingleQuotes(created))
-					.setParameter(10, removeSingleQuotes(purposeid)).setParameter(11, removeSingleQuotes(functionreqd))
-					.setParameter(12, removeSingleQuotes(operation)).setParameter(13, removeSingleQuotes(type))
-					.setParameter(14, removeSingleQuotes(classification)).setParameter(15, removeSingleQuotes(classname))
-					.setParameter(16, removeSingleQuotes(budgetCheckReqd))
-					.setParameter(17, removeSingleQuotes(getMajorCode(glCode))).executeUpdate();
+			persistenceService.getSession().createSQLQuery(insertQuery.toString()).setInteger(0, Integer.parseInt(id))
+					.setString(1, removeSingleQuotes(glCode)).setString(2, removeSingleQuotes(name))
+					.setString(3, removeSingleQuotes(description)).setString(4, removeSingleQuotes(isActiveForPosting))
+					.setString(5, removeSingleQuotes(parentId)).setString(6, removeSingleQuotes(lastModified))
+					.setString(7, removeSingleQuotes(modifiedBy)).setString(8, removeSingleQuotes(created))
+					.setString(9, removeSingleQuotes(purposeid)).setString(10, removeSingleQuotes(functionreqd))
+					.setString(11, removeSingleQuotes(operation)).setString(12, removeSingleQuotes(type))
+					.setString(13, removeSingleQuotes(classification)).setString(14, removeSingleQuotes(classname))
+					.setString(15, removeSingleQuotes(budgetCheckReqd))
+					.setString(16, removeSingleQuotes(getMajorCode(glCode))).executeUpdate();
         } catch (final HibernateException e) {
             LOGGER.error("Exception occured while getting the data  " + e.getMessage(), new HibernateException(e.getMessage()));
         } catch (final TaskFailedException | ParseException e) {
@@ -391,53 +391,53 @@ public class ChartOfAccts {
 
         try {
             int i = 1;
-            pstmt = persistenceService.getSession().createNativeQuery(query.toString());
+            pstmt = persistenceService.getSession().createSQLQuery(query.toString());
 
             if (glCode != null)
-                pstmt.setParameter(i++, glCode);
+                pstmt.setString(i++, glCode);
             if (name != null)
-                pstmt.setParameter(i++, name);
+                pstmt.setString(i++, name);
             if (description != null)
-                pstmt.setParameter(i++, description);
+                pstmt.setString(i++, description);
             if (isActiveForPosting != null)
-                pstmt.setParameter(i++, isActiveForPosting);
+                pstmt.setString(i++, isActiveForPosting);
             if (parentId != null)
-                pstmt.setParameter(i++, parentId);
+                pstmt.setString(i++, parentId);
             if (lastModified != null)
-                pstmt.setParameter(i++, lastModified);
+                pstmt.setString(i++, lastModified);
             if (modifiedBy != null)
-                pstmt.setParameter(i++, modifiedBy);
+                pstmt.setString(i++, modifiedBy);
             if (created != null)
-                pstmt.setParameter(i++, created);
+                pstmt.setString(i++, created);
             if (purposeid != null)
-                pstmt.setParameter(i++, purposeid);
+                pstmt.setString(i++, purposeid);
             if (operation != null)
-                pstmt.setParameter(i++, operation);
+                pstmt.setString(i++, operation);
             if (FIEoperation != null)
-                pstmt.setParameter(i++, FIEoperation);
+                pstmt.setString(i++, FIEoperation);
             if (type != null)
-                pstmt.setParameter(i++, type);
+                pstmt.setString(i++, type);
             if (classname != null)
-                pstmt.setParameter(i++, classname);
+                pstmt.setString(i++, classname);
             if (classification != null)
-                pstmt.setParameter(i++, classification);
+                pstmt.setString(i++, classification);
             if (functionreqd != null)
-                pstmt.setParameter(i++, functionreqd);
+                pstmt.setString(i++, functionreqd);
             if (scheduleId != null)
-                pstmt.setParameter(i++, scheduleId);
+                pstmt.setString(i++, scheduleId);
             if (FIEscheduleId != null)
-                pstmt.setParameter(i++, FIEscheduleId);
+                pstmt.setInteger(i++, FIEscheduleId);
             if (receiptscheduleid != null)
-                pstmt.setParameter(i++, receiptscheduleid);
+                pstmt.setString(i++, receiptscheduleid);
             if (receiptoperation != null)
-                pstmt.setParameter(i++, receiptoperation);
+                pstmt.setString(i++, receiptoperation);
             if (paymentscheduleid != null)
-                pstmt.setParameter(i++, paymentscheduleid);
+                pstmt.setString(i++, paymentscheduleid);
             if (paymentoperation != null)
-                pstmt.setParameter(i++, paymentoperation);
+                pstmt.setString(i++, paymentoperation);
             if (budgetCheckReqd != null)
-                pstmt.setParameter(i++, budgetCheckReqd);
-            pstmt.setParameter(i++, id);
+                pstmt.setString(i++, budgetCheckReqd);
+            pstmt.setString(i++, id);
 
             pstmt.executeUpdate();
         } catch (final HibernateException e) {

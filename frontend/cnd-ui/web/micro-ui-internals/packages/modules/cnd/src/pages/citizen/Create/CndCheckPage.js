@@ -2,6 +2,7 @@
 import {Card,CardHeader,CardSubHeader,CheckBox,LinkButton,Row,StatusTable,SubmitBar, EditIcon} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHistory } from "react-router-dom";
 import { checkForNA, CNDDocumnetPreview, getOrderDocuments } from "../../../utils";
 import ApplicationTable from "../../../components/inbox/ApplicationTable";
 import { cndStyles } from "../../../utils/cndStyles";
@@ -12,9 +13,9 @@ In Parent Component,  we are passing the data as a props coming through params (
 
   const ActionButton = ({ jumpTo }) => {
     const { t } = useTranslation();
-    const navigate = Digit.Hooks.useCustomNavigate();
+    const history = useHistory();
     function routeTo() {
-      navigate(jumpTo);
+      history.push(jumpTo);
     }
     return <LinkButton 
     label={<EditIcon style={cndStyles.editIcon} />}
