@@ -16,6 +16,7 @@ import org.upyog.dashboard.config.DashboardExtractorProperties;
 import org.upyog.dashboard.common.constants.Module;
 import org.upyog.dashboard.extractor.LegacyBatchExtractor;
 import org.upyog.dashboard.model.IngestionResult;
+import org.upyog.dashboard.model.IngestionSchedulerDetail;
 import org.upyog.dashboard.model.LegacyIngestionResponse;
 
 import net.javacrumbs.shedlock.core.LockConfiguration;
@@ -170,6 +171,22 @@ public class LegacyBatchIngestionOrchestrator {
         // Register initial legacy job entry with full range and execution date
         persistenceService.createLegacyJob(jobId, tenantId, moduleName, LocalDate.now(), start, end);
 
+        long startTime = CommonUtils.getCurrentEpochMillis();
+        IngestionSchedulerDetail schedulerDetail = IngestionSchedulerDetail.builder()
+                .schedulerId(jobId)
+                .schedulerName("LEGACY_POPULATE_SCHEDULER")
+                .startTime(startTime)
+                .status(DashboardExtractorConstants.STATUS_RUNNING)
+                .totalRecordsProcessed(0)
+                .successRecordsCount(0)
+                .failureRecordsCount(0)
+                .createdBy(DashboardExtractorConstants.SYSTEM_USER)
+                .createdTime(startTime)
+                .lastModifiedBy(DashboardExtractorConstants.SYSTEM_USER)
+                .lastModifiedTime(startTime)
+                .build();
+        summaryRepository.createSchedulerRun(schedulerDetail);
+
         File generatedExcelFile = null;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DashboardExtractorConstants.DATE_FORMAT);
 
@@ -256,6 +273,7 @@ public class LegacyBatchIngestionOrchestrator {
                 log.info("No records found for legacy extraction job {}. Skipping Excel generation.", jobId);
                 String emptyResponse = "{\"message\": \"No records found for specified date range\"}";
                 persistenceService.updateLegacyJobStatus(jobId, DashboardExtractorConstants.STATUS_SUCCESS, null, emptyResponse);
+                summaryRepository.completeSchedulerRun(jobId, startTime, 0, 0, 0, DashboardExtractorConstants.STATUS_COMPLETED, null);
 
                 // When totalExtracted is 0 (or for any specific calendar date where no data/activity existed in the DB),
                 // MISSED_DATE detail entries are persisted into the ingestion_detail table.
@@ -290,6 +308,7 @@ public class LegacyBatchIngestionOrchestrator {
 
             // Persist the status and fileStoreId into legacy_data_ingestion_detail
             persistenceService.updateLegacyJobStatus(jobId, ingestionResult.getIngestionStatus(), null, responseJson);
+            summaryRepository.completeSchedulerRun(jobId, startTime, (int) totalExtracted, isSuccess ? (int) totalExtracted : 0, isSuccess ? 0 : (int) totalExtracted, isSuccess ? DashboardExtractorConstants.STATUS_COMPLETED : DashboardExtractorConstants.STATUS_FAILED, isSuccess ? null : ingestionResult.getFailureReason());
 
             // Persist per-date detail entries into ingestion_detail
             persistDateWiseDetails(jobId, targetDateDataMap, moduleName, responseJson, isSuccess);
@@ -307,6 +326,7 @@ public class LegacyBatchIngestionOrchestrator {
             log.error("Error executing streaming legacy batch ingestion job {}: {}", jobId, exception.getMessage(), exception);
             String errResponse = "{\"error\": \"" + (exception.getMessage() != null ? exception.getMessage().replace("\"", "'") : "Exception") + "\"}";
             persistenceService.updateLegacyJobStatus(jobId, DashboardExtractorConstants.STATUS_FAILURE, null, errResponse);
+            summaryRepository.completeSchedulerRun(jobId, startTime, 0, 0, 1, DashboardExtractorConstants.STATUS_FAILED, exception.getMessage());
 
             // Persist per-date failure detail entries into ingestion_detail
             persistDateWiseDetails(jobId, targetDateDataMap, moduleName, errResponse, false);
@@ -315,9 +335,9 @@ public class LegacyBatchIngestionOrchestrator {
                     .totalDatesRequested((int) start.until(end.plusDays(1)).getDays())
                     .datesFailed(1)
                     .processedResults(List.of(IngestionResult.builder()
-                                .ingestionStatus(DashboardExtractorConstants.STATUS_FAILURE)
-                                .failureReason(exception.getMessage())
-                                .build()))
+                            .ingestionStatus(DashboardExtractorConstants.STATUS_FAILURE)
+                            .failureReason(exception.getMessage())
+                            .build()))
                     .build();
         } finally {
             if (generatedExcelFile != null && generatedExcelFile.exists()) {
