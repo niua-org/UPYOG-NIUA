@@ -7,519 +7,173 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.upyog.Automation.Base.BaseTest;
-import org.upyog.Automation.Modules.Adv.AdvEmp;
-import org.upyog.Automation.Modules.Asset.AssetApprover;
-import org.upyog.Automation.Modules.Asset.AssetEmp;
-import org.upyog.Automation.Modules.Asset.AssetVerifier;
-import org.upyog.Automation.Modules.CHB.chbEmp;
-import org.upyog.Automation.Modules.ChallanGene.CGEmp;
-import org.upyog.Automation.Modules.CnD.CnDEmp;
-import org.upyog.Automation.Modules.DesludgingService.DelsudgingEmployeeComplete;
-import org.upyog.Automation.Modules.DesludgingService.DelsudgingFstpo;
-import org.upyog.Automation.Modules.DesludgingService.DesludgingAssignPsso;
-import org.upyog.Automation.Modules.DesludgingService.DesludgingEmployeeUpdate;
-import org.upyog.Automation.Modules.EWaste.EWasteEmp;
-import org.upyog.Automation.Modules.EstateManagement.EMEmp;
-import org.upyog.Automation.Modules.GarbageCollection.GCCreate;
-import org.upyog.Automation.Modules.GarbageCollection.GCEmp;
-import org.upyog.Automation.Modules.NDC.NdcEmp;
-import org.upyog.Automation.Modules.OBPAS.OBPASEmp;
-import org.upyog.Automation.Modules.OBPAS.OBPASOcEmp;
-import org.upyog.Automation.Modules.Pet.PetApplicationEmp;
-import org.upyog.Automation.Modules.PropertyTax.PropertyTaxEmp;
-import org.upyog.Automation.Modules.PublicGrievanceRedressal.PgrEmp;
-import org.upyog.Automation.Modules.RequestService.MobileToiletEmp;
-import org.upyog.Automation.Modules.RequestService.TreePruningEmp;
-import org.upyog.Automation.Modules.RequestService.TreePruningVerifier;
-import org.upyog.Automation.Modules.StreetVending.SvEmp;
 import org.upyog.Automation.Modules.TradeLicense.InboxEmpTl;
-import org.upyog.Automation.Modules.TradeLicense.TradeLicenseEmp;
-import org.upyog.Automation.Modules.WaterAndSewerage.SewerageEmp;
-import org.upyog.Automation.Modules.WaterAndSewerage.WaterEmp;
-import org.upyog.Automation.Modules.RequestService.WaterTankerEmployee;
+import org.upyog.Automation.Utils.AutomationConstants;
+import org.upyog.Automation.Utils.CommonModuleExecutor;
 import org.upyog.Automation.Utils.DriverFactory;
 import org.upyog.Automation.Utils.ModuleWrapper;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Common entry point for all employee module tests
- * Routes to appropriate module based on moduleName
+ * Common entry point for all UPYOG employee module tests.
+ *
+ * <p>This class maps employee module identifiers to their corresponding JSON configuration
+ * files and executes them using {@link CommonModuleExecutor}, eliminating duplicate module code.</p>
  */
 @Component
 public class CommonEmployeeTest extends BaseTest {
 
     private static final Logger logger = LoggerFactory.getLogger(CommonEmployeeTest.class);
 
-    @Autowired
-    private SvEmp svEmp;
+    /**
+     * Immutable mapping of employee module identifiers to their respective JSON configuration file paths.
+     */
+    private static final Map<String, String> EMPLOYEE_MODULE_CONFIG_MAP;
+
+    static {
+        Map<String, String> map = new HashMap<>();
+
+        // Street Vending
+        map.put("STREET_VENDING", AutomationConstants.CONFIG_STREET_VENDING_EMPLOYEE);
+
+        // Pet Registration
+        map.put("PET_REGISTRATION", AutomationConstants.CONFIG_PET_EMPLOYEE);
+        map.put("PET_CEMP", AutomationConstants.CONFIG_PET_CEMP_CITIZEN);
+
+        // Trade License
+        map.put("TRADE_LICENSE", AutomationConstants.CONFIG_TRADE_LICENSE_EMPLOYEE);
+
+        // Asset Management
+        map.put("ASSET_MANAGEMENT_SYSTEM", AutomationConstants.CONFIG_ASSET_INITIATOR);
+        map.put("ASSET_MANAGEMENT_SYSTEM_VERIFIER", AutomationConstants.CONFIG_ASSET_VERIFIER);
+        map.put("ASSET_MANAGEMENT_SYSTEM_APPROVER", AutomationConstants.CONFIG_ASSET_APPROVER);
+
+        // Advertisement
+        map.put("ADVERTISEMENT", AutomationConstants.CONFIG_ADV_EMPLOYEE);
+
+        // Property Tax
+        map.put("PROPERTY_TAX", AutomationConstants.CONFIG_PROPERTY_TAX_EMPLOYEE);
+
+        // E-Waste Management
+        map.put("EWASTE_MANAGEMENT_SYSTEM", AutomationConstants.CONFIG_EWASTE_EMPLOYEE);
+
+        // Desludging Services
+        map.put("DESLUDGING_EMPLOYEE_UPDATE", AutomationConstants.CONFIG_DESLUDGING_UPDATE);
+        map.put("DESLUDGING_EMPLOYEE_COMPLETE", AutomationConstants.CONFIG_DESLUDGING_COMPLETE);
+        map.put("DESLUDGING_EMPLOYEE_PSSO", AutomationConstants.CONFIG_DESLUDGING_PSSO);
+        map.put("DESLUDGING_EMPLOYEE_FSTPO", AutomationConstants.CONFIG_DESLUDGING_FSTPO);
+
+        // Online Building Plan Approval System
+        map.put("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM", AutomationConstants.CONFIG_OBPAS_EMPLOYEE);
+        map.put("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC", AutomationConstants.CONFIG_OBPAS_OC_EMPLOYEE);
+
+        // Request Services
+        map.put("WATER_TANKER", AutomationConstants.CONFIG_WATER_TANKER_EMPLOYEE);
+        map.put("WATER_TANKER_VENDOR", AutomationConstants.CONFIG_WATER_TANKER_VENDOR);
+        map.put("TREE_PRUNING", AutomationConstants.CONFIG_TREE_PRUNING_EMPLOYEE);
+        map.put("TREE_PRUNING_VERIFIER", AutomationConstants.CONFIG_TREE_PRUNING_VERIFIER);
+        map.put("MOBILE_TOILET", AutomationConstants.CONFIG_MOBILE_TOILET_EMPLOYEE);
+        map.put("MOBILE_TOILET_VENDOR", AutomationConstants.CONFIG_MOBILE_TOILET_VENDOR);
+
+        // Community Hall Booking
+        map.put("COMMUNITY_HALL_BOOKING", AutomationConstants.CONFIG_CHB_EMPLOYEE);
+        map.put("CHB", AutomationConstants.CONFIG_CHB_EMPLOYEE);
+
+        // Construction and Demolition
+        map.put("CONSTRUCTION_AND_DEMOLITION", AutomationConstants.CONFIG_CND_EMPLOYEE);
+        map.put("CND_EMP", AutomationConstants.CONFIG_CND_EMPLOYEE);
+        map.put("CND_VENDOR", AutomationConstants.CONFIG_CND_VENDOR);
+
+        // Public Grievance Redressal
+        map.put("PUBLIC_GRIEVANCE_REDRESSAL", AutomationConstants.CONFIG_PGR_EMPLOYEE);
+
+        // Water and Sewerage
+        map.put("SEWERAGE_EMP", AutomationConstants.CONFIG_SEWERAGE_EMPLOYEE);
+        map.put("SEWERAGE", AutomationConstants.CONFIG_SEWERAGE_EMPLOYEE);
+        map.put("WATER_EMP", AutomationConstants.CONFIG_WATER_EMPLOYEE);
+        map.put("WATER", AutomationConstants.CONFIG_WATER_EMPLOYEE);
+
+        // Garbage Collection
+        map.put("GARBAGE_COLLECTION", AutomationConstants.CONFIG_GC_EMPLOYEE);
+
+        // Estate Management
+        map.put("ESTATE_MANAGEMENT", AutomationConstants.CONFIG_ESTATE_EMPLOYEE);
+
+        // Challan Generation
+        map.put("CHALLAN_GENERATION", AutomationConstants.CONFIG_CHALLAN_GEN_EMPLOYEE);
+
+        // No Due Certificate
+        map.put("NO_DUE_CERTIFICATE", AutomationConstants.CONFIG_NDC_EMPLOYEE);
+
+        EMPLOYEE_MODULE_CONFIG_MAP = Collections.unmodifiableMap(map);
+    }
 
     @Autowired
-    private PetApplicationEmp petApplicationEmp;
-    
-    @Autowired
-    private TradeLicenseEmp tradeLicenseEmp;
+    private CommonModuleExecutor commonModuleExecutor;
 
-    @Autowired
+    @Autowired(required = false)
     private InboxEmpTl inboxEmpTl;
-    
-    @Autowired
-    private AssetEmp assetEmp;
 
-    @Autowired
-    private AssetVerifier assetVerifier;
-
-    @Autowired
-    private AssetApprover assetApprover;
-
-    @Autowired
-    private AdvEmp advEmp;
-
-    @Autowired
-    private PropertyTaxEmp propertyTaxEmp;
-
-    @Autowired
-    private EWasteEmp eWasteEmp;
-
-    @Autowired
-    private OBPASEmp obpasEmp;
-
-    @Autowired
-    private OBPASOcEmp obpasOcEmp;
-
-    @Autowired
-    private WaterTankerEmployee waterTankerEmployee;
-
-    @Autowired
-    private TreePruningEmp treePruningEmp;
-
-    @Autowired
-    private TreePruningVerifier treePruningVerifier;
-
-    @Autowired
-    private MobileToiletEmp mobileToiletEmp;
-
-    @Autowired
-    private chbEmp chbEmp;
-
-    @Autowired
-    private CnDEmp cndEmp;
-
-    @Autowired
-    private PgrEmp pgrEmp;
-
-    @Autowired
-    private SewerageEmp sewerageEmp;
-
-    @Autowired
-    private WaterEmp waterEmp;
-
-    @Autowired
-    private DesludgingEmployeeUpdate desludgingEmployeeUpdate;
-
-    @Autowired
-    private DelsudgingEmployeeComplete desludgingEmployeeComplete;
-
-    @Autowired
-    private DesludgingAssignPsso desludgingAssignPsso;
-
-    @Autowired
-    private DelsudgingFstpo delsudgingFstpo;
-
-    @Autowired
-    private GCEmp gcEmp;
-
-    @Autowired
-    private EMEmp emEmp;
-
-    @Autowired
-    private CGEmp cgEmp;
-
-    @Autowired
-    private NdcEmp ndcEmp;
-
-
+    /**
+     * Initializes the WebDriver instance for employee portal test execution.
+     *
+     * @param baseUrl the employee portal login URL
+     */
     private void employeeSetUp(String baseUrl) {
         driver = DriverFactory.createChromeDriver();
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
         js = (JavascriptExecutor) driver;
 
+        // Navigate to employee login URL
         driver.get(baseUrl);
     }
 
-
+    /**
+     * Executes an employee module test workflow.
+     *
+     * @param baseUrl the employee portal login base URL
+     * @param moduleName the name of the employee module to execute
+     * @param username employee login username
+     * @param password employee login password
+     * @param applicationNumber target application number for inbox search/actions
+     */
     public void runEmployeeTest(String baseUrl,
                                 String moduleName,
                                 String username,
                                 String password,
                                 String applicationNumber) {
 
+        // Initialize employee session
         employeeSetUp(baseUrl);
-
         logger.info("Starting {} employee test", moduleName);
 
         try {
-            switch (moduleName.toUpperCase()) {
-
-                case "STREET_VENDING":
-
-                    ModuleWrapper.execute(
-                            "STREET_VENDING",
-                            () -> svEmp.inboxEmpSv(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "PET_REGISTRATION":
-
-                    ModuleWrapper.execute(
-                            "PET_REGISTRATION",
-                            () -> petApplicationEmp.petInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "TRADE_LICENSE":
-
-                    ModuleWrapper.execute(
-                            "TRADE_LICENSE",
-                            () -> tradeLicenseEmp.tlInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "TRADE_LICENSE1":
-                    inboxEmpTl.inboxEmpTl(baseUrl, username, password, applicationNumber);
-                    break;
-
-
-                case "ASSET_MANAGEMENT_SYSTEM":
-
-                    ModuleWrapper.execute(
-                            "ASSET_MANAGEMENT_SYSTEM",
-                            () -> assetEmp.assetEmployeeFlow(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "ASSET_MANAGEMENT_SYSTEM_VERIFIER":
-
-                    ModuleWrapper.execute(
-                            "ASSET_MANAGEMENT_SYSTEM",
-                            () -> assetVerifier.assetEmployeeVerifier(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "ASSET_MANAGEMENT_SYSTEM_APPROVER":
-
-                    ModuleWrapper.execute(
-                            "ASSET_MANAGEMENT_SYSTEM",
-                            () -> assetApprover.assetEmployeeApprover(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "ADVERTISEMENT":
-
-                    ModuleWrapper.execute(
-                            "ADVERTISEMENT",
-                            () -> advEmp.advApproval(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "PROPERTY_TAX":
-
-                    ModuleWrapper.execute(
-                            "PROPERTY_TAX",
-                            () -> propertyTaxEmp.propertyInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "EWASTE_MANAGEMENT_SYSTEM":
-
-                    ModuleWrapper.execute(
-                            "EWASTE_MANAGEMENT_SYSTEM",
-                            () -> eWasteEmp.eWasteApproval(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "DESLUDGING_EMPLOYEE_UPDATE":
-
-                    ModuleWrapper.execute(
-                            "DESLUDGING_EMPLOYEE_UPDATE",
-                            () -> desludgingEmployeeUpdate.desludgingUpdate(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "DESLUDGING_EMPLOYEE_COMPLETE":
-
-                    ModuleWrapper.execute(
-                            "DESLUDGING_EMPLOYEE_COMPLETE",
-                            () -> desludgingEmployeeComplete.desludgingCom(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "DESLUDGING_EMPLOYEE_PSSO":
-
-                    ModuleWrapper.execute(
-                            "DESLUDGING_EMPLOYEE_PSSO",
-                            () -> desludgingAssignPsso.desludgingPss(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "DESLUDGING_EMPLOYEE_FSTPO":
-
-                    ModuleWrapper.execute(
-                            "DESLUDGING_EMPLOYEE_FSTPO",
-                            () -> delsudgingFstpo.desludgingFstp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
-
-                    ModuleWrapper.execute(
-                            "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM",
-                            () -> obpasEmp.OBPASInbox(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC":
-
-                    ModuleWrapper.execute(
-                            "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC",
-                            () -> obpasOcEmp.OBPASOcInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "WATER_TANKER":
-
-                    ModuleWrapper.execute(
-                            "WATER_TANKER",
-                            () -> waterTankerEmployee.waterTankerInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "TREE_PRUNING":
-
-                    ModuleWrapper.execute(
-                            "TREE_PRUNING",
-                            () -> treePruningEmp.treePruningInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "MOBILE_TOILET":
-
-                    ModuleWrapper.execute(
-                            "MOBILE_TOILET",
-                            () -> mobileToiletEmp.mobileToiletInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "COMMUNITY_HALL_BOOKING":
-
-                    ModuleWrapper.execute(
-                            "CHB",
-                            () -> chbEmp.chbInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "CONSTRUCTION_AND_DEMOLITION":
-
-                    ModuleWrapper.execute(
-                            "CND_EMP",
-                            () -> cndEmp.cndApproval(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "PUBLIC_GRIEVANCE_REDRESSAL":
-
-                    ModuleWrapper.execute(
-                            "PUBLIC_GRIEVANCE_REDRESSAL",
-                            () -> pgrEmp.pgrInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-
-                case "SEWERAGE_EMP":
-
-                    ModuleWrapper.execute(
-                            "SEWERAGE",
-                            () -> sewerageEmp.sewerageInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "WATER_EMP":
-
-                    ModuleWrapper.execute(
-                            "WATER",
-                            () -> waterEmp.waterInboxEmp(
-                                    driver,
-                                    wait,
-                                    js
-                            )
-                    );
-
-                    break;
-
-                case "GARBAGE_COLLECTION":
-                    ModuleWrapper.execute(
-                            "GARBAGE_COLLECTION",
-                            () -> gcEmp.gcInboxEmp(driver, wait, js)
-                    );
-                    break;
-
-                case "ESTATE_MANAGEMENT":
-                    ModuleWrapper.execute(
-                            "ESTATE_MANAGEMENT",
-                            () -> emEmp.emInboxEmp(driver, wait, js)
-                    );
-                    break;
-
-                case "CHALLAN_GENERATION":
-                    ModuleWrapper.execute(
-                            "CHALLAN_GENERATION",
-                            () -> cgEmp.cgInboxEmp(driver, wait, js)
-                    );
-                    break;
-
-                case "NO_DUE_CERTIFICATE":
-                    ModuleWrapper.execute(
-                            "NO_DUE_CERTIFICATE",
-                            () -> ndcEmp.ndcInboxEmp(driver, wait, js)
-                    );
-                    break;
-
-
-
-
-
-                default:
-                    logger.error("Unknown module: {}", moduleName);
+            // Handle custom workflow if specific module requires legacy handler
+            if ("TRADE_LICENSE1".equalsIgnoreCase(moduleName) && inboxEmpTl != null) {
+                inboxEmpTl.inboxEmpTl(baseUrl, username, password, applicationNumber);
+            } else {
+                // Look up JSON configuration path
+                String configPath = EMPLOYEE_MODULE_CONFIG_MAP.get(moduleName.toUpperCase());
+                if (configPath == null) {
+                    logger.error("Unknown employee module: {}", moduleName);
                     throw new RuntimeException("Unknown module: " + moduleName);
+                }
+
+                // Execute employee workflow via CommonModuleExecutor
+                ModuleWrapper.execute(
+                        moduleName.toUpperCase(),
+                        () -> commonModuleExecutor.execute(driver, wait, js, configPath)
+                );
             }
 
-            logger.info("{} employee test completed", moduleName);
+            logger.info("{} employee test completed successfully", moduleName);
 
         } catch (Exception e) {
-            logger.error("Error in {} employee test: {}", moduleName, e.getMessage());
+            logger.error("Error in {} employee test: {}", moduleName, e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }

@@ -9,6 +9,7 @@ import org.upyog.Automation.Reports.ReportManager;
 import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
+import org.upyog.Automation.Utils.ScreenshotManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +41,15 @@ import java.util.List;
  */
 public class ActionExecutor {
 
+    /**
+     * Resolves an environment-specific value if piped syntax (value1||value2) is used.
+     *
+     * <p>If the input contains '||', the first segment is returned for NIUATT environment,
+     * and the second segment is returned for other environments.</p>
+     *
+     * @param value the raw configuration string (may contain '||')
+     * @return the resolved string according to the active environment
+     */
     private String resolveByEnv(String value) {
         if (value == null || !value.contains("||")) {
             return value;
@@ -61,6 +71,12 @@ public class ActionExecutor {
     private final Actions actions;
     private final org.upyog.Automation.engine.LocatorResolver locatorResolver;
 
+    /**
+     * Constructs a new {@link ActionExecutor} with the provided {@link WebDriver} and {@link WebDriverWait}.
+     *
+     * @param driver the Selenium WebDriver instance
+     * @param wait the explicit WebDriverWait instance
+     */
     public ActionExecutor(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
         this.wait = wait;
@@ -284,6 +300,19 @@ public class ActionExecutor {
                 e.getMessage()
         );
 
+            String screenshotPath =
+                    ScreenshotManager.captureFailureScreenshot(
+                            driver,
+                            WorkflowDataStore.get("current.module"),
+                            WorkflowDataStore.get("current.test.case"),
+                            stepName
+                    );
+
+            WorkflowDataStore.put(
+                    "FAILED_SCREENSHOT",
+                    screenshotPath
+            );
+
         ReportManager.logFailure(
                 "FAILED : " + stepName + " | " + e.getMessage()
         );
@@ -303,6 +332,19 @@ public class ActionExecutor {
             WorkflowDataStore.put(
                     "FAILED_STEP",
                     stepName
+            );
+
+            String screenshotPath =
+                    ScreenshotManager.captureFailureScreenshot(
+                            driver,
+                            WorkflowDataStore.get("current.module"),
+                            WorkflowDataStore.get("current.test.case"),
+                            stepName
+                    );
+
+            WorkflowDataStore.put(
+                    "FAILED_SCREENSHOT",
+                    screenshotPath
             );
 
             WorkflowDataStore.put(
@@ -1049,6 +1091,14 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * TYPE_FROM_STORE action: Reads a value previously stored in {@link WorkflowDataStore}
+     * and types it into the target input element.
+     *
+     * @param instruction the test instruction containing store key and locator
+     * @throws InterruptedException if thread sleep is interrupted
+     * @throws RuntimeException if key is not found in the workflow store
+     */
     private void typeFromStore(
             TestInstruction instruction)
             throws InterruptedException {
@@ -1369,6 +1419,11 @@ public class ActionExecutor {
         logger.info("React date set successfully: {}", dateValue);
     }
 
+    /**
+     * TYPE_BY_LABEL action: Finds an input element associated with a label text and types the input value into it.
+     *
+     * @param instruction the test instruction containing the label text locator and input value
+     */
     private void executeTypeByLabel(TestInstruction instruction) {
 
         WebElement input = wait.until(
@@ -1388,6 +1443,12 @@ public class ActionExecutor {
                 instruction.getInputValue(),
                 instruction.getLocatorValue());
     }
+
+    /**
+     * SELECT_BY_VALUE action: Selects an option from a native HTML select dropdown by its value attribute.
+     *
+     * @param instruction the test instruction containing locator and select value
+     */
     private void executeSelectByValue(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1416,6 +1477,11 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * SCROLL_TO_ELEMENT action: Scrolls the browser viewport until the specified element is centered.
+     *
+     * @param instruction the test instruction containing locator
+     */
     private void executeScrollToElement(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1431,6 +1497,12 @@ public class ActionExecutor {
 
         logger.info("Scrolled to element");
     }
+
+    /**
+     * WAIT_VISIBLE action: Waits until the target element is visible in the DOM.
+     *
+     * @param instruction the test instruction containing locator and optional sleep
+     */
     private void executeWaitVisible(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1452,6 +1524,10 @@ public class ActionExecutor {
             }
         }
     }
+
+    /**
+     * Clicks the date range calendar icon trigger on the page.
+     */
     private void clickCalendar() {
 
         WebElement calendar =
@@ -1460,6 +1536,10 @@ public class ActionExecutor {
 
         calendar.click();
     }
+
+    /**
+     * Clicks the continuous selection tab/item within the date range picker.
+     */
     private void clickContinuous() {
 
         WebElement continuous =
@@ -1468,6 +1548,12 @@ public class ActionExecutor {
 
         continuous.click();
     }
+
+    /**
+     * Clicks a specific date cell in the date range picker calendar.
+     *
+     * @param date the {@link LocalDate} to select
+     */
     private void clickDate(LocalDate date) {
 
         String day = String.valueOf(date.getDayOfMonth());
@@ -1489,6 +1575,11 @@ public class ActionExecutor {
         logger.info("Clicked Date = {}", date);
     }
 
+    /**
+     * SELECT_DATE_RANGE action: Selects a continuous date range (from tomorrow to +3 days).
+     *
+     * @throws InterruptedException if thread sleep is interrupted
+     */
     private void executeSelectDateRange() throws InterruptedException {
 
         LocalDate start = LocalDate.now().plusDays(1);
@@ -1525,6 +1616,13 @@ public class ActionExecutor {
         logger.info("Date Range Selected : {} -> {}", start, end);
     }
 
+    /**
+     * Extracts and returns the display value to be logged in the Extent/HTML test report for a step.
+     *
+     * @param instruction the executed test instruction
+     * @param action the action type string
+     * @return the resolved string value suitable for reporting, or null if not applicable
+     */
     private String getReportValue(
             TestInstruction instruction,
             String action) {
