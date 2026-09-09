@@ -162,7 +162,7 @@ const RoadCuttForm = _props => {
           </h2>
         </div>
         <div className="ws-auto-157">
-          {allRoadCuttingDetails?.filter(o => o.status !== "INACTIVE").length > 1 ? <LinkButton label={<DeleteIcon fill={!(allRoadCuttingDetails?.length == 1) ? "#494848" : "#FAFAFA"} className="ws-auto-159" />} onClick={e => removeroadCutt(roadCutt)} className="ws-auto-158" /> : null}
+          {allRoadCuttingDetails?.filter(o => o.status !== "INACTIVE").length > 1 ? <LinkButton label={<DeleteIcon fill={!(allRoadCuttingDetails?.length == 1) ? "#494848" : "var(--grey-light)"} className="ws-auto-159" />} onClick={e => removeroadCutt(roadCutt)} className="ws-auto-158" /> : null}
 
           <div style={allRoadCuttingDetails?.filter(o => o.status !== "INACTIVE").length == 1 ? {} : {
           marginTop: "40px"

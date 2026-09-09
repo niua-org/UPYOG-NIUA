@@ -102,24 +102,7 @@ function ChatBot() {
     <div style={{ textAlign: "start" }}>
       {!isOpen && (
         <button
-          style={{
-            position: "fixed",
-            bottom: "30px",
-            right: "20px",
-            padding: "10px",
-            fontSize: "16px",
-            cursor: "pointer",
-            backgroundColor: "#162f6a",
-            color: "white",
-            border: "none",
-            borderRadius: "50%",
-            width: "60px",
-            height: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-          }}
+          className="text-md cursor-pointer flex items-center justify-center" style={{ position: "fixed", bottom: "30px", right: "20px", padding: "10px", backgroundColor: "#162f6a", color: "white", border: "none", borderRadius: "50%", width: "60px", height: "60px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)" }}
           onClick={toggleChatbot}
         >
           <svg xmlns="
@@ -131,40 +114,14 @@ function ChatBot() {
       )}
       {isOpen && (
         <div
-          style={{
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            width: "400px",
-            maxHeight: "400px",
-            height: "500px",
-            backgroundColor: "white",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
+          className="bg-white rounded-md flex" style={{ position: "fixed", bottom: "20px", right: "20px", width: "400px", maxHeight: "400px", height: "500px", boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", flexDirection: "column", overflow: "hidden" }}
         >
           <div
-            style={{
-              backgroundColor: "#162f6a",
-              color: "white",
-              padding: "10px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+            className="flex justify-between items-center" style={{ backgroundColor: "#162f6a", color: "white", padding: "10px" }}
           >
             <span>Connect With Us</span>
             <button
-              onClick={handleChatbotClose}
-              style={{
-                background: "none",
-                border: "none",
-                color: "white",
-                cursor: "pointer",
-              }}
+              onClick={handleChatbotClose} className="cursor-pointer" style={{ background: "none", border: "none", color: "white" }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -191,13 +148,8 @@ function ChatBot() {
           >
             {messages.map((message, index) => (
               <div
-                key={index}
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    message.sender === "user" ? "flex-end" : "flex-start",
-                  marginBottom: "10px",
-                }}
+                key={index} className="flex" style={{ justifyContent:
+                    message.sender === "user" ? "flex-end" : "flex-start", marginBottom: "10px" }}
               >
                 <div
                   style={{
@@ -224,7 +176,7 @@ function ChatBot() {
             - Uses CSS modules for styling
             - Appears in same style as bot messages for consistency */}
             {isLoading && (
-              <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: "10px" }}>
+              <div className="flex justify-start" style={{ marginBottom: "10px" }}>
                 <div
                   style={{
                     maxWidth: "70%",
@@ -252,11 +204,7 @@ function ChatBot() {
             <div ref={messagesEndRef} />
           </div>
           <div
-            style={{
-              display: "flex",
-              padding: "10px",
-              borderTop: "1px solid #ddd",
-            }}
+            className="flex" style={{ padding: "10px", borderTop: "1px solid #ddd" }}
           >
             <input
               type="text"
@@ -277,19 +225,7 @@ function ChatBot() {
               }}
             />
             <button
-              onClick={handleMessageSend}
-              style={{
-                marginLeft: "10px",
-                padding: "15px",
-                backgroundColor: "#162f6a",
-                color: "white",
-                border: "none",
-                borderRadius: "50%",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              onClick={handleMessageSend} className="cursor-pointer flex items-center justify-center" style={{ marginLeft: "10px", padding: "15px", backgroundColor: "#162f6a", color: "white", border: "none", borderRadius: "50%" }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

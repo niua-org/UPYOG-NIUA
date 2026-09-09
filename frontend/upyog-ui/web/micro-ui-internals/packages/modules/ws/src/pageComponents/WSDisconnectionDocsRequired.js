@@ -18,7 +18,7 @@ const WSDisconnectionDocsRequired = ({ userType }) => {
         <Card>
           <CardHeader>{t(`WS_COMMON_APPLICATION_DISCONNECTION`)}</CardHeader>
           <CitizenInfoLabel textStyle={{
-          color: "#0B0C0C",
+          color: "var(--text-primary)",
           paddingLeft: "40px",
           paddingRight: "40px"
         }} text={t(`WS_DOCS_REQUIRED_TIME`)} showInfo={false} className="ws-auto-63" />

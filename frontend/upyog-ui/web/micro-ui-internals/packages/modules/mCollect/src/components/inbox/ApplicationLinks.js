@@ -16,7 +16,7 @@ const InboxLinks = ({ parentRoute, businessService, allLinks, headerText }) => {
   }, []);
 
   const GetLogo = () => (
-    <div className="header" style={{ justifyContent: "flex-start" }}>
+    <div className="header justify-start">
       <span className="logo">
         <ShippingTruck />
       </span>{" "}

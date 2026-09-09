@@ -22,7 +22,7 @@
 
 @screen dt {
   .InboxComposerWrapper {
-    grid-template-columns: calc(25% - 32px) 75%;
+    grid-template-columns: calc(25% - var(--spacing-xl)) 75%;
     @apply grid gap-x-8 gap-y-6;
   }
 
@@ -90,7 +90,7 @@
       --bg-opacity: 1;
       background-color: #fff;
       background-color: rgba(255, 255, 255, var(--bg-opacity));
-      padding: 16px;
+      padding: var(--spacing-md);
       display: unset;
       flex-wrap: unset;
       justify-content: unset;

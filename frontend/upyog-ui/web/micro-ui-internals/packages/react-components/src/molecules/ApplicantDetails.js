@@ -121,8 +121,7 @@ const ApplicantDetails = ({ t, config, onSelect, formData, renewApplication = {}
         <CardLabel>{`${t("COMMON_GENDER")}`} <span className="astericColor">*</span></CardLabel>
         <RadioButtons
             t={t}
-            options={genderOptions}
-            style={{ display: "flex", flexWrap: "wrap", maxHeight: "30px" }}
+            options={genderOptions} className="flex" style={{ flexWrap: "wrap", maxHeight: "30px" }}
             innerStyles={{ minWidth: "24%" }}
             optionsKey="i18nKey"
             name={`gender`}

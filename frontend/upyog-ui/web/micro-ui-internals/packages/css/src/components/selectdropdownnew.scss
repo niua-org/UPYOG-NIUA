@@ -27,7 +27,7 @@
       @apply border-2 border-solid border-primary-main;
     }
     input[type="text"] {
-      width: calc(100% - 32px);
+      width: calc(100% - var(--spacing-xl));
       background-color: transparent;
 
       @apply absolute z-10 w-full h-full outline-none text-text-primary text-form-field pl-sm;
@@ -50,11 +50,11 @@
   .select-active {
     @apply relative block w-full h-10 border-2 border-solid border-primary-main;
     height: 2 rem !important;
-    border: 1px solid black;
+    border: var(--border-width-sm) solid black;
     background-color: white;
 
     input[type="text"] {
-      width: calc(100% - 32px);
+      width: calc(100% - var(--spacing-xl));
       background-color: transparent;
 
       @apply absolute z-10 w-full h-full outline-none text-text-primary text-form-field pl-sm;
@@ -79,7 +79,7 @@
 
   .options-card {
     width: 100% !important;
-    box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 var(--spacing-sm) 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
     max-height: 250px !important;
     overflow: auto;
     z-index: 1000 !important;
@@ -130,7 +130,7 @@
     @apply relative block w-full h-10 border border-solid border-input-border;
 
     input[type="text"] {
-      width: calc(100% - 32px);
+      width: calc(100% - var(--spacing-xl));
       background-color: transparent;
 
       @apply absolute z-10 w-full h-full outline-none text-text-primary text-form-field pl-sm;
@@ -154,7 +154,7 @@
     @apply relative block w-full h-10 border-2 border-solid border-primary-main;
 
     input[type="text"] {
-      width: calc(100% - 32px);
+      width: calc(100% - var(--spacing-xl));
       background-color: transparent;
 
       @apply absolute z-10 w-full h-full outline-none text-text-primary text-form-field pl-sm;
@@ -179,7 +179,7 @@
 
   .options-cardNew {
     width: 100% !important;
-    box-shadow: 0 8px 10px 1px rgba(8, 38, 231, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 var(--spacing-sm) 10px 1px rgba(8, 38, 231, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
     @apply absolute z-20 mt-xs bg-white;
 
     p {
@@ -202,14 +202,14 @@
   width: 100%;
   height: 2.5rem;
   --border-opacity:1;
-  border: 1px solid #464646;
+  border: var(--border-width-sm) solid var(--input-border);
   border-color: rgba(70, 70, 70, var(--border-opacity)); }
   .employee-select-wrap .select:hover {
     --border-opacity:1;
-    border: 1px solid #a82227;
+    border: var(--border-width-sm) solid var(--focus);
     border-color: rgba(168, 34, 39, var(--border-opacity)); }
   .employee-select-wrap .select input[type=text], .employee-select-wrap .select .checkbox-wrap .input-emp[type=text], .checkbox-wrap .employee-select-wrap .select .input-emp[type=text] {
-    width: calc(50% - 32px);
+    width: calc(50% - var(--spacing-xl));
     background-color: initial;
     position: absolute;
     z-index: 10;
@@ -217,23 +217,23 @@
     height: 100%;
     outline: 2px solid transparent;
     outline-offset: 2px;
-    padding-left: 8px; }
+    padding-left: var(--spacing-sm); }
   .employee-select-wrap .select input[type=text], .employee-select-wrap .select .checkbox-wrap .input-emp[type=text], .checkbox-wrap .employee-select-wrap .select .input-emp[type=text], .employee-select-wrap .select p {
     --text-opacity:1;
-    color: #0b0c0c;
+    color: var(--text-primary);
     color: rgba(11, 12, 12, var(--text-opacity));
-    font-size: 16px;
+    font-size: var(--font-size-md);
     line-height: 20px; }
   .employee-select-wrap .select p {
     padding-top: 9px;
     float: left;
-    margin-left: 8px; }
+    margin-left: var(--spacing-sm); }
   .employee-select-wrap-ve .select img, .employee-select-wrap .select svg {
     float: right;
     height: 1.5rem;
     width: 1.5rem;
-    margin-top: 8px;
-    margin-right: 8px; }
+    margin-top: var(--spacing-sm);
+    margin-right: var(--spacing-sm); }
   .employee-select-wrap .select svg {
     position: absolute;
     right: 0; }

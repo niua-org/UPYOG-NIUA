@@ -235,7 +235,7 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
     <React.Fragment>
       <Timeline currentStep={checkingFlow === "OCBPA" ? 2 : checkingFlow==="PRE_APPROVE"? 4: 1 } flow={checkingFlow}/>
       <FormStep t={t} config={config} onSelect={goNext} onSkip={!(formData?.data?.edcrDetails?.drawingDetail) ? onSkip : undefined}  /* isDisabled={Object.keys(subOccupancyObject).length === 0} */>
-        <CardSubHeader style={{ fontSize: "20px" }}>{formData?.data?.edcrDetails?.drawingDetail ? t("BPA_DRAWING_DETAILS"):t("BPA_EDCR_DETAILS")}</CardSubHeader>
+        <CardSubHeader className="text-xl">{formData?.data?.edcrDetails?.drawingDetail ? t("BPA_DRAWING_DETAILS"):t("BPA_EDCR_DETAILS")}</CardSubHeader>
         <StatusTable style={{ border: "none" }}>
           <Row
             className="border-none"
@@ -282,7 +282,7 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
           
         </StatusTable>
         <hr style={{ color: "#cccccc", backgroundColor: "#cccccc", height: "2px", marginTop: "20px", marginBottom: "20px" }} />
-        <CardSubHeader style={{ fontSize: "20px" }}>
+        <CardSubHeader className="text-xl">
           {checkingFlow === "OCBPA" ? t("BPA_ACTUAL_BUILDING_EXTRACT_HEADER") : formData?.data?.edcrDetails?.drawingDetail ? t("BPA_BUILDING_EXTRACT_DETAILS"):t("BPA_BUILDING_EXTRACT_HEADER")}
         </CardSubHeader>
         <StatusTable style={{ border: "none" }}>
@@ -311,14 +311,14 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
           ></Row>
         </StatusTable>
         <hr style={{ color: "#cccccc", backgroundColor: "#cccccc", height: "2px", marginTop: "20px", marginBottom: "20px" }} />
-        <CardSubHeader style={{ fontSize: "20px" }}>{formData?.data?.edcrDetails?.drawingDetail ? t("BPA_BLOCK_HEADER"):t("BPA_OCC_SUBOCC_HEADER")}</CardSubHeader>
+        <CardSubHeader className="text-xl">{formData?.data?.edcrDetails?.drawingDetail ? t("BPA_BLOCK_HEADER"):t("BPA_OCC_SUBOCC_HEADER")}</CardSubHeader>
         {data?.planDetail?.blocks?.map((block, index) => (
           <div key={index} style={{ marginTop: "20px" }}>
-            <CardSubHeader style={{ fontSize: "18px" }}>
+            <CardSubHeader className="text-lg">
               {t("BPA_BLOCK_SUBHEADER")} {index + 1}
             </CardSubHeader>
             {!(checkingFlow === "OCBPA") ? (
-              <CardSectionHeader style={{ fontWeight: "normal" }} className="card-label-smaller">
+              <CardSectionHeader className="font-regular card-label-smaller">
                 {t("BPA_SUB_OCCUPANCY_LABEL")}
               </CardSectionHeader>
             ) : null}
@@ -350,7 +350,7 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
             {!(checkingFlow === "OCBPA")
               ? subOccupancyObject[`Block_${block.number}`] &&
                 subOccupancyObject[`Block_${block.number}`].length > 0 && (
-                  <LinkButton style={{ textAlign: "left" }} label={"Clear All"} onClick={() => clearall(block.number)} />
+                  <LinkButton className="text-left" label={"Clear All"} onClick={() => clearall(block.number)} />
                 )
               : null}
             <div style={{ marginTop: "20px" }}>
@@ -385,11 +385,11 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
         ))}
         {formData?.data?.edcrDetails?.drawingDetail?.blocks?.map((block, index) => (
           <div key={index} style={{ marginTop: "20px" }}>
-            <CardSubHeader style={{ fontSize: "18px" }}>
+            <CardSubHeader className="text-lg">
               {t("BPA_BLOCK_SUBHEADER")} {index + 1}
             </CardSubHeader>
             {!(checkingFlow === "OCBPA") && !(formData?.data?.edcrDetails?.drawingDetail) ? (
-              <CardSectionHeader style={{ fontWeight: "normal" }} className="card-label-smaller">
+              <CardSectionHeader className="font-regular card-label-smaller">
                 {t("BPA_SUB_OCCUPANCY_LABEL")}
               </CardSectionHeader>
             ) : null}
@@ -421,7 +421,7 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
             {!(checkingFlow === "OCBPA")
               ? subOccupancyObject[`Block_${block.number}`] &&
                 subOccupancyObject[`Block_${block.number}`].length > 0 && (
-                  <LinkButton style={{ textAlign: "left" }} label={"Clear All"} onClick={() => clearall(block.number)} />
+                  <LinkButton className="text-left" label={"Clear All"} onClick={() => clearall(block.number)} />
                 )
               : null}
             <div style={{ marginTop: "20px" }}>
@@ -455,7 +455,7 @@ const ScrutinyDetails = ({ onSelect, userType, formData, config }) => {
           </div>
         ))}
         <hr style={{ color: "#cccccc", backgroundColor: "#cccccc", height: "2px", marginTop: "20px", marginBottom: "20px" }} />
-        <CardSubHeader style={{ fontSize: "20px" }}>{t("BPA_APP_DETAILS_DEMOLITION_DETAILS_LABEL")}</CardSubHeader>
+        <CardSubHeader className="text-xl">{t("BPA_APP_DETAILS_DEMOLITION_DETAILS_LABEL")}</CardSubHeader>
         <StatusTable style={{ border: "none" }}>
           <Row
             label={t("BPA_APPLICATION_DEMOLITION_AREA_LABEL")}

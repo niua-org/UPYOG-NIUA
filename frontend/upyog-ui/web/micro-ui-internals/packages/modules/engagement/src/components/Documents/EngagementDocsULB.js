@@ -27,7 +27,7 @@ const SelectULB = ({ userType, t, setValue, onSelect, config, data, formData, re
       <LabelFieldPair
         style={{ alignItems: 'start' }}
       >
-        <CardLabel style={{ fontWeight: "bold" }}>{t("ES_COMMON_ULB") + " *"}</CardLabel>
+        <CardLabel className="font-bold">{t("ES_COMMON_ULB") + " *"}</CardLabel>
         <div className="field">
           <Controller
             name={config.key}

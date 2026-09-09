@@ -5,7 +5,7 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import FilterContext from "./FilterContext";
 import NoData from "./NoData";
 
-const barColors = ["#048BD0", "#FBC02D", "#8E29BF", "#EA8A3B", "#0BABDE", "#6E8459", "#D4351C", "#0CF7E4", "#F80BF4", "#22F80B"];
+const barColors = ["#048BD0", "#FBC02D", "#8E29BF", "#EA8A3B", "#0BABDE", "#6E8459", "var(--error)", "#0CF7E4", "#F80BF4", "#22F80B"];
 
 const renderPlot = (plot, key, denomination) => {
   const plotValue = key ? plot?.[key] : plot?.value || 0;
@@ -91,7 +91,7 @@ const CustomHorizontalBarChart = ({
 
   const chartData = useMemo(() => constructChartData(response?.responseData?.data, value?.denomination), [response, value?.denomination]);
 
-  const renderLegend = (value) => <span style={{ fontSize: "14px", color: "#505A5F" }}>{value}</span>;
+  const renderLegend = (value) => <span className="text-text-secondary text-sm">{value}</span>;
 
   const tickFormatter = (value) => {
     if (typeof value === "string") {
@@ -152,21 +152,21 @@ const CustomHorizontalBarChart = ({
             <YAxis
               dataKey={yDataKey}
               type={yAxisType}
-              tick={{ fontSize: "12px", fill: "#505A5F" }}
+              tick={{ fontSize: "12px", fill: "var(--text-secondary)" }}
               label={{
                 value: yAxisLabel,
                 angle: -90,
                 position: "insideLeft",
                 dy: 50,
                 fontSize: "12px",
-                fill: "#505A5F",
+                fill: "var(--text-secondary)",
               }}
               tickCount={10}
               tickFormatter={tickFormatter}
               unit={id === "fssmCapacityUtilization"  || id === "fsmCapacityUtilization"? "%" : ""}
               width={getVerticalWidth(layout)}
             />
-            <XAxis dataKey={xDataKey} type={xAxisType} tick={{ fontSize: "14px", fill: "#505A5F" }} tickCount={10} tickFormatter={tickFormatter} />
+            <XAxis dataKey={xDataKey} type={xAxisType} tick={{ fontSize: "14px", fill: "var(--text-secondary)" }} tickCount={10} tickFormatter={tickFormatter} />
             {bars?.map((bar, id) => (
               <Bar key={id} dataKey={t(bar)} fill={barColors[id]} stackId={bars?.length > 2 ? 1 : id} />
             ))}

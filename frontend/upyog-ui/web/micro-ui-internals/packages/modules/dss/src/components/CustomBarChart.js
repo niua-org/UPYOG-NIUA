@@ -53,8 +53,7 @@ if( possibleValues.includes(data?.id) )
         dx={0}
         dy={30}
         fill={stroke}
-        width="35"
-        style={{ fontSize: "medium", textAlign: "right", fontVariantNumeric: "proportional-nums" }}
+        width="35" className="text-right" style={{ fontSize: "medium", fontVariantNumeric: "proportional-nums" }}
       >
         {`₹ ${maxValue?.[t(name)]} ${t("ES_DSS_CR")}`}
       </text>
@@ -79,8 +78,7 @@ else if(data?.id.includes("GDP") )
         dx={0}
         dy={30}
         fill={stroke}
-        width="35"
-        style={{ fontSize: "medium", textAlign: "right", fontVariantNumeric: "proportional-nums" }}
+        width="35" className="text-right" style={{ fontSize: "medium", fontVariantNumeric: "proportional-nums" }}
       >
         {`${maxValue?.[t(name)]} %`}
       </text>
@@ -100,8 +98,7 @@ else if (data?.id.includes("Population") || data?.id.includes("Household"))
         dx={0}
         dy={30}
         fill={stroke}
-        width="35"
-        style={{ fontSize: "medium", textAlign: "right", fontVariantNumeric: "proportional-nums" }}
+        width="35" className="text-right" style={{ fontSize: "medium", fontVariantNumeric: "proportional-nums" }}
       >
         {`₹ ${maxValue?.[t(name)]}`}
       </text>
@@ -121,8 +118,7 @@ return (
         dx={0}
         dy={30}
         fill={stroke}
-        width="35"
-        style={{ fontSize: "medium", textAlign: "right", fontVariantNumeric: "proportional-nums" }}
+        width="35" className="text-right" style={{ fontSize: "medium", fontVariantNumeric: "proportional-nums" }}
       >
         {`${maxValue?.[t(name)]}`}
       </text>
@@ -133,7 +129,7 @@ return (
   );
 }
 };
-const COLORS = { RED: "#00703C", GREEN: "#D4351C", default: "#00703C" };
+const COLORS = { RED: "var(--success)", GREEN: "var(--error)", default: "var(--success)" };
 
 const CustomBarChart = ({
   xDataKey = "value",
@@ -247,7 +243,7 @@ const CustomBarChart = ({
           <Bar
             dataKey={xDataKey}
             fill={COLORS[fillColor]}
-            background={{ fill: "#D6D5D4", radius: 8 }}
+            background={{ fill: "var(--border)", radius: 8 }}
             label={<CustomLabel stroke={COLORS[fillColor]} maxValue={maxValue} data={data}/>}
             radius={[8, 8, 8, 8]}
             isAnimationActive={false}

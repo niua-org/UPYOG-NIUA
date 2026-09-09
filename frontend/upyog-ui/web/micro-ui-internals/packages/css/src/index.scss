@@ -192,21 +192,21 @@
 }
 
 .home-link {
-  margin-left: 16px;
-  margin-bottom: 16px;
+  margin-left: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
 
   a {
-    color: #1d70b8;
+    color: var(--link-normal);
   }
 }
 
 .clear-search-label {
-  color: #a82227;
+  color: var(--focus);
   cursor: pointer;
 }
 
 .search-submit-bar {
-  margin-top: 32;
+  margin-top: var(--spacing-xl);
   margin-left: auto;
 }
 
@@ -214,8 +214,8 @@
   @apply flex justify-between items-center;
 
   .download-button {
-    color: a82227;
-    margin-left: 8px;
+    color: var(--primary-main);
+    margin-left: var(--spacing-sm);
   }
 }
 
@@ -223,21 +223,21 @@
   @apply flex mb-sm;
 
   .download-button {
-    color: #a82227;
-    margin-left: 8px;
+    color: var(--focus);
+    margin-left: var(--spacing-sm);
     white-space: nowrap;
 
   }
 }
 
 .check-page-link-button {
-  color: #a82227 !important;
+  color: var(--focus) !important;
 }
 
 .pt-application-download-btn {
   display: flex;
   justify-content: flex-end;
-  margin: 0px 8px;
+  margin: 0px var(--spacing-sm);
 }
 
 .form-pt-dropdown-only {
@@ -254,18 +254,18 @@
   gap: 10px;
 
   svg {
-    fill: #a82227;
+    fill: var(--focus);
   }
 
-  color: #5a1166;
+  color: var(--disabled);
 
   cursor: pointer;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   width: fit-content;
 }
 
 .primaryColor {
-  color: #0b0c0c !important;
+  color: var(--text-primary) !important;
 }
 
 @media (hover: hover) {
@@ -299,13 +299,13 @@
   width: 194px;
   height: 2.5rem;
   &__wrapper {
-    border: 2px solid #0b0c0c;
-    padding-left: 16px;
+    border: var(--border-width-md) solid var(--text-primary);
+    padding-left: var(--spacing-md);
   }
   &__inputGroup__input {
     @apply px-sm;
     line-height: 2.5rem;
-    min-width: 16px;
+    min-width: var(--spacing-md);
     &:focus {
       outline: 2px solid black;
     }
@@ -344,7 +344,7 @@ input[type="number"] {
 }
 
 .bill-summary {
-  border: #e8e7e6 solid 1px;
+  border: var(--border) solid var(--border-width-sm);
   @apply bg-grey-light w-full;
 
   .bill-account-details {
@@ -370,25 +370,25 @@ input[type="number"] {
 
     .value {
       @apply w-1/2 font-bold text-right;
-      font-size: 18px;
+      font-size: var(--font-size-lg);
     }
   }
 }
 
 .bill-payment-amount {
   @apply sticky bottom-0 bg-white;
-  padding-bottom: 32px;
+  padding-bottom: var(--spacing-xl);
 
   .payment-amount-front {
     @apply absolute z-10 w-10 flex justify-center items-center;
-    background-color: #efefef;
+    background-color: var(--grey-bg);
     padding: 7px 12px;
-    color: #9a9a9a;
+    color: var(--grey-dark);
   }
 }
 
 .text-indent-xl input {
-  text-indent: 40px;
+  text-indent: var(--spacing-2xl);
 }
 
 .select-payment-type {
@@ -397,14 +397,14 @@ input[type="number"] {
   padding-bottom: 25px;
 
   .value {
-    font-size: 20px;
+    font-size: var(--font-size-xl);
   }
 }
 
 .cheque-date {
   @apply flex items-center mb-lg;
-  border: 2px solid #0b0c0c;
-  border-radius: 2px;
+  border: var(--border-width-md) solid var(--text-primary);
+  border-radius: var(--border-width-md);
 
   input {
     @apply outline-none w-full;
@@ -428,8 +428,8 @@ input[type="number"] {
 
 .ifsc-field {
   @apply flex items-center mb-lg;
-  border: 2px solid #0b0c0c;
-  border-radius: 2px;
+  border: var(--border-width-md) solid var(--text-primary);
+  border-radius: var(--border-width-md);
 
   input {
     @apply outline-none w-full;
@@ -473,8 +473,8 @@ input[type="number"] {
 }
 
 .submit-bar-search {
-  margin-top: 32px;
-  margin-left: 16px;
+  margin-top: var(--spacing-xl);
+  margin-left: var(--spacing-md);
   max-width: 256px;
 }
 
@@ -494,7 +494,7 @@ input[type="number"] {
 }
 
 .underline {
-  border-color: #e7e6e6;
+  border-color: var(--border);
   @apply mb-sm;
 }
 
@@ -531,7 +531,7 @@ input[type="number"] {
 .error-boundary {
   width: 100vw;
   height: 100vh;
-  font-size: 16px;
+  font-size: var(--font-size-md);
   font-family: sans-serif;
   display: flex;
   justify-content: center;
@@ -545,17 +545,17 @@ input[type="number"] {
     align-items: center;
     flex-direction: column;
     h1 {
-      font-size: 32px;
-      font-weight: bold;
+      font-size: var(--spacing-xl);
+      font-weight: var(--weight-bold);
     }
     button {
-      height: 40px;
+      height: var(--spacing-2xl);
       width: 153px;
       border-radius: 0px;
-      padding: 8px 24px;
+      padding: var(--spacing-sm) var(--spacing-lg);
       color: white;
       cursor: pointer;
-      background-color: #a82227;
+      background-color: var(--focus);
     }
   }
 }
@@ -565,7 +565,7 @@ input[type="number"] {
   width: 300px;
   background-color: rgb(218, 100, 100);
   margin: 5px;
-  border: 2px solid #222;
+  border: var(--border-width-md) solid #222;
   border-radius: 3px;
   padding: 3px;
 }
@@ -608,8 +608,8 @@ input[type="number"] {
     display: flex;
     justify-content: center;
     margin-top: 1rem;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
   }
 }
 @media (min-width: 780px) {
@@ -636,8 +636,8 @@ input[type="number"] {
   .noc-citizen,
   .tl-citizen {
     width: calc(100% - 219px);
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
     margin-top: 1rem;
   }
 }
@@ -681,13 +681,13 @@ input[type="number"] {
 
   .old-value-null-wrapper {
     visibility: hidden;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
   }
   .row {
     color: #b1b4b6;
-    font-weight: 700;
-    font-size: 16px;
+    font-weight: var(--weight-bold);
+    font-size: var(--font-size-md);
   }
 }
 
@@ -704,25 +704,25 @@ input[type="number"] {
   flex: 1 1 auto;
   .old-value-null-wrapper {
     visibility: hidden;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
   }
   .row {
     color: #b1b4b6;
-    font-weight: 700;
-    font-size: 16px;
+    font-weight: var(--weight-bold);
+    font-size: var(--font-size-md);
   }
 }
 
 .modal-header-ws {
   padding: 1rem;
-  font-weight: 400;
+  font-weight: var(--weight-regular);
 }
 .modal-body-ws {
   padding: 1rem;
-  font-weight: 700;
-  color: #0b0c0c;
-  font-size: 24px;
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+  font-size: var(--font-size-2xl);
   margin-bottom: 1rem;
 }
 .privacy-icon {
@@ -749,9 +749,9 @@ min-height: calc(100vh - 8em);
     background-color:#d7aefc !important;
 }
 .icon-banner-employee svg{
-  background-color:#bf2f3b !important;
-  width: 40px;
-  height: 40px;
+  background-color: var(--primary-main) !important;
+  width: var(--spacing-2xl);
+  height: var(--spacing-2xl);
 }
 .inboxButton{
     border: none;
@@ -759,17 +759,17 @@ min-height: calc(100vh - 8em);
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 14px;
-    margin: 4px 2px;
+    font-size: var(--font-size-sm);
+    margin: var(--spacing-xs) 2px;
     cursor: pointer;
     height: fit-content;
     border-radius: 5px;
     font-family: sans-serif;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
 }
 .employee .inboxButton{
   padding: 5px 15px;
-  background: #ba2b36
+  background: var(--primary-main);
 }
 .citizen .inboxButton{
   padding: 15px;

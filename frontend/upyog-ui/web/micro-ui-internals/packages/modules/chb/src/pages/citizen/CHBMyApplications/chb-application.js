@@ -164,17 +164,13 @@ const ChbApplication = ({ application, tenantId, buttonLabel }) => {
         <KeyNote
           keyValue={t("CHB_REFUND_STATUS") || "Refund Status"}
           note={
-            <span
-              style={{
-                fontWeight: "600",
-                color: (refundStatus?.toUpperCase() === "SUCCESS" || refundStatus?.toUpperCase() === "SUCCESSFUL" || refundStatus?.toUpperCase() === "COMPLETED" || refundStatus?.toUpperCase() === "REFUNDED")
+            <span className="font-medium" style={{ color: (refundStatus?.toUpperCase() === "SUCCESS" || refundStatus?.toUpperCase() === "SUCCESSFUL" || refundStatus?.toUpperCase() === "COMPLETED" || refundStatus?.toUpperCase() === "REFUNDED")
                   ? "#155724"
                   : (refundStatus?.toUpperCase() === "INITIATED" || refundStatus?.toUpperCase() === "IN_PROGRESS" || refundStatus?.toUpperCase() === "INPROGRESS")
                   ? "#856404"
                   : refundStatus
                   ? "#383D41"
-                  : "#6C757D",
-              }}
+                  : "#6C757D" }}
             >
               {refundStatus
                 ? refundStatus

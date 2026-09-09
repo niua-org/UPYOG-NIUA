@@ -9,7 +9,7 @@ const StepWrapper = ({ children, currentStep = 1, nextStep, prevStep, stepsList 
     alignItems: "center",
     justifyContent: "flex-start",
     flex: "0 0 auto",
-    color: isActive ? "#0D43A7" : "#9CA3AF",
+    color: isActive ? "#0D43A7" : "var(--grey-dark)",
     padding: "14px 12px",
     width: "260px",
     marginBottom: isLast ? "6px" : "18px",
@@ -127,28 +127,10 @@ const StepWrapper = ({ children, currentStep = 1, nextStep, prevStep, stepsList 
 
   return (
     <div
-      className="stepper"
-      style={{
-        width: "100%",
-        display: "flex",
-        flexDirection: isMobile ? "column" : "row",
-        gap: "24px",
-      }}
+      className="stepper flex" style={{ width: "100%", flexDirection: isMobile ? "column" : "row", gap: "24px" }}
     >
       <div
-        className="stepper-navigation-bar"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "18px",
-          minWidth: "120px",
-          maxWidth: "320px",
-          marginBottom: "20px",
-          marginTop: isMobile ? "20px" : "0",
-          height: isMobile ? "106px" : "",
-          ...mobileNavBarStyle,
-        }}
+        className="stepper-navigation-bar flex items-center" style={{ flexDirection: "column", padding: "18px", minWidth: "120px", maxWidth: "320px", marginBottom: "20px", marginTop: isMobile ? "20px" : "0", height: isMobile ? "106px" : "", ...mobileNavBarStyle }}
       >
         {[...Array(totalSteps)].map((_, index) => (
           <div className="step-content" key={index} style={{...stepStyle(index + 1 <= currentStep, index === totalSteps - 1), ...mobileStepStyle}}>
@@ -156,7 +138,7 @@ const StepWrapper = ({ children, currentStep = 1, nextStep, prevStep, stepsList 
               {index + 1}
               {index < totalSteps - 1 && !isMobile && <div style={lineStyle}></div>}
             </div>
-            <div className="step-sub-content" style={{ display: "flex", flexDirection: "column", alignItems: isMobile ? "center" : "flex-end", margin: isMobile ? "4px" : "10px" }}>
+            <div className="step-sub-content flex" style={{ flexDirection: "column", alignItems: isMobile ? "center" : "flex-end", margin: isMobile ? "4px" : "10px" }}>
               {index + 1 === totalSteps ? null : (
                 <div className="step-number" style={stepNumberStyle}>
                   {/* Step {index + 1} */}
@@ -190,7 +172,7 @@ const StepWrapper = ({ children, currentStep = 1, nextStep, prevStep, stepsList 
       >
         {children}
       </div>
-      {/* <div style={{ display: "flex", justifyContent: "flex-end", width: "100%", position: "fixed", bottom: "50px", right: "20px", padding: "10px" }}> */}
+      {/* <div className="flex justify-end" style={{ width: "100%", position: "fixed", bottom: "50px", right: "20px", padding: "10px" }}> */}
       {/* {currentStep > 1 && (
           <button style={buttonStyle.back} onClick={prevStep}>
             Back

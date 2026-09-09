@@ -198,7 +198,7 @@
 }
 
 .venue-modal-header-title {
-  color: #a82227;
+  color: var(--primary-main);
   margin: 35px;
 }
 

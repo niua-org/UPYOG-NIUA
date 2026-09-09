@@ -4,8 +4,8 @@
   bottom: 64px;
   left: 0;
   margin: 0 10px;
-  gap: 16px;
-  border-radius: 4px;
+  gap: var(--spacing-md);
+  border-radius: var(--border-radius-sm);
   min-height: 48px;
   @apply fixed flex bg-success leading-7 z-20 items-center pl-md pr-sm;
 

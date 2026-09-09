@@ -220,7 +220,7 @@ const NocLocationDetails = ({ t, config, onSelect, userType, formData }) => {
       <div style={{ padding: "10px" }}>
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("NOC_PROPERTY_ID_LABEL")}</CardLabel>
-          <div className="field" style={{ display: "flex", gap: "10px" }}>
+          <div className="field flex" style={{ gap: "10px" }}>
             <TextInput
               t={t}
               type="text"
@@ -359,7 +359,7 @@ const NocLocationDetails = ({ t, config, onSelect, userType, formData }) => {
         isDisabled={false}
       >
         <CardLabel>{t("NOC_PROPERTY_ID_LABEL")}</CardLabel>
-        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+        <div className="flex" style={{ gap: "10px", marginBottom: "15px" }}>
           <TextInput
             t={t}
             type="text"
@@ -450,7 +450,7 @@ const NocLocationDetails = ({ t, config, onSelect, userType, formData }) => {
         {fieldErrors.pincode && <CardLabelError>{fieldErrors.pincode}</CardLabelError>}
 
         <CardLabel>{t("NOC_PROPERTY_DETAILS_GIS_CORD_LABEL")}</CardLabel>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "15px" }}>
+        <div className="flex items-center" style={{ gap: "10px", marginBottom: "15px" }}>
           <TextInput
             t={t}
             type="text"
@@ -462,13 +462,13 @@ const NocLocationDetails = ({ t, config, onSelect, userType, formData }) => {
           />
           <LinkButton
             label={
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <div className="flex items-center" style={{ gap: "5px" }}>
                 <span>{t("NOC_LOCATE_ON_MAP")}</span>
                 <MapLocateIcon />
               </div>
             }
             onClick={() => setIsOpen(true)}
-            style={{ color: "#FE7A51", cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "10px 0px" }}
+            className="text-primary-light" style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "10px 0px" }}
           />
         </div>
 

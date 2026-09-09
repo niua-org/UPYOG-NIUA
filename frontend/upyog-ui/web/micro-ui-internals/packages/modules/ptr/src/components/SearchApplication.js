@@ -162,7 +162,7 @@
                   <div>
                   <Header>{t("PTR_SEARCH_PET_APPLICATIONS")}</Header>
                   < Card className={"card-search-heading"}>
-                      <span style={{color:"#505A5F"}}>{t("Provide at least one parameter to search for an application")}</span>
+                      <span className="text-text-secondary">{t("Provide at least one parameter to search for an application")}</span>
                   </Card>
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
@@ -293,7 +293,7 @@
                   t(data.display)
                       .split("\\n")
                       .map((text, index) => (
-                      <p key={index} style={{ textAlign: "center" }}>
+                      <p key={index} className="text-center">
                           {text}
                       </p>
                       ))

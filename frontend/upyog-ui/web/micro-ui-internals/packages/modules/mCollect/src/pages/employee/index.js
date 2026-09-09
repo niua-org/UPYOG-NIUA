@@ -56,7 +56,7 @@ const EmployeeApp = ({ path, url, userType }) => {
     <React.Fragment>
       <div className="ground-container">
         <p className="breadcrumb employee-main-application-details" style={{ marginLeft: mobileView ? "2vw" : "revert" }}>
-          <Link to="/upyog-ui/employee" style={{ cursor: "pointer", color: "#666" }}>
+          <Link to="/upyog-ui/employee" className="cursor-pointer" style={{ color: "#666" }}>
             {t("ES_COMMON_HOME")}
           </Link>{" "}
           / <span>{location.pathname === "/upyog-ui/employee/mcollect/inbox" ? t("UC_SEARCH_HEADER") : t("UC_COMMON_HEADER_SEARCH")}</span>

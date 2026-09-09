@@ -85,7 +85,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
     Cell: ({
       row
     }) => <button onClick={() => handleDelete(row.index)}>
-          <DeleteIcon className="delete ads-auto-5" fill="#a82227" />
+          <DeleteIcon className="delete ads-auto-5" fill="var(--primary-main)" />
         </button>
   }
   // { Header: t("TOTAL_PRICE"), accessor: "price" },
@@ -165,7 +165,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
       </div>
       {showCancellationPolicy && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: "#a82227", margin: "25px" }}>Terms and Conditions</CardSubHeader>}
+          headerBarMain={<CardSubHeader className="text-primary-main" style={{ margin: "25px" }}>Terms and Conditions</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handleCancellationPolicyClick} />}
           popupStyles={{
             backgroundColor: "#fff",
@@ -179,7 +179,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
               {cancelpolicyData?.length > 0 ? (
                 renderCancellationPolicy(cancelpolicyData[0].termsAndCondition)
               ) : (
-                <CardLabel style={{ fontSize: "20px" }}>Loading...</CardLabel>
+                <CardLabel className="text-xl">Loading...</CardLabel>
               )}
             </div>
           }
@@ -205,7 +205,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
       )}
       {showViewCart && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: "#a82227", margin: "25px" }}>My Cart</CardSubHeader>}
+          headerBarMain={<CardSubHeader className="text-primary-main" style={{ margin: "25px" }}>My Cart</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handleCartClick} />}
           popupStyles={{ backgroundColor: "#fff", position: "relative", maxHeight: "80vh", width: "80%", overflowY: "auto" }}
           popupModuleMianStyles={{ padding: "10px" }}
@@ -231,7 +231,7 @@ const ADSCartAndCancellationPolicyDetails = () => {
       )}
       {showPriceBreakup && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>Price Breakup</CardSubHeader>}
+          headerBarMain={<CardSubHeader className="text-primary-main" style={{ margin: '25px' }}>Price Breakup</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handlePriceBreakupClick} />}
           popupStyles={{ backgroundColor: "#fff", position: 'relative', maxHeight: '90vh', width: '60%', overflowY: 'auto' }}
           children={

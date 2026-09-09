@@ -128,12 +128,12 @@ const Details = () => {
 
             {data?.Employees?.[0]?.documents ? <StatusTable style={{ marginBottom: "40px" }}>
               <Row label={t("TL_APPROVAL_UPLOAD_HEAD")} text={""} />
-              <div style={{ display: "flex", flexWrap: "wrap" }}>
+              <div className="flex" style={{ flexWrap: "wrap" }}>
                 {data?.Employees?.[0]?.documents?.map((document, index) => {
                   return (
                     <a onClick={() => handleDownload(document)} style={{ minWidth: "160px", marginRight: "20px" }} key={index}>
-                      <DocumentSVG width={85} height={100} style={{ background: "#f6f6f6", padding: "8px", marginLeft: "15px" }} />
-                      <p style={{ marginTop: "8px", maxWidth: "196px", }}>{document.documentName}</p>
+                      <DocumentSVG width={85} height={100} className="p-sm" style={{ background: "#f6f6f6", marginLeft: "15px" }} />
+                      <p className="mt-sm" style={{ maxWidth: "196px" }}>{document.documentName}</p>
                     </a>
                   );
                 })}

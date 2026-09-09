@@ -120,20 +120,20 @@ const ForgotPassword = ({ config: propsConfig, t }) => {
       </FormComposer>
       {showToast && <Toast error={true} label={t(showToast)} onClose={closeToast} />}
 
-      <div style={{ width: '100%', position: 'fixed', bottom: 0,backgroundColor:"white",textAlign:"center" }}>
-        <div style={{ display: 'flex', justifyContent: 'center', color:"black" }}>
-          {/* <span style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px", fontWeight: "400"}} onClick={() => { window.open('https://www.digit.org/', '_blank').focus();}} >Powered by DIGIT</span>
+      <div className="bg-white text-center" style={{ width: '100%', position: 'fixed', bottom: 0 }}>
+        <div className="flex justify-center" style={{ color:"black" }}>
+          {/* <span className="cursor-pointer font-regular" style={{ fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px" }} onClick={() => { window.open('https://www.digit.org/', '_blank').focus();}} >Powered by DIGIT</span>
           <span style={{ margin: "0 10px" ,fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px"}}>|</span> */}
-          <a style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px", fontWeight: "400"}} href="#" target='_blank'>UPYOG License</a>
+          <a className="cursor-pointer font-regular" style={{ fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px" }} href="#" target='_blank'>UPYOG License</a>
 
-          <span  className="upyog-copyright-footer" style={{ margin: "0 10px",fontSize:"12px" }} >|</span>
-          <span  className="upyog-copyright-footer" style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px", fontWeight: "400"}} onClick={() => { window.open('https://niua.in/', '_blank').focus();}} >Copyright © 2022 National Institute of Urban Affairs</span>
+          <span  className="upyog-copyright-footer text-xs" style={{ margin: "0 10px" }} >|</span>
+          <span  className="upyog-copyright-footer cursor-pointer font-regular" style={{ fontSize: window.Digit.Utils.browser.isMobile()?"12px":"12px" }} onClick={() => { window.open('https://niua.in/', '_blank').focus();}} >Copyright © 2022 National Institute of Urban Affairs</span>
           
-          {/* <a style={{ cursor: "pointer", fontSize: "16px", fontWeight: "400"}} href="#" target='_blank'>UPYOG License</a> */}
+          {/* <a className="cursor-pointer text-md font-regular" href="#" target='_blank'>UPYOG License</a> */}
 
         </div>
         <div className="upyog-copyright-footer-web">
-          <span className="" style={{ cursor: "pointer", fontSize:  window.Digit.Utils.browser.isMobile()?"14px":"16px", fontWeight: "400"}} onClick={() => { window.open('https://niua.in/', '_blank').focus();}} >Copyright © 2022 National Institute of Urban Affairs</span>
+          <span className=" cursor-pointer font-regular" style={{ fontSize:  window.Digit.Utils.browser.isMobile()?"14px":"16px" }} onClick={() => { window.open('https://niua.in/', '_blank').focus();}} >Copyright © 2022 National Institute of Urban Affairs</span>
           </div>
       </div>
     </Background>

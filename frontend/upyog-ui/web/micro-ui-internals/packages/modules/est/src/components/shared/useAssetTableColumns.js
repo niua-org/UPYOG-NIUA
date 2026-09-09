@@ -65,7 +65,7 @@ const useAssetTableColumns = ({
           if (onEstateNoClick) {
             return (
               <span
-                style={{ color: "#a82227", cursor: "pointer", textDecoration: "underline" }}
+                className="text-primary-main cursor-pointer" style={{ textDecoration: "underline" }}
                 onClick={() => onEstateNoClick(row.original)}
               >
                 {estateNo}
@@ -75,7 +75,7 @@ const useAssetTableColumns = ({
           if (estateNoLink === "navigate") {
             return (
               <span
-                style={{ color: "#a82227", cursor: "pointer", textDecoration: "underline" }}
+                className="text-primary-main cursor-pointer" style={{ textDecoration: "underline" }}
                 onClick={() => navigate(`${modulePath}/application-details/${estateNo}`)}
               >
                 {estateNo}
@@ -185,12 +185,7 @@ const useAssetTableColumns = ({
 
           return (
             <div
-              style={{
-                display: "flex",
-                flexDirection: isMobile && showEdit ? "column" : "row",
-                gap: isMobile ? "4px" : "8px",
-                justifyContent: "center",
-              }}
+              className="flex justify-center" style={{ flexDirection: isMobile && showEdit ? "column" : "row", gap: isMobile ? "4px" : "8px" }}
             >
               <button
                 onClick={() => canAllot && onAllot?.(row.original)}

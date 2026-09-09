@@ -192,8 +192,8 @@ function SelectDocument({
     }
 
     return (
-        <div style={{ marginBottom: "24px", maxWidth: "950px", minWidth: "280px", background: "#FAFAFA", borderRadius: "4px", border: "1px solid #D6D5D4", padding: "8px" }}>
-            <CardSubHeader style={{ marginBottom: "8px", paddingBottom: "9px", color: "#0B0C0C", fontSize: "16px", lineHeight: "19px" }}>{`${t(doc?.code)}`}</CardSubHeader>
+        <div className="mb-lg bg-grey-light rounded-sm border border-solid border-border p-sm" style={{ maxWidth: "950px", minWidth: "280px" }}>
+            <CardSubHeader className="mb-sm text-text-primary text-md" style={{ paddingBottom: "9px", lineHeight: "19px" }}>{`${t(doc?.code)}`}</CardSubHeader>
             {doc?.uploadedDocuments?.length && <DocumentsPreview documents={doc?.uploadedDocuments} svgStyles={{ width: "100px", height: "100px", viewBox: "0 0 25 25", minWidth: "100px" }} />}
             {
                 checkEnablingDocs ?

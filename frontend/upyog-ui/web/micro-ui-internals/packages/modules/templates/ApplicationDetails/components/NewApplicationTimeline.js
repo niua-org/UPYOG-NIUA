@@ -144,7 +144,7 @@ export default function NewApplicationTimeline({ workflowDetails, t, tenantId = 
     <React.Fragment>
       <div className="custom-timeline-container">
         {timeObj && (
-          <div style={{ marginBottom: "8px", fontStyle: "italic" }}>
+          <div className="mb-sm" style={{ fontStyle: "italic" }}>
             {t("TOTAL_TIME_TAKEN")}: {timeObj?.days} {t("DAYS")} {timeObj?.hours} {t("HOURS")} {timeObj?.minutes} {t("MINUTES")} {timeObj?.seconds}{" "}
             {t("SECONDS")}
           </div>

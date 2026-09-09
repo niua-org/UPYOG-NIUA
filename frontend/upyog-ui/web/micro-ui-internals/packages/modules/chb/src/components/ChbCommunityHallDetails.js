@@ -94,48 +94,48 @@ const ChbCommunityHallDetails = ({ hallId, setShowDetails }) => {
     <div>
       {showPopup && selectedHall && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '35px' }}>Community Hall Details</CardSubHeader>}
+          headerBarMain={<CardSubHeader className="text-primary-main" style={{ margin: '35px' }}>Community Hall Details</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handleClosePopup} />}
           popupStyles={{ backgroundColor: "#fff", position: 'relative', width: '90%', maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto' }}
           children={
             <div style={{ padding: '15px', paddingTop: '1px' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              <div className="flex" style={{ flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ flex: '1 1 45%' }}>
-                  <CardLabel style={{ fontSize: '20px' }}>Name</CardLabel>
+                  <CardLabel className="text-xl">Name</CardLabel>
                   <CardLabelDesc>{selectedHall.name}</CardLabelDesc>
                 </div>
                 <div style={{ flex: '1 1 45%' }}>
-                  <CardLabel style={{ fontSize: '20px' }}>Geo Location</CardLabel>
+                  <CardLabel className="text-xl">Geo Location</CardLabel>
                   <CardLabelDesc>{selectedHall.geoLocation}</CardLabelDesc>
                 </div>
                 <div style={{ flex: '1 1 45%' }}>
-                  <CardLabel style={{ fontSize: '20px' }}>Address</CardLabel>
+                  <CardLabel className="text-xl">Address</CardLabel>
                   <CardLabelDesc>{selectedHall.address}</CardLabelDesc>
                 </div>
                 <div style={{ flex: '1 1 45%' }}>
-                  <CardLabel style={{ fontSize: '20px' }}>Contact Details</CardLabel>
+                  <CardLabel className="text-xl">Contact Details</CardLabel>
                   <CardLabelDesc>{selectedHall.contactDetails}</CardLabelDesc>
                 </div>
                 <div style={{ flex: '1 1 45%' }}>
-                  <CardLabel style={{ fontSize: '20px' }}>Description</CardLabel>
+                  <CardLabel className="text-xl">Description</CardLabel>
                   <CardLabelDesc>{selectedHall.hallDescription}</CardLabelDesc>
                 </div>
                 <div style={{ flex: '1 1 45%' }}>
-                  <CardLabel style={{ fontSize: '20px' }}>Type</CardLabel>
+                  <CardLabel className="text-xl">Type</CardLabel>
                   <CardLabelDesc>{selectedHall.type}</CardLabelDesc>
                 </div>
               </div>
-              <CardLabel style={{ fontSize: '20px', marginTop: '10px' }}>Terms and Conditions</CardLabel>
+              <CardLabel className="text-xl" style={{ marginTop: '10px' }}>Terms and Conditions</CardLabel>
               <CardLabelDesc>
                 <ul>{renderList(selectedHall.termsAndCondition)}</ul>
               </CardLabelDesc>
-              {/* <CardLabel style={{ fontSize: '20px', marginTop: '15px' }}>Disclaimer</CardLabel>
+              {/* <CardLabel className="text-xl" style={{ marginTop: '15px' }}>Disclaimer</CardLabel>
               <CardLabelDesc>{selectedHall.disclaimer}</CardLabelDesc>
-              <CardLabel style={{ fontSize: '20px', marginTop: '15px' }}>Cancellation Policy</CardLabel>
+              <CardLabel className="text-xl" style={{ marginTop: '15px' }}>Cancellation Policy</CardLabel>
               <CardLabelDesc>
                 <ul>{renderList(selectedHall.cancellationPolicy)}</ul>
               </CardLabelDesc>
-              <CardLabel style={{ fontSize: '20px', marginTop: '15px' }}>Remarks</CardLabel>
+              <CardLabel className="text-xl" style={{ marginTop: '15px' }}>Remarks</CardLabel>
               <CardLabelDesc>{selectedHall.remarks}</CardLabelDesc> */}
             </div>
           }

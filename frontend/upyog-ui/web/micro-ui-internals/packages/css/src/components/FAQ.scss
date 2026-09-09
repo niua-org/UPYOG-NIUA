@@ -10,18 +10,18 @@
 
 .faq-page{
   width: 92%;
-  margin: 16px;
+  margin: var(--spacing-md);
 }
 
 .faqs{
   cursor: pointer;
   .faq-question{
-    font-weight: 400;
-    margin: 16px;
+    font-weight: var(--weight-regular);
+    margin: var(--spacing-md);
     background: #fff;
     justify-content: space-between;
     display: flex;
-    font-size: 16px;
+    font-size: var(--font-size-md);
   }
 
   .faqicon{
@@ -36,26 +36,26 @@
 
     span {
       display: block; 
-      font-size: 14px;
-      font-weight: 400;
+      font-size: var(--font-size-sm);
+      font-weight: var(--weight-regular);
       margin: 0px 12px 5px
     }
   }
   .cs-box-border {
     height: 1px;
     position: relative;
-    border-bottom: 1px solid lightgray;;
+    border-bottom: var(--border-width-sm) solid lightgray;;
     background: lightgray;
-    margin-left: 16px;
-    margin-right: 16px;
+    margin-left: var(--spacing-md);
+    margin-right: var(--spacing-md);
   }
 }
 
 .faq-list{
   background: #fff;
   margin: 5px 0;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding-top: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
 }
   
 .rotate {

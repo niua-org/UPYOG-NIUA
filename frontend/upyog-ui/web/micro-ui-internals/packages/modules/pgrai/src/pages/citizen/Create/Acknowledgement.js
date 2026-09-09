@@ -77,7 +77,7 @@ useEffect(() => {
         {mutation.isSuccess && <Row rowContainerStyle={rowContainerStyle} last textStyle={{ whiteSpace: "pre", width: "60%" }} />}
       </StatusTable>
       {mutation.isSuccess && (
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '20px' }}>
+      <div className="flex" style={{ flexDirection: 'row', gap: '20px' }}>
         {user.type==="EMPLOYEE" &&(<Link to={`/upyog-ui/employee`}>
         <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
          </Link>)}

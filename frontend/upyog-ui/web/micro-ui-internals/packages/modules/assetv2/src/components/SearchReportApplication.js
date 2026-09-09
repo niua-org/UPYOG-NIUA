@@ -232,7 +232,7 @@ const downloadQRReport = async () => {
                 <div>
                 <Header>{t("AST_REPORTS_CHECK")}</Header>
                 < Card className={"card-search-heading"}>
-                    <span style={{color:"#505A5F"}}>{t("Provide at least one parameter to search for an application")}</span>
+                    <span className="text-text-secondary">{t("Provide at least one parameter to search for an application")}</span>
                 </Card>
                 <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                 <SearchField>
@@ -331,7 +331,7 @@ const downloadQRReport = async () => {
 
             <br></br>
            { data !== "" ? 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: "10px" }}>
+            <div className="flex justify-end" style={{ marginTop: "10px" }}>
             <button onClick={downloadPDF} style = {{ color: "maroon", border: "2px solid #333", padding: "8px 16px", cursor: "pointer",marginRight: "10px"}} >Download PDF</button>
             <button onClick={downloadXLS} style = {{ color: "maroon", border: "2px solid #333", padding: "10px 20px",cursor: "pointer"}}>Download XLS</button> 
             <button onClick={downloadQRReport} style = {{ color: "maroon", border: "2px solid #333", padding: "10px 20px",cursor: "pointer", marginLeft:"15px"}}>Download QR Report</button> 
@@ -346,7 +346,7 @@ const downloadQRReport = async () => {
                 t(data.display)
                     .split("\\n")
                     .map((text, index) => (
-                    <p key={index} style={{ textAlign: "center" }}>
+                    <p key={index} className="text-center">
                         {text}
                     </p>
                     ))

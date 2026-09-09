@@ -4,13 +4,13 @@
     @apply bg-grey-mid rounded-2xl pt-sm pb-sm flex justify-between items-center;
     padding-left: 12px;
     padding-right: 12px;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     margin-left: 2px;
     height: 2rem;
     margin-top: 1rem;
     .text {
       padding-right: 5px;
-      max-width: calc( 100% - 24px );
+      max-width: calc( 100% - var(--spacing-lg) );
       height: 22px;
       overflow: hidden;
       text-overflow: clip;

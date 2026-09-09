@@ -1,10 +1,10 @@
 .SearchOnRadioButton{
     svg{
-        fill: #505A5F;
-        width: 24px;
-        height: 24px;
-        top: 8px;
-        right: 8px;
+        fill: var(--text-secondary);
+        width: var(--spacing-lg);
+        height: var(--spacing-lg);
+        top: var(--spacing-sm);
+        right: var(--spacing-sm);
         @apply absolute;
     }
 }

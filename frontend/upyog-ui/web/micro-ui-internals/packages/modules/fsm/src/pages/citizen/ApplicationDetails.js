@@ -127,10 +127,10 @@ const ApplicationDetails = () => {
   return (
     <React.Fragment>
       <div className="cardHeaderWithOptions" style={isMobile ? {} : {maxWidth:"960px", display:"flex", alignItems:"center"}}>
-        <div  style={{flexGrow:1, textAlign:"left"}}>
+        <div  className="text-left" style={{ flexGrow:1 }}>
         <Header>{t("CS_FSM_APPLICATION_DETAIL_TITLE_APPLICATION_DETAILS")}</Header>
         </div>
-        <div style={{display:"flex",flexDirection:"row-reverse",alignItems:"center", marginTop:"-25px", justifyContent:"flex-end",gap:"10px"}}>
+        <div className="flex items-center justify-end" style={{ flexDirection:"row-reverse", marginTop:"-25px", gap:"10px" }}>
         {dowloadOptions && dowloadOptions.length > 0 && !showReceiptOptions && (
           <MultiLink
             className="multilinkWrapper"
@@ -139,9 +139,9 @@ const ApplicationDetails = () => {
             options={dowloadOptions}
           />
         )}   
-        <LinkButton label={t("VIEW_TIMELINE")} style={{ color:"#A52A2A"}} onClick={handleViewTimeline}></LinkButton>
+        <LinkButton label={t("VIEW_TIMELINE")} className="text-primary-main" onClick={handleViewTimeline}></LinkButton>
         </div> 
-        <div style={{display:"flex",flexDirection:"row-reverse",alignItems:"center",gap:"10px", marginTop:"-25px", zIndex:"10"}}>
+        <div className="flex items-center" style={{ flexDirection:"row-reverse", gap:"10px", marginTop:"-25px", zIndex:"10" }}>
         {receiptOptions && receiptOptions.length > 0 && showReceiptOptions && (
           <MultiLink
             className="multilinkWrapper"

@@ -156,18 +156,18 @@ const columns = useMemo(
       </SearchForm>
       <div style={{marginTop:"240px",marginLeft:"-55%",width:"80%"}} >
       {data?.display ? (
-        <div style={{ marginTop: "20x",maxWidth:"680%", marginLeft:"60px" ,backgroundColor: "white",height:"60px" }}>
+        <div className="bg-white" style={{ marginTop: "20x", maxWidth:"680%", marginLeft:"60px", height:"60px" }}>
           {t(data.display)
             .split("\\n")
             .map((text, index) => (
-              <p key={index} style={{ textAlign: "center", paddingTop:"12px" }}>
+              <p key={index} className="text-center" style={{ paddingTop:"12px" }}>
                 {text}
               </p>
             ))}
         </div>
       ) : (
         data !== "" ? (
-        <div style={{ backgroundColor: "white", marginRight:"200px", marginLeft:"2.5%", width:"100%" }}>  
+        <div className="bg-white" style={{ marginRight:"200px", marginLeft:"2.5%", width:"100%" }}>  
         <div className="sideContent" style={{ float:"right", padding:"10px 30px"}}>
                   <DownloadBtn className="mrlg cursorPointer"  onClick={() => handleExcelDownload(tabledata)}/>
               </div>

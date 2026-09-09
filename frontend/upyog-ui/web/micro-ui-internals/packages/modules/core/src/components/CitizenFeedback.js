@@ -140,7 +140,7 @@ const CitizenFeedback = ({popup = false, onClose, setShowToast, data}) => {
         <Card>
           <div style={popup ? {display:"flex", justifyContent: "space-between"} : {}}>
           <CardHeader>{t(getCardHeaderAndText("Header")) || t(`PT_RATE_HELP_TEXT`)}</CardHeader>
-          {popup && <span style={{marginTop:"8px"}} onClick={() => onClose(false)}>
+          {popup && <span className="mt-sm" onClick={() => onClose(false)}>
                   <CloseSvg />
             </span>}
           </div>

@@ -181,16 +181,16 @@ function Assignment({
     assignments;
   };
   return (
-    <div key={index + 1} style={{ marginBottom: "16px" }}>
-      <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
+    <div key={index + 1} className="mb-md">
+      <div className="p-md mt-sm border border-solid border-grey-bg">
         <LabelFieldPair>
           <div className="label-field-pair" style={{ width: "100%" }}>
-            <h2 className="card-label card-label-smaller" style={{ color: "#505A5F" }}>
+            <h2 className="card-label card-label-smaller text-text-secondary">
               {t("HR_ASSIGNMENT")} {index + 1}
             </h2>
           </div>
           {assignments.length > 1 && !assignment?.id && !assignment?.isCurrentAssignment ? (
-            <div onClick={() => handleRemoveUnit(assignment)} style={{ marginBottom: "16px", padding: "5px", cursor: "pointer", textAlign: "right" }}>
+            <div onClick={() => handleRemoveUnit(assignment)} className="mb-md" style={{ padding: "5px", cursor: "pointer", textAlign: "right" }}>
               X
             </div>
           ) : null}

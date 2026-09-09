@@ -35,7 +35,7 @@ const StakeholderResponse = (props) => {
           headerStyles={{fontSize: "32px", wordBreak: "break-word"}}
         />
         <CardText style={{ paddingBottom: "10px", marginBottom: "10px" }}>{getSubHeaderMessage()}</CardText>
-        <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+        <ActionBar className="flex justify-end" style={{ alignItems: "baseline" }}>
           <SubmitBar
             label={t("CORE_COMMON_GO_TO_HOME")}
             onSubmit={onSubmit}

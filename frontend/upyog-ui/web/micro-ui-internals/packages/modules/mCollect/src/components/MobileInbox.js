@@ -103,10 +103,7 @@ const MobileInbox = ({
                 <Link>
                   <a
                     href="javascript:void(0)"
-                    style={{
-                      color: "#FE7A51",
-                      cursor: "pointer",
-                    }}
+                    className="text-primary-light cursor-pointer"
                     onClick={(value) => {
                       printReciept(original?.["businessService"], original?.["challanNo"]);
                     }}

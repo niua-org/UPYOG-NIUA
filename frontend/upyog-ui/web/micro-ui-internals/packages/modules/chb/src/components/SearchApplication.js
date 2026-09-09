@@ -289,13 +289,10 @@
                 return (
                   <span
                     onClick={() => handleViewRefundStatus(row?.original)}
-                    style={{
-                      color: "#a82227",
-                      cursor: "pointer",
+                    className="text-primary-main" style={{ cursor: "pointer",
                       fontWeight: isSelected ? "700" : "500",
                       textDecoration: "underline",
-                      fontSize: "14px",
-                    }}
+                      fontSize: "14px", }}
                   >
                     {isSelected && refundStatus
                       ? refundStatus
@@ -389,26 +386,13 @@
                       />
                       {isMenuOpen && (
                         <div
-                          style={{
-                            position: 'absolute',
-                            backgroundColor: 'white',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            padding: '8px',
-                            zIndex: 1000,
-                          }}
+                          className="bg-white rounded-sm p-sm" style={{ position: 'absolute', border: '1px solid #ccc', zIndex: 1000 }}
                         >
                           {/* Action for Cancel */}
                           {application?.bookingStatus === "BOOKED" && (
                             <div
                               onClick={handleCancel}
-                              style={{
-                                display: 'block',
-                                padding: '8px',
-                                textDecoration: 'none',
-                                color: 'black',
-                                cursor: 'pointer',
-                              }}
+                              className="p-sm block cursor-pointer" style={{ textDecoration: 'none', color: 'black' }}
                             >
                               {t("CHB_CANCEL")}
                             </div>
@@ -418,13 +402,7 @@
                           {(application.bookingStatus === "BOOKING_CREATED" || application.bookingStatus === "PAYMENT_FAILED" || application.bookingStatus === "PENDING_FOR_PAYMENT") && (
                             <div
                               onClick={() => handleMakePayment()}
-                              style={{
-                                display: 'block',
-                                padding: '8px',
-                                textDecoration: 'none',
-                                color: 'black',
-                                cursor: 'pointer',
-                              }}
+                              className="p-sm" style={{ display: 'block', textDecoration: 'none', color: 'black', cursor: 'pointer' }}
                             >
                               {t("CHB_COLLECT_PAYMENT")}
                             </div>
@@ -474,7 +452,7 @@
                   <div>
                   <Header>{t("CHB_SEARCH_BOOKINGS")}</Header>
                   < Card className={"card-search-heading"}>
-                      <span style={{color:"#505A5F"}}>{t("Provide at least one parameter to search for an application")}</span>
+                      <span className="text-text-secondary">{t("Provide at least one parameter to search for an application")}</span>
                   </Card>
                   <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
                   <SearchField>
@@ -632,7 +610,7 @@
                   t(data.display)
                       .split("\\n")
                       .map((text, index) => (
-                      <p key={index} style={{ textAlign: "center" }}>
+                      <p key={index} className="text-center">
                           {text}
                       </p>
                       ))
@@ -679,30 +657,23 @@
                     gap: "8px",
                   }}
                 >
-                  <div style={{ fontWeight: "600", fontSize: "15px" }}>
+                  <div className="font-medium" style={{ fontSize: "15px" }}>
                     {t("CHB_REFUND_STATUS_FOR") || "Refund Status for"}{" "}
-                    <span style={{ fontWeight: "700" }}>{bookingDetails.bookingNo}</span>
+                    <span className="font-bold">{bookingDetails.bookingNo}</span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                  <div className="flex items-center" style={{ gap: "16px", flexWrap: "wrap" }}>
                     {refund?.refundId && (
-                      <span style={{ fontSize: "14px" }}>
+                      <span className="text-sm">
                         <strong>{t("CHB_REFUND_ID") || "Refund ID"}:</strong>{" "}{refund.refundId}
                       </span>
                     )}
                     {refund?.refundAmount && (
-                      <span style={{ fontSize: "14px" }}>
+                      <span className="text-sm">
                         <strong>{t("CHB_REFUND_AMOUNT") || "Amount"}:</strong>{" "}₹{refund.refundAmount}
                       </span>
                     )}
                     <span
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: "700",
-                        padding: "3px 12px",
-                        borderRadius: "12px",
-                        backgroundColor: refundStatus ? refundStatusColor.border : "#DEE2E6",
-                        color: refundStatus ? refundStatusColor.text : "#6C757D",
-                      }}
+                      className="text-sm font-bold" style={{ padding: "3px 12px", borderRadius: "12px", backgroundColor: refundStatus ? refundStatusColor.border : "#DEE2E6", color: refundStatus ? refundStatusColor.text : "#6C757D" }}
                     >
                       {refundStatus
                         ? `${t("CHB_REFUND_STATUS") || "Refund Status"}: ${refundStatus}`

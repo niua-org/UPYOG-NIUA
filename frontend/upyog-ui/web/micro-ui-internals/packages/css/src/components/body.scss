@@ -14,9 +14,9 @@ body,
 }
 .navbar {
   @apply text-white bg-secondary p-md w-full mb-md;
-  background: linear-gradient(to right, #feeee7, #a82227,#feeee7) !important;
+  background: linear-gradient(to right, #feeee7, var(--focus),#feeee7) !important;
   img {
-    height: 24px;
+    height: var(--spacing-lg);
   }
 }
 /* .navbar-header{
@@ -53,8 +53,8 @@ body,
 }
 
 .bread-crumb {
-  font-size: 14px;
-  color: #505a5f;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
   display: flex;
   margin-bottom: 10px;
   flex-wrap: wrap
@@ -71,7 +71,7 @@ body,
   }
 
   .last {
-    color: #0b0c0c;
+    color: var(--text-primary);
   }
 }
 

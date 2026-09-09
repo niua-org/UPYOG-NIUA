@@ -17,6 +17,10 @@ export const DigitApp = ({ stateCode, modules, appTenants, logoUrl, initData }) 
 // console.log("DigitAppDigitAppDigitApp",stateCode, modules, appTenants, logoUrl, initData)
   if (window.location.pathname.split("/").includes("employee")) CITIZEN = false;
 
+  const currentTenantId = Digit.ULBService.getStateId();
+  const currentThemeType = CITIZEN ? "CITIZEN" : "EMPLOYEE";
+  Digit.Hooks.useThemeConfig?.({ tenantId: currentTenantId, themeType: currentThemeType });
+
   useEffect(() => {
     // 🔹 scroll to top on route change (replaces history.listen)
     window?.scrollTo({ top: 0, left: 0, behavior: "smooth" });

@@ -228,19 +228,12 @@ const PropertyOwnerDetails = ({ t, config, onSelect, userType, formData, formSta
       {ownerDetails?.map((owner, index) => {
         return (
           <div
-            style={{
-              border: "1px solid #D6D5D4",
-              background: "#FAFAFA",
-              borderRadius: "4px",
-              boxSizing: "border-box",
-              margin: "16px 0px",
-              padding: "16px 8px",
-            }}
+            className="border border-solid border-border bg-grey-light rounded-sm my-md" style={{ boxSizing: "border-box", padding: "16px 8px" }}
           >
             {isMobile && ismultiple && ownerDetails.length > 1 && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <div className="flex justify-end">
                 <LinkButton
-                  label={<DeleteIcon style={{ bottom: "5px" }} fill={!(ownerDetails.length == 1) ? "#494848" : "#FAFAFA"} />}
+                  label={<DeleteIcon style={{ bottom: "5px" }} fill={!(ownerDetails.length == 1) ? "#494848" : "var(--grey-light)"} />}
                   style={{ margin: "0px" }}
                   onClick={(e) => {
                     setOwnerDetails([...ownerDetails.filter((own, ind) => ind != index)]);
@@ -414,10 +407,10 @@ const PropertyOwnerDetails = ({ t, config, onSelect, userType, formData, formSta
                       />
                     </div>
                     {!isMobile && (
-                      <div style={{ display: "flex", justifyContent: "flex-end", width: "20%", alignSelf: "flex-start" }}>
+                      <div className="flex justify-end" style={{ width: "20%", alignSelf: "flex-start" }}>
                         {ismultiple && (
                           <LinkButton
-                            label={<DeleteIcon style={{ bottom: "0px" }} fill={!(ownerDetails.length == 1) ? "#494848" : "#FAFAFA"} />}
+                            label={<DeleteIcon style={{ bottom: "0px" }} fill={!(ownerDetails.length == 1) ? "#494848" : "var(--grey-light)"} />}
                             style={{ margin: "0px" }}
                             onClick={(e) => {
                               setOwnerDetails([...ownerDetails.filter((own, ind) => ind != index)]);
@@ -523,10 +516,10 @@ const PropertyOwnerDetails = ({ t, config, onSelect, userType, formData, formSta
                       />
                     </div>
                     {!isMobile && (
-                      <div style={{ display: "flex", justifyContent: "flex-end", width: "20%", alignSelf: "flex-start" }}>
+                      <div className="flex justify-end" style={{ width: "20%", alignSelf: "flex-start" }}>
                         {ismultiple && (
                           <LinkButton
-                            label={<DeleteIcon style={{ bottom: "0px" }} fill={!(ownerDetails.length == 1) ? "#494848" : "#FAFAFA"} />}
+                            label={<DeleteIcon style={{ bottom: "0px" }} fill={!(ownerDetails.length == 1) ? "#494848" : "var(--grey-light)"} />}
                             style={{ margin: "0px" }}
                             onClick={(e) => {
                               setOwnerDetails([...ownerDetails.filter((own, ind) => ind != index)]);
@@ -737,7 +730,7 @@ const PropertyOwnerDetails = ({ t, config, onSelect, userType, formData, formSta
       })}
       {ismultiple ? (
         <div>
-          <div style={{ display: "flex", paddingBottom: "15px", color: "#FF8C00" }}>
+          <div className="flex" style={{ paddingBottom: "15px", color: "#FF8C00" }}>
             <button
               type="button"
               style={{ paddingTop: "10px" }}
@@ -762,7 +755,7 @@ const PropertyOwnerDetails = ({ t, config, onSelect, userType, formData, formSta
               {t("PT_COMMON_ADD_APPLICANT_LABEL")}
             </button>
           </div>
-          <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-35px" }}>
+          <CardLabelError className="text-xs" style={{ width: "70%", marginLeft: "30%", marginTop: "-35px" }}>
             {t(formState.errors?.mulipleOwnerError?.message || "")}
           </CardLabelError>
         </div>

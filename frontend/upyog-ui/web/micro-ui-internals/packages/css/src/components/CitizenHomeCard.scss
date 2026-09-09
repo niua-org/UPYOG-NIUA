@@ -35,8 +35,8 @@
     }
 
   .CitizenHomeCard{
-     padding: 16px !important;
-     margin-right:16px !important;
+     padding: var(--spacing-md) !important;
+     margin-right:var(--spacing-md) !important;
      display:block !important;
       box-shadow: rgb(50 50 93 / 18%) 0px 50px 100px -20px, rgb(0 0 0 / 16%) 0px 30px 60px -30px, rgb(10 37 64 / 17%) 0px -2px 6px 0px inset;
       @apply inline-block mr-lg p-lg align-top;

@@ -23,7 +23,7 @@ const WSDocsRequired = ({ onSelect, userType, onSkip, config }) => {
       <Card>
         <CardHeader>{t(`WS_COMMON_APPL_NEW_CONNECTION`)}</CardHeader>
         <CitizenInfoLabel textStyle={{
-          color: "#0B0C0C"
+          color: "var(--text-primary)"
         }} text={t(`WS_DOCS_REQUIRED_TIME`)} showInfo={false} className="ws-auto-105" />
         <CardText className="ws-auto-106">{t(`WS_NEW_CONNECTION_TEST_1`)}</CardText>
         <CardText className="ws-auto-107">{t(`WS_NEW_CONNECTION_TEST_2`)}</CardText>

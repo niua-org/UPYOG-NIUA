@@ -89,10 +89,7 @@ export const getActionButton = (businessService, receiptNumber) => {
   const { t } = useTranslation();
   return (
     <a
-      style={{
-        color: "#FE7A51",
-        cursor: "pointer",
-      }}
+      className="text-primary-light cursor-pointer"
       onClick={() => {
         printReciept(businessService, receiptNumber);
       }}
@@ -107,10 +104,7 @@ export const getBillNumber = (businessService, consumerCode, billNumber) => {
   return (
     <a
       href="javascript:void(0)"
-      style={{
-        color: "#FE7A51",
-        cursor: "pointer",
-      }}
+      className="text-primary-light cursor-pointer"
       onClick={() => {
         printBill(businessService, consumerCode);
       }}
@@ -137,10 +131,7 @@ export const getRetryButton = (key, tenantId, locality, isConsolidated, business
   return (
     <>
     <div
-      style={{
-        color: "#FE7A51",
-        cursor: "pointer",
-      }}
+      className="text-primary-light cursor-pointer"
       onClick={() => {
         retrywnsDownloadBill(key, tenantId, locality, isConsolidated, businessService,setShowToast,t);
       }}
@@ -155,10 +146,7 @@ export const getCancelButton = (jobid,setShowToast,t) => {
   
   return (
     <div
-      style={{
-        color: "#FE7A51",
-        cursor: "pointer",
-      }}
+      className="text-primary-light cursor-pointer"
       onClick={() => {
         cancelwnsDownloadBill(jobid,setShowToast,t);
       }}

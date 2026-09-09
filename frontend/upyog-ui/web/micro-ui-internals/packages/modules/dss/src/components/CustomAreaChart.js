@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis ,ComposedChart, Bar} from "recharts";
 import FilterContext from "./FilterContext";
 import NoData from "./NoData";
-const COLORS = ["#048BD0", "#FBC02D", "#8E29BF", "#EA8A3B", "#0BABDE", "#6E8459", "#D4351C", "#0CF7E4", "#F80BF4", "#22F80B"];
+const COLORS = ["#048BD0", "#FBC02D", "#8E29BF", "#EA8A3B", "#0BABDE", "#6E8459", "var(--error)", "#0CF7E4", "#F80BF4", "#22F80B"];
 const increasedHeightCharts = [
   "nssOBPSTotalPermitsVsTotalOCSubmittedVsTotalOCIssued",
   "nssNOCApplicationVsProvisionalVsActual",
@@ -172,12 +172,12 @@ const CustomAreaChart = ({ xDataKey = "name", yDataKey = getValue, data, setChar
     }
   };
 
-  const renderLegend = () => <span style={{ fontSize: "14px", color: "#505A5F" }}>{t(`DSS_${Digit.Utils.locale.getTransformedLocale(id)}`)}</span>;
+  const renderLegend = () => <span className="text-text-secondary text-sm">{t(`DSS_${Digit.Utils.locale.getTransformedLocale(id)}`)}</span>;
 
   const renderLegendForLine = (ss, sss, index) => {
     return (
       <ul>
- <span style={{ fontSize: "14px", color: "#505A5F" }}>{keysArr?.[index]}</span>
+ <span className="text-text-secondary text-sm">{keysArr?.[index]}</span>
       </ul>
     )
   }
@@ -280,7 +280,7 @@ else {
     return <Loader />;
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%" }}>
+    <div className="flex justify-center items-center" style={{ flexDirection: "column", height: "100%" }}>
       {(id === "fssmCapacityUtilization"  ||id === "fsmCapacityUtilization"  )&& (
         <p>
           {t("DSS_FSM_TOTAL_SLUDGE_TREATED")} - {totalWaste} {t("DSS_KL")}
@@ -299,7 +299,7 @@ else {
             </defs>
             <CartesianGrid strokeDasharray="3 3" />
             <Tooltip content={renderTooltip} />
-            <XAxis dataKey={xDataKey} tick={{ fontSize: "14px", fill: "#505A5F" }} tickFormatter={tickFormatter} />
+            <XAxis dataKey={xDataKey} tick={{ fontSize: "14px", fill: "var(--text-secondary)" }} tickFormatter={tickFormatter} />
             <YAxis
               /*
               label={{
@@ -311,10 +311,10 @@ else {
                 dy: 40,
                 offset: -10,
                 fontSize: "14px",
-                fill: "#505A5F",
+                fill: "var(--text-secondary)",
               }}
               */
-              tick={{ fontSize: "14px", fill: "#505A5F" }}
+              tick={{ fontSize: "14px", fill: "var(--text-secondary)" }}
             />
             <Legend formatter={renderLegend} iconType="circle" />
             <Area type="monotone" dataKey={renderPlot} stroke="#048BD0" fill="url(#colorUv)" dot={true} />

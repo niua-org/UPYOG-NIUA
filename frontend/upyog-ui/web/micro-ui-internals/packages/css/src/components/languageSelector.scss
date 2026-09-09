@@ -3,22 +3,22 @@
 }
 
 .language-selector div:not(:first-child) {
-  margin-left: 10px;
+  margin-left: var(--spacing-sm);
 }
 .bannerCard .language-button-container button {
   width: 6.2rem;
   height: 2.5rem;
 }
 .bannerCard .customBtn {
-  border-color: #505a5f;
+  border-color: var(--text-secondary);
 }
 .bannerCard .customBtn:focus {
   outline: none;
 }
 .bannerCard .customBtn-selected {
   border-color: transparent;
-  background-color: #5a1166 !important;
+  background-color: var(--primary-main) !important;
 }
 .bannerCard .bannerHeader p {
-  font-size: 19px;
+  font-size: var(--font-size-xl);
 }

@@ -39,10 +39,10 @@ export const ViewImages = (props) => {
 
   return (
     <React.Fragment>
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      <div className="flex" style={{ flexWrap: 'wrap' }}>
         {uploadedImagesThumbs?.map((thumbnail, index) => {
           return (
-            <div key={index} style={{ minWidth: '160px', marginRight: '8px', marginBottom: '8px', maxWidth: '200px' }}>
+            <div key={index} className="mb-sm" style={{ minWidth: '160px', marginRight: '8px', maxWidth: '200px' }}>
               <img src={thumbnail.image} alt="uploaded thumbnail"  onClick={() => props.onClick(thumbnail.fullImage, index)} />
             </div>
           );

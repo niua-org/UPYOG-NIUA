@@ -54,7 +54,7 @@ export const configSVApproverApplication = ({ t, action, selectFile, uploadedFil
                   setUploadedFile(null);
                 }}
                 message={isUploading ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="flex items-center" style={{ gap: '8px' }}>
                     <LoadingSpinner />
                     <span>Uploading...</span>
                   </div>

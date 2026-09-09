@@ -159,7 +159,7 @@ const WorkerConfig = ({ t, disabled = false, skillsOption = [], defaultSkill = [
           labelChildren: (
             <div className="tooltip" style={{ paddingLeft: "10px", marginBottom: "-3px" }}>
               <InfoIcon />
-              <span className="tooltiptext" style={{ width: "150px", left: "230%", fontSize: "14px" }}>
+              <span className="tooltiptext text-sm" style={{ width: "150px", left: "230%" }}>
                 {t("ES_FSM_SW_SKILLS_INFO_TIP")}
               </span>
             </div>

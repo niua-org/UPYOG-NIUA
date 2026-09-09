@@ -129,22 +129,20 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
   };
   return (
     <div>
-      <CardSubHeader style={{ color: '#a82227', fontSize: '18px'}}>
+      <CardSubHeader className="text-primary-main text-lg">
         {t("CHB_TOTAL_BOOKING_AMOUNT")}
       </CardSubHeader>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={{ marginLeft: '30px', marginRight: '60px', fontSize: '16px', fontWeight: 'bold' }}>
+      <div className="flex items-center">
+        <div className="text-md font-bold" style={{ marginLeft: '30px', marginRight: '60px' }}>
           Rs {mutation.data?.demands[0]?.demandDetails ? calculateTotalAmount(mutation.data?.demands[0]?.demandDetails) : 'Loading...'} /-
         </div>
         <div 
-          onClick={handlePriceBreakupClick} 
-          style={{ cursor: 'pointer', margin: '0 18px', color: '#a82227', fontSize: '20px', textDecoration: 'none' }}
+          onClick={handlePriceBreakupClick} className="cursor-pointer text-primary-main text-xl" style={{ margin: '0 18px', textDecoration: 'none' }}
         >
           {t("CHB_PRICE_BREAKUP")}
         </div>
         <div 
-          onClick={handleCancellationPolicyClick} 
-          style={{ cursor: 'pointer', color: '#a82227', fontSize: '20px', textDecoration: 'none' }}
+          onClick={handleCancellationPolicyClick} className="cursor-pointer text-primary-main text-xl" style={{ textDecoration: 'none' }}
         >
           {t("CHB_TERMS_CONDITION")}
         </div>
@@ -152,7 +150,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
 
       {showCancellationPolicy && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>{t('CHB_TERMS_AND_CONDITIONS')}</CardSubHeader>}
+          headerBarMain={<CardSubHeader className="text-primary-main" style={{ margin: '25px' }}>{t('CHB_TERMS_AND_CONDITIONS')}</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handleCancellationPolicyClick} />}
           popupStyles={{ backgroundColor: "#fff", position: 'relative', maxHeight: '90vh', width: '80%', overflowY: 'auto' }}
           children={
@@ -162,7 +160,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
                   {renderCancellationPolicy(cancelpolicyData[0].termsAndCondition)}
                 </div>
               ) : (
-                <CardLabel style={{ fontSize: '20px' }}>Loading...</CardLabel>
+                <CardLabel className="text-xl">Loading...</CardLabel>
               )}
             </div>
           }
@@ -188,7 +186,7 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
       )}
       {showPriceBreakup && (
         <Modal
-          headerBarMain={<CardSubHeader style={{ color: '#a82227', margin: '25px' }}>{t('CHB_PRICE_BREAKUP')}</CardSubHeader>}
+          headerBarMain={<CardSubHeader className="text-primary-main" style={{ margin: '25px' }}>{t('CHB_PRICE_BREAKUP')}</CardSubHeader>}
           headerBarEnd={<CloseBtn onClick={handlePriceBreakupClick} />}
           popupStyles={{ backgroundColor: "#fff", position: 'relative', maxHeight: '60vh', width: '60%', overflowY: 'auto' }}
           children={
@@ -196,14 +194,14 @@ const ChbCancellationPolicy = ({ slotDetail, SlotSearchData }) => {
               <CardLabelDesc style={{ marginBottom: '15px' }}>{t("CHB_ESTIMATE_PRICE_DETAILS)")}</CardLabelDesc>
               <ul>
                 {mutation.data?.demands[0]?.demandDetails && mutation.data?.demands[0]?.demandDetails.map((demands, index) => (
-                  <li key={index} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <li key={index} className="flex justify-between">
                     <CardText>{t(`${demands.taxHeadMasterCode}`)}</CardText>
                     <CardText>Rs {demands.taxAmount}</CardText>
                   </li>
                 ))}
               </ul>
               <hr />
-              <div style={{ fontWeight: 'bold', marginTop: '10px', display: 'flex', justifyContent: 'space-between' }}>
+              <div className="font-bold flex justify-between" style={{ marginTop: '10px' }}>
                 <CardLabelDesc>{t("CHB_TOTAL")}</CardLabelDesc>
                 <CardLabelDesc>Rs {mutation.data?.demands[0]?.demandDetails && calculateTotalAmount(mutation.data?.demands[0]?.demandDetails)}</CardLabelDesc>
               </div>

@@ -8,18 +8,18 @@
   }
 
   &-margin-right {
-    margin-right: 16px;
+    margin-right: var(--spacing-md);
   }
 
   &-unit {
-    font-size: 12px;
-    font-weight: 400;
-    color: #505a5f;
-    margin-left: 4px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--weight-regular);
+    color: var(--text-secondary);
+    margin-left: var(--spacing-xs);
   }
 
   &-required {
-    color: #d4351c;
+    color: var(--error);
     margin-left: 2px;
   }
 
@@ -28,12 +28,12 @@
   }
 
   &-group {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-lg);
 
     &-children {
       display: flex;
       flex-direction: row;
-      gap: 16px;
+      gap: var(--spacing-md);
       flex-wrap: wrap;
 
       > * {
@@ -48,8 +48,8 @@
     align-items: center;
     text-align: left;
     margin-top: 28px;
-    padding-bottom: 24px;
-    gap: 16px;
+    padding-bottom: var(--spacing-lg);
+    gap: var(--spacing-md);
 
     // Override global ActionBar `div { width: 100% }` so primary/cancel stay side by side.
     > div {
@@ -60,7 +60,7 @@
   &-action-primary {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: var(--spacing-md);
   }
 
   &-submit-flex {
@@ -68,8 +68,8 @@
   }
 
   &-error {
-    color: #d4351c;
-    font-size: 12px;
+    color: var(--error);
+    font-size: var(--font-size-xs);
   }
 
   /* Search mode — inline Clear + Search (no sticky ActionBar) */
@@ -78,8 +78,8 @@
     flex-direction: row;
     gap: 10px;
     align-items: center;
-    margin-top: 16px;
-    margin-bottom: 8px;
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
 
     @media (max-width: 768px) {
       flex-direction: column;
@@ -98,14 +98,14 @@
   &-search-clear {
     margin: 0;
     cursor: pointer;
-    color: #a82227;
-    font-size: 16px;
+    color: var(--focus);
+    font-size: var(--font-size-md);
 
     @media (max-width: 768px) {
       width: 100%;
       text-align: center;
-      font-size: 14px;
-      margin-top: 4px;
+      font-size: var(--font-size-sm);
+      margin-top: var(--spacing-xs);
     }
   }
 }

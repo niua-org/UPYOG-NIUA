@@ -14,7 +14,7 @@ import { format } from "date-fns";
 const PROJECTION_CONFIG = { scale: 280, center: [85.9629, 22.5937] };
 
 // Red Variants
-const COLOR_RANGE = ["#54D140", "#298CFF", "#a82227", "#D1D1D1"];
+const COLOR_RANGE = ["#54D140", "#298CFF", "var(--primary-main)", "#D1D1D1"];
 
 const STATUS = ["Live", "OnBoarded", "None"];
 const DEFAULT_COLOR = "#D1D1D1";

@@ -876,10 +876,10 @@ const WrapPaymentComponent = (props) => {
           />
         )}
       </StatusTable>
-      <div style={{display:"flex"}}>
+      <div className="flex">
       {business_service == "TL" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={printReciept}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -888,7 +888,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "TL" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginTop:"15px" }} onClick={printCertificate}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -897,7 +897,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "pet-services" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={printReciept}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -906,7 +906,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "pet-services" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={petCertificate}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -915,7 +915,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "garbage-service" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={printGCReceipt}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -932,9 +932,9 @@ const WrapPaymentComponent = (props) => {
        </div>
       :null}
        {business_service == "request-service.water_tanker" && (
-        <div style={{ display: "flex", justifyContent: "flex-start", width: "100%" }}>
+        <div className="flex justify-start" style={{ width: "100%" }}>
           <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginTop:"15px" }} onClick={printWTReceipt}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
               <path d="M0 0h24v24H0V0z" fill="none" />
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
             </svg>
@@ -943,9 +943,9 @@ const WrapPaymentComponent = (props) => {
         </div>
       )}
       {business_service == "request-service.mobile_toilet" && (
-        <div style={{ display: "flex", justifyContent: "flex-start", width: "100%" }}>
+        <div className="flex justify-start" style={{ width: "100%" }}>
           <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginTop:"15px" }} onClick={printMTReceipt}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
               <path d="M0 0h24v24H0V0z" fill="none" />
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
             </svg>
@@ -954,9 +954,9 @@ const WrapPaymentComponent = (props) => {
         </div>
       )}
        {business_service == "request-service.tree_pruning" && (
-        <div style={{ display: "flex", justifyContent: "flex-start", width: "100%" }}>
+        <div className="flex justify-start" style={{ width: "100%" }}>
           <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginTop:"15px" }} onClick={printTPReceipt}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
               <path d="M0 0h24v24H0V0z" fill="none" />
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
             </svg>
@@ -1012,16 +1012,16 @@ const WrapPaymentComponent = (props) => {
           </div>
       ) : null}
       {business_service == "chb-services" ? (
-        <div  style={{ display: 'flex', justifyContent: 'flex-end', gap: '20px', marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
+        <div  className="flex justify-end" style={{ gap: '20px', marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
         <div className="primary-label-btn d-grid" onClick={printCHBReceipt}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
           {t("CHB_FEE_RECEIPT")}
         </div>
         <div className="primary-label-btn d-grid" onClick={printPermissionLetter}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
               <path d="M0 0h24v24H0V0z" fill="none" />
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
             </svg>
@@ -1030,16 +1030,16 @@ const WrapPaymentComponent = (props) => {
         </div>
       ) : null}
        {business_service == "adv-services" ? (
-        <div  style={{ display: 'flex', justifyContent: 'flex-end', gap: '20px', marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
+        <div  className="flex justify-end" style={{ gap: '20px', marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
         <div className="primary-label-btn d-grid" onClick={printADSReceipt}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
           {t("ADS_FEE_RECEIPT")}
         </div>
         <div className="primary-label-btn d-grid" onClick={printADSPermissionLetter}>
-            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
               <path d="M0 0h24v24H0V0z" fill="none" />
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
             </svg>
@@ -1049,7 +1049,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "sv-services" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={printReciept}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -1058,7 +1058,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "sv-services" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={svCertificate}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>
@@ -1067,7 +1067,7 @@ const WrapPaymentComponent = (props) => {
       ) : null}
       {business_service == "sv-services" ? (
         <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop:"15px",marginBottom:"15px" }} onClick={svIdCard}>
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="var(--primary-main)">
             <path d="M0 0h24v24H0V0z" fill="none" />
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
           </svg>

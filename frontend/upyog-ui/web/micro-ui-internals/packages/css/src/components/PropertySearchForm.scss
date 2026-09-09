@@ -15,19 +15,19 @@
   }
 
   .PropertySearchFormSwitcher{
-    border-bottom: 1px solid #d6d5d4;
+    border-bottom: var(--border-width-sm) solid var(--border);
     cursor: pointer;
     margin-bottom: 20px;
     display: flex;
     .non-selected {
-      color: #505a5f;
-      font-weight: 400;
+      color: var(--text-secondary);
+      font-weight: var(--weight-regular);
     }
     .selected {
-      color: #a82227;
-      font-weight: 700;
+      color: var(--focus);
+      font-weight: var(--weight-bold);
       padding-bottom: 10px;
-      border-bottom: 2px solid #a82227;
+      border-bottom: var(--border-width-md) solid var(--focus);
     }
     span {
       margin-right: 20px;

@@ -93,10 +93,7 @@ const AdsApplication = ({ application, tenantId, buttonLabel }) => {
        {/* <div> */}
        <KeyNote keyValue={t("ADS_BOOKING_NO")} note={application?.bookingNo} />
             {/* { timeRemaining>0 && (<CardSubHeader 
-              style={{ 
-                textAlign: 'right', 
-                fontSize: "24px"
-              }}
+              className="text-right text-2xl"
              >
               {t("CS_TIME_REMAINING")}: <span className="astericColor">{formatTime(timeRemaining)}</span>
              </CardSubHeader>)}

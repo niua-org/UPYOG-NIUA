@@ -14,7 +14,7 @@ import {
 // Custom inline SVG Icon
 const FlameIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C11.5 3.5 10 5.5 8 7C6 8.5 5 10.5 5 13C5 16.87 8.13 20 12 20C15.87 20 19 16.87 19 13C19 10.5 18 8.5 16 7C14 5.5 12.5 3.5 12 2Z" fill="#FE7A51" />
+    <path d="M12 2C11.5 3.5 10 5.5 8 7C6 8.5 5 10.5 5 13C5 16.87 8.13 20 12 20C15.87 20 19 16.87 19 13C19 10.5 18 8.5 16 7C14 5.5 12.5 3.5 12 2Z" fill="var(--primary-light)" />
   </svg>
 );
 
@@ -62,7 +62,7 @@ const NocCitizenHome = () => {
         <h1>{t("MODULE_FIRENOC")}</h1>
       )}
 
-      <div className="moduleLinkHomePageModuleLinks" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div className="moduleLinkHomePageModuleLinks flex" style={{ flexDirection: "column", gap: "16px" }}>
         <CitizenHomeCard
           header={t("MODULE_FIRENOC")}
           links={links}

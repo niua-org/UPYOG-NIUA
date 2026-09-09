@@ -24,17 +24,17 @@ function InspectionReport({ fiReport, isCitizen=false }) {
     return (
         <React.Fragment>
             <div style={{ marginTop: "10px" }}>
-            {isCitizen?<CardHeader style={{fontSize: "24px"}}>{`${t(`BPA_FI_REPORT`)}`}</CardHeader>:
-            <CardSectionHeader style={{fontSize: "24px"}}>{`${t(`BPA_FI_REPORT`)}`}</CardSectionHeader>}
+            {isCitizen?<CardHeader className="text-2xl">{`${t(`BPA_FI_REPORT`)}`}</CardHeader>:
+            <CardSectionHeader className="text-2xl">{`${t(`BPA_FI_REPORT`)}`}</CardSectionHeader>}
                 {fiReport.map((fiData, index) =>
-                    <div style={{ background: "#FAFAFA", border: "1px solid #D6D5D4", padding: "8px", borderRadius: "4px", maxWidth: "950px", minWidth: "280px", marginBottom: "24px" }}>
+                    <div className="bg-grey-light border border-solid border-border p-sm rounded-sm mb-lg" style={{ maxWidth: "950px", minWidth: "280px" }}>
                         <StatusTable>
-                            <CardSectionHeader style={{fontSize: "20px"}}>{fiReport?.length == 1 ? `${t(`BPA_FI_REPORT`)}` : `${t(`BPA_FI_REPORT`)} - ${index + 1}`}</CardSectionHeader>
+                            <CardSectionHeader className="text-xl">{fiReport?.length == 1 ? `${t(`BPA_FI_REPORT`)}` : `${t(`BPA_FI_REPORT`)} - ${index + 1}`}</CardSectionHeader>
                             <Row className="border-none" label={`${t(`BPA_FI_DATE_LABEL`)}`} text={fiData?.date ? (fiData.date.includes("-")?  `${fiData.date?.split("-")[2]}/${fiData.date?.split("-")[1]}/${fiData.date?.split("-")[0]}` : fiData?.date) : "NA"} />
                             <Row className="border-none" label={`${t(`BPA_FI_TIME_LABEL`)}`} text={fiData?.time ? fiData?.time : "NA"} />
                             {fiData?.questions?.length &&
                                 fiData?.questions?.map((qstn) =>
-                                    <div style={{ background: "white", border: "1px solid #D6D5D4", padding: "8px", borderRadius: "4px", marginTop: "10px" }}>
+                                    <div className="bg-white border border-solid border-border p-sm rounded-sm" style={{ marginTop: "10px" }}>
                                         <Row className="border-none" label={`${t(`${qstn.question}`)}`} text={qstn?.value ? qstn?.value : "NA"} />
                                         <Row className="border-none" label={`${t(`BPA_ENTER_REMARKS`)}`} text={qstn.remarks ? qstn.remarks : "NA"} />
                                     </div>)}

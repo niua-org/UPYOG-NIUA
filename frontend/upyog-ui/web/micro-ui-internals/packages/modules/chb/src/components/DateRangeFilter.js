@@ -129,7 +129,7 @@ const DateRangeFilter = ({
         <span
             className="employee-select-wrap--elipses"
             style={{
-            color: value?.title ? "#0B0C0C" : "#98A2B3",
+            color: value?.title ? "var(--text-primary)" : "#98A2B3",
             }}
         >
             {value?.title || t("CHB_SELECT_DATES")}

@@ -7,13 +7,13 @@ const Heading = (props) => {
 
 const Close = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#0B0C0C" />
+        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="var(--text-primary)" />
     </svg>
 );
 
 const CloseBtn = (props) => {
     return (
-        <div className="icon-bg-secondary" onClick={props.onClick} style={{ backgroundColor: "#FFFFFF" }}>
+        <div className="icon-bg-secondary" onClick={props.onClick} className="bg-white">
             <Close />
         </div>
     );
@@ -62,12 +62,12 @@ const Tempo = ({ t, styles, mdmsConfig = "", setMdmsConfig }) => {
                         selectedData?.map((value) =>
                             <div>
                                 {value?.header &&
-                                    <div style={{ fontWeight: "700", fontSize: "16px", margin: "10px 0px 10px 10px" }}>
+                                    <div className="font-bold text-md" style={{ margin: "10px 0px 10px 10px" }}>
                                         {t(value.header)}
                                     </div>}
                                 {value?.paragragh?.length &&
                                     value.paragragh.map((para) =>
-                                        <div style={{ fontSize: "16px", margin: "10px 0px 10px 10px" }}>
+                                        <div className="text-md" style={{ margin: "10px 0px 10px 10px" }}>
                                             {para?.paras?.map((value, index) => {
                                                 return <span>
                                                     {/* {index == 0 && "CCF_PP"} */}
@@ -81,21 +81,21 @@ const Tempo = ({ t, styles, mdmsConfig = "", setMdmsConfig }) => {
                                 }
                                 {value?.bulletinPoints?.length &&
                                     <div>
-                                        <ul style={{ listStyleType: "disc", width: "90%", marginLeft: "10%", fontSize: "16px" }}>
+                                        <ul className="text-md" style={{ listStyleType: "disc", width: "90%", marginLeft: "10%" }}>
                                             {value?.bulletinPoints?.map((point) => <li>{t(point)}</li>)}
                                         </ul>
                                     </div>
                                 }
                                 {value?.numericPoints?.length &&
                                     <div>
-                                        <ol style={{ listStyleType: "decimal", width: "90%", marginLeft: "10%", fontSize: "16px" }}>
+                                        <ol className="text-md" style={{ listStyleType: "decimal", width: "90%", marginLeft: "10%" }}>
                                             {value.numericPoints.map((point) => <li>{t(point)}</li>)}
                                         </ol>
                                     </div>
                                 }
                                 {value?.subParagragh?.length &&
                                     value.subParagragh.map((subPara) =>
-                                        <div style={{ fontSize: "16px", margin: "10px 0px 10px 10px" }}>
+                                        <div className="text-md" style={{ margin: "10px 0px 10px 10px" }}>
                                             {t(subPara)}
                                         </div>
                                     )

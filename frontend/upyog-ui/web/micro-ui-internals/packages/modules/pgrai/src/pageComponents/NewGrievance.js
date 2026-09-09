@@ -295,13 +295,7 @@ const NewGrievance = ({ t, config, onSelect, userType, formData }) => {
         <CardLabel style={styles.cardLabelStyle}>
           {`${t("PGR_AI_INPUT_GRIEVANCE")}`} <span style={styles.requiredAsterisk}>*</span>
         </CardLabel>
-        <div style={{
-          color: "#902434",
-          fontSize: "14px",
-          marginBottom: "8px",
-          fontStyle: "italic",
-          width: user.type === "EMPLOYEE" ? "45%" : "75%"
-        }}>
+        <div className="mb-sm text-sm" style={{ color: "#902434", fontStyle: "italic", width: user.type === "EMPLOYEE" ? "45%" : "75%" }}>
           {t("START_TYPING_TO_GET_SUGGESTIONS")}
         </div>
         <div style={{ position: "relative" }}>
@@ -441,7 +435,7 @@ const NewGrievance = ({ t, config, onSelect, userType, formData }) => {
           <AddressPopup t={t} isOpen={showAddressPopup} onClose={() => setShowAddressPopup(false)} onSubmit={handleAddressSubmit} />
 
         )}
-        <LabelFieldPair style={{ marginTop: "16px" }}>
+        <LabelFieldPair className="mt-md">
           <CardLabel style={styles.cardLabelStyle}>{`${t("PGR_AI_LANDMARK")}`} <span style={styles.requiredAsterisk}>*</span></CardLabel>
         </LabelFieldPair>
         <TextInput

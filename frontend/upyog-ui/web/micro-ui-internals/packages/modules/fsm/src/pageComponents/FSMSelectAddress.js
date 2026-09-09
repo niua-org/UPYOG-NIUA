@@ -216,8 +216,7 @@ const FSMSelectAddress = ({ t, config, onSelect, userType, formData }) => {
             <div className="field">
               <RadioButtons
                 selectedOption={selectLocation}
-                onSelect={selectedValue}
-                style={{ display: "flex", marginBottom: 0 }}
+                onSelect={selectedValue} className="flex" style={{ marginBottom: 0 }}
                 innerStyles={{ marginLeft: "10px" }}
                 options={inputs}
                 optionsKey="i18nKey"

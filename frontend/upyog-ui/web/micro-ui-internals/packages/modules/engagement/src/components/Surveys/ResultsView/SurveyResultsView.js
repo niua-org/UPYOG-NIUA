@@ -59,14 +59,14 @@ const displayResult = (ques,ans,type,resCount=0,t) => {
                         // <div className="surveyQuestion-wrapper">
                         //     <span className="question-title">{quesStmt}</span>
                         //     <header className=''>{`${resCount} Responses`}</header>
-                        //     <Card style={{"backgroundColor":"#FAFAFA","margin":"0px"}}>
+                        //     <Card style={{"backgroundColor":"var(--grey-light)","margin":"0px"}}>
                         //     {ans?.map(el=> <span>{el}<BreakLine /></span>)}
                         //     </Card>
                         // </div>
                         // <div>
                         //     <CardSectionHeader>{ques.questionStatement}</CardSectionHeader>
                         //     <header style={{"fontWeight":"bold"}}>{`${resCount} Responses`}</header>
-                        //     <Card style={{"backgroundColor":"#FAFAFA","margin":"0px"}}>
+                        //     <Card style={{"backgroundColor":"var(--grey-light)","margin":"0px"}}>
                         //     {ans?.map(el=> <p>{el}<BreakLine /></p>)}
                         //     </Card>
                         // </div>
@@ -148,7 +148,7 @@ const displayResult = (ques,ans,type,resCount=0,t) => {
                         // <div>
                         //     <CardSectionHeader>{ques.questionStatement}</CardSectionHeader>
                         //     <header style={{"fontWeight":"bold"}}>{`${resCount} Responses`}</header>
-                        //     <Card style={{"backgroundColor":"#FAFAFA","margin":"0px"}}>
+                        //     <Card style={{"backgroundColor":"var(--grey-light)","margin":"0px"}}>
                         //     {ans?.map(el=> <p>{el}<BreakLine /></p>)}
                         //     </Card>
                         // </div>

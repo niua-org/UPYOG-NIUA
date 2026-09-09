@@ -215,7 +215,7 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
                             t(tableData?.display)
                                 .split("\\n")
                                 .map((text, index) => (
-                                    <p key={index} style={{ textAlign: "center" }}>
+                                    <p key={index} className="text-center">
                                         {text}
                                     </p>
                                 ))
@@ -249,14 +249,14 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
                         t(tableData?.display)
                             .split("\\n")
                             .map((text, index) => (
-                                <p key={index} style={{ textAlign: "center" }}>
+                                <p key={index} className="text-center">
                                     {text}
                                 </p>
                             ))
                     }
                 </Card>
             ) : !isTableDataLoading ? (
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div className="flex" style={{ flexDirection: "column" }}>
                 <div style={{ alignSelf: "flex-end", marginBottom: "5px" }}>
                     <MultiLink
                         className="multilinkWrapper"
@@ -268,7 +268,7 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
                         reportStyles={{"position":"relative"}}
                     />
                 </div>
-            <div className="report-scroll-container" style={{ overflowX: "auto", width: "100%", display: "block" }}>
+            <div className="report-scroll-container block" style={{ overflowX: "auto", width: "100%" }}>
                 <Table
                 tableRef={tableRef}
                 t={t}

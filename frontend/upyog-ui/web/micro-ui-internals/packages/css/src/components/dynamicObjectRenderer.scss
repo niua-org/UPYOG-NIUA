@@ -8,8 +8,8 @@
     margin-bottom: 1.5rem;
 
     &-title {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: var(--font-size-xs);
+      font-weight: var(--weight-medium);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: #888;
@@ -18,27 +18,27 @@
   }
 
   &__array-label {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: #aaa;
     margin-bottom: 0.4rem;
   }
 
   &__card {
-    margin-bottom: 8px;
-    border-bottom-width: 1px;
-    border-color: #d6d5d4;
+    margin-bottom: var(--spacing-sm);
+    border-bottom-width: var(--border-width-sm);
+    border-color: var(--border);
     border-color: rgba(214, 213, 212, 1);
-    padding-bottom: 8px;
+    padding-bottom: var(--spacing-sm);
   }
 
   &__field-row {
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
     display: flex;
-    border-bottom-width: 1px;
+    border-bottom-width: var(--border-width-sm);
     --tw-border-opacity: 1;
-    border-color: #d6d5d4;
+    border-color: var(--border);
     border-color: rgba(214, 213, 212, var(--tw-border-opacity, 1));
-    padding-bottom: 8px;
+    padding-bottom: var(--spacing-sm);
 
     &:last-child {
       border-bottom: none;
@@ -47,15 +47,15 @@
 
   &__field-label {
     width: 40%;
-    font-weight: 700;
-    font-size: 18px;
-    line-height: 24px;
+    font-weight: var(--weight-bold);
+    font-size: var(--font-size-lg);
+    line-height: var(--spacing-lg);
   }
 
   &__field-value {
     width: 50%;
-    font-size: 18px;
-    line-height: 24px;
+    font-size: var(--font-size-lg);
+    line-height: var(--spacing-lg);
     word-break: break-all;
   }
 }

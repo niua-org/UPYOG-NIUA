@@ -57,16 +57,16 @@
 display: flex;
 flex-direction: row;
 align-items: flex-start;
-padding: 8px;
+padding: var(--spacing-sm);
 
 position: static;
-height: 40px;
+height: var(--spacing-2xl);
 left: 84px;
 top: 0px;
 
 /* Light Theme / Paper */
 
-background: #FFFFFF;
+background: var(--white);
 box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
 
 /* Inside auto layout */
@@ -79,7 +79,7 @@ color: #B1B4B6;
 .table-switch-card-inactive:hover{
     background: #fffffc;
     font-size: 17px;
-    color: #505A5F;
+    color: var(--text-secondary);
 }
 
 .table-switch-card-active{/* Frame 57 */
@@ -90,19 +90,19 @@ color: #B1B4B6;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    padding: 8px;
+    padding: var(--spacing-sm);
     
     position: static;
-    height: 40px;
+    height: var(--spacing-2xl);
     left: 0px;
     top: 0px;
     
     /* Light Theme / Paper */
     
-    background: #FFFFFF;
+    background: var(--white);
     /* Light Theme / Primary */
     
-    border: 1px solid #a82227;
+    border: var(--border-width-sm) solid var(--focus);
     box-sizing: border-box;
     box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.1);
     

@@ -66,7 +66,7 @@ const ApplicationDetail = () => {
         />}
         </div>
         {workflowDetails?.data?.timeline?.length>0 && (
-        <LinkButton label={t("VIEW_TIMELINE")} style={{ color:"#A52A2A"}} onClick={handleViewTimeline}></LinkButton>
+        <LinkButton label={t("VIEW_TIMELINE")} className="text-primary-main" onClick={handleViewTimeline}></LinkButton>
         )}
         </div>
         </div>

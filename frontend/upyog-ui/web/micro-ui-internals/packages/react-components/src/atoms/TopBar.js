@@ -31,8 +31,8 @@ const TopBar = ({
   // };
   return (
     <div className="navbar">
-      <div className="center-container back-wrapper" style={{display:"flex",marginRight:"2rem",marginLeft:"2rem",justifyContent:"space-between"}}>
-        <div className="hambuger-back-wrapper" style={{display:"flex"}}>
+      <div className="center-container back-wrapper flex justify-between" style={{ marginRight:"2rem", marginLeft:"2rem" }}>
+        <div className="hambuger-back-wrapper flex">
           {window.innerWidth <= 660  && <Hamburger handleClick={toggleSidebar} />}
           <a href={window.location.href.includes("citizen")?"/upyog-ui/citizen":"/upyog-ui/employee"}><img
             className="city"

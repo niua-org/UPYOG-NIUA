@@ -81,11 +81,11 @@ const CHBCancelBooking = ({ t, closeModal, actionCancelLabel, actionCancelOnSubm
                 <form onSubmit={handleSubmit(onSubmit)}>
                 {isOnline && (
                     <div style={{ marginBottom: "20px" }}>
-                        <p style={{ color: "#505A5F", fontSize: "16px", marginBottom: "12px", lineHeight: "1.5" }}>
+                        <p className="text-text-secondary text-md" style={{ marginBottom: "12px", lineHeight: "1.5" }}>
                             {t("CHB_ONLINE_PAYMENT_CANCEL_MSG", "Refund will be initiated to your account since the payment was done online. Cancellation charges may apply as per policy.")}
                         </p>
-                        <div style={{ marginBottom: "16px" }}>
-                            <label style={{ fontSize: "16px", fontWeight: "bold", display: "block", marginBottom: "8px" }}>
+                        <div className="mb-md">
+                            <label className="mb-sm text-md font-bold block">
                                 {t("CHB_CANCEL_REASON_LABEL", "Why do you want to cancel?")} <span className="check-page-link-button">*</span>
                             </label>
                             <TextArea

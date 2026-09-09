@@ -19,7 +19,7 @@ const YearWiseBilltable = ({ bill, ...props }) => {
     <React.Fragment>
       {showDetails ? (
         <div>
-          <div style={{ backgroundColor: "#EEEEEE" }} className="scroll-table-wrapper">
+          <div className="bg-grey-mid scroll-table-wrapper">
             <div className="scroll-table-width-wrapper">
               <table style={{ borderCollapse: "separate" }}>
                 {
@@ -58,12 +58,12 @@ const YearWiseBilltable = ({ bill, ...props }) => {
               </table>
             </div>
           </div>
-          <div style={{ textAlign: "right" }} onClick={() => setShowDetails(false)} className="filter-button">
+          <div className="text-right" onClick={() => setShowDetails(false)} className="filter-button">
             {t("ES_COMMON_HIDE_DETAILS")}
           </div>
         </div>
       ) : (
-        <div style={{ textAlign: "right" }} onClick={() => setShowDetails(true)} className="filter-button">
+        <div className="text-right" onClick={() => setShowDetails(true)} className="filter-button">
           {t("ES_COMMON_VIEW_DETAILS")}
         </div>
       )}

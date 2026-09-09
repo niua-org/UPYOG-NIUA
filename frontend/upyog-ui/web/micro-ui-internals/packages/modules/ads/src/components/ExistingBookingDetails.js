@@ -134,10 +134,7 @@ export const ExistingBookingDetails = ({
       <div>
         {filteredApplications.length > 0 && filteredApplications.map((application, index) => <div key={index}>
               
-  <Card style={{
-          ...applicationContainerStyle,
-          cursor: "pointer"
-        }} onMouseEnter={e => {
+  <Card className="cursor-pointer" style={{ ...applicationContainerStyle }} onMouseEnter={e => {
           e.currentTarget.style.backgroundColor = applicationContainerHoverStyle.backgroundColor;
           e.currentTarget.style.boxShadow = applicationContainerHoverStyle.boxShadow;
         }} onMouseLeave={e => {

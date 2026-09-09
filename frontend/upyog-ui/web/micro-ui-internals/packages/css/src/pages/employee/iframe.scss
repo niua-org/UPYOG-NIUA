@@ -2,7 +2,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Roboto";
-    background: #f4f7fb;
+    background: var(--grey-light);
   }
   
   
@@ -34,7 +34,7 @@ body {
         border-width: 0;
         width: 100vw;
         height: 100vh;
-        margin: 32px 0 0 0;
+        margin: var(--spacing-xl) 0 0 0;
     }
   }
   @media (max-width: 375px) {
@@ -42,7 +42,7 @@ body {
         border-width: 0;
         width: 100vw;
         height: 100vh;
-        margin: 32px 0 0 0;
+        margin: var(--spacing-xl) 0 0 0;
     }
   }
   

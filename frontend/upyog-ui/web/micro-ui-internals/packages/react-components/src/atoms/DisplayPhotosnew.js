@@ -5,17 +5,17 @@ import {PDFSvg} from "./svgindex"
 const ImageOrPDFIcon = ({source, index, last=false, onClick, selectedIndex, drawingNo }) => {
   const isSelected = selectedIndex === index;
   return Digit.Utils.getFileTypeFromFileStoreURL(source) === "pdf" ?
-  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-start", alignContent: "center" }}>
+  <div className="flex justify-start" style={{ flexWrap: "wrap", alignContent: "center" }}>
     <a target="_blank" href={source} style={{ minWidth: "100px", marginRight: "10px", maxWidth: "100px", height: "auto" }} key={index}>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <PDFSvg style={{ background: "#f6f6f6", padding: "8px", width:"100px" }} width="100px" height="100px" minWidth="100px" />
+      <div className="flex justify-center">
+        <PDFSvg className="p-sm" style={{ background: "#f6f6f6", width:"100px" }} width="100px" height="100px" minWidth="100px" />
       </div>
     </a>
   </div>
   :
   <div>
   <img style={{width:"200px", padding:"3px",height:"200px", margin:"8px",border: isSelected ? "4px solid black" : "none"}} key={index} src={source}{...(last ? {className:"last" } : {})}alt="issue thumbnail" onClick={() => onClick(source, index)}/>
-  <div style={{ marginTop: "12px", marginLeft:"12px", marginBottom:"5px", fontSize: "14px" }}>
+  <div className="text-sm" style={{ marginTop: "12px", marginLeft:"12px", marginBottom:"5px" }}>
         {drawingNo}
   </div>
   </div>

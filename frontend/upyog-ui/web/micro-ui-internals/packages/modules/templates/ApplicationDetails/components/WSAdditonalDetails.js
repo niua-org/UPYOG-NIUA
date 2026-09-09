@@ -58,7 +58,7 @@ const WSAdditonalDetails = ({ wsAdditionalDetails, oldValue }) => {
                       style={roadCuttingDetails?.length > 1
                         ? {
                           border: "1px solid #D6D5D4",
-                          background: "#FAFAFA",
+                          background: "var(--grey-light)",
                           borderRadius: "4px",
                           padding: "10px 10px 0px 10px",
                           margin: "5px 0px",

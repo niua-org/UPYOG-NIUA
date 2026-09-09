@@ -27,11 +27,11 @@
 
 /* components/SearchApplication.js */
 .wt-auto-5 {
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .wt-auto-6 {
-  color: #505A5F;
+  color: var(--text-secondary);
   margin-bottom: 10px;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .wt-auto-18 {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--grey-bg);
   padding: 6px;
 }
 
@@ -396,10 +396,10 @@
 }
 
 .wt-auto-75 {
-  background-color: #a82227;
+  background-color: var(--primary-main);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   padding: 4px 10px;
   cursor: pointer;
   font-size: 0.85rem;

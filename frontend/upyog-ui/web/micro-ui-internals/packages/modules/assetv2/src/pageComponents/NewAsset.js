@@ -188,12 +188,12 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
         
       <React.Fragment>
             {/* Group 1: Basic Purchase Information */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px',  border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+      <div className="rounded-md p-md" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', border: "1px solid rgb(101 43 43)" }}>
       {assetDetails?.assetParentCategory === "LAND" && (
         <div>
           <div>
             {`${t("AST_SURVEY_NUMBER")}`}
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
                 {`${t("ASSET_SURVEY_NUMBER")}`}
@@ -222,7 +222,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
       <div>
         <div>
           {`${t("AST_PURCHASE_DATE")}`} <span style={{ color: "red" }}>*</span>
-          <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+          <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
             <InfoBannerIcon />
             <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
               {`${t("ASSET_PURCHASE_DATE")}`}
@@ -271,7 +271,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
       <div>
         <div>
           {`${t("AST_LIFE")}`} <span style={{ color: "red" }}>*</span>
-          <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+          <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
             <InfoBannerIcon />
             <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
               {`${t("ASSET_USEFUL_LIFECYCLE")} `}
@@ -298,7 +298,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
        <div style={{ marginBottom: '30px' }}>
       <div>
         {`${t("AST_LOCATION_DETAILS")}`} <span style={{ color: "red" }}>*</span>
-        <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+        <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
           <InfoBannerIcon />
           <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
             {`${t("ASSET_LOCATION_DETAILS")} `}
@@ -343,7 +343,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
 
       {/* {assetDetails?.location && (
         <div>
-          <button style={{ color: "#a82227" }} onClick={() => setShowMap(true)}>
+          <button className="text-primary-main" onClick={() => setShowMap(true)}>
             Mark Asset on Map
           </button>
         </div>
@@ -373,11 +373,11 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
     </div>
 
       {assetDetails?.assetParentCategory !== "LAND" && (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+      <div className="rounded-md p-md" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', border: "1px solid rgb(101 43 43)" }}>
         <div>
           <div>
             {`${t("AST_INVOICE_DATE")}`} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
                 {`${t("ASSET_INVOICE_ISSUE_DATE")} `}
@@ -410,7 +410,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
         <div>
           <div>
             {`${t("AST_INVOICE_NUMBER")}`} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
                 {`${t("ASSET_INVOICE_ISSUE_DATE")} `}
@@ -440,11 +440,11 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
 
 
 
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px',  border: "1px solid rgb(101 43 43)", borderRadius: '8px', padding: '16px' }}>
+    <div className="rounded-md p-md" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', border: "1px solid rgb(101 43 43)" }}>
       <div>
         <div>
           {`${t("AST_MARKET_RATE")}`}
-          <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+          <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
             <InfoBannerIcon />
             <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
               {`${t("ASSET_MARKET_VALUE")} `}
@@ -473,7 +473,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
       <div>
         <div>
           {`${t("AST_PURCHASE_COST")}`} <span style={{ color: "red" }}>*</span>
-          <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+          <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
             <InfoBannerIcon />
             <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
               {`${t("ASSET_PURCHASE_COST")} `}
@@ -502,7 +502,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
       <div>
         <div>
           {`${t("AST_ACQUISITION_COST")}`} <span style={{ color: "red" }}>*</span>
-          <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+          <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
             <InfoBannerIcon />
             <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
               {`${t("ASSET_ACQUISITION_COST")} `}
@@ -531,7 +531,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
       <div>
         <div>
           {`${t("AST_BOOK_VALUE")}`} <span style={{ color: "red" }}>*</span>
-          <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+          <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
             <InfoBannerIcon />
             <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
               {`${t("ASSET_BOOK_VALUE")} `}
@@ -560,7 +560,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
 
         
           {/* Dynamic Fields - 2 column grid */}
-    {/* <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', border: '1px solid #ccc', borderRadius: '8px', boxShadow: 'rgb(0 0 0 / 26%) 0px 4px 24px', padding: '16px' }}>
+    {/* <div className="rounded-md p-md" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', border: '1px solid #ccc', boxShadow: 'rgb(0 0 0 / 26%) 0px 4px 24px' }}>
       {formJson.map((row, index) => {
         if (row.conditionalField) {
           const { dependsOn, showWhen } = row.conditionalField;
@@ -575,15 +575,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
       return (
         <div
           key={gIndex}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "20px",
-            border: "1px solid rgb(101 43 43)",
-            borderRadius: "8px",
-            padding: "16px",
-            marginBottom: "20px",
-          }}
+          className="rounded-md p-md" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", border: "1px solid rgb(101 43 43)", marginBottom: "20px" }}
         >
           {group.map((row, index) => {
             console.log("roewowow",row);
@@ -598,7 +590,7 @@ const NewAsset = ({ t, config, onSelect, formData }) => {
           <div key={index}>
             <div>
               {`${t(row.code)}`} {row.isMandatory ? <span style={{ color: "red" }}>*</span> : null}
-              <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+              <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
                 <InfoBannerIcon />
                 <span className="tooltiptext" style={{ whiteSpace: "pre-wrap", fontSize: "small", wordWrap: "break-word", width: "300px", marginLeft: "15px", marginBottom: "-10px" }}>
                   {`${t(row.code + "_INFO")} `}

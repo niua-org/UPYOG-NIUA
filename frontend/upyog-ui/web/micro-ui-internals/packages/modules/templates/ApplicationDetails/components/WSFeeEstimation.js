@@ -194,10 +194,10 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                                 return <Row className="border-none" key={`${value.title}`} label={`${t(`${value.title}`)}`} text={value?.value ? value?.value : ""} />
                             })}
                         </div>
-                        <hr style={{ border: "1px solid #D6D5D4", color: "#D6D5D4", margin: "16px 0px" }}></hr>
+                        <hr className="border border-solid border-border text-border my-md"></hr>
                         <div>
                             <Row className="border-none" key={`WS_COMMON_TOTAL_AMT`} label={`${t(`WS_COMMON_TOTAL_AMT`)}`} text={<span>&#8377;{billDetails?.totalAmount || 0}</span>} textStyle={{fontSize: "24px", fontWeight: "700"}}/>
-                            <Row className="border-none" key={`CS_INBOX_STATUS_FILTER`} label={`${t(`CS_INBOX_STATUS_FILTER`)}`} text={isPaid ? t("WS_COMMON_PAID_LABEL") : t("WS_COMMON_NOT_PAID")} textStyle={!isPaid ? { color: "#D4351C" } : { color: "#00703C" }} />
+                            <Row className="border-none" key={`CS_INBOX_STATUS_FILTER`} label={`${t(`CS_INBOX_STATUS_FILTER`)}`} text={isPaid ? t("WS_COMMON_PAID_LABEL") : t("WS_COMMON_NOT_PAID")} textStyle={!isPaid ? { color: "var(--error)" } : { color: "var(--success)" }} />
                         </div>
                     </StatusTable>}
                 {
@@ -206,7 +206,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                             showPopUp(true)
                         }}
                     >
-                        <span style={{ cursor: "pointer", color: "#a82227" }}>{t("WS_PAYMENT_ADD_REBATE_PENALTY")}</span>
+                        <span className="text-primary-main cursor-pointer">{t("WS_PAYMENT_ADD_REBATE_PENALTY")}</span>
                     </div> : null
                 }
                 {popup &&
@@ -231,7 +231,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                         {
                             <div>
                                 <Card style={{ padding: "10px 10px 1px 10px", margin: "0px 0px 15px 0px" }}>
-                                    <CardSectionHeader style={{ fontSize: "16px", fontWeight: "700", lineHeight: "18px", padding: "0px", margin: "0px 0px 10px 0px" }} >{t("PT_AD_PENALTY")}</CardSectionHeader>
+                                    <CardSectionHeader className="text-md font-bold" style={{ lineHeight: "18px", padding: "0px", margin: "0px 0px 10px 0px" }} >{t("PT_AD_PENALTY")}</CardSectionHeader>
                                     <CardLabel>
                                         {t("PT_TX_HEADS")}
                                     </CardLabel>
@@ -251,7 +251,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                                         <CardLabel>{t("PT_REASON")}</CardLabel>
                                         <div className="field">
                                             <TextInput
-                                                style={{ background: "#FAFAFA" }}
+                                                className="bg-grey-light"
                                                 t={t}
                                                 type={"text"}
                                                 isMandatory={false}
@@ -270,7 +270,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                                     <CardLabel>{t("PT_HEAD_AMT")}</CardLabel>
                                     <div className="field">
                                         <TextInput
-                                            style={{ background: "#FAFAFA" }}
+                                            className="bg-grey-light"
                                             t={t}
                                             type={"number"}
                                             isMandatory={false}
@@ -287,7 +287,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                                     </div>
                                 </Card>
                                 <Card style={{ padding: "10px 10px 1px 10px", margin: "0px 0px 15px 0px" }}>
-                                    <CardSectionHeader style={{ fontSize: "16px", fontWeight: "700", lineHeight: "18px", padding: "0px", margin: "0px 0px 10px 0px" }} >{t("PT_AD_REBATE")}</CardSectionHeader>
+                                    <CardSectionHeader className="text-md font-bold" style={{ lineHeight: "18px", padding: "0px", margin: "0px 0px 10px 0px" }} >{t("PT_AD_REBATE")}</CardSectionHeader>
                                     <CardLabel>{t("PT_TX_HEADS")}</CardLabel>
                                     <div className="field">
                                         <Dropdown
@@ -304,7 +304,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                                     {fields?.adhocRebateReason_data?.title === "PT_OTHERS" && <div className="field">
                                         <CardLabel>{t("PT_REASON")}</CardLabel>
                                         <TextInput
-                                            style={{ background: "#FAFAFA" }}
+                                            className="bg-grey-light"
                                             t={t}
                                             type={"text"}
                                             isMandatory={false}
@@ -322,7 +322,7 @@ const WSFeeEstimation = ({ wsAdditionalDetails, workflowDetails }) => {
                                     <CardLabel>{t("PT_HEAD_AMT")}</CardLabel>
                                     <div className="field">
                                         <TextInput
-                                            style={{ background: "#FAFAFA" }}
+                                            className="bg-grey-light"
                                             t={t}
                                             type={"number"}
                                             isMandatory={false}

@@ -140,22 +140,12 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="employee-app-container" style={{ padding: "20px" }}>
-      <div style={{ 
-        textAlign: "center", 
-        fontWeight: "bold", 
-        fontSize: "24px", 
-        marginBottom: "30px" 
-      }}>
+      <div className="text-center font-bold text-2xl" style={{ marginBottom: "30px" }}>
         {t("COMMON_ULB_DASHBOARD")}
       </div>
       
       {Object.keys(modulesData).length === 0 ? (
-        <div style={{ 
-          textAlign: "center", 
-          padding: "40px", 
-          color: "#505A5F",
-          fontSize: "16px" 
-        }}>
+        <div className="p-2xl text-center text-text-secondary text-md">
           {t("NO_DASHBOARD_ACCESS")}
         </div>
       ) : (

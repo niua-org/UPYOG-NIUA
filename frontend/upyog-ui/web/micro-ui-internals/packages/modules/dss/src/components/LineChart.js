@@ -205,8 +205,8 @@ const LineChartWithData = () => {
   }, [response]);
 
   return (
-    <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "10px", width: "100%" }}>
-      <h2 style={{ textAlign: "center", color: "#rgb(0, 0, 0)", padding: "10px", margin: 0, fontSize: '24px', fontWeight: '500' }}>
+    <div className="bg-white" style={{ padding: "20px", borderRadius: "10px", width: "100%" }}>
+      <h2 className="text-center text-2xl font-medium" style={{ color: "#rgb(0, 0, 0)", padding: "10px", margin: 0 }}>
         Cumulative No. of Transactions
       </h2>
 
@@ -219,7 +219,7 @@ const LineChartWithData = () => {
         id="quarterSelect"
         value={selectedQuarter}
         onChange={handleFilters}
-        style={{ padding: '8px', fontSize: '14px' }}
+        className="p-sm text-sm"
       >
         <option value="Last 12 Months">Last 12 Months</option>
         <option value="Q1">Q1</option>
@@ -251,8 +251,8 @@ const LineChartWithData = () => {
           <Legend
             verticalAlign="top"
             content={() => (
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div style={{ marginRight: 20, display: 'flex', alignItems: 'center' }}>
+              <div className="flex justify-center">
+                <div className="flex items-center" style={{ marginRight: 20 }}>
                   <div
                     style={{
                       width: 12,

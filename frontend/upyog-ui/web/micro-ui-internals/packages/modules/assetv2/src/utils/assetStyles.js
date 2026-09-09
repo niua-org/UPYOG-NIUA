@@ -35,7 +35,7 @@ export const assetStyles = {
         transform: 'translateY(-50%)',
         pointerEvents: 'none',
         zIndex: 1,
-        color: '#505A5F',
+        color: 'var(--text-secondary)',
         fontSize: '16px'
     },
 

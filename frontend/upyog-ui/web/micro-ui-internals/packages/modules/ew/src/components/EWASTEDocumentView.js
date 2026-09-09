@@ -37,13 +37,13 @@ function EWASTEDocument({ doc, Code, index }) {
   return (
     <div style={{ marginTop: "19px" }}>
       <React.Fragment>
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
+        <div className="flex" style={{ flexWrap: "wrap" }}>
           {/* Link to download or view the document */}
           <a target="_" href={documentLink} style={{ minWidth: "160px" }} key={index}>
             {/* Render the PDF icon */}
-            <PDFSvg width={45} height={50} style={{ background: "#f6f6f6", padding: "8px" }} />
+            <PDFSvg width={45} height={50} className="p-sm" style={{ background: "#f6f6f6" }} />
             {/* Render the document type */}
-            <p style={{ marginTop: "8px" }}>{t(`EWASTE_${doc?.fileType?.replace(".", "_")}`)}</p>
+            <p className="mt-sm">{t(`EWASTE_${doc?.fileType?.replace(".", "_")}`)}</p>
           </a>
 
         </div>

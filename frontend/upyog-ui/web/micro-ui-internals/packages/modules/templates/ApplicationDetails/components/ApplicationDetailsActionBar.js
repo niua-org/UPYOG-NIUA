@@ -54,7 +54,7 @@ function ApplicationDetailsActionBar({ workflowDetails, displayMenu, onActionSel
             modified === uuid || modified == null ? (
               <SubmitBar ref={menuRef} label={t("WF_TAKE_ACTION")} onSubmit={() => setDisplayMenu(!displayMenu)} />
             ) : (
-              <CardLabel style={{ color: "red", font: "30px", fontWeight: "bold" }}>{`${t("EW_ALERT_ANOTHER_VENDOR")}`}</CardLabel>
+              <CardLabel className="font-bold" style={{ color: "red", font: "30px" }}>{`${t("EW_ALERT_ANOTHER_VENDOR")}`}</CardLabel>
             )
           ) : (
             <SubmitBar ref={menuRef} label={t("WF_TAKE_ACTION")} onSubmit={() => setDisplayMenu(!displayMenu)} />
@@ -65,8 +65,7 @@ function ApplicationDetailsActionBar({ workflowDetails, displayMenu, onActionSel
       {!workflowDetails?.isLoading && !isMenuBotton && isSingleButton && !isAction && (
         <ActionBar style={{...ActionBarStyle}}>
           <button
-              style={{ color: "#FFFFFF", fontSize: "18px" }}
-              className={"submit-bar"}
+              className="submit-bar text-lg text-white"
               name={actions?.[0]?.action}
               value={actions?.[0]?.action}
               onClick={(e) => { onActionSelect(actions?.[0] || {})}}>

@@ -156,8 +156,8 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                     </span>
                     {formState?.dirtyFields?.[input.name] ? (
                       <span
-                        style={{ fontWeight: "700", color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px", fontSize: "12px" }}
-                        className="inbox-search-form-error"
+                        className="font-bold text-xs inbox-search-form-error"
+                        style={{ color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px" }}
                       >
                         {formState?.errors?.[input.name]?.message}
                       </span>
@@ -166,7 +166,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                 ))}
 
               {isInboxPage && (
-                <div style={{ gridColumn: "2/3", textAlign: "right", paddingTop: "10px" }} className="input-fields">
+                <div className="text-right input-fields" style={{ gridColumn: "2/3", paddingTop: "10px" }}>
                   <div>{clearAll()}</div>
                 </div>
               )}

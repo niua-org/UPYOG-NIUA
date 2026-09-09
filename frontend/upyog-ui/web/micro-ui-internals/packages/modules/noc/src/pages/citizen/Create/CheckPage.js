@@ -76,28 +76,28 @@ const CheckPage = ({ onSubmit, value }) => {
 
       <Header styles={{ fontSize: "32px" }}>{t("NOC_SUMMARY_HEADER")}</Header>
 
-      <Card style={{ marginBottom: "20px", padding: "24px" }}>
+      <Card className="p-lg" style={{ marginBottom: "20px" }}>
         {/* 7. Fee Estimate */}
         {isBillLoading ? (
           <Loader />
         ) : (
           bill && (
-            <div style={{ marginBottom: "24px" }}>
+            <div className="mb-lg">
               <CardHeader styles={{ fontSize: "24px" }}>
                 {t("NOC_FEE_ESTIMATE_HEADER", "Fee Estimate")}
               </CardHeader>
-              <div style={{ border: "1px solid #EAEAEA", borderRadius: "4px", overflow: "hidden", marginTop: "16px" }}>
-                <div style={{ padding: "16px" }}>
+              <div className="rounded-sm mt-md" style={{ border: "1px solid #EAEAEA", overflow: "hidden" }}>
+                <div className="p-md">
                   {taxHeadEstimates?.map((est, idx) => (
-                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
-                      <div style={{ color: "#0B0C0C", fontSize: "16px" }}>{t(est.taxHeadCode)}</div>
-                      <div style={{ color: "#0B0C0C", fontSize: "16px", textAlign: "right" }}>₹ {est.estimateAmount !== undefined ? est.estimateAmount : t("CS_NA")}</div>
+                    <div key={idx} className="flex justify-between" style={{ marginBottom: "12px" }}>
+                      <div className="text-text-primary text-md">{t(est.taxHeadCode)}</div>
+                      <div className="text-text-primary text-md text-right">₹ {est.estimateAmount !== undefined ? est.estimateAmount : t("CS_NA")}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#F4F4F4", padding: "16px", borderTop: "1px solid #EAEAEA" }}>
-                  <div style={{ fontWeight: "bold", fontSize: "18px", color: "#0B0C0C" }}>{t("NOC_TOTAL_AMOUNT_LABEL", "Total Amount")}</div>
-                  <div style={{ fontWeight: "bold", fontSize: "18px", color: "#0B0C0C", textAlign: "right" }}>₹ {totalAmount !== undefined ? totalAmount : t("CS_NA")}</div>
+                <div className="p-md flex justify-between items-center" style={{ background: "#F4F4F4", borderTop: "1px solid #EAEAEA" }}>
+                  <div className="text-text-primary font-bold text-lg">{t("NOC_TOTAL_AMOUNT_LABEL", "Total Amount")}</div>
+                  <div className="font-bold text-lg text-text-primary text-right">₹ {totalAmount !== undefined ? totalAmount : t("CS_NA")}</div>
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@ const CheckPage = ({ onSubmit, value }) => {
         )}
 
         {/* 1. NOC Type Summary */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
           <CardHeader styles={{ fontSize: "24px" }}>
             {t("NOC_TYPE_HEADER")}
             <LinkButton
@@ -134,7 +134,7 @@ const CheckPage = ({ onSubmit, value }) => {
         </div>
 
         {/* 2. Ownership details */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
           <CardHeader styles={{ fontSize: "24px" }}>
             {t("NOC_OWNERSHIP_HEADER")}
             <LinkButton
@@ -157,7 +157,7 @@ const CheckPage = ({ onSubmit, value }) => {
         </div>
 
         {/* 3. Owners Summary */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
           <CardHeader styles={{ fontSize: "24px" }}>
             {t("NOC_OWNER_DETAILS_HEADER")}
             <LinkButton
@@ -185,7 +185,7 @@ const CheckPage = ({ onSubmit, value }) => {
         </div>
 
         {/* 4. Property details */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
           <CardHeader styles={{ fontSize: "24px" }}>
             {t("NOC_PROPERTY_DETAILS_HEADER")}
             <LinkButton
@@ -228,7 +228,7 @@ const CheckPage = ({ onSubmit, value }) => {
         </div>
 
         {/* 5. Location Details */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
           <CardHeader styles={{ fontSize: "24px" }}>
             {t("NOC_LOCATION_DETAILS_HEADER")}
             <LinkButton
@@ -251,7 +251,7 @@ const CheckPage = ({ onSubmit, value }) => {
         </div>
 
         {/* 6. Document Details */}
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
           <CardHeader styles={{ fontSize: "24px" }}>
             {t("NOC_DOCUMENT_DETAILS_HEADER")}
             <LinkButton
@@ -277,7 +277,7 @@ const CheckPage = ({ onSubmit, value }) => {
 
 
 
-      <div style={{ marginTop: "24px", marginBottom: "24px" }}>
+      <div className="mt-lg mb-lg">
         <CheckBox
           label={t("NOC_FINAL_DECLARATION_MESSAGE")}
           onChange={setdeclarationhandler}

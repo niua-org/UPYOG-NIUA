@@ -332,7 +332,7 @@ const CHBApplicationDetails = () => {
         </div>
         <Card>
           {(isRefundInProgress || refundStatus || isRefunded) && (
-            <div style={{ padding: "10px 16px", borderRadius: "4px", marginBottom: "16px", fontWeight: "bold", fontSize: "16px", ...refundBannerStyle }}>
+            <div className="rounded-sm mb-md font-bold text-md" style={{ padding: "10px 16px", ...refundBannerStyle }}>
               {t("CHB_REFUND_STATUS") || "Refund Status"} &mdash; {refundStatus || (isRefunded ? "REFUNDED" : "")}
             </div>
           )}
@@ -355,7 +355,7 @@ const CHBApplicationDetails = () => {
             <Row className="border-none" label={t("CHB_PURPOSE_DESCRIPTION")} text={chb_details?.purposeDescription || t("CS_NA")} />
           </StatusTable>
 
-          {/* <CardSubHeader style={{ fontSize: "24px" }}>{t("SLOT_DETAILS")}</CardSubHeader>
+          {/* <CardSubHeader className="text-2xl">{t("SLOT_DETAILS")}</CardSubHeader>
             <StatusTable>
             <Row className="border-none" label={t("CHB_COMMUNITY_HALL_NAME")} text={chb_details?.communityHallCode || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_BOOKING_DATE")} text={getBookingDateRange(chb_details?.bookingSlotDetails) || t("CS_NA")} />
@@ -405,7 +405,7 @@ const CHBApplicationDetails = () => {
 
           {refund && (
             <React.Fragment>
-              <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_REFUND_DETAILS")}</CardSubHeader>
+              <CardSubHeader className="text-2xl">{t("CHB_REFUND_DETAILS")}</CardSubHeader>
               <StatusTable>
                 <Row className="border-none" label={t("CHB_REFUND_ID")} text={refund?.refundId || t("CS_NA")} />
                 <Row className="border-none" label={t("CHB_REFUND_AMOUNT")} text={refund?.refundAmount ? `₹${refund.refundAmount}` : t("CS_NA")} />

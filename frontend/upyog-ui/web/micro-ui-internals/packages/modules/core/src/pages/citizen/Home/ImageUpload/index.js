@@ -25,7 +25,7 @@ const Placeholder = ({ className, onFilePicked, inputProps, hide }) => {
   return (
     <div className={`${className} upload-placeholder`} style={hide ? { visibility: "hidden" } : {}}>
       <FilePicker inputProps={{ ...inputProps, multiple: false }} handleimage={onFilePicked}>
-        <FloatingActionButton backgroundColor="#767676" iconStyle={{ height: "40px", width: "40px" }} style={{ boxShadow: 0, marginBottom: "4px" }}>
+        <FloatingActionButton backgroundColor="var(--text-secondary)" iconStyle={{ height: "40px", width: "40px" }} style={{ boxShadow: 0, marginBottom: "4px" }}>
           <Icon id="image-upload" name="add-a-photo" action="image" style={{ height: "20px", width: "20px" }} color={"#ffffff"} />
         </FloatingActionButton>
         <Label label="CS_COMMON_UPLOAD_PHOTOS" labelStyle={labelStyle} fontSize="12px" />

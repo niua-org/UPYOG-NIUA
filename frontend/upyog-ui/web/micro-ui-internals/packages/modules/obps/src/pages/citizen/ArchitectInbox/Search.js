@@ -62,7 +62,7 @@ const Search = ({ onSearch, searchParams, searchFields, type, onClose, isInboxPa
         <div className="search-complaint-container">
           {(type === "mobile" || mobileView) && (
             <div className="complaint-header">
-              <h2 style={{fontWeight:"700", fontSize:"24px", marginTop:"30px", lineHeight: "28px"}}>{t("BPA_SEARCH_BY_LABEL")}:</h2>
+              <h2 className="font-bold text-2xl" style={{ marginTop:"30px", lineHeight: "28px" }}>{t("BPA_SEARCH_BY_LABEL")}:</h2>
               <span onClick={onClose} style={{position:"relative",float:"right",marginTop:"-60px"}}>
                 <CloseSvg />
               </span>
@@ -79,7 +79,7 @@ const Search = ({ onSearch, searchParams, searchFields, type, onClose, isInboxPa
                 </span>
                 {formState?.dirtyFields?.[input.name] ? (
                   <span
-                    style={{ fontWeight: "700", color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px", fontSize: "12px" }}
+                    className="font-bold text-xs" style={{ color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px" }}
                     className="inbox-search-form-error"
                   >
                     {formState?.errors?.[input.name]?.message}

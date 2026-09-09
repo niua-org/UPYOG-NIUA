@@ -40,7 +40,7 @@ const useInboxTableConfig = ({ parentRoute, onPageSizeChange, formState, totalCo
             },
             {
                 Header: <div>{t("EVENTS_STATUS_LABEL")}<div className="tooltip" style={{ marginLeft: "5px" }}>
-                    <InfoBannerIcon fill="#0b0c0c" style />
+                    <InfoBannerIcon fill="var(--text-primary)" style />
                     <span className="tooltiptext" style={{
                         whiteSpace: "pre-wrap",
                         fontSize: "small",
@@ -70,7 +70,7 @@ const useInboxTableConfig = ({ parentRoute, onPageSizeChange, formState, totalCo
                             <Link to={`results/${row.original["uuid"]}`}>
                                 <span className="link">
                                     <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5.5 18H0V6H5.5V18ZM12.75 0H7.25V18H12.75V0ZM20 8H14.5V18H20V8Z" fill="#a82227" />
+                                        <path d="M5.5 18H0V6H5.5V18ZM12.75 0H7.25V18H12.75V0ZM20 8H14.5V18H20V8Z" fill="var(--primary-main)" />
                                     </svg>
                                 </span>
                             </Link>

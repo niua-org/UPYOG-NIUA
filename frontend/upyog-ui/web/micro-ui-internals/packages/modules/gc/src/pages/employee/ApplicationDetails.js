@@ -77,7 +77,7 @@ const ApplicationDetails = () => {
 
   if (!application) {
     return (
-      <div style={{ padding: "16px", textAlign: "center" }}>
+      <div className="p-md text-center">
         <h2>{t("CS_GC_APPLICATION_NOT_FOUND")}</h2>
       </div>
     );
@@ -90,7 +90,7 @@ const ApplicationDetails = () => {
     <div>
       <div className={"employee-application-details"} style={{ marginBottom: "15px" }}>
         <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>{t("GC_APPLICATION_DETAILS")}</Header>
-        <div style={{ zIndex: "10", display: "flex", flexDirection: "row-reverse", alignItems: "center", marginTop: "-45px" }}>
+        <div className="flex items-center" style={{ zIndex: "10", flexDirection: "row-reverse", marginTop: "-45px" }}>
           {downloadOptions && downloadOptions.length > 0 && (
             <MultiLink
               className="multilinkWrapper employee-mulitlink-main-div"

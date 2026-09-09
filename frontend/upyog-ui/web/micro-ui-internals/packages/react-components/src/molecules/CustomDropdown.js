@@ -100,8 +100,7 @@ const CustomDropdown = ({ t, config, inputRef, label, onChange, value, errorStyl
         </CardLabel> */}
       {type === "radio" ? (
         <RadioButtons
-          inputRef={inputRef}
-          style={{ display: "flex", justifyContent: "flex-start", gap: "3rem", ...config.styles }}
+          inputRef={inputRef} className="flex justify-start" style={{ gap: "3rem", ...config.styles }}
           options={data || config?.options || []}
           key={config.name}
           optionsKey={config?.optionsKey}
@@ -119,8 +118,7 @@ const CustomDropdown = ({ t, config, inputRef, label, onChange, value, errorStyl
         />
       ) : (
         <Dropdown
-          inputRef={inputRef}
-          style={{ display: "flex", justifyContent: "space-between", ...config.styles }}
+          inputRef={inputRef} className="flex justify-between" style={{ ...config.styles }}
           option={data || config?.options || []}
           key={config.name}
           optionKey={config?.optionsKey}

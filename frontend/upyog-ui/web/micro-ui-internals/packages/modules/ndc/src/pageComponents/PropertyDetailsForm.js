@@ -393,7 +393,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                     {item.isLoading ? (
                       <Loader />
                     ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div className="flex items-center" style={{ gap: "12px" }}>
                         {!apiDataCheck?.[0]?.NdcDetails && item?.connectionNo && !item?.billData?.id && item?.billData?.totalAmount != 0 && (
                           <button
                             className="submit-bar"
@@ -435,7 +435,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                               });
                             }}
                           >
-                            <DeleteIcon className="delete" fill="#a82227" style={{ cursor: "pointer", marginLeft: "20px" }} />
+                            <DeleteIcon className="delete cursor-pointer" fill="var(--primary-main)" style={{ marginLeft: "20px" }} />
                           </button>
                         )}
                       </div>
@@ -447,9 +447,8 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
           </LabelFieldPair>
 
           <button
-            className="submit-bar"
-            type="button"
-            style={{ color: "white", fontSize: "12px" }}
+            className="submit-bar text-xs"
+            type="button" style={{ color: "white" }}
             onClick={() => {
               addWaterConnection();
             }}
@@ -462,17 +461,11 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
             {sewerageConnectionLoading ? (
               <Loader />
             ) : (
-              <div className="form-field" style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
+              <div className="form-field flex" style={{ flexDirection: "column", gap: "8px", width: "100%" }}>
                 {propertyDetails?.sewerageConnection?.map((item, index) => (
                   <div
-                    className="ndc_property_search"
-                    key={index}
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "baseline",
-                      gap: "16px",
-                    }}
+                    className="ndc_property_search flex"
+                    key={index} style={{ flexDirection: "row", alignItems: "baseline", gap: "16px" }}
                   >
                     <Controller
                       key={index}
@@ -504,7 +497,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                     {item.isLoading ? (
                       <Loader />
                     ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div className="flex items-center" style={{ gap: "12px" }}>
                         {!apiDataCheck?.[0]?.NdcDetails && item?.connectionNo && !item?.billData?.id && item?.billData?.totalAmount != 0 && (
                           <button
                             className="submit-bar"
@@ -548,7 +541,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                               });
                             }}
                           >
-                            <DeleteIcon className="delete" fill="#a82227" style={{ cursor: "pointer", marginLeft: "20px" }} />
+                            <DeleteIcon className="delete cursor-pointer" fill="var(--primary-main)" style={{ marginLeft: "20px" }} />
                           </button>
                         )}
                       </div>
@@ -560,9 +553,8 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
           </LabelFieldPair>
 
           <button
-            className="submit-bar"
-            type="button"
-            style={{ color: "white", fontSize: " 12px" }}
+            className="submit-bar text-xs"
+            type="button" style={{ color: "white" }}
             onClick={() => {
               addSewerageConnection();
             }}
@@ -571,7 +563,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
           </button>
 
           <div style={{ marginTop: "40px", marginBottom: "20px" }}>
-            <p style={{ color: " green", fontSize: "14px", paddingBottom: "10px" }}>
+            <p className="text-sm" style={{ color: " green", paddingBottom: "10px" }}>
               Please Select One Owner Name Who will have the access of No Due Certificate
             </p>
             <Table

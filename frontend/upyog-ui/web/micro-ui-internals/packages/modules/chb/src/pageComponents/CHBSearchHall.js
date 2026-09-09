@@ -410,7 +410,7 @@ const handleBookClick = () => {
         <CardHeader>{`${t("CHB_SEARCH_COMMUNITY_HALL_HEADER")}`}/{`${t("CHB_PARK")}`}</CardHeader>
         <div>
           <CardLabel>{`${t("CHB_SELECT_HALL_NAME")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <div style={{ display: "flex", flexDirection: "row", gap: "10px"}}>
+          <div className="flex" style={{ flexDirection: "row", gap: "10px" }}>
             <Controller
               control={control}
               name={"selectedHall"}
@@ -431,7 +431,7 @@ const handleBookClick = () => {
                 />
               )}
             />
-            <div onClick={handleViewReportClick} style={{ cursor: "pointer",display: "flex", marginTop:"10px"}}>
+            <div onClick={handleViewReportClick} className="cursor-pointer flex" style={{ marginTop:"10px" }}>
                <InfoIcon/>
             </div>
             {showDetails &&(
@@ -467,7 +467,7 @@ const handleBookClick = () => {
                   ranges={dateRange}
                   onChange={handleDateRangeChange}
                   showSelectionPreview={true}
-                  rangeColors={["#9E9E9E"]}
+                  rangeColors={["var(--grey-dark)"]}
                   moveRangeOnFirstSelection={false}
                   staticRanges={staticRanges}
                   inputRanges={[]}

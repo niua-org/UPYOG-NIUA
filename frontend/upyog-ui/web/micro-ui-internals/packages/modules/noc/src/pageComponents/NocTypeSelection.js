@@ -218,7 +218,7 @@ const NocTypeSelection = ({ t, config, onSelect, userType, formData }) => {
         {nocType?.code === "NEW" && (
           <div style={{ marginTop: "20px" }}>
             <CardLabel>{t("NOC_PROVISIONAL_FIRE_NOC_NO_LABEL")} <span style={{ color: "red" }}>*</span></CardLabel>
-            <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+            <div className="flex" style={{ gap: "10px", marginBottom: "15px" }}>
               <TextInput
                 t={t}
                 type="text"

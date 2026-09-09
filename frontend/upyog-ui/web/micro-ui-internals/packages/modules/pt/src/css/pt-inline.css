@@ -60,7 +60,7 @@
 }
 
 .pt-inline-view-timeline-btn {
-  color: #a52a2a;
+  color: var(--primary-main);
 }
 
 .pt-inline-subheader {
@@ -86,11 +86,11 @@
 }
 
 .pt-inline-owner-form-heading {
-  color: #505a5f;
+  color: var(--text-secondary);
 }
 
 .pt-inline-owner-form-body {
-  border: 1px solid #e3e3e3;
+  border: 1px solid var(--grey-bg);
   padding: 16px;
   margin-top: 8px;
 }

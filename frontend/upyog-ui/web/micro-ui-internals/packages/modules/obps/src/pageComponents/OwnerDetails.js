@@ -611,10 +611,10 @@ useEffect(()=>{
                     {fields?.map((field, index) => {
                         return (
                             <div key={`${field}-${index}`}>
-                                <div style={{ border: "solid", borderRadius: "5px", padding: "10px", paddingTop: "20px", marginTop: "10px", borderColor: "#f3f3f3", background: "#FAFAFA" }}>
+                                <div className="bg-grey-light" style={{ border: "solid", borderRadius: "5px", padding: "10px", paddingTop: "20px", marginTop: "10px", borderColor: "#f3f3f3" }}>
                                     <CardLabel style={{ marginBottom: "-15px" }}>{`${t("CORE_COMMON_MOBILE_NUMBER")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                     {ismultiple && <LinkButton
-                                        label={ <DeleteIcon style={{ float: "right", position: "relative", bottom: "5px" }} fill={!(fields.length == 1) ? "#494848" : "#FAFAFA"}/>}
+                                        label={ <DeleteIcon style={{ float: "right", position: "relative", bottom: "5px" }} fill={!(fields.length == 1) ? "#494848" : "var(--grey-light)"}/>}
                                         style={{ width: "100px", display: "inline", background: "black" }}
                                         onClick={(e) => handleRemove(index)}
                                     />}
@@ -622,7 +622,7 @@ useEffect(()=>{
                                         <div className="field-container">
                                             <div style={{ position: "relative", zIndex: "100", left: "35px", marginTop: "-24.5px",marginLeft:Webview?"-25px":"-25px" }}>+91</div>
                                             <TextInput
-                                                style={{ background: "#FAFAFA", padding: "0px 35px" }}
+                                                className="bg-grey-light" style={{ padding: "0px 35px" }}
                                                 type={"text"}
                                                 t={t}
                                                 isMandatory={false}
@@ -643,7 +643,7 @@ useEffect(()=>{
                                     </div>
                                     <CardLabel>{`${t("CORE_COMMON_NAME")}`}<span className="check-page-link-button"> *</span></CardLabel>
                                     <TextInput
-                                        style={{ background: "#FAFAFA" }}
+                                        className="bg-grey-light"
                                         t={t}
                                         type={"text"}
                                         isMandatory={false}
@@ -672,7 +672,7 @@ useEffect(()=>{
                                     <div>
                                      <CardLabel>{`${t("CORE_EMAIL_ID")}`}</CardLabel>
                                     <TextInput
-                                        style={{ background: "#FAFAFA" }}
+                                        className="bg-grey-light"
                                         t={t}
                                         type={"emailId"}
                                         isMandatory={false}
@@ -705,7 +705,7 @@ useEffect(()=>{
                     })}
                     {ismultiple ? (
                         <div>
-                            <div style={{ display: "flex", paddingBottom: "15px", color: "#FF8C00" }}>
+                            <div className="flex" style={{ paddingBottom: "15px", color: "#FF8C00" }}>
                                 <button type="button" style={{ paddingTop: "10px" }} onClick={() => handleAdd()}>
                                     {t("BPA_ADD_OWNER")}
                                 </button>

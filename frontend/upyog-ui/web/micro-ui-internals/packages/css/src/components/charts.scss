@@ -18,9 +18,9 @@
 }
 
 .signature-img{
-  top: 8px;
-  right: 8px;
-  fill: #505A5F;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  fill: var(--text-secondary);
   @apply absolute;
 }
 
@@ -75,7 +75,7 @@
 .no-data {
   @apply flex justify-center items-center;
   height: 90%;
-  margin-bottom: 40px;
+  margin-bottom: var(--spacing-2xl);
   white-space:pre;
 }
 
@@ -107,7 +107,7 @@
 
 .showMore {
   @apply text-right cursor-pointer;
-  color: #a82227;
+  color: var(--focus);
 }
 
 @media (max-width: 420px) { 
@@ -162,9 +162,9 @@
                 }
             
                 .signature-img{
-                  top: 8px;
-                  right: 8px;
-                  fill: #505A5F;
+                  top: var(--spacing-sm);
+                  right: var(--spacing-sm);
+                  fill: var(--text-secondary);
                   @apply absolute;
                 }
               }
@@ -186,7 +186,7 @@
 }
 
 .astericColor {
-  color: #a82227 !important;
+  color: var(--focus) !important;
 }
 
 .SVTableHeader {
@@ -208,7 +208,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-md);
 }
 
 .svsearchfield {
@@ -225,12 +225,12 @@
 .loading-spinner {
   width: 20px;
   height: 20px !important;
-  border: 3px solid #e5e5e5;
+  border: 3px solid var(--grey-bg);
   border-top: 3px solid #000;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   display: inline-block;
-  margin-right: 4px;
+  margin-right: var(--spacing-xs);
   transform-origin: center center;
 }
 
@@ -249,23 +249,23 @@
   text-align: center;
   color: white;
   position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 var(--spacing-xs) var(--spacing-sm) rgba(0, 0, 0, 0.1);
 }
 
 .status-card .count {
   font-size: 36px;
-  font-weight: bold;
+  font-weight: var(--weight-bold);
   display: block;
 }
 
 .status-card .title {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   margin-top: 10px;
   display: block;
 }
 
 .status-card .more-info {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   position: absolute;
   bottom: 10px;
   width: 100%;
@@ -290,12 +290,12 @@
 
 .typing_indicator {
   display: flex;
-  gap: 4px;
+  gap: var(--spacing-xs);
 }
 
 .typing_indicator span {
-  width: 8px;
-  height: 8px;
+  width: var(--spacing-sm);
+  height: var(--spacing-sm);
   background-color: #90949c;
   border-radius: 50%;
   animation: bounce 1.4s infinite ease-in-out;

@@ -94,9 +94,9 @@ const VendorDocuments = ({ t, config, onSelect, formData }) => {
         isDisabled={uploadedFiles.some((file) => file === null) && files.some((file) => file === null)}
       >
         {files.map((file, index) => (
-          <LabelFieldPair key={index} style={{ marginBottom: "24px" }}>
+          <LabelFieldPair key={index} className="mb-lg">
             <CardLabel className="card-label-smaller">{t("VENDOR_ID") + (index !== 0 ? index : "")}</CardLabel>
-            <div className="field" style={{ display: "flex", alignItems: "center" }}>
+            <div className="field flex items-center">
               <UploadFile
                 onUpload={(e) => handleFileSelect(e, index)}
                 onDelete={() =>
@@ -117,7 +117,7 @@ const VendorDocuments = ({ t, config, onSelect, formData }) => {
 
               {/* {index > 0 && (
                 <button style={{ marginLeft: "10px" }} onClick={() => removeFileField(index)}>
-                  <DeleteIcon className="delete" fill="#a82227" style={{ cursor: "pointer", marginLeft: "20px" }} />
+                  <DeleteIcon className="delete cursor-pointer" fill="var(--primary-main)" style={{ marginLeft: "20px" }} />
                 </button>
               )} */}
             </div>

@@ -20,13 +20,13 @@
       display: none;
 
       &:checked ~ label {
-        border-color: #a82227;
-        color: #a82227;
+        border-color: var(--focus);
+        color: var(--focus);
       }
     }
 
     label {
-      border: 1px solid;
+      border: var(--border-width-sm) solid;
       padding: 6px 10px;
       display: block;
       @apply border border-solid border-input-border;
@@ -49,10 +49,10 @@
   @apply flex;
 
   p {
-    font-weight: bold;
-    font-size: 24px;
+    font-weight: var(--weight-bold);
+    font-size: var(--font-size-2xl);
     line-height: 1;
-    margin: 0 12px 20px 8px;
+    margin: 0 12px 20px var(--spacing-sm);
   }
 }
 
@@ -73,9 +73,9 @@
   .clearText {
     display: block;
     text-align: right;
-    color: #a82227;
-    margin-top: 20px;
-    margin-left: 10px;
+    color: var(--primary-main);
+    margin-top: var(--spacing-lg);
+    margin-left: var(--spacing-sm);
   }
 }
 
@@ -87,8 +87,8 @@
     height: 100vh;
     left: 0;
     top: 130px;
-    padding: 16px;
-    background-color: #fff;
+    padding: var(--spacing-md);
+    background-color: var(--white);
     z-index: 99;
   }
 

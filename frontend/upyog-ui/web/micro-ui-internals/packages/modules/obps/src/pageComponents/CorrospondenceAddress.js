@@ -137,7 +137,7 @@ const CorrospondenceAddress = ({ t, config, onSelect, value, userType, formData 
           />
         </FormStep>
       </div>
-      <div style={{ disabled: "true", height: "30px", width: "100%", fontSize: "14px" }}></div>
+      <div className="text-sm" style={{ disabled: "true", height: "30px", width: "100%" }}></div>
       {showToast && <Toast error={showToast?.key === "error" ? true : false} label={error} isDleteBtn={true} onClose={() => { setShowToast(null); setError(null); }} />}
     </React.Fragment>
   );

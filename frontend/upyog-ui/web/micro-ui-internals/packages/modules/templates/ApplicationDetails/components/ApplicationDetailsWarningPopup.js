@@ -40,7 +40,7 @@ return (
           <h1>{t("PT_YOU_HAVE")} ₹{action?.AmountDueForPay} {t("PT_DUE_WARNING_MSG2")}</h1>
         </div>
        <Row rowContainerStyle={{display:"flex"}} labelStyle={{fontSize:"24px",fontWeight:"700",marginRight:"10%"}} textStyle={{fontSize:"24px",fontWeight:"700",marginBottom:"20px"}} label={`${t("PT_AMOUNT_DUE")}`} text={`₹${t(action?.AmountDueForPay)}`} />
-        <div style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
+        <div className="flex justify-end" style={{ width: "100%" }}>
           <ButtonSelector theme="border" label={t('ES_PT_COMMON_CANCEL')} onSubmit={closeWarningPopup} style={{ marginLeft: "10px" }} />
           <ButtonSelector label={t('PT_COLLECT')} onSubmit={() => window.location.assign(`${window.location.origin}${action?.redirectionUrl?.pathname}`)} style={{ marginLeft: "10px" }} />
         </div>

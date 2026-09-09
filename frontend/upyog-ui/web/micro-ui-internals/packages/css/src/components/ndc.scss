@@ -8,7 +8,7 @@
     width: 100vw;
     height: 100vh;
     background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(var(--spacing-xs));
     z-index: 9999
 }
 
@@ -24,8 +24,8 @@
 .ndc-loader-spinner {
     width: 64px;
     height: 64px;
-    border: 8px solid #1976d2;
-    border-top: 8px solid transparent;
+    border: var(--border-width-xl) solid var(--link-normal);
+    border-top: var(--border-width-xl) solid transparent;
     border-radius: 50%;
     animation: ndc-spin 1.2s linear infinite
 }
@@ -41,7 +41,7 @@
 }
 
 .ndc-margin-bottom-16 {
-    margin-bottom: 16px
+    margin-bottom: var(--spacing-md)
 }
 
 .ndc-label-width-100 {
@@ -52,11 +52,11 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    padding: 16px
+    padding: var(--spacing-md)
 }
 
 .ndc-row-padding {
-    padding: 16px
+    padding: var(--spacing-md)
 }
 
 .ndc-row-container {
@@ -84,7 +84,7 @@
 }
 
 .ndc-margin-bottom-8 {
-    margin-bottom: 8px
+    margin-bottom: var(--spacing-sm)
 }
 
 .ndc-block-display {
@@ -92,7 +92,7 @@
 }
 
 .ndc-strong-label {
-    font-weight: 700
+    font-weight: var(--weight-bold)
 }
 
 /* Banner defaults for NDC response */
@@ -101,7 +101,7 @@
 }
 
 .ndc-banner-header {
-    font-size: 32px;
+    font-size: var(--spacing-xl);
     word-break: break-word
 }
 
@@ -112,7 +112,7 @@
 .ndc-due-red {
     background: red;
     color: white;
-    padding-top: 8px;
+    padding-top: var(--spacing-sm);
     padding-left: 10px
 }
 
@@ -124,7 +124,7 @@
 
 .ndc-search-container-wide {
     width: 200%;
-    margin-left: 24px
+    margin-left: var(--spacing-lg)
 }
 
 .ndc-text-start {
@@ -144,13 +144,13 @@
 }
 
 .ndc-margin-top-40 {
-    margin-top: 40px
+    margin-top: var(--spacing-2xl)
 }
 
 .ndc-form-field-column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--spacing-sm);
     width: 100%
 }
 
@@ -179,12 +179,12 @@
 }
 
 .ndc-margin-top-24 {
-    margin-top: 24px
+    margin-top: var(--spacing-lg)
 }
 
 .ndc-btn-smaller {
     color: white;
-    font-size: 12px
+    font-size: var(--font-size-xs)
 }
 
 .ndc-margin-bottom-20 {
@@ -193,6 +193,6 @@
 
 .ndc-info-text {
     color: green;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     padding-bottom: 10px
 }

@@ -48,7 +48,7 @@ const renderLegend = (props) => {
   const { payload } = props;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column",height: "300px" }}>
+    <div className="flex" style={{ flexDirection: "column", height: "300px" }}>
       <div style={{ overflow: "auto", flex: "1" }}>
         <ul style={{ "listStyle": "disc" }}>
           {
@@ -81,7 +81,7 @@ const McqChart = (props) => {
         ))}
       </Pie>
       <Tooltip />
-      <Legend content={renderLegend} width={100} align="right" wrapperStyle={{ top: 40, right: 20,left:500, backgroundColor: '#FAFAFA', borderRadius: 3, lineHeight: '40px' }} />
+      <Legend content={renderLegend} width={100} align="right" wrapperStyle={{ top: 40, right: 20,left:500, backgroundColor: 'var(--grey-light)', borderRadius: 3, lineHeight: '40px' }} />
     </PieChart>
   )
 }

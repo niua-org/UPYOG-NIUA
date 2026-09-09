@@ -76,20 +76,20 @@ export const GCMyApplications = () => {
       <Header>{`${t("GC_MY_APPLICATIONS_HEADER")} (${filteredApplications.length})`}</Header>
       <Card>
         <div style={{ marginLeft: "16px" }}>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "16px" }}>
+          <div className="flex items-center" style={{ flexDirection: "row", gap: "16px" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
+              <div className="flex" style={{ flexDirection: "column" }}>
                 <CardLabel>{t("GC_APPLICATION_NUMBER_LABEL")}</CardLabel>
                 <TextInput
                   placeholder={t("GC_SEARCH_APP_NO_PLACEHOLDER")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ width: "100%", padding: "8px", height: "150%" }}
+                  className="p-sm" style={{ width: "100%", height: "150%" }}
                 />
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
+              <div className="flex" style={{ flexDirection: "column" }}>
                 <CardLabel>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</CardLabel>
                 <Dropdown
                   className="form-field"
@@ -107,8 +107,7 @@ export const GCMyApplications = () => {
               <div style={{ marginTop: "17%" }}>
                 <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
                 <p
-                  className="link"
-                  style={{ marginLeft: "30%", marginTop: "10px", display: "block" }}
+                  className="link block" style={{ marginLeft: "30%", marginTop: "10px" }}
                   onClick={clearAll}
                 >
                   {t(`ES_COMMON_CLEAR_ALL`)}
@@ -129,12 +128,12 @@ export const GCMyApplications = () => {
             </div>
           ))}
         {filteredApplications.length === 0 && !isLoading && (
-          <p style={{ marginLeft: "16px", marginTop: "16px" }}>{t("GC_NO_APPLICATION_FOUND_MSG")}</p>
+          <p className="mt-md" style={{ marginLeft: "16px" }}>{t("GC_NO_APPLICATION_FOUND_MSG")}</p>
         )}
 
         {filteredApplications.length !== 0 && totalCount >= t1 && (
           <div>
-            <p style={{ marginLeft: "16px", marginTop: "16px" }}>
+            <p className="mt-md" style={{ marginLeft: "16px" }}>
               <span className="link">
                 <Link to={`/upyog-ui/citizen/gc/my-applications/${t1}`}>{t("CS_LOAD_MORE")}</Link>
               </span>

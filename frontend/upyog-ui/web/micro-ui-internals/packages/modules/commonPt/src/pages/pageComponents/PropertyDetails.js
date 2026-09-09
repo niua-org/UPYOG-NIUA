@@ -106,16 +106,16 @@ const PropertyDetails = ({ t, config, onSelect, userType, formData }) => {
                 },
               }}/>
               <Row className="border-none" label={t(`PT_MUTATION_STATUS`)} text={t(propertyDetails?.Properties[0]?.status)} />
-              <div style={{ textAlign: "left" }}>
+              <div className="text-left">
                 <Link
                   to={`/upyog-ui/citizen/commonpt/view-property?propertyId=${propertyDetails?.Properties[0]?.propertyId}&tenantId=${propertyDetails?.Properties[0]?.tenantId}`}
                 >
-                  <LinkButton style={{ textAlign: "left" }} label={t("PT_VIEW_MORE_DETAILS")} />
+                  <LinkButton className="text-left" label={t("PT_VIEW_MORE_DETAILS")} />
                 </Link>
                 <Link
                   to={getChangePropertyPath()}
                 >
-                  <LinkButton style={{ textAlign: "left" }} label={t("PT_CHANGE_PROPERTY")} onClick={() => {sessionStorage.setItem("changePropertySelected", "yes"); sessionStorage.setItem("EditFormData", JSON.stringify(formData))}} />
+                  <LinkButton className="text-left" label={t("PT_CHANGE_PROPERTY")} onClick={() => {sessionStorage.setItem("changePropertySelected", "yes"); sessionStorage.setItem("EditFormData", JSON.stringify(formData))}} />
                 </Link>
               </div>
             </StatusTable>

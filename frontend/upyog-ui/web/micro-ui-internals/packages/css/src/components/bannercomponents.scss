@@ -118,15 +118,15 @@
   }
   .bannerLogo {
     width: 80px;
-    height: 40px;
+    height: var(--spacing-2xl);
     object-fit: contain;
     padding-right: 10px;
     margin-right: 10px;
-    border-right: 1px solid #0b0c0c;
+    border-right: var(--border-width-sm) solid var(--text-primary);
   }
   .bannerHeader {
     @apply flex justify-center items-center;
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-lg);
   }
 }
 

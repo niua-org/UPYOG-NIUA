@@ -15,7 +15,7 @@ const Breadcrumb = (props) => {
         if (crumb?.isBack)
           return (
             <li key={ci} style={{ ...props.style }} className="bread-crumb--item">
-              <span style={{ cursor: "pointer" }} onClick={() => window.history.back()}>
+              <span className="cursor-pointer" onClick={() => window.history.back()}>
                 {crumb.content}
               </span>
             </li>
@@ -23,7 +23,7 @@ const Breadcrumb = (props) => {
         return (
           <li key={ci} style={{ ...props.style || crumb?.style }} className="bread-crumb--item">
             {isLast(ci) || !crumb?.path || crumb?.isclickable == false ? (
-              <span style={props?.spanStyle ? { ...props?.spanStyle, color: "#0B0C0C" } : { color: "#0B0C0C" }}>{crumb.content}</span>
+              <span className="text-text-primary" style={props?.spanStyle}>{crumb.content}</span>
             ) : (
             (crumb?.isredirected ? <span onClick={() => {navigate(`${crumb?.path?.pathname}`, { ...crumb?.path?.state })}}>
               <LinkButton label={crumb.content} />

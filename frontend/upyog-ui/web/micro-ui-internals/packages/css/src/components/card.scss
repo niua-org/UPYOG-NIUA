@@ -1,6 +1,6 @@
 .card {
   @apply bg-white m-sm px-md pt-md pb-lg shadow-card;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   max-width: 960px;
 
   .card-header {
@@ -53,7 +53,7 @@
 }
 
 .docsDescription {
-  color: #0b0c0c !important;
+  color: var(--text-primary) !important;
 }
 
 .field-container {
@@ -63,7 +63,7 @@
 
 .employeeCard {
   @apply bg-white shadow-card p-md mb-xl;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
 
   .card-header {
     @apply text-text-primary text-heading-xl font-bold font-rc align-middle text-left mb-md;
@@ -129,7 +129,7 @@
 .employeeCard.fsm {
   margin-bottom: 64px !important;
   margin-left: 0px !important;
-  margin-right: 16px !important; }
+  margin-right: var(--spacing-md) !important; }
 .header-wrap {
   @apply flex mb-md;
 
@@ -155,7 +155,7 @@
 
 .submit-bar {
   @apply h-10 bg-primary-main text-center w-full outline-none;
-  box-shadow: inset 0px -2px 0px #0b0c0c;
+  box-shadow: inset 0px -2px 0px var(--text-primary);
 
   &:focus {
     @apply outline-none;
@@ -167,8 +167,8 @@
 }
 
 .submit-bar-disabled {
-  @apply h-10 bg-primary-main text-center w-full outline-none opacity-50;
-  background-color: #882636 !important;
+  @apply h-10 text-center w-full outline-none opacity-50;
+  background-color: var(--disabled);
 
   &:focus {
     @apply outline-none;
@@ -183,8 +183,6 @@
   .submit-bar,
   .submit-bar-disabled {
     width: 240px;
-    background-color: #882636 !important;
-    height: 2rem !important
   }
 
   .card {
@@ -230,12 +228,12 @@
     }
 
     .employee-card-sub-header {
-      margin-bottom: 40px;
+      margin-bottom: var(--spacing-2xl);
       @apply text-heading-l-dt;
     }
 
     .card-section-header {
-      margin-bottom: 40px;
+      margin-bottom: var(--spacing-2xl);
       @apply text-heading-m-dt;
     }
 
@@ -282,10 +280,10 @@
 
     .field-container {
       span {
-        border: 2px solid black;
+        border: var(--border-width-md) solid black;
         background: rgb(247, 247, 247);
-        width: 40px;
-        height: 40px;
+        width: var(--spacing-2xl);
+        height: var(--spacing-2xl);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -328,7 +326,7 @@
 }
 
 .home-page-info-banner-wrap {
-  margin: "0px 16px 24px 16px";
+  margin: "0px var(--spacing-md) var(--spacing-lg) var(--spacing-md)";
 }
 
 @media (min-width: 780px) {
@@ -339,8 +337,8 @@
     max-width: 45%;
     min-width: 100%;
     margin-left: 0;
-    margin-right: 24px;
-    margin-bottom: 24px;
+    margin-right: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
   }
   .info-banner-wrap-citizen-override {
   }
@@ -395,8 +393,11 @@
   width: 100% !important;
 }
 
-.language-selector .submit-bar, .submit-bar-disabled{
-  background-color: #5a1166 !important;
+.language-selector {
+  .submit-bar,
+  .submit-bar-disabled {
+    background-color: var(--primary-main);
+  }
 }
 
 .owner-details{

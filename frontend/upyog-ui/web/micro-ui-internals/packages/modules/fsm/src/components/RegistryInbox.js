@@ -318,8 +318,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.allVehicles?.length ? "link" : "cell-text"}
-                    style={{ cursor: "pointer" }}
+                    className={`${row.original?.allVehicles?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.allVehicles?.length)}
                   >
                     {row.original?.allVehicles?.length || 0}
@@ -343,8 +342,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.vehicles?.length ? "link" : "cell-text"}
-                    style={{ cursor: "pointer" }}
+                    className={`${row.original?.vehicles?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.vehicles?.length)}
                   >
                     {row.original?.vehicles?.length || 0}
@@ -368,8 +366,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.drivers?.length ? "link" : "cell-text"}
-                    style={{ cursor: "pointer" }}
+                    className={`${row.original?.drivers?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.drivers?.length)}
                   >
                     {row.original?.drivers?.length || 0}
@@ -393,8 +390,7 @@ const RegisryInbox = (props) => {
               return (
                 <div className="action-bar-wrap-registry" style={{ position: "relative" }}>
                   <div
-                    className={row.original?.activeDrivers?.length ? "link" : "cell-text"}
-                    style={{ cursor: "pointer" }}
+                    className={`${row.original?.activeDrivers?.length ? "link" : "cell-text"} cursor-pointer`}
                     onClick={() => onCellClick(row, column, row.original?.activeDrivers?.length)}
                   >
                     {row.original?.activeDrivers?.length || 0}
@@ -417,7 +413,7 @@ const RegisryInbox = (props) => {
             Cell: ({ row }) => {
               return (
                 <ToggleSwitch
-                  style={{ display: "flex", justifyContent: "left" }}
+                  className="flex" style={{ justifyContent: "left" }}
                   value={row.original?.dsoDetails?.status === "DISABLED" ? false : true}
                   onChange={() => onVendorUpdate(row)}
                   name={`switch-${row.id}`}
@@ -463,7 +459,7 @@ const RegisryInbox = (props) => {
             Cell: ({ row }) => {
               return (
                 <ToggleSwitch
-                  style={{ display: "flex", justifyContent: "left" }}
+                  className="flex" style={{ justifyContent: "left" }}
                   value={row.original?.status === "DISABLED" ? false : true}
                   onChange={() => onVehicleUpdate(row)}
                   name={`switch-${row.id}`}
@@ -520,7 +516,7 @@ const RegisryInbox = (props) => {
             Cell: ({ row }) => {
               return (
                 <ToggleSwitch
-                  style={{ display: "flex", justifyContent: "left" }}
+                  className="flex" style={{ justifyContent: "left" }}
                   value={row.original?.status === "DISABLED" ? false : true}
                   onChange={() => onDriverUpdate(row)}
                   name={`switch-${row.id}`}
@@ -551,8 +547,8 @@ const RegisryInbox = (props) => {
       emptyButtonText = "ES_FSM_REGISTRY_EMPTY_BUTTON_DRIVER";
     }
     result = (
-      <Card style={{ display: "flex", justifyContent: "center", minHeight: "250px" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Card className="flex justify-center" style={{ minHeight: "250px" }}>
+        <div className="flex items-center" style={{ flexDirection: "column" }}>
           <div style={{ marginTop: "50px", marginBottom: "25px" }}>{t(emptyCardText)}</div>
           <SubmitBar className="" label={t(emptyButtonText)} onSubmit={onSelectAdd} />
         </div>
@@ -592,7 +588,7 @@ const RegisryInbox = (props) => {
       {props.userRole !== "FSM_EMP_FSTPO" && props.userRole !== "FSM_ADMIN" && !props.isSearch && (
         <div className="filters-container">
           <FSMLink parentRoute={props.parentRoute} />
-          <div style={{ marginTop: "24px" }}>
+          <div className="mt-lg">
             <Filter
               searchParams={props.searchParams}
               paginationParms={props.paginationParms}

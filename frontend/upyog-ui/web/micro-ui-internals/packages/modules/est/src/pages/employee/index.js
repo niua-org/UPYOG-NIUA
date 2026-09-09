@@ -56,14 +56,10 @@ const EmployeeApp = ({ path }) => {
       <div className={layoutStyles.estEmployeeLayout}>
         {!hideNav ? (
           <div
-            style={{
-              marginLeft: isMobile ? "0" : "-4px",
-              display: "flex",
-              alignItems: "center",
-            }}
+            className="flex items-center" style={{ marginLeft: isMobile ? "0" : "-4px" }}
           >
             <BackButton location={location} />
-            <span style={{ margin: "0 5px 16px", display: "inline-block" }}>|</span>
+            <span className="inline-block" style={{ margin: "0 5px 16px" }}>|</span>
             <BreadCrumb
               style={
                 isMobile

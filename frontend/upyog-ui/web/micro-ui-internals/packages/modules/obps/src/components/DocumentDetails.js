@@ -31,19 +31,19 @@ const DocumentDetails = ({ documents }) => {
       {documents?.map((document, docIndex) => (
         <Fragment>
           <Row className="border-none" labelStyle={{ paddingTop: "10px", width: "100%" }} label={t(document?.title?.split('_')?.slice(0, 2).join('_'))} />
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
+          <div className="flex" style={{ flexWrap: "wrap" }}>
             {document?.filestoreIdArray && document?.filestoreIdArray.map((filestoreId, index) =>
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-start", alignContent: "center" }}>
+              <div className="flex justify-start" style={{ flexWrap: "wrap", alignContent: "center" }}>
                 <a target="_blank" href={pdfFiles[filestoreId]?.split(",")[0]} style={{ minWidth: "100px", marginRight: "10px", maxWidth: "100px", height: "auto" }} key={index}>
-                  <div style={{ display: "flex", justifyContent: "center" }}>
+                  <div className="flex justify-center">
                     <PDFSvg />
                   </div>
-                  <p style={{ marginTop: "8px", textAlign: "center", color: "#505A5F", fontWeight: "400", lineHeight: "19px", fontSize: "16px" }}>{t(document?.title)}</p>
+                  <p className="mt-sm text-center text-text-secondary font-regular text-md" style={{ lineHeight: "19px" }}>{t(document?.title)}</p>
                 </a>
               </div>
             )}
           </div>
-          {documents?.length != docIndex + 1 ? <hr style={{ color: "#D6D5D4", backgroundColor: "#D6D5D4", height: "2px", marginTop: "20px", marginBottom: "20px" }} /> : null}
+          {documents?.length != docIndex + 1 ? <hr className="text-border bg-border" style={{ height: "2px", marginTop: "20px", marginBottom: "20px" }} /> : null}
         </Fragment>
       ))}
     </Fragment>

@@ -198,7 +198,7 @@ fetchBillData();
             />
           </StatusTable>)}
            
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("PTR_ADDRESS_HEADER")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("PTR_ADDRESS_HEADER")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("PTR_PINCODE")} text={pet_details?.address?.pincode || t("CS_NA")} />
             <Row className="border-none" label={t("PTR_CITY")} text={pet_details?.address?.city || t("CS_NA")} />
@@ -206,7 +206,7 @@ fetchBillData();
             <Row className="border-none" label={t("PTR_HOUSE_NO")} text={pet_details?.address?.doorNo || t("CS_NA")} />
           </StatusTable>
 
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("PTR_APPLICANT_DETAILS_HEADER")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("PTR_APPLICANT_DETAILS_HEADER")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("PTR_APPLICANT_NAME")} text={pet_details?.applicantName || t("CS_NA")} />
             <Row className="border-none" label={t("PTR_FATHER/HUSBAND_NAME")} text={pet_details?.fatherName || t("CS_NA")} />
@@ -214,7 +214,7 @@ fetchBillData();
             <Row className="border-none" label={t("PTR_APPLICANT_EMAILID")} text={pet_details?.emailId || t("CS_NA")} />
           </StatusTable>
 
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("PTR_PET_DETAILS_HEADER")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("PTR_PET_DETAILS_HEADER")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("PTR_PET_TYPE")} text={pet_details?.petDetails?.petType || t("CS_NA")} />
             <Row className="border-none" label={t("PTR_BREED_TYPE")} text={pet_details?.petDetails?.breedType || t("CS_NA")} />

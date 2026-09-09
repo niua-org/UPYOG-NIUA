@@ -215,7 +215,7 @@ const SearchApplication = ({ onSearch, type, onClose, onTabChange, isFstpOperato
                   {getFields(input)}{" "}
                 </span>
               ))}
-              <div style={{ display: "flex" }}>
+              <div className="flex">
                 {type === "desktop" && !mobileView && <SubmitBar className="submit-bar-search" label={t("ES_COMMON_SEARCH")} submit />}
                 {type === "desktop" && !mobileView && <span className="clear-search">{clearAll()}</span>}
               </div>

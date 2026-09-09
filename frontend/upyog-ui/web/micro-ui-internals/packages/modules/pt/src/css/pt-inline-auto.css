@@ -50,7 +50,7 @@
 
 /* components/SearchApplication.js */
 .pt-auto-7 {
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .pt-auto-8 {
@@ -124,7 +124,7 @@
 }
 
 .pt-auto-22 {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--grey-bg);
   padding: 6px;
 }
 
@@ -150,7 +150,7 @@
 }
 
 .pt-auto-27 {
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 
@@ -171,7 +171,7 @@
 }
 
 .pt-auto-31 {
-  background: #00703c;
+  background: var(--success);
   margin: 0px 0px 20px 0px !impportant;
 }
 
@@ -237,7 +237,7 @@
   font-weight: bold;
   font-size: 16px;
   line-height: 19px;
-  color: #0b0c0c;
+  color: var(--text-primary);
 }
 
 .pt-auto-42 {
@@ -330,7 +330,7 @@
   font-weight: bold;
   font-size: 16px;
   line-height: 19px;
-  color: #0b0c0c;
+  color: var(--text-primary);
 }
 
 .pt-auto-58 {
@@ -434,7 +434,7 @@
   padding-top: 20px;
   margin-top: 10px;
   border-color: #f3f3f3;
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 
@@ -506,7 +506,7 @@
   padding-top: 20px;
   margin-top: 10px;
   border-color: #f3f3f3;
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .pt-auto-84 {
@@ -520,11 +520,11 @@
 }
 
 .pt-auto-86 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .pt-auto-87 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .pt-auto-88 {
@@ -598,11 +598,11 @@
 }
 
 .pt-auto-98 {
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .pt-auto-99 {
-  border: 1px solid #E3E3E3;
+  border: 1px solid var(--grey-bg);
   padding: 16px;
   margin-top: 8px;
 }
@@ -902,7 +902,7 @@
 }
 
 .pt-auto-153 {
-  color: #A52A2A;
+  color: var(--primary-main);
 }
 
 
@@ -913,13 +913,13 @@
 
 .pt-auto-155 {
   margin-bottom: 8px;
-  color: #0B0C0C;
+  color: var(--text-primary);
   font-size: 24px;
 }
 
 .pt-auto-156 {
   margin-bottom: 16px;
-  color: #0B0C0C;
+  color: var(--text-primary);
   font-size: 16px;
   margin-top: revert;
 }
@@ -929,11 +929,11 @@
 }
 
 .pt-auto-158 {
-  border: 1px solid #D6D5D4;
+  border: 1px solid var(--border);
   padding: 16px;
   margin-top: 8px;
-  border-radius: 4px;
-  background: #FAFAFA;
+  border-radius: var(--border-radius-sm);
+  background: var(--grey-light);
 }
 
 

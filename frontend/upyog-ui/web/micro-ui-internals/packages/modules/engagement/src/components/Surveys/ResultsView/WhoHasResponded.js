@@ -15,7 +15,7 @@ const WhoHasResponded = ({t,userInfo}) => {
 
 
             <div style={{"display":"flex","padding": "8px 4px", 
-                        "background-color": "#FAFAFA",
+                        "background-color": "var(--grey-light)",
                         "border": "1px solid #D6D5D4",
                         "boxSizing": "borderBox",
                         "borderRadius": "4px",

@@ -79,7 +79,7 @@ const SearchComplaint = ({ onSearch, type, onClose, searchParams }) => {
                     <TextInput
                       value={field.value}
                       onChange={(e) => field.onChange(e.target.value)}  // ✅ fixed
-                      style={{ marginBottom: "8px" }}
+                      className="mb-sm"
                     />
                   )}
                 />
@@ -118,7 +118,7 @@ const SearchComplaint = ({ onSearch, type, onClose, searchParams }) => {
                         isInvalid={!!errors.mobileNumber}
                       />
                       {errors.mobileNumber && (
-                        <span style={{ color: "red", fontSize: "12px" }}>
+                        <span className="text-xs" style={{ color: "red" }}>
                           {errors.mobileNumber.message}
                         </span>
                       )}

@@ -64,7 +64,7 @@ const NOCApplicationDetails = () => {
             pathname: `/upyog-ui/citizen/payment/collect/FIRENOC/${applicationNumber}`,
             state: { tenantId: application?.tenantId || tenantId }
           }}>
-            <div style={{ marginTop: "24px" }}>
+            <div className="mt-lg">
               <SubmitBar label={t("COMMON_MAKE_PAYMENT")} />
             </div>
           </Link>

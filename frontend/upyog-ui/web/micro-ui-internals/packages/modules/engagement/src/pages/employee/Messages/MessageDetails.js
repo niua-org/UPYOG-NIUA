@@ -41,8 +41,8 @@ const DocumentDetails = ({ t, data, documents, paymentDetails }) => {
         const docName = docUrl ? decodeURIComponent(docUrl.split("?")?.[0]?.split("/")?.pop()?.slice(13)) : "";
         return (
           <Fragment key={index}>
-            <div style={{maxWidth: "940px", padding: "8px", borderRadius: "4px", border: "1px solid #D6D5D4", background: "#FAFAFA", marginBottom: "32px"}}>
-              <div style={{fontSize: "16px", fontWeight: 700}}>{t(`BPA_${document?.documentType}`)}</div>
+            <div className="p-sm rounded-sm border border-solid border-border bg-grey-light mb-xl" style={{ maxWidth: "940px" }}>
+              <div className="text-md font-bold">{t(`BPA_${document?.documentType}`)}</div>
               {docUrl && (
                 <a target="_" href={docUrl}>
                   <PDFSvg />

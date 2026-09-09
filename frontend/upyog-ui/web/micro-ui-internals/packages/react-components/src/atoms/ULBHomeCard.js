@@ -13,11 +13,11 @@ const ULBHomeCard = (props) => {
     <React.Fragment>
       <Card className="fsm" style={{ backgroundColor: "transparent", boxShadow: "none", paddingTop: "0" }}>
         <CardHeader> {t(props.title)} </CardHeader>
-        <div style={{ display: "grid", gridTemplateColumns: "30% 30% 30%", textAlign: "-webkit-center", justifyContent: "space-between" }}>
+        <div className="justify-between" style={{ display: "grid", gridTemplateColumns: "30% 30% 30%", textAlign: "-webkit-center" }}>
           {props.module.map((i) => {
             return (
               <Card
-                style={{ minWidth: "100px", cursor: "pointer" }}
+                className="cursor-pointer" style={{ minWidth: "100px" }}
                 onClick={() => (i.hyperlink ? location.assign(i.link) : navigate(i.link))}
                 children={
                   <>

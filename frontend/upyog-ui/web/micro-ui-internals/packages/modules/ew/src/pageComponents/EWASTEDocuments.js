@@ -128,12 +128,12 @@ const EWASTEDocuments = ({ t, config, onSelect, formData }) => {
         isDisabled={uploadedFiles.some((file) => file === null) && files.some((file) => file === null)}
       >
         {files.map((file, index) => (
-          <LabelFieldPair key={index} style={{ marginBottom: "24px" }}>
+          <LabelFieldPair key={index} className="mb-lg">
             <CardLabel className="card-label-smaller">
-              {t("EWASTE_PR_DOCUMENT") + (index !== 0 ? " " + (index + 1) : " 1")} <span style={{ color: "red" }}>*</span> <span style={{ fontSize: "12px" }}>{t("ONLY_PNG_JPEG_JPG_")}</span>
+              {t("EWASTE_PR_DOCUMENT") + (index !== 0 ? " " + (index + 1) : " 1")} <span style={{ color: "red" }}>*</span> <span className="text-xs">{t("ONLY_PNG_JPEG_JPG_")}</span>
             </CardLabel>
 
-            <div className="field" style={{ display: "flex", alignItems: "center" }}>
+            <div className="field flex items-center">
               <UploadFile
                 onUpload={(e) => handleFileSelect(e, index)}
                 onDelete={() =>
@@ -153,7 +153,7 @@ const EWASTEDocuments = ({ t, config, onSelect, formData }) => {
               />
               {index > 0 && (
                 <button style={{ marginLeft: "10px" }} onClick={() => removeFileField(index)}>
-                  <DeleteIcon className="delete" fill="#a82227" style={{ cursor: "pointer", marginLeft: "20px" }} />
+                  <DeleteIcon className="delete cursor-pointer" fill="var(--primary-main)" style={{ marginLeft: "20px" }} />
                 </button>
               )}
             </div>

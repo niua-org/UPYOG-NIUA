@@ -391,41 +391,17 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
         {userType === "citizen" ? (
           <React.Fragment>
             <BackButton />
-            <div style={{ display: "flex", gap: "20px", marginTop: "24px" }}>
+            <div className="mt-lg flex" style={{ gap: "20px" }}>
               <button
                 onClick={() => SetActiveTab("profile")}
-                style={{
-                  backgroundColor: activeTab === "profile" ? "#ac2c2c" : "#ffffff",
-                  width: "100%",
-                  height: "60px",
-                  color: activeTab === "profile" ? "white" : "#333333",
-                  maxWidth: isMobile ? "100%" : "240px",
-                  borderRadius: "24px",
-                  border: "none",
-                  fontWeight: "700",
-                  fontSize: "16px",
-                  boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                }}
+                className="rounded-xl" style={{ backgroundColor: activeTab === "profile" ? "#ac2c2c" : "#ffffff", width: "100%", height: "60px", color: activeTab === "profile" ? "white" : "#333333", maxWidth: isMobile ? "100%" : "240px", border: "none", fontWeight: "700", fontSize: "16px", boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)", cursor: "pointer" }}
               >
                 {t("PROFILE")}
               </button>
 
               <button
                 onClick={() => SetActiveTab("address")}
-                style={{
-                  backgroundColor: activeTab === "address" ? "#ac2c2c" : "#ffffff",
-                  width: "100%",
-                  height: "60px",
-                  color: activeTab === "address" ? "white" : "#333333",
-                  maxWidth: isMobile ? "100%" : "240px",
-                  borderRadius: "24px",
-                  border: "none",
-                  fontWeight: "700",
-                  fontSize: "16px",
-                  boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
-                  cursor: "pointer",
-                }}
+                className="rounded-xl" style={{ backgroundColor: activeTab === "address" ? "#ac2c2c" : "#ffffff", width: "100%", height: "60px", color: activeTab === "address" ? "white" : "#333333", maxWidth: isMobile ? "100%" : "240px", border: "none", fontWeight: "700", fontSize: "16px", boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)", cursor: "pointer" }}
               >
                 {t("ADDRESS")}
               </button>
@@ -449,19 +425,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
         )}
       </section>
       <div
-        style={{
-          display: "flex",
-          flex: 1,
-          flexDirection: windowWidth < 768 || userType === "citizen" ? "column" : "row",
-          margin: userType === "citizen" ? "8px" : "16px",
-          gap: userType === "citizen" ? "" : "0 24px",
-          boxShadow: userType === "citizen" ? (activeTab === "address" ? "" : "1px 1px 4px 0px rgba(0,0,0,0.2)") : "",
-          background: userType === "citizen" ? (activeTab === "address" ? "" : "white") : "",
-          borderRadius: userType === "citizen" ? (activeTab === "address" ? "" : "4px") : "",
-          minWidth: windowWidth < 768 ? "" : "500px",
-          alignSelf: "center",
-          maxWidth: userType === "citizen" ? "960px" : "",
-        }}
+        className="flex" style={{ flex: 1, flexDirection: windowWidth < 768 || userType === "citizen" ? "column" : "row", margin: userType === "citizen" ? "8px" : "16px", gap: userType === "citizen" ? "" : "0 24px", boxShadow: userType === "citizen" ? (activeTab === "address" ? "" : "1px 1px 4px 0px rgba(0, 0, 0, 0.2)") : "", background: userType === "citizen" ? (activeTab === "address" ? "" : "white") : "", borderRadius: userType === "citizen" ? (activeTab === "address" ? "" : "4px") : "", minWidth: windowWidth < 768 ? "" : "500px", alignSelf: "center", maxWidth: userType === "citizen" ? "960px" : "" }}
       >
         {activeTab !== "address" ? (
           <section
@@ -476,7 +440,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
               borderRadius: "4px",
               boxShadow: userType === "citizen" ? "" : "1px 1px 4px 0px rgba(0,0,0,0.2)",
               border: `${userType === "citizen" ? "8px" : "24px"} solid #fff`,
-              background: "#EEEEEE",
+              background: "var(--grey-mid)",
               padding: userType === "citizen" ? "8px" : "16px",
             }}
           >
@@ -489,13 +453,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
               }}
             >
               <img
-                style={{
-                  margin: "auto",
-                  borderRadius: "300px",
-                  justifyContent: "center",
-                  height: "100%",
-                  width: "100%",
-                }}
+                className="justify-center" style={{ margin: "auto", borderRadius: "300px", height: "100%", width: "100%" }}
                 src={!profileImg || profileImg === "" ? defaultImage : profileImg}
               />
               <button style={{ position: "absolute", left: "50%", bottom: "-24px", transform: "translateX(-50%)" }} onClick={onClickAddPic}>
@@ -505,18 +463,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
           </section>
         ) : null}
         <section
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            flex: userType === "citizen" ? 1 : 7.5,
-            width: "100%",
-            borderRadius: activeTab === "address" ? "" : "4px",
-            height: "fit-content",
-            boxShadow: userType === "citizen" ? "" : "1px 1px 4px 0px rgba(0,0,0,0.2)",
-            background: activeTab === "address" ? "" : "white",
-            padding: userType === "citizen" ? "8px" : "24px",
-            paddingBottom: "20px",
-          }}
+          className="flex" style={{ flexDirection: "column", flex: userType === "citizen" ? 1 : 7.5, width: "100%", borderRadius: activeTab === "address" ? "" : "4px", height: "fit-content", boxShadow: userType === "citizen" ? "" : "1px 1px 4px 0px rgba(0, 0, 0, 0.2)", background: activeTab === "address" ? "" : "white", padding: userType === "citizen" ? "8px" : "24px", paddingBottom: "20px" }}
         >
           {userType === "citizen" ? (
             activeTab === "profile" ? (
@@ -617,22 +564,14 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
 
                 <button
                   onClick={updateProfile}
-                  style={{
-                    marginTop: "24px",
-                    backgroundColor: "#a82227",
-                    width: "100%",
-                    height: "40px",
-                    color: "white",
-                    maxWidth: isMobile ? "100%" : "240px",
-                    borderBottom: "1px solid black",
-                  }}
+                  className="mt-lg bg-primary-main" style={{ width: "100%", height: "40px", color: "white", maxWidth: isMobile ? "100%" : "240px", borderBottom: "1px solid black" }}
                 >
                   {t("CORE_COMMON_SAVE")}
                 </button>
               </React.Fragment>
             ) : activeTab === "address" ? (
               <React.Fragment>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: "15px" }}>
+                <div className="flex justify-between" style={{ gap: "15px" }}>
                   <button
                     onClick={() => setShowModal(true)}
                     style={{
@@ -663,7 +602,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
             ) : null
           ) : (
             <React.Fragment>
-              <LabelFieldPair style={{ display: "flex" }}>
+              <LabelFieldPair className="flex">
                 <CardLabel className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>
                   {`${t("CORE_COMMON_PROFILE_NAME")}`}*
                 </CardLabel>
@@ -688,7 +627,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                 </div>
               </LabelFieldPair>
 
-              <LabelFieldPair style={{ display: "flex" }}>
+              <LabelFieldPair className="flex">
                 <CardLabel className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                   "CORE_COMMON_PROFILE_GENDER"
                 )}`}</CardLabel>
@@ -705,7 +644,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                 />
               </LabelFieldPair>
 
-              <LabelFieldPair style={{ display: "flex" }}>
+              <LabelFieldPair className="flex">
                 <CardLabel className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                   "CORE_COMMON_PROFILE_CITY"
                 )}`}</CardLabel>
@@ -730,7 +669,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                 </div>
               </LabelFieldPair>
               
-              <LabelFieldPair style={{ display: "flex" }}>
+              <LabelFieldPair className="flex">
                 <CardLabel className="profile-label-margin" style={{ width: "300px" }}>{`${t("CORE_COMMON_PROFILE_MOBILE_NUMBER")}*`}</CardLabel>
                 <div style={{ width: "100%" }}>
                   <MobileNumber
@@ -746,7 +685,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                 </div>
               </LabelFieldPair>
               
-               <LabelFieldPair style={{ display: "flex" }}>
+               <LabelFieldPair className="flex">
                 <CardLabel className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                   "CORE_COMMON_PROFILE_EMAIL"
                 )}`}</CardLabel>
@@ -765,7 +704,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                   {errors?.emailAddress && <CardLabelError> {errors?.emailAddress?.message} </CardLabelError>}
                 </div>
               </LabelFieldPair>
-              <LabelFieldPair style={{ display: "flex" }}>
+              <LabelFieldPair className="flex">
                 <CardLabel className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                   "CORE_COMMON_PROFILE_DOB"
                 )}`}</CardLabel>
@@ -777,12 +716,12 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
 
               <LabelFieldPair>
                 <div>
-                  <a style={{ color: "#a82227", marginBottom: "5", cursor: "pointer",position:"relative" }} onClick={TogleforPassword}>
+                  <a className="text-primary-main cursor-pointer" style={{ marginBottom: "5", position:"relative" }} onClick={TogleforPassword}>
                     {t("CORE_COMMON_CHANGE_PASSWORD")}
                   </a>
                   {changepassword ? (
                     <div style={{ marginTop: "10px" }}>
-                      <LabelFieldPair style={{ display: "flex" }}>
+                      <LabelFieldPair className="flex">
                         <CardLabel  className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                           "CORE_COMMON_PROFILE_CURRENT_PASSWORD"
                         )}`}</CardLabel>
@@ -800,7 +739,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                         </div>
                       </LabelFieldPair>
 
-                      <LabelFieldPair style={{ display: "flex" }}>
+                      <LabelFieldPair className="flex">
                         <CardLabel  className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                           "CORE_COMMON_PROFILE_NEW_PASSWORD"
                         )}`}</CardLabel>
@@ -818,7 +757,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
                       </div>
                       </LabelFieldPair>
 
-                      <LabelFieldPair style={{ display: "flex" }}>
+                      <LabelFieldPair className="flex">
                         <CardLabel  className="profile-label-margin" style={editScreen ? { color: "#B1B4B6", width: "300px" } : { width: "300px" }}>{`${t(
                           "CORE_COMMON_PROFILE_CONFIRM_PASSWORD"
                         )}`}</CardLabel>
@@ -913,24 +852,11 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
 
       {userType === "employee" ? (
         <div
-          style={{ height: "88px", backgroundColor: "#FFFFFF", display: "flex", justifyContent: "flex-end", marginTop: "64px", alignItems: "center" }}
+          className="bg-white flex justify-end items-center" style={{ height: "88px", marginTop: "64px" }}
         >
           <button
             onClick={updateProfile}
-            style={{
-              marginTop: "24px",
-              backgroundColor: "#a82227",
-              width: windowWidth < 768 ? "100%" : "248px",
-              height: "40px",
-              float: "right",
-              margin: windowWidth < 768 ? "0 16px" : "",
-              marginRight: windowWidth < 768 ? "16px" : "31px",
-              color: "white",
-              borderBottom: "1px solid black",
-              cursor:"pointer",
-              "zIndex":"999"
-
-            }}
+            className="mt-lg bg-primary-main cursor-pointer" style={{ width: windowWidth < 768 ? "100%" : "248px", height: "40px", float: "right", margin: windowWidth < 768 ? "0 16px" : "", marginRight: windowWidth < 768 ? "16px" : "31px", color: "white", borderBottom: "1px solid black", "zIndex":"999" }}
           >
             {t("CORE_COMMON_SAVE")}
           </button>

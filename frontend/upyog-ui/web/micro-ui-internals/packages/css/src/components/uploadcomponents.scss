@@ -29,9 +29,9 @@
   div {
     display: block;
     position: relative;
-    background-color: #fafafa;
-    width: calc((100% - 16px) / 3);
-    margin-right: 8px;
+    background-color: var(--grey-light);
+    width: calc((100% - var(--spacing-md)) / 3);
+    margin-right: var(--spacing-sm);
 
     .delete {
       position: absolute;
@@ -44,7 +44,7 @@
   }
 
   .upload-img-container {
-    border: 1px dashed #d6d5d4;
+    border: var(--border-width-sm) dashed var(--border);
     margin: 0 !important;
 
     img {
@@ -78,15 +78,15 @@
   touch-action: manipulation;
     cursor: pointer;
     background-image: none;
-    border: 1px solid transparent;
+    border: var(--border-width-sm) solid transparent;
     padding: 6px 12px;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     line-height: 1.42857143;
-    border-radius: 4px;
+    border-radius: var(--border-radius-sm);
     user-select: none;
-    background: #f0f0f0c9;
+    background: var(--grey-mid);
     display: flex;
-    font-weight: bold;
+    font-weight: var(--weight-bold);
 }
 .upload-file {
   min-height: 56px;

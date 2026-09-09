@@ -9,16 +9,16 @@ function PropertyFloors({ floors }) {
     <React.Fragment>
       {floors.map((floor) => (
         <div key={t(floor?.title)} style={{ marginTop: "19px" }}>
-          <CardSubHeader style={{ marginBottom: "8px", color: "#505A5F", fontSize: "24px" }}>{t(floor?.title)}</CardSubHeader>
+          <CardSubHeader className="mb-sm text-text-secondary text-2xl">{t(floor?.title)}</CardSubHeader>
           {floor?.values?.map((value, index) => {
             return (
               <React.Fragment key={index}>
-                <CardSectionHeader style={{ marginBottom: "16px", color: "#505A5F", fontSize: "16px", marginTop: index !== 0 ? "16px" : "revert" }}>
+                <CardSectionHeader className="mb-md text-text-secondary text-md" style={{ marginTop: index !== 0 ? "16px" : "revert" }}>
                   {t(value.title)}
                 </CardSectionHeader>
-                <StatusTable style={{ position: "relative", padding: "8px" }}>
+                <StatusTable className="p-sm" style={{ position: "relative" }}>
                   <div
-                    style={{ border: "1px solid #D6D5D4", padding: "16px", marginTop: "8px", borderRadius: "4px", background: "#FAFAFA", maxWidth: "100%" }}
+                    className="border border-solid border-border p-md mt-sm rounded-sm bg-grey-light" style={{ maxWidth: "100%" }}
                   >
                   {value?.values?.map((value, index) => {
                     if (value.map === true && value.value !== "N/A") {

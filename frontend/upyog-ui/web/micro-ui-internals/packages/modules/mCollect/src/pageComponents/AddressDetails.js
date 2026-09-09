@@ -90,7 +90,7 @@ const AddressDetails = ({ config, onSelect, formData, setError, formState, clear
 
   return (
     <div style={isMobile ? {} : { marginTop: "-50px" }}>
-      <div style={{ marginBottom: "16px" }}>
+      <div className="mb-md">
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("UC_DOOR_NO_LABEL")}</CardLabel>
           <div className="field">
@@ -175,7 +175,7 @@ const AddressDetails = ({ config, onSelect, formData, setError, formState, clear
           />
         </LabelFieldPair>
       </div>
-      <hr style={{ width: "100%", border: "1px solid #D6D5D4", marginTop: "50px", marginBottom: "40px" }} />
+      <hr className="border border-solid border-border" style={{ width: "100%", marginTop: "50px", marginBottom: "40px" }} />
     </div>
   );
 };

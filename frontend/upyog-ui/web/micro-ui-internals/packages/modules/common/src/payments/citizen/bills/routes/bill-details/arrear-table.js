@@ -65,7 +65,7 @@ const ArrearTable = ({ className = "table", headers = [], values = [], arrears =
                 {headers.map((header, i) => {
                   let styleRight = headers.length == i + 1 ? styles.cellRight : {};
                   return (
-                    <td style={{ ...styles.cell, textAlign: "left", ...styleRight, whiteSpace: "pre" }} key={i} numeric>
+                    <td className="text-left" style={{ ...styles.cell, ...styleRight, whiteSpace: "pre" }} key={i} numeric>
                       {i > 1 && "₹"}
                       {(row[header] && row[header]["value"]) || "0"}
                     </td>
@@ -78,13 +78,13 @@ const ArrearTable = ({ className = "table", headers = [], values = [], arrears =
               {headers.map((header, ind) => {
                 if (ind == headers.length - 1) {
                   return (
-                    <td style={{ ...styles.cell, ...styles.cellRight, textAlign: "left", fontWeight: "700", whiteSpace: "pre" }} key={ind} numeric>
+                    <td className="text-left font-bold" style={{ ...styles.cell, ...styles.cellRight, whiteSpace: "pre" }} key={ind} numeric>
                       {arrears}
                     </td>
                   );
                 } else if (ind == headers.length - 2) {
                   return (
-                    <td style={{ ...styles.cell, textAlign: "left" }} key={ind} numeric>
+                    <td className="text-left" style={{ ...styles.cell }} key={ind} numeric>
                       {t("COMMON_ARREARS_TOTAL")}
                     </td>
                   );

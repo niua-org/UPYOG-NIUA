@@ -191,13 +191,7 @@ const UploadFile = (props) => {
           width: user_type === "employee" ? "45%" : "86%",
           ...(extraStyles?.uploadFile ? extraStyles?.uploadFile : {})
         }}>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          ...(extraStyles ? extraStyles?.containerStyles : null)
-        }}>
+        <div className="flex items-center justify-between" style={{ width: "100%", ...(extraStyles ? extraStyles?.containerStyles : null) }}>
           <div 
             className="upload-button-container"
             style={{ 
@@ -231,13 +225,7 @@ const UploadFile = (props) => {
               </div>
             })}
           {!hasFile || props.error ? (
-            <div className="file-upload-status" style={{
-              display: "flex",
-              alignItems: "center",
-              color: "#666",
-              marginLeft: "10px",
-              fontSize: "14px"
-            }}>
+            <div className="file-upload-status flex items-center text-sm" style={{ color: "#666", marginLeft: "10px" }}>
               {props.error ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: "8px" }}>
                   <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="#FF3333"/>
@@ -250,22 +238,8 @@ const UploadFile = (props) => {
               {props.message}
             </div>
           ) : (
-            <div className="tag-container" style={{
-              display: "flex",
-              alignItems: "center",
-              backgroundColor: "white",
-              borderRadius: "4px",
-              padding: "6px 10px",
-              margin: "0 10px",
-              ...(extraStyles ? extraStyles?.tagContainerStyles : null)
-            }}>
-              <div className="tag" style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: "100%",
-                ...(extraStyles ? extraStyles?.tagStyles : null)
-              }}>
+            <div className="tag-container bg-white rounded-sm flex items-center" style={{ padding: "6px 10px", margin: "0 10px", ...(extraStyles ? extraStyles?.tagContainerStyles : null) }}>
+              <div className="tag flex items-center justify-between" style={{ width: "100%", ...(extraStyles ? extraStyles?.tagStyles : null) }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: "8px" }}>
                   <path d="M14 2H6C4.9 2 4.01 2.9 4.01 4L4 20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM8 15.01L9.41 16.42L11 14.84V19H13V14.84L14.59 16.43L16 15.01L12.01 11L8 15.01Z" fill="#902434"/>
                 </svg>

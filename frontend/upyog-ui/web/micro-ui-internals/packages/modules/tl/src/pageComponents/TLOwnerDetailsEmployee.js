@@ -181,7 +181,7 @@ const OwnerForm = _props => {
         padding: "16px",
         marginTop: "8px",
         borderRadius: "4px",
-        background: "#FAFAFA"
+        background: "var(--grey-light)"
       } : {}}>
             {allOwners?.length > 1 ? <div className="tl-auto-98">
                 <div onClick={() => removeOwner(owner)} className="tl-auto-99">
@@ -433,7 +433,7 @@ const OwnerForm = _props => {
                             field.onBlur(e);
                           }}
                           disable={isSameAsPropertyOwner}
-                          style={isMulitpleOwners ? { background: "#FAFAFA" } : ""}
+                          className={isMulitpleOwners ? "bg-grey-light" : ""}
                         />
                       )}
                     />
@@ -464,7 +464,7 @@ const OwnerForm = _props => {
                           onBlur={field.onBlur}
                           disable={isSameAsPropertyOwner}
                           errorStyle={localFormState.touchedFields?.mobileNumber && errors?.mobileNumber?.message ? true : false}
-                          style={isMulitpleOwners ? { background: "#FAFAFA" } : ""}
+                          className={isMulitpleOwners ? "bg-grey-light" : ""}
                         />
                       )}
                     />
@@ -585,7 +585,7 @@ const OwnerForm = _props => {
                           labelStyle={{ marginTop: "unset" }}
                           onBlur={field.onBlur}
                           disable={isSameAsPropertyOwner}
-                          style={isMulitpleOwners ? { background: "#FAFAFA" } : ""}
+                          className={isMulitpleOwners ? "bg-grey-light" : ""}
                         />
                       )}
                     />
@@ -640,7 +640,7 @@ const OwnerForm = _props => {
                           }}
                           onBlur={field.onBlur}
                           disable={isSameAsPropertyOwner}
-                          style={isMulitpleOwners ? { background: "#FAFAFA" } : ""}
+                          className={isMulitpleOwners ? "bg-grey-light" : ""}
                         />
                       )}
                     />

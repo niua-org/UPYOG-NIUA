@@ -321,7 +321,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
         <div>
           <div>
             {t("AST_FINANCIAL_YEAR")} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span
                 className="tooltiptext"
@@ -359,7 +359,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
 
           <div>
             {t("AST_SOURCE_FINANCE")} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span
                 className="tooltiptext"
@@ -415,7 +415,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
 
           <div>
             {t("AST_CATEGORY")} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span
                 className="tooltiptext"
@@ -509,7 +509,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
 
           <div>
             {t("AST_BOOK_REF_SERIAL_NUM")} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span
                 className="tooltiptext"
@@ -565,7 +565,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
 
           <div>
             {t("ASSET_DESCRIPTION")}
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span
                 className="tooltiptext"
@@ -604,7 +604,7 @@ const NewAssetClassification = ({ t, config, onSelect, userType, formData }) => 
 
           <div>
             {t("AST_DEPARTMENT")} <span style={{ color: "red" }}>*</span>
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <InfoBannerIcon />
               <span
                 className="tooltiptext"

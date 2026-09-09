@@ -15,11 +15,7 @@ const MetricData = ({ t, data }) => {
       </p>
       {data?.insight && (
         <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "end",
-          }}
+          className="flex" style={{ width: "100%", justifyContent: "end" }}
         >
           {data?.insight?.indicator === "upper_green" ? ArrowUpwardElement("10px") : ArrowDownwardElement("10px")}
           <p className={`${data?.insight.colorCode}`} style={{ whiteSpace: "pre" }}>
@@ -67,7 +63,7 @@ const Chart = ({ data }) => {
       <div className={`tooltip`}>
         {typeof name == "string" && name}
         {Array.isArray(name) && name?.filter((ele) => ele)?.map((ele) => <div style={{ whiteSpace: "pre" }}>{ele}</div>)}
-        <span className="dss-white-pre" style={{ display: "block" }}>
+        <span className="dss-white-pre block">
           {" "}
           {showDate?.[id]?.todaysDate}
         </span>
@@ -80,7 +76,7 @@ const Chart = ({ data }) => {
             whiteSpace: "normal",
           }}
         >
-          <span style={{ fontWeight: "500", color: "white" }}>{t(`TIP_${data.name}`)}</span>
+          <span className="font-medium" style={{ color: "white" }}>{t(`TIP_${data.name}`)}</span>
           <span style={{ color: "white" }}> {showDate?.[id]?.lastUpdatedTime}</span>
         </span>
       </div>
@@ -101,7 +97,7 @@ const Summary = ({ data }) => {
               {<span style={{ whiteSpace: "pre" }}> ({t(`DSS_${Digit.Utils.locale.getTransformedLocale(value?.denomination)}`)})</span>}
             </p>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="flex justify-between">
             {data.charts.map((chart, key) => (
               <Chart data={chart} key={key} url={data?.ref?.url} />
             ))}

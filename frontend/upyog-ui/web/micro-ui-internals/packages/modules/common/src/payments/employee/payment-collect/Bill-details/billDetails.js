@@ -464,7 +464,7 @@ const BillDetails = ({ businessService, consumerCode, _amount, onChange }) => {
               ) : (
                 <div className="row last">
                   <h2></h2>
-                  <div style={{ textAlign: "right", maxWidth: "100px" }} onClick={() => setShowDetails(true)} className="filter-button value">
+                  <div className="text-right filter-button value" style={{ maxWidth: "100px" }} onClick={() => setShowDetails(true)}>
                     {t("ES_COMMON_VIEW_DETAILS")}
                   </div>
                 </div>
@@ -475,9 +475,9 @@ const BillDetails = ({ businessService, consumerCode, _amount, onChange }) => {
       )}
       {showDetails && yearWiseBills?.length > 1 && !ModuleWorkflow && businessService !== "TL" && (
         <React.Fragment>
-          <div style={{ maxWidth: "95%", display: "inline-block", textAlign: "right" }}>
-            <div style={{ display: "flex", padding: "10px", paddingLeft: "unset", maxWidth: "95%" }}>
-              <div style={{ backgroundColor: "#EEEEEE", overflowX: "auto" }}>
+          <div className="inline-block text-right" style={{ maxWidth: "95%" }}>
+            <div className="flex" style={{ padding: "10px", paddingLeft: "unset", maxWidth: "95%" }}>
+              <div className="bg-grey-mid" style={{ overflowX: "auto" }}>
                 {businessService === "WS" || "SW" ? (
                   renderArrearDetailsForWNS()
                 ) : (
@@ -538,7 +538,7 @@ const BillDetails = ({ businessService, consumerCode, _amount, onChange }) => {
         <div style={{ marginTop: "50px" }} className="bill-payment-amount">
           <CardSectionHeader>{t("CS_COMMON_PAYMENT_AMOUNT")}</CardSectionHeader>
           <RadioButtons
-            style={{ display: "flex" }}
+            className="flex"
             innerStyles={{ padding: "5px" }}
             selectedOption={paymentType}
             onSelect={setPaymentType}
@@ -547,7 +547,7 @@ const BillDetails = ({ businessService, consumerCode, _amount, onChange }) => {
           <div style={{ position: "relative" }}>
             <span
               className="payment-amount-front"
-              style={{ border: `1px solid ${paymentType === t("CS_PAYMENT_FULL_AMOUNT") ? "#9a9a9a" : "black"}` }}
+              style={{ border: `1px solid ${paymentType === t("CS_PAYMENT_FULL_AMOUNT") ? "var(--grey-dark)" : "black"}` }}
             >
               ₹
             </span>

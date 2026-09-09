@@ -84,7 +84,7 @@ const SelectName = ({ t, config, onSelect, formData = {}, userType, register, er
                   {t(input.label)}
                   {input.isMandatory ? <span className="check-page-link-button"> *</span> : null}
                 </CardLabel>
-                <div className="field" style={{display:"flex"}}>
+                <div className="field flex">
                   {input.componentInFront ? input.componentInFront : null}
                   <TextInput
                     key={input.name}

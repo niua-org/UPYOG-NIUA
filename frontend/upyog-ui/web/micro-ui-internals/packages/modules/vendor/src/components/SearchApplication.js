@@ -231,7 +231,7 @@ const VendorSearchApplication = ({ tenantId, isLoading, t, onSubmit, data, count
             {t(data.display)
               .split("\\n")
               .map((text, index) => (
-                <p key={index} style={{ textAlign: "center" }}>
+                <p key={index} className="text-center">
                   {text}
                 </p>
               ))}

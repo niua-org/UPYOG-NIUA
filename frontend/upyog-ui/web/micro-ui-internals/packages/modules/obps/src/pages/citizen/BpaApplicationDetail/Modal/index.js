@@ -9,13 +9,13 @@ const Heading = (props) => {
 
 const Close = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#0B0C0C" />
+    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="var(--text-primary)" />
   </svg>
 );
 
 const CloseBtn = (props) => {
   return (
-    <div className="icon-bg-secondary" onClick={props.onClick} style={{backgroundColor: "#FFFFFF"}}>
+    <div className="icon-bg-secondary bg-white" onClick={props.onClick}>
       <Close />
     </div>
   );
@@ -132,10 +132,10 @@ const ActionModal = ({ t, closeModal, submitAction, actionData, action, applicat
       {termsData ?
         <div style={{height: "100%"}}>
           <div style={{ height: "95%" }}>
-            <div style={{fontSize: "18px", paddingBottom: "16px", color :"#000000", fontWeight : "700"}}>{t("TERMS_AND_CONDITIONS")}</div>
+            <div className="text-lg font-bold" style={{ paddingBottom: "16px", color :"#000000" }}>{t("TERMS_AND_CONDITIONS")}</div>
             {config?.data && config?.data?.map((value, index) => <div style={{ height: "90%", overflow: "auto"}}>{`${value}`}</div>)}
           </div>
-          <div style={{display: "flex", justifyContent: "center", minHeight: "5%"}}>
+          <div className="flex justify-center" style={{ minHeight: "5%" }}>
             <ButtonSelector label={t("BPA_GO_BACK_LABEL")} onSubmit={closeModal} style={{minWidth: "240px"}}/>
           </div>
         </div> : null

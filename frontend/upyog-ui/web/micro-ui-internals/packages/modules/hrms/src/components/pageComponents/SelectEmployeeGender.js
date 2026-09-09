@@ -46,7 +46,7 @@ const SelectEmployeeGender = ({ t, config, onSelect, formData = {}, userType, re
             </CardLabel>
             <div className="field">
               <RadioButtons
-                style={{ display: "flex", justifyContent: "space-between" }}
+                className="flex justify-between"
                 /*options={[
                   {
                     code: "MALE",

@@ -79,7 +79,7 @@ const GenericChart = ({
   let headerName = t(Digit.Utils.locale.getTransformedLocale(header));
   if(window.location.href.includes("main-dashboard-landing"))
   {  return ( 
-    <Card className={`chart-item ${className}`} ReactRef={chart} style={{maxWidth:"60%",width:className == "metricsTable"?"100%":"",backgroundColor:className == "metricsTable"?"#e3e3e3":"white"}}>
+    <Card className={`chart-item ${className}`} ReactRef={chart} style={{maxWidth:"60%",width:className == "metricsTable"?"100%":"",backgroundColor:className == "metricsTable"?"var(--grey-bg)":"white"}}>
       
       {caption && <CardCaption>{caption}
       </CardCaption>}
@@ -113,7 +113,7 @@ const GenericChart = ({
                 {/* {`${t(header)}`} */}
               </CardLabel>
             )}
-            { chip.length <2 && subHeader && <p style={{ color: "#505A5F", fontWeight: 700 }}>{subHeader}</p>}
+            { chip.length <2 && subHeader && <p className="text-text-secondary font-bold">{subHeader}</p>}
           </div>
           <div className="sideContent">
             {chip && chip.length > 1 && <Chip items={chip} onClick={updateChip} t={t} />}

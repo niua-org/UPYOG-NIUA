@@ -3,7 +3,7 @@
   max-width: 960px;
 
   background-color: #C7E0F1;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   svg {
     margin-top: 5px;
     @apply rounded-full;

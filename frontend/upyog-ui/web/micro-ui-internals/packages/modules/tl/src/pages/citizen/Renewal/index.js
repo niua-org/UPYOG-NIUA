@@ -54,9 +54,9 @@ export const TLList = () => {
             </div>)}
         {!newapplicationlist?.length > 0 && <p className="tl-auto-167">{t("PT_NO_APPLICATION_FOUND_MSG")}</p>}
       </div>
-      {/* <p style={{ marginLeft: "16px", marginTop: "16px" }}>
+      {/* <p className="mt-md" style={{ marginLeft: "16px" }}>
         {t("TL_NOT_ABLE_TO_FIND_TRADE_LICENSE")}{" "}
-        <span className="link" style={{ display: "block" }}>
+        <span className="link block">
           <Link to="/upyog-ui/citizen/tl/tradelicence/trade-search">{t("TL_SEARCH_TRADE_LICENSE")}</Link>
         </span>
        </p> */}

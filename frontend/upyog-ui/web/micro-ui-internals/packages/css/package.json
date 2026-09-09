@@ -6,6 +6,7 @@
 
   "private": false,
 
+  "main": "src/index.scss",
   "source": "src/index.scss",
 
   "engines": {

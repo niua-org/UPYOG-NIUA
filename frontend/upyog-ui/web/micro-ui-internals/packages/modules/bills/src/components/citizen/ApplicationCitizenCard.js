@@ -51,7 +51,7 @@ const ApplicationCitizenCard = ({
         {t("CS_MYAPPLICATIONS_NO_APPLICATION")
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}

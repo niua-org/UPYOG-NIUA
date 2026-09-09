@@ -268,7 +268,7 @@ function PTRSelectDocument({
   }, [isHidden]);
 
   return (
-    <div style={{ marginBottom: "24px" }}>
+    <div className="mb-lg">
       {/* Render document dropdown if the document has dropdown */}
       {doc?.hasDropdown ? (
         <LabelFieldPair>
@@ -300,7 +300,7 @@ function PTRSelectDocument({
             }}
             id={id}
             message={isUploading ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="flex items-center" style={{ gap: '8px' }}>
                 <LoadingSpinner />
                 <span>Uploading...</span>
               </div>

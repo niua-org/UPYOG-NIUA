@@ -174,7 +174,7 @@ const Home = (props) => {
               )}
             </div>
             {code?.toUpperCase() === "ADS" && (
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between" }}>
+              <div className="flex justify-between" style={{ flexWrap: "wrap" }}>
                 {Advertisement.map((ad, index) => (
   <AdvertisementModuleCard
     key={ad?.poleNo || ad?.title || index}

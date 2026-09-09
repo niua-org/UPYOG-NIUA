@@ -60,15 +60,15 @@ export const PGRAIMyApplications = () => {
         <Header>{`${t("PGR_AI_MY_BOOKINGS_HEADER")} (${filteredApplications.length})`}</Header>
         <Card>
           <div style={{ marginLeft: "16px" }}>
-            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "16px" }}>
+            <div className="flex items-center" style={{ flexDirection: "row", gap: "16px" }}>
               <div style={{ flex: 2 }}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                <div className="flex" style={{ flexDirection: "column" }}>
                   <CardLabel>{t("PGR_AI_GRIEVANCE_NO")}</CardLabel>
                   <TextInput
                     placeholder={t("Enter Booking No.")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ width: "100%", padding: "8px", height: "150%" }}
+                    className="p-sm" style={{ width: "100%", height: "150%" }}
                   />
                 </div>
               </div>
@@ -76,8 +76,7 @@ export const PGRAIMyApplications = () => {
                 <div style={{ marginTop: "17%" }}>
                   <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
                   <p
-                    className="link"
-                    style={{ marginLeft: "30%", marginTop: "10px", display: "block" }}
+                    className="link block" style={{ marginLeft: "30%", marginTop: "10px" }}
                     onClick={() => setSearchTerm("")}
                   >
                     {t(`ES_COMMON_CLEAR_ALL`)}
@@ -95,7 +94,7 @@ export const PGRAIMyApplications = () => {
               </div>
             ))}
           {filteredApplications.length === 0 && !isLoading && (
-            <p style={{ marginLeft: "16px", marginTop: "16px" }}>{t("PGR_AI_NO_APPLICATION_FOUND_MSG")}</p>
+            <p className="mt-md" style={{ marginLeft: "16px" }}>{t("PGR_AI_NO_APPLICATION_FOUND_MSG")}</p>
           )}
       </div>
     </React.Fragment>

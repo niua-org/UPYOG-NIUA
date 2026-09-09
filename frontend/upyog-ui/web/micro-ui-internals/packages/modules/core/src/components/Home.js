@@ -101,7 +101,7 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
     <React.Fragment>
       <div className="citizen-all-services-wrapper">
         <BackButton />
-        <div className="citizenAllServiceGrid" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <div className="citizenAllServiceGrid flex justify-center" style={{ flexDirection: "column" }}>
           {moduleArray
             .filter((mod) => mod)
             .map(({ code }, index) => {

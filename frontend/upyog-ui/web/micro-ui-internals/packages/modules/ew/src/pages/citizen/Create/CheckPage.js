@@ -88,7 +88,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
         <div>
           {/* Section for product details */}
           <CardSubHeader>{t("EWASTE_TITLE_PRODUCT_DETAILS")}</CardSubHeader>
-          <div style={{ border: "2px solid #ccc", borderRadius: "8px", padding: "20px", margin: "20px 0" }}>
+          <div className="rounded-md" style={{ border: "2px solid #ccc", padding: "20px", margin: "20px 0" }}>
             <ApplicationTable
               t={t}
               data={productRows}

@@ -114,9 +114,9 @@
 /* Default (inactive) filter chip button */
 .gis-filter-btn {
   border: 1px solid #ddd;
-  background: #fafafa;
+  background: var(--grey-light);
   color: #444;
-  border-radius: 16px;
+  border-radius: var(--border-radius-lg);
   padding: 5px 12px;
   font-size: 12px;
   cursor: pointer;
@@ -192,7 +192,7 @@
   border-left: 3px solid var(--status-color, #ccc);
   padding: 6px 8px;
   margin-bottom: 8px;
-  background: #fafafa;
+  background: var(--grey-light);
   border-radius: 0 6px 6px 0;
 }
 
@@ -493,7 +493,7 @@
 /* Modal card containing the header bar and the map */
 .gis-diginpin-popup-card {
   width: 420px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
@@ -504,7 +504,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  background: #a82227;
+  background: var(--primary-main);
 }
 
 /* DIGIPIN text */

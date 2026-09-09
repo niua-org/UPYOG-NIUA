@@ -555,7 +555,7 @@ const VendorDetails = ({ t, config, onSelect, userType, formData, ownerIndex }) 
 
           <div>
             {t("VENDOR_TYPE")}
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <span
                 className="tooltiptext"
                 style={{
@@ -595,7 +595,7 @@ const VendorDetails = ({ t, config, onSelect, userType, formData, ownerIndex }) 
           {/* dropdown for vendor category  */}
           <div>
             {t("VENOR_CATEGORY")}
-            <div className="tooltip" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex", alignItems: "center" }}>
+            <div className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}>
               <span
                 className="tooltiptext"
                 style={{
@@ -636,14 +636,7 @@ const VendorDetails = ({ t, config, onSelect, userType, formData, ownerIndex }) 
           <div>
             {t("STATUS")}
             <div
-              className="tooltip"
-              style={{
-                width: "12px",
-                height: "5px",
-                marginLeft: "10px",
-                display: "inline-flex",
-                alignItems: "center",
-              }}
+              className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}
             >
               <span
                 className="tooltiptext"

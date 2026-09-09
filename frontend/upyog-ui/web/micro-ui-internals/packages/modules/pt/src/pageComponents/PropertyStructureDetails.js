@@ -192,7 +192,7 @@ const PropertyStructureDetails = ({
           <div key={`unique`}>
             <div className="pt-auto-73">
               {/* <LinkButton
-                label={<DeleteIcon fill={!(fields.length === 1) ? "#494848" : "#FAFAFA"} />}
+                label={<DeleteIcon fill={!(fields.length === 1) ? "#494848" : "var(--grey-light)"} />}
                 onClick={(e) => handleRemove(index)}
                /> */}
               {formData?.PropertyType?.code === "VACANT" ? <div>

@@ -851,7 +851,7 @@ const FstpOperatorDetails = () => {
               >
               </Row> : null} */}
             <div className={!isMobile && "row"} style={isMobile ? {} : { diplay: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <CardLabel style={{ fontWeight: "normal" }}> {t("ES_FSM_ADDITIONAL_DETAILS")} </CardLabel>
+              <CardLabel className="font-regular"> {t("ES_FSM_ADDITIONAL_DETAILS")} </CardLabel>
               <TextArea
                 className="form-field"
                 onChange={(e) => {
@@ -932,7 +932,7 @@ const FstpOperatorDetails = () => {
           </LabelFieldPair> */}
         </StatusTable>
       </Card>
-      {/* <h2 style={{ fontWeight: "bold", fontSize: "16px", marginLeft: "8px", marginTop: "16px" }}>{t("ES_FSTP_OPERATOR_DETAILS_WASTE_GENERATORS")}</h2>
+      {/* <h2 className="mt-md font-bold text-md" style={{ marginLeft: "8px" }}>{t("ES_FSTP_OPERATOR_DETAILS_WASTE_GENERATORS")}</h2>
       {isSearchLoading || isIdle ? (
         <Loader />
       ) : (

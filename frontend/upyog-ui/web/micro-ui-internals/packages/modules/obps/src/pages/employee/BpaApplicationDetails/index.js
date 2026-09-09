@@ -345,7 +345,7 @@ const BpaApplicationDetail = () => {
       <div className={"employee-main-application-details"}>
       <div className={"employee-application-detailsNew"} style={{marginBottom: "15px",height:"auto !important", maxHeight:"none !important"}}>
         <Header styles={{marginLeft:"0px", paddingTop: "10px", fontSize: "32px"}}>{t("CS_TITLE_APPLICATION_DETAILS")}</Header>
-        <div style={{zIndex: "10",display:"flex",flexDirection:"row-reverse",alignItems:"center",marginTop:"-25px"}}>
+        <div className="flex items-center" style={{ zIndex: "10", flexDirection:"row-reverse", marginTop:"-25px" }}>
                
         <div style={{zIndex: "10",  position: "relative"}}>
         {dowloadOptions && dowloadOptions.length>0 && <MultiLink                
@@ -357,7 +357,7 @@ const BpaApplicationDetail = () => {
           optionsClassName={"employee-options-btn-className"}
           />}  
         </div>     
-        <LinkButton label={t("VIEW_TIMELINE")} style={{ color:"#A52A2A"}} onClick={handleViewTimeline}></LinkButton>
+        <LinkButton label={t("VIEW_TIMELINE")} className="text-primary-main" onClick={handleViewTimeline}></LinkButton>
         </div>
       {data?.applicationData?.status === "FIELDINSPECTION_INPROGRESS" && (userInfo?.info?.roles.filter(role => role.code === "BPA_FIELD_INSPECTOR")).length>0 && <FormComposer
         heading={t("")}

@@ -368,7 +368,7 @@ const ConnectionDetails = _props => {
                 }}
                 isMandatory={true}
                 render={({ field }) => (
-                  <div style={{ display: "flex", alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
+                  <div className="flex" style={{ alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
                     <TextInput
                       value={field.value}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "name"}
@@ -440,11 +440,7 @@ const ConnectionDetails = _props => {
                 isMandatory={true}
                 render={({ field }) => (
                   <div
-                    style={{
-                      display: "flex",
-                      marginRight: checkifPrivacyValid() && !(isMobile && isEmployee) ? "-20px" : "unset",
-                      width: (isMobile && isEmployee) ? "" : checkifPrivacyValid() ? "197%" : "208%",
-                    }}
+                    className="flex" style={{ marginRight: checkifPrivacyValid() && !(isMobile && isEmployee) ? "-20px" : "unset", width: (isMobile && isEmployee) ? "" : checkifPrivacyValid() ? "197%" : "208%" }}
                   >
                     <Dropdown
                       className="form-field"
@@ -516,7 +512,7 @@ const ConnectionDetails = _props => {
                 //type="number"
                 isMandatory={true}
                 render={({ field }) => (
-                  <div style={{ display: "flex", alignItems: "baseline", marginRight: isEmployee && isMobile ? "" : (getValues("mobileNumber")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
+                  <div className="flex" style={{ alignItems: "baseline", marginRight: isEmployee && isMobile ? "" : (getValues("mobileNumber")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
                     <div className="employee-card-input employee-card-input--front" style={{ position: "relative", marginTop: "4px" }}>
                       +91
                     </div>
@@ -542,8 +538,8 @@ const ConnectionDetails = _props => {
                             }) &&
                             !Digit.Utils.checkPrivacy(privacyData, { uuid: connectionHolderDetail?.uuid, fieldName: "mobileNumber", model: "User" })
                             ? ((isMobile && isEmployee) ? {} :{ width: "96%" })
-                            : ((isMobile && isEmployee) ? {} :{ width: "96%", background: "#FAFAFA" })
-                          : { background: "#FAFAFA" }
+                            : ((isMobile && isEmployee) ? {} :{ width: "96%", background: "var(--grey-light)" })
+                          : { background: "var(--grey-light)" }
                       }
                     />
                     {checkifPrivacyValid() && (
@@ -599,7 +595,7 @@ const ConnectionDetails = _props => {
                 }}
                 isMandatory={true}
                 render={({ field }) => (
-                  <div style={{ display: "flex", alignItems: "baseline", marginRight: isEmployee && isMobile ? "" :(getValues("guardian")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
+                  <div className="flex" style={{ alignItems: "baseline", marginRight: isEmployee && isMobile ? "" :(getValues("guardian")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
                     <TextInput
                       value={getValues("guardian")}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "guardian"}
@@ -675,11 +671,7 @@ const ConnectionDetails = _props => {
                 isMandatory={true}
                 render={({ field }) => (
                   <div
-                    style={{
-                      display: "flex",
-                      marginRight: checkifPrivacyValid() && !(isMobile && isEmployee) ? "-20px" : "unset",
-                      width: (isMobile && isEmployee) ? "" : checkifPrivacyValid() ? "197%" : "208%",
-                    }}
+                    className="flex" style={{ marginRight: checkifPrivacyValid() && !(isMobile && isEmployee) ? "-20px" : "unset", width: (isMobile && isEmployee) ? "" : checkifPrivacyValid() ? "197%" : "208%" }}
                   >
                     <Dropdown
                       className="form-field"
@@ -750,7 +742,7 @@ const ConnectionDetails = _props => {
                 }}
                 isMandatory={true}
                 render={({ field }) => (
-                  <div style={{ display: "flex", alignItems: "baseline", marginRight: isEmployee && isMobile ? "" : (getValues("address")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
+                  <div className="flex" style={{ alignItems: "baseline", marginRight: isEmployee && isMobile ? "" : (getValues("address")?.includes("*") && !(isMobile && isEmployee) ? "-20px" : "-4%") }}>
                     <TextInput
                       value={getValues("address")}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "address"}
@@ -826,11 +818,7 @@ const ConnectionDetails = _props => {
                 //isMandatory={true}
                 render={({ field }) => (
                   <div
-                    style={{
-                      display: "flex",
-                      marginRight: checkifPrivacyValid() && !(isMobile && isEmployee) ? "-20px" : "unset",
-                      width: (isMobile && isEmployee) ? "" : checkifPrivacyValid() ? "197%" : "208%",
-                    }}
+                    className="flex" style={{ marginRight: checkifPrivacyValid() && !(isMobile && isEmployee) ? "-20px" : "unset", width: (isMobile && isEmployee) ? "" : checkifPrivacyValid() ? "197%" : "208%" }}
                   >
                     <Dropdown
                       className="form-field"
@@ -900,7 +888,7 @@ const ConnectionDetails = _props => {
                 }}
                 isMandatory={false}
                 render={({ field }) => (
-                  <div style={{ display: "flex", alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
+                  <div className="flex" style={{ alignItems: "baseline", marginRight: isMobile && isEmployee ? "" :(checkifPrivacyValid() ? "-4%" : "-4%") }}>
                     <TextInput
                       value={getValues("emailId")}
                       autoFocus={focusIndex.index === connectionHolderDetail?.key && focusIndex.type === "emailId"}

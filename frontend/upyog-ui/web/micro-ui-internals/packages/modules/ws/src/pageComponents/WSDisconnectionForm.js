@@ -270,7 +270,7 @@ const WSDisconnectionForm = ({
     fontSize: "medium"
   };
   const citizenInfoLabelTextStyle = {
-    color: "#0B0C0C"
+    color: "var(--text-primary)"
   };
   if (userType === 'citizen') {
     return <div>

@@ -23,7 +23,7 @@
 }
 
 .cg-note-strong {
-    font-weight: bolder;
+    font-weight: var(--weight-bold);
     color: green
 }
 
@@ -37,7 +37,7 @@
 
 .cg-hr-small {
     width: 35%;
-    border: 1px solid #D6D5D4;
+    border: var(--border-width-sm) solid var(--border);
     margin-top: 1rem;
     margin-bottom: 1rem
 }
@@ -47,15 +47,15 @@
 }
 
 .cg-total-text {
-    font-size: 24px;
+    font-size: var(--font-size-2xl);
     padding: 10px 0px;
-    font-weight: 700
+    font-weight: var(--weight-bold)
 }
 
 .cg-section-title {
-    font-size: 24px;
+    font-size: var(--font-size-2xl);
     padding: 10px 0px;
-    font-weight: 700
+    font-weight: var(--weight-bold)
 }
 
 .cg-card-margin-top {
@@ -75,7 +75,7 @@
 }
 
 .cg-result-margin-left {
-    margin-left: 24px
+    margin-left: var(--spacing-lg)
 }
 
 .cg-padding-0 {
@@ -102,7 +102,7 @@
 
 .cg-doc-pdf-bg {
     background: #f6f6f6;
-    padding: 8px
+    padding: var(--spacing-sm)
 }
 
 .cg-loader-page {
@@ -115,7 +115,7 @@
     width: 100vw;
     height: 100vh;
     background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(var(--spacing-xs));
     z-index: 9999
 }
 
@@ -131,8 +131,8 @@
 .cg-loader-spinner {
     width: 64px;
     height: 64px;
-    border: 8px solid #1976d2;
-    border-top: 8px solid transparent;
+    border: var(--border-width-xl) solid var(--link-normal);
+    border-top: var(--border-width-xl) solid transparent;
     border-radius: 50%;
     animation: cg-spin 1.2s linear infinite
 }
@@ -185,17 +185,17 @@
 }
 
 .cg-filter-span {
-    margin-left: 8px;
+    margin-left: var(--spacing-sm);
     font-weight: normal
 }
 
 .cg-clear-search-border {
-    border: 1px solid #e0e0e0;
+    border: var(--border-width-sm) solid var(--grey-bg);
     padding: 6px
 }
 
 .cg-clear-search-mobile {
-    border: 1px solid #e0e0e0;
+    border: var(--border-width-sm) solid var(--grey-bg);
     padding: 6px;
     margin-top: 5px
 }
@@ -207,7 +207,7 @@
 }
 
 .cg-btn-margin-right {
-    margin-right: 8px
+    margin-right: var(--spacing-sm)
 }
 
 .cg-field-width-100 {
@@ -225,7 +225,7 @@
 .cg-error-style {
     width: 70%;
     margin-left: 30%;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     margin-top: -21px
 }
 
@@ -235,7 +235,7 @@
 
 .cg-mobile-label-style {
     margin-top: unset;
-    border: 1px solid #464646;
+    border: var(--border-width-sm) solid var(--input-border);
     border-right: none
 }
 
@@ -244,7 +244,7 @@
 }
 
 .cg-margin-top-8 {
-    margin-top: 8px
+    margin-top: var(--spacing-sm)
 }
 
 .cg-status-green {
@@ -257,7 +257,7 @@
 
 .cg-table-cell {
     padding: 20px 18px;
-    font-size: 16px
+    font-size: var(--font-size-md)
 }
 
 .cg-table-minwide {
@@ -283,7 +283,7 @@
 }
 
 .cg-banner-header {
-    font-size: 32px;
+    font-size: var(--spacing-xl);
     word-break: break-word
 }
 
@@ -300,6 +300,6 @@
 
 /* Action link color used in utils getActionButton */
 .cg-link-action {
-    color: #FE7A51;
+    color: var(--primary-light);
     cursor: pointer
 }

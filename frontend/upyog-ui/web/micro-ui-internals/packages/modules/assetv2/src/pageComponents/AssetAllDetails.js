@@ -846,7 +846,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
               {assetDetails?.location && (
                 <div>
-                  <button style={{ color: "#a82227" }} onClick={() => setShowMap(true)}>
+                  <button className="text-primary-main" onClick={() => setShowMap(true)}>
                     {geometry ? "Edit Marked Asset" : "Mark Asset on Map"}
                   </button>
                 </div>
@@ -1796,16 +1796,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
 
   const LoadingSpinner = () => (
     <div
-      className="loading-spinner"
-      style={{
-        border: "2px solid #f3f3f3",
-        borderTop: "2px solid #a82227",
-        borderRadius: "50%",
-        width: "16px",
-        height: "16px",
-        animation: "spin 1s linear infinite",
-        display: "inline-block",
-      }}
+      className="loading-spinner inline-block" style={{ border: "2px solid #f3f3f3", borderTop: "2px solid #a82227", borderRadius: "50%", width: "16px", height: "16px", animation: "spin 1s linear infinite" }}
     />
   );
 
@@ -1890,7 +1881,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
   }, [uploadedFile, selectedDocument, latitude, longitude, setDocuments]);
 
   return (
-    <div style={{ marginBottom: "24px", width: "80%" }}>
+    <div className="mb-lg" style={{ width: "80%" }}>
       {doc?.hasDropdown && (
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t(doc.code.replaceAll(".", "_"))}</CardLabel>
@@ -1907,7 +1898,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
           }}
           message={
             isUploading ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div className="flex items-center" style={{ gap: "8px" }}>
                 <LoadingSpinner />
                 <span>Uploading...</span>
               </div>
@@ -1926,7 +1917,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
         {/* </div> */}
       </LabelFieldPair>
       {doc?.code === "OWNER.ASSETPHOTO" && latitude && longitude && (
-        <div style={{ marginTop: "10px", textAlign: "center" }}>
+        <div className="text-center" style={{ marginTop: "10px" }}>
           <p>
             <strong>{t("Location Details")}:</strong>
           </p>

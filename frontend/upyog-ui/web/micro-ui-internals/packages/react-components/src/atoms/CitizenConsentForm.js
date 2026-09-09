@@ -7,13 +7,13 @@ const Heading = (props) => {
 
 const Close = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="#0B0C0C" />
+        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="var(--text-primary)" />
     </svg>
 );
 
 const CloseBtn = (props) => {
     return (
-        <div className="icon-bg-secondary" onClick={props.onClick} style={{ backgroundColor: "#FFFFFF" }}>
+        <div className="icon-bg-secondary bg-white" onClick={props.onClick}>
             <Close />
         </div>
     );
@@ -59,7 +59,7 @@ const CitizenConsentForm = ({ t, styles, mdmsConfig = "", setMdmsConfig, labels 
                             src={`${url}`}
                         ></iframe>
                     </div> : 
-                    <div style={{width: "100%", height: "100px", display: "flex", justifyContent: "center", alignItems: "center"}}>
+                    <div className="flex justify-center items-center" style={{ width: "100%", height: "100px" }}>
                         {t("COMMON_URL_NOT_FOUND")}
                     </div>}
 

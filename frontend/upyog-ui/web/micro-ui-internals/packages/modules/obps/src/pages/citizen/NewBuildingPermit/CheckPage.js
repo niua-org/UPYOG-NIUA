@@ -210,7 +210,7 @@ import {
     </Card>
     <Card style={{paddingRight:"16px"}}>
     <CardHeader>{value.businessService==="BPA-PAP" ? t("BPA_STEPPER_PLAN_DETAILS_HEADER") : t("BPA_STEPPER_SCRUTINY_DETAILS_HEADER")}</CardHeader>
-    <CardSubHeader style={{fontSize: "20px"}}>{value.businessService==="BPA-PAP" ? t("BPA_DRAWING_DETAILS") : t("BPA_EDCR_DETAILS")}</CardSubHeader>
+    <CardSubHeader className="text-xl">{value.businessService==="BPA-PAP" ? t("BPA_DRAWING_DETAILS") : t("BPA_EDCR_DETAILS")}</CardSubHeader>
     <StatusTable  style={{border:"none"}}>
       <Row className="border-none" label={value.businessService==="BPA-PAP" ? t("BPA_DRAWING_NUMBER") : t("BPA_EDCR_NO_LABEL")} text={data?.scrutinyNumber?.edcrNumber||value?.edcrNumber}></Row>
       {preApprovedResponse?.[0]?.documents ? (
@@ -239,28 +239,28 @@ import {
         label={ <PDFSvg /> }
           onClick={() => routeTo(datafromAPI?.updatedDxfFile||preApprovedResponse?.[0]?.documents.find(doc => doc?.additionalDetails?.fileName.includes("pdf"))?.additionalDetails?.fileUrl)}
       />
-      <p style={{ marginTop: "8px", marginBottom: "20px", textAlign:"Left", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{datafromAPI?.updatedDxfFile?t(`BPA_UPLOADED_PLAN_DXF`):t(`BPA_UPLOADED_PLAN_PDF`)}</p>
+      <p className="mt-sm text-left text-md text-text-secondary font-regular" style={{ marginBottom: "20px", lineHeight: "19px" }}>{datafromAPI?.updatedDxfFile?t(`BPA_UPLOADED_PLAN_DXF`):t(`BPA_UPLOADED_PLAN_PDF`)}</p>
       <CardSubHeader>{t("BPA_SCRUNTINY_REPORT_OUTPUT")}</CardSubHeader>
       <LinkButton
         label={ <PDFSvg /> }
           onClick={() => routeTo(datafromAPI?.planReport)}
       />
-      <p style={{ marginTop: "8px", marginBottom: "20px", textAlign:"Left", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t(`BPA_SCRUTINY_REPORT_PDF`)}</p>
+      <p className="mt-sm text-left text-md text-text-secondary font-regular" style={{ marginBottom: "20px", lineHeight: "19px" }}>{t(`BPA_SCRUTINY_REPORT_PDF`)}</p>
       </div>
       ):null}
       </StatusTable>
       <hr style={{color:"#cccccc",backgroundColor:"#cccccc",height:"2px",marginTop:"20px",marginBottom:"20px"}}/>
-      <CardSubHeader style={{fontSize: "20px"}}>{preApprovedResponse?.[0]?.drawingDetail? t("BPA_BUILDING_EXTRACT_DETAILS") :t("BPA_BUILDING_EXTRACT_HEADER")}</CardSubHeader>
+      <CardSubHeader className="text-xl">{preApprovedResponse?.[0]?.drawingDetail? t("BPA_BUILDING_EXTRACT_DETAILS") :t("BPA_BUILDING_EXTRACT_HEADER")}</CardSubHeader>
       <StatusTable>
       <Row className="border-none" label={t("BPA_TOTAL_BUILT_UP_AREA_HEADER")} text={`${preApprovedResponse?.[0]?.drawingDetail?.totalBuitUpArea} ${t("BPA_SQ_MTRS_LABEL")}`||`${datafromAPI?.planDetail?.blocks?.[0]?.building?.totalBuitUpArea} ${t("BPA_SQ_MTRS_LABEL")}`}></Row>
       <Row className="border-none" label={t("BPA_SCRUTINY_DETAILS_NUMBER_OF_FLOORS_LABEL")} text={datafromAPI?.planDetail?.blocks?.[0]?.building?.totalFloors||preApprovedResponse?.[0]?.drawingDetail?.blocks[0]?.building?.totalFloors}></Row>
       <Row className="border-none" label={t("BPA_HEIGHT_FROM_GROUND_LEVEL_FROM_MUMTY")} text={`${preApprovedResponse?.[0]?.drawingDetail?.blocks?.[0]?.building?.buildingHeight} ${t("BPA_MTRS_LABEL")}`||`${datafromAPI?.planDetail?.blocks?.[0]?.building?.declaredBuildingHeight} ${t("BPA_MTRS_LABEL")}`}></Row>
       </StatusTable>
       <hr style={{color:"#cccccc",backgroundColor:"#cccccc",height:"2px",marginTop:"20px",marginBottom:"20px"}}/>
-      <CardSubHeader style={{fontSize: "20px"}}>{preApprovedResponse?.[0]?.drawingDetail ? t("BPA_BLOCK_HEADER"):t("BPA_OCC_SUBOCC_HEADER")}</CardSubHeader>
+      <CardSubHeader className="text-xl">{preApprovedResponse?.[0]?.drawingDetail ? t("BPA_BLOCK_HEADER"):t("BPA_OCC_SUBOCC_HEADER")}</CardSubHeader>
       {datafromAPI?.planDetail?.blocks.map((block,index)=>(
-      <div key={index} style={datafromAPI?.planDetail?.blocks?.length > 1 ?{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
-      <CardSubHeader style={{marginTop:"15px", fontSize: "18px"}}>{t("BPA_BLOCK_SUBHEADER")} {index+1}</CardSubHeader>
+      <div key={index} style={datafromAPI?.planDetail?.blocks?.length > 1 ?{ marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
+      <CardSubHeader className="text-lg" style={{ marginTop:"15px" }}>{t("BPA_BLOCK_SUBHEADER")} {index+1}</CardSubHeader>
       <StatusTable >
       <Row className="border-none" textStyle={{wordBreak:"break-word"}} label={t("BPA_SUB_OCCUPANCY_LABEL")} text={getBlockSubOccupancy(index) === ""?t("CS_NA"):getBlockSubOccupancy(index)}></Row>
       </StatusTable>
@@ -284,8 +284,8 @@ import {
       </div>
       </div>))}
       {preApprovedResponse?.[0]?.drawingDetail?.blocks.map((block,index)=>(
-      <div key={index} style={preApprovedResponse?.[0]?.drawingDetail?.blocks?.length > 1 ?{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
-      <CardSubHeader style={{marginTop:"15px", fontSize: "18px"}}>{t("BPA_BLOCK_SUBHEADER")} {index+1}</CardSubHeader>
+      <div key={index} style={preApprovedResponse?.[0]?.drawingDetail?.blocks?.length > 1 ?{ marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
+      <CardSubHeader className="text-lg" style={{ marginTop:"15px" }}>{t("BPA_BLOCK_SUBHEADER")} {index+1}</CardSubHeader>
       
       <div style={{overflow:"scroll"}}>
       <Table
@@ -307,7 +307,7 @@ import {
       </div>
       </div>))}
       <hr style={{color:"#cccccc",backgroundColor:"#cccccc",height:"2px",marginTop:"20px",marginBottom:"20px"}}/>
-      <CardSubHeader style={{fontSize: "20px"}}>{t("BPA_APP_DETAILS_DEMOLITION_DETAILS_LABEL")}</CardSubHeader>
+      <CardSubHeader className="text-xl">{t("BPA_APP_DETAILS_DEMOLITION_DETAILS_LABEL")}</CardSubHeader>
       <StatusTable  style={{border:"none"}}>
       <Row className="border-none" label={t("BPA_APPLICATION_DEMOLITION_AREA_LABEL")} text={datafromAPI?.planDetail?.planInformation?.demolitionArea ? `${datafromAPI?.planDetail?.planInformation?.demolitionArea} ${t("BPA_SQ_MTRS_LABEL")}` : t("CS_NA")}></Row>
       </StatusTable>
@@ -336,7 +336,7 @@ import {
             onClick={() => routeTo(`${routeLink}/owner-details`)}
           />
         {owners?.owners && owners?.owners.map((ob,index) =>(
-        <div key={index} style={owners?.owners?.length > 1 ?{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
+        <div key={index} style={owners?.owners?.length > 1 ?{ marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
         {owners.owners.length > 1 && <CardSubHeader>{t("COMMON_OWNER")} {index+1}</CardSubHeader>}
         <StatusTable>
         <Row className="border-none" textStyle={index==0 && owners.owners.length == 1 ?{paddingLeft:"12px"}:{}} label={t(`CORE_COMMON_NAME`)} text={ob?.name} />
@@ -363,7 +363,7 @@ import {
       </Card>
       
       {nocDocuments && nocDocuments?.NocDetails?.map((noc, index) => (
-  <div key={`noc-${index}`} style={nocDocuments?.NocDetails?.length > 1 ? { marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
+  <div key={`noc-${index}`} style={nocDocuments?.NocDetails?.length > 1 ? { marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
     <CardHeader>{t("BPA_NOC_DETAILS_SUMMARY")}</CardHeader>
           <LinkButton
             label={<EditIcon style={{ marginTop: "-10px", float: "right", position: "relative", bottom: "32px" }} />}
@@ -371,10 +371,10 @@ import {
             onClick={() => routeTo(`${routeLink}/noc-details`)}
           />
 
-        <CardSectionHeader style={{marginBottom: "24px"}}>{`${t(`BPA_${noc?.nocType}_HEADER`)}`}</CardSectionHeader>
+        <CardSectionHeader className="mb-lg">{`${t(`BPA_${noc?.nocType}_HEADER`)}`}</CardSectionHeader>
         <StatusTable>
           <Row className="border-none" label={t(`BPA_${noc?.nocType}_LABEL`)} text={noc?.applicationNo} />
-          <Row className="border-none" label={t(`BPA_NOC_STATUS`)} text={t(`${noc?.applicationStatus}`)} textStyle={noc?.applicationStatus == "APPROVED" || noc?.applicationStatus == "AUTO_APPROVED" ? {color : "#00703C"} : {color: "#D4351C"}} />
+          <Row className="border-none" label={t(`BPA_NOC_STATUS`)} text={t(`${noc?.applicationStatus}`)} textStyle={noc?.applicationStatus == "APPROVED" || noc?.applicationStatus == "AUTO_APPROVED" ? {color : "var(--success)"} : {color: "var(--error)"}} />
           {noc?.additionalDetails?.SubmittedOn ? <Row className="border-none" label={`${t("BPA_NOC_SUBMISSION_DATE")}`} text={noc?.additionalDetails?.SubmittedOn ? convertEpochToDateDMY(Number(noc?.additionalDetails?.SubmittedOn)) : "NA"} /> : null }
           {noc?.nocNo ? <Row className="border-none" label={`${t("BPA_APPROVAL_NUMBER_LABEL")}`} text={noc?.nocNo || "NA"} /> : null }
           {(noc?.applicationStatus === "APPROVED" || noc?.applicationStatus === "REJECTED" || noc?.applicationStatus === "AUTO_APPROVED" || noc?.applicationStatus === "AUTO_REJECTED") ? <Row className="border-none" label={`${t("BPA_APPROVED_REJECTED_ON_LABEL")}`} text= {convertEpochToDateDMY(Number(noc?.auditDetails?.lastModifiedTime))} /> : null }

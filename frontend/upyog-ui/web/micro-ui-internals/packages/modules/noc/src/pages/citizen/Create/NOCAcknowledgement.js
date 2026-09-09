@@ -180,7 +180,7 @@ const NOCAcknowledgement = ({ data, onSuccess, onUpdateSuccess, clearParams }) =
         />
         <CardText>{t("NOC_APPLICATION_FAILED_TEXT")}</CardText>
         {errorMsg && (
-          <CardText style={{ color: "red", fontWeight: "bold", marginTop: "10px" }}>
+          <CardText className="font-bold" style={{ color: "red", marginTop: "10px" }}>
             Error Details: {errorMsg}
           </CardText>
         )}
@@ -202,7 +202,7 @@ const NOCAcknowledgement = ({ data, onSuccess, onUpdateSuccess, clearParams }) =
       <CardText>
         {isUpdate ? t("NOC_APPLICATION_UPDATED_TEXT") : t("NOC_APPLICATION_SUCCESS_TEXT")}
       </CardText>
-      <div style={{ display: "flex", flexDirection: "row", gap: "20px", marginTop: "20px" }}>
+      <div className="flex" style={{ flexDirection: "row", gap: "20px", marginTop: "20px" }}>
         <div style={{ flex: 1 }}>
           <SubmitBar label={t("NOC_DOWNLOAD_ACK")} onSubmit={handleDownloadPdf} style={{ width: "100%" }} />
         </div>
@@ -215,7 +215,7 @@ const NOCAcknowledgement = ({ data, onSuccess, onUpdateSuccess, clearParams }) =
           </Link>
         )}
       </div>
-      <div style={{ display: "flex", flexDirection: "row", justifyContent: "flex-end", marginTop: "16px" }}>
+      <div className="mt-md flex justify-end" style={{ flexDirection: "row" }}>
         <Link to="/upyog-ui/citizen">
           <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} onClick={() => {
             Digit.SessionStorage.del("NOC_CREATE_APPLICATION");

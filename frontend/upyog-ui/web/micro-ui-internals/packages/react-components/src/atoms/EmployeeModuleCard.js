@@ -62,8 +62,8 @@ const EmployeeModuleCard = ({ Icon, moduleName, kpis = [], links = [], isCitizen
         <span className="logo-removeBorderRadiusLogo" style={{ position: "absolute", right: "10%", top: "10%" }}>{Icon}</span>
         <div className="employee-card-banner">
           <div className="body" style={{ margin: "0px", padding: "0px" }}>
-            <div style={{display: "flex",flexDirection: "column"}}>
-              <div style={{display:"flex"}}>
+            <div className="flex" style={{ flexDirection: "column" }}>
+              <div className="flex">
             <div style={{ width: "30%", height: "50px" }}><span className="icon-banner-employee" style={{ position: "absolute", left: "10%", top: "10%", borderRadius: "5px", boxShadow: "5px 5px 5px 0px #e3e4e3" }}>{Icon}</span></div>
             
             <div style={{width:"70%"}}>
@@ -71,19 +71,19 @@ const EmployeeModuleCard = ({ Icon, moduleName, kpis = [], links = [], isCitizen
               <div className="flex-fit" style={isCitizen ? { paddingLeft: "17px" } : {}}>
 
                 {kpis.map(({ count, label, link }, index) => (
-                  <div className="card-count" key={index} style={{ display: "flex", width: "100%",flexDirection: "column" }}>
+                  <div className="card-count flex" key={index} style={{ width: "100%", flexDirection: "column" }}>
                     {/*  */}
-                    <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column-reverse", width: "100%" }}>
+                    <div className="flex" style={{ marginLeft: "auto", flexDirection: "column-reverse", width: "100%" }}>
 
-                      <div style={{textAlign:"center"}}>
+                      <div className="text-center">
                         {link ? (
                           <Link to={link} className="employeeTotalLink">
                             {label}
                           </Link>
                         ) : null}
                     </div>
-                      <div style={{ textAlign:"center"}}>
-                        <span style={{ color: "#ae1e28", fontSize: "18px", fontFamily: "sans-serif", fontWeight: "bold" }}>{count || "-"}</span>
+                      <div className="text-center">
+                        <span className="text-lg font-bold" style={{ color: "#ae1e28", fontFamily: "sans-serif" }}>{count || "-"}</span>
                       </div>
                     </div>
                   </div>
@@ -93,10 +93,10 @@ const EmployeeModuleCard = ({ Icon, moduleName, kpis = [], links = [], isCitizen
             </div>
             </div>
             <div>
-            <div className="links-wrapper" style={{ width: "100%", display: "flex", fontSize: "0.8rem", paddingLeft: "10px", flexWrap:"wrap",flexDirection:"row",paddingTop:"10px"}}>
+            <div className="links-wrapper flex" style={{ width: "100%", fontSize: "0.8rem", paddingLeft: "10px", flexWrap:"wrap", flexDirection:"row", paddingTop:"10px" }}>
               {links.map(({ count, label, link }, index) => (
-                <div className="link" key={index} style={{ paddingLeft: "5px", color: "#a1a5b7",display:"flex" }}>
-                  {link ? <div style={{display:"flex"}}> <Link to={link}> {label} </Link>  <span>|</span> </div>: null}
+                <div className="link flex" key={index} style={{ paddingLeft: "5px", color: "#a1a5b7" }}>
+                  {link ? <div className="flex"> <Link to={link}> {label} </Link>  <span>|</span> </div>: null}
                 </div>
 
               ))}
@@ -115,14 +115,14 @@ const EmployeeModuleCard = ({ Icon, moduleName, kpis = [], links = [], isCitizen
 const ModuleCardFullWidth = ({ moduleName,  links = [], isCitizen = false, className, styles, headerStyle, subHeader, subHeaderLink }) => {
   return (
     <div className={className ? className : "employeeCard card-home customEmployeeCard home-action-cards"} style={styles ? styles : {}}>
-      <div className="complaint-links-container" style={{ padding: "10px" }}>
+      <div className="complaint-links-container p-sm">
         <div className="header" style={isCitizen ? { padding: "0px" } : headerStyle}>
           <span className="text removeHeight">{moduleName}</span>
           <span className="link">
             <a href={subHeaderLink}>
-              <span className={"inbox-total"} style={{ display: "flex", alignItems: "center", color: "#a82227", fontWeight: "bold" }}>
+              <span className="inbox-total flex items-center text-primary-main font-bold">
                 {subHeader || "-"}
-                <span style={{ marginLeft: "10px" }}>
+                <span className="ml-sm">
                   {" "}
                   <ArrowRightInbox />
                 </span>
@@ -130,8 +130,8 @@ const ModuleCardFullWidth = ({ moduleName,  links = [], isCitizen = false, class
             </a>
           </span>
         </div>
-        <div className="body" style={{ margin: "0px", padding: "0px" }}>
-          <div className="links-wrapper" style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
+        <div className="body m-0 p-0">
+          <div className="links-wrapper flex w-full flex-wrap">
             {links.map(({ count, label, link }, index) => (
               <span className="link full-employee-card-link" key={index}>
                 {link ? (link?.includes('upyog-ui/')?<Link to={link}>{label}</Link>:<a href={link}>{label}</a>) : null}

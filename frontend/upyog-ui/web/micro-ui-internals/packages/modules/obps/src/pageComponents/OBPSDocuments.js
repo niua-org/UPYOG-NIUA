@@ -35,18 +35,18 @@ function OBPSDocument({ value = {}, Code, index, isNOC = false, svgStyles = { wi
   return (
     <div style={{ marginTop: "19px" }}>
       <React.Fragment>
-        <div style={{ display: "flex", flexWrap: "wrap"}}>
+        <div className="flex" style={{ flexWrap: "wrap" }}>
           {documents.length > 0 ?
-            <div style={{ display: "flex", justifyContent: "flex-start", flexWrap: "wrap" }}>
+            <div className="flex justify-start" style={{ flexWrap: "wrap" }}>
               {documents?.map((document, index) => {
                 let documentLink = pdfDownloadLink(data.pdfFiles, document?.fileStoreId);
                 return (
                   <a target="_blank" href={documentLink} style={{ minWidth: "80px", marginRight: "10px", maxWidth: "100px", height: "auto" }} key={index}>
-                    <div style={{ display: "flex", justifyContent: "center" }}>
+                    <div className="flex justify-center">
                       <PDFSvg />
                     </div>
-                    {isStakeHolder ? <p style={{ marginTop: "8px", textAlign: "center", color: "#505A5F" }}>{t(`BPAREG_HEADER_${stringReplaceAll(Code?.toUpperCase(), ".", "_")}`)}</p> : null}  {/* document?.fileName ? `${document?.fileName}` : `${t(`ES_COMMON_DOC_DOCUMENT`)} - ${index + 1}` */}
-                    {!isStakeHolder ? <p style={{ marginTop: "8px", textAlign: "center", color: "#505A5F"  }}>{`${t(Code)}`}</p> : null}
+                    {isStakeHolder ? <p className="text-text-secondary mt-sm text-center">{t(`BPAREG_HEADER_${stringReplaceAll(Code?.toUpperCase(), ".", "_")}`)}</p> : null}  {/* document?.fileName ? `${document?.fileName}` : `${t(`ES_COMMON_DOC_DOCUMENT`)} - ${index + 1}` */}
+                    {!isStakeHolder ? <p className="text-text-secondary mt-sm text-center">{`${t(Code)}`}</p> : null}
                   </a>
                 );
               })}

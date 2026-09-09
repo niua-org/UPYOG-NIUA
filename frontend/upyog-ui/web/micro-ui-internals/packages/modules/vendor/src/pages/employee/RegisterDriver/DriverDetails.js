@@ -308,33 +308,33 @@ console.log('modify-drivermodify-driver',dsoId);
     <React.Fragment>
       {!isLoading ? (
         <React.Fragment>
-          <Header style={{ marginBottom: "16px" }}>{t("ES_FSM_REGISTRY_DRIVER_DETAILS")}</Header>
+          <Header className="mb-md">{t("ES_FSM_REGISTRY_DRIVER_DETAILS")}</Header>
           <div style={!isMobile ? { marginLeft: "-15px" } : {}}>
             <Card style={{ position: "relative" }}>
               {driverData?.[0]?.employeeResponse?.map((detail, index) => (
                 <React.Fragment key={index}>
-                  {index > 0 && <CardSectionHeader style={{ marginBottom: "16px", marginTop: "32px" }}>{t(detail.title)}</CardSectionHeader>}
+                  {index > 0 && <CardSectionHeader className="mb-md mt-xl">{t(detail.title)}</CardSectionHeader>}
                   <StatusTable>
                     {detail?.values?.map((value, index) =>
                       value?.type === "custom" ? (
                         <>
                           <div className={`${index === detail?.values?.length - 1 ? "row last" : "row"} border-none`}>
                             <h2>{t(value.title)}</h2>
-                            <div className="value" style={{ color: "#a82227", display: "flex" }}>
+                            <div className="value text-primary-main flex">
                               {t(value.value) || "N/A"}
                               {value.value === "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR" && (
                                 <span onClick={() => onActionSelect("ADD_VENDOR")}>
-                                  <AddIcon className="" fill="#a82227" styles={{ cursor: "pointer", marginLeft: "20px", height: "24px" }} />
+                                  <AddIcon className="" fill="var(--primary-main)" styles={{ cursor: "pointer", marginLeft: "20px", height: "24px" }} />
                                 </span>
                               )}
                               {value.value != "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR" && (
                                 <span onClick={() => onActionSelect("EDIT_VENDOR")}>
-                                  <EditIcon style={{ cursor: "pointer", marginLeft: "20px" }} />
+                                  <EditIcon className="cursor-pointer" style={{ marginLeft: "20px" }} />
                                 </span>
                               )}
                               {value.value != "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR" && (
                                 <span onClick={() => onActionSelect("DELETE_VENDOR")}>
-                                  <DeleteIcon className="delete" fill="#a82227" style={{ cursor: "pointer", marginLeft: "20px" }} />
+                                  <DeleteIcon className="delete cursor-pointer" fill="var(--primary-main)" style={{ marginLeft: "20px" }} />
                                 </span>
                               )}
                             </div>

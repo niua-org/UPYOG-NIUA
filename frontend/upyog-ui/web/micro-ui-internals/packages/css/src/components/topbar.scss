@@ -2,9 +2,9 @@
   position: fixed;
   top: 0;
   width: 100%;
-  padding: 10px 24px;
+  padding: 10px var(--spacing-lg);
   background: white;
-  box-shadow: rgba(0, 0, 0, 0.24) 0 1px 4px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0 1px var(--spacing-xs);
   z-index: 9999999;
   @apply flex items-center;
 
@@ -12,7 +12,7 @@
     display: inline;
 
     &.city {
-      margin-right: 8px;
+      margin-right: var(--spacing-sm);
       height: 48px;
       width: 48px;
     }
@@ -24,7 +24,7 @@
   }
 
   .ulb {
-    font-weight: bold;
+    font-weight: var(--weight-bold);
     display: inline-block;
   }
 
@@ -38,11 +38,11 @@
     }
 
     .user-img-txt {
-      background: #a82227;
+      background: var(--focus);
       padding: 10px 15px;
       border-radius: 50%;
       color: white;
-      font-weight: 700;
+      font-weight: var(--weight-bold);
     }
   }
 
@@ -128,12 +128,12 @@
 .profile-dropdown--item {
   display: flex;
   flex-direction: row;
-  padding: 10px;
-  column-gap: 10px;
-  color: #505a5f;
+  padding: var(--spacing-sm);
+  column-gap: var(--spacing-sm);
+  color: var(--text-secondary);
 
   &:hover {
-    background: #eeeeee;
+    background: var(--grey-mid);
   }
 }
 

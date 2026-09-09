@@ -7,7 +7,7 @@
             @apply flex z-10 items-center align-middle text-center m-md;
         }
         .multilink-optionWrap{
-            top: 32px;
+            top: var(--spacing-xl);
             right: 0%;
         }
     }

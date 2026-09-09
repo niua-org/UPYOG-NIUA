@@ -7,8 +7,8 @@ const EventLink = ({ title = "CS_HEADER_PUBLIC_BRDCST", links, icon = 'calender'
   const { t } = useTranslation();
 
   const GetLogo = () => (
-    <div className="header" style={{ justifyContent: "flex-start" }}>
-      <span className="logo" style={{ backgroundColor: "#fff" }}>
+    <div className="header justify-start">
+      <span className="logo bg-white">
       <PMBIcon/>
       </span>
       {" "}

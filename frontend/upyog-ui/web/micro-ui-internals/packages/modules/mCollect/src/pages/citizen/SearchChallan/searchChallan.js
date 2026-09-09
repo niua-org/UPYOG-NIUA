@@ -75,7 +75,7 @@ const SearchChallan = ({ config: propsConfig, formData }) => {
   }
 
   return (
-    <div style={{ marginTop: "16px" }}>
+    <div className="mt-md">
       {/* <FormComposer
         onSubmit={onChallanSearch}
         noBoxShadow

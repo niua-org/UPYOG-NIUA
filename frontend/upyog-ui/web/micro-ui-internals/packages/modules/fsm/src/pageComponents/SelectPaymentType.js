@@ -55,8 +55,7 @@ const SelectPaymentType = ({ t, config, onSelect, formData = {}, userType, regis
               <div className="field">
                 <RadioButtons
                   selectedOption={paymentType}
-                  onSelect={selectPaymentType}
-                  style={{ display: "flex", marginBottom: 0 }}
+                  onSelect={selectPaymentType} className="flex" style={{ marginBottom: 0 }}
                   innerStyles={{ marginLeft: "10px" }}
                   options={input.options}
                   optionsKey="i18nKey"

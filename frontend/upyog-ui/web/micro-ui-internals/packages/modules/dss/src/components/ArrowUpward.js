@@ -14,12 +14,7 @@ const Arrow_Upward = ({ style }) => (
 export function ArrowUpwardElement(marginRight, marginLeft) {
   return (
     <Arrow_Upward
-      style={{
-        display: "inline-block",
-        verticalAlign: "baseline",
-        marginRight: !marginRight ? "0px" : marginRight,
-        marginLeft: !marginLeft ? "0px" : marginLeft,
-      }}
+      className="inline-block" style={{ verticalAlign: "baseline", marginRight: !marginRight ? "0px" : marginRight, marginLeft: !marginLeft ? "0px" : marginLeft }}
     />
   );
 };

@@ -5,7 +5,7 @@
     @apply block w-full h-10 border border-solid border-input-border;
 
     input[type="text"] {
-      width: calc(100% - 32px);
+      width: calc(100% - var(--spacing-xl));
       @apply h-full outline-none text-text-primary text-form-field pl-sm;
     }
     p {
@@ -24,7 +24,7 @@
 
   .sect-dropdown-card {
     width: 100% !important;
-    box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 var(--spacing-sm) 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
     @apply absolute z-10 mt-xs pb-sm bg-white;
 
     h1 {

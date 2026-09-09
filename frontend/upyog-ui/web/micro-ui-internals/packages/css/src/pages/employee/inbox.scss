@@ -1,6 +1,6 @@
 .complaint-links-container {
   @apply bg-white;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   .header {
     @apply flex items-center border-b border-border justify-between;
 
@@ -9,7 +9,7 @@
       height: 56px;
       @apply bg-focus;
       padding: 12px;
-      border-radius: 4px;
+      border-radius: var(--border-radius-sm);
       svg {
         @apply w-8 h-8;
       }
@@ -28,14 +28,14 @@
     .link {
       @apply p-sm text-primary-main items-center;
       display: flex !important;
-      color: #a82227 !important;
+      color: var(--focus) !important;
     }
 
     .inbox-total {
-      padding: 4px;
+      padding: var(--spacing-xs);
       display: table;
       @apply whitespace-normal text-center text-white w-8 h-8 bg-primary-main rounded-full ml-xs;
-      background-color: #a82227 !important;
+      background-color: var(--focus) !important;
     }
   }
 
@@ -43,8 +43,8 @@
     @apply pl-md py-sm text-text-btn;
     .link {
       padding: 0 !important;
-      padding-bottom: 4px !important;
-      color: #a82227 !important;
+      padding-bottom: var(--spacing-xs) !important;
+      color: var(--focus) !important;
       svg {
         @apply ml-sm;
       }
@@ -68,12 +68,12 @@
 
 .employeeCard-info-box {
   @apply flex justify-end ml-md;
-  background-color: #fafafa;
+  background-color: var(--grey-light);
   div {
-    margin-right: 32px;
+    margin-right: var(--spacing-xl);
     span:nth-child(2) {
       @apply font-bold;
-      color: #4f5a5f;
+      color: var(--text-secondary);
     }
   }
   .employeeCard-info-data {
@@ -101,12 +101,12 @@
       gap: 12px;
       padding-bottom: 6px;
       svg {
-        fill: #0b0c0c;
+        fill: var(--text-primary);
       }
     }
     .sub-filter-label {
-      font-weight: 400;
-      font-size: 16px;
+      font-weight: var(--weight-regular);
+      font-size: var(--font-size-md);
     }
   }
   .filter-form-field {
@@ -138,13 +138,13 @@
           gap: 12px;
           padding-bottom: 6px;
           svg {
-            fill: #0b0c0c;
+            fill: var(--text-primary);
           }
         }
 
         .sub-filter-label {
-          font-weight: 400;
-          font-size: 16px;
+          font-weight: var(--weight-regular);
+          font-size: var(--font-size-md);
         }
       }
     }
@@ -161,7 +161,7 @@
             @apply text-focus;
             display: none;
             &:hover {
-              color: #003078;
+              color: var(--link-hover);
               cursor: pointer;
             }
           }
@@ -205,7 +205,7 @@
       .logo {
         @apply bg-focus;
         padding: 12px;
-        border-radius: 4px;
+        border-radius: var(--border-radius-sm);
       }
 
       .text {
@@ -219,7 +219,7 @@
       margin-left: 46px;
 
       .link {
-        color:#a82227 !important;
+        color:var(--focus) !important;
         @apply p-sm text-primary-main;
       }
     }
@@ -235,7 +235,7 @@
         @apply bg-white;
         svg {
           path {
-            fill: #a82227;
+            fill: var(--focus);
           }
         }
       }
@@ -365,7 +365,7 @@
               @apply block;
               cursor: pointer;
               &:hover {
-                color: #003078;
+                color: var(--link-hover);
                 cursor: pointer;
               }
             }
@@ -398,31 +398,31 @@
   grid-area: 2/2;
   display: flex;
   justify-content: flex-end;
-  padding-right: 16px;
+  padding-right: var(--spacing-md);
   align-items: center;
 }
 
 .cell-text {
-  color: #505a5f;
+  color: var(--text-secondary);
 }
 
 .sla-cell-error {
-  color: #d4351c;
+  color: var(--error);
   background-color: rgba(212, 53, 28, 0.12);
-  padding: 0 24px;
+  padding: 0 var(--spacing-lg);
   border-radius: 11px;
 }
 
 .sla-cell-success {
-  color: #00703c;
+  color: var(--success);
   background-color: rgba(0, 112, 60, 0.12);
-  padding: 0 24px;
+  padding: 0 var(--spacing-lg);
   border-radius: 11px;
 }
 
 .complain-no-cell-text {
-  margin-top: "4px";
-  color: "#505A5F";
+  margin-top: "var(--spacing-xs)";
+  color: "var(--text-secondary)";
 }
 
 .search-error-label {
@@ -440,8 +440,8 @@
 
 @screen dt {
   .complaint-links-container .header .removeBorderRadiusLogo {
-    border-radius: 2px !important;
-    background-color: #a82227
+    border-radius: var(--border-width-md) !important;
+    background-color: var(--focus)
   }
 }
 @screen dt {
@@ -452,9 +452,9 @@
   }
 }
 .employeeTotalLink{
-  color: #a82227;
+  color: var(--focus);
   
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 @screen dt {
@@ -469,15 +469,15 @@
           margin-right: 1rem;
           svg {
             path {
-              fill: #a82227;
+              fill: var(--focus);
             }
           }
         }
         .h1 {
-          font-size: 24px;
+          font-size: var(--font-size-2xl);
           line-height: 28px;
-          font-weight: 400;
-          color: #a82227;
+          font-weight: var(--weight-regular);
+          color: var(--focus);
         }
       }
     }
@@ -499,7 +499,7 @@
       flex-direction: row-reverse;
       .clear-search {
         margin-top: 65px;
-        margin-left: 16px;
+        margin-left: var(--spacing-md);
         padding-top: unset !important;
       }
       .submit-bar-search {
@@ -521,15 +521,15 @@
           margin-right: 1rem;
           svg {
             path {
-              fill: #a82227;
+              fill: var(--focus);
             }
           }
         }
         .h1 {
-          font-size: 24px;
+          font-size: var(--font-size-2xl);
           line-height: 28px;
-          font-weight: 400;
-          color: #a82227;
+          font-weight: var(--weight-regular);
+          color: var(--focus);
         }
       }
     }
@@ -551,7 +551,7 @@
       flex-direction: row-reverse;
       .clear-search {
         margin-top: 65px;
-        margin-left: 16px;
+        margin-left: var(--spacing-md);
         padding-top: unset !important;
       }
       .submit-bar-search {
@@ -565,7 +565,7 @@
   margin: 0 !important;
 }
 .complaint-links-container .body .link{
-  color: #a82227 !important;
+  color: var(--focus) !important;
 }
 
 .employee .customEmployeeCard:nth-child(odd){
@@ -594,12 +594,12 @@ background-size: cover
     position: absolute;
     margin-bottom: -10%;
     left: 6%;
-    box-shadow: 1px 5px 6px 0px #e3e4e3;
+    box-shadow: 1px 5px 6px 0px var(--grey-bg);
     border-radius: 10px;
 }
 .text-employee-card{
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   position: absolute;
   top:10%;
@@ -623,18 +623,18 @@ background-size: cover
 
   .old-value-null-wrapper {
     visibility: hidden;
-    padding-bottom: 8px;
-    margin-bottom: 8px;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
   }
   .row {
     color: #b1b4b6;
-    font-weight: 700;
-    font-size: 16px;
+    font-weight: var(--weight-bold);
+    font-size: var(--font-size-md);
   }
 }
 
 .search-tabs-container {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: var(--border-width-sm) solid rgba(0, 0, 0, 0.2);
   margin-bottom: 35px;
   display: flex;
   justify-content: space-between;
@@ -646,8 +646,8 @@ background-size: cover
   .search-tab-head-selected {
     padding: 10px 35px;
     color: rgb(244, 119, 56);
-    border-bottom: 4px solid rgb(244, 119, 56);
-    font-weight: bold;
+    border-bottom: var(--border-width-lg) solid rgb(244, 119, 56);
+    font-weight: var(--weight-bold);
   }
 
   .search-tab-head-selected:focus {
@@ -657,7 +657,7 @@ background-size: cover
 
 .card-with-background {
   background: rgb(250, 250, 250);
-  border: 1px solid rgb(214, 213, 212);
+  border: var(--border-width-sm) solid rgb(214, 213, 212);
 
   .card-head {
     display: flex;
@@ -666,8 +666,8 @@ background-size: cover
   }
 
   h2 {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--weight-bold);
   }
 }
 

@@ -202,7 +202,7 @@ function SelectDocument({
     }
   }, [doc])
   return (
-    <div style={{ marginBottom: "24px" }}>
+    <div className="mb-lg">
       <LabelFieldPair style={{width :"100%"}}>
         <CardLabel className="card-label-smaller" style={{width :"100%"}}>
           {doc?.documentType != "OLDLICENCENO" ?

@@ -315,7 +315,7 @@ const WSEditApplicationByConfig = () => {
 
   if (isError) {
     return (
-      <div style={{ padding: "16px" }}>
+      <div className="p-md">
         Failed to load application details
       </div>
     );

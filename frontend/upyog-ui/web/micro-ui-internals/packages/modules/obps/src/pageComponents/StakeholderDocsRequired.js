@@ -31,23 +31,23 @@ const StakeholderDocsRequired = ({ onSelect, onSkip, config }) => {
       {/* <div style={isopenlink?{marginTop:"60px", width:isCitizenUrl?"100%":"70%", marginLeft:"auto",marginRight:"auto"}:{}}> */}
       <Card>
         <CardHeader>{t(`BPA_NEW_BUILDING_HEADER`)}</CardHeader>
-        {/* <CitizenInfoLabel style={{margin:"0px",textAlign:"center"}} textStyle={{color:"#0B0C0C"}} text={t(`BPA_DOCS_REQUIRED_TIME`)} showInfo={false} /> */}
-        <CardText style={{ color: "#0B0C0C", marginTop: "12px", fontSize: "16px", fontWeight: "400", lineHeight: "24px" }}>{t(`BPA_NEW_BUILDING_PERMIT_DESCRIPTION`)}</CardText>
+        {/* <CitizenInfoLabel className="text-center" style={{ margin:"0px" }} textStyle={{color:"var(--text-primary)"}} text={t(`BPA_DOCS_REQUIRED_TIME`)} showInfo={false} /> */}
+        <CardText className="text-text-primary text-md font-regular" style={{ marginTop: "12px", lineHeight: "24px" }}>{t(`BPA_NEW_BUILDING_PERMIT_DESCRIPTION`)}</CardText>
         {isLoading ?
           <Loader /> :
           <Fragment>
             {data?.StakeholderRegistraition?.TradeTypetoRoleMapping?.[0]?.docTypes?.map((doc, index) => (
               <div>
-                <div style={{ fontWeight: 700, marginBottom: "8px" }} key={index}>
-                  <div style={{ display: "flex" }}>
+                <div className="mb-sm font-bold" key={index}>
+                  <div className="flex">
                     <div style={{ minWidth: "20px" }}>{`${index + 1}.`}&nbsp;</div>
                     <div>{` ${t(`BPAREG_HEADER_${doc?.code.replace('.', '_')}`)}`}</div>
                   </div>
                 </div>
-                <div style={{ marginBottom: "16px" }}>
-                  <div style={{ display: "flex" }}>
+                <div className="mb-md">
+                  <div className="flex">
                     <div style={{ minWidth: "20px" }}></div>
-                    {doc?.info ? <div style={{color: "#505A5F", fontSize: "16px"}}>{`${t(doc?.info.replace('.', '_'))}`}</div> : null}
+                    {doc?.info ? <div className="text-text-secondary text-md">{`${t(doc?.info.replace('.', '_'))}`}</div> : null}
                   </div>
                 </div>
               </div>

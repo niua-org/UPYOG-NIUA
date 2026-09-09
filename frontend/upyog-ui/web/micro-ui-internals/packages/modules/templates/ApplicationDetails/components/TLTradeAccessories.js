@@ -9,8 +9,8 @@ function TLTradeAccessories({ units }) {
     <React.Fragment>
       {units.map((unit, index) => (
         // TODO, Later will move to classes
-        <div key={t(unit?.title)} style={{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "600px", minWidth: "280px" }}>
-          <CardSubHeader style={{ marginBottom: "8px", paddingBottom: "9px", color: "#0B0C0C", fontSize: "16px", lineHeight: "19px" }}>{`${t(unit?.title)} ${index + 1}`}</CardSubHeader>
+        <div key={t(unit?.title)} className="bg-grey-light border border-solid border-border rounded-sm p-sm" style={{ marginTop: "19px", lineHeight: "19px", maxWidth: "600px", minWidth: "280px" }}>
+          <CardSubHeader className="mb-sm text-text-primary text-md" style={{ paddingBottom: "9px", lineHeight: "19px" }}>{`${t(unit?.title)} ${index + 1}`}</CardSubHeader>
           <React.Fragment key={index}>
             <StatusTable style={{ position: "relative", marginTop: "19px" }}>
               <div
@@ -37,7 +37,7 @@ function TLTradeAccessories({ units }) {
                     caption={value.caption}
                     className="border-none"
                     // TODO, Later will move to classes
-                    rowContainerStyle={{justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "#0B0C0C"}}
+                    rowContainerStyle={{justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "var(--text-primary)"}}
                   />
                 );
               })}

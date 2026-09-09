@@ -30,11 +30,7 @@ const PlusMinusInput = (props, customProps) => {
         </button>
         <input
           readOnly={true}
-          value={count}
-          style={{
-            textAlign: "center",
-            border: "1px solid #505A5F",
-          }}
+          value={count} className="text-center" style={{ border: "1px solid #505A5F" }}
         />
         <button type="button" onClick={() => incrementCount(count)} className="PlusMinusbutton">
           +

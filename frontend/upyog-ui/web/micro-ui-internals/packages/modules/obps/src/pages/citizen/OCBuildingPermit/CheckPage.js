@@ -217,14 +217,14 @@ const CheckPage = ({ onSubmit, value }) => {
             label={ <PDFSvg /> }
             onClick={() => routeTo(datafromAPI?.updatedDxfFile)}
           />
-           <p style={{ marginTop: "8px", marginBottom: "20px", textAlign:"Left", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t(`BPA_UPLOADED_PLAN_DXF`)}</p>
+           <p className="mt-sm text-left text-md text-text-secondary font-regular" style={{ marginBottom: "20px", lineHeight: "19px" }}>{t(`BPA_UPLOADED_PLAN_DXF`)}</p>
           {/* <Row className="border-none" label={`${t("BPA_SCRUNTINY_REPORT_OUTPUT")}`} ></Row> */}
           <CardSubHeader>{t("BPA_SCRUNTINY_REPORT_OUTPUT")}</CardSubHeader>
           <LinkButton
             label={ <PDFSvg /> }
             onClick={() => routeTo(datafromAPI?.planReport)}
           />
-            <p style={{ marginTop: "8px", marginBottom: "20px", textAlign:"Left", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t(`BPA_SCRUTINY_REPORT_PDF`)}</p>
+            <p className="mt-sm text-left text-md text-text-secondary font-regular" style={{ marginBottom: "20px", lineHeight: "19px" }}>{t(`BPA_SCRUTINY_REPORT_PDF`)}</p>
         </StatusTable>
         <hr style={{ color: "#cccccc", backgroundColor: "#cccccc", height: "2px", marginTop: "20px", marginBottom: "20px" }} />
         <CardSubHeader>{`${t("BPA_ACTUAL_BUILDING_EXTRACT_HEADER")}`}</CardSubHeader>
@@ -236,7 +236,7 @@ const CheckPage = ({ onSubmit, value }) => {
         <hr style={{ color: "#cccccc", backgroundColor: "#cccccc", height: "2px", marginTop: "20px", marginBottom: "20px" }} />
         <CardSubHeader>{`${t("BPA_OCC_SUBOCC_HEADER")}`}</CardSubHeader>
         {datafromAPI?.planDetail?.blocks.map((block, index) => (
-          <div key={index}  style={datafromAPI?.planDetail?.blocks?.length > 1 ?{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
+          <div key={index}  style={datafromAPI?.planDetail?.blocks?.length > 1 ?{ marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
             <CardSubHeader style={{marginTop:"15px"}}>{`${t("BPA_BLOCK_SUBHEADER")}`} {index + 1}</CardSubHeader>
               <StatusTable>
                 <Row className="border-none" textStyle={{wordBreak:"break-word"}} label={`${t("BPA_SUB_OCCUPANCY_LABEL")}`} text={getSubOccupancyValues(index)}></Row>
@@ -286,11 +286,11 @@ const CheckPage = ({ onSubmit, value }) => {
           onClick={() => routeTo(`${routeLink}/noc-details`)}
         />
         {nocDocuments && nocDocuments?.NocDetails.map((noc, index) => (
-          <div key={index} style={nocDocuments?.NocDetails?.length > 1 ?{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
-            <CardSectionHeader style={{marginBottom: "24px"}}>{`${t(`BPA_${noc?.nocType}_HEADER`)}`}</CardSectionHeader>
+          <div key={index} style={nocDocuments?.NocDetails?.length > 1 ?{ marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" } : {}}>
+            <CardSectionHeader className="mb-lg">{`${t(`BPA_${noc?.nocType}_HEADER`)}`}</CardSectionHeader>
             <StatusTable>
               <Row className="border-none" label={t(`BPA_${noc?.nocType}_LABEL`)} text={noc?.applicationNo} />
-              <Row className="border-none" label={t(`BPA_NOC_STATUS`)} text={t(`${noc?.applicationStatus}`)} textStyle={noc?.applicationStatus == "APPROVED" || noc?.applicationStatus == "AUTO_APPROVED" ? {color : "#00703C"} : {color: "#D4351C"}} />
+              <Row className="border-none" label={t(`BPA_NOC_STATUS`)} text={t(`${noc?.applicationStatus}`)} textStyle={noc?.applicationStatus == "APPROVED" || noc?.applicationStatus == "AUTO_APPROVED" ? {color : "var(--success)"} : {color: "var(--error)"}} />
               {noc?.additionalDetails?.SubmittedOn ? <Row className="border-none" label={`${t("BPA_NOC_SUBMISSION_DATE")}`} text={noc?.additionalDetails?.SubmittedOn ? convertEpochToDateDMY(Number(noc?.additionalDetails?.SubmittedOn)) : "NA"} /> : null }
               {noc?.nocNo ? <Row className="border-none" label={`${t("BPA_APPROVAL_NUMBER_LABEL")}`} text={noc?.nocNo || "NA"} /> : null }
               {(noc?.applicationStatus === "APPROVED" || noc?.applicationStatus === "REJECTED" || noc?.applicationStatus === "AUTO_APPROVED" || noc?.applicationStatus === "AUTO_REJECTED") ? <Row className="border-none" label={`${t("BPA_APPROVED_REJECTED_ON_LABEL")}`} text= {convertEpochToDateDMY(Number(noc?.auditDetails?.lastModifiedTime))} /> : null }

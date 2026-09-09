@@ -163,7 +163,7 @@ const SelectStreet = ({ t, config, onSelect, userType, formData, formState, setE
               name={input.name}
               rules={{ validate: convertValidationToRules(input) }}
               render={({ field }) => (
-                <div style={{ display: "flex", alignItems: "baseline", marginRight: "unset" }}>
+                <div className="flex" style={{ alignItems: "baseline", marginRight: "unset" }}>
                   <TextInput
                     id={input.name}
                     key={input.name}

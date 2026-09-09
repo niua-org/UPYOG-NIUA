@@ -10,10 +10,10 @@
 }
 .fill-path-primary-main {
   path {
-    fill: #a82227;
+    fill: var(--focus);
   }
 }
 
 .obps-search {
-  margin: 8px;
+  margin: var(--spacing-sm);
 }

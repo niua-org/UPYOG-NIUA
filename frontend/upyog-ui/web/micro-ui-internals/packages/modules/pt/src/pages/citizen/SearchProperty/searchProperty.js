@@ -9,7 +9,7 @@ const description = {
   description: "PT_SEARCH_OR_DESC",
   descriptionStyles: {
     fontWeight: "300  ",
-    color: "#505A5F",
+    color: "var(--text-secondary)",
     marginTop: "0px",
     textAlign: "center",
     marginBottom: "20px",
@@ -163,7 +163,7 @@ const SearchProperty = ({ config: propsConfig, onSelect }) => {
       label: property.label,
       labelChildren: <div className="tooltip pt-auto-139">
               {"  "}
-              <InfoBannerIcon fill="#0b0c0c" />
+              <InfoBannerIcon fill="var(--text-primary)" />
               <span className="tooltiptext pt-auto-140">
                 {t(property.description) + " " + "PG-PT-xxxx-xxxxxx"}
               </span>

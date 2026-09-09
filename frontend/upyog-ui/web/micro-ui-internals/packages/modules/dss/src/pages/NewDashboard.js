@@ -295,7 +295,7 @@ import {
             )}
           </div>
           {isNational ? (
-            <div style={{position:"relative",width:"90%",backgroundColor:"white",margin:"5%",marginTop:"2%"}}>
+            <div className="bg-white" style={{ position:"relative", width:"90%", margin:"5%", marginTop:"2%" }}>
               <div style={{padding:"0 5%"}}>
             <FiltersNational
               t={t}

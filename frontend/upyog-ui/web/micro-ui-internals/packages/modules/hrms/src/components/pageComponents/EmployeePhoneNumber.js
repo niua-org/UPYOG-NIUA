@@ -39,9 +39,9 @@ const SelectEmployeePhoneNumber = ({ t, config, onSelect, formData = {}, userTyp
               {t(input.label)}
               {input.isMandatory ? " * " : null}
             </CardLabel>
-            <div className="field-container" style={{ width:isMobile? "100%":"50%", display: "block" }}>
+            <div className="field-container block" style={{ width:isMobile? "100%":"50%" }}>
               <div>
-                <div style={{ display: "flex" }}>
+                <div className="flex">
                   <div className="employee-card-input employee-card-input--front">+91</div>
                   <TextInput
                     className="field desktop-w-full"

@@ -23,7 +23,7 @@
   .newSurveyForm_actions {
     @apply flex justify-end  gap-4 py-md;
     .checkbox-wrap .label {
-      margin-left: 40px;
+      margin-left: var(--spacing-2xl);
     }
   }
   .newSurveyForm_seprator {
@@ -53,7 +53,7 @@
 .simple_editable-input {
   outline-width: 0;
   border: 0;
-  border-bottom: 2px solid black;
+  border-bottom: var(--border-width-md) solid black;
 }
 
 .simple_readonly-input {
@@ -87,21 +87,21 @@
 }
 
 .question-title {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   line-height: 21px;
-  color: #0b0c0c;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-weight: var(--weight-bold);
 }
 
 .responses-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 8px 4px; 
-  background-color: #FAFAFA;
-  border: 1px solid #D6D5D4;
+  padding: var(--spacing-sm) var(--spacing-xs); 
+  background-color: var(--grey-light);
+  border: var(--border-width-sm) solid var(--border);
   box-sizing: border-box;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   margin-top: 20px;
   margin-bottom: 20px;
   position: relative;
@@ -112,14 +112,14 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 8px 8px 0px 8px;
+  padding: var(--spacing-sm) var(--spacing-sm) 0px var(--spacing-sm);
   position: static;
   left: 0px;
   top: 41px;
-  background: #FAFAFA;
-  border: 1px solid #D6D5D4;
+  background: var(--grey-light);
+  border: var(--border-width-sm) solid var(--border);
   box-sizing: border-box;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   margin-top: 20px;
   margin-bottom: 20px;
 }
@@ -147,33 +147,33 @@
 flex-direction: column;
 justify-content: center;
 align-items: center;
-padding: 16px 8px;
-background: #FAFAFA;
-border: 1px solid #D6D5D4;
+padding: var(--spacing-md) var(--spacing-sm);
+background: var(--grey-light);
+border: var(--border-width-sm) solid var(--border);
 box-sizing: border-box;
-border-radius: 4px;
+border-radius: var(--border-radius-sm);
 @apply gap-y-6;
 }
 
 .date-response {
 display: flex;
 flex-direction: row;
-font-weight: bold;
+font-weight: var(--weight-bold);
 @apply gap-10 ;
 }
 .divide {
   --tw-divide-x-reverse: 0;
-border-right-width: calc(2px * var(--tw-divide-x-reverse));
-border-left-width: calc(2px * calc(1 - var(--tw-divide-x-reverse)));
+border-right-width: calc(var(--border-width-md) * var(--tw-divide-x-reverse));
+border-left-width: calc(var(--border-width-md) * calc(1 - var(--tw-divide-x-reverse)));
 }
 
 .circle {
     background-color:red;
-    height:40px;
+    height:var(--spacing-2xl);
     border-radius:50%;
     -moz-border-radius:50%;
     -webkit-border-radius:50%;
-    width:40px;
+    width:var(--spacing-2xl);
 }
 
 .align-columns{
@@ -203,7 +203,7 @@ border-left-width: calc(2px * calc(1 - var(--tw-divide-x-reverse)));
         height: 1.5rem;
         width: 1.5rem;
         --border-opacity: 1;
-        border: 1px solid #464646;
+        border: var(--border-width-sm) solid var(--input-border);
         border-color: rgba(70, 70, 70, var(--border-opacity));
         border-radius: 9999px;
         display: block;
@@ -212,13 +212,13 @@ border-left-width: calc(2px * calc(1 - var(--tw-divide-x-reverse)));
       .radio-wrap .radio-btn-wrap input:checked ~ .radio-btn-checkmark:after {
         display: block;
         --bg-opacity: 1;
-        background-color: #a82227;
+        background-color: var(--focus);
         height: 1rem;
         width: 1rem;
         border-radius: 9999px;
         position: absolute;
-        top: 4px;
-        left: 4px;
+        top: var(--spacing-xs);
+        left: var(--spacing-xs);
       }
     }
   }
@@ -252,7 +252,7 @@ border-left-width: calc(2px * calc(1 - var(--tw-divide-x-reverse)));
         margin-bottom: 0;
       }
       .checkbox-wrap .label {
-        margin-left: 40px;
+        margin-left: var(--spacing-2xl);
       }
     }
     .newSurveyForm_seprator {

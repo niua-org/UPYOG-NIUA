@@ -117,7 +117,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
         <div className="search-container" style={{ width: "auto", marginLeft: isInboxPage ? "24px" : "revert" }}>
           <div className="search-complaint-container">
             {(type === "mobile" || mobileView) && (
-              <div className="complaint-header" style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="complaint-header flex justify-between">
                 <h2>{t("ES_COMMON_SEARCH_BY")}</h2>
                 <span onClick={onClose}>
                   <CloseSvg />
@@ -163,8 +163,8 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                     </span>
                     {formState?.dirtyFields?.[input.name] ? (
                       <span
-                        style={{ fontWeight: "700", color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px", fontSize: "12px" }}
-                        className="inbox-search-form-error"
+                        className="font-bold text-xs inbox-search-form-error"
+                        style={{ color: "rgba(212, 53, 28)", paddingLeft: "8px", marginTop: "-20px" }}
                       >
                         {formState?.errors?.[input.name]?.message}
                       </span>
@@ -179,7 +179,7 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                     // disabled={!!Object.keys(formState.errors).length || Object.keys(form).every((key) => !form?.[key])}
                     submit
                   />
-                  <div style={{ width: "240px", textAlign: "right", marginLeft: "96px", marginTop: "8px" }}>
+                  <div className="mt-sm text-right" style={{ width: "240px", marginLeft: "96px" }}>
                     {clearAll()}
                   </div>
                 </div>

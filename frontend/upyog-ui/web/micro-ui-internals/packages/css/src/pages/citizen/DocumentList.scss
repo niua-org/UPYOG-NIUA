@@ -17,7 +17,7 @@
   transition: max-height 0.35s cubic-bezier(0, 1, 0, 1);
 }
 .accordion-title {
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   cursor: pointer;
   color: #666;
   padding: 0.5em 0em;
@@ -37,7 +37,7 @@
   padding: 1em 0em;
 }
 .document_list_searchbar {
-  border: 1px solid #505A5F !important;
+  border: var(--border-width-sm) solid var(--text-secondary) !important;
   border-radius: 0px !important;
   margin: 20px 0;
 }
@@ -46,7 +46,7 @@
 }
 .notice_and_circular_main {
   @apply flex bg-white my-md px-md pt-md pb-lg shadow-card relative;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
 }
 .gap-ten {
   @apply gap-10;
@@ -57,64 +57,64 @@
   padding: 2px;
 }
 .notice_and_circular_heading_mb header {
-  font-weight: bold;
-  font-size: 16px !important;
+  font-weight: var(--weight-bold);
+  font-size: var(--font-size-md) !important;
   line-height: 24px;
   margin-right: 50px;
 }
 .notice_and_circular_heading_mb .card-caption {
   padding-left: 30px;
-  font-weight: normal;
-  font-size: 12px;
+  font-weight: var(--weight-regular);
+  font-size: var(--font-size-xs);
   line-height: 24px;
-  color: #505A5F;
-  padding-right: 5px;
-  padding-left: 15px;
+  color: var(--text-secondary);
+  padding-right: var(--spacing-xs);
+  padding-left: var(--spacing-md);
   min-width: 80px;
   position: absolute;
-  right: 20px;
+  right: var(--spacing-lg);
 }
 .notice_and_circular_text {
-  padding-bottom: 20px;
+  padding-bottom: var(--spacing-lg);
 }
 .notice_and_circular_text p {
-  font-weight: normal;
-  font-size: 12px;
+  font-weight: var(--weight-regular);
+  font-size: var(--font-size-xs);
   line-height: 14px;
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 .notice_and_circular_caption {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 .notice_and_circular_caption .card-caption {
-  font-weight: normal;
+  font-weight: var(--weight-regular);
   font-size: 10px;
   line-height: 18px;
-  color: #A3A3A3;
+  color: var(--grey-dark);
 }
 .view_download_main {
   display: flex;
   flex-wrap: wrap;
-  gap:8px;
+  gap:var(--spacing-sm);
   align-items: end;
   span {
-    padding-right: 20px;
+    padding-right: var(--spacing-lg);
     & .views {
       display: flex;
       justify-content: space-between;
       align-items: center;
       p {
-        padding-left: 10px;
-        font-weight: normal;
-        font-size: 16px;
+        padding-left: var(--spacing-sm);
+        font-weight: var(--weight-regular);
+        font-size: var(--font-size-md);
         line-height: 19px;
-        color: #a82227;
+        color: var(--focus);
       }
     }
   }
   & .download_views_padding{
-      padding-top: 8px;
+      padding-top: var(--spacing-sm);
   }
 }
 @screen dt{
@@ -125,18 +125,18 @@
         justify-content: space-between;
         align-items: center;
         p {
-          padding-left: 10px;
-          font-weight: normal;
-          font-size: 16px;
+          padding-left: var(--spacing-sm);
+          font-weight: var(--weight-regular);
+          font-size: var(--font-size-md);
           line-height: 19px;
-          color: #a82227;
+          color: var(--focus);
         }
       }
     }
   }
 
   .notice_and_circular_heading_mb .card-caption {
-    font-size: 16px;
+    font-size: var(--font-size-md);
     line-height: 24px;
     min-width : 150px;
     padding-left: 50px;
@@ -146,24 +146,24 @@
     padding-right: 30px;
   }
   .view_download_main span .views p {
-    padding-left: 8px;
-    font-size: 16px;
+    padding-left: var(--spacing-sm);
+    font-size: var(--font-size-md);
   }
   .notice_and_circular_text p {
-    font-size: 16px !important;
-    line-height : 24px;
+    font-size: var(--font-size-md) !important;
+    line-height : var(--spacing-lg);
   }
   .documentDetails_row {
     grid-gap: 0 !important;
     gap: 0 !important;
   }
   .notice_and_circular_heading_mb header{
-    font-size: 24px !important;
+    font-size: var(--font-size-2xl) !important;
     line-height: 28px;
     margin-right : 100px;
   }
   .notice_and_circular_caption .card-caption {
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     line-height: 21px;
   }
   
@@ -276,7 +276,7 @@
   height: 130px;
   display: flex;
   align-items: center;
-  padding-left: 8px;
+  padding-left: var(--spacing-sm);
   gap: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -284,7 +284,7 @@
 
 .Docs_CardWrapper{
   @apply bg-white m-sm px-md pt-md pb-lg shadow-card;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
 }
 
 .mobileInbox_attachments{

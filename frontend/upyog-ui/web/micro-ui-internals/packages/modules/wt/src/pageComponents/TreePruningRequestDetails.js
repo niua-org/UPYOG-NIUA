@@ -115,10 +115,7 @@ const TreePruningRequestDetails = ({ t, config, onSelect, userType, formData }) 
         <CardLabel>
           {t("UPLOAD_THE_SITE_PHOTOGRAPH")} <span className="check-page-link-button">*</span>
         </CardLabel>
-        <div style={{
-        marginBottom: "16px",
-        ...inputStyles
-      }}>
+        <div className="mb-md" style={{ ...inputStyles }}>
           <UploadFile id="supportingDocument" onUpload={e => handleFileUpload(e, setSupportingDocumentFile)} onDelete={() => {
           setSupportingDocumentFile(null);
         }} message={isUploading ? <div className="wt-auto-30">

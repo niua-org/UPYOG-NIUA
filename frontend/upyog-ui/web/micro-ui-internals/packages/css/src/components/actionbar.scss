@@ -1,5 +1,5 @@
 .action-bar-wrap {
-  box-shadow: rgba(0, 0, 0, 0.16) 0 -2px 8px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.16);
   max-width: 480px;
   z-index: 100;
 
@@ -11,9 +11,9 @@
   .menu-wrap {
     @apply absolute bg-white text-left mb-xs z-30 cursor-pointer;
     bottom: 45px;
-    box-shadow: rgba(0, 0, 0, 0.14) 0 8px 10px 1px, rgba(0, 0, 0, 0.12) 0 3px 14px 2px, rgba(0, 0, 0, 0.2) 0 5px 5px -3px;
-    width: calc(100% - 16px);
-    right: 8px;
+    box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
+    width: calc(100% - var(--spacing-md));
+    right: var(--spacing-sm);
   
     div {
       @apply h-12 pl-sm py-md text-body-l text-text-primary;
@@ -27,7 +27,7 @@
 
 @screen dt {
   .action-bar-wrap {
-    box-shadow: rgba(0, 0, 0, 0.16) 0 -2px 8px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.16);
     left: 0;
     max-width: none;
     z-index: 999;
@@ -35,16 +35,16 @@
     @apply fixed bottom-0 bg-white py-sm pr-lg text-right;
 
     div {
-      width: calc(100% - 16px);
+      width: calc(100% - var(--spacing-md));
     }
 
     .menu-wrap {
       bottom: 45px;
       top: unset;
-      box-shadow: rgba(0, 0, 0, 0.14) 0 8px 10px 1px, rgba(0, 0, 0, 0.12) 0 3px 14px 2px, rgba(0, 0, 0, 0.2) 0 5px 5px -3px;
+      box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
       @apply absolute h-auto bg-white text-left mb-xs z-30;
       width: 240px;
-      right: 24px;
+      right: var(--spacing-lg);
   
       div {
         @apply h-12 pl-sm py-md text-body-l text-text-primary;
@@ -64,7 +64,7 @@
   }
   .menu-wrap {
     @apply absolute bg-white text-left mb-xs z-30 cursor-pointer;
-    box-shadow: rgba(0, 0, 0, 0.14) 0 8px 10px 1px, rgba(0, 0, 0, 0.12) 0 3px 14px 2px, rgba(0, 0, 0, 0.2) 0 5px 5px -3px;
+    box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
     width: 160px;
     right: 60px;
   
@@ -78,7 +78,7 @@
   }
 
   .search-add {
-    padding: 12px 16px;
+    padding: 12px var(--spacing-md);
     color: rgb(244, 119, 56);
     display: flex;
     cursor: pointer;

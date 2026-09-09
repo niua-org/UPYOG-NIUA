@@ -233,7 +233,7 @@ const GCProtertyLocDetails = ({ t, config, onSelect, formData, renewApplication 
                 title: t("GC_PROPERTY_ID_ERROR_MESSAGE"),
               })}
             />
-            <div style={{ position: "relative", zIndex: "100", right: user.type === "EMPLOYEE" ? "52%" : "95px", marginTop: "-14px", marginRight: "-20px", cursor: "pointer" }} onClick={handleSearchClick}> <SearchIcon /> </div>
+            <div className="cursor-pointer" style={{ position: "relative", zIndex: "100", right: user.type === "EMPLOYEE" ? "52%" : "95px", marginTop: "-14px", marginRight: "-20px" }} onClick={handleSearchClick}> <SearchIcon /> </div>
           </div>
           <CardLabel>{`${t("GC_HOUSE_NO")}`} <span className="check-page-link-button">*</span></CardLabel>
           <TextInput

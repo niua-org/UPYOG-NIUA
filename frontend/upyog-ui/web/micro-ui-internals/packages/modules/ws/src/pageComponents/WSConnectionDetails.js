@@ -219,13 +219,13 @@ const ConnectionDetails = _props => {
   const isEmployee = window.location.href.includes("/employee");
   const titleStyle = isMobile ? {
     marginBottom: "40px",
-    color: "#505A5F",
+    color: "var(--text-secondary)",
     fontWeight: "700",
     fontSize: "16px"
   } : {
     marginTop: "-40px",
     marginBottom: "40px",
-    color: "#505A5F",
+    color: "var(--text-secondary)",
     fontWeight: "700",
     fontSize: "16px"
   };

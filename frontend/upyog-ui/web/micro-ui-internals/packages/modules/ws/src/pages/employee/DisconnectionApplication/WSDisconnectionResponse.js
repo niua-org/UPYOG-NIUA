@@ -32,7 +32,7 @@ const WSDisconnectionResponse = (props) => {
         <div className="ws-auto-307">
          <div className="primary-label-btn d-grid ws-auto-308" onClick={handleDownloadPdf}>
             <svg width="20" height="23" viewBox="0 0 20 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19.3334 8H14V0H6.00002V8H0.666687L10 17.3333L19.3334 8ZM0.666687 20V22.6667H19.3334V20H0.666687Z" fill="#a82227" />
+              <path d="M19.3334 8H14V0H6.00002V8H0.666687L10 17.3333L19.3334 8ZM0.666687 20V22.6667H19.3334V20H0.666687Z" fill="var(--primary-main)" />
             </svg>
             {t("WS_PRINT_APPLICATION_LABEL")}
           </div>

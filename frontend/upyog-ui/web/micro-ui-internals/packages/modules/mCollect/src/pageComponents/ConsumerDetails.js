@@ -194,7 +194,7 @@ const OwnerForm1 = (_props) => {
                     onBlur={field.onBlur}
                     errorStyle={(touchedFields?.mobileNumber && errors?.mobileNumber?.message) ? true : false}
                     disable={isEdit}
-                  //style={ isMulitpleOwners ? { background: "#FAFAFA" }: ""}
+                  //style={ isMulitpleOwners ? { background: "var(--grey-light)" }: ""}
                   />
                 )}
               />

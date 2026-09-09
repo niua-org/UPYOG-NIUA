@@ -472,7 +472,7 @@ const ApplicationBillAmendment = () => {
             {<tr>
               <td className="ws-auto-278">{t("WS_REBATE_PENALTY")}
                 <div className="tooltip ws-auto-279">
-                  <InfoBannerIcon fill="#0b0c0c" style />
+                  <InfoBannerIcon fill="var(--text-primary)" style />
                   <span className="tooltiptext ws-auto-280">
                     {`1. ${t(`WS_ADHOC_REBATE_TOOLTIP`)}`}
                     <br /><br />

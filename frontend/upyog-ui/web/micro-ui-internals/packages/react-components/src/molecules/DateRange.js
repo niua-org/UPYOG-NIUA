@@ -148,7 +148,7 @@ const DateRange = ({ values, onFilterChange, t, labelClass }) => {
               className="pickerShadow"
               focusedRange={focusedRange}
               ranges={[selectionRange]}
-              rangeColors={["#9E9E9E"]}
+              rangeColors={["var(--grey-dark)"]}
               onChange={handleSelect}
               onRangeFocusChange={setFocusedRange}
               retainEndDateOnFirstSelection={true}

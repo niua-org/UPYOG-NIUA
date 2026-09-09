@@ -12,7 +12,7 @@
   .divider {
     border: 0;
     height: 1px;
-    background-color: #e5e5e5;
+    background-color: var(--grey-bg);
     margin: 8px 0 12px;
   }
 }
@@ -46,13 +46,13 @@
   }
 
   .thumb {
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--grey-bg);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fafafa;
+    background-color: var(--grey-light);
     flex-shrink: 0;
   }
 

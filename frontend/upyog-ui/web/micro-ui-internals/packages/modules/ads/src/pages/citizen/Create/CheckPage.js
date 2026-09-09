@@ -72,7 +72,7 @@ import {
         accessor: "delete",
         Cell: ({ row }) => (
           <button onClick={() => handleDelete(row.index)}>
-            <DeleteIcon className="delete ads-auto-95" fill="#a82227" />
+            <DeleteIcon className="delete ads-auto-95" fill="var(--primary-main)" />
           </button>
         ),
       },

@@ -81,7 +81,7 @@ const DesktopInbox = ({
         {t(LOCALE.NO_COMPLAINTS_EMPLOYEE)
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}
@@ -116,7 +116,7 @@ const DesktopInbox = ({
         {t(LOCALE.ERROR_LOADING_RESULTS)
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}
@@ -134,7 +134,7 @@ const DesktopInbox = ({
       </div>
       <div style={{ flex: 1 }}>
         <SearchComplaint onSearch={onSearch} type="desktop" searchParams={searchParams} />
-        <div style={{ marginTop: "24px", marginLeft: "24px", flex: 1 }}>{result}</div>
+        <div className="mt-lg" style={{ marginLeft: "24px", flex: 1 }}>{result}</div>
       </div>
     </div>
   );

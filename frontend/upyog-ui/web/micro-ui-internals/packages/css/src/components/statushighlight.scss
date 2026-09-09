@@ -1,6 +1,6 @@
 .status-highlight {
   --bg-opacity: 12% !important;
-  border-radius: 16px;
+  border-radius: var(--border-radius-lg);
   @apply h-8 w-20 bg-error mb-sm;
 
   p {

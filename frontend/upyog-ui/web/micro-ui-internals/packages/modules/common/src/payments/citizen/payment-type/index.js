@@ -216,10 +216,7 @@ export const SelectPaymentType = (props) => {
         <Card>
         {timerEnabledForBusinessService(businessService) && (
             <CardSubHeader 
-              style={{ 
-                textAlign: 'right', 
-                fontSize: "24px"
-              }}
+              className="text-right text-2xl"
             >
           <TimerServices businessService={businessService} setTime={setTime} timerValues={state?.timerValue} t={t} SlotSearchData={state?.SlotSearchData } />
             </CardSubHeader>

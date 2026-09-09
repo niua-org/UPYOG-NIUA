@@ -9,15 +9,15 @@ const ImageOrPDFIcon = ({ source, index, last = false, onClick, selectedIndex, d
 
   if (isPDF) {
     return (
-      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-start", alignContent: "center" }}>
+      <div className="flex justify-start" style={{ flexWrap: "wrap", alignContent: "center" }}>
         <a
           target="_blank"
           rel="noopener noreferrer"
           href={source}
           style={{ minWidth: "100px", marginRight: "10px", maxWidth: "100px", height: "auto" }}
         >
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <PDFSvg style={{ background: "#f6f6f6", padding: "8px", width: "100px" }} width="100px" height="100px" />
+          <div className="flex justify-center">
+            <PDFSvg className="p-sm" style={{ background: "#f6f6f6", width: "100px" }} width="100px" height="100px" />
           </div>
         </a>
       </div>
@@ -40,7 +40,7 @@ const ImageOrPDFIcon = ({ source, index, last = false, onClick, selectedIndex, d
         className={last ? "last" : ""}
       />
       {drawingNo && (
-        <div style={{ marginTop: "12px", marginLeft: "12px", marginBottom: "5px", fontSize: "14px" }}>
+        <div className="text-sm" style={{ marginTop: "12px", marginLeft: "12px", marginBottom: "5px" }}>
           {drawingNo}
         </div>
       )}

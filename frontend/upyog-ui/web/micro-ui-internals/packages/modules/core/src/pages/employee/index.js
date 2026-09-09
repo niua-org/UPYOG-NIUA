@@ -159,17 +159,16 @@ const EmployeeApp = ({
                     </Routes>
                   </ErrorBoundary>
                 </div>
-                <div style={{ width: "100%", position: "fixed", bottom: 0, backgroundColor: "white", textAlign: "center" }}>
-                  <div style={{ display: "flex", justifyContent: "center", color: "black" }}>
-                    <a style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px", fontWeight: "400" }} href="#" target="_blank">
+                <div className="bg-white text-center" style={{ width: "100%", position: "fixed", bottom: 0 }}>
+                  <div className="flex justify-center" style={{ color: "black" }}>
+                    <a className="cursor-pointer font-regular" style={{ fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px" }} href="#" target="_blank">
                       UPYOG License
                     </a>
                     <span className="upyog-copyright-footer" style={{ margin: "0 10px", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px" }}>
                       |
                     </span>
                     <span
-                      className="upyog-copyright-footer"
-                      style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px", fontWeight: "400" }}
+                      className="upyog-copyright-footer cursor-pointer font-regular" style={{ fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px" }}
                       onClick={() => {
                         window.open("https://niua.in/", "_blank").focus();
                       }}
@@ -179,8 +178,7 @@ const EmployeeApp = ({
                   </div>
                   <div className="upyog-copyright-footer-web">
                     <span
-                      className=""
-                      style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px", fontWeight: "400" }}
+                      className=" cursor-pointer font-regular" style={{ fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px" }}
                       onClick={() => {
                         window.open("https://niua.in/", "_blank").focus();
                       }}

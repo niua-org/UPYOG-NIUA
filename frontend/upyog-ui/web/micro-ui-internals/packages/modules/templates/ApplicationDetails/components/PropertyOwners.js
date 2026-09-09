@@ -16,11 +16,11 @@ function PropertyOwners({ owners }) {
   const checkOwnerLength = owners?.length || 1;
   let cardStyles = { marginTop: "19px" };
   let statusTableStyles = { position: "relative", padding: "8px" };
-  let rowContainerStyle = { justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "#0B0C0C" };
+  let rowContainerStyle = { justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "var(--text-primary)" };
   if (checkLocation && Number(checkOwnerLength) > 1) {
     cardStyles = {
       marginTop: "19px",
-      background: "#FAFAFA",
+      background: "var(--grey-light)",
       border: "1px solid #D6D5D4",
       borderRadius: "4px",
       padding: "8px",
@@ -49,8 +49,8 @@ function PropertyOwners({ owners }) {
           <CardSubHeader
             style={
               checkLocation && Number(checkOwnerLength) > 1
-                ? { marginBottom: "8px", paddingBottom: "9px", color: "#0B0C0C", fontSize: "16px", lineHeight: "19px" }
-                : { marginBottom: "8px", color: "#505A5F", fontSize: "24px" }
+                ? { marginBottom: "8px", paddingBottom: "9px", color: "var(--text-primary)", fontSize: "16px", lineHeight: "19px" }
+                : { marginBottom: "8px", color: "var(--text-secondary)", fontSize: "24px" }
             }
           >
             {checkLocation && Number(checkOwnerLength) > 1 ? `${t(owner?.title)} ${index + 1}` : t(owner?.title)}

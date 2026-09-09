@@ -212,18 +212,18 @@ function Jurisdiction({
 
   };
   return (
-    <div key={jurisdiction?.keys} style={{ marginBottom: "16px" }}>
-      <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
+    <div key={jurisdiction?.keys} className="mb-md">
+      <div className="p-md mt-sm border border-solid border-grey-bg">
         <LabelFieldPair>
           <div className="label-field-pair" style={{ width: "100%" }}>
-            <h2 className="card-label card-label-smaller" style={{ color: "#505A5F" }}>
+            <h2 className="card-label card-label-smaller text-text-secondary">
               {t("HR_JURISDICTION")} {index + 1}
             </h2>
           </div>
           {jurisdictions.length > 1 ? (
             <div
               onClick={() => handleRemoveUnit(jurisdiction)}
-              style={{ marginBottom: "16px", padding: "5px", cursor: "pointer", textAlign: "right" }}
+              className="mb-md" style={{ padding: "5px", cursor: "pointer", textAlign: "right" }}
             >
               X
             </div>

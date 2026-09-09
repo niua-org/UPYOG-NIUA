@@ -238,7 +238,7 @@ const OwnerForm1 = (_props) => {
   const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" };
   return (
     <div style={isMobile ? {} : { marginTop: "-50px" }}>
-      <div style={{ marginBottom: "16px" }}>
+      <div className="mb-md">
         <div>
           <CardSectionHeader>{t("SERVICEDETAILS")}</CardSectionHeader>
           <LabelFieldPair>
@@ -363,7 +363,7 @@ const OwnerForm1 = (_props) => {
                       isMandatory={tax.isRequired}
                       rules={tax.isRequired ? { required: t("REQUIRED_FIELD") } : ""}
                       render={({ field }) => (
-                        <div style={{ display: "flex" }}>
+                        <div className="flex">
                           <div className="employee-card-input employee-card-input--front">₹</div>
                           <TextInput
                             value={field.value}

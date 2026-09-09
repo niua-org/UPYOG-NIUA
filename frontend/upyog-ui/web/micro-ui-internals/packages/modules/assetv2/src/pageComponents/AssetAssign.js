@@ -142,10 +142,10 @@ const OwnerForm = (_props) => {
 
     return (
         <React.Fragment>
-            <div style={{ marginBottom: "16px" }}>
-                <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
+            <div className="mb-md">
+                <div className="p-md mt-sm border border-solid border-grey-bg">
                     {allAssets?.length > 2 ? (
-                        <div style={{ marginBottom: "16px", padding: "5px", cursor: "pointer", textAlign: "right" }}>
+                        <div className="mb-md cursor-pointer text-right" style={{ padding: "5px" }}>
                             X
                         </div>
                     ) : null}

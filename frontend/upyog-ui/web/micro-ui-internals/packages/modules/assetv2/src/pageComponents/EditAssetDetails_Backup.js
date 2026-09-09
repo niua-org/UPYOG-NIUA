@@ -118,8 +118,8 @@ import {
     return (
 
         <React.Fragment>
-        <div style={{ marginBottom: "16px" }}>
-            <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
+        <div className="mb-md">
+            <div className="p-md mt-sm border border-solid border-grey-bg">
             {comingDataFromAPI?.assetParentCategory==="IT" && (
             <React.Fragment>
                     <LabelFieldPair>

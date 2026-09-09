@@ -76,7 +76,7 @@ const DocumentRow = ({ t, config, initialDoc, onChange }) => {
 
   return (
     <div style={{ marginBottom: "15px" }}>
-      <CardLabel style={{ fontWeight: "bold" }}>
+      <CardLabel className="font-bold">
         {t(config.code.replaceAll(".", "_"), config.name)} {config.required && <span style={{ color: "red" }}>*</span>}
       </CardLabel>
 

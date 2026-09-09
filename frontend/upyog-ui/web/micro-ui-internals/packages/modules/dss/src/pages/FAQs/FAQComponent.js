@@ -10,7 +10,7 @@ const FAQComponent = props => {
   return (
     <div className="faqs border-none" onClick={() => toggleOpen(!isOpen)}>
           <div className="faq-question" style={{justifyContent: t(question).length > 30 && isOpen ? "revert" : "space-between", display: Digit.Utils.browser.isMobile() && t(question).length > 30 && isOpen ? "block" : "flex"}}>
-        <span style={{fontWeight:700}}>
+        <span className="font-bold">
         {`${index}. `+ t(question)}
         </span>
         <span className={isOpen ? "faqicon rotate" : "faqicon"} style={{float: "right"/*,marginRight:isOpen ?(t(question).length > 27 ? "12%" : "8%") : ""*/}}>

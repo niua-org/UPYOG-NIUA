@@ -52,7 +52,7 @@ const DownloadBillInbox = () => {
           {t(data?.[0]?.display)
             .split("\\n")
             .map((text, index) => (
-              <p key={index} style={{ textAlign: "center" }}>
+              <p key={index} className="text-center">
                 {text}
               </p>
             ))}

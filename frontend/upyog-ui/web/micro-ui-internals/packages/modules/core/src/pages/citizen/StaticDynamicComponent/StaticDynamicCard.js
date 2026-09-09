@@ -128,7 +128,7 @@ const StaticDynamicCard = ({moduleCode}) => {
     return mdmsConfigResult ? (
       <React.Fragment>
         {/* { mdmsConfigResult && mdmsConfigResult?.payViaWhatsApp ? 
-          // <Card style={{margin: "16px", padding: "16px", maxWidth: "unset"}}>
+          // <Card className="p-md" style={{ margin: "16px", maxWidth: "unset" }}>
           //   <div className="pay-whatsapp-card" onClick={() => handleClickOnWhatsApp(mdmsConfigResult?.payViaWhatsApp)}>
           //     <div className="pay-whatsapp-text">{t("PAY_VIA_WHATSAPP")}</div>
           //     <div className="whatsAppIconG">
@@ -137,7 +137,7 @@ const StaticDynamicCard = ({moduleCode}) => {
           //   </div>
           //</Card> : null } */}
           { mdmsConfigResult && mdmsConfigResult?.helpline ?
-            <Card style={{margin: "16px", padding: "16px", maxWidth: "unset"}}>
+            <Card className="p-md" style={{ margin: "16px", maxWidth: "unset" }}>
           <div className="static-home-Card">
               <div className="static-home-Card-header">{t("CALL_CENTER_HELPLINE")}</div>
               <div className="helplineIcon">
@@ -155,7 +155,7 @@ const StaticDynamicCard = ({moduleCode}) => {
           </Card> : null
           }
           { mdmsConfigResult && mdmsConfigResult?.serviceCenter ?
-          <Card style={{margin: "16px", padding: "16px", maxWidth: "unset"}}>
+          <Card className="p-md" style={{ margin: "16px", maxWidth: "unset" }}>
           <div className="static-home-Card">
               <div className="static-home-Card-header">{t("CITIZEN_SERVICE_CENTER")}</div>
               <div className="serviceCentrIcon">
@@ -171,7 +171,7 @@ const StaticDynamicCard = ({moduleCode}) => {
             <a href={mdmsConfigResult?.viewMapLocation}>{t("VIEW_ON_MAP")}</a>
           </div> : null}
           </Card> : <div/> }
-      <Card style={{margin: "16px", padding: "16px", maxWidth: "unset"}}>
+      <Card className="p-md" style={{ margin: "16px", maxWidth: "unset" }}>
       { error || dynamicData == null || dynamicData?.dynamicDataOne === null ? (
         <div/>
       ) : (

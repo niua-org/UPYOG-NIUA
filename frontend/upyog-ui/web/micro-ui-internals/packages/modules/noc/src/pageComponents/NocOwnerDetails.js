@@ -625,20 +625,20 @@ const NocOwnerDetails = ({ t, config, onSelect, userType, formData }) => {
                       paddingTop: "20px",
                       marginTop: "15px",
                       borderColor: "#f3f3f3",
-                      background: "#FAFAFA",
+                      background: "var(--grey-light)",
                     }
                     : {}
                 }
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CardLabel style={{ fontWeight: "bold" }}>
+                <div className="flex justify-between items-center">
+                  <CardLabel className="font-bold">
                     {typeOfOwner === "MULTIOWNER" ? `${t("NOC_APPLICANT_INFORMATION_SUBHEADER")} - ${index + 1}` : t("NOC_APPLICANT_INFORMATION_SUBHEADER")}
                   </CardLabel>
                   {typeOfOwner === "MULTIOWNER" && formState.length > 1 && (
                     <LinkButton
                       label={t("NOC_REMOVE_OWNER_LABEL")}
                       onClick={() => dispatch({ type: "REMOVE_THIS_OWNER", payload: { index } })}
-                      style={{ color: "#FE7A51", fontSize: "14px" }}
+                      className="text-primary-light text-sm"
                     />
                   )}
                 </div>
@@ -792,14 +792,11 @@ const NocOwnerDetails = ({ t, config, onSelect, userType, formData }) => {
                 <button
                   type="button"
                   onClick={() => dispatch({ type: "ADD_NEW_OWNER" })}
-                  style={{
-                    color: "#FE7A51",
-                    background: "none",
+                  className="text-primary-light" style={{ background: "none",
                     border: "none",
                     cursor: "pointer",
                     fontWeight: "bold",
-                    padding: "10px 0px",
-                  }}
+                    padding: "10px 0px", }}
                 >
                   {t("NOC_ADD_APPLICANT_LABEL")}
                 </button>

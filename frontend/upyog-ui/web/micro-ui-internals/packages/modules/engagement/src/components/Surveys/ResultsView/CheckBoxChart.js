@@ -28,7 +28,7 @@ const CheckBoxChart = (props) => {
   "padding": "10px",
   "width": "700px",
   "height": "260px",
-  "backgroundColor": "#fafafa"}}>
+  "backgroundColor": "var(--grey-light)"}}>
     <ResponsiveContainer>
     	<BarChart 
             data={datav1}

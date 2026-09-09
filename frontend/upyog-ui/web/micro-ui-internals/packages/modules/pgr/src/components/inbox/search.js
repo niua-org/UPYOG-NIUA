@@ -71,7 +71,7 @@ const SearchComplaint = ({ onSearch, type, onClose, searchParams }) => {
                 <TextInput
                   inputRef={serviceRequestIdRef}
                   {...serviceRequestIdRegister}
-                  style={{ marginBottom: "8px" }}
+                  className="mb-sm"
                 ></TextInput>
               </span>
               <span className="mobile-input">

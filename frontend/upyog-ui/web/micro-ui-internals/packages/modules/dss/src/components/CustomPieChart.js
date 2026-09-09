@@ -5,7 +5,7 @@ import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recha
 import FilterContext from "./FilterContext";
 import NoData from "./NoData";
 // ["#048BD0", "#FBC02D", "#8E29BF","#EA8A3B","#0BABDE","#6E8459"]
-const COLORS = ["#048BD0", "#FBC02D", "#8E29BF", "#EA8A3B", "#0BABDE", "#6E8459", "#D4351C", "#0CF7E4", "#F80BF4", "#22F80B"];
+const COLORS = ["#048BD0", "#FBC02D", "#8E29BF", "#EA8A3B", "#0BABDE", "#6E8459", "var(--error)", "#0CF7E4", "#F80BF4", "#22F80B"];
 const mobileView = innerWidth <= 640;
 
 const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleCode }) => {
@@ -56,7 +56,7 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
   }, [chartData])
 
   const renderLegend = (value) => (
-    <span style={{ fontSize: "14px", color: "#505A5F" }}>{t(`COMMON_MASTERS_${value && Digit.Utils.locale.getTransformedLocale(value)}`)}</span>
+    <span className="text-text-secondary text-sm">{t(`COMMON_MASTERS_${value && Digit.Utils.locale.getTransformedLocale(value)}`)}</span>
   );
 
   const renderCustomLabel = (args) => {
@@ -71,7 +71,7 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
           cy={cy}
           percent={percent}
           name={name}
-          fill="#505A5F"
+          fill="var(--text-secondary)"
           alignmentBaseline="middle"
           className="recharts-pie-label-text"
           fontSize="14px"
@@ -91,7 +91,7 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
         cy={cy}
         percent={percent}
         name={name}
-        fill="#505A5F"
+        fill="var(--text-secondary)"
         alignmentBaseline="middle"
         className="recharts-pie-label-text"
         fontSize="14px"
@@ -159,9 +159,9 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
   }, [id]);
   const CustomLegend=({payload, totalValue})=>{
     return (
-      <div style={{display:"flex",flexWrap:"wrap"}}>
+      <div className="flex" style={{ flexWrap:"wrap" }}>
         {payload.map((entry, index)=>(
-          <div key={`legend-${index}`} style={{display:'flex', alignItems:'center', marginBottom: "5px", width:"50%"}}>
+          <div key={`legend-${index}`} className="flex items-center" style={{ marginBottom: "5px", width:"50%" }}>
             <div style={{width: 10, height:10, backgroundColor: entry.color, marginRight: 5}}/>
             <span style={{fontSize: 14, color: '#505ASF', marginRight: 10}}>
               {`${entry.value}:${(entry?.payload?.percent  * 100).toFixed(1)}% (${Digit.Utils.dss.formatter(entry?.payload?.value, entry?.payload?.payload?.symbol, value?.denomination, true, t)} )`}
@@ -226,12 +226,7 @@ const CustomPieChart = ({ dataKey = "value", data, setChartDenomination, moduleC
       )}
       {isPieClicked && (
         <div
-          style={{
-            marginTop: "-4%",
-            position: "absolute",
-            width: "30%",
-            textAlign: "center",
-          }}
+          className="text-center" style={{ marginTop: "-4%", position: "absolute", width: "30%" }}
         >
           {t(Digit.Utils.locale.getTransformedLocale(`${response?.responseData?.data?.[0]?.headerName}_${pieSelected}`))}
         </div>

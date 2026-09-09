@@ -13,7 +13,7 @@ const styles = {
     backgroundColor: '#f5f5f5',
   },
   headerTitle: {
-    color: '#a82227',
+    color: 'var(--primary-main)',
     margin: '35px',
   }
 };

@@ -585,7 +585,7 @@ const OwnerForm = _props => {
                         <CardLabel className="card-label-smaller asset-auto-68">
                             {t("AST_MAINTENANCE_TYPE")} <span className="asset-auto-69">*</span>
                             {/* <Tooltip message={t("TOOLTIP_AST_MAINTENANCE_TYPE")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                              </Tooltip> */}
                         </CardLabel>
                         <Controller
@@ -732,10 +732,10 @@ const OwnerForm = _props => {
                     <CardLabelError className="error-message">{localFormState?.touched?.paymentType ? errors?.paymentType?.message : ""}</CardLabelError>
 
                     {/* <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                             {t("AST_COST_MAINTENANCE_OVERHEAD")}
                             <Tooltip message={t("TOOLTIP_AST_COST_MAINTENANCE_OVERHEAD")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip>
                         </CardLabel>
                         <div className="field">
@@ -942,7 +942,7 @@ const OwnerForm = _props => {
                         </div>
                     </LabelFieldPair>
                     <CardLabelError className="error-message">{localFormState?.touched?.preConditionRemarks ? errors?.assignedUser?.preConditionRemarks : ""}</CardLabelError>
-                    <div style={{ backgroundColor: "#f1f3f4", borderRadius: "8px", padding: "20px" }}>
+                    <div className="rounded-md" style={{ backgroundColor: "#f1f3f4", padding: "20px" }}>
 
 
                         <LabelFieldPair>
@@ -1002,7 +1002,7 @@ const OwnerForm = _props => {
                             <CardLabel className="card-label-smaller asset-auto-90">
                                 {t("AST_IS_LIFE_OF__ASSET_AFFECTED")} <span className="asset-auto-91">*</span>
                                 {/* <Tooltip message={t("TOOLTIP_AST_IS_LIFE_OF__ASSET_AFFECTED")}>
-                                 <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                 <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                                  </Tooltip> */}
                             </CardLabel>
                             <div className="field">

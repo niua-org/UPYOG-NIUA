@@ -147,7 +147,7 @@ const CheckPage = ({ onSubmit, value }) => {
               <div key={index}>
                 <CardSectionHeader styles={{ fontSize: "18px" }}>{t(`BPAREG_HEADER_${doc?.documentType?.replace(".", "_")}`)}</CardSectionHeader>
                 {doc?.info ? (
-                  <div style={{ fontSize: "12px", color: "#505A5F", fontWeight: 400, lineHeight: "15px" }}>{`${t(doc?.info)}`}</div>
+                  <div className="text-xs text-text-secondary font-regular" style={{ lineHeight: "15px" }}>{`${t(doc?.info)}`}</div>
                 ) : null}
                 <StatusTable>
                   <OBPSDocument value={value} Code={doc?.documentType} index={index} isNOC={false} svgStyles={{}} isStakeHolder={true} />

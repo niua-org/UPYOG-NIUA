@@ -118,7 +118,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
     <React.Fragment>
      {window.location.href.includes("/citizen") ? <Timeline currentStep={6}/> : null}
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+      <div className="flex justify-between" style={{ width: "100%" }}>
         <CardHeader>{t("CHB_CHECK_YOUR_DETAILS")}</CardHeader>
         <CardSubHeader>
           <TimerValues timerValues={slotlist?.existingDataSet?.timervalue?.timervalue} SlotSearchData={slotlist?.searchData} draftId={slotlist?.existingDataSet?.draftId} />
@@ -155,7 +155,7 @@ const CheckPage = ({ onSubmit, value = {} }) => {
 
         />
         </StatusTable>
-        {/* <CardSubHeader style={{ fontSize: "24px" }}>{t("SLOT_DETAILS")}</CardSubHeader>
+        {/* <CardSubHeader className="text-2xl">{t("SLOT_DETAILS")}</CardSubHeader>
         <StatusTable>
         <Row
             label={t("CHB_COMMUNITY_HALL_NAME")}

@@ -6,7 +6,7 @@
   img {
     display: inline-block;
     min-width: 78px;
-    height: 24px;
+    height: var(--spacing-lg);
   }
   .nav {
     display: flex;
@@ -36,29 +36,29 @@
   flex-direction: column;
   align-items: center;
   padding-top: 30px;
-  background-color: #ffffff;
+  background-color: var(--white);
 
   img {
     width: 89px;
     height: 88px;
-    margin: 0px auto 16px;
+    margin: 0px auto var(--spacing-md);
   }
 
   .label-container {
     .label-text {
-      color: #767676;
+      color: var(--text-secondary);
     }
     &.name-Profile {
       .label-text {
         letter-spacing: 0.6px;
-        font-weight: 700;
-        font-size: 18px;
-        color: #0b0c0c;
+        font-weight: var(--weight-bold);
+        font-size: var(--font-size-lg);
+        color: var(--text-primary);
       }
     }
   }
   .profile-divider {
-    border-top: 1px solid #d6d5d4;
+    border-top: var(--border-width-sm) solid var(--border);
     margin-left: 20px;
     margin-right: 20px;
     width: 90%;
@@ -79,7 +79,7 @@
     margin: 0px;
     padding: 0px;
     outline: none;
-    font-size: 16px;
+    font-size: var(--font-size-md);
     position: relative;
     color: rgb(95, 92, 98);
     line-height: 48px;
@@ -99,7 +99,7 @@
     .edit-btn-ico{
       height: 17px;
       width: 17px;
-      margin-top: 16px;
+      margin-top: var(--spacing-md);
     }
     .icon + .menu-label {
       margin-left: 36px;
@@ -108,15 +108,15 @@
     }
   }
   .sidebar-list {
-    padding-right: 16px;
-    padding-left: 16px;
+    padding-right: var(--spacing-md);
+    padding-left: var(--spacing-md);
     &.active {
-      border-left: 5px solid #a82227;
+      border-left: 5px solid var(--focus);
       .menu-label {
-        color: #a82227;
+        color: var(--focus);
       }
       .icon {
-        fill: #a82227;
+        fill: var(--focus);
       }
     }
 
@@ -151,7 +151,7 @@
         input {
           border: none;
           outline: none;
-          margin-left: 16px;
+          margin-left: var(--spacing-md);
           padding: 0.5em;
           color: #5f5c62;
         }
@@ -185,7 +185,7 @@
     margin: 0px;
     padding: 0px;
     outline: none;
-    font-size: 16px;
+    font-size: var(--font-size-md);
     position: relative;
     color: rgb(95, 92, 98);
     line-height: 48px;
@@ -205,7 +205,7 @@
     .edit-btn-ico {
       height: 17px;
       width: 17px;
-      margin-top: 16px;
+      margin-top: var(--spacing-md);
     }
     .icon + .menu-label {
       margin-left: 36px;
@@ -216,16 +216,16 @@
   }
   @media (min-width: 780px) {
     .sidebar-list {
-      padding-right: 16px;
-      padding-left: 16px;
+      padding-right: var(--spacing-md);
+      padding-left: var(--spacing-md);
       &.active {
-        border-left: 5px solid #a82227;
+        border-left: 5px solid var(--focus);
         padding-left: 11px;
         .menu-label {
-          color: #a82227;
+          color: var(--focus);
         }
         .icon {
-          fill: #a82227;
+          fill: var(--focus);
         }
       }
 
@@ -245,7 +245,7 @@
           }
           .actions {
             .tooltip {
-              margin-left: 16px;
+              margin-left: var(--spacing-md);
             }
           }
         }
@@ -295,8 +295,8 @@
 .side-bar-footer {
   width: 200px;
   margin-left: 50px;
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   position: relative;
 }
 

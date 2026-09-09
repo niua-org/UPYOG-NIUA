@@ -47,7 +47,7 @@ const ApplicationCard = ({
         {t("BPA_NO_APPLICATION_PRESENT")
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}

@@ -112,9 +112,9 @@ const TopBar = ({
   const loggedin = userDetails?.access_token ? true : false;
   return (
     <div className="topbar">
-      {mobileView ? <Hamburger handleClick={toggleSidebar} color="#9E9E9E" /> : null}
+      {mobileView ? <Hamburger handleClick={toggleSidebar} color="var(--grey-dark)" /> : null}
       <img className="city" src="https://in-egov-assets.s3.ap-south-1.amazonaws.com/images/Upyog-logo.png" />
-      <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+      <span className="flex items-center justify-between" style={{ width: "100%" }}>
         {loggedin &&
           (cityDetails?.city?.ulbGrade ? (
             <p className="ulb" style={mobileView ? { fontSize: "14px", display: "inline-block" } : {}}>

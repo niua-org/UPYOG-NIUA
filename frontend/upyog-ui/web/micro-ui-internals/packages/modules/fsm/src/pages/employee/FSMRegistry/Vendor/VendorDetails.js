@@ -295,12 +295,12 @@ const VendorDetails = (props) => {
     <React.Fragment>
       {!isLoading ? (
         <React.Fragment>
-          <Header style={{ marginBottom: "16px" }}>{t("ES_FSM_REGISTRY_VENDOR_DETAILS")}</Header>
+          <Header className="mb-md">{t("ES_FSM_REGISTRY_VENDOR_DETAILS")}</Header>
           <div style={!isMobile ? { marginLeft: "-15px" } : {}}>
             <Card style={{ position: "relative" }}>
               {dsoData?.[0]?.employeeResponse?.map((detail, index) => (
                 <React.Fragment key={index}>
-                  {index > 0 && <CardSectionHeader style={{ marginBottom: "16px", marginTop: "32px" }}>{t(detail.title)}</CardSectionHeader>}
+                  {index > 0 && <CardSectionHeader className="mb-md mt-xl">{t(detail.title)}</CardSectionHeader>}
                   <div style={!isMobile ? { marginLeft: "-15px" } : {}}>
                     <StatusTable>
                       {detail?.values?.map((value, index) => {
@@ -322,12 +322,12 @@ const VendorDetails = (props) => {
                               <h2>
                                 {t(detail.type)} {index + 1}
                               </h2>
-                              <div style={{ display: "flex" }}>
+                              <div className="flex">
                                 <span onClick={() => onEdit(data, detail.type, data.id)}>
-                                  <EditIcon style={{ cursor: "pointer", marginRight: "20px" }} className="edit" fill="#a82227" />
+                                  <EditIcon className="cursor-pointer edit" style={{ marginRight: "20px" }} fill="var(--primary-main)" />
                                 </span>
                                 <span onClick={() => onDelete(data, detail.type, data.id)}>
-                                  <DeleteIcon style={{ cursor: "pointer" }} className="delete" fill="#a82227" />
+                                  <DeleteIcon className="cursor-pointer delete" fill="var(--primary-main)" />
                                 </span>
                               </div>
                             </div>
@@ -347,7 +347,7 @@ const VendorDetails = (props) => {
                       })}
                       {detail.type && (
                         <div
-                          style={{ color: "#a82227", cursor: "pointer", marginLeft: "16px" }}
+                          className="text-primary-main cursor-pointer" style={{ marginLeft: "16px" }}
                           onClick={() => onActionSelect(detail.type === "ES_FSM_REGISTRY_DETAILS_TYPE_DRIVER" ? "ADD_DRIVER" : "ADD_VEHICLE")}
                         >
                           {t(`${detail.type}_ADD`)}

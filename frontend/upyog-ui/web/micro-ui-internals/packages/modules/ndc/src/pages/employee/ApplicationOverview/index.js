@@ -497,7 +497,7 @@ const ApplicationOverview = () => {
       {/* <div>
         <Header styles={{ fontSize: "32px" }}>{t("NDC_APP_OVER_VIEW_HEADER")}</Header>
       </div> */}
-      <div style={{ display: "flex", justifyContent: "end", alignItems: "center", padding: "16px" }}>
+      <div className="p-md flex items-center" style={{ justifyContent: "end" }}>
         {isCemp && (
           <div className="cardHeaderWithOptions ral-app-details-header">
             {getLoader && <Loader />}

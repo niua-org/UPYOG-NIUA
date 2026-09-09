@@ -194,7 +194,7 @@ const SearchConnection = ({
         <div className="tooltip">
         <div className="ws-auto-193">
         <CardLabel>{`${t("WS_MYCONNECTIONS_CONSUMER_NO")}`}</CardLabel>
-        <InfoBannerIcon fill="#0b0c0c" />
+        <InfoBannerIcon fill="var(--text-primary)" />
         <span className="tooltiptext ws-auto-194">
         {t("WS_CONSUMER_NO_DESCRIPTION") + " " + t("WS_CONSUMER_NO_FORMAT")}
         </span>
@@ -210,7 +210,7 @@ const SearchConnection = ({
         {<div className="tooltip">
         <div className="ws-auto-197">
         <CardLabel>{`${t("WS_SEARCH_CONNNECTION_OLD_CONSUMER_LABEL")}`}</CardLabel>
-        <InfoBannerIcon fill="#0b0c0c" />
+        <InfoBannerIcon fill="var(--text-primary)" />
         <span className="tooltiptext ws-auto-198">
         {t("WS_CONSUMER_NO_DESCRIPTION") + " " + t("WS_CONSUMER_NO_FORMAT")}
         </span>

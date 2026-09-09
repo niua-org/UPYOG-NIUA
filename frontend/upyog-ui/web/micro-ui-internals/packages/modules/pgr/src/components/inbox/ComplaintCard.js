@@ -35,7 +35,7 @@ export const ComplaintCard = ({ data, onFilterChange, onSearch, serviceRequestId
         {t(LOCALE.NO_COMPLAINTS_EMPLOYEE)
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}
@@ -49,7 +49,7 @@ export const ComplaintCard = ({ data, onFilterChange, onSearch, serviceRequestId
         {t(LOCALE.ERROR_LOADING_RESULTS)
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}

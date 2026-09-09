@@ -118,7 +118,7 @@ const InspectionReport = ({ config, onSelect, userType, formData, setError, form
                     <InspectionReportForm key={unit.key} index={index} unit={unit} {...commonProps} />
                 ))}
             </React.Fragment>
-            <LinkButton label={t("BPA_ADD_FIELD_INSPECTION")} onClick={addNewFieldReport} style={{ color: "#a82227", width: "fit-content" }} />
+            <LinkButton label={t("BPA_ADD_FIELD_INSPECTION")} onClick={addNewFieldReport} className="text-primary-main" style={{ width: "fit-content" }} />
         </div>
     );
 };
@@ -214,11 +214,11 @@ const InspectionReportForm = (_props) => {
     const errorStyle = { width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px", maxWidth:"950px", minWidth:"280px", borderRadius:"4px" };
     return (
         <React.Fragment>
-            <div style={{ marginBottom: "16px", maxWidth: "950px" }}>
+            <div className="mb-md" style={{ maxWidth: "950px" }}>
                 <div className="fieldInspectionWrapper">
                     {allFieldReport?.length > 1 ? (
                         <LinkButton
-                            label={<DeleteIcon style={{ float: "right", position: "relative", bottom: "-6px" }} fill={!(allFieldReport.length == 1) ? "#494848" : "#FAFAFA"} />}
+                            label={<DeleteIcon style={{ float: "right", position: "relative", bottom: "-6px" }} fill={!(allFieldReport.length == 1) ? "#494848" : "var(--grey-light)"} />}
                             style={{ width: "100px", display: "inline", background: "black" }}
                             onClick={(e) => removeUnit(unit)}
                         />

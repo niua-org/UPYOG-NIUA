@@ -42,7 +42,7 @@ const ApplicationCard = ({
   let result;
   if (data?.length === 0) {
     result = (
-      <Card style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <Card className="flex items-center justify-center" style={{ marginTop: 20, flexDirection: 'column' }}>
         {t("CE_DOCUMENTS_NOT_FOUND")}<br />
         <Link className="link" to={`/upyog-ui/employee/engagement/documents/inbox/new-doc`}>{t('NEW_DOCUMENT_TEXT')}</Link>
       </Card>

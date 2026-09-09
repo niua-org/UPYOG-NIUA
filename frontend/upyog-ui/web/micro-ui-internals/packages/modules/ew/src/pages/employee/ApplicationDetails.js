@@ -105,7 +105,7 @@ const EWApplicationDetails = () => {
         <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>
           {t("EW_APPLICATION_DETAILS")}
         </Header>
-        <div style={{ zIndex: "10", display: "flex", flexDirection: "row-reverse", alignItems: "center", marginTop: "-25px" }}>
+        <div className="flex items-center" style={{ zIndex: "10", flexDirection: "row-reverse", marginTop: "-25px" }}>
           <div style={{ zIndex: "10", position: "relative" }}>
             {downloadOptions && downloadOptions.length > 0 && (
               <MultiLink

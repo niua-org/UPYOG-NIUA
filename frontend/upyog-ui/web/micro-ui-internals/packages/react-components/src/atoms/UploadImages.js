@@ -19,7 +19,7 @@ const UploadImages = (props) => {
         {props.thumbnails.map((thumbnail, index) => {
           return (
             <div key={index}>
-              <DeleteBtn onClick={() => props.onDelete(thumbnail)} className="delete" fill="#d4351c" />
+              <DeleteBtn onClick={() => props.onDelete(thumbnail)} className="delete" fill="var(--error)" />
               <img src={thumbnail} alt="uploaded thumbnail" />
             </div>
           );

@@ -8,8 +8,8 @@
 
 .employee-card-input {
   @apply mb-lg pl-sm outline-none block border w-full h-10 border-input-border border-solid bg-white leading-10 text-form-field text-text-primary;
-  margin-bottom: 16px !important;
-  height: 40px !important;
+  margin-bottom: var(--spacing-md) !important;
+  height: var(--spacing-2xl) !important;
 }
 .employee-card-input:disabled {
   @apply border-grey-dark text-grey-dark !important;
@@ -23,7 +23,7 @@
   width: fit-content !important;
   display: flex;
   align-items: center;
-  background: #eeeeee;
+  background: var(--grey-mid);
   border-right: 0;
   padding-right: 5px;
 }
@@ -45,7 +45,7 @@
   }
 
   span {
-    margin-top: 16px;
+    margin-top: var(--spacing-md);
     margin-left: 10%;
     margin-right: 10%;
   }
@@ -94,7 +94,7 @@
 
 .citizen-card-input {
   height: 2rem !important;
-  margin-bottom: 16px !important;
+  margin-bottom: var(--spacing-md) !important;
   line-height: 2.0rem !important;
 }
 
@@ -102,7 +102,7 @@
   width: fit-content !important;
   display: flex;
   align-items: center;
-  background: #eeeeee;
+  background: var(--grey-mid);
   border-right: 0;
   padding-right: 5px;
 }
@@ -113,10 +113,10 @@
   width: 100%;
   height: 2.5rem;
   background-color: rgb(255, 255, 255);
-  font-size: 16px;
+  font-size: var(--font-size-md);
   line-height: 20px;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-md);
   border-radius: 6px;
-  border: 1px solid #cccccc87;
+  border: var(--border-width-sm) solid #cccccc87;
 
 }

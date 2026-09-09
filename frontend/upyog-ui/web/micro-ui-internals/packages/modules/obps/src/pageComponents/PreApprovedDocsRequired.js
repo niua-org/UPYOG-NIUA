@@ -30,45 +30,45 @@ const PreApprovedDocsRequired = ({ onSelect, onSkip, config }) => {
       <div className={isopenlink? "OpenlinkContainer":""}>
       <Card>
         <CardHeader>{t(`PRE_APPROVED_PLAN_FOR_VACANT_LAND`)}</CardHeader>
-        <CardText style={{ color: "#0B0C0C", marginTop: "12px", fontSize: "16px", fontWeight: "400", lineHeight: "24px" }}>{t(`PRE_APPROVE_DESCRIPTION`)}</CardText>
+        <CardText className="text-text-primary text-md font-regular" style={{ marginTop: "12px", lineHeight: "24px" }}>{t(`PRE_APPROVE_DESCRIPTION`)}</CardText>
         {isLoading ?
           <Loader /> :
           <Fragment>
-          <div style={{ fontWeight: 700, marginBottom: "8px" }}>{t("BPAPAP_PLOT_DIMENSIONS_HEADER")}</div>
+          <div className="mb-sm font-bold">{t("BPAPAP_PLOT_DIMENSIONS_HEADER")}</div>
             {data?.PreApprovedDisclaimer?.Disclaimer?.[0]?.plotDimensions?.map((dimensions, index) => (
                 
                 <div key={`dimension-${index}`}>
                 
-                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                    <div style={{ display: "flex" }}>
+                <div className="mb-sm font-bold">
+                    <div className="flex">
                     <div style={{ minWidth: "20px" }}>&nbsp;</div>
                     <div>{t(dimensions?.code)}</div>
                     </div>
                 </div>
                 {dimensions?.info && (
-                    <div style={{ marginBottom: "16px" }}>
-                    <div style={{ display: "flex" }}>
+                    <div className="mb-md">
+                    <div className="flex">
                         <div style={{ minWidth: "20px" }}></div>
-                        <div style={{ color: "#505A5F", fontSize: "16px" }}>{t(dimensions.info)}</div>
+                        <div className="text-text-secondary text-md">{t(dimensions.info)}</div>
                     </div>
                     </div>
                 )}
                 </div>
             ))}
-            <div style={{ fontWeight: 700, marginBottom: "8px" }}>{t("BPAPAP_REQUIRED_DOCUMENTS")}</div>
+            <div className="mb-sm font-bold">{t("BPAPAP_REQUIRED_DOCUMENTS")}</div>
             {data?.PreApprovedDisclaimer?.Disclaimer?.[0]?.docTypes?.map((doc, index) => (
                 <div key={`doctype-${index}`}>
-                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
-                    <div style={{ display: "flex" }}>
+                <div className="mb-sm font-bold">
+                    <div className="flex">
                     <div style={{ minWidth: "20px" }}>{`${index + 1}.`}&nbsp;</div>
                     <div>{t(`BPAPAP_HEADER_${doc?.code.replace('.', '_')}`)}</div>
                     </div>
                 </div>
                 {doc?.info && (
-                    <div style={{ marginBottom: "16px" }}>
-                    <div style={{ display: "flex" }}>
+                    <div className="mb-md">
+                    <div className="flex">
                         <div style={{ minWidth: "20px" }}></div>
-                        <div style={{ color: "#505A5F", fontSize: "16px" }}>{t(doc.info.replace('.', '_'))}</div>
+                        <div className="text-text-secondary text-md">{t(doc.info.replace('.', '_'))}</div>
                     </div>
                     </div>
                 )}

@@ -80,9 +80,9 @@ const ApplicationDetails = () => {
   return (
     <Fragment>
       <div className="cardHeaderWithOptions" style={isMobile ? {} : {maxWidth:"980px"}}>
-        {/* <div style={{display:'flex'}}> */}
+        {/* <div className="flex"> */}
         <Header styles={{ fontSize: "32px", marginLeft: isMobile ? "0px" : "10px" }}>{t("BPA_TASK_DETAILS_HEADER")}</Header>
-        <div style={{zIndex: "10",display:"flex",flexDirection:"row-reverse",alignItems:"center",marginTop:"-25px"}}>
+        <div className="flex items-center" style={{ zIndex: "10", flexDirection:"row-reverse", marginTop:"-25px" }}>
          
         {reciept_data?.Payments?.length > 0 && (
           // <div style={{right: "3%", top: "20px", position: "absolute"}}>
@@ -94,7 +94,7 @@ const ApplicationDetails = () => {
             style={{ top: "90px" }}
           />
         )}        
-        <LinkButton label={t("VIEW_TIMELINE")} style={{ color:"#A52A2A"}} onClick={handleViewTimeline}></LinkButton>
+        <LinkButton label={t("VIEW_TIMELINE")} className="text-primary-main" onClick={handleViewTimeline}></LinkButton>
         {/* </div> */}
         </div>
         
@@ -155,17 +155,17 @@ const ApplicationDetails = () => {
                       {t(`BPAREG_HEADER_${stringReplaceAll(document?.documentType?.toUpperCase(), ".", "_")}`)}
                     </CardSectionHeader>
                     {document?.info ? (
-                      <div style={{ fontSize: "12px", color: "#505A5F", fontWeight: 400, lineHeight: "15px", margin: "10px 0px" }}>{`${t(
+                      <div className="text-xs text-text-secondary font-regular" style={{ lineHeight: "15px", margin: "10px 0px" }}>{`${t(
                         document?.info
                       )}`}</div>
                     ) : null}
                     <a target="_blank" href={documents[document.fileStoreId]?.split(",")[0]}>
                       <PDFSvg />
                     </a>
-                    <p style={{ marginTop: "8px", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>
+                    <p className="mt-sm text-md text-text-secondary font-regular" style={{ lineHeight: "19px" }}>
                       {t(`BPAREG_HEADER_${stringReplaceAll(document?.documentType?.toUpperCase(), ".", "_")}`)}
                     </p>
-                    {/* <p style={{ marginTop: "8px", fontWeight: "bold", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{decodeURIComponent( documents[document.fileStoreId]?.split(",")[0]?.split("?")[0]?.split("/")?.pop()?.slice(13))}</p> */}
+                    {/* <p className="mt-sm font-bold text-md text-text-secondary font-regular" style={{ lineHeight: "19px" }}>{decodeURIComponent( documents[document.fileStoreId]?.split(",")[0]?.split("?")[0]?.split("/")?.pop()?.slice(13))}</p> */}
                   </div>
                   {License?.tradeLicenseDetail?.applicationDocuments?.length != index + 1 ? (
                     <hr style={{ color: "#cccccc", backgroundColor: "#cccccc", height: "2px", marginTop: "20px", marginBottom: "20px" }} />

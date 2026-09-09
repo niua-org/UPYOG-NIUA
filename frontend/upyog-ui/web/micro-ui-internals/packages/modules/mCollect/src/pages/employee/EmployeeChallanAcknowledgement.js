@@ -40,7 +40,7 @@ const MCollectAcknowledgement = () => {
               {t("UC_PRINT_CHALLAN_LABEL")}
             </div>
           ) : null}
-          <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+          <ActionBar className="flex justify-end" style={{ alignItems: "baseline" }}>
             <Link to={`/upyog-ui/employee`} style={{ marginRight: "1rem" }}>
               <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
             </Link>
@@ -64,7 +64,7 @@ const MCollectAcknowledgement = () => {
               {t("UC_PRINT_CHALLAN_LABEL")}
             </div>
           ) : null}
-          <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+          <ActionBar className="flex justify-end" style={{ alignItems: "baseline" }}>
             <Link to={`/upyog-ui/employee`} style={{ marginRight: "1rem" }}>
               <LinkButton style={{ color: "#FF8C00" }} label={t("CORE_COMMON_GO_TO_HOME")} />
             </Link>

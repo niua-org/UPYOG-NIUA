@@ -55,38 +55,26 @@ function UploadDrawer({ setProfilePic, closeDrawer, userType, removeProfilePic ,
         onClick={onOverlayBodyClick}
       ></div>
       <div
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          display: "flex",
-          backgroundColor: "white",
-          alignItems: "center",
-          position: "fixed",
-          left: "0",
-          right: "0",
-          height: "20%",
-          bottom: userType === "citizen" ? "2.5rem" : "0",
-          zIndex: "2",
-        }}
+        className="bg-white justify-between flex items-center" style={{ width: "100%", position: "fixed", left: "0", right: "0", height: "20%", bottom: userType === "citizen" ? "2.5rem" : "0", zIndex: "2" }}
       >
         <div
-          style={{ display: "flex", flex: "1", flexDirection: "column", width: "100%", justifyContent: "center", alignItems: "center", gap: "8px 0" }}
+          className="flex justify-center items-center" style={{ flex: "1", flexDirection: "column", width: "100%", gap: "8px 0" }}
         >
-          <label for="file" style={{ cursor: "pointer" }}>
+          <label for="file" className="cursor-pointer">
             {" "}
             <GalleryIcon />
           </label>
-          <label style={{ cursor: "pointer" }}> Gallery</label>
-          <input type="file" id="file" accept="image/*, .png, .jpeg, .jpg" onChange={selectfile} style={{ display: "none" }} />
+          <label className="cursor-pointer"> Gallery</label>
+          <input type="file" id="file" accept="image/*, .png, .jpeg, .jpg" onChange={selectfile} className="hidden" />
         </div>
 
         <div
-          style={{ display: "flex", flex: "1", width: "100%", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: "8px 0" }}
+          className="flex justify-center items-center" style={{ flex: "1", width: "100%", flexDirection: "column", gap: "8px 0" }}
         >
           <button onClick={removeimg}>
             <RemoveIcon />
           </button>
-          <label style={{ cursor: "pointer" }}>Remove</label>
+          <label className="cursor-pointer">Remove</label>
         </div>
       </div>
     </React.Fragment>

@@ -26,6 +26,7 @@ import useCommonMDMSV2 from "./useMDMSV2";
 import useCustomMDMS from "./useCustomMDMS";
 import useCustomMDMSV2 from "./useCustomMDMSV2";
 import useCustomAPIHook from "./useCustomAPIHook";
+import useThemeConfig from "./useThemeConfig";
 import useInboxGeneral from "./useInboxGeneral/useInboxGeneral";
 import useApplicationStatusGeneral from "./useStatusGeneral";
 import useModuleTenants from "./useModuleTenants";
@@ -852,7 +853,8 @@ const Hooks = {
   useInbox,
   ndc,
   useCustomNavigate,
-  useModuleBasePath
+  useModuleBasePath,
+  useThemeConfig
 };
 
 

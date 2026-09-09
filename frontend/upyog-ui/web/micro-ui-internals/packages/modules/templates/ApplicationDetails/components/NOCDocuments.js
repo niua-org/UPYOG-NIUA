@@ -84,7 +84,7 @@ function SelectDocument({
   }
 
   return (
-      <div style={{/*  border: "1px solid #D6D5D4", padding: "16px 0px 16px 8px", background: "#FAFAFA", borderRadius: "5px", marginBottom: "24px", display: "flex" */ }}>
+      <div className="bg-grey-light mb-lg" style={{ /*  border: "1px solid #D6D5D4", padding: "16px 0px 16px 8px", borderRadius: "5px", display: "flex" */ }}>
         <LabelFieldPair style={{width: "98%", marginRight: "10px"}}>
           <CardLabel style={{width: "100%"}}>{doc?.required ? `${t("TL_BUTTON_UPLOAD FILE")}*` : `${t("TL_BUTTON_UPLOAD FILE")}`}</CardLabel>
           <div className="field" style={{width: "100%"}}>
@@ -167,13 +167,13 @@ const NOCDocuments = ({ t, noc, docs, isNoc, applicationData,NOCdata, bpaActions
   }, [applicationData, bpaActionsDetails])
 
   return (
-    <div style={{ border: "1px solid #D6D5D4", padding: "16px 0px 16px 8px", background: "#FAFAFA", borderRadius: "5px", marginBottom: "24px", maxWidth:"950px"/*  display: "flex" */ }}>
+    <div className="border border-solid border-border bg-grey-light mb-lg" style={{ padding: "16px 0px 16px 8px", borderRadius: "5px", maxWidth:"950px"/*  display: "flex" */ }}>
       <StatusTable>
       <Row label={isEmployee ? `${t(`BPA_${noc?.nocType}_HEADER`)}` : t(`BPA_${noc?.nocType}_HEADER`)} labelStyle={{fontSize: "20px",width:"150%"}}/>
       {NOCdata && NOCdata.map((noc,index) => {
         if (noc?.value) {
           if (noc?.field == "STATUS") {
-            return <Row className="border-none"  label={isEmployee ? `${t(noc?.title)}` : t(noc?.title)} text={noc?.value?t(noc?.value):t("CS_NA")} textStyle = {(noc?.value == "APPROVED" || noc?.value == "AUTO_APPROVED") ? {color: "#00703C"} : {color : "#D4351C"}}/>
+            return <Row className="border-none"  label={isEmployee ? `${t(noc?.title)}` : t(noc?.title)} text={noc?.value?t(noc?.value):t("CS_NA")} textStyle = {(noc?.value == "APPROVED" || noc?.value == "AUTO_APPROVED") ? {color: "var(--success)"} : {color : "var(--error)"}}/>
           } else {
             return <Row className="border-none"  label={isEmployee ? `${t(noc?.title)}` : t(noc?.title)} text={noc?.value?t(noc?.value):t("CS_NA")} />
           }

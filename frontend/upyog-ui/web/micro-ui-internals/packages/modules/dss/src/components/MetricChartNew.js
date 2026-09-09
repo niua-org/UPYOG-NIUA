@@ -30,11 +30,7 @@ const MetricData = ({ t, data, code, indexValuesWithStar }) => {
       </p>
       {/* {data?.insight && (
         <div
-          style={{
-            width: "100%",
-            display: "flex",
-            
-          }}
+          className="flex" style={{ width: "100%" }}
         >
           {data?.insight?.indicator === "upper_green" ? ArrowUpwardElement("10px") : ArrowDownwardElement("10px")}
           <p className={`${data?.insight.colorCode}`} style={{ whiteSpace: "pre" }}>
@@ -127,7 +123,7 @@ const MetricChartRow = ({ data, setChartDenomination, index, moduleCode, indexVa
               whiteSpace: "normal",
             }}
           >
-            <span style={{ fontWeight: "500", color: "white" }}>{t(`TIP_${data.name}`)}</span>
+            <span className="font-medium" style={{ color: "white" }}>{t(`TIP_${data.name}`)}</span>
           </span>
          
         </div>
@@ -151,8 +147,8 @@ const MetricChartRow = ({ data, setChartDenomination, index, moduleCode, indexVa
     // else return 50;
   };
   return (
-    <div className="row" style={{display:"flex",flexDirection:"column",width:"45%", height:"100px",margin:"2%",padding:"2%",backgroundColor:"white",boxShadow:"0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)"}}>
-      <div style={{display:"flex"}}>
+    <div className="row bg-white flex" style={{ flexDirection:"column", width:"45%", height:"100px", margin:"2%", padding:"2%", boxShadow:"0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22)" }}>
+      <div className="flex">
         <div style={{width:"85%"}}>
       <div className={`tooltip`}>
         {typeof name == "string" && name}
@@ -170,7 +166,7 @@ const MetricChartRow = ({ data, setChartDenomination, index, moduleCode, indexVa
             whiteSpace: "normal",
           }}
         >
-          <span style={{ fontWeight: "500", color: "white" }}>{t(`TIP_${data.name}`)}</span>
+          <span className="font-medium" style={{ color: "white" }}>{t(`TIP_${data.name}`)}</span>
           <span style={{ color: "white" }}> {showDate?.[id]?.lastUpdatedTime}</span>
         </span>
       </div>

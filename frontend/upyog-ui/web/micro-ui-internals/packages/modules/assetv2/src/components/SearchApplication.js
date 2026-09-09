@@ -230,14 +230,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
               <React.Fragment>
                 <SubmitBar label={t("WF_TAKE_ACTION")} onSubmit={toggleMenu} />
                 {isMenuOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    backgroundColor: 'white',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    padding: '8px',
-                    zIndex: 1000,
-                  }}>
+                  <div className="bg-white rounded-sm p-sm absolute border border-solid border-border z-50">
                     {actionOptions
                   .filter(option => {
                     // Only show AST_CERTIFICATE if assetStatus is "0"
@@ -250,13 +243,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
                         <div
                           key={index}  // Ensure each element has a unique key
                           onClick={() => printReport(row.original?.["applicationNo"])}  // Wrap printReport in an arrow function
-                          style={{
-                            display: 'block',
-                            padding: '8px',
-                            textDecoration: 'none',
-                            color: 'black',
-                            cursor: 'pointer',
-                          }}
+                          className="p-sm block text-black cursor-pointer"
                         >
                           {option.label}
                         </div>
@@ -264,13 +251,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
                         (<div
                           key={index}  // Ensure each element has a unique key
                           onClick={() => processDepreciation(row.original?.["applicationNo"], row.original?.["id"])}  // Wrap printReport in an arrow function
-                          style={{
-                            display: 'block',
-                            padding: '8px',
-                            textDecoration: 'none',
-                            color: 'black',
-                            cursor: 'pointer',
-                          }}
+                          className="p-sm block text-black cursor-pointer"
                         >
                           {option.label}
                         </div>)
@@ -278,12 +259,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
                           <Link
                             key={index}  // Add key for the Link element as well
                             to={option.link}
-                            style={{
-                              display: 'block',
-                              padding: '8px',
-                              textDecoration: 'none',
-                              color: 'black',
-                            }}
+                            className="p-sm block text-black"
                           >
                             {option.label}
                           </Link>
@@ -395,7 +371,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
     <div>
       <Header>{t("ASSET_APPLICATIONS")}</Header>
       < Card className={"card-search-heading"}>
-        <span style={{ color: "#505A5F" }}>{t("Provide at least one parameter to search for an application")}</span>
+        <span className="text-text-secondary">{t("Provide at least one parameter to search for an application")}</span>
       </Card>
       <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
         <SearchField>
@@ -451,7 +427,7 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
         </SearchField>
         <SearchField className="submit">
           <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
-          <p style={{ marginTop: "10px" }}
+          <p className="mt-sm cursor-pointer"
             onClick={() => {
               reset({
                 applicationNo: "",
@@ -471,26 +447,27 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
 
       <br></br>
       {data !== "" ?
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: "10px" }}>
-          {/* <button onClick={downloadXLS} style = {{ color: "maroon", border: "2px solid #333", padding: "10px 20px",cursor: "pointer"}}>Download XLS</button>  */}
-          <button onClick={downloadQRReport} style={{ color: "maroon", border: "2px solid #333", padding: "10px 20px", cursor: "pointer", marginLeft: "15px" }}>Download QR Report</button>
+        <div className="flex justify-end mt-sm">
+          {/* <button onClick={downloadXLS} className="text-primary-main border-2 border-solid border-text-primary px-lg py-sm cursor-pointer">Download XLS</button>  */}
+          <button onClick={downloadQRReport} className="cursor-pointer text-primary-main border-2 border-solid border-text-primary px-lg py-sm ml-md">Download QR Report</button>
 
         </div>
         : ""}
 
       <br></br>
       {!isLoading && data?.display ?
-        <Card style={{ marginTop: 20 }}>
+        <Card className="mt-md">
           {
             t(data.display)
               .split("\\n")
               .map((text, index) => (
-                <p key={index} style={{ textAlign: "center" }}>
+                <p key={index} className="text-center">
                   {text}
                 </p>
               ))
           }
         </Card>
+
         :
         (!isLoading && data !== "" ?
           <Table

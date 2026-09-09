@@ -1,6 +1,6 @@
 .timeline-container {
   @apply flex;
-  margin: 0px 8px 15px;
+  margin: 0px var(--spacing-sm) 15px;
   .timeline-checkpoint {
     @apply relative flex-1;
     z-index: 1;
@@ -15,7 +15,7 @@
     }
 
     .secondary-color {
-      color: #0B0C0C;
+      color: var(--text-primary);
       padding: 5px;
       font-size: small;
     }
@@ -24,23 +24,23 @@
   .line {
     @apply absolute;
     top: 12px;
-    left: calc(50% + 8px);
-    right: calc(-50% + 8px);
-    border-top: 4px solid #D6D5D4;
+    left: calc(50% + var(--spacing-sm));
+    right: calc(-50% + var(--spacing-sm));
+    border-top: var(--border-width-lg) solid var(--border);
     z-index: -1;
   }
 
   .circle {
-    width: 24px;
-    height: 24px;
+    width: var(--spacing-lg);
+    height: var(--spacing-lg);
     background-color: #B1B4B6;
     border-radius: 50%;
     text-align: center;
   }
 
   .active {
-    background-color: #a82227;
-    border-color: #a82227;
+    background-color: var(--focus);
+    border-color: var(--focus);
   }
 } 
 

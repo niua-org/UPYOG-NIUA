@@ -2,11 +2,11 @@
   margin-top: -25px;
 
   .BannerWithSearch {
-    margin-bottom: 40px;
+    margin-bottom: var(--spacing-2xl);
     width: 100%;
     @apply relative;
     .Search {
-      width: calc(100% - 32px);
+      width: calc(100% - var(--spacing-xl));
       bottom: -18px;
       @apply mx-md absolute;
     }
@@ -18,13 +18,13 @@
 
   .ServicesSection {
     @apply flex flex-wrap;
-    padding: 40px 15px 0 15px;
+    padding: var(--spacing-2xl) 15px 0 15px;
   }
 
   @screen dt {
     .ServicesSection {
       @apply flex flex-wrap;
-      padding: 40px 15px 0 15px;
+      padding: var(--spacing-2xl) 15px 0 15px;
       width: 100%;
     }
   }
@@ -60,14 +60,14 @@
 @media (min-width: 780px) {
   .SideBarStatic {
     width: 219px;
-    background: #ffffff;
+    background: var(--white);
     margin-top: -24px;
   }
 }
 @media (max-width: 780px) {
   .SideBarStatic {
     width: 219px;
-    background: #ffffff;
+    background: var(--white);
     margin-top: -24px;
     display: none;
   }
@@ -88,7 +88,7 @@
   margin-top: -25px;
   img {
     height: 33vw;
-    background: linear-gradient(#000000,#000000);
+    background: linear-gradient(var(--black),var(--black));
     @apply w-full object-cover;
   }
   h1 {
@@ -101,7 +101,7 @@
     border: none;
     top: 76px;
     svg {
-      fill: #ffffff;
+      fill: var(--white);
     }
     @apply absolute text-white text-heading-s ml-md;
   }
@@ -147,11 +147,11 @@
       height: 20vw;
     }
     h1 {
-      top: calc(10vw + 40px);
+      top: calc(10vw + var(--spacing-2xl));
       left: 15.8rem;
     }
     .moduleLinkHomePageBackButton {
-      top: calc(10vw + 16px);
+      top: calc(10vw + var(--spacing-md));
       @apply ml-md;
     }
   }

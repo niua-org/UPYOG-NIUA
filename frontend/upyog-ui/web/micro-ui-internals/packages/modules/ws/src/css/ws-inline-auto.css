@@ -7,15 +7,15 @@
 
 /* components/BillIAmendMentInbox/useInboxTableConfig.js */
 .ws-auto-2 {
-  color: #00703C;
+  color: var(--success);
 }
 
 .ws-auto-3 {
-  color: #0B0C0C;
+  color: var(--text-primary);
 }
 
 .ws-auto-4 {
-  color: #E50000;
+  color: var(--error);
 }
 
 .ws-auto-5 {
@@ -36,7 +36,7 @@
 
 /* components/SearchApplication/index.js */
 .ws-auto-8 {
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .ws-auto-9 {
@@ -198,7 +198,7 @@
 }
 
 .ws-auto-41 {
-  background: #FAFAFA;
+  background: var(--grey-light);
   padding: 0px 35px;
 }
 
@@ -247,23 +247,23 @@
   padding-top: 20px;
   margin-top: 10px;
   border-color: #f3f3f3;
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-50 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-51 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-52 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-53 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-54 {
@@ -306,7 +306,7 @@
 
 .ws-auto-61 {
   border: none;
-  color: #0b0c0c !important;
+  color: var(--text-primary) !important;
   pointer-events: none;
 }
 
@@ -322,17 +322,17 @@
 }
 
 .ws-auto-64 {
-  color: #0B0C0C;
+  color: var(--text-primary);
   margin-top: 12px;
 }
 
 .ws-auto-65 {
-  color: #0B0C0C;
+  color: var(--text-primary);
   margin-top: 12px;
 }
 
 .ws-auto-66 {
-  color: #0B0C0C;
+  color: var(--text-primary);
   margin-top: 12px;
 }
 
@@ -526,17 +526,17 @@
 }
 
 .ws-auto-106 {
-  color: #0B0C0C;
+  color: var(--text-primary);
   margin-top: 12px;
 }
 
 .ws-auto-107 {
-  color: #0B0C0C;
+  color: var(--text-primary);
   margin-top: 12px;
 }
 
 .ws-auto-108 {
-  color: #0B0C0C;
+  color: var(--text-primary);
   margin-top: 12px;
 }
 
@@ -566,7 +566,7 @@
 .ws-auto-114 {
   font-size: 24px;
   font-weight: 400;
-  color: #0B0C0C;
+  color: var(--text-primary);
 }
 
 .ws-auto-115 {
@@ -683,12 +683,12 @@
 }
 
 .ws-auto-137 {
-  color: #a82227;
+  color: var(--primary-main);
   display: inline-block;
 }
 
 .ws-auto-138 {
-  color: #a82227;
+  color: var(--primary-main);
   display: inline-block;
 }
 
@@ -698,7 +698,7 @@
 }
 
 .ws-auto-140 {
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 
@@ -778,11 +778,11 @@
 }
 
 .ws-auto-156 {
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .ws-auto-157 {
-  border: 1px solid #E3E3E3;
+  border: 1px solid var(--grey-bg);
   padding: 16px;
   margin-top: 8px;
 }
@@ -974,7 +974,7 @@
   padding-top: 20px;
   margin-top: 10px;
   border-color: #f3f3f3;
-  background: #FAFAFA;
+  background: var(--grey-light);
   margin-bottom: 20px;
 }
 
@@ -983,13 +983,13 @@
 }
 
 .ws-auto-191 {
-  background: #FAFAFA;
+  background: var(--grey-light);
   max-width: 500px;
 }
 
 .ws-auto-192 {
   text-align: center;
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .ws-auto-193 {
@@ -1005,12 +1005,12 @@
 }
 
 .ws-auto-195 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-196 {
   text-align: center;
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .ws-auto-197 {
@@ -1026,16 +1026,16 @@
 }
 
 .ws-auto-199 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-200 {
   text-align: center;
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .ws-auto-201 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-202 {
@@ -1045,16 +1045,16 @@
   padding-top: 20px;
   margin-top: 10px;
   border-color: #f3f3f3;
-  background: #FAFAFA;
+  background: var(--grey-light);
   margin-bottom: 20px;
 }
 
 .ws-auto-203 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 .ws-auto-204 {
-  background: #FAFAFA;
+  background: var(--grey-light);
 }
 
 
@@ -1102,7 +1102,7 @@
 }
 
 .ws-auto-213 {
-  color: #A52A2A;
+  color: var(--primary-main);
 }
 
 .ws-auto-214 {
@@ -1555,7 +1555,7 @@
 }
 
 .ws-auto-302 {
-  color: #A52A2A;
+  color: var(--primary-main);
 }
 
 .ws-auto-303 {

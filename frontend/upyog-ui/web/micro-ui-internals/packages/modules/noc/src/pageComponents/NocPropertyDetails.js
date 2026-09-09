@@ -633,20 +633,20 @@ const NocPropertyDetails = ({ t, config, onSelect, userType, formData }) => {
                     paddingTop: "20px",
                     marginTop: "15px",
                     borderColor: "#f3f3f3",
-                    background: "#FAFAFA",
+                    background: "var(--grey-light)",
                   }
                   : {}
               }
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <CardLabel style={{ fontWeight: "bold" }}>
+              <div className="flex justify-between items-center">
+                <CardLabel className="font-bold">
                   {noOfBuildings === "MULTIPLE" ? `${t("NOC_BUILDING_LABEL")} - ${index + 1}` : t("NOC_BUILDING_LABEL")}
                 </CardLabel>
                 {noOfBuildings === "MULTIPLE" && formState.length > 1 && (
                   <LinkButton
                     label={t("NOC_REMOVE_BUILDING_LABEL")}
                     onClick={() => handleRemoveBuilding(index)}
-                    style={{ color: "#FE7A51", fontSize: "14px" }}
+                    className="text-primary-light text-sm"
                   />
                 )}
               </div>
@@ -798,14 +798,7 @@ const NocPropertyDetails = ({ t, config, onSelect, userType, formData }) => {
             <button
               type="button"
               onClick={handleAddBuilding}
-              style={{
-                color: "#FE7A51",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: "bold",
-                padding: "10px 0px",
-              }}
+              className="text-primary-light cursor-pointer font-bold" style={{ background: "none", border: "none", padding: "10px 0px" }}
             >
               {t("NOC_ADD_BUILDING_LABEL")}
             </button>
@@ -816,7 +809,7 @@ const NocPropertyDetails = ({ t, config, onSelect, userType, formData }) => {
         <CardHeader style={{ marginTop: "30px", marginBottom: "20px" }}>{t("NOC_LOCATION_DETAILS_HEADER")}</CardHeader>
 
         <CardLabel>{t("NOC_PROPERTY_ID_LABEL")}</CardLabel>
-        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+        <div className="flex" style={{ gap: "10px", marginBottom: "15px" }}>
           <TextInput
             t={t}
             type="text"
@@ -907,7 +900,7 @@ const NocPropertyDetails = ({ t, config, onSelect, userType, formData }) => {
         {fieldErrors.pincode && <CardLabelError>{fieldErrors.pincode}</CardLabelError>}
 
         <CardLabel>{t("NOC_PROPERTY_DETAILS_GIS_CORD_LABEL")}</CardLabel>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "15px" }}>
+        <div className="flex items-center" style={{ gap: "10px", marginBottom: "15px" }}>
           <TextInput
             t={t}
             type="text"
@@ -917,26 +910,26 @@ const NocPropertyDetails = ({ t, config, onSelect, userType, formData }) => {
             placeholder={t("NOC_PROPERTY_DETAILS_GIS_CORD_PLACEHOLDER")}
             style={{ flex: 1 }}
           />
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <div className="flex" style={{ flexDirection: "column", gap: "5px" }}>
             <LinkButton
               label={
-                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <div className="flex items-center" style={{ gap: "5px" }}>
                   <span>{t("NOC_CURRENT_LOCATION")}</span>
                   <CurrentLocationIcon />
                 </div>
               }
               onClick={fetchCurrentLocation}
-              style={{ color: "#FE7A51", cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "5px 0px" }}
+              className="text-primary-light" style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "5px 0px" }}
             />
             <LinkButton
               label={
-                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <div className="flex items-center" style={{ gap: "5px" }}>
                   <span>{t("NOC_CHOOSE_LOCATION")}</span>
                   <ChooseLocationIcon />
                 </div>
               }
               onClick={() => setIsOpen(true)}
-              style={{ color: "#FE7A51", cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "5px 0px" }}
+              className="text-primary-light" style={{ cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "5px 0px" }}
             />
           </div>
         </div>

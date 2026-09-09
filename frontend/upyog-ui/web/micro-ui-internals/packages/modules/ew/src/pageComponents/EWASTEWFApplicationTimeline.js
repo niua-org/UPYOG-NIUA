@@ -103,7 +103,7 @@ const EWASTEWFApplicationTimeline = (props) => {
 
   //     case "SUBMIT_FEEDBACK":
   //       return (
-  //         <div style={{ marginTop: "24px" }}>
+  //         <div className="mt-lg">
   //           <Link to={`/upyog-ui/citizen/fsm/rate/${props.id}`}>
   //             <SubmitBar label={t("CS_APPLICATION_DETAILS_RATE")} />
   //           </Link>
@@ -123,7 +123,7 @@ const EWASTEWFApplicationTimeline = (props) => {
       {!isLoading && (
         <Fragment>
           {data?.timeline?.length > 0 && (
-            <CardSectionHeader style={{ marginBottom: "16px", marginTop: "32px" }}>
+            <CardSectionHeader className="mb-md mt-xl">
               {t("CS_APPLICATION_DETAILS_APPLICATION_TIMELINE")}
             </CardSectionHeader>
           )}

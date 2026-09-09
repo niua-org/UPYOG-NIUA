@@ -11,7 +11,7 @@ const MetricData = ({ t, data, code, indexValuesWithStar }) => {
   const insight = data?.insight?.value?.replace(/[+-]/g, "")?.split("%");
   return (
     <div>
-      <div className="heading-m" style={{ textAlign: "right", paddingTop: "0px", whiteSpace: "nowrap" }}>
+      <div className="heading-m text-right" style={{ paddingTop: "0px", whiteSpace: "nowrap" }}>
         {indexValuesWithStar?.includes(code) ? (
           <Rating toolTipText={t("COMMON_RATING_LABEL")} currentRating={Math.round(data?.headerValue * 10) / 10} styles={{ width: "unset", marginBottom:"unset" }} starStyles={{ width: "25px" }} />
         ) : data?.headerName.includes("AVG") ? (
@@ -38,11 +38,7 @@ const MetricData = ({ t, data, code, indexValuesWithStar }) => {
       </div>
       {/* {data?.insight && (
         <div
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "end",
-          }}
+          className="flex" style={{ width: "100%", justifyContent: "end" }}
         >
           {data?.insight?.indicator === "upper_green" ? ArrowUpwardElement("10px") : ArrowDownwardElement("10px")}
           <p className={`${data?.insight.colorCode}`} style={{ whiteSpace: "pre" }}>
@@ -122,7 +118,7 @@ const MetricChartRow = ({ data, setChartDenomination, index, moduleCode, indexVa
               whiteSpace: "normal",
             }}
           >
-            <span style={{ fontWeight: "500", color: "white" }}>{t(`TIP_${data.name}`)}</span>
+            <span className="font-medium" style={{ color: "white" }}>{t(`TIP_${data.name}`)}</span>
           </span>
         </div>
         <span style={{ whiteSpace: "pre" }}>{t("DSS_NO_DATA")}</span>
@@ -150,7 +146,7 @@ const MetricChartRow = ({ data, setChartDenomination, index, moduleCode, indexVa
       <div className={`tooltip`}>
         {typeof name == "string" && name}
         {Array.isArray(name) && name?.filter((ele) => ele)?.map((ele) => <div style={{ whiteSpace: "pre" }}>{ele}</div>)}
-        <span className="dss-white-pre" style={{ display: "block" }}>
+        <span className="dss-white-pre block">
           {" "}
           {showDate?.[id]?.todaysDate}
         </span>
@@ -163,7 +159,7 @@ const MetricChartRow = ({ data, setChartDenomination, index, moduleCode, indexVa
             whiteSpace: "normal",
           }}
         >
-          <span style={{ fontWeight: "500", color: "white" }}>{t(`TIP_${data.name}`)}</span>
+          <span className="font-medium" style={{ color: "white" }}>{t(`TIP_${data.name}`)}</span>
           <span style={{ color: "white" }}> {showDate?.[id]?.lastUpdatedTime}</span>
         </span>
       </div>

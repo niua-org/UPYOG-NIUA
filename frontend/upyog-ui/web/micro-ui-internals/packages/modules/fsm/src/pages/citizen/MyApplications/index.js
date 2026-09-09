@@ -29,7 +29,7 @@ export const MyApplications = () => {
           ))}
           {applicationsList.length === 0 && (
           <Card>
-            <p style={{ textAlign: "center" }}>{`${t("FSM_NO_APPLICATION")} ${userInfo.mobileNumber}`}</p>
+            <p className="text-center">{`${t("FSM_NO_APPLICATION")} ${userInfo.mobileNumber}`}</p>
           </Card>
         )}
       </div>

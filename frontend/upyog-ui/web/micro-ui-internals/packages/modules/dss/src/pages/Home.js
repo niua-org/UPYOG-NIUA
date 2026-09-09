@@ -25,7 +25,7 @@ import MapDrillChart from "../components/mapDrillDownTable";
 import NoData from "../components/NoData";
 // import { ReactComponent as Arrow_Right } from "../images/Arrow_Right.svg";
 // import { ReactComponent as Arrow_Right_White } from "../images/Arrow_Right_white.svg";
-const Arrow_Right = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="#a82227"/></svg>;
+const Arrow_Right = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="var(--primary-main)"/></svg>;
 const Arrow_Right_White = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 0L6.59 1.41L12.17 7H0V9H12.17L6.59 14.59L8 16L16 8L8 0Z" fill="#ffffff"/></svg>;
 import { checkCurrentScreen } from "../components/DSSCard";
 import CustomAreaChart from "../components/CustomAreaChart"
@@ -107,7 +107,7 @@ const Chart = ({ data, moduleLevel, overview = false }) => {
             whiteSpace: "normal",
           }}
         >
-          <span style={{ fontSize: "14px", fontWeight: "400px", color: "white" }}>{t(`TIP_${data.name}`)}</span>
+          <span className="text-sm" style={{ fontWeight: "400px", color: "white" }}>{t(`TIP_${data.name}`)}</span>
         </span>
       </div>
       {data.name === "NATIONAL_DSS_OVERVIEW_CITIZEN_FEEDBACK_SCORE" ?
@@ -259,7 +259,7 @@ const renderLegend = (value) => {
     <li style={{display:"contents"}}>
       {
         value == "TotalCollection"?
-          <span style={{ fontSize: "14px", color: "#505A5F" }}>{t(`DSS_${Digit.Utils.locale.getTransformedLocale(value)}`)}(Cr)</span>:<span style={{ fontSize: "14px", color: "#505A5F" }}>{t(`DSS_${Digit.Utils.locale.getTransformedLocale(value)}`)}</span>
+          <span className="text-text-secondary text-sm">{t(`DSS_${Digit.Utils.locale.getTransformedLocale(value)}`)}(Cr)</span>:<span className="text-text-secondary text-sm">{t(`DSS_${Digit.Utils.locale.getTransformedLocale(value)}`)}</span>
         
       }
     </li>
@@ -302,13 +302,13 @@ const renderLegend = (value) => {
             data={chartData}
           >
             <CartesianGrid stroke="#f5f5f5" strokeDasharray="3 3" />
-            <XAxis dataKey={"name"} type={"category"} tick={{ fontSize: "14px", fill: "#505A5F" }} tickCount={12} />
+            <XAxis dataKey={"name"} type={"category"} tick={{ fontSize: "14px", fill: "var(--text-secondary)" }} tickCount={12} />
             <YAxis yAxisId="left"  type={"number"} orientation="left" stroke="#54d140" tickCount={10} domain={[0, 600]}/>
-            <YAxis yAxisId="right" type={"number"} orientation="right" stroke="#a82227" tickCount={10} />
+            <YAxis yAxisId="right" type={"number"} orientation="right" stroke="var(--primary-main)" tickCount={10} />
             <Tooltip cursor={false} formatter={tooltipFormatter}/>
              <Legend formatter={renderLegend} iconType="circle" />
             <Bar yAxisId="left" dataKey="TotalCollection" fill="#54d140" />
-            <Line yAxisId="right" type="monotone" dataKey="liveUlbsCount" stroke="#a82227" />
+            <Line yAxisId="right" type="monotone" dataKey="liveUlbsCount" stroke="var(--primary-main)" />
           </ComposedChart>
       )}
     </ResponsiveContainer>
@@ -426,7 +426,7 @@ const Home = ({ stateCode }) => {
     <FilterContext.Provider value={provided}>
       <div ref={fullPageRef}>
         <div className="options" style={{ margin: "10px" }}>
-        <Header styles={{ marginBottom: "0px" }}><span style={{color:"#a82227"}}>UMEED</span> - <span><span style={{color:"#a82227"}}>U</span>rban <span style={{color:"#a82227"}}>M</span>onitoring for <span style={{color:"#a82227"}}>E</span>fficient and <span style={{color:"#a82227"}}>E</span>ffective <span style={{color:"#a82227"}}>D</span>ecision-making</span></Header>
+        <Header styles={{ marginBottom: "0px" }}><span className="text-primary-main">UMEED</span> - <span><span className="text-primary-main">U</span>rban <span className="text-primary-main">M</span>onitoring for <span className="text-primary-main">E</span>fficient and <span className="text-primary-main">E</span>ffective <span className="text-primary-main">D</span>ecision-making</span></Header>
           {mobileView ? null : (
             <div>
               <div className="mrlg">
@@ -487,11 +487,7 @@ const Home = ({ stateCode }) => {
                       key={index}
                     >
                       <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                        }}
+                        className="flex justify-between" style={{ flexDirection: "row" }}
                       >
                         <div className="dss-card-header">
                           {Icon(item.name)}
@@ -499,7 +495,7 @@ const Home = ({ stateCode }) => {
                             {selectedState === "" ? t(item.name) : t(`DSS_TB_${Digit.Utils.locale.getTransformedLocale(selectedState)}`)}
                           </p>
                           {selectedState != "" && item.name.includes("PROJECT_STAUS") && (
-                            <span style={{ fontSize: "14px", display: "block" }}>
+                            <span className="text-sm block">
                               {t(`DSS_TOTAL_ULBS`)} {Number(totalCount).toFixed()} | {t(`DSS_LIVE_ULBS`)} {Number(liveCount).toFixed()}
                             </span>
                           )}
@@ -507,7 +503,7 @@ const Home = ({ stateCode }) => {
                         {item?.charts?.[0]?.chartType == "map" && (
                           <div className="dss-card-header" style={{ width: "60%" }}>
                             {Icon(row.vizArray?.[1]?.name)}
-                            <p style={{ marginLeft: "20px", fontSize: "24px", fontFamily: "Roboto, sans-serif", fontWeight: 500, color: "#000000" }}>
+                            <p className="text-2xl font-medium" style={{ marginLeft: "20px", fontFamily: "Roboto, sans-serif", color: "#000000" }}>
                               {selectedState === ""
                                 ? t(row.vizArray?.[1]?.name)
                                 : t(`${Digit.Utils.locale.getTransformedLocale(selectedState)}_${row.vizArray?.[1]?.name}`)}
@@ -556,11 +552,7 @@ const Home = ({ stateCode }) => {
                       key={index}
                     >
                       <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                        }}
+                        className="flex justify-between" style={{ flexDirection: "row" }}
                       >
                        
                       </div>
@@ -590,22 +582,14 @@ const Home = ({ stateCode }) => {
                       key={index}
                       // onClick={() => routeTo(`/upyog-ui/employee/dss/dashboard/${item.ref.url}`)}
                     >
-                      <div style={{ justifyContent: "space-between", display: "flex", flexDirection: "row" }}>
+                      <div className="justify-between flex" style={{ flexDirection: "row" }}>
                         <div className="dss-card-header" style={{ marginBottom: "10px" }}>
                           {Icon(item.name, colors[index].dark)}
                           <p style={{ marginLeft: "20px" }}>{t(item.name)}</p>
                         </div>
                         {item.vizType == "collection" ? (
                           <div
-                            style={{
-                              float: "right",
-                              textAlign: "right",
-                              color: "#a82227",
-                              fontSize: 16,
-                              fontWeight: "bold",
-                              display: "flex",
-                              flexDirection: "row",
-                            }}
+                            className="text-right text-primary-main font-bold flex" style={{ float: "right", fontSize: 16, flexDirection: "row" }}
                           >
                             {!isLandingPage && <span><span style={{ paddingRight: 10 }}>{t("DSS_OVERVIEW")}</span>
                               <span>
@@ -624,10 +608,10 @@ const Home = ({ stateCode }) => {
                         ))}
                       </div>
                       {isLandingPage && <div
-                        style={{ borderRadius: "0px 0px 4px 4px", position: "absolute", display: "flex", justifyContent: "center", alignItems: "center", bottom: "0px", left: "0px", width: "100%", background: item.vizType == "collection" || item.name.includes("PROJECT_STAUS") || item.name.includes("LIVE_ACTIVE_ULBS") ? colors?.[index]?.defaultColor : colors?.[index]?.dark }}
+                        className="flex justify-center items-center" style={{ borderRadius: "0px 0px 4px 4px", position: "absolute", bottom: "0px", left: "0px", width: "100%", background: item.vizType == "collection" || item.name.includes("PROJECT_STAUS") || item.name.includes("LIVE_ACTIVE_ULBS") ? colors?.[index]?.defaultColor : colors?.[index]?.dark }}
                         onClick={() => routeTo(`/upyog-ui/employee/dss/dashboard/${item.ref.url}`)}
                       >
-                        <div style={{ padding: "10px", display: "flex", justifyContent: "center", alignItems: "center", height: "40px" }}>
+                        <div className="flex justify-center items-center" style={{ padding: "10px", height: "40px" }}>
                           <span style={{ marginRight: "10px", color: "white" }}>
                             {`${t("COMMON_DSS_VIEW_DASH_BOARD_LABEL")} `}
                           </span>

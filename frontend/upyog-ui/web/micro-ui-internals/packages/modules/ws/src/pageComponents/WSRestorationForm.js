@@ -253,7 +253,7 @@ const WSRestorationForm = ({
   };
   if (isMdmsLoading || wsDocsLoading || isEnableLoader || slaLoading) return <Loader />;
   const infoLabelTextStyle = {
-    color: "#0B0C0C"
+    color: "var(--text-primary)"
   };
   const restorationTooltipStyle = {
     whiteSpace: Digit.Utils.browser.isMobile() ? "unset" : "nowrap",

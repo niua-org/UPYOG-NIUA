@@ -32,7 +32,7 @@ const Response = (props) => {
           headerStyles={{fontSize: "32px", wordBreak: "break-word"}}
         />
         { nocData?.applicationStatus !== "REJECTED" ? <CardText>{t(`NOC_${stringReplaceAll(nocData?.nocType, ".", "_")}_${stringReplaceAll(nocData?.applicationStatus, ".", "_")}_SUB_HEADER`)}</CardText> : null}
-        <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+        <ActionBar className="flex justify-end" style={{ alignItems: "baseline" }}>
           <SubmitBar
             label={t("CORE_COMMON_GO_TO_HOME")}
             onSubmit={onSubmit}

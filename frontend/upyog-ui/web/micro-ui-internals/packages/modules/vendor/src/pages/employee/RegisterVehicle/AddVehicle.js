@@ -36,7 +36,7 @@ const AddVehicle = ({ parentUrl, heading }) => {
       item.labelChildren = (
         <div className="tooltip" style={{ paddingLeft: "10px", marginBottom: "-3px" }}>
           <InfoIcon />
-          <span className="tooltiptext" style={{ width: "150px", left: "230%", fontSize: "14px" }}>
+          <span className="tooltiptext text-sm" style={{ width: "150px", left: "230%" }}>
             {t(item.populators.validation.title)}
           </span>
         </div>

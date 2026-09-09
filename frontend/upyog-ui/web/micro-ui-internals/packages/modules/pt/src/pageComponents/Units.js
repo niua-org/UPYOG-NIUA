@@ -485,7 +485,7 @@ function Unit({
         </h2>
       </div>
       <div className="pt-auto-99">
-        {allUnits.length > 1 ? <LinkButton label={<DeleteIcon fill={!(allUnits.length == 1) ? "#494848" : "#FAFAFA"} className="pt-auto-101" />} onClick={e => handleRemoveUnit(unit)} className="pt-auto-100" />
+        {allUnits.length > 1 ? <LinkButton label={<DeleteIcon fill={!(allUnits.length == 1) ? "#494848" : "var(--grey-light)"} className="pt-auto-101" />} onClick={e => handleRemoveUnit(unit)} className="pt-auto-100" />
       // <div onClick={() => handleRemoveUnit(unit)}>
       //   X
       // </div>

@@ -7,26 +7,26 @@
     color: #25D366;
     float: left;
     font-family: 'Roboto';
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--weight-bold);
 }
 .dynamicDataCard{
     background: rgba(244, 119, 56, 0.12);
     mix-blend-mode: normal;
     height: auto;
     max-height: 64px;
-    border-radius: 4px;
-    margin-bottom: 16px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-md);
 }
 .dynamicData{
-    padding: 10px 16px 16px 16px;
+    padding: 10px var(--spacing-md) var(--spacing-md) var(--spacing-md);
     display: flex;
 }
 .dynamicData-content{
     font-family: 'Roboto';
-    font-size: 14px;
-    font-weight: 400;
-    padding-top: 4px;
+    font-size: var(--font-size-sm);
+    font-weight: var(--weight-regular);
+    padding-top: var(--spacing-xs);
     word-break: break-word;
     margin-inline: 20px;
 }
@@ -35,42 +35,42 @@
     mix-blend-mode: normal;
     height: auto;
     max-height: 100px;
-    border-radius: 4px;
-    margin-bottom: 16px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-md);
 }
 .staticData{
     display: flex;
 }
 .timerIcon{
-    padding: 16px 0px 16px 16px;
+    padding: var(--spacing-md) 0px var(--spacing-md) var(--spacing-md);
 }
 .static-data-content{
     display: grid;
     margin-inline: 20px;
-    padding-top: 8px;
+    padding-top: var(--spacing-sm);
 }
 .rupeeSymbol{
-    padding: 16px 0px 16px 16px;
+    padding: var(--spacing-md) 0px var(--spacing-md) var(--spacing-md);
 }
 .validityIcon{
-    padding: 16px 0px 16px 8px;
+    padding: var(--spacing-md) 0px var(--spacing-md) var(--spacing-sm);
 }
 .static-data-content-first{
     font-family: 'Roboto';
-    font-size: 14px;
-    font-weight: 400;
+    font-size: var(--font-size-sm);
+    font-weight: var(--weight-regular);
 }
 .static-data-content-second{
     font-family: 'Roboto';
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--weight-bold);
     word-break: break-word;
 }
 .staticDataCardLast{
     background: rgba(238, 238, 238, 1);
     mix-blend-mode: normal;
     height: 56px;
-    border-radius: 4px;
+    border-radius: var(--border-radius-sm);
 }
 .whatsAppIconG{
     float: right;
@@ -81,8 +81,8 @@
 }
 .static-home-Card-header{
     font-family: 'Roboto';
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--font-size-md);
+    font-weight: var(--weight-bold);
     float: left;
 }
 .helplineIcon{

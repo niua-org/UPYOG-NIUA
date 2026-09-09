@@ -78,7 +78,7 @@ const ADSCartDetails = ({
     Cell: ({
       row
     }) => <button onClick={() => handleDelete(row.index)}>
-          <DeleteIcon className="delete ads-auto-27" fill="#a82227" />
+          <DeleteIcon className="delete ads-auto-27" fill="var(--primary-main)" />
         </button>
   }];
   return <Modal headerBarMain={<CardSubHeader className="ads-auto-28">My Cart</CardSubHeader>} headerBarEnd={<CloseBtn onClick={onClose} />} popupStyles={{

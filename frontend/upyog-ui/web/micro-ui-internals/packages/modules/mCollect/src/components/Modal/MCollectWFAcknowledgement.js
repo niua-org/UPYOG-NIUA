@@ -20,11 +20,7 @@ const MCollectWFAcknowledgement = () => {
       <CardText>{t("UC_BILL_GENERATION_MESSAGE_SUB")}</CardText>
 
       <ActionBar
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "baseline",
-        }}
+        className="flex justify-end" style={{ alignItems: "baseline" }}
       >
         <Link to={`/upyog-ui/employee`} style={{ marginRight: "1rem" }}>
           <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />

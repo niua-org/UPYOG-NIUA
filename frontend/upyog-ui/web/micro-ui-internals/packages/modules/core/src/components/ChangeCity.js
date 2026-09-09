@@ -53,7 +53,7 @@ const ChangeCity = (prop) => {
 
   // if (isDropdown) {
   return (
-    <div style={prop?.mobileView ? {color: "#767676"} : {}}>
+    <div style={prop?.mobileView ? {color: "var(--text-secondary)"} : {}}>
       <Dropdown
         option={selectCityData}
         selected={selectCityData.find((cityValue) => cityValue.value === dropDownData?.value)}
@@ -68,7 +68,7 @@ const ChangeCity = (prop) => {
   //   return (
   //     <React.Fragment>
   //       <div style={{ marginBottom: "5px" }}>City</div>
-  //       <div className="language-selector" style={{display: "flex", flexWrap: "wrap"}}>
+  //       <div className="language-selector flex" style={{ flexWrap: "wrap" }}>
   //         {selectCityData?.map((city, index) => (
   //           <div className="language-button-container" key={index}>
   //             <CustomButton

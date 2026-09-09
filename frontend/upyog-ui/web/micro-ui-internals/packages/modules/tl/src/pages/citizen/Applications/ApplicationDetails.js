@@ -40,7 +40,7 @@ const TLApplicationDetails = () => {
   const stateId = Digit.ULBService.getStateId();
   let multiBoxStyle = {
     border: "groove",
-    background: "#FAFAFA",
+    background: "var(--grey-light)",
     borderRadius: "4px",
     paddingInline: "10px",
     marginTop: "10px",
@@ -49,7 +49,7 @@ const TLApplicationDetails = () => {
   let multiHeaderStyle = {
     marginBottom: "10px",
     marginTop: "10px",
-    color: "#505A5F"
+    color: "var(--text-secondary)"
   };
   //todo: hook should return object to render the data
   const {
@@ -200,8 +200,7 @@ const TLApplicationDetails = () => {
         {application?.map((application, index) => {
         return <div key={index} className="employee-data-table">
               <Row
-          // className="employee-data-table"
-          className="border-none" label={t("TL_COMMON_TABLE_COL_APP_NO")} text={application?.applicationNumber}
+          // className="employee-data-table border-none" label={t("TL_COMMON_TABLE_COL_APP_NO")} text={application?.applicationNumber}
           // textStyle={{ border: "none", wordBreak:"break-word" }}
           textStyle={{
             wordBreak: "break-word"

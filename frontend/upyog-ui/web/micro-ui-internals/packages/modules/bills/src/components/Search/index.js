@@ -212,20 +212,20 @@ const SearchApplication = ({ showTable, showLoader, isLoading, tenantId, t, onSu
     <React.Fragment>
       <Header>{t("ABG_SEARCH_BILL_COMMON_HEADER")}</Header>
       <Card className={"card-search-heading"}>
-        <span style={{ color: "#505A5F" }}>{t("WS_INFO_VALIDATION")}</span>
+        <span className="text-text-secondary">{t("WS_INFO_VALIDATION")}</span>
       </Card>
       <SearchForm className="ws-custom-wrapper" onSubmit={onSubmit} handleSubmit={handleSubmit}>
         <SearchFields {...{ register, control, reset, tenantId, t, previousPage, formState }} />
       </SearchForm>
       {isLoading && <Loader />}
       {data && data?.length == 0 ? (
-        <Card style={{ backgroundColor: "white", textAlign: "center" }}>{t("ES_COMMON_NO_DATA")}</Card>
+        <Card className="bg-white text-center">{t("ES_COMMON_NO_DATA")}</Card>
       ) : (
         success &&
         data &&
         data.length > 0 && (
-          <div style={{ backgroundColor: "white" }}>
-            <div className="sideContent" style={{ float: "left", padding: "20px 10px", fontSize: "24px", fontWeight: "700", fontFamily: "Roboto" }}>
+          <div className="bg-white">
+            <div className="sideContent text-2xl font-bold" style={{ float: "left", padding: "20px 10px", fontFamily: "Roboto" }}>
               {t("ABG_SEARCH_RESULTS_HEADER")}
             </div>
             <div className="sideContent" style={{ float: "right", padding: "10px 30px" }}>

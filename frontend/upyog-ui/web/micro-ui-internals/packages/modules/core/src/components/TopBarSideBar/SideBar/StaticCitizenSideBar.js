@@ -261,12 +261,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
           }}
         ></div>
         <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            height: isMobile ? "calc(100vh - 56px)" : "auto",
-            zIndex: "99",
-          }}
+          className="flex" style={{ flexDirection: "column", height: isMobile ? "calc(100vh - 56px)" : "auto", zIndex: "99" }}
         >
           {profileItem}
           <div className="drawer-desktop" style={{"backgroundColor":"white"}}>

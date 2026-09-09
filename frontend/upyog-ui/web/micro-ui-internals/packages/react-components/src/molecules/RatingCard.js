@@ -45,7 +45,7 @@ const RatingCard = ({ config, onSelect, t }) => {
           <CardLabel>{t(input.label)}</CardLabel>
           {input?.error}
           {input.checkLabels &&
-            input.checkLabels.map((label, index) => <CheckBox style={{ marginBottom: "16px", paddingTop:"10px" }} key={index} name={input.label} label={t(label)} value={label} {...register(input.label)} />)}
+            input.checkLabels.map((label, index) => <CheckBox className="mb-md" style={{ paddingTop:"10px" }} key={index} name={input.label} label={t(label)} value={label} {...register(input.label)} />)}
         </React.Fragment>
       );
     }

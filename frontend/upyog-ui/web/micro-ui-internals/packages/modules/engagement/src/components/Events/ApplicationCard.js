@@ -38,7 +38,7 @@ const ApplicationCard = ({
         {t("ES_NO_EVENTS")
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}

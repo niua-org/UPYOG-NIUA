@@ -160,7 +160,7 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
           filteredApplications.map((application, index) => (
             <div key={index}> 
               <Card
-               style={{ ...applicationContainerStyle, cursor: "pointer" }}
+               className="cursor-pointer" style={{ ...applicationContainerStyle }}
                onMouseEnter={(e) => {
                  e.currentTarget.style.backgroundColor = applicationContainerHoverStyle.backgroundColor;
                  e.currentTarget.style.boxShadow = applicationContainerHoverStyle.boxShadow;
@@ -182,7 +182,7 @@ export const ExistingBookingDetails = ({ onSubmit,setExistingDataSet,Searchdata 
             </div>
           ))}
         {filteredApplications.length === 0 && !isLoading && (
-          <p style={{ marginLeft: "16px", marginTop: "16px" }}>
+          <p className="mt-md" style={{ marginLeft: "16px" }}>
             {t("CHB_NO_APPLICATION_FOUND_MSG")}
           </p>
         )}

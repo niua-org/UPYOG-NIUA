@@ -264,7 +264,7 @@ const ApplicationDetails = () => {
     <div>
       <div className={"employee-application-details"} style={{ marginBottom: "15px" }}>
         <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>{t("CHB_BOOKING_DETAILS")}</Header>
-        <div style={{ zIndex: "10", display: "flex", flexDirection: "row-reverse", alignItems: "center", marginTop: "-25px" }}>
+        <div className="flex items-center" style={{ zIndex: "10", flexDirection: "row-reverse", marginTop: "-25px" }}>
           {dowloadOptions && dowloadOptions.length > 0 && (
             <MultiLink
               className="multilinkWrapper employee-mulitlink-main-div"
@@ -279,7 +279,7 @@ const ApplicationDetails = () => {
         </div>
       </div>
       {(isRefundInProgress || refundStatus || isRefunded) && (
-        <div style={{ padding: "10px 16px", borderRadius: "4px", marginBottom: "16px", fontWeight: "bold", fontSize: "16px", ...refundBannerStyle }}>
+        <div className="rounded-sm mb-md font-bold text-md" style={{ padding: "10px 16px", ...refundBannerStyle }}>
           {t("CHB_REFUND_STATUS") || "Refund Status"} &mdash; {refundStatus || (isRefunded ? "REFUNDED" : "")}
         </div>
       )}

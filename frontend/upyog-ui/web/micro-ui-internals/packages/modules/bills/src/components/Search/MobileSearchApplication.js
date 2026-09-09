@@ -173,10 +173,7 @@ const MobileSearchApplication = ({ Controller, register, control, t, reset, prev
                   <Link>
                     <a
                       href="javascript:void(0)"
-                      style={{
-                        color: "#FE7A51",
-                        cursor: "pointer",
-                      }}
+                      className="text-primary-light cursor-pointer"
                       onClick={(value) => {
                         printRecieptMobile(original?.["businessService"], original?.["consumerCode"]);
                       }}

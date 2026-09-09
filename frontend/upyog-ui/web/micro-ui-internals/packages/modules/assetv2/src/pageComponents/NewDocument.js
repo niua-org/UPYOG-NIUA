@@ -172,21 +172,14 @@ citizen/select-language
   }, [uploadedFile, selectedDocument, latitude, longitude, setDocuments]);
 
   return (
-    <div style={{ marginBottom: "24px" }}>
+    <div className="mb-lg">
      {doc?.hasDropdown && (
   <LabelFieldPair>
     {doc?.code === "OWNER.ASSETPHOTO" ? (
       <div>
         {`${t(doc.code.replaceAll(".", "_"))}`} <span style={{ color: "red" }}>*</span>
         <div
-          className="tooltip"
-          style={{
-            width: "12px",
-            height: "5px",
-            marginLeft: "10px",
-            display: "inline-flex",
-            alignItems: "center",
-          }}
+          className="tooltip items-center" style={{ width: "12px", height: "5px", marginLeft: "10px", display: "inline-flex" }}
         >
           <InfoBannerIcon />
           <span
@@ -222,7 +215,7 @@ citizen/select-language
             }}
             id={id}
             message={isUploading ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="flex items-center" style={{ gap: '8px' }}>
                 <LoadingSpinner />
                 <span>Uploading...</span>
               </div>
@@ -236,7 +229,7 @@ citizen/select-language
         </div>
       </LabelFieldPair>
       {doc?.code === "OWNER.ASSETPHOTO" && latitude && longitude && (
-        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+        <div className="text-center" style={{ marginTop: '10px' }}>
           <p><strong>{t("Location Details")}:</strong></p>
           <p>{t("Latitude")}: {latitude}</p>
           <p>{t("Longitude")}: {longitude}</p>

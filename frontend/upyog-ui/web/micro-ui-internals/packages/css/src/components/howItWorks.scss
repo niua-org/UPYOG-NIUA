@@ -1,6 +1,6 @@
 .how-it-works-page{
     width: 92%;
-    margin: 16px;
+    margin: var(--spacing-md);
     .how-it-works-page-header{
         margin-bottom: 15px;
     }
@@ -24,12 +24,12 @@
     padding: 5px;
     overflow-wrap: break-word;
     h2{
-        font-size: 16px;
-        font-weight: 400;
+        font-size: var(--font-size-md);
+        font-weight: var(--weight-regular);
     }
     p{
-        font-size: 12px;
-        font-weight: 400;
+        font-size: var(--font-size-xs);
+        font-weight: var(--weight-regular);
     }
 }
 
@@ -47,12 +47,12 @@
             padding: 5px;
             overflow-wrap: break-word;
             h2{
-                font-size: 16px;
-                font-weight: 400;
+                font-size: var(--font-size-md);
+                font-weight: var(--weight-regular);
             }
             p{
-                font-size: 12px;
-                font-weight: 400;
+                font-size: var(--font-size-xs);
+                font-weight: var(--weight-regular);
             }
         }
     }

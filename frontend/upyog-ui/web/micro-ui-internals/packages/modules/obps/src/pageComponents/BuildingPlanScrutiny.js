@@ -235,7 +235,7 @@ const getDetailsRow = (estimateDetails) => {
       
       isDisabled={!isPlanApproved?.code || !landStatus?.code || !projectComponent?.code || error || !estimateResponse?.data?.Calculations}
     >
-      <div style={{ marginTop: "10px", display: "flex", justifyContent: "space-between" }}>
+      <div className="flex justify-between" style={{ marginTop: "10px" }}>
         <div style={{ flex: 1 }}>
           <CardLabel>{t("PREAPPROVE_LAYOUT_TYPE_HEADER")}<span className="check-page-link-button"> *</span></CardLabel>
           <Dropdown t={t} optionKey="key" isMandatory={true} option={planArrpovedOptione} selected={isPlanApproved} select={setIsPlanApproved}/>
@@ -251,9 +251,9 @@ const getDetailsRow = (estimateDetails) => {
           {error === "" && (
             <React.Fragment>
               <CardLabel>{t("PREAPPROVE_LENGHT_OF_PLOT")}<span className="check-page-link-button"> *</span></CardLabel>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px', marginTop: '10px' }}>
+              <div className="flex justify-between" style={{ gap: '6px', marginTop: '10px' }}>
                 <div style={{ flex: 1 }}>
-                  <CardLabel style={{fontSize:"18px"}}>{t("FEET")}
+                  <CardLabel className="text-lg">{t("FEET")}
                     <TextInput
                       t={t}
                       // type="number"
@@ -266,7 +266,7 @@ const getDetailsRow = (estimateDetails) => {
                   </CardLabel>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <CardLabel style={{fontSize:"18px"}}>{t("INCHES")}
+                  <CardLabel className="text-lg">{t("INCHES")}
                     <TextInput
                       t={t}
                       // type="number"
@@ -282,9 +282,9 @@ const getDetailsRow = (estimateDetails) => {
               </div>
   
               <CardLabel>{t("PREAPPROVE_PLOT_WITH_IN_FT")}<span className="check-page-link-button"> *</span></CardLabel>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '6px', marginTop: '10px' }}>
+              <div className="flex justify-between" style={{ gap: '6px', marginTop: '10px' }}>
                 <div style={{ flex: 1 }}>
-                  <CardLabel style={{fontSize:"18px"}}>{t("FEET")}
+                  <CardLabel className="text-lg">{t("FEET")}
                     <TextInput
                       t={t}
                       // type="number"
@@ -297,7 +297,7 @@ const getDetailsRow = (estimateDetails) => {
                   </CardLabel>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <CardLabel style={{fontSize:"18px"}}>{t("INCHES")}
+                  <CardLabel className="text-lg">{t("INCHES")}
                     <TextInput
                       t={t}
                       // type="number"
@@ -341,24 +341,24 @@ const getDetailsRow = (estimateDetails) => {
           {selectedPlot && selectedPlot?.documents?.length > 0 ? (
             <div>
             <Header>{t("PLAN_DRAWING_IMAGES")}</Header>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-                <span style={{ fontWeight: "bold", marginRight: "10rem"}}>{t("BPA_UPLOADED_PDF_DIAGRAM")}</span>
+              <div className="flex items-center" style={{ marginBottom: "1rem" }}>
+                <span className="font-bold" style={{ marginRight: "10rem" }}>{t("BPA_UPLOADED_PDF_DIAGRAM")}</span>
                 <ActionButton
                   label={t(selectedPlot?.documents.find(doc => doc?.additionalDetails?.fileName.includes("pdf"))?.additionalDetails?.fileName)}
                   jumpTo={selectedPlot?.documents.find(doc => doc?.additionalDetails?.fileName.includes("pdf"))?.additionalDetails?.fileUrl}
                 />
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-                <span style={{ fontWeight: "bold", marginRight: "10.2rem" }}>{t("BPA_UPLOADED_CAD_DIAGRAM")}</span>
+              <div className="flex items-center" style={{ marginBottom: "1rem" }}>
+                <span className="font-bold" style={{ marginRight: "10.2rem" }}>{t("BPA_UPLOADED_CAD_DIAGRAM")}</span>
                 <ActionButton
                   label={t(selectedPlot?.documents.find(doc => doc?.additionalDetails?.fileName.includes("dxf"))?.additionalDetails?.fileName)}
                   jumpTo={selectedPlot?.documents.find(doc => doc?.additionalDetails?.fileName.includes("dxf"))?.additionalDetails?.fileUrl}
                 />
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-                <span style={{ fontWeight: "bold", marginRight: "9rem" }}>{t("BPA_UPLOADED_IMAGE_DIAGRAM")}</span>
+              <div className="flex items-center" style={{ marginBottom: "1rem" }}>
+                <span className="font-bold" style={{ marginRight: "9rem" }}>{t("BPA_UPLOADED_IMAGE_DIAGRAM")}</span>
                 <ActionButton
                   label={t(selectedPlot?.documents.find(doc => doc?.additionalDetails?.fileName.includes("jpg"))?.additionalDetails?.fileName)}
                   jumpTo={selectedPlot?.documents.find(doc => doc?.additionalDetails?.fileName.includes("jpg"))?.additionalDetails?.fileUrl}
@@ -369,11 +369,11 @@ const getDetailsRow = (estimateDetails) => {
           
         </div>
         
-        <div style={{ marginLeft: "20px", display: "flex", flexDirection: "column", alignItems: "flex-end", marginTop: "40px" }}>
+        <div className="flex items-end" style={{ marginLeft: "20px", flexDirection: "column", marginTop: "40px" }}>
           <img
             src={plotImage}
             alt="Description"
-            style={{ width: "300px", height: "auto", borderRadius: "8px" }}
+            className="rounded-md" style={{ width: "300px", height: "auto" }}
           />
         </div>
       </div>

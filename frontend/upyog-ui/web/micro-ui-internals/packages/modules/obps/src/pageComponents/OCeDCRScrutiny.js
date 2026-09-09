@@ -174,7 +174,7 @@ const OCeDCRScrutiny = ({ t, config, onSelect, userType, formData, ownerIndex = 
                         />
                     </StatusTable>
                     <hr style={{color:"#cccccc",backgroundColor:"#cccccc",height:"2px",marginTop:"20px",marginBottom:"20px"}}/>
-                    <h1 style={{ fontSize: "18px", lineHeight: "21px", fontWeight: "700", padding: "0px 0px 16px 0px" }}>{`${t("BPA_PERMIT_EDCR_DETAILS_LABEL")}`}</h1>
+                    <h1 className="text-lg font-bold" style={{ lineHeight: "21px", padding: "0px 0px 16px 0px" }}>{`${t("BPA_PERMIT_EDCR_DETAILS_LABEL")}`}</h1>
                     <StatusTable>
                         <Row
                             label={`${t("BPA_EDCR_NO_LABEL")}`}
@@ -182,22 +182,22 @@ const OCeDCRScrutiny = ({ t, config, onSelect, userType, formData, ownerIndex = 
                             className="border-none"
                         />
                     </StatusTable>
-                    <h1 style={{ fontSize: "18px", lineHeight: "21px", fontWeight: "700", padding: "0px 0px 16px 0px" }}>{`${t("BPA_UPLOADED_PLAN_DIAGRAM_LABEL")}`}</h1>
+                    <h1 className="text-lg font-bold" style={{ lineHeight: "21px", padding: "0px 0px 16px 0px" }}>{`${t("BPA_UPLOADED_PLAN_DIAGRAM_LABEL")}`}</h1>
                     <a target="_" href={permitEdcrData?.updatedDxfFile} style={{ minWidth: "160px", marginRight: "20px" }} key={permitEdcrData?.updatedDxfFile}>
                         {/**TODO : refactor it to send height,weight as part of styles object instead of passing seperately */}
                         <PDFSvg />
-                        <p style={{ marginTop: "8px", fontSize: "14px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t("BPA_UPLOADED_PLAN_DXF")}</p>
+                        <p className="mt-sm text-sm text-text-secondary font-regular" style={{ lineHeight: "19px" }}>{t("BPA_UPLOADED_PLAN_DXF")}</p>
                     </a>
-                    <h1 style={{ fontSize: "18px", lineHeight: "21px", fontWeight: "700", padding: "0px 0px 16px 0px" }}>{`${t("BPA_SCRUTINY_REPORT_OUTPUT_LABEL")}`}</h1>
+                    <h1 className="text-lg font-bold" style={{ lineHeight: "21px", padding: "0px 0px 16px 0px" }}>{`${t("BPA_SCRUTINY_REPORT_OUTPUT_LABEL")}`}</h1>
                     <a target="_" href={permitEdcrData?.planReport} style={{ minWidth: "160px", marginRight: "20px" }} key={permitEdcrData?.planReport}>
                         {/**TODO : refactor it to send height,weight as part of styles object instead of passing seperately */}
                         <PDFSvg />
-                        <p style={{ marginTop: "8px", fontSize: "14px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t("BPA_SCRUTINY_REPORT_PDF")}</p>
+                        <p className="mt-sm text-sm text-text-secondary font-regular" style={{ lineHeight: "19px" }}>{t("BPA_SCRUTINY_REPORT_PDF")}</p>
                     </a>
                     <div onClick={routeToNextPage}>
                         <SubmitBar label={t("BPA_PROCEED_OC_SCRUTINY_LABEL")} />
                     </div>
-                    {/* <div style={{ disabled: "true", height: "30px", width: "100%", fontSize: "14px" }}></div> */}
+                    {/* <div className="text-sm" style={{ disabled: "true", height: "30px", width: "100%" }}></div> */}
                 </FormStep> : null
             }
         </div>

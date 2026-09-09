@@ -141,9 +141,9 @@ const ComplaintDetailsPage = (props) => {
   return (
     <React.Fragment>
       <div className="complaint-summary">
-        <div style={{display:"flex",justifyContent:"space-between",maxWidth:"960px"}}>
+        <div className="flex justify-between" style={{ maxWidth:"960px" }}>
         <Header>{t(`${LOCALIZATION_KEY.CS_HEADER}_COMPLAINT_SUMMARY`)}</Header>
-        <div style={{ color:"#A52A2A"}}>
+        <div className="text-primary-main">
         <LinkButton label={t("VIEW_TIMELINE")}  onClick={handleViewTimeline} ></LinkButton>
         </div>
         </div>

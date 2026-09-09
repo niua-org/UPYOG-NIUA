@@ -41,7 +41,7 @@ export const ApplicationCard = ({ data, onFilterChange, onSearch, serviceRequest
         {t("CS_MYCOMPLAINTS_NO_COMPLAINTS_EMPLOYEE")
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}
@@ -55,7 +55,7 @@ export const ApplicationCard = ({ data, onFilterChange, onSearch, serviceRequest
         {t("CS_COMMON_ERROR_LOADING_RESULTS")
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}

@@ -198,7 +198,7 @@ function GCSelectDocument({
     }, [file]);
 
     return (
-        <div style={{ marginBottom: "24px" }}>
+        <div className="mb-lg">
             {doc?.hasDropdown ? (
                 <LabelFieldPair>
                     <CardLabel className="card-label-smaller">{t("GC_" + (doc?.code.replaceAll(".", "_")))} {doc?.required ? <span className="check-page-link-button">*</span> : null}</CardLabel>
@@ -228,7 +228,7 @@ function GCSelectDocument({
                         }}
                         id={id}
                         message={isUploading ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="flex items-center" style={{ gap: '8px' }}>
                                 <LoadingSpinner />
                                 <span>Uploading...</span>
                             </div>

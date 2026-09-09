@@ -98,7 +98,7 @@ const HowItWorks = ({module}) => {
         </div>
 
     ))}
-    <div className="WhatsNewCard" style={{ position: "relative", width: "100%", marginBottom: 10, display: "inline-block"}}>
+    <div className="WhatsNewCard inline-block" style={{ position: "relative", width: "100%", marginBottom: 10 }}>
       <div className="how-it-works-pdf-section">
         <div className="pdf-icon-header-desc">
         <div className="pdf-icon">

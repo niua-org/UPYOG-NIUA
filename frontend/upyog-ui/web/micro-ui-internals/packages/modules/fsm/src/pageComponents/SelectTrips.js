@@ -195,7 +195,7 @@ const SelectTrips = ({ t, config, onSelect, formData = {}, userType, styles, FSM
           </div>
         </LabelFieldPair>
       ))}
-      {billError ? <CardLabelError style={{ width: "100%", textAlign: "center" }}>{t("ES_APPLICATION_BILL_SLAB_ERROR")}</CardLabelError> : null}
+      {billError ? <CardLabelError className="text-center" style={{ width: "100%" }}>{t("ES_APPLICATION_BILL_SLAB_ERROR")}</CardLabelError> : null}
     </div>
   );
 };

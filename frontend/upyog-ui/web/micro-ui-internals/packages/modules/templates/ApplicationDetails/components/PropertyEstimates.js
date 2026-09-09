@@ -19,8 +19,8 @@ function PropertyEstimates({ taxHeadEstimatesCalculation }) {
               text={`₹ ${estimate.estimateAmount}` || "N/A"}
               last={index === taxHeadEstimates?.length - 1}
               className="border-none"
-              textStyle={{ color: "#505A5F" }}
-              labelStyle={{ color: "#505A5F" }}
+              textStyle={{ color: "var(--text-secondary)" }}
+              labelStyle={{ color: "var(--text-secondary)" }}
             />
           );
         })}

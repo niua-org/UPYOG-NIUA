@@ -44,11 +44,11 @@ export const NocMyApplications = () => {
               <NocApplication application={application} tenantId={user?.permanentCity} />
             </div>
           ))}
-        {!applicationsList?.length > 0 && <p style={{ marginLeft: "16px", marginTop: "16px" }}>{t("NOC_NO_APPLICATION_FOUND_MSG", "No applications found.")}</p>}
+        {!applicationsList?.length > 0 && <p className="mt-md" style={{ marginLeft: "16px" }}>{t("NOC_NO_APPLICATION_FOUND_MSG", "No applications found.")}</p>}
 
         {applicationsList?.length !== 0 && applicationsList?.length >= 10 && (
           <div>
-            <p style={{ marginLeft: "16px", marginTop: "16px" }}>
+            <p className="mt-md" style={{ marginLeft: "16px" }}>
               <span className="link">
                 <Link to={`/upyog-ui/citizen/firenoc/my-applications/${t1}`}>{t("NOC_LOAD_MORE_MSG", "Load More")}</Link>
               </span>

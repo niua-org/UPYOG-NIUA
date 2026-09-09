@@ -169,7 +169,7 @@ const CHBAddressDetails = ({ t, config, onSelect, userType, formData, value = fo
       {window.location.href.includes("/citizen") ? <Timeline currentStep={3} /> : <Timeline currentStep={3} />}
       <Card>
         <CardSubHeader>
-        <div style={{display:"flex", justifyContent: "space-between", width: "100%" }}>
+        <div className="flex justify-between" style={{ width: "100%" }}>
           {value?.bookingSlotDetails && value.bookingSlotDetails.length > 0
             ? formatSlotDetails(value.bookingSlotDetails)
             : null}

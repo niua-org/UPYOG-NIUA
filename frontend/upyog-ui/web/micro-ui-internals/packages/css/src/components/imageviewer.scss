@@ -3,7 +3,7 @@
 
   svg {
     top: 90px;
-    right: 16px;
+    right: var(--spacing-md);
     @apply absolute h-6 w-6;
   }
 
@@ -19,7 +19,7 @@
 
     svg {
       top: 90px;
-      right: 16px;
+      right: var(--spacing-md);
       @apply absolute h-6 w-6;
     }
 

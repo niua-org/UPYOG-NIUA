@@ -16,7 +16,7 @@ const Backsvg = ({ onClick }) => (
     >
       <path
         d="M16 7H3.83L9.42 1.41L8 0L0 8L8 16L9.41 14.59L3.83 9H16V7Z"
-        fill="#0B0C0C"
+        fill="var(--text-primary)"
       />
     </svg>
   );
@@ -116,7 +116,7 @@ const MapDrillChart = ({
               <span
                 className={"tab-rows"}
                 style={{
-                  background: i % 2 == 0 ? "none" : "#EEEEEE",
+                  background: i % 2 == 0 ? "none" : "var(--grey-mid)",
                 }}
               >
                 <span>{t(`DSS_${dat.plots[1].label}`)}</span>

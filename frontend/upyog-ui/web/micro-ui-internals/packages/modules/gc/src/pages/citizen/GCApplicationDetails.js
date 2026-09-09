@@ -84,7 +84,7 @@ const GCApplicationDetails = () => {
 
   const CloseBtn = (props) => {
     return (
-      <div onClick={props.onClick} style={{ cursor: "pointer", padding: "5px" }}>
+      <div onClick={props.onClick} className="cursor-pointer" style={{ padding: "5px" }}>
         <CloseSvg />
       </div>
     );
@@ -275,7 +275,7 @@ const GCApplicationDetails = () => {
 
         <Card>
           {/* Application Summary */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_APPLICATION_SUMMARY")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("GC_APPLICATION_SUMMARY")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("GC_APPLICATION_NUMBER_LABEL")} text={appNo || t("CS_NA")} />
             <Row
@@ -287,7 +287,7 @@ const GCApplicationDetails = () => {
           </StatusTable>
 
           {/* Applicant Details */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("ES_APPLICANT_DETAILS")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("ES_APPLICANT_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("GC_APPLICANT_NAME")} text={ownerNames || t("CS_NA")} />
             <Row className="border-none" label={t("GC_MOBILE_NUMBER")} text={mobileNumbers || t("CS_NA")} />
@@ -296,7 +296,7 @@ const GCApplicationDetails = () => {
           </StatusTable>
 
           {/* Property Location */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_PROPERTY_LOCATION_DETAILS")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("GC_PROPERTY_LOCATION_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("GC_PROPERTY_ID")} text={propertyId || t("CS_NA")} />
             <Row className="border-none" label={t("GC_PINCODE")} text={pincode || t("CS_NA")} />
@@ -311,7 +311,7 @@ const GCApplicationDetails = () => {
           </StatusTable>
 
           {/* Garbage Specifications */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_GARBAGE_SPECIFICATIONS")}</CardSubHeader>
+          <CardSubHeader className="text-2xl">{t("GC_GARBAGE_SPECIFICATIONS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("GC_OLD_GARBAGE_ID")} text={oldGarbageId || t("CS_NA")} />
             <Row className="border-none" label={t("GC_TYPE_OF_COLLECTION")} text={typeOfCollection ? t(typeOfCollection) : t("CS_NA")} />
@@ -333,7 +333,7 @@ const GCApplicationDetails = () => {
           {/* Documents */}
           {docs.length > 0 && (
             <>
-              <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_GARBAGE_DOCUMENTS")}</CardSubHeader>
+              <CardSubHeader className="text-2xl">{t("GC_GARBAGE_DOCUMENTS")}</CardSubHeader>
               <StatusTable>
                 <Card className="chb-doc-card">
                   {docs.map((doc, index) => (

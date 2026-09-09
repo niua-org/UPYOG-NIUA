@@ -159,7 +159,7 @@ export const styles = {
   cardLabelStyle: {
     fontSize: "18px",
     fontWeight: "600",
-    color: "#505A5F",
+    color: "var(--text-secondary)",
     marginBottom: "8px",
     display: "inline-block"
   },

@@ -233,9 +233,9 @@ function ApplicationDetailsContent({
 
   const getRowStyles = () => {
     if (window.location.href.includes("employee/obps") || window.location.href.includes("employee/noc")) {
-      return { justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "#0B0C0C" };
+      return { justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "var(--text-primary)" };
     } else if (checkLocation) {
-      return { justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "#0B0C0C" };
+      return { justifyContent: "space-between", fontSize: "16px", lineHeight: "19px", color: "var(--text-primary)" };
     } else {
       return {};
     }
@@ -351,7 +351,7 @@ function ApplicationDetailsContent({
         <React.Fragment key={detail.title || index}>
           <div style={getMainDivStyles()}>
             {index === 0 && !detail.asSectionHeader ? (
-              <CardSubHeader style={{ marginBottom: "16px", fontSize: "24px" }}>{t(detail.title)}</CardSubHeader>
+              <CardSubHeader className="mb-md text-2xl">{t(detail.title)}</CardSubHeader>
             ) : (
               <React.Fragment>
                 <CardSectionHeader
@@ -373,7 +373,7 @@ function ApplicationDetailsContent({
               <table
                 style={{ tableLayout: "fixed", width: "100%", borderCollapse: "collapse", border: "1px solid black" }}
               >
-                <tr style={{ textAlign: "left" }}>
+                <tr className="text-left">
                   {detail?.headers.map((header) => (
                     <th style={{ padding: "10px", paddingLeft: "5px", border: "1px solid black" }}>{t(header)}</th>
                   ))}
@@ -384,7 +384,7 @@ function ApplicationDetailsContent({
                   //   return <>
                   //     <hr style={{ width: "1200px", marginTop: "15px" }} className="underline" />
                   //     <tr>
-                  //       {row.map(element => <td style={{ textAlign: "left" }}>{t(element)}</td>)}
+                  //       {row.map(element => <td className="text-left">{t(element)}</td>)}
                   //     </tr>
                   //   </>
                   // }
@@ -392,8 +392,8 @@ function ApplicationDetailsContent({
                     <tr>
                       {row.map((element, idx) =>
                         Array.isArray(element) && element.length > 1 && detail.isMaintenance === true ? (
-                          <td style={{ paddingTop: "20px", textAlign: "left", border: "1px solid black", verticalAlign: "middle" }} key={idx}>
-                            <div style={{ display: "flex", flexWrap: "nowrap", gap: "5px" }}>
+                          <td className="text-left" style={{ paddingTop: "20px", border: "1px solid black", verticalAlign: "middle" }} key={idx}>
+                            <div className="flex" style={{ flexWrap: "nowrap", gap: "5px" }}>
                               {element.map((file, fileIndex) => (
                                 <a
                                   key={fileIndex} // Ensure each <a> tag has a unique key
@@ -407,9 +407,9 @@ function ApplicationDetailsContent({
                             </div>
                           </td>
                         ) : (
-                          <td key={idx} style={{ paddingTop: "20px", textAlign: "left", border: "1px solid black", verticalAlign: "middle" }}>
+                          <td key={idx} className="text-left" style={{ paddingTop: "20px", border: "1px solid black", verticalAlign: "middle" }}>
                             {element && element.editButton === true ? (
-                              <span style={{ display: "inline-flex", gap: "10px", alignItems: "center" }}>
+                              <span className="items-center" style={{ display: "inline-flex", gap: "10px" }}>
                                 <Link
                                   to={{
                                     pathname: `/upyog-ui/employee/asset/assetservice/maintenance-edit/${applicationNo}`,
@@ -478,21 +478,13 @@ function ApplicationDetailsContent({
                         key={t(value.title)}
                         label={t(value.title)}
                         text={
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div className="flex items-center" style={{ gap: "8px" }}>
                             {/* Show the original value */}
                             <span>{getTextValue(value)}</span>
                             {isAssetModule && (
                               applicationDetailsofAsset?.applicationData?.applicationData?.additionalDetails?.geometry ? (
                                 <button
-                                  style={{
-                                    backgroundColor: "#a82227",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    padding: "4px 10px",
-                                    cursor: "pointer",
-                                    fontSize: "0.85rem",
-                                  }}
+                                  className="bg-primary-main rounded-sm cursor-pointer" style={{ color: "white", border: "none", padding: "4px 10px", fontSize: "0.85rem" }}
                                   onClick={() =>
                                     handleOpenMap(applicationDetailsofAsset?.applicationData?.applicationData?.additionalDetails?.geometry)
                                   }
@@ -501,15 +493,7 @@ function ApplicationDetailsContent({
                                 </button>
                               ) : (
                                 <button
-                                  style={{
-                                    backgroundColor: "#a82227",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    padding: "4px 10px",
-                                    cursor: "pointer",
-                                    fontSize: "0.85rem",
-                                  }}
+                                  className="bg-primary-main rounded-sm cursor-pointer" style={{ color: "white", border: "none", padding: "4px 10px", fontSize: "0.85rem" }}
                                   onClick={() => setShowMap(true)}
                                 >
                                   {t("Mark on Map")}
@@ -543,7 +527,7 @@ function ApplicationDetailsContent({
                           window.location.href.includes("tl") || window.location.href.includes("ws") ? (
                             <div style={{ width: "200%" }}>
                               <Link to={value?.to}>
-                                <span className="link" style={{ color: "#a82227" }}>
+                                <span className="link text-primary-main">
                                   {t(value?.title)}
                                 </span>
                               </Link>
@@ -557,7 +541,7 @@ function ApplicationDetailsContent({
                         text={
                           <div>
                             <Link to={value?.to}>
-                              <span className="link" style={{ color: "#a82227" }}>
+                              <span className="link text-primary-main">
                                 {value?.value}
                               </span>
                             </Link>
@@ -673,9 +657,9 @@ function ApplicationDetailsContent({
           {detail?.isWaterConnectionDetails && <WSAdditonalDetails wsAdditionalDetails={detail} oldValue={oldValue} />}
           {/* {detail?.isLabelShow ? <WSInfoLabel t={t} /> : null} */}
           {detail?.additionalDetails?.redirectUrl && (
-            <div style={{ fontSize: "16px", lineHeight: "24px", fontWeight: "400", padding: "10px 0px" }}>
+            <div className="text-md font-regular" style={{ lineHeight: "24px", padding: "10px 0px" }}>
               <Link to={detail?.additionalDetails?.redirectUrl?.url}>
-                <span className="link" style={{ color: "#a82227" }}>
+                <span className="link text-primary-main">
                   {detail?.additionalDetails?.redirectUrl?.title}
                 </span>
               </Link>
@@ -692,7 +676,7 @@ function ApplicationDetailsContent({
           {!workflowDetails?.isLoading && !isDataLoading && (
             <Fragment>
               <div id="timeline">
-                <CardSectionHeader style={{ marginBottom: "16px", marginTop: "32px" }}>
+                <CardSectionHeader className="mb-md mt-xl">
                   {t("ES_APPLICATION_DETAILS_APPLICATION_TIMELINE")}
                 </CardSectionHeader>
                 {workflowDetails?.data?.timeline && workflowDetails?.data?.timeline?.length === 1 ? (

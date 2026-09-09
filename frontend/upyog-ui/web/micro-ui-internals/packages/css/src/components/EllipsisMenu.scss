@@ -10,7 +10,7 @@
                 @apply bg-grey-mid cursor-pointer;
             }
             svg {
-              margin-right: 10px;
+              margin-right: var(--spacing-sm);
             }
         }
     }

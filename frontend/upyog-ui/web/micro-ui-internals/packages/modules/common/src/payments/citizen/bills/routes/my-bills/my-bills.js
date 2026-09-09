@@ -77,7 +77,7 @@ export const BillList = ({ billsList, currentPath, businessService }) => {
               paddingTop: "16px",
               // position: "fixed",
               // bottom: "40px",
-              // backgroundColor: "#e3e3e3",
+              // backgroundColor: "var(--grey-bg)",
               // textAlign: "left",
               // width: "100%",
             }}

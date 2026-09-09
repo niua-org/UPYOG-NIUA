@@ -140,12 +140,7 @@ console.log("advance",advanceAmount,totalAmount,MinAmount)
         {formData?.address?.propertyLocation?.code ===
           "FROM_GRAM_PANCHAYAT" && (
           <CardLabelError
-            style={{
-              width: "100%",
-              marginTop: "-15px",
-              fontSize: "14px",
-              marginBottom: "0px",
-            }}
+            className="text-sm" style={{ width: "100%", marginTop: "-15px", marginBottom: "0px" }}
           >
             {t("FSM_TOTAL_AMOUNT_NOTE")}
           </CardLabelError>
@@ -172,12 +167,12 @@ console.log("advance",advanceAmount,totalAmount,MinAmount)
                     {...input.validation}
                   />
                   {currentValue > max && (
-                    <CardLabelError style={{ width: "100%", marginTop: "-15px", fontSize: "14px", marginBottom: "0px" }}>
+                    <CardLabelError className="text-sm" style={{ width: "100%", marginTop: "-15px", marginBottom: "0px" }}>
                       {t("FSM_ADVANCE_AMOUNT_MAX")}
                     </CardLabelError>
                   )}
                   {currentValue < min && (
-                    <CardLabelError style={{ width: "100%", marginTop: "-15px", fontSize: "14px", marginBottom: "0px" }}>
+                    <CardLabelError className="text-sm" style={{ width: "100%", marginTop: "-15px", marginBottom: "0px" }}>
                       {t("FSM_ADVANCE_AMOUNT_MIN")}
                     </CardLabelError>
                   )}

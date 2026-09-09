@@ -102,7 +102,7 @@ const DesktopInbox = ({ tableConfig, filterComponent, ...props }) => {
         {t("COMMON_TABLE_NO_RECORD_FOUND")
           .split("\\n")
           .map((text, index) => (
-            <p key={index} style={{ textAlign: "center" }}>
+            <p key={index} className="text-center">
               {text}
             </p>
           ))}

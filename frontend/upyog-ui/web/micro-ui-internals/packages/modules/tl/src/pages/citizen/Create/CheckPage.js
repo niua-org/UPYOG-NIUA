@@ -176,9 +176,9 @@ const WrapCheckPage = ({
               <Row className="border-none" label={t("TL_CHECK_ADDRESS")} text={`${address?.doorNo?.trim() ? `${address?.doorNo?.trim()}, ` : ""} ${address?.street?.trim() ? `${address?.street?.trim()}, ` : ""}${t(address?.locality?.i18nkey)}, ${t(address?.city.code)} ${address?.pincode?.trim() ? `,${address?.pincode?.trim()}` : ""}`} />
             </React.Fragment>}
         </StatusTable>
-        {/* <div style={{ textAlign: "left" }}>
+        {/* <div className="text-left">
           <Link to={`/upyog-ui/citizen/commonpt/view-property?propertyId=${cpt?.details?.propertyId || cptId?.id || value?.tradeLicenseDetail?.additionalDetail?.propertyId}&tenantId=${cpt?.details?.tenantId || value?.tenantId}`}>
-            <LinkButton style={{ textAlign: "left" }} label={t("TL_VIEW_PROPERTY")} />
+            <LinkButton className="text-left" label={t("TL_VIEW_PROPERTY")} />
           </Link>
          </div> */}
       </Card>}

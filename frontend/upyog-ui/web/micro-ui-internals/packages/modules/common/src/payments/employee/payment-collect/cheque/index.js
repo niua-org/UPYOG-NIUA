@@ -112,7 +112,7 @@ export const ChequeDetailsComponent = (props) => {
               </div>
             </div>
           </div>
-          {ifscCodeError && <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>{ifscCodeError}</CardLabelError>}
+          {ifscCodeError && <CardLabelError className="text-xs" style={{ width: "70%", marginLeft: "30%", marginTop: "-21px" }}>{ifscCodeError}</CardLabelError>}
           <div className="label-field-pair">
             <h2 className="card-label">{t("PAYMENT_BANK_NAME_LABEL")}</h2>
             <div className="field">

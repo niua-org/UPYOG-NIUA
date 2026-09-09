@@ -1,6 +1,6 @@
 .roundedLabel {
-  width: 24px;
-  height: 24px;
+  width: var(--spacing-lg);
+  height: var(--spacing-lg);
   border-radius: 15px;
   position: absolute;
   z-index: 100;

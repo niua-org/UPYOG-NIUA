@@ -68,34 +68,16 @@ const ProductList = ({ t, prlistName, setPrlistName, prlistQuantity, setPrlistQu
       Header: t("PRODUCT_QUANTITY"),
       accessor: "quantity",
       Cell: ({ row }) => (
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="flex items-center">
           <button
-            style={{
-              marginRight: "5px",
-              borderRadius: "50%",
-              paddingLeft: "11px",
-              paddingRight: "11px",
-              background: "#a82227",
-              cursor: "pointer",
-              fontSize: "18px",
-              color: "white",
-            }}
+            className="bg-primary-main cursor-pointer text-lg" style={{ marginRight: "5px", borderRadius: "50%", paddingLeft: "11px", paddingRight: "11px", color: "white" }}
             onClick={() => handleDecrement(row.index)}
           >
             -
           </button>
           {row.original.quantity}
           <button
-            style={{
-              marginLeft: "5px",
-              borderRadius: "50%",
-              paddingLeft: "9px",
-              paddingRight: "9px",
-              background: "#a82227",
-              fontSize: "18px",
-              cursor: "pointer",
-              color: "white",
-            }}
+            className="bg-primary-main text-lg cursor-pointer" style={{ marginLeft: "5px", borderRadius: "50%", paddingLeft: "9px", paddingRight: "9px", color: "white" }}
             onClick={() => handleIncrement(row.index)}
           >
             +
@@ -110,7 +92,7 @@ const ProductList = ({ t, prlistName, setPrlistName, prlistQuantity, setPrlistQu
       accessor: "delete",
       Cell: ({ row }) => (
         <button onClick={() => handleDelete(row.index)}>
-          <DeleteIcon className="delete" fill="#a82227" style={{ cursor: "pointer", marginLeft: "20px" }} />
+          <DeleteIcon className="delete cursor-pointer" fill="var(--primary-main)" style={{ marginLeft: "20px" }} />
         </button>
       ),
     },

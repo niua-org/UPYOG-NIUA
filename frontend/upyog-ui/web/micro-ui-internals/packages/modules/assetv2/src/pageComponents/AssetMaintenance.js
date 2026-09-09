@@ -289,10 +289,7 @@ const OwnerForm = (_props) => {
     const Tooltip = ({ message, children }) => {
         return (
             <div
-                style={{
-                    position: "relative",
-                    display: "inline-block",
-                }}
+                className="inline-block" style={{ position: "relative" }}
                 onMouseEnter={(e) => {
                     const tooltip = e.currentTarget.querySelector(".tooltiptext");
                     tooltip.style.visibility = "visible";
@@ -305,28 +302,7 @@ const OwnerForm = (_props) => {
                 }}
             >
                 {children}
-                <span
-                    style={{
-                        visibility: "hidden",
-                        position: "absolute",
-                        backgroundColor: "#555",
-                        color: "#fff",
-                        textAlign: "center",
-                        borderRadius: "4px",
-                        padding: "5px",
-                        fontSize: "small",
-                        wordWrap: "break-word",
-                        width: "300px",
-                        top: "100%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        marginTop: "5px",
-                        zIndex: "1",
-                        opacity: 0,
-                        transition: "opacity 0.3s ease-in-out",
-                    }}
-                    className="tooltiptext"
-                >
+                <span className="tooltiptext">
                     {message}
                 </span>
             </div>
@@ -334,10 +310,10 @@ const OwnerForm = (_props) => {
     };
     return (
         <React.Fragment>
-            <div style={{ marginBottom: "16px" }}>
-                <div style={{ border: "1px solid #E3E3E3", padding: "16px", marginTop: "8px" }}>
+            <div className="mb-md">
+                <div className="p-md mt-sm border border-solid border-grey-bg">
                     {allAssets?.length > 2 ? (
-                        <div style={{ marginBottom: "16px", padding: "5px", cursor: "pointer", textAlign: "right" }}>
+                        <div className="mb-md cursor-pointer text-right" style={{ padding: "5px" }}>
                             X
                         </div>
                     ) : null}
@@ -472,10 +448,10 @@ const OwnerForm = (_props) => {
                         </div>
                     </LabelFieldPair>
                     <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                             {t("AST_MAINTENANCE_OPTIONS")} <span style={{ color: "red" }}>*</span>
                             <Tooltip className="tooltip-wrapper" message={t("TOOLTIP_AST_MAINTENANCE_OPTIONS")} style={{ maxWidth: "300px" }}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer", fontSize: "16px" }} />
+                                <InfoBannerIcon className="cursor-pointer text-md" style={{ verticalAlign: "middle" }} />
                             </Tooltip>
                         </CardLabel>
                         <div className="field">
@@ -630,10 +606,10 @@ const OwnerForm = (_props) => {
                         )}
 
                     <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                             {t("AST_MAINTENANCE_TYPE")} <span style={{ color: "red" }}>*</span>
                             {/* <Tooltip message={t("TOOLTIP_AST_MAINTENANCE_TYPE")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip> */}
                         </CardLabel>
                         <Controller
@@ -685,10 +661,10 @@ const OwnerForm = (_props) => {
                         </div>
                     </LabelFieldPair>
                     <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                             {t("AST_MAINTENANCE_CYCLE")} <span style={{ color: "red" }}>*</span>
                             <Tooltip message={t("TOOLTIP_AST_MAINTENANCE_CYCLE")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip>
                         </CardLabel>
 
@@ -719,10 +695,10 @@ const OwnerForm = (_props) => {
 
                     <CardLabelError style={errorStyle}>{localFormState.touched.maintenanceCycle ? errors?.maintenanceCycle?.message : ""}</CardLabelError>
                     <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                                 {t("AST_NEXT_MAINTENANCE_DATE")} <span style={{ color: "red" }}>*</span>
                             <Tooltip message={t("TOOLTIP_AST_NEXT_MAINTENANCE_DATE")}>
-                               <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                               <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip>
                         </CardLabel>
                         <div className="field">
@@ -753,10 +729,10 @@ const OwnerForm = (_props) => {
                         </div>
                     </LabelFieldPair>
                     <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                             {t("AST_PAYMENT_TYPE")} <span style={{ color: "red" }}>*</span>
                             <Tooltip message={t("TOOLTIP_AST_PAYMENT_TYPE")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip>
                         </CardLabel>
                         <Controller
@@ -780,10 +756,10 @@ const OwnerForm = (_props) => {
                     <CardLabelError style={errorStyle}>{localFormState.touched.paymentType ? errors?.paymentType?.message : ""}</CardLabelError>
 
                     {/* <LabelFieldPair>
-                        <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                             {t("AST_COST_MAINTENANCE_OVERHEAD")}
                             <Tooltip message={t("TOOLTIP_AST_COST_MAINTENANCE_OVERHEAD")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip>
                         </CardLabel>
                         <div className="field">
@@ -990,7 +966,7 @@ const OwnerForm = (_props) => {
                         </div>
                     </LabelFieldPair>
                     <CardLabelError style={errorStyle}>{localFormState.touched.preConditionRemarks ? errors?.assignedUser?.preConditionRemarks : ""}</CardLabelError>
-                    <div style={{ backgroundColor: "#f1f3f4", borderRadius: "8px", padding: "20px" }}>
+                    <div className="rounded-md" style={{ backgroundColor: "#f1f3f4", padding: "20px" }}>
 
 
                         <LabelFieldPair>
@@ -1047,10 +1023,10 @@ const OwnerForm = (_props) => {
                         </LabelFieldPair>
                         <CardLabelError style={errorStyle}>{localFormState.touched.postConditionRemarks ? errors?.assignedUser?.postConditionRemarks : ""}</CardLabelError>
                         <LabelFieldPair>
-                            <CardLabel className="card-label-smaller" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <CardLabel className="card-label-smaller flex items-center" style={{ gap: "8px" }}>
                                 {t("AST_IS_LIFE_OF__ASSET_AFFECTED")} <span style={{ color: "red" }}>*</span>
                                 {/* <Tooltip message={t("TOOLTIP_AST_IS_LIFE_OF__ASSET_AFFECTED")}>
-                                <InfoBannerIcon style={{ verticalAlign: "middle", cursor: "pointer" }} />
+                                <InfoBannerIcon className="cursor-pointer" style={{ verticalAlign: "middle" }} />
                             </Tooltip> */}
                             </CardLabel>
                             <div className="field">

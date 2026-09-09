@@ -122,19 +122,14 @@ import {
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "14px",
-                marginTop: "1rem"
-              }}
+              className="text-sm" style={{ width: "100%", borderCollapse: "collapse", marginTop: "1rem" }}
             >
               <thead>
                 <tr style={{ backgroundColor: "#f0f0f0" }}>
                   <th rowSpan={2} style={cellStyleLeft}>Installments</th>
-                  <th colSpan={3} style={{ ...cellStyleRight, textAlign: "center" }}>Demand</th>
-                  <th colSpan={3} style={{ ...cellStyleRight, textAlign: "center" }}>Collection</th>
-                  <th colSpan={3} style={{ ...cellStyleRight, textAlign: "center" }}>Balance</th>
+                  <th colSpan={3} className="text-center" style={{ ...cellStyleRight }}>Demand</th>
+                  <th colSpan={3} className="text-center" style={{ ...cellStyleRight }}>Collection</th>
+                  <th colSpan={3} className="text-center" style={{ ...cellStyleRight }}>Balance</th>
                 </tr>
                 <tr style={{ backgroundColor: "#f9f9f9" }}>
                   <th style={cellStyleRight}>Tax</th>
@@ -150,7 +145,7 @@ import {
               </thead>
               <tbody>
                 {getTableRows()}
-                <tr style={{ backgroundColor: "#efefef", fontWeight: "bold" }}>
+                <tr className="bg-grey-bg font-bold">
                   <td style={cellStyleLeft}>Total</td>
                   <td style={cellStyleRight}>{totals.demandTax.toFixed(2)}</td>
                   <td style={cellStyleRight}>{totals.demandInterest.toFixed(2)}</td>

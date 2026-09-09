@@ -9,7 +9,7 @@ const description = {
   description: "PT_SEARCH_OR_DESC",
   descriptionStyles: {
     fontWeight: "300",
-    color: "#505A5F",
+    color: "var(--text-secondary)",
     marginTop: "0px",
     textAlign: "center",
     marginBottom: "20px",
@@ -180,9 +180,9 @@ const SearchProperty = ({ config: propsConfig, onSelect, redirectToUrl }) => {
           label: "",
           labelChildren: (
             <div className="tooltip" /* style={{position:"relative"}} */>
-              <div style={{ display: "flex", /* alignItems: "center", */ gap: "0 4px" }}>
+              <div className="flex" style={{ /* alignItems: "center", */ gap: "0 4px" }}>
                 <h2>{t(property.label)}</h2>
-                <InfoBannerIcon fill="#0b0c0c" />
+                <InfoBannerIcon fill="var(--text-primary)" />
                 <span className="tooltiptext" style={{ position: "absolute", width: "72%", marginLeft: "50%", fontSize: "medium" }}>
                   {t(property.description) + " " + "PG-PT-xxxx-xxxxxx"}
                 </span>
@@ -525,7 +525,7 @@ const SearchProperty = ({ config: propsConfig, onSelect, redirectToUrl }) => {
   }
 
   return (
-    <div style={{ marginTop: "16px", marginBottom: "16px", backgroundColor: "white", maxWidth: "960px" }}>
+    <div className="mt-md mb-md bg-white" style={{ maxWidth: "960px" }}>
       <FormComposer
         onSubmit={onPropertySearch}
         noBoxShadow
@@ -538,7 +538,7 @@ const SearchProperty = ({ config: propsConfig, onSelect, redirectToUrl }) => {
         onFormValueChange={onFormValueChange}
         cardStyle={{ marginBottom: "0", maxWidth: "960px" }}
       ></FormComposer>
-      <div style={{ display: "flex" }}>
+      <div className="flex">
 
         {window.location.href.includes("/obps/bpa/") ? <span className="link" style={isMobile ? { display: "flex", justifyContent: "center", paddingBottom: "16px" } : { display: "flex", justifyContent: "left", paddingBottom: "16px", marginLeft: "45px" }}>
           <Link to={"/upyog-ui/citizen/obps/bpa/building_plan_scrutiny/new_construction/location"}>{t("CORE_COMMON_SKIP_CONTINUE")}</Link>

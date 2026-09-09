@@ -398,7 +398,7 @@ const BpaApplicationDetail = () => {
     return (
       <div>
         <span>{`${t("BPA_I_AGREE_THE_LABEL")} `}</span>
-        <span style={{color: "#a82227", cursor: "pointer"}} onClick={() => setShowTermsModal(!showTermsModal)}>{t(`BPA_TERMS_AND_CONDITIONS_LABEL`)}</span>
+        <span className="text-primary-main cursor-pointer" onClick={() => setShowTermsModal(!showTermsModal)}>{t(`BPA_TERMS_AND_CONDITIONS_LABEL`)}</span>
       </div>
     )
   }
@@ -433,7 +433,7 @@ const BpaApplicationDetail = () => {
           displayOptions={showOptions}
           options={dowloadOptions}
         />}
-        <LinkButton label={t("VIEW_TIMELINE")} style={{ color:"#A52A2A"}} onClick={handleViewTimeline}></LinkButton>
+        <LinkButton label={t("VIEW_TIMELINE")} className="text-primary-main" onClick={handleViewTimeline}></LinkButton>
         </div>
         
       </div>
@@ -443,15 +443,15 @@ const BpaApplicationDetail = () => {
           <div>
             {!detail?.isNotAllowed ? <Card key={index} style={!detail?.additionalDetails?.fiReport && detail?.title === "" ? { marginTop: "-30px" } : {}}>
 
-              {!detail?.isTitleVisible ? <CardSubHeader style={{fontSize: "24px"}}>{t(detail?.title)}</CardSubHeader> : null}
+              {!detail?.isTitleVisible ? <CardSubHeader className="text-2xl">{t(detail?.title)}</CardSubHeader> : null}
               
-              <div style={detail?.isBackGroundColor ? { marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "950px", minWidth: "280px" } : {}}>
+              <div style={detail?.isBackGroundColor ? { marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "950px", minWidth: "280px" } : {}}>
 
               <StatusTable>
                 {/* to get common values */}
                 {(detail?.isCommon && detail?.values?.length > 0) ? detail?.values?.map((value) => {
                   if (value?.isUnit) return <Row className="border-none" label={t(value?.title)} text={value?.value ? `${getTranslatedValues(value?.value, value?.isNotTranslated)} ${t(value?.isUnit)}` : t("CS_NA")} />
-                  if (value?.isLink) return <Row className="border-none" label={t(value?.title)} text={<div><Link to={value?.to}><span className="link" style={{color: "#a82227"}}>{value?.value}</span></Link></div>} />
+                  if (value?.isLink) return <Row className="border-none" label={t(value?.title)} text={<div><Link to={value?.to}><span className="link text-primary-main">{value?.value}</span></Link></div>} />
                   else return <Row className="border-none" label={t(value?.title)} text={getTranslatedValues(value?.value, value?.isNotTranslated) || t("CS_NA")} />
                 }) : null}
                 {/* to get additional common values */}
@@ -459,7 +459,7 @@ const BpaApplicationDetail = () => {
                     <div>
                     {!detail?.isTitleRepeat && !value?.isHeader && !value?.isUnit ? <Row className="border-none" label={t(value?.title)} textStyle={value?.value === "Paid"?{color:"darkgreen"}:(value?.value === "Unpaid"?{color:"red"}:{})} text={value?.value ? getTranslatedValues(value?.value, value?.isNotTranslated) : t("CS_NA")} /> : null}
                     {!detail?.isTitleRepeat && value?.isUnit ? <Row className="border-none" label={t(value?.title)} text={value?.value ? `${getTranslatedValues(value?.value, value?.isNotTranslated)} ${t(value?.isUnit)}` : t("CS_NA")} /> : null}
-                    {!detail?.isTitleRepeat && value?.isHeader ? <CardSubHeader style={{fontSize: "20px"}}>{t(value?.title)}</CardSubHeader> : null}
+                    {!detail?.isTitleRepeat && value?.isHeader ? <CardSubHeader className="text-xl">{t(value?.title)}</CardSubHeader> : null}
                     </div>
                 )) : null}
 
@@ -475,13 +475,13 @@ const BpaApplicationDetail = () => {
                         onClick={() => downloadDiagram(scrutiny?.value)}
                         label={<PDFSvg />}>
                       </LinkButton>
-                      <p style={{ marginTop: "8px", marginBottom: "20px", fontSize: "16px", lineHeight: "19px", color: "#505A5F", fontWeight: "400" }}>{t(scrutiny?.text)}</p>
+                      <p className="mt-sm text-md text-text-secondary font-regular" style={{ marginBottom: "20px", lineHeight: "19px" }}>{t(scrutiny?.text)}</p>
                     </Fragment>
                   )) : null}
 
                 {/* to get Owner values */}
                 {(detail?.isOwnerDetails && detail?.additionalDetails?.owners?.length > 0) ? detail?.additionalDetails?.owners.map((owner, index) => (
-                  <div key={index} style={detail?.additionalDetails?.owners?.length > 1 ? { marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "950px", minWidth: "280px" } : {}}>
+                  <div key={index} style={detail?.additionalDetails?.owners?.length > 1 ? { marginTop: "19px", background: "var(--grey-light)", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "950px", minWidth: "280px" } : {}}>
                     {detail?.additionalDetails?.owners?.length > 1 ? <Row className="border-none" label={`${t("Owner")} - ${index + 1}`} /> : null }
                     {owner?.values.map((value) => (
                       <Row className="border-none" label={t(value?.title)} text={getTranslatedValues(value?.value, value?.isNotTranslated) || t("CS_NA")} />
@@ -501,11 +501,11 @@ const BpaApplicationDetail = () => {
 
                 {/* to get NOC values */}
                 {detail?.additionalDetails?.noc?.length > 0 ? detail?.additionalDetails?.noc.map((nocob, ind) => (
-                  <div key={ind} style={{ marginTop: "19px", background: "#FAFAFA", border: "1px solid #D6D5D4", borderRadius: "4px", padding: "8px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" }}>
+                  <div key={ind} className="bg-grey-light border border-solid border-border rounded-sm p-sm" style={{ marginTop: "19px", lineHeight: "19px", maxWidth: "960px", minWidth: "280px" }}>
                     <StatusTable>
                       <Row className="border-none" label={t(`${`BPA_${detail?.additionalDetails?.data?.nocType}_HEADER`}`)} labelStyle={{fontSize: "20px"}}></Row>
                       <Row className="border-none" label={t(`${detail?.values?.[0]?.title}`)} textStyle={{ marginLeft: "10px" }} text={getTranslatedValues(detail?.values?.[0]?.value, detail?.values?.[0]?.isNotTranslated)} />
-                      <Row className="border-none" label={t(`${detail?.values?.[1]?.title}`)} textStyle={detail?.values?.[1]?.value == "APPROVED" || detail?.values?.[1]?.value == "AUTO_APPROVED" ? { marginLeft: "10px", color: "#00703C" } : { marginLeft: "10px", color: "#D4351C" }} text={getTranslatedValues(detail?.values?.[1]?.value, detail?.values?.[1]?.isNotTranslated)} />
+                      <Row className="border-none" label={t(`${detail?.values?.[1]?.title}`)} textStyle={detail?.values?.[1]?.value == "APPROVED" || detail?.values?.[1]?.value == "AUTO_APPROVED" ? { marginLeft: "10px", color: "var(--success)" } : { marginLeft: "10px", color: "var(--error)" }} text={getTranslatedValues(detail?.values?.[1]?.value, detail?.values?.[1]?.isNotTranslated)} />
                       { detail?.values?.[2]?.value ? <Row className="border-none" label={t(`${detail?.values?.[2]?.title}`)} textStyle={{ marginLeft: "10px" }} text={getTranslatedValues(detail?.values?.[2]?.value, detail?.values?.[2]?.isNotTranslated)} /> : null }
                       { detail?.values?.[3]?.value ? <Row className="border-none" label={t(`${detail?.values?.[3]?.title}`)} textStyle={{ marginLeft: "10px" }} text={getTranslatedValues(detail?.values?.[3]?.value, detail?.values?.[3]?.isNotTranslated)} /> : null }
                       { detail?.values?.[3]?.value ? <Row className="border-none" label={t(`${detail?.values?.[4]?.title}`)} textStyle={{ marginLeft: "10px" }} text={getTranslatedValues(detail?.values?.[4]?.value, detail?.values?.[4]?.isNotTranslated)} /> : null }

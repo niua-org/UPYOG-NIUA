@@ -254,7 +254,7 @@ const NewSurveyForm = ({ t, index, questionStatement, type, uuid, qorder, requir
           {index!==0 && <div className="newSurveyForm_seprator" />}
           {index!==0 && <div className={`pointer ${disableInputs ? 'disabled-btn':''}`} onClick={() => dispatch({ type: "removeForm", payload: { index } })}>
           <div className="tooltip" /* style={{position:"relative"}} */>
-              <div style={{display: "flex", /* alignItems: "center", */ gap: "0 4px"}}>
+              <div className="flex" style={{ /* alignItems: "center", */ gap: "0 4px" }}>
             <DustbinIcon />
             <span className="tooltiptext" style={{ position:"absolute",width:"100px", marginLeft:"50%", fontSize:"medium" }}>
               {t("CS_INFO_DELETE")}

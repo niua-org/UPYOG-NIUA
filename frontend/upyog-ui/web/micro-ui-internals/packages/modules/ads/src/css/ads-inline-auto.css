@@ -31,7 +31,7 @@
 }
 
 .ads-auto-8 {
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 .ads-auto-9 {
@@ -42,7 +42,7 @@
 
 .ads-auto-10 {
   cursor: pointer;
-  color: #a82227;
+  color: var(--primary-main);
   font-size: 20px;
   text-decoration: none;
   margin-bottom: 10px;
@@ -61,7 +61,7 @@
   position: absolute;
   top: -4px;
   right: -93px;
-  color: #008000;
+  color: var(--success);
   padding: 5px;
   border-radius: 30px;
   width: 30px;
@@ -71,7 +71,7 @@
 
 .ads-auto-14 {
   cursor: pointer;
-  color: #a82227;
+  color: var(--primary-main);
   font-size: 20px;
   text-decoration: none;
   margin-bottom: 10px;
@@ -80,7 +80,7 @@
 .ads-auto-15 {
   cursor: pointer;
   font-size: 20px;
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 .ads-auto-16 {
@@ -88,7 +88,7 @@
 }
 
 .ads-auto-17 {
-  color: #a82227;
+  color: var(--primary-main);
   margin: 25px;
 }
 
@@ -97,7 +97,7 @@
 }
 
 .ads-auto-19 {
-  color: #a82227;
+  color: var(--primary-main);
   margin: 25px;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .ads-auto-21 {
-  color: #a82227;
+  color: var(--primary-main);
   margin: 25px;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .ads-auto-28 {
-  color: #a82227;
+  color: var(--primary-main);
   margin: 25px;
 }
 
@@ -162,7 +162,7 @@
 .ads-auto-30 {
   border: 1px solid #ccc;
   background-color: white;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
   overflow: hidden;
   max-width: 30%;
   margin: 10px auto;
@@ -191,7 +191,7 @@
 
 .ads-auto-34 {
   margin: 0;
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 .ads-auto-35 {
@@ -201,7 +201,7 @@
 
 .ads-auto-36 {
   margin-left: 5px;
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 .ads-auto-37 {
@@ -219,15 +219,15 @@
   color: white;
   border: 1px solid #ccc;
   padding: 5px 10px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
 }
 
 .ads-auto-40 {
-  background-color: #a82227;
+  background-color: var(--primary-main);
   color: white;
   border: 1px solid #ccc;
   padding: 5px 10px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
 }
 
 
@@ -257,7 +257,7 @@
   position: absolute;
   background-color: white;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   padding: 8px;
   z-index: 1000px;
 }
@@ -279,7 +279,7 @@
 }
 
 .ads-auto-47 {
-  color: #505A5F;
+  color: var(--text-secondary);
 }
 
 .ads-auto-48 {
@@ -393,7 +393,7 @@
   position: absolute;
   right: 83px;
   background-color: #FFFFFF;
-  color: #008000;
+  color: var(--success);
   padding: 4px;
   border-radius: 30px;
   margin: 1px 0 1px 0;
@@ -424,7 +424,7 @@
 }
 
 .ads-auto-73 {
-  color: #a82227;
+  color: var(--primary-main);
 }
 
 .ads-auto-74 {

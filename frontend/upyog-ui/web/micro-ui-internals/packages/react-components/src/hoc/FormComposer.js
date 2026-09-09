@@ -195,7 +195,7 @@ const FormComposer = (props) => {
           paddingTop: "20px",
           marginTop: "10px",
           borderColor: "#f3f3f3",
-          background: "#FAFAFA",
+          background: "var(--grey-light)",
           marginBottom: "20px",
         };
       case 1:
@@ -206,7 +206,7 @@ const FormComposer = (props) => {
           paddingTop: "20px",
           marginTop: "-30px",
           borderColor: "#f3f3f3",
-          background: "#FAFAFA",
+          background: "var(--grey-light)",
           borderTop: "0px",
           borderBottom: "0px",
         };
@@ -218,14 +218,14 @@ const FormComposer = (props) => {
           paddingTop: "20px",
           marginTop: "-30px",
           borderColor: "#f3f3f3",
-          background: "#FAFAFA",
+          background: "var(--grey-light)",
           marginBottom: "20px",
           borderTop: "0px",
         };
     }
   };
 
-  const titleStyle = { color: "#505A5F", fontWeight: "700", fontSize: "16px" };
+  const titleStyle = { color: "var(--text-secondary)", fontWeight: "700", fontSize: "16px" };
 
   const getCombinedComponent = (section) => {
     if (section.head && section.subHead) {
@@ -265,7 +265,7 @@ const FormComposer = (props) => {
                     <div style={field.isInsideBox ? getCombinedStyle(field?.placementinbox) : {}}>
                       {!field.withoutLabel && (
                         <CardLabel
-                          style={{ color: field.isSectionText ? "#505A5F" : "", marginBottom: props.inline ? "8px" : "revert" }}
+                          style={{ color: field.isSectionText ? "var(--text-secondary)" : "", marginBottom: props.inline ? "8px" : "revert" }}
                           className={field?.disable ? "disabled" : ""}
                         >
                           {t(field.label)}
@@ -280,13 +280,7 @@ const FormComposer = (props) => {
                         {fieldSelector(field.type, field.populators, field.isMandatory, field?.disable, field?.component, field)}
                         {field?.description && (
                           <CardLabel
-                            style={{
-                              marginTop: "-24px",
-                              fontSize: "16px",
-                              fontWeight: "bold",
-                              color: "#505A5F",
-                              ...field?.descriptionStyles,
-                            }}
+                            className="text-md font-bold text-text-secondary" style={{ marginTop: "-24px", ...field?.descriptionStyles }}
                           >
                             {t(field.description)}
                           </CardLabel>
@@ -299,7 +293,7 @@ const FormComposer = (props) => {
               <Fragment key={field?.populators?.name || field?.label || index}>
                   <LabelFieldPair>
                     {!field.withoutLabel && (
-                      <CardLabel style={{ color: field.isSectionText ? "#505A5F" : "", marginBottom: props.inline ? "8px" : "revert" }}>
+                      <CardLabel style={{ color: field.isSectionText ? "var(--text-secondary)" : "", marginBottom: props.inline ? "8px" : "revert" }}>
                         {t(field.label)}
                         {field.isMandatory ? " * " : null}
                         {field.labelChildren && field.labelChildren}
@@ -307,11 +301,11 @@ const FormComposer = (props) => {
                     )}
                     <div style={field.withoutLabel ? { width: "100%", ...props?.fieldStyle } : {}} className="field">
                       {fieldSelector(field.type, field.populators, field.isMandatory, field?.disable, field?.component, field)}
-                      {field?.description && <CardText style={{ fontSize: "14px", marginTop: "-24px" }}>{t(field?.description)}</CardText>}
+                      {field?.description && <CardText className="text-sm" style={{ marginTop: "-24px" }}>{t(field?.description)}</CardText>}
                     </div>
                   </LabelFieldPair>
                   {field?.populators?.name && errors && errors[field?.populators?.name] && Object.keys(errors[field?.populators?.name]).length ? (
-                    <CardLabelError style={{ width: "70%", marginLeft: "30%", fontSize: "12px", marginTop: "-21px" }}>
+                    <CardLabelError className="text-xs" style={{ width: "70%", marginLeft: "30%", marginTop: "-21px" }}>
                       {t(field?.populators?.error)}
                     </CardLabelError>
                   ) : null}

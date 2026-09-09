@@ -23,14 +23,14 @@ const Toast = (props) => {
               <ErrorIcon />
               <h2 style={{ marginLeft: "10px" }}>{props.label}</h2>
               {props.isDleteBtn ? <DeleteBtn fill="none" className="toast-close-btn" onClick={props.onClose} /> : null}
-            </div> : <div style={{ display: "flex" }}>
+            </div> : <div className="flex">
               <ErrorIcon />
               <h2 style={{ marginLeft: "10px" }}>{props.label}</h2>
               {props.isDleteBtn ? <DeleteBtn fill="none" className="toast-close-btn" onClick={props.onClose} /> : null}
             </div>
           }
           {props?.isWarningButtons ?
-            <div style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
+            <div className="flex justify-end" style={{ width: "100%" }}>
               <ButtonSelector theme="border" label={"NO"} onSubmit={props.onNo} style={{ marginLeft: "10px" }} />
               <ButtonSelector label={"YES"} onSubmit={props.onYes} style={{ marginLeft: "10px" }} />
             </div> : null

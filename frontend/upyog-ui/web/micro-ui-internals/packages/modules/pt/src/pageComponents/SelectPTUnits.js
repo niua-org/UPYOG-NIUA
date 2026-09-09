@@ -378,7 +378,7 @@ const SelectPTUnits = React.memo(({
       {fields.map((field, index) => {
         return <div key={`${field}-${index}`}>
             <div className="pt-auto-83">
-              <LinkButton label={<DeleteIcon fill={!(fields.length === 1) ? "#494848" : "#FAFAFA"} className="pt-auto-85" />} onClick={e => handleRemove(index)} className="pt-auto-84" />
+              <LinkButton label={<DeleteIcon fill={!(fields.length === 1) ? "#494848" : "var(--grey-light)"} className="pt-auto-85" />} onClick={e => handleRemove(index)} className="pt-auto-84" />
               <CardLabel>{`${t("PT_FORM2_USAGE_TYPE")}`}<span className="check-page-link-button"> *</span></CardLabel>
               <Dropdown t={t} optionKey="i18nKey" isMandatory={config.isMandatory} option={[...(mdmsData?.UsageCategory ? mdmsData?.UsageCategory : []), {
               code: "RESIDENTIAL",

@@ -105,20 +105,20 @@ const DocsRequired = ({ onSelect, onSkip, config }) => {
       <Card>
         <CardHeader>{checkingUrl ? t(`BPA_OOCUPANCY_CERTIFICATE_APP_LABEL`) : t(`OBPS_NEW_BUILDING_PERMIT`)}</CardHeader>
         {/* TODO: Change text styles */}
-        {/* <CitizenInfoLabel style={{margin:"0px"}} textStyle={{color:"#0B0C0C"}} text={t(`OBPS_DOCS_REQUIRED_TIME`)} showInfo={false} /> */}
-        <CardText style={{ color: "#0B0C0C", marginTop: "12px", fontSize: "16px", fontWeight: "400", lineHeight: "24px" }}>{t(`OBPS_NEW_BUILDING_PERMIT_DESCRIPTION`)}</CardText>
+        {/* <CitizenInfoLabel style={{margin:"0px"}} textStyle={{color:"var(--text-primary)"}} text={t(`OBPS_DOCS_REQUIRED_TIME`)} showInfo={false} /> */}
+        <CardText className="text-text-primary text-md font-regular" style={{ marginTop: "12px", lineHeight: "24px" }}>{t(`OBPS_NEW_BUILDING_PERMIT_DESCRIPTION`)}</CardText>
         {isLoading ?
           <Loader /> :
           <Fragment>
             {docsList?.[0]?.map((doc, index) => (
               <div>
-                <div style={{ fontWeight: 700, marginBottom: "8px" }} key={index}>
-                  <div style={{ display: "flex" }}>
+                <div className="mb-sm font-bold" key={index}>
+                  <div className="flex">
                     <div>{`${index + 1}.`}&nbsp;</div>
                     <div>{` ${t(doc?.code.replace('.', '_'))}`}</div>
                   </div>
                 </div>
-                <div style={{marginBottom: "16px"}}>
+                <div className="mb-md">
                   {doc?.dropdownData?.map((value, index) => doc?.dropdownData?.length !== index + 1 ? <span>{`${t(value?.i18nKey)}, `}</span> : <span>{`${t(value?.i18nKey)}`}</span> )}
                 </div>
               </div>

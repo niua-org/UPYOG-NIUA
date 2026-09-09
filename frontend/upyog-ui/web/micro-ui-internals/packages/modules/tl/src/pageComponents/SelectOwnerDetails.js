@@ -341,13 +341,13 @@ const SelectOwnerDetails = ({
             paddingTop: "20px",
             marginTop: "10px",
             borderColor: "#f3f3f3",
-            background: "#FAFAFA"
+            background: "var(--grey-light)"
           } : {}}>
                 <CardLabel className="tl-auto-44">{`${t("TL_NEW_OWNER_DETAILS_NAME_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                 {typeOfOwner === "MULTIOWNER" && <LinkButton label={<div>
                         <span>
                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="tl-auto-46">
-                            <path d="M1 16C1 17.1 1.9 18 3 18H11C12.1 18 13 17.1 13 16V4H1V16ZM14 1H10.5L9.5 0H4.5L3.5 1H0V3H14V1Z" fill={!(formState.length == 1) ? "#494848" : "#FAFAFA"} />
+                            <path d="M1 16C1 17.1 1.9 18 3 18H11C12.1 18 13 17.1 13 16V4H1V16ZM14 1H10.5L9.5 0H4.5L3.5 1H0V3H14V1Z" fill={!(formState.length == 1) ? "#494848" : "var(--grey-light)"} />
                           </svg>
                         </span>
                       </div>} onClick={e => dispatch({
@@ -357,7 +357,7 @@ const SelectOwnerDetails = ({
               }
             })} className="tl-auto-45" />}
                 <TextInput style={typeOfOwner === "MULTIOWNER" ? {
-              background: "#FAFAFA"
+              background: "var(--grey-light)"
             } : {}} t={t} type={"text"} isMandatory={false} optionKey="i18nKey" name="name" value={field.name} onChange={e => handleTextInputField(index, e, "name")} ValidationRequired={true}
             //disable={isUpdateProperty || isEditProperty}
             {...{
@@ -378,7 +378,7 @@ const SelectOwnerDetails = ({
                     +91
                   </span>
                   <TextInput style={typeOfOwner === "MULTIOWNER" ? {
-                background: "#FAFAFA",
+                background: "var(--grey-light)",
                 maxWidth: "500px"
               } : {
                 maxWidth: "500px"
@@ -395,7 +395,7 @@ const SelectOwnerDetails = ({
                 </div>
                 <CardLabel>{`${t("TL_NEW_OWNER_DETAILS_GUARDIAN_LABEL")}`}<span className="check-page-link-button"> *</span></CardLabel>
                 <TextInput style={typeOfOwner === "MULTIOWNER" ? {
-              background: "#FAFAFA"
+              background: "var(--grey-light)"
             } : {}} t={t} type={"text"} isMandatory={false} name="fatherOrHusbandName" value={field.fatherOrHusbandName} onChange={e => handleTextInputField(index, e, "fatherOrHusbandName")} ValidationRequired={true}
             //disable={isUpdateProperty || isEditProperty}
             {...{
@@ -426,7 +426,7 @@ const SelectOwnerDetails = ({
             </div>;
       })}
         {typeOfOwner === "MULTIOWNER" && <div>
-            {/* <hr color="#d6d5d4" className="break-line"></hr> */}
+            {/* <hr color="var(--border)" className="break-line"></hr> */}
             <div className="tl-auto-49">
               <button type="button" onClick={() => dispatch({
             type: "ADD_NEW_OWNER"

@@ -24,7 +24,7 @@ const ResponseCancelBill = () => {
                 successful={!hookLoading && data?.Message ? true : false}
             />
             {!hookLoading && data?.Message ? <CardText>{t("COMMON_RESPONSE_SUCCESS_MESSAGE_CANCEL_BILL")}</CardText> : null}
-            <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+            <ActionBar className="flex justify-end" style={{ alignItems: "baseline" }}>
                 <Link to={`/upyog-ui/employee`} style={{ marginRight: "1rem" }}>
                     <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
                 </Link>

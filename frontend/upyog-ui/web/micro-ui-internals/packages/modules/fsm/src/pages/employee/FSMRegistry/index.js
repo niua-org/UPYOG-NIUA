@@ -244,7 +244,7 @@ const FSMRegistry = () => {
             labelChildren: (
               <div className="tooltip" style={{ paddingLeft: "10px", marginBottom: "-3px" }}>
                 <InfoIcon />
-                <span className="tooltiptext" style={{ width: "150px", left: "230%", fontSize: "14px" }}>
+                <span className="tooltiptext text-sm" style={{ width: "150px", left: "230%" }}>
                   {t("ES_FSM_VEHICLE_FORMAT_TIP")}
                 </span>
               </div>

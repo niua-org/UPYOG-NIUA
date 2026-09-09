@@ -8,9 +8,9 @@ function Document({ docs = [] }) {
   return (
     <div style={{ marginTop: "19px" }}>
       <React.Fragment>
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
+        <div className="flex" style={{ flexWrap: "wrap" }}>
           {docs.length > 0 ? (
-            <div style={{ display: "flex", justifyContent: "flex-start", flexWrap: "wrap" }}>
+            <div className="flex justify-start" style={{ flexWrap: "wrap" }}>
               {docs?.map((document, index) => {
                 let documentLink = document?.fileURL;
                 return (
@@ -21,10 +21,10 @@ function Document({ docs = [] }) {
                     style={{ minWidth: "80px", marginRight: "10px", maxWidth: "100px", height: "auto" }}
                     key={index}
                   >
-                    <div style={{ display: "flex", justifyContent: "center" }}>
+                    <div className="flex justify-center">
                       <PDFSvg />
                     </div>
-                    <p style={{ marginTop: "8px", textAlign: "center", color: "#505A5F" }}>{`${t(document?.documentType)}`}</p>
+                    <p className="text-text-secondary mt-sm text-center">{`${t(document?.documentType)}`}</p>
                   </a>
                 );
               })}

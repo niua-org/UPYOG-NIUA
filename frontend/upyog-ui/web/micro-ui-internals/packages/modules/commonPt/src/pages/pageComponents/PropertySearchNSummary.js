@@ -108,7 +108,7 @@ const PropertySearchNSummary = ({ config, onSelect, userType, formData, setError
      {(window.location.href.includes("/tl/") ? (!(formData?.tradedetils?.[0]?.structureType?.code === "MOVABLE") && (isEmpNewApplication || isEmpRenewLicense) ) : true) && <div>
       <LabelFieldPair>
         <CardLabel className="card-label-smaller" style={getInputStyles()}>{`${t(`PROPERTY_ID`)}`}</CardLabel>
-        <div className="field" style={{ marginTop: "20px", display: "flex" }}>
+        <div className="field flex" style={{ marginTop: "20px" }}>
           <TextInput
             key={config.key}
             value={propertyId}
@@ -125,11 +125,11 @@ const PropertySearchNSummary = ({ config, onSelect, userType, formData, setError
         </div>
       </LabelFieldPair>
       <span onClick={() => navigate(`/upyog-ui/employee/commonpt/search?redirectToUrl=${redirectBackUrl}&${serachParams}`, { ...state })}>
-        <LinkButton label={t("CPT_SEARCH_PROPERTY")} style={{ color: "#a82227", display: "inline-block" }} />
+        <LinkButton label={t("CPT_SEARCH_PROPERTY")} className="text-primary-main inline-block" />
       </span>
       &nbsp; | &nbsp;
       <span onClick={() => navigate(`/upyog-ui/employee/commonpt/new-application?redirectToUrl=${redirectBackUrl}&${serachParams}`, { ...state })}>
-        <LinkButton label={t("CPT_CREATE_PROPERTY")} style={{ color: "#a82227", display: "inline-block" }} />
+        <LinkButton label={t("CPT_CREATE_PROPERTY")} className="text-primary-main inline-block" />
       </span>
       {propertyDetails && propertyDetails?.Properties.length ? (
         <React.Fragment>
@@ -181,7 +181,7 @@ const PropertySearchNSummary = ({ config, onSelect, userType, formData, setError
             <Link to={`/upyog-ui/employee/commonpt/view-property?propertyId=${propertyId}&tenantId=${tenantId}&from=${window.location.pathname?.includes("employee/ws/new-application") ? "ES_COMMON_WS_NEW_CONNECTION" : window.location.pathname?.includes("employee/ws/modify-application") ?"WS_MODIFY_CONNECTION_BUTTON": window.location.pathname?.includes("employee/tl/new-application")
         ?"ES_TITLE_NEW_TRADE_LICESE_APPLICATION"
         :"WF_EMPLOYEE_NEWTL_RENEWAL_SUBMIT_BUTTON"}`}>
-            <LinkButton label={t("CPT_COMPLETE_PROPERTY_DETAILS")} style={{ color: "#a82227", textAlign: "Left" }} />
+            <LinkButton label={t("CPT_COMPLETE_PROPERTY_DETAILS")} className="text-primary-main text-left" />
           </Link>
         </React.Fragment>
       ) : null}

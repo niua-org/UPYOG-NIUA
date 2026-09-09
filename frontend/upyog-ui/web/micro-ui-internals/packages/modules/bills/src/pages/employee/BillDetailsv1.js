@@ -128,7 +128,7 @@ const BillDetailsv1 = (props) => {
                     <React.Fragment key={index}>
                         <div >
                             {index === 0 && !detail.asSectionHeader ? (
-                                <CardSubHeader style={{ marginBottom: "16px", fontSize: "24px" }}>{t(detail.title)}</CardSubHeader>
+                                <CardSubHeader className="mb-md text-2xl">{t(detail.title)}</CardSubHeader>
                             ) : (
                                 <React.Fragment>
                                     <CardSectionHeader
@@ -147,11 +147,11 @@ const BillDetailsv1 = (props) => {
                             {/* Here Render the table for adjustment amount details detail.isTable is true for that table*/}
                             {detail?.isTable && (
                                 <table style={{ tableLayout: "fixed", width: "100%", borderCollapse: "collapse" }}>
-                                    <tr style={{ textAlign: "left" }}>
+                                    <tr className="text-left">
                                         {detail?.headers.map(header => <th style={{ padding: "10px" }}>{t(header)}</th>)}
                                     </tr>
                                     {detail?.tableRows.map(row => <tr>
-                                        {row.map(element => <td style={{ paddingRight: "60px", paddingTop: "20px", textAlign: "center" }}>{t(element)}</td>)}
+                                        {row.map(element => <td className="text-center" style={{ paddingRight: "60px", paddingTop: "20px" }}>{t(element)}</td>)}
                                     </tr>)}
                                 </table>
                             )}
@@ -170,7 +170,7 @@ const BillDetailsv1 = (props) => {
                                                         window.location.href.includes("tl") || window.location.href.includes("ws") || window.location.href.includes("bills") ? (
                                                             <div style={{ width: "200%" }}>
                                                                 <Link to={value?.to}>
-                                                                    <span className="link" style={{ color: "#a82227" }}>
+                                                                    <span className="link text-primary-main">
                                                                         {t(value?.title)}
                                                                     </span>
                                                                 </Link>
@@ -184,7 +184,7 @@ const BillDetailsv1 = (props) => {
                                                     text={
                                                         <div>
                                                             <Link to={value?.to}>
-                                                                <span className="link" style={{ color: "#a82227" }}>
+                                                                <span className="link text-primary-main">
                                                                     {value?.value}
                                                                 </span>
                                                             </Link>
@@ -216,7 +216,7 @@ const BillDetailsv1 = (props) => {
                 ))}
             </Card>:<Loader/>}
 
-            <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+            <ActionBar className="flex justify-end" style={{ alignItems: "baseline" }}>
                 <SubmitBar label={t("ABG_CANCEL_BILL")} onSubmit={()=>setShowModal(true)}/>
             </ActionBar>
 

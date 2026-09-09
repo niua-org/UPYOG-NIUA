@@ -103,7 +103,7 @@ const CHBDocumentDetails = ({ t, config, onSelect, userType, formData, setError:
       <Timeline currentStep={5} />
       <Card>
         <CardSubHeader>
-          <div style={{display:"flex", justifyContent: "space-between", width: "100%" }}>
+          <div className="flex justify-between" style={{ width: "100%" }}>
           {value?.bookingSlotDetails && value.bookingSlotDetails.length > 0
             ? formatSlotDetails(value.bookingSlotDetails)
             : null}
@@ -248,7 +248,7 @@ function CHBSelectDocument({
   }, [isHidden]);
 
   return (
-    <div style={{ marginBottom: "24px" }}>
+    <div className="mb-lg">
       {doc?.hasDropdown ? (
         <LabelFieldPair>
           <CardLabel className="card-label-smaller">{t("CHB_"+(doc?.code.replaceAll(".", "_"))) } <span className="check-page-link-button">*</span></CardLabel>
