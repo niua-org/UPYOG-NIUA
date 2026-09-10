@@ -52,23 +52,41 @@ The folder structure is organized as follows:
 - **Example S3 Key:**
   `dashboard/pg/PT/a89f41b2-3f1d-4b89-9a07-8e6f3328dc41_daily_PT_1725960000.xlsx`
 
-### 2. Legacy Batch Ingestion: ULB-Level Grouping
+### 2. Legacy Batch Ingestion: ULB / State-Level Grouping
 - **Hierarchy Pattern:**
-  `<awsS3Folder>/<ulb>/<module>/<uuid>_legacy_<module>_<timestamp>.xlsx`
-- **Parent Folder:** **ULB Tenant ID** (e.g. `pg.citya`).
-  - In `LegacyBatchIngestionOrchestrator`, the full tenant ID from the request or active tenant list (`request.getTenantId()`) is used without splitting.
+  `<awsS3Folder>/<jobTenantId>/<module>/<uuid>_legacy_<module>_<timestamp>.xlsx`
+- **Parent Folder:**
+  - **Single ULB Extraction:** Uses the ULB tenant ID (e.g. `pg.citya`) when the request targets exactly one ULB.
+  - **Multi-Tenant / State-Wide Extraction:** Uses the parent state code (e.g. `pg`) when targeting multiple ULBs, comma-separated ULBs, or when tenant is omitted / set to state code (resolving all active ULBs).
 - **Inner Folder:** **Module Code** (e.g. `PT`, `PGR`, `CHB`).
 - **File Prefix:** `legacy_` (defined in `DashboardConstants.LEGACY`).
 - **Sheet Name:** `{MODULE}_legacy`.
-- **Example S3 Key:**
+- **Example S3 Key (Single ULB):**
   `dashboard/pg.citya/PT/b91c73e1-4c2e-4e90-8b18-7f5e2217cb32_legacy_PT_1725960000.xlsx`
+- **Example S3 Key (Multi-Tenant State-Wide):**
+  `dashboard/pg/PT/c02d84e2-5d3f-5f01-9c29-8a6f3328dc42_legacy_PT_1725960000.xlsx`
 
 ### Summary Comparison
 
 | Ingestion Pipeline | Parent Folder | Inner Subfolder | File Prefix | Sheet Name | Example Path |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Daily** | **State** (`pg`) | **Module** (`PT`) | `daily_` | `{MODULE}_daily` | `dashboard/pg/PT/<uuid>_daily_PT_...xlsx` |
-| **Legacy** | **ULB** (`pg.citya`) | **Module** (`PT`) | `legacy_` | `{MODULE}_legacy` | `dashboard/pg.citya/PT/<uuid>_legacy_PT_...xlsx` |
+| **Legacy (Single ULB)** | **ULB** (`pg.citya`) | **Module** (`PT`) | `legacy_` | `{MODULE}_legacy` | `dashboard/pg.citya/PT/<uuid>_legacy_PT_...xlsx` |
+| **Legacy (Multi-Tenant)** | **State** (`pg`) | **Module** (`PT`) | `legacy_` | `{MODULE}_legacy` | `dashboard/pg/PT/<uuid>_legacy_PT_...xlsx` |
+
+## Excel Generation & Column Specifications
+
+When Excel workbooks are generated (via `SXSSFExcelGeneratorService`), columns and sheets follow standardized conventions:
+- **Clean Column Ordering:**
+  1. `date`
+  2. `module`
+  3. `state`
+  4. `Tenant` (renamed from `ulb` for national consistency)
+  5. `ward`
+  6. `region`
+  7. `payload_json` (exact serialized `NationalDashboardIngestRequest` JSON payload for the row)
+- **Filtered Columns:** Internal composite objects (`combinedMetrics`, `collectionMetrics`) are strictly excluded from Excel headers and rows.
+- **Memory-Safe Streaming:** Uses Apache POI `SXSSFWorkbook` with row flushing to handle millions of historical records without heap exhaustion.
 
 ## Database Schema
 
@@ -105,6 +123,17 @@ The folder structure is organized as follows:
 - Performs **catch-up ingestion** across missing date ranges up to yesterday, automatically handling and advancing zero-metric tenants.
 - Employs reflection caching (`ConcurrentHashMap`) in `extractTenantId` to eliminate runtime reflection overhead.
 - Uses `saveOrUpdateLastAttemptedDatesBatch` to eliminate N+1 database roundtrips during catch-up iterations.
+
+### `LegacyBatchIngestionOrchestrator`
+- Orchestrates high-throughput, memory-safe streaming historical batch ingestion triggered via `POST /api/v1/legacy/batch-ingest`.
+- Acquires a module-level distributed ShedLock (`manual_batch_extraction_{MODULE}`) to prevent concurrent conflicting runs.
+- **Multi-Tenant Resolution:**
+  - Accepts a list of ULBs (`"tenantIds": ["pg.citya", "pg.cityb"]`), a single ULB (`"tenantId": "pg.citya"`), or comma-separated ULBs (`"tenantId": "pg.citya,pg.cityb"`).
+  - If omitted or specified as the state code (`"pg"`), automatically resolves all active ULBs configured for the module from `ug_ingestion_module_detail` via `TenantSyncService`.
+- Executes chunked extraction via `LegacyBatchExtractor.extractInBatches` across dates and tenant batches (default 50).
+- Streams non-zero records into a single combined Excel workbook via `SXSSFExcelGeneratorService.StreamingExcelSession`.
+- Uploads the workbook using `DashboardIngestionClient` (S3 bucket or FileStore API) under `dashboard/<jobTenantId>/<module>/...`.
+- Saves granular audit logs in `ug_legacy_data_ingestion_detail` (job summary) and `ug_ingestion_detail` (per-date and per-tenant detail records with specific `module_detail_id` per ULB).
 
 ### `LegacyIngestionService`
 - Manages bulk historical ingestion via a **two-phase scheduler** approach:
@@ -157,13 +186,32 @@ extractor.enabled-modules=PT,PGR,NEW_MODULE
 ```
 
 ### 5. DB Migration (Optional)
-If your state requires new tracking tables, place your migration scripts in `dashboard-data-extractor/src/main/resources/db/migration/main/`. Ensure the new tables are tied to the Kafka producer config within `adapter-service-persister.yml`.
+If your state requires new tracking tables, place your migration scripts in `dashboard-data-extractor/src/main/resources/db/migration/main/`. Ensure the new tables are tied to the Kafka producer config within `dashboard-data-extractor-persister.yml`.
 
-### 6. Legacy Ingestion
-You can ingest historical data using the newly built API:
-`POST /api/v1/legacy/ingest?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&module=NEW_MODULE`
-Check the job statuses using:
-`GET /api/v1/legacy/jobs/status?tenantId=pg&moduleName=NEW_MODULE`
+### 6. Legacy Ingestion APIs
+
+#### A. Streaming Batch Ingestion (`LegacyBatchIngestionOrchestrator`) [Recommended]
+Directly streams historical data over a date range into a single Excel workbook and uploads to S3/FileStore:
+```http
+POST /api/v1/legacy/batch-ingest
+Content-Type: application/json
+
+{
+  "moduleName": "PT",
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "tenantIds": ["pg.citya", "pg.cityb"],   // Optional: specific list of ULBs
+  "tenantId": "pg",                       // Optional: state code, single ULB, or comma-separated ULBs
+  "async": false                          // Optional: true to run asynchronously in background
+}
+```
+*Note: If `tenantIds` and `tenantId` are omitted or set to the state code (e.g. `pg`), it automatically extracts data across all active ULBs for the module.*
+
+#### B. Two-Phase Scheduler Ingestion (`LegacyIngestionService`)
+```http
+POST /api/v1/legacy/ingest?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&module=NEW_MODULE
+GET /api/v1/legacy/jobs/status?tenantId=pg&moduleName=NEW_MODULE
+```
 
 ## Coding Conventions
 
