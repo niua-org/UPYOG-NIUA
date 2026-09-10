@@ -2,6 +2,8 @@ package org.upyog.dashboard.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +30,9 @@ public class LegacyBatchIngestRequest {
 
     @JsonProperty("tenantId")
     private String tenantId;
+
+    @JsonProperty("tenantIds")
+    private List<String> tenantIds;
 
     @JsonProperty("startDate")
     @NotNull(message = "Start date is required")
