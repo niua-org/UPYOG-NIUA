@@ -36,9 +36,13 @@ load_dotenv()
 
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(name)s:%(lineno)d] %(message)s"
+)
 logger = logging.getLogger(__name__)
 # ============== HELPER: Extract Phone Number from Session ==============
 
@@ -67,24 +71,32 @@ def extract_phone_from_session(session_id: str) -> str:
 
 # ============== END HELPER ==============
 
+_USER_PROFILE_CACHE = {}
+
 def save_user_profile_info(phone_anchor: str, user_info: dict) -> bool:
     try:
+        _USER_PROFILE_CACHE[str(phone_anchor)] = dict(user_info)
         from database import r_client
         r_client.set(f"user_profile_info:{phone_anchor}", json.dumps(user_info))
         return True
     except Exception as e:
-        logger.error(f"Error saving user profile info: {e}")
-        return False
+        logger.warning(f"Error saving user profile info: {e}")
+        return True
 
 def get_user_profile_info(phone_anchor: str) -> dict:
+    # Check in-memory cache first
+    if str(phone_anchor) in _USER_PROFILE_CACHE:
+        return _USER_PROFILE_CACHE[str(phone_anchor)]
     try:
         from database import r_client
         data = r_client.get(f"user_profile_info:{phone_anchor}")
         if data:
-            return json.loads(data.decode('utf-8'))
+            parsed = json.loads(data.decode('utf-8') if isinstance(data, bytes) else data)
+            _USER_PROFILE_CACHE[str(phone_anchor)] = parsed
+            return parsed
     except Exception as e:
-        logger.error(f"Error getting user profile info: {e}")
-    return {}
+        logger.warning(f"Error getting user profile info: {e}")
+    return _USER_PROFILE_CACHE.get(str(phone_anchor), {})
 
 # Ensure consistent language detection
 DetectorFactory.seed = 0
@@ -426,21 +438,31 @@ def detect_language(text: str) -> dict:
     text_lower = text.lower()
     words_lower = re.findall(r'\b\w+\b', text_lower)
 
-    hindi_phonetic = [
-        'kya', 'kaise', 'kahan', 'kab', 'kyun', 'kaun',
-        'hai', 'hain', 'tha', 'thi', 'hoga', 'hogi', 'hoge',
-        'mujhe', 'aapko', 'mera', 'meri', 'mere', 'humara', 'hamare',
-        'nahi', 'nahin', 'haan', 'theek', 'accha', 'theek hai',
-        'batao', 'chahiye', 'milega', 'karo', 'dijiye', 'bataye',
-        'aur', 'lekin', 'toh', 'bhi', 'sirf',
-        'din', 'mahina', 'saal', 'ghanta',
+    # Distinct Hindi words that strongly indicate Hindi/Hinglish
+    distinct_hindi = {
+        'kya', 'kaise', 'kahan', 'kyun', 'kaun', 'kab', 'kitna', 'kitni',
+        'mujhe', 'aapko', 'mera', 'meri', 'mere', 'humara', 'hamare', 'apna', 'apni',
+        'nahin', 'nahi', 'haan', 'theek', 'accha', 'achha',
+        'batao', 'chahiye', 'milega', 'karo', 'karein', 'dijiye', 'bataye', 'bataiye',
+        'dikhao', 'dikhaye', 'hatao', 'mitado', 'shikayat', 'namaste', 'dhanyawad',
+        'samasya', 'paani', 'sadak', 'kachra', 'bijli'
+    }
+
+    # Common Hinglish phrases
+    hinglish_phrases = [
+        r'\bkya\s+hai\b', r'\bkaise\s+kare\b', r'\bkaise\s+karein\b',
+        r'\bmujhe\s+', r'\bmera\s+', r'\bmeri\s+', r'\bmere\s+',
+        r'\bshikayat\s+darj\b', r'\bpaani\s+ki\b', r'\bkaro\b', r'\bkarein\b',
+        r'\bbatao\b', r'\bbataiye\b', r'\bdikhao\b', r'\bchahiye\b',
+        r'\btheek\s+hai\b', r'\baapka\s+', r'\baapke\s+'
     ]
 
-    hindi_word_count = sum(1 for w in words_lower if w in hindi_phonetic)
+    has_phrase = any(re.search(p, text_lower) for p in hinglish_phrases)
+    hindi_matches = [w for w in words_lower if w in distinct_hindi]
 
-    if hindi_word_count >= 1:
+    if has_phrase or len(hindi_matches) >= 2 or (len(words_lower) <= 3 and len(hindi_matches) >= 1):
         result = {'lang': 'hi', 'script': 'roman_hindi', 'search_lang': 'hi'}
-        logger.info(f"[LANG DETECT] Roman Hindi phonetic words matched ({hindi_word_count}) in '{text}' -> result: {result}")
+        logger.info(f"[LANG DETECT] Roman Hindi phonetic words matched ({len(hindi_matches)}) in '{text}' -> result: {result}")
         return result
 
     result = {'lang': 'en', 'script': 'english', 'search_lang': 'en'}
@@ -509,22 +531,47 @@ async def generate_edge_tts(text, voice, output_path):
     communicate = edge_tts.Communicate(text, voice)
     await communicate.save(output_path)
 
+# ── Pre-compiled Pipeline for Fast TTS Text Sanitization ─────────────────────
+_TTS_REGEX_PIPELINE = [
+    (re.compile(r'<ui-[^>]*>'), ''),                                                       # UI tags
+    (re.compile(r'\[(?:CANCEL_DRAFT|RELOAD|CLOSE|SUBMIT|OPTION|seed:\d+)\]', re.I), ''),      # Internal commands
+    (re.compile(r'```[\s\S]*?```'), ''),                                                   # Code blocks
+    (re.compile(r'`([^`]+)`'), r'\1'),                                                     # Inline code
+    (re.compile(r'!\[[^\]]*\]\([^\)]+\)'), ''),                                            # Images
+    (re.compile(r'\[([^\]]+)\]\([^\)]+\)'), r'\1'),                                        # Links
+    (re.compile(r'(?m)^\s*(?:#{1,6}|[-*_]{3,}|>\s*|[-*+]\s+)\s*'), ''),                   # Headers, HRs, quotes, bullets
+    (re.compile(r'[*~_]{1,3}([^*~_]+)[*~_]{1,3}'), r'\1'),                                 # Bold / Italic / Strike
+    (re.compile(r'([A-Za-z0-9]+)[-_]([A-Za-z0-9]+)'), r'\1 \2'),                           # Hyphenated IDs/Dates -> Space (no "dash dash")
+    (re.compile(r'[\U00010000-\U0010ffff\U00002600-\U000027BF\U0000FE00-\U0000FE0F|•–—\-\#\*~]'), ' '), # Emojis, pipes & symbols
+    (re.compile(r'\s+'), ' ')                                                              # Normalize whitespace
+]
+
+_TTS_BRANDING_COMPILED = {
+    "hi": [(re.compile(r'\bUPYOG\b|Upyog', re.I), 'उपयोग'), (re.compile(r'\bNUDM\b'), 'एन.यू.डी.एम.'), (re.compile(r'\bMoHUA\b'), 'मोहुआ')],
+    "en": [(re.compile(r'\bUPYOG\b|Upyog', re.I), 'Oop-yog'), (re.compile(r'\bNUDM\b'), 'N-U-D-M'), (re.compile(r'\bMoHUA\b'), 'Mo-hua')]
+}
+
+def clean_text_for_tts(text: str, language_code: str = "en") -> str:
+    """Fast, pre-compiled markdown and symbol sanitizer for natural voice synthesis."""
+    if not text:
+        return ""
+
+    for pattern, replacement in _TTS_REGEX_PIPELINE:
+        text = pattern.sub(replacement, text)
+
+    for pattern, replacement in _TTS_BRANDING_COMPILED.get(language_code, _TTS_BRANDING_COMPILED["en"]):
+        text = pattern.sub(replacement, text)
+
+    return text.strip()
+
+
 # Converts AI text to speech audio using Edge-TTS with Bhashini as a fallback
 def text_to_speech(text, language_code, gender="female"):
     """Convert text to speech using Edge-TTS with Bhashini fallback."""
     logger.info(f"[TTS GENERATION] Input text length: {len(text)} | Language: '{language_code}' | Gender: '{gender}'")
 
-    # Branding
-    if language_code == "hi":
-        text = re.sub(r'\bUPYOG\b', 'उपयोग', text, flags=re.IGNORECASE)
-        text = text.replace('Upyog', 'उपयोग')
-        text = text.replace('NUDM', 'एन.यू.डी.एम.')
-        text = text.replace('MoHUA', 'मोहुआ')
-    else:
-        text = re.sub(r'\bUPYOG\b', 'Oop-yog', text, flags=re.IGNORECASE)
-        text = text.replace('Upyog', 'Oop-yog')
-        text = text.replace('NUDM', 'N-U-D-M')
-        text = text.replace('MoHUA', 'Mo-hua')
+    # Clean markdown, headers (###, etc.) and apply pronunciation rules
+    text = clean_text_for_tts(text, language_code)
 
     # Ensure script matches language
     if language_code == "en" and any('ऀ' <= c <= 'ॿ' for c in text):
@@ -533,13 +580,6 @@ def text_to_speech(text, language_code, gender="female"):
     elif language_code == "hi" and not any('ऀ' <= c <= 'ॿ' for c in text):
         logger.info("[TTS SCRIPT FIX] Non-Devanagari detected in Hindi TTS text — translating to Hindi")
         text = translate_text(text, "en", "hi")
-
-    # Strip emojis and markdown
-    text = re.sub(
-        u'[\U00002600-\U000027BF]|[\U0001F300-\U0001FAFF]|[\U00002702-\U000027B0]|[\U0000FE00-\U0000FE0F]|[\U0001F000-\U0001F9FF]|‍|️',
-        '', text
-    ).strip()
-    text = text.replace('**', '').replace('*', '')
 
     logger.info(f"[TTS] Generating TTS for language: {language_code}")
 
@@ -615,9 +655,9 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
     if search_lang is None:
         search_lang = lang
 
-    # --- Fetch persistent profile values from Redis ---
+    # --- Fetch persistent profile values from Redis & in-memory cache ---
     phone_anchor = extract_phone_from_session(session_id)
-    user_info = get_user_profile_info(phone_anchor)
+    user_info = get_user_profile_info(phone_anchor) if phone_anchor != "default" else None
     
     # --- LOAD USER'S LONG-TERM MEMORY (BOOKINGS) ---
     long_term_bookings_str = ""
@@ -647,22 +687,16 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
         except Exception as e:
             logger.error(f"Error loading chat history or summaries for RAG context: {e}")
     
-    profile_details_str = "NO ACTIVE CITIZEN PROFILE FOUND."
-    profile_name = "User"
-    if user_info:
-        profile_name = user_info.get("name") or user_info.get("userName") or "User"
+    profile_details_str = "CITIZEN STATUS: Guest / Not Logged In."
+    profile_name = None
+    if user_info and phone_anchor != "default":
+        profile_name = user_info.get("name") or user_info.get("userName") or "Citizen"
         profile_details_str = f"""ACTIVE CITIZEN PROFILE:
 - Name: {profile_name}
 - Mobile Number: {user_info.get("mobileNumber") or user_info.get("userName") or "N/A"}
 - Email ID: {user_info.get("emailId") or "N/A"}
-- User ID (UUID): {user_info.get("uuid") or "N/A"}
 - Roles: {', '.join([r.get('name') for r in user_info.get('roles', [])]) if user_info.get('roles') else 'Citizen'}
 - Tenant ID: {user_info.get("tenantId") or "pg"}"""
-    else:
-        profile_name = get_any_user_profile_name()
-        if profile_name and profile_name != "User":
-            profile_details_str = f"""ACTIVE CITIZEN PROFILE:
-- Name: {profile_name}"""
 
     if long_term_bookings_str:
         profile_details_str += long_term_bookings_str
@@ -704,9 +738,7 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
     # Step 2: Build language instruction
     if lang == 'hi':
         lang_rule = "CRITICAL LANGUAGE INSTRUCTION: The user is asking in Hindi. You MUST respond in pure Hindi language using Devanagari script ONLY (हिंदी लिपि). Do NOT use Roman script, English sentences, or Romanized Hinglish under any circumstances. Exception: keep UPYOG, NUDM, NOC, GIS, ULB, MoU as-is."
-        lang_rule = "CRITICAL LANGUAGE INSTRUCTION: The user is asking in Hindi. You MUST respond in pure Hindi language using Devanagari script ONLY (हिंदी लिपि). Do NOT use Roman script, English sentences, or Romanized Hinglish under any circumstances. Exception: keep UPYOG, NUDM, NOC, GIS, ULB, MoU as-is."
     else:
-        lang_rule = "CRITICAL LANGUAGE INSTRUCTION: The user is asking in English. You MUST respond in pure standard English script and language ONLY. Do NOT use Romanized Hinglish, Hindi words, or Devanagari script under any circumstances."
         lang_rule = "CRITICAL LANGUAGE INSTRUCTION: The user is asking in English. You MUST respond in pure standard English script and language ONLY. Do NOT use Romanized Hinglish, Hindi words, or Devanagari script under any circumstances."
 
     # Step 3: Build context section
@@ -726,7 +758,6 @@ Answer from your general knowledge about:
 - Standard government processes for urban services in India"""
 
     # Step 4: Build conversation history with language isolation
-    # Step 4: Build conversation history with language isolation
     history_messages = []
     for turn in history[-6:]:
         if "content" in turn and "role" in turn:
@@ -741,19 +772,14 @@ Answer from your general knowledge about:
                     if translated and len(translated.strip()) > 0:
                         content = translated
             history_messages.append({"role": turn["role"], "content": content})
-            content = turn["content"]
-            if turn["role"] == "assistant":
-                if lang == 'en' and any('ऀ' <= c <= 'ॿ' for c in content):
-                    translated = translate_text(content, "hi", "en")
-                    if translated and len(translated.strip()) > 0:
-                        content = translated
-                elif lang == 'hi' and not any('ऀ' <= c <= 'ॿ' for c in content):
-                    translated = translate_text(content, "en", "hi")
-                    if translated and len(translated.strip()) > 0:
-                        content = translated
-            history_messages.append({"role": turn["role"], "content": content})
 
     # Step 5: System prompt - LLM as the brain
+    guest_instruction = (
+        f"The user is authenticated and logged in as: {profile_name} (Mobile: {user_info.get('mobileNumber', 'N/A')})."
+        if (profile_name and profile_name != "User") else
+        "The user is currently NOT LOGGED IN (GUEST SESSION). DO NOT ever say 'You are now logged in' or assume they are logged in unless active citizen profile details are shown above. If the user claims they logged in without an active session, tell them: 'I do not detect an active logged-in session yet. Please complete the login by clicking Login in the left sidebar.'"
+    )
+
     system = f"""{lang_rule}
 
 You are UPYOG Assistant — expert on:
@@ -761,12 +787,12 @@ You are UPYOG Assistant — expert on:
 - NUDM (National Urban Digital Mission)
 - All ULB services: Property Tax, Trade License, Fire NOC, Water & Sewerage,
   Birth & Death Certificates, Building Plan Approval, Waste Management,
-  GIS Services, Community Hall, Street Vendors, Livelihood, Works Management, etc.
+  GIS Services, Community Hall, Street Vendors, Livelihood, etc.
 - MoU details, NUDM state partnerships, citizen processes
 
 {profile_details_str}
 
-If the user asks "who am I?", "what is my name?", "show my details", "show my profile", or asks for their registered details (mobile number, email address, UUID, or roles), respond by listing their CITIZEN PROFILE details above. Address them warmly by their name ({profile_name}).
+{guest_instruction}
 
 CRITICAL RULES:
 
@@ -777,9 +803,8 @@ Users speak naturally, not in FAQ format.
 Understand MEANING, not literal words.
 
 RULE 2 — ALWAYS TRY TO HELP:
-If you know about the topic, answer it.
+If you know about the topic, answer it concisely.
 NEVER say "जानकारी नहीं है" for UPYOG-related questions.
-If the user asks "what is my name?", "do you remember my name?", or "who am I?", greet them warmly by their name ({profile_name}) stored in your profile system context matrix.
 
 RULE 3 — CONVERSATIONAL SCENARIOS:
 Users describe situations, not textbook questions.
@@ -802,8 +827,9 @@ Format every response using markdown for a clear, professional look:
 - Use **bold** for service names, key terms, and important values.
 - Use numbered lists (1. 2. 3.) for step-by-step processes.
 - Use bullet points (-) for features, requirements, or multiple items.
-- Use headers (### or ####) for multi-section answers.
+- Use headers (e.g. ### Section Title) with the title text immediately on the same line as the hashes (NEVER leave hashes alone on a line).
 - Keep paragraphs short (2-3 lines max).
+- Always finish every bullet point and sentence completely. Never leave thoughts or sentences unfinished.
 - End with a helpful follow-up question when appropriate.
 - Do NOT use emojis. This is a government services portal.
 
@@ -817,6 +843,12 @@ NEVER invent, guess, or hallucinate complaint IDs, booking numbers, application 
 If the user asks to see their complaints or bookings (e.g. "show my complaints", "my grievances", "my bookings"),
 respond: "To view your registered complaints, please type 'show my complaints' or provide your complaint ID (e.g. PG-PGR-XXXX) and I will look it up for you."
 Do NOT list fake IDs or made-up complaint descriptions.
+
+RULE 10 — DO NOT MENTION LOGIN STEPS UNLESS EXPLICITLY ASKED:
+STRICT RULE: NEVER explain login steps, sidebar navigation, or OTP instructions when answering general questions about services (such as Trade License, Property Tax, Birth Certificate, etc.).
+Answer ONLY what the user asked about the service directly.
+ONLY provide login steps if the user explicitly asks how to log in:
+"In the left sidebar, scroll down and click on **Login**. Enter your registered mobile number and then enter the OTP received on your phone. Once logged in, you will be able to create bookings, register complaints, and check your application status."
 
 {context_section}"""
 
@@ -833,10 +865,10 @@ Do NOT list fake IDs or made-up complaint descriptions.
             groq_client = Groq(api_key=GROQ_API_KEY)
 
         response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=GROQ_MODEL,
             messages=messages,
-            max_tokens=400,
-            temperature=0.3
+            max_tokens=650,
+            temperature=0.1
         )
         ans = response.choices[0].message.content.strip()
         elapsed = time.time() - start_time
@@ -855,8 +887,25 @@ Do NOT list fake IDs or made-up complaint descriptions.
         return ans
 
     except Exception as e:
-        logger.error(f"[GROQ RAG] Groq error: {e}")
-        return "क्षमा करें, तकनीकी समस्या है।" if lang == 'hi' else "Sorry, technical issue."
+        err_str = str(e).lower()
+        logger.error(f"[GROQ RAG] Groq error: {e}", exc_info=True)
+        if any(w in err_str for w in ["rate_limit", "429", "token", "tpm", "quota", "too many requests"]):
+            return (
+                "एआई सहायक की टोकन सीमा कुछ समय के लिए पूरी हो गई है। कृपया थोड़ी देर प्रतीक्षा करें और संक्षिप्त प्रश्न पूछें।"
+                if lang == 'hi' else
+                "The AI assistant has temporarily reached its message token limit. Please wait a moment and try again with a shorter question."
+            )
+        elif any(w in err_str for w in ["context_length", "maximum context"]):
+            return (
+                "यह बातचीत अधिकतम सीमा से अधिक लंबी हो गई है। कृपया एक नया प्रश्न पूछें।"
+                if lang == 'hi' else
+                "This conversation has exceeded the maximum length. Please ask a concise question or start a fresh query."
+            )
+        return (
+            "क्षमा करें, सर्वर से संपर्क नहीं हो पा रहा है। कृपया थोड़ी देर बाद पुनः प्रयास करें।"
+            if lang == 'hi' else
+            "I'm sorry, I am currently unable to process your request. Please try again in a few moments."
+        )
 
 # ============== RETRIEVAL (legacy wrapper) ==============
 
@@ -950,10 +999,10 @@ def retrieve_document_stream(query, user_lang, history, phone_anchor="default"):
 
         try:
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model=GROQ_MODEL,
                 messages=messages,
                 temperature=0.1,
-                max_tokens=150,
+                max_tokens=500,
                 stream=True
             )
 
@@ -975,12 +1024,30 @@ def retrieve_document_stream(query, user_lang, history, phone_anchor="default"):
                     yield f"data: {json.dumps({'type': 'audio', 'audio': audio_output})}\n\n"
 
         except Exception as e:
-            logger.error(f"Streaming error: {e}")
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+            err_str = str(e).lower()
+            logger.error(f"Streaming error: {e}", exc_info=True)
+            if any(w in err_str for w in ["rate_limit", "429", "token", "tpm", "quota"]):
+                friendly_err = (
+                    "एआई सेवा की टोकन सीमा पूरी हो गई है। कृपया थोड़ी देर प्रतीक्षा करके संक्षिप्त प्रश्न पूछें।"
+                    if user_lang == "hi" else
+                    "The AI token limit has been reached. Please wait a moment and try again with a shorter message."
+                )
+            else:
+                friendly_err = (
+                    "सर्वर समस्या के कारण प्रतिक्रिया पूरी नहीं हो सकी। कृपया पुनः प्रयास करें।"
+                    if user_lang == "hi" else
+                    "Unable to complete the response due to a temporary server issue. Please try again."
+                )
+            yield f"data: {json.dumps({'type': 'text', 'text': friendly_err})}\n\n"
 
     except Exception as e:
-        logger.error(f"Error in retrieve_document_stream: {e}")
-        yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+        logger.error(f"Error in retrieve_document_stream: {e}", exc_info=True)
+        fallback = (
+            "क्षमा करें, इस समय संपर्क स्थापित नहीं हो सका। कृपया पुनः प्रयास करें।"
+            if user_lang == "hi" else
+            "Sorry, unable to establish connection at this time. Please try again."
+        )
+        yield f"data: {json.dumps({'type': 'text', 'text': fallback})}\n\n"
 
 
 # ==========================================
@@ -1019,18 +1086,27 @@ def process_user_message(user_input: str, phone_number: str, session_id: str,
                          target_workflow: str = "adv_booking") -> Dict[str, Any]:
     intent = target_workflow
     if intent not in workflows:
-        return {"response": f"Service '{intent}' unavailable.", "status": "error"}
+        return {"response": "This service is currently unavailable. Please try again later.", "status": "ok"}
 
     target_graph = workflows[intent]
     thread_key = phone_number if (phone_number and phone_number != "default") else session_id
     config = {"configurable": {"thread_id": thread_key}}
 
-    events = target_graph.stream(
-        {"messages": [HumanMessage(content=user_input)], "phone_number": phone_number,
-         "session_id": session_id, "active_service": intent},
-        config,
-        stream_mode="values"
-    )
+    try:
+        events = target_graph.stream(
+            {"messages": [HumanMessage(content=user_input)], "phone_number": phone_number,
+             "session_id": session_id, "active_service": intent},
+            config,
+            stream_mode="values"
+        )
+    except Exception as stream_err:
+        logger.error(f"[process_user_message] Workflow error in '{intent}': {stream_err}", exc_info=True)
+        return {
+            "response": "I apologize, but I encountered a temporary technical issue while processing this request. Please try again or rephrase your input.",
+            "status": "ok",
+            "input_type": "text",
+            "options": []
+        }
     
     final_message = None
     graph_input_type = "text"
@@ -1068,9 +1144,23 @@ def process_user_message(user_input: str, phone_number: str, session_id: str,
             options = [opt.strip().strip('\'"') for opt in raw_options.split(',')]
         response_text = re.sub(r'<ui-(dropdown|button|checkbox-group)[^>]+>', '', response_text).strip()
         
+    min_date = None
     # Parse <ui-calendar ... />
-    if re.search(r'<ui-calendar[^>]*>', response_text):
+    cal_match = re.search(r'<ui-calendar([^>]*)>', response_text)
+    if cal_match:
         input_type = "date"
+        cal_attrs = cal_match.group(1)
+        min_date_match = re.search(r'minDate="([^"]*)"', cal_attrs)
+        from datetime import datetime, timedelta
+        tomorrow_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        if min_date_match:
+            val = min_date_match.group(1)
+            if val == "tomorrow" or str(val).strip() <= datetime.now().strftime("%Y-%m-%d"):
+                min_date = tomorrow_str
+            else:
+                min_date = str(val).strip()
+        else:
+            min_date = tomorrow_str
         response_text = re.sub(r'<ui-calendar[^>]*>', '', response_text).strip()
         
     # Parse <ui-file ... />
@@ -1123,6 +1213,7 @@ def process_user_message(user_input: str, phone_number: str, session_id: str,
         "messages_list": messages_list,
         "input_type": input_type,
         "options": options,
+        "min_date": min_date,
         "status": "done"
     }
 
@@ -1210,72 +1301,98 @@ def chat():
                 return jsonify({"error": "Loading resources..."}), 503
 
         user_data = request.json or {}
-        user_input = user_data.get("query", "")
+        user_input = user_data.get("query") or user_data.get("user_input") or ""
         session_id = user_data.get("session_id", "default")
         request_info = user_data.get("request_info") or user_data.get("RequestInfo", {})
         phone_anchor = extract_phone_from_session(session_id)
         from database import get_chat_history
         history = get_chat_history(phone_anchor) if phone_anchor != "default" else []
         file_name = user_data.get("file_name")
-        file_data = user_data.get("file_data")
+        file_data = user_data.get("file_data") 
 
         token = None
         cached_info = None
+        is_authenticated = False
 
-        # --- Cache & Validate User Profile Info in Redis dynamically ---
-        phone_anchor = extract_phone_from_session(session_id)
-        if phone_anchor != "default":
-            token = user_data.get("auth_token") or user_data.get("RequestInfo", {}).get("authToken")
+        # --- Auto-detect & Validate User Profile Info dynamically ---
+        # 1. First check if parent portal (e.g. NIUATT) passed RequestInfo with token & userInfo
+        req_user_info = request_info.get("userInfo", {}) if isinstance(request_info, dict) else {}
+        req_auth_token = request_info.get("authToken") if isinstance(request_info, dict) else None
+        req_auth_token = req_auth_token or user_data.get("auth_token")
+
+        if req_user_info and req_auth_token and len(str(req_auth_token)) > 15:
+            req_mobile = req_user_info.get("mobileNumber") or req_user_info.get("userName")
+            clean_mobile = re.sub(r'\D', '', str(req_mobile or ''))[-10:]
+            if clean_mobile and len(clean_mobile) == 10:
+                phone_anchor = clean_mobile
+                token = req_auth_token
+                req_user_info["_auth_token"] = req_auth_token
+                req_user_info["_verified_at"] = time.time()
+                save_user_profile_info(phone_anchor, req_user_info)
+                cached_info = req_user_info
+                is_authenticated = True
+                logger.info(f"[Auth] Auto-authenticated from RequestInfo for mobile={phone_anchor}")
+
+        # 2. Check user-service Redis token store directly (access_token:<token>)
+        if not is_authenticated:
+            token = token or req_auth_token or user_data.get("auth_token") or (request_info.get("authToken") if isinstance(request_info, dict) else None)
+            if token and len(str(token)) > 15:
+                from database import get_user_from_redis_token
+                redis_user = get_user_from_redis_token(str(token))
+                if redis_user:
+                    mobile = redis_user.get("mobileNumber") or redis_user.get("userName")
+                    clean_mobile = re.sub(r'\D', '', str(mobile or ''))[-10:]
+                    if clean_mobile and len(clean_mobile) == 10:
+                        phone_anchor = clean_mobile
+                        save_user_profile_info(phone_anchor, redis_user)
+                        cached_info = redis_user
+                        is_authenticated = True
+                        logger.info(f"[Auth] Auto-authenticated from backbone Redis token store for mobile={phone_anchor}")
+
+        # 3. Check session phone_anchor cache if not already authenticated
+        if not is_authenticated and phone_anchor != "default":
+            token = user_data.get("auth_token") or (request_info.get("authToken") if isinstance(request_info, dict) else None)
             if token and len(token) > 15:
                 cached_info = get_user_profile_info(phone_anchor)
                 cached_token = cached_info.get("_auth_token") if cached_info else None
                 verified_at = cached_info.get("_verified_at", 0) if cached_info else 0
                 
-                is_valid = False
-                user_info = cached_info
-                
                 # Trust cache if same token and verified in the last 10 minutes (600s)
                 if cached_token == token and (time.time() - verified_at) < 600:
-                    is_valid = True
+                    is_authenticated = True
                     logger.info(f"[Auth] Token for {phone_anchor} verified from cache (last check: {int(time.time() - verified_at)}s ago)")
                 else:
                     logger.info(f"[Auth] Token cache miss/expired for {phone_anchor}. Validating with UPYOG...")
                     is_valid, fresh_user_info = verify_user_auth(token, phone_anchor)
                     if is_valid:
-                        user_info = fresh_user_info
-                        user_info["_auth_token"] = token
-                        user_info["_verified_at"] = time.time()
-                        save_user_profile_info(phone_anchor, user_info)
-                        cached_info = user_info
+                        fresh_user_info["_auth_token"] = token
+                        fresh_user_info["_verified_at"] = time.time()
+                        save_user_profile_info(phone_anchor, fresh_user_info)
+                        cached_info = fresh_user_info
+                        is_authenticated = True
+                    else:
+                        from database import r_client
+                        r_client.delete(f"user_profile_info:{phone_anchor}")
+                        cached_info = None
+                        is_authenticated = False
+                        logger.warning(f"[Auth] Token verification failed for {phone_anchor}, operating in guest mode")
 
-                if is_valid:
-                    
-                    # Clear chat history if the user was previously locked out by an expired session
-                    try:
-                        from database import get_chat_history, r_client
-                        history = get_chat_history(phone_anchor)
-                        if history and len(history) > 0:
-                            # Check the entire history to ensure we catch any previous lockout messages
-                            last_messages = [msg.get("content", "") for msg in history]
-                            if any("session has expired" in content.lower() or "सत्र समाप्त हो गया है" in content for content in last_messages):
-                                r_client.delete(f"chat_history:{phone_anchor}")
-                                logger.info(f"[Auth] Cleared old expired session chat history for {phone_anchor}")
-                    except Exception as history_err:
-                        logger.error(f"Error checking/clearing history on re-login: {history_err}")
-                else:
-                    from database import r_client
-                    r_client.delete(f"user_profile_info:{phone_anchor}")
-                    
-                    lang_info = detect_language(user_input)
-                    user_language = lang_info['lang']
-                    msg = "सत्र समाप्त हो गया है। कृपया फिर से लॉगिन करें।" if user_language == 'hi' else "Your login session has expired. Please log in again using the System Login button."
-                    audio = text_to_speech(msg, user_language)
-                    return jsonify({
-                        "response": msg,
-                        "lang": user_language,
-                        "mode": "blocked",
-                        "audio": audio
-                    })
+        # 4. Fallback: query UPYOG /user/_search using the token
+        if not is_authenticated:
+            token = user_data.get("auth_token") or (request_info.get("authToken") if isinstance(request_info, dict) else None)
+            if token and len(str(token)) > 15:
+                is_valid, fresh_user_info = verify_user_auth(token, "default")
+                if is_valid and fresh_user_info:
+                    mobile = fresh_user_info.get("mobileNumber") or fresh_user_info.get("userName")
+                    clean_mobile = re.sub(r'\D', '', str(mobile or ''))[-10:]
+                    if clean_mobile and len(clean_mobile) == 10:
+                        phone_anchor = clean_mobile
+                        fresh_user_info["_auth_token"] = token
+                        fresh_user_info["_verified_at"] = time.time()
+                        save_user_profile_info(phone_anchor, fresh_user_info)
+                        cached_info = fresh_user_info
+                        is_authenticated = True
+                        logger.info(f"[Auth] Verified token with UPYOG and authenticated mobile={phone_anchor}")
 
         if file_name and file_data and token:
             from mcp_tools import upload_to_filestore
@@ -1320,24 +1437,6 @@ def chat():
             return jsonify({"response": msg, "lang": user_language,
                            "audio": audio_output, "mode": "blocked"})
 
-        # Intercept unsupported transactional requests professionally (Trade License, Property Tax)
-        unsupported_keywords = ["trade license", "property tax", "property text", "व्यापार लाइसेंस", "संपत्ति कर"]
-        action_keywords = ["pay", "book", "apply", "register", "fill", "payment", "details", "भरें", "भुगतान", "आवेदन"]
-        ui_lower = user_input.lower()
-        if any(u in ui_lower for u in unsupported_keywords) and any(a in ui_lower for a in action_keywords):
-            msg = (
-                "वर्तमान में, मैं केवल विज्ञापन बुकिंग में आपकी सहायता कर सकता हूँ। व्यापार लाइसेंस और संपत्ति कर सेवाओं पर काम चल रहा है और वे जल्द ही शुरू की जाएंगी। कृपया मुझे बताएं कि क्या आप विज्ञापन बुकिंग के साथ आगे बढ़ना चाहते हैं!"
-                if user_language == 'hi' else
-                "Currently, I can only assist you with Advertisement Bookings. Support for Trade License and Property Tax services is under development and will be launched soon. Please let me know if you would like to proceed with an advertisement booking!"
-            )
-            audio_output = text_to_speech(msg, user_language)
-            return jsonify({
-                "response": msg,
-                "lang": user_language,
-                "audio": audio_output,
-                "mode": "blocked"
-            })
-
         # ── Direct greeting pre-check (before LLM classifier) ───────────────────
         # Greet keywords are loaded from config.yml `greeting_keywords`; fallback to
         # a minimal built-in list so zero Python code needs updating when config changes.
@@ -1348,55 +1447,92 @@ def chat():
             "hello", "hi", "hey", "namaste", "good morning", "good afternoon",
             "good evening", "hola", "howdy", "greetings", "नमस्ते", "हेलो"
         ])]
+        
+        # Word boundary match to ensure words like "hindi", "hinglish", "this" don't match "hi"
         _is_pure_greeting = (
             user_input.lower().strip() in _greet_kws or
-            (len(user_input.split()) <= 3 and any(w in user_input.lower() for w in _greet_kws))
+            (len(user_input.split()) <= 2 and any(re.search(rf'\b{re.escape(w)}\b', user_input.lower()) for w in _greet_kws) and not any(l in user_input.lower() for l in ["hindi", "hinglish", "english", "translate", "karo", "batao", "status", "bill"]))
         )
         if _is_pure_greeting:
-            # Check active plugin first so we resume, not reset
-            phone = extract_phone_from_session(session_id)
-            thread_key = phone if (phone and phone != "default") else session_id
-            _cfg = {"configurable": {"thread_id": thread_key}}
-            _active_on_greet = None
-            _active_plugins = []
-            for _wf_name, _graph in workflows.items():
-                _st = _graph.get_state(_cfg)
-                if _st and _st.values:
-                    _dk = "draft_booking" if _wf_name == "adv_booking" else "draft_grievance"
-                    _dr = _st.values.get(_dk) or {}
-                    if isinstance(_dr, dict) and any(
-                        v for k, v in _dr.items() if not k.startswith("_") and v is not None
-                    ):
-                        timestamp = getattr(_st, "created_at", "")
-                        _active_plugins.append((_wf_name, timestamp))
-            
-            if _active_plugins:
-                _active_plugins.sort(key=lambda x: x[1], reverse=True)
-                _active_on_greet = _active_plugins[0][0]
-            if _active_on_greet:
-                # Resume active workflow — re-prompt the pending step
-                logger.info(f"[Greeting] Active plugin '{_active_on_greet}' — resuming")
-                _res = process_user_message(user_input, phone, session_id, target_workflow=_active_on_greet)
-                _audio = text_to_speech(_res.get("response", ""), user_language)
-                return jsonify({
-                    "response": _res.get("response", ""),
-                    "lang": user_language, "mode": "agent_active", "audio": _audio,
-                    "input_type": _res.get("input_type", "text"),
-                    "options": _res.get("options", []),
-                })
+            # Show fresh dynamic greeting
+            greet_msg = build_greeting_response(user_language, workflows)
+            audio_output = text_to_speech(greet_msg, user_language)
+            logger.info("[Greeting] Responding with fresh greeting")
+            return jsonify({
+                "response": greet_msg, "lang": user_language,
+                "mode": "greeting", "audio": audio_output
+            })
+
+        # ── Direct login guidance check (CHATBOT-02: Portal journey alignment) ───
+        login_kws = [
+            "how to login", "how to log in", "how do i login", "how can i login",
+            "login kaise kare", "login kaise karte hain", "login process",
+            "login process kya hai", "can you login", "log me in", "where is login",
+            "login option", "login button", "login kaise hoga", "login kahan hai",
+            "login kaise karein", "login kaise karey", "login steps", "login karna",
+            "login kaise kiya jata hai", "login karna hai", "can i login without clicking",
+            "login without clicking", "how to sign in", "sign in kaise kare"
+        ]
+        ui_clean = user_input.lower().strip()
+        is_login_query = (
+            any(kw in ui_clean for kw in login_kws) or
+            (("login" in ui_clean or "log in" in ui_clean or "sign in" in ui_clean) and any(w in ui_clean for w in ["how", "kaise", "where", "kahan", "procedure", "karna", "process", "steps", "help", "batao", "bataiye", "can you", "without", "bina"]))
+        )
+        if is_login_query:
+            if user_language == "hi":
+                login_msg = (
+                    "बाईं ओर के साइडबार (Left Sidebar) में नीचे जाएं और **Login** विकल्प पर क्लिक करें। "
+                    "अपना पंजीकृत मोबाइल नंबर भरें और फिर प्राप्त OTP दर्ज करें। "
+                    "लॉगिन करने के बाद, आप बुकिंग बना सकते हैं, शिकायत दर्ज कर सकते हैं और अपने आवेदन की स्थिति देख सकते हैं।"
+                )
             else:
-                # No active workflow — show fresh dynamic greeting
-                greet_msg = build_greeting_response(user_language, workflows)
-                audio_output = text_to_speech(greet_msg, user_language)
-                logger.info("[Greeting] No active plugin — fresh greeting")
-                return jsonify({
-                    "response": greet_msg, "lang": user_language,
-                    "mode": "greeting", "audio": audio_output
-                })
+                login_msg = (
+                    "In the left sidebar, scroll down and click on **Login**. "
+                    "Enter your registered mobile number and then enter the OTP received on your phone. "
+                    "Once logged in, you will be able to create bookings, register complaints, and check your application status."
+                )
+            audio_output = text_to_speech(login_msg, user_language)
+            logger.info("[Login Guidance] Returned portal left-sidebar login flow instructions")
+            return jsonify({
+                "response": login_msg,
+                "lang": user_language,
+                "mode": "faq",
+                "audio": audio_output
+            })
+
+        # ── Check if user is claiming they have logged in ("logging done", "login ho gaya") ──
+        login_claim_kws = [
+            "logging done", "login done", "logged in", "i have logged in",
+            "i logged in", "done", "login ho gaya", "maine login kar liya",
+            "login complete", "login kar liya", "login hogaya", "signed in",
+            "i have signed in", "now logged in", "login completed", "done login",
+            "login kar chuka hu", "login ho chuka hai"
+        ]
+        is_login_claim = any(ui_clean == kw or ui_clean.startswith(kw) for kw in login_claim_kws)
+        if is_login_claim:
+            if is_authenticated:
+                user_name = (cached_info.get("name") if cached_info else None) or "Citizen"
+                if user_language == "hi":
+                    resp_msg = f"बहुत बढ़िया! आपकी पहचान सत्यापित हो गई है ({user_name})। अब आप विज्ञापन बुकिंग कर सकते हैं या शिकायत दर्ज कर सकते हैं। आप क्या करना चाहते हैं?"
+                else:
+                    resp_msg = f"Great! Your login session is verified ({user_name}). You can now proceed to book an advertisement or register a complaint. How would you like to proceed?"
+            else:
+                if user_language == "hi":
+                    resp_msg = "मुझे अभी आपका सक्रिय लॉगिन सत्र नहीं मिला है। कृपया बाईं ओर के साइडबार में नीचे **Login** विकल्प पर क्लिक करके अपने मोबाइल नंबर और OTP से लॉगिन पूरा करें।"
+                else:
+                    resp_msg = "I do not detect an active logged-in session yet. Please complete the login by clicking **Login** in the left sidebar and entering your mobile number and OTP."
+            audio_output = text_to_speech(resp_msg, user_language)
+            logger.info(f"[Login Claim] is_authenticated={is_authenticated}, returning verified status response")
+            return jsonify({
+                "response": resp_msg,
+                "lang": user_language,
+                "mode": "faq",
+                "audio": audio_output
+            })
 
         # ===== EARLY INTERCEPTION: Multi-Draft Selection Menu =====
         # Must run BEFORE intent classification to avoid keyword conflicts (e.g. "booking" triggering status search)
-        phone = extract_phone_from_session(session_id)
+        phone = phone_anchor if phone_anchor != "default" else extract_phone_from_session(session_id)
         thread_key = phone if (phone and phone != "default") else session_id
         config = {"configurable": {"thread_id": thread_key}}
 
@@ -1405,34 +1541,44 @@ def chat():
             from draft_switcher import MultiDraftSwitcher
             drafts = pending_multi.get("drafts", [])
             logger.info(f"[DraftSwitcher] Intercepted multi-draft response for {phone}. Input='{user_input}', Drafts={len(drafts)}")
-            selected_draft = MultiDraftSwitcher.resolve_citizen_selection(user_input, drafts)
             
-            _clear_multi_draft_pending(phone)
-            
-            if selected_draft:
-                target_wf = selected_draft.get("plugin_name")
-                draft_data = selected_draft.get("draft_data", {})
-                logger.info(f"[DraftSwitcher] Selected: {target_wf}, draft_data keys: {list(draft_data.keys())}")
-                
-                # Restore selected draft into LangGraph workflow
-                if target_wf in workflows and draft_data:
-                    draft_key = "draft_booking" if target_wf == "adv_booking" else "draft_grievance"
-                    config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
-                    workflows[target_wf].update_state(config_update, {draft_key: draft_data})
-                    logger.info(f"[DraftSwitcher] Draft restored into LangGraph for {phone}/{target_wf}")
-                    
-                # Send 'continue' — triggers resume path in intent_and_ui_node directly
-                # 'Continue my application' was matching 'my application' keyword → past bookings bug
-                agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf)
-                audio = text_to_speech(agent_res.get("response", ""), user_language)
-                return jsonify({
-                    "response": agent_res.get("response", ""), "messages": agent_res.get("messages_list", []),
-                    "lang": user_language, "mode": "agent_active", "audio": audio,
-                    "input_type": agent_res.get("input_type", "text"), "options": agent_res.get("options", []),
-                    "show_button": agent_res.get("show_button")
-                })
+            ui_check = user_input.strip().lower()
+            digits = re.findall(r'\d+', ui_check)
+            selected_idx = int(digits[0]) - 1 if digits else -1
+            delete_keywords = ["delete", "cancel", "clear", "discard", "remove", "erase", "hatao", "hata", "mitado"]
+            is_delete_choice = selected_idx == len(drafts) + 1 or any(w in ui_check for w in delete_keywords)
+
+            if is_delete_choice:
+                logger.info(f"[DraftSwitcher] User chose to delete/cancel drafts while in multi-draft switcher")
+                _clear_multi_draft_pending(phone)
+                # Will fall through to draft_delete intent directly below
             else:
-                logger.warning(f"[DraftSwitcher] Could not resolve selection '{user_input}' from {len(drafts)} drafts")
+                selected_draft = MultiDraftSwitcher.resolve_citizen_selection(user_input, drafts)
+                _clear_multi_draft_pending(phone)
+                
+                if selected_draft:
+                    target_wf = selected_draft.get("plugin_name")
+                    draft_data = selected_draft.get("draft_data", {})
+                    logger.info(f"[DraftSwitcher] Selected: {target_wf}, draft_data keys: {list(draft_data.keys())}")
+                    
+                    # Restore selected draft into LangGraph workflow
+                    if target_wf in workflows and draft_data:
+                        draft_key = "draft_booking" if target_wf == "adv_booking" else "draft_grievance"
+                        config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+                        workflows[target_wf].update_state(config_update, {draft_key: draft_data})
+                        logger.info(f"[DraftSwitcher] Draft restored into LangGraph for {phone}/{target_wf}")
+                        
+                    # Send 'continue' — triggers resume path in intent_and_ui_node directly
+                    agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf)
+                    audio = text_to_speech(agent_res.get("response", ""), user_language)
+                    return jsonify({
+                        "response": agent_res.get("response", ""), "messages": agent_res.get("messages_list", []),
+                        "lang": user_language, "mode": "agent_active", "audio": audio,
+                        "input_type": agent_res.get("input_type", "text"), "options": agent_res.get("options", []),
+                        "show_button": agent_res.get("show_button")
+                    })
+                else:
+                    logger.warning(f"[DraftSwitcher] Could not resolve selection '{user_input}' from {len(drafts)} drafts")
 
         # ===== INTENT CLASSIFICATION FLOW =====
         ui_lower = user_input.strip().lower()
@@ -1440,23 +1586,80 @@ def chat():
         if (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}")):
             is_ui_payload = True
 
+        profile_triggers = [
+            "profile", "my profile", "profile details", "who am i", "what is my name",
+            "show my details", "my details", "account details", "my account",
+            "user details", "mera profile", "meri profile", "mera naam", "meri details",
+            "profile info", "my info", "account info"
+        ]
+        is_profile_query = any(re.search(rf'\b{re.escape(w)}\b', ui_lower) for w in profile_triggers)
+
+        # Regex patterns for Draft operations
+        draft_delete_patterns = [
+            r"\b(delete|remove|clear|discard|cancel|erase|drop)\s+(all\s+)?(my\s+)?(saved\s+)?(drafts?|applications?)\b",
+            r"\b(my\s+)?(saved\s+)?(drafts?|applications?)\s+(ko\s+)?(delete|cancel|clear|discard|remove|hatao|hata\s*do|hataiye|mitado)\b",
+            r"\b(delete|remove|clear|discard|cancel)\s+(the\s+)?drafts?\b",
+            r"\b(delete|remove|clear|discard|cancel)\s+(draft\s*\d+|option\s*\d+|\d+)\b",
+            r"\b(delete|remove|clear|discard|cancel)\s+(grievance|complaint|booking|advertisement|adv)\s+draft\b",
+            r"\bdraft(s)?\s+(delete|cancel|clear|discard|remove|hatao|hata\s*do|hataiye|khatam)\b",
+            r"\b(mere|mera|sab|saare)\s+draft(s)?\s+(delete|cancel|clear|hatao|hata\s*do|hataiye)\b",
+            r"\bdelete\s+(all\s+)?drafts?\b",
+            r"\bcancel\s+(all\s+)?drafts?\b",
+            r"\bclear\s+(all\s+)?drafts?\b",
+            r"\bdiscard\s+(all\s+)?drafts?\b",
+            r"\bcancel\s+application\b",
+            r"\bcancel\s+my\s+application\b",
+            r"\bdelete\s+my\s+application\b",
+            r"\bdelete\s+application\b"
+        ]
+        is_draft_delete = any(re.search(p, ui_lower) for p in draft_delete_patterns)
+
+        draft_continue_patterns = [
+            r"\b(continue|resume)\s+(my\s+)?(application|booking|complaint|draft|grievance)\b",
+            r"\b(aage\s+badhao|jaari\s+rakhein|continue\s+karo)\b",
+            r"^continue$",
+            r"^resume$"
+        ]
+        is_draft_continue = any(re.search(p, ui_lower) for p in draft_continue_patterns)
+
+        draft_save_patterns = [
+            r"\bsave\s+(the\s+|my\s+)?(draft|application)\b",
+            r"\bdraft\s+save\s*(karo|kar\s*do|karein)?\b"
+        ]
+        is_draft_save = any(re.search(p, ui_lower) for p in draft_save_patterns)
+
+        draft_view_patterns = [
+            r"\b(show|view|list|check|see|get|fetch|display|open|dikhao|batao|bataiye)\s+(all\s+)?(my\s+)?(saved\s+)?(drafts?)\b",
+            r"\b(my\s+|saved\s+|all\s+|mere\s+|mera\s+)?drafts?\s+(list|dikhao|batao|bataiye|dekho|dekhein)\b",
+            r"^(show\s+)?(my\s+)?drafts?$",
+            r"^(saved\s+)?drafts?$",
+            r"^(mere\s+|mera\s+)?drafts?(\s+dikhao)?$",
+            r"\b(show|view|list|open)\s+drafts?\b"
+        ]
+        is_draft_view = any(re.search(p, ui_lower) for p in draft_view_patterns) or (
+            "draft" in ui_lower and any(w in ui_lower for w in ["show", "resume", "continue", "open", "list", "view", "check", "dikhao", "batao"])
+        )
+
         if is_ui_payload:
             intent_data = {"intent": "none", "service": "None", "emotion": "neutral"}
             logger.info("Bypassed intent classification for UI payload.")
-        elif "save draft" in ui_lower or "save the draft" in ui_lower:
-            intent_data = {"intent": "draft_save", "service": "None", "emotion": "neutral"}
-        elif "continue without saving" in ui_lower:
-            intent_data = {"intent": "draft_continue_no_save", "service": "None", "emotion": "neutral"}
-        elif "cancel application" in ui_lower:
-            intent_data = {"intent": "draft_cancel_application", "service": "None", "emotion": "neutral"}
-        elif "continue application" in ui_lower:
+        elif is_profile_query:
+            intent_data = {"intent": "profile", "service": "None", "emotion": "neutral"}
+            logger.info(f"[Intent] Pre-classified profile query: '{user_input}'")
+        elif is_draft_delete:
+            intent_data = {"intent": "draft_delete", "service": "None", "emotion": "neutral"}
+            logger.info(f"[Intent] Pre-classified draft delete query: '{user_input}'")
+        elif is_draft_continue:
             intent_data = {"intent": "draft_continue_application", "service": "None", "emotion": "neutral"}
-        elif "cancel draft" in ui_lower:
-            intent_data = {"intent": "draft_cancel", "service": "None", "emotion": "neutral"}
+            logger.info(f"[Intent] Pre-classified draft continue query: '{user_input}'")
+        elif is_draft_save:
+            intent_data = {"intent": "draft_save", "service": "None", "emotion": "neutral"}
+            logger.info(f"[Intent] Pre-classified draft save query: '{user_input}'")
+        elif is_draft_view:
+            intent_data = {"intent": "draft_resume", "service": "None", "emotion": "neutral"}
+            logger.info(f"[Intent] Pre-classified draft view/resume query: '{user_input}'")
         elif "end conversation" in ui_lower:
             intent_data = {"intent": "end_conversation", "service": "None", "emotion": "neutral"}
-        elif "draft" in ui_lower and any(w in ui_lower for w in ["show", "resume", "continue", "open"]):
-            intent_data = {"intent": "draft_resume", "service": "None", "emotion": "neutral"}
         else:
             # Run intent classifier FIRST - before any FAISS filtering
             intent_data = classify_intent(user_input, history, user_language)
@@ -1472,15 +1675,18 @@ def chat():
             state = graph.get_state(config)
             if state and state.values:
                 draft_key = "draft_booking" if wf_name == "adv_booking" else "draft_grievance"
-                draft = state.values.get(draft_key) or {}
-                if isinstance(draft, dict):
-                    user_fields = [v for k, v in draft.items() if not k.startswith("_") and v is not None]
-                    if user_fields:
-                        timestamp = getattr(state, "created_at", "")
-                        active_plugins.append((wf_name, timestamp))
+                draft = state.values.get(draft_key)
+                if isinstance(draft, dict) and not draft.get("_cancelled"):
+                    has_fields = any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != "")
+                    has_options = bool(draft.get("_category_options") or draft.get("_sub_options") or draft.get("_locality_options") or draft.get("_slot_options"))
+                    messages = state.values.get("messages", [])
+                    
+                    if (has_fields or has_options) and messages:
+                        timestamp = getattr(state, "created_at", "") or ""
+                        active_plugins.append((wf_name, timestamp, len(messages)))
         
         if active_plugins:
-            active_plugins.sort(key=lambda x: x[1], reverse=True)
+            active_plugins.sort(key=lambda x: (x[1], x[2]), reverse=True)
             active_plugin = active_plugins[0][0]
 
         # Map ML intents & dynamic config keywords to plugin names (Zero Hardcoding)
@@ -1502,42 +1708,187 @@ def chat():
                 plugin_intent = s_key
                 break
 
-        if not plugin_intent:
+        if not plugin_intent and intent != "profile":
             if intent in ["grievance_candidate", "grievance_status_candidate"]:
                 plugin_intent = "grievance"
-            elif intent in ["adv_candidate", "adv_confirm", "adv_status_candidate", "booking_candidate", "booking_confirm"]:
+            elif intent in ["adv_candidate", "adv_status_candidate", "booking_candidate"]:
                 plugin_intent = "adv_booking"
+            elif intent in ["adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel", "grievance_confirm", "grievance_cancel"]:
+                # Generic confirmation/cancellation intents stay with active_plugin if one is ongoing
+                plugin_intent = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
 
-        # Clear active_plugin if user explicitly requested a different workflow
-        if plugin_intent and active_plugin and plugin_intent != active_plugin:
+        # Explicit service switch occurs ONLY if the user explicitly requested the other service (NOT on generic yes/no/confirm/cancel responses)
+        is_generic_response = ui_lower in ["yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"]
+        if plugin_intent and active_plugin and plugin_intent != active_plugin and not is_generic_response:
             logger.info(f"[Router] User switched service: {active_plugin} -> {plugin_intent}")
+            # Auto-save previous workflow draft before switching if it has user-filled data
+            if active_plugin in workflows:
+                prev_state = workflows[active_plugin].get_state(config)
+                if prev_state and prev_state.values:
+                    prev_draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+                    prev_draft = prev_state.values.get(prev_draft_key) or {}
+                    if prev_draft and any(v for k, v in prev_draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""):
+                        from memory_manager import MemoryManager
+                        MemoryManager.save_draft_state(phone, active_plugin, prev_draft)
+                        logger.info(f"[AutoSave] Saved previous workflow draft for {phone}/{active_plugin}")
+                    
+                    # Reset previous workflow in-memory state so it doesn't hijack subsequent turns
+                    empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
+                    workflows[active_plugin].update_state(config, {prev_draft_key: empty_draft, "missing_fields": [], "messages": []})
+                    logger.info(f"[AutoSave] Reset in-memory state for {active_plugin}")
             active_plugin = plugin_intent
+        elif active_plugin and is_generic_response:
+            # Strictly preserve active_plugin for generic yes/no/confirm/cancel answers
+            plugin_intent = active_plugin
 
-        # === GENERIC WORKFLOW INTERRUPTION & DRAFT MANAGER ===
-        # 1. Handle FAQ while in active workflow
-        if intent == "faq" and active_plugin:
-            logger.info(f"FAQ Interruption triggered for {phone}")
-            _set_pending_interruption(phone, {
-                "question": user_input,
-                "plugin": active_plugin,
-                "status": "awaiting_action"
-            })
-            msg = "Your current application is still in progress. What would you like to do?"
-            audio = text_to_speech(msg, user_language)
+        # === GENERIC WORKFLOW INTERRUPTION & DRAFT AUTO-SAVER ===
+        question_triggers = [
+            "?", "what is", "what does", "explain", "meaning", "kya hai", "kaise", "kyun",
+            "tell me about", "rules for", "how to", "who is", "help with", "information about",
+            "where can", "details of", "procedure for", "charges for", "fees for", "kya hota",
+            "kaun", "kahan", "batao", "bataiye", "jaankari", "information"
+        ]
+        is_explicit_question = any(q in user_input.lower() for q in question_triggers)
+
+        # Check if user_input matches any options or fields of the active workflow
+        is_option_selection = False
+        if active_plugin and active_plugin in workflows and not is_explicit_question:
+            state = workflows[active_plugin].get_state(config)
+            if state and state.values:
+                draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+                draft = state.values.get(draft_key) or {}
+                
+                # Fetch categories dynamically from grievance / adv_booking if not yet stored
+                if active_plugin == "grievance":
+                    from workflow.grievance import _pgr_categories, _pgr_localities
+                    pgr_cats = draft.get("_category_options") or _pgr_categories() or {}
+                    cats = list(pgr_cats.keys())
+                    pgr_locs = draft.get("_locality_options") or _pgr_localities() or []
+                    locs = [l.get("name", "") if isinstance(l, dict) else str(l) for l in pgr_locs]
+                else:
+                    cats = list((draft.get("_category_options") or {}).keys())
+                    locs = [l.get("name", "") if isinstance(l, dict) else str(l) for l in (draft.get("_locality_options") or [])]
+                
+                subs = [s.get("name", "") if isinstance(s, dict) else str(s) for s in (draft.get("_sub_options") or [])]
+                slots = [s.get("name", "") if isinstance(s, dict) else str(s) for s in (draft.get("_slot_options") or [])]
+                
+                # Normalize all options (alphanumeric only, lowercase)
+                all_opts = [re.sub(r'[\s_]+', '', str(o).lower()) for o in (cats + subs + locs + slots) if o]
+                clean_in = re.sub(r'[\s_]+', '', user_input.strip().lower())
+                
+                # Also check digit selection e.g. "1", "option 1"
+                is_digit_choice = bool(re.match(r'^(?:option\s*)?\d+$', user_input.strip().lower()))
+                
+                if is_digit_choice or clean_in in all_opts or any(clean_in == o or (o in clean_in and len(user_input.split()) <= 3) for o in all_opts):
+                    is_option_selection = True
+                    logger.info(f"[Router] '{user_input}' matched active option in {active_plugin}")
+
+        # An interruption occurs ONLY when the citizen asks an EXPLICIT question during an active form
+        is_faq_or_interruption = is_explicit_question and not is_option_selection and not is_ui_payload
+
+        if is_faq_or_interruption and active_plugin:
+            logger.info(f"[Interruption] User asked a question during '{active_plugin}': '{user_input}'. Answering FAQ.")
+            
+            draft_saved = False
+            saved_plugin_name = None
+            
+            # 1. Automatically save active workflow state into Qdrant ONLY IF real user data exists
+            if active_plugin in workflows:
+                state = workflows[active_plugin].get_state(config)
+                if state and state.values:
+                    draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+                    draft = state.values.get(draft_key) or {}
+                    real_fields = {k: v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""}
+                    if real_fields:
+                        from memory_manager import MemoryManager
+                        MemoryManager.save_draft_state(phone, active_plugin, draft)
+                        draft_saved = True
+                        saved_plugin_name = active_plugin
+                        logger.info(f"[AutoSave] Saved draft for {phone}/{active_plugin}: {real_fields}")
+                    
+                    # Reset active LangGraph graph state so subsequent queries don't auto-lock into form
+                    empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
+                    workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
+
+            # 2. Answer the citizen's question via FAQ retrieval / RAG
+            faq_ans = retrieve_document(user_input, user_language, history, session_id=session_id)
+            
+            draft_note = ""
+            if draft_saved and saved_plugin_name:
+                plugin_display = "Advertisement Booking" if saved_plugin_name == "adv_booking" else "Grievance"
+                if user_language == 'hi':
+                    draft_note = f"\n\n*(नोट: आपका {plugin_display} ड्राफ्ट सुरक्षित सेव कर लिया गया है। इसे जारी रखने के लिए कभी भी 'Continue my application' कहें या ड्राफ्ट चुनें।)*"
+                else:
+                    draft_note = f"\n\n*(Note: Your {plugin_display} application draft has been saved. You can continue it anytime by saying 'Continue my application' or selecting it from your drafts.)*"
+            
+            full_ans = f"{faq_ans}{draft_note}"
+            audio = text_to_speech(full_ans, user_language)
             return jsonify({
-                "response": msg,
+                "response": full_ans,
                 "lang": user_language,
-                "mode": "agent_active",
+                "mode": "faq",
                 "audio": audio,
-                "input_type": "choice",
-                "options": ["Save Draft", "Continue Without Saving", "Cancel Application"],
-                "show_button": True
+                "input_type": "text",
+                "options": []
             })
 
-        # 2. Handle explicit "Save Draft" intent
+        # 2. Handle explicit "Continue Application" intent
+        if intent == "draft_continue_application":
+            from memory_manager import MemoryManager
+            all_drafts = MemoryManager.get_all_draft_states(phone)
+            logger.info(f"[ContinueApplication] Found {len(all_drafts)} drafts for phone {phone}")
+            
+            if len(all_drafts) == 1:
+                target_wf = all_drafts[0].get("plugin_name", "adv_booking")
+                draft_data = all_drafts[0].get("draft_data", {})
+                
+                # Restore into LangGraph checkpointer
+                if target_wf in workflows and draft_data:
+                    draft_key = "draft_booking" if target_wf == "adv_booking" else "draft_grievance"
+                    config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+                    workflows[target_wf].update_state(config_update, {draft_key: draft_data})
+                
+                agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf)
+                audio = text_to_speech(agent_res.get("response", ""), user_language)
+                return jsonify({
+                    "response": agent_res.get("response", ""),
+                    "messages": agent_res.get("messages_list", []),
+                    "lang": user_language,
+                    "mode": "agent_active",
+                    "audio": audio,
+                    "input_type": agent_res.get("input_type", "text"),
+                    "options": agent_res.get("options", []),
+                    "min_date": agent_res.get("min_date"),
+                    "field": agent_res.get("field"),
+                    "show_button": agent_res.get("show_button")
+                })
+            elif len(all_drafts) > 1:
+                from draft_switcher import MultiDraftSwitcher
+                switcher_res = MultiDraftSwitcher.inspect_and_render_switcher(phone, user_input=user_input, user_language=user_language)
+                _set_multi_draft_pending(phone, switcher_res["drafts"])
+                msg = switcher_res["menu"]
+                audio = text_to_speech(msg, user_language)
+                return jsonify({
+                    "response": msg,
+                    "lang": user_language,
+                    "mode": "agent_active",
+                    "audio": audio,
+                    "input_type": "choice",
+                    "options": switcher_res.get("options") or [f"Option {i+1}" for i in range(switcher_res["count"])] + ["Start New Service Request"],
+                    "show_button": True
+                })
+            else:
+                msg = (
+                    "Aapka koi saved draft nahi mila. Kya aap naya application start karna chahte hain?"
+                    if user_language == 'hi' else
+                    "I couldn't find any saved drafts. Would you like to start a new application?"
+                )
+                audio = text_to_speech(msg, user_language)
+                return jsonify({"response": msg, "lang": user_language, "mode": "faq", "audio": audio})
+
+        # 3. Handle explicit "Save Draft" intent
         if intent == "draft_save":
-            pending = _get_pending_interruption(phone)
-            plugin = pending.get("plugin") or active_plugin
+            plugin = active_plugin or "adv_booking"
             if plugin and plugin in workflows:
                 config_check = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
                 state = workflows[plugin].get_state(config_check)
@@ -1549,80 +1900,17 @@ def chat():
                         MemoryManager.save_draft_state(phone, plugin, draft)
                         logger.info(f"Explicitly saved draft for {phone}/{plugin}: {draft}")
                 
-            if pending and pending.get("status") == "awaiting_action":
-                faq_ans = retrieve_document(pending["question"], user_language, history, session_id=session_id)
-                msg = f"Your application has been saved successfully. You can continue it anytime.\n\n{faq_ans}\n\nWould you like to continue your application now?"
-                pending["status"] = "awaiting_resume"
-                _set_pending_interruption(phone, pending)
-                audio = text_to_speech(msg, user_language)
-                return jsonify({
-                    "response": msg, "lang": user_language, "mode": "agent_active", "audio": audio,
-                    "input_type": "choice", "options": ["Continue Application", "End Conversation"], "show_button": True
-                })
-            else:
-                msg = "Your draft application has been saved successfully in memory. You can resume it anytime!"
-                audio = text_to_speech(msg, user_language)
-                return jsonify({"response": msg, "lang": user_language, "mode": "agent_active", "audio": audio})
+            msg = "Your draft application has been saved successfully. You can resume it anytime by saying 'Continue my application'!"
+            audio = text_to_speech(msg, user_language)
+            return jsonify({"response": msg, "lang": user_language, "mode": "faq", "audio": audio})
 
-        if intent == "draft_continue_no_save":
-            pending = _get_pending_interruption(phone)
-            if pending:
-                faq_ans = retrieve_document(pending["question"], user_language, history, session_id=session_id)
-                target_wf = pending["plugin"]
-                _clear_pending_interruption(phone)
-                agent_res = process_user_message("", phone, session_id, target_workflow=target_wf)
-                msg = f"{faq_ans}\n\nContinuing Your Application...\n\n{agent_res.get('response', '')}"
-                audio = text_to_speech(msg, user_language)
-                return jsonify({
-                    "response": msg, "messages": agent_res.get("messages_list", []), "lang": user_language,
-                    "mode": "agent_active", "audio": audio, "input_type": agent_res.get("input_type", "text"),
-                    "options": agent_res.get("options", []), "show_button": agent_res.get("show_button")
-                })
-                
-        if intent == "draft_cancel_application":
-            pending = _get_pending_interruption(phone)
-            if pending:
-                faq_ans = retrieve_document(pending["question"], user_language, history, session_id=session_id)
-                target_wf = pending["plugin"]
-                _clear_pending_interruption(phone)
-                from memory_manager import MemoryManager
-                MemoryManager.delete_draft_state(phone, target_wf)
-                process_user_message("[CANCEL_DRAFT]", phone, session_id, target_workflow=target_wf)
-                msg = f"{faq_ans}\n\nYour previous application has been cancelled."
-                audio = text_to_speech(msg, user_language)
-                return jsonify({
-                    "response": msg, "lang": user_language, "mode": "faq", "audio": audio
-                })
-                
-        if intent == "draft_continue_application":
-            pending = _get_pending_interruption(phone)
-            if pending:
-                target_wf = pending["plugin"]
-                _clear_pending_interruption(phone)
-                
-                # Fetch module-isolated draft from Qdrant and inject it back into LangGraph checkpointer
-                from memory_manager import MemoryManager
-                draft = MemoryManager.get_draft_state(phone, target_wf)
-                if draft and draft.get("draft_data") and target_wf in workflows:
-                    draft_key = "draft_booking" if target_wf == "adv_booking" else "draft_grievance"
-                    config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
-                    workflows[target_wf].update_state(config_update, {draft_key: draft["draft_data"]})
-                
-                agent_res = process_user_message("Continue my application", phone, session_id, target_workflow=target_wf)
-                audio = text_to_speech(agent_res.get("response", ""), user_language)
-                return jsonify({
-                    "response": agent_res.get("response", ""), "messages": agent_res.get("messages_list", []), "lang": user_language,
-                    "mode": "agent_active", "audio": audio, "input_type": agent_res.get("input_type", "text"),
-                    "options": agent_res.get("options", []), "show_button": agent_res.get("show_button")
-                })
-                
         if intent == "end_conversation":
             _clear_pending_interruption(phone)
             msg = "Goodbye! Have a great day!"
             audio = text_to_speech(msg, user_language)
             return jsonify({"response": msg, "lang": user_language, "mode": "faq", "audio": audio})
-            
-        # 3. Global Dynamic Multi-Draft Resume & Switcher
+
+        # 4. Global Dynamic Multi-Draft Resume & Switcher
         if intent == "draft_resume":
             from draft_switcher import MultiDraftSwitcher
             from memory_manager import MemoryManager
@@ -1661,35 +1949,161 @@ def chat():
                 audio = text_to_speech(msg, user_language)
                 return jsonify({"response": msg, "lang": user_language, "mode": "faq", "audio": audio})
                 
-        if intent == "draft_cancel":
+        if intent in ["draft_cancel", "draft_cancel_application", "draft_delete"]:
             pending = _get_pending_interruption(phone)
-            target_wf = pending.get("plugin") or active_plugin
             _clear_pending_interruption(phone)
+            _clear_multi_draft_pending(phone)
             
-            # Explicitly delete draft from Qdrant Vector DB
+            from database import clear_short_term_memory
             from memory_manager import MemoryManager
-            MemoryManager.delete_draft_state(phone, target_wf)
+            from draft_switcher import _SERVICES_MAP
             
-            if target_wf and target_wf in workflows:
-                process_user_message("[CANCEL_DRAFT]", phone, session_id, target_workflow=target_wf)
+            clear_short_term_memory(phone)
+            
+            # Check if citizen requested to delete a specific draft by module or number
+            target_plugins = []
+            if "grievance" in ui_lower or "complaint" in ui_lower or "shikayat" in ui_lower:
+                target_plugins = ["grievance"]
+            elif "booking" in ui_lower or "advertisement" in ui_lower or "adv" in ui_lower or "ad" in ui_lower:
+                target_plugins = ["adv_booking"]
+            else:
+                digits = re.findall(r'\d+', ui_lower)
+                all_current = MemoryManager.get_all_draft_states(phone)
+                if digits and all_current:
+                    num = int(digits[0]) - 1
+                    if 0 <= num < len(all_current):
+                        target_plugins = [all_current[num].get("plugin_name")]
+                elif pending and pending.get("plugin"):
+                    target_plugins = [pending["plugin"]]
+                elif active_plugin and ("my drafts" not in ui_lower and "all" not in ui_lower and "drafts" not in ui_lower):
+                    target_plugins = [active_plugin]
+                else:
+                    # Clear drafts across all registered workflows
+                    target_plugins = list(workflows.keys())
+
+            # Delete target plugin drafts or all drafts
+            is_delete_all = set(target_plugins) == set(workflows.keys()) or any(w in ui_lower for w in ["all", "drafts", "saare", "sab"])
+            if is_delete_all:
+                MemoryManager.delete_draft_state(phone)
+                for wf in workflows.keys():
+                    if wf in workflows:
+                        config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+                        draft_key = "draft_booking" if wf == "adv_booking" else "draft_grievance"
+                        empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if wf == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
+                        workflows[wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": []})
+                        try:
+                            process_user_message("[CANCEL_DRAFT]", phone, session_id, target_workflow=wf)
+                        except Exception as e:
+                            logger.warning(f"[DraftDelete] Failed running [CANCEL_DRAFT] on {wf}: {e}")
+                logger.info(f"[DraftDelete] Cleared all drafts for phone={phone}")
+                msg = (
+                    "Aapke sabhi saved drafts safaltapoorvak delete kar diye gaye hain."
+                    if user_language == 'hi' else
+                    "Your saved drafts have been deleted successfully."
+                )
+            else:
+                for wf in target_plugins:
+                    MemoryManager.delete_draft_state(phone, wf)
+                    if wf in workflows:
+                        config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+                        draft_key = "draft_booking" if wf == "adv_booking" else "draft_grievance"
+                        empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if wf == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
+                        workflows[wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": []})
+                        try:
+                            process_user_message("[CANCEL_DRAFT]", phone, session_id, target_workflow=wf)
+                        except Exception as e:
+                            logger.warning(f"[DraftDelete] Failed running [CANCEL_DRAFT] on {wf}: {e}")
                 
-            msg = "Your draft has been cancelled successfully."
+                remaining = MemoryManager.get_all_draft_states(phone)
+                plugin_display = _SERVICES_MAP.get(target_plugins[0], {}).get("name", target_plugins[0].replace('_', ' ').title()) if target_plugins else "Draft"
+                logger.info(f"[DraftDelete] Cleared draft '{target_plugins}' for phone={phone}, remaining={len(remaining)}")
+                
+                if user_language == 'hi':
+                    if remaining:
+                        msg = f"Aapka **{plugin_display}** draft delete kar diya gaya hai. Aapke paas abhi {len(remaining)} saved draft(s) baaki hain."
+                    else:
+                        msg = f"Aapka **{plugin_display}** draft delete kar diya gaya hai."
+                else:
+                    if remaining:
+                        msg = f"Your **{plugin_display}** draft has been deleted successfully. You have {len(remaining)} saved draft(s) remaining."
+                    else:
+                        msg = f"Your **{plugin_display}** draft has been deleted successfully."
+
             audio = text_to_speech(msg, user_language)
             return jsonify({"response": msg, "lang": user_language, "mode": "faq", "audio": audio})
 
+        # 5. Handle Citizen Profile / Identity Request
+        if intent == "profile" or is_profile_query:
+            logger.info(f"[Profile] Handling citizen profile request for phone={phone}")
+            # If an active workflow exists, auto-save its draft first
+            if active_plugin and active_plugin in workflows:
+                state = workflows[active_plugin].get_state(config)
+                if state and state.values:
+                    draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+                    draft = state.values.get(draft_key) or {}
+                    if draft and any(v for k, v in draft.items() if not k.startswith("_") and v is not None):
+                        from memory_manager import MemoryManager
+                        MemoryManager.save_draft_state(phone, active_plugin, draft)
+                        logger.info(f"[AutoSave] Saved draft for {phone}/{active_plugin} before showing profile")
+                    empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
+                    workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
+
+            profile_ans = retrieve_document(user_input, user_language, history, session_id=session_id)
+            audio = text_to_speech(profile_ans, user_language)
+            return jsonify({
+                "response": profile_ans,
+                "lang": user_language,
+                "mode": "faq",
+                "audio": audio,
+                "input_type": "text",
+                "options": []
+            })
+
         target_wf = plugin_intent or active_plugin
         if target_wf and target_wf in workflows:
+            # Check if user is authenticated for transactional workflows (adv_booking, grievance)
+            if not is_authenticated:
+                logger.info(f"[Auth] Action requires authentication but user is not logged in (phone={phone_anchor}). Prompting login in UPYOG.")
+                msg = (
+                    "शिकायत दर्ज करने या विज्ञापन बुकिंग के लिए, कृपया पहले लॉगिन करें। बाईं ओर के साइडबार में नीचे जाएं और **Login** विकल्प पर क्लिक करें, मोबाइल नंबर भरें और OTP दर्ज करें।"
+                    if user_language == 'hi' else
+                    "To file a complaint or create an advertisement booking, please log in first.")
+                audio = text_to_speech(msg, user_language)
+                return jsonify({
+                    "response": msg,
+                    "lang": user_language,
+                    "mode": "auth_required",
+                    "auth_required": True,
+                    "audio": audio
+                })
+
             logger.info(f"Routing to dynamic plugin: {target_wf}")
             agent_res = process_user_message(user_input, phone, session_id, target_workflow=target_wf)
-            audio = text_to_speech(agent_res.get("response", ""), user_language)
+            resp_content = agent_res.get("response", "")
+
+            # Ensure workflow response strictly aligns with user_language
+            if user_language == 'en' and any('ऀ' <= c <= 'ॿ' for c in resp_content):
+                logger.info(f"[Workflow Lang] Output contained Devanagari for English session — translating to English")
+                trans = translate_text(resp_content, "hi", "en")
+                if trans and len(trans.strip()) > 0:
+                    resp_content = trans
+            elif user_language == 'hi' and not any('ऀ' <= c <= 'ॿ' for c in resp_content):
+                logger.info(f"[Workflow Lang] Output contained English for Hindi session — translating to Hindi")
+                trans = translate_text(resp_content, "en", "hi")
+                if trans and len(trans.strip()) > 0:
+                    resp_content = trans
+
+            audio = text_to_speech(resp_content, user_language)
             return jsonify({
-                "response": agent_res.get("response", ""),
+                "response": resp_content,
                 "messages": agent_res.get("messages_list", []),
                 "lang": user_language,
                 "mode": "agent_active",
                 "audio": audio,
                 "input_type": agent_res.get("input_type", "text"),
                 "options": agent_res.get("options", []),
+                "min_date": agent_res.get("min_date"),
+                "field": agent_res.get("field"),
                 "show_button": agent_res.get("show_button"),
                 "redirect_url": agent_res.get("redirect_url")
             })
@@ -1746,8 +2160,46 @@ def chat():
         }), 200
 
     except Exception as e:
+        err_str = str(e).lower()
         logger.error(f"[ENDPOINT /chat ERROR] Exception: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        is_hi = ('user_language' in locals() and user_language == "hi")
+
+        if any(w in err_str for w in ["rate_limit", "429", "token", "tpm", "quota", "too many requests"]):
+            fallback_msg = (
+                "एआई सहायक की टोकन सीमा कुछ समय के लिए पूरी हो गई है। कृपया थोड़ी देर प्रतीक्षा करें और संक्षिप्त प्रश्न पूछें।"
+                if is_hi else
+                "The AI assistant has temporarily reached its message token limit. Please wait a moment and try again with a shorter question."
+            )
+            mode = "rate_limit"
+        elif any(w in err_str for w in ["401", "unauthorized", "session", "permissionerror", "invalid access token", "token expired"]):
+            fallback_msg = (
+                "आपका लॉगिन सत्र समाप्त हो गया है। कृपया जारी रखने के लिए ऊपर दाईं ओर लॉगिन बटन से पुनः लॉगिन करें।"
+                if is_hi else
+                "Your login session has expired. Please log in again using your registered mobile number via the Login button to continue."
+            )
+            mode = "auth_required"
+        elif any(w in err_str for w in ["context_length", "maximum context"]):
+            fallback_msg = (
+                "बातचीत की लंबाई सीमा से अधिक हो गई है। कृपया एक नया प्रश्न पूछें।"
+                if is_hi else
+                "This conversation has exceeded the maximum length. Please ask a concise question or start a fresh query."
+            )
+            mode = "context_limit"
+        else:
+            fallback_msg = (
+                "क्षमा करें, सर्वर से संपर्क नहीं हो पा रहा है। कृपया थोड़ी देर बाद पुनः प्रयास करें या सहायता केंद्र से संपर्क करें।"
+                if is_hi else
+                "I am currently experiencing a temporary server issue. Please try again in a moment or contact the municipal helpdesk."
+            )
+            mode = "error"
+
+        audio_output = text_to_speech(fallback_msg, user_language if 'user_language' in locals() else "en")
+        return jsonify({
+            "response": fallback_msg,
+            "lang": user_language if 'user_language' in locals() else "en",
+            "mode": mode,
+            "audio": audio_output
+        }), 200
 
 import threading
 
@@ -1777,8 +2229,8 @@ Summary:"""
 
         response = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant",
-            max_tokens=150,
+            model=GROQ_MODEL,
+            max_tokens=400,
             temperature=0.3
         )
         summary_text = response.choices[0].message.content.strip()
@@ -1981,8 +2433,11 @@ def send_otp_upyog(mobile):
             "plainAccessRequest": {}
         }
     }
+    headers = {"Content-Type": "application/json"}
+    if _BASIC_AUTH:
+        headers["Authorization"] = _BASIC_AUTH
     try:
-        res = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+        res = requests.post(url, json=payload, headers=headers)
         # UPYOG OTP API returns 201 Created on success (not 200) — both are valid
         if res.status_code not in (200, 201):
             logger.error(f"UPYOG OTP Error {res.status_code}: {res.text}")
@@ -2079,10 +2534,10 @@ def verify_user_auth(auth_token, uuid_or_mobile=None, tenant_id=None):
             "plainAccessRequest": {}
         }
     }
-    if uuid_or_mobile:
+    if uuid_or_mobile and uuid_or_mobile != "default":
         if "-" in str(uuid_or_mobile):
             payload["uuid"] = [str(uuid_or_mobile)]
-        else:
+        elif str(uuid_or_mobile).isdigit():
             payload["userName"] = str(uuid_or_mobile)
 
     max_retries = 2
@@ -2165,7 +2620,8 @@ def api_verify_otp():
     # 1. Verify OTP
     verify_res = verify_otp_upyog(mobile, otp)
     if "access_token" not in verify_res:
-        return jsonify({"error": "Invalid OTP or verification failed", "details": verify_res}), 400
+        logger.warning(f"[api_verify_otp] Verification failed for mobile={mobile}: {verify_res}")
+        return jsonify({"error": "Invalid OTP. Please check the code sent to your phone and try again."}), 400
     
     # 2. Get user info (either from verify response or search)
     user_info = verify_res.get("UserRequest", verify_res.get("userInfo", {}))
@@ -2222,6 +2678,18 @@ Examples:
 → "track my complaint"
 → "my complaint status"
 
+"profile" — User is asking about their personal identity, user profile, account details, name, registered phone number, or who they are.
+Examples:
+→ "show my profile details"
+→ "show my profile"
+→ "my profile"
+→ "who am I"
+→ "what is my name"
+→ "my account details"
+→ "mera profile dikhao"
+→ "meri profile details"
+→ "my details"
+
 "booking_candidate" — User wants to BOOK or RESERVE a resource (e.g. community hall).
 "booking_confirm" — User is saying YES to the bot's offer to book a resource.
 "booking_cancel" — User says NO to the booking offer.
@@ -2237,6 +2705,18 @@ Examples:
 → "track my ad booking"
 → "my applications"
 
+"draft_resume" — User wants to VIEW, SHOW, LIST, or RESUME their saved form drafts or applications.
+Examples: "show my drafts", "my drafts", "view saved drafts", "draft dikhao"
+
+"draft_delete" — User wants to DELETE, CANCEL, CLEAR, or DISCARD their draft(s) or application(s).
+Examples: "delete my drafts", "delete draft", "clear drafts", "cancel draft", "draft delete karo", "draft hata do"
+
+"draft_save" — User wants to SAVE their currently filled draft or form to finish later.
+Examples: "save draft", "save my application", "draft save karo"
+
+"draft_continue_application" — User wants to CONTINUE or RESUME filling their pending form/draft.
+Examples: "continue my application", "resume complaint", "continue"
+
 ━━━ IMPORTANT RULES ━━━
 1. Look at the last message and context. If the user says "yes" or "haan":
    - If the previous turn offered an advertisement -> "adv_confirm"
@@ -2251,7 +2731,7 @@ Language: {lang}
 
 Respond ONLY with this JSON, no other text:
 {{
-  "intent": "greeting" | "faq" | "grievance_candidate" | "grievance_confirm" | "grievance_cancel" | "grievance_status_candidate" | "booking_candidate" | "booking_confirm" | "booking_cancel" | "adv_candidate" | "adv_confirm" | "adv_cancel" | "adv_status_candidate",
+  "intent": "greeting" | "faq" | "profile" | "grievance_candidate" | "grievance_confirm" | "grievance_cancel" | "grievance_status_candidate" | "booking_candidate" | "booking_confirm" | "booking_cancel" | "adv_candidate" | "adv_confirm" | "adv_cancel" | "adv_status_candidate" | "draft_resume" | "draft_delete" | "draft_save" | "draft_continue_application" | "end_conversation",
   "reasoning": "one sentence why",
   "service": "specific UPYOG service name or null",
   "emotion": "neutral" | "frustrated" | "stuck" | "urgent"
@@ -2262,21 +2742,26 @@ Respond ONLY with this JSON, no other text:
             groq_client = Groq(api_key=GROQ_API_KEY)
 
         response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=GROQ_MODEL,
             messages=[{"role": "user", "content": classifier_prompt}],
-            max_tokens=150,
+            max_tokens=400,
             temperature=0.1
         )
 
         raw = response.choices[0].message.content.strip()
-        raw = raw.replace("```json", "").replace("```", "").strip()
-        result = json.loads(raw)
-        logger.info(f"[INTENT CLASSIFIER] Groq raw response: {result}")
+        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group(0))
+        else:
+            raw_clean = raw.replace("```json", "").replace("```", "").strip()
+            result = json.loads(raw_clean)
+        logger.info(f"[INTENT CLASSIFIER] Groq parsed response: {result}")
 
         valid_intents = [
-            "greeting", "faq", "grievance_candidate", "grievance_confirm", "grievance_cancel", "grievance_status_candidate",
+            "greeting", "faq", "profile", "grievance_candidate", "grievance_confirm", "grievance_cancel", "grievance_status_candidate",
             "booking_candidate", "booking_confirm", "booking_cancel",
-            "adv_candidate", "adv_confirm", "adv_cancel", "adv_status_candidate"
+            "adv_candidate", "adv_confirm", "adv_cancel", "adv_status_candidate",
+            "draft_resume", "draft_delete", "draft_save", "draft_continue_application", "end_conversation"
         ]
        
         if result.get("intent") not in valid_intents:
@@ -2338,12 +2823,17 @@ def build_greeting_response(lang: str, active_workflows: dict) -> str:
         if not groq_client:
             groq_client = groq_lib.Groq(api_key=GROQ_API_KEY)
         resp = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=60,
+            max_tokens=400,
             temperature=0.2,
         )
-        return resp.choices[0].message.content.strip()
+        content = resp.choices[0].message.content.strip()
+        if content:
+            return content
+        if lang == "hi":
+            return "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"
+        return "Hello! I'm UPYOG AI. How can I help you today?"
     except Exception:
         if lang == "hi":
             return "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"

@@ -1,0 +1,60 @@
+package org.upyog.dashboard.common.constants;
+
+/**
+ * Shared constants across dashboard microservices, defining database parameter keys,
+ * status strings, and date formatting patterns.
+ */
+public class DashboardConstants {
+    /**
+     * Protected constructor to prevent direct instantiation of constant class.
+     */
+    protected DashboardConstants() {}
+
+    // DB Parameter Keys
+    public static final String PARAM_TENANT_ID = "tenantId";
+    public static final String PARAM_MODULE_NAME = "moduleName";
+    public static final String PARAM_ID = "id";
+    public static final String PARAM_START_DATE = "startDate";
+    public static final String PARAM_END_DATE = "endDate";
+    public static final String PARAM_STATUS = "status";
+    public static final String PARAM_CREATED_BY = "createdBy";
+    public static final String PARAM_CREATED_TIME = "createdTime";
+    public static final String PARAM_LAST_MODIFIED_BY = "lastModifiedBy";
+    public static final String PARAM_LAST_MODIFIED_TIME = "lastModifiedTime";
+    public static final String PARAM_LAST_SUCCESSFUL_DATE = "lastSuccessfulDate";
+    public static final String PARAM_LAST_ATTEMPTED_DATE = "lastAttemptedDate";
+    public static final String PARAM_REQUEST_DATA = "requestData";
+    public static final String PARAM_RESPONSE_DATA = "responseData";
+    public static final String PARAM_LIMIT = "limit";
+    
+    // Engine specific DB Parameter Keys
+    public static final String PARAM_MODULE_INGESTION_ID = "moduleIngestionId";
+    public static final String PARAM_MODULE_DETAIL_ID = "moduleDetailId";
+    public static final String PARAM_SCHEDULER_ID = "schedulerId";
+    public static final String PARAM_PUSH_DATE = "pushDate";
+    public static final String PARAM_INGESTION_STATUS = "ingestionStatus";
+    public static final String PARAM_EXCEPTION_CODE = "exceptionCode";
+    public static final String PARAM_ERROR_DATE = "errorDate";
+    public static final String PARAM_ISSUE_DESCRIPTION = "issueDescription";
+
+    // Common Strings
+    public static final String SYSTEM_USER = "SYSTEM";
+    
+    // Statuses
+    public static final String STATUS_NOT_STARTED = "NOT_STARTED";
+    public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_FAILURE = "FAILURE";
+
+    // Ingestion Types / Excel Generation Modes
+    public static final String DAILY = "daily";
+    public static final String LEGACY = "legacy";
+    public static final String INGESTION_TYPE_DAILY = DAILY;
+    public static final String INGESTION_TYPE_LEGACY = LEGACY;
+
+    // Date Format Patterns
+    public static final String DATE_FORMAT = "dd-MM-yyyy";
+    public static final String SQL_DATE_FORMAT = "DD-MM-YYYY";
+
+    // Excel Generation Limits
+    public static final int EXCEL_MAX_CELL_CHAR_LIMIT = 32765;
+}
