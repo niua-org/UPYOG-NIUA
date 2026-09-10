@@ -29,6 +29,8 @@ public class DashboardConstants {
     
     // Engine specific DB Parameter Keys
     public static final String PARAM_MODULE_INGESTION_ID = "moduleIngestionId";
+    public static final String PARAM_MODULE_DETAIL_ID = "moduleDetailId";
+    public static final String PARAM_SCHEDULER_ID = "schedulerId";
     public static final String PARAM_PUSH_DATE = "pushDate";
     public static final String PARAM_INGESTION_STATUS = "ingestionStatus";
     public static final String PARAM_EXCEPTION_CODE = "exceptionCode";
@@ -42,6 +44,12 @@ public class DashboardConstants {
     public static final String STATUS_NOT_STARTED = "NOT_STARTED";
     public static final String STATUS_SUCCESS = "SUCCESS";
     public static final String STATUS_FAILURE = "FAILURE";
+
+    // Ingestion Types / Excel Generation Modes
+    public static final String DAILY = "daily";
+    public static final String LEGACY = "legacy";
+    public static final String INGESTION_TYPE_DAILY = DAILY;
+    public static final String INGESTION_TYPE_LEGACY = LEGACY;
 
     // Date Format Patterns
     public static final String DATE_FORMAT = "dd-MM-yyyy";

@@ -33,7 +33,42 @@ The pipeline uses the type-safe `IngestionStatus` enum (`org.upyog.dashboard.enu
 | `SKIPPED` | Ingestion was skipped (e.g. module already up to date). |
 | `UNKNOWN` | Fallback status for unrecognized status strings (`@JsonCreator` fallback). |
 
-Both `SUCCESS`, `SUCCESS_ZERO_METRICS`, and `SUCCESS_DUPLICATE` return `isSuccess() = true`, enabling `last_successful_date` in `ingestion_module_summary` to advance cleanly.
+Both `SUCCESS`, `SUCCESS_ZERO_METRICS`, and `SUCCESS_DUPLICATE` return `isSuccess() = true`, enabling `last_successful_date` in `ug_ingestion_module_summary` to advance cleanly.
+
+## Storage & S3 Folder Hierarchy
+
+When files are generated and uploaded to AWS S3 (or FileStore), the object key is built via `CommonUtils.buildS3Key(folder, tenantId, moduleName, fileName)`.
+
+The folder structure is organized as follows:
+
+### 1. Daily Ingestion: State-Level Grouping
+- **Hierarchy Pattern:**
+  `<awsS3Folder>/<state>/<module>/<uuid>_daily_<module>_<timestamp>.xlsx`
+- **Parent Folder:** **State Code** (e.g. `pg`).
+  - In `S3DashboardDataLoaderImpl`, the ULB identifier (e.g. `pg.citya`) is split at `.` (`payloadUlb.split("\\.")[0]`) to resolve the parent state code.
+- **Inner Folder:** **Module Code** (e.g. `PT`, `PGR`, `CHB`).
+- **File Prefix:** `daily_` (defined in `DashboardConstants.DAILY`).
+- **Sheet Name:** `{MODULE}_daily`.
+- **Example S3 Key:**
+  `dashboard/pg/PT/a89f41b2-3f1d-4b89-9a07-8e6f3328dc41_daily_PT_1725960000.xlsx`
+
+### 2. Legacy Batch Ingestion: ULB-Level Grouping
+- **Hierarchy Pattern:**
+  `<awsS3Folder>/<ulb>/<module>/<uuid>_legacy_<module>_<timestamp>.xlsx`
+- **Parent Folder:** **ULB Tenant ID** (e.g. `pg.citya`).
+  - In `LegacyBatchIngestionOrchestrator`, the full tenant ID from the request or active tenant list (`request.getTenantId()`) is used without splitting.
+- **Inner Folder:** **Module Code** (e.g. `PT`, `PGR`, `CHB`).
+- **File Prefix:** `legacy_` (defined in `DashboardConstants.LEGACY`).
+- **Sheet Name:** `{MODULE}_legacy`.
+- **Example S3 Key:**
+  `dashboard/pg.citya/PT/b91c73e1-4c2e-4e90-8b18-7f5e2217cb32_legacy_PT_1725960000.xlsx`
+
+### Summary Comparison
+
+| Ingestion Pipeline | Parent Folder | Inner Subfolder | File Prefix | Sheet Name | Example Path |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Daily** | **State** (`pg`) | **Module** (`PT`) | `daily_` | `{MODULE}_daily` | `dashboard/pg/PT/<uuid>_daily_PT_...xlsx` |
+| **Legacy** | **ULB** (`pg.citya`) | **Module** (`PT`) | `legacy_` | `{MODULE}_legacy` | `dashboard/pg.citya/PT/<uuid>_legacy_PT_...xlsx` |
 
 ## Database Schema
 
@@ -41,31 +76,31 @@ Both `SUCCESS`, `SUCCESS_ZERO_METRICS`, and `SUCCESS_DUPLICATE` return `isSucces
 
 | Table | Purpose |
 |-------|---------|
-| `ingestion_module_detail` | Active ULB-module mapping registry synchronized from MDMS |
-| `ingestion_detail` | Daily ingestion detail records per module/date |
-| `legacy_data_ingestion_detail` | Legacy (historical daily) ingestion detail records |
-| `ingestion_module_summary` | Tracks last successful and last attempted date per tenant/module |
-| `adapter_ingestion_error_log` | Error log for ingestion pipeline issues |
+| `ug_ingestion_module_detail` | Active ULB-module mapping registry synchronized from MDMS |
+| `ug_ingestion_detail` | Daily ingestion detail records per module/date |
+| `ug_legacy_data_ingestion_detail` | Legacy (historical daily) ingestion detail records |
+| `ug_ingestion_module_summary` | Tracks last successful and last attempted date per tenant/module |
+| `ug_adapter_ingestion_error_log` | Error log for ingestion pipeline issues |
 
 ### Schema Evolutions & Migrations
 
-- **`exception_code` Column (`V20260818140000`):** Both `ingestion_detail` and `legacy_data_ingestion_detail` carry an `exception_code VARCHAR(128)` column to record short failure codes when `ingestion_status = FAILURE`.
-- **Streamlined `ingestion_module_detail` (`V20260907150000`):** Dropped legacy flags (`is_legacy_data_ingested`, `last_ingested_date`, `ulb_name`, `schedule_cron`). The table now functions purely as an active registry mapping ULBs to enabled modules, with legacy progress tracked directly in `legacy_data_ingestion_detail` and `ingestion_module_summary`.
+- **`exception_code` Column (`V20260818140000`):** Both `ug_ingestion_detail` and `ug_legacy_data_ingestion_detail` carry an `exception_code VARCHAR(128)` column to record short failure codes when `ingestion_status = FAILURE`.
+- **Streamlined `ug_ingestion_module_detail` (`V20260907150000`):** Dropped legacy flags (`is_legacy_data_ingested`, `last_ingested_date`, `ulb_name`, `schedule_cron`). The table now functions purely as an active registry mapping ULBs to enabled modules, with legacy progress tracked directly in `ug_legacy_data_ingestion_detail` and `ug_ingestion_module_summary`.
 
 ## Multi-Tenant & MDMS Synchronization
 
 ### `TenantSyncService` & `TenantController`
-- Synchronizes active city/ULB tenant IDs from eGov MDMS (`tenant` module, `nationalInfo` master) into `ingestion_module_detail`.
+- Synchronizes active city/ULB tenant IDs from eGov MDMS (`tenant` module, `nationalInfo` master) into `ug_ingestion_module_detail`.
 - Manages in-memory caching via `@Cacheable` and `@CacheEvict` using centralized cache names (`active_tenants`, `tenant_module_details`).
 - Provides REST endpoints:
-  - `POST /tenant/sync?stateTenantId={state}` — Triggers MDMS pull and atomically refreshes `ingestion_module_detail`.
+  - `POST /tenant/sync?stateTenantId={state}` — Triggers MDMS pull and atomically refreshes `ug_ingestion_module_detail`.
   - `GET /tenant/search` (or `/_search`) — Returns active tenants and module mappings from cache/database.
 
 ## Key Service Classes
 
 ### `DailyIngestionService`
 - Fetches active ULB tenants per module via `TenantSyncService.getActiveTenants(...)`.
-- Queries `ingestion_module_summary.findAllLastSuccessfulDatesByModule(...)` to bulk fetch checkpoints for all tenants in a single query.
+- Queries `ug_ingestion_module_summary.findAllLastSuccessfulDatesByModule(...)` to bulk fetch checkpoints for all tenants in a single query.
 - Executes **multi-tenant batch extraction** (`ModuleExtractor.extractData(List<String> tenantIds, LocalDate targetDate)`) using parameterized SQL queries with `UNNEST(string_to_array(:tenantId, ','))` across configured batch chunks (`dashboard-data.extractor.tenant-batch-size`).
 - Performs **catch-up ingestion** across missing date ranges up to yesterday, automatically handling and advancing zero-metric tenants.
 - Employs reflection caching (`ConcurrentHashMap`) in `extractTenantId` to eliminate runtime reflection overhead.
@@ -73,22 +108,22 @@ Both `SUCCESS`, `SUCCESS_ZERO_METRICS`, and `SUCCESS_DUPLICATE` return `isSucces
 
 ### `LegacyIngestionService`
 - Manages bulk historical ingestion via a **two-phase scheduler** approach:
-  1. **Populate phase** (`populateLegacyJobs` / `populateLegacyJobsForRange`): Determines which dates in the given range have not yet been ingested and creates `NOT_STARTED` rows in `legacy_data_ingestion_detail`.
+  1. **Populate phase** (`populateLegacyJobs` / `populateLegacyJobsForRange`): Determines which dates in the given range have not yet been ingested and creates `NOT_STARTED` rows in `ug_legacy_data_ingestion_detail`.
   2. **Execute phase** (`executeLegacyJobs`): Fetches pending/failed legacy job rows and runs them through the extractor + dashboard client pipeline.
-- Checks legacy completion via `IngestionSummaryRepository.isLegacyIngestionComplete(...)` querying `legacy_data_ingestion_detail`.
+- Checks legacy completion via `IngestionSummaryRepository.isLegacyIngestionComplete(...)` querying `ug_legacy_data_ingestion_detail`.
 - Extracts logic into private helpers: `processLegacyJob(...)` for ingestion execution, `serializeRequest(...)` for JSON payload, and `sanitizeResponse(...)`/`sanitizeJson(...)` for safe JSONB storage.
 - Uses `@RequiredArgsConstructor` constructor injection instead of `@Autowired` field injection.
 - Persistence is fully delegated to `IngestionPersistenceService` (supporting both Kafka and direct JDBC modes).
 
 ### `IngestionSummaryRepository`
-- Queries `ingestion_module_summary` for the last successful date and last attempted date per tenant/module.
-- `findSuccessfullyIngestedDates(...)` performs a UNION query across both `ingestion_detail` and `legacy_data_ingestion_detail` to determine already-ingested dates in a range.
-- `isLegacyIngestionComplete(...)` verifies legacy completion status from `legacy_data_ingestion_detail`.
+- Queries `ug_ingestion_module_summary` for the last successful date and last attempted date per tenant/module.
+- `findSuccessfullyIngestedDates(...)` performs a UNION query across both `ug_ingestion_detail` and `ug_legacy_data_ingestion_detail` to determine already-ingested dates in a range.
+- `isLegacyIngestionComplete(...)` verifies legacy completion status from `ug_legacy_data_ingestion_detail`.
 - Supports batch attempted date updates via `saveOrUpdateLastAttemptedDatesBatch(...)`.
 - All persistence side-effects are delegated to `IngestionPersistenceService` (not direct JDBC writes).
 
 ### `IngestionSummaryQueryBuilder`
-- Central SQL query factory for all queries against `ingestion_module_summary`, `ingestion_module_detail`, and `legacy_data_ingestion_detail`.
+- Central SQL query factory for all queries against `ug_ingestion_module_summary`, `ug_ingestion_module_detail`, and `ug_legacy_data_ingestion_detail`.
 - All query builder methods and constants are documented with Javadoc describing parameters and behavior.
 
 ## Utility Classes

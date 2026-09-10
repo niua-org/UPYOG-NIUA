@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,11 +16,21 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
+import org.upyog.dashboard.common.constants.DashboardConstants;
+import org.upyog.dashboard.common.constants.Module;
+import org.upyog.dashboard.model.DashboardData;
+import org.upyog.dashboard.model.DashboardPayload;
+import org.upyog.dashboard.model.NationalDashboardIngestRequest;
+import org.upyog.dashboard.model.RequestInfo;
+import org.upyog.dashboard.model.UserInfo;
+import org.upyog.dashboard.registry.TransformerRegistry;
+import org.upyog.dashboard.transformer.ModuleTransformer;
 
 /**
  * Service for streaming large datasets into memory-safe Apache POI SXSSF Excel
@@ -30,24 +43,41 @@ public class SXSSFExcelGeneratorService {
     private static final int MEMORY_ROW_WINDOW_SIZE = 100;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Autowired(required = false)
+    private TransformerRegistry transformerRegistry;
+
+    @Autowired(required = false)
+    private OAuthTokenService oAuthTokenService;
+
+    public SXSSFExcelGeneratorService() {
+    }
+
+    public SXSSFExcelGeneratorService(TransformerRegistry transformerRegistry, OAuthTokenService oAuthTokenService) {
+        this.transformerRegistry = transformerRegistry;
+        this.oAuthTokenService = oAuthTokenService;
+    }
+
     /**
      * Session wrapper holding open SXSSFWorkbook and output destination.
      */
     public static class StreamingExcelSession implements AutoCloseable {
 
         private final String moduleName;
+        private final String ingestionType;
         private final SXSSFWorkbook workbook;
         private final Sheet sheet;
         private final CellStyle headerStyle;
         private final File tempFile;
         private final ObjectMapper objectMapper;
+        private final TransformerRegistry transformerRegistry;
+        private final OAuthTokenService oAuthTokenService;
 
         private int rowIndex = 0;
-        private java.util.Set<String> columnHeaders;
+        private List<String> columnHeaders;
 
         /**
          * Initializes a streaming SXSSF Excel session with a temporary disk
-         * file.
+         * file (defaults to legacy ingestion type).
          *
          * @param moduleName module short code used in file and sheet naming
          * @param objectMapper ObjectMapper for serializing nested JSON column
@@ -55,21 +85,145 @@ public class SXSSFExcelGeneratorService {
          * @throws IOException on temporary file creation failure
          */
         public StreamingExcelSession(String moduleName, ObjectMapper objectMapper) throws IOException {
+            this(moduleName, objectMapper, null, null, DashboardConstants.LEGACY);
+        }
+
+        public StreamingExcelSession(String moduleName, ObjectMapper objectMapper,
+                                     TransformerRegistry transformerRegistry,
+                                     OAuthTokenService oAuthTokenService,
+                                     String ingestionType) throws IOException {
             this.moduleName = moduleName;
             this.objectMapper = objectMapper;
+            this.transformerRegistry = transformerRegistry;
+            this.oAuthTokenService = oAuthTokenService;
+            String type = (ingestionType != null && ingestionType.equalsIgnoreCase(DashboardConstants.DAILY)) ? DashboardConstants.DAILY : DashboardConstants.LEGACY;
+            this.ingestionType = type;
             this.workbook = new SXSSFWorkbook(MEMORY_ROW_WINDOW_SIZE);
             this.workbook.setCompressTempFiles(true);
-            this.sheet = workbook.createSheet(moduleName + "_LegacyData");
+            this.sheet = workbook.createSheet(moduleName + "_" + type);
 
             this.headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             this.headerStyle.setFont(headerFont);
 
-            this.tempFile = Files.createTempFile("ingest_" + moduleName + "_", ".xlsx").toFile();
+            this.tempFile = Files.createTempFile(type + "_" + moduleName + "_", ".xlsx").toFile();
         }
 
         @SuppressWarnings("unchecked")
+        private Map<String, Object> prepareRecordMap(Object recordObj) {
+            Map<String, Object> rawMap = (recordObj instanceof Map<?, ?> map)
+                    ? (Map<String, Object>) map
+                    : objectMapper.convertValue(recordObj, Map.class);
+            Map<String, Object> formattedMap = new LinkedHashMap<>();
+
+            // Extract Tenant value from Tenant, ulb, tenant, or tenantId
+            Object tenantVal = rawMap.get("Tenant");
+            if (tenantVal == null) {
+                tenantVal = rawMap.get("ulb");
+            }
+            if (tenantVal == null) {
+                tenantVal = rawMap.get("tenant");
+            }
+            if (tenantVal == null) {
+                tenantVal = rawMap.get("tenantId");
+            }
+
+            String payloadJson = generatePayloadJson(recordObj);
+
+            // Cleanly order standard columns: date, module, state, Tenant, ward, region, payload_json
+            formattedMap.put("date", rawMap.get("date"));
+            formattedMap.put("module", rawMap.get("module"));
+            formattedMap.put("state", rawMap.get("state"));
+            formattedMap.put("Tenant", tenantVal);
+            formattedMap.put("ward", rawMap.get("ward"));
+            formattedMap.put("region", rawMap.get("region"));
+            formattedMap.put("payload_json", payloadJson);
+
+            // Append any other non-metric, non-ulb fields if present
+            for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+                String key = entry.getKey();
+                if ("combinedMetrics".equalsIgnoreCase(key)
+                        || "collectionMetrics".equalsIgnoreCase(key)
+                        || "metrics".equalsIgnoreCase(key)
+                        || "ulb".equalsIgnoreCase(key)
+                        || "tenant".equalsIgnoreCase(key)
+                        || "tenantId".equalsIgnoreCase(key)
+                        || formattedMap.containsKey(key)) {
+                    continue;
+                }
+                formattedMap.put(key, entry.getValue());
+            }
+
+            return formattedMap;
+        }
+
+        @SuppressWarnings("unchecked")
+        private String generatePayloadJson(Object recordObj) {
+            try {
+                List<DashboardData> dataList = null;
+
+                if (recordObj instanceof DashboardData dashboardData) {
+                    dataList = Collections.singletonList(dashboardData);
+                } else if (recordObj instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof DashboardData) {
+                    dataList = (List<DashboardData>) list;
+                } else if (transformerRegistry != null && moduleName != null) {
+                    try {
+                        Module module = Module.valueOf(moduleName.toUpperCase());
+                        ModuleTransformer<Object> transformer = transformerRegistry.get(module);
+                        if (transformer != null) {
+                            DashboardPayload payload = transformer.transform(recordObj);
+                            if (payload != null) {
+                                dataList = payload.getData();
+                            }
+                        }
+                    } catch (Exception te) {
+                        log.debug("Failed to transform record via TransformerRegistry for module {}: {}", moduleName, te.getMessage());
+                    }
+                }
+
+                if (dataList != null) {
+                    String oauthToken = null;
+                    UserInfo userInfo = null;
+                    if (oAuthTokenService != null) {
+                        try {
+                            oauthToken = oAuthTokenService.getToken();
+                            userInfo = oAuthTokenService.getUserInfo();
+                        } catch (Exception oe) {
+                            log.debug("Could not fetch OAuth token for payload_json: {}", oe.getMessage());
+                        }
+                    }
+
+                    RequestInfo requestInfo = RequestInfo.builder()
+                            .apiId("Rainmaker")
+                            .authToken(oauthToken)
+                            .userInfo(userInfo)
+                            .msgId(System.currentTimeMillis() + "|en_IN")
+                            .build();
+
+                    NationalDashboardIngestRequest ingestRequest = NationalDashboardIngestRequest.builder()
+                            .requestInfo(requestInfo)
+                            .data(dataList)
+                            .build();
+
+                    String json = objectMapper.writeValueAsString(ingestRequest);
+                    if (json.length() > 32765) {
+                        json = json.substring(0, 32765);
+                    }
+                    return json;
+                } else {
+                    String json = objectMapper.writeValueAsString(recordObj);
+                    if (json.length() > 32765) {
+                        json = json.substring(0, 32765);
+                    }
+                    return json;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to generate payload_json for record: {}", e.getMessage());
+                return "";
+            }
+        }
+
         /**
          * Appends a chunk of extracted records directly to the streaming Excel
          * worksheet.
@@ -82,8 +236,8 @@ public class SXSSFExcelGeneratorService {
             }
 
             if (columnHeaders == null) {
-                Map<String, Object> sampleMap = objectMapper.convertValue(records.get(0), Map.class);
-                columnHeaders = sampleMap.keySet();
+                Map<String, Object> sampleMap = prepareRecordMap(records.get(0));
+                columnHeaders = new ArrayList<>(sampleMap.keySet());
 
                 Row headerRow = sheet.createRow(rowIndex++);
                 int colIndex = 0;
@@ -96,7 +250,7 @@ public class SXSSFExcelGeneratorService {
 
             for (Object recordObj : records) {
                 Row dataRow = sheet.createRow(rowIndex++);
-                Map<String, Object> recordMap = objectMapper.convertValue(recordObj, Map.class);
+                Map<String, Object> recordMap = prepareRecordMap(recordObj);
                 int colIndex = 0;
 
                 for (String header : columnHeaders) {
@@ -163,7 +317,11 @@ public class SXSSFExcelGeneratorService {
      * @throws IOException on session creation failure
      */
     public StreamingExcelSession createStreamingSession(String moduleName) throws IOException {
-        return new StreamingExcelSession(moduleName, objectMapper);
+        return createStreamingSession(moduleName, DashboardConstants.LEGACY);
+    }
+
+    public StreamingExcelSession createStreamingSession(String moduleName, String ingestionType) throws IOException {
+        return new StreamingExcelSession(moduleName, objectMapper, transformerRegistry, oAuthTokenService, ingestionType);
     }
 
     /**
@@ -175,7 +333,11 @@ public class SXSSFExcelGeneratorService {
      * @throws java.io.IOException if any.
      */
     public File generateExcelFile(String moduleName, List<Object> records) throws IOException {
-        try (StreamingExcelSession session = createStreamingSession(moduleName)) {
+        return generateExcelFile(moduleName, records, DashboardConstants.DAILY);
+    }
+
+    public File generateExcelFile(String moduleName, List<Object> records, String ingestionType) throws IOException {
+        try (StreamingExcelSession session = createStreamingSession(moduleName, ingestionType)) {
             session.appendBatchRecords(records);
             return session.finishWorkbook();
         }

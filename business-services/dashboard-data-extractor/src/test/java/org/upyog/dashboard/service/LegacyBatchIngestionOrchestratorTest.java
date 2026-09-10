@@ -113,7 +113,7 @@ class LegacyBatchIngestionOrchestratorTest {
                 .thenReturn(List.of());
 
         SXSSFExcelGeneratorService.StreamingExcelSession session = mock(SXSSFExcelGeneratorService.StreamingExcelSession.class);
-        when(excelGeneratorService.createStreamingSession(anyString())).thenReturn(session);
+        when(excelGeneratorService.createStreamingSession(anyString(), anyString())).thenReturn(session);
         File tempFile = new File("test.xlsx");
         when(session.finishWorkbook()).thenReturn(tempFile);
 

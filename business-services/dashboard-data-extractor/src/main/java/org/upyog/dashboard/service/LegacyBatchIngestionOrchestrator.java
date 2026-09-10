@@ -109,7 +109,7 @@ public class LegacyBatchIngestionOrchestrator {
         }
 
         if (!summaryRepository.hasAnyModuleDetails()) {
-            String errorMsg = "No tenant configuration found in ingestion_module_detail table. Please run MDMS tenant sync API (POST /extractor/v1/tenants/_sync) first.";
+            String errorMsg = "No tenant configuration found in ug_ingestion_module_detail table. Please run MDMS tenant sync API (POST /extractor/v1/tenants/_sync) first.";
             log.error(errorMsg);
             return LegacyIngestionResponse.builder()
                     .totalDatesRequested(0)
@@ -200,7 +200,7 @@ public class LegacyBatchIngestionOrchestrator {
             currentDate = currentDate.plusDays(1);
         }
 
-        try (SXSSFExcelGeneratorService.StreamingExcelSession session = excelGeneratorService.createStreamingSession(moduleName)) {
+        try (SXSSFExcelGeneratorService.StreamingExcelSession session = excelGeneratorService.createStreamingSession(moduleName, DashboardExtractorConstants.LEGACY)) {
 
             Module module = Module.valueOf(moduleName.toUpperCase());
             ModuleExtractor<?> extractor = extractorRegistry != null ? extractorRegistry.get(module) : null;
@@ -276,7 +276,7 @@ public class LegacyBatchIngestionOrchestrator {
                 summaryRepository.completeSchedulerRun(jobId, startTime, 0, 0, 0, DashboardExtractorConstants.STATUS_COMPLETED, null);
 
                 // When totalExtracted is 0 (or for any specific calendar date where no data/activity existed in the DB),
-                // MISSED_DATE detail entries are persisted into the ingestion_detail table.
+                // MISSED_DATE detail entries are persisted into the ug_ingestion_detail table.
                 // This explicitly records that the pipeline attempted extraction for that date but found no business transactions/rows,
                 // differentiating an empty/inactive date from an extraction failure or an unattempted run.
                 persistDateWiseDetails(jobId, targetDateDataMap, moduleName, emptyResponse, false);
@@ -306,11 +306,11 @@ public class LegacyBatchIngestionOrchestrator {
                     ? ingestionResult.getResponseData()
                     : "{\"failureReason\": \"" + (ingestionResult.getFailureReason() != null ? ingestionResult.getFailureReason().replace("\"", "'") : "Unknown Error") + "\"}";
 
-            // Persist the status and fileStoreId into legacy_data_ingestion_detail
+            // Persist the status and fileStoreId into ug_legacy_data_ingestion_detail
             persistenceService.updateLegacyJobStatus(jobId, ingestionResult.getIngestionStatus(), null, responseJson);
             summaryRepository.completeSchedulerRun(jobId, startTime, (int) totalExtracted, isSuccess ? (int) totalExtracted : 0, isSuccess ? 0 : (int) totalExtracted, isSuccess ? DashboardExtractorConstants.STATUS_COMPLETED : DashboardExtractorConstants.STATUS_FAILED, isSuccess ? null : ingestionResult.getFailureReason());
 
-            // Persist per-date detail entries into ingestion_detail
+            // Persist per-date detail entries into ug_ingestion_detail
             persistDateWiseDetails(jobId, targetDateDataMap, moduleName, responseJson, isSuccess);
 
             return LegacyIngestionResponse.builder()
@@ -328,7 +328,7 @@ public class LegacyBatchIngestionOrchestrator {
             persistenceService.updateLegacyJobStatus(jobId, DashboardExtractorConstants.STATUS_FAILURE, null, errResponse);
             summaryRepository.completeSchedulerRun(jobId, startTime, 0, 0, 1, DashboardExtractorConstants.STATUS_FAILED, exception.getMessage());
 
-            // Persist per-date failure detail entries into ingestion_detail
+            // Persist per-date failure detail entries into ug_ingestion_detail
             persistDateWiseDetails(jobId, targetDateDataMap, moduleName, errResponse, false);
 
             return LegacyIngestionResponse.builder()
@@ -354,7 +354,7 @@ public class LegacyBatchIngestionOrchestrator {
     }
 
     /**
-     * Persists per-date entries into the ingestion_detail table for every
+     * Persists per-date entries into the ug_ingestion_detail table for every
      * calendar date requested in the legacy date range.
      *
      * @param schedulerId the unique identifier of the legacy batch job
@@ -405,7 +405,7 @@ public class LegacyBatchIngestionOrchestrator {
             detailRecords.add(detail);
         }
 
-        log.info("Saving {} per-date ingestion_detail records for legacy batch {}", detailRecords.size(), moduleName);
+        log.info("Saving {} per-date ug_ingestion_detail records for legacy batch {}", detailRecords.size(), moduleName);
         persistenceService.saveIngestionDetailsBatch(detailRecords);
     }
 

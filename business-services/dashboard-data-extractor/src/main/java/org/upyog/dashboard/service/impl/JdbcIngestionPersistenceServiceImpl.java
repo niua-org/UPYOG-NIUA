@@ -33,7 +33,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
 
     /**
      * Inserts or updates the {@code last_successful_date} and
-     * {@code last_attempted_date} columns in {@code ingestion_module_summary}
+     * {@code last_attempted_date} columns in {@code ug_ingestion_module_summary}
      * for the given tenant and module. An UPSERT is performed on the unique
      * {@code (tenant_id, module_name)} key.
      *
@@ -66,7 +66,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
 
     /**
      * Inserts or updates the {@code last_attempted_date} column in
-     * {@code ingestion_module_summary} for the given tenant and module. The
+     * {@code ug_ingestion_module_summary} for the given tenant and module. The
      * {@code last_successful_date} is preserved via a fallback epoch value.
      *
      * @param tenantId the tenant identifier
@@ -80,7 +80,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
 
     /**
      * Batch inserts or updates the {@code last_attempted_date} column in
-     * {@code ingestion_module_summary} for a list of tenants and module.
+     * {@code ug_ingestion_module_summary} for a list of tenants and module.
      *
      * @param tenantIds the list of tenant identifiers
      * @param moduleName the module short code
@@ -116,7 +116,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
     }
 
     /**
-     * Inserts a new legacy job record into {@code legacy_data_ingestion_detail}
+     * Inserts a new legacy job record into {@code ug_legacy_data_ingestion_detail}
      * with an initial status of {@code NOT_STARTED}.
      *
      * @param jobId the unique identifier of the legacy job
@@ -158,7 +158,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
     /**
      * Updates the ingestion status, request payload, and response payload of
      * the legacy job identified by {@code jobId} in
-     * {@code legacy_data_ingestion_detail}.
+     * {@code ug_legacy_data_ingestion_detail}.
      *
      * @param jobId the unique identifier of the legacy job
      * @param status the new ingestion status (e.g., {@code SUCCESS} or
@@ -184,7 +184,7 @@ public class JdbcIngestionPersistenceServiceImpl implements IngestionPersistence
     }
 
     /**
-     * Persists a batch of daily ingestion detail records into ingestion_detail
+     * Persists a batch of daily ingestion detail records into ug_ingestion_detail
      * table.
      *
      * @param details list of daily ingestion data objects

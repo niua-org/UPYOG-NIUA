@@ -29,7 +29,7 @@ public class TenantController {
 
     /**
      * Synchronizes tenant metadata from MDMS and persists them to
-     * {@code ingestion_module_detail}.
+     * {@code ug_ingestion_module_detail}.
      *
      * @param stateTenantId optional state tenant identifier (e.g. {@code "pg"})
      * @return response entity with synced record count and details

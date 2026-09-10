@@ -35,7 +35,7 @@ public final class ExtractorUtil {
         if (tenantIds != null && !tenantIds.isEmpty()) {
             return String.join(",", tenantIds);
         }
-        throw new IllegalArgumentException("Tenant (ULB) missing for module " + module + " in ingestion_module_detail table. Please run the tenant sync API or configure tenants manually.");
+        throw new IllegalArgumentException("Tenant (ULB) missing for module " + module + " in ug_ingestion_module_detail table. Please run the tenant sync API or configure tenants manually.");
     }
 
     /**
