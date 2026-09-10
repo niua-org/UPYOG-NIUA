@@ -92,7 +92,7 @@ public class DailyIngestionService {
 
     /**
      * Executes the daily scheduled ingestion pipeline wrapped with full execution lifecycle tracking.
-     * Records the initial RUNNING status in ingestion_scheduler_detail, processes all enabled modules,
+     * Records the initial RUNNING status in ug_ingestion_scheduler_detail, processes all enabled modules,
      * and updates the run with COMPLETED or FAILED status and processed counts using constant values.
      *
      * @param cronExpression the active cron expression driving this scheduler run
@@ -177,7 +177,7 @@ public class DailyIngestionService {
         }
 
         if (!summaryRepository.hasAnyModuleDetails()) {
-            String errorMsg = "No tenant configuration found in ingestion_module_detail table. Please run the MDMS tenant sync API (POST /api/v1/tenant/_sync) or configure tenants manually.";
+            String errorMsg = "No tenant configuration found in ug_ingestion_module_detail table. Please run the MDMS tenant sync API (POST /api/v1/tenant/_sync) or configure tenants manually.";
             log.error(errorMsg);
             throw new IllegalStateException(errorMsg);
         }
@@ -194,7 +194,7 @@ public class DailyIngestionService {
 
             List<String> activeTenants = tenantSyncService.getActiveTenants(module);
             if (activeTenants.isEmpty()) {
-                log.warn("No active tenants configured for module {} in ingestion_module_detail table. Skipping module.", module);
+                log.warn("No active tenants configured for module {} in ug_ingestion_module_detail table. Skipping module.", module);
                 continue;
             }
 
@@ -351,7 +351,7 @@ public class DailyIngestionService {
         }
 
         if (!summaryRepository.hasAnyModuleDetails()) {
-            String errorMsg = "No tenant configuration found in ingestion_module_detail table. Please run the MDMS tenant sync API (POST /api/v1/tenant/_sync) or configure tenants manually.";
+            String errorMsg = "No tenant configuration found in ug_ingestion_module_detail table. Please run the MDMS tenant sync API (POST /api/v1/tenant/_sync) or configure tenants manually.";
             log.error(errorMsg);
             throw new IllegalStateException(errorMsg);
         }
@@ -365,7 +365,7 @@ public class DailyIngestionService {
 
             List<String> activeTenants = tenantSyncService.getActiveTenants(module);
             if (activeTenants.isEmpty()) {
-                log.warn("No active tenants configured for module {} in ingestion_module_detail table. Skipping module.", module);
+                log.warn("No active tenants configured for module {} in ug_ingestion_module_detail table. Skipping module.", module);
                 continue;
             }
 
@@ -557,7 +557,8 @@ public class DailyIngestionService {
                             .build();
                     batchDetailRecords.add(detailData);
                 } else {
-                    result = executeIngestion(module, item, date);
+                    String moduleDetailId = tenantSyncService.getModuleDetailId(itemTenantId, module.name());
+                    result = executeIngestion(module, item, date, schedulerId, moduleDetailId);
                 }
 
                 if (result != null && IngestionStatus.fromValue(result.getIngestionStatus()).isSuccess()) {
@@ -661,8 +662,17 @@ public class DailyIngestionService {
      * @return the {@link IngestionResult} returned by the client
      */
     private IngestionResult executeIngestion(Module module, Object item, LocalDate date) {
+        return executeIngestion(module, item, date, null, null);
+    }
+
+    private IngestionResult executeIngestion(Module module, Object item, LocalDate date, String schedulerId, String moduleDetailId) {
         Object payloadItem = item instanceof DashboardData dashboardData ? List.of(dashboardData) : item;
-        DashboardRequest request = DashboardRequest.builder().module(module).rawData(payloadItem).build();
+        DashboardRequest request = DashboardRequest.builder()
+                .module(module)
+                .rawData(payloadItem)
+                .schedulerId(schedulerId)
+                .moduleDetailId(moduleDetailId)
+                .build();
         log.info("Executing dashboardClient for item: {}", item);
         IngestionResult result = dashboardClient.execute(request);
         if (result != null) {

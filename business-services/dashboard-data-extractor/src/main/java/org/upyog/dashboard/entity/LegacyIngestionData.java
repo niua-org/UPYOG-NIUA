@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Data-transfer / entity object representing a single legacy ingestion
- * record persisted in the {@code legacy_data_ingestion_detail} PostgreSQL table.
+ * record persisted in the {@code ug_legacy_data_ingestion_detail} PostgreSQL table.
  */
 @Data
 @Builder

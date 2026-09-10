@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.upyog.dashboard.api.DashboardIngestionClient;
 import org.upyog.dashboard.config.DashboardProperties;
 import org.upyog.dashboard.loader.DashboardDataLoader;
+import org.upyog.dashboard.common.constants.DashboardConstants;
 import org.upyog.dashboard.model.DashboardData;
 import org.upyog.dashboard.model.DashboardPayload;
 import org.upyog.dashboard.model.IngestionResult;
@@ -47,7 +48,7 @@ public class S3DashboardDataLoaderImpl implements DashboardDataLoader {
                 }
             }
 
-            tempFile = excelGeneratorService.generateExcelFile(moduleName, records);
+            tempFile = excelGeneratorService.generateExcelFile(moduleName, records, DashboardConstants.DAILY);
 
             String tenantId = properties.getTenantId();
             if (payload.getData() != null && !payload.getData().isEmpty()) {

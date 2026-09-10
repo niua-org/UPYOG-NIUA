@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spring Repository managing persistence operations for
- * {@code ingestion_module_summary}.
+ * {@code ug_ingestion_module_summary}.
  *
  * <p>
  * Tracks and updates the last successfully ingested date per tenant and module.
@@ -181,7 +181,7 @@ public Optional<LocalDate> findLastSuccessfulDate(String tenantId, String module
 	}
 
 	/**
-	 * Updates the {@code ingestion_module_detail} table, marking legacy ingestion as
+	 * Updates the {@code ug_ingestion_module_detail} table, marking legacy ingestion as
 	 * completed and setting the last ingested date.
 	 *
 	 * @param tenantId   the tenant identifier
@@ -318,7 +318,7 @@ public Set<LocalDate> findRegisteredLegacyJobDates(String tenantId, String modul
 
 	/**
 	 * Immutable value object representing a legacy ingestion job entry retrieved from
-	 * {@code legacy_data_ingestion_detail}. Carries the unique job identifier and the
+	 * {@code ug_legacy_data_ingestion_detail}. Carries the unique job identifier and the
 	 * date for which data should be ingested.
 	 */
 	public static class LegacyJob {
@@ -440,29 +440,29 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 						.addValue("lastModifiedTime", now);
 			}
 			namedParameterJdbcTemplate.batchUpdate(IngestionSummaryQueryBuilder.UPSERT_MODULE_DETAIL_QUERY, batchParams);
-			log.info("Successfully upserted {} records into ingestion_module_detail", moduleDetails.size());
+			log.info("Successfully upserted {} records into ug_ingestion_module_detail", moduleDetails.size());
 		} catch (Exception exception) {
-			log.error("IngestionSummaryRepository | Failed to batch upsert ingestion_module_detail records", exception);
+			log.error("IngestionSummaryRepository | Failed to batch upsert ug_ingestion_module_detail records", exception);
 			throw new RuntimeException("Failed to upsert module details: " + exception.getMessage(), exception);
 		}
 	}
 
 	/**
-	 * Deletes all records from {@code ingestion_module_detail}.
+	 * Deletes all records from {@code ug_ingestion_module_detail}.
 	 */
 	public void deleteAllModuleDetails() {
 		try {
 			namedParameterJdbcTemplate.update(
 					IngestionSummaryQueryBuilder.DELETE_ALL_MODULE_DETAILS_QUERY, new MapSqlParameterSource());
-			log.info("IngestionSummaryRepository | Cleared all existing records from ingestion_module_detail");
+			log.info("IngestionSummaryRepository | Cleared all existing records from ug_ingestion_module_detail");
 		} catch (Exception exception) {
-			log.error("IngestionSummaryRepository | Failed to clear ingestion_module_detail records", exception);
+			log.error("IngestionSummaryRepository | Failed to clear ug_ingestion_module_detail records", exception);
 			throw new RuntimeException("Failed to delete existing module details: " + exception.getMessage(), exception);
 		}
 	}
 
 	/**
-	 * Atomically replaces all {@code ingestion_module_detail} records by clearing the table and inserting the new list.
+	 * Atomically replaces all {@code ug_ingestion_module_detail} records by clearing the table and inserting the new list.
 	 *
 	 * @param moduleDetails the new list of module details to persist
 	 */
@@ -475,7 +475,7 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 	}
 
 	/**
-	 * Checks whether any records currently exist in the {@code ingestion_module_detail} table.
+	 * Checks whether any records currently exist in the {@code ug_ingestion_module_detail} table.
 	 *
 	 * @return {@code true} if table has at least one record, {@code false} otherwise
 	 */
@@ -487,7 +487,7 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 					Integer.class);
 			return count != null && count > 0;
 		} catch (Exception exception) {
-			log.error("IngestionSummaryRepository | Failed to count ingestion_module_detail records", exception);
+			log.error("IngestionSummaryRepository | Failed to count ug_ingestion_module_detail records", exception);
 			return false;
 		}
 	}
@@ -548,7 +548,7 @@ public void updateLegacyJobStatus(String jobId, String status, String requestDat
 	}
 
 	/**
-	 * Creates a new scheduler execution record in {@code ingestion_scheduler_detail}.
+	 * Creates a new scheduler execution record in {@code ug_ingestion_scheduler_detail}.
 	 *
 	 * @param schedulerDetail the scheduler detail entity to persist
 	 */
