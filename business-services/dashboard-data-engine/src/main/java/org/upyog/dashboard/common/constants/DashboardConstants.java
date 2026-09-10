@@ -54,5 +54,7 @@ public class DashboardConstants {
     // Date Format Patterns
     public static final String DATE_FORMAT = "dd-MM-yyyy";
     public static final String SQL_DATE_FORMAT = "DD-MM-YYYY";
-    
+
+    // Excel Generation Limits
+    public static final int EXCEL_MAX_CELL_CHAR_LIMIT = 32765;
 }

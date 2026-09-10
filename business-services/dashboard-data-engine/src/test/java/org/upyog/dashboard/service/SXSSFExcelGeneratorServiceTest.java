@@ -145,4 +145,21 @@ class SXSSFExcelGeneratorServiceTest {
             excelFile.delete();
         }
     }
+
+    @Test
+    @DisplayName("Should throw ValidationException when payload_json exceeds EXCEL_MAX_CELL_CHAR_LIMIT")
+    void testGenerateExcelFile_PayloadExceedsCharacterLimit_ThrowsValidationException() {
+        String hugeString = "A".repeat(33000);
+        DashboardData data = DashboardData.builder()
+                .module("PT")
+                .date("2026-09-08")
+                .ulb("pg.cityb")
+                .metrics(java.util.Map.of("hugeField", hugeString))
+                .build();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                service.generateExcelFile("PT", List.of(data), DashboardConstants.DAILY)
+        ).isInstanceOf(org.upyog.dashboard.exception.ValidationException.class)
+         .hasMessageContaining("exceeds maximum Excel cell character limit");
+    }
 }

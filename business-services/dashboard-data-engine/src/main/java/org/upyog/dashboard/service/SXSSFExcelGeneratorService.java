@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.upyog.dashboard.common.constants.DashboardConstants;
 import org.upyog.dashboard.common.constants.Module;
+import org.upyog.dashboard.exception.ValidationException;
 import org.upyog.dashboard.model.DashboardData;
 import org.upyog.dashboard.model.DashboardPayload;
 import org.upyog.dashboard.model.NationalDashboardIngestRequest;
@@ -89,9 +90,9 @@ public class SXSSFExcelGeneratorService {
         }
 
         public StreamingExcelSession(String moduleName, ObjectMapper objectMapper,
-                                     TransformerRegistry transformerRegistry,
-                                     OAuthTokenService oAuthTokenService,
-                                     String ingestionType) throws IOException {
+                TransformerRegistry transformerRegistry,
+                OAuthTokenService oAuthTokenService,
+                String ingestionType) throws IOException {
             this.moduleName = moduleName;
             this.objectMapper = objectMapper;
             this.transformerRegistry = transformerRegistry;
@@ -206,20 +207,20 @@ public class SXSSFExcelGeneratorService {
                             .data(dataList)
                             .build();
 
-                    String json = objectMapper.writeValueAsString(ingestRequest);
-                    if (json.length() > 32765) {
-                        json = json.substring(0, 32765);
+                    String payloadJsonString = objectMapper.writeValueAsString(ingestRequest);
+                    if (payloadJsonString.length() > DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT) {
+                        log.error("Failed to generate payload_json: Payload length ({}) exceeds maximum allowed Excel cell character limit ({}) for module {}",
+                                payloadJsonString.length(), DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT, moduleName);
+                        throw new ValidationException("Generated payload_json exceeds maximum Excel cell character limit of "
+                                + DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT + " characters (actual length: " + payloadJsonString.length() + ")");
                     }
-                    return json;
-                } else {
-                    String json = objectMapper.writeValueAsString(recordObj);
-                    if (json.length() > 32765) {
-                        json = json.substring(0, 32765);
-                    }
-                    return json;
+                    return payloadJsonString;
                 }
-            } catch (Exception e) {
-                log.warn("Failed to generate payload_json for record: {}", e.getMessage());
+                return "";
+            } catch (ValidationException validationException) {
+                throw validationException;
+            } catch (Exception exception) {
+                log.warn("Failed to generate payload_json for record in module {}: {}", moduleName, exception.getMessage());
                 return "";
             }
         }
@@ -264,8 +265,8 @@ public class SXSSFExcelGeneratorService {
                         } else if (val instanceof Map || val instanceof List) {
                             try {
                                 String jsonStr = objectMapper.writeValueAsString(val);
-                                if (jsonStr.length() > 32765) {
-                                    jsonStr = jsonStr.substring(0, 32765);
+                                if (jsonStr.length() > DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT) {
+                                    jsonStr = jsonStr.substring(0, DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT);
                                 }
                                 cell.setCellValue(jsonStr);
                             } catch (Exception exception) {
@@ -274,8 +275,8 @@ public class SXSSFExcelGeneratorService {
                             }
                         } else {
                             String strVal = val.toString();
-                            if (strVal.length() > 32765) {
-                                strVal = strVal.substring(0, 32765);
+                            if (strVal.length() > DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT) {
+                                strVal = strVal.substring(0, DashboardConstants.EXCEL_MAX_CELL_CHAR_LIMIT);
                             }
                             cell.setCellValue(strVal);
                         }
