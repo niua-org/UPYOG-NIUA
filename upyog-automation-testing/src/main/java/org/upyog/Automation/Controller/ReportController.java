@@ -4,6 +4,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.model.ReportDto;
 
 import java.io.IOException;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Comparator;
 
 @RestController
 @RequestMapping("/api/report")
@@ -31,7 +31,7 @@ public class ReportController {
     private File getLatestReport() {
 
         File reportDir =
-                new File("target/reports");
+                new File(AutomationConstants.REPORTS_DIR);
 
         File[] files =
                 reportDir.listFiles(
@@ -94,7 +94,7 @@ public class ReportController {
     public ResponseEntity<String[]> getReports() {
 
         File reportDir =
-                new File("target/reports");
+                new File(AutomationConstants.REPORTS_DIR);
 
         File[] files =
                 reportDir.listFiles(
@@ -138,7 +138,7 @@ public class ReportController {
             }
 
             File reportDir =
-                    new File("target/reports");
+                    new File(AutomationConstants.REPORTS_DIR);
 
             File report =
                     new File(reportDir, fileName);
@@ -177,7 +177,7 @@ public class ReportController {
     @GetMapping("/module/{moduleName}")
     public List<ReportDto> getReportsByModule(@PathVariable String moduleName) {
 
-        File reportDir = new File("target/reports");
+        File reportDir = new File(AutomationConstants.REPORTS_DIR);
         logger.info("GET REPORTS API CALLED FOR MODULE : {}", moduleName);
 
         if (!reportDir.exists()) {
@@ -217,9 +217,9 @@ public class ReportController {
                         logger.info("FILE = {}", file.getAbsolutePath());
 
                         if (html.contains("fail-bg")) {
-                            dto.setStatus("FAIL");
+                            dto.setStatus(AutomationConstants.STATUS_FAIL);
                         } else {
-                            dto.setStatus("PASS");
+                            dto.setStatus(AutomationConstants.STATUS_PASS);
                         }
 
                         logger.info("FINAL STATUS = {}", dto.getStatus());

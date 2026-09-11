@@ -2,6 +2,7 @@ package org.upyog.Automation.engine;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
 import org.upyog.Automation.model.TestModule;
@@ -63,7 +64,7 @@ public class TestEngine {
         logger.info("========================================");
 
         // Navigate to base URL if specified
-        String baseUrl = WorkflowDataStore.get("selected.url");
+        String baseUrl = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_URL);
         String currentUrl = driver.getCurrentUrl();
 
         if (currentUrl == null || currentUrl.contains("login")) {

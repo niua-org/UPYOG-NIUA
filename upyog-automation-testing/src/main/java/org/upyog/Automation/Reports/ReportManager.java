@@ -6,6 +6,8 @@ import com.aventstack.extentreports.ExtentTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 public class ReportManager {
 
     private static final Logger logger =
@@ -98,6 +100,69 @@ public class ReportManager {
         if (extentTest != null) {
             extentTest.fail(stepName);
         } else {
+            logger.info(
+                    "NO ACTIVE TEST : " + stepName
+            );
+        }
+    }
+    public static void logTestData(Map<String, String> testData) {
+
+        if (testData == null || testData.isEmpty()) {
+            return;
+        }
+
+        logStep("========== TEST DATA ==========");
+
+        for (Map.Entry<String, String> entry : testData.entrySet()) {
+
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            // Don't show execution control in the report
+            if ("Execute".equalsIgnoreCase(key)
+                    || "TestCase".equalsIgnoreCase(key)) {
+                continue;
+            }
+
+            logStep(key + " : " + value);
+        }
+
+        logStep("========== END TEST DATA ==========");
+    }
+    public static void logFailure(
+            String stepName,
+            Exception exception
+    ) {
+
+        ExtentTest extentTest = getTest();
+
+        if (extentTest != null) {
+
+            String errorMessage =
+                    exception.getMessage();
+
+            if (errorMessage == null ||
+                    errorMessage.trim().isEmpty()) {
+
+                errorMessage =
+                        exception.getClass().getSimpleName();
+            }
+
+            extentTest.fail(
+                    "FAILED STEP : " + stepName
+            );
+
+            extentTest.fail(
+                    "ERROR : " + errorMessage
+            );
+
+            extentTest.fail(
+                    "EXCEPTION : "
+                            + exception.getClass().getSimpleName()
+            );
+
+        } else {
+
             logger.info(
                     "NO ACTIVE TEST : " + stepName
             );
