@@ -38,76 +38,75 @@ public class CommonEmployeeTest extends BaseTest {
         Map<String, String> map = new HashMap<>();
 
         // Street Vending
-        map.put("STREET_VENDING", AutomationConstants.CONFIG_STREET_VENDING_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_STREET_VENDING, AutomationConstants.CONFIG_STREET_VENDING_EMPLOYEE);
 
         // Pet Registration
-        map.put("PET_REGISTRATION", AutomationConstants.CONFIG_PET_EMPLOYEE);
-        map.put("PET_CEMP", AutomationConstants.CONFIG_PET_CEMP_CITIZEN);
+        map.put(AutomationConstants.MODULE_PET_REGISTRATION, AutomationConstants.CONFIG_PET_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_PET_CEMP, AutomationConstants.CONFIG_PET_CEMP);
 
         // Trade License
-        map.put("TRADE_LICENSE", AutomationConstants.CONFIG_TRADE_LICENSE_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_TRADE_LICENSE, AutomationConstants.CONFIG_TRADE_LICENSE_EMPLOYEE);
 
         // Asset Management
-        map.put("ASSET_MANAGEMENT_SYSTEM", AutomationConstants.CONFIG_ASSET_INITIATOR);
-        map.put("ASSET_MANAGEMENT_SYSTEM_VERIFIER", AutomationConstants.CONFIG_ASSET_VERIFIER);
-        map.put("ASSET_MANAGEMENT_SYSTEM_APPROVER", AutomationConstants.CONFIG_ASSET_APPROVER);
+        map.put(AutomationConstants.MODULE_ASSET_MANAGEMENT, AutomationConstants.CONFIG_ASSET_INITIATOR);
+        map.put(AutomationConstants.MODULE_ASSET_VERIFIER, AutomationConstants.CONFIG_ASSET_VERIFIER);
+        map.put(AutomationConstants.MODULE_ASSET_APPROVER, AutomationConstants.CONFIG_ASSET_APPROVER);
 
         // Advertisement
-        map.put("ADVERTISEMENT", AutomationConstants.CONFIG_ADV_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_ADVERTISEMENT, AutomationConstants.CONFIG_ADVERTISEMENT_EMPLOYEE);
 
         // Property Tax
-        map.put("PROPERTY_TAX", AutomationConstants.CONFIG_PROPERTY_TAX_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_PROPERTY_TAX, AutomationConstants.CONFIG_PROPERTY_TAX_EMPLOYEE);
 
         // E-Waste Management
-        map.put("EWASTE_MANAGEMENT_SYSTEM", AutomationConstants.CONFIG_EWASTE_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_EWASTE, AutomationConstants.CONFIG_EWASTE_EMPLOYEE);
 
         // Desludging Services
-        map.put("DESLUDGING_EMPLOYEE_UPDATE", AutomationConstants.CONFIG_DESLUDGING_UPDATE);
-        map.put("DESLUDGING_EMPLOYEE_COMPLETE", AutomationConstants.CONFIG_DESLUDGING_COMPLETE);
-        map.put("DESLUDGING_EMPLOYEE_PSSO", AutomationConstants.CONFIG_DESLUDGING_PSSO);
-        map.put("DESLUDGING_EMPLOYEE_FSTPO", AutomationConstants.CONFIG_DESLUDGING_FSTPO);
+        map.put(AutomationConstants.MODULE_DESLUDGING_EMP_UPDATE, AutomationConstants.CONFIG_DESLUDGING_EMPLOYEE_UPDATE);
+        map.put(AutomationConstants.MODULE_DESLUDGING_EMP_COMPLETE, AutomationConstants.CONFIG_DESLUDGING_EMPLOYEE_COMPLETE);
+        map.put(AutomationConstants.MODULE_DESLUDGING_EMP_PSSO, AutomationConstants.CONFIG_DESLUDGING_EMPLOYEE_PSSO);
+        map.put(AutomationConstants.MODULE_DESLUDGING_EMP_FSTPO, AutomationConstants.CONFIG_DESLUDGING_EMPLOYEE_FSTPO);
 
         // Online Building Plan Approval System
-        map.put("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM", AutomationConstants.CONFIG_OBPAS_EMPLOYEE);
-        map.put("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC", AutomationConstants.CONFIG_OBPAS_OC_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_OBPAS, AutomationConstants.CONFIG_OBPAS_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_OBPAS_OC, AutomationConstants.CONFIG_OBPAS_OC_EMPLOYEE);
 
         // Request Services
-        map.put("WATER_TANKER", AutomationConstants.CONFIG_WATER_TANKER_EMPLOYEE);
-        map.put("WATER_TANKER_VENDOR", AutomationConstants.CONFIG_WATER_TANKER_VENDOR);
-        map.put("TREE_PRUNING", AutomationConstants.CONFIG_TREE_PRUNING_EMPLOYEE);
-        map.put("TREE_PRUNING_VERIFIER", AutomationConstants.CONFIG_TREE_PRUNING_VERIFIER);
-        map.put("MOBILE_TOILET", AutomationConstants.CONFIG_MOBILE_TOILET_EMPLOYEE);
-        map.put("MOBILE_TOILET_VENDOR", AutomationConstants.CONFIG_MOBILE_TOILET_VENDOR);
+        map.put(AutomationConstants.MODULE_WATER_TANKER, AutomationConstants.CONFIG_WATER_TANKER_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_WATER_TANKER_VENDOR, AutomationConstants.CONFIG_WATER_TANKER_VENDOR);
+        map.put(AutomationConstants.MODULE_TREE_PRUNING, AutomationConstants.CONFIG_TREE_PRUNING_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_TREE_PRUNING_VERIFIER, AutomationConstants.CONFIG_TREE_PRUNING_VERIFIER);
+        map.put(AutomationConstants.MODULE_MOBILE_TOILET, AutomationConstants.CONFIG_MOBILE_TOILET_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_MOBILE_TOILET_VENDOR, AutomationConstants.CONFIG_MOBILE_TOILET_VENDOR);
 
         // Community Hall Booking
-        map.put("COMMUNITY_HALL_BOOKING", AutomationConstants.CONFIG_CHB_EMPLOYEE);
-        map.put("CHB", AutomationConstants.CONFIG_CHB_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_CHB, AutomationConstants.CONFIG_CHB_EMPLOYEE);
 
         // Construction and Demolition
-        map.put("CONSTRUCTION_AND_DEMOLITION", AutomationConstants.CONFIG_CND_EMPLOYEE);
-        map.put("CND_EMP", AutomationConstants.CONFIG_CND_EMPLOYEE);
-        map.put("CND_VENDOR", AutomationConstants.CONFIG_CND_VENDOR);
+        map.put(AutomationConstants.MODULE_CND, AutomationConstants.CONFIG_CND_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_CND_EMP, AutomationConstants.CONFIG_CND_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_CND_VENDOR, AutomationConstants.CONFIG_CND_VENDOR);
 
         // Public Grievance Redressal
-        map.put("PUBLIC_GRIEVANCE_REDRESSAL", AutomationConstants.CONFIG_PGR_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_PUBLIC_GRIEVANCE_REDRESSAL, AutomationConstants.CONFIG_PGR_EMPLOYEE);
 
         // Water and Sewerage
-        map.put("SEWERAGE_EMP", AutomationConstants.CONFIG_SEWERAGE_EMPLOYEE);
-        map.put("SEWERAGE", AutomationConstants.CONFIG_SEWERAGE_EMPLOYEE);
-        map.put("WATER_EMP", AutomationConstants.CONFIG_WATER_EMPLOYEE);
-        map.put("WATER", AutomationConstants.CONFIG_WATER_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_SEWERAGE_EMP, AutomationConstants.CONFIG_SEWERAGE_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_SEWERAGE, AutomationConstants.CONFIG_SEWERAGE_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_WATER_EMP, AutomationConstants.CONFIG_WATER_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_WATER, AutomationConstants.CONFIG_WATER_EMPLOYEE);
 
         // Garbage Collection
-        map.put("GARBAGE_COLLECTION", AutomationConstants.CONFIG_GC_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_GARBAGE_COLLECTION, AutomationConstants.CONFIG_GARBAGE_COLLECTION_EMPLOYEE);
 
         // Estate Management
-        map.put("ESTATE_MANAGEMENT", AutomationConstants.CONFIG_ESTATE_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_ESTATE_MANAGEMENT, AutomationConstants.CONFIG_ESTATE_MANAGEMENT_EMPLOYEE);
 
         // Challan Generation
-        map.put("CHALLAN_GENERATION", AutomationConstants.CONFIG_CHALLAN_GEN_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_CHALLAN_GENERATION, AutomationConstants.CONFIG_CHALLAN_EMPLOYEE);
 
         // No Due Certificate
-        map.put("NO_DUE_CERTIFICATE", AutomationConstants.CONFIG_NDC_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_NO_DUE_CERTIFICATE, AutomationConstants.CONFIG_NDC_EMPLOYEE);
 
         EMPLOYEE_MODULE_CONFIG_MAP = Collections.unmodifiableMap(map);
     }

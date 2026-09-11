@@ -29,23 +29,23 @@ public class BaseTest {
         js = (JavascriptExecutor) driver;
         logger.info("JS created");
 
-        logger.info("selected.url = " + WorkflowDataStore.get("selected.url"));
+        logger.info("selected.url = " + WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_URL));
 
 
         String baseUrl =
-                WorkflowDataStore.get("selected.url");
+                WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_URL);
 
         String mobile =
-                WorkflowDataStore.get("selected.mobile");
+                WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_MOBILE);
 
         String otp =
-                WorkflowDataStore.get("selected.otp");
+                WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_OTP);
 
         String city =
-                WorkflowDataStore.get("selected.city");
+                WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_CITY);
 
         String moduleName =
-                WorkflowDataStore.get("selected.module");
+                WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_MODULE);
 
         // Fallback only if HTML didn't send values
         if (baseUrl == null)
@@ -78,7 +78,7 @@ public class BaseTest {
                 moduleName
         );
         logger.info("HTML selected.url = {}",
-                WorkflowDataStore.get("selected.url"));
+                WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_URL));
     }
 
     public void tearDown() throws InterruptedException {

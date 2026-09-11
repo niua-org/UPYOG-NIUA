@@ -1,8 +1,5 @@
 package org.upyog.Automation.Controller;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +16,7 @@ import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.Utils.ExcelDataReader;
 import org.upyog.Automation.Utils.ExcelResultGenerator;
 import org.upyog.Automation.model.ModuleExecutionResult;
+import org.upyog.Automation.model.ModuleRequest;
 
 import java.io.File;
 import java.util.HashMap;
@@ -34,10 +32,18 @@ import java.util.Map;
  * execution templates and result workbooks.</p>
  */
 @RestController
-@RequestMapping(AutomationConstants.API_MODULE_BASE)
+@RequestMapping("/api/module")
 public class ModuleTestController {
 
     private static final Logger logger = LoggerFactory.getLogger(ModuleTestController.class);
+
+    private static final String TEST_DATA_FILE = "test-data/test-data.xlsx";
+    private static final String TEST_DATA_CONTENT_DISPOSITION = "attachment; filename=\"UPYOG_Test_Data.xlsx\"";
+    private static final String TEST_RESULT_CONTENT_DISPOSITION = "attachment; filename=\"UPYOG_Test_Result.xlsx\"";
+    private static final String EXCEL_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String XLSX_EXTENSION = ".xlsx";
+    private static final String TEST_RESULT_FILE_PREFIX = "upyog-test-result-";
+    private static final String TEST_DATA_FILE_PREFIX = "upyog-test-data-";
 
     @Autowired
     private ModuleTestService moduleTestService;
@@ -57,7 +63,7 @@ public class ModuleTestController {
      * @param request the module execution request containing module name and base URL
      * @return ResponseEntity containing list of ModuleExecutionResult objects
      */
-    @PostMapping(AutomationConstants.ENDPOINT_RUN)
+    @PostMapping("/run")
     public ResponseEntity<List<ModuleExecutionResult>> runModule(@RequestBody ModuleRequest request) {
         logger.info("Received request to run module: [{}], Base URL: [{}]", 
                 request != null ? request.getModuleName() : null, 
@@ -84,8 +90,8 @@ public class ModuleTestController {
 
                 // Create a temporary file to store the result workbook
                 File outputFile = File.createTempFile(
-                        AutomationConstants.TEST_RESULT_FILE_PREFIX,
-                        AutomationConstants.XLSX_EXTENSION
+                        TEST_RESULT_FILE_PREFIX,
+                        XLSX_EXTENSION
                 );
 
                 // Preserve uploaded workbook structure and append execution results
@@ -114,7 +120,7 @@ public class ModuleTestController {
      *
      * @return ResponseEntity containing progress details map
      */
-    @GetMapping(AutomationConstants.ENDPOINT_PROGRESS)
+    @GetMapping("/progress")
     public ResponseEntity<?> getExecutionProgress() {
         Map<String, Object> progress = new HashMap<>();
 
@@ -124,11 +130,11 @@ public class ModuleTestController {
         String currentModule = moduleTestService.getCurrentModule();
         boolean isRunning = moduleTestService.isExecutionRunning();
 
-        progress.put(AutomationConstants.KEY_TOTAL_TEST_CASES, total);
-        progress.put(AutomationConstants.KEY_COMPLETED_TEST_CASES, completed);
-        progress.put(AutomationConstants.KEY_CURRENT_TEST_CASE, currentTestCase);
-        progress.put(AutomationConstants.KEY_CURRENT_MODULE, currentModule);
-        progress.put(AutomationConstants.KEY_EXECUTION_RUNNING, isRunning);
+        progress.put("totalTestCases", total);
+        progress.put("completedTestCases", completed);
+        progress.put("currentTestCase", currentTestCase);
+        progress.put("currentModule", currentModule);
+        progress.put("executionRunning", isRunning);
 
         logger.debug("Progress check: Total=[{}], Completed=[{}], Active=[{}], Running=[{}]",
                 total, completed, currentTestCase, isRunning);
@@ -141,19 +147,19 @@ public class ModuleTestController {
      *
      * @return ResponseEntity with the template file resource
      */
-    @GetMapping(AutomationConstants.ENDPOINT_DOWNLOAD_TEMPLATE)
+    @GetMapping("/download-template")
     public ResponseEntity<Resource> downloadTemplate() {
-        logger.info("Request received to download test data template: [{}]", AutomationConstants.TEST_DATA_FILE);
+        logger.info("Request received to download test data template: [{}]", TEST_DATA_FILE);
 
-        ClassPathResource resource = new ClassPathResource(AutomationConstants.TEST_DATA_FILE);
+        ClassPathResource resource = new ClassPathResource(TEST_DATA_FILE);
 
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        AutomationConstants.TEST_DATA_CONTENT_DISPOSITION
+                        TEST_DATA_CONTENT_DISPOSITION
                 )
                 .contentType(
-                        MediaType.parseMediaType(AutomationConstants.EXCEL_CONTENT_TYPE)
+                        MediaType.parseMediaType(EXCEL_CONTENT_TYPE)
                 )
                 .body(resource);
     }
@@ -163,7 +169,7 @@ public class ModuleTestController {
      *
      * @return ResponseEntity containing the result Excel resource, or 404 Not Found if unavailable
      */
-    @GetMapping(AutomationConstants.ENDPOINT_DOWNLOAD_RESULT)
+    @GetMapping("/download-result")
     public ResponseEntity<Resource> downloadResult() {
         logger.info("Request received to download latest test results.");
 
@@ -178,10 +184,10 @@ public class ModuleTestController {
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        AutomationConstants.TEST_RESULT_CONTENT_DISPOSITION
+                        TEST_RESULT_CONTENT_DISPOSITION
                 )
                 .contentType(
-                        MediaType.parseMediaType(AutomationConstants.EXCEL_CONTENT_TYPE)
+                        MediaType.parseMediaType(EXCEL_CONTENT_TYPE)
                 )
                 .body(resource);
     }
@@ -225,62 +231,42 @@ public class ModuleTestController {
      * @param file the multipart Excel file uploaded by the user
      * @return ResponseEntity containing success message or bad request error
      */
-    @PostMapping(AutomationConstants.ENDPOINT_UPLOAD_EXCEL)
+    @PostMapping("/upload-excel")
     public ResponseEntity<String> uploadExcel(@RequestParam("file") MultipartFile file) {
         try {
             // Validate presence of uploaded file
             if (file == null || file.isEmpty()) {
                 logger.warn("Upload rejected: empty or null file provided.");
                 return ResponseEntity.badRequest()
-                        .body(AutomationConstants.MSG_EMPTY_FILE);
+                        .body("Please upload an Excel file.");
             }
 
             String fileName = file.getOriginalFilename();
             logger.info("Processing uploaded Excel file: [{}] (Size: {} bytes)", fileName, file.getSize());
 
             // Validate file extension
-            if (fileName == null || !fileName.toLowerCase().endsWith(AutomationConstants.XLSX_EXTENSION)) {
+            if (fileName == null || !fileName.toLowerCase().endsWith(XLSX_EXTENSION)) {
                 logger.warn("Upload rejected: invalid file format for [{}]", fileName);
                 return ResponseEntity.badRequest()
-                        .body(AutomationConstants.MSG_UNSUPPORTED_EXCEL_FORMAT);
+                        .body("Only .xlsx Excel files are supported.");
             }
 
             // Create temporary file to store the workbook
             File tempFile = File.createTempFile(
-                    AutomationConstants.TEST_DATA_FILE_PREFIX,
-                    AutomationConstants.XLSX_EXTENSION
+                    TEST_DATA_FILE_PREFIX,
+                    XLSX_EXTENSION
             );
 
             file.transferTo(tempFile);
             ExcelDataReader.setUploadedExcelFile(tempFile);
 
             logger.info("Excel test-data file stored successfully at: [{}]", tempFile.getAbsolutePath());
-            return ResponseEntity.ok(AutomationConstants.MSG_EXCEL_UPLOAD_SUCCESS + fileName);
+            return ResponseEntity.ok("Excel uploaded successfully: " + fileName);
 
         } catch (Exception e) {
             logger.error("Failed to upload Excel test-data file: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError()
-                    .body(AutomationConstants.MSG_EXCEL_UPLOAD_FAILURE + e.getMessage());
+                    .body("Failed to upload Excel: " + e.getMessage());
         }
-    }
-
-    /**
-     * Request object used to receive module execution parameters from the frontend.
-     */
-    @Getter
-    @Setter
-    @ToString
-    public static class ModuleRequest {
-
-        /**
-         * Name of the module to execute, or comma-separated list of module names.
-         */
-        private String moduleName;
-
-        /**
-         * Target application base URL for the automation tests.
-         */
-        private String baseUrl;
-
     }
 }

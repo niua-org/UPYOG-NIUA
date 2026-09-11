@@ -15,10 +15,9 @@ import java.util.List;
 
 public class ExcelResultGenerator {
 
-    private static final String STATUS_COLUMN = "Status";
-    private static final String REMARK_COLUMN = "Remark";
-    private static final String FAILED_STEP_COLUMN = "Failed Steps";
-
+    private static final String STATUS_COLUMN = AutomationConstants.EXCEL_COLUMN_STATUS;
+    private static final String REMARK_COLUMN = AutomationConstants.EXCEL_COLUMN_REMARK;
+    private static final String FAILED_STEP_COLUMN = AutomationConstants.EXCEL_COLUMN_FAILED_STEPS;
 
     /**
      * Generates a result Excel from the source Excel.
@@ -125,7 +124,7 @@ public class ExcelResultGenerator {
                                 row,
                                 findColumn(
                                         headerRow,
-                                        "TestCase"
+                                        AutomationConstants.EXCEL_COLUMN_TEST_CASE
                                 )
                         );
 
@@ -134,7 +133,7 @@ public class ExcelResultGenerator {
                                 row,
                                 findColumn(
                                         headerRow,
-                                        "Execute"
+                                        AutomationConstants.EXCEL_COLUMN_EXECUTE
                                 )
                         );
 

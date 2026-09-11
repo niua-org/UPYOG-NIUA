@@ -6,6 +6,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.upyog.Automation.Reports.ReportManager;
+import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
@@ -55,10 +56,10 @@ public class ActionExecutor {
             return value;
         }
 
-        String env = WorkflowDataStore.get("selected.env");
+        String env = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_ENV);
         String[] parts = value.split("\\|\\|");
 
-        return "NIUATT".equalsIgnoreCase(env)
+        return AutomationConstants.ENV_NIUATT.equalsIgnoreCase(env)
                 ? parts[0]
                 : parts[1];
     }
@@ -121,95 +122,95 @@ public class ActionExecutor {
             // Using switch expression for clean, exhaustive handling
             switch (action.toUpperCase()) {
 
-                case "TYPE":
+                case AutomationConstants.ACTION_TYPE:
                     executeType(instruction);
                     break;
 
-                case "CLICK":
+                case AutomationConstants.ACTION_CLICK:
                     executeClick(instruction);
                     break;
 
-                case "CLICK_JS":
+                case AutomationConstants.ACTION_CLICK_JS:
                     executeJsClick(instruction);
                     break;
 
-                case "HOVER":
+                case AutomationConstants.ACTION_HOVER:
                     executeHover(instruction);
                     break;
 
-                case "UPLOAD_FILE":
+                case AutomationConstants.ACTION_UPLOAD_FILE:
                     executeFileUpload(instruction);
                     break;
 
-                case "TYPE_OTP":
+                case AutomationConstants.ACTION_TYPE_OTP:
                     executeOtpType(instruction);
                     break;
 
-                case "SELECT_RADIO_BY_TEXT":
+                case AutomationConstants.ACTION_SELECT_RADIO_BY_TEXT:
                     executeRadioSelectionByText(instruction);
                     break;
 
-                case "SELECT_DROPDOWN_BY_INDEX":
+                case AutomationConstants.ACTION_SELECT_DROPDOWN_BY_INDEX:
                     executeDropdownSelectionByIndex(instruction);
                     break;
 
-                case "CHECK_LAST_CHECKBOX":
+                case AutomationConstants.ACTION_CHECK_LAST_CHECKBOX:
                     checkLastCheckbox(instruction);
                     break;
 
-                case "CAPTURE_TEXT":
+                case AutomationConstants.ACTION_CAPTURE_TEXT:
                     captureText(instruction);
                     break;
 
-                case "TYPE_FROM_STORE":
+                case AutomationConstants.ACTION_TYPE_FROM_STORE:
                     typeFromStore(instruction);
                     break;
 
-                case "SET_DATE_TODAY":
+                case AutomationConstants.ACTION_SET_DATE_TODAY:
                     executeSetDateToday(instruction);
                     break;
 
-                case "SET_DATE_PLUS_DAYS":
+                case AutomationConstants.ACTION_SET_DATE_PLUS_DAYS:
                     executeSetDatePlusDays(instruction);
                     break;
 
-                case "SWITCH_WINDOW":
+                case AutomationConstants.ACTION_SWITCH_WINDOW:
                     switchWindow();
                     break;
 
-                case "WAIT_FOR_TEXT":
+                case AutomationConstants.ACTION_WAIT_FOR_TEXT:
                     waitForText(instruction);
                     break;
 
-                case "SET_DATE_TEXT":
+                case AutomationConstants.ACTION_SET_DATE_TEXT:
                     executeSetDateText(instruction);
                     break;
 
-                case "MULTI_SELECT_CHECKBOX":
+                case AutomationConstants.ACTION_MULTI_SELECT_CHECKBOX:
                     executeMultiSelectCheckbox(instruction);
                     break;
 
-                case "OPEN_URL":
+                case AutomationConstants.ACTION_OPEN_URL:
                     openUrl(instruction);
                     break;
 
-                case "SET_CURRENT_TIME":
+                case AutomationConstants.ACTION_SET_CURRENT_TIME:
                     executeSetCurrentTime(instruction);
                     break;
 
-                case "SET_CUSTOM_TIME":
+                case AutomationConstants.ACTION_SET_CUSTOM_TIME:
                     executeSetCustomTime(instruction);
                     break;
 
-                case "SET_DATE_JS":
+                case AutomationConstants.ACTION_SET_DATE_JS:
                     executeSetDateJs(instruction);
                     break;
 
-                case "TYPE_BY_LABEL":
+                case AutomationConstants.ACTION_TYPE_BY_LABEL:
                     executeTypeByLabel(instruction);
                     break;
 
-                case "OPTIONAL_CLICK_JS":
+                case AutomationConstants.ACTION_OPTIONAL_CLICK_JS:
                     try {
                         executeJsClick(instruction);
                     } catch (Exception e) {
@@ -217,7 +218,7 @@ public class ActionExecutor {
                     }
                     break;
 
-                case "OPTIONAL_SELECT_DROPDOWN_BY_INDEX":
+                case AutomationConstants.ACTION_OPTIONAL_SELECT_DROPDOWN_BY_INDEX:
                     try {
                         executeDropdownSelectionByIndex(instruction);
                         logger.info("Optional dropdown executed");
@@ -226,7 +227,7 @@ public class ActionExecutor {
                     }
                     break;
 
-                case "OPTIONAL_TYPE":
+                case AutomationConstants.ACTION_OPTIONAL_TYPE:
                     try {
                         executeType(instruction);
                         logger.info("Optional type executed");
@@ -235,23 +236,23 @@ public class ActionExecutor {
                     }
                     break;
 
-                case "SELECT_BY_VALUE":
+                case AutomationConstants.ACTION_SELECT_BY_VALUE:
                     executeSelectByValue(instruction);
                     break;
 
-                case "SCROLL_TO_ELEMENT":
+                case AutomationConstants.ACTION_SCROLL_TO_ELEMENT:
                     executeScrollToElement(instruction);
                     break;
 
-                case "WAIT_VISIBLE":
+                case AutomationConstants.ACTION_WAIT_VISIBLE:
                     executeWaitVisible(instruction);
                     break;
 
-                case "SELECT_DATE_RANGE":
+                case AutomationConstants.ACTION_SELECT_DATE_RANGE:
                     executeSelectDateRange();
                     break;
 
-                case "ACCEPT_ALERT":
+                case AutomationConstants.ACTION_ACCEPT_ALERT:
 
                     Alert alert = wait.until(ExpectedConditions.alertIsPresent());
 
@@ -290,65 +291,65 @@ public class ActionExecutor {
 
         } catch (NoSuchElementException e) {
 
-        WorkflowDataStore.put(
-                "FAILED_STEP",
-                stepName
-        );
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_STEP,
+                    stepName
+            );
 
-        WorkflowDataStore.put(
-                "FAILED_ERROR",
-                e.getMessage()
-        );
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_ERROR,
+                    e.getMessage()
+            );
 
             String screenshotPath =
                     ScreenshotManager.captureFailureScreenshot(
                             driver,
-                            WorkflowDataStore.get("current.module"),
-                            WorkflowDataStore.get("current.test.case"),
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_MODULE),
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE),
                             stepName
                     );
 
             WorkflowDataStore.put(
-                    "FAILED_SCREENSHOT",
+                    AutomationConstants.KEY_FAILED_SCREENSHOT,
                     screenshotPath
             );
 
-        ReportManager.logFailure(
-                "FAILED : " + stepName + " | " + e.getMessage()
-        );
+            ReportManager.logFailure(
+                    "FAILED : " + stepName + " | " + e.getMessage()
+            );
 
-        logger.error(
-                "Element not found for step '{}': {}",
-                stepName,
-                e.getMessage()
-        );
+            logger.error(
+                    "Element not found for step '{}': {}",
+                    stepName,
+                    e.getMessage()
+            );
 
-        throw new RuntimeException(
-                "Step failed - element not found: " + stepName,
-                e
-        );
+            throw new RuntimeException(
+                    "Step failed - element not found: " + stepName,
+                    e
+            );
         } catch (TimeoutException e) {
 
             WorkflowDataStore.put(
-                    "FAILED_STEP",
+                    AutomationConstants.KEY_FAILED_STEP,
                     stepName
             );
 
             String screenshotPath =
                     ScreenshotManager.captureFailureScreenshot(
                             driver,
-                            WorkflowDataStore.get("current.module"),
-                            WorkflowDataStore.get("current.test.case"),
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_MODULE),
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE),
                             stepName
                     );
 
             WorkflowDataStore.put(
-                    "FAILED_SCREENSHOT",
+                    AutomationConstants.KEY_FAILED_SCREENSHOT,
                     screenshotPath
             );
 
             WorkflowDataStore.put(
-                    "FAILED_ERROR",
+                    AutomationConstants.KEY_FAILED_ERROR,
                     e.getMessage()
             );
 
@@ -380,12 +381,12 @@ public class ActionExecutor {
         catch (Exception e) {
 
             WorkflowDataStore.put(
-                    "FAILED_STEP",
+                    AutomationConstants.KEY_FAILED_STEP,
                     stepName
             );
 
             WorkflowDataStore.put(
-                    "FAILED_ERROR",
+                    AutomationConstants.KEY_FAILED_ERROR,
                     e.getMessage()
             );
 
@@ -466,19 +467,19 @@ public class ActionExecutor {
         By locator;
 
         switch (instruction.getLocatorStrategy().toUpperCase()) {
-            case "XPATH":
+            case AutomationConstants.LOCATOR_XPATH:
                 locator = By.xpath(resolvedLocator);
                 break;
 
-            case "CSS":
+            case AutomationConstants.LOCATOR_CSS:
                 locator = By.cssSelector(resolvedLocator);
                 break;
 
-            case "ID":
+            case AutomationConstants.LOCATOR_ID:
                 locator = By.id(resolvedLocator);
                 break;
 
-            case "NAME":
+            case AutomationConstants.LOCATOR_NAME:
                 locator = By.name(resolvedLocator);
                 break;
 
@@ -946,9 +947,9 @@ public class ActionExecutor {
 
         Thread.sleep(instruction.getDynamicSleep());
 
-// Store the actual selected dropdown value for reporting
+        // Store the actual selected dropdown value for reporting
         WorkflowDataStore.put(
-                "REPORT_SELECTED_VALUE",
+                AutomationConstants.KEY_SELECTED_VALUE,
                 selectedOptionText
         );
 
@@ -1051,10 +1052,10 @@ public class ActionExecutor {
 
         WorkflowDataStore.put(key, capturedValue);
 
-        if (!"WATER_APPLICATION_NO".equals(key)
-                && !"SEWERAGE_APPLICATION_NO".equals(key)) {
+        if (!AutomationConstants.WATER_APPLICATION_NO.equals(key)
+                && !AutomationConstants.SEWERAGE_APPLICATION_NO.equals(key)) {
 
-            WorkflowDataStore.put("APPLICATION_NO", capturedValue);
+            WorkflowDataStore.put(AutomationConstants.APPLICATION_NO, capturedValue);
         }
 
 // Existing logic
@@ -1074,12 +1075,12 @@ public class ActionExecutor {
         Thread.sleep(instruction.getDynamicSleep());
         logger.info(
                 "Water App No = {}",
-                WorkflowDataStore.get("WATER_APPLICATION_NO")
+                WorkflowDataStore.get(AutomationConstants.WATER_APPLICATION_NO)
         );
 
         logger.info(
                 "Sewerage App No = {}",
-                WorkflowDataStore.get("SEWERAGE_APPLICATION_NO")
+                WorkflowDataStore.get(AutomationConstants.SEWERAGE_APPLICATION_NO)
         );
         logger.info(
                 "Captured Value = {}",
@@ -1087,7 +1088,7 @@ public class ActionExecutor {
         );
         logger.info(
                 "APPLICATION_NO STORED = {}",
-                WorkflowDataStore.get("APPLICATION_NO")
+                WorkflowDataStore.get(AutomationConstants.APPLICATION_NO)
         );
     }
 
@@ -1118,11 +1119,11 @@ public class ActionExecutor {
                 WorkflowDataStore.get(key);
 
         if ((storedValue == null || storedValue.isEmpty())
-                && "APPLICATION_NO".equals(key)) {
+                && AutomationConstants.APPLICATION_NO.equals(key)) {
 
             storedValue =
                     WorkflowDataStore.get(
-                            "selected.applicationNumber"
+                            AutomationConstants.KEY_SELECTED_APPLICATION_NO
                     );
         }
 
@@ -1631,23 +1632,23 @@ public class ActionExecutor {
 
             switch (action.toUpperCase()) {
 
-                case "TYPE":
-                case "TYPE_BY_LABEL":
-                case "CLEAR_AND_TYPE":
-                case "TYPE_FROM_STORE":
+                case AutomationConstants.ACTION_TYPE:
+                case AutomationConstants.ACTION_TYPE_BY_LABEL:
+                case AutomationConstants.ACTION_CLEAR_AND_TYPE:
+                case AutomationConstants.ACTION_TYPE_FROM_STORE:
 
                     return instruction.getInputValue();
 
-                case "SELECT_RADIO_BY_TEXT":
-                case "MULTI_SELECT_CHECKBOX":
+                case AutomationConstants.ACTION_SELECT_RADIO_BY_TEXT:
+                case AutomationConstants.ACTION_MULTI_SELECT_CHECKBOX:
 
                     return instruction.getInputValue();
 
-                case "SELECT_DROPDOWN_BY_INDEX":
+                case AutomationConstants.ACTION_SELECT_DROPDOWN_BY_INDEX:
 
-                    return WorkflowDataStore.get("REPORT_SELECTED_VALUE");
+                    return WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_VALUE);
 
-                case "UPLOAD_FILE":
+                case AutomationConstants.ACTION_UPLOAD_FILE:
 
                     String filePath = instruction.getInputValue();
 
@@ -1657,18 +1658,18 @@ public class ActionExecutor {
 
                     return null;
 
-                case "CAPTURE_TEXT":
+                case AutomationConstants.ACTION_CAPTURE_TEXT:
 
                     String key = instruction.getInputValue();
 
                     return WorkflowDataStore.get(key);
 
-                case "SET_DATE_TODAY":
-                case "SET_DATE_PLUS_DAYS":
-                case "SET_DATE_TEXT":
-                case "SET_DATE_JS":
-                case "SET_CURRENT_TIME":
-                case "SET_CUSTOM_TIME":
+                case AutomationConstants.ACTION_SET_DATE_TODAY:
+                case AutomationConstants.ACTION_SET_DATE_PLUS_DAYS:
+                case AutomationConstants.ACTION_SET_DATE_TEXT:
+                case AutomationConstants.ACTION_SET_DATE_JS:
+                case AutomationConstants.ACTION_SET_CURRENT_TIME:
+                case AutomationConstants.ACTION_SET_CUSTOM_TIME:
 
                     return instruction.getInputValue();
 

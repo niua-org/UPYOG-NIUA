@@ -2,11 +2,12 @@ package org.upyog.Automation.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.upyog.Automation.Controller.ModuleTestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.ModuleExecutionResult;
+import org.upyog.Automation.model.ModuleRequest;
 import org.upyog.Automation.Utils.ExcelDataReader;
 
 import java.util.Map;
@@ -33,7 +34,7 @@ public class ModuleTestService {
     @Autowired
     private WorkflowExecutor workflowExecutor;
 
-    public List<ModuleExecutionResult> runModule(ModuleTestController.ModuleRequest request) {
+    public List<ModuleExecutionResult> runModule(ModuleRequest request) {
 
         String moduleName = request.getModuleName();
 
@@ -83,7 +84,7 @@ public class ModuleTestService {
                         results.add(
                                 new ModuleExecutionResult(
                                         module,
-                                        "PASS",
+                                        AutomationConstants.STATUS_PASS,
                                         "Executed Successfully"
                                 )
                         );
@@ -100,7 +101,7 @@ public class ModuleTestService {
                     results.add(
                             new ModuleExecutionResult(
                                     module,
-                                    "FAIL",
+                                    AutomationConstants.STATUS_FAIL,
                                     e.getMessage()
                             )
                     );
@@ -132,7 +133,7 @@ public class ModuleTestService {
             return List.of(
                     new ModuleExecutionResult(
                             moduleName,
-                            "PASS",
+                            AutomationConstants.STATUS_PASS,
                             "Executed Successfully"
                     )
             );
@@ -142,7 +143,7 @@ public class ModuleTestService {
             return List.of(
                     new ModuleExecutionResult(
                             moduleName,
-                            "FAIL",
+                            AutomationConstants.STATUS_FAIL,
                             e.getMessage()
                     )
             );
@@ -159,107 +160,86 @@ public class ModuleTestService {
 
         String sheetName = switch (moduleName.toUpperCase()) {
 
-            case "PET_REGISTRATION" ->
-                    "PET_Test_Data";
+            case AutomationConstants.MODULE_PET_REGISTRATION ->
+                    AutomationConstants.SHEET_PET;
 
-            case "PUBLIC_GRIEVANCE_REDRESSAL" ->
-                    "PGR_Test_Data";
+            case AutomationConstants.MODULE_PUBLIC_GRIEVANCE_REDRESSAL ->
+                    AutomationConstants.SHEET_PGR;
 
-            case "NO_DUE_CERTIFICATE" ->
-                    "NDC_Test_Data";
+            case AutomationConstants.MODULE_NO_DUE_CERTIFICATE ->
+                    AutomationConstants.SHEET_NDC;
 
-            case "PROPERTY_TAX" ->
-                    "PT_Test_Data";
+            case AutomationConstants.MODULE_PROPERTY_TAX ->
+                    AutomationConstants.SHEET_PT;
 
-            case "ADVERTISEMENT" ->
-                    "Advertisement_Test_Data";
+            case AutomationConstants.MODULE_ADVERTISEMENT ->
+                    AutomationConstants.SHEET_ADVERTISEMENT;
 
-            case "STREET_VENDING" ->
-                    "StreetVending_Test_Data";
+            case AutomationConstants.MODULE_STREET_VENDING ->
+                    AutomationConstants.SHEET_STREET_VENDING;
 
-            case "TRADE_LICENSE" ->
-                    "TradeLicense_Test_Data";
+            case AutomationConstants.MODULE_TRADE_LICENSE ->
+                    AutomationConstants.SHEET_TRADE_LICENSE;
 
-            case "TREE_PRUNING" ->
-                    "TreePruning_Test_Data";
+            case AutomationConstants.MODULE_TREE_PRUNING ->
+                    AutomationConstants.SHEET_TREE_PRUNING;
 
-            case "WATER_TANKER" ->
-                    "WaterTanker_Test_Data";
+            case AutomationConstants.MODULE_WATER_TANKER ->
+                    AutomationConstants.SHEET_WATER_TANKER;
 
-            case "MOBILE_TOILET" ->
-                    "MobileToilet_Test_Data";
+            case AutomationConstants.MODULE_MOBILE_TOILET ->
+                    AutomationConstants.SHEET_MOBILE_TOILET;
 
-            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ->
-                    "OBPAS_Test_Data";
+            case AutomationConstants.MODULE_OBPAS ->
+                    AutomationConstants.SHEET_OBPAS;
 
-            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC" ->
-                    "OBPAS_OC_Create_Test_Data";
+            case AutomationConstants.MODULE_OBPAS_OC ->
+                    AutomationConstants.SHEET_OBPAS_OC_CREATE;
 
-            case "EWASTE_MANAGEMENT_SYSTEM" ->
-                    "EWaste_Test_Data";
+            case AutomationConstants.MODULE_EWASTE ->
+                    AutomationConstants.SHEET_EWASTE;
 
-            case "COMMUNITY_HALL_BOOKING" ->
-                    "CHB_Test_Data";
+            case AutomationConstants.MODULE_CHB ->
+                    AutomationConstants.SHEET_CHB;
 
-            case "CONSTRUCTION_AND_DEMOLITION" ->
-                    "CND_Test_Data";
+            case AutomationConstants.MODULE_CND ->
+                    AutomationConstants.SHEET_CND;
 
-            case "DESLUDGING_SERVICE" ->
-                    "Desludging_Test_Data";
+            case AutomationConstants.MODULE_DESLUDGING ->
+                    AutomationConstants.SHEET_DESLUDGING;
 
-            case "DESLUDGING_SERVICE_PAYMENT" ->
-                    "Desludging_Payment_Test_Data";
+            case AutomationConstants.MODULE_DESLUDGING_PAYMENT ->
+                    AutomationConstants.SHEET_DESLUDGING_PAYMENT;
 
-            case "DESLUDGING_SERVICE_PAYMENT2" ->
-                    "Desludging_Payment2_Test_Data";
+            case AutomationConstants.MODULE_DESLUDGING_PAYMENT2 ->
+                    AutomationConstants.SHEET_DESLUDGING_PAYMENT2;
 
-            case "WATER_AND_SEWERAGE" ->
-                    "WaterAndSewerage_Test_Data";
+            case AutomationConstants.MODULE_WATER_AND_SEWERAGE ->
+                    AutomationConstants.SHEET_WATER_AND_SEWERAGE;
 
-            case "GARBAGE_COLLECTION" ->
-                    "GC_Test_Data";
+            case AutomationConstants.MODULE_GARBAGE_COLLECTION ->
+                    AutomationConstants.SHEET_GC;
 
-            case "GARBAGE_COLLECTION_PAYMENT" ->
-                    "GC_Payment_Test_Data";
+            case AutomationConstants.MODULE_GARBAGE_COLLECTION_PAYMENT ->
+                    AutomationConstants.SHEET_GC_PAYMENT;
 
-            case "ESTATE_MANAGEMENT" ->
-                    "EstateManagement_Test_Data";
+            case AutomationConstants.MODULE_ESTATE_MANAGEMENT ->
+                    AutomationConstants.SHEET_ESTATE_MANAGEMENT;
 
-            case "ASSET_MANAGEMENT_SYSTEM" ->
-                    "Asset_Test_Data";
+            case AutomationConstants.MODULE_ASSET_MANAGEMENT ->
+                    AutomationConstants.SHEET_ASSET;
 
-            case "CHALLAN_GENERATION" ->
-                    "Challan_Test_Data";
+            case AutomationConstants.MODULE_CHALLAN_GENERATION ->
+                    AutomationConstants.SHEET_CHALLAN;
 
-            case "DESLUDGING_EMPLOYEE_UPDATE" ->
-                    "Desludging_Employee_Update_Test_Data";
+            case AutomationConstants.MODULE_DESLUDGING_EMP_UPDATE ->
+                    AutomationConstants.SHEET_DESLUDGING_EMP_UPDATE;
 
-            case "DESLUDGING_EMPLOYEE_COMPLETE" ->
-                    "Desludging_Employee_Complete_Test_Data";
-
-            case "DESLUDGING_EMPLOYEE_PSSO" ->
-                    "Desludging_Employee_PSSO_Test_Data";
-
-            case "DESLUDGING_EMPLOYEE_FSTPO" ->
-                    "Desludging_Employee_FSTPO_Test_Data";
-
-            case "ASSET_MANAGEMENT_SYSTEM_VERIFIER" ->
-                    "Asset_Verifier_Test_Data";
-
-            case "ASSET_MANAGEMENT_SYSTEM_APPROVER" ->
-                    "Asset_Approver_Test_Data";
-
-            case "TRADE_LICENSE1" ->
-                    "TradeLicense1_Test_Data";
-
-            case "SEWERAGE_EMP" ->
-                    "Sewerage_Test_Data";
-
-            case "WATER_EMP" ->
-                    "Water_Test_Data";
+            case AutomationConstants.MODULE_DESLUDGING_EMP_COMPLETE ->
+                    AutomationConstants.SHEET_DESLUDGING_EMP_COMPLETE;
 
             default ->
-                    moduleName + "_Test_Data";
+                    moduleName + AutomationConstants.SHEET_SUFFIX;
         };
 
         logger.info(
@@ -336,6 +316,9 @@ public class ModuleTestService {
                 // Clear previous Excel data
                 WorkflowDataStore.clear();
 
+                WorkflowDataStore.put(AutomationConstants.KEY_CURRENT_MODULE, moduleName);
+                WorkflowDataStore.put(AutomationConstants.KEY_CURRENT_TEST_CASE, testCase);
+
                 // Load current Excel row
                 for (Map.Entry<String, String> entry :
                         testData.entrySet()) {
@@ -373,7 +356,7 @@ public class ModuleTestService {
                         new ModuleExecutionResult(
                                 moduleName,
                                 testCase,
-                                "PASS",
+                                AutomationConstants.STATUS_PASS,
                                 "Executed Successfully",
                                 ""
                         )
@@ -395,10 +378,10 @@ public class ModuleTestService {
             }
 
             String failedStep =
-                    WorkflowDataStore.get("FAILED_STEP");
+                    WorkflowDataStore.get(AutomationConstants.KEY_FAILED_STEP);
 
             String failedError =
-                    WorkflowDataStore.get("FAILED_ERROR");
+                    WorkflowDataStore.get(AutomationConstants.KEY_FAILED_ERROR);
 
             if (failedStep == null || failedStep.trim().isEmpty()) {
                 failedStep = "Unknown Step";
@@ -419,7 +402,7 @@ public class ModuleTestService {
             results.add(new ModuleExecutionResult(
                     moduleName,
                     testCase,
-                    "FAIL",
+                    AutomationConstants.STATUS_FAIL,
                     errorMessage,
                     failedStep
             ));
@@ -469,201 +452,201 @@ public class ModuleTestService {
 
         switch (moduleName.toUpperCase()) {
 
-            case "DESLUDGING_SERVICE":
+            case AutomationConstants.MODULE_DESLUDGING:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/desludging/desludging_workflow.json",
-                        "test-config/desludging/desludging_stakeholder_module.json",
+                        AutomationConstants.CONFIG_DESLUDGING_WORKFLOW,
+                        AutomationConstants.CONFIG_DESLUDGING_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "PET_REGISTRATION":
+            case AutomationConstants.MODULE_PET_REGISTRATION:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/pet/pet_workflow.json",
-                        "test-config/pet/pet_stakeholder_module.json",
+                        AutomationConstants.CONFIG_PET_WORKFLOW,
+                        AutomationConstants.CONFIG_PET_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "EWASTE_MANAGEMENT_SYSTEM":
+            case AutomationConstants.MODULE_EWASTE:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/ewaste/ewaste_workflow.json",
-                        "test-config/ewaste/ewaste_stakeholder_module.json",
+                        AutomationConstants.CONFIG_EWASTE_WORKFLOW,
+                        AutomationConstants.CONFIG_EWASTE_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "WATER_TANKER":
+            case AutomationConstants.MODULE_WATER_TANKER:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/requestService/water_tanker_workflow.json",
-                        "test-config/requestService/water_tanker_stakeholder_module.json",
+                        AutomationConstants.CONFIG_WATER_TANKER_WORKFLOW,
+                        AutomationConstants.CONFIG_WATER_TANKER_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "TREE_PRUNING":
+            case AutomationConstants.MODULE_TREE_PRUNING:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/requestService/tree_pruning_workflow.json",
-                        "test-config/requestService/tree_pruning_stakeholder_module.json",
+                        AutomationConstants.CONFIG_TREE_PRUNING_WORKFLOW,
+                        AutomationConstants.CONFIG_TREE_PRUNING_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "MOBILE_TOILET":
+            case AutomationConstants.MODULE_MOBILE_TOILET:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/requestService/mobile_toilet_workflow.json",
-                        "test-config/requestService/mobile_toilet_stakeholder_module.json",
+                        AutomationConstants.CONFIG_MOBILE_TOILET_WORKFLOW,
+                        AutomationConstants.CONFIG_MOBILE_TOILET_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "STREET_VENDING":
+            case AutomationConstants.MODULE_STREET_VENDING:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/streetVending/street_vending_workflow.json",
-                        "test-config/streetVending/street_vending_stakeholder_module.json",
+                        AutomationConstants.CONFIG_STREET_VENDING_WORKFLOW,
+                        AutomationConstants.CONFIG_STREET_VENDING_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "TRADE_LICENSE":
+            case AutomationConstants.MODULE_TRADE_LICENSE:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/tradeLicense/trade_license_workflow.json",
-                        "test-config/tradeLicense/trade_license_stakeholder_module.json",
+                        AutomationConstants.CONFIG_TRADE_LICENSE_WORKFLOW,
+                        AutomationConstants.CONFIG_TRADE_LICENSE_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "ADVERTISEMENT":
+            case AutomationConstants.MODULE_ADVERTISEMENT:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/advertisement/adv_workflow.json",
-                        "test-config/advertisement/adv_stakeholder_module.json",
+                        AutomationConstants.CONFIG_ADVERTISEMENT_WORKFLOW,
+                        AutomationConstants.CONFIG_ADVERTISEMENT_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "PROPERTY_TAX":
+            case AutomationConstants.MODULE_PROPERTY_TAX:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/propertyTax/property_tax_workflow.json",
-                        "test-config/propertyTax/property_tax_stakeholder_module.json",
+                        AutomationConstants.CONFIG_PROPERTY_TAX_WORKFLOW,
+                        AutomationConstants.CONFIG_PROPERTY_TAX_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "PUBLIC_GRIEVANCE_REDRESSAL":
+            case AutomationConstants.MODULE_PUBLIC_GRIEVANCE_REDRESSAL:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/pgr/pgr_workflow.json",
-                        "test-config/pgr/pgr_stakeholder_module.json",
+                        AutomationConstants.CONFIG_PGR_WORKFLOW,
+                        AutomationConstants.CONFIG_PGR_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM":
+            case AutomationConstants.MODULE_OBPAS:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/obpas/obpas_workflow.json",
-                        "test-config/obpas/obpas_stakeholder_module.json",
+                        AutomationConstants.CONFIG_OBPAS_WORKFLOW,
+                        AutomationConstants.CONFIG_OBPAS_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
 
-            case "COMMUNITY_HALL_BOOKING":
+            case AutomationConstants.MODULE_CHB:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/chb/chb_workflow.json",
-                        "test-config/chb/chb_stakeholder_module.json",
+                        AutomationConstants.CONFIG_CHB_WORKFLOW,
+                        AutomationConstants.CONFIG_CHB_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
 
-            case "CONSTRUCTION_AND_DEMOLITION":
+            case AutomationConstants.MODULE_CND:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/cnd/cnd_workflow.json",
-                        "test-config/cnd/cnd_stakeholder_module.json",
+                        AutomationConstants.CONFIG_CND_WORKFLOW,
+                        AutomationConstants.CONFIG_CND_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
 
-            case "WATER_AND_SEWERAGE":
+            case AutomationConstants.MODULE_WATER_AND_SEWERAGE:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/waterAndSewerage/water_and_sewerage_workflow.json",
-                        "test-config/waterAndSewerage/water_and_sewerage_stakeholder_module.json",
+                        AutomationConstants.CONFIG_WATER_AND_SEWERAGE_WORKFLOW,
+                        AutomationConstants.CONFIG_WATER_AND_SEWERAGE_STAKEHOLDER,
                         citizenUrl
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "ASSET_MANAGEMENT_SYSTEM":
+            case AutomationConstants.MODULE_ASSET_MANAGEMENT:
 
                 workflowExecutor.executeWorkflow(
-                        "test-config/asset/asset_workflow.json",
-                        "test-config/asset/asset_stakeholder_module.json",
-                        citizenUrl.replace("/citizen/login", "/employee/login")
+                        AutomationConstants.CONFIG_ASSET_WORKFLOW,
+                        AutomationConstants.CONFIG_ASSET_STAKEHOLDER,
+                        citizenUrl.replace(AutomationConstants.CITIZEN_LOGIN_PATH, AutomationConstants.EMPLOYEE_LOGIN_PATH)
                 );
 
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "GARBAGE_COLLECTION":
+            case AutomationConstants.MODULE_GARBAGE_COLLECTION:
                 workflowExecutor.executeWorkflow(
-                        "test-config/garbageCollection/gc_workflow.json",
-                        "test-config/garbageCollection/gc_stakeholder_module.json",
+                        AutomationConstants.CONFIG_GARBAGE_COLLECTION_WORKFLOW,
+                        AutomationConstants.CONFIG_GARBAGE_COLLECTION_STAKEHOLDER,
                         citizenUrl
                 );
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "ESTATE_MANAGEMENT":
+            case AutomationConstants.MODULE_ESTATE_MANAGEMENT:
                 workflowExecutor.executeWorkflow(
-                        "test-config/estateManagement/estateManagement_workflow_module.json",
-                        "test-config/estateManagement/estateManagement_stakeholder_module.json",
+                        AutomationConstants.CONFIG_ESTATE_MANAGEMENT_WORKFLOW,
+                        AutomationConstants.CONFIG_ESTATE_MANAGEMENT_STAKEHOLDER,
                         citizenUrl
                 );
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
-            case "CHALLAN_GENERATION":
+            case AutomationConstants.MODULE_CHALLAN_GENERATION:
                 workflowExecutor.executeWorkflow(
-                        "test-config/challanGeneration/cg_workflow_module.json",
-                        "test-config/challanGeneration/cg_stakeholder_module.json",
+                        AutomationConstants.CONFIG_CHALLAN_WORKFLOW,
+                        AutomationConstants.CONFIG_CHALLAN_STAKEHOLDER,
                         citizenUrl
                 );
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
 
-            case "NO_DUE_CERTIFICATE":
+            case AutomationConstants.MODULE_NO_DUE_CERTIFICATE:
                 workflowExecutor.executeWorkflow(
-                        "test-config/noDueCertificate/ndc_workflow.json",
-                        "test-config/noDueCertificate/ndc_stakeholder_module.json",
+                        AutomationConstants.CONFIG_NDC_WORKFLOW,
+                        AutomationConstants.CONFIG_NDC_STAKEHOLDER,
                         citizenUrl
                 );
-                return "Workflow Executed";
+                return AutomationConstants.MSG_WORKFLOW_EXECUTED;
 
 
 

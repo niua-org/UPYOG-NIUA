@@ -189,8 +189,7 @@ public class WorkflowExecutor {
                      * Citizen workflow steps are delegated to the common
                      * CitizenTestService using the citizen configuration.
                      */
-                    if (AutomationConstants.WORKFLOW_TYPE_CITIZEN
-                            .equalsIgnoreCase(step.getType())) {
+                    if ("CITIZEN".equalsIgnoreCase(step.getType())) {
 
                         logger.info(
                                 "Executing Citizen workflow step: {}",
@@ -212,8 +211,7 @@ public class WorkflowExecutor {
                      * Employee workflow steps use the employee details
                      * configured for the role specified in the workflow.
                      */
-                    else if (AutomationConstants.WORKFLOW_TYPE_EMPLOYEE
-                            .equalsIgnoreCase(step.getType())) {
+                    else if ("EMPLOYEE".equalsIgnoreCase(step.getType())) {
 
                         EmployeeData employee =
                                 stakeholder.getEmployeeByRole(
@@ -225,7 +223,7 @@ public class WorkflowExecutor {
                             throw new RuntimeException(
                                     "Role not found in stakeholder file: "
                                             + step.getRole()
-                            );
+                                );
                         }
 
                         logger.info(
@@ -238,14 +236,14 @@ public class WorkflowExecutor {
                         String applicationNo;
 
                         /*
-                         * Water and Sewerage workflows maintain separate
-                         * application numbers because they generate
-                         * different application references.
-                         */
+                          * Water and Sewerage workflows maintain separate
+                          * application numbers because they generate
+                          * different application references.
+                          */
                         switch (step.getModule().toUpperCase()) {
 
-                            case "WATER":
-                            case "WATER_EMP":
+                            case AutomationConstants.MODULE_WATER:
+                            case AutomationConstants.MODULE_WATER_EMP:
 
                                 applicationNo =
                                         WorkflowDataStore.get(
@@ -254,8 +252,8 @@ public class WorkflowExecutor {
 
                                 break;
 
-                            case "SEWERAGE":
-                            case "SEWERAGE_EMP":
+                            case AutomationConstants.MODULE_SEWERAGE:
+                            case AutomationConstants.MODULE_SEWERAGE_EMP:
 
                                 applicationNo =
                                         WorkflowDataStore.get(
@@ -284,8 +282,7 @@ public class WorkflowExecutor {
                          * themselves, so the application number is not required
                          * before executing those steps.
                          */
-                        if (!AutomationConstants.WORKFLOW_ROLE_INITIATOR
-                                .equalsIgnoreCase(step.getRole())) {
+                        if (!"INITIATOR".equalsIgnoreCase(step.getRole())) {
 
                             if (applicationNo == null
                                     || applicationNo.isBlank()) {
@@ -311,8 +308,7 @@ public class WorkflowExecutor {
                      * Vendor workflow steps use the vendor details from
                      * the stakeholder configuration.
                      */
-                    else if (AutomationConstants.WORKFLOW_TYPE_VENDOR
-                            .equalsIgnoreCase(step.getType())) {
+                    else if ("VENDOR".equalsIgnoreCase(step.getType())) {
 
                         VendorData vendor =
                                 stakeholder.getVendor();

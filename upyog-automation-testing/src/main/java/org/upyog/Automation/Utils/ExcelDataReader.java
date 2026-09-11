@@ -15,10 +15,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ExcelDataReader {
 
+    private static final Logger logger = LoggerFactory.getLogger(ExcelDataReader.class);
+
     private static final String EXCEL_FILE =
-            "test-data/test-data.xlsx";
+            AutomationConstants.DEFAULT_EXCEL_FILE;
 
     /*
      * Uploaded Excel is the PRIMARY source.
@@ -154,9 +159,9 @@ public class ExcelDataReader {
 
                 // Only execute rows where Execute = YES
                 String execute =
-                        rowData.get("Execute");
+                        rowData.get(AutomationConstants.EXCEL_COLUMN_EXECUTE);
 
-                if ("YES".equalsIgnoreCase(execute)) {
+                if (AutomationConstants.EXCEL_EXECUTE_YES.equalsIgnoreCase(execute)) {
                     testData.add(rowData);
                 }
             }
@@ -241,17 +246,13 @@ public class ExcelDataReader {
 
         List<Map<String, String>> data =
                 ExcelDataReader.readSheet(
-                        "NDC_Test_Data"
+                        AutomationConstants.SHEET_NDC
                 );
 
-        System.out.println(
-                "Total test cases: "
-                        + data.size()
-        );
+        logger.info("Total test cases: {}", data.size());
 
         for (Map<String, String> row : data) {
-
-            System.out.println(row);
+            logger.info("Row: {}", row);
         }
     }
 }

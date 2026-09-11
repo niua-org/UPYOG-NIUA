@@ -10,6 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Utility class responsible for capturing and storing failure screenshots during test execution.
  *
@@ -19,10 +22,12 @@ import java.nio.file.Paths;
  */
 public class ScreenshotManager {
 
+    private static final Logger logger = LoggerFactory.getLogger(ScreenshotManager.class);
+
     /**
      * Target directory where failure screenshots are saved.
      */
-    private static final String SCREENSHOT_DIR = "target/screenshots";
+    private static final String SCREENSHOT_DIR = AutomationConstants.SCREENSHOTS_DIR;
 
     /**
      * Captures a screenshot of the current browser state upon test failure and saves it to disk.
@@ -70,19 +75,13 @@ public class ScreenshotManager {
                     destination
             );
 
-            System.out.println(
-                    "Failure screenshot saved: "
-                            + destination
-            );
+            logger.info("Failure screenshot saved: {}", destination);
 
             return destination.toString();
 
         } catch (IOException e) {
 
-            System.err.println(
-                    "Unable to save failure screenshot: "
-                            + e.getMessage()
-            );
+            logger.error("Unable to save failure screenshot: {}", e.getMessage(), e);
 
             return "";
         }
