@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Entity model representing a configured ULB-module ingestion stream in {@code ingestion_module_detail}.
+ * Entity model representing a configured ULB-module ingestion stream in {@code ug_ingestion_module_detail}.
  */
 @Data
 @Builder

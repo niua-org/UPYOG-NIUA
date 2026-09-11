@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Data-transfer / entity object representing a single daily ingestion
- * record persisted in the {@code ingestion_detail} PostgreSQL table.
+ * record persisted in the {@code ug_ingestion_detail} PostgreSQL table.
  */
 @Data
 @Builder

@@ -22,7 +22,7 @@ import org.upyog.dashboard.util.CommonUtils;
 
 /**
  * Service responsible for synchronizing tenant lists from MDMS into the local
- * {@code ingestion_module_detail} table and providing cached tenant lookups.
+ * {@code ug_ingestion_module_detail} table and providing cached tenant lookups.
  */
 @Slf4j
 @Service
@@ -36,7 +36,7 @@ public class TenantSyncService {
 
     /**
      * Synchronizes city tenants from MDMS for the given state and upserts
-     * records into {@code ingestion_module_detail} for all enabled modules.
+     * records into {@code ug_ingestion_module_detail} for all enabled modules.
      *
      * @param stateTenantId state identifier (e.g. {@code "pg"})
      * @return list of synced {@link IngestionModuleDetail} records
@@ -44,7 +44,7 @@ public class TenantSyncService {
     @CacheEvict(value = {DashboardExtractorConstants.CACHE_ACTIVE_TENANTS, DashboardExtractorConstants.CACHE_TENANT_MODULE_DETAILS}, allEntries = true)
     public List<IngestionModuleDetail> syncTenantsFromMdms(String stateTenantId) {
         if (summaryRepository.hasAnyModuleDetails()) {
-            log.warn("MDMS tenant sync rejected: ingestion_module_detail table already contains data.");
+            log.warn("MDMS tenant sync rejected: ug_ingestion_module_detail table already contains data.");
             throw new IllegalStateException("This API is allowed to be used only once as tenant data is already present in the table. If you want, you can insert the data directly in the table or you can first delete the data of this table manually and then retry to hit the API.");
         }
 
@@ -145,7 +145,7 @@ public class TenantSyncService {
                 }
             }
         }
-        throw new IllegalStateException("No active module configuration found in ingestion_module_detail table for tenant: " 
+        throw new IllegalStateException("No active module configuration found in ug_ingestion_module_detail table for tenant: " 
                 + tenantId + " and module: " + moduleName + ". Please run tenant sync API (POST /extractor/v1/tenants/_sync) first.");
     }
 }

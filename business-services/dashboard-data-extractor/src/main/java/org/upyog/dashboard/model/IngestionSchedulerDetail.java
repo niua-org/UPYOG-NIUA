@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Domain entity representing a single execution instance of a scheduled or manual ingestion job.
- * Stored in the {@code ingestion_scheduler_detail} database table.
+ * Stored in the {@code ug_ingestion_scheduler_detail} database table.
  */
 @Data
 @Builder
