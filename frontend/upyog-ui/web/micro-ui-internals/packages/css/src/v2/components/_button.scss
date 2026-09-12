@@ -1,0 +1,114 @@
+@use "../utils/mixins" as *;
+
+.upyog-ui {
+  .button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    width: 100%;
+    font-size: 16px;
+    height: 40px;
+    font-size: 12px;
+    border: none;
+    font-weight: 600;
+    border-radius: 8px;
+    position: relative;
+
+    &-group {
+      display: flex;
+      flex-direction: column;
+
+      &.gap {
+        &-sm {
+          row-gap: 10px;
+        }
+        &-lg {
+          row-gap: 10px;
+
+          @include tablet {
+            row-gap: 26px;
+          }
+        }
+      }
+    }
+
+    &:disabled {
+      opacity: 0.1;
+    }
+
+    @include desktop {
+      font-size: 16px;
+      height: 56px;
+    }
+
+    span {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      column-gap: 12px;
+      justify-content: center;
+
+      img {
+        height: 24px;
+
+        @include desktop {
+          height: auto;
+        }
+      }
+    }
+
+    &.text {
+      height: auto;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &.secondary {
+      border: 1px solid var(--theme-border-light);
+      background: var(--theme-color-light);
+      color: var(--theme-text-primary);
+      overflow: hidden;
+
+      @include desktop {
+        border-width: 1.5px;
+      }
+
+      &::before {
+        content: "";
+        width: 100%;
+        opacity: 0;
+        background: var(--theme-border-light);
+        height: 100%;
+        position: absolute;
+        border-radius: 7px;
+        left: 0;
+        top: 0;
+        transition: all ease-in-out 0.3s;
+      }
+
+      &:hover {
+        border-color: var(--theme-border-dark);
+        &::before {
+          width: 100%;
+          opacity: 1;
+        }
+      }
+    }
+
+    &.primary {
+      color: var(--theme-color-light);
+      background: var(--theme-gradient-button-primary);
+      background-size: 200% 100%;
+      background-position: left center;
+      transition: background-position 0.3s ease-in-out;
+
+      &:hover {
+        background-position: right center;
+      }
+    }
+  }
+}

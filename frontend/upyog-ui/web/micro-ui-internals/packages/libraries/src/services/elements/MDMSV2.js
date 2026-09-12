@@ -1530,14 +1530,14 @@ export const MdmsServiceV2 = {
       useCache: true,
       params: { tenantId: stateCode },
     }),
-  call: (tenantId, details) => {
+  call: (tenantId, details, useCache = true) => {
     return new Promise((resolve, reject) =>
       debouncedCall(
         {
           serviceName: "mdmsCall",
           url: Urls.MDMSV2,
           data: getCriteria(tenantId, details),
-          useCache: true,
+          useCache,
           params: { tenantId },
         },
         resolve,
@@ -1545,17 +1545,20 @@ export const MdmsServiceV2 = {
       )
     );
   },
-  getDataByCriteria: async (tenantId, mdmsDetails, moduleCode, masterName, i18nKeyString) => {
+  getDataByCriteria: async (tenantId, mdmsDetails, moduleCode, masterName, i18nKeyString, { useCache = true } = {}) => {
     const moduleName = moduleCode; // moduleName is used here to pass unchanged modulecode
     const key = `MDMS.${tenantId}.${moduleCode}.${mdmsDetails.type}.${JSON.stringify(mdmsDetails.details)}`;
-    const inStoreValue = PersistantStorage.get(key);
+    if (!useCache) PersistantStorage.del(key);
+    const inStoreValue = useCache ? PersistantStorage.get(key) : null;
     if (inStoreValue) {
       return inStoreValue;
     }
-    const { MdmsRes } = await MdmsServiceV2.call(tenantId, mdmsDetails.details);
+    const { MdmsRes } = await MdmsServiceV2.call(tenantId, mdmsDetails.details, useCache);
     const responseValue = transformResponse(mdmsDetails.type, MdmsRes, moduleCode.toUpperCase(), moduleName, tenantId, masterName, i18nKeyString);
-    const cacheSetting = getCacheSetting(mdmsDetails.details.moduleDetails[0].moduleName);
-    PersistantStorage.set(key, responseValue, cacheSetting.cacheTimeInSecs);
+    if (useCache) {
+      const cacheSetting = getCacheSetting(mdmsDetails.details.moduleDetails[0].moduleName);
+      PersistantStorage.set(key, responseValue, cacheSetting.cacheTimeInSecs);
+    }
     return responseValue;
   },
   getServiceDefs: (tenantId, moduleCode) => {
@@ -1690,8 +1693,8 @@ export const MdmsServiceV2 = {
   getMultipleTypes: (tenantId, moduleCode, types) => {
     return MdmsServiceV2.getDataByCriteria(tenantId, getMultipleTypes(tenantId, moduleCode, types), moduleCode);
   },
-  getMultipleTypesWithFilter: (tenantId, moduleCode, types) => {
-    return MdmsServiceV2.getDataByCriteria(tenantId, getMultipleTypesWithFilter(moduleCode, types), moduleCode);
+  getMultipleTypesWithFilter: (tenantId, moduleCode, types, options) => {
+    return MdmsServiceV2.getDataByCriteria(tenantId, getMultipleTypesWithFilter(moduleCode, types), moduleCode, undefined, undefined, options);
   },
   getFSTPPlantInfo: (tenantId, moduleCode, types) => {
     return MdmsServiceV2.getDataByCriteria(tenantId, getFSTPPlantCriteria(tenantId, moduleCode, types), moduleCode);

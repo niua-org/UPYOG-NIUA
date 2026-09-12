@@ -28,7 +28,7 @@ let mdmsRef = null;
  * if mdmsV2Enabled is true and moduleName matches to any of mention inside mdmsV2Modules array
  * then it return MdmsServiceV2 and if any of thsi is false then it return  MdmsService
  */
-const getMDMSServiceRef = (moduleName) => {
+export const getMDMSServiceRef = (moduleName) => {
   // Check if the module is in the list of modules that should use V2
   if (mdmsV2Enabled && mdmsV2Modules.includes(moduleName)) {
     return MdmsServiceV2;

@@ -2,7 +2,7 @@ import React from "react";
 import { CitizenSideBar } from "./CitizenSideBar";
 import EmployeeSideBar from "./EmployeeSideBar";
 
-const SideBar = ({ t, CITIZEN, isSidebarOpen, toggleSidebar, handleLogout, mobileView, userDetails, modules, linkData, islinkDataLoading, isSideBarScroll,setSideBarScrollTop  }) => {
+const SideBar = ({ t, CITIZEN, isSidebarOpen, toggleSidebar, handleLogout, mobileView, userDetails, modules, linkData, islinkDataLoading, isSideBarScroll,setSideBarScrollTop, citizenLoginPath }) => {
   if (CITIZEN)
     return (
       <CitizenSideBar
@@ -14,6 +14,7 @@ const SideBar = ({ t, CITIZEN, isSidebarOpen, toggleSidebar, handleLogout, mobil
         onLogout={handleLogout}
         linkData={linkData}
         islinkDataLoading={islinkDataLoading}
+        citizenLoginPath={citizenLoginPath}
       />
     );
   else {

@@ -193,17 +193,22 @@ const moduleReducers = (initData) => ({
   challan: ChallanReducers(initData),
 });
 
-function App() {
-  const stateCode = window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") || process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
-  
+function App({ isConfigBased = false }) {
+  const stateCode =
+    window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") ||
+    process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
+
   if (!stateCode) {
     return <h1>stateCode is not defined</h1>;
   }
   return (
+    // Enable the configuration-driven V2 citizen and employee authentication
+    // routes for this application; omit isConfigBased to retain the V1 flow.
     <DigitUI
       stateCode={stateCode}
       enabledModules={enabledModules}
       moduleReducers={moduleReducers}
+      isConfigBased={isConfigBased}
     />
   );
 }

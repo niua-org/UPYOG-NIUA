@@ -7,22 +7,29 @@ import EmployeeLogin from "../pages/employee/Login/index";
 import ChangePassword from "../pages/employee/ChangePassword/index";
 import ForgotPassword from "../pages/employee/ForgotPassword/index";
 import LanguageSelection from "../pages/employee/LanguageSelection";
+import { getEmployeeAuthPaths } from "../pages/employee/AuthRoutes";
 // import UserProfile from "./userProfile";
 
 const getTenants = (codes, tenants) => {
   return tenants.filter((tenant) => codes?.map?.((item) => item.code).includes(tenant.code));
 };
 
-export const AppModules = ({ stateCode, userType, modules, appTenants }) => {
+// The default preserves existing V1 consumers; V2 callers pass the flag so
+// expired or missing employee sessions return to the matching login screen.
+export const AppModules = ({ stateCode, userType, modules, appTenants, isConfigBased = false }) => {
   const ComponentProvider = Digit.Contexts.ComponentProvider;
   const { path } = Digit.Hooks.useModuleBasePath();
   const location = useLocation();
 
   const user = Digit.UserService.getUser();
+  // Resolve once and reuse below instead of hardcoding a V1 employee login URL.
+  const employeeAuthPaths = getEmployeeAuthPaths(isConfigBased);
 
   if (!user || !user?.access_token || !user?.info) {
     return (
-      <Navigate to="/upyog-ui/employee/user/login" state={{ from: location.pathname + location.search }} replace />
+      // Keep unauthenticated module access inside the active Employee auth
+      // version while preserving the originally requested destination.
+      <Navigate to={employeeAuthPaths.login} state={{ from: location.pathname + location.search }} replace />
     );
   }
 
@@ -89,7 +96,9 @@ return (
   <div className="ground-container">
     <Routes>
       {appRoutes}
-      <Route path="login" element={<Navigate to="/upyog-ui/employee/user/login" state={{ from: location.pathname + location.search }} replace />} />
+      {/* Normalize module-level login URLs to the employee login belonging to
+          the active version while retaining the requested return location. */}
+      <Route path="login" element={<Navigate to={employeeAuthPaths.login} state={{ from: location.pathname + location.search }} replace />} />
       <Route path="forgot-password" element={<ForgotPassword />} />
       <Route path="change-password" element={<ChangePassword />} />
       <Route path="*" element={<AppHome userType={userType} modules={modules} />} />

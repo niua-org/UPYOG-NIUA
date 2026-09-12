@@ -17,11 +17,13 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import EmployeeDashboard from "./EmployeeDashboard";
+import { getCitizenOnboardingPaths } from "../pages/citizen/onboardingRoutes";
 
 /* 
 Feature :: Citizen All service screen cards
 */
-export const processLinkData = (newData, code, t) => {
+// isConfigBased is optional because existing callers still expect V1 login links.
+export const processLinkData = (newData, code, t, isConfigBased = false) => {
   const obj = newData?.[`${code}`];
   if (obj) {
     obj.map((link) => {
@@ -51,7 +53,9 @@ export const processLinkData = (newData, code, t) => {
         });
       else
         newObj?.links?.push({
-          link: `/upyog-ui/citizen/login`,
+          // Authentication links follow the active citizen onboarding version;
+          // service-card navigation remains otherwise unchanged.
+          link: getCitizenOnboardingPaths(isConfigBased).login,
           state: { role: "FSM_DSO", from },
           i18nKey: t(loginLink),
         });
@@ -88,7 +92,9 @@ const iconSelector = (code) => {
       return <PTIcon className="fill-path-primary-main" />;
   }
 };
-const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => {
+// Carry the version flag into MDMS link processing so only authentication links
+// change version; ordinary citizen service links remain untouched.
+const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading, isConfigBased = false }) => {
   const paymentModule = modules.filter(({ code }) => code === "Payment")[0];
   const moduleArr = modules.filter(({ code }) => code !== "Payment");
   const moduleArray = [paymentModule, ...moduleArr];
@@ -106,7 +112,8 @@ const CitizenHome = ({ modules, getCitizenMenu, fetchedCitizen, isLoading }) => 
             .filter((mod) => mod)
             .map(({ code }, index) => {
               let mdmsDataObj;
-              if (fetchedCitizen) mdmsDataObj = fetchedCitizen ? processLinkData(getCitizenMenu, code, t) : undefined;
+              // Generate any role-based login link for the active V1/V2 flow.
+              if (fetchedCitizen) mdmsDataObj = fetchedCitizen ? processLinkData(getCitizenMenu, code, t, isConfigBased) : undefined;
               if (mdmsDataObj?.links?.length > 0) {
                 return (
                   <CitizenHomeCard

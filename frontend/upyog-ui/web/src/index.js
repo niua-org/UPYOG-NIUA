@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { initLibraries } from "@upyog/digit-ui-libraries";
+import { initLibraries, initializeTheme, ThemeProvider } from "@upyog/digit-ui-libraries";
 /* if you want to run the css locally, then you have to add import "@nudmcdgnpm/upyog-css/src/index.scss" and comment out the import "@nudmcdgnpm/upyog-css/index.css"
 If you want the npm published css to run here, then you have to add   import "@nudmcdgnpm/upyog-css/index.css" and comment out the import "@nudmcdgnpm/upyog-css/src/index.scss" */
 import "@nudmcdgnpm/upyog-css/src/index.scss";
@@ -50,12 +50,33 @@ if (!user || !user.access_token || !user.info) {
   window.Digit.SessionStorage.set("Employee.tenantId", employeeTenantId);
 }
 
-// ✅ React 18+ root API
-const root = createRoot(document.getElementById('root'));
+const AppProviders = ({ children, isConfigBased }) => {
+  if (!isConfigBased) {
+    return children;
+  }
 
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+  const stateCode =
+    window.globalConfigs?.getConfig("STATE_LEVEL_TENANT_ID") ||
+    process.env.REACT_APP_STATE_LEVEL_TENANT_ID;
 
+  const initialThemeState = initializeTheme({ tenantId: stateCode });
+
+  return (
+    <ThemeProvider initialState={initialThemeState}>{children}</ThemeProvider>
+  );
+};
+
+const bootstrap = () => {
+  const root = createRoot(document.getElementById("root"));
+  // We have to add this `CONFIG_BASED_UI` key in config, so that we can remove hardcoded boolean `true`
+  const isConfigBased = window.globalConfigs?.getConfig("CONFIG_BASED_UI") || true;
+  root.render(
+    <React.StrictMode>
+      <AppProviders isConfigBased={isConfigBased}>
+        <App isConfigBased={isConfigBased} />
+      </AppProviders>
+    </React.StrictMode>,
+  );
+};
+
+bootstrap();

@@ -83,7 +83,7 @@ const PoweredBy = () => (
 /* 
 Feature :: Citizen Webview sidebar
 */
-export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogout, isEmployee = false, linkData, islinkDataLoading, isSideBarScroll }) => {
+export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogout, isEmployee = false, linkData, islinkDataLoading, isSideBarScroll, citizenLoginPath }) => {
   const { data: storeData, isFetched } = Digit.Hooks.useStore.getInitData();
   const { stateInfo } = storeData || {};
   const user = Digit.UserService.getUser();
@@ -106,7 +106,9 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    navigate(`${APPLICATION_PATH}/citizen/login`);
+    // Citizen callers supply the flag-selected login path; employee reuse keeps
+    // the legacy default because employee onboarding is outside this feature.
+    navigate(citizenLoginPath || `${APPLICATION_PATH}/citizen/login`);
     closeSidebar();
   };
   // Function to redirect the user to the EDCR scrutiny page
@@ -263,6 +265,6 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
       setSearch={setSearch}
     />
   ) : (
-    <StaticCitizenSideBar logout={onLogout} />
+    <StaticCitizenSideBar logout={onLogout} citizenLoginPath={citizenLoginPath} />
   );
 };
