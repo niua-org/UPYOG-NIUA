@@ -260,98 +260,292 @@ const GCApplicationDetails = () => {
   // ---------- Render ----------
   return (
     <React.Fragment>
-      <div>
-        <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
-          <Header styles={{ fontSize: "32px" }}>{t("GC_APPLICATION_DETAILS")}</Header>
+      <div style={{ maxWidth: "960px", marginLeft: 0, marginRight: "auto" }}>
+        {/* Top Header with Title & Interactive Download Button */}
+        <div className="cardHeaderWithOptions mb-4 flex flex-row items-center justify-between gap-3 w-full">
+          <Header styles={{ fontSize: "28px", margin: 0 }}>{t("GC_APPLICATION_DETAILS")}</Header>
+          
           {downloadOptions.length > 0 && (
-            <MultiLink
-              className="multilinkWrapper"
-              onHeadClick={() => setShowOptions(!showOptions)}
-              displayOptions={showOptions}
-              options={downloadOptions}
-            />
+            <div className="gc-download-dropdown-wrap">
+              <button
+                type="button"
+                onClick={() => setShowOptions(!showOptions)}
+                className="gc-download-trigger-btn"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>{t("CS_COMMON_DOWNLOAD") || "Download"}</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${showOptions ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showOptions && (
+                <div className="gc-download-menu">
+                  {downloadOptions.map((opt, idx) => (
+                    <button
+                      key={`download-opt-${idx}`}
+                      type="button"
+                      onClick={() => {
+                        opt.onClick();
+                        setShowOptions(false);
+                      }}
+                      className="gc-download-menu-item"
+                    >
+                      <span className="gc-download-menu-item-icon">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      </span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        <Card>
-          {/* Application Summary */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_APPLICATION_SUMMARY")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_APPLICATION_NUMBER_LABEL")} text={appNo || t("CS_NA")} />
-            <Row
-              className="border-none"
-              label={t("GC_APPLICATION_STATUS_LABEL")}
-              text={appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA")}
-            />
-            {dueDate && <Row className="border-none" label={t("GC_DUE_DATE")} text={dueDate} />}
-          </StatusTable>
+        <Card className="gc-details-card">
+          {/* Section 1: Application Summary */}
+          <div className="gc-details-section">
+            <div className="gc-section-title">
+              <span className="gc-section-title-icon">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </span>
+              <span>{t("GC_APPLICATION_SUMMARY")}</span>
+            </div>
+            <div className="gc-details-grid">
+              <div className="gc-detail-item">
+                <span className="gc-detail-label">{t("GC_APPLICATION_NUMBER_LABEL")}</span>
+                <span className="gc-detail-value">{appNo || t("CS_NA")}</span>
+              </div>
+              <div className="gc-detail-item">
+                <span className="gc-detail-label">{t("GC_APPLICATION_STATUS_LABEL")}</span>
+                <span className="gc-detail-value font-bold text-emerald-700">
+                  {appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA")}
+                </span>
+              </div>
+              {dueDate && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_DUE_DATE")}</span>
+                  <span className="gc-detail-value text-amber-700">{dueDate}</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* Applicant Details */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("ES_APPLICANT_DETAILS")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_APPLICANT_NAME")} text={ownerNames || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_MOBILE_NUMBER")} text={mobileNumbers || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_ALT_MOBILE_NUMBER")} text={altMobileNumbers || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_EMAIL_ID")} text={emails || t("CS_NA")} />
-          </StatusTable>
+          {/* Section 2: Applicant Details */}
+          <div className="gc-details-section">
+            <div className="gc-section-title">
+              <span className="gc-section-title-icon">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </span>
+              <span>{t("ES_APPLICANT_DETAILS")}</span>
+            </div>
+            <div className="gc-details-grid">
+              <div className="gc-detail-item">
+                <span className="gc-detail-label">{t("GC_APPLICANT_NAME")}</span>
+                <span className="gc-detail-value">{ownerNames || t("CS_NA")}</span>
+              </div>
+              <div className="gc-detail-item">
+                <span className="gc-detail-label">{t("GC_MOBILE_NUMBER")}</span>
+                <span className="gc-detail-value">{mobileNumbers || t("CS_NA")}</span>
+              </div>
+              {altMobileNumbers && altMobileNumbers !== t("CS_NA") && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_ALT_MOBILE_NUMBER")}</span>
+                  <span className="gc-detail-value">{altMobileNumbers}</span>
+                </div>
+              )}
+              {emails && emails !== t("CS_NA") && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_EMAIL_ID")}</span>
+                  <span className="gc-detail-value">{emails}</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* Property Location */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_PROPERTY_LOCATION_DETAILS")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_PROPERTY_ID")} text={propertyId || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_PINCODE")} text={pincode || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_CITY")} text={city ? t(city) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_LOCALITY")} text={localityText || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_STREET_NAME")} text={street || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_HOUSE_NO")} text={houseNo || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_BUILDING_NAME")} text={buildingName || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_ADDRESS_LINE1")} text={addressLine1 || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_ADDRESS_LINE2")} text={addressLine2 || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_LANDMARK")} text={landmark || t("CS_NA")} />
-          </StatusTable>
+          {/* Section 3: Property Location Details */}
+          <div className="gc-details-section">
+            <div className="gc-section-title">
+              <span className="gc-section-title-icon">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </span>
+              <span>{t("GC_PROPERTY_LOCATION_DETAILS")}</span>
+            </div>
+            <div className="gc-details-grid">
+              {propertyId && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_PROPERTY_ID")}</span>
+                  <span className="gc-detail-value">{propertyId}</span>
+                </div>
+              )}
+              {pincode && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_PINCODE")}</span>
+                  <span className="gc-detail-value">{pincode}</span>
+                </div>
+              )}
+              {city && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_CITY")}</span>
+                  <span className="gc-detail-value">{t(city)}</span>
+                </div>
+              )}
+              {localityText && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_LOCALITY")}</span>
+                  <span className="gc-detail-value">{localityText}</span>
+                </div>
+              )}
+              {street && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_STREET_NAME")}</span>
+                  <span className="gc-detail-value">{street}</span>
+                </div>
+              )}
+              {houseNo && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_HOUSE_NO")}</span>
+                  <span className="gc-detail-value">{houseNo}</span>
+                </div>
+              )}
+              {buildingName && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_BUILDING_NAME")}</span>
+                  <span className="gc-detail-value">{buildingName}</span>
+                </div>
+              )}
+              {addressLine1 && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_ADDRESS_LINE1")}</span>
+                  <span className="gc-detail-value">{addressLine1}</span>
+                </div>
+              )}
+              {addressLine2 && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_ADDRESS_LINE2")}</span>
+                  <span className="gc-detail-value">{addressLine2}</span>
+                </div>
+              )}
+              {landmark && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_LANDMARK")}</span>
+                  <span className="gc-detail-value">{landmark}</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* Garbage Specifications */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_GARBAGE_SPECIFICATIONS")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_OLD_GARBAGE_ID")} text={oldGarbageId || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_TYPE_OF_COLLECTION")} text={typeOfCollection ? t(typeOfCollection) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_OWNER_OR_TENANT")} text={ownerOrTenant ? t(ownerOrTenant) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_NAME")} text={specName || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_PHONE_NUMBER")} text={specPhone || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_GENDER")} text={specGender ? t(specGender) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_EMAIL")} text={specEmail || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_CATEGORY")} text={category ? t(category) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_SUB_CATEGORY")} text={subCategory ? t(subCategory) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_SUB_CATEGORY_TYPE")} text={subCategoryType ? t(subCategoryType) : t("CS_NA")} />
-            {multiUnits.includes(typeOfCollection) && (
-              <Row className="border-none" label={t("GC_NO_OF_UNITS")} text={no_of_units || t("CS_NA")} />
-            )}
-            <Row className="border-none" label={t("GC_SPECIAL_CATEGORY")} text={specialCategory ? t(specialCategory) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_IS_INHERITANCE")} text={isInheritance ? t("YES") : t("NO")} />
-          </StatusTable>
+          {/* Section 4: Garbage Specifications */}
+          <div className="gc-details-section">
+            <div className="gc-section-title">
+              <span className="gc-section-title-icon">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </span>
+              <span>{t("GC_GARBAGE_SPECIFICATIONS")}</span>
+            </div>
+            <div className="gc-details-grid">
+              {oldGarbageId && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_OLD_GARBAGE_ID")}</span>
+                  <span className="gc-detail-value">{oldGarbageId}</span>
+                </div>
+              )}
+              {typeOfCollection && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_TYPE_OF_COLLECTION")}</span>
+                  <span className="gc-detail-value">{t(typeOfCollection)}</span>
+                </div>
+              )}
+              {ownerOrTenant && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_OWNER_OR_TENANT")}</span>
+                  <span className="gc-detail-value">{t(ownerOrTenant)}</span>
+                </div>
+              )}
+              {category && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_CATEGORY")}</span>
+                  <span className="gc-detail-value">{t(category)}</span>
+                </div>
+              )}
+              {subCategory && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_SUB_CATEGORY")}</span>
+                  <span className="gc-detail-value">{t(subCategory)}</span>
+                </div>
+              )}
+              {subCategoryType && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_SUB_CATEGORY_TYPE")}</span>
+                  <span className="gc-detail-value">{t(subCategoryType)}</span>
+                </div>
+              )}
+              {multiUnits.includes(typeOfCollection) && no_of_units && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_NO_OF_UNITS")}</span>
+                  <span className="gc-detail-value">{no_of_units}</span>
+                </div>
+              )}
+              {specialCategory && (
+                <div className="gc-detail-item">
+                  <span className="gc-detail-label">{t("GC_SPECIAL_CATEGORY")}</span>
+                  <span className="gc-detail-value">{t(specialCategory)}</span>
+                </div>
+              )}
+              <div className="gc-detail-item">
+                <span className="gc-detail-label">{t("GC_IS_INHERITANCE")}</span>
+                <span className="gc-detail-value">{isInheritance ? t("YES") : t("NO")}</span>
+              </div>
+            </div>
+          </div>
 
-          {/* Documents */}
+          {/* Section 5: Documents */}
           {docs.length > 0 && (
-            <>
-              <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_GARBAGE_DOCUMENTS")}</CardSubHeader>
-              <StatusTable>
-                <Card className="chb-doc-card">
-                  {docs.map((doc, index) => (
-                    <div key={`doc-${index}`} className="chb-doc-item">
-                      <div>
-                        <CardSectionHeader>{t("GC_" + (doc?.documentType?.split(".").slice(0, 2).join("_")))}</CardSectionHeader>
-                        <GCDocuments value={docs} Code={doc?.documentType} index={index} />
-                      </div>
+            <div className="gc-details-section">
+              <div className="gc-section-title">
+                <span className="gc-section-title-icon">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </span>
+                <span>{t("GC_GARBAGE_DOCUMENTS")}</span>
+              </div>
+              <div className="chb-doc-card">
+                {docs.map((doc, index) => (
+                  <div key={`doc-${index}`} className="chb-doc-item">
+                    <div>
+                      <CardSectionHeader>{t("GC_" + (doc?.documentType?.split(".").slice(0, 2).join("_")))}</CardSectionHeader>
+                      <GCDocuments value={docs} Code={doc?.documentType} index={index} />
                     </div>
-                  ))}
-                </Card>
-              </StatusTable>
-            </>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
-          <GCWFApplicationTimeline application={appData} />
-
-
+          {/* Section 6: Workflow Timeline */}
+          <div className="pt-2">
+            <GCWFApplicationTimeline application={appData} />
+          </div>
         </Card>
 
         {appStatus === "EDIT_APPLICATION" && (
