@@ -26,12 +26,12 @@ public class LoginHelper {
 
         String loginMobile = mobile;
 
-        String env = WorkflowDataStore.get("selected.env");
+        String env = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_ENV);
 
-        if ("ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM"
+        if (AutomationConstants.MODULE_OBPAS
                 .equalsIgnoreCase(moduleName)) {
 
-            if ("NIUATT".equalsIgnoreCase(env)) {
+            if (AutomationConstants.ENV_NIUATT.equalsIgnoreCase(env)) {
                 loginMobile =
                         ConfigReader.get("niuatt.architect.mobile");
             }
