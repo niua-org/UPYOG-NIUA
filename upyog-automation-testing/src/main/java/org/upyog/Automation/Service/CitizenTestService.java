@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.upyog.Automation.Common.CommonCitizenTest;
 import org.upyog.Automation.Reports.ReportManager;
+import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.Utils.ConfigReader;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 
@@ -43,28 +44,21 @@ public class CitizenTestService {
 
         logger.info("Starting {} citizen test", moduleName);
 
-        WorkflowDataStore.put("citizen.mobile.number", mobileNumber);
-        WorkflowDataStore.put("selected.mobile", mobileNumber);
-
-        WorkflowDataStore.put("test.otp", otp);
-        WorkflowDataStore.put("selected.otp", otp);
-
-        WorkflowDataStore.put("test.city.name", cityName);
-        WorkflowDataStore.put("selected.city", cityName);
-
-        WorkflowDataStore.put("selected.permitNo", permitNumber);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_MOBILE, mobileNumber);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_OTP, otp);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_CITY, cityName);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_PERMIT_NO, permitNumber);
 
         logger.info("Permit stored: {}", permitNumber);
 
-        WorkflowDataStore.put("base.url", baseUrl);
-        WorkflowDataStore.put("selected.url", baseUrl);
-        WorkflowDataStore.put("selected.module", moduleName);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_URL, baseUrl);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_MODULE, moduleName);
 
-        String env = baseUrl.contains("niuatt")
-                ? "NIUATT"
-                : "UPYOG";
+        String env = baseUrl.toLowerCase().contains(AutomationConstants.ENV_NIUATT.toLowerCase())
+                ? AutomationConstants.ENV_NIUATT
+                : AutomationConstants.ENV_UPYOG;
 
-        WorkflowDataStore.put("selected.env", env);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_ENV, env);
 
         // Selecting City based on Url
         if (cityName == null || cityName.isBlank()) {
@@ -74,7 +68,7 @@ public class CitizenTestService {
             cityName = ConfigReader.get(prefix + ".city");
         }
 
-        WorkflowDataStore.put("selected.city", cityName);
+        WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_CITY, cityName);
 
         try {
 
