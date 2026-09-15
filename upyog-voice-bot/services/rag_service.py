@@ -39,6 +39,7 @@ frs_index = None
 prompt_embeddings = None
 is_loading = False
 load_lock = threading.Lock()
+resources_ready_event = threading.Event()
 
 FAISS_THRESHOLD = 1.08
 EMBEDDING_MODEL = 'all-mpnet-base-v2'
@@ -49,31 +50,39 @@ def load_resources():
     global model, data, index, prompt_embeddings, frs_data, frs_index, is_loading
 
     with load_lock:
-        if is_loading:
+        if resources_ready_event.is_set() and model is not None and index is not None:
             return
 
         is_loading = True
         try:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-            # Load FAQ data
+            # 1. Initialize SentenceTransformer model
+            if model is None:
+                logger.info(f"Loading SentenceTransformer model ({EMBEDDING_MODEL})...")
+                model = SentenceTransformer(EMBEDDING_MODEL)
+                logger.info("SentenceTransformer model loaded successfully.")
+
+            # 2. Load FAQ data & FAISS index
             data_path = os.path.join(base_dir, 'data', 'UpyogFAQ.csv')
+            faq_idx_path = os.path.join(base_dir, 'data', 'UpyogFAQ_index.faiss')
             if os.path.exists(data_path):
                 data = pd.read_csv(data_path)
-                logger.info(f"FAQ data loaded from {data_path}")
+                logger.info(f"FAQ data loaded from {data_path} ({len(data)} rows)")
 
-                # Initialize SentenceTransformer model and generate embeddings
-                model = SentenceTransformer(EMBEDDING_MODEL)
-                prompt_embeddings = model.encode(data['prompt'].tolist())
-                logger.info("Embeddings generated successfully.")
+                if os.path.exists(faq_idx_path):
+                    index = faiss.read_index(faq_idx_path)
+                    logger.info(f"FAQ FAISS index loaded from {faq_idx_path} ({index.ntotal} vectors).")
+                else:
+                    logger.info("Generating FAQ embeddings from scratch...")
+                    prompt_embeddings = model.encode(data['prompt'].tolist())
+                    dimension = prompt_embeddings.shape[1]
+                    index = faiss.IndexFlatL2(dimension)
+                    index.add(prompt_embeddings.astype(np.float32))
+                    faiss.write_index(index, faq_idx_path)
+                    logger.info(f"FAQ FAISS index generated and saved to {faq_idx_path}.")
 
-                # Initialize FAISS index and add embeddings
-                dimension = prompt_embeddings.shape[1]
-                index = faiss.IndexFlatL2(dimension)
-                index.add(prompt_embeddings.astype(np.float32))
-                logger.info("FAQ FAISS index initialized.")
-
-            # Load FRS Knowledge Base
+            # 3. Load FRS Knowledge Base
             frs_path = os.path.join(base_dir, 'data', 'frs_smart_faq.csv')
             frs_idx_path = os.path.join(base_dir, 'data', 'frs_smart_index.faiss')
             if os.path.exists(frs_path) and os.path.exists(frs_idx_path):
@@ -83,6 +92,7 @@ def load_resources():
             else:
                 logger.warning("FRS Knowledge Base NOT found.")
 
+            resources_ready_event.set()
             logger.info("All RAG resources loaded successfully.")
 
         except Exception as e:
@@ -92,7 +102,7 @@ def load_resources():
             is_loading = False
 
 
-# Start loading resources in background thread
+# Start loading resources immediately
 threading.Thread(target=load_resources, daemon=True).start()
 
 

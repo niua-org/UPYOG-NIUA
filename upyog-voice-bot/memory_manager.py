@@ -18,35 +18,35 @@ shared_memory = MemorySaver()
 
 
 load_dotenv(override=True)
-QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
-QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
-QDRANT_GRPC_PORT = int(os.getenv("QDRANT_GRPC_PORT", 6334))
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
+# QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
+# QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
+# QDRANT_GRPC_PORT = int(os.getenv("QDRANT_GRPC_PORT", 6334))
+# QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
 
-try:
-    # Connect to the standalone Qdrant server via high-speed gRPC
-    client = QdrantClient(
-        host=QDRANT_HOST,
-        port=QDRANT_PORT,
-        grpc_port=QDRANT_GRPC_PORT,
-        api_key=QDRANT_API_KEY,
-        prefer_grpc=True,
-        timeout=5.0
-    )
-    # Test connection
-    client.get_collections()
-    logger.info(f"[Qdrant] Connected successfully to standalone server at {QDRANT_HOST}:{QDRANT_PORT}")
-except Exception as e:
-    logger.warning(f"[Qdrant] Could not connect to {QDRANT_HOST}:{QDRANT_PORT} ({e}), falling back to in-memory.")
-    client = QdrantClient(":memory:")
+# try:
+#     # Connect to the standalone Qdrant server via high-speed gRPC
+#     client = QdrantClient(
+#         host=QDRANT_HOST,
+#         port=QDRANT_PORT,
+#         grpc_port=QDRANT_GRPC_PORT,
+#         api_key=QDRANT_API_KEY,
+#         prefer_grpc=True,
+#         timeout=5.0
+#     )
+#     # Test connection
+#     client.get_collections()
+#     logger.info(f"[Qdrant] Connected successfully to standalone server at {QDRANT_HOST}:{QDRANT_PORT}")
+# except Exception as e:
+#     logger.warning(f"[Qdrant] Could not connect to {QDRANT_HOST}:{QDRANT_PORT} ({e}), falling back to in-memory.")
+#     client = QdrantClient(":memory:")
     
 
 # # Initialize local filesystem Qdrant database with fallback for concurrent access
-# try:
-#     client = QdrantClient(path="./qdrant_storage")
-# except Exception as e:
-#     logger.warning(f"Could not open ./qdrant_storage ({e}), falling back to in-memory Qdrant client.")
-#     client = QdrantClient(":memory:")
+try:
+    client = QdrantClient(path="./qdrant_storage")
+except Exception as e:
+    logger.warning(f"Could not open ./qdrant_storage ({e}), falling back to in-memory Qdrant client.")
+    client = QdrantClient(":memory:")
 
 LONG_TERM_MEMORY_COLLECTION = "long_term_chat_memory"
 KNOWLEDGE_BASE_COLLECTION = "upyog_knowledge_base"

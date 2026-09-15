@@ -160,8 +160,9 @@ def chat():
         logger.info("[ENDPOINT /chat GET] Health check ping")
         return jsonify({"status": "ok", "message": "UPYOG Voice Bot Chat Endpoint"}), 200
 
+
+    import services.rag_service as rag_service
     from services.rag_service import (
-        model, data, index, is_loading,
         is_hard_blocked, is_in_domain, get_rejection_message,
         retrieve_document
     )
@@ -178,10 +179,12 @@ def chat():
     from database import save_user_profile_name
 
     try:
-        if is_loading or any(x is None for x in [model, data, index]):
-            logger.warning("[ENDPOINT /chat POST] Resources still loading — waiting 1s...")
-            time.sleep(1)
-            if any(x is None for x in [model, data, index]):
+        if not rag_service.resources_ready_event.is_set() or any(x is None for x in [rag_service.model, rag_service.data, rag_service.index]):
+            logger.warning("[ENDPOINT /chat POST] Resources still warming up — waiting up to 10s...")
+            rag_service.resources_ready_event.wait(timeout=10)
+            if any(x is None for x in [rag_service.model, rag_service.data, rag_service.index]):
+                rag_service.load_resources()
+            if any(x is None for x in [rag_service.model, rag_service.data, rag_service.index]):
                 logger.error("[ENDPOINT /chat POST] Resources unavailable (503 Service Unavailable)")
                 return jsonify({"error": "Loading resources..."}), 503
 
@@ -1115,15 +1118,18 @@ def stream():
         logger.info("[ENDPOINT /stream GET] Health check ping")
         return jsonify({"status": "ok", "message": "UPYOG Voice Bot Stream Endpoint"}), 200
 
-    from services.rag_service import model, data, index, is_loading, retrieve_document_stream
+    import services.rag_service as rag_service
+    from services.rag_service import retrieve_document_stream
     from services.voice_service import stop_generation
     from services.intent_service import detect_language_per_turn
     from services.user_service import extract_phone_from_session
 
     try:
-        if is_loading or any(x is None for x in [model, data, index]):
-            time.sleep(1)
-            if any(x is None for x in [model, data, index]):
+        if not rag_service.resources_ready_event.is_set() or any(x is None for x in [rag_service.model, rag_service.data, rag_service.index]):
+            rag_service.resources_ready_event.wait(timeout=10)
+            if any(x is None for x in [rag_service.model, rag_service.data, rag_service.index]):
+                rag_service.load_resources()
+            if any(x is None for x in [rag_service.model, rag_service.data, rag_service.index]):
                 return Response("data: {\"error\": \"Loading resources...\"}\n\n", mimetype='text/event-stream'), 503
 
         user_data = request.json or {}
