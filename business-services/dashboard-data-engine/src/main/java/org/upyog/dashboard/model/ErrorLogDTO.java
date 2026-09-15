@@ -1,14 +1,23 @@
 package org.upyog.dashboard.model;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
-@Data
+/**
+ * DTO holding error logs for failed adapter ingestion runs.
+ */
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 public class ErrorLogDTO {
 
     private String id;

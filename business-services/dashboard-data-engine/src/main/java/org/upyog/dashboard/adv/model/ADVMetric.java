@@ -4,10 +4,15 @@ import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
-@Data
+/**
+ * Transformed metrics model for Advertisement (ADV) formatted for downstream dashboard ingestion.
+ */
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +24,11 @@ public class ADVMetric {
     private Integer totalApplicationApproved;
     private List<Map<String, Object>> transactions;
 
+    /**
+     * Serializes this metric object into a flat key-value Map structure for payload formatting.
+     *
+     * @return map of metric field names to values
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> dataMap = new java.util.LinkedHashMap<>();
         dataMap.put("previousYearRevenue", previousYearRevenue != null ? previousYearRevenue : 0);

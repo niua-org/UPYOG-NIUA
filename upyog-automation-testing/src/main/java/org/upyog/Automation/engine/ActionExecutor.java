@@ -6,9 +6,11 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.upyog.Automation.Reports.ReportManager;
+import org.upyog.Automation.Utils.AutomationConstants;
 import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
+import org.upyog.Automation.Utils.ScreenshotManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +42,24 @@ import java.util.List;
  */
 public class ActionExecutor {
 
+    /**
+     * Resolves an environment-specific value if piped syntax (value1||value2) is used.
+     *
+     * <p>If the input contains '||', the first segment is returned for NIUATT environment,
+     * and the second segment is returned for other environments.</p>
+     *
+     * @param value the raw configuration string (may contain '||')
+     * @return the resolved string according to the active environment
+     */
     private String resolveByEnv(String value) {
         if (value == null || !value.contains("||")) {
             return value;
         }
 
-        String env = WorkflowDataStore.get("selected.env");
+        String env = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_ENV);
         String[] parts = value.split("\\|\\|");
 
-        return "NIUATT".equalsIgnoreCase(env)
+        return AutomationConstants.ENV_NIUATT.equalsIgnoreCase(env)
                 ? parts[0]
                 : parts[1];
     }
@@ -61,6 +72,12 @@ public class ActionExecutor {
     private final Actions actions;
     private final org.upyog.Automation.engine.LocatorResolver locatorResolver;
 
+    /**
+     * Constructs a new {@link ActionExecutor} with the provided {@link WebDriver} and {@link WebDriverWait}.
+     *
+     * @param driver the Selenium WebDriver instance
+     * @param wait the explicit WebDriverWait instance
+     */
     public ActionExecutor(WebDriver driver, WebDriverWait wait) {
         this.driver = driver;
         this.wait = wait;
@@ -105,95 +122,95 @@ public class ActionExecutor {
             // Using switch expression for clean, exhaustive handling
             switch (action.toUpperCase()) {
 
-                case "TYPE":
+                case AutomationConstants.ACTION_TYPE:
                     executeType(instruction);
                     break;
 
-                case "CLICK":
+                case AutomationConstants.ACTION_CLICK:
                     executeClick(instruction);
                     break;
 
-                case "CLICK_JS":
+                case AutomationConstants.ACTION_CLICK_JS:
                     executeJsClick(instruction);
                     break;
 
-                case "HOVER":
+                case AutomationConstants.ACTION_HOVER:
                     executeHover(instruction);
                     break;
 
-                case "UPLOAD_FILE":
+                case AutomationConstants.ACTION_UPLOAD_FILE:
                     executeFileUpload(instruction);
                     break;
 
-                case "TYPE_OTP":
+                case AutomationConstants.ACTION_TYPE_OTP:
                     executeOtpType(instruction);
                     break;
 
-                case "SELECT_RADIO_BY_TEXT":
+                case AutomationConstants.ACTION_SELECT_RADIO_BY_TEXT:
                     executeRadioSelectionByText(instruction);
                     break;
 
-                case "SELECT_DROPDOWN_BY_INDEX":
+                case AutomationConstants.ACTION_SELECT_DROPDOWN_BY_INDEX:
                     executeDropdownSelectionByIndex(instruction);
                     break;
 
-                case "CHECK_LAST_CHECKBOX":
+                case AutomationConstants.ACTION_CHECK_LAST_CHECKBOX:
                     checkLastCheckbox(instruction);
                     break;
 
-                case "CAPTURE_TEXT":
+                case AutomationConstants.ACTION_CAPTURE_TEXT:
                     captureText(instruction);
                     break;
 
-                case "TYPE_FROM_STORE":
+                case AutomationConstants.ACTION_TYPE_FROM_STORE:
                     typeFromStore(instruction);
                     break;
 
-                case "SET_DATE_TODAY":
+                case AutomationConstants.ACTION_SET_DATE_TODAY:
                     executeSetDateToday(instruction);
                     break;
 
-                case "SET_DATE_PLUS_DAYS":
+                case AutomationConstants.ACTION_SET_DATE_PLUS_DAYS:
                     executeSetDatePlusDays(instruction);
                     break;
 
-                case "SWITCH_WINDOW":
+                case AutomationConstants.ACTION_SWITCH_WINDOW:
                     switchWindow();
                     break;
 
-                case "WAIT_FOR_TEXT":
+                case AutomationConstants.ACTION_WAIT_FOR_TEXT:
                     waitForText(instruction);
                     break;
 
-                case "SET_DATE_TEXT":
+                case AutomationConstants.ACTION_SET_DATE_TEXT:
                     executeSetDateText(instruction);
                     break;
 
-                case "MULTI_SELECT_CHECKBOX":
+                case AutomationConstants.ACTION_MULTI_SELECT_CHECKBOX:
                     executeMultiSelectCheckbox(instruction);
                     break;
 
-                case "OPEN_URL":
+                case AutomationConstants.ACTION_OPEN_URL:
                     openUrl(instruction);
                     break;
 
-                case "SET_CURRENT_TIME":
+                case AutomationConstants.ACTION_SET_CURRENT_TIME:
                     executeSetCurrentTime(instruction);
                     break;
 
-                case "SET_CUSTOM_TIME":
+                case AutomationConstants.ACTION_SET_CUSTOM_TIME:
                     executeSetCustomTime(instruction);
                     break;
 
-                case "SET_DATE_JS":
+                case AutomationConstants.ACTION_SET_DATE_JS:
                     executeSetDateJs(instruction);
                     break;
 
-                case "TYPE_BY_LABEL":
+                case AutomationConstants.ACTION_TYPE_BY_LABEL:
                     executeTypeByLabel(instruction);
                     break;
 
-                case "OPTIONAL_CLICK_JS":
+                case AutomationConstants.ACTION_OPTIONAL_CLICK_JS:
                     try {
                         executeJsClick(instruction);
                     } catch (Exception e) {
@@ -201,7 +218,7 @@ public class ActionExecutor {
                     }
                     break;
 
-                case "OPTIONAL_SELECT_DROPDOWN_BY_INDEX":
+                case AutomationConstants.ACTION_OPTIONAL_SELECT_DROPDOWN_BY_INDEX:
                     try {
                         executeDropdownSelectionByIndex(instruction);
                         logger.info("Optional dropdown executed");
@@ -210,7 +227,7 @@ public class ActionExecutor {
                     }
                     break;
 
-                case "OPTIONAL_TYPE":
+                case AutomationConstants.ACTION_OPTIONAL_TYPE:
                     try {
                         executeType(instruction);
                         logger.info("Optional type executed");
@@ -219,23 +236,23 @@ public class ActionExecutor {
                     }
                     break;
 
-                case "SELECT_BY_VALUE":
+                case AutomationConstants.ACTION_SELECT_BY_VALUE:
                     executeSelectByValue(instruction);
                     break;
 
-                case "SCROLL_TO_ELEMENT":
+                case AutomationConstants.ACTION_SCROLL_TO_ELEMENT:
                     executeScrollToElement(instruction);
                     break;
 
-                case "WAIT_VISIBLE":
+                case AutomationConstants.ACTION_WAIT_VISIBLE:
                     executeWaitVisible(instruction);
                     break;
 
-                case "SELECT_DATE_RANGE":
+                case AutomationConstants.ACTION_SELECT_DATE_RANGE:
                     executeSelectDateRange();
                     break;
 
-                case "ACCEPT_ALERT":
+                case AutomationConstants.ACTION_ACCEPT_ALERT:
 
                     Alert alert = wait.until(ExpectedConditions.alertIsPresent());
 
@@ -252,30 +269,104 @@ public class ActionExecutor {
                     );
             }
 
-            // Apply dynamic sleep after action (configured per-step in JSON)
+            // Apply dynamic sleep after action
             applyDynamicSleep(instruction);
 
             logger.info("✓ Completed step: {}", stepName);
 
-            ReportManager.logStep(
-                    "PASSED : " + stepName
-            );
+            String reportValue = getReportValue(instruction, action);
+
+            if (reportValue != null && !reportValue.isBlank()) {
+
+                ReportManager.logStep(
+                        "PASSED : " + stepName + " → " + reportValue
+                );
+
+            } else {
+
+                ReportManager.logStep(
+                        "PASSED : " + stepName
+                );
+            }
 
         } catch (NoSuchElementException e) {
-            ReportManager.logFailure(
-                    "FAILED : " + stepName
+
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_STEP,
+                    stepName
             );
-            logger.error("✗ Element not found for step '{}': {}", stepName, e.getMessage());
-            throw new RuntimeException("Step failed - element not found: " + stepName, e);
 
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_ERROR,
+                    e.getMessage()
+            );
 
+            String screenshotPath =
+                    ScreenshotManager.captureFailureScreenshot(
+                            driver,
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_MODULE),
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE),
+                            stepName
+                    );
+
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_SCREENSHOT,
+                    screenshotPath
+            );
+
+            ReportManager.logFailure(
+                    "FAILED : " + stepName + " | " + e.getMessage()
+            );
+
+            logger.error(
+                    "Element not found for step '{}': {}",
+                    stepName,
+                    e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "Step failed - element not found: " + stepName,
+                    e
+            );
         } catch (TimeoutException e) {
-            ReportManager.logFailure(
-                    "TIMEOUT : " + stepName
-            );
-            logger.error("✗ Timeout waiting for element in step '{}': {}", stepName, e.getMessage());
-            throw new RuntimeException("Step failed - timeout: " + stepName, e);
 
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_STEP,
+                    stepName
+            );
+
+            String screenshotPath =
+                    ScreenshotManager.captureFailureScreenshot(
+                            driver,
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_MODULE),
+                            WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE),
+                            stepName
+                    );
+
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_SCREENSHOT,
+                    screenshotPath
+            );
+
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_ERROR,
+                    e.getMessage()
+            );
+
+            ReportManager.logFailure(
+                    "TIMEOUT : " + stepName + " | " + e.getMessage()
+            );
+
+            logger.error(
+                    "Timeout waiting for element in step '{}': {}",
+                    stepName,
+                    e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "Step failed - timeout: " + stepName,
+                    e
+            );
         } catch (ElementClickInterceptedException e) {
             logger.warn("Click intercepted for step '{}', attempting JS click", stepName);
             // Fallback to JS click when standard click is intercepted
@@ -289,12 +380,26 @@ public class ActionExecutor {
         }
         catch (Exception e) {
 
-            ReportManager.logFailure(
-                    "FAILED : " + stepName
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_STEP,
+                    stepName
             );
 
-            throw new RuntimeException("Step execution failed", e);
+            WorkflowDataStore.put(
+                    AutomationConstants.KEY_FAILED_ERROR,
+                    e.getMessage()
+            );
+
+            ReportManager.logFailure(
+                    "FAILED : " + stepName + " | " + e.getMessage()
+            );
+
+            throw new RuntimeException(
+                    "Step execution failed: " + stepName,
+                    e
+            );
         }
+
     }
 
     /**
@@ -362,19 +467,19 @@ public class ActionExecutor {
         By locator;
 
         switch (instruction.getLocatorStrategy().toUpperCase()) {
-            case "XPATH":
+            case AutomationConstants.LOCATOR_XPATH:
                 locator = By.xpath(resolvedLocator);
                 break;
 
-            case "CSS":
+            case AutomationConstants.LOCATOR_CSS:
                 locator = By.cssSelector(resolvedLocator);
                 break;
 
-            case "ID":
+            case AutomationConstants.LOCATOR_ID:
                 locator = By.id(resolvedLocator);
                 break;
 
-            case "NAME":
+            case AutomationConstants.LOCATOR_NAME:
                 locator = By.name(resolvedLocator);
                 break;
 
@@ -828,6 +933,9 @@ public class ActionExecutor {
 
         WebElement option = options.get(optionIndex);
 
+// Capture the actual visible text BEFORE clicking
+        String selectedOptionText = option.getText().trim();
+
         js.executeScript(
                 "arguments[0].scrollIntoView({block:'center'});",
                 option
@@ -839,10 +947,17 @@ public class ActionExecutor {
 
         Thread.sleep(instruction.getDynamicSleep());
 
+        // Store the actual selected dropdown value for reporting
+        WorkflowDataStore.put(
+                AutomationConstants.KEY_SELECTED_VALUE,
+                selectedOptionText
+        );
+
         logger.info(
-                "Selected dropdown {} option {}",
+                "Selected dropdown {} option {} = {}",
                 dropdownIndex,
-                optionIndex
+                optionIndex,
+                selectedOptionText
         );
     }
 
@@ -937,10 +1052,10 @@ public class ActionExecutor {
 
         WorkflowDataStore.put(key, capturedValue);
 
-        if (!"WATER_APPLICATION_NO".equals(key)
-                && !"SEWERAGE_APPLICATION_NO".equals(key)) {
+        if (!AutomationConstants.WATER_APPLICATION_NO.equals(key)
+                && !AutomationConstants.SEWERAGE_APPLICATION_NO.equals(key)) {
 
-            WorkflowDataStore.put("APPLICATION_NO", capturedValue);
+            WorkflowDataStore.put(AutomationConstants.APPLICATION_NO, capturedValue);
         }
 
 // Existing logic
@@ -960,12 +1075,12 @@ public class ActionExecutor {
         Thread.sleep(instruction.getDynamicSleep());
         logger.info(
                 "Water App No = {}",
-                WorkflowDataStore.get("WATER_APPLICATION_NO")
+                WorkflowDataStore.get(AutomationConstants.WATER_APPLICATION_NO)
         );
 
         logger.info(
                 "Sewerage App No = {}",
-                WorkflowDataStore.get("SEWERAGE_APPLICATION_NO")
+                WorkflowDataStore.get(AutomationConstants.SEWERAGE_APPLICATION_NO)
         );
         logger.info(
                 "Captured Value = {}",
@@ -973,10 +1088,18 @@ public class ActionExecutor {
         );
         logger.info(
                 "APPLICATION_NO STORED = {}",
-                WorkflowDataStore.get("APPLICATION_NO")
+                WorkflowDataStore.get(AutomationConstants.APPLICATION_NO)
         );
     }
 
+    /**
+     * TYPE_FROM_STORE action: Reads a value previously stored in {@link WorkflowDataStore}
+     * and types it into the target input element.
+     *
+     * @param instruction the test instruction containing store key and locator
+     * @throws InterruptedException if thread sleep is interrupted
+     * @throws RuntimeException if key is not found in the workflow store
+     */
     private void typeFromStore(
             TestInstruction instruction)
             throws InterruptedException {
@@ -996,11 +1119,11 @@ public class ActionExecutor {
                 WorkflowDataStore.get(key);
 
         if ((storedValue == null || storedValue.isEmpty())
-                && "APPLICATION_NO".equals(key)) {
+                && AutomationConstants.APPLICATION_NO.equals(key)) {
 
             storedValue =
                     WorkflowDataStore.get(
-                            "selected.applicationNumber"
+                            AutomationConstants.KEY_SELECTED_APPLICATION_NO
                     );
         }
 
@@ -1297,6 +1420,11 @@ public class ActionExecutor {
         logger.info("React date set successfully: {}", dateValue);
     }
 
+    /**
+     * TYPE_BY_LABEL action: Finds an input element associated with a label text and types the input value into it.
+     *
+     * @param instruction the test instruction containing the label text locator and input value
+     */
     private void executeTypeByLabel(TestInstruction instruction) {
 
         WebElement input = wait.until(
@@ -1316,6 +1444,12 @@ public class ActionExecutor {
                 instruction.getInputValue(),
                 instruction.getLocatorValue());
     }
+
+    /**
+     * SELECT_BY_VALUE action: Selects an option from a native HTML select dropdown by its value attribute.
+     *
+     * @param instruction the test instruction containing locator and select value
+     */
     private void executeSelectByValue(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1344,6 +1478,11 @@ public class ActionExecutor {
         );
     }
 
+    /**
+     * SCROLL_TO_ELEMENT action: Scrolls the browser viewport until the specified element is centered.
+     *
+     * @param instruction the test instruction containing locator
+     */
     private void executeScrollToElement(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1359,6 +1498,12 @@ public class ActionExecutor {
 
         logger.info("Scrolled to element");
     }
+
+    /**
+     * WAIT_VISIBLE action: Waits until the target element is visible in the DOM.
+     *
+     * @param instruction the test instruction containing locator and optional sleep
+     */
     private void executeWaitVisible(TestInstruction instruction) {
 
         By locator = locatorResolver.resolveLocator(instruction);
@@ -1380,6 +1525,10 @@ public class ActionExecutor {
             }
         }
     }
+
+    /**
+     * Clicks the date range calendar icon trigger on the page.
+     */
     private void clickCalendar() {
 
         WebElement calendar =
@@ -1388,6 +1537,10 @@ public class ActionExecutor {
 
         calendar.click();
     }
+
+    /**
+     * Clicks the continuous selection tab/item within the date range picker.
+     */
     private void clickContinuous() {
 
         WebElement continuous =
@@ -1396,23 +1549,38 @@ public class ActionExecutor {
 
         continuous.click();
     }
-    private void clickDate(int day) {
+
+    /**
+     * Clicks a specific date cell in the date range picker calendar.
+     *
+     * @param date the {@link LocalDate} to select
+     */
+    private void clickDate(LocalDate date) {
+
+        String day = String.valueOf(date.getDayOfMonth());
 
         By locator = By.xpath(
-                "//button[contains(@class,'rdrDay')][.//span[@class='rdrDayNumber']/span[text()='" + day + "']]"
+                "//button[contains(@class,'rdrDay')]" +
+                        "[not(contains(@class,'rdrDayPassive'))]" +
+                        "[.//span[@class='rdrDayNumber']/span[text()='" + day + "']]"
         );
 
-        WebElement date = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(locator)
+        WebElement dateElement = wait.until(
+                ExpectedConditions.elementToBeClickable(locator)
         );
 
-        actions.moveToElement(date)
+        actions.moveToElement(dateElement)
                 .click()
                 .perform();
 
-        logger.info("Clicked Date = {}", day);
+        logger.info("Clicked Date = {}", date);
     }
 
+    /**
+     * SELECT_DATE_RANGE action: Selects a continuous date range (from tomorrow to +3 days).
+     *
+     * @throws InterruptedException if thread sleep is interrupted
+     */
     private void executeSelectDateRange() throws InterruptedException {
 
         LocalDate start = LocalDate.now().plusDays(1);
@@ -1421,7 +1589,7 @@ public class ActionExecutor {
         // Calendar already open from JSON step "Open Calendar"
 
         // First date
-        clickDate(start.getDayOfMonth());
+        clickDate(start);
 
         logger.info("Start Date Selected");
 
@@ -1442,10 +1610,83 @@ public class ActionExecutor {
         Thread.sleep(500);
 
         // End date
-        clickDate(end.getDayOfMonth());
+        clickDate(end);
 
         logger.info("End Date Selected");
 
         logger.info("Date Range Selected : {} -> {}", start, end);
+    }
+
+    /**
+     * Extracts and returns the display value to be logged in the Extent/HTML test report for a step.
+     *
+     * @param instruction the executed test instruction
+     * @param action the action type string
+     * @return the resolved string value suitable for reporting, or null if not applicable
+     */
+    private String getReportValue(
+            TestInstruction instruction,
+            String action) {
+
+        try {
+
+            switch (action.toUpperCase()) {
+
+                case AutomationConstants.ACTION_TYPE:
+                case AutomationConstants.ACTION_TYPE_BY_LABEL:
+                case AutomationConstants.ACTION_CLEAR_AND_TYPE:
+                case AutomationConstants.ACTION_TYPE_FROM_STORE:
+
+                    return instruction.getInputValue();
+
+                case AutomationConstants.ACTION_SELECT_RADIO_BY_TEXT:
+                case AutomationConstants.ACTION_MULTI_SELECT_CHECKBOX:
+
+                    return instruction.getInputValue();
+
+                case AutomationConstants.ACTION_SELECT_DROPDOWN_BY_INDEX:
+
+                    return WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_VALUE);
+
+                case AutomationConstants.ACTION_UPLOAD_FILE:
+
+                    String filePath = instruction.getInputValue();
+
+                    if (filePath != null) {
+                        return new File(filePath).getName();
+                    }
+
+                    return null;
+
+                case AutomationConstants.ACTION_CAPTURE_TEXT:
+
+                    String key = instruction.getInputValue();
+
+                    return WorkflowDataStore.get(key);
+
+                case AutomationConstants.ACTION_SET_DATE_TODAY:
+                case AutomationConstants.ACTION_SET_DATE_PLUS_DAYS:
+                case AutomationConstants.ACTION_SET_DATE_TEXT:
+                case AutomationConstants.ACTION_SET_DATE_JS:
+                case AutomationConstants.ACTION_SET_CURRENT_TIME:
+                case AutomationConstants.ACTION_SET_CUSTOM_TIME:
+
+                    return instruction.getInputValue();
+
+                default:
+
+                    return null;
+            }
+
+        } catch (Exception e) {
+
+            logger.debug(
+                    "Could not determine report value for step '{}': {}",
+                    instruction.getStepName(),
+                    e.getMessage()
+            );
+
+            return null;
+        }
     }
 }
