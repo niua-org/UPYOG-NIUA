@@ -87,10 +87,12 @@ const ApplicationDetails = () => {
   const appNo = application?.grbgApplication?.applicationNo || application?.grbgApplicationNumber || t("CS_NA");
 
   return (
-    <div>
-      <div className={"employee-application-details"} style={{ marginBottom: "15px" }}>
-        <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>{t("GC_APPLICATION_DETAILS")}</Header>
-        <div style={{ zIndex: "10", display: "flex", flexDirection: "row-reverse", alignItems: "center", marginTop: "-45px" }}>
+    <div style={{ width: "100%" }}>
+      <div className="gc-emp-details-header-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginBottom: "20px", marginTop: "10px" }}>
+        <h1 className="gc-emp-details-title" style={{ margin: 0, padding: 0, fontSize: "28px", fontWeight: 700, color: "#0f172a", textAlign: "left" }}>
+          {t("GC_APPLICATION_DETAILS")}
+        </h1>
+        <div style={{ position: "relative", zIndex: 10 }}>
           {downloadOptions && downloadOptions.length > 0 && (
             <MultiLink
               className="multilinkWrapper employee-mulitlink-main-div"

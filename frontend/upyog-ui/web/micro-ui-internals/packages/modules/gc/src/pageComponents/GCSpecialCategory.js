@@ -114,18 +114,20 @@ const GCSpecialCategory = ({ t, config, onSelect, userType, formData, renewAppli
     return (
         <React.Fragment>
             <FormStep t={t} config={config} onSelect={goNext} onSkip={onSkip} isDisabled={!specialCategory}>
-                <div>
-                    <RadioButtons
-                        t={t}
-                        optionsKey="i18nKey"
-                        isMandatory={config.isMandatory}
-                        options={getSpecialCategoryData || []}
-                        selectedOption={specialCategory}
-                        onSelect={setTypeOfCategory}
-                        labelKey="GC_SPECIAL_CATEGORY"
-                        isDependent={true}
-                        disabled={editScreen}
-                    />
+                <div className="gc-form-step-wrapper">
+                    <div className="gc-radio-wrap">
+                        <RadioButtons
+                            t={t}
+                            optionsKey="i18nKey"
+                            isMandatory={config.isMandatory}
+                            options={getSpecialCategoryData || []}
+                            selectedOption={specialCategory}
+                            onSelect={setTypeOfCategory}
+                            labelKey="GC_SPECIAL_CATEGORY"
+                            isDependent={true}
+                            disabled={editScreen}
+                        />
+                    </div>
                 </div>
             </FormStep>
         </React.Fragment>
