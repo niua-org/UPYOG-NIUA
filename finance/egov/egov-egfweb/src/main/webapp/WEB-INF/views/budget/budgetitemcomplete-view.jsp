@@ -80,6 +80,7 @@
     th:nth-child(6), td:nth-child(6) { width: 12%; }
     th:nth-child(7), td:nth-child(7) { width: 12%; }
 
+    /* Unified Back Button styling matching design system across budget views */
     .btn-budget-back {
         background-color: #fe7a51 !important;
         border: 1px solid #fe7a51 !important;
@@ -93,6 +94,7 @@
         cursor: pointer;
         transition: background-color 0.2s ease, border-color 0.2s ease;
     }
+
     .btn-budget-back:hover, .btn-budget-back:focus {
         background-color: #e5673e !important;
         border-color: #e5673e !important;
@@ -153,123 +155,149 @@
             </tr>
         </c:if>
 
-        <c:forEach var="part" items="${parts}">
 
-            <!-- PART HEADER -->
-            <tr class="part-row">
-                <td colspan="7">
-                    Part ${part.key} - ${part.value.name}
-                </td>
-            </tr>
 
-            <c:forEach var="acct" items="${part.value.types}">
+        <!-- ========================== -->
+        <!-- PART A - REVENUE BUDGET -->
+        <!-- ========================== -->
+        <tr class="part-row"><td colspan="7">Part A - REVENUE BUDGET</td></tr>
 
-                <!-- ACCOUNT TYPE HEADER -->
-                <tr class="acct-row">
-                    <td colspan="7" class="indent1">
-                        ${acct.value.name}
-                    </td>
+        <c:forEach var="acctEntry" items="${grouped_rb.entrySet()}">
+
+            <tr class="acct-row"><td colspan="7">${acctEntry.key}</td></tr>
+
+            <c:forEach var="catEntry" items="${acctEntry.value.entrySet()}">
+
+                <tr class="cat-row">
+                    <td colspan="7" class="indent1">${catEntry.key}</td>
                 </tr>
 
-                <c:forEach var="cat" items="${acct.value.categories}">
 
-                    <!-- CATEGORY HEADER -->
-                    <tr class="cat-row">
-                        <td colspan="7" class="indent2">
-                            ${cat.key}
+                <c:forEach var="item" items="${catEntry.value}">
+                    <tr>
+                        <td class="indent2">
+                            <c:choose>
+                                <c:when test="${item.budgetHead != null}">${item.budgetHead.name}</c:when>
+                                <c:otherwise><span class="muted">—</span></c:otherwise>
+                            </c:choose>
                         </td>
-                    </tr>
 
-                    <!-- DETAIL ROWS -->
-                    <c:forEach var="item" items="${cat.value}">
-                        <tr>
-                            <td class="indent2">
-                                ${item.budgetHeadName}
-                            </td>
+                        <td>${item.budgetCode}</td>
 
-                            <td>${item.budgetHeadCode}</td>
-                            <td>${item.stateBudgetHeadCode}</td>
-
-                            <td class="num">
-                                <fmt:formatNumber value="${item.currentEstimate}" maxFractionDigits="2"/>
-                            </td>
-                            <td class="num">
-                                <fmt:formatNumber value="${item.currentActual}" maxFractionDigits="2"/>
-                            </td>
-                            <td class="num">
-                                <fmt:formatNumber value="${item.currentRevisedEstimate}" maxFractionDigits="2"/>
-                            </td>
-                            <td class="num">
-                                <fmt:formatNumber value="${item.nextEstimate}" maxFractionDigits="2"/>
-                            </td>
-                        </tr>
-                    </c:forEach>
-
-                    <!-- CATEGORY TOTAL -->
-                    <tr class="total-row">
-                        <td class="indent2">Total of ${cat.key}</td>
-                        <td></td>
-                        <td></td>
+                        <td>${item.stateBudgetCode}</td>
 
                         <td class="num">
-                            <fmt:formatNumber value="${categoryTotals[cat.key].currentEstimate}" maxFractionDigits="2"/>
+                            <fmt:formatNumber value="${item.currentEstimate}" maxFractionDigits="2"/>
                         </td>
+
                         <td class="num">
-                            <fmt:formatNumber value="${categoryTotals[cat.key].currentActual}" maxFractionDigits="2"/>
+                            <fmt:formatNumber value="${item.currentActual}" maxFractionDigits="2"/>
                         </td>
+
                         <td class="num">
-                            <fmt:formatNumber value="${categoryTotals[cat.key].currentRevisedEstimate}" maxFractionDigits="2"/>
+                            <fmt:formatNumber value="${item.currentRevisedEstimate}" maxFractionDigits="2"/>
                         </td>
+
                         <td class="num">
-                            <fmt:formatNumber value="${categoryTotals[cat.key].nextEstimate}" maxFractionDigits="2"/>
+                            <fmt:formatNumber value="${item.nextEstimate}" maxFractionDigits="2"/>
                         </td>
                     </tr>
 
                 </c:forEach>
 
-                <!-- ACCOUNT TYPE TOTAL -->
+
+                <!-- CATEGORY TOTAL ROW (Injected here inside loop) -->
                 <tr class="total-row">
-                    <td class="indent1">Total of ${acct.value.name}</td>
+                    <td class="indent2">Total</td>
                     <td></td>
+
                     <td></td>
 
                     <td class="num">
-                        <fmt:formatNumber value="${accountTypeTotals[acct.key].currentEstimate}" maxFractionDigits="2"/>
+                        <fmt:formatNumber value="${rbTotals[catEntry.key].estimate}" maxFractionDigits="2"/>
                     </td>
+
                     <td class="num">
-                        <fmt:formatNumber value="${accountTypeTotals[acct.key].currentActual}" maxFractionDigits="2"/>
+                        <fmt:formatNumber value="${rbTotals[catEntry.key].actual}" maxFractionDigits="2"/>
                     </td>
+
                     <td class="num">
-                        <fmt:formatNumber value="${accountTypeTotals[acct.key].currentRevisedEstimate}" maxFractionDigits="2"/>
+                        <fmt:formatNumber value="${rbTotals[catEntry.key].revised}" maxFractionDigits="2"/>
                     </td>
+
                     <td class="num">
-                        <fmt:formatNumber value="${accountTypeTotals[acct.key].nextEstimate}" maxFractionDigits="2"/>
+                        <fmt:formatNumber value="${rbTotals[catEntry.key].next}" maxFractionDigits="2"/>
                     </td>
                 </tr>
 
             </c:forEach>
-
-            <!-- PART TOTAL -->
-            <tr class="total-row">
-                <td>Total of Part ${part.key}</td>
-                <td></td>
-                <td></td>
-
-                <td class="num">
-                    <fmt:formatNumber value="${partTotals[part.key].currentEstimate}" maxFractionDigits="2"/>
-                </td>
-                <td class="num">
-                    <fmt:formatNumber value="${partTotals[part.key].currentActual}" maxFractionDigits="2"/>
-                </td>
-                <td class="num">
-                    <fmt:formatNumber value="${partTotals[part.key].currentRevisedEstimate}" maxFractionDigits="2"/>
-                </td>
-                <td class="num">
-                    <fmt:formatNumber value="${partTotals[part.key].nextEstimate}" maxFractionDigits="2"/>
-                </td>
-            </tr>
-
         </c:forEach>
+
+
+        <!-- ========================== -->
+        <!-- PART B - CAPITAL BUDGET -->
+        <!-- ========================== -->
+        <tr class="part-row"><td colspan="7">Part B - CAPITAL BUDGET</td></tr>
+
+        <c:forEach var="acctEntry" items="${grouped_cb.entrySet()}">
+
+            <tr class="acct-row"><td colspan="7">${acctEntry.key}</td></tr>
+
+            <c:forEach var="catEntry" items="${acctEntry.value.entrySet()}">
+
+                <tr class="cat-row">
+                    <td colspan="7" class="indent1">${catEntry.key}</td>
+                </tr>
+
+                <c:forEach var="item" items="${catEntry.value}">
+                    <tr>
+                        <td class="indent2">
+                            <c:choose>
+                                <c:when test="${item.budgetHead != null}">${item.budgetHead.name}</c:when>
+                                <c:otherwise><span class="muted">—</span></c:otherwise>
+                            </c:choose>
+                        </td>
+
+                        <td>${item.budgetCode}</td>
+
+                        <td>${item.stateBudgetCode}</td>
+
+                        <td class="num"><fmt:formatNumber value="${item.currentEstimate}" maxFractionDigits="2"/></td>
+                        <td class="num"><fmt:formatNumber value="${item.currentActual}" maxFractionDigits="2"/></td>
+                        <td class="num"><fmt:formatNumber value="${item.currentRevisedEstimate}" maxFractionDigits="2"/></td>
+                        <td class="num"><fmt:formatNumber value="${item.nextEstimate}" maxFractionDigits="2"/></td>
+                    </tr>
+
+                </c:forEach>
+
+                <!-- total capital budgets -->
+                <tr class="total-row">
+                    <td class="indent2">Total</td>
+                    <td></td>
+
+                    <td></td>
+
+                    <td class="num">
+                        <fmt:formatNumber value="${cbTotals[catEntry.key].estimate}" maxFractionDigits="2"/>
+                    </td>
+
+                    <td class="num">
+                        <fmt:formatNumber value="${cbTotals[catEntry.key].actual}" maxFractionDigits="2"/>
+                    </td>
+
+                    <td class="num">
+                        <fmt:formatNumber value="${cbTotals[catEntry.key].revised}" maxFractionDigits="2"/>
+                    </td>
+
+                    <td class="num">
+                        <fmt:formatNumber value="${cbTotals[catEntry.key].next}" maxFractionDigits="2"/>
+                    </td>
+                </tr>
+
+            </c:forEach>
+        </c:forEach>
+
+
 
         <!-- ========================== -->
         <!-- CLOSING BALANCE -->
@@ -300,7 +328,7 @@
         </tbody>
     </table>
 
-    <div class="text-center" style="margin-top: 25px; margin-bottom: 25px;">
+    <div style="text-align: center; margin-top: 25px; margin-bottom: 25px;">
         <a href="${pageContext.request.contextPath}/budget/register/workflow/view/${budgetRegister.budgetRegisterNumber}" class="btn btn-budget-back">
             <i class="fa fa-arrow-left"></i> Back
         </a>
