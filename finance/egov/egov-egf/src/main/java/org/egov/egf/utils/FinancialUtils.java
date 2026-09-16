@@ -72,6 +72,7 @@ import org.egov.eis.entity.Assignment;
 import org.egov.eis.service.AssignmentService;
 import org.egov.eis.service.EisCommonService;
 import org.egov.eis.service.PositionMasterService;
+import org.egov.enums.BudgetWorkflowState;
 import org.egov.infra.admin.master.entity.AppConfig;
 import org.egov.infra.admin.master.entity.AppConfigValues;
 import org.egov.infra.admin.master.entity.User;
@@ -387,7 +388,8 @@ public class FinancialUtils {
      */
     private void populateRevertOrRejectOwner(final Map<String, Object> targetMap, final String rawStatus,
             final String formattedStatus, final Long creatorId) {
-        if ("REVERTED".equalsIgnoreCase(rawStatus) || "Reverted".equalsIgnoreCase(formattedStatus)) {
+        BudgetWorkflowState state = BudgetWorkflowState.from(rawStatus != null ? rawStatus : formattedStatus);
+        if (state == BudgetWorkflowState.REVERTED) {
             if (creatorId != null) {
                 List<EmployeeInfo> creatorList = this.microServiceUtil.getEmployee(creatorId, null, null, null);
                 if (creatorList != null && !creatorList.isEmpty()) {
@@ -401,7 +403,7 @@ public class FinancialUtils {
                     }
                 }
             }
-        } else if ("REJECTED".equalsIgnoreCase(rawStatus) || "Rejected".equalsIgnoreCase(formattedStatus)) {
+        } else if (state == BudgetWorkflowState.REJECTED || "Rejected".equalsIgnoreCase(formattedStatus)) {
             targetMap.put("user", "-");
         }
     }
@@ -414,22 +416,8 @@ public class FinancialUtils {
         if (status == null) {
             return "";
         }
-        if ("PENDING_EO_APPROVAL".equalsIgnoreCase(status)
-                || "FORWARDED_TO_DMA".equalsIgnoreCase(status)
-                || "DMA_APPROVED".equalsIgnoreCase(status)
-                || "APPROVED".equalsIgnoreCase(status)) {
-            return "Approved";
-        }
-        if ("REVERTED".equalsIgnoreCase(status)) {
-            return "Reverted";
-        }
-        if ("REJECTED".equalsIgnoreCase(status)) {
-            return "Rejected";
-        }
-        if ("NEW".equalsIgnoreCase(status) || "CREATED".equalsIgnoreCase(status)) {
-            return "Created";
-        }
-        return status;
+        BudgetWorkflowState state = BudgetWorkflowState.from(status);
+        return state != null ? state.getHistoryDisplayStatus() : status;
     }
 
     /**
@@ -440,25 +428,8 @@ public class FinancialUtils {
         if (status == null) {
             return "";
         }
-        if ("PENDING_EO_APPROVAL".equalsIgnoreCase(status)) {
-            return "Pending EO Approval";
-        }
-        if ("FORWARDED_TO_DMA".equalsIgnoreCase(status)) {
-            return "Pending DMA Approval";
-        }
-        if ("DMA_APPROVED".equalsIgnoreCase(status) || "APPROVED".equalsIgnoreCase(status)) {
-            return "Approved";
-        }
-        if ("REVERTED".equalsIgnoreCase(status)) {
-            return "Reverted";
-        }
-        if ("REJECTED".equalsIgnoreCase(status)) {
-            return "Rejected";
-        }
-        if ("NEW".equalsIgnoreCase(status) || "CREATED".equalsIgnoreCase(status)) {
-            return "Created";
-        }
-        return status;
+        BudgetWorkflowState state = BudgetWorkflowState.from(status);
+        return state != null ? state.getCurrentDisplayStatus() : status;
     }
 
     public String formatWorkflowStatus(final String status) {
