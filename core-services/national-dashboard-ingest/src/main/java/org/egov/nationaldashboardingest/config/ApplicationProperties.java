@@ -1,14 +1,13 @@
 package org.egov.nationaldashboardingest.config;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Centralized configuration properties component for the National Dashboard Ingest service.
@@ -46,6 +45,12 @@ public class ApplicationProperties {
 
     @Value("${bulk.ingest.topic}")
     private String bulkIngestTopic;
+
+    @Value("${save.bulk.ingest.job.topic}")
+    private String saveBulkIngestJobTopic;
+
+    @Value("${update.bulk.ingest.job.topic}")
+    private String updateBulkIngestJobTopic;
 
     @Value("${ingest.error.queue}")
     private String ingestErrorQueue;
@@ -124,6 +129,9 @@ public class ApplicationProperties {
 
     @Value("${aws.s3.folder}")
     private String awsS3Folder;
+
+    @Value("${bulk.ingest.temp.dir}")
+    private String bulkIngestTempDir;
 
 }
 

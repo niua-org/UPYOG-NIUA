@@ -54,6 +54,9 @@ class BulkIngestListenerTest {
     @Mock
     private ExternalApiAuditLogger integrationAuditLogger;
 
+    @Mock
+    private org.egov.nationaldashboardingest.repository.BulkIngestJobRepository bulkIngestJobRepository;
+
     @Spy
     private ResponseInfoFactory responseInfoFactory = new ResponseInfoFactory();
 
@@ -100,8 +103,8 @@ class BulkIngestListenerTest {
         ReflectionTestUtils.setField(bulkIngestListener, "bulkFileProcessorService", bulkFileProcessorService);
         ReflectionTestUtils.setField(bulkIngestListener, "objectMapper", objectMapper);
         ReflectionTestUtils.setField(bulkFileProcessorService, "batchIngestionProcessor", batchIngestionProcessor);
+        ReflectionTestUtils.setField(bulkFileProcessorService, "bulkIngestJobRepository", bulkIngestJobRepository);
         ReflectionTestUtils.setField(batchIngestionProcessor, "integrationAuditLogger", integrationAuditLogger);
-        ReflectionTestUtils.setField(batchIngestionProcessor, "responseInfoFactory", responseInfoFactory);
     }
 
     /**
@@ -110,6 +113,7 @@ class BulkIngestListenerTest {
      */
     @Test
     void testListen_SuccessFlow() {
+        when(bulkIngestJobRepository.findByFileName(initDetail.getFileName())).thenReturn(java.util.Optional.empty());
         when(s3FileDownloader.downloadFileFromS3(initDetail.getFileName())).thenReturn(mockTempFile);
 
         doAnswer(invocation -> {
@@ -123,6 +127,7 @@ class BulkIngestListenerTest {
 
         verify(s3FileDownloader).downloadFileFromS3(initDetail.getFileName());
         verify(integrationAuditLogger, times(1)).logInboundApi(any(), any(), any(), any(), any());
+        verify(bulkIngestJobRepository).updateJobStatus(any(), eq("COMPLETED"), eq(1), eq(0), anyLong());
     }
 
     /**
@@ -131,6 +136,7 @@ class BulkIngestListenerTest {
      */
     @Test
     void testListen_MultipleRowsPerRowAudited() {
+        when(bulkIngestJobRepository.findByFileName(initDetail.getFileName())).thenReturn(java.util.Optional.empty());
         when(s3FileDownloader.downloadFileFromS3(initDetail.getFileName())).thenReturn(mockTempFile);
 
         Data row1 = Data.builder().date("01-01-2026").ulb("pg.citya").module("PGR").build();
@@ -149,5 +155,28 @@ class BulkIngestListenerTest {
 
         // Should call logInboundApi for each of the 2 rows individually
         verify(integrationAuditLogger, times(2)).logInboundApi(any(), any(), any(), any(), any());
+    }
+
+    /**
+     * Verifies that if a file job is already COMPLETED, S3 download and row ingestion are skipped for idempotency.
+     */
+    @Test
+    void testListen_AlreadyCompletedFileSkipped() {
+        org.egov.nationaldashboardingest.web.models.BulkIngestJob existingCompletedJob =
+                org.egov.nationaldashboardingest.web.models.BulkIngestJob.builder()
+                        .id("job-123")
+                        .fileName(initDetail.getFileName())
+                        .status("COMPLETED")
+                        .totalRowsProcessed(10)
+                        .failedRowsCount(0)
+                        .build();
+
+        when(bulkIngestJobRepository.findByFileName(initDetail.getFileName())).thenReturn(java.util.Optional.of(existingCompletedJob));
+
+        bulkIngestListener.listen(record, "key", "bulk-ingest-init");
+
+        // Should skip downloading and processing
+        verifyNoInteractions(s3FileDownloader);
+        verifyNoInteractions(excelStreamingBatchReader);
     }
 }

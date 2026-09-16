@@ -32,6 +32,14 @@ public final class BulkIngestConstants {
     /** Status text string representing failed execution. */
     public static final String STATUS_FAILED = "FAILED";
 
+    // Job Execution Status Constants
+    /** Job execution status indicating background file processing is actively in progress. */
+    public static final String JOB_STATUS_IN_PROGRESS = "IN_PROGRESS";
+    /** Job execution status indicating all rows in the bulk file were processed successfully. */
+    public static final String JOB_STATUS_COMPLETED = "COMPLETED";
+    /** Job execution status indicating an error occurred during file download or row batching. */
+    public static final String JOB_STATUS_FAILED = "FAILED";
+
     // Response Messages
     /** User-facing success response message returned on successful initialization. */
     public static final String MSG_INIT_SUCCESS = "Bulk ingest init request pushed to queue successfully";

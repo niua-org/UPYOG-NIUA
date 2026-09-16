@@ -71,8 +71,9 @@ public class S3FileDownloader {
 
             AmazonS3 s3Client = getS3Client();
 
-            String tempFileName = "legacy_file_" + UUID.randomUUID().toString() + ".xlsx";
-            File tempFile = new File("/tmp", tempFileName);
+            String tempFileName = "data_file_" + UUID.randomUUID().toString() + ".xlsx";
+            String tempDir = applicationProperties.getBulkIngestTempDir();
+            File tempFile = new File(tempDir, tempFileName);
 
             s3Client.getObject(new GetObjectRequest(bucketName, s3Key), tempFile);
 

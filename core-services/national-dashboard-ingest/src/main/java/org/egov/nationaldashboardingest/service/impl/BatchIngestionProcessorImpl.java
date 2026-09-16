@@ -50,9 +50,6 @@ public class BatchIngestionProcessorImpl implements BatchIngestionProcessor {
     @Autowired
     private ExternalApiAuditLogger integrationAuditLogger;
 
-    @Autowired
-    private ResponseInfoFactory responseInfoFactory;
-
     /**
      * Iterates through a streaming batch of parsed Excel row objects, executing per-row ingestion and audit logging.
      * <p>
@@ -103,7 +100,7 @@ public class BatchIngestionProcessorImpl implements BatchIngestionProcessor {
                         singleRequest,
                         () -> {
                             List<Integer> responseHash = ingestService.ingestData(singleRequest);
-                            ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(
+                            ResponseInfo responseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(
                                      singleRequest.getRequestInfo(), true);
                             IngestResponse response = IngestResponse.builder()
                                     .responseInfo(responseInfo)
