@@ -45,8 +45,11 @@ public interface BudgetHeadRepository extends JpaRepository<BudgetHead, Long> {
     @Query(value = "SELECT bh.* FROM egf_budgethead bh " +
             "JOIN function_budget_head fbh ON bh.id = fbh.budget_head_id " +
             "WHERE fbh.function_id = :functionId " +
-            "AND (LOWER(bh.code) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(bh.name) LIKE LOWER(CONCAT('%', :query, '%')))",
+            "AND (LOWER(bh.code) LIKE LOWER(CONCAT(:query, '%')) " +
+            "OR LOWER(bh.accountTypeCode) = LOWER(:query) " +
+            "OR LOWER(bh.name) LIKE LOWER(CONCAT(:query, '%')) " +
+            "OR (LENGTH(:query) > 2 AND LOWER(bh.name) LIKE LOWER(CONCAT('%', :query, '%')))) " +
+            "ORDER BY bh.code ASC",
             nativeQuery = true)
     List<BudgetHead> searchBudgetHeadsByFunctionNative(
             @Param("functionId") Long functionId,
