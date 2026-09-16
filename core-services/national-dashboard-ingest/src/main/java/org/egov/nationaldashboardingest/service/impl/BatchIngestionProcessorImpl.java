@@ -128,7 +128,7 @@ public class BatchIngestionProcessorImpl implements BatchIngestionProcessor {
     }
 
     /**
-     * Constructs a fallback DIGIT {@link RequestInfo} carrying automated SYSTEM credentials and tenant context.
+     * Constructs a fallback UPYOG {@link RequestInfo} carrying automated SYSTEM credentials and tenant context.
      * <p>
      * Used when neither the Excel row nor the caller supplied an explicit {@link RequestInfo}.
      * </p>

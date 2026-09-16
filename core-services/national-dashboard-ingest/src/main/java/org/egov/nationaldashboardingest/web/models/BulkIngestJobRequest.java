@@ -10,7 +10,7 @@ import org.egov.common.contract.request.RequestInfo;
 /**
  * Event payload wrapper model for publishing bulk job persistence events to Kafka persister topics.
  * <p>
- * Pairs {@link BulkIngestJob} execution details with standard DIGIT {@link RequestInfo} headers
+ * Pairs {@link BulkIngestJob} execution details with standard UPYOG {@link RequestInfo} headers
  * for egov-persister mapping.
  * </p>
  */
@@ -21,7 +21,7 @@ import org.egov.common.contract.request.RequestInfo;
 public class BulkIngestJobRequest {
 
     /**
-     * Standard DIGIT platform request metadata carrying user context and trace credentials.
+     * Standard UPYOG platform request metadata carrying user context and trace credentials.
      */
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;

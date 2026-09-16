@@ -4,7 +4,7 @@ import lombok.*;
 import org.egov.common.contract.request.RequestInfo;
 
 /**
- * Wrapper object pairing a parsed {@link Data} row with its associated DIGIT {@link RequestInfo}.
+ * Wrapper object pairing a parsed {@link Data} row with its associated UPYOG {@link RequestInfo}.
  * <p>
  * Enables streaming batch processing to carry authentication credentials and user context
  * extracted from the Excel spreadsheet alongside individual row metric values.
@@ -19,7 +19,7 @@ import org.egov.common.contract.request.RequestInfo;
 public class IngestRowData {
 
     /**
-     * DIGIT {@link RequestInfo} metadata (auth token, user UUID, action, API ID) assigned to this row.
+     * UPYOG {@link RequestInfo} metadata (auth token, user UUID, action, API ID) assigned to this row.
      */
     private RequestInfo requestInfo;
 

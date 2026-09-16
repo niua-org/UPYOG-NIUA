@@ -11,7 +11,7 @@ import org.egov.common.contract.request.RequestInfo;
 import java.util.List;
 
 /**
- * Standard DIGIT request model wrapper for the bulk data ingestion initialization endpoint ({@code POST /bulk/v1/_init}).
+ * Standard UPYOG request model wrapper for the bulk data ingestion initialization endpoint ({@code POST /bulk/v1/_init}).
  * <p>
  * Pairs the functional target file details ({@link BulkIngestInitDetail}) with standard platform request
  * headers ({@link RequestInfo}) carrying authentication, API credentials, and tracing context.
@@ -34,7 +34,7 @@ public class BulkIngestInitRequest {
     private BulkIngestInitDetail details;
 
     /**
-     * Standard DIGIT platform request metadata carrying authentication credentials and user context.
+     * Standard UPYOG platform request metadata carrying authentication credentials and user context.
      */
     @JsonProperty("requestInfo")
     private RequestInfo requestInfo;

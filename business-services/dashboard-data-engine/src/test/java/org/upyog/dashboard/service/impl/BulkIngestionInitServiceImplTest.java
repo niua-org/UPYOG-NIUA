@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Unit test suite for {@link BulkIngestionInitServiceImpl}.
  * <p>
- * Validates proper assembly of DIGIT {@link org.upyog.dashboard.model.RequestInfo},
+ * Validates proper assembly of UPYOG {@link org.upyog.dashboard.model.RequestInfo},
  * payload serialization into JSON, and dispatching to the configured Feign client.
  * </p>
  */

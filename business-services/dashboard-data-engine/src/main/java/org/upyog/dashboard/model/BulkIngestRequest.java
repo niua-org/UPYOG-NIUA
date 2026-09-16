@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 /**
  * Request payload envelope model for calling the downstream bulk ingestion initialization endpoint ({@code /bulk/v1/_init}).
  * <p>
- * Complies with DIGIT platform standards by wrapping the functional body ({@link BulkIngestDetails})
+ * Complies with UPYOG platform standards by wrapping the functional body ({@link BulkIngestDetails})
  * alongside authentication and audit headers ({@link RequestInfo}).
  * </p>
  */
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 public class BulkIngestRequest {
 
     /**
-     * Standard DIGIT {@link RequestInfo} header carrying API credentials, authentication token,
+     * Standard UPYOG {@link RequestInfo} header carrying API credentials, authentication token,
      * action metadata, and caller user context.
      */
     @JsonProperty("requestInfo")

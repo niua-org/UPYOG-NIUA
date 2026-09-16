@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * Orchestrates the downstream notification workflow after files are staged in AWS S3:
  * <ol>
  *   <li>Retrieves active OAuth authentication credentials and system user metadata from {@link OAuthTokenService}.</li>
- *   <li>Assembles standard DIGIT {@link RequestInfo} with API ID, auth token, and epoch message ID.</li>
+ *   <li>Assembles standard UPYOG {@link RequestInfo} with API ID, auth token, and epoch message ID.</li>
  *   <li>Constructs {@link BulkIngestDetails} linking the S3 file key with the state tenant code.</li>
  *   <li>Wraps both in a {@link BulkIngestRequest} envelope and serializes the JSON body via {@link ObjectMapper}.</li>
  *   <li>Dispatches the HTTP POST request to the national dashboard endpoint using {@link DashboardFeignClient#ingestMetrics}.</li>
@@ -45,7 +45,7 @@ public class BulkIngestionInitServiceImpl implements BulkIngestionInitService {
     /**
      * Dispatches the bulk ingestion initialization request to the downstream national dashboard ingest engine.
      * <p>
-     * Fetches current OAuth credentials, builds the DIGIT request body containing the S3 key,
+     * Fetches current OAuth credentials, builds the UPYOG request body containing the S3 key,
      * serializes the request to JSON, and sends an HTTP POST request to {@code dashboardProperties.getBulkInitUrl()}.
      * Handles exceptions gracefully and logs diagnostics.
      * </p>

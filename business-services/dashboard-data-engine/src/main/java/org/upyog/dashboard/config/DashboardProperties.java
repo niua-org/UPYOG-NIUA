@@ -10,7 +10,7 @@ import lombok.Getter;
  * <p>
  * Binds environment configurations defined across application properties files:
  * <ul>
- *   <li>DIGIT OAuth user authentication endpoints, system credentials, and retry policies.</li>
+ *   <li>UPYOG OAuth user authentication endpoints, system credentials, and retry policies.</li>
  *   <li>National dashboard ingestion engine URLs and bulk initialization endpoints ({@code bulkInitUrl}).</li>
  *   <li>Module-specific classification mappings for Property Tax (PT) tax heads, usage categories, and digital payments.</li>
  *   <li>AWS S3 connection settings (bucket, region, access credentials, root folder prefix).</li>

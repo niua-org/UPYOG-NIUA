@@ -5,10 +5,10 @@ import lombok.*;
 import org.egov.common.contract.response.ResponseInfo;
 
 /**
- * Standard DIGIT response envelope returned by the bulk data ingestion initialization API ({@code POST /bulk/v1/_init}).
+ * Standard UPYOG response envelope returned by the bulk data ingestion initialization API ({@code POST /bulk/v1/_init}).
  * <p>
  * Returns execution outcome, diagnostic message, numeric status code, echoing back the submitted
- * {@link BulkIngestInitDetail} alongside DIGIT {@link ResponseInfo}.
+ * {@link BulkIngestInitDetail} alongside UPYOG {@link ResponseInfo}.
  * </p>
  */
 @Getter
@@ -20,7 +20,7 @@ import org.egov.common.contract.response.ResponseInfo;
 public class BulkIngestInitResponse {
 
     /**
-     * Standard DIGIT platform response header conveying correlation ID, API status, and timestamp.
+     * Standard UPYOG platform response header conveying correlation ID, API status, and timestamp.
      */
     @JsonProperty("ResponseInfo")
     private ResponseInfo responseInfo;

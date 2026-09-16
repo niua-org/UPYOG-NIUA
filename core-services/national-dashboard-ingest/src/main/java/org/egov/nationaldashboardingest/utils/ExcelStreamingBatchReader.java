@@ -1,15 +1,5 @@
 package org.egov.nationaldashboardingest.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.usermodel.*;
-import org.egov.nationaldashboardingest.web.models.Data;
-import org.egov.nationaldashboardingest.web.models.IngestRequest;
-import org.egov.nationaldashboardingest.web.models.IngestRowData;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -19,6 +9,25 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.egov.nationaldashboardingest.config.ApplicationProperties;
+import org.egov.nationaldashboardingest.web.models.Data;
+import org.egov.nationaldashboardingest.web.models.IngestRequest;
+import org.egov.nationaldashboardingest.web.models.IngestRowData;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Streaming reader component for memory-safe processing of large Excel spreadsheet datasets.
@@ -43,7 +52,8 @@ public class ExcelStreamingBatchReader {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static final int BATCH_SIZE = 100;
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     /**
      * Reads an Excel spreadsheet file row-by-row in memory-efficient batches of 100 rows,
@@ -84,7 +94,7 @@ public class ExcelStreamingBatchReader {
                         currentBatch.add(rowData);
                         totalRowsProcessed++;
 
-                        if (currentBatch.size() == BATCH_SIZE) {
+                        if (currentBatch.size() == applicationProperties.getBatchSize()) {
                             batchProcessor.accept(new ArrayList<>(currentBatch));
                             currentBatch.clear();
                         }

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <ul>
  *   <li>{@code POST /bulk/v1/_init}: Ingests metadata referencing an uploaded dataset file in S3,
  *       validates request headers and payloads, publishes an event to Kafka for decoupled processing,
- *       and returns standardized DIGIT {@link BulkIngestInitResponse}.</li>
+ *       and returns standardized UPYOG {@link BulkIngestInitResponse}.</li>
  * </ul>
  * </p>
  */
@@ -42,7 +42,7 @@ public class BulkDataIngestController {
      *   <li>Validates inbound {@link BulkIngestInitRequest} payload via Jakarta Bean Validation ({@code @Valid}).</li>
      *   <li>Delegates validation and Kafka dispatch to {@link BulkIngestService#init}.</li>
      *   <li>Maps returned integer code to {@link BulkIngestStatus} enum.</li>
-     *   <li>Constructs standard DIGIT {@link ResponseInfo} via {@link ResponseInfoFactory}.</li>
+     *   <li>Constructs standard UPYOG {@link ResponseInfo} via {@link ResponseInfoFactory}.</li>
      *   <li>Returns {@link ResponseEntity} containing {@link BulkIngestInitResponse} and appropriate HTTP status (200 OK or 500 ERROR).</li>
      * </ol>
      * </p>

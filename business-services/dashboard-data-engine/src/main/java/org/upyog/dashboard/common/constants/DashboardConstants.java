@@ -68,9 +68,9 @@ public class DashboardConstants {
     // Common Strings
     /** Standard system user identifier for automated cron jobs and background operations. */
     public static final String SYSTEM_USER = "SYSTEM";
-    /** Default API identifier used in DIGIT RequestInfo headers. */
+    /** Default API identifier used in UPYOG RequestInfo headers. */
     public static final String API_ID_RAINMAKER = "Rainmaker";
-    /** Default locale and language suffix for DIGIT RequestInfo message IDs. */
+    /** Default locale and language suffix for UPYOG RequestInfo message IDs. */
     public static final String LOCALE_EN_IN_SUFFIX = "|en_IN";
 
     // Upload Modes

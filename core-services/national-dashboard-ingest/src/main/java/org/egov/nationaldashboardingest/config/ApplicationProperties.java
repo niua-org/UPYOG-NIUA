@@ -132,6 +132,10 @@ public class ApplicationProperties {
 
     @Value("${bulk.ingest.temp.dir}")
     private String bulkIngestTempDir;
+    
+    
+    @Value("${bulk.ingest.batch.size}")
+    private Integer batchSize;
 
 }
 

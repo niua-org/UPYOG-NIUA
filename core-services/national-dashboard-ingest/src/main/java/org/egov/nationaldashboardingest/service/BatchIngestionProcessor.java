@@ -12,7 +12,7 @@ import java.util.Map;
  * Key responsibilities:
  * <ul>
  *   <li>Iterates through parsed {@link IngestRowData} objects sequentially within the batch.</li>
- *   <li>Derives effective DIGIT {@link RequestInfo} per row (preserving row-level user/auth tokens or falling back to defaults).</li>
+ *   <li>Derives effective UPYOG {@link RequestInfo} per row (preserving row-level user/auth tokens or falling back to defaults).</li>
  *   <li>Generates unique per-row correlation IDs to ensure isolated audit entries in {@code ug_external_api_*} tables.</li>
  *   <li>Dispatches individual row ingestion requests to {@link IngestService} and catches row-level exceptions without halting the batch.</li>
  *   <li>Captures structured error metadata for any failed rows into {@code failedDatesList}.</li>
