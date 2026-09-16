@@ -273,6 +273,26 @@ public class FinancialUtils {
         return isEditable;
     }
 
+    /**
+     * Constructs and formats workflow history trail for UI representation.
+     * 
+     * <p><b>PR Enhancements & Business Logic:</b></p>
+     * <ul>
+     *   <li><b>Dynamic Status Resolution:</b> Distinguishes between completed/past workflow steps ({@code StateHistory})
+     *       and current active step ({@code State}). Past approved actions display as "Approved", whereas active pending
+     *       steps display descriptive statuses like "Pending EO Approval" or "Pending DMA Approval".</li>
+     *   <li><b>Sender Name Resolution:</b> Prefers {@code getSenderName()} (formatted as {@code username::Full Name})
+     *       over raw numeric user IDs.</li>
+     *   <li><b>Revert Assignment:</b> On {@code REVERTED} states, dynamically resolves the current assignee back to the
+     *       creator/initiator (FMO) so that the audit trail reflects the return of ownership for correction.</li>
+     *   <li><b>Reject State:</b> On {@code REJECTED} states, marks the current owner as {@code "-"} since the workflow
+     *       is permanently terminated and unassigned.</li>
+     * </ul>
+     *
+     * @param state the current active workflow state
+     * @param history the list of past state transitions
+     * @return structured list of history rows for rendering in workflow history tables
+     */
     public List<HashMap<String, Object>> getHistory(final State state, final List<StateHistory> history) {
         User user = null;
         EmployeeInfo ownerobj = null;
@@ -285,12 +305,15 @@ public class FinancialUtils {
                 final HashMap<String, Object> workflowHistory = new HashMap<>(0);
                 workflowHistory.put("date", stateHistory.getDateInfo());
                 workflowHistory.put("comments", stateHistory.getComments());
-                workflowHistory.put("updatedBy", stateHistory.getLastModifiedBy() + "::"
-                        + stateHistory.getLastModifiedBy());
-                workflowHistory.put("status", stateHistory.getValue());
+                String histUpdatedBy = (stateHistory.getSenderName() != null && !stateHistory.getSenderName().trim().isEmpty())
+                        ? stateHistory.getSenderName()
+                        : (stateHistory.getLastModifiedBy() + "::" + stateHistory.getLastModifiedBy());
+                workflowHistory.put("updatedBy", histUpdatedBy);
+                String histStatus = formatCompletedHistoryStatus(stateHistory.getValue());
+                workflowHistory.put("status", histStatus);
                 final Long owner = stateHistory.getOwnerPosition();
                 final State _sowner = stateHistory.getState();
-               ownerobj=    this.microServiceUtil.getEmployeeByPositionId(owner);
+                ownerobj = this.microServiceUtil.getEmployeeByPositionId(owner);
                 // user = stateHistory.getOwnerUser();
                 if (null != ownerobj) {
 //                    workflowHistory.put("user", user.getUsername() + "::" + user.getName());
@@ -307,12 +330,20 @@ public class FinancialUtils {
                             .put("user", null != user.getUsername() ? user.getUsername() + "::" + user.getName() : "");
                     workflowHistory.put("department", null != _sowner.getDeptName() ? _sowner.getDeptName() : "");
                 }
+
+                Long creatorId = stateHistory.getCreatedBy() != null ? stateHistory.getCreatedBy() : state.getCreatedBy();
+                populateRevertOrRejectOwner(workflowHistory, stateHistory.getValue(), histStatus, creatorId);
+
                 historyTable.add(workflowHistory);
             }
             map.put("date", state.getDateInfo());
             map.put("comments", state.getComments() != null ? state.getComments() : "");
-            map.put("updatedBy", state.getLastModifiedBy() + "::" + state.getLastModifiedBy());
-            map.put("status", state.getValue());
+            String currUpdatedBy = (state.getSenderName() != null && !state.getSenderName().trim().isEmpty())
+                    ? state.getSenderName()
+                    : (state.getLastModifiedBy() + "::" + state.getLastModifiedBy());
+            map.put("updatedBy", currUpdatedBy);
+            String currStatus = formatCurrentStateStatus(state.getValue());
+            map.put("status", currStatus);
             final Long ownerPosition = state.getOwnerPosition();
             // user = state.getOwnerUser();
             ownerobj=    this.microServiceUtil.getEmployeeByPositionId(ownerPosition);
@@ -330,6 +361,9 @@ public class FinancialUtils {
                 map.put("user", null != user.getUsername() ? user.getUsername() + "::" + user.getName() : "");
                 map.put("department", null != state.getDeptName() ? state.getDeptName() : "");
             }
+
+            populateRevertOrRejectOwner(map, state.getValue(), currStatus, state.getCreatedBy());
+
             historyTable.add(map);
             Collections.sort(historyTable, new Comparator<Map<String, Object>> () {
 
@@ -344,6 +378,91 @@ public class FinancialUtils {
             });
         }
         return historyTable;
+    }
+
+    /**
+     * Helper method to assign appropriate user and department when a workflow item is Reverted or Rejected.
+     * On Revert: sets owner to creator (FMO) and department accordingly.
+     * On Reject: sets owner to "-" as workflow terminates.
+     */
+    private void populateRevertOrRejectOwner(final Map<String, Object> targetMap, final String rawStatus,
+            final String formattedStatus, final Long creatorId) {
+        if ("REVERTED".equalsIgnoreCase(rawStatus) || "Reverted".equalsIgnoreCase(formattedStatus)) {
+            if (creatorId != null) {
+                List<EmployeeInfo> creatorList = this.microServiceUtil.getEmployee(creatorId, null, null, null);
+                if (creatorList != null && !creatorList.isEmpty()) {
+                    EmployeeInfo creatorEmp = creatorList.get(0);
+                    targetMap.put("user", creatorEmp.getUser().getUserName() + "::" + creatorEmp.getUser().getName());
+                    if (creatorEmp.getAssignments() != null && !creatorEmp.getAssignments().isEmpty()) {
+                        Department dept = this.microServiceUtil.getDepartmentByCode(creatorEmp.getAssignments().get(0).getDepartment());
+                        if (dept != null) {
+                            targetMap.put("department", dept.getName());
+                        }
+                    }
+                }
+            }
+        } else if ("REJECTED".equalsIgnoreCase(rawStatus) || "Rejected".equalsIgnoreCase(formattedStatus)) {
+            targetMap.put("user", "-");
+        }
+    }
+
+    /**
+     * Formats status values for completed (historical) workflow transitions.
+     * Past approved steps consistently render as "Approved". Mainly for status in workflow history
+     */
+    public String formatCompletedHistoryStatus(final String status) {
+        if (status == null) {
+            return "";
+        }
+        if ("PENDING_EO_APPROVAL".equalsIgnoreCase(status)
+                || "FORWARDED_TO_DMA".equalsIgnoreCase(status)
+                || "DMA_APPROVED".equalsIgnoreCase(status)
+                || "APPROVED".equalsIgnoreCase(status)) {
+            return "Approved";
+        }
+        if ("REVERTED".equalsIgnoreCase(status)) {
+            return "Reverted";
+        }
+        if ("REJECTED".equalsIgnoreCase(status)) {
+            return "Rejected";
+        }
+        if ("NEW".equalsIgnoreCase(status) || "CREATED".equalsIgnoreCase(status)) {
+            return "Created";
+        }
+        return status;
+    }
+
+    /**
+     * Formats status values for active / in-progress workflow states.
+     * Reflects the current pending action for the assigned approver desk.
+     */
+    public String formatCurrentStateStatus(final String status) {
+        if (status == null) {
+            return "";
+        }
+        if ("PENDING_EO_APPROVAL".equalsIgnoreCase(status)) {
+            return "Pending EO Approval";
+        }
+        if ("FORWARDED_TO_DMA".equalsIgnoreCase(status)) {
+            return "Pending DMA Approval";
+        }
+        if ("DMA_APPROVED".equalsIgnoreCase(status) || "APPROVED".equalsIgnoreCase(status)) {
+            return "Approved";
+        }
+        if ("REVERTED".equalsIgnoreCase(status)) {
+            return "Reverted";
+        }
+        if ("REJECTED".equalsIgnoreCase(status)) {
+            return "Rejected";
+        }
+        if ("NEW".equalsIgnoreCase(status) || "CREATED".equalsIgnoreCase(status)) {
+            return "Created";
+        }
+        return status;
+    }
+
+    public String formatWorkflowStatus(final String status) {
+        return formatCurrentStateStatus(status);
     }
 
     public AccountCodePurpose getAccountCodePurposeById(final Long id) {
