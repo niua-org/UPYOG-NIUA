@@ -165,18 +165,18 @@ const OwnerForm = (_props) => {
                   required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                   validate: { pattern: (val) => (/^[a-zA-Z0-9/-\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "vehicleNumber"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "vehicleNumber" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -196,18 +196,18 @@ const OwnerForm = (_props) => {
                   validate: { pattern: (val) => (/^[a-zA-Z0-9/-\s]*$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")) },
 
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "vehicleDepoNumber"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "vehicleDepoNumber" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -228,18 +228,18 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "driverName"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "driverName" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -260,18 +260,18 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^\d{1,5}$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "grossWeight"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "grossWeight" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -292,18 +292,18 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^\d{1,5}$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG")
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "netWeight"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "netWeight" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -324,18 +324,18 @@ const OwnerForm = (_props) => {
                     pattern: (val) => /^[a-zA-Z\s\-/]+$/.test(val) || t("ERR_DEFAULT_INPUT_FIELD_MSG"),
                   },
                 }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "dumpingStation"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "dumpingStation" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
@@ -354,19 +354,19 @@ const OwnerForm = (_props) => {
                     required: t("CORE_COMMON_REQUIRED_ERRMSG"),
                     validDate: (val) => (/^\d{4}-\d{2}-\d{2}$/.test(val) ? true : t("ERR_DEFAULT_INPUT_FIELD_MSG")),
                   }}
-                render={(props) => (
+                render={({ field }) => (
                   <TextInput
                     type={"date"}
-                    value={props.value}
+                    value={field.value}
                     disable={false}
                     autoFocus={focusIndex.index === pickup?.key && focusIndex.type === "disposeDate"}
                     onChange={(e) => {
-                      props.onChange(e.target.value);
+                      field.onChange(e.target.value);
                       setFocusIndex({ index: pickup.key, type: "disposeDate" });
                     }}
                     onBlur={(e) => {
                       setFocusIndex({ index: -1 });
-                      props.onBlur(e);
+                      field.onBlur(e);
                     }}
                   />
                 )}
