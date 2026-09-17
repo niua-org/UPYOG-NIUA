@@ -276,7 +276,7 @@ public class ExternalApiAuditLogger {
     /**
      * Classifies a thrown exception into a coarse {@code errorType}
      * (client/server/network/timeout/validation) with a corresponding {@code errorCode} and
-     * {@code errorMessage}, based on common Spring {@code RestTemplate} and DIGIT/egov
+     * {@code errorMessage}, based on common Spring {@code RestTemplate} and UPYOG/egov
      * exception types. Falls back to a generic {@code INTEGRATION_CALL_FAILED} / server-type
      * classification for anything unrecognized.
      */
@@ -302,7 +302,7 @@ public class ExternalApiAuditLogger {
                     : ExternalApiAuditConstants.ERROR_TYPE_NETWORK;
             errorCode = isTimeoutException(exception) ? "REQUEST_TIMEOUT" : "NETWORK_ERROR";
         } else if (exception instanceof ServiceCallException) {
-            // DIGIT/egov convention for a failed downstream service call.
+            // UPYOG/egov convention for a failed downstream service call.
             errorType = ExternalApiAuditConstants.ERROR_TYPE_CLIENT;
             errorCode = "SERVICE_CALL_ERROR";
         } else if (exception instanceof CustomException customException) {
