@@ -13,7 +13,8 @@ const getResponse = (data, vendorDetils) => {
           value: vendorDetils?.vendor?.[0]?.name || "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR",
           type: "custom",
         },
-        { title: "ES_FSM_REGISTRY_DETAILS_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description || data?.additionalDetails?.serviceType },
+        { title: "ES_FSM_REGISTRY_DETAILS_SERVICE_TYPE", value: data?.additionalDetails?.serviceType },
+        { title: "ES_FSM_REGISTRY_DETAILS_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description },
       ],
     },
   ];
