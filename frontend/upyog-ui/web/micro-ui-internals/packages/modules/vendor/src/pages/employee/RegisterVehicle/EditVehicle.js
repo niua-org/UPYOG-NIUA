@@ -67,10 +67,10 @@ const EditVehicle = ({ parentUrl, heading }) => {
         emailId: vehicleDataObj?.vehicleData?.owner?.emailId === "abc@egov.com" ? "" : vehicleDataObj?.vehicleData?.owner?.emailId,
         additionalDetails: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType
           ? {
-              code: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType,
-              i18nKey: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType,
-              value: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType,
-            }
+            code: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType,
+            i18nKey: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType,
+            value: vehicleDataObj?.vehicleData?.additionalDetails?.serviceType,
+          }
           : vehicleDataObj?.vehicleData?.additionalDetails?.description,
       };
       setDefaultValues(values);
@@ -125,6 +125,7 @@ const EditVehicle = ({ parentUrl, heading }) => {
     const formData = {
       vehicle: {
         ...vehicleDetails,
+        tenantId: vehicleDetails?.tenantId || tenantId,
         model: vehicleModal,
         type: vehicleType,
         tankCapacity: tankCapacity,
@@ -138,6 +139,9 @@ const EditVehicle = ({ parentUrl, heading }) => {
         },
         owner: {
           ...vehicleDetails.owner,
+          tenantId: vehicleDetails?.owner?.tenantId || stateId,
+          fatherOrHusbandName: vehicleOwnerName,
+          relationship: vehicleDetails?.owner?.relationship || "OTHER",
           gender: gender || vehicleDetails.owner?.gender || "OTHER",
           dob: dob,
           emailId: emailId || "abc@egov.com",
@@ -154,11 +158,13 @@ const EditVehicle = ({ parentUrl, heading }) => {
       onSuccess: (data, variables) => {
         setShowToast({ key: "success", action: "UPDATE_VEHICLE" });
         setTimeout(closeToast, 5000);
+        queryClient.invalidateQueries("FSM_VEHICLE_DETAILS");
+        queryClient.invalidateQueries("FSM_VEICLES_SEARCH");
         queryClient.invalidateQueries("DSO_SEARCH");
         setTimeout(() => {
           closeToast();
           navigate(`/upyog-ui/employee/vendor/registry/vehicle-details/${dsoId}`);
-        }, 3000);
+        }, 2000);
       },
     });
   };

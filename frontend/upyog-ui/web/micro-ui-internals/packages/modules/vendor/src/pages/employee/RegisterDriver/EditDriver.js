@@ -49,10 +49,10 @@ const EditDriver = ({ parentUrl, heading }) => {
         emailId: driverDetailsObj?.driverData?.owner?.emailId === "abc@egov.com" ? "" : driverDetailsObj?.driverData?.owner?.emailId,
         additionalDetails: driverDetailsObj?.driverData?.additionalDetails?.serviceType
           ? {
-              code: driverDetailsObj?.driverData?.additionalDetails?.serviceType,
-              i18nKey: driverDetailsObj?.driverData?.additionalDetails?.serviceType,
-              value: driverDetailsObj?.driverData?.additionalDetails?.serviceType,
-            }
+            code: driverDetailsObj?.driverData?.additionalDetails?.serviceType,
+            i18nKey: driverDetailsObj?.driverData?.additionalDetails?.serviceType,
+            value: driverDetailsObj?.driverData?.additionalDetails?.serviceType,
+          }
           : driverDetailsObj?.driverData?.additionalDetails?.description,
       };
       setDefaultValues(values);
@@ -85,6 +85,7 @@ const EditDriver = ({ parentUrl, heading }) => {
     const formData = {
       driver: {
         ...driverDetails,
+        tenantId: driverDetails?.tenantId || tenantId,
         licenseNumber: license,
         additionalDetails: {
           ...driverDetails.additionalDetails,
@@ -92,6 +93,9 @@ const EditDriver = ({ parentUrl, heading }) => {
         },
         owner: {
           ...driverDetails.owner,
+          tenantId: driverDetails?.owner?.tenantId || stateId,
+          name: data?.driverName || driverDetails?.owner?.name || driverDetails?.name,
+          fatherOrHusbandName: data?.driverName || driverDetails?.owner?.fatherOrHusbandName || driverDetails?.name,
           relationship: driverDetails.owner?.relationship || "OTHER",
           gender: gender || driverDetails.owner?.gender || "OTHER",
           dob: dob,
