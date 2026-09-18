@@ -152,13 +152,29 @@ public class BudgetHeadService {
 
 
     public List<BudgetHead> findBudgetHeadByNameOrCode(final String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return budgetHeadRepository.findAll();
+        }
+        String trimmedQuery = query.trim().toUpperCase();
+        if ("RR".equals(trimmedQuery) || "RE".equals(trimmedQuery) || "CR".equals(trimmedQuery) || "CE".equals(trimmedQuery)
+                || trimmedQuery.startsWith("RR-") || trimmedQuery.startsWith("RE-") || trimmedQuery.startsWith("CR-") || trimmedQuery.startsWith("CE-")) {
+            return budgetHeadRepository.findByAccountTypeCodeIgnoreCaseOrCodeStartingWithIgnoreCase(trimmedQuery, trimmedQuery);
+        }
         return budgetHeadRepository.findByCodeContainingIgnoreCaseOrNameContainingIgnoreCase(query, query);
     }
 
 
 
     public List<BudgetHead> searchBudgetHeadsByFunctionNative(final Long functionId, final String query) {
-        return budgetHeadRepository.searchBudgetHeadsByFunctionNative(functionId, query);
+        if (query == null || query.trim().isEmpty()) {
+            return budgetHeadRepository.getBudgetHeadByFunction(functionId);
+        }
+        String trimmedQuery = query.trim().toUpperCase();
+        if ("RR".equals(trimmedQuery) || "RE".equals(trimmedQuery) || "CR".equals(trimmedQuery) || "CE".equals(trimmedQuery)
+                || trimmedQuery.startsWith("RR-") || trimmedQuery.startsWith("RE-") || trimmedQuery.startsWith("CR-") || trimmedQuery.startsWith("CE-")) {
+            return budgetHeadRepository.searchBudgetHeadsByAccountTypeOrCodePrefix(functionId, trimmedQuery);
+        }
+        return budgetHeadRepository.searchBudgetHeadsByFunctionNative(functionId, query.trim());
     }
 
     public List<BudgetHead> getBudgetHeadsByFunction(CFunction function) {
