@@ -1,0 +1,22 @@
+// Mobile-first breakpoints
+@mixin tablet {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin large-desktop {
+  @media (min-width: 1440px) {
+    @content;
+  }
+}
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease-in-out) {
+  transition: $property $duration $timing;
+}

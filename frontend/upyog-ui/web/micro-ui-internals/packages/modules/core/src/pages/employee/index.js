@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Route, Routes, useLocation, } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppModules } from "../../components/AppModules";
 import ErrorBoundary from "../../components/ErrorBoundaries";
 import TopBarSideBar from "../../components/TopBarSideBar";
@@ -12,9 +12,25 @@ import UserProfile from "../citizen/Home/UserProfile";
 import ErrorComponent from "../../components/ErrorComponent";
 import { PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
 import EmployeeDashboard from "../../components/EmployeeDashboard";
+import OnboardingLayout from "../onboarding/OnboardingLayout";
+import {
+  ChangePasswordV2,
+  ForgotPasswordV2,
+  LoginV2,
+} from "./V2AuthFlow";
+import { EMPLOYEE_V2_ONBOARDING_STORAGE_KEY, getEmployeeAuthPaths } from "./AuthRoutes";
 
 const userScreensExempted = ["user/profile", "user/error"];
 
+// Preserve query parameters and router state when a bookmarked V1 auth URL is
+// redirected into the active V2 Employee experience.
+const EmployeeAuthRedirect = ({ to }) => {
+  const location = useLocation();
+  return <Navigate to={`${to}${location.search}`} state={location.state} replace />;
+};
+
+// Default to the legacy employee auth screens. The application bootstrap opts
+// in explicitly, allowing other consumers of this module to remain on V1.
 const EmployeeApp = ({
   stateInfo,
   userDetails,
@@ -30,6 +46,7 @@ const EmployeeApp = ({
   sourceUrl,
   pathname,
   initData,
+  isConfigBased = false,
 }) => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation();
@@ -37,15 +54,47 @@ const EmployeeApp = ({
   const location = useLocation();
   const showLanguageChange = location?.pathname?.includes("language-selection");
   const isUserProfile = userScreensExempted.some((url) => location?.pathname?.includes(url));
+  // Employee authentication routes are version-aware so all unauthenticated
+  // navigation stays consistently within either V1 or V2.
+  const employeeAuthPaths = getEmployeeAuthPaths(isConfigBased);
+
   useEffect(() => {
     Digit.UserService.setType("employee");
   }, []);
   sourceUrl = "https://s3.ap-south-1.amazonaws.com/egov-qa-assets";
-  const pdfUrl = "https://pg-egov-assets.s3.ap-south-1.amazonaws.com/Upyog+Code+and+Copyright+License_v1.pdf"
+  // Commented `pdfUrl` as we are not using it anywhere
+  // const pdfUrl = "https://pg-egov-assets.s3.ap-south-1.amazonaws.com/Upyog+Code+and+Copyright+License_v1.pdf";
 
   return (
     <div className="employee">
       <Routes>
+        {/* Employee V2 authentication routes share the configuration-driven
+            layout and never fall back to legacy screens when a step is absent. */}
+        {isConfigBased && (
+          <Route
+            path="user/v2"
+            element={
+              // Employee onboarding uses its own MDMS master and persistence
+              // namespace while reusing the shared layout/provider implementation.
+              <OnboardingLayout
+                stateCode={stateCode}
+                moduleName="EMPLOYEE_ONBOARDING"
+                masterName="OnboardingConfig"
+                homePath={employeeAuthPaths.login}
+                storageKey={EMPLOYEE_V2_ONBOARDING_STORAGE_KEY}
+              />
+            }
+          >
+            {/* Relative child routes make the active Outlet step explicit while
+                the provider/layout remains mounted across the reset flow. */}
+            {/* Login is independent; forgot-password stores the continuation
+                context consumed and guarded by change-password. */}
+            <Route path="login" element={<LoginV2 />} />
+            <Route path="forgot-password" element={<ForgotPasswordV2 />} />
+            <Route path="change-password" element={<ChangePasswordV2 />} />
+            <Route path="*" element={<Navigate to={employeeAuthPaths.login} replace />} />
+          </Route>
+        )}
         <Route
           path="user/*"
           element={
@@ -100,9 +149,25 @@ const EmployeeApp = ({
                     />
                   </picture>
                   <Routes>
-                    <Route path="login" element={<EmployeeLogin />} />
-                    <Route path="forgot-password" element={<ForgotPassword />} />
-                    <Route path="change-password" element={<ChangePassword />} />
+                    {/* V1 components remain mounted only when V1 is active.
+                        Under V2, legacy auth URLs redirect to their V2 peers. */}
+                    {isConfigBased ? (
+                      <>
+                        {/* Preserve old bookmarks without mounting legacy forms;
+                            query parameters and route state survive the handoff. */}
+                        <Route path="login" element={<EmployeeAuthRedirect to={employeeAuthPaths.login} />} />
+                        <Route path="forgot-password" element={<EmployeeAuthRedirect to={employeeAuthPaths.forgotPassword} />} />
+                        <Route path="change-password" element={<EmployeeAuthRedirect to={employeeAuthPaths.changePassword} />} />
+                        <Route path="language-selection" element={<EmployeeAuthRedirect to={employeeAuthPaths.login} />} />
+                      </>
+                    ) : (
+                      <>
+                        <Route path="login" element={<EmployeeLogin />} />
+                        <Route path="forgot-password" element={<ForgotPassword />} />
+                        <Route path="change-password" element={<ChangePassword />} />
+                        <Route path="language-selection" element={<LanguageSelection />} />
+                      </>
+                    )}
                     <Route
                       path="profile"
                       element={
@@ -122,8 +187,14 @@ const EmployeeApp = ({
                         />
                       }
                     />
-                    <Route path="language-selection" element={<LanguageSelection />} />
-                    <Route path="*" element={<Navigate to={`/user/language-selection`} replace />} />
+                    <Route
+                      path="*"
+                      element={
+                        // Unknown legacy auth URLs stay in the current flow:
+                        // V2 goes to V2 login, while V1 keeps language selection.
+                        <Navigate to={isConfigBased ? employeeAuthPaths.login : "/upyog-ui/employee/user/language-selection"} replace />
+                      }
+                    />
                   </Routes>
                 </div>
               </div>
@@ -149,22 +220,38 @@ const EmployeeApp = ({
                 <div className="employee-app-wrapper">
                   <ErrorBoundary initData={initData}>
                     <Routes>
-                      <Route path="dashboard" element={
-                        <PrivateRoute>
-                          <EmployeeDashboard />
-                        </PrivateRoute>
-                      } />
-                      <Route path="*" element={<AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} />} />
-
+                      <Route
+                        path="dashboard"
+                        element={
+                          <PrivateRoute>
+                            <EmployeeDashboard />
+                          </PrivateRoute>
+                        }
+                      />
+                      <Route
+                        path="*"
+                        element={
+                          // Protected modules need the version flag so session
+                          // expiry returns users to the matching employee login.
+                          <AppModules stateCode={stateCode} userType="employee" modules={modules} appTenants={appTenants} isConfigBased={isConfigBased} />
+                        }
+                      />
                     </Routes>
                   </ErrorBoundary>
                 </div>
                 <div style={{ width: "100%", position: "fixed", bottom: 0, backgroundColor: "white", textAlign: "center" }}>
                   <div style={{ display: "flex", justifyContent: "center", color: "black" }}>
-                    <a style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px", fontWeight: "400" }} href="#" target="_blank">
+                    <a
+                      style={{ cursor: "pointer", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px", fontWeight: "400" }}
+                      href="#"
+                      target="_blank"
+                    >
                       UPYOG License
                     </a>
-                    <span className="upyog-copyright-footer" style={{ margin: "0 10px", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px" }}>
+                    <span
+                      className="upyog-copyright-footer"
+                      style={{ margin: "0 10px", fontSize: window.Digit.Utils.browser.isMobile() ? "12px" : "14px" }}
+                    >
                       |
                     </span>
                     <span

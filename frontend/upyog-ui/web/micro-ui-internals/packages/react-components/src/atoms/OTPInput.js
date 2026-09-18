@@ -79,8 +79,9 @@ const OTPInput = (props) => {
           setActiveInput(i);
           e.target.select();
         }}
+        placeholder={props?.placeholder || ""}
         value={otp[i]}
-      />
+      />,
     );
   }
 

@@ -17,6 +17,7 @@ const TopBarSideBar = ({
   showLanguageChange,
   linkData,
   islinkDataLoading,
+  citizenLoginPath,
 }) => {
   const [isSidebarOpen, toggleSidebar] = useState(false);
   const [isSideBarScroll, setSideBarScrollTop] = useState(false);
@@ -75,6 +76,7 @@ const TopBarSideBar = ({
           userDetails={userDetails}
           linkData={linkData}
           islinkDataLoading={islinkDataLoading}
+          citizenLoginPath={citizenLoginPath}
         />
       )}
     </React.Fragment>

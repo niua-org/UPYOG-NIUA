@@ -1,4 +1,5 @@
 import { queryTemplate } from "../common/queryTemplate";
+import { getMDMSServiceRef } from "./useSelectedMDMS";
 
 /**
  * Custom React Hook: useEnabledMDMS
@@ -22,8 +23,18 @@ import { queryTemplate } from "../common/queryTemplate";
  * - The optional `config` object allows customization of `react-query` behavior.
  */
 
+export const fetchEnabledMDMS = (tenantId, moduleName, masterDetails = [], { useCache = true } = {}) => {
+  return getMDMSServiceRef(moduleName).getMultipleTypesWithFilter(tenantId, moduleName, masterDetails, { useCache });
+};
+
 const useEnabledMDMS = (tenantId, moduleName, masterDetails = [], config = {}) => {
-    return queryTemplate({ queryKey: [tenantId, moduleName, masterDetails], queryFn: () => Digit.Hooks.useSelectedMDMS(moduleName).getMultipleTypesWithFilter(tenantId, moduleName, masterDetails), config });
+  const { useCache = true, ...queryConfig } = config;
+
+  return queryTemplate({
+    queryKey: [tenantId, moduleName, masterDetails],
+    queryFn: () => fetchEnabledMDMS(tenantId, moduleName, masterDetails, { useCache }),
+    config: queryConfig,
+  });
 };
 
 
