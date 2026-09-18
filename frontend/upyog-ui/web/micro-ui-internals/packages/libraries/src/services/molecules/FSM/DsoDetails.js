@@ -55,7 +55,8 @@ const getResponse = (data) => {
         { title: "ES_FSM_REGISTRY_DETAILS_VENDOR_NAME", value: data?.name },
         { title: "ES_FSM_REGISTRY_DETAILS_VENDOR_ADDRESS", value: data?.address?.locality?.name },
         { title: "ES_FSM_REGISTRY_DETAILS_VENDOR_PHONE", value: data?.owner?.mobileNumber },
-        { title: "ES_FSM_REGISTRY_DETAILS_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description || data?.additionalDetails?.serviceType },
+        { title: "ES_FSM_REGISTRY_DETAILS_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description },
+        { title: "ES_FSM_REGISTRY_DETAILS_SERVICE_TYPE", value: data?.additionalDetails?.serviceType },
       ],
     },
     {
