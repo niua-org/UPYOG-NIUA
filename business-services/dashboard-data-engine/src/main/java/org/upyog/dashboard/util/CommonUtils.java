@@ -3,6 +3,9 @@ package org.upyog.dashboard.util;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Reusable utility methods providing epoch timestamps, UUID generation, and S3 object keys.
+ */
 public class CommonUtils {
 
     /**
@@ -19,5 +22,30 @@ public class CommonUtils {
      */
     public static String generateUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Generates a standard S3 object key formatted as:
+     * {@code <folder>/<tenantId>/<moduleName>/<uuid>_<fileName>}
+     *
+     * @param folder     the root S3 folder
+     * @param tenantId   the tenant identifier
+     * @param moduleName the module name
+     * @param fileName   the file name
+     * @return structured S3 object key
+     */
+    public static String buildS3Key(String folder, String tenantId, String moduleName, String fileName) {
+        StringBuilder keyBuilder = new StringBuilder();
+        if (folder != null && !folder.trim().isEmpty()) {
+            keyBuilder.append(folder.trim()).append("/");
+        }
+        if (tenantId != null && !tenantId.trim().isEmpty()) {
+            keyBuilder.append(tenantId.trim()).append("/");
+        }
+        if (moduleName != null && !moduleName.trim().isEmpty()) {
+            keyBuilder.append(moduleName.trim()).append("/");
+        }
+        keyBuilder.append(generateUUID()).append("_").append(fileName != null ? fileName : "file");
+        return keyBuilder.toString();
     }
 }

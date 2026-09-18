@@ -1,8 +1,13 @@
 package org.upyog.dashboard.finance.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+/**
+ * Model encapsulating aggregated financial balance, audit, debt, and expenditure metrics.
+ */
+@Getter
+@Setter
 public class FinanceAggregatedData {
     private Integer totalRevenueCollected;
     private Integer totalAuditsCompleted;

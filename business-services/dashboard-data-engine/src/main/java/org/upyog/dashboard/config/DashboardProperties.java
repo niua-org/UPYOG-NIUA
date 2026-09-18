@@ -2,13 +2,22 @@ package org.upyog.dashboard.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import lombok.Getter;
 
 /**
- * Centralized application properties configuration class.
- *
- * <p>Retrieves properties from {@code application.properties} without default fallbacks
- * to ensure that missing configuration keys cause a fail-fast startup failure.
+ * Centralized configuration properties component for dashboard data engine and extractors.
+ * <p>
+ * Binds environment configurations defined across application properties files:
+ * <ul>
+ *   <li>UPYOG OAuth user authentication endpoints, system credentials, and retry policies.</li>
+ *   <li>National dashboard ingestion engine URLs and bulk initialization endpoints ({@code bulkInitUrl}).</li>
+ *   <li>Module-specific classification mappings for Property Tax (PT) tax heads, usage categories, and digital payments.</li>
+ *   <li>AWS S3 connection settings (bucket, region, access credentials, root folder prefix).</li>
+ *   <li>Kafka topic destinations for asynchronous persistence of audit records and error logs.</li>
+ *   <li>Upload mode strategies (API vs. S3) for daily incremental and legacy batch workflows.</li>
+ * </ul>
+ * </p>
  */
 @Getter
 @Component
@@ -53,6 +62,9 @@ public class DashboardProperties {
     // Ingest API settings
     @Value("${national.dashboard.ingest.url}")
     private String dashboardIngestUrl;
+
+    @Value("${national.dashboard.bulk.init.url}")
+    private String bulkInitUrl;
 
     // HTTP Ingestion retry config
     @Value("${dashboard-data.retry.enabled:false}")
@@ -130,6 +142,72 @@ public class DashboardProperties {
     private int dailyCatchUpLimitDays;
 
     // Toggle for persister vs direct JDBC
-    @Value("${dashboard-data.persister.enabled:true}")
+    @Value("${dashboard-data.persister.enabled}")
     private boolean persisterEnabled;
+
+    // Daily upload mode (API or S3)
+    @Value("${dashboard-data.daily.upload-mode}")
+    private String dailyUploadMode;
+
+    // Legacy upload mode (API or S3)
+    @Value("${dashboard-data.legacy.upload-mode}")
+    private String legacyUploadMode;
+
+    /**
+     * Resolves the effective upload mode strategy for daily incremental ingestion batches.
+     * <p>
+     * Checks configured property {@code dashboard-data.daily.upload-mode}.
+     * If unconfigured or blank, defaults to {@code "API"} (direct HTTP multipart POST).
+     * </p>
+     *
+     * @return normalized upload mode string (e.g. "API", "S3", or "FILESTORE")
+     */
+    public String getEffectiveDailyUploadMode() {
+        return (dailyUploadMode != null && !dailyUploadMode.trim().isEmpty()) ? dailyUploadMode.trim() : "API";
+    }
+
+    /**
+     * Resolves the effective upload mode strategy for historical legacy backfill batches.
+     * <p>
+     * Checks configured property {@code dashboard-data.legacy.upload-mode}.
+     * If unconfigured or blank, defaults to {@code "S3"} (upload Excel file to AWS S3 and trigger bulk init).
+     * </p>
+     *
+     * @return normalized upload mode string (e.g. "S3", "API", or "FILESTORE")
+     */
+    public String getEffectiveLegacyUploadMode() {
+        return (legacyUploadMode != null && !legacyUploadMode.trim().isEmpty()) ? legacyUploadMode.trim() : "S3";
+    }
+
+    // S3 properties
+    @Value("${aws.s3.access-key}")
+    private String awsS3AccessKey;
+
+    @Value("${aws.s3.secret-key}")
+    private String awsS3SecretKey;
+
+    @Value("${aws.s3.region}")
+    private String awsS3Region;
+
+    @Value("${aws.s3.bucket}")
+    private String awsS3Bucket;
+
+    @Value("${aws.s3.folder}")
+    private String awsS3Folder;
+
+    // Kafka Topics configuration
+    @Value("${kafka.topics.save.ingestion.detail}")
+    private String saveIngestionDetailTopic;
+
+    @Value("${kafka.topics.save.module.ingestion.detail}")
+    private String saveLegacyIngestionDetailTopic;
+
+    @Value("${kafka.topics.update.module.ingestion.detail}")
+    private String updateLegacyIngestionDetailTopic;
+
+    @Value("${kafka.topics.save.dashboard-data.error.log}")
+    private String saveAdapterErrorLogTopic;
+
+    @Value("${kafka.topics.update.dashboard-data.module.summary}")
+    private String updateAdapterModuleSummaryTopic;
 }

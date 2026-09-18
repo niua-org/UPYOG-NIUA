@@ -1,11 +1,14 @@
 package org.upyog.dashboard.model;
-
 import java.util.List;
 
 import org.upyog.dashboard.common.constants.Module;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 
 /**
  * Encapsulates a single ingestion request passed into the adapter-service pipeline.
@@ -46,8 +49,11 @@ import lombok.Data;
  * 
  * <p>Contributes to the core Property Tax metrics ingestion pipeline.
  */
-@Data
 @Builder
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 public class DashboardRequest {
 
     /**
@@ -78,4 +84,14 @@ public class DashboardRequest {
      * a {@link ClassCastException} inside the transformer.
      */
     private Object rawData;
+
+    /**
+     * Unique identifier of the triggering scheduler run, if triggered by a background scheduler.
+     */
+    private String schedulerId;
+
+    /**
+     * Unique identifier of the parent module configuration record in ingestion_module_detail.
+     */
+    private String moduleDetailId;
 }
