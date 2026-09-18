@@ -14,7 +14,7 @@ const getResponse = (data, vendorDetils) => {
           title: "ES_FSM_REGISTRY_DETAILS_VENDOR_NAME",
           value: vendorDetils?.vendor?.[0]?.name || "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR",
           type: "custom",
-        },
+        }
       ],
     },
   ];
