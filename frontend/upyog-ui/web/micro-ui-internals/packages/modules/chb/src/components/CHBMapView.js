@@ -347,17 +347,29 @@ const CHBMapView = () => {
         const hallCode = button.getAttribute("data-community-hall-code");
         const hallId = button.getAttribute("data-community-hall-id");
         button.addEventListener("click", () => {
-          if (!hallCode) return;
-          history.push({
-            pathname: `/upyog-ui/citizen/chb/bookHall/searchhall`,
-            selectedCommunityHall: {
-              code: hallCode,
-              value: hallCode,
-              i18nKey: hallCode,
-              communityHallId: hallId || undefined,
-            },
-          });
-        });
+        if (!hallCode) return;
+          navigate(
+            `/upyog-ui/citizen/chb/bookHall/searchvenue`,
+            {
+              state: {
+                selectedVenueType: {
+                  code: "COMMUNITY_HALLS",
+                  value: "Community Hall",
+                  i18nKey: "COMMUNITY_HALLS",
+                  parentMasterType: "CommunityHalls",
+                  timeSlots: { maxDuration: "23:59", minDuration: "1:00" },
+                },
+                selectedCommunityHall: {
+                  code: hallCode,
+                  value: hallCode,
+                  i18nKey: hallCode,
+                  childMasterCode: "HallCode",
+                  communityHallId: hallId || undefined,
+                },
+              },
+            }
+          );
+            });
       });
 
       // Add to markerMap for searching
