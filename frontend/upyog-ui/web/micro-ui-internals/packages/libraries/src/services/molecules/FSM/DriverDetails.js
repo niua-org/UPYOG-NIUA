@@ -5,10 +5,10 @@ const getResponse = (data, vendorDetils) => {
     {
       title: "ES_FSM_REGISTRY_DETAILS_DRIVER_DETAILS",
       values: [
+        { title: "ES_FSM_REGISTRY_DETAILS_SERVICE_TYPE", value: data?.additionalDetails?.serviceType },
         { title: "ES_FSM_REGISTRY_DRIVER_NAME", value: data?.name },
         // { title: "ES_FSM_REGISTRY_DRIVER_PHONE", value: data?.owner?.mobileNumber },
         { title: "ES_FSM_REGISTRY_DRIVER_LICENSE", value: data?.licenseNumber },
-        { title: "ES_FSM_REGISTRY_DETAILS_SERVICE_TYPE", value: data?.additionalDetails?.serviceType },
         { title: "ES_FSM_REGISTRY_DETAILS_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description },
         {
           title: "ES_FSM_REGISTRY_DETAILS_VENDOR_NAME",

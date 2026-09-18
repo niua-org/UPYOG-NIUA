@@ -5,6 +5,7 @@ const getResponse = (data, vendorDetails) => {
     {
       title: 'ES_FSM_REGISTRY_DETAILS_VEHICLE_DETAILS',
       values: [
+        { title: "ES_FSM_REGISTRY_DETAILS_SERVICE_TYPE", value: data?.additionalDetails?.serviceType },
         { title: "ES_FSM_REGISTRY_VEHICLE_NUMBER", value: data?.registrationNumber },
         { title: "ES_FSM_REGISTRY_VEHICLE_TYPE", value: `COMMON_MASTER_VEHICLE_${data?.type}` },
         { title: "ES_FSM_REGISTRY_VEHICLE_MODEL", value: data?.model },
@@ -13,7 +14,6 @@ const getResponse = (data, vendorDetails) => {
         { title: "ES_FSM_REGISTRY_VEHICLE_ROAD_TAX", value: data?.roadTaxPaidTill && Digit.DateUtils.ConvertEpochToDate(data?.roadTaxPaidTill) },
         { title: "ES_FSM_REGISTRY_VEHICLE_INSURANCE", value: data?.InsuranceCertValidTill && Digit.DateUtils.ConvertEpochToDate(data?.InsuranceCertValidTill) },
         { title: "ES_FSM_REGISTRY_VEHICLE_STATUS", value: data.status },
-        { title: "ES_FSM_REGISTRY_DETAILS_SERVICE_TYPE", value: data?.additionalDetails?.serviceType },
         { title: "ES_FSM_REGISTRY_VEHICLE_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description },
         { title: "ES_FSM_REGISTRY_DETAILS_VENDOR_NAME", value: vendorDetails?.vendor?.[0]?.name || "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR", type: "custom" },
       ],
