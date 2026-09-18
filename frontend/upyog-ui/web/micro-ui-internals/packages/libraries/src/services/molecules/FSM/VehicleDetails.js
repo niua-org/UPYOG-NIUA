@@ -15,7 +15,7 @@ const getResponse = (data, vendorDetails) => {
         { title: "ES_FSM_REGISTRY_VEHICLE_INSURANCE", value: data?.InsuranceCertValidTill && Digit.DateUtils.ConvertEpochToDate(data?.InsuranceCertValidTill) },
         { title: "ES_FSM_REGISTRY_VEHICLE_STATUS", value: data.status },
         { title: "ES_FSM_REGISTRY_VEHICLE_ADDITIONAL_DETAILS", value: data?.additionalDetails?.description },
-        { title: "ES_FSM_REGISTRY_DETAILS_VENDOR_NAME", value: vendorDetails?.vendor?.[0]?.name || "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR", type: "custom" }
+        { title: "ES_FSM_REGISTRY_DETAILS_VENDOR_NAME", value: vendorDetails?.vendor?.[0]?.name || "ES_FSM_REGISTRY_DETAILS_ADD_VENDOR", type: "custom" },
       ],
     }
   ];
