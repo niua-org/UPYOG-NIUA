@@ -1,6 +1,5 @@
 package org.egov.nationaldashboardingest.web.models;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,8 +14,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Builder
 @ToString
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class ExternalApiRequestEvent {
+public class ExternalApiAuditDetail {
 
     @JsonProperty("id")
     private String id;
@@ -42,6 +40,15 @@ public class ExternalApiRequestEvent {
     @JsonProperty("status")
     private String status;
 
+    @JsonProperty("httpStatusCode")
+    private Integer httpStatusCode;
+
+    @JsonProperty("responseTime")
+    private Long responseTime;
+
+    @JsonProperty("durationMs")
+    private Long durationMs;
+
     @JsonProperty("retryCount")
     private Integer retryCount;
 
@@ -54,6 +61,12 @@ public class ExternalApiRequestEvent {
     @JsonProperty("requestPayload")
     private Object requestPayload;
 
+    @JsonProperty("responsePayload")
+    private Object responsePayload;
+
     @JsonProperty("payloadSizeBytes")
     private Long payloadSizeBytes;
+
+    @JsonProperty("errorDetails")
+    private ExternalApiErrorDetails errorDetails;
 }
