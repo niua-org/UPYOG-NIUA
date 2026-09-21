@@ -38,9 +38,8 @@ public class PersistRepository {
         try {
             if( ! rows.isEmpty()) {
                 log.info("Executing query : "+ query);
-                int[] rowsCount = jdbcTemplate.batchUpdate(query, rows);
-                int totalAffectedRows = Arrays.stream(rowsCount).sum();
-                log.info("Persisted {} row(s) to DB! Number of rows inserted/updated: {}", rows.size(), totalAffectedRows);
+                jdbcTemplate.batchUpdate(query, rows);
+                log.info("Persisted {} row(s) to DB!", rows.size());
             }
         } catch (Exception ex) {
             log.error("Failed to persist {} row(s) using query: {}", rows.size(), query, ex);
@@ -55,9 +54,8 @@ public class PersistRepository {
         try {
             if( ! rows.isEmpty()) {
                 log.info("Executing query : "+ query);
-                int[] rowsCount = jdbcTemplate.batchUpdate(query, rows);
-                int totalAffectedRows = Arrays.stream(rowsCount).sum();
-                log.info("Persisted {} row(s) to DB for path {}! Number of rows inserted/updated: {}", rows.size(), baseJsonPath, totalAffectedRows);
+                jdbcTemplate.batchUpdate(query, rows);
+                log.info("Persisted {} row(s) to DB!", rows.size(), baseJsonPath);
             }
         } catch (Exception ex) {
             log.error("Failed to persist {} row(s) using query: {}", rows.size(), query, ex);
