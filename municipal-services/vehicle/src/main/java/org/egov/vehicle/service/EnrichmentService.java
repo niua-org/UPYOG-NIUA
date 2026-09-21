@@ -46,6 +46,8 @@ public class EnrichmentService {
 		if (vehicleRequest.getVehicle().getOwner().getId() == null) {
 			vehicleRequest.getVehicle().getOwner().setId(UUID.randomUUID().toString());
 		}
+        // Set owner UUID for persister - persister reads from $.vehicle.owner.uuid to populate database owner_id column
+        //vehicleRequest.getVehicle().getOwner().setUuid(vehicleRequest.getVehicle().getOwner().getId());
 
 		// Default serviceType to FSM if not provided (e.g. created via FSM module)
 		Vehicle vehicle = vehicleRequest.getVehicle();
