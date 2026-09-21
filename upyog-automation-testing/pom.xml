@@ -110,6 +110,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Video Recording (Pure Java MP4 Encoder) -->
+        <dependency>
+            <groupId>org.jcodec</groupId>
+            <artifactId>jcodec</artifactId>
+            <version>0.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jcodec</groupId>
+            <artifactId>jcodec-javase</artifactId>
+            <version>0.2.5</version>
+        </dependency>
+
     </dependencies>
 
 

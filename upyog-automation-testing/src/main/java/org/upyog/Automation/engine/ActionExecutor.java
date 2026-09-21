@@ -71,6 +71,16 @@ public class ActionExecutor {
     private final JavascriptExecutor js;
     private final Actions actions;
     private final org.upyog.Automation.engine.LocatorResolver locatorResolver;
+    private String lastCapturedFingerprint = "";
+    private long lastCapturedTime = 0;
+
+    /**
+     * Resets the screen capture fingerprint state at the start of a new module or test case.
+     */
+    public void resetAcknowledgementCaptureState() {
+        this.lastCapturedFingerprint = "";
+        this.lastCapturedTime = 0;
+    }
 
     /**
      * Constructs a new {@link ActionExecutor} with the provided {@link WebDriver} and {@link WebDriverWait}.
@@ -116,6 +126,11 @@ public class ActionExecutor {
                 instruction.getAction(),
                 instruction.getLocatorValue()
         );
+
+        // If this step navigates away or submits a filled screen, capture screenshot before clicking
+        if (isScreenTransitionStep(instruction)) {
+            captureFilledScreen(stepName);
+        }
 
         try {
             // Dispatch to appropriate action handler based on action type
@@ -262,6 +277,11 @@ public class ActionExecutor {
 
                     break;
 
+                case AutomationConstants.ACTION_CAPTURE_SCREENSHOT:
+                case AutomationConstants.ACTION_SCREENSHOT:
+                    executeCaptureScreenshot(instruction);
+                    break;
+
 
                 default:
                     throw new IllegalArgumentException(
@@ -272,7 +292,22 @@ public class ActionExecutor {
             // Apply dynamic sleep after action
             applyDynamicSleep(instruction);
 
+            // If this step is a submission or payment action, check if we arrived at an acknowledgement/response screen
+            if (isSubmissionOrPaymentStep(instruction)) {
+                try {
+                    Thread.sleep(1500);
+                    if (isAcknowledgementScreen()) {
+                        captureFilledScreen("Acknowledgement - " + stepName);
+                    }
+                } catch (Exception e) {
+                    logger.debug("Acknowledgement screen capture check failed for step '{}': {}", stepName, e.getMessage());
+                }
+            }
+
             logger.info("✓ Completed step: {}", stepName);
+
+            // Record frame for smooth video timeline
+            org.upyog.Automation.Utils.ScreenRecorder.recordFrame(driver);
 
             String reportValue = getReportValue(instruction, action);
 
@@ -309,13 +344,16 @@ public class ActionExecutor {
                             stepName
                     );
 
+            String base64Fail = ScreenshotManager.captureBase64(driver);
+
             WorkflowDataStore.put(
                     AutomationConstants.KEY_FAILED_SCREENSHOT,
                     screenshotPath
             );
 
             ReportManager.logFailure(
-                    "FAILED : " + stepName + " | " + e.getMessage()
+                    "FAILED : " + stepName + " | " + e.getMessage(),
+                    base64Fail
             );
 
             logger.error(
@@ -343,6 +381,8 @@ public class ActionExecutor {
                             stepName
                     );
 
+            String base64Fail = ScreenshotManager.captureBase64(driver);
+
             WorkflowDataStore.put(
                     AutomationConstants.KEY_FAILED_SCREENSHOT,
                     screenshotPath
@@ -354,7 +394,8 @@ public class ActionExecutor {
             );
 
             ReportManager.logFailure(
-                    "TIMEOUT : " + stepName + " | " + e.getMessage()
+                    "TIMEOUT : " + stepName + " | " + e.getMessage(),
+                    base64Fail
             );
 
             logger.error(
@@ -390,8 +431,11 @@ public class ActionExecutor {
                     e.getMessage()
             );
 
+            String base64Fail = ScreenshotManager.captureBase64(driver);
+
             ReportManager.logFailure(
-                    "FAILED : " + stepName + " | " + e.getMessage()
+                    "FAILED : " + stepName + " | " + e.getMessage(),
+                    base64Fail
             );
 
             throw new RuntimeException(
@@ -1090,6 +1134,13 @@ public class ActionExecutor {
                 "APPLICATION_NO STORED = {}",
                 WorkflowDataStore.get(AutomationConstants.APPLICATION_NO)
         );
+
+        // Capture screenshot of the acknowledgement/response screen displaying the captured value
+        try {
+            captureFilledScreen("Acknowledgement - " + (instruction.getStepName() != null ? instruction.getStepName() : "Response"));
+        } catch (Exception e) {
+            logger.debug("Could not capture acknowledgement screen in captureText: {}", e.getMessage());
+        }
     }
 
     /**
@@ -1688,5 +1739,228 @@ public class ActionExecutor {
 
             return null;
         }
+    }
+
+    /**
+     * Determines whether an instruction represents a screen transition/submission step
+     * (e.g. clicking Next, Submit, Continue, Proceed, Forward, Pay, Apply, Approve, Verify).
+     *
+     * @param instruction the test step instruction
+     * @return true if the step transitions away from a filled screen
+     */
+    private boolean isScreenTransitionStep(TestInstruction instruction) {
+        if (instruction == null) {
+            return false;
+        }
+
+        String action = instruction.getAction();
+        if (action == null) {
+            return false;
+        }
+
+        String upperAction = action.toUpperCase();
+
+        if (AutomationConstants.ACTION_CAPTURE_SCREENSHOT.equals(upperAction)
+                || AutomationConstants.ACTION_SCREENSHOT.equals(upperAction)) {
+            return false; // Handled directly by executeCaptureScreenshot
+        }
+
+        if (AutomationConstants.ACTION_CLICK.equals(upperAction)
+                || AutomationConstants.ACTION_CLICK_JS.equals(upperAction)
+                || AutomationConstants.ACTION_OPTIONAL_CLICK_JS.equals(upperAction)) {
+
+            String stepName = instruction.getStepName() != null ? instruction.getStepName().toLowerCase() : "";
+            String locator = instruction.getLocatorValue() != null ? instruction.getLocatorValue().toLowerCase() : "";
+
+            return stepName.contains("next")
+                    || stepName.contains("submit")
+                    || stepName.contains("continue")
+                    || stepName.contains("proceed")
+                    || stepName.contains("forward")
+                    || stepName.contains("save")
+                    || stepName.contains("apply")
+                    || stepName.contains("pay")
+                    || stepName.contains("approve")
+                    || stepName.contains("verify")
+                    || stepName.contains("send otp")
+                    || stepName.contains("take action")
+                    || locator.contains("next")
+                    || locator.contains("submit")
+                    || locator.contains("continue");
+        }
+
+        return false;
+    }
+
+    /**
+     * Determines whether an instruction represents a final submission, payment, or approval action.
+     *
+     * @param instruction the test step instruction
+     * @return true if the step triggers submission, payment, or approval
+     */
+    private boolean isSubmissionOrPaymentStep(TestInstruction instruction) {
+        if (instruction == null) {
+            return false;
+        }
+
+        String action = instruction.getAction();
+        if (action == null) {
+            return false;
+        }
+
+        String upperAction = action.toUpperCase();
+        if (AutomationConstants.ACTION_CLICK.equals(upperAction)
+                || AutomationConstants.ACTION_CLICK_JS.equals(upperAction)
+                || AutomationConstants.ACTION_OPTIONAL_CLICK_JS.equals(upperAction)) {
+
+            String stepName = instruction.getStepName() != null ? instruction.getStepName().toLowerCase() : "";
+            String locator = instruction.getLocatorValue() != null ? instruction.getLocatorValue().toLowerCase() : "";
+
+            return stepName.contains("submit")
+                    || stepName.contains("pay")
+                    || stepName.contains("collect payment")
+                    || stepName.contains("approve")
+                    || stepName.contains("forward")
+                    || stepName.contains("verify popup")
+                    || stepName.contains("approve popup")
+                    || stepName.contains("take action")
+                    || locator.contains("submit")
+                    || locator.contains("collect payment")
+                    || locator.contains("pay");
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks whether the browser is currently viewing an acknowledgement, response, or payment success page.
+     *
+     * @return true if the active page matches known UPYOG acknowledgement / response signatures
+     */
+    public boolean isAcknowledgementScreen() {
+        try {
+            String currentUrl = driver.getCurrentUrl();
+            if (currentUrl != null) {
+                String lowerUrl = currentUrl.toLowerCase();
+                if (lowerUrl.contains("/response")
+                        || lowerUrl.contains("/success")
+                        || lowerUrl.contains("/acknowledgement")
+                        || lowerUrl.contains("/acknowledgment")
+                        || lowerUrl.contains("/receipt")
+                        || lowerUrl.contains("/collect-receipt")) {
+                    return true;
+                }
+            }
+
+            String pageSource = driver.getPageSource();
+            if (pageSource != null) {
+                String lowerSource = pageSource.toLowerCase();
+                if (lowerSource.contains("payment collected")
+                        || lowerSource.contains("payment successful")
+                        || lowerSource.contains("payment completed")
+                        || lowerSource.contains("application submitted")
+                        || lowerSource.contains("application created")
+                        || lowerSource.contains("booking successful")
+                        || lowerSource.contains("challan created")
+                        || lowerSource.contains("trade license created")
+                        || lowerSource.contains("permit generated")) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Could not determine if current screen is acknowledgement: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Captures a screenshot of the currently displayed screen, saves it to disk, and logs it to the active report.
+     *
+     * @param screenName descriptive label for the screenshot
+     * @param force if true, bypasses duplicate fingerprint checking
+     */
+    public void captureScreen(String screenName, boolean force) {
+        try {
+            String currentUrl = "";
+            try {
+                currentUrl = driver.getCurrentUrl();
+            } catch (Exception ignored) {}
+
+            long now = System.currentTimeMillis();
+            String currentHeading = "";
+            try {
+                List<WebElement> headers = driver.findElements(By.cssSelector("h1, h2, h3, header, .card-label, .heading"));
+                if (!headers.isEmpty()) {
+                    currentHeading = headers.get(0).getText().trim();
+                }
+            } catch (Exception ignored) {}
+
+            String fingerprint = (currentUrl != null ? currentUrl : "") + "|" + currentHeading;
+
+            // If not forced, avoid duplicate captures of the exact same screen within 2.5 seconds
+            if (!force && fingerprint.equals(lastCapturedFingerprint) && (now - lastCapturedTime < 2500)) {
+                logger.debug("Skipping duplicate screen capture for '{}' (same page state)", screenName);
+                return;
+            }
+            lastCapturedFingerprint = fingerprint;
+            lastCapturedTime = now;
+
+            String selectedMod = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_MODULE);
+            String currentMod = WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_MODULE);
+            String moduleName = (selectedMod != null && !selectedMod.isBlank()) ? selectedMod : currentMod;
+            if (moduleName == null || moduleName.isBlank() || moduleName.equalsIgnoreCase("TC") || moduleName.startsWith("TC_")) {
+                moduleName = (currentMod != null && !currentMod.isBlank()) ? currentMod : "UPYOG";
+            }
+
+            String testCase = WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE);
+            if (testCase == null || testCase.isBlank()) {
+                testCase = "WORKFLOW";
+            }
+
+            // Save to disk for local file archives and User Manual
+            ScreenshotManager.captureScreenScreenshot(
+                    driver,
+                    moduleName,
+                    testCase,
+                    screenName
+            );
+
+            // Capture base64 representation to embed directly inside the HTML report
+            String base64Screenshot = ScreenshotManager.captureBase64(driver);
+
+            if (base64Screenshot != null && !base64Screenshot.isEmpty()) {
+                ReportManager.logScreen("SCREEN CAPTURE : " + screenName, base64Screenshot);
+            }
+        } catch (Exception e) {
+            logger.warn("Could not capture screen screenshot for step '{}': {}", screenName, e.getMessage());
+        }
+    }
+
+    /**
+     * Captures a screenshot of the filled form or intermediate screen.
+     *
+     * @param screenName descriptive label for the screenshot
+     */
+    public void captureFilledScreen(String screenName) {
+        captureScreen(screenName, false);
+    }
+
+    /**
+     * Explicitly captures the acknowledgement/response screen.
+     *
+     * @param screenName descriptive label for the screenshot
+     */
+    public void captureAcknowledgementScreen(String screenName) {
+        captureScreen(screenName != null && !screenName.isBlank() ? screenName : "Acknowledgement", true);
+    }
+
+    /**
+     * Executes an explicit CAPTURE_SCREENSHOT instruction.
+     *
+     * @param instruction the test instruction
+     */
+    private void executeCaptureScreenshot(TestInstruction instruction) {
+        String screenName = instruction.getStepName() != null ? instruction.getStepName() : "Screen";
+        captureScreen(screenName, true);
     }
 }

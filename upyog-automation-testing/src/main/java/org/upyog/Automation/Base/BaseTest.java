@@ -82,6 +82,9 @@ public class BaseTest {
     }
 
     public void tearDown() throws InterruptedException {
+        try {
+            org.upyog.Automation.Utils.ScreenRecorder.stopRecording();
+        } catch (Exception ignored) {}
         Thread.sleep(15000);
         if (driver != null) {
             driver.quit();

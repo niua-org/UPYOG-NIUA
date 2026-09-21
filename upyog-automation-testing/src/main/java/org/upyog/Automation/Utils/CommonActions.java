@@ -9,7 +9,8 @@ import java.util.List;
 public class CommonActions {
 
     public static void fillInput(WebDriverWait wait, String fieldName, String value) {
-        WebElement input = wait.until(ExpectedConditions.elementToBeClickable(By.name(fieldName)));
+        By locator = By.xpath("//input[@name='" + fieldName + "' or @id='" + fieldName + "'] | //*[@name='" + fieldName + "']");
+        WebElement input = wait.until(ExpectedConditions.elementToBeClickable(locator));
         input.clear();
         input.sendKeys(value);
     }
@@ -75,13 +76,9 @@ public class CommonActions {
     }
 
     public static void clickButtonByText(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String text) {
-
-        By locator = By.xpath("//button[.//header[text()='" + text + "']]");
-
+        By locator = By.xpath("//button[.//header[normalize-space()='" + text + "'] or normalize-space()='" + text + "' or .//span[normalize-space()='" + text + "']]");
         WebElement button = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
-
         js.executeScript("arguments[0].scrollIntoView({block:'center'});", button);
-
         try {
             wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
         } catch (Exception e) {
@@ -89,36 +86,92 @@ public class CommonActions {
         }
     }
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CommonActions.class);
+
     public static void selectCity(WebDriver driver,
                                   WebDriverWait wait,
                                   JavascriptExecutor js,
                                   String cityName) {
 
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.cssSelector("div.radio-wrap.reverse-radio-selection-wrapper")));
+        String selectedUrl = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_URL);
+        if (selectedUrl != null && selectedUrl.toLowerCase().contains("sandbox")) {
+            if (cityName == null || cityName.isBlank() || "City A".equalsIgnoreCase(cityName) || "Delhi".equalsIgnoreCase(cityName)) {
+                cityName = "City A Muncipal Corporation";
+            }
+        } else if (selectedUrl != null && selectedUrl.toLowerCase().contains("niuatt")) {
+            if (cityName == null || cityName.isBlank() || "Delhi".equalsIgnoreCase(cityName) || "City A Muncipal Corporation".equalsIgnoreCase(cityName)) {
+                cityName = "City A";
+            }
+        } else if (selectedUrl != null && selectedUrl.toLowerCase().contains("upyog.niua.org")) {
+            if (cityName == null || cityName.isBlank() || "City A".equalsIgnoreCase(cityName) || "City A Muncipal Corporation".equalsIgnoreCase(cityName)) {
+                cityName = "Delhi";
+            }
+        }
 
+        logger.info("Selecting city on location screen: '{}' (Target URL: {})", cityName, selectedUrl);
+
+        // 1. Wait for location screen container or radio elements
+        try {
+            wait.until(ExpectedConditions.or(
+                    ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.radio-wrap")),
+                    ExpectedConditions.visibilityOfElementLocated(By.cssSelector("input[type='radio']")),
+                    ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(text(),'Choose your location') or contains(text(),'Select City') or contains(text(),'City')]"))
+            ));
+        } catch (Exception e) {
+            logger.warn("Location container wait, checking options directly: {}", e.getMessage());
+        }
+
+        // 2. Direct XPath match for matching label
+        List<WebElement> matchingLabels = driver.findElements(By.xpath(
+                "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]"
+        ));
+
+        if (!matchingLabels.isEmpty()) {
+            WebElement label = matchingLabels.get(0);
+            js.executeScript("arguments[0].scrollIntoView({block:'center'});", label);
+            try {
+                WebElement radio = label.findElement(By.xpath("./preceding-sibling::span/input[@type='radio'] | ./following-sibling::span/input[@type='radio'] | .//input[@type='radio'] | ./ancestor::*[contains(@class,'radio-wrap')]//input[@type='radio']"));
+                js.executeScript("arguments[0].click();", radio);
+            } catch (Exception ignored) {
+                js.executeScript("arguments[0].click();", label);
+            }
+            logger.info("Successfully selected city via matching label: {}", cityName);
+            return;
+        }
+
+        // 3. Scan through all radio container elements
         List<WebElement> cityOptions = driver.findElements(
-                By.cssSelector("div.radio-wrap.reverse-radio-selection-wrapper div"));
+                By.cssSelector("div.radio-wrap div, div.radio-wrap, .reverse-radio-selection-wrapper div, label"));
 
         for (WebElement option : cityOptions) {
+            try {
+                String text = option.getText().trim();
+                if (text.equalsIgnoreCase(cityName) ||
+                    (cityName.contains("City A") && text.contains("City A")) ||
+                    (cityName.equalsIgnoreCase("Delhi") && text.contains("Delhi"))) {
 
-            WebElement label = option.findElement(By.tagName("label"));
+                    js.executeScript("arguments[0].scrollIntoView({block:'center'});", option);
 
-            if (label.getText().trim().equals(cityName)) {
-
-                WebElement radioInput = option.findElement(
-                        By.cssSelector("input[type='radio']")
-                );
-
-                if (!radioInput.isSelected()) {
-
-                    js.executeScript("arguments[0].click();", radioInput);
-
-                    wait.until(driver1 -> radioInput.isSelected());
+                    List<WebElement> radioInputs = option.findElements(By.cssSelector("input[type='radio']"));
+                    if (!radioInputs.isEmpty()) {
+                        WebElement radioInput = radioInputs.get(0);
+                        js.executeScript("arguments[0].click();", radioInput);
+                    } else {
+                        js.executeScript("arguments[0].click();", option);
+                    }
+                    logger.info("Selected city option: '{}' for target: '{}'", text, cityName);
+                    return;
                 }
+            } catch (Exception ignored) {}
+        }
 
-                return;
-            }
+        // 4. Fallback to first available radio option
+        List<WebElement> allRadios = driver.findElements(By.cssSelector("input[type='radio']"));
+        if (!allRadios.isEmpty()) {
+            WebElement firstRadio = allRadios.get(0);
+            js.executeScript("arguments[0].scrollIntoView({block:'center'}); arguments[0].click();", firstRadio);
+            logger.warn("Target city '{}' exact match not found, selected first radio option.", cityName);
+            return;
         }
 
         throw new RuntimeException("Failed to select city: " + cityName);

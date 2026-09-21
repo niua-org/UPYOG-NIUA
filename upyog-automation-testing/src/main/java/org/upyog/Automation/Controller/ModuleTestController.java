@@ -120,6 +120,27 @@ public class ModuleTestController {
      *
      * @return ResponseEntity containing progress details map
      */
+    /**
+     * Returns the test plan for the selected modules (number of test cases,
+     * whether running from Excel or dev.properties, test case IDs).
+     */
+    @GetMapping("/test-plan")
+    public ResponseEntity<Map<String, Object>> getTestPlan(@RequestParam(value = "modules", defaultValue = "") String moduleNames) {
+        String[] modules = (moduleNames != null && !moduleNames.trim().isEmpty())
+                ? (moduleNames.contains(",") ? moduleNames.split(",") : new String[]{moduleNames.trim()})
+                : new String[0];
+        Map<String, Object> plan = moduleTestService.getTestPlan(modules);
+        return ResponseEntity.ok(plan);
+    }
+
+    /**
+     * Returns the current progress of the ongoing test execution.
+     *
+     * <p>The frontend periodically polls this endpoint to update
+     * execution progress indicators (progress bar, active test case, etc.).</p>
+     *
+     * @return ResponseEntity containing progress details map
+     */
     @GetMapping("/progress")
     public ResponseEntity<?> getExecutionProgress() {
         Map<String, Object> progress = new HashMap<>();
@@ -129,15 +150,19 @@ public class ModuleTestController {
         String currentTestCase = moduleTestService.getCurrentTestCase();
         String currentModule = moduleTestService.getCurrentModule();
         boolean isRunning = moduleTestService.isExecutionRunning();
+        String executionMode = moduleTestService.getExecutionMode();
+        String sourceName = moduleTestService.getSourceName();
 
         progress.put("totalTestCases", total);
         progress.put("completedTestCases", completed);
         progress.put("currentTestCase", currentTestCase);
         progress.put("currentModule", currentModule);
         progress.put("executionRunning", isRunning);
+        progress.put("executionMode", executionMode);
+        progress.put("sourceName", sourceName);
 
-        logger.debug("Progress check: Total=[{}], Completed=[{}], Active=[{}], Running=[{}]",
-                total, completed, currentTestCase, isRunning);
+        logger.debug("Progress check: Total=[{}], Completed=[{}], Active=[{}], Running=[{}], Mode=[{}], Source=[{}]",
+                total, completed, currentTestCase, isRunning, executionMode, sourceName);
 
         return ResponseEntity.ok(progress);
     }
@@ -202,24 +227,7 @@ public class ModuleTestController {
      * @return the corresponding sheet name
      */
     private String getSheetName(String moduleName) {
-        if (moduleName == null) {
-            return AutomationConstants.SHEET_SUFFIX;
-        }
-
-        if (AutomationConstants.MODULE_PET_REGISTRATION.equalsIgnoreCase(moduleName)) {
-            return AutomationConstants.SHEET_PET;
-        }
-
-        if (AutomationConstants.MODULE_PUBLIC_GRIEVANCE_REDRESSAL.equalsIgnoreCase(moduleName)) {
-            return AutomationConstants.SHEET_PGR;
-        }
-
-        if (AutomationConstants.MODULE_NO_DUE_CERTIFICATE.equalsIgnoreCase(moduleName)) {
-            return AutomationConstants.SHEET_NDC;
-        }
-
-        // Use standard naming convention for modules without an explicit mapping
-        return moduleName + AutomationConstants.SHEET_SUFFIX;
+        return moduleTestService.resolveSheetName(moduleName);
     }
 
     /**

@@ -44,7 +44,7 @@ public class ExcelResultGenerator {
         ) {
 
             Sheet sheet =
-                    workbook.getSheet(sheetName);
+                    ExcelDataReader.getSheetSafely(workbook, sheetName);
 
             if (sheet == null) {
                 throw new RuntimeException(

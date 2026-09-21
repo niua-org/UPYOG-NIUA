@@ -54,18 +54,22 @@ public class CitizenTestService {
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_URL, baseUrl);
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_MODULE, moduleName);
 
-        String env = baseUrl.toLowerCase().contains(AutomationConstants.ENV_NIUATT.toLowerCase())
-                ? AutomationConstants.ENV_NIUATT
-                : AutomationConstants.ENV_UPYOG;
+        String env;
+        if (baseUrl.toLowerCase().contains("sandbox")) {
+            env = AutomationConstants.ENV_SANDBOX;
+        } else if (baseUrl.toLowerCase().contains(AutomationConstants.ENV_NIUATT.toLowerCase())) {
+            env = AutomationConstants.ENV_NIUATT;
+        } else {
+            env = AutomationConstants.ENV_UPYOG;
+        }
 
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_ENV, env);
 
-        // Selecting City based on Url
+        // Selecting City based on Url if not explicitly provided or default
+        String prefix = env.toLowerCase();
+        String envCity = ConfigReader.get(prefix + ".city");
         if (cityName == null || cityName.isBlank()) {
-
-            String prefix = env.toLowerCase();
-
-            cityName = ConfigReader.get(prefix + ".city");
+            cityName = envCity != null ? envCity : "City A";
         }
 
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_CITY, cityName);

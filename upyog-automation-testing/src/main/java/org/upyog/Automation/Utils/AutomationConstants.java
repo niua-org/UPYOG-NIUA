@@ -30,6 +30,7 @@ public final class AutomationConstants {
     public static final String MODULE_PGR_EMP = "PGR_EMP";
 
     public static final String MODULE_NO_DUE_CERTIFICATE = "NO_DUE_CERTIFICATE";
+    public static final String MODULE_NDC = "NDC";
     public static final String MODULE_NO_DUE_CERTIFICATE_CITIZEN = "NO_DUE_CERTIFICATE_CITIZEN";
     public static final String MODULE_NO_DUE_CERTIFICATE_EMPLOYEE = "NO_DUE_CERTIFICATE_EMPLOYEE";
 
@@ -51,22 +52,27 @@ public final class AutomationConstants {
     public static final String MODULE_ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC_EMP = "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC_EMP";
 
     public static final String MODULE_CND = "CND";
+    public static final String MODULE_CONSTRUCTION_AND_DEMOLITION = "CONSTRUCTION_AND_DEMOLITION";
     public static final String MODULE_CND_REQUEST = "CND_REQUEST";
     public static final String MODULE_CND_EMP = "CND_EMP";
     public static final String MODULE_CND_EMPLOYEE = "CND_EMPLOYEE";
     public static final String MODULE_CND_VENDOR = "CND_VENDOR";
 
     public static final String MODULE_PROPERTY_TAX = "PROPERTY_TAX";
+    public static final String MODULE_PT = "PT";
     public static final String MODULE_PROPERTY_TAX_EMP = "PROPERTY_TAX_EMP";
 
     public static final String MODULE_ADVERTISEMENT = "ADVERTISEMENT";
+    public static final String MODULE_ADV = "ADV";
     public static final String MODULE_ADVERTISEMENT_CITIZEN = "ADVERTISEMENT_CITIZEN";
     public static final String MODULE_ADVERTISEMENT_EMPLOYEE = "ADVERTISEMENT_EMPLOYEE";
 
     public static final String MODULE_STREET_VENDING = "STREET_VENDING";
+    public static final String MODULE_SV = "SV";
     public static final String MODULE_STREET_VENDING_EMP = "STREET_VENDING_EMP";
 
     public static final String MODULE_TRADE_LICENSE = "TRADE_LICENSE";
+    public static final String MODULE_TL = "TL";
     public static final String MODULE_TRADE_LICENSE_EMP = "TRADE_LICENSE_EMP";
 
     public static final String MODULE_TREE_PRUNING = "TREE_PRUNING";
@@ -76,10 +82,12 @@ public final class AutomationConstants {
     public static final String MODULE_TREE_PRUNING_VENDOR = "TREE_PRUNING_VENDOR";
 
     public static final String MODULE_EWASTE = "EWASTE";
+    public static final String MODULE_EWASTE_MANAGEMENT_SYSTEM = "EWASTE_MANAGEMENT_SYSTEM";
     public static final String MODULE_EWASTE_CITIZEN = "EWASTE_CITIZEN";
     public static final String MODULE_EWASTE_EMPLOYEE = "EWASTE_EMPLOYEE";
 
     public static final String MODULE_CHB = "CHB";
+    public static final String MODULE_COMMUNITY_HALL_BOOKING = "COMMUNITY_HALL_BOOKING";
     public static final String MODULE_CHB_CITIZEN = "CHB_CITIZEN";
     public static final String MODULE_CHB_EMPLOYEE = "CHB_EMPLOYEE";
 
@@ -93,12 +101,16 @@ public final class AutomationConstants {
     public static final String MODULE_ESTATE_MANAGEMENT_EMPLOYEE = "ESTATE_MANAGEMENT_EMPLOYEE";
 
     public static final String MODULE_DESLUDGING = "DESLUDGING";
+    public static final String MODULE_DESLUDGING_SERVICE = "DESLUDGING_SERVICE";
     public static final String MODULE_DESLUDGING_CITIZEN = "DESLUDGING_CITIZEN";
     public static final String MODULE_DESLUDGING_EMPLOYEE = "DESLUDGING_EMPLOYEE";
     public static final String MODULE_DESLUDGING_PAYMENT = "DESLUDGING_PAYMENT";
+    public static final String MODULE_DESLUDGING_SERVICE_PAYMENT = "DESLUDGING_SERVICE_PAYMENT";
     public static final String MODULE_DESLUDGING_CITIZEN_PAYMENT = "DESLUDGING_CITIZEN_PAYMENT";
     public static final String MODULE_DESLUDGING_PAYMENT2 = "DESLUDGING_PAYMENT2";
+    public static final String MODULE_DESLUDGING_SERVICE_PAYMENT2 = "DESLUDGING_SERVICE_PAYMENT2";
     public static final String MODULE_DESLUDGING_EMP_UPDATE = "DESLUDGING_EMP_UPDATE";
+    public static final String MODULE_DESLUDGING_EMPLOYEE_UPDATE = "DESLUDGING_EMPLOYEE_UPDATE";
     public static final String MODULE_DESLUDGING_EMP_COMPLETE = "DESLUDGING_EMP_COMPLETE";
     public static final String MODULE_DESLUDGING_EMP_PSSO = "DESLUDGING_EMPLOYEE_PSSO";
     public static final String MODULE_DESLUDGING_ASSIGN_PSSO = "DESLUDGING_ASSIGN_PSSO";
@@ -106,6 +118,7 @@ public final class AutomationConstants {
     public static final String MODULE_DESLUDGING_FSTPO = "DESLUDGING_FSTPO";
 
     public static final String MODULE_WATER_AND_SEWERAGE = "WATER_AND_SEWERAGE";
+    public static final String MODULE_WS = "WS";
     public static final String MODULE_WATER = "WATER";
     public static final String MODULE_WATER_CITIZEN = "WATER_CITIZEN";
     public static final String MODULE_WATER_EMP = "WATER_EMP";
@@ -114,6 +127,7 @@ public final class AutomationConstants {
     public static final String MODULE_SEWERAGE_EMP = "SEWERAGE_EMP";
 
     public static final String MODULE_ASSET_MANAGEMENT = "ASSET_MANAGEMENT";
+    public static final String MODULE_ASSET_MANAGEMENT_SYSTEM = "ASSET_MANAGEMENT_SYSTEM";
     public static final String MODULE_ASSET_EMPLOYEE = "ASSET_EMPLOYEE";
     public static final String MODULE_ASSET_VERIFIER = "ASSET_MANAGEMENT_SYSTEM_VERIFIER";
     public static final String MODULE_ASSET_VERIFIER_RUNNER = "ASSET_VERIFIER";
@@ -170,6 +184,7 @@ public final class AutomationConstants {
     public static final String CONFIG_ADVERTISEMENT_EMPLOYEE = "test-config/advertisement/adv_employee_module.json";
     public static final String CONFIG_PROPERTY_TAX_EMPLOYEE = "test-config/propertyTax/property_tax_employee_module.json";
     public static final String CONFIG_EWASTE_EMPLOYEE = "test-config/ewaste/ewaste_employee_module.json";
+    public static final String CONFIG_DESLUDGING_EMPLOYEE = "test-config/desludging/desludging_employee_module.json";
     public static final String CONFIG_DESLUDGING_EMPLOYEE_UPDATE = "test-config/desludging/desludging_employee_update.json";
     public static final String CONFIG_DESLUDGING_EMPLOYEE_COMPLETE = "test-config/desludging/desludging_employee_complete.json";
     public static final String CONFIG_DESLUDGING_EMPLOYEE_MODULE = "test-config/desludging/desludging_employee_module.json";
@@ -188,7 +203,7 @@ public final class AutomationConstants {
     public static final String CONFIG_SEWERAGE_EMPLOYEE = "test-config/waterAndSewerage/sewerage_employee_module.json";
     public static final String CONFIG_WATER_EMPLOYEE = "test-config/waterAndSewerage/water_employee_module.json";
     public static final String CONFIG_GARBAGE_COLLECTION_EMPLOYEE = "test-config/garbageCollection/gc_employee_module.json";
-    public static final String CONFIG_ESTATE_MANAGEMENT_EMPLOYEE = "test-config/estateManagement/estate_management_employee_module.json";
+    public static final String CONFIG_ESTATE_MANAGEMENT_EMPLOYEE = "test-config/estateManagement/estateManagement_employee_module.json";
     public static final String CONFIG_CHALLAN_EMPLOYEE = "test-config/challanGeneration/cg_employee_module.json";
     public static final String CONFIG_NDC_EMPLOYEE = "test-config/noDueCertificate/ndc_employee_module.json";
 
@@ -347,6 +362,8 @@ public final class AutomationConstants {
     public static final String ACTION_SELECT_DATE_RANGE = "SELECT_DATE_RANGE";
     public static final String ACTION_ACCEPT_ALERT = "ACCEPT_ALERT";
     public static final String ACTION_CLEAR_AND_TYPE = "CLEAR_AND_TYPE";
+    public static final String ACTION_CAPTURE_SCREENSHOT = "CAPTURE_SCREENSHOT";
+    public static final String ACTION_SCREENSHOT = "SCREENSHOT";
 
     // =========================================================================
     // Workflow Data Keys (Shared runtime data store keys)
@@ -381,6 +398,8 @@ public final class AutomationConstants {
 
     public static final String REPORTS_DIR = "target/reports";
     public static final String SCREENSHOTS_DIR = "target/screenshots";
+    public static final String MANUALS_DIR = "target/manuals";
+    public static final String RECORDINGS_DIR = "target/recordings";
 
     // =========================================================================
     // Environment Identifiers
@@ -388,6 +407,7 @@ public final class AutomationConstants {
 
     public static final String ENV_NIUATT = "NIUATT";
     public static final String ENV_UPYOG = "UPYOG";
+    public static final String ENV_SANDBOX = "SANDBOX";
 
     // =========================================================================
     // Portal Authentication Paths

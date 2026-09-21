@@ -73,28 +73,63 @@ public class TestEngine {
         } else {
             logger.info("Already logged in, skipping navigation");
         }
+        // Ensure current module is recorded in WorkflowDataStore
+        WorkflowDataStore.put(AutomationConstants.KEY_CURRENT_MODULE, module.getModuleName());
+        String currentTestCase = WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE);
+
+        // Start screen recording for this module execution (works in both headless and headed modes)
+        org.upyog.Automation.Utils.ScreenRecorder.startRecording(
+                driver,
+                module.getModuleName(),
+                currentTestCase != null ? currentTestCase : "TEST"
+        );
+
+        // Reset acknowledgement capture state for new module execution
+        actionExecutor.resetAcknowledgementCaptureState();
+
         List<TestInstruction> instructions = module.getInstructions();
         int totalSteps = instructions.size();
         int passedSteps = 0;
         int failedStep = -1;
         String failureReason = null;
 
-        for (int i = 0; i < totalSteps; i++) {
-            TestInstruction instruction = instructions.get(i);
-            logger.info("Step [{}/{}]: {}", i + 1, totalSteps, instruction.getStepName());
+        try {
+            for (int i = 0; i < totalSteps; i++) {
+                TestInstruction instruction = instructions.get(i);
+                logger.info("Step [{}/{}]: {}", i + 1, totalSteps, instruction.getStepName());
 
+                try {
+                    actionExecutor.execute(instruction);
+                    passedSteps++;
+
+                } catch (Exception e) {
+                    failedStep = i + 1;
+                    failureReason = e.getMessage();
+                    logger.error("Step {} failed: {}", failedStep, failureReason);
+
+                    // Halt on first failure
+                    break;
+                }
+            }
+
+            // Capture final completion / result screen upon successful module completion
+            if (failedStep == -1) {
+                try {
+                    Thread.sleep(1500);
+                    String label = actionExecutor.isAcknowledgementScreen()
+                            ? "Acknowledgement - " + module.getModuleName()
+                            : "Completion - " + module.getModuleName();
+                    actionExecutor.captureScreen(label, false);
+                } catch (Exception e) {
+                    logger.debug("Final module screen capture note: {}", e.getMessage());
+                }
+            }
+        } finally {
+            // Finalize and encode screen recording MP4
             try {
-                actionExecutor.execute(instruction);
-                passedSteps++;
-
+                org.upyog.Automation.Utils.ScreenRecorder.stopRecording();
             } catch (Exception e) {
-                failedStep = i + 1;
-                failureReason = e.getMessage();
-                logger.error("Step {} failed: {}", failedStep, failureReason);
-
-                // Optionally continue to next step or halt execution
-                // For now, we halt on first failure
-                break;
+                logger.warn("Screen recording finalization note: {}", e.getMessage());
             }
         }
 
