@@ -551,35 +551,108 @@ document.getElementById('vendorForm').addEventListener('submit', async (e) => {
 
 // Employee/Vendor dropdown autofill
 
-document.querySelectorAll("select[name='moduleName']").forEach(select => {
-    select.addEventListener("change", function () {
+function autoFillEmployeeFields(selectElement) {
+    const select = selectElement || document.querySelector("#employeeModuleDropdown");
+    if (!select) return;
+    const form = select.closest("form");
+    if (!form) return;
 
-        const form = this.closest("form");
+    const mobileField = form.querySelector("input[name='mobileNumber']");
+    const otpField = form.querySelector("input[name='otp']");
+    const baseUrlField = form.querySelector("[name='baseUrl']");
+    const cityField = form.querySelector("select[name='cityName']");
 
-        const mobileField = form.querySelector("input[name='mobileNumber']");
-        const otpField = form.querySelector("input[name='otp']");
-        const baseUrlField = form.querySelector("[name='baseUrl']");
+    const baseUrl = baseUrlField ? baseUrlField.value : "";
+    const moduleVal = select.value;
 
-        if (!mobileField || !otpField) return;
+    if (cityField) {
+        if (moduleVal === "COMMUNITY_HALL_BOOKING") {
+            cityField.value = "Mohali";
+            cityField.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (moduleVal === "STREET_VENDING") {
+            cityField.value = "Kurali";
+            cityField.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
 
+    if (mobileField && otpField) {
         let mobile = "7906413996";
         let otp = "123456";
 
-        const baseUrl = baseUrlField ? baseUrlField.value : "";
-
         if (
-            this.value === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ||
-            this.value === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC"
+            moduleVal === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ||
+            moduleVal === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM_OC"
         ) {
             if (baseUrl.includes("niuatt.niua")) {
                 mobile = "7272727216";
             } else if (baseUrl.includes("upyog")) {
                 mobile = "8888888881";
             }
+        } else if (moduleVal === "STREET_VENDING") {
+            if (baseUrl.includes("niuatt.niua.in/sv-ui") || baseUrl.includes("sv-ui")) {
+                mobile = "8010012414";
+            }
         }
 
         mobileField.value = mobile;
         otpField.value = otp;
+        mobileField.dispatchEvent(new Event('input', { bubbles: true }));
+        mobileField.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+
+function autoFillVendorFields(selectElement) {
+    const select = selectElement || document.querySelector("#vendorModuleDropdown");
+    if (!select) return;
+    const form = select.closest("form");
+    if (!form) return;
+
+    const cityField = form.querySelector("select[name='cityName']");
+    const moduleVal = select.value;
+
+    if (cityField) {
+        if (moduleVal === "COMMUNITY_HALL_BOOKING") {
+            cityField.value = "Mohali";
+            cityField.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (moduleVal === "STREET_VENDING") {
+            cityField.value = "Kurali";
+            cityField.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+}
+
+document.querySelectorAll("select[name='moduleName']").forEach(select => {
+    select.addEventListener("change", function () {
+        if (this.id === "employeeModuleDropdown") {
+            autoFillEmployeeFields(this);
+        } else if (this.id === "vendorModuleDropdown") {
+            autoFillVendorFields(this);
+        } else {
+            autoFillEmployeeFields(this);
+        }
+    });
+});
+
+document.querySelectorAll("select[name='baseUrl']").forEach(select => {
+    select.addEventListener("change", function () {
+        const form = this.closest("form");
+        if (!form) return;
+        if (form.id === "citizenForm") {
+            const checkedCb = form.querySelector("input[name='modules']:checked");
+            if (checkedCb) {
+                autoFillCitizenFields(checkedCb);
+            }
+        } else if (form.id === "employeeForm") {
+            const moduleSelect = form.querySelector("select[name='moduleName']");
+            if (moduleSelect) {
+                autoFillEmployeeFields(moduleSelect);
+            }
+        } else if (form.id === "vendorForm") {
+            const moduleSelect = form.querySelector("select[name='moduleName']");
+            if (moduleSelect) {
+                autoFillVendorFields(moduleSelect);
+            }
+        }
     });
 });
 
@@ -818,18 +891,30 @@ async function loadReports() {
 
 function autoFillCitizenFields(moduleCheckbox) {
     const form = moduleCheckbox.closest("form");
+    if (!form) return;
 
     const mobileField = form.querySelector("input[name='mobileNumber']");
     const otpField = form.querySelector("input[name='otp']");
     const baseUrlField = form.querySelector("[name='baseUrl']");
+    const cityField = form.querySelector("select[name='cityName']");
+
+    const baseUrl = baseUrlField ? baseUrlField.value : "";
+    const selectedModule = moduleCheckbox.value;
+
+    if (cityField && moduleCheckbox.checked) {
+        if (selectedModule === "COMMUNITY_HALL_BOOKING") {
+            cityField.value = "Mohali";
+            cityField.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (selectedModule === "STREET_VENDING") {
+            cityField.value = "Kurali";
+            cityField.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
 
     if (!mobileField || !otpField) return;
 
     let mobile = "7906413996";
     let otp = "123456";
-
-    const baseUrl = baseUrlField ? baseUrlField.value : "";
-    const selectedModule = moduleCheckbox.value;
 
     if (
         selectedModule === "ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM" ||
@@ -844,7 +929,7 @@ function autoFillCitizenFields(moduleCheckbox) {
     if (
         selectedModule === "STREET_VENDING"
     ) {
-        if (baseUrl.includes("niuatt.niua.in/sv-ui/citizen/login")) {
+        if (baseUrl.includes("niuatt.niua.in/sv-ui/citizen/login") || baseUrl.includes("sv-ui")) {
             mobile = "8010012414";
         }
     }

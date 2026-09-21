@@ -54,25 +54,20 @@ public class CommonActions {
                                                 JavascriptExecutor js,
                                                 String labelText) {
 
-        WebElement radio = wait.until(
-                ExpectedConditions.elementToBeClickable(
-                        By.xpath(
-                                "//*[normalize-space()='" + labelText + "']" +
-                                        "/ancestor::*[contains(@class,'radio-wrap')]" +
-                                        "//input[@type='radio']"
-                        )
-                )
+        By locator = By.xpath(
+                "//label[normalize-space()='" + labelText + "']/preceding-sibling::span//input[@type='radio'] | " +
+                "//label[normalize-space()='" + labelText + "']/preceding-sibling::input[@type='radio'] | " +
+                "//label[normalize-space()='" + labelText + "']//input[@type='radio'] | " +
+                "//label[normalize-space()='" + labelText + "']"
         );
 
-        js.executeScript(
-                "arguments[0].scrollIntoView({block:'center'});",
-                radio
-        );
-
-        js.executeScript(
-                "arguments[0].click();",
-                radio
-        );
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        js.executeScript("arguments[0].scrollIntoView({block:'center'});", element);
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(locator)).click();
+        } catch (Exception e) {
+            js.executeScript("arguments[0].click();", element);
+        }
     }
 
     public static void clickButtonByText(WebDriver driver, WebDriverWait wait, JavascriptExecutor js, String text) {
@@ -94,21 +89,27 @@ public class CommonActions {
                                   String cityName) {
 
         String selectedUrl = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_URL);
-        if (selectedUrl != null && selectedUrl.toLowerCase().contains("sandbox")) {
-            if (cityName == null || cityName.isBlank() || "City A".equalsIgnoreCase(cityName) || "Delhi".equalsIgnoreCase(cityName)) {
+        String selectedModule = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_MODULE);
+
+        if (selectedModule != null) {
+            if ("COMMUNITY_HALL_BOOKING".equalsIgnoreCase(selectedModule) || "CHB".equalsIgnoreCase(selectedModule)) {
+                cityName = "Mohali";
+            } else if ("STREET_VENDING".equalsIgnoreCase(selectedModule) || "SV".equalsIgnoreCase(selectedModule)) {
+                cityName = "Kurali";
+            }
+        }
+
+        if (cityName == null || cityName.isBlank() || "Select City".equalsIgnoreCase(cityName)) {
+            if (selectedUrl != null && selectedUrl.toLowerCase().contains("sandbox")) {
                 cityName = "City A Muncipal Corporation";
-            }
-        } else if (selectedUrl != null && selectedUrl.toLowerCase().contains("niuatt")) {
-            if (cityName == null || cityName.isBlank() || "Delhi".equalsIgnoreCase(cityName) || "City A Muncipal Corporation".equalsIgnoreCase(cityName)) {
+            } else if (selectedUrl != null && selectedUrl.toLowerCase().contains("niuatt")) {
                 cityName = "City A";
-            }
-        } else if (selectedUrl != null && selectedUrl.toLowerCase().contains("upyog.niua.org")) {
-            if (cityName == null || cityName.isBlank() || "City A".equalsIgnoreCase(cityName) || "City A Muncipal Corporation".equalsIgnoreCase(cityName)) {
+            } else if (selectedUrl != null && selectedUrl.toLowerCase().contains("upyog.niua.org")) {
                 cityName = "Delhi";
             }
         }
 
-        logger.info("Selecting city on location screen: '{}' (Target URL: {})", cityName, selectedUrl);
+        logger.info("Selecting city on location screen: '{}' (Target URL: {}, Module: {})", cityName, selectedUrl, selectedModule);
 
         // 1. Wait for location screen container or radio elements
         try {
@@ -121,7 +122,25 @@ public class CommonActions {
             logger.warn("Location container wait, checking options directly: {}", e.getMessage());
         }
 
-        // 2. Direct XPath match for matching label
+        // 2. Direct radio input match associated with target city label or value
+        List<WebElement> targetRadios = driver.findElements(By.xpath(
+                "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]/preceding-sibling::span//input[@type='radio'] | " +
+                "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]/preceding-sibling::input[@type='radio'] | " +
+                "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]/following-sibling::span//input[@type='radio'] | " +
+                "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]/following-sibling::input[@type='radio'] | " +
+                "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]//input[@type='radio'] | " +
+                "//input[@type='radio' and (contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '" + cityName.toLowerCase() + "'))]"
+        ));
+
+        if (!targetRadios.isEmpty()) {
+            WebElement radio = targetRadios.get(0);
+            js.executeScript("arguments[0].scrollIntoView({block:'center'});", radio);
+            js.executeScript("arguments[0].click();", radio);
+            logger.info("Successfully selected city radio input for: {}", cityName);
+            return;
+        }
+
+        // 3. Direct label match for target city
         List<WebElement> matchingLabels = driver.findElements(By.xpath(
                 "//label[normalize-space()='" + cityName + "' or contains(normalize-space(),'" + cityName + "')]"
         ));
@@ -129,30 +148,29 @@ public class CommonActions {
         if (!matchingLabels.isEmpty()) {
             WebElement label = matchingLabels.get(0);
             js.executeScript("arguments[0].scrollIntoView({block:'center'});", label);
-            try {
-                WebElement radio = label.findElement(By.xpath("./preceding-sibling::span/input[@type='radio'] | ./following-sibling::span/input[@type='radio'] | .//input[@type='radio'] | ./ancestor::*[contains(@class,'radio-wrap')]//input[@type='radio']"));
-                js.executeScript("arguments[0].click();", radio);
-            } catch (Exception ignored) {
-                js.executeScript("arguments[0].click();", label);
-            }
-            logger.info("Successfully selected city via matching label: {}", cityName);
+            js.executeScript("arguments[0].click();", label);
+            logger.info("Successfully clicked matching label for city: {}", cityName);
             return;
         }
 
-        // 3. Scan through all radio container elements
+        // 4. Scan through individual radio option child wrappers (not the top container)
         List<WebElement> cityOptions = driver.findElements(
-                By.cssSelector("div.radio-wrap div, div.radio-wrap, .reverse-radio-selection-wrapper div, label"));
+                By.xpath("//div[contains(@class,'radio-wrap')]/*[self::div or self::span or self::label] | " +
+                        "//div[contains(@class,'reverse-radio-selection-wrapper')]/*[self::div or self::span or self::label] | " +
+                        "//form//label"));
 
         for (WebElement option : cityOptions) {
             try {
                 String text = option.getText().trim();
                 if (text.equalsIgnoreCase(cityName) ||
-                    (cityName.contains("City A") && text.contains("City A")) ||
-                    (cityName.equalsIgnoreCase("Delhi") && text.contains("Delhi"))) {
+                    (cityName.equalsIgnoreCase("Mohali") && text.toLowerCase().contains("mohali")) ||
+                    (cityName.equalsIgnoreCase("Kurali") && text.toLowerCase().contains("kurali")) ||
+                    (cityName.equalsIgnoreCase("City A") && (text.equalsIgnoreCase("City A") || text.equalsIgnoreCase("City A Muncipal Corporation"))) ||
+                    (cityName.equalsIgnoreCase("Delhi") && text.equalsIgnoreCase("Delhi"))) {
 
                     js.executeScript("arguments[0].scrollIntoView({block:'center'});", option);
 
-                    List<WebElement> radioInputs = option.findElements(By.cssSelector("input[type='radio']"));
+                    List<WebElement> radioInputs = option.findElements(By.xpath(".//input[@type='radio'] | ./preceding-sibling::span//input[@type='radio']"));
                     if (!radioInputs.isEmpty()) {
                         WebElement radioInput = radioInputs.get(0);
                         js.executeScript("arguments[0].click();", radioInput);
@@ -165,7 +183,7 @@ public class CommonActions {
             } catch (Exception ignored) {}
         }
 
-        // 4. Fallback to first available radio option
+        // 5. Fallback to first available radio option only if no specific city was found
         List<WebElement> allRadios = driver.findElements(By.cssSelector("input[type='radio']"));
         if (!allRadios.isEmpty()) {
             WebElement firstRadio = allRadios.get(0);

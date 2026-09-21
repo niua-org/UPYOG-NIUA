@@ -44,20 +44,33 @@ public class LoginHelper {
         }
 
         String loginMobile = mobile;
+        String loginCity = city;
 
         String env = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_ENV);
 
-        if (AutomationConstants.MODULE_OBPAS
-                .equalsIgnoreCase(moduleName)) {
+        if (moduleName != null) {
+            String upperMod = moduleName.toUpperCase();
+            if (upperMod.contains("OBPAS") || upperMod.contains("ONLINE_BUILDING_PLAN")) {
+                if (AutomationConstants.ENV_NIUATT.equalsIgnoreCase(env)) {
+                    loginMobile = ConfigReader.get("niuatt.architect.mobile");
+                } else {
+                    loginMobile = ConfigReader.get("upyog.architect.mobile");
+                }
+            }
 
-            if (AutomationConstants.ENV_NIUATT.equalsIgnoreCase(env)) {
-                loginMobile =
-                        ConfigReader.get("niuatt.architect.mobile");
+            // Determine specific city and mobile based on module
+            if (upperMod.contains("COMMUNITY_HALL_BOOKING") || upperMod.contains("CHB") || upperMod.contains("COMMUNITY_HALL")) {
+                loginCity = "Mohali";
+            } else if (upperMod.contains("STREET_VENDING") || upperMod.contains("SV")) {
+                loginCity = "Kurali";
+                if (baseUrl != null && baseUrl.contains("sv-ui")) {
+                    loginMobile = "8010012414";
+                }
             }
-            else {
-                loginMobile =
-                        ConfigReader.get("upyog.architect.mobile");
-            }
+        }
+
+        if (loginCity != null && !loginCity.isBlank()) {
+            WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_CITY, loginCity);
         }
 
         // ==========================
@@ -106,7 +119,7 @@ public class LoginHelper {
                 ExpectedConditions
                         .visibilityOfAllElementsLocatedBy(
                                 By.cssSelector(
-                                        "input.input-otp"
+                                    "input.input-otp"
                                 )
                         )
         );
@@ -134,7 +147,7 @@ public class LoginHelper {
                 js,
                 "Next"
         );
-        logger.info("selecting cityyyyy");
+        logger.info("selecting city: {}", loginCity);
 
 
         // ==========================
@@ -144,7 +157,7 @@ public class LoginHelper {
         CommonActions.selectCity(driver,
                 wait,
                 js,
-                city);
+                loginCity);
 
 
         logger.info("City selected properly");
