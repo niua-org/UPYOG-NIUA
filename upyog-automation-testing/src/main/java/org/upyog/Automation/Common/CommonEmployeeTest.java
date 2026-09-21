@@ -54,11 +54,11 @@ public class CommonEmployeeTest extends BaseTest {
         map.put(AutomationConstants.MODULE_TRADE_LICENSE_EMP, AutomationConstants.CONFIG_TRADE_LICENSE_EMPLOYEE);
 
         // Asset Management
-        map.put(AutomationConstants.MODULE_ASSET_MANAGEMENT, AutomationConstants.CONFIG_ASSET_INITIATOR);
-        map.put(AutomationConstants.MODULE_ASSET_MANAGEMENT_SYSTEM, AutomationConstants.CONFIG_ASSET_INITIATOR);
-        map.put(AutomationConstants.MODULE_ASSET_EMPLOYEE, AutomationConstants.CONFIG_ASSET_INITIATOR);
-        map.put(AutomationConstants.MODULE_ASSET_VERIFIER, AutomationConstants.CONFIG_ASSET_VERIFIER);
-        map.put(AutomationConstants.MODULE_ASSET_APPROVER, AutomationConstants.CONFIG_ASSET_APPROVER);
+        map.put(AutomationConstants.MODULE_ASSET_MANAGEMENT, AutomationConstants.CONFIG_ASSET_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_ASSET_MANAGEMENT_SYSTEM, AutomationConstants.CONFIG_ASSET_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_ASSET_EMPLOYEE, AutomationConstants.CONFIG_ASSET_EMPLOYEE);
+        map.put(AutomationConstants.MODULE_ASSET_VERIFIER, AutomationConstants.CONFIG_ASSET_EMPLOYEE_VERIFIER);
+        map.put(AutomationConstants.MODULE_ASSET_APPROVER, AutomationConstants.CONFIG_ASSET_EMPLOYEE_APPROVER);
 
         // Advertisement
         map.put(AutomationConstants.MODULE_ADVERTISEMENT, AutomationConstants.CONFIG_ADVERTISEMENT_EMPLOYEE);

@@ -56,8 +56,15 @@ public class BaseTest {
         if (otp == null)
             otp = ConfigReader.get("user.otp");
 
-        if (city == null)
-            city = ConfigReader.get("city.name");
+        if (city == null || city.isBlank()) {
+            if ("COMMUNITY_HALL_BOOKING".equalsIgnoreCase(moduleName) || "CHB".equalsIgnoreCase(moduleName)) {
+                city = "Mohali";
+            } else if ("STREET_VENDING".equalsIgnoreCase(moduleName) || "SV".equalsIgnoreCase(moduleName)) {
+                city = "Kurali";
+            } else {
+                city = ConfigReader.get("city.name");
+            }
+        }
 
         if (moduleName == null)
             moduleName = ConfigReader.get("obpas.module");

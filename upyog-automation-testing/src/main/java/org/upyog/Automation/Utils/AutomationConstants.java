@@ -175,9 +175,9 @@ public final class AutomationConstants {
     public static final String CONFIG_STREET_VENDING_EMPLOYEE = "test-config/streetVending/street_vending_employee_module.json";
     public static final String CONFIG_PET_EMPLOYEE = "test-config/pet/pet_employee_module.json";
     public static final String CONFIG_TRADE_LICENSE_EMPLOYEE = "test-config/tradeLicense/trade_license_employee_module.json";
-    public static final String CONFIG_ASSET_INITIATOR = "test-config/asset/asset_initiator.json";
-    public static final String CONFIG_ASSET_VERIFIER = "test-config/asset/asset_verifier.json";
-    public static final String CONFIG_ASSET_APPROVER = "test-config/asset/asset_approver.json";
+    public static final String CONFIG_ASSET_INITIATOR = "test-config/asset/asset_employee_module.json";
+    public static final String CONFIG_ASSET_VERIFIER = "test-config/asset/asset_employeeVerifier_module.json";
+    public static final String CONFIG_ASSET_APPROVER = "test-config/asset/asset_employeeApprover_module.json";
     public static final String CONFIG_ASSET_EMPLOYEE = "test-config/asset/asset_employee_module.json";
     public static final String CONFIG_ASSET_EMPLOYEE_VERIFIER = "test-config/asset/asset_employeeVerifier_module.json";
     public static final String CONFIG_ASSET_EMPLOYEE_APPROVER = "test-config/asset/asset_employeeApprover_module.json";

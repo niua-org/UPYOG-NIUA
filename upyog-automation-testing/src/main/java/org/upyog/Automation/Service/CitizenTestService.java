@@ -68,8 +68,20 @@ public class CitizenTestService {
         // Selecting City based on Url if not explicitly provided or default
         String prefix = env.toLowerCase();
         String envCity = ConfigReader.get(prefix + ".city");
-        if (cityName == null || cityName.isBlank()) {
-            cityName = envCity != null ? envCity : "City A";
+        if (cityName == null || cityName.isBlank() || "Select City".equalsIgnoreCase(cityName)) {
+            if (moduleName != null && ("COMMUNITY_HALL_BOOKING".equalsIgnoreCase(moduleName) || "CHB".equalsIgnoreCase(moduleName))) {
+                cityName = "Mohali";
+            } else if (moduleName != null && ("STREET_VENDING".equalsIgnoreCase(moduleName) || "SV".equalsIgnoreCase(moduleName))) {
+                cityName = "Kurali";
+            } else {
+                cityName = envCity != null ? envCity : "City A";
+            }
+        } else if ("City A".equalsIgnoreCase(cityName) || "Delhi".equalsIgnoreCase(cityName)) {
+            if (moduleName != null && ("COMMUNITY_HALL_BOOKING".equalsIgnoreCase(moduleName) || "CHB".equalsIgnoreCase(moduleName))) {
+                cityName = "Mohali";
+            } else if (moduleName != null && ("STREET_VENDING".equalsIgnoreCase(moduleName) || "SV".equalsIgnoreCase(moduleName))) {
+                cityName = "Kurali";
+            }
         }
 
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_CITY, cityName);
