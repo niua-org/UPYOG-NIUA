@@ -103,11 +103,8 @@ public class ApplicationProperties {
     @Value("${kafka.topics.notification.email}")
     private String emailNotifTopic;
 
-    @Value("${external.api.audit.request.initiated.topic}")
-    private String integrationRequestInitiatedTopic;
-
-    @Value("${external.api.audit.response.received.topic}")
-    private String integrationResponseReceivedTopic;
+    @Value("${external.api.audit.detail.topic}")
+    private String integrationAuditDetailTopic;
 
     @Value("${external.api.audit.max.payload.bytes}")
     private int integrationAuditMaxPayloadBytes;

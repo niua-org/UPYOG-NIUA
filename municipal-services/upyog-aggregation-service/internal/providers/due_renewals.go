@@ -22,7 +22,6 @@ import (
 
 const dueRenewalsProviderName = "due-renewals"
 
-
 // DueRenewalsProvider fetches licences and registrations nearing expiry.
 type DueRenewalsProvider struct {
 	BaseProvider
@@ -63,7 +62,7 @@ func (p *DueRenewalsProvider) Execute(
 	}
 
 	// Fetch all bills to get accurate totalCount and perform pagination in-memory
-	path := fmt.Sprintf("/billing-service/bill/v2/short/_search?tenantId=%s&mobileNumber=%s&isActive=true&status=ACTIVE", tenantID, userMobile)
+	path := fmt.Sprintf("/billing-service/bill/v2/_searchsummary?tenantId=%s&mobileNumber=%s&isActive=true&status=ACTIVE", tenantID, userMobile)
 
 	headers := map[string]string{
 		common.HeaderTenantID: aggReq.TenantID,
