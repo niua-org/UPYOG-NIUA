@@ -7,6 +7,7 @@ import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
 import org.upyog.Automation.model.TestModule;
 import org.upyog.Automation.Utils.JsonConfigLoader;
+import org.upyog.Automation.Utils.ScreenRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,7 @@ public class TestEngine {
         String currentTestCase = WorkflowDataStore.get(AutomationConstants.KEY_CURRENT_TEST_CASE);
 
         // Start screen recording for this module execution (works in both headless and headed modes)
-        org.upyog.Automation.Utils.ScreenRecorder.startRecording(
+        ScreenRecorder.startRecording(
                 driver,
                 module.getModuleName(),
                 currentTestCase != null ? currentTestCase : "TEST"
@@ -127,7 +128,7 @@ public class TestEngine {
         } finally {
             // Finalize and encode screen recording MP4
             try {
-                org.upyog.Automation.Utils.ScreenRecorder.stopRecording();
+                ScreenRecorder.stopRecording();
             } catch (Exception e) {
                 logger.warn("Screen recording finalization note: {}", e.getMessage());
             }

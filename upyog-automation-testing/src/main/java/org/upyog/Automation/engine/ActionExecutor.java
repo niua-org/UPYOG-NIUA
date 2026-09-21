@@ -11,6 +11,7 @@ import org.upyog.Automation.Utils.TestDataStore;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.TestInstruction;
 import org.upyog.Automation.Utils.ScreenshotManager;
+import org.upyog.Automation.Utils.ScreenRecorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,7 @@ public class ActionExecutor {
     private final WebDriverWait wait;
     private final JavascriptExecutor js;
     private final Actions actions;
-    private final org.upyog.Automation.engine.LocatorResolver locatorResolver;
+    private final LocatorResolver locatorResolver;
     private String lastCapturedFingerprint = "";
     private long lastCapturedTime = 0;
 
@@ -93,7 +94,7 @@ public class ActionExecutor {
         this.wait = wait;
         this.js = (JavascriptExecutor) driver;
         this.actions = new Actions(driver);
-        this.locatorResolver = new org.upyog.Automation.engine.LocatorResolver();
+        this.locatorResolver = new LocatorResolver();
     }
 
     /**
@@ -307,7 +308,7 @@ public class ActionExecutor {
             logger.info("✓ Completed step: {}", stepName);
 
             // Record frame for smooth video timeline
-            org.upyog.Automation.Utils.ScreenRecorder.recordFrame(driver);
+            ScreenRecorder.recordFrame(driver);
 
             String reportValue = getReportValue(instruction, action);
 

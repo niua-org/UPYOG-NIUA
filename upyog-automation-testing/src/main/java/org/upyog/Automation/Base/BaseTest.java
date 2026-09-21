@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.upyog.Automation.Utils.*;
 
-
 import java.time.Duration;
 
 public class BaseTest {
@@ -83,7 +82,7 @@ public class BaseTest {
 
     public void tearDown() throws InterruptedException {
         try {
-            org.upyog.Automation.Utils.ScreenRecorder.stopRecording();
+            ScreenRecorder.stopRecording();
         } catch (Exception ignored) {}
         Thread.sleep(15000);
         if (driver != null) {

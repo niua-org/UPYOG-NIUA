@@ -95,7 +95,7 @@ public class ReportManager {
                     );
                     return;
                 } catch (Exception e) {
-                    logger.warn("Unable to attach base64 screenshot to ExtentTest: {}", e.getMessage());
+                    logger.error("Unable to attach base64 screenshot to ExtentTest: {}", e.getMessage());
                 }
             }
             extentTest.info(stepName);
@@ -146,7 +146,7 @@ public class ReportManager {
                     );
                     return;
                 } catch (Exception e) {
-                    logger.warn("Unable to attach base64 failure screenshot to ExtentTest: {}", e.getMessage());
+                    logger.error("Unable to attach base64 failure screenshot to ExtentTest: {}", e.getMessage());
                 }
             }
             extentTest.fail(stepName);

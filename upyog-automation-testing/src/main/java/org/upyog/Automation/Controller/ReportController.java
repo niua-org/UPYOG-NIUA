@@ -420,13 +420,13 @@ public class ReportController {
     public ResponseEntity<ResourceRegion> streamRecordingFile(
             @PathVariable String fileName,
             @RequestHeader(required = false) HttpHeaders headers) {
-        File file = org.upyog.Automation.Utils.ScreenRecorder.getRecordingFile(fileName);
+        File file = ScreenRecorder.getRecordingFile(fileName);
         return streamVideoRegion(file, headers);
     }
 
     @GetMapping(value = {"/video/download/{fileName:.+}"})
     public ResponseEntity<Resource> downloadRecordingFile(@PathVariable String fileName) {
-        File file = org.upyog.Automation.Utils.ScreenRecorder.getRecordingFile(fileName);
+        File file = ScreenRecorder.getRecordingFile(fileName);
         if (file == null || !file.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -439,13 +439,13 @@ public class ReportController {
 
     @GetMapping("/video/latest")
     public ResponseEntity<ResourceRegion> streamLatestRecording(@RequestHeader(required = false) HttpHeaders headers) {
-        File file = org.upyog.Automation.Utils.ScreenRecorder.getLatestRecording("ALL");
+        File file = ScreenRecorder.getLatestRecording("ALL");
         return streamVideoRegion(file, headers);
     }
 
     @GetMapping("/video/download/latest")
     public ResponseEntity<Resource> downloadLatestRecording() {
-        File file = org.upyog.Automation.Utils.ScreenRecorder.getLatestRecording("ALL");
+        File file = ScreenRecorder.getLatestRecording("ALL");
         if (file == null || !file.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -460,13 +460,13 @@ public class ReportController {
     public ResponseEntity<ResourceRegion> streamModuleRecording(
             @PathVariable String moduleName,
             @RequestHeader(required = false) HttpHeaders headers) {
-        File file = org.upyog.Automation.Utils.ScreenRecorder.getLatestRecording(moduleName);
+        File file = ScreenRecorder.getLatestRecording(moduleName);
         return streamVideoRegion(file, headers);
     }
 
     @GetMapping(value = {"/video/download/module/{moduleName:.+}"})
     public ResponseEntity<Resource> downloadModuleRecording(@PathVariable String moduleName) {
-        File file = org.upyog.Automation.Utils.ScreenRecorder.getLatestRecording(moduleName);
+        File file = ScreenRecorder.getLatestRecording(moduleName);
         if (file == null || !file.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -481,14 +481,14 @@ public class ReportController {
     public ResponseEntity<byte[]> downloadAllRecordingsZip(@RequestParam(required = false) String module) {
         try {
             String targetModule = (module != null && !module.isBlank() && !"ALL".equalsIgnoreCase(module)) ? module : "ALL";
-            List<File> files = org.upyog.Automation.Utils.ScreenRecorder.getRecordingsForModule(targetModule);
+            List<File> files = ScreenRecorder.getRecordingsForModule(targetModule);
 
             if (files.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
             java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-            org.upyog.Automation.Utils.ScreenRecorder.bundleRecordingsZip(files, baos);
+            ScreenRecorder.bundleRecordingsZip(files, baos);
             byte[] zipBytes = baos.toByteArray();
 
             String zipName = "Recordings_" + targetModule.replace(" ", "_") + ".zip";
@@ -505,7 +505,7 @@ public class ReportController {
     @GetMapping("/video/list")
     public ResponseEntity<List<java.util.Map<String, Object>>> listRecordings(@RequestParam(required = false) String module) {
         String targetModule = (module != null && !module.isBlank()) ? module : "ALL";
-        return ResponseEntity.ok(org.upyog.Automation.Utils.ScreenRecorder.listRecordings(targetModule));
+        return ResponseEntity.ok(ScreenRecorder.listRecordings(targetModule));
     }
 
     @RequestMapping(value = "/manual/delete-image", method = {RequestMethod.DELETE, RequestMethod.POST})
