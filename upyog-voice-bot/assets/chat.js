@@ -1,8 +1,38 @@
 // assets/chat.js — Chat UI, State Management, Authentication, and Message Dispatching
 
+// Helper to execute callback when DOM is ready (or immediately if already parsed)
+function onDOMReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
+  }
+}
+
 // ============== REDIS LOGIN LOGIC ==============
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 let conversationSessionId = null;
+
+function ensureSessionId() {
+  if (!conversationSessionId) {
+    const savedPhone = localStorage.getItem("upyog_redis_phone");
+    const savedToken = localStorage.getItem("upyog_auth_token");
+    if (savedPhone && savedToken && savedPhone.length === 10 && /^\d+$/.test(savedPhone)) {
+      conversationSessionId = sessionStorage.getItem("upyog_active_session");
+      if (!conversationSessionId || !conversationSessionId.includes(savedPhone)) {
+        conversationSessionId = `user_${savedPhone}_${Math.random().toString(36).substring(2, 9)}`;
+        sessionStorage.setItem("upyog_active_session", conversationSessionId);
+      }
+    } else {
+      conversationSessionId = sessionStorage.getItem("upyog_active_session");
+      if (!conversationSessionId || !conversationSessionId.startsWith("guest_")) {
+        conversationSessionId = `guest_${Math.random().toString(36).substring(2, 9)}`;
+        sessionStorage.setItem("upyog_active_session", conversationSessionId);
+      }
+    }
+  }
+  return conversationSessionId;
+}
 
 function openLoginModal() {
   if (!isLocal) return; // Never show login popup modal on external/testing/production environments
@@ -305,7 +335,9 @@ function handleNiuattMessage(event) {
 
   if (event.data?.type === "TOGGLE_MIC" || event.data?.action === "TOGGLE_MIC" || (event.data?.type === "KEY_EVENT" && (event.data?.key === 'd' || event.data?.key === 'D'))) {
     console.log('[UPYOG POST_MESSAGE] Triggering session toggle from postMessage command');
-    handleSessionToggle();
+    if (typeof handleSessionToggle === 'function') {
+      handleSessionToggle();
+    }
   }
 }
 window.addEventListener("message", handleNiuattMessage);
@@ -336,50 +368,50 @@ function setState(newState) {
 
   if (newState === States.SPEAKING) {
     statusDot.className = 'status-dot speaking';
-    statusDot.innerHTML = ICONS.speakingWave;
+    statusDot.innerHTML = (typeof ICONS !== 'undefined' && ICONS.speakingWave) ? ICONS.speakingWave : '';
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = ICONS.stop;
+      sendBtn.innerHTML = (typeof ICONS !== 'undefined' && ICONS.stop) ? ICONS.stop : '';
       sendBtn.title = 'Stop Voice & End Session';
       sendBtn.classList.add('stop-mode');
     }
-    updateSessionBtnIcon(sessionActive);
+    if (typeof updateSessionBtnIcon === 'function') updateSessionBtnIcon(sessionActive);
   } else if (newState === States.PROCESSING) {
     statusDot.className = 'status-dot processing';
     statusDot.innerHTML = '';
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = ICONS.stop;
+      sendBtn.innerHTML = (typeof ICONS !== 'undefined' && ICONS.stop) ? ICONS.stop : '';
       sendBtn.title = 'Stop Voice & End Session';
       sendBtn.classList.add('stop-mode');
     }
-    updateSessionBtnIcon(sessionActive);
+    if (typeof updateSessionBtnIcon === 'function') updateSessionBtnIcon(sessionActive);
   } else if (newState === States.LISTENING) {
     statusDot.className = 'status-dot listening';
     statusDot.innerHTML = '';
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = ICONS.send;
+      sendBtn.innerHTML = (typeof ICONS !== 'undefined' && ICONS.send) ? ICONS.send : '';
       sendBtn.title = 'Send message';
       sendBtn.classList.remove('stop-mode');
     }
-    updateSessionBtnIcon(sessionActive);
+    if (typeof updateSessionBtnIcon === 'function') updateSessionBtnIcon(sessionActive);
     if (typeof startSessionInactivityTimer === 'function') startSessionInactivityTimer();
   } else {
-    statusDot.className = 'status-dot ' + newState.toLowerCase();
+    statusDot.className = 'status-dot ' + String(newState).toLowerCase();
     statusDot.innerHTML = '';
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = ICONS.send;
+      sendBtn.innerHTML = (typeof ICONS !== 'undefined' && ICONS.send) ? ICONS.send : '';
       sendBtn.title = 'Send message';
       sendBtn.classList.remove('stop-mode');
     }
-    updateSessionBtnIcon(sessionActive);
+    if (typeof updateSessionBtnIcon === 'function') updateSessionBtnIcon(sessionActive);
     if (typeof clearSessionInactivityTimer === 'function') clearSessionInactivityTimer();
     if (typeof clearInterimDisplay === 'function') clearInterimDisplay();
   }
 
-  statusText.innerText = STATE_LABELS[newState] || newState;
+  statusText.innerText = (typeof STATE_LABELS !== 'undefined' && STATE_LABELS[newState]) ? STATE_LABELS[newState] : newState;
 }
 
 function toggleSettingsPanel() {
@@ -405,7 +437,7 @@ function syncLangPreference(e) {
 function showTextInputBar(field) {
   const input = document.getElementById('text-input');
   if (input) {
-    input.placeholder = FIELD_PLACEHOLDERS[field] || FIELD_PLACEHOLDERS.default;
+    input.placeholder = (typeof FIELD_PLACEHOLDERS !== 'undefined' && FIELD_PLACEHOLDERS[field]) ? FIELD_PLACEHOLDERS[field] : ((typeof FIELD_PLACEHOLDERS !== 'undefined') ? FIELD_PLACEHOLDERS.default : 'Type your answer...');
     setTimeout(() => input.focus(), 500);
   }
 }
@@ -482,7 +514,7 @@ function addUserMessage(text) {
   msgDiv.innerText = text;
   const avatarDiv = document.createElement('div');
   avatarDiv.className = 'user-avatar';
-  avatarDiv.innerHTML = ICONS.avatar;
+  avatarDiv.innerHTML = (typeof ICONS !== 'undefined' && ICONS.avatar) ? ICONS.avatar : '';
 
   rowDiv.appendChild(msgDiv);
   rowDiv.appendChild(avatarDiv);
@@ -605,7 +637,7 @@ function addBotMessage(text, mode, inputType, options, field, minDate) {
     }
     const hint = document.createElement('div');
     hint.className = 'choice-hint';
-    hint.textContent = HINT_MESSAGES.speakChoice;
+    hint.textContent = (typeof HINT_MESSAGES !== 'undefined' && HINT_MESSAGES.speakChoice) ? HINT_MESSAGES.speakChoice : 'You can also speak your choice';
     wrapper.appendChild(hint);
   }
 
@@ -658,7 +690,7 @@ function addBotMessage(text, mode, inputType, options, field, minDate) {
   if (inputType === 'number') {
     const hint = document.createElement('div');
     hint.className = 'number-hint';
-    hint.textContent = HINT_MESSAGES.speakDigits;
+    hint.textContent = (typeof HINT_MESSAGES !== 'undefined' && HINT_MESSAGES.speakDigits) ? HINT_MESSAGES.speakDigits : 'Speak digits clearly, or type below';
     wrapper.appendChild(hint);
     showTextInputBar(field);
   }
@@ -919,7 +951,8 @@ function addBotMessage(text, mode, inputType, options, field, minDate) {
 
 // ============== SEND QUERY ==============
 async function sendQuery(transcript, file_name = null, file_data = null, display_text = null) {
-  if ((!transcript.trim() && !file_name) || !conversationSessionId) return;
+  const activeSessionId = ensureSessionId();
+  if ((!String(transcript || '').trim() && !file_name) || !activeSessionId) return;
   if (typeof destroyRecognition === 'function') destroyRecognition();
   setState(States.PROCESSING);
   if (typeof clearInterimDisplay === 'function') clearInterimDisplay();
@@ -938,7 +971,7 @@ async function sendQuery(transcript, file_name = null, file_data = null, display
       body: JSON.stringify({
         RequestInfo: getRequestInfo(),
         query: transcript || '',
-        session_id: conversationSessionId,
+        session_id: activeSessionId,
         auth_token: localStorage.getItem("upyog_auth_token"),
         file_name: file_name,
         file_data: file_data
@@ -1064,8 +1097,8 @@ function saveChatHistory() {
   }
 }
 
-// ============== INITIALIZATION ON DOM READY ==============
-window.addEventListener('DOMContentLoaded', () => {
+// ============== INITIALIZATION RUNNER ==============
+function initializeChatApp() {
   const urlParams = new URLSearchParams(window.location.search);
   const urlToken = urlParams.get("token") || urlParams.get("authToken") || urlParams.get("auth_token");
   const urlPhone = urlParams.get("phone") || urlParams.get("mobile") || urlParams.get("mobileNumber");
@@ -1126,6 +1159,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const sendTextBtn = document.getElementById('send-text-btn');
   const textInput = document.getElementById('text-input');
 
-  if (sendTextBtn) sendTextBtn.addEventListener('click', handleSendBtnClick);
-  if (textInput) textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleTextSubmit(); });
-});
+  if (sendTextBtn && !sendTextBtn.dataset.bound) {
+    sendTextBtn.dataset.bound = "true";
+    sendTextBtn.addEventListener('click', handleSendBtnClick);
+  }
+  if (textInput && !textInput.dataset.bound) {
+    textInput.dataset.bound = "true";
+    textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleTextSubmit(); });
+  }
+}
+
+// Execute when DOM is ready
+onDOMReady(initializeChatApp);

@@ -75,7 +75,10 @@ function createRecognition(lang) {
   destroyRecognition();
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert('Speech recognition not supported in this browser');
+    console.warn('Speech recognition not supported in this browser');
+    if (typeof addBotMessage === 'function') {
+      addBotMessage('Speech recognition is not supported in this browser. Please use Google Chrome, Edge, or a WebSpeech-compatible browser.', 'error', null, null, null);
+    }
     return null;
   }
 
@@ -100,11 +103,21 @@ function createRecognition(lang) {
     }
   };
   recognition.onerror = function onRecognitionError(e) {
+    console.warn('[UPYOG SPEECH] Recognition error:', e.error);
     if (e.error === 'no-speech' || e.error === 'aborted') return;
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+      sessionActive = false;
+      updateSessionBtnIcon(false);
+      setState(States.IDLE);
+      if (typeof addBotMessage === 'function') {
+        addBotMessage('Microphone access was denied or is unavailable. Please check your browser microphone permissions or ensure the connection is HTTPS.', 'error', null, null, null);
+      }
+      return;
+    }
     setTimeout(() => {
       if (sessionActive) {
         createRecognition(lastDetectedLang);
-        try { recognition.start(); } catch (e) { }
+        try { recognition.start(); } catch (err) { }
       }
     }, 500);
   };
@@ -118,8 +131,18 @@ function createAndStartRecognition() {
     try {
       recognition.start();
     } catch (e) {
-      addBotMessage('Sorry, microphone could not start.', null, null, null, null);
+      console.error('[UPYOG MIC] Error starting recognition:', e);
+      if (typeof addBotMessage === 'function') {
+        addBotMessage('Sorry, microphone could not start. Please ensure microphone permissions are granted.', null, null, null, null);
+      }
+      sessionActive = false;
+      updateSessionBtnIcon(false);
+      setState(States.IDLE);
     }
+  } else {
+    sessionActive = false;
+    updateSessionBtnIcon(false);
+    setState(States.IDLE);
   }
 }
 
@@ -492,12 +515,29 @@ async function handleSessionToggle() {
 }
 
 // Bind audio buttons
-document.addEventListener('DOMContentLoaded', () => {
+function bindAudioControls() {
   const stopVoiceBtn = document.getElementById('stop-voice-btn');
   const interruptMicBtn = document.getElementById('interrupt-mic-btn');
   const sessionBtn = document.getElementById('session-toggle-btn');
 
-  if (stopVoiceBtn) stopVoiceBtn.addEventListener('click', handleStopVoiceClick);
-  if (interruptMicBtn) interruptMicBtn.addEventListener('click', handleInterruptClick);
-  if (sessionBtn) sessionBtn.addEventListener('click', handleSessionToggle);
-});
+  if (stopVoiceBtn && !stopVoiceBtn.dataset.bound) {
+    stopVoiceBtn.dataset.bound = "true";
+    stopVoiceBtn.addEventListener('click', handleStopVoiceClick);
+  }
+  if (interruptMicBtn && !interruptMicBtn.dataset.bound) {
+    interruptMicBtn.dataset.bound = "true";
+    interruptMicBtn.addEventListener('click', handleInterruptClick);
+  }
+  if (sessionBtn && !sessionBtn.dataset.bound) {
+    sessionBtn.dataset.bound = "true";
+    sessionBtn.addEventListener('click', handleSessionToggle);
+  }
+}
+
+if (typeof onDOMReady === 'function') {
+  onDOMReady(bindAudioControls);
+} else if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindAudioControls);
+} else {
+  bindAudioControls();
+}
