@@ -2,9 +2,9 @@
   "moduleName": "CHALLAN_GENERATION",
 
   "citizen": {
-    "mobile": "7906413996",
-    "otp": "123456",
-    "city": "City A"
+    "mobile": "",
+    "otp": "",
+    "city": ""
   },
 
   "employee": {

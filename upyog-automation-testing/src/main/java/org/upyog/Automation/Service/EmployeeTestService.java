@@ -47,9 +47,14 @@ public class EmployeeTestService {
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_PASSWORD, password);
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_APPLICATION_NO, applicationNumber);
 
-        String env = baseUrl.toLowerCase().contains(AutomationConstants.ENV_NIUATT.toLowerCase())
-                ? AutomationConstants.ENV_NIUATT
-                : AutomationConstants.ENV_UPYOG;
+        String env;
+        if (baseUrl.toLowerCase().contains("sandbox")) {
+            env = AutomationConstants.ENV_SANDBOX;
+        } else if (baseUrl.toLowerCase().contains(AutomationConstants.ENV_NIUATT.toLowerCase())) {
+            env = AutomationConstants.ENV_NIUATT;
+        } else {
+            env = AutomationConstants.ENV_UPYOG;
+        }
 
         WorkflowDataStore.put(AutomationConstants.KEY_SELECTED_ENV, env);
 

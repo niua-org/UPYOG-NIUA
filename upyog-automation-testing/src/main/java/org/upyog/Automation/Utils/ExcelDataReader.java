@@ -89,8 +89,7 @@ public class ExcelDataReader {
             Workbook workbook =
                     WorkbookFactory.create(inputStream);
 
-            Sheet sheet =
-                    workbook.getSheet(sheetName);
+            Sheet sheet = getSheetSafely(workbook, sheetName);
 
             if (sheet == null) {
                 throw new RuntimeException(
@@ -209,7 +208,7 @@ public class ExcelDataReader {
                     WorkbookFactory.create(inputStream);
 
             boolean exists =
-                    workbook.getSheet(sheetName) != null;
+                    getSheetSafely(workbook, sheetName) != null;
 
             workbook.close();
 
@@ -219,6 +218,89 @@ public class ExcelDataReader {
 
             return false;
         }
+    }
+
+    /**
+     * Resiliently finds a sheet by exact name, case-insensitively, or via standard aliases.
+     *
+     * @param workbook the active Excel workbook
+     * @param sheetName the sheet name to search for
+     * @return the resolved {@link Sheet}, or {@code null} if not found
+     */
+    public static Sheet getSheetSafely(Workbook workbook, String sheetName) {
+        if (workbook == null || sheetName == null) {
+            return null;
+        }
+
+        Sheet sheet = workbook.getSheet(sheetName);
+        if (sheet != null) {
+            return sheet;
+        }
+
+        // 1. Direct case-insensitive match
+        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+            Sheet s = workbook.getSheetAt(i);
+            if (s.getSheetName().equalsIgnoreCase(sheetName)) {
+                return s;
+            }
+        }
+
+        // 2. Normalized matching (stripping non-alphanumeric chars)
+        String normTarget = sheetName.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+            Sheet s = workbook.getSheetAt(i);
+            String normSheet = s.getSheetName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+            if (normSheet.equals(normTarget)) {
+                return s;
+            }
+        }
+
+        // 3. Known module alias mappings (Full name <-> Abbreviation)
+        Map<String, List<String>> aliases = Map.ofEntries(
+                Map.entry("pet", List.of("pet", "petregistration", "ptr")),
+                Map.entry("tradelicense", List.of("tradelicense", "tl", "tlmodule")),
+                Map.entry("streetvending", List.of("streetvending", "sv")),
+                Map.entry("waterandsewerage", List.of("waterandsewerage", "ws", "watersewerage", "water", "sewerage")),
+                Map.entry("propertytax", List.of("propertytax", "pt")),
+                Map.entry("publicgrievanceredressal", List.of("publicgrievanceredressal", "publicgrievance", "pgr")),
+                Map.entry("advertisement", List.of("advertisement", "adv", "ads")),
+                Map.entry("ewaste", List.of("ewaste", "ew")),
+                Map.entry("communityhallbooking", List.of("communityhallbooking", "communityhall", "chb")),
+                Map.entry("constructionanddemolition", List.of("constructionanddemolition", "cnd")),
+                Map.entry("desludging", List.of("desludging", "fsm")),
+                Map.entry("garbagecollection", List.of("garbagecollection", "gc")),
+                Map.entry("estatemanagement", List.of("estatemanagement", "estate")),
+                Map.entry("noduecertificate", List.of("noduecertificate", "ndc")),
+                Map.entry("assetmanagement", List.of("assetmanagement", "asset")),
+                Map.entry("challangeneration", List.of("challangeneration", "challan", "cg")),
+                Map.entry("treepruning", List.of("treepruning", "tp")),
+                Map.entry("watertanker", List.of("watertanker", "wt")),
+                Map.entry("mobiletoilet", List.of("mobiletoilet", "mt")),
+                Map.entry("obpas", List.of("obpas", "bpa"))
+        );
+
+        String cleanTarget = normTarget.replace("testdata", "").replace("test", "").replace("data", "");
+
+        for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+            Sheet s = workbook.getSheetAt(i);
+            String cleanSheet = s.getSheetName().replaceAll("[^a-zA-Z0-9]", "").toLowerCase()
+                    .replace("testdata", "").replace("test", "").replace("data", "");
+
+            if (cleanSheet.equals(cleanTarget)) {
+                return s;
+            }
+
+            for (Map.Entry<String, List<String>> entry : aliases.entrySet()) {
+                List<String> list = entry.getValue();
+                boolean targetMatches = list.contains(cleanTarget) || cleanTarget.contains(entry.getKey());
+                boolean sheetMatches = list.contains(cleanSheet) || cleanSheet.contains(entry.getKey());
+                if (targetMatches && sheetMatches) {
+                    return s;
+                }
+            }
+        }
+
+        return null;
     }
 
 
@@ -243,16 +325,17 @@ public class ExcelDataReader {
     // =========================================================
 
     public static void main(String[] args) {
-
-        List<Map<String, String>> data =
-                ExcelDataReader.readSheet(
-                        AutomationConstants.SHEET_NDC
-                );
-
-        logger.info("Total test cases: {}", data.size());
-
-        for (Map<String, String> row : data) {
-            logger.info("Row: {}", row);
+        logger.info("ExcelDataReader initialized. Default excel: {}", EXCEL_FILE);
+        for (String sheet : new String[]{
+                AutomationConstants.SHEET_PET,
+                AutomationConstants.SHEET_PGR,
+                AutomationConstants.SHEET_PT,
+                AutomationConstants.SHEET_NDC
+        }) {
+            if (hasSheet(sheet)) {
+                List<Map<String, String>> data = readSheet(sheet);
+                logger.info("Sheet '{}' has {} executable rows.", sheet, data.size());
+            }
         }
     }
 }

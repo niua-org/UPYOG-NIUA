@@ -10,11 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Utility class responsible for capturing and storing failure screenshots during test execution.
+ * Utility class responsible for capturing and storing failure screenshots and filled screen snapshots during test execution.
  *
  * <p>When a step or assertion fails during Selenium automation, this manager captures
  * the current browser screen, sanitizes the file name based on module name, test case,
@@ -28,6 +30,81 @@ public class ScreenshotManager {
      * Target directory where failure screenshots are saved.
      */
     private static final String SCREENSHOT_DIR = AutomationConstants.SCREENSHOTS_DIR;
+
+    /**
+     * Captures the current screen as a Base64-encoded string for inline embedding in HTML reports.
+     *
+     * @param driver the active {@link WebDriver} instance
+     * @return the Base64 image string, or an empty string if capture failed
+     */
+    public static String captureBase64(WebDriver driver) {
+        try {
+            return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
+        } catch (Exception e) {
+            logger.error("Unable to capture Base64 screenshot: {}", e.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Captures a screenshot of the filled screen during normal test execution and saves it to disk.
+     *
+     * @param driver the active {@link WebDriver} instance
+     * @param moduleName the name of the module currently executing
+     * @param testCase the name or identifier of the test case
+     * @param screenName the name or description of the screen/step
+     * @return the file path of the saved screenshot, or an empty string if capture failed
+     */
+    public static String captureScreenScreenshot(
+            WebDriver driver,
+            String moduleName,
+            String testCase,
+            String screenName
+    ) {
+
+        try {
+
+            Path directory = Paths.get(SCREENSHOT_DIR);
+
+            // Create screenshot directory if it does not exist
+            Files.createDirectories(directory);
+
+            String safeModule = sanitize(moduleName);
+            String safeTestCase = sanitize(testCase);
+            String safeScreen = sanitize(screenName);
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS").format(new Date());
+
+            // Construct sanitized screenshot file name with structured delimiters
+            String fileName =
+                    safeModule + "__"
+                            + safeTestCase + "__"
+                            + safeScreen + "__"
+                            + timestamp + ".png";
+
+            File screenshot =
+                    ((TakesScreenshot) driver)
+                            .getScreenshotAs(OutputType.FILE);
+
+            Path destination =
+                    directory.resolve(fileName);
+
+            // Copy captured screenshot file to the target destination
+            Files.copy(
+                    screenshot.toPath(),
+                    destination
+            );
+
+            logger.info("Screen screenshot saved: {}", destination);
+
+            return destination.toString();
+
+        } catch (Exception e) {
+
+            logger.error("Unable to save screen screenshot: {}", e.getMessage(), e);
+
+            return "";
+        }
+    }
 
     /**
      * Captures a screenshot of the current browser state upon test failure and saves it to disk.
@@ -55,12 +132,14 @@ public class ScreenshotManager {
             String safeModule = sanitize(moduleName);
             String safeTestCase = sanitize(testCase);
             String safeStep = sanitize(failedStep);
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss_SSS").format(new Date());
 
             // Construct sanitized unique screenshot file name
             String fileName =
-                    safeModule + "_"
-                            + safeTestCase + "_"
-                            + safeStep + "_FAIL.png";
+                    safeModule + "__"
+                            + safeTestCase + "__"
+                            + safeStep + "__FAIL__"
+                            + timestamp + ".png";
 
             File screenshot =
                     ((TakesScreenshot) driver)
@@ -95,7 +174,7 @@ public class ScreenshotManager {
      * @param value the string value to sanitize
      * @return the sanitized string safe for file naming, or "UNKNOWN" if null/empty
      */
-    private static String sanitize(String value) {
+    public static String sanitize(String value) {
 
         if (value == null || value.trim().isEmpty()) {
             return "UNKNOWN";
@@ -104,6 +183,17 @@ public class ScreenshotManager {
         return value
                 .trim()
                 .replaceAll("[^a-zA-Z0-9._-]", "_");
+    }
+
+    /**
+     * Generates a step-by-step User Manual HTML document for the given module.
+     *
+     * @param moduleName the target module name or "ALL"
+     * @return the generated HTML file
+     * @throws IOException if generation fails
+     */
+    public static File generateUserManual(String moduleName) throws IOException {
+        return org.upyog.Automation.Reports.UserManualGenerator.generateHtmlManual(moduleName);
     }
 }
 

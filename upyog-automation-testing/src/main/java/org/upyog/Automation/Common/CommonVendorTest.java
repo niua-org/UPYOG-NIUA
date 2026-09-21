@@ -31,6 +31,8 @@ public class CommonVendorTest extends BaseTest {
         map.put(AutomationConstants.MODULE_WATER_TANKER, AutomationConstants.CONFIG_WATER_TANKER_VENDOR);
         map.put(AutomationConstants.MODULE_MOBILE_TOILET, AutomationConstants.CONFIG_MOBILE_TOILET_VENDOR);
         map.put(AutomationConstants.MODULE_CND, AutomationConstants.CONFIG_CND_VENDOR);
+        map.put(AutomationConstants.MODULE_CONSTRUCTION_AND_DEMOLITION, AutomationConstants.CONFIG_CND_VENDOR);
+        map.put(AutomationConstants.MODULE_CND_VENDOR, AutomationConstants.CONFIG_CND_VENDOR);
 
         VENDOR_MODULE_CONFIG_MAP = Collections.unmodifiableMap(map);
     }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.upyog.Automation.Reports.ExtentManager;
 import org.upyog.Automation.Reports.ReportManager;
 import org.upyog.Automation.Utils.AutomationConstants;
+import org.upyog.Automation.Utils.ConfigReader;
 import org.upyog.Automation.Utils.WorkflowDataStore;
 import org.upyog.Automation.model.WorkflowData;
 import org.upyog.Automation.model.WorkflowStep;
@@ -295,11 +296,20 @@ public class WorkflowExecutor {
                             }
                         }
 
+                        String envPrefix = employeeUrl.toLowerCase().contains("sandbox") ? "sandbox"
+                                : (employeeUrl.toLowerCase().contains("niuatt") ? "niuatt" : "upyog");
+
+                        String resolvedUsername = resolveEmployeeUsername(envPrefix, step.getModule(), step.getRole(), employee.getUsername());
+                        String resolvedPassword = resolveEmployeePassword(envPrefix, step.getModule(), step.getRole(), employee.getPassword());
+
+                        logger.info("Executing Employee step: [{}] role: [{}] on env: [{}] with username: [{}]",
+                                step.getModule(), step.getRole(), envPrefix, resolvedUsername);
+
                         employeeTestService.runEmployeeTest(
                                 employeeUrl,
                                 step.getModule(),
-                                employee.getUsername(),
-                                employee.getPassword(),
+                                resolvedUsername,
+                                resolvedPassword,
                                 applicationNo
                         );
                     }
@@ -397,5 +407,78 @@ public class WorkflowExecutor {
 
             ExtentManager.reset();
         }
+    }
+
+    private String resolveEmployeeUsername(String envPrefix, String module, String role, String defaultUsername) {
+        String modKey = normalizeModuleKey(module);
+        String roleKey = role != null ? role.toLowerCase() : "";
+
+        if (!roleKey.isEmpty()) {
+            String customRoleUser = ConfigReader.get(envPrefix + "." + modKey + "." + roleKey + ".username");
+            if (customRoleUser != null && !customRoleUser.isBlank()) return customRoleUser.trim();
+
+            String roleOnlyUser = ConfigReader.get(envPrefix + "." + roleKey + ".username");
+            if (roleOnlyUser != null && !roleOnlyUser.isBlank()) return roleOnlyUser.trim();
+        }
+
+        String customModUser = ConfigReader.get(envPrefix + "." + modKey + ".username");
+        if (customModUser != null && !customModUser.isBlank()) return customModUser.trim();
+
+        String rawModUser = ConfigReader.get(envPrefix + "." + module.toLowerCase() + ".username");
+        if (rawModUser != null && !rawModUser.isBlank()) return rawModUser.trim();
+
+        return defaultUsername;
+    }
+
+    private String resolveEmployeePassword(String envPrefix, String module, String role, String defaultPassword) {
+        String modKey = normalizeModuleKey(module);
+        String roleKey = role != null ? role.toLowerCase() : "";
+
+        if (!roleKey.isEmpty()) {
+            String customRolePass = ConfigReader.get(envPrefix + "." + modKey + "." + roleKey + ".password");
+            if (customRolePass != null && !customRolePass.isBlank()) return customRolePass.trim();
+
+            String roleOnlyPass = ConfigReader.get(envPrefix + "." + roleKey + ".password");
+            if (roleOnlyPass != null && !roleOnlyPass.isBlank()) return roleOnlyPass.trim();
+        }
+
+        String customModPass = ConfigReader.get(envPrefix + "." + modKey + ".password");
+        if (customModPass != null && !customModPass.isBlank()) return customModPass.trim();
+
+        String rawModPass = ConfigReader.get(envPrefix + "." + module.toLowerCase() + ".password");
+        if (rawModPass != null && !rawModPass.isBlank()) return rawModPass.trim();
+
+        return defaultPassword;
+    }
+
+    private String normalizeModuleKey(String module) {
+        if (module == null) return "";
+        String mod = module.toLowerCase()
+                .replace("_employee", "")
+                .replace("_emp", "")
+                .replace("_citizen", "")
+                .replace("_module", "")
+                .replace("_workflow", "");
+        if (mod.equals("pet_registration")) return "pet";
+        if (mod.equals("trade_license")) return "tl";
+        if (mod.equals("property_tax")) return "pt";
+        if (mod.equals("public_grievance_redressal")) return "pgr";
+        if (mod.equals("online_building_plan_approval_system") || mod.equals("obpas_oc")) return "obpas";
+        if (mod.equals("street_vending")) return "sv";
+        if (mod.equals("advertisement")) return "adv";
+        if (mod.equals("water_and_sewerage") || mod.equals("water") || mod.equals("sewerage")) return "ws";
+        if (mod.equals("community_hall_booking")) return "chb";
+        if (mod.equals("construction_and_demolition")) return "cnd";
+        if (mod.equals("garbage_collection") || mod.equals("garbage_collection_payment")) return "gc";
+        if (mod.equals("no_due_certificate")) return "ndc";
+        if (mod.equals("challan_generation")) return "challan";
+        if (mod.equals("asset_management")) return "asset";
+        if (mod.equals("estate_management")) return "estate";
+        if (mod.equals("tree_pruning")) return "tp";
+        if (mod.equals("water_tanker")) return "wt";
+        if (mod.equals("mobile_toilet")) return "mt";
+        if (mod.equals("ewaste_management_system")) return "ewaste";
+        if (mod.equals("desludging_service") || mod.equals("desludging_service_payment") || mod.equals("desludging_service_payment2")) return "desludging";
+        return mod;
     }
 }

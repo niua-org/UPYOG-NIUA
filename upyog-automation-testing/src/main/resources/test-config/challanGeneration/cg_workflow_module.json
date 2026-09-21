@@ -8,12 +8,6 @@
       "type": "EMPLOYEE",
       "module": "CHALLAN_GENERATION",
       "role": "INITIATOR"
-    },
-
-    {
-      "name": "Citizen Application",
-      "type": "CITIZEN",
-      "module": "CHALLAN_GENERATION"
     }
   ]
 }

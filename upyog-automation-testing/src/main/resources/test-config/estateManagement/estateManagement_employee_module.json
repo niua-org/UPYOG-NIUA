@@ -52,7 +52,7 @@
     {
       "stepName": "Enter Building Name",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Building Name",
+      "locatorValue": "Building Name",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${house.name}",
       "dynamicSleep": 1000
@@ -60,7 +60,7 @@
     {
       "stepName": "Enter Building Number",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Building Number",
+      "locatorValue": "Building Number",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${house.number}",
       "dynamicSleep": 1000
@@ -68,7 +68,7 @@
     {
       "stepName": "Enter Building Floor",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Building Floor",
+      "locatorValue": "Building Floor",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${floor.number}",
       "dynamicSleep": 1000
@@ -76,7 +76,7 @@
     {
       "stepName": "Enter Building Block",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Building Block",
+      "locatorValue": "Building Block",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${block.number}",
       "dynamicSleep": 1000
@@ -84,23 +84,23 @@
     {
       "stepName": "Enter Building Block",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Building Block",
+      "locatorValue": "Building Block",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${floor.number}",
       "dynamicSleep": 1000
     },
     {
-      "stepName":"Locality",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select svg.cp",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"1:1",
+      "stepName": "Locality",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.select svg.cp",
+      "action": "SELECT_DROPDOWN_BY_INDEX",
+      "inputValue": "1:1",
       "dynamicSleep": 2000
     },
     {
       "stepName": "Enter Total Plot Area",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Total Plot Area",
+      "locatorValue": "Total Plot Area",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${plot.area}",
       "dynamicSleep": 1000
@@ -108,7 +108,7 @@
     {
       "stepName": "Enter Length",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Length",
+      "locatorValue": "Length",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${length.area}",
       "dynamicSleep": 1000
@@ -116,7 +116,7 @@
     {
       "stepName": "Enter Width",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Width",
+      "locatorValue": "Width",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${width.area}",
       "dynamicSleep": 1000
@@ -124,24 +124,24 @@
     {
       "stepName": "Enter Rates",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Rates",
+      "locatorValue": "Rates",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${rates.sq}",
       "dynamicSleep": 1000
     },
     {
-      "stepName":"Asset Type",
-      "locatorStrategy":"CSS",
-      "locatorValue":"div.select svg.cp",
-      "action":"SELECT_DROPDOWN_BY_INDEX",
-      "inputValue":"2:1",
+      "stepName": "Asset Type",
+      "locatorStrategy": "CSS",
+      "locatorValue": "div.select svg.cp",
+      "action": "SELECT_DROPDOWN_BY_INDEX",
+      "inputValue": "2:1",
       "dynamicSleep": 2000
     },
     {
-      "stepName":"Save And Next",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Save & Next')]",
-      "action":"CLICK_JS",
+      "stepName": "Save And Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Save & Next') or contains(.,'SAVE_&_NEXT') or contains(.,'SAVE & NEXT')]",
+      "action": "CLICK_JS",
       "dynamicSleep": 2000
     },
     {
@@ -161,18 +161,18 @@
       "dynamicSleep": 2000
     },
     {
-      "stepName":"Capture Application Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//*[contains(text(),'Application No.') or contains(text(),'Application Number')]/following-sibling::*[1]",
-      "action":"CAPTURE_TEXT",
-      "inputValue":"APPLICATION_NO",
-      "dynamicSleep":3000
+      "stepName": "Capture Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//*[contains(text(),'Application No.') or contains(text(),'Application Number')]/following-sibling::*[1]",
+      "action": "CAPTURE_TEXT",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 3000
     },
     {
       "stepName": "Navigate to Homepage",
       "locatorStrategy": "XPATH",
-      "locatorValue":"//a[@href='/upyog-ui/employee']",
-      "action":"CLICK_JS",
+      "locatorValue": "//a[@href='/upyog-ui/employee']",
+      "action": "CLICK_JS",
       "dynamicSleep": 2000
     },
     {
@@ -201,16 +201,16 @@
     {
       "stepName": "Allot Asset ",
       "locatorStrategy": "XPATH",
-      "locatorValue":"//button[contains(.,'Allot Asset')]",
+      "locatorValue": "//button[contains(.,'Allot Asset')]",
       "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 2000
     },
     {
-      "stepName":"Info Next",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//button[contains(.,'Next')]",
-      "action":"CLICK_JS",
+      "stepName": "Info Next",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Next')]",
+      "action": "CLICK_JS",
       "dynamicSleep": 2000
     },
     {
@@ -224,7 +224,7 @@
     {
       "stepName": "Enter Allottee Name",
       "locatorStrategy": "LABEL",
-      "locatorValue":"Allottee Name",
+      "locatorValue": "Allottee Name",
       "action": "TYPE_BY_LABEL",
       "inputValue": "${applicant.name}",
       "dynamicSleep": 500
@@ -272,7 +272,7 @@
     {
       "stepName": "Upload Citizen Request Letter ",
       "locatorStrategy": "XPATH",
-      "locatorValue":"(//input[@type='file'])[1]",
+      "locatorValue": "(//input[@type='file'])[1]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.png}",
       "dynamicSleep": 1000
@@ -280,7 +280,7 @@
     {
       "stepName": "Upload Allotment Letter",
       "locatorStrategy": "XPATH",
-      "locatorValue":"(//input[@type='file'])[2]",
+      "locatorValue": "(//input[@type='file'])[2]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
@@ -288,17 +288,16 @@
     {
       "stepName": "Upload Signed Deed",
       "locatorStrategy": "XPATH",
-      "locatorValue":"(//input[@type='file'])[3]",
+      "locatorValue": "(//input[@type='file'])[3]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
     },
     {
-      "stepName": "Submit application",
+      "stepName": "Save And Next",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@class='submit-bar ' and @type='button'][.//header[text()='SUBMIT']]",
-      "action": "CLICK",
-      "inputValue": null,
+      "locatorValue": "//button[contains(.,'Save & Next') or contains(.,'SAVE_&_NEXT') or contains(.,'SAVE & NEXT')]",
+      "action": "CLICK_JS",
       "dynamicSleep": 2000
     },
     {
@@ -318,12 +317,12 @@
       "dynamicSleep": 2000
     },
     {
-      "stepName":"Capture Application Number",
-      "locatorStrategy":"XPATH",
-      "locatorValue":"//*[contains(text(),'Allotment Number') or contains(text(),'Application Number')]/following-sibling::*[1]",
-      "action":"CAPTURE_TEXT",
-      "inputValue":"APPLICATION_NO",
-      "dynamicSleep":3000
+      "stepName": "Capture Application Number",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//*[contains(text(),'Allotment Number') or contains(text(),'Application Number')]/following-sibling::*[1]",
+      "action": "CAPTURE_TEXT",
+      "inputValue": "APPLICATION_NO",
+      "dynamicSleep": 3000
     },
     {
       "stepName": "Download Acknowledgement",

@@ -36,7 +36,7 @@
       "dynamicSleep": 2000
     },
     {
-      "stepName": "Navigate to Estate Management",
+      "stepName": "Navigate to Challan Generation",
       "locatorStrategy": "XPATH",
       "locatorValue": "//a[@href='/upyog-ui/employee/challangeneration/generate-challan']",
       "action": "CLICK_JS",
@@ -83,26 +83,26 @@
       "dynamicSleep": 2000
     },
     {
-      "stepName": "Upload Citizen Request Letter ",
+      "stepName": "Upload Challan Document / Image",
       "locatorStrategy": "XPATH",
       "locatorValue": "(//input[@type='file'])[1]",
-      "action": "UPLOAD_FILE",
-      "inputValue": "${document.common.png}",
-      "dynamicSleep": 1000
-    },
-    {
-      "stepName": "Upload Allotment Letter",
-      "locatorStrategy": "XPATH",
-      "locatorValue": "(//input[@type='file'])[2]",
       "action": "UPLOAD_FILE",
       "inputValue": "${document.common.proof}",
       "dynamicSleep": 1000
     },
     {
+      "stepName": "Upload Additional Document",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "(//input[@type='file'])[2]",
+      "action": "UPLOAD_FILE",
+      "inputValue": "${document.challan.image}",
+      "dynamicSleep": 3000
+    },
+    {
       "stepName": "Submit application",
       "locatorStrategy": "XPATH",
-      "locatorValue": "//button[@class='submit' and @type='button'][.//header[text()='Submit']]",
-      "action": "CLICK",
+      "locatorValue": "//button[contains(@class, 'submit-bar') and (.//header[contains(text(),'Submit') or contains(text(),'SUBMIT')] or contains(.,'Submit') or contains(.,'SUBMIT'))]",
+      "action": "CLICK_JS",
       "inputValue": null,
       "dynamicSleep": 2000
     },
@@ -113,6 +113,28 @@
       "action": "CAPTURE_TEXT",
       "inputValue": "APPLICATION_NO",
       "dynamicSleep": 3000
+    },
+    {
+      "stepName": "Make Payment",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//header[contains(text(),'Make Payment')]",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Enter Payer Mobile",
+      "locatorStrategy": "NAME",
+      "locatorValue": "payerMobile",
+      "action": "TYPE",
+      "inputValue": "${mobile.number}",
+      "dynamicSleep": 1000
+    },
+    {
+      "stepName": "Collect Payment",
+      "locatorStrategy": "XPATH",
+      "locatorValue": "//button[contains(.,'Collect Payment')]",
+      "action": "CLICK_JS",
+      "dynamicSleep": 1000
     }
   ]
 }

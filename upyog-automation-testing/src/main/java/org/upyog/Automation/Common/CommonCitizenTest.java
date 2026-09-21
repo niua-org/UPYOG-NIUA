@@ -38,16 +38,20 @@ public class CommonCitizenTest extends BaseTest {
 
         // Street Vending
         map.put(AutomationConstants.MODULE_STREET_VENDING, AutomationConstants.CONFIG_STREET_VENDING_CITIZEN);
+        map.put(AutomationConstants.MODULE_SV, AutomationConstants.CONFIG_STREET_VENDING_CITIZEN);
 
         // Trade License
         map.put(AutomationConstants.MODULE_TRADE_LICENSE, AutomationConstants.CONFIG_TRADE_LICENSE_CITIZEN);
+        map.put(AutomationConstants.MODULE_TL, AutomationConstants.CONFIG_TRADE_LICENSE_CITIZEN);
 
         // Pet Registration
         map.put(AutomationConstants.MODULE_PET_REGISTRATION, AutomationConstants.CONFIG_PET_CITIZEN);
+        map.put(AutomationConstants.MODULE_PET, AutomationConstants.CONFIG_PET_CITIZEN);
         map.put(AutomationConstants.MODULE_PET_CEMP, AutomationConstants.CONFIG_PET_CEMP);
 
         // Advertisement
         map.put(AutomationConstants.MODULE_ADVERTISEMENT, AutomationConstants.CONFIG_ADVERTISEMENT_CITIZEN);
+        map.put(AutomationConstants.MODULE_ADV, AutomationConstants.CONFIG_ADVERTISEMENT_CITIZEN);
 
         // Request Services
         map.put(AutomationConstants.MODULE_TREE_PRUNING, AutomationConstants.CONFIG_TREE_PRUNING_CITIZEN);
@@ -56,30 +60,40 @@ public class CommonCitizenTest extends BaseTest {
 
         // Property Tax
         map.put(AutomationConstants.MODULE_PROPERTY_TAX, AutomationConstants.CONFIG_PROPERTY_TAX_CITIZEN);
+        map.put(AutomationConstants.MODULE_PT, AutomationConstants.CONFIG_PROPERTY_TAX_CITIZEN);
 
         // Public Grievance Redressal
         map.put(AutomationConstants.MODULE_PUBLIC_GRIEVANCE_REDRESSAL, AutomationConstants.CONFIG_PGR_CITIZEN);
+        map.put(AutomationConstants.MODULE_PGR, AutomationConstants.CONFIG_PGR_CITIZEN);
 
         // Online Building Plan Approval System
         map.put(AutomationConstants.MODULE_OBPAS, AutomationConstants.CONFIG_OBPAS_CITIZEN);
         map.put(AutomationConstants.MODULE_OBPAS_OC, AutomationConstants.CONFIG_OBPAS_OC_CITIZEN);
+        map.put(AutomationConstants.MODULE_ONLINE_BUILDING_PLAN_APPROVAL_SYSTEM, AutomationConstants.CONFIG_OBPAS_CITIZEN);
 
         // E-Waste Management System
         map.put(AutomationConstants.MODULE_EWASTE, AutomationConstants.CONFIG_EWASTE_CITIZEN);
+        map.put(AutomationConstants.MODULE_EWASTE_MANAGEMENT_SYSTEM, AutomationConstants.CONFIG_EWASTE_CITIZEN);
 
         // Community Hall Booking
         map.put(AutomationConstants.MODULE_CHB, AutomationConstants.CONFIG_CHB_CITIZEN);
+        map.put(AutomationConstants.MODULE_COMMUNITY_HALL_BOOKING, AutomationConstants.CONFIG_CHB_CITIZEN);
 
         // Construction and Demolition
         map.put(AutomationConstants.MODULE_CND, AutomationConstants.CONFIG_CND_CITIZEN);
+        map.put(AutomationConstants.MODULE_CONSTRUCTION_AND_DEMOLITION, AutomationConstants.CONFIG_CND_CITIZEN);
 
         // Desludging Services
         map.put(AutomationConstants.MODULE_DESLUDGING, AutomationConstants.CONFIG_DESLUDGING_CITIZEN);
+        map.put(AutomationConstants.MODULE_DESLUDGING_SERVICE, AutomationConstants.CONFIG_DESLUDGING_CITIZEN);
         map.put(AutomationConstants.MODULE_DESLUDGING_PAYMENT, AutomationConstants.CONFIG_DESLUDGING_CITIZEN_PAYMENT);
+        map.put(AutomationConstants.MODULE_DESLUDGING_SERVICE_PAYMENT, AutomationConstants.CONFIG_DESLUDGING_CITIZEN_PAYMENT);
         map.put(AutomationConstants.MODULE_DESLUDGING_PAYMENT2, AutomationConstants.CONFIG_DESLUDGING_CITIZEN_PAYMENT2);
+        map.put(AutomationConstants.MODULE_DESLUDGING_SERVICE_PAYMENT2, AutomationConstants.CONFIG_DESLUDGING_CITIZEN_PAYMENT2);
 
         // Water and Sewerage
         map.put(AutomationConstants.MODULE_WATER_AND_SEWERAGE, AutomationConstants.CONFIG_WATER_AND_SEWERAGE_CITIZEN);
+        map.put(AutomationConstants.MODULE_WS, AutomationConstants.CONFIG_WATER_AND_SEWERAGE_CITIZEN);
 
         // Garbage Collection
         map.put(AutomationConstants.MODULE_GARBAGE_COLLECTION, AutomationConstants.CONFIG_GARBAGE_COLLECTION_CITIZEN);
@@ -90,6 +104,7 @@ public class CommonCitizenTest extends BaseTest {
 
         // No Due Certificate
         map.put(AutomationConstants.MODULE_NO_DUE_CERTIFICATE, AutomationConstants.CONFIG_NDC_CITIZEN);
+        map.put(AutomationConstants.MODULE_NDC, AutomationConstants.CONFIG_NDC_CITIZEN);
 
         MODULE_CONFIG_MAP = Collections.unmodifiableMap(map);
     }

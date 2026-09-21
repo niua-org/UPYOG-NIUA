@@ -24,6 +24,25 @@ public class LoginHelper {
 
         driver.get(baseUrl);
 
+        // Handle language selection screen if redirected or displayed
+        try {
+            if (driver.getCurrentUrl().contains("select-language") ||
+                !driver.findElements(By.xpath("//*[contains(text(),'Select Language') or contains(text(),'Choose Language')]")).isEmpty()) {
+                logger.info("Language selection screen detected, selecting English and continuing...");
+                List<WebElement> englishOptions = driver.findElements(By.xpath("//*[normalize-space()='English' or @value='en_IN']"));
+                if (!englishOptions.isEmpty()) {
+                    js.executeScript("arguments[0].click();", englishOptions.get(0));
+                }
+                List<WebElement> continueButtons = driver.findElements(By.xpath("//button[normalize-space()='CONTINUE' or normalize-space()='Continue']"));
+                if (!continueButtons.isEmpty()) {
+                    js.executeScript("arguments[0].click();", continueButtons.get(0));
+                    Thread.sleep(1500);
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Non-fatal check for language selection: {}", e.getMessage());
+        }
+
         String loginMobile = mobile;
 
         String env = WorkflowDataStore.get(AutomationConstants.KEY_SELECTED_ENV);
