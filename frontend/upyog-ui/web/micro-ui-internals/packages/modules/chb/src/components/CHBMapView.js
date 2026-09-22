@@ -1,220 +1,391 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from "react-i18next";
+import { CardLabel, SubmitBar, Dropdown, Loader, Modal, CardSubHeader, CardLabelDesc } from '@nudmcdgnpm/digit-ui-react-components';
+import "../css/mapview.css";
 
-import { CardLabel,SubmitBar, Dropdown } from '@nudmcdgnpm/digit-ui-react-components';
+const Close = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFFFFF" width="20px" height="20px">
+    <path d="M0 0h24v24H0V0z" fill="none" />
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+  </svg>
+);
 
+const CloseBtn = (props) => {
+  return (
+    <div className="icon-bg-secondary chb-close-btn" onClick={props.onClick}>
+      <Close />
+    </div>
+  );
+};
+
+const VENUE_TYPE_CONFIGS = {
+  COMMUNITY_HALLS: {
+    parentMasterType: "CommunityHalls",
+    childMasterCode: "HallCode",
+    defaultIconColor: "#a82227",
+    label: "Community Hall",
+  },
+  PARKS: {
+    parentMasterType: "Parks",
+    childMasterCode: "ParkCode",
+    defaultIconColor: "#2e7d32",
+    label: "Park",
+  },
+  STADIUMS: {
+    parentMasterType: "Stadiums",
+    childMasterCode: "StadiumCode",
+    defaultIconColor: "#1565c0",
+    label: "Stadium",
+  },
+  GUEST_HOUSES: {
+    parentMasterType: "GuestHouses",
+    childMasterCode: "GuestHouseCode",
+    defaultIconColor: "#e65100",
+    label: "Guest House",
+  },
+  CREMATORIUMS: {
+    parentMasterType: "Crematoriums",
+    childMasterCode: "CrematoriumCode",
+    defaultIconColor: "#455a64",
+    label: "Crematorium",
+  },
+};
 
 const CHBMapView = () => {
   const mapRef = useRef(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [selectedVenueTypeFilter, setSelectedVenueTypeFilter] = useState(null);
+  const [selectedVenue, setSelectedVenue] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [inputValue, setInputValue] = useState('');
+  const [selectedVenueForDetails, setSelectedVenueForDetails] = useState(null);
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
 
-  const geoJsonData = {
-    "type": "FeatureCollection",
-    "features": [
-      // Delhi Cantt Community Halls
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.123490, 28.564143] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 9000, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Atul", "capacity": 250, "contact_number": "011-25695450",
-          "community_hall_code": "MEHRAM_NAGAR_BARAT_GHAR", "community_hall_name": "Mehram Nagar Barat Ghar",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.1378208, 28.5802044] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 9200, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Nikhil", "capacity": 300, "contact_number": "011-25695450",
-          "community_hall_code": "JHARERA_BARAT_GHAR", "community_hall_name": "Jharera Barat Ghar"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.115316, 28.605519] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 8800, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Nikhil", "capacity": 200, "contact_number": "011-25695450",
-          "community_hall_code": "MANGLAM_BARAT_GHAR", "community_hall_name": "Manglam Barat Ghar",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.1322511, 28.5978913] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 9100, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Nikhil", "capacity": 300, "contact_number": "011-25695450",
-          "community_hall_code": "ASHOKA_BARAT_GHAR", "community_hall_name": "Ashoka Barat Ghar"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.1195994, 28.5934095] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 9300, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Kunal", "capacity": 350, "contact_number": "011-25695450",
-          "community_hall_code": "ALANKAR_BARAT_GHAR", "community_hall_name": "Alankar Barat Ghar",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.1196247, 28.5926723] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 9500, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Kunal", "capacity": 500, "contact_number": "011-25695450",
-          "community_hall_code": "DUSSEHRA_GROUND_PART_I", "community_hall_name": "Dussehra Ground Part I"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.1196247, 28.5926723] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 9500, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Kunal", "capacity": 500, "contact_number": "011-25695450",
-          "community_hall_code": "DUSSEHRA_GROUND_PART_II", "community_hall_name": "Dussehra Ground Part II",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.121770, 28.596320] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 8900, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Sourabh", "capacity": 300, "contact_number": "011-25695450",
-          "community_hall_code": "DAV_GROUND", "community_hall_name": "DAV Ground",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.120439, 28.594060] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 8800, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Sourabh", "capacity": 300, "contact_number": "011-25695450",
-          "community_hall_code": "JAIN_MANDIR", "community_hall_name": "Jain Mandir"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [77.121738, 28.595236] },
-        "properties": {
-          "city": "Delhi Cantt", "price": 8800, "state": "Delhi", "tenant": "pg.delhi",
-          "manager": "Sourabh", "capacity": 300, "contact_number": "011-25695450",
-          "community_hall_code": "MASJID_GROUND", "community_hall_name": "Masjid Ground"
-        }
-      },
-  
-      // Punjab (Mohali) Community Halls (already provided in previous step)
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.708, 30.683] },
-        "properties": {
-          "city": "Mohali", "price": 9600, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Kavita Yadav", "capacity": 360, "contact_number": "9876512347",
-          "community_hall_code": "Sector_54_Phase_2", "community_hall_name": "Sector 54 Phase 2", "community_hall_id":"1",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.709, 30.686] },
-        "properties": {
-          "city": "Mohali", "price": 9700, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Vikram Mehra", "capacity": 370, "contact_number": "9876512346",
-          "community_hall_code": "Sector_55_Phase_1", "community_hall_name": "Sector 55 Phase 1","community_hall_id":"2"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.711, 30.689] },
-        "properties": {
-          "city": "Mohali", "price": 9800, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Neha Gupta", "capacity": 390, "contact_number": "9876512345",
-          "community_hall_code": "Sector_59_Phase_5", "community_hall_name": "Sector 59 Phase 5","community_hall_id":"3",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.713, 30.692] },
-        "properties": {
-          "city": "Mohali", "price": 10500, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Amit Joshi", "capacity": 420, "contact_number": "9876512344",
-          "community_hall_code": "Sector_61_Phase_7", "community_hall_name": "Sector 61 Phase 7","community_hall_id":"4"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.715, 30.695] },
-        "properties": {
-          "city": "Mohali", "price": 11000, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Pooja Singh", "capacity": 450, "contact_number": "9876512343",
-          "community_hall_code": "Sector_65_Phase_11", "community_hall_name": "Sector 65 Phase 11","community_hall_id":"5",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.717, 30.698] },
-        "properties": {
-          "city": "Mohali", "price": 9200, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Rohit Verma", "capacity": 320, "contact_number": "9876512342",
-          "community_hall_code": "Sector_69", "community_hall_name": "Sector 69","community_hall_id":"6",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.718, 30.701] },
-        "properties": {
-          "city": "Mohali", "price": 9500, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Anjali Sharma", "capacity": 350, "contact_number": "9876512341",
-          "community_hall_code": "Sector_70", "community_hall_name": "Sector 70","community_hall_id":"7",
-          "image_url": "https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg"
-        }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [76.7191, 30.7046] },
-        "properties": {
-          "city": "Mohali", "price": 10000, "state": "Punjab", "tenant": "pg.mohali",
-          "manager": "Deepak Kumar", "capacity": 400, "contact_number": "9876512340",
-          "community_hall_code": "Sector_71", "community_hall_name": "Sector 71","community_hall_id":"8"
-        }
-      }
+  // Fetch Venue Types from MDMS
+  const { data: venueTypeList = [] } = Digit.Hooks.useEnabledMDMS(
+    tenantId,
+    "CHB",
+    [{ name: "Venues" }],
+    {
+      select: (data) => data?.["CHB"]?.["Venues"] || [],
+    }
+  );
+
+  // Fetch all Venue Masters and Child Codes from MDMS
+  const { data: mdmsAllData, isLoading: isVenuesLoading } = Digit.Hooks.useEnabledMDMS(
+    tenantId,
+    "CHB",
+    [
+      { name: "CommunityHalls" },
+      { name: "Parks" },
+      { name: "Stadiums" },
+      { name: "GuestHouses" },
+      { name: "Crematoriums" },
+      { name: "HallCode" },
+      { name: "ParkCode" },
+      { name: "StadiumCode" },
+      { name: "GuestHouseCode" },
+      { name: "CrematoriumCode" },
+      { name: "CalculationType" },
     ]
-  };
-  
-  const statusOptions = geoJsonData.features.map(feature => ({
-    code: feature.properties.community_hall_code,
-    value: feature.properties.community_hall_code,
-    i18nKey: feature.properties.community_hall_code
-  }));
+  );
 
-  const handleSearch = () => {
-    // This will just trigger a re-run of the useEffect with updated searchTerm
-    setSearchTerm(inputValue?.value || inputValue || "");
-  };
+  const communityHalls = mdmsAllData?.["CHB"]?.["CommunityHalls"] || [];
+  const parks = mdmsAllData?.["CHB"]?.["Parks"] || [];
+  const stadiums = mdmsAllData?.["CHB"]?.["Stadiums"] || [];
+  const guestHouses = mdmsAllData?.["CHB"]?.["GuestHouses"] || [];
+  const crematoriums = mdmsAllData?.["CHB"]?.["Crematoriums"] || [];
+  const hallCodes = mdmsAllData?.["CHB"]?.["HallCode"] || [];
+  const parkCodes = mdmsAllData?.["CHB"]?.["ParkCode"] || [];
+  const stadiumCodes = mdmsAllData?.["CHB"]?.["StadiumCode"] || [];
+  const guestHouseCodes = mdmsAllData?.["CHB"]?.["GuestHouseCode"] || [];
+  const crematoriumCodes = mdmsAllData?.["CHB"]?.["CrematoriumCode"] || [];
+  const calculationTypes = mdmsAllData?.["CHB"]?.["CalculationType"] || [];
 
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
     const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+
+  const getChildCodes = (venue) => {
+    let list = [];
+    if (venue.childMasterCode === "HallCode" || venue.venueTypeCode === "COMMUNITY_HALLS") list = hallCodes;
+    else if (venue.childMasterCode === "ParkCode" || venue.venueTypeCode === "PARKS") list = parkCodes;
+    else if (venue.childMasterCode === "StadiumCode" || venue.venueTypeCode === "STADIUMS") list = stadiumCodes;
+    else if (venue.childMasterCode === "GuestHouseCode" || venue.venueTypeCode === "GUEST_HOUSES") list = guestHouseCodes;
+    else if (venue.childMasterCode === "CrematoriumCode" || venue.venueTypeCode === "CREMATORIUMS") list = crematoriumCodes;
+
+    return list.filter(
+      (c) =>
+        c.venueCode === venue.code ||
+        (venue.venueId && c.venueId === venue.venueId) ||
+        (venue.venueId && c.guestHouseId === venue.venueId)
+    );
+  };
+
+  const getPriceDisplay = (venue) => {
+    const matchingCalc = calculationTypes.find(
+      (ct) =>
+        ct.communityHallCode === venue.code &&
+        (ct.feeType === "BOOKING_FEES" || ct.feeType === "HALL_RENT" || ct.feeType === "RENT")
+    );
+    if (matchingCalc?.amount) {
+      return matchingCalc.calculationDurationType
+        ? `₹${matchingCalc.amount} / ${t(matchingCalc.calculationDurationType)}`
+        : `₹${matchingCalc.amount}`;
+    }
+    if (venue.price) {
+      return `₹${venue.price}`;
+    }
+    return t("CS_NA");
+  };
+
+  const getCapacityDisplay = (venue) => {
+    const codes = getChildCodes(venue);
+    const caps = codes.map((c) => c.capacity || c.rooms).filter(Boolean);
+    if (caps.length > 0) {
+      return `${caps.join(", ")} ${venue.venueTypeCode === "GUEST_HOUSES" ? t("CHB_ROOMS") : t("CHB_PERSONS")}`;
+    }
+    if (venue.capacity) return `${venue.capacity} ${t("CHB_PERSONS")}`;
+    if (venue.rooms) return `${venue.rooms} ${t("CHB_ROOMS")}`;
+    return t("CS_NA");
+  };
+
+  const parseTerms = (terms) => {
+    if (!terms) return [];
+    if (Array.isArray(terms)) return terms.map((t) => String(t).trim()).filter(Boolean);
+    if (typeof terms === "string") {
+      const cleaned = terms.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n").replace(/\r/g, "");
+      return cleaned.split("\n").map((l) => l.trim()).filter(Boolean);
+    }
+    return [String(terms)];
+  };
+
+  const getVenueFacilities = (venue) => {
+    const fac = venue.facilities || venue.services || venue.amenities;
+    const sports = venue.sportsAvailable;
+    const items = [];
+    if (Array.isArray(fac)) items.push(...fac);
+    else if (typeof fac === "string" && fac.trim()) items.push(fac.trim());
+
+    if (Array.isArray(sports)) items.push(...sports);
+    else if (typeof sports === "string" && sports.trim()) items.push(sports.trim());
+
+    return items;
+  };
+
+  const getVenueTerms = (venue) => {
+    return venue.termsAndCondition || venue.termsAndConditions || venue.tnc || venue.terms_and_conditions || venue.rules || "";
+  };
+
+  const getVenueDescription = (venue) => {
+    return venue.venueDescription || venue.parkDescription || venue.hallDescription || venue.description || "";
+  };
+
+  const getVenueContact = (venue) => {
+    return venue.contactDetails || venue.contact_number || venue.contactNumber || venue.phone || "N/A";
+  };
+
+  const formatDurationText = (durationStr) => {
+    if (!durationStr) return "";
+    if (typeof durationStr === "number") {
+      return `${durationStr} ${durationStr === 1 ? t("CHB_HOUR") : t("CHB_HOURS")}`;
+    }
+    const str = String(durationStr).trim();
+    if (str === "23:59" || str === "24:00" || str === "24") {
+      return `${t("CHB_FULL_DAY")} (24 ${t("CHB_HOURS")})`;
+    }
+    if (str.includes(":")) {
+      const [h, m] = str.split(":").map((v) => parseInt(v, 10) || 0);
+      const hourPart = h > 0 ? `${h} ${h === 1 ? t("CHB_HOUR") : t("CHB_HOURS")}` : "";
+      const minPart = m > 0 ? `${m} ${t("CHB_MINS")}` : "";
+      return [hourPart, minPart].filter(Boolean).join(" ");
+    }
+    const num = parseInt(str, 10);
+    if (!isNaN(num)) {
+      return `${num} ${num === 1 ? t("CHB_HOUR") : t("CHB_HOURS")}`;
+    }
+    return t(str);
+  };
+
+  const getSlotDurationDisplay = (venue) => {
+    const timeSlots = venue?.timeSlots || venue?.timeSlot;
+    if (!timeSlots) return t("CS_NA");
+
+    if (Array.isArray(timeSlots)) {
+      if (timeSlots.length === 0) return t("CS_NA");
+      return timeSlots
+        .map((s) => s.slot || `${s.from || s.fromTime || ""} - ${s.to || s.toTime || ""}`.trim())
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    const min = timeSlots.minDuration;
+    const max = timeSlots.maxDuration;
+
+    if (min && max) {
+      const minFormatted = formatDurationText(min);
+      const maxFormatted = formatDurationText(max);
+      if (minFormatted === maxFormatted) return minFormatted;
+      return `${t("CHB_MIN")}: ${minFormatted} | ${t("CHB_MAX")}: ${maxFormatted}`;
+    }
+
+    if (min) return `${t("CHB_MIN")}: ${formatDurationText(min)}`;
+    if (max) return `${t("CHB_MAX")}: ${formatDurationText(max)}`;
+
+    return t("CS_NA");
+  };
+
+  // Combine all active venues across all types
+  const allVenues = useMemo(() => {
+    const list = [];
+
+    const processVenues = (items, venueTypeCode, defaultChildMaster) => {
+      (items || []).forEach((item) => {
+        if (item.active === false) return;
+        const venueTypeMeta = venueTypeList.find((v) => v.code === venueTypeCode) || VENUE_TYPE_CONFIGS[venueTypeCode];
+        list.push({
+          ...item,
+          venueTypeCode: venueTypeCode,
+          venueTypeName: venueTypeMeta?.name || VENUE_TYPE_CONFIGS[venueTypeCode]?.label || venueTypeCode,
+          parentMasterType: venueTypeMeta?.parentMasterType || VENUE_TYPE_CONFIGS[venueTypeCode]?.parentMasterType,
+          childMasterCode: item.childMasterCode || venueTypeMeta?.childMasterCode || defaultChildMaster,
+          timeSlots: venueTypeMeta?.timeSlot || { maxDuration: "23:59", minDuration: "1:00" },
+        });
+      });
+    };
+
+    processVenues(communityHalls, "COMMUNITY_HALLS", "HallCode");
+    processVenues(parks, "PARKS", "ParkCode");
+    processVenues(stadiums, "STADIUMS", "StadiumCode");
+    processVenues(guestHouses, "GUEST_HOUSES", "GuestHouseCode");
+    processVenues(crematoriums, "CREMATORIUMS", "CrematoriumCode");
+
+    return list;
+  }, [communityHalls, parks, stadiums, guestHouses, crematoriums, venueTypeList]);
+
+  // Venue Type dropdown options
+  const venueTypeOptions = useMemo(() => {
+    const options = [];
+    (venueTypeList.length > 0
+      ? venueTypeList
+      : Object.keys(VENUE_TYPE_CONFIGS).map((k) => ({
+          code: k,
+          name: VENUE_TYPE_CONFIGS[k].label,
+          parentMasterType: VENUE_TYPE_CONFIGS[k].parentMasterType,
+        }))
+    ).forEach((vt) => {
+      if (vt.active !== false) {
+        options.push({
+          code: vt.code,
+          value: vt.code,
+          i18nKey: vt.code,
+          name: t(vt.code),
+          parentMasterType: vt.parentMasterType,
+          timeSlots: vt.timeSlot,
+        });
+      }
+    });
+    return options;
+  }, [venueTypeList, t]);
+
+  // Filtered venues based on selected venue type for map display
+  const displayVenuesOnMap = useMemo(() => {
+    if (!selectedVenueTypeFilter) {
+      return allVenues;
+    }
+    return allVenues.filter((v) => v.venueTypeCode === selectedVenueTypeFilter.code);
+  }, [allVenues, selectedVenueTypeFilter]);
+
+  // Venue dropdown options - ONLY show venue options when venue type is selected, using venue code
+  const venueOptions = useMemo(() => {
+    if (!selectedVenueTypeFilter) {
+      return [];
+    }
+    return allVenues
+      .filter((v) => v.venueTypeCode === selectedVenueTypeFilter.code)
+      .map((v) => {
+        return {
+          code: v.code,
+          value: v.code,
+          i18nKey: v.code,
+          displayName: v.code,
+          venueName: v.venueName || v.name || v.code,
+          childMasterCode: v.childMasterCode,
+          address: v.address,
+          contactDetails: getVenueContact(v),
+          geoLocation: v.geoLocation,
+          parkDescription: v.parkDescription,
+          termsAndCondition: getVenueTerms(v),
+          venueDescription: getVenueDescription(v),
+          venueId: v.venueId,
+          venueData: v,
+        };
+      });
+  }, [allVenues, selectedVenueTypeFilter]);
+
+  const handleSearch = () => {
+    setSearchTerm(selectedVenue?.code || (typeof selectedVenue === "string" ? selectedVenue : ""));
+  };
+
+  const navigateToBooking = (venue) => {
+    navigate(`/upyog-ui/citizen/chb/bookHall/searchvenue`, {
+      state: {
+        selectedVenueType: {
+          code: venue.venueTypeCode,
+          value: venue.venueTypeName,
+          i18nKey: venue.venueTypeCode,
+          parentMasterType: venue.parentMasterType,
+          timeSlots: venue.timeSlots,
+        },
+        selectedCommunityHall: {
+          code: venue.code,
+          value: venue.venueName || venue.name || venue.code,
+          i18nKey: venue.code,
+          childMasterCode: venue.childMasterCode,
+          venueId: venue.venueId,
+          communityHallId: venue.venueId || undefined,
+          address: venue.address,
+          contactDetails: getVenueContact(venue),
+          geoLocation: venue.geoLocation,
+          venueDescription: getVenueDescription(venue),
+          termsAndCondition: getVenueTerms(venue),
+        },
+      },
+    });
+  };
+
+  // Expose global methods for Leaflet HTML popups
+  useEffect(() => {
+    window.showVenueDetails = (venueCode) => {
+      const targetVenue = allVenues.find((v) => v.code === venueCode);
+      if (targetVenue) {
+        setSelectedVenueForDetails(targetVenue);
+      }
+    };
+
+    window.selectHall = (venueCode, hallId) => {
+      const targetVenue = allVenues.find(
+        (v) => v.code === venueCode || (hallId && (v.venueId === hallId || v.communityHallId === hallId))
+      );
+      if (targetVenue) {
+        navigateToBooking(targetVenue);
+      }
+    };
+
+    return () => {
+      delete window.showVenueDetails;
+      delete window.selectHall;
+    };
+  }, [allVenues]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -227,14 +398,13 @@ const CHBMapView = () => {
         },
         (error) => {
           console.warn("Location access denied or unavailable:", error);
-          // Do NOT set a default; just leave userLocation null
         }
       );
     }
   }, []);
 
   useEffect(() => {
-    if (!userLocation) return;
+    if (isVenuesLoading) return;
 
     const loadLeaflet = () => {
       if (!window.L) {
@@ -253,184 +423,495 @@ const CHBMapView = () => {
     };
 
     loadLeaflet();
-  }, [userLocation,searchTerm]);
+  }, [userLocation, searchTerm, displayVenuesOnMap, isVenuesLoading]);
 
   const initMap = () => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !window.L) return;
 
     if (mapRef.current._leaflet_id) {
-        mapRef.current._leaflet_id = null;
-        mapRef.current.innerHTML = "";
+      mapRef.current._leaflet_id = null;
+      mapRef.current.innerHTML = "";
     }
 
-    const map = window.L.map(mapRef.current).setView([userLocation.lat, userLocation.lng], 12);
+    const defaultCenter = userLocation ? [userLocation.lat, userLocation.lng] : [30.683, 76.708];
+    const map = window.L.map(mapRef.current).setView(defaultCenter, 12);
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    const userIcon = window.L.divIcon({
-      html: '<div style="font-size: 24px; color: blue;">⦿</div>',
-      iconSize: [40, 40],
-      className: 'user-location-marker'
-    });
+    const boundsPoints = [];
 
-    window.L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
-      .addTo(map)
-      .bindPopup('<b>Your Location</b>');
+    if (userLocation) {
+      const userIcon = window.L.divIcon({
+        html: '<div class="user-location-dot">⦿</div>',
+        iconSize: [40, 40],
+        className: 'user-location-marker',
+      });
 
-    // Store markers in a map for searching later
-    const markerMap = new Map();
+      window.L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+        .addTo(map)
+        .bindPopup(`<b>${t("CHB_YOUR_LOCATION")}</b>`);
+
+      boundsPoints.push([userLocation.lat, userLocation.lng]);
+    }
 
     const hallIcon = window.L.icon({
       iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      iconRetinaUrl:
-        "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      shadowUrl:
-        "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       iconSize: [25, 41],
       iconAnchor: [12, 41],
     });
 
-    geoJsonData.features.forEach(feature => {
-      const [lng, lat] = feature.geometry.coordinates;
-      const props = feature.properties;
-      const distance = calculateDistance(userLocation.lat, userLocation.lng, lat, lng);
+    const markerMap = new Map();
+
+    const parseCoordinates = (venue) => {
+      let lat = null;
+      let lng = null;
+
+      if (venue.latitude && venue.longitude) {
+        lat = parseFloat(venue.latitude);
+        lng = parseFloat(venue.longitude);
+      } else if (venue.geoLocation && typeof venue.geoLocation === 'string') {
+        const coords = venue.geoLocation.split(',').map((s) => parseFloat(s.trim()));
+        if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+          // Detect if formatted as [lng, lat] (where Longitude > 50 and Latitude < 45 in India) or [lat, lng]
+          if (coords[0] > 50 && coords[1] < 45) {
+            lng = coords[0];
+            lat = coords[1];
+          } else {
+            lat = coords[0];
+            lng = coords[1];
+          }
+        }
+      }
+
+      return { lat, lng };
+    };
+
+    displayVenuesOnMap.forEach((venue) => {
+      const { lat, lng } = parseCoordinates(venue);
+
+      if (lat === null || lng === null) return;
+
+      boundsPoints.push([lat, lng]);
+
+      const priceDisplay = getPriceDisplay(venue);
+      const capacityDisplay = getCapacityDisplay(venue);
+      const venueDisplayName = t(venue.code);
+      const venueTypeName = t(venue.venueTypeCode);
+      const description = getVenueDescription(venue);
+      const termsList = parseTerms(getVenueTerms(venue));
+      const facilitiesList = getVenueFacilities(venue);
+      const imageUrl =
+        venue.headerImageUrl ||
+        venue.image_url ||
+        'https://nugp-assets.s3.ap-south-1.amazonaws.com/nugp+asset/Banner+UPYOG+%281920x500%29B+%282%29.jpg';
+      const address = venue.address || '';
+      const contactNumber = getVenueContact(venue);
+      const distance = userLocation ? calculateDistance(userLocation.lat, userLocation.lng, lat, lng) : null;
+
       const marker = window.L.marker([lat, lng], {
         icon: hallIcon,
       }).addTo(map);
 
+      const directionUrl = userLocation
+        ? `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${lat},${lng}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+      // T&C preview for popup
+      const tncPreviewHtml =
+        termsList.length > 0
+          ? `
+          <div class="chb-map-popup-tnc-box">
+            <div class="chb-map-popup-tnc-header">
+              📜 ${t("CHB_TERMS_AND_CONDITIONS")}
+            </div>
+            <div class="chb-map-popup-tnc-content">
+              ${termsList.slice(0, 2).map((item) => `• ${t(item)}`).join("<br>")}
+            </div>
+          </div>
+        `
+          : "";
+
+      const facilitiesHtml =
+        facilitiesList.length > 0
+          ? `
+          <div class="chb-map-popup-amenities">
+            <b>${t("CHB_FACILITIES_AMENITIES")}:</b> ${facilitiesList.map((f) => t(f)).join(", ")}
+          </div>
+        `
+          : "";
+
       const popupContent = `
-        <div style="position: relative; width: 300px;">
-          <img src="${props.image_url || 'https://via.placeholder.com/80x60?text=Hall'}" alt="Community Hall" style="position: absolute; top: 0; right: 0; width: 150px; height: 110px; object-fit: cover; border-radius: 4px;" />
-          <div style="margin-right: 85px;">
-            <b>${props.community_hall_name}</b><br>
-            City: ${props.city}<br>
-            Price: ₹${props.price} per Day<br>
-            Capacity: ${props.capacity} Person<br>
+        <div class="chb-map-popup-card">
+          <div class="chb-map-popup-top-section">
+            <div class="chb-map-popup-header-info">
+              <span class="chb-map-popup-badge">
+                ${venueTypeName}
+              </span>
+              <b class="chb-map-popup-title">${venueDisplayName}</b>
+              ${address ? `<span class="chb-map-popup-address">📍 ${address}</span>` : ''}
+            </div>
+            <img src="${imageUrl}" alt="${venueDisplayName}" class="chb-map-popup-image" />
           </div>
-          <div>
-            Manager: ${props.manager}<br>
-            Contact: ${props.contact_number}<br>
-            Distance: ${distance.toFixed(1)} km<br>
+          <div class="chb-map-popup-details">
+            <div class="chb-map-popup-stat">💰 <b>${t("CHB_PRICE")}:</b> ${priceDisplay}</div>
+            <div class="chb-map-popup-stat">👥 <b>${t("CHB_CAPACITY")}:</b> ${capacityDisplay}</div>
+            <div class="chb-map-popup-stat">📞 <b>${t("CHB_CONTACT")}:</b> ${contactNumber}</div>
+            ${distance !== null ? `<div class="chb-map-popup-stat">🧭 <b>${t("CHB_DISTANCE")}:</b> ${distance.toFixed(1)} km</div>` : ''}
+            ${facilitiesHtml}
+            ${description ? `<div class="chb-map-popup-desc">${t(description)}</div>` : ''}
           </div>
-          <div>
-            <a href="https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${lat},${lng}" 
-            target="_blank" 
-            style="color: #0066cc; text-decoration: none; font-weight: 500; display: block; margin-bottom: 5px;">
-            ${t("CHB_GET_DIRECTION")} (Google Maps)
+          ${tncPreviewHtml}
+          <div class="chb-map-popup-actions">
+            <a href="${directionUrl}" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="chb-map-popup-direction-link">
+              🗺️ ${t("CHB_GET_DIRECTION")}
             </a>
-            <button
-              type="button"
-              class="chb-book-now-btn"
-              style="
-                background-color: #a82227;
-                color: white;
-                border: none;
-                padding: 6px 12px;
-                border-radius: 4px;
-                font-weight: bold;
-                cursor: pointer;
-                font-size: 12px;
-              "
-              data-community-hall-code="${props.community_hall_code}"
-              ${props.community_hall_id ? `data-community-hall-id="${props.community_hall_id}"` : ""}
-            >
-              ${t("CHB_BOOK_NOW")}
-            </button>
+            <div class="chb-map-popup-btn-group">
+              <button
+                type="button"
+                class="chb-view-details-btn"
+                onclick="window.showVenueDetails('${venue.code}')"
+                data-venue-code="${venue.code}"
+              >
+                ${t("CHB_DETAILS_AND_TNC")}
+              </button>
+              <button
+                type="button"
+                class="chb-book-now-btn"
+                onclick="window.selectHall('${venue.code}')"
+                data-venue-code="${venue.code}"
+                ${venue.venueId ? `data-venue-id="${venue.venueId}"` : ""}
+              >
+                ${t("CHB_BOOK_NOW")}
+              </button>
+            </div>
           </div>
         </div>
-        `;
-      marker.bindPopup(popupContent);
+      `;
+
+      marker.bindPopup(popupContent, { maxWidth: 360, minWidth: 320 });
+
       marker.on("popupopen", (e) => {
         const popupElement = e.popup && e.popup.getElement ? e.popup.getElement() : null;
         if (!popupElement) return;
+
+        const detailsBtn = popupElement.querySelector(".chb-view-details-btn");
+        if (detailsBtn) {
+          detailsBtn.onclick = (event) => {
+            event.preventDefault();
+            setSelectedVenueForDetails(venue);
+          };
+        }
+
         const button = popupElement.querySelector(".chb-book-now-btn");
-        if (!button) return;
-        const hallCode = button.getAttribute("data-community-hall-code");
-        const hallId = button.getAttribute("data-community-hall-id");
-        button.addEventListener("click", () => {
-        if (!hallCode) return;
-          navigate(
-            `/upyog-ui/citizen/chb/bookHall/searchvenue`,
-            {
-              state: {
-                selectedVenueType: {
-                  code: "COMMUNITY_HALLS",
-                  value: "Community Hall",
-                  i18nKey: "COMMUNITY_HALLS",
-                  parentMasterType: "CommunityHalls",
-                  timeSlots: { maxDuration: "23:59", minDuration: "1:00" },
-                },
-                selectedCommunityHall: {
-                  code: hallCode,
-                  value: hallCode,
-                  i18nKey: hallCode,
-                  childMasterCode: "HallCode",
-                  communityHallId: hallId || undefined,
-                },
-              },
-            }
-          );
-            });
+        if (button) {
+          button.onclick = (event) => {
+            event.preventDefault();
+            navigateToBooking(venue);
+          };
+        }
       });
 
-      // Add to markerMap for searching
-      markerMap.set(
-        `${props.community_hall_code.toLowerCase()}`,
-        { marker, lat, lng }
-      );
+      markerMap.set(`${venue.code.toLowerCase()}`, { marker, lat, lng });
+      if (venue.venueName) {
+        markerMap.set(`${venue.venueName.toLowerCase()}`, { marker, lat, lng });
+      }
     });
 
     // Search and fly-to logic
     if (searchTerm) {
       const term = searchTerm.trim().toLowerCase();
+      let matched = false;
       for (let [key, { marker, lat, lng }] of markerMap) {
         if (key.includes(term)) {
-          map.flyTo([lat, lng], 18);
+          map.flyTo([lat, lng], 16);
           marker.openPopup();
+          matched = true;
           break;
         }
-        }
-    } 
-    window.selectHall = (hallCode,hallId) => {
-      navigate({
-        pathname: `/upyog-ui/citizen/chb/bookHall/searchhall`,
-        selectedCommunityHall: {code: hallCode, value: hallCode, i18nKey: hallCode, communityHallId:hallId}
-      });
+      }
+      if (!matched && boundsPoints.length > 0) {
+        map.fitBounds(boundsPoints, { padding: [50, 50], maxZoom: 14 });
+      }
+    } else if (boundsPoints.length > 0) {
+      map.fitBounds(boundsPoints, { padding: [50, 50], maxZoom: 14 });
     }
-      
   };
+
+  const selectedVenueTermsList = selectedVenueForDetails ? parseTerms(getVenueTerms(selectedVenueForDetails)) : [];
+  const selectedVenueFacilities = selectedVenueForDetails ? getVenueFacilities(selectedVenueForDetails) : [];
+  const selectedVenueChildCodes = selectedVenueForDetails ? getChildCodes(selectedVenueForDetails) : [];
 
   return (
     <div>
-      <div style={{ marginLeft: "10px", marginRight: "10px"}}>
-      <CardLabel>{t("CHB_SEARCH_COMMUNITY_HALL")}</CardLabel>
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "16px", position: "relative", zIndex: 2000 }}>
+      <div className="chb-mapview-wrapper">
+        <CardLabel className="chb-mapview-search-label">
+          {t("CHB_VENUE_SEARCH")}
+        </CardLabel>
+        <div className="chb-mapview-filter-bar">
+          {/* Venue Type Dropdown Filter */}
+          <div className="chb-mapview-type-dropdown-container">
             <Dropdown
-            className="form-field"
-            selected={inputValue}
-            select={setInputValue}
-            option={statusOptions}
-            placeholder={t("Select Community Hall")}
-            optionKey="i18nKey"
-            style={{ width: "100%", position: "relative", zIndex: 2001 }}
-            t={t}
-          />
-            <div style={{marginTop:"5px", display: "flex", gap: "16px"}}>
-              <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
-              <p
-                className="link"
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  setSearchTerm("");
-                  setInputValue("");
-                }}
-              >
-                {t("ES_COMMON_CLEAR_ALL")}
-              </p>
-            </div>
+              className="form-field chb-mapview-type-dropdown"
+              selected={selectedVenueTypeFilter}
+              select={(val) => {
+                setSelectedVenueTypeFilter(val);
+                setSelectedVenue(null);
+                setSearchTerm("");
+              }}
+              option={venueTypeOptions}
+              placeholder={t("CHB_VENUE_TYPE_PLACEHOLDER")}
+              optionKey="name"
+              t={t}
+            />
+          </div>
+
+          {/* Venue Select Dropdown */}
+          <div className="chb-mapview-name-dropdown-container">
+            <Dropdown
+              className="form-field chb-mapview-name-dropdown"
+              selected={selectedVenue}
+              select={setSelectedVenue}
+              option={venueOptions}
+              placeholder={t("CHB_VENUE_NAME_PLACEHOLDER")}
+              optionKey="i18nKey"
+              disable={!selectedVenueTypeFilter || venueOptions.length === 0}
+              t={t}
+            />
+          </div>
+
+          <div className="chb-mapview-action-group">
+            <SubmitBar className="chb-mapview-submit-btn" label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
+            <p
+              className="link chb-mapview-clear-link"
+              onClick={() => {
+                setSelectedVenueTypeFilter(null);
+                setSelectedVenue(null);
+                setSearchTerm("");
+              }}
+            >
+              {t("ES_COMMON_CLEAR_ALL")}
+            </p>
+          </div>
         </div>
 
-        <div ref={mapRef} style={{ height: '86vh', width: '100%', border: '1px solid #ccc', marginTop: "0px" }} />
+        {isVenuesLoading ? (
+          <div className="chb-mapview-loader-container">
+            <Loader />
+          </div>
+        ) : (
+          <div ref={mapRef} className="chb-mapview-map-container" />
+        )}
       </div>
+
+      {/* Modal for Full Venue Details & Terms and Conditions (T&C) */}
+      {selectedVenueForDetails && (
+        <Modal
+          headerBarMain={
+            <CardSubHeader className="chb-modal-header-text">
+              {t(selectedVenueForDetails.code)}
+            </CardSubHeader>
+          }
+          headerBarEnd={<CloseBtn onClick={() => setSelectedVenueForDetails(null)} />}
+          popupStyles={{
+            backgroundColor: "#fff",
+            position: 'relative',
+            width: '90%',
+            maxWidth: '1000px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            borderRadius: '8px',
+          }}
+          children={
+            <div className="chb-modal-content-body">
+              {/* Overview Metric Cards Grid */}
+              <div className="chb-modal-overview-grid">
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_HALL_CODE_LABEL")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-code-value">
+                    {t(selectedVenueForDetails.code)}
+                  </CardLabelDesc>
+                </div>
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_VENUE_TYPE_LABEL")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value-bold">
+                    {t(selectedVenueForDetails.venueTypeCode)}
+                  </CardLabelDesc>
+                </div>
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_BOOKING_PRICE")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value-bold">
+                    {getPriceDisplay(selectedVenueForDetails)}
+                  </CardLabelDesc>
+                </div>
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_TOTAL_CAPACITY")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value-bold">
+                    {getCapacityDisplay(selectedVenueForDetails)}
+                  </CardLabelDesc>
+                </div>
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_CONTACT_DETAILS")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value-bold">
+                    {t(getVenueContact(selectedVenueForDetails))}
+                  </CardLabelDesc>
+                </div>
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_GEO_LOCATION")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value">
+                    {selectedVenueForDetails.geoLocation || t("CS_NA")}
+                  </CardLabelDesc>
+                </div>
+                <div>
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_BOOKING_DURATION")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value">
+                    {getSlotDurationDisplay(selectedVenueForDetails)}
+                  </CardLabelDesc>
+                </div>
+                <div className="chb-modal-grid-span2">
+                  <CardLabel className="chb-modal-grid-label">
+                    {t("CHB_ADDRESS")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-grid-value">
+                    {selectedVenueForDetails.address || t("CS_NA")}
+                  </CardLabelDesc>
+                </div>
+              </div>
+
+              {/* Sub-Units Breakdown (if child codes exist) */}
+              {selectedVenueChildCodes.length > 0 && (
+                <div className="chb-modal-section-container">
+                  <CardLabel className="chb-modal-section-heading">
+                    {t("CHB_AVAILABLE_UNITS")} ({selectedVenueChildCodes.length})
+                  </CardLabel>
+                  <div className="chb-modal-units-flex">
+                    {selectedVenueChildCodes.map((child, idx) => (
+                      <div key={idx} className="chb-modal-unit-card">
+                        <div className="chb-modal-unit-card-title">
+                          {t(child.code)}
+                        </div>
+                        {(child.capacity || child.rooms) && (
+                          <div className="chb-modal-unit-card-capacity">
+                            {t("CHB_CAPACITY")}: <b>{child.capacity || child.rooms}</b> {selectedVenueForDetails.venueTypeCode === "GUEST_HOUSES" ? t("CHB_ROOMS") : t("CHB_PERSONS")}
+                          </div>
+                        )}
+                        {child.rent && (
+                          <div className="chb-modal-unit-card-rent">
+                            {t("CHB_RENT")}: ₹{child.rent}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {getVenueDescription(selectedVenueForDetails) && (
+                <div className="chb-modal-section-container">
+                  <CardLabel className="chb-modal-section-heading">
+                    {t("CHB_DESCRIPTION")}
+                  </CardLabel>
+                  <CardLabelDesc className="chb-modal-desc-content">
+                    {t(getVenueDescription(selectedVenueForDetails))}
+                  </CardLabelDesc>
+                </div>
+              )}
+
+              {/* Facilities & Services */}
+              {selectedVenueFacilities.length > 0 && (
+                <div className="chb-modal-section-container">
+                  <CardLabel className="chb-modal-section-heading">
+                    {t("CHB_FACILITIES_AMENITIES")}
+                  </CardLabel>
+                  <div className="chb-modal-amenities-flex">
+                    {selectedVenueFacilities.map((fac, idx) => (
+                      <span key={idx} className="chb-modal-amenity-chip">
+                        ✓ {t(fac)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Terms and Conditions (T&C) */}
+              <div className="chb-modal-tnc-container">
+                <CardLabel className="chb-modal-section-heading">
+                  📜 {t("CHB_TERMS_AND_CONDITIONS")}
+                </CardLabel>
+                <div className="chb-modal-tnc-scrollbox">
+                  {selectedVenueTermsList.length > 0 ? (
+                    <ol className="chb-modal-tnc-ol">
+                      {selectedVenueTermsList.map((line, idx) => (
+                        <li key={idx} className="chb-modal-tnc-li">
+                          {t(line)}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="chb-modal-tnc-empty-msg">
+                      {t("NO_TERMS_AVAILABLE")}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Disclaimer / Remarks if present */}
+              {(selectedVenueForDetails.disclaimer || selectedVenueForDetails.remarks) && (
+                <div className="chb-modal-remarks-container">
+                  <div className="chb-modal-remarks-heading">
+                    {t("CHB_REMARKS")}
+                  </div>
+                  <div className="chb-modal-remarks-text">
+                    {t(selectedVenueForDetails.disclaimer || selectedVenueForDetails.remarks)}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="chb-modal-footer-action-bar">
+                <SubmitBar
+                  label={t("CS_COMMON_CLOSE")}
+                  onSubmit={() => setSelectedVenueForDetails(null)}
+                />
+                <SubmitBar
+                  label={t("CHB_BOOK_NOW")}
+                  onSubmit={() => {
+                    const venueToBook = selectedVenueForDetails;
+                    setSelectedVenueForDetails(null);
+                    navigateToBooking(venueToBook);
+                  }}
+                />
+              </div>
+            </div>
+          }
+          actionCancelLabel={null}
+          actionSaveLabel={null}
+          hideSubmit={true}
+          popupModuleMianStyles={{ padding: "0" }}
+          headerBarMainStyle={{ position: "sticky", top: 0, backgroundColor: "#f5f5f5", zIndex: 10 }}
+          popupModuleActionBarStyles={{ display: 'none' }}
+          isOpen={!!selectedVenueForDetails}
+          onClose={() => setSelectedVenueForDetails(null)}
+        />
+      )}
     </div>
   );
 };
