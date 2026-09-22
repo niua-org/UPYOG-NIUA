@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from "react-i18next";
 import { CardLabel, SubmitBar, Dropdown, Loader, Modal, CardSubHeader, CardLabelDesc } from '@nudmcdgnpm/digit-ui-react-components';
-import "../css/mapview.css";
+import "../css/mapview.scss";
 
 const Close = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFFFFF" width="20px" height="20px">
@@ -22,31 +22,26 @@ const VENUE_TYPE_CONFIGS = {
   COMMUNITY_HALLS: {
     parentMasterType: "CommunityHalls",
     childMasterCode: "HallCode",
-    defaultIconColor: "#a82227",
     label: "Community Hall",
   },
   PARKS: {
     parentMasterType: "Parks",
     childMasterCode: "ParkCode",
-    defaultIconColor: "#2e7d32",
     label: "Park",
   },
   STADIUMS: {
     parentMasterType: "Stadiums",
     childMasterCode: "StadiumCode",
-    defaultIconColor: "#1565c0",
     label: "Stadium",
   },
   GUEST_HOUSES: {
     parentMasterType: "GuestHouses",
     childMasterCode: "GuestHouseCode",
-    defaultIconColor: "#e65100",
     label: "Guest House",
   },
   CREMATORIUMS: {
     parentMasterType: "Crematoriums",
     childMasterCode: "CrematoriumCode",
-    defaultIconColor: "#455a64",
     label: "Crematorium",
   },
 };
