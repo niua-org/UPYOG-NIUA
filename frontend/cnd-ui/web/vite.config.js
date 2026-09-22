@@ -72,7 +72,7 @@
  *
  * Why this matters:
  * - Allows importing internal packages like:
- *      import Something from "@upyog/digit-ui-react-components";
+ *      import Something from "@nudmcdgnpm/digit-ui-react-components";
  * - Prevents Vite from resolving them from node_modules.
  * - Ensures local development uses latest source/build.
  *
