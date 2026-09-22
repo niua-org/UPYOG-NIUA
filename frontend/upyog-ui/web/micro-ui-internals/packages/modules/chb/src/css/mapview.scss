@@ -105,7 +105,7 @@ $chb-user-marker-color: #1d4ed8;
 
   .user-location-dot {
     font-size: 24px;
-    color: #1d4ed8;
+    color: $chb-user-marker-color;
   }
 }
 
@@ -133,8 +133,8 @@ $chb-user-marker-color: #1d4ed8;
       gap: 3px;
 
       .chb-map-popup-badge {
-        background: #f0f4f8;
-        color: #a82227;
+        background: $chb-badge-bg;
+        color: $chb-primary-color;
         font-size: 10px;
         font-weight: bold;
         padding: 2px 6px;
@@ -182,7 +182,7 @@ $chb-user-marker-color: #1d4ed8;
 
     .chb-map-popup-amenities {
       font-size: 10px;
-      color: #2e7d32;
+      color: $chb-success-color;
       line-height: 1.3;
     }
 
@@ -198,15 +198,15 @@ $chb-user-marker-color: #1d4ed8;
 
   .chb-map-popup-tnc-box {
     margin-top: 8px;
-    background: #fff8f8;
-    border-left: 3px solid #a82227;
+    background: $chb-primary-bg;
+    border-left: 3px solid $chb-primary-color;
     padding: 6px 8px;
     border-radius: 3px;
 
     .chb-map-popup-tnc-header {
       font-weight: bold;
       font-size: 11px;
-      color: #a82227;
+      color: $chb-primary-color;
       margin-bottom: 2px;
     }
 
@@ -262,7 +262,7 @@ $chb-user-marker-color: #1d4ed8;
       }
 
       .chb-book-now-btn {
-        background-color: #a82227;
+        background-color: $chb-primary-color;
         color: white;
         border: none;
         padding: 5px 10px;
@@ -272,7 +272,7 @@ $chb-user-marker-color: #1d4ed8;
         font-size: 11px;
 
         &:hover {
-          background-color: #8c1b20;
+          background-color: $chb-primary-hover;
         }
       }
     }
@@ -283,8 +283,35 @@ $chb-user-marker-color: #1d4ed8;
    Details Modal Custom Styling
    ---------------------------------------------------------------- */
 
+.chb-details-modal-wrapper {
+  .popup-module {
+    background-color: #fff;
+    position: relative;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 8px;
+  }
+
+  .popup-module-main {
+    padding: 0;
+  }
+
+  .popup-module-action-bar {
+    display: none;
+  }
+
+  .header-bar-main {
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+    z-index: 10;
+  }
+}
+
 .chb-modal-header-text {
-  color: #a82227;
+  color: $chb-primary-color;
   margin: 20px 25px 0;
   font-size: 20px;
   font-weight: 700;
@@ -312,7 +339,7 @@ $chb-user-marker-color: #1d4ed8;
     .chb-modal-code-value {
       font-size: 15px;
       font-weight: 700;
-      color: #a82227;
+      color: $chb-primary-color;
     }
 
     .chb-modal-grid-value-bold {
@@ -356,7 +383,7 @@ $chb-user-marker-color: #1d4ed8;
         .chb-modal-unit-card-title {
           font-weight: 600;
           font-size: 14px;
-          color: #a82227;
+          color: $chb-primary-color;
         }
 
         .chb-modal-unit-card-capacity {

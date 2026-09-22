@@ -22,27 +22,22 @@ const VENUE_TYPE_CONFIGS = {
   COMMUNITY_HALLS: {
     parentMasterType: "CommunityHalls",
     childMasterCode: "HallCode",
-    label: "Community Hall",
   },
   PARKS: {
     parentMasterType: "Parks",
     childMasterCode: "ParkCode",
-    label: "Park",
   },
   STADIUMS: {
     parentMasterType: "Stadiums",
     childMasterCode: "StadiumCode",
-    label: "Stadium",
   },
   GUEST_HOUSES: {
     parentMasterType: "GuestHouses",
     childMasterCode: "GuestHouseCode",
-    label: "Guest House",
   },
   CREMATORIUMS: {
     parentMasterType: "Crematoriums",
     childMasterCode: "CrematoriumCode",
-    label: "Crematorium",
   },
 };
 
@@ -99,6 +94,110 @@ const CHBMapView = () => {
   const crematoriumCodes = mdmsAllData?.["CHB"]?.["CrematoriumCode"] || [];
   const calculationTypes = mdmsAllData?.["CHB"]?.["CalculationType"] || [];
 
+  // Combine all active venues across all types
+  const allVenues = useMemo(() => {
+    const list = [];
+
+    const processVenues = (items, venueTypeCode, defaultChildMaster) => {
+      (items || []).forEach((item) => {
+        if (item.active === false) return;
+        const venueTypeMeta = venueTypeList.find((v) => v.code === venueTypeCode) || VENUE_TYPE_CONFIGS[venueTypeCode];
+        list.push({
+          ...item,
+          venueTypeCode: venueTypeCode,
+          venueTypeName: venueTypeMeta?.name || venueTypeCode,
+          parentMasterType: venueTypeMeta?.parentMasterType || VENUE_TYPE_CONFIGS[venueTypeCode]?.parentMasterType,
+          childMasterCode: item.childMasterCode || venueTypeMeta?.childMasterCode || defaultChildMaster,
+          timeSlots: venueTypeMeta?.timeSlot || { maxDuration: "23:59", minDuration: "1:00" },
+        });
+      });
+    };
+
+    processVenues(communityHalls, "COMMUNITY_HALLS", "HallCode");
+    processVenues(parks, "PARKS", "ParkCode");
+    processVenues(stadiums, "STADIUMS", "StadiumCode");
+    processVenues(guestHouses, "GUEST_HOUSES", "GuestHouseCode");
+    processVenues(crematoriums, "CREMATORIUMS", "CrematoriumCode");
+
+    return list;
+  }, [communityHalls, parks, stadiums, guestHouses, crematoriums, venueTypeList]);
+
+  // Filtered venues based on selected venue type for map display
+  const displayVenuesOnMap = useMemo(() => {
+    if (!selectedVenueTypeFilter) {
+      return allVenues;
+    }
+    return allVenues.filter((v) => v.venueTypeCode === selectedVenueTypeFilter.code);
+  }, [allVenues, selectedVenueTypeFilter]);
+
+  // ==========================================
+  // All useEffect Hooks (Top of Component)
+  // ==========================================
+
+  // 1. Geolocation Effect
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn("Location access denied or unavailable:", error);
+        }
+      );
+    }
+  }, []);
+
+  // 2. Expose global methods for Leaflet HTML popups
+  useEffect(() => {
+    window.showVenueDetails = (venueCode) => {
+      const targetVenue = allVenues.find((v) => v.code === venueCode);
+      if (targetVenue) {
+        setSelectedVenueForDetails(targetVenue);
+      }
+    };
+
+    window.selectHall = (venueCode, hallId) => {
+      const targetVenue = allVenues.find(
+        (v) => v.code === venueCode || (hallId && (v.venueId === hallId || v.communityHallId === hallId))
+      );
+      if (targetVenue) {
+        navigateToBooking(targetVenue);
+      }
+    };
+
+    return () => {
+      delete window.showVenueDetails;
+      delete window.selectHall;
+    };
+  }, [allVenues]);
+
+  // 3. Leaflet Map Loading Effect
+  useEffect(() => {
+    if (isVenuesLoading) return;
+
+    const loadLeaflet = () => {
+      if (!window.L) {
+        const link = document.createElement('link');
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = initMap;
+        document.head.appendChild(script);
+      } else {
+        initMap();
+      }
+    };
+
+    loadLeaflet();
+  }, [userLocation, searchTerm, displayVenuesOnMap, isVenuesLoading]);
+
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -110,14 +209,21 @@ const CHBMapView = () => {
     return R * c;
   };
 
-  const getChildCodes = (venue) => {
-    let list = [];
-    if (venue.childMasterCode === "HallCode" || venue.venueTypeCode === "COMMUNITY_HALLS") list = hallCodes;
-    else if (venue.childMasterCode === "ParkCode" || venue.venueTypeCode === "PARKS") list = parkCodes;
-    else if (venue.childMasterCode === "StadiumCode" || venue.venueTypeCode === "STADIUMS") list = stadiumCodes;
-    else if (venue.childMasterCode === "GuestHouseCode" || venue.venueTypeCode === "GUEST_HOUSES") list = guestHouseCodes;
-    else if (venue.childMasterCode === "CrematoriumCode" || venue.venueTypeCode === "CREMATORIUMS") list = crematoriumCodes;
+  const childMasterMap = {
+    HallCode: hallCodes,
+    COMMUNITY_HALLS: hallCodes,
+    ParkCode: parkCodes,
+    PARKS: parkCodes,
+    StadiumCode: stadiumCodes,
+    STADIUMS: stadiumCodes,
+    GuestHouseCode: guestHouseCodes,
+    GUEST_HOUSES: guestHouseCodes,
+    CrematoriumCode: crematoriumCodes,
+    CREMATORIUMS: crematoriumCodes,
+  };
 
+  const getChildCodes = (venue) => {
+    const list = childMasterMap[venue.childMasterCode] || childMasterMap[venue.venueTypeCode] || [];
     return list.filter(
       (c) =>
         c.venueCode === venue.code ||
@@ -165,51 +271,16 @@ const CHBMapView = () => {
   };
 
   const getVenueFacilities = (venue) => {
-    const fac = venue.facilities || venue.services || venue.amenities;
-    const sports = venue.sportsAvailable;
-    const items = [];
-    if (Array.isArray(fac)) items.push(...fac);
-    else if (typeof fac === "string" && fac.trim()) items.push(fac.trim());
-
-    if (Array.isArray(sports)) items.push(...sports);
-    else if (typeof sports === "string" && sports.trim()) items.push(sports.trim());
-
-    return items;
+    const fac = venue.facilities || venue.services || venue.amenities || [];
+    const sports = venue.sportsAvailable || [];
+    const facList = Array.isArray(fac) ? fac : [fac];
+    const sportsList = Array.isArray(sports) ? sports : [sports];
+    return [...facList, ...sportsList].map((s) => String(s).trim()).filter(Boolean);
   };
 
-  const getVenueTerms = (venue) => {
-    return venue.termsAndCondition || venue.termsAndConditions || venue.tnc || venue.terms_and_conditions || venue.rules || "";
-  };
-
-  const getVenueDescription = (venue) => {
-    return venue.venueDescription || venue.parkDescription || venue.hallDescription || venue.description || "";
-  };
-
-  const getVenueContact = (venue) => {
-    return venue.contactDetails || venue.contact_number || venue.contactNumber || venue.phone || "N/A";
-  };
-
-  const formatDurationText = (durationStr) => {
-    if (!durationStr) return "";
-    if (typeof durationStr === "number") {
-      return `${durationStr} ${durationStr === 1 ? t("CHB_HOUR") : t("CHB_HOURS")}`;
-    }
-    const str = String(durationStr).trim();
-    if (str === "23:59" || str === "24:00" || str === "24") {
-      return `${t("CHB_FULL_DAY")} (24 ${t("CHB_HOURS")})`;
-    }
-    if (str.includes(":")) {
-      const [h, m] = str.split(":").map((v) => parseInt(v, 10) || 0);
-      const hourPart = h > 0 ? `${h} ${h === 1 ? t("CHB_HOUR") : t("CHB_HOURS")}` : "";
-      const minPart = m > 0 ? `${m} ${t("CHB_MINS")}` : "";
-      return [hourPart, minPart].filter(Boolean).join(" ");
-    }
-    const num = parseInt(str, 10);
-    if (!isNaN(num)) {
-      return `${num} ${num === 1 ? t("CHB_HOUR") : t("CHB_HOURS")}`;
-    }
-    return t(str);
-  };
+  const getVenueTerms = (venue) => venue?.termsAndCondition || "";
+  const getVenueDescription = (venue) => venue?.venueDescription || venue?.parkDescription || "";
+  const getVenueContact = (venue) => venue?.contactDetails || "N/A";
 
   const getSlotDurationDisplay = (venue) => {
     const timeSlots = venue?.timeSlots || venue?.timeSlot;
@@ -227,45 +298,15 @@ const CHBMapView = () => {
     const max = timeSlots.maxDuration;
 
     if (min && max) {
-      const minFormatted = formatDurationText(min);
-      const maxFormatted = formatDurationText(max);
-      if (minFormatted === maxFormatted) return minFormatted;
-      return `${t("CHB_MIN")}: ${minFormatted} | ${t("CHB_MAX")}: ${maxFormatted}`;
+      if (min === max) return t(min);
+      return `${t("CHB_MIN")}: ${t(min)} | ${t("CHB_MAX")}: ${t(max)}`;
     }
 
-    if (min) return `${t("CHB_MIN")}: ${formatDurationText(min)}`;
-    if (max) return `${t("CHB_MAX")}: ${formatDurationText(max)}`;
+    if (min) return `${t("CHB_MIN")}: ${t(min)}`;
+    if (max) return `${t("CHB_MAX")}: ${t(max)}`;
 
     return t("CS_NA");
   };
-
-  // Combine all active venues across all types
-  const allVenues = useMemo(() => {
-    const list = [];
-
-    const processVenues = (items, venueTypeCode, defaultChildMaster) => {
-      (items || []).forEach((item) => {
-        if (item.active === false) return;
-        const venueTypeMeta = venueTypeList.find((v) => v.code === venueTypeCode) || VENUE_TYPE_CONFIGS[venueTypeCode];
-        list.push({
-          ...item,
-          venueTypeCode: venueTypeCode,
-          venueTypeName: venueTypeMeta?.name || VENUE_TYPE_CONFIGS[venueTypeCode]?.label || venueTypeCode,
-          parentMasterType: venueTypeMeta?.parentMasterType || VENUE_TYPE_CONFIGS[venueTypeCode]?.parentMasterType,
-          childMasterCode: item.childMasterCode || venueTypeMeta?.childMasterCode || defaultChildMaster,
-          timeSlots: venueTypeMeta?.timeSlot || { maxDuration: "23:59", minDuration: "1:00" },
-        });
-      });
-    };
-
-    processVenues(communityHalls, "COMMUNITY_HALLS", "HallCode");
-    processVenues(parks, "PARKS", "ParkCode");
-    processVenues(stadiums, "STADIUMS", "StadiumCode");
-    processVenues(guestHouses, "GUEST_HOUSES", "GuestHouseCode");
-    processVenues(crematoriums, "CREMATORIUMS", "CrematoriumCode");
-
-    return list;
-  }, [communityHalls, parks, stadiums, guestHouses, crematoriums, venueTypeList]);
 
   // Venue Type dropdown options
   const venueTypeOptions = useMemo(() => {
@@ -274,7 +315,7 @@ const CHBMapView = () => {
       ? venueTypeList
       : Object.keys(VENUE_TYPE_CONFIGS).map((k) => ({
           code: k,
-          name: VENUE_TYPE_CONFIGS[k].label,
+          name: t(k),
           parentMasterType: VENUE_TYPE_CONFIGS[k].parentMasterType,
         }))
     ).forEach((vt) => {
@@ -291,14 +332,6 @@ const CHBMapView = () => {
     });
     return options;
   }, [venueTypeList, t]);
-
-  // Filtered venues based on selected venue type for map display
-  const displayVenuesOnMap = useMemo(() => {
-    if (!selectedVenueTypeFilter) {
-      return allVenues;
-    }
-    return allVenues.filter((v) => v.venueTypeCode === selectedVenueTypeFilter.code);
-  }, [allVenues, selectedVenueTypeFilter]);
 
   // Venue dropdown options - ONLY show venue options when venue type is selected, using venue code
   const venueOptions = useMemo(() => {
@@ -357,68 +390,6 @@ const CHBMapView = () => {
       },
     });
   };
-
-  // Expose global methods for Leaflet HTML popups
-  useEffect(() => {
-    window.showVenueDetails = (venueCode) => {
-      const targetVenue = allVenues.find((v) => v.code === venueCode);
-      if (targetVenue) {
-        setSelectedVenueForDetails(targetVenue);
-      }
-    };
-
-    window.selectHall = (venueCode, hallId) => {
-      const targetVenue = allVenues.find(
-        (v) => v.code === venueCode || (hallId && (v.venueId === hallId || v.communityHallId === hallId))
-      );
-      if (targetVenue) {
-        navigateToBooking(targetVenue);
-      }
-    };
-
-    return () => {
-      delete window.showVenueDetails;
-      delete window.selectHall;
-    };
-  }, [allVenues]);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.warn("Location access denied or unavailable:", error);
-        }
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isVenuesLoading) return;
-
-    const loadLeaflet = () => {
-      if (!window.L) {
-        const link = document.createElement('link');
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
-
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.onload = initMap;
-        document.head.appendChild(script);
-      } else {
-        initMap();
-      }
-    };
-
-    loadLeaflet();
-  }, [userLocation, searchTerm, displayVenuesOnMap, isVenuesLoading]);
 
   const initMap = () => {
     if (!mapRef.current || !window.L) return;
@@ -631,8 +602,10 @@ const CHBMapView = () => {
       if (!matched && boundsPoints.length > 0) {
         map.fitBounds(boundsPoints, { padding: [50, 50], maxZoom: 14 });
       }
-    } else if (boundsPoints.length > 0) {
-      map.fitBounds(boundsPoints, { padding: [50, 50], maxZoom: 14 });
+    } else {
+      if (boundsPoints.length > 0) {
+        map.fitBounds(boundsPoints, { padding: [50, 50], maxZoom: 14 });
+      }
     }
   };
 
@@ -704,24 +677,16 @@ const CHBMapView = () => {
 
       {/* Modal for Full Venue Details & Terms and Conditions (T&C) */}
       {selectedVenueForDetails && (
-        <Modal
-          headerBarMain={
-            <CardSubHeader className="chb-modal-header-text">
-              {t(selectedVenueForDetails.code)}
-            </CardSubHeader>
-          }
-          headerBarEnd={<CloseBtn onClick={() => setSelectedVenueForDetails(null)} />}
-          popupStyles={{
-            backgroundColor: "#fff",
-            position: 'relative',
-            width: '90%',
-            maxWidth: '1000px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            borderRadius: '8px',
-          }}
-          children={
-            <div className="chb-modal-content-body">
+        <div className="chb-details-modal-wrapper">
+          <Modal
+            headerBarMain={
+              <CardSubHeader className="chb-modal-header-text">
+                {t(selectedVenueForDetails.code)}
+              </CardSubHeader>
+            }
+            headerBarEnd={<CloseBtn onClick={() => setSelectedVenueForDetails(null)} />}
+            children={
+              <div className="chb-modal-content-body">
               {/* Overview Metric Cards Grid */}
               <div className="chb-modal-overview-grid">
                 <div>
@@ -900,15 +865,13 @@ const CHBMapView = () => {
           actionCancelLabel={null}
           actionSaveLabel={null}
           hideSubmit={true}
-          popupModuleMianStyles={{ padding: "0" }}
-          headerBarMainStyle={{ position: "sticky", top: 0, backgroundColor: "#f5f5f5", zIndex: 10 }}
-          popupModuleActionBarStyles={{ display: 'none' }}
           isOpen={!!selectedVenueForDetails}
           onClose={() => setSelectedVenueForDetails(null)}
         />
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 };
 
 export default CHBMapView;
