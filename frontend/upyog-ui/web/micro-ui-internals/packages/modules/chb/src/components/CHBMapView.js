@@ -20,22 +20,37 @@ const CloseBtn = (props) => {
 
 const VENUE_TYPE_CONFIGS = {
   COMMUNITY_HALLS: {
+    code: "COMMUNITY_HALLS",
     parentMasterType: "CommunityHalls",
     childMasterCode: "HallCode",
   },
   PARKS: {
+    code: "PARKS",
     parentMasterType: "Parks",
     childMasterCode: "ParkCode",
   },
   STADIUMS: {
+    code: "STADIUMS",
     parentMasterType: "Stadiums",
     childMasterCode: "StadiumCode",
   },
-  GUEST_HOUSES: {
+  GUEST_HOUSE: {
+    code: "GUEST_HOUSE",
     parentMasterType: "GuestHouses",
     childMasterCode: "GuestHouseCode",
   },
+  GUEST_HOUSES: {
+    code: "GUEST_HOUSES",
+    parentMasterType: "GuestHouses",
+    childMasterCode: "GuestHouseCode",
+  },
+  CREMATORIUM: {
+    code: "CREMATORIUM",
+    parentMasterType: "Crematoriums",
+    childMasterCode: "CrematoriumCode",
+  },
   CREMATORIUMS: {
+    code: "CREMATORIUMS",
     parentMasterType: "Crematoriums",
     childMasterCode: "CrematoriumCode",
   },
@@ -98,26 +113,39 @@ const CHBMapView = () => {
   const allVenues = useMemo(() => {
     const list = [];
 
-    const processVenues = (items, venueTypeCode, defaultChildMaster) => {
+    const venueMasterMap = [
+      { parentMasterType: "CommunityHalls", items: communityHalls, fallbackCode: "COMMUNITY_HALLS", fallbackChild: "HallCode" },
+      { parentMasterType: "Parks", items: parks, fallbackCode: "PARKS", fallbackChild: "ParkCode" },
+      { parentMasterType: "Stadiums", items: stadiums, fallbackCode: "STADIUMS", fallbackChild: "StadiumCode" },
+      { parentMasterType: "GuestHouses", items: guestHouses, fallbackCode: "GUEST_HOUSE", fallbackChild: "GuestHouseCode" },
+      { parentMasterType: "Crematoriums", items: crematoriums, fallbackCode: "CREMATORIUM", fallbackChild: "CrematoriumCode" },
+    ];
+
+    venueMasterMap.forEach(({ parentMasterType, items, fallbackCode, fallbackChild }) => {
+      const venueTypeMeta =
+        venueTypeList.find(
+          (v) =>
+            v.parentMasterType?.toLowerCase() === parentMasterType.toLowerCase() ||
+            v.code?.toLowerCase() === fallbackCode.toLowerCase()
+        ) ||
+        VENUE_TYPE_CONFIGS[fallbackCode] ||
+        {};
+
+      const venueTypeCode = venueTypeMeta.code || fallbackCode;
+      const childMasterCode = venueTypeMeta.childMasterCode || fallbackChild;
+
       (items || []).forEach((item) => {
         if (item.active === false) return;
-        const venueTypeMeta = venueTypeList.find((v) => v.code === venueTypeCode) || VENUE_TYPE_CONFIGS[venueTypeCode];
         list.push({
           ...item,
           venueTypeCode: venueTypeCode,
           venueTypeName: venueTypeMeta?.name || venueTypeCode,
-          parentMasterType: venueTypeMeta?.parentMasterType || VENUE_TYPE_CONFIGS[venueTypeCode]?.parentMasterType,
-          childMasterCode: item.childMasterCode || venueTypeMeta?.childMasterCode || defaultChildMaster,
+          parentMasterType: parentMasterType,
+          childMasterCode: item.childMasterCode || childMasterCode,
           timeSlots: venueTypeMeta?.timeSlot || { maxDuration: "23:59", minDuration: "1:00" },
         });
       });
-    };
-
-    processVenues(communityHalls, "COMMUNITY_HALLS", "HallCode");
-    processVenues(parks, "PARKS", "ParkCode");
-    processVenues(stadiums, "STADIUMS", "StadiumCode");
-    processVenues(guestHouses, "GUEST_HOUSES", "GuestHouseCode");
-    processVenues(crematoriums, "CREMATORIUMS", "CrematoriumCode");
+    });
 
     return list;
   }, [communityHalls, parks, stadiums, guestHouses, crematoriums, venueTypeList]);
@@ -127,7 +155,13 @@ const CHBMapView = () => {
     if (!selectedVenueTypeFilter) {
       return allVenues;
     }
-    return allVenues.filter((v) => v.venueTypeCode === selectedVenueTypeFilter.code);
+    const filterCode = selectedVenueTypeFilter.code?.toLowerCase();
+    const filterParent = selectedVenueTypeFilter.parentMasterType?.toLowerCase();
+    return allVenues.filter(
+      (v) =>
+        (filterCode && v.venueTypeCode?.toLowerCase() === filterCode) ||
+        (filterParent && v.parentMasterType?.toLowerCase() === filterParent)
+    );
   }, [allVenues, selectedVenueTypeFilter]);
 
   // ==========================================
@@ -212,30 +246,43 @@ const CHBMapView = () => {
   const childMasterMap = {
     HallCode: hallCodes,
     COMMUNITY_HALLS: hallCodes,
+    CommunityHalls: hallCodes,
     ParkCode: parkCodes,
     PARKS: parkCodes,
+    Parks: parkCodes,
     StadiumCode: stadiumCodes,
     STADIUMS: stadiumCodes,
+    Stadiums: stadiumCodes,
     GuestHouseCode: guestHouseCodes,
+    GUEST_HOUSE: guestHouseCodes,
     GUEST_HOUSES: guestHouseCodes,
+    GuestHouses: guestHouseCodes,
     CrematoriumCode: crematoriumCodes,
+    CREMATORIUM: crematoriumCodes,
     CREMATORIUMS: crematoriumCodes,
+    Crematoriums: crematoriumCodes,
   };
 
   const getChildCodes = (venue) => {
-    const list = childMasterMap[venue.childMasterCode] || childMasterMap[venue.venueTypeCode] || [];
+    const list =
+      childMasterMap[venue.childMasterCode] ||
+      childMasterMap[venue.parentMasterType] ||
+      childMasterMap[venue.venueTypeCode] ||
+      [];
     return list.filter(
       (c) =>
         c.venueCode === venue.code ||
+        (venue.code && c.code === venue.code) ||
         (venue.venueId && c.venueId === venue.venueId) ||
-        (venue.venueId && c.guestHouseId === venue.venueId)
+        (venue.venueId && c.guestHouseId === venue.venueId) ||
+        (venue.venueId && c.crematoriumId === venue.venueId)
     );
   };
 
   const getPriceDisplay = (venue) => {
     const matchingCalc = calculationTypes.find(
       (ct) =>
-        ct.communityHallCode === venue.code &&
+        (ct.communityHallCode === venue.code || ct.venueCode === venue.code) &&
         (ct.feeType === "BOOKING_FEES" || ct.feeType === "HALL_RENT" || ct.feeType === "RENT")
     );
     if (matchingCalc?.amount) {
@@ -252,8 +299,9 @@ const CHBMapView = () => {
   const getCapacityDisplay = (venue) => {
     const codes = getChildCodes(venue);
     const caps = codes.map((c) => c.capacity || c.rooms).filter(Boolean);
+    const isGuestHouse = venue.venueTypeCode?.includes("GUEST_HOUSE") || venue.parentMasterType === "GuestHouses";
     if (caps.length > 0) {
-      return `${caps.join(", ")} ${venue.venueTypeCode === "GUEST_HOUSES" ? t("CHB_ROOMS") : t("CHB_PERSONS")}`;
+      return `${caps.join(", ")} ${isGuestHouse ? t("CHB_ROOMS") : t("CHB_PERSONS")}`;
     }
     if (venue.capacity) return `${venue.capacity} ${t("CHB_PERSONS")}`;
     if (venue.rooms) return `${venue.rooms} ${t("CHB_ROOMS")}`;
@@ -338,8 +386,14 @@ const CHBMapView = () => {
     if (!selectedVenueTypeFilter) {
       return [];
     }
+    const filterCode = selectedVenueTypeFilter.code?.toLowerCase();
+    const filterParent = selectedVenueTypeFilter.parentMasterType?.toLowerCase();
     return allVenues
-      .filter((v) => v.venueTypeCode === selectedVenueTypeFilter.code)
+      .filter(
+        (v) =>
+          (filterCode && v.venueTypeCode?.toLowerCase() === filterCode) ||
+          (filterParent && v.parentMasterType?.toLowerCase() === filterParent)
+      )
       .map((v) => {
         return {
           code: v.code,
@@ -348,6 +402,7 @@ const CHBMapView = () => {
           displayName: v.code,
           venueName: v.venueName || v.name || v.code,
           childMasterCode: v.childMasterCode,
+          parentMasterType: v.parentMasterType,
           address: v.address,
           contactDetails: getVenueContact(v),
           geoLocation: v.geoLocation,
