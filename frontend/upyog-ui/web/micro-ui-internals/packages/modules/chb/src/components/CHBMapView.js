@@ -1,23 +1,34 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from "react-i18next";
-import { CardLabel, SubmitBar, Dropdown, Loader, Modal, CardSubHeader, CardLabelDesc } from '@nudmcdgnpm/digit-ui-react-components';
+import { CardLabel, SubmitBar, Dropdown, Loader, Modal, CardSubHeader, CardLabelDesc, CloseSvg } from '@nudmcdgnpm/digit-ui-react-components';
 import "../css/mapview.scss";
 
-const Close = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFFFFF" width="20px" height="20px">
-    <path d="M0 0h24v24H0V0z" fill="none" />
-    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
-  </svg>
-);
-
+/**
+ * Close button wrapper component for the modal dialog.
+ * 
+ * @param {Object} props - Component properties
+ * @param {Function} props.onClick - Click handler callback to dismiss modal
+ * @returns {JSX.Element} Close button element
+ */
 const CloseBtn = (props) => {
   return (
     <div className="icon-bg-secondary chb-close-btn" onClick={props.onClick}>
-      <Close />
+      <CloseSvg />
     </div>
   );
 };
 
+/**
+ * CHBMapView Component
+ * 
+ * Interactive map viewer and search interface for Community Hall Booking (CHB) module.
+ * Integrates Leaflet.js to visualize venues (Community Halls, Parks, Stadiums, Guest Houses, Crematoriums)
+ * dynamically loaded from MDMS. Allows citizens to filter by venue type, select specific venue codes,
+ * view venue details, capacity, pricing, terms & conditions, and navigate directly to the booking workflow.
+ * 
+ * @component
+ * @returns {JSX.Element} Rendered CHBMapView component
+ */
 const CHBMapView = () => {
   const mapRef = useRef(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -30,7 +41,9 @@ const CHBMapView = () => {
 
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
-  // Fetch Venue Types from MDMS
+  /**
+   * Fetch configured Venue Types from MDMS master data (CHB.Venues).
+   */
   const { data: venueTypeList = [] } = Digit.Hooks.useEnabledMDMS(
     tenantId,
     "CHB",
@@ -40,7 +53,9 @@ const CHBMapView = () => {
     }
   );
 
-  // Fetch all Venue Masters and Child Codes from MDMS
+  /**
+   * Fetch all venue entity masters, child units, and calculation types from MDMS.
+   */
   const { data: mdmsAllData, isLoading: isVenuesLoading } = Digit.Hooks.useEnabledMDMS(
     tenantId,
     "CHB",
@@ -61,7 +76,12 @@ const CHBMapView = () => {
 
   const calculationTypes = mdmsAllData?.["CHB"]?.["CalculationType"] || [];
 
-  // Combine all active venues directly from MDMS venueTypeList and their parent master tables
+  /**
+   * Combine and normalize all active venues across all configured MDMS venue types.
+   * Dynamically iterates over MDMS venue types and joins their respective parent master data records.
+   * 
+   * @type {Array<Object>}
+   */
   const allVenues = useMemo(() => {
     const list = [];
     (venueTypeList || []).forEach((vt) => {
@@ -82,7 +102,11 @@ const CHBMapView = () => {
     return list;
   }, [mdmsAllData, venueTypeList]);
 
-  // Filtered venues based on selected venue type for map display
+  /**
+   * Filtered list of venues for map rendering based on the currently selected venue type filter.
+   * 
+   * @type {Array<Object>}
+   */
   const displayVenuesOnMap = useMemo(() => {
     if (!selectedVenueTypeFilter) {
       return allVenues;
@@ -94,7 +118,9 @@ const CHBMapView = () => {
   // All useEffect Hooks (Top of Component)
   // ==========================================
 
-  // 1. Geolocation Effect
+  /**
+   * Effect to detect and fetch the user's current GPS location via HTML5 Geolocation API.
+   */
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -111,7 +137,9 @@ const CHBMapView = () => {
     }
   }, []);
 
-  // 2. Leaflet Loading and Initialization Effect
+  /**
+   * Effect to asynchronously inject Leaflet CDN CSS/JS (if not already loaded) and initialize the map.
+   */
   useEffect(() => {
     if (isVenuesLoading) return;
 
@@ -138,6 +166,15 @@ const CHBMapView = () => {
   // Helper Methods & Memoized Options
   // ==========================================
 
+  /**
+   * Calculates the great-circle distance between two geographical coordinates using the Haversine formula.
+   * 
+   * @param {number} lat1 - Latitude of origin
+   * @param {number} lng1 - Longitude of origin
+   * @param {number} lat2 - Latitude of destination
+   * @param {number} lng2 - Longitude of destination
+   * @returns {number} Distance in kilometers
+   */
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -149,6 +186,12 @@ const CHBMapView = () => {
     return R * c;
   };
 
+  /**
+   * Resolves child unit codes (e.g. rooms, specific hall sections) associated with a venue from MDMS.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {Array<Object>} List of matching child codes
+   */
   const getChildCodes = (venue) => {
     const list =
       (venue.childMasterCode && mdmsAllData?.["CHB"]?.[venue.childMasterCode]) ||
@@ -163,6 +206,12 @@ const CHBMapView = () => {
     );
   };
 
+  /**
+   * Formats the booking fee or rent for a venue from MDMS CalculationType or direct price attribute.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {string} Formatted price string with currency and duration
+   */
   const getPriceDisplay = (venue) => {
     const matchingCalc = calculationTypes.find(
       (ct) =>
@@ -180,6 +229,12 @@ const CHBMapView = () => {
     return t("CS_NA");
   };
 
+  /**
+   * Resolves the capacity or room count string for a venue.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {string} Formatted capacity string
+   */
   const getCapacityDisplay = (venue) => {
     const codes = getChildCodes(venue);
     const caps = codes.map((c) => c.capacity || c.rooms).filter(Boolean);
@@ -192,6 +247,12 @@ const CHBMapView = () => {
     return t("CS_NA");
   };
 
+  /**
+   * Parses terms and conditions into an array of sanitized individual rule strings.
+   * 
+   * @param {string|Array<string>} terms - Raw terms string or array
+   * @returns {Array<string>} List of individual term statements
+   */
   const parseTerms = (terms) => {
     if (!terms) return [];
     if (Array.isArray(terms)) return terms.map((t) => String(t).trim()).filter(Boolean);
@@ -202,6 +263,12 @@ const CHBMapView = () => {
     return [String(terms)];
   };
 
+  /**
+   * Extracts facilities, amenities, and available sports from venue properties.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {Array<string>} List of facilities
+   */
   const getVenueFacilities = (venue) => {
     const fac = venue.facilities || venue.services || venue.amenities || [];
     const sports = venue.sportsAvailable || [];
@@ -210,10 +277,36 @@ const CHBMapView = () => {
     return [...facList, ...sportsList].map((s) => String(s).trim()).filter(Boolean);
   };
 
+  /**
+   * Retrieves the terms and conditions text for a venue.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {string} Terms text
+   */
   const getVenueTerms = (venue) => venue?.termsAndCondition || "";
+
+  /**
+   * Retrieves the descriptive overview text for a venue.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {string} Description text
+   */
   const getVenueDescription = (venue) => venue?.venueDescription || venue?.parkDescription || "";
+
+  /**
+   * Retrieves the contact phone number or details for a venue.
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {string} Contact details
+   */
   const getVenueContact = (venue) => venue?.contactDetails || "N/A";
 
+  /**
+   * Formats the booking slot duration constraints (min/max duration).
+   * 
+   * @param {Object} venue - Venue record
+   * @returns {string} Formatted duration constraints or time slot summary
+   */
   const getSlotDurationDisplay = (venue) => {
     const timeSlots = venue?.timeSlots || venue?.timeSlot;
     if (!timeSlots) return t("CS_NA");
@@ -240,7 +333,11 @@ const CHBMapView = () => {
     return t("CS_NA");
   };
 
-  // Venue Type dropdown options from MDMS
+  /**
+   * Formatted options for the Venue Type dropdown filter from MDMS.
+   * 
+   * @type {Array<Object>}
+   */
   const venueTypeOptions = useMemo(() => {
     return (venueTypeList || [])
       .filter((vt) => vt.active !== false)
@@ -254,7 +351,11 @@ const CHBMapView = () => {
       }));
   }, [venueTypeList, t]);
 
-  // Venue dropdown options - ONLY show venue options when venue type is selected
+  /**
+   * Formatted options for the Venue Code dropdown filter based on selected Venue Type.
+   * 
+   * @type {Array<Object>}
+   */
   const venueOptions = useMemo(() => {
     if (!selectedVenueTypeFilter) {
       return [];
@@ -280,10 +381,18 @@ const CHBMapView = () => {
       }));
   }, [allVenues, selectedVenueTypeFilter]);
 
+  /**
+   * Triggers map search and fly-to animation for the selected venue code.
+   */
   const handleSearch = () => {
     setSearchTerm(selectedVenue?.code || (typeof selectedVenue === "string" ? selectedVenue : ""));
   };
 
+  /**
+   * Navigates the citizen to the CHB venue booking search workflow with pre-selected venue parameters.
+   * 
+   * @param {Object} venue - Venue record to book
+   */
   const navigateToBooking = (venue) => {
     navigate(`/upyog-ui/citizen/chb/bookHall/searchvenue`, {
       state: {
@@ -311,6 +420,9 @@ const CHBMapView = () => {
     });
   };
 
+  /**
+   * Initializes the Leaflet map instance, adds markers, sets up popups, and handles search centering.
+   */
   const initMap = () => {
     if (!mapRef.current || !window.L) return;
 
@@ -349,6 +461,12 @@ const CHBMapView = () => {
 
     const markerMap = new Map();
 
+    /**
+     * Parses latitude and longitude coordinates from direct properties or comma-separated geoLocation string.
+     * 
+     * @param {Object} venue - Venue record
+     * @returns {{lat: number|null, lng: number|null}} Coordinate object
+     */
     const parseCoordinates = (venue) => {
       let lat = null;
       let lng = null;
