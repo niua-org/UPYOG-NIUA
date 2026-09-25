@@ -3,6 +3,8 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import uuid
+import os
+from dotenv import load_dotenv
 
 # We will use Qdrant for both vector-based RAG and persistent sliding window memory.
 from qdrant_client import QdrantClient
@@ -14,7 +16,32 @@ logger = logging.getLogger(__name__)
 # Global Short-Term Memory Checkpointer (RAM based, temporary during a chat)
 shared_memory = MemorySaver()
 
-# Initialize local filesystem Qdrant database with fallback for concurrent access
+
+load_dotenv(override=True)
+# QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
+# QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
+# QDRANT_GRPC_PORT = int(os.getenv("QDRANT_GRPC_PORT", 6334))
+# QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
+
+# try:
+#     # Connect to the standalone Qdrant server via high-speed gRPC
+#     client = QdrantClient(
+#         host=QDRANT_HOST,
+#         port=QDRANT_PORT,
+#         grpc_port=QDRANT_GRPC_PORT,
+#         api_key=QDRANT_API_KEY,
+#         prefer_grpc=True,
+#         timeout=5.0
+#     )
+#     # Test connection
+#     client.get_collections()
+#     logger.info(f"[Qdrant] Connected successfully to standalone server at {QDRANT_HOST}:{QDRANT_PORT}")
+# except Exception as e:
+#     logger.warning(f"[Qdrant] Could not connect to {QDRANT_HOST}:{QDRANT_PORT} ({e}), falling back to in-memory.")
+#     client = QdrantClient(":memory:")
+    
+
+# # Initialize local filesystem Qdrant database with fallback for concurrent access
 try:
     client = QdrantClient(path="./qdrant_storage")
 except Exception as e:
@@ -146,6 +173,7 @@ class MemoryManager:
         Saves or updates a draft specifically for (phone_number, plugin_name).
         Does NOT overwrite drafts of other modules!
         """
+        logger.info(f"[MemoryManager.save_draft_state] Saving draft for phone={phone_number}, plugin={plugin_name}, keys={list(draft_data.keys()) if isinstance(draft_data, dict) else []}")
         try:
             # Check for existing draft point for THIS specific phone + plugin combination
             records, _ = client.scroll(
@@ -164,6 +192,7 @@ class MemoryManager:
                     collection_name=DRAFT_STATE_COLLECTION,
                     points_selector=point_ids
                 )
+                logger.debug(f"[MemoryManager.save_draft_state] Deleted {len(point_ids)} previous draft points for {phone_number}:{plugin_name}")
             
             point_id = str(uuid.uuid4())
             payload = {
@@ -178,9 +207,9 @@ class MemoryManager:
                 collection_name=DRAFT_STATE_COLLECTION,
                 points=[PointStruct(id=point_id, vector=[0.0], payload=payload)]
             )
-            logger.info(f"Saved isolated draft [{plugin_name}] for user {phone_number}")
+            logger.info(f"[MemoryManager.save_draft_state] Successfully saved isolated draft [{plugin_name}] for user {phone_number}")
         except Exception as e:
-            logger.error(f"Error saving draft state for {phone_number}/{plugin_name}: {e}")
+            logger.error(f"[MemoryManager.save_draft_state] Error saving draft state for {phone_number}/{plugin_name}: {e}")
 
     # Retrieves all active drafts for a citizen across all modules
     @staticmethod
@@ -188,6 +217,7 @@ class MemoryManager:
         """
         Retrieves all active drafts for a citizen to allow dynamic draft switching.
         """
+        logger.info(f"[MemoryManager.get_all_draft_states] Fetching all drafts for phone={phone_number}")
         try:
             records, _ = client.scroll(
                 collection_name=DRAFT_STATE_COLLECTION,
@@ -198,9 +228,12 @@ class MemoryManager:
                 with_payload=True
             )
             if records:
-                return [r.payload for r in records]
+                drafts = [r.payload for r in records]
+                logger.info(f"[MemoryManager.get_all_draft_states] Found {len(drafts)} drafts for {phone_number}: {[d.get('plugin_name') for d in drafts]}")
+                return drafts
+            logger.info(f"[MemoryManager.get_all_draft_states] No active drafts found for {phone_number}")
         except Exception as e:
-            logger.error(f"Error retrieving all draft states for {phone_number}: {e}")
+            logger.error(f"[MemoryManager.get_all_draft_states] Error retrieving all draft states for {phone_number}: {e}")
         return []
 
     # Retrieves a specific draft form or the latest saved draft
@@ -209,6 +242,7 @@ class MemoryManager:
         """
         Fetches the active draft for a specific module (plugin_name) or the latest draft.
         """
+        logger.info(f"[MemoryManager.get_draft_state] Fetching draft for phone={phone_number}, plugin={plugin_name}")
         try:
             must_conditions = [FieldCondition(key="phone_number", match=MatchValue(value=phone_number))]
             if plugin_name:
@@ -222,9 +256,11 @@ class MemoryManager:
             )
             
             if records:
+                logger.info(f"[MemoryManager.get_draft_state] Found draft for {phone_number}/{plugin_name}")
                 return records[0].payload
+            logger.info(f"[MemoryManager.get_draft_state] No draft found for {phone_number}/{plugin_name}")
         except Exception as e:
-            logger.error(f"Error retrieving draft state for {phone_number}/{plugin_name}: {e}")
+            logger.error(f"[MemoryManager.get_draft_state] Error retrieving draft state for {phone_number}/{plugin_name}: {e}")
         return None
 
     # Deletes a specific module draft after successful submission or cancellation
@@ -233,6 +269,7 @@ class MemoryManager:
         """
         Deletes the draft for a specific module or all drafts if plugin_name is None.
         """
+        logger.info(f"[MemoryManager.delete_draft_state] Deleting draft(s) for phone={phone_number}, plugin={plugin_name}")
         try:
             must_conditions = [FieldCondition(key="phone_number", match=MatchValue(value=phone_number))]
             if plugin_name:
@@ -241,7 +278,9 @@ class MemoryManager:
             records, _ = client.scroll(
                 collection_name=DRAFT_STATE_COLLECTION,
                 scroll_filter=Filter(must=must_conditions),
-                limit=10
+                limit=100,
+                with_payload=False,
+                with_vectors=False
             )
             if records:
                 point_ids = [record.id for record in records]
@@ -249,9 +288,11 @@ class MemoryManager:
                     collection_name=DRAFT_STATE_COLLECTION,
                     points_selector=point_ids
                 )
-                logger.info(f"Deleted {len(point_ids)} draft(s) [{plugin_name or 'all'}] for {phone_number}")
+                logger.info(f"[MemoryManager.delete_draft_state] Deleted {len(point_ids)} draft point(s) [{plugin_name or 'all'}] for {phone_number}")
+            else:
+                logger.info(f"[MemoryManager.delete_draft_state] No draft points found to delete for {phone_number}/{plugin_name}")
         except Exception as e:
-            logger.error(f"Error deleting draft state for {phone_number}/{plugin_name}: {e}")
+            logger.error(f"[MemoryManager.delete_draft_state] Error deleting draft state for {phone_number}/{plugin_name}: {e}")
 
     # Fetches recent chat history
     @staticmethod

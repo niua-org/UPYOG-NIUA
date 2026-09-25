@@ -1,8 +1,13 @@
 package org.upyog.dashboard.chb.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+/**
+ * Model encapsulating aggregated venue availability, application counts, and booking JSON for CHB module.
+ */
+@Getter
+@Setter
 public class CHBAggregatedData {
 
     private Integer totalActiveVenueAvailable;
