@@ -1,7 +1,7 @@
 export const Config = {
   label: "WBH_FORM_BUILDER_HEADER",
   type: "search",
-  actionLabel: "WBH_ADD_NEW_FIELD",
+  actionLabel: ["WBH_ADD_NEW_FIELD","WBH_ADD_NEW_FORM"],
   actionRole: "LOC_ADMIN",
   actionLink: "workbench/form-builder-add",
   apiDetails: {
@@ -56,7 +56,7 @@ export const Config = {
           },
           {
             label: "CS_COMMON_ACTION",
-            svg: "EditIcon"
+            additionalCustomization: true
           }
         ],
         enableGlobalSearch: false,

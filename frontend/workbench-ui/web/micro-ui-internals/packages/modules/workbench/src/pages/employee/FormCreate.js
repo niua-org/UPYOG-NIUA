@@ -4,6 +4,7 @@ import {
   CardLabel,
   TextInput,
   Dropdown,
+  ToggleSwitch,
   SubmitBar,
   ActionBar,
   Button,
@@ -78,26 +79,65 @@ const FormCreate = () => {
   const queryParams = Digit.Hooks.useQueryParams();
   const stateData = location?.state || {};
 
-  // Detect Edit Mode vs New Mode
+  // Detect Edit Mode vs Copy Mode vs New Mode
   const isEdit = queryParams?.isEdit === "true" || stateData?.isEdit || false;
+  const isCopy = queryParams?.isCopy === "true" || stateData?.isCopy || false;
 
   // Resolved parameters passed from popup / table row
   const moduleName = queryParams?.moduleName || stateData?.moduleName || "Not Specified";
   const accordionName = queryParams?.accordionName || stateData?.accordionName || "Not Specified";
   const formName = queryParams?.formName || stateData?.formName || "Not Specified";
 
-  // Initial field configuration state depending on Edit vs New mode
+  const cityResponseObject = Digit.Hooks.useEnabledMDMS(
+    "PG",
+    "ASSET",
+    [
+      {
+        name: "AssetParentCategoryFields",
+      },
+    ],
+    {
+      select: (data) => {
+        const formattedData = data?.["ASSET"]?.["AssetParentCategoryFields"];
+        return formattedData;
+      },
+    },
+  );
+
+  console.log("MDMS AssetParentCategoryFields Response: ", cityResponseObject?.data);
+  // Helper function to auto-generate Localization Key based on Module Name and Field Label
+  // Format: WBH_<MODULE_NAME>_<FIELD_LABEL> (e.g. WBH_TRADE_LICENCE_APPLICANT_NAME)
+  const generateLocalizationKey = (module, label) => {
+    if (!label) return "";
+    const cleanModule = (module && module !== "Not Specified" ? module : "COMMON")
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    const cleanLabel = label
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+
+    return `WBH_${cleanModule}_${cleanLabel}`;
+  };
+
+  // Initial field configuration state depending on Edit vs Copy vs New mode
   const getInitialFields = () => {
     if (stateData?.existingFields && Array.isArray(stateData.existingFields) && stateData.existingFields.length > 0) {
       return stateData.existingFields;
     }
-    if (isEdit) {
-      // Pre-populated schema fields for EDIT case
+    if (isEdit || isCopy) {
+      // Pre-populated schema fields for EDIT / COPY case
       return [
         {
           id: "field_101",
           label: "Applicant Full Name",
-          fieldKey: "applicantName",
+          fieldKey: generateLocalizationKey(moduleName, "Applicant Full Name"),
           type: "text",
           required: "required",
           placeholder: "Enter full name",
@@ -110,7 +150,7 @@ const FormCreate = () => {
         {
           id: "field_102",
           label: "Mobile Number",
-          fieldKey: "mobileNumber",
+          fieldKey: generateLocalizationKey(moduleName, "Mobile Number"),
           type: "text",
           required: "required",
           placeholder: "Enter 10 digit mobile number",
@@ -123,7 +163,7 @@ const FormCreate = () => {
         {
           id: "field_103",
           label: "Trade Details Category",
-          fieldKey: "tradeCategory",
+          fieldKey: generateLocalizationKey(moduleName, "Trade Details Category"),
           type: "dropdown",
           required: "optional",
           placeholder: "Select category",
@@ -140,7 +180,7 @@ const FormCreate = () => {
       {
         id: "field_1",
         label: "Text Field 1",
-        fieldKey: "field_1",
+        fieldKey: generateLocalizationKey(moduleName, "Text Field 1"),
         type: "text",
         required: "required",
         placeholder: "Enter text value",
@@ -159,18 +199,25 @@ const FormCreate = () => {
   // Add new field to the canvas
   const handleAddField = (fieldType) => {
     const isFile = fieldType.code === "file";
+    const isDropdown = fieldType.code === "dropdown";
+    const fieldLabel = `New ${fieldType.name}`;
     const newField = {
       id: `field_${Date.now()}`,
-      label: `New ${fieldType.name}`,
-      fieldKey: `field_${Date.now().toString().slice(-4)}`,
+      label: fieldLabel,
+      fieldKey: generateLocalizationKey(moduleName, fieldLabel),
       type: fieldType.code,
       required: "required",
+      isReadonly: false,
+      isDisabled: false,
       placeholder: `Enter ${fieldType.name.toLowerCase()}`,
       minLength: "",
       maxLength: "",
       regexType: "none",
       pattern: "",
       patternErrorMessage: "",
+      // MDMS Dropdown Specific Settings
+      mdmsModuleName: isDropdown ? moduleName || "ASSET" : undefined,
+      mdmsMasterName: isDropdown ? "" : undefined,
       // File Upload Specific Settings
       uploadMode: isFile ? "single" : undefined,
       allowedFileTypes: isFile ? "pdf_image" : undefined,
@@ -208,10 +255,19 @@ const FormCreate = () => {
     }
   };
 
-  // Update specific field properties
+  // Update specific field properties with auto-generating localization key when label changes
   const handleFieldChange = (fieldId, key, value) => {
     setFields((prev) =>
-      prev.map((field) => (field.id === fieldId ? { ...field, [key]: value } : field))
+      prev.map((field) => {
+        if (field.id === fieldId) {
+          const updatedField = { ...field, [key]: value };
+          if (key === "label") {
+            updatedField.fieldKey = generateLocalizationKey(moduleName, value);
+          }
+          return updatedField;
+        }
+        return field;
+      })
     );
   };
 
@@ -327,7 +383,9 @@ const FormCreate = () => {
         <Header className="works-header-search">
           {isEdit
             ? t("WBH_EDIT_FORM_CONFIG_BUILDER") || "Edit Form Field Configuration"
-            : t("WBH_FORM_CONFIG_BUILDER") || "Form Field Configuration Builder"}
+            : isCopy
+              ? t("WBH_COPY_FORM_CONFIG_BUILDER") || "Copy Form Field Configuration (Cloned Scope)"
+              : t("WBH_FORM_CONFIG_BUILDER") || "Form Field Configuration Builder"}
         </Header>
         <Button
           variation="secondary"
@@ -343,7 +401,9 @@ const FormCreate = () => {
           <span className="context-title-badge">
             {isEdit
               ? `✏️ ${t("WBH_EDITING_CONFIG_SCOPE") || "Editing Scope Parameters (Edit Mode)"}`
-              : `📋 ${t("WBH_SELECTED_CONFIG_SCOPE") || "Configured Scope Parameters (New Mode)"}`}
+              : isCopy
+                ? `📋 ${t("WBH_COPYING_CONFIG_SCOPE") || "Copied Scope Parameters (Copy Mode)"}`
+                : `📋 ${t("WBH_SELECTED_CONFIG_SCOPE") || "Configured Scope Parameters (New Mode)"}`}
           </span>
         </div>
         <div className="form-context-grid">
@@ -452,7 +512,7 @@ const FormCreate = () => {
                       </div>
 
                       <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_KEY") || "Field Key / ID"}</CardLabel>
+                        <CardLabel className="config-label">{t("WBH_LOCALIZATION_KEY") || "Field Key / ID"}</CardLabel>
                         <TextInput
                           value={field.fieldKey}
                           onChange={(e) => handleFieldChange(field.id, "fieldKey", e.target.value)}
@@ -471,14 +531,44 @@ const FormCreate = () => {
 
                       <div className="field-config-item">
                         <CardLabel className="config-label">{t("WBH_FIELD_REQUIREMENT") || "Requirement"}</CardLabel>
-                        <Dropdown
-                          option={REQUIREMENT_OPTIONS}
-                          optionKey="name"
-                          selected={REQUIREMENT_OPTIONS.find((r) => r.code === (field.required || "required"))}
-                          select={(val) => handleFieldChange(field.id, "required", val?.code)}
-                          t={t}
-                          placeholder="Select Requirement"
-                        />
+                        <div className="requirement-toggle-wrapper">
+                          <ToggleSwitch
+                            value={field.required === "required"}
+                            onChange={(e) => handleFieldChange(field.id, "required", e.target.checked ? "required" : "optional")}
+                            name={`required_${field.id}`}
+                          />
+                          <span className="toggle-status-label">
+                            {field.required === "required" ? "true" : "false"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="field-config-item">
+                        <CardLabel className="config-label">{t("WBH_FIELD_READONLY") || "Read Only"}</CardLabel>
+                        <div className="requirement-toggle-wrapper">
+                          <ToggleSwitch
+                            value={!!field.isReadonly}
+                            onChange={(e) => handleFieldChange(field.id, "isReadonly", e.target.checked)}
+                            name={`readonly_${field.id}`}
+                          />
+                          <span className="toggle-status-label">
+                            {field.isReadonly ? "true" : "false"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="field-config-item">
+                        <CardLabel className="config-label">{t("WBH_FIELD_DISABLED") || "Disabled"}</CardLabel>
+                        <div className="requirement-toggle-wrapper">
+                          <ToggleSwitch
+                            value={!!field.isDisabled}
+                            onChange={(e) => handleFieldChange(field.id, "isDisabled", e.target.checked)}
+                            name={`disabled_${field.id}`}
+                          />
+                          <span className="toggle-status-label">
+                            {field.isDisabled ? "true" : "false"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -541,6 +631,39 @@ const FormCreate = () => {
                               value={field.patternErrorMessage || ""}
                               onChange={(e) => handleFieldChange(field.id, "patternErrorMessage", e.target.value)}
                               placeholder="e.g. Please enter a valid value"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Row 2: MDMS Dropdown Data Source Configuration */}
+                    {field.type === "dropdown" && (
+                      <div className="field-validation-section">
+                        <div className="validation-section-header">
+                          <span>🗂️ {t("WBH_MDMS_DROPDOWN_SETTINGS") || "MDMS Dropdown Data Source Configuration"}</span>
+                        </div>
+
+                        <div className="field-card-grid row-2">
+                          <div className="field-config-item">
+                            <CardLabel className="config-label">
+                              {t("WBH_MDMS_MODULE_NAME") || "Module Name"} <span className="mandatory-asterisk">*</span>
+                            </CardLabel>
+                            <TextInput
+                              value={field.mdmsModuleName || ""}
+                              onChange={(e) => handleFieldChange(field.id, "mdmsModuleName", e.target.value)}
+                              placeholder="e.g. ASSET or PropertyTax"
+                            />
+                          </div>
+
+                          <div className="field-config-item">
+                            <CardLabel className="config-label">
+                              {t("WBH_MDMS_MASTER_NAME") || "MDMS File Name / Master Name"} <span className="mandatory-asterisk">*</span>
+                            </CardLabel>
+                            <TextInput
+                              value={field.mdmsMasterName || ""}
+                              onChange={(e) => handleFieldChange(field.id, "mdmsMasterName", e.target.value)}
+                              placeholder="e.g. AssetParentCategoryFields"
                             />
                           </div>
                         </div>
