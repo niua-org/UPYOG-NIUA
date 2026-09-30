@@ -1,8 +1,13 @@
 package org.upyog.dashboard.adv.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+/**
+ * DTO holding collection and receipt breakdown details for the ADV module.
+ */
+@Getter
+@Setter
 public class ADVCollectionDTO {
     private String paymentChannelType;
     private Double amount;

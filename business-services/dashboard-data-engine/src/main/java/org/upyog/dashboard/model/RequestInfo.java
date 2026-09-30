@@ -1,7 +1,10 @@
 package org.upyog.dashboard.model;
-
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
+import lombok.Setter;
 
 /**
  * Standard {@code RequestInfo} block included in every outbound API request.
@@ -9,7 +12,7 @@ import lombok.Data;
  * <p>The National Dashboard ingest endpoint (and all other /UPYOG APIs)
  * require this envelope in the request body.  It carries authentication context
  * (bearer token and user profile) as well as API metadata used for request
- * tracing and auditing.
+ * tracing and request logging.
  *
  * <h3>Wire format</h3>
  * <pre>{@code
@@ -40,8 +43,11 @@ import lombok.Data;
  * 
  * <p>Contributes to the core Property Tax metrics ingestion pipeline.
  */
-@Data
 @Builder
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 public class RequestInfo {
 
     /**
@@ -113,7 +119,7 @@ public class RequestInfo {
      *
      * <p>Obtained from {@link org.upyog.dashboard.service.OAuthTokenService#getUserInfo()}.
      * Contains the user UUID, roles, tenant, and contact details.  Required by
-     * some API implementations for audit trail creation.
+     * some API implementations for request tracking.
      */
     private UserInfo userInfo;
 }

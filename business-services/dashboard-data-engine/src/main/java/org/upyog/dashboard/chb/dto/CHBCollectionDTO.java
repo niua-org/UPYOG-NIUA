@@ -1,8 +1,13 @@
 package org.upyog.dashboard.chb.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+/**
+ * DTO holding collection and receipt breakdown details for the CHB module.
+ */
+@Getter
+@Setter
 public class CHBCollectionDTO {
     private String bookingStatus;
     private String bookingMode;
