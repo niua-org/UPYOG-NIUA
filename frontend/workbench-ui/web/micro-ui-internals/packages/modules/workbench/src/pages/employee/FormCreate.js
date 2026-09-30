@@ -129,7 +129,47 @@ const FormCreate = () => {
   // Initial field configuration state depending on Edit vs Copy vs New mode
   const getInitialFields = () => {
     if (stateData?.existingFields && Array.isArray(stateData.existingFields) && stateData.existingFields.length > 0) {
-      return stateData.existingFields;
+      return stateData.existingFields.map((item, idx) => {
+        const fieldObj = item.field || {};
+        const validationObj = item.validation || {};
+        const dataSourceObj = fieldObj.dataSource || {};
+
+        return {
+          id: item.id || `field_${Date.now()}_${idx}`,
+          label: item.label || fieldObj.name || fieldObj.code || `Field ${idx + 1}`,
+          fieldKey: fieldObj.code || item.fieldKey || item.key || `field_${idx + 1}`,
+          type: fieldObj.type || item.type || "text",
+          required: (validationObj.required ?? (item.required === "required")) ? "required" : "optional",
+          isReadonly: validationObj.readOnly ?? item.isReadonly ?? false,
+          isDisabled: validationObj.disabled ?? item.isDisabled ?? false,
+          placeholder: fieldObj.placeholder || item.placeholder || "",
+          minLength: validationObj.minLength || item.minLength || "",
+          maxLength: validationObj.maxLength || item.maxLength || "",
+          regexType: item.regexType || "none",
+          pattern: validationObj.pattern || item.pattern || "",
+          patternErrorMessage: item.patternErrorMessage || item.messages?.error || "",
+          // MDMS Dropdown Specific Settings
+          mdmsModuleName: dataSourceObj.moduleName || item.mdmsModuleName || moduleName,
+          mdmsMasterName: dataSourceObj.masterName || item.mdmsMasterName || "",
+          // Radio / Checkbox Options
+          options: Array.isArray(fieldObj.options)
+            ? fieldObj.options
+            : Array.isArray(item.options)
+              ? item.options
+              : ["radio", "checkbox"].includes(fieldObj.type || item.type)
+                ? [
+                  { code: "OPTION_1", name: "Option 1" },
+                  { code: "OPTION_2", name: "Option 2" },
+                ]
+                : undefined,
+          // File Upload Specific Settings
+          uploadMode: fieldObj.uploadMode || item.uploadMode || "single",
+          allowedFileTypes: fieldObj.allowedFileTypes || item.allowedFileTypes || "pdf_image",
+          maxFileSize: fieldObj.maxFileSize || item.maxFileSize || "5",
+          maxFileCount: fieldObj.maxFileCount || item.maxFileCount || "5",
+          fileErrorMessage: item.fileErrorMessage || item.messages?.error || "Allowed formats: PDF, JPG, PNG up to 5MB",
+        };
+      });
     }
     if (isEdit || isCopy) {
       // Pre-populated schema fields for EDIT / COPY case
@@ -200,6 +240,7 @@ const FormCreate = () => {
   const handleAddField = (fieldType) => {
     const isFile = fieldType.code === "file";
     const isDropdown = fieldType.code === "dropdown";
+    const isOptionsField = ["radio", "checkbox"].includes(fieldType.code);
     const fieldLabel = `New ${fieldType.name}`;
     const newField = {
       id: `field_${Date.now()}`,
@@ -215,8 +256,15 @@ const FormCreate = () => {
       regexType: "none",
       pattern: "",
       patternErrorMessage: "",
+      // Radio & Checkbox Options
+      options: isOptionsField
+        ? [
+          { code: "OPTION_1", name: "Option 1" },
+          { code: "OPTION_2", name: "Option 2" },
+        ]
+        : undefined,
       // MDMS Dropdown Specific Settings
-      mdmsModuleName: isDropdown ? moduleName || "ASSET" : undefined,
+      mdmsModuleName: isDropdown ? moduleName : undefined,
       mdmsMasterName: isDropdown ? "" : undefined,
       // File Upload Specific Settings
       uploadMode: isFile ? "single" : undefined,
@@ -227,6 +275,56 @@ const FormCreate = () => {
     };
     setFields((prev) => [...prev, newField]);
     setToast({ label: t("WBH_FIELD_ADDED_SUCCESS") || `Added new ${fieldType.name} field`, error: false });
+  };
+
+  // Manage Radio / Checkbox Options: Add new option
+  const handleAddOption = (fieldId) => {
+    setFields((prev) =>
+      prev.map((field) => {
+        if (field.id === fieldId) {
+          const currentOptions = Array.isArray(field.options) ? field.options : [];
+          const newOptNum = currentOptions.length + 1;
+          const newOption = {
+            code: `OPTION_${newOptNum}`,
+            name: `Option ${newOptNum}`,
+          };
+          return { ...field, options: [...currentOptions, newOption] };
+        }
+        return field;
+      })
+    );
+  };
+
+  // Manage Radio / Checkbox Options: Update option label/code
+  const handleOptionChange = (fieldId, optIndex, key, value) => {
+    setFields((prev) =>
+      prev.map((field) => {
+        if (field.id === fieldId) {
+          const currentOptions = Array.isArray(field.options) ? [...field.options] : [];
+          if (currentOptions[optIndex]) {
+            currentOptions[optIndex] = {
+              ...currentOptions[optIndex],
+              [key]: value,
+            };
+          }
+          return { ...field, options: currentOptions };
+        }
+        return field;
+      })
+    );
+  };
+
+  // Manage Radio / Checkbox Options: Delete option
+  const handleRemoveOption = (fieldId, optIndex) => {
+    setFields((prev) =>
+      prev.map((field) => {
+        if (field.id === fieldId) {
+          const currentOptions = Array.isArray(field.options) ? field.options.filter((_, i) => i !== optIndex) : [];
+          return { ...field, options: currentOptions };
+        }
+        return field;
+      })
+    );
   };
 
   // Remove field from canvas
@@ -306,13 +404,30 @@ const FormCreate = () => {
 
     const formFieldsArray = fields.map((field, idx) => {
       const fieldItem = {
-        order: idx,
+        order: idx + 1,
         key: field.fieldKey || `field_${idx + 1}`,
         field: {
           code: field.fieldKey || `field_${idx + 1}`,
           name: field.fieldKey || `field_${idx + 1}`,
           placeholder: field.placeholder || "",
           type: field.type,
+          ...(field.type === "dropdown" && {
+            dataSource: {
+              type: "MDMS",
+              moduleName: field.mdmsModuleName || moduleName || "",
+              masterName: field.mdmsMasterName || "",
+              customiztionRequired: true,
+            },
+          }),
+          ...(["radio", "checkbox"].includes(field.type) && {
+            options: (Array.isArray(field.options) && field.options.length > 0 ? field.options : [
+              { code: "OPTION_1", name: "Option 1" },
+              { code: "OPTION_2", name: "Option 2" },
+            ]).map((opt) => ({
+              code: opt.code || opt.name || "",
+              name: opt.name || opt.code || "",
+            })),
+          }),
           ...(field.type === "file" && {
             uploadMode: field.uploadMode || "single",
             allowedFileTypes: field.allowedFileTypes || "pdf_image",
@@ -322,8 +437,8 @@ const FormCreate = () => {
         },
         validation: {
           required: field.required === "required",
-          disabled: false,
-          readOnly: false,
+          disabled: !!field.isDisabled,
+          readOnly: !!field.isReadonly,
           ...(field.minLength ? { minLength: Number(field.minLength) } : {}),
           ...(field.maxLength ? { maxLength: Number(field.maxLength) } : {}),
           ...(field.pattern ? { pattern: field.pattern } : {}),
@@ -666,6 +781,61 @@ const FormCreate = () => {
                               placeholder="e.g. AssetParentCategoryFields"
                             />
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Row 2: Radio & Checkbox Options Configuration */}
+                    {["radio", "checkbox"].includes(field.type) && (
+                      <div className="field-validation-section">
+                        <div className="validation-section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span>🔘 {t("WBH_OPTIONS_CONFIG_HEADER") || "Radio / Checkbox Options Configuration"}</span>
+                          <Button
+                            type="button"
+                            variation="secondary"
+                            label={t("WBH_ADD_OPTION") || "+ Add Option"}
+                            onButtonClick={() => handleAddOption(field.id)}
+                            style={{ minWidth: "110px", padding: "0.35rem 0.75rem", fontSize: "0.75rem", margin: 0 }}
+                          />
+                        </div>
+
+                        <div className="options-list-container" style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.75rem" }}>
+                          {(Array.isArray(field.options) && field.options.length > 0 ? field.options : [
+                            { code: "OPTION_1", name: "Option 1" },
+                            { code: "OPTION_2", name: "Option 2" },
+                          ]).map((opt, optIdx) => (
+                            <div key={optIdx} className="option-item-row" style={{ display: "flex", gap: "0.75rem", alignItems: "center", background: "#ffffff", padding: "0.6rem 0.85rem", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                              <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", minWidth: "24px" }}>#{optIdx + 1}</span>
+                              <div style={{ flex: 1 }}>
+                                <CardLabel className="config-label" style={{ fontSize: "0.75rem", marginBottom: "0.2rem" }}>
+                                  {t("WBH_OPTION_NAME") || "Display Label"}
+                                </CardLabel>
+                                <TextInput
+                                  value={opt.name || ""}
+                                  onChange={(e) => handleOptionChange(field.id, optIdx, "name", e.target.value)}
+                                  placeholder={t("WBH_OPTION_LABEL_PLACEHOLDER") || "e.g. Option 1 / Yes"}
+                                />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <CardLabel className="config-label" style={{ fontSize: "0.75rem", marginBottom: "0.2rem" }}>
+                                  {t("WBH_OPTION_CODE") || "Value Code"}
+                                </CardLabel>
+                                <TextInput
+                                  value={opt.code || ""}
+                                  onChange={(e) => handleOptionChange(field.id, optIdx, "code", e.target.value)}
+                                  placeholder={t("WBH_OPTION_VALUE_PLACEHOLDER") || "e.g. OPTION_1 / YES"}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "1.1rem", padding: "0.2rem 0.4rem", alignSelf: "flex-end", marginBottom: "0.3rem" }}
+                                onClick={() => handleRemoveOption(field.id, optIdx)}
+                                title={t("WBH_REMOVE_OPTION") || "Remove Option"}
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
