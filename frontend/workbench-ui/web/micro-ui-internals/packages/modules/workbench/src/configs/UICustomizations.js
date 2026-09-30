@@ -250,9 +250,8 @@ export const UICustomizations = {
         return (
           <span className="link">
             <Link
-              to={`/${
-                "workbench-ui"
-              }/employee/attendencemgmt/view-attendance?tenantId=${Digit.ULBService.getCurrentTenantId()}&musterRollNumber=${value}`}
+              to={`/${"workbench-ui"
+                }/employee/attendencemgmt/view-attendance?tenantId=${Digit.ULBService.getCurrentTenantId()}&musterRollNumber=${value}`}
             >
               {String(value ? (column.translate ? t(column.prefix ? `${column.prefix}${value}` : value) : value) : t("ES_COMMON_NA"))}
             </Link>
@@ -420,38 +419,38 @@ export const UICustomizations = {
   SearchMDMSConfig: {
     customValidationCheck: (data) => {
       //checking both to and from date are present
-      
-      const { createdFrom, createdTo,field,value } = data;
+
+      const { createdFrom, createdTo, field, value } = data;
       if ((createdFrom === "" && createdTo !== "") || (createdFrom !== "" && createdTo === ""))
         return { warning: true, label: "ES_COMMON_ENTER_DATE_RANGE" };
 
-      if((field && !value) || (!field && value)){
+      if ((field && !value) || (!field && value)) {
         return { warning: true, label: "WBH_MDMS_SEARCH_VALIDATION_FIELD_VALUE_PAIR" };
       }
 
       return false;
     },
-    preProcess: (data,additionalDetails) => {
-      
+    preProcess: (data, additionalDetails) => {
+
       const tenantId = Digit.ULBService.getCurrentTenantId();
-      data.body.MdmsCriteria.tenantId = tenantId 
-     
+      data.body.MdmsCriteria.tenantId = tenantId
+
       const filters = {}
       const custom = data.body.MdmsCriteria.custom
-      const {field,value,isActive} = custom || {}
-      if(field?.code && value) {
+      const { field, value, isActive } = custom || {}
+      if (field?.code && value) {
         filters[field.code] = value
       }
-      if(isActive){
-        if(isActive.value==="all") delete data.body.MdmsCriteria.isActive
+      if (isActive) {
+        if (isActive.value === "all") delete data.body.MdmsCriteria.isActive
         else data.body.MdmsCriteria.isActive = isActive?.value
-      }else{
+      } else {
         delete data.body.MdmsCriteria.isActive
       }
       data.body.MdmsCriteria.filters = filters
       data.body.MdmsCriteria.schemaCode = additionalDetails?.currentSchemaCode
       delete data.body.MdmsCriteria.custom
-      
+
       return data;
     },
     additionalCustomizations: (row, key, column, value, t, searchResult) => {
@@ -489,7 +488,7 @@ export const UICustomizations = {
             t("ES_COMMON_NA")
           );
         case "WBH_ISACTIVE":
-          return value ?  <span style={{ color:"green" }}>{t("WBH_COMMON_YES")}</span> : <span style={{ color:"red" }}>{t("WBH_COMMON_NO")}</span>
+          return value ? <span style={{ color: "green" }}>{t("WBH_COMMON_YES")}</span> : <span style={{ color: "red" }}>{t("WBH_COMMON_NO")}</span>
         default:
           return t("ES_COMMON_NA");
       }
@@ -517,27 +516,27 @@ export const UICustomizations = {
 
       return false;
     },
-    preProcess: (data,additionalDetails) => {
-      
+    preProcess: (data, additionalDetails) => {
+
       delete data.body.custom
       const tenant = Digit.ULBService.getStateId();
-      
-      const {locale=undefined,module:modulee=undefined,codes=undefined,message=undefined} = data.params
-      
-      delete data.params.locale 
-      delete data.params.module 
-      delete data.params.codes 
-      delete data.params.message 
+
+      const { locale = undefined, module: modulee = undefined, codes = undefined, message = undefined } = data.params
+
+      delete data.params.locale
+      delete data.params.module
+      delete data.params.codes
+      delete data.params.message
 
       data.params.tenantId = tenant
-      if(locale){
-        data.params.locale = locale.value  
+      if (locale) {
+        data.params.locale = locale.value
       }
-      if(modulee){
-        data.params.module = modulee.value 
+      if (modulee) {
+        data.params.module = modulee.value
       }
-      if(codes){
-        data.params.codes = codes 
+      if (codes) {
+        data.params.codes = codes
       }
 
       return data;
@@ -550,7 +549,7 @@ export const UICustomizations = {
      */
       switch (key) {
         case "Unique Identifier":
-          const [moduleName,masterName] = row.schemaCode.split(".")
+          const [moduleName, masterName] = row.schemaCode.split(".")
           return (
             <span className="link">
               <Link to={`/${"workbench-ui"}/employee/workbench/mdms-view?moduleName=${moduleName}&masterName=${masterName}&uniqueIdentifier=${row.uniqueIdentifier}`}>
@@ -595,19 +594,57 @@ export const UICustomizations = {
         return data[keys.start] && data[keys.end] ? () => new Date(data[keys.start]).getTime() <= new Date(data[keys.end]).getTime() : true;
       }
     },
-    combineData : ({isLoading,isFetching,data,defaultData,refetch,refetchDefault}) => {
+    combineData: ({ isLoading, isFetching, data, defaultData, refetch, refetchDefault }) => {
       //TODO: Revisit this logic
-      defaultData?.messages?.forEach((message,idx) => {
+      defaultData?.messages?.forEach((message, idx) => {
         message.defaultMessage = ""
-        data?.messages?.forEach((defaultMessage,defaultIdx)=> {
-          if(message.code === defaultMessage.code){
+        data?.messages?.forEach((defaultMessage, defaultIdx) => {
+          if (message.code === defaultMessage.code) {
             message.defaultMessage = defaultMessage.message
             message.originalLocale = defaultMessage.locale
           }
         })
       })
       return defaultData
-      
+
     }
+  },
+  SearchFormBuilderConfig: {
+    additionalCustomizations: (row, label, column, value, t, searchResult) => {
+      if (label === "CS_COMMON_ACTION" || column?.label === "CS_COMMON_ACTION") {
+        return (
+          <div className="form-builder-action-btns">
+            <button
+              type="button"
+              className="action-icon-btn btn-edit"
+              title={t("WBH_EDIT") || "Edit Form"}
+              onClick={() => window.onFormBuilderAction && window.onFormBuilderAction("EDIT", row)}
+            >
+              <span className="action-icon">✏️</span>
+              <span className="action-text">{t("WBH_EDIT") || "Edit"}</span>
+            </button>
+            <button
+              type="button"
+              className="action-icon-btn btn-copy"
+              title={t("WBH_COPY_TO_NEW") || "Copy to New"}
+              onClick={() => window.onFormBuilderAction && window.onFormBuilderAction("COPY", row)}
+            >
+              <span className="action-icon">📋</span>
+              <span className="action-text">{t("WBH_COPY_TO_NEW") || "Copy to New"}</span>
+            </button>
+            <button
+              type="button"
+              className="action-icon-btn btn-delete"
+              title={t("WBH_DELETE") || "Delete"}
+              onClick={() => window.onFormBuilderAction && window.onFormBuilderAction("DELETE", row)}
+            >
+              <span className="action-icon">🗑️</span>
+              <span className="action-text">{t("WBH_DELETE") || "Delete"}</span>
+            </button>
+          </div>
+        );
+      }
+      return value;
+    },
   }
 };
