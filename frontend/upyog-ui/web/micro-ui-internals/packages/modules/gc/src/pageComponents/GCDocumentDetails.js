@@ -71,24 +71,28 @@ const GCDocumentDetails = ({ t, config, onSelect, userType, formData, value = fo
         <div>
             {!isLoading ? (
                 <FormStep t={t} config={config} onSelect={handleSubmit} onSkip={onSkip} isDisabled={enableSubmit} onAdd={onAdd}>
-                    <CardSubHeader>{t(`GC_PROOF_OF_DOCUMENTS`)}</CardSubHeader>
-                    <CardLabelDesc>{t(`GC_UPLOAD_RESTRICTIONS_TYPES`)}</CardLabelDesc>
-                    <CardLabelDesc>{t(`GC_UPLOAD_RESTRICTIONS_SIZE`)}</CardLabelDesc>
-                    {finalDocumentsList?.map((document, index) => {
-                        return (
-                            <GCSelectDocument
-                                key={index}
-                                document={document}
-                                t={t}
-                                error={error}
-                                setError={setError}
-                                setDocuments={setDocuments}
-                                documents={documents}
-                                setCheckRequiredFields={setCheckRequiredFields}
-                            />
-                        );
-                    })}
-                    {error && <Toast label={error} onClose={() => setError(null)} error />}
+                    <div className="gc-form-step-wrapper">
+                        <div className="gc-doc-restrictions">
+                            <p className="font-semibold text-slate-800">{t("GC_PROOF_OF_DOCUMENTS")}</p>
+                            <p>{t("GC_UPLOAD_RESTRICTIONS_TYPES")}</p>
+                            <p>{t("GC_UPLOAD_RESTRICTIONS_SIZE")}</p>
+                        </div>
+                        {finalDocumentsList?.map((document, index) => {
+                            return (
+                                <GCSelectDocument
+                                    key={index}
+                                    document={document}
+                                    t={t}
+                                    error={error}
+                                    setError={setError}
+                                    setDocuments={setDocuments}
+                                    documents={documents}
+                                    setCheckRequiredFields={setCheckRequiredFields}
+                                />
+                            );
+                        })}
+                        {error && <Toast label={error} onClose={() => setError(null)} error />}
+                    </div>
                 </FormStep>
             ) : (
                 <Loader />
@@ -141,8 +145,6 @@ function GCSelectDocument({
         if (selectedDocument?.code || (!doc?.hasDropdown && doc?.code)) {
             const childCode = selectedDocument?.code?.split('.').pop();
             const docCode = doc?.hasDropdown ? `${doc?.code}.${childCode}` : doc?.code;
-            // Keep one document entry per MDMS document type while the selected
-            // subtype or uploaded file changes.
             setDocuments((prev) => {
                 const filteredDocumentsByDocumentType = prev?.filter((item) => !item?.documentType?.startsWith(doc?.code));
 
@@ -198,53 +200,50 @@ function GCSelectDocument({
     }, [file]);
 
     return (
-        <div style={{ marginBottom: "24px" }}>
-            {doc?.hasDropdown ? (
-                <LabelFieldPair>
-                    <CardLabel className="card-label-smaller">{t("GC_" + (doc?.code.replaceAll(".", "_")))} {doc?.required ? <span className="check-page-link-button">*</span> : null}</CardLabel>
+        <div className="gc-doc-upload-item">
+            <div className="gc-doc-upload-title">
+                <span>{t("GC_" + (doc?.code.replaceAll(".", "_")))}</span>
+                {doc?.required && <span className="gc-required-star">*</span>}
+            </div>
+
+            {doc?.hasDropdown && (
+                <div className="gc-form-field-wrap mb-3">
                     <Dropdown
                         className="form-field"
                         selected={selectedDocument}
-                        style={{ width: user?.type === "EMPLOYEE" ? "50%" : "100%" }}
                         placeholder={"Select " + t("GC_" + (doc?.code.replaceAll(".", "_")))}
                         option={dropDownData}
                         select={handleGCSelectDocument}
                         optionKey="i18nKey"
                         t={t}
                     />
-                </LabelFieldPair>
-            ) : (
-                <LabelFieldPair>
-                    <CardLabel className="card-label-smaller">{t("GC_" + (doc?.code.replaceAll(".", "_")))} {doc?.required ? <span className="check-page-link-button">*</span> : null}</CardLabel>
-                </LabelFieldPair>
-            )}
-            <LabelFieldPair>
-                <CardLabel className="card-label-smaller"></CardLabel>
-                <div className="field">
-                    <UploadFile
-                        onUpload={selectfile}
-                        onDelete={() => {
-                            setUploadedFile(null);
-                        }}
-                        id={id}
-                        message={isUploading ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <LoadingSpinner />
-                                <span>Uploading...</span>
-                            </div>
-                        ) : uploadedFile ? "1 File Uploaded" : "No File Uploaded"}
-                        textStyles={{ width: "100%" }}
-                        inputStyles={{ width: "280px" }}
-                        accept={
-                            doc?.code === "APPLICANT_PHOTO" || doc?.code?.includes("PHOTO")
-                                ? ".jpeg, .jpg, .png"
-                                : ".pdf, .jpeg, .jpg, .png"
-                        }
-                        buttonType="button"
-                        error={!uploadedFile}
-                    />
                 </div>
-            </LabelFieldPair>
+            )}
+
+            <div className="gc-doc-upload-box">
+                <UploadFile
+                    onUpload={selectfile}
+                    onDelete={() => {
+                        setUploadedFile(null);
+                    }}
+                    id={id}
+                    message={isUploading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <LoadingSpinner />
+                            <span>Uploading...</span>
+                        </div>
+                    ) : uploadedFile ? "1 File Uploaded" : "No File Uploaded"}
+                    textStyles={{ width: "100%" }}
+                    inputStyles={{ width: "100%", maxWidth: "600px" }}
+                    accept={
+                        doc?.code === "APPLICANT_PHOTO" || doc?.code?.includes("PHOTO")
+                            ? ".jpeg, .jpg, .png"
+                            : ".pdf, .jpeg, .jpg, .png"
+                    }
+                    buttonType="button"
+                    error={!uploadedFile}
+                />
+            </div>
         </div>
     );
 }

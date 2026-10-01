@@ -50,7 +50,6 @@ const GCProtertyLocDetails = ({ t, config, onSelect, formData, renewApplication 
   const [propertyId, setpropertyId] = useState(addressData?.propertyId || renewApplication?.propertyId || "");
   const [shouldFetchDetails, setShouldFetchDetails] = useState(false);
   const stateId = Digit.ULBService.getStateId();
-  const inputStyles = { width: user.type === "EMPLOYEE" ? "50%" : "86%" };
   const [showToast, setShowToast] = useState(null);
   const { data: fetchedLocalities } = Digit.Hooks.useBoundaryLocalities(
     city?.code,
@@ -214,199 +213,232 @@ const GCProtertyLocDetails = ({ t, config, onSelect, formData, renewApplication 
          } `
             }
           </style>
-          <CardLabel>{`${t("GC_PROPERTY_NO")}`}</CardLabel>
-          <div className="field-container">
+          <div className="gc-form-field-wrap">
+            <CardLabel>{t("GC_PROPERTY_NO")}</CardLabel>
+            <div className="gc-search-input-group">
+              <TextInput
+                t={t}
+                type="text"
+                isMandatory={false}
+                optionKey="i18nKey"
+                name="propertyId"
+                value={propertyId}
+                placeholder="Enter Property ID"
+                onChange={setPropertyId}
+                ValidationRequired={true}
+                {...(validation = {
+                  isRequired: false,
+                  pattern: "^[A-Z]{2}-PT-\\d{4}-\\d{6}$",
+                  type: "text",
+                  title: t("GC_PROPERTY_ID_ERROR_MESSAGE"),
+                })}
+              />
+              <button
+                type="button"
+                className="gc-property-search-btn"
+                onClick={handleSearchClick}
+              >
+                <SearchIcon />
+                <span>{t("ES_COMMON_SEARCH") || "Search"}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_HOUSE_NO")} <span className="gc-required-star">*</span>
+            </CardLabel>
             <TextInput
               t={t}
-              type={"text"}
+              type="text"
+              inputMode="numeric"
               isMandatory={false}
               optionKey="i18nKey"
-              name="propertyId"
-              value={propertyId}
-              onChange={setPropertyId}
-              style={inputStyles}
+              name="houseNo"
+              value={houseNo}
+              placeholder="Enter House No"
+              onChange={setApplicantHouseNo}
+              ValidationRequired={true}
+              validation={{
+                isRequired: true,
+                pattern: "^[0-9]+$",
+                title: t("GC_HOUSE_NO_ERROR_MESSAGE"),
+              }}
+            />
+          </div>
+
+          <div className="gc-form-field-wrap">
+            <CardLabel>{t("GC_HOUSE_NAME")}</CardLabel>
+            <TextInput
+              t={t}
+              type="text"
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="houseName"
+              value={houseName}
+              placeholder="Enter House Name"
+              onChange={sethouseName}
+              ValidationRequired={false}
+            />
+          </div>
+
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_STREET_NAME")} <span className="gc-required-star">*</span>
+            </CardLabel>
+            <TextInput
+              t={t}
+              type="text"
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="streetName"
+              value={streetName}
+              placeholder="Enter Street Name"
+              onChange={setApplicantStreetName}
+              ValidationRequired={true}
+              {...(validation = {
+                pattern: "^[a-zA-Z0-9 ,\\-]+$",
+                type: "text",
+                title: t("GC_STREET_NAME_ERROR_MESSAGE"),
+              })}
+            />
+          </div>
+
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_ADDRESS_LINE1")} <span className="gc-required-star">*</span>
+            </CardLabel>
+            <TextInput
+              t={t}
+              type="text"
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="addressline1"
+              value={addressline1}
+              placeholder="Enter Address Line 1"
+              onChange={setaddressline1}
               ValidationRequired={true}
               {...(validation = {
                 isRequired: false,
-                pattern: "^[A-Z]{2}-PT-\\d{4}-\\d{6}$",
-                type: "text",
-                title: t("GC_PROPERTY_ID_ERROR_MESSAGE"),
+                pattern: "^[a-zA-Z0-9 .,?!'\"\\-]+$",
+                type: "textarea",
+                title: t("SV_LANDMARK_ERROR_MESSAGE"),
               })}
             />
-            <div style={{ position: "relative", zIndex: "100", right: user.type === "EMPLOYEE" ? "52%" : "95px", marginTop: "-14px", marginRight: "-20px", cursor: "pointer" }} onClick={handleSearchClick}> <SearchIcon /> </div>
           </div>
-          <CardLabel>{`${t("GC_HOUSE_NO")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <TextInput
-            t={t}
-            type="text"
-            inputMode="numeric"
-            isMandatory={false}
-            optionKey="i18nKey"
-            name="houseNo"
-            value={houseNo}
-            placeholder="Enter House No"
-            onChange={setApplicantHouseNo}
-            style={{ width: user.type === "EMPLOYEE" ? "50%" : "86%" }}
-            ValidationRequired={true}
-            validation={{
-              isRequired: true,
-              pattern: "^[0-9]+$",
-              title: t("GC_HOUSE_NO_ERROR_MESSAGE"),
-            }}
-          />
 
+          <div className="gc-form-field-wrap">
+            <CardLabel>{t("GC_ADDRESS_LINE2")}</CardLabel>
+            <TextInput
+              t={t}
+              type="text"
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="addressline2"
+              value={addressline2}
+              placeholder="Enter Address Line 2"
+              onChange={setaddressline2}
+              ValidationRequired={true}
+              {...(validation = {
+                isRequired: false,
+                pattern: "^[a-zA-Z ]*$",
+                type: "textarea",
+                title: t("SV_LANDMARK_ERROR_MESSAGE"),
+              })}
+            />
+          </div>
 
-          <CardLabel>{`${t("GC_HOUSE_NAME")}`}</CardLabel>
-          <TextInput
-            t={t}
-            type={"text"}
-            isMandatory={false}
-            optionKey="i18nKey"
-            name="houseName"
-            value={houseName}
-            placeholder={"Enter House Name"}
-            onChange={sethouseName}
-            style={{ width: user.type === "EMPLOYEE" ? "50%" : "86%" }}
-            ValidationRequired={false}
-          />
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_LANDMARK")} <span className="gc-required-star">*</span>
+            </CardLabel>
+            <TextArea
+              t={t}
+              type="textarea"
+              isMandatory={false}
+              optionKey="i18nKey"
+              name="landmark"
+              value={landmark}
+              placeholder="Enter Landmark"
+              onChange={setApplicantLandmark}
+              ValidationRequired={true}
+              {...(validation = {
+                isRequired: true,
+                pattern: "^[a-zA-Z0-9 ,\\-]+$",
+                type: "textarea",
+                title: t("GC_LANDMARK_ERROR_MESSAGE"),
+              })}
+            />
+          </div>
 
-          <CardLabel>{`${t("GC_STREET_NAME")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <TextInput
-            t={t}
-            type={"text"}
-            isMandatory={false}
-            optionKey="i18nKey"
-            name="streetName"
-            value={streetName}
-            placeholder={"Enter Street Name"}
-            onChange={setApplicantStreetName}
-            style={{ width: user.type === "EMPLOYEE" ? "50%" : "86%" }}
-            ValidationRequired={true}
-            {...(validation = {
-              pattern: "^[a-zA-Z0-9 ,\\-]+$",
-              type: "text",
-              title: t("GC_STREET_NAME_ERROR_MESSAGE"),
-            })}
-          />
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_CITY")} <span className="gc-required-star">*</span>
+            </CardLabel>
+            <Controller
+              control={control}
+              name="city"
+              defaultValue={city}
+              rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+              render={({ field }) => (
+                <Dropdown
+                  className="form-field"
+                  selected={city}
+                  select={setCity}
+                  option={allCities}
+                  optionKey="i18nKey"
+                  t={t}
+                  placeholder="Select City"
+                />
+              )}
+            />
+          </div>
 
-          <CardLabel>{`${t("GC_ADDRESS_LINE1")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <TextInput
-            t={t}
-            type={"text"}
-            isMandatory={false}
-            optionKey="i18nKey"
-            name="addressline1"
-            value={addressline1}
-            placeholder={"Enter Address"}
-            onChange={setaddressline1}
-            style={{ width: user.type === "EMPLOYEE" ? "50%" : "86%" }}
-            ValidationRequired={true}
-            {...(validation = {
-              isRequired: false,
-              pattern: "^[a-zA-Z0-9 .,?!'\"\\-]+$",
-              type: "textarea",
-              title: t("SV_LANDMARK_ERROR_MESSAGE"),
-            })}
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_LOCALITY")} <span className="gc-required-star">*</span>
+            </CardLabel>
+            <Controller
+              control={control}
+              name="locality"
+              defaultValue={locality}
+              rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
+              render={({ field }) => (
+                <Dropdown
+                  className="form-field"
+                  selected={locality}
+                  select={setLocality}
+                  option={structuredLocality}
+                  optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
+                  optionKey="i18nKey"
+                  t={t}
+                  placeholder="Select Locality"
+                />
+              )}
+            />
+          </div>
 
-          />
-
-          <CardLabel>{`${t("GC_ADDRESS_LINE2")}`}</CardLabel>
-          <TextInput
-            t={t}
-            type={"text"}
-            isMandatory={false}
-            optionKey="i18nKey"
-            name="addressline2"
-            value={addressline2}
-            placeholder={"Enter Address"}
-            onChange={setaddressline2}
-            style={{ width: user.type === "EMPLOYEE" ? "50%" : "86%" }}
-            ValidationRequired={true}
-            {...(validation = {
-              isRequired: false,
-              pattern: "^[a-zA-Z ]*$",
-              type: "textarea",
-              title: t("SV_LANDMARK_ERROR_MESSAGE"),
-            })}
-          />
-          <CardLabel>{`${t("GC_LANDMARK")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <TextArea
-            t={t}
-            type={"textarea"}
-            isMandatory={false}
-            optionKey="i18nKey"
-            name="landmark"
-            value={landmark}
-            placeholder={"Enter Landmark"}
-            onChange={setApplicantLandmark}
-            style={{ width: "50%" }}
-            ValidationRequired={true}
-            {...(validation = {
-              isRequired: true,
-              pattern: "^[a-zA-Z0-9 ,\\-]+$",
-              type: "textarea",
-              title: t("GC_LANDMARK_ERROR_MESSAGE"),
-            })}
-          />
-
-          <CardLabel>{`${t("GC_CITY")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <Controller
-            control={control}
-            name={"city"}
-            defaultValue={city}
-            rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={({ field }) => (
-              <Dropdown
-                className="form-field"
-                selected={city}
-                select={setCity}
-                option={allCities}
-                optionKey="i18nKey"
-                t={t}
-                placeholder={"Select"}
-              />
-            )}
-          />
-          <CardLabel>{`${t("GC_LOCALITY")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <Controller
-            control={control}
-            name={"locality"}
-            defaultValue={locality}
-            rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
-            render={({ field }) => (
-              <Dropdown
-                className="form-field"
-                selected={locality}
-                select={setLocality}
-                option={structuredLocality}
-                optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
-                optionKey="i18nKey"
-                t={t}
-                placeholder={"Select"}
-              />
-            )}
-          />
-
-          <CardLabel>{`${t("GC_ADDRESS_PINCODE")}`} <span className="check-page-link-button">*</span></CardLabel>
-          <TextInput
-            t={t}
-            type="text"
-            inputMode="numeric"
-            name="pincode"
-            value={pincode}
-            onChange={setAddressPincode}
-            placeholder="Enter Pincode"
-            style={{ width: user.type === "EMPLOYEE" ? "50%" : "86%" }}
-            ValidationRequired={true}
-            validation={{
-              isRequired: true,
-              pattern: "^[1-9][0-9]{5}$",
-              title: t("SV_ADDRESS_PINCODE_INVALID"),
-            }}
-            maxLength={6}
-          />
-
-
+          <div className="gc-form-field-wrap">
+            <CardLabel>
+              {t("GC_ADDRESS_PINCODE")} <span className="gc-required-star">*</span>
+            </CardLabel>
+            <TextInput
+              t={t}
+              type="text"
+              inputMode="numeric"
+              name="pincode"
+              value={pincode}
+              onChange={setAddressPincode}
+              placeholder="Enter Pincode"
+              ValidationRequired={true}
+              validation={{
+                isRequired: true,
+                pattern: "^[1-9][0-9]{5}$",
+                title: t("SV_ADDRESS_PINCODE_INVALID"),
+              }}
+              maxLength={6}
+            />
+          </div>
         </div>
       </FormStep>
       {showToast && (

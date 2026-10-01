@@ -74,50 +74,66 @@ export const GCMyApplications = () => {
   return (
     <React.Fragment>
       <Header>{`${t("GC_MY_APPLICATIONS_HEADER")} (${filteredApplications.length})`}</Header>
-      <Card>
-        <div style={{ marginLeft: "16px" }}>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "16px" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <CardLabel>{t("GC_APPLICATION_NUMBER_LABEL")}</CardLabel>
-                <TextInput
-                  placeholder={t("GC_SEARCH_APP_NO_PLACEHOLDER")}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ width: "100%", padding: "8px", height: "150%" }}
+      
+      {/* Interactive Search & Filter Card */}
+      <Card className="gc-search-card">
+        <div className="gc-filter-row">
+          {/* Application Number Filter */}
+          <div className="gc-filter-col">
+            <CardLabel>{t("GC_APPLICATION_NUMBER_LABEL")}</CardLabel>
+            <TextInput
+              placeholder={t("GC_SEARCH_APP_NO_PLACEHOLDER")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="gc-filter-col">
+            <CardLabel>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</CardLabel>
+            <Dropdown
+              className="form-field"
+              selected={status}
+              select={setStatus}
+              option={statusOptions}
+              placeholder={t("CS_COMMON_SELECT_STATUS")}
+              optionKey="value"
+              t={t}
+            />
+          </div>
+
+          {/* Action Buttons: Search & Clear All */}
+          <div className="gc-filter-actions">
+            <button
+              type="button"
+              onClick={handleSearch}
+              className="gc-search-btn"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
-              </div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <CardLabel>{t("PT_COMMON_TABLE_COL_STATUS_LABEL")}</CardLabel>
-                <Dropdown
-                  className="form-field"
-                  selected={status}
-                  select={setStatus}
-                  option={statusOptions}
-                  placeholder={t("CS_COMMON_SELECT_STATUS")}
-                  optionKey="value"
-                  style={{ width: "100%" }}
-                  t={t}
-                />
-              </div>
-            </div>
-            <div>
-              <div style={{ marginTop: "17%" }}>
-                <SubmitBar label={t("ES_COMMON_SEARCH")} onSubmit={handleSearch} />
-                <p
-                  className="link"
-                  style={{ marginLeft: "30%", marginTop: "10px", display: "block" }}
-                  onClick={clearAll}
-                >
-                  {t(`ES_COMMON_CLEAR_ALL`)}
-                </p>
-              </div>
-            </div>
+              </svg>
+              <span>{t("ES_COMMON_SEARCH")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={clearAll}
+              className="gc-clear-btn"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span>{t("ES_COMMON_CLEAR_ALL")}</span>
+            </button>
           </div>
         </div>
       </Card>
+
+      {/* Applications List */}
       <div>
         {filteredApplications.length > 0 &&
           filteredApplications.map((application, index) => (
@@ -128,17 +144,34 @@ export const GCMyApplications = () => {
               />
             </div>
           ))}
+
+        {/* Empty State */}
         {filteredApplications.length === 0 && !isLoading && (
-          <p style={{ marginLeft: "16px", marginTop: "16px" }}>{t("GC_NO_APPLICATION_FOUND_MSG")}</p>
+          <div className="gc-empty-state">
+            <svg className="w-12 h-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <div className="text-base font-semibold text-gray-700">{t("GC_NO_APPLICATION_FOUND_MSG")}</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Try adjusting your search criteria or clear filters to view all applications.
+            </div>
+          </div>
         )}
 
+        {/* Load More Button */}
         {filteredApplications.length !== 0 && totalCount >= t1 && (
-          <div>
-            <p style={{ marginLeft: "16px", marginTop: "16px" }}>
-              <span className="link">
-                <Link to={`/upyog-ui/citizen/gc/my-applications/${t1}`}>{t("CS_LOAD_MORE")}</Link>
-              </span>
-            </p>
+          <div className="flex justify-center my-6">
+            <Link to={`/upyog-ui/citizen/gc/my-applications/${t1}`} className="gc-load-more-btn">
+              <span>{t("CS_LOAD_MORE")}</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </Link>
           </div>
         )}
       </div>
@@ -147,3 +180,4 @@ export const GCMyApplications = () => {
 };
 
 export default GCMyApplications;
+

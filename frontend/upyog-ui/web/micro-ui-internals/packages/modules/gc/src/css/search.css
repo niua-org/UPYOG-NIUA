@@ -1,5 +1,11 @@
 .search-container.gc-search-container {
   width: auto !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 20px 24px !important;
+  margin-bottom: 24px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
 }
 
 .search-container.gc-search-container.is-inbox {
@@ -11,57 +17,179 @@
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
   gap: 20px !important;
-  align-items: start !important;
+  align-items: end !important;
 }
 
 .complaint-input-container.for-pt.gc-inbox-input-container.is-inbox {
-  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-template-columns: 1fr 1fr auto !important;
+}
+
+.complaint-input-container.for-pt .input-fields {
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.complaint-input-container.for-pt .input-fields label {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  margin: 0 0 6px 0 !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  display: block !important;
+  white-space: nowrap !important;
+}
+
+.complaint-input-container.for-pt .input-fields .card-input,
+.complaint-input-container.for-pt .input-fields input[type="text"],
+.complaint-input-container.for-pt .input-fields .select {
+  height: 40px !important;
+  min-height: 40px !important;
+  border-radius: 4px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-size: 14px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* Mobile Number field layout in Employee Inbox search */
+.complaint-input-container.for-pt .input-fields .field-container {
+  display: flex !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.complaint-input-container.for-pt .input-fields .field-container .citizen-card-input--front,
+.complaint-input-container.for-pt .input-fields .field-container .employee-card-input--front {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  width: 48px !important;
+  min-width: 48px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-right: none !important;
+  border-radius: 4px 0 0 4px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  box-sizing: border-box !important;
+}
+
+.complaint-input-container.for-pt .input-fields .field-container .text-input {
+  display: flex !important;
+  flex: 1 !important;
+  width: 100% !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.complaint-input-container.for-pt .input-fields .field-container .text-input input {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  width: 100% !important;
+  border-radius: 0 4px 4px 0 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  padding: 0 12px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper {
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row-reverse !important;
   align-items: center !important;
-  justify-content: flex-start !important;
-  margin-top: 56px !important;
-  width: 100% !important;
-  max-width: 100% !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  margin-top: 0 !important;
+  height: 40px !important;
+  width: auto !important;
   margin-left: 0 !important;
 }
 
 .complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper.is-inbox {
   grid-column: 3 / 4 !important;
-  grid-row: 1 !important;
 }
 
 .complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper .submit-bar-search {
-  width: 90% !important;
-  max-width: 100% !important;
+  width: auto !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 24px !important;
+  background-color: #a82227 !important;
+  border-radius: 4px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
   margin: 0 !important;
-  margin-top: 3px !important;
-  margin-bottom: 0 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px rgba(168, 34, 39, 0.2) !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper .submit-bar-search:hover {
+  background-color: #8c191e !important;
 }
 
 .complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper .clear-search {
-  margin-top: 8px !important;
-  text-align: center !important;
-  cursor: pointer !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .gc-inbox-search-form-error {
-  font-weight: 700 !important;
-  color: rgba(212, 53, 28) !important;
-  padding-left: 8px !important;
-  margin-top: -20px !important;
+  font-weight: 600 !important;
+  color: #dc2626 !important;
+  padding-left: 4px !important;
+  margin-top: 4px !important;
   font-size: 12px !important;
 }
 
 .gc-clear-search-link,
 .complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper .clear-search .link-label {
+  height: 40px !important;
+  min-height: 40px !important;
+  line-height: 38px !important;
+  padding: 0 18px !important;
+  background: #ffffff !important;
+  color: #64748b !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 4px !important;
   text-decoration: none !important;
-  border-bottom: none !important;
-  display: inline !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   margin: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
+.gc-clear-search-link:hover,
+.complaint-input-container.for-pt .search-submit-wrapper.gc-search-submit-wrapper .clear-search .link-label:hover {
+  color: #a82227 !important;
+  border-color: #fca5a5 !important;
+  background-color: #f8fafc !important;
 }
 
 .gc-clear-search-link.mobile-view {
