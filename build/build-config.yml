@@ -1033,5 +1033,13 @@ config:
         image-name: "upyog-aggregation-service"
         dockerfile: "municipal-services/upyog-aggregation-service/Dockerfile"
 
+  - name: "builds/upyog/dx-services/data-sharing-service-dx"
+    build:
+      - work-dir: "dx-services/data-sharing-service-dx"
+        image-name: "data-sharing-service-dx"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "dx-services/data-sharing-service-dx/src/main/resources/db"
+        image-name: "data-sharing-service-dx-db"
+
 
 
