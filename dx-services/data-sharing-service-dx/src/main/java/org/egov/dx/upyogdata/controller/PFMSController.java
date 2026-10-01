@@ -45,14 +45,14 @@ public class PFMSController {
     @PostMapping("/scheduler/_trigger")
     @Operation(summary = "Manually trigger PFMS forwarding scheduler", description = "For testing only")
     public ResponseEntity<?> triggerScheduler() {
-        pfmsForwardingService.forwardInitiatedTransactions();
+        pfmsForwardingService.forwardInitiatedTransactions("MANUAL");
         return ResponseEntity.ok("Scheduler triggered");
     }
 
     @PostMapping("/scheduler/_retryTrigger")
     @Operation(summary = "Manually trigger PFMS Retry scheduler for Failed Status", description = "For testing only")
     public ResponseEntity<?> triggerRetryScheduler() {
-        pfmsForwardingService.retryFailedTransactions();
+        pfmsForwardingService.retryFailedTransactions("MANUAL");
         return ResponseEntity.ok("Retry Scheduler triggered");
     }
 

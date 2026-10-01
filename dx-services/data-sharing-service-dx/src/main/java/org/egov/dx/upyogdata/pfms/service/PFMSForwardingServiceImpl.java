@@ -30,16 +30,16 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
     private String currentToken;
 
     @Override
-    public void forwardInitiatedTransactions() {
-        processBatch(pfmsRepository.fetchInitiatedTransactionIds(batchSize), SchedulerType.INITIATED_FORWARD);
+    public void forwardInitiatedTransactions(String triggeredBy) {
+        processBatch(pfmsRepository.fetchInitiatedTransactionIds(batchSize), SchedulerType.INITIATED_FORWARD, triggeredBy);
     }
 
     @Override
-    public void retryFailedTransactions() {
-        processBatch(pfmsRepository.fetchFailedTransactionIds(batchSize), SchedulerType.FAILED_RETRY);
+    public void retryFailedTransactions(String triggeredBy) {
+        processBatch(pfmsRepository.fetchFailedTransactionIds(batchSize), SchedulerType.FAILED_RETRY, triggeredBy);
     }
 
-    private void processBatch(List<String> ids, SchedulerType type) {
+    private void processBatch(List<String> ids, SchedulerType type, String triggeredBy) {
         log.info("Pfms Scheduler [{}] Starting cycle", type);
 
         if (ids.isEmpty()) {
@@ -91,7 +91,7 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
                 .totalPicked(ids.size())
                 .successCount(success)
                 .failedCount(failed)
-                .createdBy("SCHEDULER")
+                .createdBy(triggeredBy)
                 .build());
     }
 

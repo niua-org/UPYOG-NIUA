@@ -20,9 +20,9 @@ public class PFMSForwardingScheduler {
 
     private final PFMSForwardingService pfmsForwardingService;
 
-    @Scheduled(cron = "${pfms.scheduler.cron:0 */5 * * * *}")
+    @Scheduled(cron = "${pfms.scheduler.cron:0 0 2 * * *}")
     public void run() {
         log.info("Pfms Daily Scheduler Triggered");
-        pfmsForwardingService.forwardInitiatedTransactions();
+        pfmsForwardingService.forwardInitiatedTransactions("SCHEDULER");
     }
 }

@@ -13,9 +13,9 @@ public class PFMSRetryScheduler {
 
     private final PFMSForwardingService pfmsForwardingService;
 
-    @Scheduled(cron = "${pfms.retry.scheduler.cron:0 0 2 * * *}")
+    @Scheduled(cron = "${pfms.retry.scheduler.cron:0 0 5 * * *}")
     public void run() {
         log.info("Pfms Retry Scheduler Triggered");
-        pfmsForwardingService.retryFailedTransactions();
+        pfmsForwardingService.retryFailedTransactions("SCHEDULER");
     }
 }
