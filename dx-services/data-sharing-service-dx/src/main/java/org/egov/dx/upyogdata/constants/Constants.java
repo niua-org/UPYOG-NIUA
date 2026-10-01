@@ -7,4 +7,6 @@ public class Constants {
     public static final String PARTIAL = "PARTIAL";
     public static final String FAILED = "FAILED";
     public static final String PROCESSING = "PROCESSING";
+    public static final String SCHEDULER = "SCHEDULER";
+    public static final String MANUAL = "MANUAL";
 }

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingService;
 import org.egov.dx.upyogdata.pfms.service.PFMSService;
 import org.egov.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
-
+import org.egov.dx.upyogdata.constants.Constants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,14 +45,14 @@ public class PFMSController {
     @PostMapping("/scheduler/_trigger")
     @Operation(summary = "Manually trigger PFMS forwarding scheduler", description = "For testing only")
     public ResponseEntity<?> triggerScheduler() {
-        pfmsForwardingService.forwardInitiatedTransactions("MANUAL");
+        pfmsForwardingService.forwardInitiatedTransactions(Constants.MANUAL);
         return ResponseEntity.ok("Scheduler triggered");
     }
 
     @PostMapping("/scheduler/_retryTrigger")
     @Operation(summary = "Manually trigger PFMS Retry scheduler for Failed Status", description = "For testing only")
     public ResponseEntity<?> triggerRetryScheduler() {
-        pfmsForwardingService.retryFailedTransactions("MANUAL");
+        pfmsForwardingService.retryFailedTransactions(Constants.MANUAL);
         return ResponseEntity.ok("Retry Scheduler triggered");
     }
 

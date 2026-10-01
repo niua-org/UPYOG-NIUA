@@ -4,8 +4,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.egov.common.contract.request.RequestInfo;
 
 import java.util.List;
@@ -17,7 +18,8 @@ import java.util.List;
  * and one or more PFMS data records
  */
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PFMSCreateTransactionRequest {

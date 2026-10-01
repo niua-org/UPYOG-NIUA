@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.egov.dx.upyogdata.constants.Constants;
 
 /**
  * Scheduler that periodically picks up INITIATED transactions
@@ -20,9 +21,9 @@ public class PFMSForwardingScheduler {
 
     private final PFMSForwardingService pfmsForwardingService;
 
-    @Scheduled(cron = "${pfms.scheduler.cron:0 0 2 * * *}")
+    @Scheduled(cron = "${pfms.scheduler.cron}")
     public void run() {
         log.info("Pfms Daily Scheduler Triggered");
-        pfmsForwardingService.forwardInitiatedTransactions("SCHEDULER");
+        pfmsForwardingService.forwardInitiatedTransactions(Constants.SCHEDULER);
     }
 }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.egov.dx.upyogdata.constants.Constants;
 
 @Slf4j
 @Component
@@ -13,9 +14,9 @@ public class PFMSRetryScheduler {
 
     private final PFMSForwardingService pfmsForwardingService;
 
-    @Scheduled(cron = "${pfms.retry.scheduler.cron:0 0 5 * * *}")
+    @Scheduled(cron = "${pfms.retry.scheduler.cron}")
     public void run() {
         log.info("Pfms Retry Scheduler Triggered");
-        pfmsForwardingService.retryFailedTransactions("SCHEDULER");
+        pfmsForwardingService.retryFailedTransactions(Constants.SCHEDULER);
     }
 }

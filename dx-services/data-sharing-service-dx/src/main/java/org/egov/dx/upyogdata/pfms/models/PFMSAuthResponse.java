@@ -1,14 +1,16 @@
 package org.egov.dx.upyogdata.pfms.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Response model for PFMS authentication API.
  * Token from AccessToken field is used as Bearer in subsequent data push calls.
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 public class PFMSAuthResponse {
 

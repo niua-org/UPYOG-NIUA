@@ -31,12 +31,12 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
 
     @Override
     public void forwardInitiatedTransactions(String triggeredBy) {
-        processBatch(pfmsRepository.fetchInitiatedTransactionIds(batchSize), SchedulerType.INITIATED_FORWARD, triggeredBy);
+        processBatch(pfmsRepository.fetchInitiatedTransactionIds(batchSize), SchedulerType.DAILY, triggeredBy);
     }
 
     @Override
     public void retryFailedTransactions(String triggeredBy) {
-        processBatch(pfmsRepository.fetchFailedTransactionIds(batchSize), SchedulerType.FAILED_RETRY, triggeredBy);
+        processBatch(pfmsRepository.fetchFailedTransactionIds(batchSize), SchedulerType.RETRY, triggeredBy);
     }
 
     private void processBatch(List<String> ids, SchedulerType type, String triggeredBy) {

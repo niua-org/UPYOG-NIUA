@@ -1,10 +1,13 @@
 package org.egov.dx.upyogdata.pfms.models;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Builder
 public class SchedulerLog {
     private String schedulerType;
@@ -12,8 +15,8 @@ public class SchedulerLog {
     private LocalDateTime endedAt;
     private long durationMs;
     private String status;
-    private int totalPicked;
-    private int successCount;
-    private int failedCount;
+    private Integer totalPicked;
+    private Integer successCount;
+    private Integer failedCount;
     private String createdBy;
 }

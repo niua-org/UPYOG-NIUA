@@ -73,9 +73,9 @@ CREATE TABLE IF NOT EXISTS ug_pfms_scheduler_log (
     ended_at        TIMESTAMP,
     duration_ms     BIGINT,
     status  VARCHAR(32),
-    total_picked    INT          NOT NULL DEFAULT 0,
-    success_count   INT          NOT NULL DEFAULT 0,
-    failed_count    INT          NOT NULL DEFAULT 0,
+    total_picked    INT,
+    success_count   INT,
+    failed_count    INT,
     created_time    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by     VARCHAR(50),
     last_modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
