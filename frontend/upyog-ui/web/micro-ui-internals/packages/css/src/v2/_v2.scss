@@ -1,0 +1,12 @@
+// UTILS
+@use "./utils/globals" as *;
+@use "./utils/utils" as *;
+
+// COMPONENTS
+@use "./components/languages" as *;
+@use "./components/button" as *;
+@use "./components/form" as *;
+@use "./components/toast" as *;
+
+// PAGES
+@use "./pages/_onboarding.scss" as *;

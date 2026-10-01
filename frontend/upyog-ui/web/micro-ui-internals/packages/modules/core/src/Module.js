@@ -16,7 +16,9 @@ import EmployeeDashboard from "./components/EmployeeDashboard";
 import { useState } from "react";
 import EDCRAcknowledgement from "./pages/citizen/Home/EDCR/EDCRAcknowledgement"
 import CreateAnonymousEDCR from "./pages/citizen/Home/EDCR";
-const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
+// Receive the version flag at the initialized-store boundary so routing starts
+// only after the same application configuration and module data are available.
+const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers, isConfigBased }) => {
   const { isLoading, data: initData } = Digit.Hooks.useInitStore(stateCode, enabledModules);
   if (isLoading) {
     return <Loader page={true} />;
@@ -25,14 +27,27 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
   const i18n = getI18n();
   return (
     <Provider store={getStore(initData, moduleReducers(initData))}>
-      <Router>
+      {/*
+       * Opt in to React Router v7 behavior while still using v6:
+       * - v7_startTransition wraps router state updates in React.startTransition.
+       * - v7_relativeSplatPath uses the v7 rules for resolving relative links
+       *   inside splat ("*") routes.
+       *
+       * Without these flags, the app keeps the legacy v6 behavior and logs
+       * future-flag warnings. Enabling them now also avoids an unexpected
+       * routing behavior change when the application is upgraded to v7.
+       */}
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Body>
+          {/* Pass the selected auth-flow version into the top-level route
+              switch; this does not change the initialized store itself. */}
           <DigitApp
             initData={initData}
             stateCode={stateCode}
             modules={initData?.modules || []}
             appTenants={initData?.tenants || []}
             logoUrl={initData?.stateInfo?.logoUrl || ""}
+            isConfigBased={isConfigBased}
           />
         </Body>
       </Router>
@@ -40,7 +55,9 @@ const DigitUIWrapper = ({ stateCode, enabledModules, moduleReducers }) => {
   );
 };
 
-export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers }) => {
+// Default to V1 for backward compatibility with applications that consume
+// DigitUI without explicitly opting in to the V2 authentication experience.
+export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers, isConfigBased = false }) => {
   const userType = Digit.UserService.getType();
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -69,10 +86,9 @@ export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers })
   const DSO = Digit.UserService.hasAccess(["FSM_DSO"]);
 
   return (
-    <div>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <TanstackQueryClientProvider client={tanstackQueryClient}>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TanstackQueryClientProvider client={tanstackQueryClient}>
           <ComponentProvider.Provider value={registry}>
             <PrivacyProvider.Provider
               value={{
@@ -108,13 +124,14 @@ export const DigitUI = ({ stateCode, registry, enabledModules, moduleReducers })
                 },
               }}
             >
-              <DigitUIWrapper stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />
+              {/* Forward the caller's version choice unchanged through the
+                  providers so every downstream router uses one source of truth. */}
+              <DigitUIWrapper isConfigBased={isConfigBased} stateCode={stateCode} enabledModules={enabledModules} moduleReducers={moduleReducers} />
             </PrivacyProvider.Provider>
           </ComponentProvider.Provider>
-          </TanstackQueryClientProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </div>
+        </TanstackQueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

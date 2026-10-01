@@ -71,6 +71,7 @@ import { NDCService } from "./services/elements/NDC";
 import { ChallanGenerationService } from "./services/elements/ChallanGeneration";
 import {UpyogBotService} from "./services/elements/UpyogBot";
 import { GCServices } from "./services/elements/GC";
+import Theme from "./theme";
 
    
 
@@ -153,6 +154,9 @@ const initLibraries = () => {
   setupLibraries("ChallanGenerationService", ChallanGenerationService);
   setupLibraries("UpyogBotService", UpyogBotService);
   setupLibraries("GCServices", GCServices);
+  // The theme module owns its public API; register it without rebuilding the
+  // same object (and accidentally exposing internal implementation details).
+  setupLibraries("Theme", Theme);
 
   return new Promise((resolve) => {
     initI18n(resolve);
@@ -161,3 +165,4 @@ const initLibraries = () => {
 
 export { initLibraries, Enums, Hooks, subFormRegistry };
 export { default as useModuleBasePath } from "./hooks/useModuleBasePath";
+export { refreshTheme, ThemeProvider, initializeTheme, updateTheme, useTheme } from "./theme";

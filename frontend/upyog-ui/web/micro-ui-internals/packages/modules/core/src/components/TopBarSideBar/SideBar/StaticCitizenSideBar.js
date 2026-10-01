@@ -96,7 +96,7 @@ const IconsObject = {
   Phone: <Phone className="icon" />,
   LoginIcon: <LoginIcon className="icon" />,
 };
-const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
+const StaticCitizenSideBar = ({ linkData, islinkDataLoading, citizenLoginPath }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const location = useLocation();
@@ -147,7 +147,9 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading }) => {
   const redirectToLoginPage = () => {
     // localStorage.clear();
     // sessionStorage.clear();
-    navigate(`${APPLICATION_PATH}/citizen/login`);
+    // Reuse the route selected by the citizen router so desktop login actions
+    // cannot escape from V2 into the legacy login route.
+    navigate(citizenLoginPath || `${APPLICATION_PATH}/citizen/login`);
   };
   // Function to redirect the user to the EDCR scrutiny page
   const redirectToScrutinyPage = () => {

@@ -7,24 +7,11 @@ import SelectMobileNumber from "./SelectMobileNumber";
 import SelectOtp from "./SelectOtp";
 import SelectName from "./SelectName";
 import { subYears, format } from "date-fns";
+import { authenticateCitizen, persistCitizenSession, registerCitizen, sendCitizenOtp } from "./citizenAuth";
 const TYPE_REGISTER = { type: "register" };
 const TYPE_LOGIN = { type: "login" };
 const DEFAULT_USER = "digit-user";
 const DEFAULT_REDIRECT_URL = "/upyog-ui/citizen";
-
-/* set citizen details to enable backward compatiable */
-const setCitizenDetail = (userObject, token, tenantId) => {
-  let locale = JSON.parse(sessionStorage.getItem("Digit.initData"))?.value?.selectedLanguage;
-  localStorage.setItem("Citizen.tenant-id", tenantId);
-  localStorage.setItem("tenant-id", tenantId);
-  localStorage.setItem("citizen.userRequestObject", JSON.stringify(userObject));
-  localStorage.setItem("locale", locale);
-  localStorage.setItem("Citizen.locale", locale);
-  localStorage.setItem("token", token);
-  localStorage.setItem("Citizen.token", token);
-  localStorage.setItem("user-info", JSON.stringify(userObject));
-  localStorage.setItem("Citizen.user-info", JSON.stringify(userObject));
-};
 
 const getFromLocation = (state, searchParams) => {
   return state?.from || searchParams?.from || DEFAULT_REDIRECT_URL;
@@ -67,9 +54,8 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
     if (!user) {
       return;
     }
-    Digit.SessionStorage.set("citizen.userRequestObject", user);
-    Digit.UserService.setUser(user);
-    setCitizenDetail(user?.info, user?.access_token, stateCode);
+    // V1 and V2 now write the same authentication/session representation.
+    persistCitizenSession(user, stateCode);
     const redirectPath = location.state?.from || DEFAULT_REDIRECT_URL;
     if (!Digit.ULBService.getCitizenCurrentTenant(true)) {
       navigate("/upyog-ui/citizen/select-location", { replace: true, state: {
@@ -189,13 +175,12 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
       setCanSubmitOtp(false);
       const { mobileNumber, otp, name } = params;
       if (isUserRegistered) {
-        const requestData = {
-          username: mobileNumber ? mobileNumber:sessionStorage.getItem("userName"),
-          password: otp,
-          tenantId: stateCode,
-          userType: getUserType(),
-        };
-        const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.UserService.authenticate(requestData);
+        const authenticatedUser = await authenticateCitizen({
+          stateCode,
+          mobileNumber: mobileNumber || sessionStorage.getItem("userName"),
+          otp,
+        });
+        const { info } = authenticatedUser;
 
         if (location.state?.role) {
           const roleInfo = info.roles.find((userRole) => userRole.code === location.state.role);
@@ -205,26 +190,9 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
             return;
           }
         }
-        if (window?.globalConfigs?.getConfig("ENABLE_SINGLEINSTANCE")) {
-          info.tenantId = Digit.ULBService.getStateId();
-        }
-
-        setUser({ info, ...tokens });
+        setUser(authenticatedUser);
       } else if (!isUserRegistered) {
-        const requestData = {
-          name,
-          username: mobileNumber,
-          otpReference: otp,
-          tenantId: stateCode,
-        };
-
-        const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.UserService.registerUser(requestData, stateCode);
-
-        if (window?.globalConfigs?.getConfig("ENABLE_SINGLEINSTANCE")) {
-          info.tenantId = Digit.ULBService.getStateId();
-        }
-
-        setUser({ info, ...tokens });
+        setUser(await registerCitizen({ stateCode, mobileNumber, otp, name }));
       }
     } catch (err) {
       setCanSubmitOtp(true);
@@ -248,7 +216,9 @@ const Login = ({ stateCode, isUserRegistered = true }) => {
 
   const sendOtp = async (data) => {
     try {
-      const res = await Digit.UserService.sendOtp(data, stateCode);
+      // Keep the V1 call sites stable while sharing the OTP request builder with V2.
+      const { type: flow, ...otpDetails } = data.otp;
+      const res = await sendCitizenOtp({ stateCode, flow, ...otpDetails });
       return [res, null];
     } catch (err) {
       return [null, err];
