@@ -1,9 +1,9 @@
 package org.egov.dx.upyogdata.pfms.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -16,38 +16,101 @@ import java.time.format.DateTimeFormatter;
 @Builder
 public class PFMSTransactionFormData {
 
-    private String ULBCodeOrPFMSAgencyCode;
-    private String VoucherNumber;
-    private String VoucherDate;
-    private String VoucherType;
-    private String FinancialYear;
-    private String AccountHeadCode;
-    private String FunctionCode;
-    private String SchemeCode;
-    private String DebitAmount;
-    private String CreditAmount;
-    private String NarrationOrDescription;
-    private String VoucherStatus;
-    private String ULBBankAccountNumber;
-    private String ULBIFSCCode;
-    private String InstrumentReference;
-    private String ModeOfTransaction;
-    private String BeneficiaryOrPayeeName;
-    private String BeneficiaryAccountNumber;
-    private String BeneficiaryIFSCCode;
-    private String BeneficiaryType;
-    private String ChallanNumber;
-    private String FromAccount;
-    private String ToAccount;
-    private String ContraNature;
-    private String TransferInstructionReference;
-    private String ReferenceVoucherNumber;
-    private String AdjustmentType;
-    private String RelatedAssetOrLiabilityCode;
-    private String DebtorOrCreditorReference;
-    private String BasisOfAdjustment;
-    private String PeriodCovered;
-    private String ClientIP;
+    @JsonProperty("ULBCodeOrPFMSAgencyCode")
+    private String ulbCodeOrPfmsAgencyCode;
+
+    @JsonProperty("VoucherNumber")
+    private String voucherNumber;
+
+    @JsonProperty("VoucherDate")
+    private String voucherDate;
+
+    @JsonProperty("VoucherType")
+    private String voucherType;
+
+    @JsonProperty("FinancialYear")
+    private String financialYear;
+
+    @JsonProperty("AccountHeadCode")
+    private String accountHeadCode;
+
+    @JsonProperty("FunctionCode")
+    private String functionCode;
+
+    @JsonProperty("SchemeCode")
+    private String schemeCode;
+
+    @JsonProperty("DebitAmount")
+    private String debitAmount;
+
+    @JsonProperty("CreditAmount")
+    private String creditAmount;
+
+    @JsonProperty("NarrationOrDescription")
+    private String narrationOrDescription;
+
+    @JsonProperty("VoucherStatus")
+    private String voucherStatus;
+
+    @JsonProperty("ULBBankAccountNumber")
+    private String ulbBankAccountNumber;
+
+    @JsonProperty("ULBIFSCCode")
+    private String ulbIfscCode;
+
+    @JsonProperty("InstrumentReference")
+    private String instrumentReference;
+
+    @JsonProperty("ModeOfTransaction")
+    private String modeOfTransaction;
+
+    @JsonProperty("BeneficiaryOrPayeeName")
+    private String beneficiaryOrPayeeName;
+
+    @JsonProperty("BeneficiaryAccountNumber")
+    private String beneficiaryAccountNumber;
+
+    @JsonProperty("BeneficiaryIFSCCode")
+    private String beneficiaryIfscCode;
+
+    @JsonProperty("BeneficiaryType")
+    private String beneficiaryType;
+
+    @JsonProperty("ChallanNumber")
+    private String challanNumber;
+
+    @JsonProperty("FromAccount")
+    private String fromAccount;
+
+    @JsonProperty("ToAccount")
+    private String toAccount;
+
+    @JsonProperty("ContraNature")
+    private String contraNature;
+
+    @JsonProperty("TransferInstructionReference")
+    private String transferInstructionReference;
+
+    @JsonProperty("ReferenceVoucherNumber")
+    private String referenceVoucherNumber;
+
+    @JsonProperty("AdjustmentType")
+    private String adjustmentType;
+
+    @JsonProperty("RelatedAssetOrLiabilityCode")
+    private String relatedAssetOrLiabilityCode;
+
+    @JsonProperty("DebtorOrCreditorReference")
+    private String debtorOrCreditorReference;
+
+    @JsonProperty("BasisOfAdjustment")
+    private String basisOfAdjustment;
+
+    @JsonProperty("PeriodCovered")
+    private String periodCovered;
+
+    @JsonProperty("ClientIP")
+    private String clientIp;
 
     private static final DateTimeFormatter PFMS_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
@@ -61,38 +124,38 @@ public class PFMSTransactionFormData {
      */
     public static PFMSTransactionFormData from(PFMSTransaction t, String clientIp) {
         return PFMSTransactionFormData.builder()
-                .ULBCodeOrPFMSAgencyCode(t.getUlbCodeOrPFMSAgencyCode())
-                .VoucherNumber(t.getVoucherNumber())
-                .VoucherDate(t.getVoucherDate().format(PFMS_DATE_FORMAT))
-                .VoucherType(t.getVoucherType())
-                .FinancialYear(t.getFinancialYear())
-                .AccountHeadCode(t.getAccountHeadCode())
-                .FunctionCode(t.getFunctionCode())
-                .SchemeCode(t.getSchemeCode())
-                .DebitAmount(t.getDebitAmount() == null ? "" : t.getDebitAmount().toString())
-                .CreditAmount(t.getCreditAmount() == null ? "" : t.getCreditAmount().toString())
-                .NarrationOrDescription(t.getNarrationOrDescription())
-                .VoucherStatus(t.getVoucherStatus())
-                .ULBBankAccountNumber(t.getUlbBankAccountNumber())
-                .ULBIFSCCode(t.getUlbIFSCCode())
-                .InstrumentReference(t.getInstrumentReference())
-                .ModeOfTransaction(t.getModeOfTransaction())
-                .BeneficiaryOrPayeeName(t.getBeneficiaryOrPayeeName())
-                .BeneficiaryAccountNumber(t.getBeneficiaryAccountNumber())
-                .BeneficiaryIFSCCode(t.getBeneficiaryIFSCCode())
-                .BeneficiaryType(t.getBeneficiaryType())
-                .ChallanNumber(t.getChallanNumber())
-                .FromAccount(t.getFromAccount())
-                .ToAccount(t.getToAccount())
-                .ContraNature(t.getContraNature())
-                .TransferInstructionReference(t.getTransferInstructionReference())
-                .ReferenceVoucherNumber(t.getReferenceVoucherNumber())
-                .AdjustmentType(t.getAdjustmentType())
-                .RelatedAssetOrLiabilityCode(t.getRelatedAssetOrLiabilityCode())
-                .DebtorOrCreditorReference(t.getDebtorOrCreditorReference())
-                .BasisOfAdjustment(t.getBasisOfAdjustment())
-                .PeriodCovered(t.getPeriodCovered())
-                .ClientIP(clientIp)
+                .ulbCodeOrPfmsAgencyCode(t.getUlbCodeOrPFMSAgencyCode())
+                .voucherNumber(t.getVoucherNumber())
+                .voucherDate(t.getVoucherDate().format(PFMS_DATE_FORMAT))
+                .voucherType(t.getVoucherType())
+                .financialYear(t.getFinancialYear())
+                .accountHeadCode(t.getAccountHeadCode())
+                .functionCode(t.getFunctionCode())
+                .schemeCode(t.getSchemeCode())
+                .debitAmount(t.getDebitAmount() == null ? "" : t.getDebitAmount().toString())
+                .creditAmount(t.getCreditAmount() == null ? "" : t.getCreditAmount().toString())
+                .narrationOrDescription(t.getNarrationOrDescription())
+                .voucherStatus(t.getVoucherStatus())
+                .ulbBankAccountNumber(t.getUlbBankAccountNumber())
+                .ulbIfscCode(t.getUlbIFSCCode())
+                .instrumentReference(t.getInstrumentReference())
+                .modeOfTransaction(t.getModeOfTransaction())
+                .beneficiaryOrPayeeName(t.getBeneficiaryOrPayeeName())
+                .beneficiaryAccountNumber(t.getBeneficiaryAccountNumber())
+                .beneficiaryIfscCode(t.getBeneficiaryIFSCCode())
+                .beneficiaryType(t.getBeneficiaryType())
+                .challanNumber(t.getChallanNumber())
+                .fromAccount(t.getFromAccount())
+                .toAccount(t.getToAccount())
+                .contraNature(t.getContraNature())
+                .transferInstructionReference(t.getTransferInstructionReference())
+                .referenceVoucherNumber(t.getReferenceVoucherNumber())
+                .adjustmentType(t.getAdjustmentType())
+                .relatedAssetOrLiabilityCode(t.getRelatedAssetOrLiabilityCode())
+                .debtorOrCreditorReference(t.getDebtorOrCreditorReference())
+                .basisOfAdjustment(t.getBasisOfAdjustment())
+                .periodCovered(t.getPeriodCovered())
+                .clientIp(clientIp)
                 .build();
     }
 }
