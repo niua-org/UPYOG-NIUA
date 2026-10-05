@@ -1,25 +1,30 @@
-import { Banner, Card, CardText, LinkButton, Loader, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { Banner, Card, CardText, LinkButton, Loader, SubmitBar, resolveAppPath } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { convertToEditTrade, convertToResubmitTrade, convertToTrade, convertToUpdateTrade, stringToBoolean } from "../../../utils";
+import { convertToEditTrade, convertToResubmitTrade, convertToTrade, convertToUpdateTrade, currentFinancialYear, stringToBoolean } from "../../../utils";
 import getPDFData from "../../../utils/getTLAcknowledgementData";
+
+const isTradeUpdateFlow = () =>
+  window.location.href.includes("renew-trade") ||
+  window.location.href.includes("edit-application");
 
 const GetActionMessage = (props) => {
   const { t } = useTranslation();
+  const update = isTradeUpdateFlow();
   if (props.isSuccess) {
-    return !window.location.href.includes("renew-trade") || !window.location.href.includes("edit-application")
-      ? t("CS_TRADE_APPLICATION_SUCCESS")
-      : t("CS_TRADE_UPDATE_APPLICATION_SUCCESS");
-  } else if (props.isLoading) {
-    return !window.location.href.includes("renew-trade") || !window.location.href.includes("edit-application")
-      ? t("CS_TRADE_APPLICATION_SUCCESS")
-      : t("CS_TRADE_UPDATE_APPLICATION_PENDING");
-  } else if (!props.isSuccess) {
-    return !window.location.href.includes("renew-trade") || !window.location.href.includes("edit-application")
-      ? t("CS_TRADE_APPLICATION_FAILED")
-      : t("CS_TRADE_UPDATE_APPLICATION_FAILED");
+    return update
+      ? t("CS_TRADE_UPDATE_APPLICATION_SUCCESS")
+      : t("CS_TRADE_APPLICATION_SUCCESS");
   }
+  if (props.isLoading) {
+    return update
+      ? t("CS_TRADE_UPDATE_APPLICATION_PENDING")
+      : t("CS_TRADE_APPLICATION_SUCCESS");
+  }
+  return update
+    ? t("CS_TRADE_UPDATE_APPLICATION_FAILED")
+    : t("CS_TRADE_APPLICATION_FAILED");
 };
 
 const BannerPicker = (props) => {
@@ -38,7 +43,7 @@ const FailureCard = ({ t, data, isSuccess, isLoading, detail }) => (
     <BannerPicker t={t} data={data} isSuccess={!!isSuccess} isLoading={!!isLoading} />
     <CardText>{t("TL_FILE_TRADE_FAILED_RESPONSE")}</CardText>
     {detail ? <CardText>{detail}</CardText> : null}
-    <Link to={`/upyog-ui/citizen`}>
+    <Link to={resolveAppPath("/upyog-ui/citizen")}>
       <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
     </Link>
   </Card>
@@ -58,6 +63,24 @@ const serverErrorMessage = (err) => {
 const EMPTY_DOWNSTREAM = /json object can not be null/i;
 const MAX_APPLY_RETRIES = 3;
 
+/** TL financial year from egf-master that covers today, else the latest TL year. */
+const pickTlFinancialYear = (fydata) => {
+  const years = (fydata?.["egf-master"]?.FinancialYear || []).filter(
+    (year) => year?.module === "TL" && year?.code && year?.active !== false
+  );
+  if (!years.length) return null;
+  const now = Date.now();
+  const covering = years.find((year) => {
+    const start = Number(year.startingDate);
+    const end = Number(year.endingDate);
+    return Number.isFinite(start) && Number.isFinite(end) && start <= now && end >= now;
+  });
+  if (covering?.code) return covering.code;
+  return [...years].sort(
+    (a, b) => Number(b.endingDate) - Number(a.endingDate)
+  )[0]?.code || null;
+};
+
 const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
   const { t } = useTranslation();
   const [mutationHappened, setMutationHappened] = Digit.Hooks.useSessionStorage(
@@ -69,6 +92,7 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
   const [applyRetrying, setApplyRetrying] = useState(false);
   const applyAttempts = useRef(0);
   const applyRetryingRef = useRef(false);
+  const submittedRef = useRef(false);
   const formDataRef = useRef(data);
   if (data?.TradeDetails) formDataRef.current = data;
   const resubmit = window.location.href.includes("edit-application");
@@ -90,7 +114,7 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants } = storeData || {};
   const stateId = Digit.ULBService.getStateId();
-  const { data: fydata = {} } = Digit.Hooks.tl.useTradeLicenseMDMS(
+  const { data: fydata = {}, isLoading: isFyLoading } = Digit.Hooks.tl.useTradeLicenseMDMS(
     stateId,
     "egf-master",
     "FinancialYear"
@@ -100,15 +124,19 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
     : null;
 
   useEffect(() => {
+    if (submittedRef.current) return;
+    // Create needs the MDMS financial year. Submitting the locally computed
+    // year (for example 2026-27) before this loads returns INVALID FINANCIALYEAR.
+    if (!resubmit && !isEdit && isFyLoading) return;
+    if (!data || (typeof data === "object" && Object.keys(data).length === 0)) {
+      return;
+    }
     const onSuccessedit = () => {
       setMutationHappened(true);
     };
     const timer = setTimeout(() => {
+      if (submittedRef.current) return;
       try {
-        if (!data || (typeof data === "object" && Object.keys(data).length === 0)) {
-          setSubmitError("TL_FILE_TRADE_FAILED_RESPONSE");
-          return;
-        }
         if (!data?.TradeDetails?.TradeName) {
           console.warn("TLAcknowledgement: missing TradeDetails on session", data);
         }
@@ -116,8 +144,17 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
           data?.cpt?.details?.address?.tenantId || data?.tenantId || tenantId;
         data.tenantId = tenantId1;
         if (!resubmit) {
+          const financialYear =
+            pickTlFinancialYear(fydata) || currentFinancialYear();
+          if (!isEdit && financialYear) {
+            try {
+              sessionStorage.setItem("CurrentFinancialYear", financialYear);
+            } catch (e) {
+              /* ignore */
+            }
+          }
           const formdata = !isEdit
-            ? convertToTrade(data)
+            ? convertToTrade(data, { financialYear })
             : convertToEditTrade(
                 data,
                 fydata["egf-master"]
@@ -129,25 +166,28 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
             return;
           }
           const license = formdata.Licenses[0];
-          if (
-            !isEdit &&
-            (!license?.financialYear ||
-              !license?.tradeLicenseDetail?.structureType ||
-              !license?.tradeLicenseDetail?.subOwnerShipCategory ||
-              !license?.tradeLicenseDetail?.owners?.length ||
-              !license?.tradeLicenseDetail?.tradeUnits?.length ||
-              !license?.tradeLicenseDetail?.address?.locality?.code)
-          ) {
-            console.error("TLAcknowledgement: incomplete payload", {
-              financialYear: license?.financialYear,
-              owners: license?.tradeLicenseDetail?.owners,
-              tradeUnits: license?.tradeLicenseDetail?.tradeUnits,
-              ownership: license?.tradeLicenseDetail?.subOwnerShipCategory,
-              structureType: license?.tradeLicenseDetail?.structureType,
-              locality: license?.tradeLicenseDetail?.address?.locality,
-            });
-            setSubmitError("TL_FILE_TRADE_FAILED_RESPONSE");
-            return;
+          if (!isEdit) {
+            const missing = [];
+            if (!license?.financialYear) missing.push("financial year");
+            if (!license?.tradeLicenseDetail?.structureType) missing.push("structure type");
+            if (!license?.tradeLicenseDetail?.subOwnerShipCategory) missing.push("ownership");
+            if (!license?.tradeLicenseDetail?.owners?.length) missing.push("owners");
+            if (!license?.tradeLicenseDetail?.tradeUnits?.length) missing.push("trade units");
+            if (!license?.tradeLicenseDetail?.address?.locality?.code) missing.push("locality");
+            if (missing.length) {
+              console.error("TLAcknowledgement: incomplete payload", {
+                missing,
+                financialYear: license?.financialYear,
+                owners: license?.tradeLicenseDetail?.owners,
+                tradeUnits: license?.tradeLicenseDetail?.tradeUnits,
+                ownership: license?.tradeLicenseDetail?.subOwnerShipCategory,
+                structureType: license?.tradeLicenseDetail?.structureType,
+                locality: license?.tradeLicenseDetail?.address?.locality,
+              });
+              setErrorDetail(`Missing ${missing.join(", ")}`);
+              setSubmitError("TL_FILE_TRADE_FAILED_RESPONSE");
+              return;
+            }
           }
           // Avoid INITIATE 400 INVALID UOM when slab requires UOM but value missing
           const missingUom = (license?.tradeLicenseDetail?.tradeUnits || []).some(
@@ -162,6 +202,7 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
             formdata?.Licenses[0]?.tenantId || tenantId1;
           if (!isEdit) {
             if (!mutation.isPending && !mutation.isSuccess && !mutationHappened) {
+              submittedRef.current = true;
               mutation.mutate(formdata, {
                 // Keep the form session until APPLY succeeds. Clearing it here
                 // drops documents and makes a failed APPLY look like a blank submit.
@@ -178,12 +219,14 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
             isDirectRenewal
           ) {
             if (!mutation2.isPending && !mutation2.isSuccess && !mutationHappened) {
+              submittedRef.current = true;
               mutation2.mutate(formdata, {
                 onUpdateSuccess,
                 onError: () => setSubmitError("TL_FILE_TRADE_FAILED_RESPONSE"),
               });
             }
           } else if (!mutation1.isPending && !mutation1.isSuccess && !mutationHappened) {
+            submittedRef.current = true;
             mutation1.mutate(formdata, {
               onUpdateSuccess,
               onError: () => setSubmitError("TL_FILE_TRADE_FAILED_RESPONSE"),
@@ -194,6 +237,7 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
           formdata.Licenses[0].tenantId =
             formdata?.Licenses[0]?.tenantId || tenantId1;
           if (!mutation2.isPending && !mutation2.isSuccess && !mutationHappened) {
+            submittedRef.current = true;
             mutation2.mutate(formdata, {
               onSuccess: onSuccessedit,
               onError: () => setSubmitError("TL_FILE_TRADE_FAILED_RESPONSE"),
@@ -206,8 +250,9 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
       }
     }, 0);
     return () => clearTimeout(timer);
+    // mutation objects are stable enough; re-running on their identity double-submits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [data, fydata, isEdit, isFyLoading, resubmit, tenantId]);
 
   useEffect(() => {
     if (
@@ -363,14 +408,14 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
       {resultData?.Licenses?.[0]?.status === "PENDINGPAYMENT" && (
         <Link
           to={{
-            pathname: `/upyog-ui/citizen/payment/collect/${resultData.Licenses[0].businessService}/${resultData.Licenses[0].applicationNumber}`,
+            pathname: resolveAppPath(`/upyog-ui/citizen/payment/collect/${resultData.Licenses[0].businessService}/${resultData.Licenses[0].applicationNumber}`),
             state: { tenantId: resultData.Licenses[0].tenantId },
           }}
         >
           <SubmitBar label={t("COMMON_MAKE_PAYMENT")} />
         </Link>
       )}
-      <Link to={`/upyog-ui/citizen`}>
+      <Link to={resolveAppPath("/upyog-ui/citizen")}>
         <LinkButton label={t("CORE_COMMON_GO_TO_HOME")} />
       </Link>
     </Card>

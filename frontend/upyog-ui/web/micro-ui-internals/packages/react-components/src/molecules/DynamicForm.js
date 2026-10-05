@@ -117,6 +117,8 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { resolveConfigTimelineStep } from "./ConfigTimeline";
 import { SubmitBar, Toast, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import ActionBar from "../atoms/ActionBar";
 import ButtonSelector from "../atoms/ButtonSelector";
@@ -125,11 +127,12 @@ import Modal from "../hoc/Modal";
 import DynamicFormField from "./DynamicFormField";
 import DynamicFormAccordion from "./DynamicFormAccordion";
 import { validateFields, validateCrossField, calculateDuration, calculateRentByBillingCycle } from "../utilities/validators";
-import { sortByOrder, buildPayload, scrollToFirstError, buildInitialData, flattenFormConfig, findFieldConfig, enrichDropdownSelection, optionCode, collectSectionFieldNames, findAccordionSectionId, getAccordionCellClass, isFieldVisible } from "../utilities/formUtils";
+import { sortByOrder, buildPayload, scrollToFirstError, buildInitialData, flattenFormConfig, findFieldConfig, enrichDropdownSelection, optionCode, collectSectionFieldNames, findAccordionSectionId, getAccordionCellClass, isFieldVisible, getFieldArrayName, createEmptyFieldArrayItem } from "../utilities/formUtils";
 import {
   resolveFormGate,
   resolveCreateNewPath,
   shouldShowGatedActionBar,
+  resolveAppPath,
 } from "../utilities/formGateUtils";
 import useDynamicMDMS from "../utilities/useDynamicMDMS";
 import { mapFormToSearchFilters } from "../utilities/searchUtils";
@@ -184,6 +187,85 @@ const COMPUTE_REGISTRY = {
 };
 
 /**
+ * True when an existing error key belongs to a field the user just edited.
+ * Prefixes cover field-array keys such as `tradeUnits.0.uom`.
+ *
+ * @param {string}   key
+ * @param {Set<string>} keys
+ * @param {string[]} prefixes
+ * @returns {boolean}
+ */
+const isTouchedErrorKey = (key, keys, prefixes) =>
+  keys.has(key) || prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`));
+
+/**
+ * Drop touched error keys, then write back only the ones that are still invalid.
+ * Untouched keys stay as they are, so fixing one field does not leave its old
+ * message behind and does not clear errors on other fields.
+ *
+ * @param {object}   prevErrors
+ * @param {object}   freshErrors Result of validateFields for the updated form.
+ * @param {string[]} [touchedKeys]
+ * @param {string[]} [prefixes]
+ * @returns {object}
+ */
+const refreshTouchedErrors = (prevErrors, freshErrors, touchedKeys = [], prefixes = []) => {
+  const keys = new Set(touchedKeys.filter(Boolean));
+  const next = { ...prevErrors };
+  const previousTouched = Object.keys(next).filter((key) =>
+    isTouchedErrorKey(key, keys, prefixes)
+  );
+  const hadPrefixErrors = prefixes.some((prefix) =>
+    previousTouched.some((key) => key === prefix || key.startsWith(`${prefix}.`))
+  );
+
+  previousTouched.forEach((key) => {
+    delete next[key];
+  });
+
+  previousTouched.forEach((key) => {
+    const underPrefix = prefixes.some(
+      (prefix) => key === prefix || key.startsWith(`${prefix}.`)
+    );
+    if (!underPrefix && freshErrors?.[key]) next[key] = freshErrors[key];
+  });
+
+  if (hadPrefixErrors) {
+    Object.keys(freshErrors || {}).forEach((key) => {
+      if (
+        freshErrors[key] &&
+        prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`))
+      ) {
+        next[key] = freshErrors[key];
+      }
+    });
+  }
+
+  return next;
+};
+
+/**
+ * Replace errors that belong to one accordion section with a fresh validation result.
+ *
+ * @param {object}        prevErrors
+ * @param {Set<string>}   names
+ * @param {object}        fieldErrors
+ * @returns {object}
+ */
+const replaceSectionErrors = (prevErrors, names, fieldErrors) => {
+  const next = { ...prevErrors };
+  Object.keys(next).forEach((key) => {
+    const inSection =
+      names.has(key) || [...names].some((name) => key.startsWith(`${name}.`));
+    if (inSection) delete next[key];
+  });
+  Object.keys(fieldErrors || {}).forEach((key) => {
+    if (fieldErrors[key]) next[key] = fieldErrors[key];
+  });
+  return next;
+};
+
+/**
  * Config-driven form engine for wizard steps and search filter pages.
  * Loads MDMS options, hydrates/validates form state, runs computed fields,
  * and builds create / edit / search payloads.
@@ -225,9 +307,14 @@ const DynamicForm = ({
   sections = [],
   enrichFieldArrayRow = null,
   transformDropdownData = null,
+  onFieldChange = null,
+  onTimelineStep = null,
 }) => {
   /** True when mode === "search" (filter UI, no wizard ActionBar). */
   const isSearchMode = mode === "search";
+  const { pathname } = useLocation();
+  const [activeSection, setActiveSection] = useState(null);
+  const [activeField, setActiveField] = useState(null);
   const accordionConfig = routeConfig?.navigation?.accordion || {};
   const isAccordionLayout =
     !isSearchMode &&
@@ -292,6 +379,9 @@ const DynamicForm = ({
   );
 
   const [formData, setFormData] = useState(initialData);
+  /** Latest form values for change handlers. Updated on render and on each edit. */
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
 
   /**
    * Render-time dropdown map. Optional module transform (TL billing slabs, …)
@@ -483,13 +573,14 @@ const DynamicForm = ({
         const openVal = formGate.openValue
           ? String(formGate.openValue).toUpperCase()
           : null;
+        const hintFields = formGate.unlockWhenFields || ["buildingName"];
+        const hasHint = hintFields.some((key) => {
+          const value = merged[key];
+          return value !== undefined && value !== null && String(value).trim() !== "";
+        });
         if (
           !merged[detailsKey] &&
-          (isEditMode ||
-            merged.buildingName ||
-            merged.tradeName ||
-            merged.propertyId ||
-            (openVal && typeVal === openVal))
+          (isEditMode || hasHint || (openVal && typeVal === openVal))
         ) {
           merged[detailsKey] = "YES";
         }
@@ -524,14 +615,17 @@ const DynamicForm = ({
         Object.keys(source).forEach((key) => {
           if (key.startsWith("__")) stash[key] = source[key];
         });
+        const kept = {};
+        (formGate?.preserveOnPrefill || []).forEach((key) => {
+          if (preserve[key] !== undefined) kept[key] = preserve[key];
+          else if (source[key] !== undefined) kept[key] = source[key];
+          else if (built[key] !== undefined) kept[key] = built[key];
+        });
         const merged = {
           ...built,
           ...stash,
           ...preserve,
-          // Keep categorization answers across property select (TL gate).
-          structureType: preserve.structureType ?? source.structureType ?? built.structureType,
-          buildingType: preserve.buildingType ?? source.buildingType ?? built.buildingType,
-          vehicleType: preserve.vehicleType ?? source.vehicleType ?? built.vehicleType,
+          ...kept,
         };
         const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
         return allComputeDeps.length
@@ -539,7 +633,7 @@ const DynamicForm = ({
           : merged;
       });
     },
-    [routeConfig.form, dropdownData, tenantId, flatFields, applyComputedFields]
+    [routeConfig.form, dropdownData, tenantId, flatFields, applyComputedFields, formGate]
   );
 
   /**
@@ -549,14 +643,42 @@ const DynamicForm = ({
    *   or open createNewPath redirect when redirectOnValue is selected.
    * - billingCycle → enrichDropdownSelection so multipliers stay on the value.
    * - city → update cityForLocality and clear serviceType.
-   * Always clears errors for the changed (and reset) fields and runs applyComputedFields.
+   * Re-validates the changed field (and field-array keys) so a fixed error
+   * drops out while other fields keep their current messages.
    *
    * @param {string}   fieldName     field.name that changed.
    * @param {*}        value         New value (string, option object, file meta, etc.).
    * @param {string[]} [resetFields] Sibling fields to null out (cascading clears).
+   * @param {object}   [meta]
+   * @param {string[]} [meta.clearErrorKeys] Exact error keys to refresh (field-array cells).
+   * @param {string[]} [meta.refreshPrefixes] Error-key prefixes to refresh (row add/remove).
    */
+  const notifyFieldChange = (name, nextValue) => {
+    if (name) setActiveField(name);
+    if (typeof onFieldChange !== "function") return;
+    try {
+      onFieldChange(name, nextValue);
+    } catch (err) {
+      console.warn("onFieldChange failed", err);
+    }
+  };
+
+  const assignResetValue = (updated, name) => {
+    const arrayItem = (routeConfig.form || []).find(
+      (item) => item?.type === "fieldArray" && getFieldArrayName(item) === name
+    );
+    if (arrayItem) {
+      const minItems = Math.max(1, Number(arrayItem.minItems) || 1);
+      updated[name] = Array.from({ length: minItems }, () =>
+        createEmptyFieldArrayItem(arrayItem.children)
+      );
+      return;
+    }
+    updated[name] = null;
+  };
+
   const handleChange = useCallback(
-    (fieldName, value, resetFields = []) => {
+    (fieldName, value, resetFields = [], meta = {}) => {
       if (formGate && fieldName === formGate.typeField) {
         suppressSuggestRef.current = false;
         setSearchPanel(null);
@@ -582,11 +704,13 @@ const DynamicForm = ({
           setFormData((prev) => {
             const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
             const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+            const kept = {};
+            (formGate.preserveOnPrefill || []).forEach((key) => {
+              if (prev[key] !== undefined) kept[key] = prev[key];
+            });
             const cleared = {
               ...blank,
-              structureType: prev.structureType,
-              buildingType: prev.buildingType,
-              vehicleType: prev.vehicleType,
+              ...kept,
               [formGate.typeField]: value,
               [formGate.searchField]: "",
               [formGate.detailsField]: "",
@@ -595,6 +719,7 @@ const DynamicForm = ({
               ? applyComputedFields(cleared, allComputeDeps)
               : cleared;
           });
+          notifyFieldChange(fieldName, value);
           return;
         }
 
@@ -602,11 +727,13 @@ const DynamicForm = ({
           setFormData((prev) => {
             const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
             const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+            const kept = {};
+            (formGate.preserveOnPrefill || []).forEach((key) => {
+              if (prev[key] !== undefined) kept[key] = prev[key];
+            });
             const cleared = {
               ...blank,
-              structureType: prev.structureType,
-              buildingType: prev.buildingType,
-              vehicleType: prev.vehicleType,
+              ...kept,
               [formGate.typeField]: value,
               [formGate.searchField]: "",
               [formGate.detailsField]: "YES",
@@ -615,6 +742,7 @@ const DynamicForm = ({
               ? applyComputedFields(cleared, allComputeDeps)
               : cleared;
           });
+          notifyFieldChange(fieldName, value);
           return;
         }
 
@@ -622,11 +750,13 @@ const DynamicForm = ({
           setFormData((prev) => {
             const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
             const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+            const kept = {};
+            (formGate.preserveOnPrefill || []).forEach((key) => {
+              if (prev[key] !== undefined) kept[key] = prev[key];
+            });
             const cleared = {
               ...blank,
-              structureType: prev.structureType,
-              buildingType: prev.buildingType,
-              vehicleType: prev.vehicleType,
+              ...kept,
               [formGate.typeField]: value,
               [formGate.searchField]: "",
               [formGate.detailsField]: "",
@@ -635,100 +765,107 @@ const DynamicForm = ({
               ? applyComputedFields(cleared, allComputeDeps)
               : cleared;
           });
+          notifyFieldChange(fieldName, value);
           return;
         }
       }
 
-      // TL: structure categorization gate — MOVABLE unlocks form; IMMOVABLE needs property.
-      if (fieldName === "structureType") {
+      const structureReset = formGate?.structureReset;
+      if (structureReset?.field && fieldName === structureReset.field) {
         suppressSuggestRef.current = false;
         setSearchPanel(null);
         setErrors({});
         setCrossFieldMessages([]);
         const normalized = optionCode(value);
+        const unlock = String(structureReset.unlockValue || "").toUpperCase();
         const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
         const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
-        const isMovable = normalized === "MOVABLE";
         const cleared = {
           ...blank,
-          structureType: value,
-          hasPropertyId: "",
-          searchPropertyId: "",
-          propertyId: "",
-          createPropertyRedirect: "",
-          buildingType: null,
-          vehicleType: null,
-          showTradeDetails: isMovable ? "YES" : "",
+          [structureReset.field]: typeof value === "string" ? value : normalized,
         };
+        (structureReset.clearFields || []).forEach((name) => {
+          cleared[name] = "";
+        });
+        if (formGate.detailsField) {
+          cleared[formGate.detailsField] = normalized === unlock ? "YES" : "";
+        }
         setFormData(
           allComputeDeps.length
             ? applyComputedFields(cleared, allComputeDeps)
             : cleared
         );
+        notifyFieldChange(fieldName, value);
         return;
       }
 
-      setFormData((prev) => {
-        let resolvedValue = value;
-        if (fieldName === "billingCycle") {
-          resolvedValue = enrichDropdownSelection(value, billingCycleOptions);
-        }
-        let updated = { ...prev, [fieldName]: resolvedValue };
-        resetFields.forEach((f) => {
-          updated[f] = null;
-        });
-
-        // City change → clear locality; localities will reload for the new city.
-        if (fieldName === "city") {
-          const nextCity =
-            optionCode(resolvedValue) ||
-            (typeof resolvedValue === "string" ? resolvedValue : "");
-          if (nextCity) setCityForLocality(String(nextCity).trim());
-          updated.serviceType = null;
-          updated.serviceTypeName = "";
-        }
-
-        // Seed fieldArray rows when a gate radio unlocks them (e.g. accessories).
-        (routeConfig.form || []).forEach((item) => {
-          if (item?.type !== "fieldArray") return;
-          const arrayName = item.field?.name;
-          if (!arrayName) return;
-          const rule = item.visibleWhen;
-          if (!rule?.field || rule.field !== fieldName) return;
-          const show =
-            rule.equals !== undefined
-              ? String(resolvedValue || "").toUpperCase() ===
-                String(rule.equals).toUpperCase()
-              : Array.isArray(rule.in) &&
-                rule.in
-                  .map((v) => String(v).toUpperCase())
-                  .includes(String(resolvedValue || "").toUpperCase());
-          if (!show) return;
-          if (!Array.isArray(updated[arrayName]) || updated[arrayName].length === 0) {
-            const minItems = Math.max(1, Number(item.minItems) || 1);
-            const emptyRow = {};
-            (item.children || []).forEach((child) => {
-              const n = child?.field?.name;
-              if (!n) return;
-              emptyRow[n] = child.field.type === "dropdown" || child.field.type === "file" ? null : "";
-            });
-            updated[arrayName] = Array.from({ length: minItems }, () => ({ ...emptyRow }));
-          }
-        });
-
-        return applyComputedFields(updated, [fieldName, ...resetFields]);
+      const resetList = resetFields || [];
+      let resolvedValue = value;
+      if (fieldName === "billingCycle") {
+        resolvedValue = enrichDropdownSelection(value, billingCycleOptions);
+      }
+      let updated = { ...formDataRef.current, [fieldName]: resolvedValue };
+      resetList.forEach((f) => {
+        assignResetValue(updated, f);
       });
+
+      // City change → clear locality; localities will reload for the new city.
+      if (fieldName === "city") {
+        const nextCity =
+          optionCode(resolvedValue) ||
+          (typeof resolvedValue === "string" ? resolvedValue : "");
+        if (nextCity) setCityForLocality(String(nextCity).trim());
+        updated.serviceType = null;
+        updated.serviceTypeName = "";
+      }
+
+      // Seed fieldArray rows when a gate radio unlocks them (e.g. accessories).
+      (routeConfig.form || []).forEach((item) => {
+        if (item?.type !== "fieldArray") return;
+        const arrayName = item.field?.name;
+        if (!arrayName) return;
+        const rule = item.visibleWhen;
+        if (!rule?.field || rule.field !== fieldName) return;
+        const show =
+          rule.equals !== undefined
+            ? String(resolvedValue || "").toUpperCase() ===
+              String(rule.equals).toUpperCase()
+            : Array.isArray(rule.in) &&
+              rule.in
+                .map((v) => String(v).toUpperCase())
+                .includes(String(resolvedValue || "").toUpperCase());
+        if (!show) return;
+        if (!Array.isArray(updated[arrayName]) || updated[arrayName].length === 0) {
+          const minItems = Math.max(1, Number(item.minItems) || 1);
+          const emptyRow = {};
+          (item.children || []).forEach((child) => {
+            const n = child?.field?.name;
+            if (!n) return;
+            emptyRow[n] = child.field.type === "dropdown" || child.field.type === "file" ? null : "";
+          });
+          updated[arrayName] = Array.from({ length: minItems }, () => ({ ...emptyRow }));
+        }
+      });
+
+      const nextData = applyComputedFields(updated, [fieldName, ...resetList]);
+      formDataRef.current = nextData;
+      setFormData(nextData);
+      notifyFieldChange(fieldName, value);
       if (formGate && fieldName === formGate.searchField) {
         suppressSuggestRef.current = false;
       }
-      setErrors((prev) => {
-        const updated = { ...prev, [fieldName]: false };
-        resetFields.forEach((f) => {
-          updated[f] = false;
-        });
-        if (fieldName === "city") updated.serviceType = false;
-        return updated;
-      });
+      const clearErrorKeys = Array.isArray(meta?.clearErrorKeys) ? meta.clearErrorKeys : [];
+      const refreshPrefixes = Array.isArray(meta?.refreshPrefixes) ? meta.refreshPrefixes : [];
+      const touched = [fieldName, ...resetList, ...clearErrorKeys];
+      if (fieldName === "city") touched.push("serviceType");
+      setErrors((prev) =>
+        refreshTouchedErrors(
+          prev,
+          validateFields(routeConfig.form, nextData),
+          touched,
+          refreshPrefixes
+        )
+      );
     },
     [
       applyComputedFields,
@@ -738,6 +875,7 @@ const DynamicForm = ({
       tenantId,
       flatFields,
       formGate,
+      onFieldChange,
     ]
   );
 
@@ -1157,22 +1295,13 @@ const DynamicForm = ({
   const handleSectionContinue = useCallback(
     (section) => {
       const fieldErrors = validateFields(section?.form, formData);
+      const names = collectSectionFieldNames(section?.form);
+      setErrors((prev) => replaceSectionErrors(prev, names, fieldErrors));
       if (Object.keys(fieldErrors).length > 0) {
-        setErrors((prev) => ({ ...prev, ...fieldErrors }));
         setAccordionFocusId(section?.id || null);
         scrollToFirstError();
         return false;
       }
-      const names = collectSectionFieldNames(section?.form);
-      setErrors((prev) => {
-        const next = { ...prev };
-        Object.keys(next).forEach((key) => {
-          if (names.has(key) || [...names].some((n) => key.startsWith(`${n}.`))) {
-            delete next[key];
-          }
-        });
-        return next;
-      });
       return true;
     },
     [formData]
@@ -1185,6 +1314,27 @@ const DynamicForm = ({
 
   /** Clear / cancel label for search clear link (and related copy). */
   const clearLabel = cancelLabel || routeConfig.actionButton?.text?.clear || "ES_COMMON_CLEAR_ALL";
+
+  const timelineConfig = routeConfig?.navigation?.timeline;
+  useEffect(() => {
+    if (typeof onTimelineStep !== "function" || !timelineConfig?.steps?.length) return;
+    const parts = String(pathname || "").split("/").filter(Boolean);
+    const route = parts[parts.length - 1] || "";
+    const step = resolveConfigTimelineStep(timelineConfig, {
+      route,
+      activeSection,
+      activeField,
+      values: formData,
+    });
+    if (step != null) onTimelineStep(step);
+  }, [
+    onTimelineStep,
+    timelineConfig,
+    pathname,
+    activeSection,
+    activeField,
+    formData,
+  ]);
 
   // Only block the first paint. Remounting the form on later MDMS/locality
   // refetches wipes in-progress dropdown selections (search filters, etc.).
@@ -1241,6 +1391,7 @@ const DynamicForm = ({
           ))
       }
       onContinue={handleSectionContinue}
+      onActiveSectionChange={setActiveSection}
     />
   ) : null;
 
@@ -1369,7 +1520,7 @@ const DynamicForm = ({
           actionCancelOnSubmit={() => setCreateNewRedirectPath(null)}
           actionSaveLabel={t("CS_COMMON_OK")}
           actionSaveOnSubmit={() => {
-            window.location.href = createNewRedirectPath;
+            window.location.href = resolveAppPath(createNewRedirectPath);
           }}
           formId="modal-create-new-redirect"
         >

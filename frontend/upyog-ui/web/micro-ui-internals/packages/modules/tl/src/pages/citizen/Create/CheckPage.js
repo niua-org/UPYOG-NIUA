@@ -12,8 +12,10 @@ import {
   StatusTable,
   SubmitBar,
   Toast,
+  resolveAppPath,
+  ConfigTimeline,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link,  useParams, useLocation } from "react-router-dom";
 import TLDocument from "../../../pageComponents/TLDocumets";
@@ -25,17 +27,36 @@ const getPath = (path, params) => {
   });
   return path;
 };
-const CheckPage = props => {
-  if (localStorage.getItem("TLAppSubmitEnabled") !== "true") {
-    // window.history.forward();
-    window.location.replace("/upyog-ui/citizen");
+let tlCheckMounts = 0;
+
+const CheckPage = (props) => {
+  const allowedRef = useRef(localStorage.getItem("TLAppSubmitEnabled") === "true");
+  useEffect(() => {
+    tlCheckMounts += 1;
+    return () => {
+      tlCheckMounts -= 1;
+      setTimeout(() => {
+        if (tlCheckMounts === 0) {
+          try {
+            localStorage.setItem("TLAppSubmitEnabled", "false");
+          } catch (e) {
+            /* ignore */
+          }
+        }
+      }, 0);
+    };
+  }, []);
+
+  if (!allowedRef.current) {
+    window.location.replace(resolveAppPath("/upyog-ui/citizen"));
     return null;
   }
   return <WrapCheckPage {...props} />;
 };
 const WrapCheckPage = ({
   onSubmit,
-  value
+  value,
+  timeline,
 }) => {
   let isEdit = window.location.href.includes("renew-trade");
   const { t } = useTranslation();
@@ -80,11 +101,6 @@ const WrapCheckPage = ({
     let newdate = Date.parse(date);
     return `${new Date(newdate).getDate().toString() + "/" + (new Date(newdate).getMonth() + 1).toString() + "/" + new Date(newdate).getFullYear().toString()}`;
   }
-  useEffect(() => {
-    return () => {
-      localStorage.setItem("TLAppSubmitEnabled", "false");
-    };
-  }, []);
   function routeTo(jumpTo) {
     sessionStorage.getItem("isDirectRenewal") ? sessionStorage.removeItem("isDirectRenewal") : "";
     navigate(jumpTo);
@@ -116,7 +132,7 @@ const WrapCheckPage = ({
     } else onSubmit();
   };
   const typeOfApplication = !isEditProperty ? `new-application` : `renew-trade`;
-  let routeLink = `/upyog-ui/citizen/tl/tradelicence/${typeOfApplication}`;
+  let routeLink = resolveAppPath(`/upyog-ui/citizen/tl/tradelicence/${typeOfApplication}`);
   if (window.location.href.includes("edit-application") || window.location.href.includes("renew-trade")) {
     routeLink = `${basePath}`;
     routeLink = routeLink.replace("/check", "");
@@ -126,7 +142,13 @@ const WrapCheckPage = ({
   const editRoute = value?.__dynamicForm ? `${routeLink}/apply` : null;
   const goEdit = (legacyPath) => routeTo(editRoute || `${routeLink}/${legacyPath}`);
   return <React.Fragment>
-      {window.location.href.includes("/citizen") ? <Timeline currentStep={4} /> : null}
+      {window.location.href.includes("/citizen") ? (
+        value?.__dynamicForm && timeline?.steps?.length ? (
+          <ConfigTimeline timeline={timeline} />
+        ) : (
+          <Timeline currentStep={4} />
+        )
+      ) : null}
 
       <Header styles={{
       fontSize: "32px"
@@ -201,7 +223,7 @@ const WrapCheckPage = ({
                 <Row className="border-none" label={t("TL_GUARDIAN_S_NAME_LABEL")} text={t(owner?.fatherOrHusbandName) || t("CS_NA")} />
                 <Row className="border-none" label={t("TL_RELATIONSHIP_WITH_GUARDIAN_LABEL")} text={t(owner?.relationship?.i18nKey) || t("CS_NA")} />
                 <Row className="border-none" label={t("TL_EMAIL_ID_LABEL")} text={t(owner?.emailId) || t("CS_NA")} />
-                <Row className="border-none" label={t("TL_COMMON_TABLE_COL_OWN_CATEGORY_SHIP")} text={t(value?.ownershipCategory?.code)} />
+                <Row className="border-none" label={t("TL_COMMON_TABLE_COL_OWN_CATEGORY_SHIP")} text={t(value?.ownershipCategory?.i18nKey || value?.ownershipCategory?.code)} />
                 <Row className="border-none" label={t("TL_CORRESPONDENCE_ADDRESS")} labelStyle={{
             marginRight: "2px"
           }} text={t(owners?.permanentAddress) || t("CS_NA")} />

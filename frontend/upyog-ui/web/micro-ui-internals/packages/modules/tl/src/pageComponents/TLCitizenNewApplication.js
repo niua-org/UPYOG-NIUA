@@ -6,9 +6,10 @@
  * Billing slabs + enrichFieldArrayRow stay in the TL module (not workbench JSON).
  */
 import React, { useCallback, useEffect } from "react";
-import { ConfigDrivenFormStep } from "@nudmcdgnpm/digit-ui-react-components";
+import { ConfigDrivenFormStep, optionCode } from "@nudmcdgnpm/digit-ui-react-components";
 import tlFormConfig from "../config/tlFormConfig";
 import {
+  clearTlPropertySession,
   mapPropertyToSearchMatch,
   persistPropertySession,
   searchPropertyById,
@@ -45,6 +46,7 @@ const TLCitizenNewApplication = ({
     }
   );
 
+  // this is use to enrich the billing slab data in the dropdown
   const enrichFieldArrayRow = useCallback(
     (ctx) =>
       enrichTlBillingSlabRow({
@@ -53,20 +55,20 @@ const TLCitizenNewApplication = ({
       }),
     [billingSlabs]
   );
-
+// this is use to filter the dropdown data based on the billing slabs
   const transformDropdownData = useCallback(
     (dropdownData, values) =>
       filterTradeUnitDropdownByBillingSlabs(dropdownData, values, billingSlabs),
     [billingSlabs]
   );
-
+// this is use to search the property id and return the matches
   const handleFieldSearch = useCallback(
     async (fieldName, values) => {
       if (fieldName !== "searchPropertyId") return null;
 
       const propertyId = String(values?.searchPropertyId || "").trim();
       if (!propertyId) {
-        return { error: "Enter a property ID or mobile number" };
+        return { error: "TL_PROPERTY_SEARCH_REQUIRED" };
       }
 
       try {
@@ -92,6 +94,17 @@ const TLCitizenNewApplication = ({
     }
   }, []);
 
+  const handleFieldChange = useCallback((fieldName, value) => {
+    const code = optionCode(value);
+    if (fieldName === "structureType") {
+      clearTlPropertySession();
+      return;
+    }
+    if (fieldName === "hasPropertyId" && code !== "YES") {
+      clearTlPropertySession();
+    }
+  }, []);
+
   return (
     <ConfigDrivenFormStep
       config={config}
@@ -106,6 +119,7 @@ const TLCitizenNewApplication = ({
       defaultHeaderCode="TL_COMMON_NEW_TRADE_LICENSE"
       onFieldSearch={handleFieldSearch}
       onPrefillApplied={handlePrefillApplied}
+      onFieldChange={handleFieldChange}
       enrichFieldArrayRow={enrichFieldArrayRow}
       transformDropdownData={transformDropdownData}
       confirmCancel

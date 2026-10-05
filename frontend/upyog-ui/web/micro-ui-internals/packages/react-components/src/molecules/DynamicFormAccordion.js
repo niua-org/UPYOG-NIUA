@@ -69,6 +69,7 @@ const resolvePanelTitle = (section, t) => {
  * @param {string}   [props.focusSectionId] Force-open this panel (e.g. after submit errors).
  * @param {Function} props.renderFields   (formSlice) => React nodes.
  * @param {Function} [props.onContinue]   (section) => boolean; false keeps the panel open.
+ * @param {Function} [props.onActiveSectionChange] (sectionId) => void. Latest panel the citizen opened.
  */
 const DynamicFormAccordion = ({
   sections = [],
@@ -80,6 +81,7 @@ const DynamicFormAccordion = ({
   focusSectionId,
   renderFields,
   onContinue,
+  onActiveSectionChange,
 }) => {
   const allowMultipleOpen = accordion.allowMultipleOpen !== false;
   const continueOpensNext = accordion.continueOpensNext !== false;
@@ -95,6 +97,13 @@ const DynamicFormAccordion = ({
 
   const [openIds, setOpenIds] = useState(() => new Set(defaultOpenId ? [defaultOpenId] : []));
 
+  const reportSection = useCallback(
+    (id) => {
+      if (id) onActiveSectionChange?.(id);
+    },
+    [onActiveSectionChange]
+  );
+
   const openSection = useCallback(
     (id, { exclusive } = {}) => {
       if (!id) return;
@@ -104,9 +113,14 @@ const DynamicFormAccordion = ({
         next.add(id);
         return next;
       });
+      reportSection(id);
     },
-    [allowMultipleOpen]
+    [allowMultipleOpen, reportSection]
   );
+
+  useEffect(() => {
+    if (defaultOpenId) reportSection(defaultOpenId);
+  }, [defaultOpenId, reportSection]);
 
   useEffect(() => {
     if (focusSectionId) openSection(focusSectionId);
@@ -123,6 +137,7 @@ const DynamicFormAccordion = ({
       if (prev.has(id)) return new Set();
       return new Set([id]);
     });
+    reportSection(id);
   };
 
   const handleContinue = (section, index) => {
@@ -137,8 +152,10 @@ const DynamicFormAccordion = ({
 
   if (!sections.length) return null;
 
-  const hintDefault = "Expand a section to fill details. Submit when every section is complete.";
-  const hintKey = "TL_ACCORDION_HINT";
+  const hintDefault =
+    accordion.introDefault ||
+    "Expand a section to fill details. Submit when every section is complete.";
+  const hintKey = accordion.introKey || "COMMON_ACCORDION_HINT";
   const hintTranslated = t(hintKey, { defaultValue: hintDefault });
   const hintText =
     !hintTranslated || hintTranslated === hintKey ? hintDefault : hintTranslated;

@@ -134,7 +134,9 @@ export const getownerarray = (data) => {
         fatherOrHusbandName: ob?.fatherOrHusbandName || null,
         relationship: codeOf(ob?.relationship),
         dob: null,
-        gender: codeOf(ob?.gender),
+        gender: codeOf(ob?.gender)
+          ? String(codeOf(ob?.gender)).trim().toUpperCase()
+          : null,
         permanentAddress: clipAddress(
           ob?.permanentAddress || data?.owners?.permanentAddress
         ),
@@ -235,6 +237,7 @@ export const gettradeunits = (data) => {
       tradeType,
       uom: uom || null,
       uomValue,
+      active: true,
     });
   });
   return tradeunits;
@@ -307,6 +310,7 @@ export const getaccessories = (data) => {
       accessoryCategory,
       uomValue,
       count,
+      active: true,
     });
   });
   return tradeaccessories;
@@ -372,7 +376,19 @@ export const currentFinancialYear = () => {
   return currentFinancialYear;
 }
 
-export const convertToTrade = (data = {}) => {
+const localityCodeOf = (value) => {
+  if (value == null || value === "") return null;
+  if (typeof value === "string") return value;
+  return value.code || value.boundaryCode || null;
+};
+
+const numberOrNull = (value) => {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+export const convertToTrade = (data = {}, options = {}) => {
   let Financialyear = sessionStorage.getItem("CurrentFinancialYear");
   let isSameAsPropertyOwner = sessionStorage.getItem("isSameAsPropertyOwner");
   const resolveCityCode = () => {
@@ -398,6 +414,9 @@ export const convertToTrade = (data = {}) => {
     return String(val);
   };
   const resolveFinancialYear = () => {
+    // MDMS year (passed by the acknowledgement page) wins over a stale
+    // session value such as a locally computed year that is not in egf-master.
+    if (options.financialYear) return options.financialYear;
     if (Financialyear && Financialyear !== "[object Object]") return Financialyear;
     const fy = data?.financialYear;
     const fromData = resolveCode(fy);
@@ -406,13 +425,13 @@ export const convertToTrade = (data = {}) => {
     return currentFinancialYear();
   };
   const cityCode = resolveCityCode();
-  const localityCode = !data?.cpt
-    ? data?.address?.locality?.code ||
-      (typeof data?.address?.locality === "string" ? data.address.locality : null)
-    : data?.cpt?.details?.address?.locality?.code ||
-      (typeof data?.cpt?.details?.address?.locality === "string"
-        ? data.cpt.details.address.locality
-        : null);
+  // Citizen-confirmed address first. Property locality is only a fallback —
+  // a linked property often has no locality.code, which used to drop the
+  // ward the citizen selected and fail create before the API call.
+  const propertyAddress = data?.cpt?.details?.address;
+  const localityCode =
+    localityCodeOf(data?.address?.locality) ||
+    localityCodeOf(propertyAddress?.locality);
   const ownershipCode =
     resolveCode(data?.ownershipCategory) ||
     resolveCode(data?.owners?.owners?.[0]?.subOwnerShipCategory) ||
@@ -460,17 +479,17 @@ export const convertToTrade = (data = {}) => {
             city: cityCode,
             locality: localityCode ? { code: localityCode } : undefined,
             tenantId: data?.tenantId || cityCode,
-            pincode: !data?.cpt ? data?.address?.pincode :  data?.cpt?.details?.address?.pincode,
-            doorNo: !data?.cpt ? data?.address?.doorNo : data?.cpt?.details?.address?.doorNo,
-            street: !data?.cpt ? data?.address?.street : data?.cpt?.details?.address?.street,
-            landmark: !data?.cpt ? data?.address?.landmark : data?.cpt?.details?.address?.landmark,
+            pincode: propertyAddress?.pincode || data?.address?.pincode || null,
+            doorNo: propertyAddress?.doorNo || data?.address?.doorNo || null,
+            street: propertyAddress?.street || data?.address?.street || null,
+            landmark: propertyAddress?.landmark || data?.address?.landmark || null,
           },
-          noOfEmployees: data?.TradeDetails?.NumberOfEmployees || null,
-          operationalArea : data?.TradeDetails?.OperationalSqFtArea || null,
-          applicationDocuments: getwfdocuments(data).map((doc) => ({
-            ...doc,
-            id: newDocumentId(),
-          })),
+          noOfEmployees: numberOrNull(data?.TradeDetails?.NumberOfEmployees),
+          operationalArea: numberOrNull(data?.TradeDetails?.OperationalSqFtArea),
+          // INITIATE must not carry application documents. tl-services rejects
+          // INITIATE when this list is present; convertToUpdateTrade attaches
+          // them on the following APPLY call.
+          applicationDocuments: null,
           accessories: data?.TradeDetails?.accessories && data?.TradeDetails?.isAccessories?.i18nKey?.includes("YES") ? getaccessories(data) : null,
           owners: getownerarray(data),
           ...(ownershipCode.includes("INSTITUTIONAL") && {institution: {
@@ -504,11 +523,6 @@ const uploadFileId = (file) => {
   if (typeof file === "string") return file;
   return file.fileStoreId || file.filestoreId || file.documentuuid || "";
 };
-
-const newDocumentId = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `doc-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 /**
  * Citizen uploads live on the accordion as proofOfIdentity / proofOfOwnership /

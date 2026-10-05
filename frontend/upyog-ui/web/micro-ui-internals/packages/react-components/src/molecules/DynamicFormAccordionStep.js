@@ -31,9 +31,10 @@
  * @see buildAccordionSections
  */
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import Header from "../atoms/Header";
 import DynamicForm from "./DynamicForm";
+import ConfigTimeline from "./ConfigTimeline";
 import {
   attachRouteConfigToStepData,
   mergeRouteConfig,
@@ -66,9 +67,14 @@ const DynamicFormAccordionStep = ({
   confirmCancel = false,
   enrichFieldArrayRow = null,
   transformDropdownData = null,
+  onFieldChange = null,
 }) => {
   const t = tProp || ((key) => key);
   const sessionData = formData ?? persistedData ?? {};
+  const [timelineStep, setTimelineStep] = useState(null);
+  const handleTimelineStep = useCallback((step) => {
+    setTimelineStep((prev) => (prev === step ? prev : step));
+  }, []);
 
   const sections = useMemo(
     () => buildAccordionSections(config, localOverrides.form || []),
@@ -147,7 +153,7 @@ const DynamicFormAccordionStep = ({
     },
     [draft, handleSelect, onSelect, routeConfig]
   );
-
+// this function is used ot save the draft
   const onSaveDraft = draft?.onPersist
     ? (flat) => draft.onPersist(routeConfig.key, draft.buildStepData?.(flat) || flat)
     : undefined;
@@ -163,13 +169,15 @@ const DynamicFormAccordionStep = ({
   const headerFallback =
     routeConfig.pageHeading?.fallback ||
     config?.headDefault ||
-    "New Trade License";
+    "Application";
   const headerText =
     translatedHeader && translatedHeader !== headerCode
       ? translatedHeader
       : headerFallback;
-  const subtitleDefault = "All sections on one page";
-  const subtitleKey = "TL_ACCORDION_SUBTITLE";
+  const subtitleDefault =
+    config?.navigation?.accordion?.subtitleDefault || "All sections on one page";
+  const subtitleKey =
+    config?.navigation?.accordion?.subtitleKey || "COMMON_ACCORDION_SUBTITLE";
   const subtitleTranslated = t(subtitleKey, { defaultValue: subtitleDefault });
   const subtitleText =
     !subtitleTranslated || subtitleTranslated === subtitleKey
@@ -178,8 +186,14 @@ const DynamicFormAccordionStep = ({
 
   const handleCancel = () => draft?.onClear?.(routeConfig.key);
 
+  const timeline = config?.navigation?.timeline;
+
   return (
-    <div className={wrapperClassName}>
+    <>
+      {timeline?.steps?.length ? (
+        <ConfigTimeline timeline={timeline} currentStep={timelineStep} t={t} />
+      ) : null}
+      <div className={wrapperClassName}>
       <div className="dynamic-form-accordion-pagehead">
         <Header>{headerText}</Header>
         <p className="dynamic-form-accordion-pagehead__sub">{subtitleText}</p>
@@ -210,8 +224,11 @@ const DynamicFormAccordionStep = ({
         onPrefillApplied={onPrefillApplied}
         enrichFieldArrayRow={enrichFieldArrayRow}
         transformDropdownData={transformDropdownData}
+        onFieldChange={onFieldChange}
+        onTimelineStep={timeline?.steps?.length ? handleTimelineStep : undefined}
       />
     </div>
+    </>
   );
 };
 

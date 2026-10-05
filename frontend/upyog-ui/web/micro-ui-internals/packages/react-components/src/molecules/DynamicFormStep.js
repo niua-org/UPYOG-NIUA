@@ -101,6 +101,7 @@ const DynamicFormStep = ({
   confirmCancel = false,
   enrichFieldArrayRow = null,
   transformDropdownData = null,
+  onFieldChange = null,
 }) => {
   /**
    * i18n helper. Uses the `t` prop when provided; otherwise identity so missing
@@ -290,6 +291,7 @@ const DynamicFormStep = ({
         onPrefillApplied={onPrefillApplied}
         enrichFieldArrayRow={enrichFieldArrayRow}
         transformDropdownData={transformDropdownData}
+        onFieldChange={onFieldChange}
       />
     </div>
   );

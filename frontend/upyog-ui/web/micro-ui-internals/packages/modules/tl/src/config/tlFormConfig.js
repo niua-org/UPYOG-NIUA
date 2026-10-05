@@ -25,6 +25,7 @@ const CREATE_PROPERTY_PATH =
  * Ensure createNewPath works even when remote MDMS is stale.
  * Billing-slab rules live here (not in AccordionNewApplication.json).
  */
+/* this is use to overlay the fields to overlay the default fields */
 const tlFormFieldOverlays = [
   {
     key: "TL_HAS_PROPERTY_ID",
@@ -132,6 +133,22 @@ const tlFormGate = {
   redirectModalMessage: "TL_PROCEED_POST_APPROVAL",
   redirectModalMessageDefault:
     "You will be able to proceed post approval.",
+  unlockWhenFields: ["tradeName", "propertyId"],
+  preserveOnPrefill: ["structureType", "buildingType", "vehicleType"],
+  structureReset: {
+    field: "structureType",
+    unlockValue: "MOVABLE",
+    clearFields: [
+      "hasPropertyId",
+      "searchPropertyId",
+      "propertyId",
+      "createPropertyRedirect",
+      "buildingType",
+      "vehicleType",
+      "propertyOwnersReady",
+      "isSameAsPropertyOwner",
+    ],
+  },
 };
 
 export default {

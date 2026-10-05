@@ -19,12 +19,13 @@
   },
   "tenantId": "pg",
   "moduleName": "TradeLicense",
-  "AccordionNewApplication": [
+  "NewApplication": [
     {
       "_comment": "Trade License create — accordion layout. Section order: structure → tradeLocation → ownersDocs; then check page for confirm.",
       "head": "TL_COMMON_NEW_TRADE_LICENSE",
+      "headDefault": "New Trade License",
       "navigation": {
-        "_comment": "Flow: /info (docs list from infoPage) → /apply (accordion) → /check → /acknowledgement. Omit multiStepNavigation (defaults false) so Next stays on one page. Move infoPage to workbench AccordionNewApplication later.",
+        "_comment": "Flow: /info (docs list from infoPage) → /apply (accordion) → /check → /acknowledgement. Omit multiStepNavigation (defaults false) so Next stays on one page. Move infoPage to workbench NewApplication later.",
         "pattern": "accordion",
         "indexRoute": "info",
         "formRoute": "apply",
@@ -48,7 +49,43 @@
           "submitLabelDefault": "Submit Application",
           "continueOpensNext": true,
           "continueLabel": "COMMON_SAVE_NEXT",
-          "continueLabelDefault": "Save & continue"
+          "continueLabelDefault": "Save & continue",
+          "introKey": "TL_ACCORDION_HINT",
+          "introDefault": "Expand a section to fill details. Submit when every section is complete.",
+          "subtitleKey": "TL_ACCORDION_SUBTITLE",
+          "subtitleDefault": "All sections on one page"
+        },
+        "timeline": {
+          "_comment": "Labels match accordion panel titles (body[].i18nKey / labelDefault). One step per panel, then Summary on the check page. Hidden on the documents info page.",
+          "citizenOnly": true,
+          "hideOnRoutes": ["info", "acknowledgement"],
+          "steps": [
+            {
+              "step": 1,
+              "label": "TL_STEP_STRUCTURE",
+              "labelDefault": "Structure & property",
+              "sections": ["structure"],
+              "routes": ["apply"]
+            },
+            {
+              "step": 2,
+              "label": "TL_STEP_TRADE_LOCATION",
+              "labelDefault": "Trade details & location",
+              "sections": ["tradeLocation"]
+            },
+            {
+              "step": 3,
+              "label": "TL_STEP_OWNERS_DOCS",
+              "labelDefault": "Ownership & documents",
+              "sections": ["ownersDocs"]
+            },
+            {
+              "step": 4,
+              "label": "TL_STEP_CONFIRM",
+              "labelDefault": "Confirm",
+              "routes": ["check"]
+            }
+          ]
         }
       },
       "body": [
@@ -120,7 +157,8 @@
               "field": {
                 "code": "TL_BUILDING_TYPE_PUCCA_KUCCHA_QUESTION",
                 "name": "buildingType",
-                "type": "radio"
+                "type": "radio",
+                "resetFields": ["tradeUnits"]
               },
               "options": [
                 {
@@ -164,7 +202,8 @@
                   "i18nKeyPrefix": "COMMON_MASTERS_STRUCTURETYPE",
                   "filter": {
                     "codeExcludes": "IMMOVABLE"
-                  }
+                  },
+                  "resetFields": ["tradeUnits"]
                 }
               },
               "visibleWhen": {
@@ -962,6 +1001,7 @@
                   "masterName": "TenantBoundary",
                   "customiztionRequired": true
                 },
+                "strictOptions": true,
                 "prefillFrom": "property.address.locality"
               },
               "visibleWhen": {
@@ -1082,12 +1122,26 @@
                 }
               ],
               "visibleWhen": {
-                "field": "structureType",
-                "equals": "IMMOVABLE"
+                "and": [
+                  { "field": "structureType", "equals": "IMMOVABLE" },
+                  { "field": "showTradeDetails", "equals": "YES" },
+                  { "field": "propertyId", "notEmpty": true }
+                ]
               }
             },
             {
-              "_comment": "Who owns the trade. Shown when same-as-property-owner is No or still blank. MDMS master is common-masters.OwnerShipCategory (not TLOwnerTypeWithSubtypes — that name is only a TL hook alias). Example: INDIVIDUAL.SINGLEOWNER.",
+              "_comment": "YES when the linked property already has an owner name and mobile. Locks the owner fields when same-as-property-owner is also Yes.",
+              "order": 2.5,
+              "key": "TL_PROPERTY_OWNERS_READY",
+              "hidden": true,
+              "excludeFromPayload": true,
+              "field": {
+                "name": "propertyOwnersReady",
+                "type": "text"
+              }
+            },
+            {
+              "_comment": "Who owns the trade. Filled from the property when a property is selected. Locked when same-as-property-owner is Yes and that owner record is complete. MDMS master is common-masters.OwnerShipCategory. Example: INDIVIDUAL.SINGLEOWNER.",
               "order": 3,
               "key": "TL_OWNERSHIP_CATEGORY",
               "apiFieldName": "tradeLicenseDetail.subOwnerShipCategory",
@@ -1096,6 +1150,12 @@
                 "name": "ownershipCategory",
                 "placeholder": "TL_SELECT_OWNERSHIP_TYPE",
                 "type": "dropdown",
+                "disabledWhen": {
+                  "and": [
+                    { "field": "isSameAsPropertyOwner", "equals": "YES" },
+                    { "field": "propertyOwnersReady", "equals": "YES" }
+                  ]
+                },
                 "dataSource": {
                   "type": "MDMS",
                   "moduleName": "common-masters",
@@ -1119,11 +1179,8 @@
                 }
               ],
               "visibleWhen": {
-                "field": "isSameAsPropertyOwner",
-                "in": [
-                  "NO",
-                  ""
-                ]
+                "field": "showTradeDetails",
+                "equals": "YES"
               },
               "validation": {
                 "required": true
@@ -1133,7 +1190,7 @@
               }
             },
             {
-              "_comment": "Repeatable list of owners. At least 1, at most 10. Shown when same-as-property-owner is No or blank. Example: one row for Ramesh Sharma.",
+              "_comment": "Repeatable list of owners. At least 1, at most 10. Prefilled from the property owners. Locked when same-as-property-owner is Yes and those owners are complete. Example: one row for Ramesh Sharma.",
               "order": 4,
               "key": "TL_OWNERS",
               "apiFieldName": "tradeLicenseDetail.owners",
@@ -1144,14 +1201,17 @@
               "itemLabel": "TL_OWNER",
               "field": {
                 "name": "owners",
-                "type": "fieldArray"
+                "type": "fieldArray",
+                "disabledWhen": {
+                  "and": [
+                    { "field": "isSameAsPropertyOwner", "equals": "YES" },
+                    { "field": "propertyOwnersReady", "equals": "YES" }
+                  ]
+                }
               },
               "visibleWhen": {
-                "field": "isSameAsPropertyOwner",
-                "in": [
-                  "NO",
-                  ""
-                ]
+                "field": "showTradeDetails",
+                "equals": "YES"
               },
               "children": [
                 {
@@ -1165,10 +1225,11 @@
                     "type": "text"
                   },
                   "validation": {
-                    "pattern": "^[a-zA-Z][a-zA-Z ]+[a-zA-Z]$",
+                    "pattern": "^[\\p{L}][\\p{L} .'-]{0,99}$",
+                    "patternFlags": "u",
                     "regex": {
-                      "pattern": "[^a-zA-Z ]",
-                      "flags": "g"
+                      "pattern": "[^\\p{L} .'-]",
+                      "flags": "gu"
                     },
                     "required": true
                   },
@@ -1232,10 +1293,11 @@
                     "type": "text"
                   },
                   "validation": {
-                    "pattern": "^[a-zA-Z][a-zA-Z ]+[a-zA-Z]$",
+                    "pattern": "^[\\p{L}][\\p{L} .'-]{0,99}$",
+                    "patternFlags": "u",
                     "regex": {
-                      "pattern": "[^a-zA-Z ]",
-                      "flags": "g"
+                      "pattern": "[^\\p{L} .'-]",
+                      "flags": "gu"
                     },
                     "required": true
                   },
@@ -1293,12 +1355,12 @@
                   "field": {
                     "code": "TL_OWNERS_ADDRESS",
                     "name": "permanentAddress",
-                    "placeholder": "TL_ENTER_OWNER_cADDRESS",
+                    "placeholder": "TL_ENTER_OWNER_ADDRESS",
                     "type": "text"
                   },
                   "validation": {
                     "maxLength": 300,
-                    "required": true
+                    "required": false
                   },
                   "messages": {
                     "error": "TL_OWNER_ADDRESS_REQUIRED"
@@ -1441,8 +1503,7 @@
           "submitLabelDefault": "Submit Application",
           "form": []
         }
-      ],
-      "headDefault": "New Trade License"
+      ]
     }
   ]
 }

@@ -237,16 +237,34 @@ const DynamicFormField = ({
       base = filterDependsOnOptions(base, ds, formData);
     }
 
-    return base.map((o) => {
-      const translated = o.i18nKey ? t(o.i18nKey) : "";
-      const untranslated = !translated || translated === o.i18nKey;
-      return untranslated ? { ...o, i18nKey: o.name || o.code } : o;
+    const labeled = base.map((o) => {
+      const key = o.i18nKey || "";
+      const translated = key ? t(key) : "";
+      const untranslated = !translated || translated === key;
+      // Keep TRADELICENSE_TRADETYPE_GBS (and similar) so Dropdown calls t()
+      // and shows "Goods Based Services", not the segment code GBS.
+      const keepLocaleKey = key.startsWith("TRADELICENSE_") || key.startsWith("TL_");
+      if (untranslated && !keepLocaleKey) {
+        return { ...o, i18nKey: o.name || o.code };
+      }
+      return o;
     });
+
+    // niuatt trade dropdowns are alphabetical by the localized label.
+    // Radios stay in config order (Yes/No must not be sorted).
+    if (type !== "dropdown") return labeled;
+    const labelOf = (o) => {
+      const key = o.i18nKey || o.name || o.code || "";
+      const translated = key ? t(key) : "";
+      if (!translated || translated === key) return String(o.name || o.code || key);
+      return String(translated);
+    };
+    return [...labeled].sort((a, b) => labelOf(a).localeCompare(labelOf(b)));
   }, [type, name, field, fieldConfig, dropdownData, t, formData]);
 
   /**
    * Compiled validation.regex for stripping illegal characters on text input.
-   * Null when the field has no regex rule.
+   * Null when the field has no regex rule. here is the regex rule for the field.
    *
    * @returns {RegExp|null}
    */
@@ -279,10 +297,15 @@ const DynamicFormField = ({
   }
 
   // ── Non-leaf: fieldArray — repeatable card rows with Add / Remove ────
+  // this is the field array component which is used to repeat the field in a row
   if (fieldConfig.type === "fieldArray") {
     if (!isFieldVisible(fieldConfig, formData)) return null;
 
     const arrayName = getFieldArrayName(fieldConfig);
+    const arrayLocked = fieldConfig.field?.disabledWhen
+      ? evaluateFormRule(fieldConfig.field.disabledWhen, formData)
+      : false;
+    const controlsDisabled = isDisabled || arrayLocked;
     const minItems = Math.max(1, Number(fieldConfig.minItems) || 1);
     const children = fieldConfig.children || [];
     const rows = Array.isArray(formData[arrayName])
@@ -292,7 +315,7 @@ const DynamicFormField = ({
     const removeLabel = fieldConfig.removeLabel || "CS_COMMON_REMOVE";
     const itemLabel = fieldConfig.itemLabel || fieldConfig.key || arrayName;
 
-    const commitRows = (nextRows) => onChange(arrayName, nextRows);
+    const commitRows = (nextRows, meta) => onChange(arrayName, nextRows, [], meta);
 
     const updateRowField = (rowIndex, childName, value, resetFields = []) => {
       const nextRows = rows.map((row, i) => {
@@ -309,22 +332,29 @@ const DynamicFormField = ({
             }) || { ...row, [childName]: value }
           );
         }
+        // this is the updated row date after the change is made in the field
         const updated = { ...row, [childName]: value };
         (resetFields || []).forEach((f) => {
           updated[f] = null;
         });
         return updated;
       });
-      commitRows(nextRows);
+      const clearErrorKeys = [
+        `${arrayName}.${rowIndex}.${childName}`,
+        ...(resetFields || []).map((f) => `${arrayName}.${rowIndex}.${f}`),
+      ];
+      commitRows(nextRows, { clearErrorKeys });
     };
-
+    // this function is used to add a new row to the field array
     const addRow = () => {
       commitRows([...rows, createEmptyFieldArrayItem(children)]);
     };
-
+    // this function is used to remove a row from the field array
     const removeRow = (rowIndex) => {
       if (rows.length <= minItems) return;
-      commitRows(rows.filter((_, i) => i !== rowIndex));
+      commitRows(rows.filter((_, i) => i !== rowIndex), {
+        refreshPrefixes: [arrayName],
+      });
     };
 
     return (
@@ -333,7 +363,7 @@ const DynamicFormField = ({
           const rowErrors = {};
           Object.keys(errors || {}).forEach((key) => {
             const prefix = `${arrayName}.${rowIndex}.`;
-            if (key.startsWith(prefix)) {
+            if (key.startsWith(prefix) && errors[key]) {
               rowErrors[key.slice(prefix.length)] = errors[key];
             }
           });
@@ -352,7 +382,7 @@ const DynamicFormField = ({
                     type="button"
                     className="dynamic-form-field__field-array-remove"
                     onClick={() => removeRow(rowIndex)}
-                    disabled={isDisabled}
+                    disabled={controlsDisabled}
                   >
                     {t(removeLabel)}
                   </button>
@@ -370,7 +400,7 @@ const DynamicFormField = ({
                     errors={rowErrors}
                     dropdownData={dropdownData}
                     t={t}
-                    isDisabled={isDisabled}
+                    isDisabled={controlsDisabled}
                     onFileUpload={onFileUpload}
                     onFieldSearch={onFieldSearch}
                     isFieldSearching={isFieldSearching}
@@ -389,7 +419,7 @@ const DynamicFormField = ({
           type="button"
           className="dynamic-form-field__field-array-add"
           onClick={addRow}
-          disabled={isDisabled}
+          disabled={controlsDisabled}
         >
           {t(addLabel)}
         </button>
@@ -479,7 +509,8 @@ const DynamicFormField = ({
     fieldDisabled = fieldDisabled || evaluateFormRule(field.disabledWhen, formData);
   }
 
-  const dropdownResetFields = field.dataSource?.resetFields || [];
+  const dropdownResetFields =
+    field.dataSource?.resetFields || field.resetFields || fieldConfig.resetFields || [];
 
   /** Duration compute fields may display as years when months > 12. */
   const isDurationField = field.computeFn === "calculateDuration";
@@ -688,6 +719,30 @@ const DynamicFormField = ({
                     <span>{t(field.resultLabel || labelKey || "CS_COMMON_ASSET_NUMBER")}</span>
                     <span>{panelForField.estateNo}</span>
                   </div>
+                  {panelForField.prefill?.buildingName && (
+                    <div className="dynamic-form-field__result-row">
+                      <span>{t("EST_BUILDING_NAME")}</span>
+                      <span>{t(panelForField.prefill.buildingName)}</span>
+                    </div>
+                  )}
+                  {panelForField.prefill?.assetType && (
+                    <div className="dynamic-form-field__result-row">
+                      <span>{t("EST_ASSET_TYPE")}</span>
+                      <span>{t(panelForField.prefill.assetType)}</span>
+                    </div>
+                  )}
+                  {panelForField.prefill?.serviceType && (
+                    <div className="dynamic-form-field__result-row">
+                      <span>{t("EST_LOCALITY")}</span>
+                      <span>{t(panelForField.prefill.serviceType)}</span>
+                    </div>
+                  )}
+                  {panelForField.prefill?.city && (
+                    <div className="dynamic-form-field__result-row">
+                      <span>{t("EST_CITY")}</span>
+                      <span>{t(panelForField.prefill.city)}</span>
+                    </div>
+                  )}
                   <button
                     type="button"
                     className="dynamic-form-field__select-button"
@@ -743,83 +798,6 @@ const DynamicFormField = ({
             </button>
           </div>
           <FieldError show={hasError} message={errorMsg} />
-
-          {panelForField?.status === "matches" && Array.isArray(panelForField.matches) && (
-            <div className="dynamic-form-field__suggest-box">
-              {panelForField.matches.map((match) => (
-                <button
-                  key={match.estateNo}
-                  type="button"
-                  className="dynamic-form-field__suggest-item"
-                  onClick={() => onSelectSearchResult?.(name, match)}
-                >
-                  <span className="dynamic-form-field__suggest-no">
-                    {match.label || match.estateNo}
-                  </span>
-                  {match.subtitle ? (
-                    <span className="dynamic-form-field__suggest-sub">
-                      {match.subtitle}
-                    </span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {panelForField?.status === "found" && (
-            <div className="dynamic-form-field__result-card">
-              <div className="dynamic-form-field__result-row">
-                <span>{t(field.resultLabel || labelKey || "CS_COMMON_ASSET_NUMBER")}</span>
-                <span>{panelForField.estateNo}</span>
-              </div>
-              {panelForField.prefill?.buildingName && (
-                <div className="dynamic-form-field__result-row">
-                  <span>{t("EST_BUILDING_NAME")}</span>
-                  <span>{t(panelForField.prefill.buildingName)}</span>
-                </div>
-              )}
-              {panelForField.prefill?.assetType && (
-                <div className="dynamic-form-field__result-row">
-                  <span>{t("EST_ASSET_TYPE")}</span>
-                  <span>{t(panelForField.prefill.assetType)}</span>
-                </div>
-              )}
-              {panelForField.prefill?.serviceType && (
-                <div className="dynamic-form-field__result-row">
-                  <span>{t("EST_LOCALITY")}</span>
-                  <span>{t(panelForField.prefill.serviceType)}</span>
-                </div>
-              )}
-              {panelForField.prefill?.city && (
-                <div className="dynamic-form-field__result-row">
-                  <span>{t("EST_CITY")}</span>
-                  <span>{t(panelForField.prefill.city)}</span>
-                </div>
-              )}
-              <button
-                type="button"
-                className="dynamic-form-field__select-button"
-                onClick={() => onSelectSearchResult?.(name)}
-              >
-                {t(field.selectLabel || "CS_COMMON_SELECT")}
-              </button>
-            </div>
-          )}
-
-          {panelForField?.status === "notFound" && (
-            <div className="dynamic-form-field__not-found">
-              <p className="dynamic-form-field__not-found-text">
-                {t(field.notFoundLabel || "CS_COMMON_NOT_FOUND")}
-              </p>
-              <button
-                type="button"
-                className="dynamic-form-field__create-button"
-                onClick={() => onCreateNewFromSearch?.(name)}
-              >
-                {t(field.createNewLabel || "CS_COMMON_CREATE_NEW")}
-              </button>
-            </div>
-          )}
         </div>
       </LabelFieldPair>
     );

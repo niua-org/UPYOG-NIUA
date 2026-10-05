@@ -241,6 +241,7 @@ import AddressDetails from "./molecules/AddressDetails";
 import ApplicantDetails from "./molecules/ApplicantDetails";
 import Stepper from "./customComponents/Stepper";
 import Timeline from "./molecules/Timeline";
+import ConfigTimeline from "./molecules/ConfigTimeline";
 
 import DynamicForm from "./molecules/DynamicForm"
 export {
@@ -263,6 +264,7 @@ export {
   resolveConfigDate,
   buildInitialData,
 } from "./utilities/formUtils";
+export { resolveAppPath, resolveFormGate, shouldShowGatedActionBar } from "./utilities/formGateUtils";
 export {
   defaultCheckNA,
   parseFlexibleDate,
@@ -550,6 +552,7 @@ export {
   ApplicantDetails,
   Stepper,
   Timeline,
+  ConfigTimeline,
   SuccessSvg,
   DynamicForm,
   DynamicFormStep,
