@@ -20,6 +20,11 @@ public class ExternalApiAuditProducer implements ExternalApiAuditPublisher {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+    /**
+     * Sends the event asynchronously. Exceptions from {@code send} and from the
+     * completion callback are logged only — the caller is never failed.
+     */
+    @Override
     public void publishAsync(String topic, Object event) {
         try {
             kafkaTemplate.send(topic, event).whenComplete((result, exception) -> {

@@ -1,5 +1,7 @@
 # External API Audit — Data Sharing Service (DX / PFMS) test plan
 
+How to add this library to another module: [external-api-audit README](../../../core-services/libraries/external-api-audit/README.md).
+
 Use this to confirm state inbound `_create` and PFMS outbound auth/data-push write the expected rows in `ug_external_api_*`.
 
 DX publishes to Kafka topic `external-api-audit-details`. Persister (`external-api-audit-persister.yml` in national-dashboard-ingest) writes the tables in the **ingest** database. DX does not JDBC-insert audit rows.

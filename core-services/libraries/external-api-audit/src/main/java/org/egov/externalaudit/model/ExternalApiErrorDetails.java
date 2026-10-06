@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Error captured on FAILED events and inserted into {@code ug_external_api_error_detail}.
+ * There is no ON CONFLICT on this table; each FAILED publish inserts a new row.
+ */
 @Getter
 @Setter
 @AllArgsConstructor

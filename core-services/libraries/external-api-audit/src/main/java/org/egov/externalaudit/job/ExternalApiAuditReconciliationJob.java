@@ -27,6 +27,10 @@ public class ExternalApiAuditReconciliationJob {
         this.properties = properties;
     }
 
+    /**
+     * Scheduled entry: INITIATED rows with {@code request_time} older than
+     * {@link ExternalApiAuditProperties#getStaleThresholdMs()} become {@code TIMED_OUT}.
+     */
     @Scheduled(cron = "${external.api.audit.reconciliation.cron:0 0 6 * * *}",
             zone = "${external.api.audit.reconciliation.zone:Asia/Kolkata}")
     public void reconcileStaleRequests() {

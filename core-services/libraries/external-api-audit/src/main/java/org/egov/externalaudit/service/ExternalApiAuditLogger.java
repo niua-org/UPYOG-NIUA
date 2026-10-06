@@ -30,9 +30,21 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * Reusable executor for explicitly identified EXTERNAL integrations.
- * Publishes two Kafka events (INITIATED, then SUCCESS/FAILED) that upsert one audit row.
- * Kafka publish is async and fail-open. The original business exception is always rethrown.
+ * Explicit executor for third-party / external integrations.
+ * <p>
+ * Call sites wrap a {@link Supplier} around the inbound handler or outbound HTTP call.
+ * The logger publishes two Kafka events on {@code external.api.audit.detail.topic}:
+ * {@code INITIATED} before the supplier runs, then {@code SUCCESS} or {@code FAILED}.
+ * egov-persister upserts those events into a single {@code ug_external_api_message_detail}
+ * row keyed by {@code correlation_id}.
+ * </p>
+ * <p>
+ * Kafka publish is asynchronous and fail-open: broker errors are logged and never
+ * replace the original business exception. Do not use this for internal UPYOG APIs.
+ * </p>
+ *
+ * @see ExternalIntegrationContext
+ * @see org.egov.externalaudit.config.ExternalApiAuditProperties
  */
 @Slf4j
 @Component
@@ -54,19 +66,39 @@ public class ExternalApiAuditLogger {
         this.sensitivePayloadMasker = sensitivePayloadMasker;
     }
 
+    /**
+     * Audits an inbound call from an external system into UPYOG ({@code direction=INBOUND}).
+     *
+     * @param context per-call metadata; a new audit UUID is generated when {@code correlationId} is blank
+     * @param apiCall business handler; its return value is stored as the response payload
+     * @return the supplier result
+     */
     public <T> T logInboundApi(ExternalIntegrationContext context, Supplier<T> apiCall) {
         context.setDirection(ExternalApiAuditConstants.DIRECTION_INBOUND);
         return execute(context, apiCall);
     }
 
+    /**
+     * Audits an outbound call from UPYOG to a third party ({@code direction=OUTBOUND}).
+     *
+     * @param context per-call metadata; reuse {@code correlationId} and increment {@code retryCount} for in-cycle retries
+     * @param apiCall Feign / RestTemplate / SDK invocation
+     * @return the supplier result
+     */
     public <T> T logAndExecute(ExternalIntegrationContext context, Supplier<T> apiCall) {
         context.setDirection(ExternalApiAuditConstants.DIRECTION_OUTBOUND);
         return execute(context, apiCall);
     }
 
     /**
-     * Backward-compatible inbound wrapper used by national-dashboard-ingest.
-     * A new audit correlation id is generated; {@code correlationId} is kept as originating id.
+     * Inbound overload used by national-dashboard-ingest.
+     * {@code correlationId} is stored as {@code originatingCorrelationId}; a new audit UUID is generated.
+     *
+     * @param correlationId RequestInfo / tracer correlation id (not the table primary key)
+     * @param tenantId      ULB or tenant; falls back to {@code unknown}
+     * @param externalApiName stable integration name, for example {@code national-dashboard-metric-ingest}
+     * @param requestPayload request body to persist (masked)
+     * @param apiCall       ingest / handler lambda
      */
     public <T> T logInboundApi(String correlationId, String tenantId, String externalApiName,
             Object requestPayload, Supplier<T> apiCall) {
@@ -78,6 +110,10 @@ public class ExternalApiAuditLogger {
                 .build(), apiCall);
     }
 
+    /**
+     * Outbound overload matching the ingest-style positional arguments.
+     * Prefer {@link #logAndExecute(ExternalIntegrationContext, Supplier)} for new integrations.
+     */
     public <T> T logAndExecute(String correlationId, String tenantId, String externalApiName,
             Object requestPayload, Supplier<T> apiCall) {
         return logAndExecute(ExternalIntegrationContext.builder()
@@ -88,6 +124,10 @@ public class ExternalApiAuditLogger {
                 .build(), apiCall);
     }
 
+    /**
+     * Runs {@code apiCall} between INITIATED and SUCCESS/FAILED Kafka publishes.
+     * Re-throws the original exception after the FAILED event is queued.
+     */
     public <T> T execute(ExternalIntegrationContext context, Supplier<T> apiCall) {
         String correlationId = resolveAuditCorrelationId(context);
         context.setCorrelationId(correlationId);
@@ -127,6 +167,9 @@ public class ExternalApiAuditLogger {
         }
     }
 
+    /**
+     * Reuses the caller-supplied id (in-cycle retry) or allocates a new UUID (new logical request).
+     */
     private String resolveAuditCorrelationId(ExternalIntegrationContext context) {
         if (context.getCorrelationId() != null && !context.getCorrelationId().isBlank()) {
             return context.getCorrelationId();
@@ -190,6 +233,9 @@ public class ExternalApiAuditLogger {
         publishSafely(responseEvent);
     }
 
+    /**
+     * Fail-open: Kafka / serialization errors are logged and must not fail the business call.
+     */
     private void publishSafely(ExternalApiAuditDetail event) {
         try {
             producer.publishAsync(properties.getDetailTopic(),
@@ -348,6 +394,9 @@ public class ExternalApiAuditLogger {
         return exception.getMessage();
     }
 
+    /**
+     * Detects Feign failures by class name so this library does not need a hard Feign compile dependency.
+     */
     private boolean isFeignException(Exception exception) {
         Class<?> type = exception.getClass();
         while (type != null) {

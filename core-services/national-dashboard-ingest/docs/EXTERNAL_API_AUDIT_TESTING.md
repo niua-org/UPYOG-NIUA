@@ -1,5 +1,7 @@
 # External API Audit — National Dashboard Ingest test plan
 
+How to add this library to another module: [external-api-audit README](../../libraries/external-api-audit/README.md).
+
 Use this to confirm inbound metric ingest and bulk-row ingest write the expected rows in `ug_external_api_*`.
 
 Tables live in the National Dashboard Ingest database. Kafka topic `external-api-audit-details` is consumed by egov-persister using `src/main/resources/external-api-audit-persister.yml`.

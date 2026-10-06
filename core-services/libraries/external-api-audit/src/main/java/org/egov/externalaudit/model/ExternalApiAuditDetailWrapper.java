@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * Root JSON object expected by {@code external-api-audit-persister.yml}
+ * ({@code basePath: $.apiAuditDetail}).
+ */
 @Getter
 @Setter
 @AllArgsConstructor

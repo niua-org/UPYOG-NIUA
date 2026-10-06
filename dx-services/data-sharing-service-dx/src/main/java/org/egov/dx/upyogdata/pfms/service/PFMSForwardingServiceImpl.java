@@ -18,6 +18,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Forwards stored PFMS transactions to the external PFMS APIs.
+ * <p>
+ * Auth and data-push HTTP is audited inside {@link PFMSApiClient}. This class only
+ * decides when a 401 retry must reuse the same audit {@code correlation_id}.
+ * A later scheduler cycle always allocates a new UUID (new audit row).
+ * </p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -97,6 +105,10 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
                 .build());
     }
 
+    /**
+     * First push uses retryCount 0. On 401 the same {@code auditCorrelationId} is reused with retryCount 1
+     * so persister updates one {@code pfms-data-push} row instead of inserting a second.
+     */
     private String pushWithTokenRefreshOnExpiry(PFMSTransaction transaction) {
         String auditCorrelationId = UUID.randomUUID().toString();
         try {

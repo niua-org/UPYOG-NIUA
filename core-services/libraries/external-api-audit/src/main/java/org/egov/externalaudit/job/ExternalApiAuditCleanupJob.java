@@ -27,6 +27,9 @@ public class ExternalApiAuditCleanupJob {
         this.properties = properties;
     }
 
+    /**
+     * Scheduled entry: deletes audit rows whose {@code created_time} is older than the retention window.
+     */
     @Scheduled(cron = "${external.api.audit.cleanup.cron:0 30 3 * * *}",
             zone = "${external.api.audit.cleanup.zone:Asia/Kolkata}")
     public void deleteExpiredRecords() {

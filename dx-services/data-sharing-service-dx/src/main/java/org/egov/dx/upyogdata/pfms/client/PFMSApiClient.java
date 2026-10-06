@@ -45,7 +45,11 @@ public class PFMSApiClient {
 
     /**
      * Authenticates with PFMS and returns a Bearer access token.
-     * Throws RuntimeException if the response is null or token is missing.
+     * <p>
+     * The audited lambda returns the full {@link PFMSAuthResponse} so {@code AccessToken}
+     * and {@code RefreshToken} are masked in {@code ug_external_api_message_raw_detail}.
+     * The live token is extracted after the wrap for use on subsequent calls.
+     * </p>
      *
      * @return Bearer token string to use in subsequent API calls
      */
@@ -83,7 +87,13 @@ public class PFMSApiClient {
 
     /**
      * Pushes a transaction using an explicit audit correlation id so an in-cycle
-     * retry (e.g. after 401) updates the same audit row.
+     * retry (for example after HTTP 401) updates the same {@code pfms-data-push} row.
+     * Pass {@code null} {@code auditCorrelationId} to allocate a new UUID (new logical request).
+     *
+     * @param transaction        voucher payload; bank-account fields are masked in audit JSON
+     * @param accessToken        Bearer token from {@link #fetchAccessToken()}
+     * @param auditCorrelationId table {@code correlation_id}; reuse on retry
+     * @param retryCount         {@code 0} on first attempt, {@code 1} after 401 refresh
      */
     public String pushTransaction(PFMSTransaction transaction, String accessToken,
             String auditCorrelationId, int retryCount) {

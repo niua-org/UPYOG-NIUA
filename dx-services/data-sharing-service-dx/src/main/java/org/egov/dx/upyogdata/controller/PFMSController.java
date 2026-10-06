@@ -21,9 +21,11 @@ import java.util.Map;
 
 /**
  * REST controller exposing APIs for PFMS transaction data exchange.
- *
- * Accepts transaction data from state systems and forwards the
- * validated request to PFMS Servers
+ * <p>
+ * State systems post inbound payloads on {@code /_create}. That inbound call is audited
+ * with {@link ExternalApiAuditLogger#logInboundApi}. Outbound PFMS HTTP is audited in
+ * {@link org.egov.dx.upyogdata.pfms.client.PFMSApiClient}, not here.
+ * </p>
  */
 @RestController
 @RequestMapping("/v1/transactions")
@@ -31,12 +33,17 @@ import java.util.Map;
 @Tag(name = "Upyog Data Sharing Service", description = "APIs for Upyog Data Sharing Services")
 public class PFMSController {
 
+    /** All PFMS audit rows use tenant_id {@code PFMS} (not the ULB tenant). */
     private static final String PFMS_TENANT = "PFMS";
 
     private final PFMSService pfmsService;
     private final PFMSForwardingService pfmsForwardingService;
     private final ExternalApiAuditLogger auditLogger;
 
+    /**
+     * Inbound create from a state system. Audited as {@code state-pfms-transaction-create} / INBOUND.
+     * {@link IllegalArgumentException} from the service still produces a FAILED audit row, then HTTP 400.
+     */
     @PostMapping("/_create")
     @Operation(summary = "Create", description = "State will push data in this create")
     public ResponseEntity<?> createTransaction(

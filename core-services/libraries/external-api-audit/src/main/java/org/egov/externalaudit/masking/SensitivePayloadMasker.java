@@ -34,6 +34,10 @@ public class SensitivePayloadMasker {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Returns a copy of {@code payload} with sensitive field values replaced by {@code ********}.
+     * On serialization failure the original payload is returned unmasked and a warning is logged.
+     */
     public Object mask(Object payload) {
         if (payload == null) {
             return null;
@@ -78,6 +82,9 @@ public class SensitivePayloadMasker {
         return node;
     }
 
+    /**
+     * {@code Password}, {@code access_token}, and {@code ULBBankAccountNumber} all normalize to the same key.
+     */
     static String normalizeKey(String key) {
         if (key == null) {
             return "";

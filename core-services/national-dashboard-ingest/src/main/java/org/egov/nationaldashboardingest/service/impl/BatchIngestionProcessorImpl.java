@@ -106,6 +106,7 @@ public class BatchIngestionProcessorImpl implements BatchIngestionProcessor {
             String rowCorrelationId = UUID.randomUUID().toString();
 
             try {
+                // Originating id is per-row so bulk ingest writes one audit row per Excel row.
                 integrationAuditLogger.logInboundApi(
                         rowCorrelationId,
                         tenantId,
