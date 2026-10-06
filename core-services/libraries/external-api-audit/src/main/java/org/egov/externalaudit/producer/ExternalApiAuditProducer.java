@@ -1,0 +1,34 @@
+package org.egov.externalaudit.producer;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+
+/**
+ * Fail-open, asynchronous publisher for external API audit events.
+ * Kafka unavailability must not fail the originating business call.
+ */
+@Slf4j
+@Component
+@ConditionalOnBean(KafkaTemplate.class)
+public class ExternalApiAuditProducer implements ExternalApiAuditPublisher {
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    public ExternalApiAuditProducer(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    public void publishAsync(String topic, Object event) {
+        try {
+            kafkaTemplate.send(topic, event).whenComplete((result, exception) -> {
+                if (exception != null) {
+                    log.error("Failed to publish integration audit event to topic {}: {}", topic, exception.getMessage());
+                }
+            });
+        } catch (Exception exception) {
+            log.error("Failed to publish integration audit event to topic {}: {}", topic, exception.getMessage());
+        }
+    }
+}

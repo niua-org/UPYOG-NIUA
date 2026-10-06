@@ -5,9 +5,9 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.nationaldashboardingest.service.BatchIngestionProcessor;
-import org.egov.nationaldashboardingest.service.ExternalApiAuditLogger;
+import org.egov.externalaudit.constants.ExternalApiAuditConstants;
+import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.service.IngestService;
-import org.egov.nationaldashboardingest.utils.ExternalApiAuditConstants;
 import org.egov.nationaldashboardingest.utils.ResponseInfoFactory;
 import org.egov.nationaldashboardingest.web.models.Data;
 import org.egov.nationaldashboardingest.web.models.IngestRequest;
@@ -35,8 +35,7 @@ import java.util.UUID;
  * {@link RequestInfo} extracted from the first row of the Excel file, falling
  * back to method defaults or a system-generated header.</li>
  * <li>Generates unique UUID correlation identifiers for each row to record
- * granular inbound API audits in {@code ug_external_api_audit_request} and
- * {@code ug_external_api_audit_response} tables.</li>
+ * granular inbound API audits in {@code ug_external_api_*} tables.</li>
  * <li>Calls {@link IngestService#ingestData} within
  * {@link ExternalApiAuditLogger#logInboundApi} wrapper lambda.</li>
  * <li>Catches row-level failures to prevent any single corrupted row from

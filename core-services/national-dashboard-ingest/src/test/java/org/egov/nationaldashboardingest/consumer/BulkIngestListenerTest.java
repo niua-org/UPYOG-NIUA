@@ -3,7 +3,7 @@ package org.egov.nationaldashboardingest.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.nationaldashboardingest.config.ApplicationProperties;
 import org.egov.nationaldashboardingest.producer.Producer;
-import org.egov.nationaldashboardingest.service.ExternalApiAuditLogger;
+import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.service.IngestService;
 import org.egov.nationaldashboardingest.service.impl.BatchIngestionProcessorImpl;
 import org.egov.nationaldashboardingest.service.impl.BulkFileProcessorServiceImpl;

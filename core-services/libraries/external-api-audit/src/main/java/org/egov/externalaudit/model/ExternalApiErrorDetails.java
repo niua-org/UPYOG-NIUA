@@ -1,4 +1,4 @@
-package org.egov.nationaldashboardingest.web.models;
+package org.egov.externalaudit.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

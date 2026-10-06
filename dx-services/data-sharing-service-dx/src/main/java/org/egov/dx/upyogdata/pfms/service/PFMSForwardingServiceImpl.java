@@ -2,6 +2,7 @@ package org.egov.dx.upyogdata.pfms.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.dx.upyogdata.constants.Constants;
 import org.egov.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.egov.dx.upyogdata.pfms.enums.SchedulerType;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
@@ -10,11 +11,12 @@ import org.egov.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.egov.dx.upyogdata.constants.Constants;
+import feign.FeignException;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import org.egov.dx.upyogdata.constants.Constants;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -96,12 +98,23 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
     }
 
     private String pushWithTokenRefreshOnExpiry(PFMSTransaction transaction) {
+        String auditCorrelationId = UUID.randomUUID().toString();
         try {
-            return pfmsApiClient.pushTransaction(transaction, currentToken);
-        } catch (HttpClientErrorException.Unauthorized e) {
+            return pfmsApiClient.pushTransaction(transaction, currentToken, auditCorrelationId, 0);
+        } catch (Exception e) {
+            if (!isUnauthorized(e)) {
+                throw e;
+            }
             log.warn("Pfms Token expired (401), refreshing | voucherNumber={}", transaction.getVoucherNumber());
             currentToken = pfmsApiClient.fetchAccessToken();
-            return pfmsApiClient.pushTransaction(transaction, currentToken);
+            return pfmsApiClient.pushTransaction(transaction, currentToken, auditCorrelationId, 1);
         }
+    }
+
+    private boolean isUnauthorized(Exception exception) {
+        if (exception instanceof HttpClientErrorException.Unauthorized) {
+            return true;
+        }
+        return exception instanceof FeignException feignException && feignException.status() == 401;
     }
 }

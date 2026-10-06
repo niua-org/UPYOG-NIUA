@@ -1,4 +1,4 @@
-package org.egov.nationaldashboardingest.utils;
+package org.egov.externalaudit.constants;
 
 public final class ExternalApiAuditConstants {
 
@@ -20,6 +20,11 @@ public final class ExternalApiAuditConstants {
     public static final String ERROR_TYPE_VALIDATION = "VALIDATION";
 
     public static final String API_NATIONAL_DASHBOARD_METRIC_INGEST = "national-dashboard-metric-ingest";
+    public static final String API_STATE_PFMS_TRANSACTION_CREATE = "state-pfms-transaction-create";
+    public static final String API_PFMS_AUTH = "pfms-auth";
+    public static final String API_PFMS_DATA_PUSH = "pfms-data-push";
 
     public static final String PAYLOAD_TRUNCATED_MESSAGE = "Payload truncated due to size limit";
+    public static final String MASKED_VALUE = "********";
+    public static final String DEFAULT_TENANT = "unknown";
 }

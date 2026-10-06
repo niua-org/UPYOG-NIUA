@@ -1,4 +1,4 @@
-package org.egov.nationaldashboardingest.web.models;
+package org.egov.externalaudit.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -27,6 +27,9 @@ public class ExternalApiAuditDetail {
 
     @JsonProperty("tenantId")
     private String tenantId;
+
+    @JsonProperty("state")
+    private String state;
 
     @JsonProperty("externalApiName")
     private String externalApiName;
