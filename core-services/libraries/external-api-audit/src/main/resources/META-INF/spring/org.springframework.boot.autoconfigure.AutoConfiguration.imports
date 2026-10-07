@@ -1,1 +1,1 @@
-config.org.upyog.externalaudit.ExternalApiAuditAutoConfiguration
+org.upyog.externalaudit.config.ExternalApiAuditAutoConfiguration
