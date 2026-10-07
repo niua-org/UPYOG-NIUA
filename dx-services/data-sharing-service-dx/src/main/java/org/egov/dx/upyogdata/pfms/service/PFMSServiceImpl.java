@@ -12,6 +12,8 @@ import org.egov.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.egov.dx.upyogdata.util.DxUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -70,6 +72,18 @@ public class PFMSServiceImpl implements PFMSService {
      */
     private void validateDuplicates(PFMSCreateTransactionRequest request) {
         for (PFMSData data : request.getData()) {
+
+            // Check for duplicates within the incoming request itself
+            Set<String> seen = new HashSet<>();
+            for (PFMSTransaction t : data.getTransactions()) {
+                String key = t.getVoucherNumber() + "|" + t.getVoucherDate();
+                if (!seen.add(key)) {
+                    throw new IllegalArgumentException(
+                            "Duplicate voucher found in request - voucherNumber: " + t.getVoucherNumber()
+                                    + ", voucherDate: " + t.getVoucherDate());
+                }
+            }
+
             // Group transactions by voucherDate
             Map<java.time.LocalDate, List<String>> byDate = data.getTransactions().stream()
                     .collect(Collectors.groupingBy(
