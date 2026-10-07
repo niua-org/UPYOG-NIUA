@@ -2,20 +2,30 @@ package org.egov.dx.upyogdata.pfms.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.dx.upyogdata.config.PFMSProperties;
+import org.egov.dx.upyogdata.constants.Constants;
 import org.egov.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.egov.dx.upyogdata.pfms.enums.SchedulerType;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.egov.dx.upyogdata.pfms.models.SchedulerLog;
 import org.egov.dx.upyogdata.pfms.repository.PFMSRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.egov.dx.upyogdata.constants.Constants;
+import feign.FeignException;
+
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import org.egov.dx.upyogdata.constants.Constants;
+import java.util.UUID;
 
+/**
+ * Forwards stored PFMS transactions to the external PFMS APIs.
+ * <p>
+ * Auth and data-push HTTP is audited inside {@link PFMSApiClient}. This class only
+ * decides when a 401 retry must reuse the same audit {@code correlation_id}.
+ * A later scheduler cycle always allocates a new UUID (new audit row).
+ * </p>
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,20 +33,20 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
 
     private final PFMSRepository pfmsRepository;
     private final PFMSApiClient pfmsApiClient;
-
-    @Value("${pfms.scheduler.batch.size:50}")
-    private int batchSize;
+    private final PFMSProperties pfmsProperties;
 
     private String currentToken;
 
     @Override
     public void forwardInitiatedTransactions(String triggeredBy) {
-        processBatch(pfmsRepository.fetchInitiatedTransactionIds(batchSize), SchedulerType.DAILY, triggeredBy);
+        processBatch(pfmsRepository.fetchInitiatedTransactionIds(pfmsProperties.getScheduler().getBatchSize()),
+                SchedulerType.DAILY, triggeredBy);
     }
 
     @Override
     public void retryFailedTransactions(String triggeredBy) {
-        processBatch(pfmsRepository.fetchFailedTransactionIds(batchSize), SchedulerType.RETRY, triggeredBy);
+        processBatch(pfmsRepository.fetchFailedTransactionIds(pfmsProperties.getScheduler().getBatchSize()),
+                SchedulerType.RETRY, triggeredBy);
     }
 
     private void processBatch(List<String> ids, SchedulerType type, String triggeredBy) {
@@ -95,13 +105,28 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
                 .build());
     }
 
+    /**
+     * First push uses retryCount 0. On 401 the same {@code auditCorrelationId} is reused with retryCount 1
+     * so persister updates one {@code pfms-data-push} row instead of inserting a second.
+     */
     private String pushWithTokenRefreshOnExpiry(PFMSTransaction transaction) {
+        String auditCorrelationId = UUID.randomUUID().toString();
         try {
-            return pfmsApiClient.pushTransaction(transaction, currentToken);
-        } catch (HttpClientErrorException.Unauthorized e) {
+            return pfmsApiClient.pushTransaction(transaction, currentToken, auditCorrelationId, 0);
+        } catch (Exception e) {
+            if (!isUnauthorized(e)) {
+                throw e;
+            }
             log.warn("Pfms Token expired (401), refreshing | voucherNumber={}", transaction.getVoucherNumber());
             currentToken = pfmsApiClient.fetchAccessToken();
-            return pfmsApiClient.pushTransaction(transaction, currentToken);
+            return pfmsApiClient.pushTransaction(transaction, currentToken, auditCorrelationId, 1);
         }
+    }
+
+    private boolean isUnauthorized(Exception exception) {
+        if (exception instanceof HttpClientErrorException.Unauthorized) {
+            return true;
+        }
+        return exception instanceof FeignException feignException && feignException.status() == 401;
     }
 }
