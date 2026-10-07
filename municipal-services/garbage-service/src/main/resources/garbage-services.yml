@@ -33,13 +33,15 @@ serviceMaps:
               business_service,
               approval_date,
               is_active,
-              channel
+              channel,
+              payment_status,
+              payment_amount
             )
             VALUES
             (
               ?,?,?,?,?,?,?,?,?,?,
               ?,?,?,?::JSONB,?,?,?,?,?,
-              ?,?,?,?,?
+              ?,?,?,?,?,?,?
             );
 
           basePath: $.garbageAccounts.*
@@ -95,6 +97,10 @@ serviceMaps:
             - jsonPath: $.garbageAccounts.*.isActive
 
             - jsonPath: $.garbageAccounts.*.channel
+
+            - jsonPath: $.garbageAccounts.*.paymentStatus
+
+            - jsonPath: $.garbageAccounts.*.paymentAmount
 
         - query: >
             INSERT INTO ug_grbg_application
@@ -325,13 +331,15 @@ serviceMaps:
               business_service,
               approval_date,
               is_active,
-              channel
+              channel,
+              payment_status,
+              payment_amount
             )
             VALUES
             (
               ?,?,?,?,?,?,?,?,?,?,
               ?,?,?,?::JSONB,?,?,?,?,?,
-              ?,?,?,?,?
+              ?,?,?,?,?,?,?
             );
 
           basePath: $.garbageAccounts.*.childGarbageAccounts.*
@@ -387,6 +395,10 @@ serviceMaps:
             - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.isActive
 
             - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.channel
+
+            - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.paymentStatus
+
+            - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.paymentAmount
 
         - query: >
             INSERT INTO ug_grbg_application
@@ -559,7 +571,9 @@ serviceMaps:
               business_service = ?,
               approval_date = ?,
               channel = ?,
-              due_date = TO_DATE(?, 'DD-MM-YYYY')
+              due_date = TO_DATE(?, 'DD-MM-YYYY'),
+              payment_status = ?,
+              payment_amount = ?
             WHERE id = ?;
 
           basePath: $.garbageAccounts.*
@@ -607,6 +621,10 @@ serviceMaps:
             - jsonPath: $.garbageAccounts.*.channel
 
             - jsonPath: $.garbageAccounts.*.dueDate
+
+            - jsonPath: $.garbageAccounts.*.paymentStatus
+
+            - jsonPath: $.garbageAccounts.*.paymentAmount
 
             - jsonPath: $.garbageAccounts.*.id
 
@@ -810,7 +828,9 @@ serviceMaps:
               tenant_id = ?,
               business_service = ?,
               approval_date = ?,
-              channel = ?
+              channel = ?,
+              payment_status = ?,
+              payment_amount = ?
             WHERE id = ?;
 
           basePath: $.garbageAccounts.*.childGarbageAccounts.*
@@ -856,6 +876,10 @@ serviceMaps:
             - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.approvalDate
 
             - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.channel
+
+            - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.paymentStatus
+
+            - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.paymentAmount
 
             - jsonPath: $.garbageAccounts.*.childGarbageAccounts.*.id
 

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.*;
 import org.egov.tracer.annotations.CustomSafeHtml;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -125,4 +126,9 @@ public class GarbageAccount {
 
     @CustomSafeHtml
     private String channel;
+
+    @CustomSafeHtml
+    private String paymentStatus;
+
+    private BigDecimal paymentAmount;
 }

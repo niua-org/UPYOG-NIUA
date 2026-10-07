@@ -230,6 +230,7 @@ export const getGCStatusOptions = (t) => [
   { i18nKey: t("GC_STATUS_PENDING_FOR_APPROVAL"), value: t("GC_STATUS_PENDING_FOR_APPROVAL"), code: "PENDING_FOR_APPROVAL" },
   { i18nKey: t("GC_STATUS_EDIT_APPLICATION"), value: t("GC_STATUS_EDIT_APPLICATION"), code: "EDIT_APPLICATION" },
   { i18nKey: t("GC_STATUS_APPROVED"), value: t("GC_STATUS_APPROVED"), code: "APPROVED" },
+  { i18nKey: t("GC_STATUS_DISCONNECTED"), value: t("GC_STATUS_DISCONNECTED"), code: "DISCONNECTED" },
   { i18nKey: t("GC_STATUS_REJECTED"), value: t("GC_STATUS_REJECTED"), code: "REJECTED" },
   { i18nKey: t("GC_STATUS_PENDING_FOR_PAYMENT"), value: t("GC_STATUS_PENDING_FOR_PAYMENT"), code: "PENDING_FOR_PAYMENT" },
   { i18nKey: t("GC_STATUS_PAID"), value: t("GC_STATUS_PAID"), code: "PAID" },
@@ -329,3 +330,77 @@ export const GCAPIToFormData = (application, params) => {
 };
 
 export const multiUnits = ["HOUSEHOLD_MULTI_COLLECTION", "COMMERCIAL_MULTI_COLLECTION", "MIX_PROPERTY"];
+
+/**
+ * Formats date values (ISO string "YYYY-MM-DD", epoch timestamp, or date string) to "DD/MM/YYYY" format.
+ * @param {string|number} dVal - The date value to format
+ * @param {string} defaultVal - Default fallback value if not present
+ * @returns {string} - Formatted date string "DD/MM/YYYY"
+ */
+export const formatDateValue = (dVal, defaultVal = "NA") => {
+  if (!dVal) return defaultVal;
+  if (typeof dVal === "number") {
+    return window?.Digit?.DateUtils?.ConvertEpochToDate(dVal) || defaultVal;
+  }
+  const str = String(dVal).trim();
+  const parts = str.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  const converted = window?.Digit?.DateUtils?.ConvertEpochToDate(str);
+  return converted && converted !== "NA" ? converted : str;
+};
+
+/**
+ * Builds the update payload for disconnecting a garbage collection service.
+ * @param {object} application - Current garbage account application object
+ * @param {object} params - Disconnect parameters (disconnectionDate, reason, comments, hasPendingPayment)
+ * @returns {object} - Payload object formatted for Digit.GCServices.update
+ */
+export const createDisconnectPayload = (application, { disconnectionDate, reason, comments, hasPendingPayment }) => {
+  const reasonText = reason?.name || reason?.code || (typeof reason === "string" ? reason : "");
+  return {
+    garbageAccounts: [
+      {
+        ...application,
+        additionalDetail: {
+          ...(application?.additionalDetail || {}),
+          disconnectionDate: disconnectionDate,
+          disconnectionReason: reasonText,
+        },
+        ...(hasPendingPayment
+          ? {}
+          : {
+              workflowAction: "DISCONNECT",
+              isOnlyWorkflowCall: true,
+            }),
+        workflow: {
+          action: hasPendingPayment ? "EDIT" : "DISCONNECT",
+          comments: comments || (reasonText ? `GC_DISCONNECT_SERVICE: ${reasonText}` : "GC_SERVICE_DISCONNECTION_REQUESTED"),
+          assignes: [],
+        },
+      },
+    ],
+  };
+};
+
+/**
+ * Builds the update payload for reconnecting / resuming a disconnected garbage collection service.
+ * @param {object} application - Current garbage account application object
+ * @param {string} comments - Reconnection workflow comments code
+ * @returns {object} - Payload object formatted for Digit.GCServices.update
+ */
+export const createReconnectPayload = (application, comments = "GC_SERVICE_RECONNECTION_REQUESTED") => {
+  return {
+    garbageAccounts: [
+      {
+        ...application,
+        workflow: {
+          action: "RECONNECT",
+          comments: comments || "GC_SERVICE_RECONNECTION_REQUESTED",
+          assignes: [],
+        },
+      },
+    ],
+  };
+};

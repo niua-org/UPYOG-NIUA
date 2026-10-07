@@ -2,9 +2,12 @@ import { Card, CardSubHeader, CardSectionHeader, Header, Loader, Row, StatusTabl
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import GCWFApplicationTimeline from "../../pageComponents/GCWFApplicationTimeline";
-import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits } from "../../utils";
+import GCPaymentHistoryModal from "../../components/GCPaymentHistoryModal";
+import GCPauseServiceModal from "../../components/GCPauseServiceModal";
+import GCPauseHistoryModal from "../../components/GCPauseHistoryModal";
+import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits, formatDateValue, createDisconnectPayload, createReconnectPayload } from "../../utils";
+import "../../css/gc-inline-auto.css";
 
 /**
  * GCApplicationDetails Component (Citizen)
@@ -16,6 +19,7 @@ import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits } from "../../
  * - Fetches application and workflow details by application number from URL params
  * - Handles payment: fetches bill data and provides "Make Payment" button when pending
  * - Supports edit flow: shows "Edit Application" button when status is EDIT_APPLICATION
+ * - Supports disconnection & reconnection flow: allows citizens to disconnect active services and resume via edit flow
  * - Displays all details in organized sections with StatusTable rows
  * - Handles multiple data formats from the API (nested garbageAccount, flat structure, etc.)
  */
@@ -33,6 +37,9 @@ const GCApplicationDetails = () => {
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
   const [showOptions, setShowOptions] = useState(false);
+  const [showPaymentHistoryModal, setShowPaymentHistoryModal] = useState(false);
+  const [showDisconnectionHistoryModal, setShowDisconnectionHistoryModal] = useState(false);
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState(null);
   const [comments, setComments] = useState("");
   const [showToast, setShowToast] = useState(null);
@@ -50,14 +57,12 @@ const GCApplicationDetails = () => {
     },
   };
 
-  const { isLoading, data: gcData } = Digit.Hooks.gc.useGCSearch(
+  const { isLoading, data: gcData, refetch: refetchApplication } = Digit.Hooks.gc.useGCSearch(
     { tenantId, data: searchCriteria, filters: { applicationNumber: [applicationNo] } },
     { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 }
   );
 
-  // The API should now return a single application in the array
-  const applicationList = gcData?.garbageAccounts || gcData?.GarbageApplications || gcData?.data || [];
-  const application = applicationList.length > 0 ? applicationList[0] : null;
+  const application = gcData?.garbageAccounts?.[0] || null;
 
   const businessService = application?.businessService || "garbage-service";
 
@@ -71,16 +76,14 @@ const GCApplicationDetails = () => {
 
   const GCDocuments = Digit?.ComponentRegistryService?.getComponent("GCDocuments");
 
-  const { isLoading: isWorkflowLoading, data: workflowDetails } = Digit.Hooks.useWorkflowDetails({
+  const { isLoading: isWorkflowLoading, data: workflowDetails, revalidate: revalidateWorkflow } = Digit.Hooks.useWorkflowDetails({
     tenantId: tenantId,
     id: applicationNo, // Use the application number from the URL directly
     moduleCode: businessService,
     config: { staleTime: 0 }
   });
 
-  const queryClient = useQueryClient();
-
-  const { mutateAsync } = useMutation({ mutationFn: (data) => Digit.GCServices.update(data, tenantId) });
+  const { mutateAsync } = Digit.Hooks.gc.useGCApplicationAction(tenantId);
 
   const CloseBtn = (props) => {
     return (
@@ -107,50 +110,67 @@ const GCApplicationDetails = () => {
 
       await mutateAsync(payload);
 
-      queryClient.invalidateQueries({ queryKey: ["GC_SEARCH_APPLICATIONS"] });
-      queryClient.invalidateQueries({ queryKey: ["workFlowDetails"] });
       setShowToast({ key: "success", label: t("GC_ACTION_SUCCESS") });
       setSelectedAction(null);
       setComments("");
-      setTimeout(() => window.location.reload(), 1500);
+      refetchApplication();
+      revalidateWorkflow();
     } catch (error) {
       setShowToast({ key: "error", label: t("GC_ACTION_FAILED") });
     }
   };
 
-  // Step 2: flatten any wrapper (must come before applicationDetails)
-  let appData = application?.garbageAccount || application || {};
-  if (typeof appData === "string") {
+  const handleDisconnectService = async (params) => {
     try {
-      appData = JSON.parse(appData);
-    } catch (e) {
-      appData = {};
+      const payload = createDisconnectPayload(application, params);
+
+      await mutateAsync(payload);
+      setShowDisconnectModal(false);
+
+      if (params.hasPendingPayment) {
+        setShowToast({ key: "info", label: t("GC_REDIRECTING_TO_PAYMENT") });
+        setTimeout(() => {
+          navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${encodeURIComponent(appNo)}`);
+        }, 1500);
+      } else {
+        setShowToast({ key: "success", label: t("GC_DISCONNECT_REQUEST_SUCCESS") });
+        refetchApplication();
+        revalidateWorkflow();
+      }
+    } catch (error) {
+      setShowToast({ key: "error", label: t("GC_DISCONNECT_REQUEST_FAILED") });
     }
-  }
+  };
 
-  // Step 3: derive nested application details (grbgApplication lives inside the account object)
-  const applicationDetails = appData?.grbgApplication || appData?.GarbageApplication || {};
+  const handleContinueService = async () => {
+    try {
+      const payload = createReconnectPayload(application, "GC_SERVICE_RECONNECTION_REQUESTED");
 
-  // Application number — prefer nested applicationNo, fall back to top-level grbgApplicationNumber
-  const appNo =
-    applicationDetails?.applicationNo ||
-    appData?.grbgApplicationNumber ||
-    appData?.applicationNo ||
-    t("CS_NA");
+      await mutateAsync(payload);
+      navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`);
+    } catch (error) {
+      setShowToast({ key: "error", label: t("GC_ACTION_FAILED") });
+    }
+  };
 
-  // Status — prefer nested status, fall back to top-level status
-  const appStatus =
-    applicationDetails?.status ||
-    appData?.status ||
-    appData?.applicationStatus ||
-    t("CS_NA");
+  const appNo = application?.grbgApplicationNumber;
+  const rawStatus = application?.status || "";
+  const appStatus = rawStatus.toUpperCase();
+  const dueDate = application?.dueDate;
+  const paymentStatus = application?.paymentStatus;
+  const paymentAmount = application?.paymentAmount;
 
-  const dueDate = appData?.dueDate || null;
+  const nextActions = workflowDetails?.data?.nextActions || [];
+  const canDisconnect = nextActions.some((a) => a.action === "DISCONNECT");
+  const canReconnect = nextActions.some((a) => a.action === "RECONNECT");
+  const canEdit = nextActions.some((a) => a.action === "EDIT");
+  const isPendingPayment = paymentStatus === "PENDING_FOR_PAYMENT" || (Number(paymentAmount) > 0 && paymentStatus !== "PAID");
+
 
   const downloadOptions = [];
   downloadOptions.push({
     label: t("GC_DOWNLOAD_ACKNOWLEDGEMENT"),
-    onClick: () => downloadGCAcknowledgement(appData, tenants, t),
+    onClick: () => downloadGCAcknowledgement(application, tenants, t),
   });
   if (reciept_data?.Payments?.length > 0 && !recieptDataLoading) {
     downloadOptions.push({
@@ -158,8 +178,14 @@ const GCApplicationDetails = () => {
       onClick: () => downloadGCReceipt(reciept_data.Payments[0].tenantId, reciept_data.Payments[0]),
     });
   }
+  downloadOptions.push({
+    label: t("GC_VIEW_DISCONNECTION_HISTORY"),
+    onClick: () => setShowDisconnectionHistoryModal(true),
+  });
 
-  const docs = appData?.documents || [];
+  const docs = application?.documents || [];
+
+  const formatDisplayDate = (dVal) => formatDateValue(dVal, t("CS_NA"));
 
   const handleMakePayment = () => {
     navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
@@ -173,90 +199,43 @@ const GCApplicationDetails = () => {
     return <div>{t("GC_APPLICATION_NOT_FOUND")}</div>;
   }
 
-  // ---------- Additional Details ----------
-  let additionalDetails = appData?.additionalDetails || appData?.additionalDetail || {};
-  if (typeof additionalDetails === "string") {
-    try {
-      additionalDetails = JSON.parse(additionalDetails);
-    } catch (e) {
-      additionalDetails = {};
-    }
-  }
-
-  // ---------- Applicant / Owner Details ----------
-  const rawOwners =
-    appData?.additionalDetail?.applicantDetails ||
-    appData?.additionalDetails?.applicantDetails ||
-    appData?.applicantDetails ||
-    [];
-  const owners = Array.isArray(rawOwners) ? rawOwners : rawOwners ? [rawOwners] : [];
-
-  const ownerNames =
-    owners
-      ?.map((o) => o?.name || o?.applicantName || o?.ownerName)
-      ?.filter(Boolean)
-      ?.join(", ") ||
-    appData?.name ||
-    t("CS_NA");
-
-
-  const mobileNumbers =
-    owners?.map((o) => o?.mobileNumber)?.filter(Boolean)?.join(", ") ||
-    appData?.mobileNumber ||
-    t("CS_NA");
-
-  const emails =
-    owners
-      ?.map((o) => o?.emailId || o?.email || o?.emailAddress)
-      ?.filter(Boolean)
-      ?.join(", ") ||
-    appData?.emailId ||
-    appData?.email ||
-    additionalDetails?.emailId ||
-    appData?.user?.emailId;
-
-  const altMobileNumbers =
-    owners
-      ?.map((o) => o?.alternateNumber || o?.altMobileNumber || o?.altMobileNo || o?.alternateMobileNumber)
-      ?.filter(Boolean)
-      ?.join(", ") ||
-    appData?.alternateNumber ||
-    appData?.altMobileNumber ||
-    additionalDetails?.alternateNumber;
+  // ---------- Applicant Details ----------
+  const applicant = application?.additionalDetail?.applicantDetails?.[0];
+  const ownerNames = applicant?.applicantName || application?.name || t("CS_NA");
+  const mobileNumbers = applicant?.mobileNumber || application?.mobileNumber || t("CS_NA");
+  const altMobileNumbers = applicant?.alternateNumber;
+  const emails = applicant?.emailId || application?.emailId;
 
   // ---------- Address ----------
-  const address = appData?.addresses?.[0] || {};
+  const address = application?.addresses?.[0] || {};
   const addressAdditional = address?.additionalDetail || {};
-  const propertyLocation = appData?.propertyLocation || {};
 
-  const propertyId = appData?.propertyId || propertyLocation?.propertyId;
-  const pincode = address?.pincode || propertyLocation?.pincode;
-  const city = address?.city || propertyLocation?.city || appData?.tenantId;
-  const localityRaw = addressAdditional?.locality || propertyLocation?.locality;
-  const localityText = typeof localityRaw === "string" ? t(localityRaw) : localityRaw?.name ? t(localityRaw.name) : null;
-  const street = addressAdditional?.streetName || propertyLocation?.streetName;
-  const houseNo = addressAdditional?.houseNo || propertyLocation?.houseNo;
-  const buildingName = addressAdditional?.houseName || propertyLocation?.houseName;
-  const addressLine1 = address?.address1 || propertyLocation?.addressline1;
-  const addressLine2 = address?.address2 || propertyLocation?.addressline2;
-  const landmark = addressAdditional?.landmark || propertyLocation?.landmark;
+  const propertyId = application?.propertyId;
+  const pincode = address?.pincode;
+  const city = address?.city;
+  const localityText = addressAdditional?.locality ? t(addressAdditional.locality) : null;
+  const street = addressAdditional?.streetName;
+  const houseNo = addressAdditional?.houseNo;
+  const buildingName = addressAdditional?.houseName;
+  const addressLine1 = address?.address1;
+  const addressLine2 = address?.address2;
+  const landmark = addressAdditional?.landmark;
 
   // ---------- Garbage Specs ----------
-  const specs = appData?.grbgCollectionUnits?.[0] || {};
-  const garbageSpec = appData?.garbageSpecification || {};
-  const oldGarbageId = appData?.grbgOldDetails?.oldGarbageId || garbageSpec?.oldGarbageId;
-  const typeOfCollection = specs?.unitType || garbageSpec?.typeOfCollection;
-  const ownerOrTenant = specs?.ownerType || garbageSpec?.propertyOwnerType;
-  const category = specs?.category || garbageSpec?.category;
-  const subCategory = specs?.subCategory || garbageSpec?.subCategory;
-  const subCategoryType = specs?.subCategoryType || garbageSpec?.subCategoryType;
-  const no_of_units = specs?.no_of_units || garbageSpec?.no_of_units;
-  const specialCategory = specs?.specialCategory || garbageSpec?.specialCategory;
-  const isInheritance = specs?.isInheritance || garbageSpec?.isInheritance;
-  const specName = garbageSpec?.name || appData?.name;
-  const specPhone = garbageSpec?.phoneNumber || appData?.mobileNumber;
-  const specGender = garbageSpec?.gender || appData?.gender;
-  const specEmail = garbageSpec?.email || appData?.emailId;
+  const collectionUnit = application?.grbgCollectionUnits?.[0] || {};
+  const oldGarbageId = application?.grbgOldDetails?.oldGarbageId;
+  const typeOfCollection = collectionUnit?.unitType;
+  const ownerOrTenant = collectionUnit?.ownerType;
+  const category = collectionUnit?.category;
+  const subCategory = collectionUnit?.subCategory;
+  const subCategoryType = collectionUnit?.subCategoryType;
+  const no_of_units = collectionUnit?.no_of_units;
+  const specialCategory = collectionUnit?.specialCategory;
+  const isInheritance = collectionUnit?.isInheritance;
+  const specName = application?.name;
+  const specPhone = application?.mobileNumber;
+  const specGender = application?.gender;
+  const specEmail = application?.emailId;
   // ---------- Render ----------
   return (
     <React.Fragment>
@@ -281,9 +260,73 @@ const GCApplicationDetails = () => {
             <Row
               className="border-none"
               label={t("GC_APPLICATION_STATUS_LABEL")}
-              text={appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA")}
+              text={
+                appStatus ? (
+                  <span className={appStatus === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
+                    {t(`GC_STATUS_${appStatus}`)}
+                  </span>
+                ) : (
+                  t("CS_NA")
+                )
+              }
             />
-            {dueDate && <Row className="border-none" label={t("GC_DUE_DATE")} text={dueDate} />}
+            {appStatus === "DISCONNECTED" && application?.additionalDetail?.disconnectionDate && (
+              <Row
+                className="border-none"
+                label={t("GC_DISCONNECTION_DATE_LABEL")}
+                text={formatDisplayDate(application.additionalDetail.disconnectionDate)}
+              />
+            )}
+            {appStatus === "DISCONNECTED" && application?.additionalDetail?.disconnectionReason && (
+              <Row
+                className="border-none"
+                label={t("GC_REASON_FOR_DISCONNECTION")}
+                text={application.additionalDetail.disconnectionReason}
+              />
+            )}
+            {paymentStatus && (
+              <Row
+                className="border-none"
+                label={t("GC_PAYMENT_STATUS_LABEL")}
+                text={
+                  <span className={paymentStatus === "PAID" ? "gc-status-paid" : "gc-status-pending"}>
+                    {t(`GC_STATUS_${paymentStatus}`)}
+                  </span>
+                }
+              />
+            )}
+            {paymentAmount !== null && (
+              <Row
+                className="border-none"
+                label={t("GC_PAYMENT_AMOUNT_LABEL")}
+                text={`₹ ${paymentAmount}`}
+              />
+            )}
+            {dueDate && <Row className="border-none" label={t("GC_DUE_DATE")} text={formatDisplayDate(dueDate)} />}
+            <Row
+              className="border-none"
+              label={t("GC_PAYMENT_HISTORY_LABEL")}
+              text={
+                <span
+                  className="gc-payment-history-link"
+                  onClick={() => setShowPaymentHistoryModal(true)}
+                >
+                  {t("GC_VIEW_DETAILS")}
+                </span>
+              }
+            />
+            <Row
+              className="border-none"
+              label={t("GC_DISCONNECTION_HISTORY_LABEL")}
+              text={
+                <span
+                  className="gc-payment-history-link"
+                  onClick={() => setShowDisconnectionHistoryModal(true)}
+                >
+                  {t("GC_VIEW_DETAILS")}
+                </span>
+              }
+            />
           </StatusTable>
 
           {/* Applicant Details */}
@@ -349,25 +392,41 @@ const GCApplicationDetails = () => {
             </>
           )}
 
-          <GCWFApplicationTimeline application={appData} />
+          <GCWFApplicationTimeline application={application} />
 
 
         </Card>
 
-        {appStatus === "EDIT_APPLICATION" && (
+        {(canEdit || canDisconnect || canReconnect || isPendingPayment) && (
           <ActionBar>
-            <SubmitBar
-              label={t("GC_EDIT_APPLICATION")}
-              onSubmit={() =>
-                navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`)
-              }
-            />
-          </ActionBar>
-        )}
-
-        {appStatus === "PENDING_FOR_PAYMENT" && (
-          <ActionBar>
-            <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
+            <div className="gc-btn-row">
+              {canDisconnect && (
+                <SubmitBar
+                  label={t("GC_DISCONNECT_SERVICE")}
+                  onSubmit={() => setShowDisconnectModal(true)}
+                />
+              )}
+              {canReconnect && (
+                <SubmitBar
+                  label={t("GC_RECONNECT_SERVICE")}
+                  onSubmit={handleContinueService}
+                />
+              )}
+              {canEdit && (
+                <SubmitBar
+                  label={t("GC_EDIT_APPLICATION", "Edit Application")}
+                  onSubmit={() =>
+                    navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`)
+                  }
+                />
+              )}
+              {isPendingPayment && (
+                <SubmitBar
+                  label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT", "Make Payment")}
+                  onSubmit={handleMakePayment}
+                />
+              )}
+            </div>
           </ActionBar>
         )}
 
@@ -375,17 +434,39 @@ const GCApplicationDetails = () => {
           <Modal
             headerBarMain={<h1 className="heading-m">{t(`WF_EMPLOYEE_GC_${selectedAction.action}`)}</h1>}
             headerBarEnd={<CloseBtn onClick={() => setSelectedAction(null)} />}
-            actionCancelLabel={t("CS_COMMON_CANCEL")}
+            actionCancelLabel={t("CS_COMMON_CANCEL", "Cancel")}
             actionCancelOnSubmit={() => setSelectedAction(null)}
-            actionSaveLabel={t("CS_COMMON_SUBMIT")}
+            actionSaveLabel={t("CS_COMMON_SUBMIT", "Submit")}
             actionSaveOnSubmit={submitWorkflowAction}
           >
             <Card style={{ padding: "0px", margin: "0px", boxShadow: "none" }}>
-              <CardText>{t("WF_COMMON_COMMENTS")}</CardText>
+              <CardText>{t("WF_COMMON_COMMENTS", "Comments")}</CardText>
               <TextArea value={comments} onChange={(e) => setComments(e.target.value)} />
             </Card>
           </Modal>
         )}
+
+        <GCPauseServiceModal
+          isOpen={showDisconnectModal}
+          onClose={() => setShowDisconnectModal(false)}
+          onConfirm={handleDisconnectService}
+          applicationNo={appNo}
+          paymentAmount={paymentAmount}
+          paymentStatus={paymentStatus}
+        />
+
+        <GCPaymentHistoryModal
+          isOpen={showPaymentHistoryModal}
+          onClose={() => setShowPaymentHistoryModal(false)}
+          payments={reciept_data?.Payments}
+          tenantId={tenantId}
+        />
+
+        <GCPauseHistoryModal
+          isOpen={showDisconnectionHistoryModal}
+          onClose={() => setShowDisconnectionHistoryModal(false)}
+          application={application}
+        />
 
         {showToast && (
           <Toast
