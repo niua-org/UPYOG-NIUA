@@ -4,7 +4,7 @@ How to add this library to another module: [external-api-audit README](../../../
 
 Use this to confirm state inbound `_create` and PFMS outbound auth/data-push write the expected rows in `ug_external_api_*`.
 
-DX publishes to Kafka topic `external-api-audit-details`. Persister (`external-api-audit-persister.yml` in national-dashboard-ingest) writes the tables in the **ingest** database. DX does not JDBC-insert audit rows.
+DX publishes to Kafka topic `external-api-audit-details`. Persister (`external-api-audit-persister.yml` in the `external-api-audit` library) writes the tables in the **ingest** database. DX does not JDBC-insert audit rows.
 
 ## 1. Automated tests (table-backed)
 
@@ -32,7 +32,7 @@ Expected highlights:
 
 ## 2. Manual / deployed environment
 
-Prerequisites: DX service, Kafka, egov-persister, ingest Flyway (audit tables including `endpoint` and `method`). Query the **ingest** DB. Identity is `external_api_name`.
+Prerequisites: DX service, Kafka, egov-persister, ingest Flyway from the `external-api-audit` library. Query the **ingest** DB. Identity is `external_api_name`.
 
 ### 2.1 Inbound state `_create` SUCCESS
 
@@ -60,7 +60,7 @@ curl -s -X POST "$DX_HOST/upyog-data-dx/v1/transactions/_create" \
 ```
 
 ```sql
-SELECT correlation_id, tenant_id, endpoint, method, external_api_name, direction, status, http_status_code, retry_count
+SELECT correlation_id, tenant_id, external_api_name, direction, status, http_status_code, retry_count
 FROM ug_external_api_message_detail
 WHERE external_api_name = 'state-pfms-transaction-create'
 ORDER BY created_time DESC

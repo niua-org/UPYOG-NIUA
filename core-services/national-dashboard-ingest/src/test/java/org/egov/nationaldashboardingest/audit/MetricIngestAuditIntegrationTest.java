@@ -72,8 +72,6 @@ class MetricIngestAuditIntegrationTest {
         String correlationId = harness.onlyCorrelationId();
         Map<String, Object> message = harness.message(correlationId);
         assertEquals("pb.amritsar", message.get("tenant_id"));
-        assertEquals("/national-dashboard/metric/_ingest", message.get("endpoint"));
-        assertEquals("POST", message.get("method"));
         assertEquals(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST, message.get("external_api_name"));
         assertEquals(ExternalApiAuditConstants.DIRECTION_INBOUND, message.get("direction"));
         assertEquals(ExternalApiAuditConstants.STATUS_SUCCESS, message.get("status"));

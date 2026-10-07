@@ -237,8 +237,7 @@ public class ExternalApiAuditLogger {
 
     /**
      * Envelope stored in {@code ug_external_api_message_raw_detail.request_payload}
-     * and {@code response_payload}. {@code endpoint} and {@code method} are also persisted
-     * as columns on {@code ug_external_api_message_detail}.
+     * and {@code response_payload}, including {@code endpoint} and {@code method}.
      */
     private Object buildAuditablePayload(ExternalApiAuditDetail detail, Object rawPayload) {
         Map<String, Object> envelope = new LinkedHashMap<>();

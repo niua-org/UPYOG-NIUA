@@ -14,8 +14,8 @@ import lombok.ToString;
  * <p>
  * Call sites pass this model to {@link org.egov.externalaudit.service.ExternalApiAuditLogger}.
  * Two events (INITIATED then SUCCESS/FAILED) share {@link #correlationId} so persister
- * upserts a single row. Additive columns: {@code endpoint}, {@code method}.
- * {@code external_api_name} identifies the integration.
+ * upserts a single row. {@code external_api_name} identifies the integration.
+ * {@code endpoint} and {@code method} are stored in the raw JSON envelope.
  * </p>
  */
 @Getter
@@ -60,14 +60,14 @@ public class ExternalApiAuditDetail {
     private String direction;
 
     /**
-     * Target URL or inbound path. Column {@code endpoint} and raw-JSON key {@code endpoint}.
+     * Target URL or inbound path. Stored in the raw JSON envelope as {@code endpoint}.
      */
     @JsonProperty("endpoint")
     private String endpoint;
 
     /**
      * HTTP method of the integration call, for example {@code POST}.
-     * Column {@code method} and raw-JSON keys {@code method} / {@code httpMethod}.
+     * Stored in the raw JSON envelope as {@code method} / {@code httpMethod}.
      */
     @JsonProperty("method")
     private String method;

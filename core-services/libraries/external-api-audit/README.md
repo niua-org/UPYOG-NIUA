@@ -114,7 +114,7 @@ public ResponseEntity<?> verify(@RequestBody GstnRequest request) {
 }
 ```
 
-National Dashboard Ingest uses the same `ExternalApiAuditDetail` builder so columns and raw JSON include endpoint and method:
+National Dashboard Ingest uses the same `ExternalApiAuditDetail` builder so the raw JSON envelope includes endpoint and method:
 
 ```java
 integrationAuditLogger.logInboundApi(
@@ -188,16 +188,24 @@ Audit tables live in the **National Dashboard Ingest** Postgres schema (Flyway).
 - `ug_external_api_message_raw_detail`
 - `ug_external_api_error_detail`
 
-Do **not** create replacement tables. Additive Flyway only:
+Do **not** create replacement tables. Flyway scripts and persister YAML live in this library:
 
-- `V20261007150000__add_endpoint_and_method_to_external_api_audit.sql` drops unreleased `state` / `external_service` if present and adds `endpoint`, `method`
-- Integration identity is `external_api_name` (already on the production table)
+- `src/main/resources/db/migration/external-api-audit/` — table DDL (`V20250721130000`) and unique raw-detail index (`V20260918160000`)
+- `src/main/resources/external-api-audit-persister.yml`
 
-Call sites use the existing production model `ExternalApiAuditDetail` (`$.apiAuditDetail`), plus `ExternalApiAuditDetailWrapper` and `ExternalApiErrorDetails`. There is no separate context class.
+The service that owns the audit database (National Dashboard Ingest today) must include the library location:
 
-`external-api-audit-persister.yml` maps `endpoint`, `method`, and `externalApiName` onto `ug_external_api_message_detail`. Kafka `basePath` remains `$.apiAuditDetail`.
+```properties
+spring.flyway.locations=classpath:/db/migration/main,classpath:/db/migration/external-api-audit
+```
 
-Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `egov-persister` must load `national-dashboard-ingest/src/main/resources/external-api-audit-persister.yml`.
+Leave that extra location off DX and other adapters so they do not create `ug_external_api_*` in their own databases.
+
+Integration identity is `external_api_name`. Call sites use `ExternalApiAuditDetail` (`$.apiAuditDetail`), plus `ExternalApiAuditDetailWrapper` and `ExternalApiErrorDetails`.
+
+`external-api-audit-persister.yml` maps `externalApiName` onto `ug_external_api_message_detail`. Endpoint and HTTP method are written into the raw JSON envelope, not as table columns. Kafka `basePath` remains `$.apiAuditDetail`.
+
+Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `egov-persister` must load `core-services/libraries/external-api-audit/src/main/resources/external-api-audit-persister.yml`.
 
 Do not JDBC-insert from the business service.
 
@@ -221,7 +229,7 @@ Leave them `false` on DX and any new adapter unless that service is the one host
 
 ## Payload envelope and masking
 
-Endpoint and HTTP method are columns on `ug_external_api_message_detail` (`endpoint`, `method`) and are also written into the raw JSON envelope in `ug_external_api_message_raw_detail.request_payload` / `response_payload`:
+Endpoint and HTTP method are written into the raw JSON envelope in `ug_external_api_message_raw_detail.request_payload` / `response_payload`:
 
 ```json
 {

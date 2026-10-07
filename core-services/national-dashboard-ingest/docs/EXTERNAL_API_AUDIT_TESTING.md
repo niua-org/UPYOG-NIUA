@@ -4,7 +4,7 @@ How to add this library to another module: [external-api-audit README](../../lib
 
 Use this to confirm inbound metric ingest and bulk-row ingest write the expected rows in `ug_external_api_*`.
 
-Tables live in the National Dashboard Ingest database. Kafka topic `external-api-audit-details` is consumed by egov-persister using `src/main/resources/external-api-audit-persister.yml`.
+Tables live in the National Dashboard Ingest database. Kafka topic `external-api-audit-details` is consumed by egov-persister using `external-api-audit-persister.yml` from the `external-api-audit` library.
 
 ## 1. Automated tests (table-backed)
 
@@ -32,7 +32,7 @@ Expected highlights:
 
 ## 2. Manual / deployed environment
 
-Prerequisites: ingest service, Kafka, egov-persister loaded with `external-api-audit-persister.yml`, Postgres with Flyway applied (including `endpoint` and `method` columns). `external_api_name` identifies the integration.
+Prerequisites: ingest service, Kafka, egov-persister loaded with the library `external-api-audit-persister.yml`, Postgres with Flyway applied from `classpath:/db/migration/external-api-audit`. `external_api_name` identifies the integration.
 
 ### 2.1 Inbound metric SUCCESS
 
@@ -52,7 +52,7 @@ curl -s -X POST "$INGEST_HOST/national-dashboard-ingest/metric/_ingest" \
 Confirm:
 
 ```sql
-SELECT correlation_id, tenant_id, endpoint, method, external_api_name, direction, status,
+SELECT correlation_id, tenant_id, external_api_name, direction, status,
        http_status_code, retry_count
 FROM ug_external_api_message_detail
 ORDER BY created_time DESC
