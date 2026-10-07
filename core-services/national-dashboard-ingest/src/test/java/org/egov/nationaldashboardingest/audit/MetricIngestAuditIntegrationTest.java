@@ -55,7 +55,7 @@ class MetricIngestAuditIntegrationTest {
     void setUp() {
         harness.truncate();
         ingestService = mock(IngestService.class);
-        controller = controller(harness.newLogger("national-dashboard-ingest", true));
+        controller = controller(harness.newLogger(true));
     }
 
     @Test
@@ -72,7 +72,6 @@ class MetricIngestAuditIntegrationTest {
         String correlationId = harness.onlyCorrelationId();
         Map<String, Object> message = harness.message(correlationId);
         assertEquals("pb.amritsar", message.get("tenant_id"));
-        assertEquals("national-dashboard-ingest", message.get("external_service"));
         assertEquals("/national-dashboard/metric/_ingest", message.get("endpoint"));
         assertEquals("POST", message.get("method"));
         assertEquals(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST, message.get("external_api_name"));
@@ -154,7 +153,7 @@ class MetricIngestAuditIntegrationTest {
 
     @Test
     void payloadCaptureDisabled_storesEnvelopeWithoutBody() {
-        controller = controller(harness.newLogger("national-dashboard-ingest", false));
+        controller = controller(harness.newLogger(false));
         when(ingestService.ingestData(any())).thenReturn(List.of(9));
 
         controller.create(sampleRequest("origin-off", "pb.patiala"));
@@ -168,7 +167,7 @@ class MetricIngestAuditIntegrationTest {
 
     @Test
     void kafkaDown_doesNotFailBusinessCallAndWritesNoRows() {
-        controller = controller(harness.newLogger("national-dashboard-ingest", true, harness.throwingPublisher()));
+        controller = controller(harness.newLogger(true, harness.throwingPublisher()));
         when(ingestService.ingestData(any())).thenReturn(List.of(7));
 
         ResponseEntity<IngestResponse> response = controller.create(sampleRequest("origin-kafka", "pb.mohali"));

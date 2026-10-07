@@ -64,9 +64,6 @@ Typical UPYOG services already have Kafka via tracer / spring-kafka. If `Externa
 # Topic consumed by egov-persister (must match external-api-audit-persister.yml fromTopic)
 external.api.audit.detail.topic=external-api-audit-details
 
-# Stored in ug_external_api_message_detail.external_service — identify the source UPYOG service
-external.api.audit.source-service=my-external-adapter
-
 # Persist request/response bodies inside the JSON envelope (masked). false = metadata only
 external.api.audit.capture-payload.enabled=true
 external.api.audit.max.payload.bytes=204800
@@ -79,7 +76,6 @@ external.api.audit.cleanup.enabled=false
 | Property | Default | Meaning |
 |---|---|---|
 | `external.api.audit.detail.topic` | `external-api-audit-details` | Kafka topic for both INITIATED and SUCCESS/FAILED |
-| `external.api.audit.source-service` | `unknown` | Copied into column `external_service` |
 | `external.api.audit.capture-payload.enabled` | `true` | When false, envelope has `payloadCaptured: false` and no body |
 | `external.api.audit.max.payload.bytes` | `204800` | Oversize bodies are replaced with a truncated marker |
 | `external.api.audit.stale.threshold.ms` | `600000` | INITIATED older than this become `TIMED_OUT` |
@@ -194,16 +190,14 @@ Audit tables live in the **National Dashboard Ingest** Postgres schema (Flyway).
 
 Do **not** create replacement tables. Additive Flyway only:
 
-- `V20261006150000` added `state` on this branch (unreleased)
-- `V20261007150000` renames `state` to `external_service` and adds `endpoint`, `method`
+- `V20261007150000__add_endpoint_and_method_to_external_api_audit.sql` drops unreleased `state` / `external_service` if present and adds `endpoint`, `method`
+- Integration identity is `external_api_name` (already on the production table)
 
 Call sites use the existing production model `ExternalApiAuditDetail` (`$.apiAuditDetail`), plus `ExternalApiAuditDetailWrapper` and `ExternalApiErrorDetails`. There is no separate context class.
 
-`external-api-audit-persister.yml` maps `externalService`, `endpoint`, and `method` onto `ug_external_api_message_detail`. Kafka `basePath` remains `$.apiAuditDetail`.
+`external-api-audit-persister.yml` maps `endpoint`, `method`, and `externalApiName` onto `ug_external_api_message_detail`. Kafka `basePath` remains `$.apiAuditDetail`.
 
 Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `egov-persister` must load `national-dashboard-ingest/src/main/resources/external-api-audit-persister.yml`.
-
-Column `external_service` holds `external.api.audit.source-service` (for example `national-dashboard-ingest`, `upyog-data-dx`).
 
 Do not JDBC-insert from the business service.
 
@@ -295,7 +289,7 @@ mvn test -Dtest=PFMSInboundAuditIntegrationTest,PFMSOutboundAuditIntegrationTest
 ### Integration checklist for a new module
 
 1. Dependency + Kafka bean present; logger injects.
-2. `source-service` set; jobs **off** unless this service owns the audit DB.
+2. Jobs **off** unless this service owns the audit DB.
 3. Every external inbound/outbound path wrapped (no global interceptor).
 4. New logical call → new UUID; in-cycle retry → same UUID + higher `retryCount`.
 5. Secrets/PII field names masked in `ug_external_api_message_raw_detail`.

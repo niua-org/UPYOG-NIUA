@@ -33,7 +33,6 @@ class ExternalApiAuditLoggerTest {
         publisher = new RecordingPublisher();
         properties = new ExternalApiAuditProperties();
         properties.setDetailTopic("external-api-audit-details");
-        properties.setSourceService("upyog-data-dx");
         properties.setCapturePayloadEnabled(true);
         logger = new ExternalApiAuditLogger(publisher, properties, new ObjectMapper(),
                 new SensitivePayloadMasker(new ObjectMapper(), properties));
@@ -55,7 +54,6 @@ class ExternalApiAuditLoggerTest {
         ExternalApiAuditDetailWrapper responseWrapper = (ExternalApiAuditDetailWrapper) publisher.events.get(1);
 
         assertEquals("PFMS", requestWrapper.getApiAuditDetail().getTenantId());
-        assertEquals("upyog-data-dx", requestWrapper.getApiAuditDetail().getExternalService());
         assertEquals("http://pfms.example/data", requestWrapper.getApiAuditDetail().getEndpoint());
         assertEquals("POST", requestWrapper.getApiAuditDetail().getMethod());
         assertEquals(ExternalApiAuditConstants.API_PFMS_DATA_PUSH,

@@ -58,7 +58,7 @@ class PFMSForwardingRetryAuditIntegrationTest {
         dataFeignClient = mock(PFMSDataFeignClient.class);
         pfmsRepository = mock(PFMSRepository.class);
         PFMSApiClient apiClient = new PFMSApiClient(authFeignClient, dataFeignClient,
-                harness.newLogger("upyog-data-dx", true));
+                harness.newLogger(true));
         ReflectionTestUtils.setField(apiClient, "username", "pfms-user");
         ReflectionTestUtils.setField(apiClient, "password", "pfms-password-secret");
         ReflectionTestUtils.setField(apiClient, "clientIp", "10.0.0.8");

@@ -52,7 +52,7 @@ class PFMSOutboundAuditIntegrationTest {
         harness.truncate();
         authFeignClient = mock(PFMSAuthFeignClient.class);
         dataFeignClient = mock(PFMSDataFeignClient.class);
-        client = new PFMSApiClient(authFeignClient, dataFeignClient, harness.newLogger("upyog-data-dx", true));
+        client = new PFMSApiClient(authFeignClient, dataFeignClient, harness.newLogger(true));
         ReflectionTestUtils.setField(client, "username", "pfms-user");
         ReflectionTestUtils.setField(client, "password", "pfms-password-secret");
         ReflectionTestUtils.setField(client, "clientIp", "10.0.0.8");
@@ -74,7 +74,6 @@ class PFMSOutboundAuditIntegrationTest {
         String correlationId = harness.onlyCorrelationId();
         Map<String, Object> message = harness.message(correlationId);
         assertEquals("PFMS", message.get("tenant_id"));
-        assertEquals("upyog-data-dx", message.get("external_service"));
         assertEquals(ExternalApiAuditConstants.API_PFMS_AUTH, message.get("external_api_name"));
         assertEquals(ExternalApiAuditConstants.DIRECTION_OUTBOUND, message.get("direction"));
         assertEquals(ExternalApiAuditConstants.STATUS_SUCCESS, message.get("status"));

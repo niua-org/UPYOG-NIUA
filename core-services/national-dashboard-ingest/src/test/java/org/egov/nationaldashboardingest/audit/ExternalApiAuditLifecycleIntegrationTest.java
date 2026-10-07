@@ -187,7 +187,6 @@ class ExternalApiAuditLifecycleIntegrationTest {
                 .rawDetailId(UUID.randomUUID().toString())
                 .correlationId(correlationId)
                 .tenantId("pb.amritsar")
-                .externalService("national-dashboard-ingest")
                 .externalApiName(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST)
                 .direction(ExternalApiAuditConstants.DIRECTION_INBOUND)
                 .requestTime(time)

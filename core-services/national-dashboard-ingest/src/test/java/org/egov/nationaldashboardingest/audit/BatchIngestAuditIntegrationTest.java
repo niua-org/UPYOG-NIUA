@@ -49,7 +49,7 @@ class BatchIngestAuditIntegrationTest {
         processor = new BatchIngestionProcessorImpl();
         ReflectionTestUtils.setField(processor, "ingestService", ingestService);
         ReflectionTestUtils.setField(processor, "integrationAuditLogger",
-                harness.newLogger("national-dashboard-ingest", true));
+                harness.newLogger(true));
         ReflectionTestUtils.setField(processor, "applicationProperties", new ApplicationProperties());
     }
 

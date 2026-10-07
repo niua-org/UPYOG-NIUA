@@ -144,9 +144,6 @@ public class ExternalApiAuditLogger {
         if (detail.getRetryCount() == null) {
             detail.setRetryCount(0);
         }
-        if (isBlank(detail.getExternalService())) {
-            detail.setExternalService(properties.getSourceService());
-        }
         if (isBlank(detail.getTenantId())) {
             detail.setTenantId(ExternalApiAuditConstants.DEFAULT_TENANT);
         }
@@ -216,7 +213,6 @@ public class ExternalApiAuditLogger {
         return ExternalApiAuditDetail.builder()
                 .correlationId(detail.getCorrelationId())
                 .tenantId(detail.getTenantId())
-                .externalService(detail.getExternalService())
                 .externalApiName(detail.getExternalApiName())
                 .direction(detail.getDirection())
                 .endpoint(detail.getEndpoint())

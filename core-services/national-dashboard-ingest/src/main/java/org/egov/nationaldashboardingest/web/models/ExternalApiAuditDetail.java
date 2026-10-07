@@ -33,9 +33,6 @@ public class ExternalApiAuditDetail {
     @JsonProperty("tenantId")
     private String tenantId;
 
-    @JsonProperty("externalService")
-    private String externalService;
-
     @JsonProperty("externalApiName")
     private String externalApiName;
 

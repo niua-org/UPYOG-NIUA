@@ -51,7 +51,7 @@ class PFMSInboundAuditIntegrationTest {
         harness.truncate();
         pfmsService = mock(PFMSService.class);
         controller = new PFMSController(pfmsService, mock(PFMSForwardingService.class),
-                harness.newLogger("upyog-data-dx", true));
+                harness.newLogger(true));
     }
 
     @Test
@@ -67,7 +67,6 @@ class PFMSInboundAuditIntegrationTest {
         String correlationId = harness.onlyCorrelationId();
         Map<String, Object> message = harness.message(correlationId);
         assertEquals("PFMS", message.get("tenant_id"));
-        assertEquals("upyog-data-dx", message.get("external_service"));
         assertEquals(ExternalApiAuditConstants.API_STATE_PFMS_TRANSACTION_CREATE, message.get("external_api_name"));
         assertEquals(ExternalApiAuditConstants.DIRECTION_INBOUND, message.get("direction"));
         assertEquals(ExternalApiAuditConstants.STATUS_SUCCESS, message.get("status"));
@@ -118,7 +117,7 @@ class PFMSInboundAuditIntegrationTest {
     @Test
     void payloadCaptureDisabled_doesNotStoreBodies() {
         controller = new PFMSController(pfmsService, mock(PFMSForwardingService.class),
-                harness.newLogger("upyog-data-dx", false));
+                harness.newLogger(false));
         when(pfmsService.createTransaction(any())).thenReturn("SUCCESS");
 
         controller.createTransaction(sampleRequest("origin-off"));
@@ -131,7 +130,7 @@ class PFMSInboundAuditIntegrationTest {
 
     @Test
     void kafkaDown_doesNotFailInboundCreate() {
-        ExternalApiAuditLogger logger = harness.newLogger("upyog-data-dx", true, harness.throwingPublisher());
+        ExternalApiAuditLogger logger = harness.newLogger(true, harness.throwingPublisher());
         controller = new PFMSController(pfmsService, mock(PFMSForwardingService.class), logger);
         when(pfmsService.createTransaction(any())).thenReturn("SUCCESS");
 

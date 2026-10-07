@@ -14,7 +14,8 @@ import lombok.ToString;
  * <p>
  * Call sites pass this model to {@link org.egov.externalaudit.service.ExternalApiAuditLogger}.
  * Two events (INITIATED then SUCCESS/FAILED) share {@link #correlationId} so persister
- * upserts a single row. Additive columns: {@code external_service}, {@code endpoint}, {@code method}.
+ * upserts a single row. Additive columns: {@code endpoint}, {@code method}.
+ * {@code external_api_name} identifies the integration.
  * </p>
  */
 @Getter
@@ -46,12 +47,9 @@ public class ExternalApiAuditDetail {
     private String tenantId;
 
     /**
-     * Source UPYOG service, persisted in column {@code external_service}.
-     * Defaults to {@code external.api.audit.source-service} when blank.
+     * Stable integration name, for example {@code pfms-data-push}.
+     * Persisted in column {@code external_api_name}.
      */
-    @JsonProperty("externalService")
-    private String externalService;
-
     @JsonProperty("externalApiName")
     private String externalApiName;
 

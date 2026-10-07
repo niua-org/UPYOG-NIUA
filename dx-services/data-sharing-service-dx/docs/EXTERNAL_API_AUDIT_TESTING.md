@@ -26,14 +26,13 @@ First run downloads an embedded Postgres binary (needs network). Later runs are 
 Expected highlights:
 
 - `tenant_id` = `PFMS` for inbound and outbound
-- `state` = `upyog-data-dx`
 - Inbound API name `state-pfms-transaction-create`, direction `INBOUND`
 - Outbound API names `pfms-auth` and `pfms-data-push`, direction `OUTBOUND`
 - Password, AccessToken, RefreshToken, bank account fields stored as `********`
 
 ## 2. Manual / deployed environment
 
-Prerequisites: DX service, Kafka, egov-persister, ingest Flyway (audit tables + `state` column). Query the **ingest** DB.
+Prerequisites: DX service, Kafka, egov-persister, ingest Flyway (audit tables including `endpoint` and `method`). Query the **ingest** DB. Identity is `external_api_name`.
 
 ### 2.1 Inbound state `_create` SUCCESS
 
@@ -61,7 +60,7 @@ curl -s -X POST "$DX_HOST/upyog-data-dx/v1/transactions/_create" \
 ```
 
 ```sql
-SELECT correlation_id, tenant_id, state, external_api_name, direction, status, http_status_code, retry_count
+SELECT correlation_id, tenant_id, endpoint, method, external_api_name, direction, status, http_status_code, retry_count
 FROM ug_external_api_message_detail
 WHERE external_api_name = 'state-pfms-transaction-create'
 ORDER BY created_time DESC
@@ -70,7 +69,7 @@ LIMIT 5;
 
 Pass:
 
-- One row, `tenant_id=PFMS`, `state=upyog-data-dx`, `direction=INBOUND`, `status=SUCCESS`
+- One row, `tenant_id=PFMS`, `external_api_name=state-pfms-transaction-create`, `direction=INBOUND`, `status=SUCCESS`
 - `correlation_id` ≠ `state-origin-1` (originating id is inside raw JSON)
 - Auth token and bank accounts masked as `********`
 

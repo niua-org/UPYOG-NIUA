@@ -26,11 +26,10 @@ import java.util.Map;
 public final class ExternalApiAuditTableHarness implements AutoCloseable {
 
     private static final String MESSAGE_SQL = """
-            INSERT INTO ug_external_api_message_detail(id, correlation_id, tenant_id, external_service, endpoint, method, external_api_name, direction, request_time, status, http_status_code, response_time, duration_ms, retry_count, created_time, last_modified_time)
-            VALUES (COALESCE(cast(? as uuid), gen_random_uuid()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 0), COALESCE(?, 0), ?)
+            INSERT INTO ug_external_api_message_detail(id, correlation_id, tenant_id, endpoint, method, external_api_name, direction, request_time, status, http_status_code, response_time, duration_ms, retry_count, created_time, last_modified_time)
+            VALUES (COALESCE(cast(? as uuid), gen_random_uuid()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 0), COALESCE(?, 0), ?)
             ON CONFLICT (correlation_id) DO UPDATE SET
               tenant_id = COALESCE(EXCLUDED.tenant_id, ug_external_api_message_detail.tenant_id),
-              external_service = COALESCE(EXCLUDED.external_service, ug_external_api_message_detail.external_service),
               endpoint = COALESCE(EXCLUDED.endpoint, ug_external_api_message_detail.endpoint),
               method = COALESCE(EXCLUDED.method, ug_external_api_message_detail.method),
               external_api_name = COALESCE(EXCLUDED.external_api_name, ug_external_api_message_detail.external_api_name),
@@ -88,15 +87,13 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
         }
     }
 
-    public ExternalApiAuditLogger newLogger(String sourceService, boolean capturePayload) {
-        return newLogger(sourceService, capturePayload, persistingPublisher());
+    public ExternalApiAuditLogger newLogger(boolean capturePayload) {
+        return newLogger(capturePayload, persistingPublisher());
     }
 
-    public ExternalApiAuditLogger newLogger(String sourceService, boolean capturePayload,
-            ExternalApiAuditPublisher publisher) {
+    public ExternalApiAuditLogger newLogger(boolean capturePayload, ExternalApiAuditPublisher publisher) {
         ExternalApiAuditProperties properties = new ExternalApiAuditProperties();
         properties.setDetailTopic("external-api-audit-details");
-        properties.setSourceService(sourceService);
         properties.setCapturePayloadEnabled(capturePayload);
         properties.setStaleThresholdMs(600000);
         properties.getCleanup().setRetentionMs(2592000000L);
@@ -127,7 +124,6 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
                     detail.getId(),
                     detail.getCorrelationId(),
                     detail.getTenantId(),
-                    detail.getExternalService(),
                     detail.getEndpoint(),
                     detail.getMethod(),
                     detail.getExternalApiName(),
@@ -191,7 +187,7 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
 
     public Map<String, Object> message(String correlationId) {
         return jdbc.queryForMap("""
-                SELECT correlation_id, tenant_id, external_service, endpoint, method, external_api_name, direction, status,
+                SELECT correlation_id, tenant_id, endpoint, method, external_api_name, direction, status,
                        http_status_code, retry_count, request_time, response_time, duration_ms
                 FROM ug_external_api_message_detail
                 WHERE correlation_id = ?
@@ -218,7 +214,7 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
 
     public List<Map<String, Object>> messagesByApi(String externalApiName) {
         return jdbc.queryForList("""
-                SELECT correlation_id, tenant_id, external_service, endpoint, method, external_api_name, direction, status,
+                SELECT correlation_id, tenant_id, endpoint, method, external_api_name, direction, status,
                        http_status_code, retry_count
                 FROM ug_external_api_message_detail
                 WHERE external_api_name = ?
@@ -276,10 +272,6 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
                     created_time BIGINT NOT NULL,
                     last_modified_time BIGINT NOT NULL
                 )
-                """);
-        jdbc.execute("""
-                ALTER TABLE ug_external_api_message_detail
-                    ADD COLUMN IF NOT EXISTS external_service VARCHAR(256)
                 """);
         jdbc.execute("""
                 ALTER TABLE ug_external_api_message_detail

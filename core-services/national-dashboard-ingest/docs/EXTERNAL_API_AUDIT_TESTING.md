@@ -25,7 +25,6 @@ First run downloads an embedded Postgres binary (needs network). Later runs are 
 
 Expected highlights:
 
-- `state` = `national-dashboard-ingest`
 - `external_api_name` = `national-dashboard-metric-ingest`
 - `direction` = `INBOUND`
 - RequestInfo `authToken` is stored as `********`
@@ -33,7 +32,7 @@ Expected highlights:
 
 ## 2. Manual / deployed environment
 
-Prerequisites: ingest service, Kafka, egov-persister loaded with `external-api-audit-persister.yml`, Postgres with Flyway applied (including `external_service`, `endpoint`, and `method` columns).
+Prerequisites: ingest service, Kafka, egov-persister loaded with `external-api-audit-persister.yml`, Postgres with Flyway applied (including `endpoint` and `method` columns). `external_api_name` identifies the integration.
 
 ### 2.1 Inbound metric SUCCESS
 
@@ -53,7 +52,7 @@ curl -s -X POST "$INGEST_HOST/national-dashboard-ingest/metric/_ingest" \
 Confirm:
 
 ```sql
-SELECT correlation_id, tenant_id, state, external_api_name, direction, status,
+SELECT correlation_id, tenant_id, endpoint, method, external_api_name, direction, status,
        http_status_code, retry_count
 FROM ug_external_api_message_detail
 ORDER BY created_time DESC
@@ -70,7 +69,7 @@ LIMIT 1;
 Pass criteria:
 
 - One new `message_detail` row, `status=SUCCESS`, `http_status_code=200`, `retry_count=0`
-- `tenant_id=pb.amritsar`, `state=national-dashboard-ingest`
+- `tenant_id=pb.amritsar`, `external_api_name=national-dashboard-metric-ingest`
 - `correlation_id` is a new UUID, not `manual-origin-1`
 - Raw payload `originatingCorrelationId=manual-origin-1`
 - `authToken` / secrets appear as `********`, never the plain token
