@@ -118,14 +118,18 @@ public ResponseEntity<?> verify(@RequestBody GstnRequest request) {
 }
 ```
 
-National Dashboard Ingest still uses the older overload (originating id as the first String argument):
+National Dashboard Ingest uses the same context builder so raw JSON includes endpoint and method:
 
 ```java
 integrationAuditLogger.logInboundApi(
-        requestInfo.getCorrelationId(),   // originating id, NOT the table PK
-        ulbTenantId,
-        ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST,
-        ingestRequest,
+        ExternalIntegrationContext.builder()
+                .originatingCorrelationId(requestInfo.getCorrelationId())
+                .tenantId(ulbTenantId)
+                .externalApiName(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST)
+                .requestPayload(ingestRequest)
+                .endpoint("/national-dashboard/metric/_ingest")
+                .httpMethod("POST")
+                .build(),
         () -> ingestService.ingestData(ingestRequest));
 ```
 
@@ -224,7 +228,7 @@ Leave them `false` on DX and any new adapter unless that service is the one host
 
 ## Payload envelope and masking
 
-Each stored JSON body is an envelope, not the raw HTTP body:
+Each stored JSON body is an envelope in `ug_external_api_message_raw_detail.request_payload` / `response_payload` (JSONB), not table columns. Endpoint and HTTP method are always written as keys `endpoint`, `httpMethod`, and `method`:
 
 ```json
 {
@@ -232,12 +236,13 @@ Each stored JSON body is an envelope, not the raw HTTP body:
   "businessReferenceId": "txn-id",
   "endpoint": "https://...",
   "httpMethod": "POST",
+  "method": "POST",
   "retryCount": 0,
   "payload": { }
 }
 ```
 
-When capture is off: `{ "payloadCaptured": false, "retryCount": 0, ... }`.
+When capture is off: `{ "endpoint": "...", "httpMethod": "POST", "method": "POST", "payloadCaptured": false, "retryCount": 0, ... }`.
 
 `SensitivePayloadMasker` replaces values whose JSON field names match (case-insensitive, non-alphanumerics stripped): `password`, `authToken`, `AccessToken`, `RefreshToken`, `ULBBankAccountNumber`, `BeneficiaryAccountNumber`, `FromAccount`, `ToAccount`, and the rest of `external.api.audit.sensitive-fields`. Masked value is `********`.
 

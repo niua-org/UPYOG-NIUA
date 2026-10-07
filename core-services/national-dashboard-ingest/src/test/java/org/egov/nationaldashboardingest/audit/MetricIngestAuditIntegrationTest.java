@@ -84,6 +84,10 @@ class MetricIngestAuditIntegrationTest {
         String requestPayload = String.valueOf(raw.get("request_payload"));
         String responsePayload = String.valueOf(raw.get("response_payload"));
         assertTrue(requestPayload.contains("origin-1"));
+        assertTrue(requestPayload.contains("/national-dashboard/metric/_ingest"));
+        assertTrue(requestPayload.contains("\"endpoint\""));
+        assertTrue(requestPayload.contains("\"httpMethod\"") || requestPayload.contains("\"method\""));
+        assertTrue(requestPayload.contains("POST"));
         assertTrue(requestPayload.contains("********"));
         assertFalse(requestPayload.contains("super-secret-token"));
         assertTrue(responsePayload.contains("101"));

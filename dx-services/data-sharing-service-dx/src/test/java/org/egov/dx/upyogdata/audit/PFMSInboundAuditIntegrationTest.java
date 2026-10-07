@@ -78,6 +78,9 @@ class PFMSInboundAuditIntegrationTest {
         String responsePayload = String.valueOf(harness.raw(correlationId).get("response_payload"));
         assertTrue(requestPayload.contains("state-corr-1"));
         assertTrue(requestPayload.contains("/upyog-data-dx/v1/transactions/_create"));
+        assertTrue(requestPayload.contains("\"endpoint\""));
+        assertTrue(requestPayload.contains("\"method\""));
+        assertTrue(requestPayload.contains("POST"));
         assertTrue(requestPayload.contains("********"));
         assertFalse(requestPayload.contains("state-secret-token"));
         assertTrue(responsePayload.contains("ACCEPTED"));

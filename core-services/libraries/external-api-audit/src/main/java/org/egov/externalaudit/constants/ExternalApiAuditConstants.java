@@ -44,6 +44,15 @@ public final class ExternalApiAuditConstants {
     /** Outbound PFMS voucher / data push. */
     public static final String API_PFMS_DATA_PUSH = "pfms-data-push";
 
+    /** Raw JSONB envelope key for the integration URL or inbound path. */
+    public static final String ENVELOPE_ENDPOINT = "endpoint";
+
+    /** Raw JSONB envelope key for the HTTP method (existing name). */
+    public static final String ENVELOPE_HTTP_METHOD = "httpMethod";
+
+    /** Raw JSONB envelope key for the HTTP method (alias of {@link #ENVELOPE_HTTP_METHOD}). */
+    public static final String ENVELOPE_METHOD = "method";
+
     public static final String PAYLOAD_TRUNCATED_MESSAGE = "Payload truncated due to size limit";
 
     /** Replacement value written for masked secret / PII fields. */

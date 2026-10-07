@@ -71,12 +71,13 @@ public class ExternalIntegrationContext {
     private String businessReferenceId;
 
     /**
-     * Target URL or inbound path, stored in the envelope for operations.
+     * Target URL or inbound path. Stored in raw JSON as {@code endpoint}, not as a table column.
      */
     private String endpoint;
 
     /**
      * HTTP method of the integration call, for example {@code POST}.
+     * Stored in raw JSON as both {@code httpMethod} and {@code method}.
      */
     private String httpMethod;
 }

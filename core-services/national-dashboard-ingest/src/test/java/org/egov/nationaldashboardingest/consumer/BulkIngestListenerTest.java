@@ -3,6 +3,7 @@ package org.egov.nationaldashboardingest.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.nationaldashboardingest.config.ApplicationProperties;
 import org.egov.nationaldashboardingest.producer.Producer;
+import org.egov.externalaudit.model.ExternalIntegrationContext;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.service.IngestService;
 import org.egov.nationaldashboardingest.service.impl.BatchIngestionProcessorImpl;
@@ -126,7 +127,7 @@ class BulkIngestListenerTest {
         bulkIngestListener.listen(record, "key", "bulk-ingest-init");
 
         verify(s3FileDownloader).downloadFileFromS3(initDetail.getFileName());
-        verify(integrationAuditLogger, times(1)).logInboundApi(any(), any(), any(), any(), any());
+        verify(integrationAuditLogger, times(1)).logInboundApi(any(ExternalIntegrationContext.class), any());
         verify(bulkIngestJobRepository).updateJobStatus(any(), eq("COMPLETED"), eq(1), eq(0), anyLong());
     }
 
@@ -154,7 +155,7 @@ class BulkIngestListenerTest {
         bulkIngestListener.listen(record, "key", "bulk-ingest-init");
 
         // Should call logInboundApi for each of the 2 rows individually
-        verify(integrationAuditLogger, times(2)).logInboundApi(any(), any(), any(), any(), any());
+        verify(integrationAuditLogger, times(2)).logInboundApi(any(ExternalIntegrationContext.class), any());
     }
 
     /**

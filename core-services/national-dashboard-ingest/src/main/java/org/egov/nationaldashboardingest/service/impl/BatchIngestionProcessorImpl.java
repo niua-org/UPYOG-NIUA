@@ -6,6 +6,7 @@ import org.egov.common.contract.request.User;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.nationaldashboardingest.service.BatchIngestionProcessor;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
+import org.egov.externalaudit.model.ExternalIntegrationContext;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.service.IngestService;
 import org.egov.nationaldashboardingest.utils.ResponseInfoFactory;
@@ -108,10 +109,14 @@ public class BatchIngestionProcessorImpl implements BatchIngestionProcessor {
             try {
                 // Originating id is per-row so bulk ingest writes one audit row per Excel row.
                 integrationAuditLogger.logInboundApi(
-                        rowCorrelationId,
-                        tenantId,
-                        ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST,
-                        singleRequest,
+                        ExternalIntegrationContext.builder()
+                                .originatingCorrelationId(rowCorrelationId)
+                                .tenantId(tenantId)
+                                .externalApiName(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST)
+                                .requestPayload(singleRequest)
+                                .endpoint("/national-dashboard/bulk/v1/_init")
+                                .httpMethod("POST")
+                                .build(),
                         () -> {
                             List<Integer> responseHash = ingestService.ingestData(singleRequest);
                             ResponseInfo responseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(

@@ -46,6 +46,8 @@ class ExternalApiAuditLoggerTest {
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_DATA_PUSH)
                 .requestPayload(Map.of("voucherNumber", "V1"))
                 .originatingCorrelationId("business-corr")
+                .endpoint("http://pfms.example/data")
+                .httpMethod("POST")
                 .build(), () -> "ok");
 
         assertEquals(2, publisher.events.size());
@@ -64,6 +66,19 @@ class ExternalApiAuditLoggerTest {
         assertEquals(ExternalApiAuditConstants.STATUS_SUCCESS, responseWrapper.getApiAuditDetail().getStatus());
         assertEquals(200, responseWrapper.getApiAuditDetail().getHttpStatusCode());
         assertEquals("ok", body);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> requestEnvelope =
+                (Map<String, Object>) requestWrapper.getApiAuditDetail().getRequestPayload();
+        assertEquals("http://pfms.example/data", requestEnvelope.get(ExternalApiAuditConstants.ENVELOPE_ENDPOINT));
+        assertEquals("POST", requestEnvelope.get(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD));
+        assertEquals("POST", requestEnvelope.get(ExternalApiAuditConstants.ENVELOPE_METHOD));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseEnvelope =
+                (Map<String, Object>) responseWrapper.getApiAuditDetail().getResponsePayload();
+        assertEquals("http://pfms.example/data", responseEnvelope.get(ExternalApiAuditConstants.ENVELOPE_ENDPOINT));
+        assertEquals("POST", responseEnvelope.get(ExternalApiAuditConstants.ENVELOPE_METHOD));
     }
 
     @Test
@@ -118,6 +133,8 @@ class ExternalApiAuditLoggerTest {
         Map<String, Object> envelope = (Map<String, Object>) requestWrapper.getApiAuditDetail().getRequestPayload();
         assertEquals(false, envelope.get("payloadCaptured"));
         assertTrue(!envelope.containsKey("payload"));
+        assertTrue(envelope.containsKey(ExternalApiAuditConstants.ENVELOPE_ENDPOINT));
+        assertTrue(envelope.containsKey(ExternalApiAuditConstants.ENVELOPE_METHOD));
     }
 
     @Test

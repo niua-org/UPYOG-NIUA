@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -73,6 +74,12 @@ class BatchIngestAuditIntegrationTest {
         assertEquals("SUCCESS", rows.get(0).get("status"));
         assertEquals("SUCCESS", rows.get(1).get("status"));
         assertNotEquals(rows.get(0).get("correlation_id"), rows.get(1).get("correlation_id"));
+
+        String requestPayload = String.valueOf(
+                harness.raw(String.valueOf(rows.get(0).get("correlation_id"))).get("request_payload"));
+        assertTrue(requestPayload.contains("/national-dashboard/bulk/v1/_init"));
+        assertTrue(requestPayload.contains("\"method\""));
+        assertTrue(requestPayload.contains("POST"));
     }
 
     @Test

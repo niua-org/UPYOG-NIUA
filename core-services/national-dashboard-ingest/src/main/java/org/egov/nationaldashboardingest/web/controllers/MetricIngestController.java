@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.nationaldashboardingest.service.IngestService;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
+import org.egov.externalaudit.model.ExternalIntegrationContext;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.utils.ResponseInfoFactory;
 import org.egov.nationaldashboardingest.web.models.IngestRequest;
@@ -48,9 +49,10 @@ public class MetricIngestController {
     /**
      * Inbound National Dashboard metric ingest from an external producer.
      * <p>
-     * Wrapped with {@link ExternalApiAuditLogger#logInboundApi(String, String, String, Object, java.util.function.Supplier)}
-     * so each HTTP call writes one audit row ({@code national-dashboard-metric-ingest}, direction INBOUND).
+     * Wrapped with {@link ExternalApiAuditLogger#logInboundApi} so each HTTP call writes one
+     * audit row ({@code national-dashboard-metric-ingest}, direction INBOUND).
      * RequestInfo {@code correlationId} is stored as originating id; the table key is a new UUID.
+     * Endpoint and method are stored in raw JSON ({@code request_payload}/{@code response_payload}).
      * </p>
      *
      * @param ingestRequest UPYOG ingest payload ({@code RequestInfo} + {@code Data})
@@ -59,10 +61,14 @@ public class MetricIngestController {
     @RequestMapping(value="/_ingest", method = RequestMethod.POST)
     public ResponseEntity<IngestResponse> create(@RequestBody @Valid IngestRequest ingestRequest) {
         return integrationAuditLogger.logInboundApi(
-                resolveCorrelationId(ingestRequest),
-                resolveTenantId(ingestRequest),
-                ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST,
-                ingestRequest,
+                ExternalIntegrationContext.builder()
+                        .originatingCorrelationId(resolveCorrelationId(ingestRequest))
+                        .tenantId(resolveTenantId(ingestRequest))
+                        .externalApiName(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST)
+                        .requestPayload(ingestRequest)
+                        .endpoint("/national-dashboard/metric/_ingest")
+                        .httpMethod("POST")
+                        .build(),
                 () -> {
                     log.info("Received request: " + ingestRequest.getIngestData().toString());
                     List<Integer> responseHash = ingestService.ingestData(ingestRequest);

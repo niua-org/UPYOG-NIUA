@@ -246,12 +246,18 @@ public class ExternalApiAuditLogger {
         }
     }
 
+    /**
+     * Envelope stored in {@code ug_external_api_message_raw_detail.request_payload}
+     * and {@code response_payload}. {@code endpoint} / {@code httpMethod} / {@code method}
+     * are always present as JSON keys (not table columns).
+     */
     private Object buildAuditablePayload(ExternalIntegrationContext context, Object rawPayload) {
         Map<String, Object> envelope = new LinkedHashMap<>();
         putIfPresent(envelope, "originatingCorrelationId", context.getOriginatingCorrelationId());
         putIfPresent(envelope, "businessReferenceId", context.getBusinessReferenceId());
-        putIfPresent(envelope, "endpoint", context.getEndpoint());
-        putIfPresent(envelope, "httpMethod", context.getHttpMethod());
+        envelope.put(ExternalApiAuditConstants.ENVELOPE_ENDPOINT, context.getEndpoint());
+        envelope.put(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD, context.getHttpMethod());
+        envelope.put(ExternalApiAuditConstants.ENVELOPE_METHOD, context.getHttpMethod());
         envelope.put("retryCount", context.getRetryCount());
         if (properties.isCapturePayloadEnabled()) {
             envelope.put("payload", sensitivePayloadMasker.mask(rawPayload));
@@ -442,6 +448,14 @@ public class ExternalApiAuditLogger {
                 return new PayloadResult(payload, payloadSizeBytes);
             }
             Map<String, Object> truncatedPayload = new LinkedHashMap<>();
+            if (payload instanceof Map<?, ?> original) {
+                truncatedPayload.put(ExternalApiAuditConstants.ENVELOPE_ENDPOINT,
+                        original.get(ExternalApiAuditConstants.ENVELOPE_ENDPOINT));
+                truncatedPayload.put(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD,
+                        original.get(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD));
+                truncatedPayload.put(ExternalApiAuditConstants.ENVELOPE_METHOD,
+                        original.get(ExternalApiAuditConstants.ENVELOPE_METHOD));
+            }
             truncatedPayload.put("truncated", true);
             truncatedPayload.put("originalSizeBytes", payloadSizeBytes);
             truncatedPayload.put("message", ExternalApiAuditConstants.PAYLOAD_TRUNCATED_MESSAGE);

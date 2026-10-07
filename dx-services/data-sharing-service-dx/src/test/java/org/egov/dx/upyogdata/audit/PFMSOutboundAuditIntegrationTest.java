@@ -82,6 +82,10 @@ class PFMSOutboundAuditIntegrationTest {
         Map<String, Object> raw = harness.raw(correlationId);
         String requestPayload = String.valueOf(raw.get("request_payload"));
         String responsePayload = String.valueOf(raw.get("response_payload"));
+        assertTrue(requestPayload.contains("http://pfms.example/auth"));
+        assertTrue(requestPayload.contains("\"endpoint\""));
+        assertTrue(requestPayload.contains("\"method\""));
+        assertTrue(requestPayload.contains("POST"));
         assertTrue(requestPayload.contains("********"));
         assertFalse(requestPayload.contains("pfms-password-secret"));
         assertTrue(responsePayload.contains("********"));
