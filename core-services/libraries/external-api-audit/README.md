@@ -182,7 +182,23 @@ Persister `ON CONFLICT (correlation_id)` keeps `SUCCESS`/`FAILED` sticky unless 
 
 ### 9. Persister and database
 
-Audit tables live in the **National Dashboard Ingest** Postgres schema (Flyway). Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `egov-persister` must load `national-dashboard-ingest/src/main/resources/external-api-audit-persister.yml`.
+Audit tables live in the **National Dashboard Ingest** Postgres schema (Flyway). Existing tables are reused:
+
+- `ug_external_api_message_detail`
+- `ug_external_api_message_raw_detail`
+- `ug_external_api_error_detail`
+
+Do **not** create replacement tables. The only schema delta is Flyway `V20261006150000__add_state_to_external_api_audit.sql` (`ALTER TABLE ... ADD COLUMN state`).
+
+Existing persistence models keep their names and JSON keys:
+
+- `ExternalApiAuditDetail` (`$.apiAuditDetail`)
+- `ExternalApiAuditDetailWrapper`
+- `ExternalApiErrorDetails`
+
+`state` is added on the existing model. `external-api-audit-persister.yml` maps that field into `ug_external_api_message_detail.state`. Kafka `basePath` remains `$.apiAuditDetail`.
+
+Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `egov-persister` must load `national-dashboard-ingest/src/main/resources/external-api-audit-persister.yml`.
 
 Column `state` holds `external.api.audit.source-service` (for example `national-dashboard-ingest`, `upyog-data-dx`).
 
