@@ -8,9 +8,9 @@ import org.egov.dx.upyogdata.pfms.models.PFMSAuthRequest;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthResponse;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransactionFormData;
-import org.egov.externalaudit.constants.ExternalApiAuditConstants;
-import org.egov.externalaudit.model.ExternalApiAuditDetail;
-import org.egov.externalaudit.service.ExternalApiAuditLogger;
+import org.upyog.externalaudit.constants.ExternalApiAuditConstants;
+import org.upyog.externalaudit.model.ExternalApiAuditDetail;
+import org.upyog.externalaudit.service.ExternalApiAuditLogger;
 import org.springframework.stereotype.Component;
 
 /**

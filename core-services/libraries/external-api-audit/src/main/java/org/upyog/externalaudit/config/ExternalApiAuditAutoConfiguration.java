@@ -18,6 +18,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 @AutoConfiguration
 @ConditionalOnClass(KafkaTemplate.class)
 @EnableConfigurationProperties(ExternalApiAuditProperties.class)
-@ComponentScan(basePackages = "org.egov.externalaudit")
+@ComponentScan(basePackages = "org.upyog.externalaudit")
 public class ExternalApiAuditAutoConfiguration {
 }

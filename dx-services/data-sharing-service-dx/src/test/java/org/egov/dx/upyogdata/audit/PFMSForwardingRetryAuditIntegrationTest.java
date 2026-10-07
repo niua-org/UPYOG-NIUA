@@ -12,7 +12,7 @@ import org.egov.dx.upyogdata.pfms.models.PFMSAuthResponse;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.egov.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingServiceImpl;
-import org.egov.externalaudit.constants.ExternalApiAuditConstants;
+import org.upyog.externalaudit.constants.ExternalApiAuditConstants;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
