@@ -209,11 +209,11 @@ Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `eg
 
 Do not JDBC-insert from the business service.
 
-### 10. Schedulers (one database owner)
+### 10. Schedulers (one database owner, one pod)
 
 Jobs are packaged in this library but stay **disabled by default**.
 
-Enable only on National Dashboard Ingest today:
+Enable only on National Dashboard Ingest today (the service whose Postgres hosts `ug_external_api_*`):
 
 ```properties
 external.api.audit.reconciliation.enabled=true
@@ -224,6 +224,8 @@ external.api.audit.cleanup.retention-ms=2592000000
 ```
 
 Leave them `false` on DX and any new adapter unless that service is the one hosting `ug_external_api_*`.
+
+When NDI is scaled to multiple pods, JDBC **ShedLock** (`shedlock` table, Flyway `V20261007160000`) lets only one replica acquire `external-api-audit-reconciliation` / `external-api-audit-cleanup`. Other pods skip that tick. DX never starts these beans, so it does not compete for the lock.
 
 ---
 

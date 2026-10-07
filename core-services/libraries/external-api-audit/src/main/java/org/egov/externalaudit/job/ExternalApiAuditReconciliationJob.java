@@ -1,7 +1,9 @@
 package org.egov.externalaudit.job;
 
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.egov.externalaudit.config.ExternalApiAuditProperties;
+import org.egov.externalaudit.constants.ExternalApiAuditConstants;
 import org.egov.externalaudit.repository.IntegrationAuditRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,7 +12,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Marks INITIATED rows that never received a SUCCESS/FAILED event as TIMED_OUT.
- * Enable only on the service whose datasource hosts {@code ug_external_api_*} tables.
+ * Enable only on the service whose datasource hosts {@code ug_external_api_*}.
+ * ShedLock keeps a single pod running this cron when that service is scaled.
  */
 @Slf4j
 @Component
@@ -33,6 +36,8 @@ public class ExternalApiAuditReconciliationJob {
      */
     @Scheduled(cron = "${external.api.audit.reconciliation.cron:0 0 6 * * *}",
             zone = "${external.api.audit.reconciliation.zone:Asia/Kolkata}")
+    @SchedulerLock(name = ExternalApiAuditConstants.RECONCILIATION_LOCK,
+            lockAtLeastFor = "PT5M", lockAtMostFor = "PT30M")
     public void reconcileStaleRequests() {
         long now = System.currentTimeMillis();
         long requestTimeThreshold = now - properties.getStaleThresholdMs();

@@ -60,4 +60,10 @@ public final class ExternalApiAuditConstants {
 
     /** Used when the call site does not supply {@code tenantId}. */
     public static final String DEFAULT_TENANT = "unknown";
+
+    /** ShedLock name so only one pod runs reconciliation. */
+    public static final String RECONCILIATION_LOCK = "external-api-audit-reconciliation";
+
+    /** ShedLock name so only one pod runs cleanup. */
+    public static final String CLEANUP_LOCK = "external-api-audit-cleanup";
 }

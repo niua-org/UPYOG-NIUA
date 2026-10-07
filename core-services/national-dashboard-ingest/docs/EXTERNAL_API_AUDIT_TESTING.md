@@ -111,7 +111,7 @@ Pass: HTTP 200 from ingest, **no new audit rows** (or delayed rows after Kafka r
 
 ### 2.7 Reconciliation (`TIMED_OUT`)
 
-Jobs are enabled only on ingest:
+Jobs are enabled only on ingest. Multiple ingest pods share a ShedLock row (`external-api-audit-reconciliation` / `external-api-audit-cleanup`); only one replica runs each tick.
 
 ```
 external.api.audit.reconciliation.enabled=true
