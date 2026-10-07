@@ -2,6 +2,7 @@ package org.egov.dx.upyogdata.pfms.service;
 
 import feign.FeignException;
 import feign.Request;
+import org.egov.dx.upyogdata.config.PFMSProperties;
 import org.egov.dx.upyogdata.constants.Constants;
 import org.egov.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
@@ -9,10 +10,8 @@ import org.egov.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -35,12 +34,13 @@ class PFMSForwardingServiceImplTest {
     @Mock
     private PFMSApiClient pfmsApiClient;
 
-    @InjectMocks
     private PFMSForwardingServiceImpl forwardingService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(forwardingService, "batchSize", 50);
+        PFMSProperties properties = new PFMSProperties();
+        properties.getScheduler().setBatchSize(50);
+        forwardingService = new PFMSForwardingServiceImpl(pfmsRepository, pfmsApiClient, properties);
     }
 
     @Test

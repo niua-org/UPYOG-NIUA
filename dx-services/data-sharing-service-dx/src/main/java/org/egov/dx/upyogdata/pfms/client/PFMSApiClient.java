@@ -2,6 +2,8 @@ package org.egov.dx.upyogdata.pfms.client;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.dx.upyogdata.config.PFMSProperties;
+import org.egov.dx.upyogdata.constants.Constants;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthRequest;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthResponse;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
@@ -9,7 +11,6 @@ import org.egov.dx.upyogdata.pfms.models.PFMSTransactionFormData;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
 import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,26 +23,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PFMSApiClient {
 
-    private static final String PFMS_TENANT = "PFMS";
-
     private final PFMSAuthFeignClient authFeignClient;
     private final PFMSDataFeignClient dataFeignClient;
     private final ExternalApiAuditLogger auditLogger;
-
-    @Value("${pfms.auth.username}")
-    private String username;
-
-    @Value("${pfms.auth.password}")
-    private String password;
-
-    @Value("${pfms.client.ip}")
-    private String clientIp;
-
-    @Value("${pfms.auth.url}")
-    private String authUrl;
-
-    @Value("${pfms.data.url}")
-    private String dataUrl;
+    private final PFMSProperties pfmsProperties;
 
     /**
      * Authenticates with PFMS and returns a Bearer access token.
@@ -55,13 +40,14 @@ public class PFMSApiClient {
      */
     public String fetchAccessToken() {
         log.info("Fetching access token from PFMS auth API");
-        PFMSAuthRequest authRequest = new PFMSAuthRequest(username, password);
+        PFMSAuthRequest authRequest = new PFMSAuthRequest(
+                pfmsProperties.getAuth().getUsername(), pfmsProperties.getAuth().getPassword());
         PFMSAuthResponse authResponse = auditLogger.logAndExecute(ExternalApiAuditDetail.builder()
-                .tenantId(PFMS_TENANT)
+                .tenantId(Constants.PFMS_TENANT)
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_AUTH)
                 .requestPayload(authRequest)
-                .endpoint(authUrl)
-                .method("POST")
+                .endpoint(pfmsProperties.getAuth().getUrl())
+                .method(Constants.HTTP_POST)
                 .build(), () -> {
             PFMSAuthResponse response = authFeignClient.authenticate(authRequest);
             if (response == null || response.getAccessToken() == null) {
@@ -98,17 +84,18 @@ public class PFMSApiClient {
     public String pushTransaction(PFMSTransaction transaction, String accessToken,
             String auditCorrelationId, int retryCount) {
         log.info("Pushing transaction to Pfms | voucherNumber={}", transaction.getVoucherNumber());
-        PFMSTransactionFormData formData = PFMSTransactionFormData.from(transaction, clientIp);
+        PFMSTransactionFormData formData = PFMSTransactionFormData.from(transaction,
+                pfmsProperties.getClient().getIp());
         String response = auditLogger.logAndExecute(ExternalApiAuditDetail.builder()
                 .correlationId(auditCorrelationId)
                 .retryCount(retryCount)
-                .tenantId(PFMS_TENANT)
+                .tenantId(Constants.PFMS_TENANT)
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_DATA_PUSH)
                 .requestPayload(formData)
                 .originatingCorrelationId(transaction.getCorrelationId())
                 .businessReferenceId(transaction.getId())
-                .endpoint(dataUrl)
-                .method("POST")
+                .endpoint(pfmsProperties.getData().getUrl())
+                .method(Constants.HTTP_POST)
                 .build(), () -> dataFeignClient.pushTransaction("Bearer " + accessToken, formData));
         log.info("Pfms Response | voucherNumber={} body={}", transaction.getVoucherNumber(), response);
         return response;

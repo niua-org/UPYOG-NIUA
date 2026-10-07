@@ -33,9 +33,6 @@ import java.util.Map;
 @Tag(name = "Upyog Data Sharing Service", description = "APIs for Upyog Data Sharing Services")
 public class PFMSController {
 
-    /** All PFMS audit rows use tenant_id {@code PFMS} (not the ULB tenant). */
-    private static final String PFMS_TENANT = "PFMS";
-
     private final PFMSService pfmsService;
     private final PFMSForwardingService pfmsForwardingService;
     private final ExternalApiAuditLogger auditLogger;
@@ -50,12 +47,12 @@ public class PFMSController {
             @Valid @RequestBody PFMSCreateTransactionRequest request) {
         try {
             Object result = auditLogger.logInboundApi(ExternalApiAuditDetail.builder()
-                    .tenantId(PFMS_TENANT)
+                    .tenantId(Constants.PFMS_TENANT)
                     .externalApiName(ExternalApiAuditConstants.API_STATE_PFMS_TRANSACTION_CREATE)
                     .requestPayload(request)
                     .originatingCorrelationId(resolveOriginatingCorrelationId(request))
-                    .method("POST")
-                    .endpoint("/upyog-data-dx/v1/transactions/_create")
+                    .method(Constants.HTTP_POST)
+                    .endpoint(Constants.PFMS_INBOUND_CREATE_ENDPOINT)
                     .build(), () -> pfmsService.createTransaction(request));
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {

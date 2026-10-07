@@ -12,6 +12,9 @@ import java.util.Collection;
 
 import static org.egov.tracer.constants.TracerConstants.CORRELATION_ID_HEADER;
 import static org.egov.tracer.constants.TracerConstants.CORRELATION_ID_MDC;
+import static org.egov.tracer.constants.TracerConstants.EMPTY_BODY;
+import static org.egov.tracer.constants.TracerConstants.REQUEST_MESSAGE;
+import static org.egov.tracer.constants.TracerConstants.REQUEST_MESSAGE_WITH_BODY;
 import static org.egov.tracer.constants.TracerConstants.TENANTID_MDC;
 import static org.egov.tracer.constants.TracerConstants.TENANT_ID_HEADER;
 
@@ -25,10 +28,6 @@ import static org.egov.tracer.constants.TracerConstants.TENANT_ID_HEADER;
  */
 @Slf4j
 public class FeignTracingRequestInterceptor implements RequestInterceptor {
-
-    private static final String REQUEST_MESSAGE_WITH_BODY = "Sending request to {} with verb {} with body {}";
-    private static final String REQUEST_MESSAGE = "Sending request to {} with verb {}";
-    private static final String EMPTY_BODY = "<NOT-AVAILABLE>";
 
     private final TracerProperties tracerProperties;
 

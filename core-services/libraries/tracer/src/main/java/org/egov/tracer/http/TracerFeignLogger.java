@@ -9,17 +9,17 @@ import org.egov.tracer.config.TracerProperties;
 
 import java.io.IOException;
 
+import static org.egov.tracer.constants.TracerConstants.EMPTY_BODY;
+import static org.egov.tracer.constants.TracerConstants.FAILED_RESPONSE_MESSAGE;
+import static org.egov.tracer.constants.TracerConstants.RESPONSE_MESSAGE;
+import static org.egov.tracer.constants.TracerConstants.RESPONSE_MESSAGE_WITH_BODY;
+
 /**
  * Feign logger that mirrors {@link RestTemplateLoggingInterceptor} response logging.
  * Request logging is done by {@link FeignTracingRequestInterceptor} to avoid duplicates.
  */
 @Slf4j
 public class TracerFeignLogger extends Logger {
-
-    private static final String RESPONSE_MESSAGE_WITH_BODY = "Received from {} response code {} and body {}: ";
-    private static final String RESPONSE_MESSAGE = "Received response from {}";
-    private static final String FAILED_RESPONSE_MESSAGE = "Received error response from {}";
-    private static final String EMPTY_BODY = "<NOT-AVAILABLE>";
 
     private final TracerProperties tracerProperties;
 

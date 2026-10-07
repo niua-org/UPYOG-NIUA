@@ -1,5 +1,6 @@
 package org.egov.dx.upyogdata.pfms.client;
 
+import org.egov.dx.upyogdata.config.PFMSProperties;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthRequest;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthResponse;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
@@ -9,10 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.function.Supplier;
@@ -34,16 +33,17 @@ class PFMSApiClientTest {
     @Mock
     private ExternalApiAuditLogger auditLogger;
 
-    @InjectMocks
     private PFMSApiClient pfmsApiClient;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(pfmsApiClient, "username", "user");
-        ReflectionTestUtils.setField(pfmsApiClient, "password", "secret");
-        ReflectionTestUtils.setField(pfmsApiClient, "clientIp", "127.0.0.1");
-        ReflectionTestUtils.setField(pfmsApiClient, "authUrl", "http://pfms/auth");
-        ReflectionTestUtils.setField(pfmsApiClient, "dataUrl", "http://pfms/data");
+        PFMSProperties properties = new PFMSProperties();
+        properties.getAuth().setUsername("user");
+        properties.getAuth().setPassword("secret");
+        properties.getAuth().setUrl("http://pfms/auth");
+        properties.getClient().setIp("127.0.0.1");
+        properties.getData().setUrl("http://pfms/data");
+        pfmsApiClient = new PFMSApiClient(authFeignClient, dataFeignClient, auditLogger, properties);
         when(auditLogger.logAndExecute(any(), any())).thenAnswer(invocation -> {
             Supplier<?> supplier = invocation.getArgument(1);
             return supplier.get();

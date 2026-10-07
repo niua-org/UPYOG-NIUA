@@ -2,13 +2,13 @@ package org.egov.dx.upyogdata.pfms.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.dx.upyogdata.config.PFMSProperties;
 import org.egov.dx.upyogdata.constants.Constants;
 import org.egov.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.egov.dx.upyogdata.pfms.enums.SchedulerType;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.egov.dx.upyogdata.pfms.models.SchedulerLog;
 import org.egov.dx.upyogdata.pfms.repository.PFMSRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import feign.FeignException;
@@ -33,20 +33,20 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
 
     private final PFMSRepository pfmsRepository;
     private final PFMSApiClient pfmsApiClient;
-
-    @Value("${pfms.scheduler.batch.size:50}")
-    private int batchSize;
+    private final PFMSProperties pfmsProperties;
 
     private String currentToken;
 
     @Override
     public void forwardInitiatedTransactions(String triggeredBy) {
-        processBatch(pfmsRepository.fetchInitiatedTransactionIds(batchSize), SchedulerType.DAILY, triggeredBy);
+        processBatch(pfmsRepository.fetchInitiatedTransactionIds(pfmsProperties.getScheduler().getBatchSize()),
+                SchedulerType.DAILY, triggeredBy);
     }
 
     @Override
     public void retryFailedTransactions(String triggeredBy) {
-        processBatch(pfmsRepository.fetchFailedTransactionIds(batchSize), SchedulerType.RETRY, triggeredBy);
+        processBatch(pfmsRepository.fetchFailedTransactionIds(pfmsProperties.getScheduler().getBatchSize()),
+                SchedulerType.RETRY, triggeredBy);
     }
 
     private void processBatch(List<String> ids, SchedulerType type, String triggeredBy) {

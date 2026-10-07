@@ -1,6 +1,7 @@
 package org.egov.dx.upyogdata.audit;
 
 import org.egov.dx.upyogdata.audit.support.ExternalApiAuditTableHarness;
+import org.egov.dx.upyogdata.config.PFMSProperties;
 import org.egov.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.egov.dx.upyogdata.pfms.client.PFMSAuthFeignClient;
 import org.egov.dx.upyogdata.pfms.client.PFMSDataFeignClient;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.http.HttpStatus;
 
@@ -52,12 +52,7 @@ class PFMSOutboundAuditIntegrationTest {
         harness.truncate();
         authFeignClient = mock(PFMSAuthFeignClient.class);
         dataFeignClient = mock(PFMSDataFeignClient.class);
-        client = new PFMSApiClient(authFeignClient, dataFeignClient, harness.newLogger(true));
-        ReflectionTestUtils.setField(client, "username", "pfms-user");
-        ReflectionTestUtils.setField(client, "password", "pfms-password-secret");
-        ReflectionTestUtils.setField(client, "clientIp", "10.0.0.8");
-        ReflectionTestUtils.setField(client, "authUrl", "http://pfms.example/auth");
-        ReflectionTestUtils.setField(client, "dataUrl", "http://pfms.example/data");
+        client = new PFMSApiClient(authFeignClient, dataFeignClient, harness.newLogger(true), testPfmsProperties());
     }
 
     @Test
@@ -163,6 +158,16 @@ class PFMSOutboundAuditIntegrationTest {
         assertNotEquals(rows.get(0).get("correlation_id"), rows.get(1).get("correlation_id"));
         assertEquals(0, ((Number) rows.get(0).get("retry_count")).intValue());
         assertEquals(0, ((Number) rows.get(1).get("retry_count")).intValue());
+    }
+
+    private static PFMSProperties testPfmsProperties() {
+        PFMSProperties properties = new PFMSProperties();
+        properties.getAuth().setUsername("pfms-user");
+        properties.getAuth().setPassword("pfms-password-secret");
+        properties.getAuth().setUrl("http://pfms.example/auth");
+        properties.getClient().setIp("10.0.0.8");
+        properties.getData().setUrl("http://pfms.example/data");
+        return properties;
     }
 
     private PFMSTransaction sampleTransaction() {

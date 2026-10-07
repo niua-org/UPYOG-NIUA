@@ -3,6 +3,7 @@ package org.egov.dx.upyogdata.audit;
 import feign.FeignException;
 import feign.Request;
 import org.egov.dx.upyogdata.audit.support.ExternalApiAuditTableHarness;
+import org.egov.dx.upyogdata.config.PFMSProperties;
 import org.egov.dx.upyogdata.constants.Constants;
 import org.egov.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.egov.dx.upyogdata.pfms.client.PFMSAuthFeignClient;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -57,15 +57,10 @@ class PFMSForwardingRetryAuditIntegrationTest {
         authFeignClient = mock(PFMSAuthFeignClient.class);
         dataFeignClient = mock(PFMSDataFeignClient.class);
         pfmsRepository = mock(PFMSRepository.class);
+        PFMSProperties properties = testPfmsProperties();
         PFMSApiClient apiClient = new PFMSApiClient(authFeignClient, dataFeignClient,
-                harness.newLogger(true));
-        ReflectionTestUtils.setField(apiClient, "username", "pfms-user");
-        ReflectionTestUtils.setField(apiClient, "password", "pfms-password-secret");
-        ReflectionTestUtils.setField(apiClient, "clientIp", "10.0.0.8");
-        ReflectionTestUtils.setField(apiClient, "authUrl", "http://pfms.example/auth");
-        ReflectionTestUtils.setField(apiClient, "dataUrl", "http://pfms.example/data");
-        forwardingService = new PFMSForwardingServiceImpl(pfmsRepository, apiClient);
-        ReflectionTestUtils.setField(forwardingService, "batchSize", 50);
+                harness.newLogger(true), properties);
+        forwardingService = new PFMSForwardingServiceImpl(pfmsRepository, apiClient, properties);
     }
 
     @Test
@@ -162,6 +157,17 @@ class PFMSForwardingRetryAuditIntegrationTest {
 
     private FeignException serverError() {
         return feignStatus(502, "Bad Gateway");
+    }
+
+    private static PFMSProperties testPfmsProperties() {
+        PFMSProperties properties = new PFMSProperties();
+        properties.getAuth().setUsername("pfms-user");
+        properties.getAuth().setPassword("pfms-password-secret");
+        properties.getAuth().setUrl("http://pfms.example/auth");
+        properties.getClient().setIp("10.0.0.8");
+        properties.getData().setUrl("http://pfms.example/data");
+        properties.getScheduler().setBatchSize(50);
+        return properties;
     }
 
     private FeignException feignStatus(int status, String reason) {

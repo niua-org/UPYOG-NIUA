@@ -1,5 +1,6 @@
 package org.egov.externalaudit.producer;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,14 +12,11 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @ConditionalOnBean(KafkaTemplate.class)
 public class ExternalApiAuditProducer implements ExternalApiAuditPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-
-    public ExternalApiAuditProducer(KafkaTemplate<String, Object> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
-    }
 
     /**
      * Sends the event asynchronously. Exceptions from {@code send} and from the
