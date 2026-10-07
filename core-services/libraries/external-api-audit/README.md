@@ -64,7 +64,7 @@ Typical UPYOG services already have Kafka via tracer / spring-kafka. If `Externa
 # Topic consumed by egov-persister (must match external-api-audit-persister.yml fromTopic)
 external.api.audit.detail.topic=external-api-audit-details
 
-# Stored in ug_external_api_message_detail.state — identify the source UPYOG service
+# Stored in ug_external_api_message_detail.external_service — identify the source UPYOG service
 external.api.audit.source-service=my-external-adapter
 
 # Persist request/response bodies inside the JSON envelope (masked). false = metadata only
@@ -79,7 +79,7 @@ external.api.audit.cleanup.enabled=false
 | Property | Default | Meaning |
 |---|---|---|
 | `external.api.audit.detail.topic` | `external-api-audit-details` | Kafka topic for both INITIATED and SUCCESS/FAILED |
-| `external.api.audit.source-service` | `unknown` | Copied into column `state` |
+| `external.api.audit.source-service` | `unknown` | Copied into column `external_service` |
 | `external.api.audit.capture-payload.enabled` | `true` | When false, envelope has `payloadCaptured: false` and no body |
 | `external.api.audit.max.payload.bytes` | `204800` | Oversize bodies are replaced with a truncated marker |
 | `external.api.audit.stale.threshold.ms` | `600000` | INITIATED older than this become `TIMED_OUT` |
@@ -105,12 +105,12 @@ private ExternalApiAuditLogger auditLogger;
 
 @PostMapping("/v1/gstn/_verify")
 public ResponseEntity<?> verify(@RequestBody GstnRequest request) {
-    Object result = auditLogger.logInboundApi(ExternalIntegrationContext.builder()
+    Object result = auditLogger.logInboundApi(ExternalApiAuditDetail.builder()
             .tenantId(request.getTenantId())          // required for the table; fallback "unknown"
             .externalApiName("gstn-verify-pan")       // stable name for this integration
             .requestPayload(request)                  // masked before persist
             .originatingCorrelationId(request.getRequestInfo().getCorrelationId())
-            .httpMethod("POST")
+            .method("POST")
             .endpoint("/my-service/v1/gstn/_verify")
             .build(),
             () -> gstnService.verify(request));       // business call
@@ -118,17 +118,17 @@ public ResponseEntity<?> verify(@RequestBody GstnRequest request) {
 }
 ```
 
-National Dashboard Ingest uses the same context builder so raw JSON includes endpoint and method:
+National Dashboard Ingest uses the same `ExternalApiAuditDetail` builder so columns and raw JSON include endpoint and method:
 
 ```java
 integrationAuditLogger.logInboundApi(
-        ExternalIntegrationContext.builder()
+        ExternalApiAuditDetail.builder()
                 .originatingCorrelationId(requestInfo.getCorrelationId())
                 .tenantId(ulbTenantId)
                 .externalApiName(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST)
                 .requestPayload(ingestRequest)
                 .endpoint("/national-dashboard/metric/_ingest")
-                .httpMethod("POST")
+                .method("POST")
                 .build(),
         () -> ingestService.ingestData(ingestRequest));
 ```
@@ -138,12 +138,12 @@ integrationAuditLogger.logInboundApi(
 Use `logAndExecute`. Direction is set to `OUTBOUND`. Return the **object you want stored as the response payload** from the lambda (for example the full auth response, not only the extracted token) so masking can apply to field names such as `AccessToken`.
 
 ```java
-String token = auditLogger.logAndExecute(ExternalIntegrationContext.builder()
+String token = auditLogger.logAndExecute(ExternalApiAuditDetail.builder()
         .tenantId("GSTN")
         .externalApiName("gstn-auth")
         .requestPayload(authRequest)
         .endpoint(authUrl)
-        .httpMethod("POST")
+                .method("POST")
         .build(), () -> {
     GstnAuthResponse response = gstnFeign.authenticate(authRequest);
     if (response == null || response.getAccessToken() == null) {
@@ -192,19 +192,18 @@ Audit tables live in the **National Dashboard Ingest** Postgres schema (Flyway).
 - `ug_external_api_message_raw_detail`
 - `ug_external_api_error_detail`
 
-Do **not** create replacement tables. The only schema delta is Flyway `V20261006150000__add_state_to_external_api_audit.sql` (`ALTER TABLE ... ADD COLUMN state`).
+Do **not** create replacement tables. Additive Flyway only:
 
-Existing persistence models keep their names and JSON keys:
+- `V20261006150000` added `state` on this branch (unreleased)
+- `V20261007150000` renames `state` to `external_service` and adds `endpoint`, `method`
 
-- `ExternalApiAuditDetail` (`$.apiAuditDetail`)
-- `ExternalApiAuditDetailWrapper`
-- `ExternalApiErrorDetails`
+Call sites use the existing production model `ExternalApiAuditDetail` (`$.apiAuditDetail`), plus `ExternalApiAuditDetailWrapper` and `ExternalApiErrorDetails`. There is no separate context class.
 
-`state` is added on the existing model. `external-api-audit-persister.yml` maps that field into `ug_external_api_message_detail.state`. Kafka `basePath` remains `$.apiAuditDetail`.
+`external-api-audit-persister.yml` maps `externalService`, `endpoint`, and `method` onto `ug_external_api_message_detail`. Kafka `basePath` remains `$.apiAuditDetail`.
 
 Every producer (NDI, DX, future adapters) publishes to the same Kafka topic. `egov-persister` must load `national-dashboard-ingest/src/main/resources/external-api-audit-persister.yml`.
 
-Column `state` holds `external.api.audit.source-service` (for example `national-dashboard-ingest`, `upyog-data-dx`).
+Column `external_service` holds `external.api.audit.source-service` (for example `national-dashboard-ingest`, `upyog-data-dx`).
 
 Do not JDBC-insert from the business service.
 
@@ -228,7 +227,7 @@ Leave them `false` on DX and any new adapter unless that service is the one host
 
 ## Payload envelope and masking
 
-Each stored JSON body is an envelope in `ug_external_api_message_raw_detail.request_payload` / `response_payload` (JSONB), not table columns. Endpoint and HTTP method are always written as keys `endpoint`, `httpMethod`, and `method`:
+Endpoint and HTTP method are columns on `ug_external_api_message_detail` (`endpoint`, `method`) and are also written into the raw JSON envelope in `ug_external_api_message_raw_detail.request_payload` / `response_payload`:
 
 ```json
 {
@@ -268,7 +267,7 @@ DX application class imports `TracerConfiguration` so Feign tracing matches Rest
 | Type | Role |
 |---|---|
 | `ExternalApiAuditLogger` | Explicit executor. `logInboundApi` / `logAndExecute` / `execute` |
-| `ExternalIntegrationContext` | Per-call metadata (tenant, API name, payloads, retry) |
+| `ExternalApiAuditDetail` | Existing production model used as the call-site payload |
 | `ExternalApiAuditPublisher` | SPI; production impl is async Kafka |
 | `SensitivePayloadMasker` | Field-name masking |
 | `ExternalApiAuditProperties` | `external.api.audit.*` |

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.nationaldashboardingest.service.IngestService;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.utils.ResponseInfoFactory;
 import org.egov.nationaldashboardingest.web.models.IngestRequest;
@@ -61,13 +61,13 @@ public class MetricIngestController {
     @RequestMapping(value="/_ingest", method = RequestMethod.POST)
     public ResponseEntity<IngestResponse> create(@RequestBody @Valid IngestRequest ingestRequest) {
         return integrationAuditLogger.logInboundApi(
-                ExternalIntegrationContext.builder()
+                ExternalApiAuditDetail.builder()
                         .originatingCorrelationId(resolveCorrelationId(ingestRequest))
                         .tenantId(resolveTenantId(ingestRequest))
                         .externalApiName(ExternalApiAuditConstants.API_NATIONAL_DASHBOARD_METRIC_INGEST)
                         .requestPayload(ingestRequest)
                         .endpoint("/national-dashboard/metric/_ingest")
-                        .httpMethod("POST")
+                        .method("POST")
                         .build(),
                 () -> {
                     log.info("Received request: " + ingestRequest.getIngestData().toString());

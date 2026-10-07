@@ -7,7 +7,7 @@ import org.egov.dx.upyogdata.pfms.models.PFMSAuthResponse;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransactionFormData;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -56,12 +56,12 @@ public class PFMSApiClient {
     public String fetchAccessToken() {
         log.info("Fetching access token from PFMS auth API");
         PFMSAuthRequest authRequest = new PFMSAuthRequest(username, password);
-        PFMSAuthResponse authResponse = auditLogger.logAndExecute(ExternalIntegrationContext.builder()
+        PFMSAuthResponse authResponse = auditLogger.logAndExecute(ExternalApiAuditDetail.builder()
                 .tenantId(PFMS_TENANT)
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_AUTH)
                 .requestPayload(authRequest)
                 .endpoint(authUrl)
-                .httpMethod("POST")
+                .method("POST")
                 .build(), () -> {
             PFMSAuthResponse response = authFeignClient.authenticate(authRequest);
             if (response == null || response.getAccessToken() == null) {
@@ -99,7 +99,7 @@ public class PFMSApiClient {
             String auditCorrelationId, int retryCount) {
         log.info("Pushing transaction to Pfms | voucherNumber={}", transaction.getVoucherNumber());
         PFMSTransactionFormData formData = PFMSTransactionFormData.from(transaction, clientIp);
-        String response = auditLogger.logAndExecute(ExternalIntegrationContext.builder()
+        String response = auditLogger.logAndExecute(ExternalApiAuditDetail.builder()
                 .correlationId(auditCorrelationId)
                 .retryCount(retryCount)
                 .tenantId(PFMS_TENANT)
@@ -108,7 +108,7 @@ public class PFMSApiClient {
                 .originatingCorrelationId(transaction.getCorrelationId())
                 .businessReferenceId(transaction.getId())
                 .endpoint(dataUrl)
-                .httpMethod("POST")
+                .method("POST")
                 .build(), () -> dataFeignClient.pushTransaction("Bearer " + accessToken, formData));
         log.info("Pfms Response | voucherNumber={} body={}", transaction.getVoucherNumber(), response);
         return response;

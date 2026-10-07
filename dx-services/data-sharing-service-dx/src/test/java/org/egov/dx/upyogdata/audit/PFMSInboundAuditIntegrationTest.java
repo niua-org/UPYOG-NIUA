@@ -67,7 +67,7 @@ class PFMSInboundAuditIntegrationTest {
         String correlationId = harness.onlyCorrelationId();
         Map<String, Object> message = harness.message(correlationId);
         assertEquals("PFMS", message.get("tenant_id"));
-        assertEquals("upyog-data-dx", message.get("state"));
+        assertEquals("upyog-data-dx", message.get("external_service"));
         assertEquals(ExternalApiAuditConstants.API_STATE_PFMS_TRANSACTION_CREATE, message.get("external_api_name"));
         assertEquals(ExternalApiAuditConstants.DIRECTION_INBOUND, message.get("direction"));
         assertEquals(ExternalApiAuditConstants.STATUS_SUCCESS, message.get("status"));

@@ -9,10 +9,9 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * Existing Kafka / persister payload for one external API audit event.
- * Field names and JSON keys are unchanged; {@code state} is the only additive column.
- * Two events (INITIATED then SUCCESS/FAILED) share {@code correlationId} so persister
- * upserts a single {@code ug_external_api_message_detail} row.
+ * Existing production persistence model for external API audit.
+ * Runtime publishing uses the library copy
+ * {@link org.egov.externalaudit.model.ExternalApiAuditDetail} with the same JSON keys.
  */
 @Getter
 @Setter
@@ -34,17 +33,26 @@ public class ExternalApiAuditDetail {
     @JsonProperty("tenantId")
     private String tenantId;
 
-    /**
-     * Source UPYOG service ({@code external.api.audit.source-service}).
-     */
-    @JsonProperty("state")
-    private String state;
+    @JsonProperty("externalService")
+    private String externalService;
 
     @JsonProperty("externalApiName")
     private String externalApiName;
 
     @JsonProperty("direction")
     private String direction;
+
+    @JsonProperty("endpoint")
+    private String endpoint;
+
+    @JsonProperty("method")
+    private String method;
+
+    @JsonProperty("originatingCorrelationId")
+    private String originatingCorrelationId;
+
+    @JsonProperty("businessReferenceId")
+    private String businessReferenceId;
 
     @JsonProperty("requestTime")
     private Long requestTime;

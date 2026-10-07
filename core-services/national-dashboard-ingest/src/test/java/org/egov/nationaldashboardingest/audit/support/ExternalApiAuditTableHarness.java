@@ -26,11 +26,13 @@ import java.util.Map;
 public final class ExternalApiAuditTableHarness implements AutoCloseable {
 
     private static final String MESSAGE_SQL = """
-            INSERT INTO ug_external_api_message_detail(id, correlation_id, tenant_id, state, external_api_name, direction, request_time, status, http_status_code, response_time, duration_ms, retry_count, created_time, last_modified_time)
-            VALUES (COALESCE(cast(? as uuid), gen_random_uuid()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 0), COALESCE(?, 0), ?)
+            INSERT INTO ug_external_api_message_detail(id, correlation_id, tenant_id, external_service, endpoint, method, external_api_name, direction, request_time, status, http_status_code, response_time, duration_ms, retry_count, created_time, last_modified_time)
+            VALUES (COALESCE(cast(? as uuid), gen_random_uuid()), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 0), COALESCE(?, 0), ?)
             ON CONFLICT (correlation_id) DO UPDATE SET
               tenant_id = COALESCE(EXCLUDED.tenant_id, ug_external_api_message_detail.tenant_id),
-              state = COALESCE(EXCLUDED.state, ug_external_api_message_detail.state),
+              external_service = COALESCE(EXCLUDED.external_service, ug_external_api_message_detail.external_service),
+              endpoint = COALESCE(EXCLUDED.endpoint, ug_external_api_message_detail.endpoint),
+              method = COALESCE(EXCLUDED.method, ug_external_api_message_detail.method),
               external_api_name = COALESCE(EXCLUDED.external_api_name, ug_external_api_message_detail.external_api_name),
               direction = COALESCE(EXCLUDED.direction, ug_external_api_message_detail.direction),
               request_time = COALESCE(EXCLUDED.request_time, ug_external_api_message_detail.request_time),
@@ -125,7 +127,9 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
                     detail.getId(),
                     detail.getCorrelationId(),
                     detail.getTenantId(),
-                    detail.getState(),
+                    detail.getExternalService(),
+                    detail.getEndpoint(),
+                    detail.getMethod(),
                     detail.getExternalApiName(),
                     detail.getDirection(),
                     detail.getRequestTime(),
@@ -187,7 +191,7 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
 
     public Map<String, Object> message(String correlationId) {
         return jdbc.queryForMap("""
-                SELECT correlation_id, tenant_id, state, external_api_name, direction, status,
+                SELECT correlation_id, tenant_id, external_service, endpoint, method, external_api_name, direction, status,
                        http_status_code, retry_count, request_time, response_time, duration_ms
                 FROM ug_external_api_message_detail
                 WHERE correlation_id = ?
@@ -214,7 +218,7 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
 
     public List<Map<String, Object>> messagesByApi(String externalApiName) {
         return jdbc.queryForList("""
-                SELECT correlation_id, tenant_id, state, external_api_name, direction, status,
+                SELECT correlation_id, tenant_id, external_service, endpoint, method, external_api_name, direction, status,
                        http_status_code, retry_count
                 FROM ug_external_api_message_detail
                 WHERE external_api_name = ?
@@ -275,7 +279,15 @@ public final class ExternalApiAuditTableHarness implements AutoCloseable {
                 """);
         jdbc.execute("""
                 ALTER TABLE ug_external_api_message_detail
-                    ADD COLUMN IF NOT EXISTS state VARCHAR(256)
+                    ADD COLUMN IF NOT EXISTS external_service VARCHAR(256)
+                """);
+        jdbc.execute("""
+                ALTER TABLE ug_external_api_message_detail
+                    ADD COLUMN IF NOT EXISTS endpoint VARCHAR(2048)
+                """);
+        jdbc.execute("""
+                ALTER TABLE ug_external_api_message_detail
+                    ADD COLUMN IF NOT EXISTS method VARCHAR(32)
                 """);
         jdbc.execute("""
                 CREATE TABLE IF NOT EXISTS ug_external_api_message_raw_detail (

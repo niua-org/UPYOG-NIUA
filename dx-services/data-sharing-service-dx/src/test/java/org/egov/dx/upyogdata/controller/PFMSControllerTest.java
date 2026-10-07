@@ -3,7 +3,7 @@ package org.egov.dx.upyogdata.controller;
 import org.egov.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingService;
 import org.egov.dx.upyogdata.pfms.service.PFMSService;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,10 +49,10 @@ class PFMSControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("SUCCESS", response.getBody());
-        ArgumentCaptor<ExternalIntegrationContext> contextCaptor = ArgumentCaptor.forClass(ExternalIntegrationContext.class);
-        verify(auditLogger).logInboundApi(contextCaptor.capture(), any());
-        assertEquals("PFMS", contextCaptor.getValue().getTenantId());
-        assertEquals("state-pfms-transaction-create", contextCaptor.getValue().getExternalApiName());
-        assertEquals("POST", contextCaptor.getValue().getHttpMethod());
+        ArgumentCaptor<ExternalApiAuditDetail> detailCaptor = ArgumentCaptor.forClass(ExternalApiAuditDetail.class);
+        verify(auditLogger).logInboundApi(detailCaptor.capture(), any());
+        assertEquals("PFMS", detailCaptor.getValue().getTenantId());
+        assertEquals("state-pfms-transaction-create", detailCaptor.getValue().getExternalApiName());
+        assertEquals("POST", detailCaptor.getValue().getMethod());
     }
 }

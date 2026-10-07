@@ -7,7 +7,7 @@ import org.egov.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingService;
 import org.egov.dx.upyogdata.pfms.service.PFMSService;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,12 +49,12 @@ public class PFMSController {
     public ResponseEntity<?> createTransaction(
             @Valid @RequestBody PFMSCreateTransactionRequest request) {
         try {
-            Object result = auditLogger.logInboundApi(ExternalIntegrationContext.builder()
+            Object result = auditLogger.logInboundApi(ExternalApiAuditDetail.builder()
                     .tenantId(PFMS_TENANT)
                     .externalApiName(ExternalApiAuditConstants.API_STATE_PFMS_TRANSACTION_CREATE)
                     .requestPayload(request)
                     .originatingCorrelationId(resolveOriginatingCorrelationId(request))
-                    .httpMethod("POST")
+                    .method("POST")
                     .endpoint("/upyog-data-dx/v1/transactions/_create")
                     .build(), () -> pfmsService.createTransaction(request));
             return ResponseEntity.ok(result);

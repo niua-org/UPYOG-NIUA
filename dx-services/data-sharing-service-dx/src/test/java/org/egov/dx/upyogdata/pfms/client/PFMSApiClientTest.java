@@ -3,7 +3,7 @@ package org.egov.dx.upyogdata.pfms.client;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthRequest;
 import org.egov.dx.upyogdata.pfms.models.PFMSAuthResponse;
 import org.egov.dx.upyogdata.pfms.models.PFMSTransaction;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,11 +59,11 @@ class PFMSApiClientTest {
         String token = pfmsApiClient.fetchAccessToken();
 
         assertEquals("token", token);
-        ArgumentCaptor<ExternalIntegrationContext> contextCaptor = ArgumentCaptor.forClass(ExternalIntegrationContext.class);
-        verify(auditLogger).logAndExecute(contextCaptor.capture(), any());
-        assertEquals("PFMS", contextCaptor.getValue().getTenantId());
-        assertEquals("pfms-auth", contextCaptor.getValue().getExternalApiName());
-        assertEquals("POST", contextCaptor.getValue().getHttpMethod());
+        ArgumentCaptor<ExternalApiAuditDetail> detailCaptor = ArgumentCaptor.forClass(ExternalApiAuditDetail.class);
+        verify(auditLogger).logAndExecute(detailCaptor.capture(), any());
+        assertEquals("PFMS", detailCaptor.getValue().getTenantId());
+        assertEquals("pfms-auth", detailCaptor.getValue().getExternalApiName());
+        assertEquals("POST", detailCaptor.getValue().getMethod());
     }
 
     @Test
@@ -84,11 +84,11 @@ class PFMSApiClientTest {
         String result = pfmsApiClient.pushTransaction(transaction, "token", "audit-id", 1);
 
         assertEquals("SUCCESS", result);
-        ArgumentCaptor<ExternalIntegrationContext> contextCaptor = ArgumentCaptor.forClass(ExternalIntegrationContext.class);
-        verify(auditLogger).logAndExecute(contextCaptor.capture(), any());
-        assertEquals("audit-id", contextCaptor.getValue().getCorrelationId());
-        assertEquals(1, contextCaptor.getValue().getRetryCount());
-        assertEquals("txn-1", contextCaptor.getValue().getBusinessReferenceId());
-        assertEquals("batch-1", contextCaptor.getValue().getOriginatingCorrelationId());
+        ArgumentCaptor<ExternalApiAuditDetail> detailCaptor = ArgumentCaptor.forClass(ExternalApiAuditDetail.class);
+        verify(auditLogger).logAndExecute(detailCaptor.capture(), any());
+        assertEquals("audit-id", detailCaptor.getValue().getCorrelationId());
+        assertEquals(1, detailCaptor.getValue().getRetryCount());
+        assertEquals("txn-1", detailCaptor.getValue().getBusinessReferenceId());
+        assertEquals("batch-1", detailCaptor.getValue().getOriginatingCorrelationId());
     }
 }

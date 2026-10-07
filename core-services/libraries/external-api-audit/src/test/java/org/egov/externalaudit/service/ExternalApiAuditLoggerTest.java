@@ -5,7 +5,7 @@ import org.egov.externalaudit.config.ExternalApiAuditProperties;
 import org.egov.externalaudit.constants.ExternalApiAuditConstants;
 import org.egov.externalaudit.masking.SensitivePayloadMasker;
 import org.egov.externalaudit.model.ExternalApiAuditDetailWrapper;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.producer.ExternalApiAuditPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,13 +41,13 @@ class ExternalApiAuditLoggerTest {
 
     @Test
     void execute_shouldPublishMatchingCorrelationIdsOnSuccess() {
-        String body = logger.logAndExecute(ExternalIntegrationContext.builder()
+        String body = logger.logAndExecute(ExternalApiAuditDetail.builder()
                 .tenantId("PFMS")
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_DATA_PUSH)
                 .requestPayload(Map.of("voucherNumber", "V1"))
                 .originatingCorrelationId("business-corr")
                 .endpoint("http://pfms.example/data")
-                .httpMethod("POST")
+                .method("POST")
                 .build(), () -> "ok");
 
         assertEquals(2, publisher.events.size());
@@ -55,7 +55,9 @@ class ExternalApiAuditLoggerTest {
         ExternalApiAuditDetailWrapper responseWrapper = (ExternalApiAuditDetailWrapper) publisher.events.get(1);
 
         assertEquals("PFMS", requestWrapper.getApiAuditDetail().getTenantId());
-        assertEquals("upyog-data-dx", requestWrapper.getApiAuditDetail().getState());
+        assertEquals("upyog-data-dx", requestWrapper.getApiAuditDetail().getExternalService());
+        assertEquals("http://pfms.example/data", requestWrapper.getApiAuditDetail().getEndpoint());
+        assertEquals("POST", requestWrapper.getApiAuditDetail().getMethod());
         assertEquals(ExternalApiAuditConstants.API_PFMS_DATA_PUSH,
                 requestWrapper.getApiAuditDetail().getExternalApiName());
         assertEquals(ExternalApiAuditConstants.DIRECTION_OUTBOUND,
@@ -109,7 +111,7 @@ class ExternalApiAuditLoggerTest {
     void execute_shouldNotFailBusinessCallWhenKafkaPublishFails() {
         publisher.failure = new RuntimeException("kafka down");
 
-        String result = logger.logAndExecute(ExternalIntegrationContext.builder()
+        String result = logger.logAndExecute(ExternalApiAuditDetail.builder()
                 .tenantId("PFMS")
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_AUTH)
                 .requestPayload(Map.of("Password", "secret"))
@@ -122,7 +124,7 @@ class ExternalApiAuditLoggerTest {
     void execute_shouldOmitPayloadWhenCaptureDisabled() {
         properties.setCapturePayloadEnabled(false);
 
-        logger.logAndExecute(ExternalIntegrationContext.builder()
+        logger.logAndExecute(ExternalApiAuditDetail.builder()
                 .tenantId("PFMS")
                 .externalApiName(ExternalApiAuditConstants.API_PFMS_AUTH)
                 .requestPayload(Map.of("Password", "secret"))
@@ -141,7 +143,7 @@ class ExternalApiAuditLoggerTest {
     void execute_shouldReuseCorrelationIdOnRetry() {
         String auditId = "11111111-1111-1111-1111-111111111111";
 
-        logger.logAndExecute(ExternalIntegrationContext.builder()
+        logger.logAndExecute(ExternalApiAuditDetail.builder()
                 .correlationId(auditId)
                 .retryCount(1)
                 .tenantId("PFMS")

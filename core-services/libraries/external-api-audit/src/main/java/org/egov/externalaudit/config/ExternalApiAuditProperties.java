@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * Bindable settings for {@code external.api.audit.*}.
  * <p>
- * Set {@code source-service} in every consuming module. Enable {@code reconciliation}
- * and {@code cleanup} only on the service whose datasource hosts {@code ug_external_api_*}.
+ * Set {@code source-service} in every consuming module (copied into column {@code external_service}).
+ * Enable {@code reconciliation} and {@code cleanup} only on the service whose datasource hosts {@code ug_external_api_*}.
  * </p>
  */
 @Getter
@@ -35,7 +35,7 @@ public class ExternalApiAuditProperties {
     private boolean capturePayloadEnabled = true;
 
     /**
-     * Source service identifier stored in column {@code state}.
+     * Source service identifier stored in column {@code external_service}.
      */
     private String sourceService = "unknown";
 

@@ -9,10 +9,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * Kafka / persister payload for one audit event.
+ * Existing production Kafka / persister payload for one external API audit event
+ * ({@code ug_external_api_message_detail} + raw/error tables).
  * <p>
+ * Call sites pass this model to {@link org.egov.externalaudit.service.ExternalApiAuditLogger}.
  * Two events (INITIATED then SUCCESS/FAILED) share {@link #correlationId} so persister
- * upserts a single {@code ug_external_api_message_detail} row.
+ * upserts a single row. Additive columns: {@code external_service}, {@code endpoint}, {@code method}.
  * </p>
  */
 @Getter
@@ -35,6 +37,7 @@ public class ExternalApiAuditDetail {
 
     /**
      * Unique per logical request. Persister {@code ON CONFLICT} key.
+     * Leave blank to allocate a new UUID; reuse and increment {@link #retryCount} for in-cycle retry.
      */
     @JsonProperty("correlationId")
     private String correlationId;
@@ -43,16 +46,46 @@ public class ExternalApiAuditDetail {
     private String tenantId;
 
     /**
-     * Source UPYOG service ({@code external.api.audit.source-service}).
+     * Source UPYOG service, persisted in column {@code external_service}.
+     * Defaults to {@code external.api.audit.source-service} when blank.
      */
-    @JsonProperty("state")
-    private String state;
+    @JsonProperty("externalService")
+    private String externalService;
 
     @JsonProperty("externalApiName")
     private String externalApiName;
 
+    /**
+     * {@code INBOUND} or {@code OUTBOUND}. Set by the logger; callers normally omit it.
+     */
     @JsonProperty("direction")
     private String direction;
+
+    /**
+     * Target URL or inbound path. Column {@code endpoint} and raw-JSON key {@code endpoint}.
+     */
+    @JsonProperty("endpoint")
+    private String endpoint;
+
+    /**
+     * HTTP method of the integration call, for example {@code POST}.
+     * Column {@code method} and raw-JSON keys {@code method} / {@code httpMethod}.
+     */
+    @JsonProperty("method")
+    private String method;
+
+    /**
+     * Tracer / RequestInfo / business correlation id stored in the raw JSON envelope,
+     * not used as the table unique key.
+     */
+    @JsonProperty("originatingCorrelationId")
+    private String originatingCorrelationId;
+
+    /**
+     * Business entity id (for example PFMS transaction id) stored in the raw JSON envelope.
+     */
+    @JsonProperty("businessReferenceId")
+    private String businessReferenceId;
 
     @JsonProperty("requestTime")
     private Long requestTime;
@@ -69,6 +102,9 @@ public class ExternalApiAuditDetail {
     @JsonProperty("durationMs")
     private Long durationMs;
 
+    /**
+     * {@code 0} on first attempt. Increment on an in-cycle retry of the same {@link #correlationId}.
+     */
     @JsonProperty("retryCount")
     private Integer retryCount;
 

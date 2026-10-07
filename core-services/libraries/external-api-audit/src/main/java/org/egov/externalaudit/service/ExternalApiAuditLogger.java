@@ -8,7 +8,6 @@ import org.egov.externalaudit.masking.SensitivePayloadMasker;
 import org.egov.externalaudit.model.ExternalApiAuditDetail;
 import org.egov.externalaudit.model.ExternalApiAuditDetailWrapper;
 import org.egov.externalaudit.model.ExternalApiErrorDetails;
-import org.egov.externalaudit.model.ExternalIntegrationContext;
 import org.egov.externalaudit.producer.ExternalApiAuditProducer;
 import org.egov.externalaudit.producer.ExternalApiAuditPublisher;
 import org.egov.tracer.constants.TracerConstants;
@@ -43,7 +42,7 @@ import java.util.function.Supplier;
  * replace the original business exception. Do not use this for internal UPYOG APIs.
  * </p>
  *
- * @see ExternalIntegrationContext
+ * @see ExternalApiAuditDetail
  * @see org.egov.externalaudit.config.ExternalApiAuditProperties
  */
 @Slf4j
@@ -69,40 +68,33 @@ public class ExternalApiAuditLogger {
     /**
      * Audits an inbound call from an external system into UPYOG ({@code direction=INBOUND}).
      *
-     * @param context per-call metadata; a new audit UUID is generated when {@code correlationId} is blank
+     * @param detail existing production audit model; a new audit UUID is generated when {@code correlationId} is blank
      * @param apiCall business handler; its return value is stored as the response payload
      * @return the supplier result
      */
-    public <T> T logInboundApi(ExternalIntegrationContext context, Supplier<T> apiCall) {
-        context.setDirection(ExternalApiAuditConstants.DIRECTION_INBOUND);
-        return execute(context, apiCall);
+    public <T> T logInboundApi(ExternalApiAuditDetail detail, Supplier<T> apiCall) {
+        detail.setDirection(ExternalApiAuditConstants.DIRECTION_INBOUND);
+        return execute(detail, apiCall);
     }
 
     /**
      * Audits an outbound call from UPYOG to a third party ({@code direction=OUTBOUND}).
      *
-     * @param context per-call metadata; reuse {@code correlationId} and increment {@code retryCount} for in-cycle retries
+     * @param detail existing production audit model; reuse {@code correlationId} and increment {@code retryCount} for in-cycle retries
      * @param apiCall Feign / RestTemplate / SDK invocation
      * @return the supplier result
      */
-    public <T> T logAndExecute(ExternalIntegrationContext context, Supplier<T> apiCall) {
-        context.setDirection(ExternalApiAuditConstants.DIRECTION_OUTBOUND);
-        return execute(context, apiCall);
+    public <T> T logAndExecute(ExternalApiAuditDetail detail, Supplier<T> apiCall) {
+        detail.setDirection(ExternalApiAuditConstants.DIRECTION_OUTBOUND);
+        return execute(detail, apiCall);
     }
 
     /**
-     * Inbound overload used by national-dashboard-ingest.
-     * {@code correlationId} is stored as {@code originatingCorrelationId}; a new audit UUID is generated.
-     *
-     * @param correlationId RequestInfo / tracer correlation id (not the table primary key)
-     * @param tenantId      ULB or tenant; falls back to {@code unknown}
-     * @param externalApiName stable integration name, for example {@code national-dashboard-metric-ingest}
-     * @param requestPayload request body to persist (masked)
-     * @param apiCall       ingest / handler lambda
+     * Inbound convenience overload. {@code correlationId} is stored as {@code originatingCorrelationId}.
      */
     public <T> T logInboundApi(String correlationId, String tenantId, String externalApiName,
             Object requestPayload, Supplier<T> apiCall) {
-        return logInboundApi(ExternalIntegrationContext.builder()
+        return logInboundApi(ExternalApiAuditDetail.builder()
                 .originatingCorrelationId(correlationId)
                 .tenantId(tenantId)
                 .externalApiName(externalApiName)
@@ -111,12 +103,11 @@ public class ExternalApiAuditLogger {
     }
 
     /**
-     * Outbound overload matching the ingest-style positional arguments.
-     * Prefer {@link #logAndExecute(ExternalIntegrationContext, Supplier)} for new integrations.
+     * Outbound convenience overload matching the ingest-style positional arguments.
      */
     public <T> T logAndExecute(String correlationId, String tenantId, String externalApiName,
             Object requestPayload, Supplier<T> apiCall) {
-        return logAndExecute(ExternalIntegrationContext.builder()
+        return logAndExecute(ExternalApiAuditDetail.builder()
                 .originatingCorrelationId(correlationId)
                 .tenantId(tenantId)
                 .externalApiName(externalApiName)
@@ -128,13 +119,13 @@ public class ExternalApiAuditLogger {
      * Runs {@code apiCall} between INITIATED and SUCCESS/FAILED Kafka publishes.
      * Re-throws the original exception after the FAILED event is queued.
      */
-    public <T> T execute(ExternalIntegrationContext context, Supplier<T> apiCall) {
-        String correlationId = resolveAuditCorrelationId(context);
-        context.setCorrelationId(correlationId);
-        applyDefaults(context);
+    public <T> T execute(ExternalApiAuditDetail detail, Supplier<T> apiCall) {
+        String correlationId = resolveAuditCorrelationId(detail);
+        detail.setCorrelationId(correlationId);
+        applyDefaults(detail);
 
         long requestTime = System.currentTimeMillis();
-        publishRequestEvent(context, requestTime);
+        publishRequestEvent(detail, requestTime);
 
         T response = null;
         Exception caughtException = null;
@@ -145,24 +136,24 @@ public class ExternalApiAuditLogger {
             caughtException = exception;
             throw exception;
         } finally {
-            publishResponseEvent(context, requestTime, response, caughtException);
+            publishResponseEvent(detail, requestTime, response, caughtException);
         }
     }
 
-    private void applyDefaults(ExternalIntegrationContext context) {
-        if (context.getRetryCount() == null) {
-            context.setRetryCount(0);
+    private void applyDefaults(ExternalApiAuditDetail detail) {
+        if (detail.getRetryCount() == null) {
+            detail.setRetryCount(0);
         }
-        if (isBlank(context.getState())) {
-            context.setState(properties.getSourceService());
+        if (isBlank(detail.getExternalService())) {
+            detail.setExternalService(properties.getSourceService());
         }
-        if (isBlank(context.getTenantId())) {
-            context.setTenantId(ExternalApiAuditConstants.DEFAULT_TENANT);
+        if (isBlank(detail.getTenantId())) {
+            detail.setTenantId(ExternalApiAuditConstants.DEFAULT_TENANT);
         }
-        if (isBlank(context.getOriginatingCorrelationId())) {
+        if (isBlank(detail.getOriginatingCorrelationId())) {
             String mdcCorrelationId = MDC.get(TracerConstants.CORRELATION_ID_MDC);
             if (!isBlank(mdcCorrelationId)) {
-                context.setOriginatingCorrelationId(mdcCorrelationId);
+                detail.setOriginatingCorrelationId(mdcCorrelationId);
             }
         }
     }
@@ -170,28 +161,22 @@ public class ExternalApiAuditLogger {
     /**
      * Reuses the caller-supplied id (in-cycle retry) or allocates a new UUID (new logical request).
      */
-    private String resolveAuditCorrelationId(ExternalIntegrationContext context) {
-        if (context.getCorrelationId() != null && !context.getCorrelationId().isBlank()) {
-            return context.getCorrelationId();
+    private String resolveAuditCorrelationId(ExternalApiAuditDetail detail) {
+        if (detail.getCorrelationId() != null && !detail.getCorrelationId().isBlank()) {
+            return detail.getCorrelationId();
         }
         return UUID.randomUUID().toString();
     }
 
-    private void publishRequestEvent(ExternalIntegrationContext context, long requestTime) {
+    private void publishRequestEvent(ExternalApiAuditDetail detail, long requestTime) {
         long currentTime = System.currentTimeMillis();
-        PayloadResult payloadResult = preparePayload(buildAuditablePayload(context, context.getRequestPayload()));
+        PayloadResult payloadResult = preparePayload(buildAuditablePayload(detail, detail.getRequestPayload()));
 
-        ExternalApiAuditDetail requestEvent = ExternalApiAuditDetail.builder()
-                .id(context.getCorrelationId())
+        ExternalApiAuditDetail requestEvent = copyMetadata(detail)
+                .id(detail.getCorrelationId())
                 .rawDetailId(UUID.randomUUID().toString())
-                .correlationId(context.getCorrelationId())
-                .tenantId(context.getTenantId())
-                .state(context.getState())
-                .externalApiName(context.getExternalApiName())
-                .direction(context.getDirection())
                 .requestTime(requestTime)
                 .status(ExternalApiAuditConstants.STATUS_INITIATED)
-                .retryCount(context.getRetryCount())
                 .createdTime(currentTime)
                 .lastModifiedTime(currentTime)
                 .requestPayload(payloadResult.payload())
@@ -201,28 +186,22 @@ public class ExternalApiAuditLogger {
         publishSafely(requestEvent);
     }
 
-    private void publishResponseEvent(ExternalIntegrationContext context, long requestTime, Object response,
+    private void publishResponseEvent(ExternalApiAuditDetail detail, long requestTime, Object response,
             Exception caughtException) {
         long responseTime = System.currentTimeMillis();
         long durationMs = responseTime - requestTime;
-        ResponseAuditDetails auditDetails = buildResponseAuditDetails(context.getCorrelationId(), response, caughtException);
-        PayloadResult requestPayloadResult = preparePayload(buildAuditablePayload(context, context.getRequestPayload()));
-        PayloadResult responsePayloadResult = preparePayload(buildAuditablePayload(context, auditDetails.responsePayload()));
+        ResponseAuditDetails auditDetails = buildResponseAuditDetails(detail.getCorrelationId(), response, caughtException);
+        PayloadResult requestPayloadResult = preparePayload(buildAuditablePayload(detail, detail.getRequestPayload()));
+        PayloadResult responsePayloadResult = preparePayload(buildAuditablePayload(detail, auditDetails.responsePayload()));
 
-        ExternalApiAuditDetail responseEvent = ExternalApiAuditDetail.builder()
-                .id(context.getCorrelationId())
-                .correlationId(context.getCorrelationId())
-                .tenantId(context.getTenantId())
-                .state(context.getState())
-                .externalApiName(context.getExternalApiName())
-                .direction(context.getDirection())
+        ExternalApiAuditDetail responseEvent = copyMetadata(detail)
+                .id(detail.getCorrelationId())
                 .requestTime(requestTime)
                 .createdTime(requestTime)
                 .status(auditDetails.status())
                 .httpStatusCode(auditDetails.httpStatusCode())
                 .responseTime(responseTime)
                 .durationMs(durationMs)
-                .retryCount(context.getRetryCount())
                 .lastModifiedTime(responseTime)
                 .requestPayload(requestPayloadResult.payload())
                 .responsePayload(responsePayloadResult.payload())
@@ -231,6 +210,20 @@ public class ExternalApiAuditLogger {
                 .build();
 
         publishSafely(responseEvent);
+    }
+
+    private ExternalApiAuditDetail.ExternalApiAuditDetailBuilder copyMetadata(ExternalApiAuditDetail detail) {
+        return ExternalApiAuditDetail.builder()
+                .correlationId(detail.getCorrelationId())
+                .tenantId(detail.getTenantId())
+                .externalService(detail.getExternalService())
+                .externalApiName(detail.getExternalApiName())
+                .direction(detail.getDirection())
+                .endpoint(detail.getEndpoint())
+                .method(detail.getMethod())
+                .originatingCorrelationId(detail.getOriginatingCorrelationId())
+                .businessReferenceId(detail.getBusinessReferenceId())
+                .retryCount(detail.getRetryCount());
     }
 
     /**
@@ -248,17 +241,17 @@ public class ExternalApiAuditLogger {
 
     /**
      * Envelope stored in {@code ug_external_api_message_raw_detail.request_payload}
-     * and {@code response_payload}. {@code endpoint} / {@code httpMethod} / {@code method}
-     * are always present as JSON keys (not table columns).
+     * and {@code response_payload}. {@code endpoint} and {@code method} are also persisted
+     * as columns on {@code ug_external_api_message_detail}.
      */
-    private Object buildAuditablePayload(ExternalIntegrationContext context, Object rawPayload) {
+    private Object buildAuditablePayload(ExternalApiAuditDetail detail, Object rawPayload) {
         Map<String, Object> envelope = new LinkedHashMap<>();
-        putIfPresent(envelope, "originatingCorrelationId", context.getOriginatingCorrelationId());
-        putIfPresent(envelope, "businessReferenceId", context.getBusinessReferenceId());
-        envelope.put(ExternalApiAuditConstants.ENVELOPE_ENDPOINT, context.getEndpoint());
-        envelope.put(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD, context.getHttpMethod());
-        envelope.put(ExternalApiAuditConstants.ENVELOPE_METHOD, context.getHttpMethod());
-        envelope.put("retryCount", context.getRetryCount());
+        putIfPresent(envelope, "originatingCorrelationId", detail.getOriginatingCorrelationId());
+        putIfPresent(envelope, "businessReferenceId", detail.getBusinessReferenceId());
+        envelope.put(ExternalApiAuditConstants.ENVELOPE_ENDPOINT, detail.getEndpoint());
+        envelope.put(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD, detail.getMethod());
+        envelope.put(ExternalApiAuditConstants.ENVELOPE_METHOD, detail.getMethod());
+        envelope.put("retryCount", detail.getRetryCount());
         if (properties.isCapturePayloadEnabled()) {
             envelope.put("payload", sensitivePayloadMasker.mask(rawPayload));
         } else {

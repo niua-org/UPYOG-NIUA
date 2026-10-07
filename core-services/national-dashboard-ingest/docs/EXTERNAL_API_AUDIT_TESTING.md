@@ -33,7 +33,7 @@ Expected highlights:
 
 ## 2. Manual / deployed environment
 
-Prerequisites: ingest service, Kafka, egov-persister loaded with `external-api-audit-persister.yml`, Postgres with Flyway applied (including `state` column).
+Prerequisites: ingest service, Kafka, egov-persister loaded with `external-api-audit-persister.yml`, Postgres with Flyway applied (including `external_service`, `endpoint`, and `method` columns).
 
 ### 2.1 Inbound metric SUCCESS
 
