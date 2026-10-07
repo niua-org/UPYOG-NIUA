@@ -74,10 +74,10 @@ public class PFMSServiceImpl implements PFMSService {
         for (PFMSData data : request.getData()) {
 
             // Check for duplicates within the incoming request itself
-            Set<String> seen = new HashSet<>();
+            Set<String> voucherLists = new HashSet<>();
             for (PFMSTransaction t : data.getTransactions()) {
                 String key = t.getVoucherNumber() + "|" + t.getVoucherDate();
-                if (!seen.add(key)) {
+                if (!voucherLists.add(key)) {
                     throw new IllegalArgumentException(
                             "Duplicate voucher found in request - voucherNumber: " + t.getVoucherNumber()
                                     + ", voucherDate: " + t.getVoucherDate());
