@@ -2,12 +2,18 @@ package org.egov.dx.upyogdata.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.egov.dx.upyogdata.constants.Constants;
+import org.egov.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
 import org.egov.dx.upyogdata.pfms.service.PFMSForwardingService;
 import org.egov.dx.upyogdata.pfms.service.PFMSService;
-import org.egov.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
-import org.egov.dx.upyogdata.constants.Constants;
+import org.egov.externalaudit.constants.ExternalApiAuditConstants;
+import org.egov.externalaudit.model.ExternalApiAuditDetail;
+import org.egov.externalaudit.service.ExternalApiAuditLogger;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -15,12 +21,12 @@ import java.util.Map;
 
 /**
  * REST controller exposing APIs for PFMS transaction data exchange.
- *
- * Accepts transaction data from state systems and forwards the
- * validated request to PFMS Servers
+ * <p>
+ * State systems post inbound payloads on {@code /_create}. That inbound call is audited
+ * with {@link ExternalApiAuditLogger#logInboundApi}. Outbound PFMS HTTP is audited in
+ * {@link org.egov.dx.upyogdata.pfms.client.PFMSApiClient}, not here.
+ * </p>
  */
-
-
 @RestController
 @RequestMapping("/v1/transactions")
 @RequiredArgsConstructor
@@ -29,18 +35,30 @@ public class PFMSController {
 
     private final PFMSService pfmsService;
     private final PFMSForwardingService pfmsForwardingService;
+    private final ExternalApiAuditLogger auditLogger;
 
+    /**
+     * Inbound create from a state system. Audited as {@code state-pfms-transaction-create} / INBOUND.
+     * {@link IllegalArgumentException} from the service still produces a FAILED audit row, then HTTP 400.
+     */
     @PostMapping("/_create")
     @Operation(summary = "Create", description = "State will push data in this create")
     public ResponseEntity<?> createTransaction(
             @Valid @RequestBody PFMSCreateTransactionRequest request) {
         try {
-            return ResponseEntity.ok(pfmsService.createTransaction(request));
+            Object result = auditLogger.logInboundApi(ExternalApiAuditDetail.builder()
+                    .tenantId(Constants.PFMS_TENANT)
+                    .externalApiName(ExternalApiAuditConstants.API_STATE_PFMS_TRANSACTION_CREATE)
+                    .requestPayload(request)
+                    .originatingCorrelationId(resolveOriginatingCorrelationId(request))
+                    .method(Constants.HTTP_POST)
+                    .endpoint(Constants.PFMS_INBOUND_CREATE_ENDPOINT)
+                    .build(), () -> pfmsService.createTransaction(request));
+            return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
-
 
     @PostMapping("/scheduler/_trigger")
     @Operation(summary = "Manually trigger PFMS forwarding scheduler", description = "For testing only")
@@ -56,5 +74,12 @@ public class PFMSController {
         return ResponseEntity.ok("Retry Scheduler triggered");
     }
 
-
+    private String resolveOriginatingCorrelationId(PFMSCreateTransactionRequest request) {
+        if (request.getRequestInfo() != null
+                && request.getRequestInfo().getCorrelationId() != null
+                && !request.getRequestInfo().getCorrelationId().isBlank()) {
+            return request.getRequestInfo().getCorrelationId();
+        }
+        return null;
+    }
 }
