@@ -1,1 +1,1 @@
-org.egov.externalaudit.config.ExternalApiAuditAutoConfiguration
+config.org.upyog.externalaudit.ExternalApiAuditAutoConfiguration
