@@ -2,6 +2,7 @@ import {
   Header,
   Card,
   CardLabel,
+  CardLabelError,
   TextInput,
   Dropdown,
   ToggleSwitch,
@@ -9,6 +10,8 @@ import {
   ActionBar,
   Button,
   SVG,
+  CloseSvg,
+  PopUp,
   Toast,
 } from "@upyog/workbench-ui-react-components";
 import React, { useState } from "react";
@@ -123,7 +126,7 @@ const FormCreate = () => {
       .replace(/_+/g, "_")
       .replace(/^_+|_+$/g, "");
 
-    return `WBH_${cleanModule}_${cleanLabel}`;
+    return `${cleanModule}_${cleanLabel}`;
   };
 
   // Initial field configuration state depending on Edit vs Copy vs New mode
@@ -148,6 +151,8 @@ const FormCreate = () => {
           regexType: item.regexType || "none",
           pattern: validationObj.pattern || item.pattern || "",
           patternErrorMessage: item.patternErrorMessage || item.messages?.error || "",
+          heading: item.heading || fieldObj.heading || "",
+          paragraph: item.paragraph || fieldObj.paragraph || "",
           // MDMS Dropdown Specific Settings
           mdmsModuleName: dataSourceObj.moduleName || item.mdmsModuleName || moduleName,
           mdmsMasterName: dataSourceObj.masterName || item.mdmsMasterName || "",
@@ -235,13 +240,38 @@ const FormCreate = () => {
 
   const [fields, setFields] = useState(getInitialFields);
   const [toast, setToast] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewFormData, setPreviewFormData] = useState({});
+
+  // Check if field label is a duplicate among form fields
+  const isDuplicateFieldLabel = (currentField) => {
+    if (!currentField?.label || !currentField.label.trim()) return false;
+    const cleanLabel = currentField.label.trim().toLowerCase();
+    return fields.some((f) => f.id !== currentField.id && (f.label || "").trim().toLowerCase() === cleanLabel);
+  };
+
+  // Check if field key / ID is a duplicate among form fields
+  const isDuplicateFieldKey = (currentField) => {
+    if (!currentField?.fieldKey || !currentField.fieldKey.trim()) return false;
+    const cleanKey = currentField.fieldKey.trim().toLowerCase();
+    return fields.some((f) => f.id !== currentField.id && (f.fieldKey || "").trim().toLowerCase() === cleanKey);
+  };
 
   // Add new field to the canvas
   const handleAddField = (fieldType) => {
     const isFile = fieldType.code === "file";
     const isDropdown = fieldType.code === "dropdown";
     const isOptionsField = ["radio", "checkbox"].includes(fieldType.code);
-    const fieldLabel = `New ${fieldType.name}`;
+
+    // Auto-generate unique field label to prevent duplicate names on field addition
+    const baseLabel = `New ${fieldType.name}`;
+    let fieldLabel = baseLabel;
+    let counter = 1;
+    while (fields.some((f) => (f.label || "").trim().toLowerCase() === fieldLabel.trim().toLowerCase())) {
+      fieldLabel = `${baseLabel} ${counter}`;
+      counter++;
+    }
+
     const newField = {
       id: `field_${Date.now()}`,
       label: fieldLabel,
@@ -253,6 +283,8 @@ const FormCreate = () => {
       placeholder: `Enter ${fieldType.name.toLowerCase()}`,
       minLength: "",
       maxLength: "",
+      heading: "",
+      paragraph: "",
       regexType: "none",
       pattern: "",
       patternErrorMessage: "",
@@ -355,6 +387,7 @@ const FormCreate = () => {
 
   // Update specific field properties with auto-generating localization key when label changes
   const handleFieldChange = (fieldId, key, value) => {
+    console.log("Testing :- ", fieldId, key, value);
     setFields((prev) =>
       prev.map((field) => {
         if (field.id === fieldId) {
@@ -399,6 +432,53 @@ const FormCreate = () => {
 
   // Save form configuration schema (Generates UPYOG Standard Single Field MDMS/Config JSON)
   const handleSaveSchema = () => {
+    // 1. Validate Duplicate Field Names / Labels or Keys
+    const labelSet = new Set();
+    const keySet = new Set();
+    let duplicateLabelName = null;
+    let duplicateKeyName = null;
+
+    for (const field of fields) {
+      const normLabel = (field.label || "").trim().toLowerCase();
+      const normKey = (field.fieldKey || "").trim().toLowerCase();
+
+      if (!normLabel) {
+        setToast({
+          label: t("WBH_EMPTY_FIELD_LABEL_ERROR") || "Field Label cannot be empty. Please specify a label for all fields.",
+          error: true,
+        });
+        return;
+      }
+
+      if (labelSet.has(normLabel)) {
+        duplicateLabelName = field.label;
+        break;
+      }
+      if (normKey && keySet.has(normKey)) {
+        duplicateKeyName = field.fieldKey;
+        break;
+      }
+
+      labelSet.add(normLabel);
+      if (normKey) keySet.add(normKey);
+    }
+
+    if (duplicateLabelName) {
+      setToast({
+        label: t("WBH_DUPLICATE_FIELD_LABEL_ERROR") || `Duplicate field name found: "${duplicateLabelName}". Each field must have a unique name.`,
+        error: true,
+      });
+      return;
+    }
+
+    if (duplicateKeyName) {
+      setToast({
+        label: t("WBH_DUPLICATE_FIELD_KEY_ERROR") || `Duplicate field key found: "${duplicateKeyName}". Each field key must be unique.`,
+        error: true,
+      });
+      return;
+    }
+
     const stateCode = Digit.ULBService.getStateId ? Digit.ULBService.getStateId() : "pg";
     const formattedKeyName = formName ? formName.charAt(0).toLowerCase() + formName.slice(1) : "form";
 
@@ -406,9 +486,13 @@ const FormCreate = () => {
       const fieldItem = {
         order: idx + 1,
         key: field.fieldKey || `field_${idx + 1}`,
+        heading: field.heading || "",
+        paragraph: field.paragraph || "",
         field: {
           code: field.fieldKey || `field_${idx + 1}`,
           name: field.fieldKey || `field_${idx + 1}`,
+          heading: field.heading || "",
+          paragraph: field.paragraph || "",
           placeholder: field.placeholder || "",
           type: field.type,
           ...(field.type === "dropdown" && {
@@ -502,12 +586,22 @@ const FormCreate = () => {
               ? t("WBH_COPY_FORM_CONFIG_BUILDER") || "Copy Form Field Configuration (Cloned Scope)"
               : t("WBH_FORM_CONFIG_BUILDER") || "Form Field Configuration Builder"}
         </Header>
-        <Button
-          variation="secondary"
-          className="header-btn-back-to-forms"
-          label={t("WBH_BACK_TO_LIST") || "← Back to Forms"}
-          onButtonClick={() => navigate(`/${window?.contextPath}/employee/workbench/form-builder`)}
-        />
+        <div className="header-action-bar-container">
+          <Button
+            type="button"
+            variation="secondary"
+            className="header-btn-back-to-forms"
+            label={t("WBH_PREVIEW_FORM") || "👁️ Preview Form"}
+            onButtonClick={() => setShowPreviewModal(true)}
+          />
+          <Button
+            type="button"
+            variation="secondary"
+            className="header-btn-back-to-forms"
+            label={t("WBH_BACK_TO_LIST") || "← Back to Forms"}
+            onButtonClick={() => navigate(`/${window?.contextPath}/employee/workbench/form-builder`)}
+          />
+        </div>
       </div>
 
       {/* Selected Parameters Context Banner */}
@@ -618,12 +712,20 @@ const FormCreate = () => {
                     {/* Row 1: Basic Configs */}
                     <div className="field-card-grid row-1">
                       <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_LABEL") || "Field Label"}</CardLabel>
+                        <CardLabel className="config-label">
+                          {t("WBH_FIELD_LABEL") || "Field Label"} <span className="mandatory-asterisk">*</span>
+                        </CardLabel>
                         <TextInput
                           value={field.label}
                           onChange={(e) => handleFieldChange(field.id, "label", e.target.value)}
                           placeholder="e.g. Applicant Name"
+                          className={isDuplicateFieldLabel(field) ? "has-duplicate-error" : ""}
                         />
+                        {isDuplicateFieldLabel(field) && (
+                          <CardLabelError className="duplicate-error-msg">
+                            ⚠️ {t("WBH_DUPLICATE_NAME_WARN") || "Duplicate field name! Each field must have a unique name."}
+                          </CardLabelError>
+                        )}
                       </div>
 
                       <div className="field-config-item">
@@ -632,6 +734,21 @@ const FormCreate = () => {
                           value={field.fieldKey}
                           onChange={(e) => handleFieldChange(field.id, "fieldKey", e.target.value)}
                           placeholder="e.g. applicantName"
+                          className={isDuplicateFieldKey(field) ? "has-duplicate-error" : ""}
+                        />
+                        {isDuplicateFieldKey(field) && (
+                          <CardLabelError className="duplicate-error-msg">
+                            ⚠️ {t("WBH_DUPLICATE_KEY_WARN") || "Duplicate field key! Field ID must be unique."}
+                          </CardLabelError>
+                        )}
+                      </div>
+
+                      <div className="field-config-item">
+                        <CardLabel className="config-label">{t("WBH_FIELD_HEADING") || "Heading"}</CardLabel>
+                        <TextInput
+                          value={field.heading || ""}
+                          onChange={(e) => handleFieldChange(field.id, "heading", e.target.value)}
+                          placeholder="e.g. Enter heading"
                         />
                       </div>
 
@@ -641,6 +758,17 @@ const FormCreate = () => {
                           value={field.placeholder}
                           onChange={(e) => handleFieldChange(field.id, "placeholder", e.target.value)}
                           placeholder="e.g. Enter value"
+                        />
+                      </div>
+
+                      <div className="field-config-item span-2">
+                        <CardLabel className="config-label">{t("WBH_FIELD_PARAGRAPH") || "Paragraph"}</CardLabel>
+                        <textarea
+                          value={field.paragraph || ""}
+                          onChange={(e) => handleFieldChange(field.id, "paragraph", e.target.value)}
+                          placeholder="e.g. Enter paragraph text"
+                          rows={2}
+                          className="preview-textarea"
                         />
                       </div>
 
@@ -714,7 +842,6 @@ const FormCreate = () => {
                               placeholder="e.g. 100"
                             />
                           </div>
-
                           <div className="field-config-item">
                             <CardLabel className="config-label">{t("WBH_PREDEFINED_REGEX") || "Pattern Validation Dropdown"}</CardLabel>
                             <Dropdown
@@ -788,26 +915,26 @@ const FormCreate = () => {
                     {/* Row 2: Radio & Checkbox Options Configuration */}
                     {["radio", "checkbox"].includes(field.type) && (
                       <div className="field-validation-section">
-                        <div className="validation-section-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div className="validation-section-header validation-header-flex">
                           <span>🔘 {t("WBH_OPTIONS_CONFIG_HEADER") || "Radio / Checkbox Options Configuration"}</span>
                           <Button
                             type="button"
                             variation="secondary"
+                            className="add-option-btn"
                             label={t("WBH_ADD_OPTION") || "+ Add Option"}
                             onButtonClick={() => handleAddOption(field.id)}
-                            style={{ minWidth: "110px", padding: "0.35rem 0.75rem", fontSize: "0.75rem", margin: 0 }}
                           />
                         </div>
 
-                        <div className="options-list-container" style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginTop: "0.75rem" }}>
+                        <div className="options-list-container">
                           {(Array.isArray(field.options) && field.options.length > 0 ? field.options : [
                             { code: "OPTION_1", name: "Option 1" },
                             { code: "OPTION_2", name: "Option 2" },
                           ]).map((opt, optIdx) => (
-                            <div key={optIdx} className="option-item-row" style={{ display: "flex", gap: "0.75rem", alignItems: "center", background: "#ffffff", padding: "0.6rem 0.85rem", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                              <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", minWidth: "24px" }}>#{optIdx + 1}</span>
-                              <div style={{ flex: 1 }}>
-                                <CardLabel className="config-label" style={{ fontSize: "0.75rem", marginBottom: "0.2rem" }}>
+                            <div key={optIdx} className="option-item-row">
+                              <span className="option-index-badge">#{optIdx + 1}</span>
+                              <div className="option-field-flex">
+                                <CardLabel className="config-label">
                                   {t("WBH_OPTION_NAME") || "Display Label"}
                                 </CardLabel>
                                 <TextInput
@@ -816,8 +943,8 @@ const FormCreate = () => {
                                   placeholder={t("WBH_OPTION_LABEL_PLACEHOLDER") || "e.g. Option 1 / Yes"}
                                 />
                               </div>
-                              <div style={{ flex: 1 }}>
-                                <CardLabel className="config-label" style={{ fontSize: "0.75rem", marginBottom: "0.2rem" }}>
+                              <div className="option-field-flex">
+                                <CardLabel className="config-label">
                                   {t("WBH_OPTION_CODE") || "Value Code"}
                                 </CardLabel>
                                 <TextInput
@@ -828,7 +955,7 @@ const FormCreate = () => {
                               </div>
                               <button
                                 type="button"
-                                style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "1.1rem", padding: "0.2rem 0.4rem", alignSelf: "flex-end", marginBottom: "0.3rem" }}
+                                className="option-remove-btn"
                                 onClick={() => handleRemoveOption(field.id, optIdx)}
                                 title={t("WBH_REMOVE_OPTION") || "Remove Option"}
                               >
@@ -923,6 +1050,225 @@ const FormCreate = () => {
           label={isEdit ? t("WBH_UPDATE_FORM_CONFIG") || "Update Configuration" : t("WBH_SAVE_FORM_CONFIG") || "Save Configuration"}
         />
       </ActionBar>
+
+      {/* Form Live Preview Popup Modal */}
+      {showPreviewModal && (
+        <PopUp>
+          <div className="create-form-modal-overlay">
+            <div className="create-form-modal-container preview-modal-container">
+              {/* Modal Header */}
+              <div className="create-form-modal-header preview-modal-header">
+                <div className="modal-title-wrapper preview-modal-title-wrapper">
+                  <div className="modal-icon-badge preview-modal-badge">
+                    <span className="preview-modal-icon">👁️</span>
+                  </div>
+                  <div>
+                    <h2 className="modal-title-text preview-modal-title">
+                      {t("WBH_FORM_PREVIEW") || "Form Live Preview"}: {formName}
+                    </h2>
+                    <p className="modal-subtitle-text preview-modal-subtitle">
+                      {t("WBH_ACCORDION") || "Section"}: <strong>{accordionName}</strong> | {t("WBH_MODULE") || "Module"}: <strong>{moduleName}</strong> ({fields.length} {t("WBH_FIELDS") || "fields"})
+                    </p>
+                  </div>
+                </div>
+                <button type="button" className="modal-close-btn" onClick={() => setShowPreviewModal(false)} aria-label="Close">
+                  <CloseSvg fill="#64748b" width="18" height="18" />
+                </button>
+              </div>
+
+              {/* Modal Body - Interactive Form Preview */}
+              <div className="preview-modal-body">
+                <div className="preview-card-container">
+                  <h3 className="preview-section-title">
+                    {accordionName}
+                  </h3>
+
+                  {fields.length === 0 ? (
+                    <div className="preview-empty-state">
+                      <p>{t("WBH_NO_FIELDS_TO_PREVIEW") || "No form fields added yet. Add fields on the canvas to preview your form."}</p>
+                    </div>
+                  ) : (
+                    <div className="preview-fields-grid">
+                      {fields.map((field, idx) => {
+                        const isRequired = field.required === "required";
+                        const isReadOnly = !!field.isReadonly;
+                        const isDisabled = !!field.isDisabled;
+                        const fieldVal = previewFormData[field.id] || "";
+
+                        return (
+                          <div key={field.id} className="preview-field-item">
+                            {field.heading && (
+                              <h4 className="preview-field-heading" style={{ fontSize: "0.95rem", fontWeight: "600", color: "#0f172a", margin: "0 0 4px 0" }}>
+                                {field.heading}
+                              </h4>
+                            )}
+                            <CardLabel className="config-label preview-field-label">
+                              {field.label || `Field ${idx + 1}`}
+                              {isRequired && <span className="mandatory-asterisk"> *</span>}
+                            </CardLabel>
+                            {field.paragraph && (
+                              <p className="preview-field-paragraph" style={{ fontSize: "0.85rem", color: "#64748b", margin: "2px 0 8px 0" }}>
+                                {field.paragraph}
+                              </p>
+                            )}
+
+                            {/* Render Text / Password Input */}
+                            {["text", "password"].includes(field.type) && (
+                              <TextInput
+                                type={field.type}
+                                value={fieldVal}
+                                onChange={(e) => setPreviewFormData((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                                placeholder={field.placeholder || `Enter ${field.label || "value"}`}
+                                disabled={isDisabled}
+                                readOnly={isReadOnly}
+                              />
+                            )}
+
+                            {/* Render Date Picker */}
+                            {field.type === "date" && (
+                              <TextInput
+                                type="date"
+                                value={fieldVal}
+                                onChange={(e) => setPreviewFormData((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                                disabled={isDisabled}
+                                readOnly={isReadOnly}
+                              />
+                            )}
+
+                            {/* Render Textarea */}
+                            {field.type === "textarea" && (
+                              <textarea
+                                value={fieldVal}
+                                onChange={(e) => setPreviewFormData((prev) => ({ ...prev, [field.id]: e.target.value }))}
+                                placeholder={field.placeholder || `Enter ${field.label || "details"}`}
+                                disabled={isDisabled}
+                                readOnly={isReadOnly}
+                                rows={3}
+                                className="preview-textarea"
+                              />
+                            )}
+
+                            {/* Render Dropdown Select */}
+                            {field.type === "dropdown" && (
+                              <Dropdown
+                                option={
+                                  field.mdmsMasterName
+                                    ? [{ name: `${field.mdmsMasterName} Option 1` }, { name: `${field.mdmsMasterName} Option 2` }]
+                                    : [{ name: "Sample Option 1" }, { name: "Sample Option 2" }]
+                                }
+                                optionKey="name"
+                                selected={fieldVal}
+                                select={(val) => setPreviewFormData((prev) => ({ ...prev, [field.id]: val }))}
+                                placeholder={field.placeholder || `Select ${field.label || "option"}`}
+                                disabled={isDisabled}
+                                readOnly={isReadOnly}
+                                t={t}
+                              />
+                            )}
+
+                            {/* Render Radio Options */}
+                            {field.type === "radio" && (
+                              <div className="preview-options-group">
+                                {(Array.isArray(field.options) && field.options.length > 0
+                                  ? field.options
+                                  : [
+                                    { code: "OPT_1", name: "Option 1" },
+                                    { code: "OPT_2", name: "Option 2" },
+                                  ]
+                                ).map((opt, oIdx) => (
+                                  <label key={oIdx} className={`preview-option-label ${isDisabled ? "disabled" : ""}`}>
+                                    <input
+                                      type="radio"
+                                      name={`preview_radio_${field.id}`}
+                                      value={opt.code}
+                                      checked={fieldVal === opt.code}
+                                      disabled={isDisabled}
+                                      onChange={() => setPreviewFormData((prev) => ({ ...prev, [field.id]: opt.code }))}
+                                      className="preview-control-input"
+                                    />
+                                    <span>{opt.name || opt.code}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Render Checkbox Options */}
+                            {field.type === "checkbox" && (
+                              <div className="preview-options-group">
+                                {(Array.isArray(field.options) && field.options.length > 0
+                                  ? field.options
+                                  : [
+                                    { code: "OPT_1", name: "Option 1" },
+                                    { code: "OPT_2", name: "Option 2" },
+                                  ]
+                                ).map((opt, oIdx) => {
+                                  const currentCheck = Array.isArray(fieldVal) ? fieldVal : [];
+                                  const isChecked = currentCheck.includes(opt.code);
+                                  return (
+                                    <label key={oIdx} className={`preview-option-label ${isDisabled ? "disabled" : ""}`}>
+                                      <input
+                                        type="checkbox"
+                                        value={opt.code}
+                                        checked={isChecked}
+                                        disabled={isDisabled}
+                                        onChange={(e) => {
+                                          const updated = e.target.checked
+                                            ? [...currentCheck, opt.code]
+                                            : currentCheck.filter((c) => c !== opt.code);
+                                          setPreviewFormData((prev) => ({ ...prev, [field.id]: updated }));
+                                        }}
+                                        className="preview-control-input"
+                                      />
+                                      <span>{opt.name || opt.code}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Render File Upload Preview Box */}
+                            {field.type === "file" && (
+                              <div className="preview-file-box">
+                                <span className="preview-file-icon">📁</span>
+                                <span className="preview-file-title">{t("WBH_CLICK_TO_UPLOAD") || "Choose file to upload"}</span>
+                                <span className="preview-file-hint">
+                                  Formats: {field.allowedFileTypes || "PDF, JPG"} | Max: {field.maxFileSize || 5}MB
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Helper hint error or format msg if specified */}
+                            {field.patternErrorMessage && (
+                              <span className="preview-rule-hint">Rules: {field.patternErrorMessage}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="create-form-modal-footer">
+                <Button
+                  type="button"
+                  className="modal-btn-cancel"
+                  label={t("WBH_RESET_PREVIEW") || "↺ Reset Form"}
+                  variation="secondary"
+                  onButtonClick={() => setPreviewFormData({})}
+                />
+                <Button
+                  type="button"
+                  className="modal-btn-submit"
+                  label={t("WBH_CLOSE_PREVIEW") || "Close Preview"}
+                  onButtonClick={() => setShowPreviewModal(false)}
+                />
+              </div>
+            </div>
+          </div>
+        </PopUp>
+      )}
 
       {toast && (
         <Toast
