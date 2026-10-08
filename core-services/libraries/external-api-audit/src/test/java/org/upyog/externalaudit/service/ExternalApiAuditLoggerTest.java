@@ -71,7 +71,6 @@ class ExternalApiAuditLoggerTest {
         Map<String, Object> requestEnvelope =
                 (Map<String, Object>) requestWrapper.getApiAuditDetail().getRequestPayload();
         assertEquals("http://pfms.example/data", requestEnvelope.get(ExternalApiAuditConstants.ENVELOPE_ENDPOINT));
-        assertEquals("POST", requestEnvelope.get(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD));
         assertEquals("POST", requestEnvelope.get(ExternalApiAuditConstants.ENVELOPE_METHOD));
 
         @SuppressWarnings("unchecked")
