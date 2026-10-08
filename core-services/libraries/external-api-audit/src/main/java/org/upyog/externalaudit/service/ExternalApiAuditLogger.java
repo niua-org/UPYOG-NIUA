@@ -244,9 +244,7 @@ public class ExternalApiAuditLogger {
         putIfPresent(envelope, "originatingCorrelationId", detail.getOriginatingCorrelationId());
         putIfPresent(envelope, "businessReferenceId", detail.getBusinessReferenceId());
         envelope.put(ExternalApiAuditConstants.ENVELOPE_ENDPOINT, detail.getEndpoint());
-        envelope.put(ExternalApiAuditConstants.ENVELOPE_HTTP_METHOD, detail.getMethod());
         envelope.put(ExternalApiAuditConstants.ENVELOPE_METHOD, detail.getMethod());
-        envelope.put("retryCount", detail.getRetryCount());
         if (properties.isCapturePayloadEnabled()) {
             envelope.put("payload", sensitivePayloadMasker.mask(rawPayload));
         } else {
