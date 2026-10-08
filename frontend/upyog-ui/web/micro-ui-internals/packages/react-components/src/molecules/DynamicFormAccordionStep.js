@@ -68,6 +68,7 @@ const DynamicFormAccordionStep = ({
   enrichFieldArrayRow = null,
   transformDropdownData = null,
   onFieldChange = null,
+  pageClassName,
 }) => {
   const t = tProp || ((key) => key);
   const sessionData = formData ?? persistedData ?? {};
@@ -188,10 +189,16 @@ const DynamicFormAccordionStep = ({
 
   const timeline = config?.navigation?.timeline;
 
-  return (
+  const page = (
     <>
       {timeline?.steps?.length ? (
-        <ConfigTimeline timeline={timeline} currentStep={timelineStep} t={t} />
+        <ConfigTimeline
+          timeline={timeline}
+          currentStep={timelineStep}
+          t={t}
+          className={pageClassName ? `${pageClassName}__timeline` : undefined}
+          fullWidth={Boolean(pageClassName)}
+        />
       ) : null}
       <div className={wrapperClassName}>
       <div className="dynamic-form-accordion-pagehead">
@@ -230,6 +237,9 @@ const DynamicFormAccordionStep = ({
     </div>
     </>
   );
+
+  if (!pageClassName) return page;
+  return <div className={pageClassName}>{page}</div>;
 };
 
 export default DynamicFormAccordionStep;

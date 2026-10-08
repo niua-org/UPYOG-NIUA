@@ -49,6 +49,7 @@ const tlFormFieldOverlays = [
       placeholder: "TL_ENTER_PROPERTY_ID_OR_MOBILE",
       placeholderDefault: "Property ID or mobile number",
       resultLabel: "TL_PROPERTY_ID",
+      searchButtonLabel: "CS_COMMON_SEARCH",
       selectLabel: "CS_COMMON_SELECT",
       notFoundLabel: "TL_PROPERTY_NOT_FOUND",
       notFoundLabelDefault: "No property found for this property ID or mobile number",
@@ -68,8 +69,28 @@ const tlFormFieldOverlays = [
     },
   },
   {
+    key: "TL_TRADE_CATEGORY",
+    field: {
+      name: "tradecategory",
+      dataSource: { i18nKeyPrefix: "TRADELICENSE_TRADETYPE" },
+    },
+  },
+  {
+    key: "TL_TRADE_TYPE",
+    field: {
+      name: "tradetype",
+      dataSource: {
+        i18nKeyPrefix: "TRADELICENSE_TRADETYPE",
+        sortOptions: "label",
+      },
+    },
+  },
+  {
     key: "TL_TRADE_SUBTYPE",
-    field: { name: "tradesubtype" },
+    field: {
+      name: "tradesubtype",
+      dataSource: { leafI18nPrefix: "TL", sortOptions: "label" },
+    },
     validation: {
       billingSlabFound: true,
     },
@@ -93,7 +114,13 @@ const tlFormFieldOverlays = [
   },
   {
     key: "TL_ACCESSORY_CATEGORY",
-    field: { name: "accessory" },
+    field: {
+      name: "accessory",
+      dataSource: {
+        i18nKeyPrefix: "TRADELICENSE_ACCESSORIESCATEGORY",
+        sortOptions: "label",
+      },
+    },
     validation: {
       billingSlabFound: true,
     },
@@ -118,7 +145,7 @@ const tlFormFieldOverlays = [
 ];
 
 /**
- * Explicit gate — also auto-detected from hasPropertyId field name.
+ * Trade License property gate. Merged over the JSON formGate (local keys win).
  * YES → property ID search; NO → popup then redirect to create property.
  */
 const tlFormGate = {

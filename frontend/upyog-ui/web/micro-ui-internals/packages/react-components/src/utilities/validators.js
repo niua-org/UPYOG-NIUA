@@ -78,7 +78,11 @@ export const fieldRules = {
     const normalized = String(value).trim();
     if (!normalized) return true; // empty handled by `required`
     try {
-      return new RegExp(pattern).test(normalized);
+      // `g` makes RegExp.test stateful, so a valid value can fail on the next keystroke.
+      const flags = [
+        ...new Set(String(fieldConfig.validation?.patternFlags || "").match(/[imsuy]/g) || []),
+      ].join("");
+      return new RegExp(pattern, flags).test(normalized);
     } catch (e) {
       console.error("Invalid validation.pattern:", pattern, e);
       return true;

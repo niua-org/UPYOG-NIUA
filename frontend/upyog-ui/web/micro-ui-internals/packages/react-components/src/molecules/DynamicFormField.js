@@ -83,6 +83,7 @@ import {
   resolveFieldLabelKey,
   getFieldWatchNames,
   optionCode,
+  radioOptionMatches,
   enrichDropdownSelection,
   isFieldVisible,
   getFieldArrayName,
@@ -241,18 +242,19 @@ const DynamicFormField = ({
       const key = o.i18nKey || "";
       const translated = key ? t(key) : "";
       const untranslated = !translated || translated === key;
-      // Keep TRADELICENSE_TRADETYPE_GBS (and similar) so Dropdown calls t()
-      // and shows "Goods Based Services", not the segment code GBS.
-      const keepLocaleKey = key.startsWith("TRADELICENSE_") || key.startsWith("TL_");
-      if (untranslated && !keepLocaleKey) {
+      // An i18nKey that is not the code or the display name is a locale key.
+      // Keep it so the control can translate it. A key that is just the code
+      // falls back to the master's name.
+      const explicitLocaleKey = key && key !== o.code && key !== o.name;
+      if (untranslated && !explicitLocaleKey && ds?.keepI18nKey !== true) {
         return { ...o, i18nKey: o.name || o.code };
       }
       return o;
     });
 
-    // niuatt trade dropdowns are alphabetical by the localized label.
+    // Alphabetical sort is opt-in via dataSource.sortOptions = "label".
     // Radios stay in config order (Yes/No must not be sorted).
-    if (type !== "dropdown") return labeled;
+    if (type !== "dropdown" || ds?.sortOptions !== "label") return labeled;
     const labelOf = (o) => {
       const key = o.i18nKey || o.name || o.code || "";
       const translated = key ? t(key) : "";
@@ -568,38 +570,49 @@ const DynamicFormField = ({
   // ── radio ────────────────────────────────────────────────────────────
   if (type === "radio") {
     const radioDisabled = fieldDisabled;
-    const selectedCode = optionCode(value);
     return (
       <LabelFieldPair>
         <FieldLabel text={labelText} required={showRequired} hasError={hasError} />
         <div className="field" data-field-error={hasError ? "true" : undefined}>
-          <div className="dynamic-form-field__radio-group">
-            {options.map((opt) => (
-              <label
-                key={opt.code}
-                className={`dynamic-form-field__radio-label${
-                  radioDisabled ? ` dynamic-form-field__radio-label--disabled` : ""
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={radioInputName}
-                  value={opt.code}
-                  checked={selectedCode === optionCode(opt)}
-                  disabled={radioDisabled}
-                  onChange={() => onChange(name, opt.code, dropdownResetFields)}
-                  className="dynamic-form-field__radio-input"
-                />
-                {(() => {
-                  const key = opt.i18nKey || opt.label || opt.name || opt.code;
-                  const translated = t(key);
-                  if ((!translated || translated === key) && (opt.name || opt.label)) {
-                    return opt.name || opt.label;
-                  }
-                  return translated || key;
-                })()}
-              </label>
-            ))}
+          <div className="radio-wrap dynamic-form-field__radio-group">
+            {options.map((opt, index) => {
+              const selected = radioOptionMatches(value, opt);
+              const key = opt.i18nKey || opt.label || opt.name || opt.code;
+              const translated = t(key);
+              const optionLabel =
+                (!translated || translated === key) && (opt.name || opt.label)
+                  ? opt.name || opt.label
+                  : translated || key;
+              const inputId = `${radioInputName}-${index}-${opt.code ?? ""}`.replace(
+                /[^A-Za-z0-9_-]+/g,
+                "-"
+              );
+              return (
+                <div key={String(opt.code ?? key)}>
+                  <span className="radio-btn-wrap">
+                    <input
+                      id={inputId}
+                      type="radio"
+                      name={radioInputName}
+                      value={opt.code}
+                      checked={selected}
+                      disabled={radioDisabled}
+                      onChange={() => onChange(name, opt.code, dropdownResetFields)}
+                      className="radio-btn"
+                    />
+                    <span className="radio-btn-checkmark" />
+                  </span>
+                  <label
+                    htmlFor={inputId}
+                    className={`dynamic-form-field__radio-label${
+                      radioDisabled ? " dynamic-form-field__radio-label--disabled" : ""
+                    }${selected ? " dynamic-form-field__radio-label--selected" : ""}`}
+                  >
+                    {optionLabel}
+                  </label>
+                </div>
+              );
+            })}
           </div>
           <FieldError show={hasError} message={errorMsg} />
         </div>
@@ -716,33 +729,19 @@ const DynamicFormField = ({
               {panelForField?.status === "found" && (
                 <div className="dynamic-form-field__result-card">
                   <div className="dynamic-form-field__result-row">
-                    <span>{t(field.resultLabel || labelKey || "CS_COMMON_ASSET_NUMBER")}</span>
+                    <span>{t(field.resultLabel || labelKey || "CS_COMMON_ID")}</span>
                     <span>{panelForField.estateNo}</span>
                   </div>
-                  {panelForField.prefill?.buildingName && (
-                    <div className="dynamic-form-field__result-row">
-                      <span>{t("EST_BUILDING_NAME")}</span>
-                      <span>{t(panelForField.prefill.buildingName)}</span>
-                    </div>
-                  )}
-                  {panelForField.prefill?.assetType && (
-                    <div className="dynamic-form-field__result-row">
-                      <span>{t("EST_ASSET_TYPE")}</span>
-                      <span>{t(panelForField.prefill.assetType)}</span>
-                    </div>
-                  )}
-                  {panelForField.prefill?.serviceType && (
-                    <div className="dynamic-form-field__result-row">
-                      <span>{t("EST_LOCALITY")}</span>
-                      <span>{t(panelForField.prefill.serviceType)}</span>
-                    </div>
-                  )}
-                  {panelForField.prefill?.city && (
-                    <div className="dynamic-form-field__result-row">
-                      <span>{t("EST_CITY")}</span>
-                      <span>{t(panelForField.prefill.city)}</span>
-                    </div>
-                  )}
+                  {(Array.isArray(field.resultRows) ? field.resultRows : []).map((row) => {
+                    const raw = panelForField.prefill?.[row.key];
+                    if (raw == null || raw === "") return null;
+                    return (
+                      <div className="dynamic-form-field__result-row" key={row.key}>
+                        <span>{t(row.label || row.key)}</span>
+                        <span>{t(String(raw))}</span>
+                      </div>
+                    );
+                  })}
                   <button
                     type="button"
                     className="dynamic-form-field__select-button"
@@ -790,10 +789,10 @@ const DynamicFormField = ({
                 !String(value || "").trim()
               }
               onClick={() => onFieldSearch?.(name)}
-              aria-label={t(field.searchButtonLabel || "ES_COMMON_SEARCH")}
+              aria-label={t(field.searchButtonLabel || "CS_COMMON_SEARCH")}
             >
               {showSearchTextButton
-                ? t(field.searchButtonLabel || "ES_COMMON_SEARCH")
+                ? t(field.searchButtonLabel || "CS_COMMON_SEARCH")
                 : <SearchIcon />}
             </button>
           </div>
@@ -804,6 +803,7 @@ const DynamicFormField = ({
   }
 
   // ── default: plain text input ────────────────────────────────────────
+  // here is the value check here
   return (
     <LabelFieldPair>
       <FieldLabel text={labelText} required={showRequired} hasError={hasError} unit={textUnit} />
@@ -897,6 +897,7 @@ const areEqual = (prev, next) => {
     watchValueEqual(prev.formData[n], next.formData[n])
   );
   if (!valuesEqual) return false;
+  // there is the value check here
 
   if (next.fieldConfig?.type === "fieldArray") {
     const arrayName = getFieldArrayName(next.fieldConfig);

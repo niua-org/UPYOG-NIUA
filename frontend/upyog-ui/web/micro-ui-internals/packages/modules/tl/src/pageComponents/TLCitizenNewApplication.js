@@ -8,6 +8,7 @@
 import React, { useCallback, useEffect } from "react";
 import { ConfigDrivenFormStep, optionCode } from "@nudmcdgnpm/digit-ui-react-components";
 import tlFormConfig from "../config/tlFormConfig";
+import "../styles/TLCitizenNewApplication.scss";
 import {
   clearTlPropertySession,
   mapPropertyToSearchMatch,
@@ -123,8 +124,9 @@ const TLCitizenNewApplication = ({
       enrichFieldArrayRow={enrichFieldArrayRow}
       transformDropdownData={transformDropdownData}
       confirmCancel
-      wrapperClassName="tl-citizen-form-step"
-      accordionWrapperClassName="tl-citizen-form-step tl-citizen-form-step--accordion"
+      pageClassName="tl-citizen-new-application"
+      wrapperClassName="tl-citizen-new-application__form-step"
+      accordionWrapperClassName="tl-citizen-new-application__form-step tl-citizen-new-application__form-step--accordion"
     />
   );
 };

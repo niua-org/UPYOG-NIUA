@@ -7,13 +7,35 @@
  * Dynamic form remains the source of truth under `newApplication`; nested keys are
  * derived views for check / acknowledgement.
  */
+import { coerceRadioFieldValue } from "@nudmcdgnpm/digit-ui-react-components";
+import { activePropertyOwners } from "./tlPropertySearch";
 
 const asCodeObj = (value, i18nPrefix) => {
   if (value == null || value === "") return undefined;
-  if (typeof value === "object" && value.code != null) return value;
+  if (typeof value === "object" && value.code != null) {
+    const code = String(value.code);
+    const key = i18nPrefix
+      ? `${i18nPrefix}_${code.replace(/\./g, "_").replace(/-/g, "_")}`
+      : code;
+    if (
+      !i18nPrefix ||
+      (value.i18nKey && value.i18nKey !== code && !String(value.i18nKey).includes("."))
+    ) {
+      return { ...value };
+    }
+    return { ...value, i18nKey: key };
+  }
   const code = String(value);
-  return { code, i18nKey: i18nPrefix ? `${i18nPrefix}_${code}` : code };
+  return {
+    code,
+    i18nKey: i18nPrefix
+      ? `${i18nPrefix}_${code.replace(/\./g, "_").replace(/-/g, "_")}`
+      : code,
+  };
 };
+
+const TRADE_TYPE_PREFIX = "TRADELICENSE_TRADETYPE";
+const STRUCTURE_PREFIX = "COMMON_MASTERS_STRUCTURETYPE";
 
 const pickFirstArrayItem = (value) => {
   if (Array.isArray(value)) return value;
@@ -34,14 +56,28 @@ const ownerDisplayName = (owner) => {
 const ownerMobile = (owner) =>
   String(owner?.mobilenumber || owner?.mobileNumber || "").trim();
 
-const isFilledOwner = (owner) => Boolean(ownerDisplayName(owner) && ownerMobile(owner));
+/** Privacy masks (asterisks) are not a real name or mobile. */
+const isPlainOwnerText = (value) => {
+  const text = String(value || "").trim();
+  return Boolean(text) && !text.includes("*");
+};
+
+const isFilledOwner = (owner) =>
+  isPlainOwnerText(ownerDisplayName(owner)) && isPlainOwnerText(ownerMobile(owner));
+
+/** Radio code first, then the check-page `{ code, i18nKey }` shape. */
+const radioCode = (value, i18nPrefix) => {
+  const code = coerceRadioFieldValue(value);
+  if (!code) return undefined;
+  return asCodeObj(code, i18nPrefix);
+};
 
 const normalizeOwnerRow = (owner) => ({
   ...owner,
   name: ownerDisplayName(owner),
   mobilenumber: ownerMobile(owner),
-  gender: asCodeObj(owner?.gender),
-  relationship: asCodeObj(owner?.relationship),
+  gender: radioCode(owner?.gender, "TL_GENDER"),
+  relationship: radioCode(owner?.relationship, "TL_RELATIONSHIP"),
 });
 
 /** Accordion file fields are { filestoreId, fileName } or a bare id string. */
@@ -65,19 +101,27 @@ const asUploadDoc = (file, documentType) => {
  * Build ownershipCategory from a PT property when citizen picks same-as-property-owner.
  * Mirrors SelectOwnerShipDetails auto-select from cpt.details.ownershipCategory.
  */
+const codeText = (value) => {
+  if (value == null || value === "") return "";
+  if (typeof value === "object") return String(value.code ?? value.value ?? value.name ?? "");
+  return String(value);
+};
+
 const ownershipFromProperty = (property) => {
-  const raw = property?.ownershipCategory;
-  if (!raw) {
+  const rawStr = codeText(property?.ownershipCategory);
+  if (!rawStr) {
     return {
       code: "INDIVIDUAL.SINGLEOWNER",
       i18nKey: "COMMON_MASTERS_OWNERSHIPCATEGORY_INDIVIDUAL_SINGLEOWNER",
       isSameAsPropertyOwner: true,
     };
   }
-  const rawStr = String(raw);
   if (rawStr.includes("INSTITUTIONAL")) {
-    const instType = property?.institution?.type;
-    const code = instType ? `${rawStr}.${instType}` : rawStr;
+    const instType = codeText(property?.institution?.type);
+    const code =
+      instType && !rawStr.endsWith(`.${instType}`) && !rawStr.endsWith(`_${instType}`)
+        ? `${rawStr}.${instType}`
+        : rawStr;
     return {
       code,
       i18nKey: `COMMON_MASTERS_OWNERSHIPCATEGORY_${code.replace(/\./g, "_")}`,
@@ -96,14 +140,7 @@ const ownershipFromProperty = (property) => {
  */
 const ownersFromProperty = (property, ownershipCategory) => {
   const code = ownershipCategory?.code || "";
-  const src = Array.isArray(property?.owners) ? [...property.owners] : [];
-  if (src.some((o) => o?.additionalDetails?.ownerSequence != null)) {
-    src.sort(
-      (a, b) =>
-        (a?.additionalDetails?.ownerSequence ?? 0) -
-        (b?.additionalDetails?.ownerSequence ?? 0)
-    );
-  }
+  const src = activePropertyOwners(property);
 
   if (code.includes("INSTITUTIONAL")) {
     const first = src[0] || {};
@@ -114,11 +151,11 @@ const ownersFromProperty = (property, ownershipCategory) => {
         mobilenumber: first.mobileNumber,
         altContactNumber: first.altContactNumber,
         institutionName: property?.institution?.name,
-        fatherOrHusbandName: "",
-        relationship: undefined,
+        fatherOrHusbandName: first.fatherOrHusbandName || first.guardian,
+        relationship: radioCode(first.relationship ?? first.relation, "TL_RELATIONSHIP"),
         emailId: first.emailId,
         permanentAddress: first.permanentAddress || first.correspondenceAddress,
-        gender: undefined,
+        gender: radioCode(first.gender ?? first.user?.gender, "TL_GENDER"),
         subOwnerShipCategory: ownershipCategory,
       },
     ];
@@ -127,9 +164,9 @@ const ownersFromProperty = (property, ownershipCategory) => {
   return src.map((ow) => ({
     name: ow?.name,
     mobilenumber: ow?.mobileNumber,
-    fatherOrHusbandName: ow?.fatherOrHusbandName,
-    relationship: asCodeObj(ow?.relationship, "COMMON_RELATION"),
-    gender: asCodeObj(ow?.gender, "TL_GENDER"),
+    fatherOrHusbandName: ow?.fatherOrHusbandName || ow?.guardian,
+    relationship: radioCode(ow?.relationship ?? ow?.relation, "TL_RELATIONSHIP"),
+    gender: radioCode(ow?.gender ?? ow?.user?.gender, "TL_GENDER"),
     emailId: ow?.emailId,
     permanentAddress: ow?.permanentAddress || ow?.correspondenceAddress,
   }));
@@ -138,18 +175,10 @@ const ownersFromProperty = (property, ownershipCategory) => {
 /** Ensure trade-unit / accessory nested dropdown codes survive flatten + display. */
 const normalizeUnitRow = (row = {}) => ({
   ...row,
-  tradecategory:
-    typeof row.tradecategory === "object"
-      ? row.tradecategory
-      : asCodeObj(row.tradecategory),
-  tradetype:
-    typeof row.tradetype === "object" ? row.tradetype : asCodeObj(row.tradetype),
-  tradesubtype:
-    typeof row.tradesubtype === "object"
-      ? row.tradesubtype
-      : asCodeObj(row.tradesubtype),
-  accessory:
-    typeof row.accessory === "object" ? row.accessory : asCodeObj(row.accessory),
+  tradecategory: asCodeObj(row.tradecategory, TRADE_TYPE_PREFIX),
+  tradetype: asCodeObj(row.tradetype, TRADE_TYPE_PREFIX),
+  tradesubtype: asCodeObj(row.tradesubtype, TRADE_TYPE_PREFIX),
+  accessory: asCodeObj(row.accessory, "TRADELICENSE_ACCESSORIESCATEGORY"),
 });
 
 /**
@@ -184,7 +213,7 @@ export const mapDynamicTlToCheckSession = (session = {}) => {
   const propertyId = flat.propertyId || property?.propertyId || "";
   const sameAsProperty = isSameAsPropertyOwnerYes(flat.isSameAsPropertyOwner);
 
-  const structureType = asCodeObj(flat.structureType, "COMMON");
+  const structureType = asCodeObj(flat.structureType, "TL");
   const isAccessories = asCodeObj(
     flat.isAccessories === "ACCESSORY"
       ? "ACCESSORY"
@@ -205,10 +234,10 @@ export const mapDynamicTlToCheckSession = (session = {}) => {
     }
   }
 
-  let ownershipCategory =
-    typeof flat.ownershipCategory === "object"
-      ? flat.ownershipCategory
-      : asCodeObj(flat.ownershipCategory);
+  let ownershipCategory = asCodeObj(
+    flat.ownershipCategory,
+    "COMMON_MASTERS_OWNERSHIPCATEGORY"
+  );
 
   // Drop blank placeholder rows. The owners fieldArray is seeded with an empty
   // row while same-as-property-owner is hidden, and that empty row was sent to
@@ -235,20 +264,23 @@ export const mapDynamicTlToCheckSession = (session = {}) => {
     if (isFilledOwner(synthesized)) ownersList.push(synthesized);
   }
 
-  // Same-as-property-owner hides ownership + owners fields — copy from PT like legacy ATT.
+  // Same-as-property-owner: use the property owners when they are complete.
+  // Incomplete property owners stay on the form so the citizen can correct them.
   if (sameAsProperty && property) {
-    if (!ownershipCategory?.code) {
-      ownershipCategory = ownershipFromProperty(property);
-    } else {
+    const fromProperty = ownersFromProperty(property, ownershipFromProperty(property))
+      .map(normalizeOwnerRow)
+      .filter(isFilledOwner);
+    if (fromProperty.length) {
+      ownershipCategory = {
+        ...ownershipFromProperty(property),
+        isSameAsPropertyOwner: true,
+      };
+      ownersList = fromProperty;
+    } else if (ownershipCategory) {
       ownershipCategory = {
         ...ownershipCategory,
         isSameAsPropertyOwner: true,
       };
-    }
-    if (ownersList.length === 0) {
-      ownersList = ownersFromProperty(property, ownershipCategory)
-        .map(normalizeOwnerRow)
-        .filter(isFilledOwner);
     }
   }
 
@@ -314,8 +346,8 @@ export const mapDynamicTlToCheckSession = (session = {}) => {
     TradeDetails: {
       TradeName: flat.tradeName,
       StructureType: structureType,
-      BuildingType: asCodeObj(flat.buildingType),
-      VehicleType: asCodeObj(flat.vehicleType),
+      BuildingType: asCodeObj(flat.buildingType, STRUCTURE_PREFIX),
+      VehicleType: asCodeObj(flat.vehicleType, STRUCTURE_PREFIX),
       CommencementDate: flat.commencementDate,
       TradeGSTNumber: flat.tradeGSTNumber,
       OperationalSqFtArea: flat.operationalSqFtArea,
@@ -364,13 +396,27 @@ export const mapDynamicTlToCheckSession = (session = {}) => {
             },
           },
         }
-      : session.cpt,
-    cptId: propertyId ? { id: propertyId } : session.cptId,
+      : undefined,
+    cptId: propertyId ? { id: propertyId } : undefined,
     knowyourproperty: propertyId
       ? { KnowProperty: { code: "YES", i18nKey: "TL_COMMON_YES" } }
-      : session.knowyourproperty,
+      : undefined,
     __dynamicForm: true,
   };
+
+  if (!propertyId) {
+    try {
+      sessionStorage.removeItem("cpt");
+      sessionStorage.removeItem("KnowProperty");
+    } catch (e) {
+      /* ignore */
+    }
+    try {
+      if (Digit?.SessionStorage?.set) Digit.SessionStorage.set("cpt", "");
+    } catch (e) {
+      /* ignore */
+    }
+  }
 
   if (property) {
     try {

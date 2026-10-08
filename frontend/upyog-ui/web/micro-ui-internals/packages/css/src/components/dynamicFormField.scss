@@ -164,8 +164,22 @@
 
   &__radio-group {
     display: flex;
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 12px 24px;
     margin-bottom: 16px;
+
+    &.radio-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-bottom: 0;
+
+      > div {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0;
+      }
+    }
   }
 
   &__radio-label {

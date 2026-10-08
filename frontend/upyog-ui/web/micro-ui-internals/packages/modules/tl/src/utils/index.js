@@ -376,6 +376,28 @@ export const currentFinancialYear = () => {
   return currentFinancialYear;
 }
 
+/**
+ * Financial year for a citizen trade-license application.
+ * Citizens have no year picker, so this is the year that covers today.
+ * A closed master-data year (for example 2025-26 after April 2026) is not used.
+ */
+export const resolveTlFinancialYear = (fydata) => {
+  const computed = currentFinancialYear();
+  const years = (fydata?.["egf-master"]?.FinancialYear || []).filter(
+    (year) => year?.module === "TL" && year?.code && year?.active !== false
+  );
+  const now = Date.now();
+  const covering = years.find((year) => {
+    const start = Number(year.startingDate);
+    const end = Number(year.endingDate);
+    return Number.isFinite(start) && Number.isFinite(end) && start <= now && end >= now;
+  });
+  if (covering?.code) return covering.code;
+  const named = years.find((year) => year.code === computed);
+  if (named?.code) return named.code;
+  return computed;
+};
+
 const localityCodeOf = (value) => {
   if (value == null || value === "") return null;
   if (typeof value === "string") return value;

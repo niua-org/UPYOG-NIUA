@@ -158,15 +158,21 @@ export const toDropdownOption = (code, name) => ({
  * @param {Array<object>} [options=[]]              Available options for lookup.
  * @returns {object|null} Resolved option object, or null when input is falsy.
  */
-export const resolveOption = (codeOrObj, nameHint, options = []) => {
+export const resolveOption = (codeOrObj, nameHint, options = [], { strict = false } = {}) => {
   if (!codeOrObj) return null;
   if (typeof codeOrObj === "object") {
-    return enrichDropdownSelection(codeOrObj, options);
+    const enriched = enrichDropdownSelection(codeOrObj, options);
+    if (!strict) return enriched;
+    const code = optionCode(enriched);
+    const matched = (options || []).some((o) => optionCode(o) === code);
+    return matched ? enriched : null;
   }
   const matched =
     options.find((o) => optionCode(o) === optionCode(codeOrObj)) ||
     options.find((o) => o.code === codeOrObj);
-  return matched || toDropdownOption(codeOrObj, nameHint || codeOrObj);
+  if (matched) return matched;
+  if (strict) return null;
+  return toDropdownOption(codeOrObj, nameHint || codeOrObj);
 };
 
 /**
@@ -207,6 +213,72 @@ export const optionCode = (val) => {
   if (val === null || val === undefined || val === "") return "";
   if (typeof val === "object" && val.code) return String(val.code).trim().toUpperCase();
   return String(val).trim().toUpperCase();
+};
+
+/** Prefixes property masters store on gender and relationship codes. */
+const RADIO_VALUE_PREFIXES = [
+  "PT_COMMON_GENDER_",
+  "COMMON_GENDER_",
+  "PT_FORM3_",
+  "COMMON_RELATION_",
+  "PT_RELATION_",
+];
+
+const RADIO_VALUE_ALIASES = {
+  M: "MALE",
+  MAN: "MALE",
+  F: "FEMALE",
+  WOMAN: "FEMALE",
+  T: "TRANSGENDER",
+  TG: "TRANSGENDER",
+  O: "OTHERS",
+  OTHER: "OTHERS",
+};
+
+/**
+ * Turn a property / session gender or relationship into the radio code.
+ * Accepts plain strings, `{ code }`, `{ value }`, and prefixed keys such as
+ * `COMMON_RELATION_FATHER` or `TL_GENDER_MALE` (last segment is the code). Masked privacy values become "".
+ *
+ * @param {string|object|null|undefined} value
+ * @returns {string}
+ */
+export const coerceRadioFieldValue = (value) => {
+  if (value == null || value === "") return "";
+  if (typeof value === "object") {
+    const nested = value.code ?? value.value ?? value.name ?? value.i18nKey ?? value.label;
+    if (nested && typeof nested === "object") return coerceRadioFieldValue(nested);
+    return coerceRadioFieldValue(nested);
+  }
+  let token = String(value).trim().toUpperCase();
+  if (!token || token.includes("*") || token === "[OBJECT OBJECT]") return "";
+  RADIO_VALUE_PREFIXES.forEach((prefix) => {
+    if (token.startsWith(prefix)) token = token.slice(prefix.length);
+  });
+  if (RADIO_VALUE_ALIASES[token]) return RADIO_VALUE_ALIASES[token];
+  const tail = token.split("_").filter(Boolean).pop();
+  if (tail && tail !== token && RADIO_VALUE_ALIASES[tail]) return RADIO_VALUE_ALIASES[tail];
+  const known = ["MALE", "FEMALE", "TRANSGENDER", "OTHERS", "FATHER", "HUSBAND"];
+  if (known.includes(token)) return token;
+  if (tail && known.includes(tail)) return tail;
+  return token;
+};
+
+/**
+ * True when a stored radio value selects this option.
+ * Compares code, name, and i18n key after coerceRadioFieldValue.
+ *
+ * @param {string|object|null|undefined} value
+ * @param {object} option
+ * @returns {boolean}
+ */
+export const radioOptionMatches = (value, option) => {
+  const selected = coerceRadioFieldValue(value);
+  if (!selected || !option) return false;
+  return [option.code, option.value, option.name, option.i18nKey, option.label]
+    .map((part) => coerceRadioFieldValue(part))
+    .filter(Boolean)
+    .includes(selected);
 };
 
 /**
@@ -322,6 +394,8 @@ export const findFieldConfig = (formConfig = [], fieldName) =>
  * Merge a single local field override onto its MDMS counterpart.
  * Local wins for compute bindings (computeFrom, computeFn, labelBy, prefillFrom),
  * validation/messages, apiFieldName, submitKey, excludeFromPayload, and hidden.
+ * `dataSource` is deep-merged so a module can add label prefixes without
+ * replacing the MDMS master, filter, and hierarchy.
  * MDMS options replace local options when MDMS provides a non-empty options array.
  *
  * @param {object} local  Local field config override.
@@ -331,9 +405,15 @@ export const findFieldConfig = (formConfig = [], fieldName) =>
 const mergeFormField = (local, mdms) => {
   const mergedField = { ...local.field, ...mdms.field };
   // Local bindings for compute/label/prefill must survive MDMS field overrides.
-  ["name", "code", "computeFrom", "computeFn", "labelBy", "prefillFrom", "dataSource", "numeric", "unit", "defaultValue", "minDate", "maxDate", "createNewPath", "searchButton", "searchCard", "placeholder", "placeholderDefault", "resultLabel", "selectLabel", "notFoundLabel", "notFoundLabelDefault", "createNewLabel"].forEach((key) => {
+  ["name", "code", "computeFrom", "computeFn", "labelBy", "prefillFrom", "numeric", "unit", "defaultValue", "minDate", "maxDate", "createNewPath", "searchButton", "searchCard", "placeholder", "placeholderDefault", "resultLabel", "selectLabel", "notFoundLabel", "notFoundLabelDefault", "createNewLabel", "searchButtonLabel", "resultRows"].forEach((key) => {
     if (local.field?.[key] != null) mergedField[key] = local.field[key];
   });
+  if (local.field?.dataSource || mdms.field?.dataSource) {
+    mergedField.dataSource = {
+      ...(mdms.field?.dataSource || {}),
+      ...(local.field?.dataSource || {}),
+    };
+  }
 
   // Local validation/messages win — MDMS often over-escapes regex patterns (e.g. \\\\.).
   const merged = {
@@ -371,18 +451,20 @@ export const mergeFormFieldConfigs = (localForm = [], mdmsForm = []) => {
 
   const localByName = new Map();
   const localByKey = new Map();
+  const nameCounts = new Map();
   flattenFormConfig(localForm).forEach((fc) => {
-    if (fc?.field?.name) localByName.set(fc.field.name, fc);
+    if (fc?.field?.name) {
+      localByName.set(fc.field.name, fc);
+      nameCounts.set(fc.field.name, (nameCounts.get(fc.field.name) || 0) + 1);
+    }
     if (fc?.key) localByKey.set(fc.key, fc);
   });
 
   const resolveLocal = (item) => {
+    if (item?.key && localByKey.has(item.key)) return localByKey.get(item.key);
     const name = item?.field?.name;
-    return (
-      (name && localByName.get(name)) ||
-      (item?.key && localByKey.get(item.key)) ||
-      null
-    );
+    if (name && nameCounts.get(name) === 1) return localByName.get(name);
+    return null;
   };
 
   const overlayMdmsItem = (mdmsItem) => {
@@ -566,9 +648,10 @@ export const collectSectionFieldNames = (form = []) => {
  */
 export const sectionHasFieldError = (form, errors = {}) => {
   const names = collectSectionFieldNames(form);
-  return Object.keys(errors || {}).some(
-    (key) => names.has(key) || [...names].some((n) => key.startsWith(`${n}.`))
-  );
+  return Object.entries(errors || {}).some(([key, value]) => {
+    if (!value) return false;
+    return names.has(key) || [...names].some((n) => key.startsWith(`${n}.`));
+  });
 };
 
 /**
@@ -646,6 +729,8 @@ export const getFieldWatchNames = (fieldConfig) => {
   if (fieldConfig?.type === "fieldArray") {
     const names = new Set([getFieldArrayName(fieldConfig)]);
     collectVisibleWhenFields(fieldConfig.visibleWhen, names);
+    collectVisibleWhenFields(fieldConfig.field?.disabledWhen, names);
+    collectVisibleWhenFields(fieldConfig.disabledWhen, names);
     return [...names];
   }
   const field = fieldConfig?.field;
@@ -736,10 +821,13 @@ export const evaluateFormRule = (rule, formData = {}) => {
 const evaluateVisibleWhenRule = evaluateFormRule;
 
 /**
- * Collapse / cascade TradeType-style dotted codes into category / type / subtype options.
- * Matches SelectTradeUnits ATT behavior.
+ * Collapse dotted master codes into category / type / subtype options.
+ * Label keys come from the field dataSource:
+ * - `i18nKeyPrefix` for a single segment (`PREFIX_<segment>`)
+ * - `leafI18nPrefix` for the full leaf code (`PREFIX_<code>`)
+ * With no prefix, the segment or the master's own key is used.
  *
- * @param {Array<object>} options - Raw MDMS TradeType rows
+ * @param {Array<object>} options - Raw MDMS rows
  * @param {object} [dataSource={}]
  * @param {object} [formData={}]
  * @returns {Array<object>}
@@ -747,19 +835,32 @@ const evaluateVisibleWhenRule = evaluateFormRule;
 export const filterDependsOnOptions = (options = [], dataSource = {}, formData = {}) => {
   const hierarchy = dataSource.hierarchy || dataSource.optionLevel;
   const list = Array.isArray(options) ? options : [];
+  const segmentKey = (code) => {
+    const segment = String(code).replace(/\./g, "_");
+    const prefix = dataSource.i18nKeyPrefix;
+    return prefix ? `${prefix}_${segment}` : segment;
+  };
+  const leafKey = (item) => {
+    const existing = item?.i18nKey ? String(item.i18nKey) : "";
+    const prefix = dataSource.leafI18nPrefix;
+    if (!prefix) return existing || item?.name || item?.code;
+    const withPrefix = `${prefix}_`;
+    return existing.startsWith(withPrefix) ? existing : `${withPrefix}${item.code}`;
+  };
 
   if (hierarchy === "category" || dataSource.customiztionRequired) {
     const seen = new Set();
     const out = [];
     list.forEach((item) => {
       const code = String(item?.code || "").split(".")[0];
-      if (!code || seen.has(code)) return;
-      seen.add(code);
+      const seenKey = code.toUpperCase();
+      if (!code || seen.has(seenKey)) return;
+      seen.add(seenKey);
       out.push({
         ...item,
         code,
         name: code,
-        i18nKey: item.i18nKey || `TRADELICENSE_TRADETYPE_${code}`,
+        i18nKey: segmentKey(code),
       });
     });
     return out;
@@ -778,21 +879,21 @@ export const filterDependsOnOptions = (options = [], dataSource = {}, formData =
       const parts = String(item?.code || "").split(".");
       if (parts[0]?.toUpperCase() !== parentCode || !parts[1]) return;
       const code = parts[1];
-      if (seen.has(code)) return;
-      seen.add(code);
+      const seenKey = code.toUpperCase();
+      if (seen.has(seenKey)) return;
+      seen.add(seenKey);
       out.push({
         ...item,
         code,
         name: code,
-        i18nKey: item.i18nKey || `TRADELICENSE_TRADETYPE_${code}`,
+        i18nKey: segmentKey(code),
       });
     });
     return out;
   }
 
   if (hierarchy === "subtype" || dataSource.dependsOnSegment === 1) {
-    // ATT SelectTradeUnits: ob.code.split(".")[1] === TradeType.code
-    // Parent may be the type segment (MANUFACTURE) or a dotted path — normalize.
+    // Parent may be the type segment or a dotted path — normalize.
     const parentParts = parentCode.split(".").filter(Boolean);
     const typeCode =
       parentParts.length >= 2 ? parentParts[1] : parentParts[0] || parentCode;
@@ -809,7 +910,7 @@ export const filterDependsOnOptions = (options = [], dataSource = {}, formData =
         ...item,
         code: item.code,
         name: item.name || item.code,
-        i18nKey: item.i18nKey || `TL_${item.code}`,
+        i18nKey: leafKey(item),
       }));
   }
 
@@ -819,6 +920,30 @@ export const filterDependsOnOptions = (options = [], dataSource = {}, formData =
     const code = String(item?.code || "").toUpperCase();
     return code === parentCode || code.startsWith(prefix);
   });
+};
+
+/**
+ * Read a prefill path. A dotted path such as `property.address.doorNo`
+ * walks the object; a literal key is used when present.
+ *
+ * @param {object} source
+ * @param {string} path
+ * @returns {*}
+ */
+const readPrefillPath = (source, path) => {
+  if (!source || typeof source !== "object" || path == null || path === "") return undefined;
+  if (Object.prototype.hasOwnProperty.call(source, path) && source[path] !== undefined) {
+    return source[path];
+  }
+  if (!String(path).includes(".")) return undefined;
+  return String(path)
+    .split(".")
+    .reduce((acc, key) => {
+      if (acc == null || key === "__proto__" || key === "constructor" || key === "prototype") {
+        return undefined;
+      }
+      return acc[key];
+    }, source);
 };
 
 /* ── prefill ────────────────────────────────────────────────────────── */
@@ -850,10 +975,18 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
     const minItems = Math.max(1, Number(item.minItems) || 1);
     const rawRows = rawAsset[arrayName];
     if (Array.isArray(rawRows) && rawRows.length > 0) {
-      result[arrayName] = rawRows.map((row) => ({
-        ...createEmptyFieldArrayItem(item.children),
-        ...(row && typeof row === "object" ? row : {}),
-      }));
+      result[arrayName] = rawRows.map((row) => {
+        const next = {
+          ...createEmptyFieldArrayItem(item.children),
+          ...(row && typeof row === "object" ? row : {}),
+        };
+        (item.children || []).forEach((child) => {
+          const childName = child?.field?.name;
+          if (!childName || child?.field?.type !== "radio") return;
+          next[childName] = coerceRadioFieldValue(next[childName]);
+        });
+        return next;
+      });
     } else {
       result[arrayName] = Array.from({ length: minItems }, () =>
         createEmptyFieldArrayItem(item.children)
@@ -887,7 +1020,10 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
       const staticOptions = item.options || [];
       const optionsList =
         dropdownData[name] || dropdownData[item.key] || staticOptions;
-      result[name] = rawVal ? resolveOption(rawVal, rawNameHint, optionsList) : null;
+      const strict = field.strictOptions === true || dataSource?.strictOptions === true;
+      result[name] = rawVal
+        ? resolveOption(rawVal, rawNameHint, optionsList, { strict })
+        : null;
       return;
     }
 
@@ -897,11 +1033,7 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
         rawAsset[name] ??
         (apiAlias ? rawAsset[apiAlias] : undefined) ??
         "";
-      if (rawVal && typeof rawVal === "object" && rawVal.code) {
-        result[name] = String(rawVal.code).trim().toUpperCase();
-      } else {
-        result[name] = String(rawVal || "").trim().toUpperCase();
-      }
+      result[name] = coerceRadioFieldValue(rawVal);
       return;
     }
 
@@ -924,7 +1056,7 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
       (item.apiFieldName ? rawAsset[item.apiFieldName] : undefined);
     const isEmpty = raw === undefined || raw === null || raw === "";
     if (applyDefaults && isEmpty && field.prefillFrom) {
-      const fromVal = rawAsset[field.prefillFrom];
+      const fromVal = readPrefillPath(rawAsset, field.prefillFrom);
       result[name] = fromVal !== undefined && fromVal !== null ? fromVal : "";
       return;
     }

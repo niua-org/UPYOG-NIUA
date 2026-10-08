@@ -64,7 +64,7 @@ const CreateTradeLicence = () => {
       withRequiredDocuments(
         resolveFormConfig({
           local: localAccordion,
-          masterKey: "AccordionNewApplication",
+          masterKey: "NewApplication",
           mdms: mdmsConfig,
           preferAccordion: true,
           preferFieldArray: true,
@@ -97,6 +97,7 @@ const CreateTradeLicence = () => {
   });
 
   const checkValue = useMemo(() => mapDynamicTlToCheckSession(params), [params]);
+  const timeline = initialConfig?.[0]?.navigation?.timeline;
 
   const goToAcknowledgement = async () => {
     sessionStorage.setItem("isCreateEnabled", "true");
@@ -122,11 +123,22 @@ const CreateTradeLicence = () => {
           handleSelect(routeObj.key || "info", {}, false);
           return;
         }
+        try {
+          localStorage.setItem("TLAppSubmitEnabled", "true");
+        } catch (e) {
+          /* ignore */
+        }
         handleSelect(key, data, skipStep, index, isAddMultiple);
       }}
       checkRoute={{
         path: "check",
-        element: <CheckPage onSubmit={goToAcknowledgement} value={checkValue} />,
+        element: (
+          <CheckPage
+            onSubmit={goToAcknowledgement}
+            value={checkValue}
+            timeline={timeline}
+          />
+        ),
       }}
       ackRoute={{
         path: "acknowledgement",

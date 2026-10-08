@@ -1,6 +1,6 @@
 /**
  * useTlWizard.js
- * Thin TL wrapper over shared useFormWizard — citizen create session + TL submit flag.
+ * Thin TL wrapper over shared useFormWizard — citizen create session.
  */
 import { useCallback } from "react";
 import { useFormWizard } from "@nudmcdgnpm/digit-ui-react-components";
@@ -21,14 +21,6 @@ const useTlWizard = ({
   invalidateQueryKey,
   transformSession,
 }) => {
-  const enableTlSubmit = useCallback(() => {
-    try {
-      localStorage.setItem("TLAppSubmitEnabled", "true");
-    } catch (e) {
-      /* ignore */
-    }
-  }, []);
-
   const {
     onUpdateSuccess: clearSessionOnUpdate,
     ...wizard
@@ -42,7 +34,6 @@ const useTlWizard = ({
     multiStepNavigation,
     invalidateQueryKey,
     transformSession,
-    onAfterSelect: enableTlSubmit,
     audience: "citizen",
     skipComponents: TL_SKIP_COMPONENTS,
     docsComponent: "TradeLicense",

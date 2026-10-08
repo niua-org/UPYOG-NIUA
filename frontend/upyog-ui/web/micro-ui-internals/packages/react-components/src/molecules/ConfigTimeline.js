@@ -108,6 +108,8 @@ const stepLabel = (step, t) => {
  * @param {string} [props.activeField]
  * @param {object} [props.values]
  * @param {Function} [props.t]
+ * @param {string} [props.className]
+ * @param {boolean} [props.fullWidth] Skip the default 640–960px width lock.
  */
 const ConfigTimeline = ({
   timeline,
@@ -116,6 +118,8 @@ const ConfigTimeline = ({
   activeField,
   values,
   t: tProp,
+  className,
+  fullWidth = false,
 }) => {
   const { t: tHook } = useTranslation();
   const t = tProp || tHook;
@@ -152,9 +156,9 @@ const ConfigTimeline = ({
 
   return (
     <div
-      className="timeline-container"
+      className={["timeline-container", className].filter(Boolean).join(" ")}
       style={
-        isMobile
+        isMobile || fullWidth
           ? {}
           : { maxWidth: "960px", minWidth: "640px", marginRight: "auto" }
       }

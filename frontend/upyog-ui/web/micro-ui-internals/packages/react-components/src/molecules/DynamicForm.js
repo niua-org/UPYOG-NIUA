@@ -573,7 +573,7 @@ const DynamicForm = ({
         const openVal = formGate.openValue
           ? String(formGate.openValue).toUpperCase()
           : null;
-        const hintFields = formGate.unlockWhenFields || ["buildingName"];
+        const hintFields = formGate.unlockWhenFields || [];
         const hasHint = hintFields.some((key) => {
           const value = merged[key];
           return value !== undefined && value !== null && String(value).trim() !== "";
@@ -912,7 +912,10 @@ const DynamicForm = ({
           setToast({ message: t(result.error), error: true });
           return;
         }
-        if (result?.notFound || result?.error === "EST_ASSET_NOT_FOUND") {
+        if (
+          result?.notFound ||
+          (formGate?.notFoundError && result?.error === formGate.notFoundError)
+        ) {
           setSearchPanel({
             fieldName,
             status: "notFound",
@@ -941,11 +944,7 @@ const DynamicForm = ({
                 [formGate.searchField]: estateNo,
                 [formGate.detailsField]: "YES",
               }
-            : {
-                assetRegistrationType: "EXISTING_ASSET",
-                searchEstateNo: estateNo,
-                showRegistrationDetails: "YES",
-              };
+            : { [fieldName]: estateNo };
           applyPrefill(prefill, preserve);
           onPrefillApplied?.(prefill);
           setToast({ message: t("CS_COMMON_RECORD_FOUND"), error: false });
@@ -1034,11 +1033,7 @@ const DynamicForm = ({
             [formGate.searchField]: selected.estateNo || formData[fieldName],
             [formGate.detailsField]: "YES",
           }
-        : {
-            assetRegistrationType: "EXISTING_ASSET",
-            searchEstateNo: selected.estateNo || formData[fieldName],
-            showRegistrationDetails: "YES",
-          };
+        : { [fieldName]: selected.estateNo || formData[fieldName] };
       applyPrefill(selected.prefill || {}, preserve);
       onPrefillApplied?.(selected.prefill || {});
       setToast({ message: t("CS_COMMON_RECORD_FOUND"), error: false });
@@ -1508,9 +1503,11 @@ const DynamicForm = ({
         <Modal
           headerBarMain={
             <CancelPopupHeading
-              label={t(
-                formGate?.redirectModalHeading || "EST_CREATE_NEW_REGISTRATION"
-              )}
+              label={
+                formGate?.redirectModalHeading
+                  ? t(formGate.redirectModalHeading)
+                  : formGate?.redirectModalHeadingDefault || ""
+              }
             />
           }
           headerBarEnd={
@@ -1527,12 +1524,8 @@ const DynamicForm = ({
           <div className="confirmation_box">
             <CardText>
               {(() => {
-                const msgKey =
-                  formGate?.redirectModalMessage ||
-                  "EST_CREATE_NEW_REGISTRATION_REDIRECT_INFO";
-                const msgDefault =
-                  formGate?.redirectModalMessageDefault ||
-                  "You are being redirected to create a new record.";
+                const msgKey = formGate?.redirectModalMessage || "";
+                const msgDefault = formGate?.redirectModalMessageDefault || "";
                 const translated = t(msgKey, { defaultValue: msgDefault });
                 if (!translated || translated === msgKey) return msgDefault;
                 return translated;

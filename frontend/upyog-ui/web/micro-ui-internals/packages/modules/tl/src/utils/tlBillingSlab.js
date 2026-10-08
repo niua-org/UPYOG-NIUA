@@ -14,17 +14,34 @@ import { optionCode, registerFieldRule } from "@nudmcdgnpm/digit-ui-react-compon
 
 const SLAB_META_FIELDS = ["fromUom", "toUom", "_billingSlabFound"];
 
+const norm = (value) => String(value ?? "").trim().toUpperCase();
+
+/** Compare ACC-1 with ACC_1 / "acc 1" without changing stored codes. */
+const normCode = (value) => norm(value).replace(/[\s_-]+/g, "");
+
 const structureCodesFromForm = (formData = {}) =>
   [optionCode(formData?.buildingType), optionCode(formData?.vehicleType)]
     .filter(Boolean)
     .map((c) => String(c));
 
+const hasTradeType = (slab) => {
+  const tradeType = norm(slab?.tradeType);
+  return Boolean(tradeType) && tradeType !== "NULL";
+};
+
+/**
+ * Accessory-only billing slab. Calculator looks these up by accessoryCategory
+ * and applicationType, not by licenseType. tradeType is empty on these rows.
+ */
+const isAccessorySlab = (slab) =>
+  Boolean(norm(slab?.accessoryCategory)) && !hasTradeType(slab);
+
 /** Accessory slab usable in citizen create (niuatt SelectAccessoriesDetails). */
-const isUsableAccessorySlab = (s) =>
-  Boolean(s?.accessoryCategory) &&
-  Boolean(s?.uom) &&
-  s?.rate != null &&
-  Number(s.rate) > 0;
+const isUsableAccessorySlab = (slab) =>
+  isAccessorySlab(slab) &&
+  Boolean(norm(slab?.uom)) &&
+  slab?.rate != null &&
+  Number(slab.rate) > 0;
 
 const findTradeUnitSlab = (billingSlabs, tradeCode, formData) => {
   if (!tradeCode || !Array.isArray(billingSlabs)) return null;
@@ -41,16 +58,14 @@ const findTradeUnitSlab = (billingSlabs, tradeCode, formData) => {
 
 const findAccessorySlab = (billingSlabs, accessoryCode) => {
   if (!accessoryCode || !Array.isArray(billingSlabs)) return null;
-  const code = String(accessoryCode).toUpperCase();
+  const code = normCode(accessoryCode);
   const matches = billingSlabs.filter(
-    (s) =>
-      s?.accessoryCategory &&
-      String(s.accessoryCategory).toUpperCase() === code
+    (s) => s?.accessoryCategory && normCode(s.accessoryCategory) === code
   );
   if (!matches.length) return null;
   return (
     matches.find(isUsableAccessorySlab) ||
-    matches.find((s) => s?.uom) ||
+    matches.find((s) => norm(s?.uom)) ||
     matches[0]
   );
 };
@@ -118,13 +133,17 @@ export const enrichTlBillingSlabRow = ({
       updated.toUom = slab.toUom ?? null;
       updated._billingSlabFound = true;
     } else {
-      // Fall back to MDMS AccessoriesCategory.uom when slab has no row yet
+      // Fall back to MDMS AccessoriesCategory.uom when slab has no row yet.
+      // Only flag a miss when accessory slabs were actually loaded — trade-only
+      // slabs must not make every accessory look unpriced.
       const mdmsUom =
         value && typeof value === "object" ? value.uom : null;
       updated.unit = mdmsUom || null;
       updated.fromUom = null;
       updated.toUom = null;
-      updated._billingSlabFound = accessoryCode ? false : undefined;
+      const accessorySlabsLoaded = billingSlabs.some(isAccessorySlab);
+      updated._billingSlabFound =
+        accessoryCode && accessorySlabsLoaded ? false : undefined;
     }
     if (!(resetFields || []).includes("uom")) updated.uom = "";
     if (!(resetFields || []).includes("accessorycount")) {
@@ -161,12 +180,15 @@ export const ensureTlBillingSlabFieldRule = () => {
  * @returns {object[]}
  */
 export const selectCitizenNewBillingSlabs = (data) =>
-  (data?.billingSlab || []).filter(
-    (e) =>
-      e.applicationType === "NEW" &&
-      e.licenseType === "PERMANENT" &&
-      (e.tradeType || e.accessoryCategory)
-  );
+  (data?.billingSlab || []).filter((slab) => {
+    const applicationType = norm(slab?.applicationType);
+    if (applicationType && applicationType !== "NEW") return false;
+    // Accessory rows are not license-type scoped (calculator searches by
+    // accessoryCategory + applicationType). Dropping them when licenseType
+    // is null made every accessory selection look like a missing slab.
+    if (isAccessorySlab(slab)) return true;
+    return norm(slab?.licenseType) === "PERMANENT" && hasTradeType(slab);
+  });
 
 /** Trade-unit MDMS fields (category / type / subtype). */
 const TRADE_UNIT_FIELDS = ["tradecategory", "tradetype", "tradesubtype"];
@@ -273,22 +295,18 @@ export const filterTradeUnitDropdownByBillingSlabs = (
       });
     }
 
-    // Accessory list from slabs (unique categories with fee), niuatt parity.
+    // Accessory list from accessory-only slabs. Keep MDMS labels/uom, but
+    // do not hide the list when the loaded slabs are trade units only.
     const allowedAcc = new Set(
       billingSlabs
-        .filter(isUsableAccessorySlab)
-        .map((s) => String(s.accessoryCategory).toUpperCase())
+        .filter(isAccessorySlab)
+        .map((s) => normCode(s.accessoryCategory))
     );
     ACCESSORY_FIELDS.forEach((name) => {
       const list = next[name];
       if (!Array.isArray(list) || !list.length) return;
-      // If slabs loaded but none are accessory slabs, keep MDMS active list
-      // only when no accessory slabs exist at all; otherwise restrict.
-      const hasAnyAccessorySlab = billingSlabs.some((s) => s?.accessoryCategory);
-      if (!hasAnyAccessorySlab) return;
-      let filtered = allowedAcc.size
-        ? list.filter((o) => allowedAcc.has(String(o?.code || "").toUpperCase()))
-        : [];
+      if (!allowedAcc.size) return;
+      const filtered = list.filter((o) => allowedAcc.has(normCode(o?.code)));
       if (filtered.length !== list.length) {
         next[name] = filtered;
         changed = true;

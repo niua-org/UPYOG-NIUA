@@ -49,11 +49,11 @@
           "submitLabelDefault": "Submit Application",
           "continueOpensNext": true,
           "continueLabel": "COMMON_SAVE_NEXT",
-          "continueLabelDefault": "Save & continue",
+          "continueLabelDefault": "Save & Next",
           "introKey": "TL_ACCORDION_HINT",
           "introDefault": "Expand a section to fill details. Submit when every section is complete.",
           "subtitleKey": "TL_ACCORDION_SUBTITLE",
-          "subtitleDefault": "All sections on one page"
+          "subtitleDefault": "All sections on this page should be filled before submittal. Fields marked with an asterisk (*) are mandatory."
         },
         "timeline": {
           "_comment": "Labels match accordion panel titles (body[].i18nKey / labelDefault). One step per panel, then Summary on the check page. Hidden on the documents info page.",
@@ -63,26 +63,26 @@
             {
               "step": 1,
               "label": "TL_STEP_STRUCTURE",
-              "labelDefault": "Structure & property",
+              "labelDefault": "Trade Details",
               "sections": ["structure"],
               "routes": ["apply"]
             },
             {
               "step": 2,
               "label": "TL_STEP_TRADE_LOCATION",
-              "labelDefault": "Trade details & location",
+              "labelDefault": "Location & Owner Details",
               "sections": ["tradeLocation"]
             },
             {
               "step": 3,
               "label": "TL_STEP_OWNERS_DOCS",
-              "labelDefault": "Ownership & documents",
+              "labelDefault": "Document Details",
               "sections": ["ownersDocs"]
             },
             {
               "step": 4,
               "label": "TL_STEP_CONFIRM",
-              "labelDefault": "Confirm",
+              "labelDefault": "Summary",
               "routes": ["check"]
             }
           ]
@@ -95,8 +95,8 @@
           "route": "structure",
           "order": 1,
           "i18nKey": "TL_STEP_STRUCTURE",
-          "labelDefault": "Structure & property",
-          "hintDefault": "Where the trade runs and property linkage. Fields share the screen in a dense grid.",
+          "labelDefault": "Trade Details",
+          "hintDefault": "Select the Trade Unit and property linkage.",
           "component": "TLCitizenNewApplication",
           "payloadKey": "Licenses",
           "apiId": "Rainmaker",
@@ -349,7 +349,7 @@
             }
           ],
           "formGate": {
-            "_comment": "Links by name, not by key. typeField hasPropertyId = radio field.name hasPropertyId. searchField searchPropertyId = search box field.name. When YES, show search. When NO, popup then redirectPath. After a property is found, detailsField showTradeDetails becomes YES and unlocks later sections.",
+            "_comment": "Trade License property gate. The shared form uses this object as-is. typeField hasPropertyId = radio field.name. searchField searchPropertyId = search box field.name. When YES, show search. When NO, popup then redirectPath. After a property is found, detailsField showTradeDetails becomes YES.",
             "typeField": "hasPropertyId",
             "detailsField": "showTradeDetails",
             "searchValue": "YES",
@@ -359,7 +359,23 @@
             "redirectPath": "/upyog-ui/citizen/pt/property/new-application/info",
             "redirectModalHeading": "TL_CREATE_NEW_PROPERTY",
             "redirectModalMessage": "TL_PROCEED_POST_APPROVAL",
-            "redirectModalMessageDefault": "You will be able to proceed post approval."
+            "redirectModalMessageDefault": "You will be able to proceed post approval.",
+            "unlockWhenFields": ["tradeName", "propertyId"],
+            "preserveOnPrefill": ["structureType", "buildingType", "vehicleType"],
+            "structureReset": {
+              "field": "structureType",
+              "unlockValue": "MOVABLE",
+              "clearFields": [
+                "hasPropertyId",
+                "searchPropertyId",
+                "propertyId",
+                "createPropertyRedirect",
+                "buildingType",
+                "vehicleType",
+                "propertyOwnersReady",
+                "isSameAsPropertyOwner"
+              ]
+            }
           }
         },
         {
@@ -368,8 +384,8 @@
           "route": "trade-location",
           "order": 2,
           "i18nKey": "TL_STEP_TRADE_LOCATION",
-          "labelDefault": "Trade details & location",
-          "hintDefault": "License, units, accessories, and trade address on one screen.",
+          "labelDefault": "Trade details & Location",
+          "hintDefault": "Fill Trade, Units, Operational, and trade address information.",
           "form": [
             {
               "_comment": "Heading only. Shown after a property is linked (showTradeDetails is YES).",
@@ -482,6 +498,7 @@
                       "moduleName": "TradeLicense",
                       "masterName": "TradeType",
                       "hierarchy": "category",
+                      "i18nKeyPrefix": "TRADELICENSE_TRADETYPE",
                       "customiztionRequired": true,
                       "filter": {
                         "type": "TL",
@@ -518,6 +535,8 @@
                       "masterName": "TradeType",
                       "dependsOn": "tradecategory",
                       "hierarchy": "type",
+                      "i18nKeyPrefix": "TRADELICENSE_TRADETYPE",
+                      "sortOptions": "label",
                       "dependsOnSegment": 0,
                       "filter": {
                         "type": "TL",
@@ -553,6 +572,8 @@
                       "masterName": "TradeType",
                       "dependsOn": "tradetype",
                       "hierarchy": "subtype",
+                      "leafI18nPrefix": "TL",
+                      "sortOptions": "label",
                       "dependsOnSegment": 1,
                       "filter": {
                         "type": "TL",
@@ -718,6 +739,7 @@
                       "moduleName": "TradeLicense",
                       "masterName": "AccessoriesCategory",
                       "i18nKeyPrefix": "TRADELICENSE_ACCESSORIESCATEGORY",
+                      "sortOptions": "label",
                       "filter": {
                         "active": true
                       },
@@ -970,7 +992,8 @@
                 "placeholder": "TL_SELECT_CITY",
                 "type": "dropdown",
                 "dataSource": {
-                  "defaultValueSource": "tenantId"
+                  "defaultValueSource": "tenantId",
+                  "sortOptions": "label"
                 },
                 "prefillFrom": "property.address.city"
               },
@@ -999,7 +1022,8 @@
                   "type": "MDMS",
                   "moduleName": "egov-location",
                   "masterName": "TenantBoundary",
-                  "customiztionRequired": true
+                  "customiztionRequired": true,
+                  "sortOptions": "label"
                 },
                 "strictOptions": true,
                 "prefillFrom": "property.address.locality"
@@ -1163,7 +1187,8 @@
                   "filter": {
                     "codeIncludes": "INDIVIDUAL."
                   },
-                  "i18nKeyPrefix": "COMMON_MASTERS_OWNERSHIPCATEGORY"
+                  "i18nKeyPrefix": "COMMON_MASTERS_OWNERSHIPCATEGORY",
+                  "sortOptions": "label"
                 }
               },
               "options": [
@@ -1248,9 +1273,16 @@
                     "dataSource": {
                       "type": "MDMS",
                       "moduleName": "common-masters",
-                      "masterName": "GenderType"
+                      "masterName": "GenderType",
+                      "i18nKeyPrefix": "TL_GENDER"
                     }
                   },
+                  "options": [
+                    { "code": "MALE", "i18nKey": "TL_GENDER_MALE" },
+                    { "code": "FEMALE", "i18nKey": "TL_GENDER_FEMALE" },
+                    { "code": "TRANSGENDER", "i18nKey": "TL_GENDER_TRANSGENDER" },
+                    { "code": "OTHERS", "i18nKey": "TL_GENDER_OTHERS" }
+                  ],
                   "validation": {
                     "required": true
                   },

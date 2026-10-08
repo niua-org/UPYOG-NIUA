@@ -3,13 +3,129 @@
  * Property lookup helpers for TL DynamicForm searchCard.
  * Accepts a property ID or a 10-digit mobile number.
  */
+import { coerceRadioFieldValue } from "@nudmcdgnpm/digit-ui-react-components";
 
 /** PT citizen search treats a 10-digit number starting at 5 as a mobile. */
 const MOBILE_QUERY = /^[5-9]\d{9}$/;
 
+/** Owner PII the property search should return in plain text for this form. */
+const OWNER_PLAIN_FIELDS = [
+  "name",
+  "mobileNumber",
+  "fatherOrHusbandName",
+  "guardian",
+  "gender",
+  "relationship",
+  "emailId",
+  "permanentAddress",
+  "correspondenceAddress",
+  "userName",
+];
+
+const normalizeTenant = (value) => String(value || "").trim().toLowerCase();
+
+/**
+ * Keep properties that belong to the citizen's ULB.
+ * A state-level row (tenant `pg` for ULB `pg.citya`) is kept only when it
+ * does not name a different city.
+ *
+ * @param {object} property
+ * @param {string} ulbTenant
+ * @returns {boolean}
+ */
+export const propertyMatchesUlb = (property = {}, ulbTenant) => {
+  const ulb = normalizeTenant(ulbTenant);
+  if (!ulb) return false;
+  const tid = normalizeTenant(property?.tenantId || property?.address?.tenantId);
+  const cityRaw = property?.address?.city;
+  const city = normalizeTenant(
+    cityRaw && typeof cityRaw === "object" ? cityRaw.code || cityRaw.name : cityRaw
+  );
+  if (tid === ulb || city === ulb) return true;
+  if (tid && ulb.startsWith(`${tid}.`) && !city) return true;
+  // State-level rows often store only the city segment (`amritsar` for `pg.amritsar`).
+  if (tid && ulb.startsWith(`${tid}.`)) {
+    const ulbCity = ulb.slice(tid.length + 1);
+    if (city === ulbCity || city.endsWith(`.${ulbCity}`)) return true;
+  }
+  return false;
+};
+
+/** Non-empty value that is not a privacy mask (asterisks). */
+const usableText = (value) => {
+  const text = String(value || "").trim();
+  return Boolean(text) && !text.includes("*");
+};
+
+/** Keep plain text; drop privacy masks so the form does not submit asterisks. */
+const plainText = (value) => (usableText(value) ? String(value).trim() : "");
+
+/**
+ * True when the property can supply at least one owner with a real name and mobile.
+ * Masked values (asterisks) do not count. Institutional records use the authorized
+ * person plus the first owner mobile.
+ *
+ * @param {object} property
+ * @returns {boolean}
+ */
+export const propertyOwnersAreComplete = (property = {}) => {
+  const owners = activePropertyOwners(property);
+  const category = codeOf(property.ownershipCategory);
+  if (category.includes("INSTITUTIONAL")) {
+    const name = property?.institution?.nameOfAuthorizedPerson || owners[0]?.name;
+    const mobile = owners[0]?.mobileNumber;
+    return usableText(name) && usableText(mobile);
+  }
+  return owners.some(
+    (owner) => usableText(owner?.name) && usableText(owner?.mobileNumber)
+  );
+};
+
+/**
+ * Current owners only. Cancelled / mutation rows stay out of the trade form.
+ * @param {object} property
+ * @returns {object[]}
+ */
+export const activePropertyOwners = (property = {}) => {
+  const owners = Array.isArray(property.owners) ? property.owners : [];
+  const active = owners.filter((owner) => {
+    const status = String(owner?.status || "ACTIVE").toUpperCase();
+    return status === "ACTIVE";
+  });
+  const list = active.length ? active : owners;
+  if (list.some((owner) => owner?.additionalDetails?.ownerSequence != null)) {
+    return [...list].sort(
+      (a, b) =>
+        (a?.additionalDetails?.ownerSequence ?? 0) -
+        (b?.additionalDetails?.ownerSequence ?? 0)
+    );
+  }
+  return list;
+};
+
+/**
+ * Drop property linkage written by an earlier immovable selection.
+ * Safe to call when the citizen switches to a movable trade.
+ */
+export const clearTlPropertySession = () => {
+  try {
+    sessionStorage.removeItem("cpt");
+    sessionStorage.removeItem("KnowProperty");
+    sessionStorage.removeItem("isSameAsPropertyOwner");
+  } catch (e) {
+    /* ignore */
+  }
+  try {
+    if (Digit?.SessionStorage?.set) Digit.SessionStorage.set("cpt", "");
+  } catch (e) {
+    /* ignore */
+  }
+};
+
 /**
  * Search PT properties by property ID or owner mobile.
- * Tries citizen tenant first, then state tenant (common for PG property ids).
+ * Queries the citizen ULB first, then the state tenant (PG ids are often
+ * stored there) and keeps only rows for this ULB.
  * @param {string} query property id or mobile number
  * @param {string} tenantId
  * @returns {Promise<object[]>}
@@ -18,13 +134,18 @@ export const searchPropertyById = async (query, tenantId) => {
   const value = String(query || "").trim();
   if (!value) return [];
 
+  const ulbTenant =
+    tenantId ||
+    Digit.ULBService.getCitizenCurrentTenant?.(true) ||
+    Digit.ULBService.getCurrentTenantId?.();
+  if (!ulbTenant) return [];
+
   const filters = MOBILE_QUERY.test(value)
     ? { mobileNumber: value }
     : { propertyIds: value };
 
   const tenants = [
-    tenantId,
-    Digit.ULBService.getCitizenCurrentTenant?.(true),
+    ulbTenant,
     Digit.ULBService.getCurrentTenantId?.(),
     Digit.ULBService.getStateId?.(),
   ].filter((t, i, arr) => t && arr.indexOf(t) === i);
@@ -35,8 +156,11 @@ export const searchPropertyById = async (query, tenantId) => {
         tenantId: tid,
         filters,
         auth: true,
+        plainAccessRequest: { plainRequestFields: OWNER_PLAIN_FIELDS },
       });
-      const list = Array.isArray(response?.Properties) ? response.Properties : [];
+      const list = (Array.isArray(response?.Properties) ? response.Properties : []).filter(
+        (property) => propertyMatchesUlb(property, ulbTenant)
+      );
       if (list.length) return list;
     } catch (err) {
       console.warn("TL property search failed for tenant", tid, err);
@@ -57,7 +181,9 @@ const formatPropertyAddress = (property = {}) => {
     address.street || address.buildingName,
     address.landmark,
     address.locality?.name || address.locality?.code,
-    address.city || property.tenantId,
+    (address.city && typeof address.city === "object"
+      ? address.city.name || address.city.code
+      : address.city) || property.tenantId,
     address.pincode,
   ].filter(Boolean);
   return parts.join(", ");
@@ -69,8 +195,12 @@ const formatPropertyAddress = (property = {}) => {
  * @returns {object}
  */
 const getPrimaryOwner = (property = {}) => {
-  const owners = Array.isArray(property.owners) ? property.owners.slice().reverse() : [];
-  return owners[0] || {};
+  const owners = Array.isArray(property.owners) ? property.owners : [];
+  const active = owners.filter(
+    (owner) => String(owner?.status || "ACTIVE").toUpperCase() === "ACTIVE"
+  );
+  const list = (active.length ? active : owners).slice().reverse();
+  return list[0] || {};
 };
 
 /**
@@ -96,19 +226,144 @@ export const persistPropertySession = (property = {}) => {
  * @param {object} property
  * @returns {object}
  */
+const codeOf = (value) => {
+  if (value == null || value === "") return "";
+  if (typeof value === "object") {
+    const nested = value.code ?? value.value ?? value.name ?? value.i18nKey ?? "";
+    if (nested && typeof nested === "object") return codeOf(nested);
+    return String(nested || "");
+  }
+  return String(value);
+};
+
+const mapPropertyOwnersToForm = (property = {}) => {
+  const owners = activePropertyOwners(property);
+  const category = codeOf(property.ownershipCategory);
+  if (category.includes("INSTITUTIONAL")) {
+    const first = owners[0] || {};
+    return [
+      {
+        name: plainText(property?.institution?.nameOfAuthorizedPerson || first.name),
+        gender: coerceRadioFieldValue(first.gender ?? first.user?.gender),
+        mobilenumber: plainText(first.mobileNumber),
+        fatherOrHusbandName: plainText(first.fatherOrHusbandName || first.guardian),
+        relationship: coerceRadioFieldValue(first.relationship ?? first.relation),
+        emailId: plainText(first.emailId),
+        permanentAddress: plainText(first.permanentAddress || first.correspondenceAddress),
+      },
+    ];
+  }
+  return owners.map((owner) => ({
+    name: plainText(owner?.name),
+    gender: coerceRadioFieldValue(owner?.gender ?? owner?.user?.gender),
+    mobilenumber: plainText(owner?.mobileNumber),
+    fatherOrHusbandName: plainText(owner?.fatherOrHusbandName || owner?.guardian),
+    relationship: coerceRadioFieldValue(owner?.relationship ?? owner?.relation),
+    emailId: plainText(owner?.emailId),
+    permanentAddress: plainText(owner?.permanentAddress || owner?.correspondenceAddress),
+  }));
+};
+
+const ownershipCategoryCode = (property = {}) => {
+  const raw = property?.ownershipCategory;
+  if (raw == null || raw === "") return "";
+  const code = codeOf(raw);
+  if (!code.includes("INSTITUTIONAL")) return code;
+  const instType = codeOf(property?.institution?.type);
+  return instType && !code.endsWith(`.${instType}`) && !code.endsWith(`_${instType}`)
+    ? `${code}.${instType}`
+    : code;
+};
+
+const asUploadedFile = (doc, documentType) => {
+  const fileStoreId = doc?.fileStoreId || doc?.filestoreId || "";
+  if (!fileStoreId) return null;
+  return {
+    fileStoreId,
+    filestoreId: fileStoreId,
+    fileName: doc.fileName || doc.documentType || documentType,
+    documentType,
+  };
+};
+
+/**
+ * First matching document from the property and its owners.
+ * PT types look like OWNER.IDENTITYPROOF.AADHAAR.
+ * @param {object} property
+ * @param {string[]} needles
+ * @param {string} documentType TL document type
+ * @returns {object|null}
+ */
+const documentMatches = (doc, needles) => {
+  const type = String(doc?.documentType || "").toUpperCase();
+  return needles.some((needle) => type.includes(needle));
+};
+
+const ownerDocuments = (owners) =>
+  owners.flatMap((owner) => (Array.isArray(owner?.documents) ? owner.documents : []));
+
+const findPropertyDocument = (property, needles, documentType) => {
+  const propertyDocs = Array.isArray(property?.documents) ? property.documents : [];
+  const allOwners = Array.isArray(property?.owners) ? property.owners : [];
+  const pools = [
+    propertyDocs,
+    ownerDocuments(activePropertyOwners(property)),
+    ownerDocuments(allOwners),
+  ];
+  for (const docs of pools) {
+    for (const doc of docs) {
+      if (!documentMatches(doc, needles)) continue;
+      const file = asUploadedFile(doc, documentType);
+      if (file) return file;
+    }
+  }
+  return null;
+};
+
+const textOrCode = (value) => {
+  if (value == null || value === "") return "";
+  if (typeof value === "object") return value.code || value.name || "";
+  return value;
+};
+
 export const mapPropertyToFormPrefill = (property = {}) => {
   const address = property.address || {};
+  const owners = mapPropertyOwnersToForm(property).filter(
+    (owner) => owner.name || owner.mobilenumber
+  );
+  const ownershipCategory = ownershipCategoryCode(property);
+  const proofOfIdentity = findPropertyDocument(
+    property,
+    ["IDENTITYPROOF", "OWNERIDPROOF"],
+    "OWNERIDPROOF"
+  );
+  const proofOfOwnership = findPropertyDocument(
+    property,
+    ["OWNERSHIPPROOF", "ADDRESSPROOF"],
+    "OWNERSHIPPROOF"
+  );
+  const ownerPhotoProof = findPropertyDocument(
+    property,
+    ["OWNERPHOTO", "PHOTOGRAPH"],
+    "OWNERPHOTO"
+  );
   return {
     propertyId: property.propertyId || "",
     searchPropertyId: property.propertyId || "",
     hasPropertyId: "YES",
     showTradeDetails: "YES",
+    propertyOwnersReady: propertyOwnersAreComplete(property) ? "YES" : "NO",
+    ...(ownershipCategory ? { ownershipCategory } : {}),
     pincode: address.pincode || "",
-    city: property.tenantId || address.city || "",
-    locality: address.locality?.code || address.locality || "",
+    city: property.tenantId || textOrCode(address.city),
+    locality: textOrCode(address.locality),
     street: address.street || "",
     doorNo: address.doorNo || "",
     landmark: address.landmark || "",
+    ...(owners.length ? { owners } : {}),
+    ...(proofOfIdentity ? { proofOfIdentity } : {}),
+    ...(proofOfOwnership ? { proofOfOwnership } : {}),
+    ...(ownerPhotoProof ? { ownerPhotoProof } : {}),
     __property: property,
   };
 };
@@ -127,7 +382,7 @@ export const mapPropertyToSearchMatch = (property = {}) => {
   return {
     estateNo: propertyId,
     label: propertyId,
-    subtitle: [owner?.name, owner?.mobileNumber, addressLine].filter(Boolean).join(" — "),
+    subtitle: [owner?.name, addressLine].filter(Boolean).join(" — "),
     prefill: mapPropertyToFormPrefill(property),
   };
 };

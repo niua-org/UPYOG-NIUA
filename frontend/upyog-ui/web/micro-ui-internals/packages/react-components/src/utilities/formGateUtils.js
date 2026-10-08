@@ -1,13 +1,14 @@
 /**
  * formGateUtils.js
  *
- * Resolves the optional "registration / property gate" used by DynamicForm:
- * a top-of-form radio that either unlocks a search field or redirects to create
- * a related entity (asset / property), then reveals the rest of the form.
+ * Resolves the optional registration / lookup gate used by DynamicForm:
+ * a top-of-form choice that unlocks a search field or redirects to create a
+ * related record, then reveals the rest of the form.
  *
- * Modules can set `routeConfig.formGate` explicitly. When omitted, the gate is
- * inferred from field names so Estate (assetRegistrationType) and Trade License
- * (hasPropertyId) keep working without duplicate hardcoded branches.
+ * The gate comes only from `routeConfig.formGate` (MDMS JSON and/or the
+ * module's local config). Field names, redirect copy, and reset lists stay
+ * in that module config. Estate still has a built-in fallback when a form
+ * has `assetRegistrationType` and no `formGate` of its own.
  *
  * @see DynamicForm
  */
@@ -22,21 +23,24 @@ export const ESTATE_FORM_GATE = {
   redirectOnValue: null,
   redirectModalHeading: "EST_CREATE_NEW_REGISTRATION",
   redirectModalMessage: "EST_CREATE_NEW_REGISTRATION_REDIRECT_INFO",
+  notFoundError: "EST_ASSET_NOT_FOUND",
 };
 
-/** Trade License NewApplication defaults (has property ID vs create property). */
-export const TL_PROPERTY_FORM_GATE = {
-  typeField: "hasPropertyId",
-  detailsField: "showTradeDetails",
-  searchValue: "YES",
-  openValue: null,
-  searchField: "searchPropertyId",
-  redirectOnValue: "NO",
-  redirectPath: "/upyog-ui/citizen/pt/property/new-application/info",
-  redirectModalHeading: "TL_CREATE_NEW_PROPERTY",
-  redirectModalMessage: "TL_PROCEED_POST_APPROVAL",
-  redirectModalMessageDefault:
-    "You will be able to proceed post approval.",
+/**
+ * Rewrite a hardcoded `/upyog-ui` path when the shell sets a different
+ * `window.contextPath`. Leaves the path unchanged for the default shell.
+ *
+ * @param {string} path
+ * @returns {string}
+ */
+export const resolveAppPath = (path) => {
+  if (!path || typeof path !== "string") return path;
+  const raw = typeof window !== "undefined" ? window.contextPath : "";
+  const ctx = String(raw || "").replace(/^\/+|\/+$/g, "");
+  if (!ctx || ctx === "upyog-ui") return path;
+  if (path === "/upyog-ui") return `/${ctx}`;
+  if (path.startsWith("/upyog-ui/")) return `/${ctx}${path.slice("/upyog-ui".length)}`;
+  return path;
 };
 
 /**
@@ -48,18 +52,13 @@ export const TL_PROPERTY_FORM_GATE = {
  */
 export const resolveFormGate = (routeConfig = {}, flatFields = []) => {
   if (routeConfig?.formGate && typeof routeConfig.formGate === "object") {
-    const base =
-      routeConfig.formGate.typeField === "hasPropertyId"
-        ? TL_PROPERTY_FORM_GATE
-        : ESTATE_FORM_GATE;
-    return { ...base, ...routeConfig.formGate };
+    const { _comment, ...gate } = routeConfig.formGate;
+    return gate.typeField ? gate : null;
   }
 
   const names = new Set(
     (flatFields || []).map((fc) => fc?.field?.name).filter(Boolean)
   );
-
-  if (names.has("hasPropertyId")) return { ...TL_PROPERTY_FORM_GATE };
   if (names.has("assetRegistrationType")) return { ...ESTATE_FORM_GATE };
   return null;
 };

@@ -56,16 +56,16 @@
     text-align: left;
     font: inherit;
     color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid #a82227;
+      outline-offset: -2px;
+    }
   }
 
   &__item--open &__head {
     background: #fdf0e9;
     border-bottom: 1px solid #eeeeee;
-  }
-
-  &__head:focus-visible {
-    outline: 2px solid #a82227;
-    outline-offset: -2px;
   }
 
   &__num {
@@ -138,29 +138,29 @@
     gap: 12px 16px;
     padding: 16px;
     align-content: start;
-  }
 
-  /* Author `display: grid` must not override the HTML hidden attribute. */
-  &__body[hidden] {
-    display: none !important;
+    /* Author `display: grid` must not override the HTML hidden attribute. */
+    &[hidden] {
+      display: none !important;
+    }
   }
 
   &__cell {
     min-width: 0;
     max-width: 100%;
-  }
 
-  /* Safety net if a field renderer returns null without unmounting the cell. */
-  &__cell:empty {
-    display: none;
-  }
+    /* Safety net if a field renderer returns null without unmounting the cell. */
+    &:empty {
+      display: none;
+    }
 
-  &__cell--full {
-    grid-column: 1 / -1;
-  }
+    &--full {
+      grid-column: 1 / -1;
+    }
 
-  &__cell--span-2 {
-    grid-column: span 2;
+    &--span-2 {
+      grid-column: span 2;
+    }
   }
 
   &__footer {
@@ -182,28 +182,15 @@
       line-height: 1.25;
     }
   }
-}
 
-@media (min-width: 1000px) {
-  .dynamic-form-accordion__body {
-   // grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
+  @media (max-width: 780px) {
+    &__body {
+      grid-template-columns: 1fr;
+    }
 
-@media (min-width: 1400px) {
-  .dynamic-form-accordion__body {
-    // grid-template-columns: repeat(4, minmax(0, 1fr));
-    // gap: 12px 20px;
-  }
-}
-
-@media (max-width: 780px) {
-  .dynamic-form-accordion__body {
-    grid-template-columns: 1fr;
-  }
-
-  .dynamic-form-accordion__cell--span-2 {
-    grid-column: 1 / -1;
+    &__cell--span-2 {
+      grid-column: 1 / -1;
+    }
   }
 }
 
@@ -272,18 +259,19 @@
     letter-spacing: 0.04em;
     color: #0b0c0c;
     width: 100%;
-  }
 
-  .dynamic-form-field__section-header:first-child {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
+    &:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
   }
 
   .dynamic-form-field__radio-group {
     width: 100%;
   }
 
+  /* Citizen TextInput adds .text-input-width (global max-width: 540px). */
   .dynamic-form-field__lookup,
   .dynamic-form-field__lookup-input-container,
   .dynamic-form-field__suggest-box,
@@ -291,15 +279,7 @@
   .dynamic-form-field__field-array,
   .dynamic-form-field__field-array-card,
   .text-input,
-  .text-input.text-input-width,
-  .text-input-width {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box;
-  }
-
-  /* Citizen TextInput adds text-input-width (global max-width: 540px).
-   * Match suggest-box / field width inside the accordion grid. */
+  .text-input-width,
   .text-input input,
   .text-input-width input,
   .employee-card-input,
@@ -319,18 +299,4 @@
   .dynamic-form-action {
     margin-top: 0;
   }
-}
-
-.tl-citizen-form-step,
-.tl-citizen-form-step--accordion {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.tl-citizen-form-step--accordion {
-  background: #fff;
-  border: 1px solid #d6d5d4;
-  border-radius: 4px;
-  padding: 20px 24px 24px;
 }

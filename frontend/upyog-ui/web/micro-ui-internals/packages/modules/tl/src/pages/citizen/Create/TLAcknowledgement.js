@@ -2,7 +2,7 @@ import { Banner, Card, CardText, LinkButton, Loader, SubmitBar, resolveAppPath }
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { convertToEditTrade, convertToResubmitTrade, convertToTrade, convertToUpdateTrade, currentFinancialYear, stringToBoolean } from "../../../utils";
+import { convertToEditTrade, convertToResubmitTrade, convertToTrade, convertToUpdateTrade, resolveTlFinancialYear, stringToBoolean } from "../../../utils";
 import getPDFData from "../../../utils/getTLAcknowledgementData";
 
 const isTradeUpdateFlow = () =>
@@ -63,24 +63,6 @@ const serverErrorMessage = (err) => {
 const EMPTY_DOWNSTREAM = /json object can not be null/i;
 const MAX_APPLY_RETRIES = 3;
 
-/** TL financial year from egf-master that covers today, else the latest TL year. */
-const pickTlFinancialYear = (fydata) => {
-  const years = (fydata?.["egf-master"]?.FinancialYear || []).filter(
-    (year) => year?.module === "TL" && year?.code && year?.active !== false
-  );
-  if (!years.length) return null;
-  const now = Date.now();
-  const covering = years.find((year) => {
-    const start = Number(year.startingDate);
-    const end = Number(year.endingDate);
-    return Number.isFinite(start) && Number.isFinite(end) && start <= now && end >= now;
-  });
-  if (covering?.code) return covering.code;
-  return [...years].sort(
-    (a, b) => Number(b.endingDate) - Number(a.endingDate)
-  )[0]?.code || null;
-};
-
 const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
   const { t } = useTranslation();
   const [mutationHappened, setMutationHappened] = Digit.Hooks.useSessionStorage(
@@ -125,8 +107,7 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
 
   useEffect(() => {
     if (submittedRef.current) return;
-    // Create needs the MDMS financial year. Submitting the locally computed
-    // year (for example 2026-27) before this loads returns INVALID FINANCIALYEAR.
+    // Wait for master data so the year that covers today can be matched.
     if (!resubmit && !isEdit && isFyLoading) return;
     if (!data || (typeof data === "object" && Object.keys(data).length === 0)) {
       return;
@@ -144,8 +125,7 @@ const TLAcknowledgement = ({ data, onSuccess, onUpdateSuccess }) => {
           data?.cpt?.details?.address?.tenantId || data?.tenantId || tenantId;
         data.tenantId = tenantId1;
         if (!resubmit) {
-          const financialYear =
-            pickTlFinancialYear(fydata) || currentFinancialYear();
+          const financialYear = resolveTlFinancialYear(fydata);
           if (!isEdit && financialYear) {
             try {
               sessionStorage.setItem("CurrentFinancialYear", financialYear);
