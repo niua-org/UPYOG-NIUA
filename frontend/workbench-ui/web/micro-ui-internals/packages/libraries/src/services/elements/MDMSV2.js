@@ -1,4 +1,5 @@
 //HAVE TO CHANGE THI
+// import { stringReplaceAll } from "@upyog/digit-ui-module-pt/src/utils";
 import { ApiCacheService } from "../atoms/ApiCacheService";
 import Urls from "../atoms/urls";
 import { Request, ServiceRequest } from "../atoms/Utils/Request";
@@ -11,6 +12,14 @@ import { PersistantStorage } from "../atoms/Utils/Storage";
 //   }
 //   return str;
 // };
+
+const stringReplaceAll = (str = "", searcher = "", replaceWith = "") => {
+  if (searcher == "") return str;
+  while (str.includes(searcher)) {
+    str = str.replace(searcher, replaceWith);
+  }
+  return str;
+};
 
 const SortByName = (na, nb) => {
   if (na < nb) {
@@ -50,7 +59,7 @@ const initRequestBody = (tenantId) => ({
     moduleDetails: [
       {
         moduleName: "common-masters",
-        masterDetails: [{ name: "Department" }, { name: "Designation" }, { name: "StateInfo" }, { name: "wfSlaConfig" }, { name: "uiHomePage" }, { name: "ModuleAccordions" }],
+        masterDetails: [{ name: "Department" }, { name: "Designation" }, { name: "StateInfo" }, { name: "wfSlaConfig" }, { name: "uiHomePage" }],
       },
       {
         moduleName: "tenant",
@@ -914,6 +923,23 @@ const getWSTaxHeadMasterCritera = (tenantId, moduleCode, type) => ({
   },
 });
 
+const getMasterDataCategory = (tenantId, moduleCode, masterName, type) => ({
+  type,
+  details: {
+    tenantId: tenantId,
+    moduleDetails: [
+      {
+        moduleName: moduleCode,
+        masterDetails: [
+          {
+            name: masterName,
+          },
+        ],
+      },
+    ],
+  },
+});
+
 const getHowItWorksJSON = (tenantId) => ({
       moduleDetails: [
       {
@@ -984,9 +1010,29 @@ const GetEgovLocations = (MdmsRes) => {
   }));
 };
 
+
+const getDataWithi18nkey = (MdmsRes, moduleName, masterName, i18nKeyString) => {
+  return MdmsRes[moduleName][masterName].filter((row) => row.active).map((item) => {
+    return {
+      ...item,
+      i18nKey: `${i18nKeyString + item.name}`,
+    };
+  });
+};
+
+const getDataWithi18nkeyandCode = (MdmsRes, moduleName, masterName, i18nKeyString) => {
+  return MdmsRes[moduleName][masterName].filter((row) => row.active).map((item) => {
+    return {
+      ...item,
+      i18nKey: `${i18nKeyString + item.name}`,
+      code: item.code
+    };
+  });
+};
+
 const GetServiceDefs = (MdmsRes, moduleCode) => MdmsRes[`RAINMAKER-${moduleCode}`].ServiceDefs.filter((def) => def.active);
 
-const GetSanitationType = (MdmsRes) => MdmsRes["FSM"].SanitationType.filter((type) => type.active);
+const GetSanitationType = (MdmsRes) => ["FSM"].SanitationType.filter((type) => type.active);
 
 const GetPitType = (MdmsRes) =>
   MdmsRes["FSM"].PitType.filter((item) => item.active).map((type) => ({ ...type, i18nKey: `PITTYPE_MASTERS_${type.code}` }));
@@ -1127,7 +1173,7 @@ const getPTPropertyType = (MdmsRes) =>
   MdmsRes["PropertyTax"].UsageCategory.filter((PropertyType) => PropertyType.active).map((PTPropertyTypelist) => {
     return {
       ...UsageCategorylist,
-      i18nKey: `COMMON_PROPTYPE_${Digit.Utils.locale.stringReplaceAll(PTPropertyTypelist.code, ".", "_")}`,
+      i18nKey: `COMMON_PROPTYPE_${stringReplaceAll(PTPropertyTypelist.code, ".", "_")}`,
     };
   });
 
@@ -1135,7 +1181,7 @@ const getTLStructureType = (MdmsRes) =>
   MdmsRes["common-masters"].StructureType.filter((StructureType) => StructureType.active).map((TLStructureTypeList) => {
     return {
       ...TLStructureTypeList,
-      i18nKey: `COMMON_MASTERS_STRUCTURETYPE_${Digit.Utils.locale.stringReplaceAll(TLStructureTypeList.code, ".", "_")}`,
+      i18nKey: `COMMON_MASTERS_STRUCTURETYPE_${stringReplaceAll(TLStructureTypeList.code, ".", "_")}`,
     };
   });
 
@@ -1143,7 +1189,7 @@ const getTLAccessoriesType = (MdmsRes) =>
   MdmsRes["TradeLicense"].AccessoriesCategory.filter((AccessoriesCategory) => AccessoriesCategory.active).map((TLAccessoryTypeList) => {
     return {
       ...TLAccessoryTypeList,
-      i18nKey: `TRADELICENSE_ACCESSORIESCATEGORY_${Digit.Utils.locale.stringReplaceAll(TLAccessoryTypeList.code, ".", "_")}`,
+      i18nKey: `TRADELICENSE_ACCESSORIESCATEGORY_${stringReplaceAll(TLAccessoryTypeList.code, ".", "_")}`,
     };
   });
 
@@ -1300,13 +1346,13 @@ const GetPreFields = (MdmsRes) => MdmsRes["FSM"].PreFieldsConfig;
 
 const GetPostFields = (MdmsRes) => MdmsRes["FSM"].PostFieldsConfig;
 
-const GetFSTPPlantInfo = (MdmsRes) => MdmsRes["FSM"]?.FSTPPlantInfo;
+const GetFSTPPlantInfo = (MdmsRes) => MdmsRes["FSM"].FSTPPlantInfo;
 
 const GetDocumentsTypes = (MdmsRes) => MdmsRes["BPA"].DocTypeMapping;
 
 const GetChecklist = (MdmsRes) => MdmsRes["BPA"].CheckList;
 
-const transformResponse = (type, MdmsRes, moduleCode, tenantId) => {
+const transformResponse = (type, MdmsRes, moduleCode, moduleName, tenantId, masterName, i18nKeyString) => {
   switch (type) {
     case "citymodule":
       return GetCitiesWithi18nKeys(MdmsRes, moduleCode);
@@ -1400,13 +1446,18 @@ const transformResponse = (type, MdmsRes, moduleCode, tenantId) => {
       return GetTripNumber(MdmsRes);
     case "ReceivedPaymentType":
       return GetReceivedPaymentType(MdmsRes);
+
+    case "i18nKey":
+      return getDataWithi18nkey(MdmsRes, moduleName, masterName, i18nKeyString);
+    case "i18nkey&code":
+      return getDataWithi18nkeyandCode(MdmsRes, moduleName, masterName, i18nKeyString);
     default:
       return MdmsRes;
   }
 };
 
 const getCacheSetting = (moduleName) => {
-  return ApiCacheService.getSettingByServiceUrl(Urls.MDMS, moduleName);
+  return ApiCacheService.getSettingByServiceUrl(Urls.MDMSV2, moduleName);
 };
 
 const mergedData = {};
@@ -1470,11 +1521,11 @@ const debouncedCall = ({ serviceName, url, data, useCache, params }, resolve, re
   mergedPromises[params.tenantId].push({ resolve, reject });
 };
 
-export const MdmsService = {
+export const MdmsServiceV2 = {
   init: (stateCode) =>
     ServiceRequest({
       serviceName: "mdmsInit",
-      url: Urls.MDMS,
+      url: Urls.MDMSV2,
       data: initRequestBody(stateCode),
       useCache: true,
       params: { tenantId: stateCode },
@@ -1484,7 +1535,7 @@ export const MdmsService = {
       debouncedCall(
         {
           serviceName: "mdmsCall",
-          url: Urls.MDMS,
+          url: Urls.MDMSV2,
           data: getCriteria(tenantId, details),
           useCache: true,
           params: { tenantId },
@@ -1494,237 +1545,254 @@ export const MdmsService = {
       )
     );
   },
-  getDataByCriteria: async (tenantId, mdmsDetails, moduleCode) => {
+  getDataByCriteria: async (tenantId, mdmsDetails, moduleCode, masterName, i18nKeyString) => {
+    const moduleName = moduleCode; // moduleName is used here to pass unchanged modulecode
     const key = `MDMS.${tenantId}.${moduleCode}.${mdmsDetails.type}.${JSON.stringify(mdmsDetails.details)}`;
     const inStoreValue = PersistantStorage.get(key);
     if (inStoreValue) {
       return inStoreValue;
     }
-    const { MdmsRes } = await MdmsService.call(tenantId, mdmsDetails.details);
-    const responseValue = transformResponse(mdmsDetails.type, MdmsRes, moduleCode.toUpperCase(), tenantId);
+    const { MdmsRes } = await MdmsServiceV2.call(tenantId, mdmsDetails.details);
+    const responseValue = transformResponse(mdmsDetails.type, MdmsRes, moduleCode.toUpperCase(), moduleName, tenantId, masterName, i18nKeyString);
     const cacheSetting = getCacheSetting(mdmsDetails.details.moduleDetails[0].moduleName);
     PersistantStorage.set(key, responseValue, cacheSetting.cacheTimeInSecs);
     return responseValue;
   },
   getServiceDefs: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getModuleServiceDefsCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getModuleServiceDefsCriteria(tenantId, moduleCode), moduleCode);
   },
   getSanitationType: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getSanitationTypeCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getSanitationTypeCriteria(tenantId, moduleCode), moduleCode);
   },
   getApplicationChannel: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getApplicationChannelCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getApplicationChannelCriteria(tenantId, moduleCode), moduleCode);
   },
   getPropertyType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPropertyTypeCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPropertyTypeCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getPropertyUsage: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPropertyUsageCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPropertyUsageCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getPropertySubtype: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPropertyTypeCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPropertyTypeCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getPitType: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getPitTypeCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPitTypeCriteria(tenantId, moduleCode), moduleCode);
   },
   getVehicleType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getVehicleTypeCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getVehicleTypeCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getChecklist: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getChecklistCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getChecklistCriteria(tenantId, moduleCode), moduleCode);
   },
   getPaymentRules: (tenantId, filter) => {
-    return MdmsService.call(tenantId, getBillingServiceForBusinessServiceCriteria(filter));
+    return MdmsServiceV2.call(tenantId, getBillingServiceForBusinessServiceCriteria(filter));
   },
 
   getCustomizationConfig: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getConfig(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getConfig(tenantId, moduleCode), moduleCode);
   },
   getSlumLocalityMapping: (tenantId, moduleCode, type) =>
-    MdmsService.getDataByCriteria(tenantId, getSlumLocalityCriteria(tenantId, moduleCode, type), moduleCode),
+    MdmsServiceV2.getDataByCriteria(tenantId, getSlumLocalityCriteria(tenantId, moduleCode, type), moduleCode),
 
   getReason: (tenantId, moduleCode, type, payload) =>
-    MdmsService.getDataByCriteria(tenantId, getReasonCriteria(tenantId, moduleCode, type, payload), moduleCode),
+    MdmsServiceV2.getDataByCriteria(tenantId, getReasonCriteria(tenantId, moduleCode, type, payload), moduleCode),
 
   getRoleStatus: (tenantId, moduleCode, type) =>
-    MdmsService.getDataByCriteria(tenantId, getRoleStatusCriteria(tenantId, moduleCode, type), moduleCode),
+    MdmsServiceV2.getDataByCriteria(tenantId, getRoleStatusCriteria(tenantId, moduleCode, type), moduleCode),
 
   getCommonFieldsConfig: (tenantId, moduleCode, type, payload) =>
-    MdmsService.getDataByCriteria(tenantId, getCommonFieldsCriteria(tenantId, moduleCode, type, payload), moduleCode),
+    MdmsServiceV2.getDataByCriteria(tenantId, getCommonFieldsCriteria(tenantId, moduleCode, type, payload), moduleCode),
 
   getPreFieldsConfig: (tenantId, moduleCode, type, payload) =>
-    MdmsService.getDataByCriteria(tenantId, getPreFieldsCriteria(tenantId, moduleCode, type, payload), moduleCode),
+    MdmsServiceV2.getDataByCriteria(tenantId, getPreFieldsCriteria(tenantId, moduleCode, type, payload), moduleCode),
 
   getPostFieldsConfig: (tenantId, moduleCode, type, payload) =>
-    MdmsService.getDataByCriteria(tenantId, getPostFieldsCriteria(tenantId, moduleCode, type, payload), moduleCode),
+    MdmsServiceV2.getDataByCriteria(tenantId, getPostFieldsCriteria(tenantId, moduleCode, type, payload), moduleCode),
 
   getPropertyOwnerShipCategory: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPropertyOwnerShipCategoryCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPropertyOwnerShipCategoryCriteria(tenantId, moduleCode, type), moduleCode);
   },
 
   GetTradeOwnerShipCategory: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getTradeOwnerShipCategoryCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getTradeOwnerShipCategoryCriteria(tenantId, moduleCode, type), moduleCode);
   },
 
   getPropertyOwnerType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPropertyOwnerTypeCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPropertyOwnerTypeCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getPropertySubOwnerShipCategory: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getSubPropertyOwnerShipCategoryCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getSubPropertyOwnerShipCategoryCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getDocumentRequiredScreen: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getDocumentRequiredScreenCategory(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getDocumentRequiredScreenCategory(tenantId, moduleCode), moduleCode);
   },
   getTLDocumentRequiredScreen: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getDocumentRequiredScreenCategory(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getDocumentRequiredScreenCategory(tenantId, moduleCode), moduleCode);
   },
   getTradeUnitsData: (tenantId, moduleCode, type, filter) => {
-    return MdmsService.getDataByCriteria(tenantId, getTradeUnitsDataList(tenantId, moduleCode, type, filter), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getTradeUnitsDataList(tenantId, moduleCode, type, filter), moduleCode);
   },
   getMapConfig: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getDefaultMapConfig(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getDefaultMapConfig(tenantId, moduleCode), moduleCode);
   },
   getUsageCategory: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getUsageCategoryList(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getUsageCategoryList(tenantId, moduleCode), moduleCode);
   },
   getPTPropertyType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPTPropertyTypeList(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPTPropertyTypeList(tenantId, moduleCode), moduleCode);
   },
   getTLStructureType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getTLStructureTypeList(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getTLStructureTypeList(tenantId, moduleCode), moduleCode);
   },
   getTLAccessoriesType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getTLAccessoriesTypeList(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getTLAccessoriesTypeList(tenantId, moduleCode), moduleCode);
   },
   getTLFinancialYear: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getTLFinancialYearList(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getTLFinancialYearList(tenantId, moduleCode), moduleCode);
   },
   getFloorList: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getPTFloorList(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getPTFloorList(tenantId, moduleCode, type), moduleCode);
   },
   getRentalDetails: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getRentalDetailsCategoryCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getRentalDetailsCategoryCriteria(tenantId, moduleCode), moduleCode);
   },
   getChargeSlabs: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getChargeSlabsCategoryCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getChargeSlabsCategoryCriteria(tenantId, moduleCode), moduleCode);
   },
   getDssDashboard: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getDssDashboardCriteria(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getDssDashboardCriteria(tenantId, moduleCode), moduleCode);
   },
   getPaymentGateway: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getReceiptKey: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getReceiptKey(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getReceiptKey(tenantId, moduleCode), moduleCode);
   },
   getHelpText: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getMCollectBillingService: (tenantId, moduleCode, type, filter) => {
-    return MdmsService.getDataByCriteria(tenantId, getMCollectBillingServiceCriteria(tenantId, moduleCode, type, filter), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getMCollectBillingServiceCriteria(tenantId, moduleCode, type, filter), moduleCode);
   },
   getMCollectApplcationStatus: (tenantId, moduleCode, type, filter) => {
-    return MdmsService.getDataByCriteria(tenantId, getMCollectApplicationStatusCriteria(tenantId, moduleCode, type, filter), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getMCollectApplicationStatusCriteria(tenantId, moduleCode, type, filter), moduleCode);
   },
   getHrmsEmployeeRolesandDesignation: (tenantId) => {
-    return MdmsService.call(tenantId, getHrmsEmployeeRolesandDesignations());
+    return MdmsServiceV2.call(tenantId, getHrmsEmployeeRolesandDesignations());
   },
   getHrmsEmployeeTypes: (tenantId, moduleCode, type, filter) => {
-    return MdmsService.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getHrmsEmployeeReason: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGeneralCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getMultipleTypes: (tenantId, moduleCode, types) => {
-    return MdmsService.getDataByCriteria(tenantId, getMultipleTypes(tenantId, moduleCode, types), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getMultipleTypes(tenantId, moduleCode, types), moduleCode);
   },
   getMultipleTypesWithFilter: (tenantId, moduleCode, types) => {
-    return MdmsService.getDataByCriteria(tenantId, getMultipleTypesWithFilter(moduleCode, types), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getMultipleTypesWithFilter(moduleCode, types), moduleCode);
   },
   getFSTPPlantInfo: (tenantId, moduleCode, types) => {
-    return MdmsService.getDataByCriteria(tenantId, getFSTPPlantCriteria(tenantId, moduleCode, types), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getFSTPPlantCriteria(tenantId, moduleCode, types), moduleCode);
   },
   getCancelReceiptReason: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getCancelReceiptReason(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getCancelReceiptReason(tenantId, moduleCode), moduleCode);
   },
   getReceiptStatus: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getReceiptStatus(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getReceiptStatus(tenantId, moduleCode), moduleCode);
   },
   getCancelReceiptReasonAndStatus: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getCancelReceiptReasonAndStatus(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getCancelReceiptReasonAndStatus(tenantId, moduleCode), moduleCode);
   },
 
   getGenderType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
   },
 
   TLGenderType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
   },
 
   PTGenderType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
   },
 
   HRGenderType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
   },
 
   getDocumentTypes: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getDocumentTypesCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getDocumentTypesCriteria(tenantId, moduleCode, type), moduleCode);
   },
 
   getTradeTypeRoleTypes: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getTradeTypeRoleCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getTradeTypeRoleCriteria(tenantId, moduleCode, type), moduleCode);
   },
 
   getFSMGenderType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getGenderTypeList(tenantId, moduleCode, type), moduleCode);
   },
 
   getFSTPORejectionReason: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getFSTPORejectionReasonCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getFSTPORejectionReasonCriteria(tenantId, moduleCode, type), moduleCode);
   },
 
   getFSMPaymentType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getFSMPaymentTypeCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getFSMPaymentTypeCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getBillsGenieKey: (tenantId, moduleCode) => {
-    return MdmsService.getDataByCriteria(tenantId, getBillsGenieKey(tenantId, moduleCode), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getBillsGenieKey(tenantId, moduleCode), moduleCode);
   },
 
   getFSMTripNumber: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getFSMTripNumberCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getFSMTripNumberCriteria(tenantId, moduleCode, type), moduleCode);
   },
 
   getFSMReceivedPaymentType: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getFSMReceivedPaymentTypeCriteria(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getFSMReceivedPaymentTypeCriteria(tenantId, moduleCode, type), moduleCode);
   },
   getWSTaxHeadMaster: (tenantId, moduleCode, type) => {
-    return MdmsService.getDataByCriteria(tenantId, getWSTaxHeadMasterCritera(tenantId, moduleCode, type), moduleCode);
+    return MdmsServiceV2.getDataByCriteria(tenantId, getWSTaxHeadMasterCritera(tenantId, moduleCode, type), moduleCode);
   },
 
   getMeterStatusType: (tenantId) => {
-    return MdmsService.call(tenantId, getMeterStatusTypeList(tenantId));
+    return MdmsServiceV2.call(tenantId, getMeterStatusTypeList(tenantId));
   },
 
   getBillingPeriod: (tenantId) => {
-    return MdmsService.call(tenantId, getBillingPeriodValidation(tenantId));
+    return MdmsServiceV2.call(tenantId, getBillingPeriodValidation(tenantId));
   },
   getHowItWorksJSONData: (tenantId) => {
-    return MdmsService.call(tenantId, getHowItWorksJSON(tenantId));
+    return MdmsServiceV2.call(tenantId, getHowItWorksJSON(tenantId));
   },
   getFAQsJSONData: (tenantId) => {
-    return MdmsService.call(tenantId, getFAQsJSON(tenantId));
+    return MdmsServiceV2.call(tenantId, getFAQsJSON(tenantId));
   },
   getDSSFAQsJSONData: (tenantId) => {
-    return MdmsService.call(tenantId, getDSSFAQsJSON(tenantId));
+    return MdmsServiceV2.call(tenantId, getDSSFAQsJSON(tenantId));
   },
   
   getDSSAboutJSONData: (tenantId) => {
-    return MdmsService.call(tenantId, getDSSAboutJSON(tenantId));
+    return MdmsServiceV2.call(tenantId, getDSSAboutJSON(tenantId));
   },
   getStaticDataJSON: (tenantId) => {
-    return MdmsService.call(tenantId, getStaticData());
-  }
+    return MdmsServiceV2.call(tenantId, getStaticData());
+  },
+/**
+ * getMasterData - Fetches master data based on the provided criteria.
+ * 
+ * @param {string} tenantId - The ID of the tenant for which the data is being fetched.
+ * @param {string} moduleCode - The module code associated with the master data.
+ * @param {string} masterName - The name of the master data to be fetched.
+ * @param {string} type - The type to be passed in switch case for fetching filtered data.
+ * 
+ * @description
+ * This function retrieves master data by calling the `MdmsServiceV2.getDataByCriteria` method.
+ * It constructs the criteria for fetching the data using the `getMasterDataCategory` function,
+ * which is passed the tenantId, moduleCode, masterName, and type as parameters.
+ */
+  getMasterData: (tenantId, moduleCode, masterName, i18nKeyString = "", type) => {
+    return MdmsServiceV2.getDataByCriteria(tenantId, getMasterDataCategory(tenantId, moduleCode, masterName, type), moduleCode, masterName, i18nKeyString);
+  },
 };
