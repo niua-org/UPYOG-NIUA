@@ -13,7 +13,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>org.egov</groupId>
+    <groupId>org.upyog</groupId>
     <artifactId>data-sharing-service-dx</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
