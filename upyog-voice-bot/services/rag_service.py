@@ -10,6 +10,12 @@ from functools import lru_cache
 from sentence_transformers import SentenceTransformer
 import faiss
 from dotenv import load_dotenv
+from prompts.system_prompt import (
+    HARD_BLOCK_TOPICS,
+    build_rag_system_prompt,
+    build_rag_stream_system_prompt,
+    build_query_rewriter_prompt,
+)
 
 try:
     from groq import Groq
@@ -22,7 +28,7 @@ from services.voice_service import (
     stop_generation
 )
 
-load_dotenv()
+load_dotenv(override=True)
 
 logger = logging.getLogger(__name__)
 
@@ -105,144 +111,6 @@ def load_resources():
 # Start loading resources immediately
 threading.Thread(target=load_resources, daemon=True).start()
 
-
-# ============== DOMAIN FILTERING & SYSTEM PROMPTS ==============
-
-SYSTEM_PROMPT = """You are UPYOG Assistant — an AI helper exclusively for the
-UPYOG platform and NUDM (National Urban Digital Mission) government services.
-
-YOUR KNOWLEDGE DOMAIN (you may ONLY answer about these):
-- UPYOG platform features, modules, and services
-- NUDM mission, goals, and implementation
-- Urban Local Body (ULB) services: Property Tax, Trade License, Fire NOC,
-  Water & Sewerage, Birth & Death certificates, Building Plan Approval,
-  Waste Management, GIS Services, Grievance Redressal, Asset Management,
-  Community Hall Booking, Street Vendors, Livelihood Services, Works Management,
-  Solid Waste Management, Door to Door Services, and all other UPYOG modules
-- How to apply for, track, or understand any of these services
-- Document requirements for any of these services
-- Fees, timelines, and processes for any of these services
-
-STRICT RULES — follow these without exception:
-
-RULE 1 — OUT OF DOMAIN REJECTION:
-If the user asks about ANYTHING not in your knowledge domain above
-(fitness, cooking, general knowledge, politics, entertainment, other software,
-health advice, legal advice unrelated to ULB services, etc.)
-you MUST respond with ONLY this (in the user's language):
-  English: "I can only help with UPYOG and NUDM related queries.
-            Please ask me about government urban services."
-  Hindi:   "मैं केवल UPYOG और NUDM से संबंधित प्रश्नों में सहायता कर सकता हूँ।
-            कृपया शहरी सेवाओं के बारे में पूछें।"
-Do NOT attempt to answer. Do NOT say "I think" or "perhaps". Just redirect.
-
-RULE 2 — FRAGMENTED INPUT HANDLING:
-If the user's input is incomplete, fragmented, or makes no clear sense
-(e.g. "ka Labh uthana hai", "kaise", "what about the", "aur phir"),
-do NOT guess what they mean and do NOT answer a random topic.
-Instead ask for clarification:
-  English: "I didn't catch that completely. Could you please repeat your question?"
-  Hindi:   "मैं आपका प्रश्न पूरी तरह समझ नहीं पाया। क्या आप दोबारा पूछ सकते हैं?"
-
-RULE 3 — KNOWLEDGE BASE FIRST:
-Always check the retrieved context from the knowledge base first.
-If the retrieved context has a similarity score above threshold, reject.
-Do NOT add information from your general training data.
-Do NOT make up fees, timelines, document names, or process steps.
-If the knowledge base does not have the answer, say so honestly.
-
-RULE 4 — TRANSACTIONAL LIMITATION:
-- You can ONLY execute/book/create transactions for "Advertisement Booking".
-- If the user asks you to apply, register, pay, or book for "Trade License" or "Property Tax", you MUST state directly and professionally:
-  "Currently, UPYOG AI can only execute bookings for Advertisements. I cannot process or apply for Property Tax payments or Trade Licenses directly. However, I can guide you on the steps, fees, or documents required for them. Please let me know if you would like me to explain the guidelines or document requirements!"
-  (In Hindi: "वर्तमान में, UPYOG AI केवल विज्ञापन बुकिंग ही कर सकता है। मैं सीधे संपत्ति कर भुगतान या व्यापार लाइसेंस के लिए आवेदन नहीं कर सकता। हालांकि, मैं आपको उनके लिए आवश्यक चरणों, शुल्क या दस्तावेजों के बारे में मार्गदर्शन कर सकता हूँ। कृपया मुझे बताएं कि क्या आप चाहते हैं कि मैं दिशा-निर्देश या दस्तावेज़ आवश्यकताओं की व्याख्या करूँ!")
-
-RULE 4 — NO HALLUCINATION:
-Never invent information. If you are not sure, say:
-  English: "I don't have specific information about that in my knowledge base.
-            Please contact your nearest ULB office for accurate details."
-  Hindi:   "मेरे पास इस विषय में सटीक जानकारी नहीं है।
-            सटीक जानकारी के लिए कृपया अपने नजदीकी ULB कार्यालय से संपर्क करें।"
-
-RULE 5 — LANGUAGE MIRROR:
-Always reply in the same language the user used.
-If Hindi → reply in pure Devanagari Hindi.
-If English → reply in English.
-Never mix scripts.
-
-RULE 6 — PROFESSIONAL TONE AND FORMAL ADDRESS:
-Maintain a formal, polite, and professional tone at all times as an official government services AI assistant.
-STRICT RULE: NEVER use informal, overly familiar, or colloquial Hindi terms of address such as "दीदी" (Didi), "काकी" (Kaki), "बेटा" (Beta), "भैया" (Bhaiya), "चाचा" (Chacha), "अंकल" (Uncle), "आंटी" (Aunty), etc.
-Always address the citizen respectfully using formal language (e.g. "आप") and clean professional greetings (e.g. "नमस्ते", "नमस्कार", "Hello") without adding informal terms of address.
-"""
-
-OUT_OF_DOMAIN_KEYWORDS = [
-    # fitness / health
-    "exercise", "workout", "gym", "yoga", "diet", "weight loss", "calories",
-    "muscle", "leg raise", "pushup", "push-up", "running", "jogging", "meditation",
-    "fitness", "health", "doctor", "medicine", "pain", "body", "weight",
-    # food
-    "recipe", "cook", "cooking", "khana", "restaurant", "food delivery", "biryani",
-    "pizza", "burger", "sabzi", "dal", "roti",
-    # entertainment
-    "movie", "film", "song", "music", "cricket", "ipl", "match", "game", "gaming",
-    "netflix", "youtube", "serial", "actor", "actress", "bollywood", "hollywood",
-    # finance (non-ULB)
-    "stock", "share market", "crypto", "bitcoin", "mutual fund", "gst rate", "income tax return",
-    "loan", "credit", "emi", "interest rate", "bank", "sbi", "hdfc",
-    # general knowledge
-    "history of india", "capital of", "president of", "prime minister", "election",
-    "weather", "news", "politics", "party", "vote",
-    # other platforms/software
-    "google", "amazon", "flipkart", "zomato", "swiggy", "uber", "ola", "whatsapp",
-    "facebook", "instagram", "twitter", "chatgpt", "ai chatbot",
-    # personal questions
-    "who are you", "tell me about yourself", "your name", "who made you",
-    # other unrelated
-    "astrology", "horoscope", "love", "marriage", "career", "job", "salary"
-]
-
-UPYOG_KEYWORDS = [
-    "upyog", "nudm", "ulb", "urban local body", "municipal", "municipality",
-    "property tax", "trade license", "fire noc", "noc",
-    "birth", "death", "certificate", "registration",
-    "grievance", "complaint", "shikayat", "pgr", "redressal",
-    "water", "sewerage", "drain", "sewage",
-    "building plan", "construction", "edcr", "approval",
-    "waste", "garbage", "safai", "swachh", "sanitation",
-    "vendor", "hawker", "street vendor", "hawker",
-    "community hall", "venue", "booking",
-    "asset", "inventory", "works", "maintenance",
-    "solid waste", "door to door", "collection",
-    "gis", "map", "geospatial", "property",
-    "livelihood", "employment", "skill",
-    "challenge", "innovation", "solution",
-    "mohua", "niua", "national urban digital mission",
-    # Hindi terms
-    "संपत्ति कर", "व्यापार लाइसेंस", "जन्म", "मृत्यु", "प्रमाण पत्र",
-    "शिकायत", "जल", "सीवरेज", "कचरा", "सफाई", "भवन", "नक्शा",
-    "नगरपालिका", "उपयोग", "नगर सेवाएं"
-]
-
-HARD_BLOCK_TOPICS = [
-    # entertainment
-    'cricket', 'ipl', 'bollywood', 'movie', 'film', 'song', 'actor',
-    'netflix', 'hotstar', 'youtube', 'web series', 'serial',
-    # food
-    'recipe', 'biryani', 'restaurant', 'zomato', 'swiggy', 'pizza',
-    'dosa', 'samosa', 'chai', 'coffee',
-    # finance (non-ULB)
-    'stock market', 'share bazaar', 'crypto', 'bitcoin', 'mutual fund',
-    'income tax', 'gst return', 'itr filing', 'nps', 'pf',
-    # fitness
-    'exercise', 'gym', 'yoga', 'diet', 'weight loss', 'leg raise',
-    'workout', 'fitness',
-    # other
-    'weather forecast', 'horoscope', 'astrology', 'love', 'relationship',
-    'jod', 'pyaar', 'shaadi',
-]
-
-
 def is_hard_blocked(query: str) -> bool:
     q = query.lower()
     blocked = any(topic in q for topic in HARD_BLOCK_TOPICS)
@@ -289,6 +157,76 @@ def contains_urdu_script(text: str) -> bool:
     return bool(re.compile(r'[؀-ۿ]').search(text))
 
 
+def contextualize_query_for_search(query: str, history: list) -> str:
+    """
+    Resolves pronouns and references (e.g. 'it', 'fees', 'iska process kya hai') 
+    using conversation history into a standalone search query for FAISS.
+    """
+    global groq_client
+    if not history or not query or len(query.strip()) < 2:
+        return query
+
+    q_lower = query.lower().strip()
+    pronoun_indicators = [
+        "it", "this", "that", "its", "these", "those", "they", "them",
+        "iska", "iski", "iske", "isme", "usme", "uska", "uski", "unka",
+        "ye", "yeh", "woh", "aise", "fees", "fee", "cost", "charge",
+        "charges", "document", "documents", "process", "time", "duration",
+        "renewal", "apply", "eligibility", "step", "steps", "kaise",
+        "kitna", "kitne", "kya chahiye", "kya lagega", "aur", "and", "tell me more"
+    ]
+    words = q_lower.split()
+    is_context_dependent = (
+        len(words) <= 7 or
+        any(re.search(rf'\b{re.escape(w)}\b', q_lower) for w in pronoun_indicators)
+    )
+    if not is_context_dependent:
+        return query
+
+    try:
+        api_key = GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
+        if not groq_client and Groq and api_key:
+            groq_client = Groq(api_key=api_key)
+
+        if not groq_client:
+            return query
+
+        recent_history = history[-4:] if len(history) >= 4 else history
+        hist_lines = []
+        for turn in recent_history:
+            if isinstance(turn, dict):
+                role = "User" if turn.get("role") == "user" else "Assistant"
+                content = str(turn.get("content", ""))[:200]
+                hist_lines.append(f"{role}: {content}")
+            elif isinstance(turn, (list, tuple)) and len(turn) == 2:
+                hist_lines.append(f"User: {str(turn[0])[:200]}")
+                hist_lines.append(f"Assistant: {str(turn[1])[:200]}")
+
+        if not hist_lines:
+            return query
+
+        history_text = "\n".join(hist_lines)
+        prompt = build_query_rewriter_prompt(query=query, history_text=history_text)
+
+        resp = groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=300,
+            temperature=0.0
+        )
+        rewritten = resp.choices[0].message.content.strip().strip('"\'').strip()
+        # Take the first line if the model generated any extra line breaks
+        if "\n" in rewritten:
+            rewritten = rewritten.split("\n")[0].strip().strip('"\'')
+        if rewritten and len(rewritten) >= 3 and len(rewritten) < 150:
+            logger.info(f"[RAG Rewrite] Contextualized query: '{query}' -> '{rewritten}'")
+            return rewritten
+    except Exception as e:
+        logger.debug(f"[RAG Rewrite] Query contextualization exception (safely falling back): {e}")
+
+    return query
+
+
 def get_rag_response(query: str, history: list, lang: str, search_lang: str = None, session_id: str = "default") -> str:
     """
     LLM-first architecture: LLM understands human language, FAISS provides optional context.
@@ -303,28 +241,30 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
     try:
         from services.user_service import extract_phone_from_session, get_user_profile_info
         phone_anchor = extract_phone_from_session(session_id)
-        user_info = get_user_profile_info(phone_anchor) if phone_anchor != "default" else None
+        user_info = get_user_profile_info(phone_anchor) if phone_anchor != "default" else get_user_profile_info(session_id)
     except Exception:
         phone_anchor = "default"
         user_info = None
 
+    history_key = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
+
     long_term_bookings_str = ""
     long_term_chat_str = ""
     qdrant_summary_str = ""
-    if phone_anchor != "default":
+    if history_key and history_key != "default":
         try:
-            from database import get_chat_history
-            redis_chat = get_chat_history(phone_anchor)
+            from storage.redis_manager import get_chat_history
+            redis_chat = get_chat_history(history_key)
             if redis_chat:
                 long_term_chat_str = "\n\nUSER'S PAST CHAT HISTORY (LONG-TERM REDIS MEMORY):\n"
                 for msg in redis_chat[-15:]:
                     role_label = "User" if msg.get("role") == "user" else "Assistant"
                     long_term_chat_str += f"{role_label}: {msg.get('content')}\n"
                     
-            from memory_manager import MemoryManager
+            from storage.qdrant_manager import MemoryManager
             if model:
                 query_emb = model.encode([query])[0].tolist()
-                past_summaries = MemoryManager.search_long_term_memory(phone_anchor, query_emb, limit=3)
+                past_summaries = MemoryManager.search_long_term_memory(history_key, query_emb, limit=3)
                 if past_summaries:
                     qdrant_summary_str = "\n\nUSER'S PAST CHAT HISTORY (SUMMARIES FROM QDRANT):\n"
                     for s in past_summaries:
@@ -353,28 +293,38 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
     # Step 1: Try FAISS for supporting context
     context = ""
     try:
-        query_for_search = query
+        # Contextualize follow-up queries using history
+        contextual_query = contextualize_query_for_search(query, history)
+        query_for_search = contextual_query
         if search_lang != 'en':
-            translated = translate_text(query, search_lang, "en")
+            translated = translate_text(contextual_query, search_lang, "en")
             if translated and len(translated.strip()) > 2:
                 query_for_search = translated
                 logger.info(f"[RAG FAISS] Translated query for vector search: '{query_for_search}'")
 
+        relevant_chunks = []
         if model and index is not None:
             query_embedding = model.encode([query_for_search])
             distances, indices = index.search(query_embedding.astype(np.float32), k=5)
 
-            relevant_chunks = []
             for dist, idx in zip(distances[0], indices[0]):
-                if idx >= 0 and dist < 1.4:
+                if idx >= 0 and dist < FAISS_THRESHOLD:
                     if data is not None and 'prompt' in data.columns and 'response' in data.columns:
                         relevant_chunks.append(f"Q: {data['prompt'].iloc[idx]}\nA: {data['response'].iloc[idx]}")
 
-            if relevant_chunks:
-                context = "\n\n".join(relevant_chunks[:3])
-                logger.info(f"[RAG FAISS] FAISS context found: {len(relevant_chunks)} relevant chunks")
-            else:
-                logger.info("[RAG FAISS] No FAISS context found - LLM will answer from general knowledge")
+        # Also search FRS Knowledge Base if available
+        if model and frs_index is not None:
+            frs_dist, frs_indices = frs_index.search(model.encode([query_for_search]).astype(np.float32), k=5)
+            for dist, idx in zip(frs_dist[0], frs_indices[0]):
+                if idx >= 0 and dist < FAISS_THRESHOLD:
+                    if frs_data is not None:
+                        relevant_chunks.append(f"Q: {frs_data.iloc[idx]['question']}\nA: {frs_data.iloc[idx]['answer']}")
+
+        if relevant_chunks:
+            context = "\n\n".join(relevant_chunks[:3])
+            logger.info(f"[RAG FAISS] FAISS context found: {len(relevant_chunks)} relevant chunks")
+        else:
+            logger.info("[RAG FAISS] No FAISS context found - LLM will answer from general knowledge")
 
     except Exception as e:
         logger.error(f"[RAG FAISS] FAISS search error (non-fatal): {e}")
@@ -405,49 +355,8 @@ Keep the answer accurate, professional, and helpful.
             history_messages.append({"role": "user", "content": turn[0]})
             history_messages.append({"role": "assistant", "content": turn[1]})
 
-    # Step 5: System prompt
-    system = f"""You are UPYOG Assistant — an AI helper for the UPYOG platform and Indian Urban Local Body (ULB) government services.
-
-{lang_rule}
-
-STRICT INSTRUCTIONS:
-RULE 1 — LANGUAGE CONSISTENCY:
-{"- You MUST write your ENTIRE response in Hindi using Devanagari script (हिंदी लिपि) ONLY." if lang == 'hi' else "- You MUST write your ENTIRE response in pure standard English ONLY."}
-
-RULE 2 — ACCURACY OVER REFUSAL:
-If you know about the topic, answer it concisely.
-NEVER say "जानकारी नहीं है" for UPYOG-related questions.
-
-RULE 3 — CONVERSATIONAL SCENARIOS:
-Users describe situations, not textbook questions.
-Map human scenarios to UPYOG services.
-
-RULE 4 — STRICT DOMAIN:
-Only UPYOG/NUDM/ULB services. Politely redirect for unrelated topics.
-
-RULE 5 — BE HONEST:
-If unsure about numbers/dates, say "approximately" rather than refusing.
-
-RULE 6 — TRANSACTIONAL LIMITATION:
-- You can ONLY execute/book/create transactions for "Advertisement Booking".
-- You CANNOT apply, register, pay, or book for "Trade License" or "Property Tax". You must state directly and clearly that you can guide and provide information about them, but you cannot execute or book payments for them.
-
-RULE 7 — FORMATTING:
-- Use **bold** for service names and key terms.
-- Use numbered lists (1. 2. 3.) for step-by-step processes.
-- Use bullet points (-) for features or requirements.
-- Keep paragraphs short (2-3 lines max).
-- Do NOT use emojis.
-
-RULE 8 — PROFESSIONAL TONE:
-Maintain a formal, polite, and professional tone. NEVER use informal Hindi terms like 'दीदी', 'काकी', 'बेटा', 'भैया', 'चाचा', 'अंकल'.
-
-RULE 9 — NEVER FABRICATE PERSONAL DATA:
-NEVER invent, guess, or hallucinate complaint IDs or booking numbers.
-
-RULE 10 — DO NOT MENTION LOGIN STEPS UNLESS EXPLICITLY ASKED.
-
-{context_section}"""
+    # Step 5: System prompt from prompts/system_prompt.py
+    system = build_rag_system_prompt(lang=lang, lang_rule=lang_rule, context_section=context_section)
 
     # Step 6: Call Groq
     messages = [{"role": "system", "content": system}]
@@ -520,9 +429,10 @@ def retrieve_document_stream(query: str, user_lang: str, history: list, phone_an
     logger.info(f"[STREAMING] Starting SSE stream for query='{query}', lang='{user_lang}'")
 
     try:
-        query_for_search = translate_text(query, user_lang, "en") if user_lang in ["hi", "mr", "bn", "gu", "ta", "te", "kn", "ml"] else query
+        contextual_query = contextualize_query_for_search(query, history)
+        query_for_search = translate_text(contextual_query, user_lang, "en") if user_lang in ["hi", "mr", "bn", "gu", "ta", "te", "kn", "ml"] else contextual_query
         if not query_for_search or len(query_for_search.strip()) < 3:
-            query_for_search = query
+            query_for_search = contextual_query
 
         faq_context = []
         if index is not None and model is not None:
@@ -568,7 +478,7 @@ def retrieve_document_stream(query: str, user_lang: str, history: list, phone_an
         qdrant_summary_str = ""
         if phone_anchor != "default":
             try:
-                from memory_manager import MemoryManager
+                from storage.qdrant_manager import MemoryManager
                 if model:
                     query_emb = model.encode([query_for_search])[0].tolist()
                     past_summaries = MemoryManager.search_long_term_memory(phone_anchor, query_emb, limit=3)
@@ -577,16 +487,11 @@ def retrieve_document_stream(query: str, user_lang: str, history: list, phone_an
             except Exception as e:
                 logger.error(f"Error fetching Qdrant summaries in stream: {e}")
 
-        system_instr = (
-            f"You are the UPYOG AI Concierge. CURRENT OUTPUT LANGUAGE: {'HINDI (DEVANAGARI)' if user_lang == 'hi' else 'ENGLISH'}.\n"
-            f"{lang_instruction}\n\n"
-            "STRICT GROUNDING RULES:\n"
-            "1. USE ONLY THE PROVIDED CONTEXT. Do not use outside knowledge.\n"
-            "2. Max 3-4 sentences or a short structured list.\n"
-            "3. You can only execute/book/create transactions for 'Advertisement Booking'. You CANNOT book or execute payments for 'Trade License' or 'Property Tax'. State directly that you can only guide/provide information about them, not perform transactions.\n"
-            "4. FORMATTING: Use **bold** for key terms and service names. Use numbered lists for steps. Use bullet points for features or requirements. Do NOT use emojis. Keep the tone professional and formal.\n"
-            "5. PROFESSIONAL TONE: NEVER use informal or familial terms of address such as 'दीदी' (Didi), 'काकी' (Kaki), 'बेटा' (Beta), 'भैया' (Bhaiya), 'चाचा', 'अंकल', etc. Use clean formal greetings (e.g. 'नमस्ते', 'नमस्कार', 'Hello').\n\n"
-            f"CONTEXT PROVIDED:\n{context_str if context_str else 'NO CONTEXT. ASK FOR CLARIFICATION.'}\n{qdrant_summary_str}"
+        system_instr = build_rag_stream_system_prompt(
+            user_lang=user_lang,
+            lang_instruction=lang_instruction,
+            context_str=context_str,
+            qdrant_summary_str=qdrant_summary_str
         )
 
         messages = [

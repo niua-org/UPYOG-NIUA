@@ -1,17 +1,32 @@
 // assets/chat.js — Chat UI, State Management, Authentication, and Message Dispatching
 
-// Helper to execute callback when DOM is ready (or immediately if already parsed)
-function onDOMReady(fn) {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', fn);
-  } else {
-    fn();
-  }
-}
-
 // ============== REDIS LOGIN LOGIC ==============
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 let conversationSessionId = null;
+
+// ============== STATE ==============
+let currentState = (typeof States !== 'undefined') ? States.IDLE : "IDLE";
+let sessionActive = false;
+window.isMicActive = function () {
+  const sessionBtn = document.getElementById('session-toggle-btn');
+  const btnActive = sessionBtn ? sessionBtn.classList.contains('active') : false;
+  return Boolean((typeof sessionActive !== 'undefined' && sessionActive) || btnActive);
+};
+let currentLang = 'auto';
+let currentFetch = null;
+
+let turnCount = 0;
+let lastDetectedLang = 'en';
+
+let API_URL = window.location.origin;
+if (window.location.pathname.includes('/upyog-voice-bot')) {
+  API_URL += '/upyog-voice-bot';
+} else if (window.location.pathname.includes('/upyog-voice')) {
+  API_URL += '/upyog-voice';
+}
+
+let NIAUTT_REQUEST_INFO = {};
+
 
 function ensureSessionId() {
   if (!conversationSessionId) {
@@ -296,28 +311,6 @@ function logoutSession() {
   window.location.reload();
 }
 
-// ============== STATE ==============
-let currentState = (typeof States !== 'undefined') ? States.IDLE : "IDLE";
-let sessionActive = false;
-window.isMicActive = function () {
-  const sessionBtn = document.getElementById('session-toggle-btn');
-  const btnActive = sessionBtn ? sessionBtn.classList.contains('active') : false;
-  return Boolean((typeof sessionActive !== 'undefined' && sessionActive) || btnActive);
-};
-let currentLang = 'auto';
-let currentFetch = null;
-
-let turnCount = 0;
-let lastDetectedLang = 'en';
-
-let API_URL = window.location.origin;
-if (window.location.pathname.includes('/upyog-voice-bot')) {
-  API_URL += '/upyog-voice-bot';
-} else if (window.location.pathname.includes('/upyog-voice')) {
-  API_URL += '/upyog-voice';
-}
-
-let NIAUTT_REQUEST_INFO = {};
 
 function getActiveBaseUrl() {
   try {
@@ -349,6 +342,11 @@ function getActiveBaseUrl() {
   }
 
   let b = sessionStorage.getItem("upyog_base_url") || sessionStorage.getItem("upyog_parent_origin");
+  if (b && (b.includes("localhost:8090") || b.includes("127.0.0.1:8090"))) {
+    sessionStorage.removeItem("upyog_base_url");
+    sessionStorage.removeItem("upyog_parent_origin");
+    b = "";
+  }
   if (!b) {
     const origin = window.location.origin;
     if (origin.includes("niuatt.niua.in")) b = "https://niuatt.niua.in";
@@ -364,14 +362,33 @@ function getActiveBaseUrl() {
 }
 
 function handleNiuattMessage(event) {
-  console.log('[UPYOG POST_MESSAGE] Received window postMessage', { data: event.data, origin: event.origin });
+  if (!event.data || typeof event.data !== 'object') return;
 
-  // Store parent origin / base_url dynamically if from a valid web origin
+  const isUpyogMessage = Boolean(
+    event.data.RequestInfo ||
+    event.data.requestInfo ||
+    event.data.type === "INIT_DATA" ||
+    event.data.type === "TOGGLE_MIC" ||
+    event.data.action === "TOGGLE_MIC" ||
+    (event.data.type === "KEY_EVENT" && (event.data.key === 'd' || event.data.key === 'D')) ||
+    event.data.baseUrl ||
+    event.data.base_url ||
+    event.data.authToken ||
+    event.data.userInfo
+  );
+
+  if (!isUpyogMessage) return;
+
+  console.log('[UPYOG POST_MESSAGE] Received valid window postMessage', { data: event.data, origin: event.origin });
+
+  // Store parent origin / base_url dynamically if from a valid web origin (excluding local bot server port)
   if (event.origin && (event.origin.startsWith("http://") || event.origin.startsWith("https://"))) {
-    sessionStorage.setItem("upyog_parent_origin", event.origin);
+    if (!event.origin.includes("localhost:8090") && !event.origin.includes("127.0.0.1:8090")) {
+      sessionStorage.setItem("upyog_parent_origin", event.origin);
+    }
   }
   const detectedUrl = event.data?.baseUrl || event.data?.RequestInfo?.baseUrl || event.data?.base_url || event.data?.RequestInfo?.base_url;
-  if (detectedUrl) {
+  if (detectedUrl && !detectedUrl.includes("localhost:8090") && !detectedUrl.includes("127.0.0.1:8090")) {
     sessionStorage.setItem("upyog_base_url", detectedUrl);
   }
 
@@ -1261,6 +1278,15 @@ function initializeChatApp() {
   if (textInput && !textInput.dataset.bound) {
     textInput.dataset.bound = "true";
     textInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleTextSubmit(); });
+  }
+}
+
+// Helper to execute callback when DOM is ready (or immediately if already parsed)
+function onDOMReady(fn) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fn);
+  } else {
+    fn();
   }
 }
 
