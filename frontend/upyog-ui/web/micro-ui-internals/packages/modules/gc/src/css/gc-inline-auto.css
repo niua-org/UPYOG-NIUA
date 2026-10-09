@@ -1,4 +1,241 @@
 .gc-btn-row {
   display: flex;
   gap: 16px;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
 }
+
+.gc-card-btn-row {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.gc-payment-history-link {
+  color: #a52a2a;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.gc-payment-history-link:hover {
+  color: #7a1f1f;
+}
+
+.gc-status-pending {
+  color: #a52a2a;
+  font-weight: 500;
+}
+
+.gc-status-paid {
+  color: #00703c;
+  font-weight: 500;
+}
+
+.gc-modal-content {
+  padding: 10px 0;
+}
+
+.gc-receipt-card {
+  margin-bottom: 16px;
+  border: 1px solid #d6d5d4;
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #f8f8f8;
+}
+
+.gc-receipt-status-table {
+  padding: 0px !important;
+  margin: 0px !important;
+}
+
+.gc-receipt-row {
+  margin: 4px 0 !important;
+}
+
+.gc-no-history-text {
+  padding: 20px;
+  text-align: center;
+  color: #505a5f;
+}
+
+.gc-payment-history-modal .popup-module {
+  width: 700px !important;
+  max-width: 95vw !important;
+}
+
+.gc-payment-history-modal .popup-module-main {
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.gc-payment-history-modal .icon-bg-secondary svg {
+  fill: #ffffff;
+}
+
+.gc-disconnect-service-modal .popup-module {
+  width: 580px !important;
+  max-width: 95vw !important;
+}
+
+.gc-disconnect-service-modal .icon-bg-secondary svg {
+  fill: #ffffff;
+}
+
+.gc-disconnect-modal-body {
+  padding: 16px 0;
+}
+
+.gc-disconnect-modal-desc {
+  font-size: 14px;
+  color: #505a5f;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.gc-form-field {
+  margin-bottom: 20px;
+}
+
+.gc-field-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0b0c0c;
+  margin-bottom: 8px;
+}
+
+.gc-mandatory-star {
+  color: #d4351c;
+}
+
+.gc-date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #505a5f;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.gc-date-input:focus {
+  outline: 2px solid #f47738;
+}
+
+.gc-date-input:disabled,
+.gc-date-input.disabled {
+  background-color: #f3f2f1;
+  color: #0b0c0c;
+  cursor: not-allowed;
+  border-color: #b1b4b6;
+}
+
+.gc-comments-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gc-status-disconnected {
+  color: #a52a2a;
+  font-weight: 500;
+}
+
+.gc-field-label-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.gc-info-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.gc-info-tooltip svg {
+  width: 18px;
+  height: 18px;
+  fill: #505a5f;
+}
+
+.gc-info-tooltip:hover svg {
+  fill: #0b0c0c;
+}
+
+.gc-info-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 240px;
+  background-color: #333333;
+  color: #ffffff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  position: absolute;
+  z-index: 99999;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.gc-info-tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333333 transparent transparent transparent;
+}
+
+.gc-info-tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.gc-disconnect-payment-box {
+  background-color: #fbf1e8;
+  border-left: 4px solid #f47738;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.gc-disconnect-payment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.gc-disconnect-payment-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0b0c0c;
+}
+
+.gc-disconnect-payment-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #a52a2a;
+}
+
+.gc-disconnect-payment-note {
+  font-size: 13px;
+  color: #505a5f;
+  margin: 0;
+  line-height: 1.4;
+}
+

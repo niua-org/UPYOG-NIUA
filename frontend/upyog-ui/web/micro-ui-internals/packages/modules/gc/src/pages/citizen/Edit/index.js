@@ -158,6 +158,19 @@ const GCEdIt = () => {
         };
 
         await Digit.GCServices.update(workflowPayload, tenantId);
+      } else if (applicationStatus === "DISCONNECTED") {
+        const workflowPayload = {
+          garbageAccounts: [
+            {
+              ...formdata,
+              workflowAction: "RECONNECT",
+              workflowComment: "Service reconnection requested by citizen",
+              isOnlyWorkflowCall: true,
+            },
+          ],
+        };
+
+        await Digit.GCServices.update(workflowPayload, tenantId);
       }
 
       clearParams();

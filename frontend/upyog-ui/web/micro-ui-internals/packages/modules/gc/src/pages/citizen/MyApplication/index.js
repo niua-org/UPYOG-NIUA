@@ -68,8 +68,8 @@ export const GCMyApplications = () => {
 
   const statusOptions = getGCStatusOptions(t);
 
-  let filteredApplications = data?.garbageAccounts || data?.GarbageApplications || data?.data || [];
-  const totalCount = data?.applicationCount || data?.count || 0;
+  let filteredApplications = data?.garbageAccounts || [];
+  const totalCount = data?.applicationCount || 0;
 
   return (
     <React.Fragment>

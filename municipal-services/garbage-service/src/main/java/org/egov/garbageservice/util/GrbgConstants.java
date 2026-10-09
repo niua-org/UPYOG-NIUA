@@ -20,6 +20,7 @@ public class GrbgConstants {
     public static final String STATUS_PENDING_FOR_APPROVAL = "PENDING_FOR_APPROVAL";
     public static final String STATUS_EDIT_APPLICATION = "EDIT_APPLICATION";
     public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_DISCONNECTED = "DISCONNECTED";
     public static final String STATUS_REJECTED = "REJECTED";
 
     // Workflow Actions
@@ -27,6 +28,8 @@ public class GrbgConstants {
     public static final String WORKFLOW_ACTION_VERIFY = "VERIFY";
     public static final String WORKFLOW_ACTION_REJECT = "REJECT";
     public static final String WORKFLOW_ACTION_APPROVE = "APPROVE";
+    public static final String WORKFLOW_ACTION_DISCONNECT = "DISCONNECT";
+    public static final String WORKFLOW_ACTION_RECONNECT = "RECONNECT";
     public static final String WORKFLOW_ACTION_RAISE_QUERY_TO_CITIZEN = "RAISE_QUERY_TO_CITIZEN";
     public static final String WORKFLOW_ACTION_SEND_BACK_TO_VERIFIER = "SEND_BACK_TO_VERIFIER";
     public static final String WORKFLOW_ACTION_EDIT = "EDIT";
@@ -56,5 +59,11 @@ public class GrbgConstants {
     public static final String GARBAGE_MODEL = "Garbage";
 
     public static final String GARBAGE_PENALTY_TAX_HEAD = "GARBAGE_PENALTY";
+
+    // Service Disconnection & Reconnection Detail Keys
+    public static final String DISCONNECTION_DATE = "disconnectionDate";
+    public static final String DISCONNECTION_REASON = "disconnectionReason";
+    public static final String DISCONNECTION_HISTORY = "disconnectionHistory";
+    public static final String RECONNECTION_DATE = "reconnectionDate";
 
 }

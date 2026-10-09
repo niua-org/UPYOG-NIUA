@@ -2,6 +2,7 @@ import React from "react";
 import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { formatDateValue } from "../../../utils";
 import "../../../css/gc-inline-auto.css";
 
 // Garbage Collection Application Component
@@ -22,11 +23,14 @@ const GCApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
 
-  const name = application?.name;
-  const mobileNumber = application?.mobileNumber;
+  const applicant = application?.additionalDetail?.applicantDetails?.[0];
+  const name = applicant?.applicantName;
+  const mobileNumber = applicant?.mobileNumber;
 
-  const appNo = application?.grbgApplication?.applicationNo || application?.grbgApplicationNumber || application?.applicationNo;
-  const appStatus = application?.grbgApplication?.status || application?.applicationStatus || application?.status;
+  const appNo = application?.grbgApplicationNumber;
+  const appStatus = application?.status;
+  const paymentStatus = application?.paymentStatus;
+  const paymentAmount = application?.paymentAmount;
 
   const propertyId = application?.propertyId;
   const collectionUnit = application?.grbgCollectionUnits?.[0] || {};
@@ -49,14 +53,36 @@ const GCApplication = ({ application, tenantId }) => {
       {propertyId && <KeyNote keyValue={t("GC_PROPERTY_ID")} note={propertyId} />}
       {category && <KeyNote keyValue={t("GC_CATEGORY")} note={t(category)} />}
       {typeOfCollection && <KeyNote keyValue={t("GC_TYPE_OF_COLLECTION")} note={t(typeOfCollection)} />}
-      <KeyNote keyValue={t("GC_APPLICATION_STATUS_LABEL")} note={appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA")} />
-      {application?.dueDate && <KeyNote keyValue={t("GC_DUE_DATE")} note={application.dueDate} />}
+      <KeyNote
+        keyValue={t("GC_APPLICATION_STATUS_LABEL")}
+        note={
+          appStatus ? (
+            <span className={appStatus === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
+              {t(`GC_STATUS_${appStatus}`)}
+            </span>
+          ) : (
+            t("CS_NA")
+          )
+        }
+      />
+      {paymentStatus && (
+        <KeyNote
+          keyValue={t("GC_PAYMENT_STATUS_LABEL")}
+          note={
+            <span className={paymentStatus === "PAID" ? "gc-status-paid" : "gc-status-pending"}>
+              {t(`GC_STATUS_${paymentStatus}`)}
+            </span>
+          }
+        />
+      )}
+      {paymentAmount !== undefined && paymentAmount !== null && <KeyNote keyValue={t("GC_PAYMENT_AMOUNT_LABEL")} note={`₹ ${paymentAmount}`} />}
+      {application?.dueDate && <KeyNote keyValue={t("GC_DUE_DATE")} note={formatDateValue(application.dueDate)} />}
       
-      <div className="gc-btn-row">
+      <div className="gc-card-btn-row">
         <Link to={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(appNo)}`}>
           <SubmitBar label={t("CS_VIEW_DETAILS")} />
         </Link>
-        {appStatus === "PENDING_FOR_PAYMENT" && (
+        {paymentStatus === "PENDING_FOR_PAYMENT" && (
           <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
         )}
         {appStatus === "EDIT_APPLICATION" && (

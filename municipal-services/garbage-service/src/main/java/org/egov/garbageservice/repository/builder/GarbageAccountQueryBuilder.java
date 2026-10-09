@@ -35,7 +35,7 @@ public class GarbageAccountQueryBuilder {
             + ", sub_acc.id as sub_acc_id, sub_acc.uuid as sub_acc_uuid, sub_acc.garbage_id as sub_acc_garbage_id, sub_acc.property_id as sub_acc_property_id, sub_acc.type as sub_acc_type "
             + ", sub_acc.name as sub_acc_name, sub_acc.mobile_number as sub_acc_mobile_number, sub_acc.gender as sub_acc_gender, sub_acc.email_id as sub_acc_email_id, sub_acc.is_owner as sub_acc_is_owner"
             + ", sub_acc.user_uuid as sub_acc_user_uuid, sub_acc.declaration_uuid as sub_acc_declaration_uuid, sub_acc.status as sub_acc_status, sub_acc.business_service as sub_acc_business_service"
-            + ", sub_acc.approval_date as sub_acc_approval_date, sub_acc.channel as sub_acc_channel"
+            + ", sub_acc.approval_date as sub_acc_approval_date, sub_acc.channel as sub_acc_channel, sub_acc.payment_status as sub_acc_payment_status, sub_acc.payment_amount as sub_acc_payment_amount"
             + ", sub_acc.created_by as sub_acc_created_by, sub_acc.created_date as sub_acc_created_date, sub_acc.last_modified_by as sub_acc_last_modified_by"
             + ", sub_acc.last_modified_date as sub_acc_last_modified_date, sub_acc.additional_detail as sub_acc_additional_detail, sub_acc.tenant_id as sub_acc_tenant_id, sub_acc.parent_account as sub_acc_parent_account, sub_acc.is_active as sub_acc_is_active, sub_acc.sub_account_count as sub_acc_sub_account_count"
             + ", sub_old_dtl.uuid as sub_old_dtl_uuid, sub_old_dtl.garbage_id as sub_old_dtl_garbage_id, sub_old_dtl.old_garbage_id as sub_old_dtl_old_garbage_id"
@@ -74,15 +74,15 @@ public class GarbageAccountQueryBuilder {
             + SELECT_QUERY_ACCOUNT_INDEX;
     public static final String INSERT_ACCOUNT = "INSERT INTO ug_grbg_account (id, uuid, garbage_id, property_id, type, name"
             + ", mobile_number, gender, email_id, is_owner, user_uuid, declaration_uuid, status, additional_detail, created_by, created_date, "
-            + "last_modified_by, last_modified_date, tenant_id, parent_account, business_service, approval_date, is_active, channel) "
+            + "last_modified_by, last_modified_date, tenant_id, parent_account, business_service, approval_date, is_active, channel, payment_status, payment_amount) "
             + "VALUES (:id, :uuid, :garbageId, :propertyId, :type, :name, :mobileNumber, :gender, :emailId, :isOwner, :userUuid, :declarationUuid, "
             + ":status, :additionalDetail :: JSONB, :createdBy, :createdDate, "
-            + ":lastModifiedBy, :lastModifiedDate, :tenantId, :parentAccount, :businessService, :approvalDate, :isActive, :channel)";
+            + ":lastModifiedBy, :lastModifiedDate, :tenantId, :parentAccount, :businessService, :approvalDate, :isActive, :channel, :paymentStatus, :paymentAmount)";
     public static final String UPDATE_ACCOUNT_BY_ID = "UPDATE ug_grbg_account SET garbage_id = :garbageId, uuid =:uuid"
             + ", property_id = :propertyId, type = :type, name = :name, mobile_number = :mobileNumber, is_owner = :isOwner"
             + ", user_uuid = :userUuid, declaration_uuid = :declarationUuid, status = :status"
             + ", gender = :gender, email_id = :emailId, additional_detail = :additionalDetail :: JSONB, last_modified_by = :lastModifiedBy, last_modified_date = :lastModifiedDate,"
-            + " tenant_id = :tenantId, business_service = :businessService, approval_date = :approvalDate , channel= :channel, due_date = :dueDate WHERE id = :id";
+            + " tenant_id = :tenantId, business_service = :businessService, approval_date = :approvalDate , channel= :channel, due_date = :dueDate, payment_status = :paymentStatus, payment_amount = :paymentAmount WHERE id = :id";
     public static final String INSERT_ACCOUNT_AUDIT = "INSERT INTO ug_grbg_account_audit (auditid, grbg_application_no, status, type"
             + ", grbg_account_details, auditcreatedtime) VALUES ((select nextval('seq_ug_grbg_account_audit')), :grbgApplicationNo, :status"
             + ", :type, :grbgAccountDetails, (SELECT extract(epoch from now())))";
@@ -303,6 +303,13 @@ public class GarbageAccountQueryBuilder {
             isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, whereClause);
             whereClause.append(" acc.status IN ( ").append(
                             getQueryForCollection(searchCriteriaGarbageAccount.getStatusList(), preparedStatementValues))
+                    .append(" )");
+        }
+
+        if (!CollectionUtils.isEmpty(searchCriteriaGarbageAccount.getPaymentStatus())) {
+            isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, whereClause);
+            whereClause.append(" acc.payment_status IN ( ").append(
+                            getQueryForCollection(searchCriteriaGarbageAccount.getPaymentStatus(), preparedStatementValues))
                     .append(" )");
         }
 

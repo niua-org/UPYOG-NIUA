@@ -45,6 +45,8 @@ public class SearchCriteriaGarbageAccount {
 
     private List<String> statusList;
 
+    private List<String> paymentStatus;
+
     private List<String> channels;
 
     private List<String> wardNames;
@@ -103,7 +105,7 @@ public class SearchCriteriaGarbageAccount {
                 .propertyId(copyList(this.propertyId)).uuid(copyList(this.uuid)).user_uuid(copyList(this.user_uuid))
                 .type(copyList(this.type)).name(copyList(this.name)).mobileNumber(copyList(this.mobileNumber))
                 .createdBy(copyList(this.createdBy)).applicationNumber(copyList(this.applicationNumber))
-                .tenantId(this.tenantId).status(copyList(this.status)).statusList(copyList(this.statusList)).isOwner(this.isOwner)
+                .tenantId(this.tenantId).status(copyList(this.status)).statusList(copyList(this.statusList)).paymentStatus(copyList(this.paymentStatus)).isOwner(this.isOwner)
                 .parentAccount(this.parentAccount).orderBy(this.orderBy).startId(this.startId).endId(this.endId)
                 .isActiveSubAccount(this.isActiveSubAccount).isActiveAccount(this.isActiveAccount)
                 .isSchedulerCall(this.isSchedulerCall).offset(this.offset).limit(this.limit)

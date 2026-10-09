@@ -70,8 +70,7 @@ const GCSearchApplication = ({ tenantId, isLoading, t, onSubmit, onClear, data, 
       Header: t("GC_APPLICANT_NAME"),
       disableSortBy: true,
       Cell: ({ row }) => {
-        const owners = row.original?.applicantDetails || [];
-        const name = owners?.map((o) => o?.name || o?.applicantName)?.join(", ") || row.original?.name || row.original?.garbageSpecification?.name;
+        const name = row.original?.name;
         return GetCell(name || t("CS_NA"));
       },
     },
@@ -79,8 +78,7 @@ const GCSearchApplication = ({ tenantId, isLoading, t, onSubmit, onClear, data, 
       Header: t("GC_MOBILE_NUMBER"),
       disableSortBy: true,
       Cell: ({ row }) => {
-        const owners = row.original?.applicantDetails || [];
-        const mobile = owners?.map((o) => o?.mobileNumber)?.join(", ") || row.original?.mobileNumber || row.original?.garbageSpecification?.phoneNumber;
+        const mobile = row.original?.mobileNumber;
         return GetCell(mobile || t("CS_NA"));
       },
     },
@@ -88,8 +86,34 @@ const GCSearchApplication = ({ tenantId, isLoading, t, onSubmit, onClear, data, 
       Header: t("PT_COMMON_TABLE_COL_STATUS_LABEL"),
       disableSortBy: true,
       Cell: ({ row }) => {
-        const status = row.original?.applicationStatus || row.original?.status || row.original?.grbgApplication?.status;
-        return GetCell(status ? t(`GC_STATUS_${status}`) : t("CS_NA"));
+        const status = row.original?.status;
+        if (!status) return GetCell(t("CS_NA"));
+        return (
+          <span className={status === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
+            {t(`GC_STATUS_${status}`)}
+          </span>
+        );
+      },
+    },
+    {
+      Header: t("GC_PAYMENT_STATUS_LABEL"),
+      disableSortBy: true,
+      Cell: ({ row }) => {
+        const paymentStatus = row.original?.paymentStatus;
+        if (!paymentStatus) return GetCell(t("CS_NA"));
+        return (
+          <span className={paymentStatus === "PAID" ? "gc-status-paid" : "gc-status-pending"}>
+            {t(`GC_STATUS_${paymentStatus}`)}
+          </span>
+        );
+      },
+    },
+    {
+      Header: t("GC_PAYMENT_AMOUNT_LABEL"),
+      disableSortBy: true,
+      Cell: ({ row }) => {
+        const paymentAmount = row.original?.paymentAmount;
+        return GetCell(paymentAmount !== undefined && paymentAmount !== null ? `₹ ${paymentAmount}` : t("CS_NA"));
       },
     },
   ], [t]);
