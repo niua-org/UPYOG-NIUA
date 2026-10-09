@@ -41,7 +41,7 @@ load_dotenv(override=True)
 #     client = QdrantClient(":memory:")
     
 
-# # Initialize local filesystem Qdrant database with fallback for concurrent access
+# Initialize local filesystem Qdrant database with fallback for concurrent access
 try:
     client = QdrantClient(path="./qdrant_storage")
 except Exception as e:
