@@ -295,7 +295,7 @@ public class GarbageAccountQueryBuilder {
 
         if (!CollectionUtils.isEmpty(searchCriteriaGarbageAccount.getStatus())) {
             isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, whereClause);
-            whereClause.append(" acc.status IN ( ").append(getQueryForCollection(searchCriteriaGarbageAccount.getStatus(),
+            whereClause.append(" app.status IN ( ").append(getQueryForCollection(searchCriteriaGarbageAccount.getStatus(),
                     preparedStatementValues)).append(" )");
         }
 
