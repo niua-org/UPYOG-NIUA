@@ -83,14 +83,27 @@ const GCSearchApplication = ({ tenantId, isLoading, t, onSubmit, onClear, data, 
       },
     },
     {
-      Header: t("PT_COMMON_TABLE_COL_STATUS_LABEL"),
+      Header: t("GC_APPLICATION_STATUS_LABEL"),
       disableSortBy: true,
       Cell: ({ row }) => {
-        const status = row.original?.status;
-        if (!status) return GetCell(t("CS_NA"));
+        const appStatus = row.original?.applicationStatus;
+        if (!appStatus) return GetCell(t("CS_NA"));
         return (
-          <span className={status === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
-            {t(`GC_STATUS_${status}`)}
+          <span className={appStatus === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
+            {t(`GC_STATUS_${appStatus}`)}
+          </span>
+        );
+      },
+    },
+    {
+      Header: t("GC_SERVICE_STATUS_LABEL"),
+      disableSortBy: true,
+      Cell: ({ row }) => {
+        const serviceStatus = row.original?.status;
+        if (!serviceStatus) return GetCell(t("CS_NA"));
+        return (
+          <span className={serviceStatus === "ACTIVE" ? "gc-status-paid" : "gc-status-disconnected"}>
+            {t(serviceStatus)}
           </span>
         );
       },

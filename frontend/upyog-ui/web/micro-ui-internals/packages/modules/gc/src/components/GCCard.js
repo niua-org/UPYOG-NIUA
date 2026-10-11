@@ -51,6 +51,7 @@ const GCCard = () => {
     ],
     links: [
       { label: t("GC_INBOX"), link: `/upyog-ui/employee/gc/inbox` },
+      { label: t("GC_NEW_REGISTRATION"), link: `/upyog-ui/employee/gc/new-registration` },
       { label: t("GC_SEARCH_APPLICATION"), link: `/upyog-ui/employee/gc/search` },
     ],
   };

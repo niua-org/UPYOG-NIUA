@@ -42,7 +42,11 @@ export const GCSearch = {
           { title: "GC_APPLICATION_NUMBER_LABEL", value: app?.grbgApplicationNumber || t("CS_NA") },
           {
             title: "GC_APPLICATION_STATUS_LABEL",
-            value: app?.status ? t(`GC_STATUS_${app.status}`) : t("CS_NA"),
+            value: app?.applicationStatus ? t(`GC_STATUS_${app.applicationStatus}`) : t("CS_NA"),
+          },
+          {
+            title: "GC_SERVICE_STATUS_LABEL",
+            value: t(app?.status) || t("CS_NA"),
           },
           ...(app?.paymentStatus
             ? [
@@ -54,10 +58,10 @@ export const GCSearch = {
             : []),
           ...(app?.paymentAmount !== undefined && app?.paymentAmount !== null ? [{ title: "GC_PAYMENT_AMOUNT_LABEL", value: `₹ ${app.paymentAmount}` }] : []),
           ...(app?.dueDate ? [{ title: "GC_DUE_DATE", value: formatDateValue(app.dueDate) }] : []),
-          ...(app?.status === "DISCONNECTED" && app?.additionalDetail?.disconnectionDate
+          ...(app?.applicationStatus === "DISCONNECTED" && app?.additionalDetail?.disconnectionDate
             ? [{ title: "GC_DISCONNECTION_DATE_LABEL", value: formatDateValue(app.additionalDetail.disconnectionDate) }]
             : []),
-          ...(app?.status === "DISCONNECTED" && app?.additionalDetail?.disconnectionReason
+          ...(app?.applicationStatus === "DISCONNECTED" && app?.additionalDetail?.disconnectionReason
             ? [{ title: "GC_REASON_FOR_DISCONNECTION", value: app.additionalDetail.disconnectionReason }]
             : []),
         ],

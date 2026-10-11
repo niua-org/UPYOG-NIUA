@@ -136,8 +136,7 @@ const GCEdIt = () => {
   const handleSubmit = async () => {
     try {
       const formdata = GCAPIToFormData(application, params);
-      const applicationStatus =
-        application?.applicationStatus || application?.status || application?.grbgApplication?.status;
+      const applicationStatus = application?.applicationStatus;
 
       // Persist the edited form first. The garbage-service deliberately treats
       // workflow-only requests separately and reloads the account from storage.
@@ -150,8 +149,11 @@ const GCEdIt = () => {
           garbageAccounts: [
             {
               ...formdata,
-              workflowAction: "EDIT",
-              workflowComment: "Application resubmitted by citizen",
+              workflow: {
+                action: "EDIT",
+                comments: "Application resubmitted by citizen",
+                assignes: [],
+              },
               isOnlyWorkflowCall: true,
             },
           ],
@@ -163,8 +165,11 @@ const GCEdIt = () => {
           garbageAccounts: [
             {
               ...formdata,
-              workflowAction: "RECONNECT",
-              workflowComment: "Service reconnection requested by citizen",
+              workflow: {
+                action: "RECONNECT",
+                comments: "Service reconnection requested by citizen",
+                assignes: [],
+              },
               isOnlyWorkflowCall: true,
             },
           ],

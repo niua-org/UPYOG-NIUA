@@ -107,6 +107,7 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                 garbageAccount.setGrbgApplicationNumber(
                         null != garbageApplication.getApplicationNo() ? garbageApplication.getApplicationNo()
                                 : null);
+                garbageAccount.setApplicationStatus(garbageApplication.getStatus());
             }
 
 
@@ -160,6 +161,7 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                         && null == subGarbageAccount.getGrbgApplication()) {
                     GrbgApplication subGarbageApplication = populateGarbageApplication(rs, "sub_app_");
                     subGarbageAccount.setGrbgApplication(subGarbageApplication);
+                    subGarbageAccount.setApplicationStatus(subGarbageApplication.getStatus());
                 }
 
 

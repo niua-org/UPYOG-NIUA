@@ -6,7 +6,7 @@ import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails
 import GCPaymentHistoryModal from "../../components/GCPaymentHistoryModal";
 import GCPauseServiceModal from "../../components/GCPauseServiceModal";
 import GCPauseHistoryModal from "../../components/GCPauseHistoryModal";
-import { downloadGCReceipt, downloadGCAcknowledgement, createDisconnectPayload, createReconnectPayload } from "../../utils";
+import { downloadGCReceipt, downloadGCAcknowledgement, createDisconnectPayload } from "../../utils";
 import "../../css/gc-inline-auto.css";
 
 /**
@@ -105,24 +105,20 @@ const ApplicationDetails = () => {
   }
 
   const appNo = application?.grbgApplicationNumber;
-  const rawStatus = application?.status || "";
-  const appStatus = rawStatus.toUpperCase();
+  const appStatus = application?.applicationStatus || "";
+  const serviceStatus = application?.status || "";
   const paymentStatus = application?.paymentStatus;
   const paymentAmount = application?.paymentAmount;
 
   const user = Digit.UserService.getUser();
   const userRoles = user?.info?.roles?.map((e) => e.code) || [];
-  const nextActions = workflowDetails?.data?.nextActions || [];
-  const hasWorkflowAction = nextActions.some((e) => {
-    return userRoles.some((role) => e.roles?.includes(role)) || !e.roles;
-  });
-
-  const canDisconnect = nextActions.some((a) => a.action === "DISCONNECT" && (userRoles.some((r) => a.roles?.includes(r)) || !a.roles));
-  const canReconnect = nextActions.some((a) => a.action === "RECONNECT" && (userRoles.some((r) => a.roles?.includes(r)) || !a.roles));
+  const availableActions = workflowDetails?.data?.actionState?.actions || [];
+  const canDisconnect = availableActions.some((a) => a.action === "DISCONNECT");
+  const canReconnect = availableActions.some((a) => a.action === "RECONNECT");
   const isPendingPayment = paymentStatus === "PENDING_FOR_PAYMENT" || (Number(paymentAmount) > 0 && paymentStatus !== "PAID");
 
   const handleMakePayment = () => {
-    navigate(`/upyog-ui/employee/payment/collect/garbage-service/${encodeURIComponent(appNo)}`);
+    navigate(`/upyog-ui/employee/payment/collect/garbage-service/${appNo}`);
   };
 
   const handleDisconnectService = async (params) => {
@@ -140,7 +136,7 @@ const ApplicationDetails = () => {
               label: t("GC_REDIRECTING_TO_PAYMENT"),
             });
             setTimeout(() => {
-              navigate(`/upyog-ui/employee/payment/collect/garbage-service/${encodeURIComponent(appNo)}`);
+              navigate(`/upyog-ui/employee/payment/collect/garbage-service/${appNo}`);
             }, 1500);
           } else {
             setShowToast({
@@ -169,35 +165,8 @@ const ApplicationDetails = () => {
     }
   };
 
-  const handleContinueService = async () => {
-    try {
-      const payload = createReconnectPayload(application, "GC_SERVICE_RECONNECTION_REQUESTED");
-
-      mutate(payload, {
-        onSuccess: () => {
-          setShowToast({
-            key: "success",
-            message: t("GC_RECONNECT_SERVICE_SUCCESS"),
-            label: t("GC_RECONNECT_SERVICE_SUCCESS"),
-          });
-          refetchApplication?.();
-          workflowDetails?.revalidate?.();
-        },
-        onError: (err) => {
-          setShowToast({
-            key: "error",
-            message: err?.message || t("GC_RECONNECT_SERVICE_FAILED"),
-            error: { message: err?.message || t("GC_RECONNECT_SERVICE_FAILED") },
-          });
-        },
-      });
-    } catch (error) {
-      setShowToast({
-        key: "error",
-        message: error?.message || t("GC_RECONNECT_SERVICE_FAILED"),
-        error: { message: error?.message || t("GC_RECONNECT_SERVICE_FAILED") },
-      });
-    }
+  const handleContinueService = () => {
+    navigate(`/upyog-ui/employee/gc/edit/${appNo}`);
   };
 
   const rawDetailsArray = applicationDetails?.applicationData?.applicationDetails || [];
@@ -209,14 +178,30 @@ const ApplicationDetails = () => {
        * and appends interactive history modal links with custom styling and skip:true flag.
        */
       const applicationValues = (section?.values || []).map((row) => {
+        // Service Status styling (Green for ACTIVE, Red for INACTIVE)
+        if (row?.title === "GC_SERVICE_STATUS_LABEL") {
+          return {
+            ...row,
+            value: serviceStatus ? (
+              <span className={serviceStatus === "ACTIVE" ? "gc-status-paid" : "gc-status-disconnected"}>
+                {t(serviceStatus)}
+              </span>
+            ) : (
+              t("CS_NA")
+            ),
+            skip: true,
+          };
+        }
         // Application Status styling (e.g. Red badge for DISCONNECTED)
         if (row?.title === "GC_APPLICATION_STATUS_LABEL") {
           return {
             ...row,
-            value: (
+            value: appStatus ? (
               <span className={appStatus === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
                 {t(`GC_STATUS_${appStatus}`)}
               </span>
+            ) : (
+              t("CS_NA")
             ),
             skip: true,
           };

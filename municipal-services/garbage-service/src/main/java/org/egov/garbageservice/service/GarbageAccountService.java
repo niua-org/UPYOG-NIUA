@@ -271,7 +271,6 @@ public class GarbageAccountService {
             }
         }
         if (garbageAccount.getWorkflow() != null) {
-            garbageAccount.setWorkflowAction(garbageAccount.getWorkflow().getAction());
             if (!CollectionUtils.isEmpty(garbageAccount.getWorkflow().getDocuments())) {
                 if (garbageAccount.getDocuments() == null) {
                     garbageAccount.setDocuments(new ArrayList<>());
@@ -280,10 +279,13 @@ public class GarbageAccountService {
             }
         }
         if (garbageAccount.getApplicationStatus() != null) {
-            garbageAccount.setStatus(garbageAccount.getApplicationStatus());
             if (garbageAccount.getGrbgApplication() != null) {
                 garbageAccount.getGrbgApplication().setStatus(garbageAccount.getApplicationStatus());
             }
+        }
+
+        if (StringUtils.isBlank(garbageAccount.getGrbgApplicationNumber()) && garbageAccount.getGrbgApplication() != null) {
+            garbageAccount.setGrbgApplicationNumber(garbageAccount.getGrbgApplication().getApplicationNo());
         }
 
         // persist applicantDetails into additionalDetail (JSONB) so the new payload's
@@ -629,6 +631,7 @@ public class GarbageAccountService {
                 .garbageId(garbageAccount.getGarbageId()).build();
 
         garbageAccount.setGrbgApplication(grbgApplication);
+        garbageAccount.setApplicationStatus(GrbgConstants.STATUS_INITIATED);
     }
 
     /**
@@ -701,8 +704,9 @@ public class GarbageAccountService {
         garbageAccount.setId(garbageAccountRepository.getNextSequence());
         garbageAccount.setUuid(UUID.randomUUID().toString());
         garbageAccount.setGarbageId(garbageAccountRepository.getNextGarbageId());
-        garbageAccount.setStatus(GrbgConstants.STATUS_INITIATED);
-        garbageAccount.setWorkflowAction(GrbgConstants.WORKFLOW_ACTION_APPLY);
+        garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_INACTIVE);
+        garbageAccount.setApplicationStatus(GrbgConstants.STATUS_INITIATED);
+        garbageAccount.getWorkflow().setAction(GrbgConstants.WORKFLOW_ACTION_APPLY);
         garbageAccount.setParentAccount(null);
         garbageAccount.setIsActive(true);
         garbageAccount.setSubAccountCount(Optional.ofNullable(garbageAccount.getChildGarbageAccounts()).map(List::size)
@@ -809,9 +813,14 @@ public class GarbageAccountService {
                     updateGarbageRequest.getGarbageAccounts(), true);
             existingGarbageIdAccountsMap = searchGarbageAccountMap(searchCriteriaGarbageAccount,
                     updateGarbageRequest.getRequestInfo());
-            existingGarbageApplicationAccountsMap = existingGarbageIdAccountsMap.entrySet().stream().collect(
-                    Collectors.toMap(a -> a.getValue().getGrbgApplication().getApplicationNo(), b -> b.getValue()));
+            existingGarbageApplicationAccountsMap = existingGarbageIdAccountsMap.entrySet().stream()
+                    .filter(a -> a.getValue() != null && StringUtils.isNotBlank(a.getValue().getGrbgApplicationNumber()))
+                    .collect(Collectors.toMap(
+                            a -> a.getValue().getGrbgApplicationNumber(),
+                            Map.Entry::getValue,
+                            (existing, replacement) -> existing));
         } catch (Exception e) {
+            log.error("Failed searching garbage accounts during update: {}", e.getMessage(), e);
             throw new CustomException("FAILED_SEARCH_GARBAGE_ACCOUNTS", "Search Garbage account details failed.");
         }
 
@@ -860,7 +869,7 @@ public class GarbageAccountService {
 
                 log.info("Pushing update request to Kafka. GarbageId: {}, ApplicationNo: {}, Topic: {}",
                         newGarbageAccount.getGarbageId(),
-                        newGarbageAccount.getGrbgApplication() != null ? newGarbageAccount.getGrbgApplication().getApplicationNo() : null,
+                        newGarbageAccount.getGrbgApplicationNumber(),
                         config.getUpdateGarbageAccountTopic());
 
                 producer.push(
@@ -1004,21 +1013,34 @@ public class GarbageAccountService {
      */
 
     private void generateDemandAndBill(GarbageAccountRequest updateGarbageRequest) {
+        if (updateGarbageRequest == null || CollectionUtils.isEmpty(updateGarbageRequest.getGarbageAccounts())) {
+            return;
+        }
         updateGarbageRequest.getGarbageAccounts().stream().forEach(account -> {
+            String action = (account.getWorkflow() != null) ? account.getWorkflow().getAction() : null;
 
-            if (StringUtils.equalsIgnoreCase(GrbgConstants.WORKFLOW_ACTION_APPROVE,
-                    account.getWorkflowAction())) {
+            if (StringUtils.equalsIgnoreCase(GrbgConstants.WORKFLOW_ACTION_APPROVE, action)) {
+                String businessService = config.getBusinessService();
+                String consumerCode = account.getGrbgApplicationNumber();
 
-                demandService.generateDemand(updateGarbageRequest.getRequestInfo(), account,
-                        java.time.LocalDate.now());
+                account.setBusinessService(businessService);
+                account.setGrbgApplicationNumber(consumerCode);
 
-                // fetch/create bill
-                GenerateBillCriteria billCriteria = GenerateBillCriteria.builder().tenantId(account.getTenantId())
-                        .businessService(account.getBusinessService()).consumerCode(account.getGrbgApplicationNumber())
-                        .build();
-                BillResponse billResponse = billService.generateBill(updateGarbageRequest.getRequestInfo(),
-                        billCriteria);
+                log.info("Generating demand and bill on APPROVE for application: {}", consumerCode);
+                try {
+                    demandService.generateDemand(updateGarbageRequest.getRequestInfo(), account,
+                            java.time.LocalDate.now());
 
+                    // fetch/create bill
+                    GenerateBillCriteria billCriteria = GenerateBillCriteria.builder().tenantId(account.getTenantId())
+                            .businessService(businessService).consumerCode(consumerCode)
+                            .build();
+                    BillResponse billResponse = billService.generateBill(updateGarbageRequest.getRequestInfo(),
+                            billCriteria);
+                    log.info("Bill generated successfully on approval for application: {}", consumerCode);
+                } catch (Exception e) {
+                    log.error("Failed to generate demand and bill on approval for application {}: {}", consumerCode, e.getMessage(), e);
+                }
             }
         });
     }
@@ -1053,57 +1075,61 @@ public class GarbageAccountService {
                     });
                 }
             }
+            String action = (account.getWorkflow() != null) ? account.getWorkflow().getAction() : null;
             if (BooleanUtils.isTrue(account.getIsOnlyWorkflowCall())) {
 
                 Boolean tempBol = account.getIsOnlyWorkflowCall();
-                String tempApplicationNo = null != account.getGrbgApplicationNumber()
-                        ? account.getGrbgApplicationNumber()
-                        : account.getGrbgApplication().getApplicationNo();
-                String action = account.getWorkflowAction();
+                String tempApplicationNo = account.getGrbgApplicationNumber();
                 String status = getStatusOrAction(action, true);
-                String comment = account.getWorkflowComment();
 
                 GarbageAccount accountTemp = objectMapper
                         .convertValue(
-                                existingGarbageApplicationAccountsMap.get(
-                                        null != account.getGrbgApplicationNumber() ? account.getGrbgApplicationNumber()
-                                                : account.getGrbgApplication().getApplicationNo()),
+                                existingGarbageApplicationAccountsMap.get(tempApplicationNo),
                                 GarbageAccount.class);
                 if (null == accountTemp) {
                     throw new CustomException("FAILED_SEARCH_GARBAGE_ACCOUNTS",
-                            "Garbage Account not found to run workflow.");
+                            "Garbage Account not found to run workflow for application: " + tempApplicationNo);
                 }
 
                 accountTemp.setIsOnlyWorkflowCall(tempBol);
                 accountTemp.setGrbgApplicationNumber(tempApplicationNo);
-                accountTemp.setWorkflowAction(action);
-                accountTemp.setWorkflowComment(comment);
-                accountTemp.setStatus(status);
-                accountTemp.getGrbgApplication().setStatus(status);
+                accountTemp.setApplicationStatus(status);
+                if (accountTemp.getGrbgApplication() != null) {
+                    accountTemp.getGrbgApplication().setStatus(status);
+                }
+                accountTemp.setStatus(StringUtils.equalsIgnoreCase(status, GrbgConstants.STATUS_APPROVED)
+                        ? GrbgConstants.SERVICE_STATUS_ACTIVE
+                        : GrbgConstants.SERVICE_STATUS_INACTIVE);
                 accountTemp.setWorkflow(account.getWorkflow());
+                if (account.getAdditionalDetail() != null) {
+                    accountTemp.setAdditionalDetail(account.getAdditionalDetail());
+                }
 
+                final String finalStatus = status;
                 if (!CollectionUtils.isEmpty(accountTemp.getChildGarbageAccounts())) {
                     accountTemp.getChildGarbageAccounts().stream().forEach(child -> {
-                        child.setWorkflowAction(action);
-                        child.setStatus(status);
-                        child.getGrbgApplication().setStatus(status);
+                        child.setApplicationStatus(finalStatus);
+                        child.setWorkflow(account.getWorkflow());
+                        if (child.getGrbgApplication() != null) {
+                            child.getGrbgApplication().setStatus(finalStatus);
+                        }
+                        child.setStatus(StringUtils.equalsIgnoreCase(finalStatus, GrbgConstants.STATUS_APPROVED)
+                                ? GrbgConstants.SERVICE_STATUS_ACTIVE
+                                : GrbgConstants.SERVICE_STATUS_INACTIVE);
                     });
                 }
 
 //				accountTemp.setChildGarbageAccounts(null);			// at a time only 1 app no provided for WF
 
                 garbageAccountRequestTemp.getGarbageAccounts().add(accountTemp);
-            } else if (StringUtils.equals(account.getWorkflowAction(), GrbgConstants.WORKFLOW_ACTION_APPLY)
-                    || StringUtils.equals(account.getWorkflowAction(),
-                    GrbgConstants.WORKFLOW_ACTION_EDIT)) {
-                // this block will work only when update Account and action is INITIATE
-                GarbageAccount accountTemp = objectMapper.convertValue(
-                        existingGarbageApplicationAccountsMap.get(account.getGrbgApplication().getApplicationNo()),
-                        GarbageAccount.class);
-                if (null == accountTemp) {
-                    throw new CustomException("FAILED_SEARCH_GARBAGE_ACCOUNTS", "Garbage Account not found to update.");
+            } else if (StringUtils.equals(action, GrbgConstants.WORKFLOW_ACTION_APPLY)
+                    || StringUtils.equals(action, GrbgConstants.WORKFLOW_ACTION_EDIT)
+                    || StringUtils.equals(action, GrbgConstants.WORKFLOW_ACTION_RECONNECT)) {
+                String appNo = account.getGrbgApplicationNumber();
+                GarbageAccount accountTemp = existingGarbageApplicationAccountsMap.get(appNo);
+                if (accountTemp != null && account.getGrbgApplication() == null) {
+                    account.setGrbgApplication(accountTemp.getGrbgApplication());
                 }
-                account.setGrbgApplication(accountTemp.getGrbgApplication());
                 garbageAccountRequestTemp.getGarbageAccounts().add(account);
             } else {
                 garbageAccountRequestTemp.getGarbageAccounts().add(account);
@@ -1129,6 +1155,8 @@ public class GarbageAccountService {
         map.put(GrbgConstants.WORKFLOW_ACTION_APPLY, GrbgConstants.STATUS_PENDING_FOR_VERIFICATION);
         map.put(GrbgConstants.WORKFLOW_ACTION_VERIFY, GrbgConstants.STATUS_PENDING_FOR_APPROVAL);
         map.put(GrbgConstants.WORKFLOW_ACTION_APPROVE, GrbgConstants.STATUS_APPROVED);
+        map.put(GrbgConstants.WORKFLOW_ACTION_DISCONNECT, GrbgConstants.STATUS_DISCONNECTED);
+        map.put(GrbgConstants.WORKFLOW_ACTION_RECONNECT, GrbgConstants.STATUS_PENDING_FOR_VERIFICATION);
         map.put(GrbgConstants.WORKFLOW_ACTION_REJECT, GrbgConstants.STATUS_REJECTED);
         map.put(GrbgConstants.WORKFLOW_ACTION_RAISE_QUERY_TO_CITIZEN, GrbgConstants.STATUS_EDIT_APPLICATION);
         map.put(GrbgConstants.WORKFLOW_ACTION_SEND_BACK_TO_VERIFIER, GrbgConstants.STATUS_PENDING_FOR_VERIFICATION);
@@ -1193,14 +1221,19 @@ public class GarbageAccountService {
                                         .build())
                                 .collect(Collectors.toList());
                     }
+                    String parentAction = (newGarbageAccount.getWorkflow() != null && StringUtils.isNotBlank(newGarbageAccount.getWorkflow().getAction()))
+                            ? newGarbageAccount.getWorkflow().getAction()
+                            : getStatusOrAction(newGarbageAccount.getStatus(), false);
+                    String parentComment = (newGarbageAccount.getWorkflow() != null)
+                            ? newGarbageAccount.getWorkflow().getComments()
+                            : null;
+
                     ProcessInstance parentProcessInstance = ProcessInstance.builder()
                             .tenantId(newGarbageAccount.getTenantId()).businessService(businessService)
                             .moduleName(GrbgConstants.WORKFLOW_MODULE_NAME)
                             .businessId(newGarbageAccount.getGrbgApplication().getApplicationNo())
-                            .action(null != newGarbageAccount.getWorkflowAction()
-                                    ? newGarbageAccount.getWorkflowAction()
-                                    : getStatusOrAction(newGarbageAccount.getStatus(), false))
-                            .comment(newGarbageAccount.getWorkflowComment())
+                            .action(parentAction)
+                            .comment(parentComment)
                             .documents(wfDocuments)
                             .build();
 
@@ -1212,22 +1245,27 @@ public class GarbageAccountService {
                         if (updateGarbageRequest.getCreateChildAccountOnly()) {
                             action = GrbgConstants.WORKFLOW_ACTION_APPLY;
                         } else {
-                            action = null != newGarbageAccount.getWorkflowAction()
-                                    ? newGarbageAccount.getWorkflowAction()
+                            action = (newGarbageAccount.getWorkflow() != null && StringUtils.isNotBlank(newGarbageAccount.getWorkflow().getAction()))
+                                    ? newGarbageAccount.getWorkflow().getAction()
                                     : getStatusOrAction(newGarbageAccount.getStatus(), false);
                         }
-                            ProcessInstance subProcessInstance = ProcessInstance.builder()
-                                    .tenantId(subAccount.getTenantId()).businessService(businessService)
-                                    .moduleName(GrbgConstants.WORKFLOW_MODULE_NAME)
-                                    .businessId(subAccount.getGrbgApplication().getApplicationNo()).action(action)
-                                    .comment(newGarbageAccount.getWorkflowComment()).build();
+                        String subComment = (newGarbageAccount.getWorkflow() != null)
+                                ? newGarbageAccount.getWorkflow().getComments()
+                                : null;
+                        ProcessInstance subProcessInstance = ProcessInstance.builder()
+                                .tenantId(subAccount.getTenantId()).businessService(businessService)
+                                .moduleName(GrbgConstants.WORKFLOW_MODULE_NAME)
+                                .businessId(subAccount.getGrbgApplication().getApplicationNo()).action(action)
+                                .comment(subComment).build();
 
-                            processInstances.add(subProcessInstance);
-                        }
+                        processInstances.add(subProcessInstance);
                     }
+                }
 
-                if (!StringUtils.isEmpty(newGarbageAccount.getWorkflowAction()) && newGarbageAccount.getWorkflowAction()
-                        .equalsIgnoreCase(GrbgConstants.WORKFLOW_ACTION_APPROVE)) {
+                String currentWfAction = (newGarbageAccount.getWorkflow() != null)
+                        ? newGarbageAccount.getWorkflow().getAction()
+                        : null;
+                if (StringUtils.equalsIgnoreCase(currentWfAction, GrbgConstants.WORKFLOW_ACTION_APPROVE)) {
                     newGarbageAccount.setApprovalDate(new Date().getTime());
                     if (!CollectionUtils.isEmpty(newGarbageAccount.getChildGarbageAccounts())) {
                         for (GarbageAccount subAccount : newGarbageAccount.getChildGarbageAccounts()) {
@@ -1260,19 +1298,23 @@ public class GarbageAccountService {
     private void updateAndEnrichGarbageAccountObjects(GarbageAccount newGarbageAccount,
                                                       GarbageAccount existingGarbageAccount, Map<String, String> applicationNumberToCurrentStatus) {
 
-        // 1. update application
+        // 1. update application and status
         if (null != newGarbageAccount.getGrbgApplication()) {
-            // enrich application
             if (null != existingGarbageAccount.getGrbgApplication()) {
                 newGarbageAccount.getGrbgApplication().setUuid(existingGarbageAccount.getGrbgApplication().getUuid());
             }
             String currentStatus = applicationNumberToCurrentStatus.get(newGarbageAccount.getGrbgApplication().getApplicationNo());
             if (null != currentStatus) {
+                newGarbageAccount.setApplicationStatus(currentStatus);
                 newGarbageAccount.getGrbgApplication().setStatus(currentStatus);
-            } else if (null != newGarbageAccount.getStatus()) {
-                newGarbageAccount.getGrbgApplication().setStatus(newGarbageAccount.getStatus());
             }
         }
+
+        // Account status: ACTIVE if application is APPROVED, otherwise INACTIVE
+        String serviceStatus = StringUtils.equalsIgnoreCase(newGarbageAccount.getApplicationStatus(), GrbgConstants.STATUS_APPROVED)
+                ? GrbgConstants.SERVICE_STATUS_ACTIVE
+                : GrbgConstants.SERVICE_STATUS_INACTIVE;
+        newGarbageAccount.setStatus(serviceStatus);
 
         // 2. update commercial details
 //			// create commercial details
@@ -1422,7 +1464,7 @@ public class GarbageAccountService {
             if (null != grbgAcc.getGarbageId() && 0 <= grbgAcc.getGarbageId()) {
                 garbageIds.add(grbgAcc.getGarbageId());
             }
-            if (!StringUtils.isEmpty(grbgAcc.getGrbgApplicationNumber())) {
+            if (StringUtils.isNotBlank(grbgAcc.getGrbgApplicationNumber())) {
                 applicationNos.add(grbgAcc.getGrbgApplicationNumber());
             }
         });

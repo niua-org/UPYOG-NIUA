@@ -62,12 +62,9 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
   }, [action, uploadedFile, isUploading]);
 
   function submit(data) {
-    const workflowAction=action?.action;
-    const workflowComment=data?.comments;
-    const isOnlyWorkflowCall=true;
+    const isOnlyWorkflowCall = true;
     const workflow = {
       action: action?.action,
-      comment: data?.comments,
       comments: data?.comments,
       assignes: [],
       businessService,
@@ -86,8 +83,6 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
       garbageAccounts: [
         {
           ...applicationData,
-          workflowAction,
-          workflowComment,
           isOnlyWorkflowCall,
           workflow,
         },

@@ -2,6 +2,8 @@ import { AppContainer, BreadCrumb, PrivateRoute } from "@nudmcdgnpm/digit-ui-rea
 import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import GCCreate from "../citizen/Create/index";
+import GCEdit from "../citizen/Edit";
 
 const GCBreadCrumb = ({ location }) => {
   const { t } = useTranslation();
@@ -80,6 +82,8 @@ const EmployeeApp = ({ path, url, userType }) => {
               </PrivateRoute>
             }
           />
+          <Route path="new-registration/*" element={<PrivateRoute><GCCreate /></PrivateRoute>} />
+          <Route path="edit/:applicationNo/*" element={<PrivateRoute><GCEdit /></PrivateRoute>} />
           <Route path="application-details/:applicationNo/*" element={<PrivateRoute><ApplicationDetails key={location.pathname} parentUrl={url} /></PrivateRoute>} />
           <Route path="search" element={<PrivateRoute><Search /></PrivateRoute>} />
           <Route path="new-application/*" element={<PrivateRoute><Create parentUrl={url} /></PrivateRoute>} />

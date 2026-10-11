@@ -65,5 +65,7 @@ public class GrbgConstants {
     public static final String DISCONNECTION_REASON = "disconnectionReason";
     public static final String DISCONNECTION_HISTORY = "disconnectionHistory";
     public static final String RECONNECTION_DATE = "reconnectionDate";
+    public static final String SERVICE_STATUS_ACTIVE = "ACTIVE";
+    public static final String SERVICE_STATUS_INACTIVE = "INACTIVE";
 
 }

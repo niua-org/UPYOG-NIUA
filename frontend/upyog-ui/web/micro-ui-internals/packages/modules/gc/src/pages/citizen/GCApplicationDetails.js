@@ -6,7 +6,7 @@ import GCWFApplicationTimeline from "../../pageComponents/GCWFApplicationTimelin
 import GCPaymentHistoryModal from "../../components/GCPaymentHistoryModal";
 import GCPauseServiceModal from "../../components/GCPauseServiceModal";
 import GCPauseHistoryModal from "../../components/GCPauseHistoryModal";
-import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits, formatDateValue, createDisconnectPayload, createReconnectPayload } from "../../utils";
+import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits, formatDateValue, createDisconnectPayload } from "../../utils";
 import "../../css/gc-inline-auto.css";
 
 /**
@@ -130,7 +130,7 @@ const GCApplicationDetails = () => {
       if (params.hasPendingPayment) {
         setShowToast({ key: "info", label: t("GC_REDIRECTING_TO_PAYMENT") });
         setTimeout(() => {
-          navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${encodeURIComponent(appNo)}`);
+          navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
         }, 1500);
       } else {
         setShowToast({ key: "success", label: t("GC_DISCONNECT_REQUEST_SUCCESS") });
@@ -142,28 +142,20 @@ const GCApplicationDetails = () => {
     }
   };
 
-  const handleContinueService = async () => {
-    try {
-      const payload = createReconnectPayload(application, "GC_SERVICE_RECONNECTION_REQUESTED");
-
-      await mutateAsync(payload);
-      navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`);
-    } catch (error) {
-      setShowToast({ key: "error", label: t("GC_ACTION_FAILED") });
-    }
+  const handleContinueService = () => {
+    navigate(`/upyog-ui/citizen/gc/edit/${appNo}`);
   };
 
   const appNo = application?.grbgApplicationNumber;
-  const rawStatus = application?.status || "";
-  const appStatus = rawStatus.toUpperCase();
+  const appStatus = application?.applicationStatus;
   const dueDate = application?.dueDate;
   const paymentStatus = application?.paymentStatus;
   const paymentAmount = application?.paymentAmount;
-
-  const nextActions = workflowDetails?.data?.nextActions || [];
-  const canDisconnect = nextActions.some((a) => a.action === "DISCONNECT");
-  const canReconnect = nextActions.some((a) => a.action === "RECONNECT");
-  const canEdit = nextActions.some((a) => a.action === "EDIT");
+  const serviceStatus = application?.status || "";
+  const availableActions = workflowDetails?.actionState?.actions || [];
+  const canDisconnect = availableActions.some((a) => a.action === "DISCONNECT");
+  const canReconnect = availableActions.some((a) => a.action === "RECONNECT");
+  const canEdit = availableActions.some((a) => a.action === "EDIT");
   const isPendingPayment = paymentStatus === "PENDING_FOR_PAYMENT" || (Number(paymentAmount) > 0 && paymentStatus !== "PAID");
 
 
@@ -257,6 +249,17 @@ const GCApplicationDetails = () => {
           <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_APPLICATION_SUMMARY")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("GC_APPLICATION_NUMBER_LABEL")} text={appNo || t("CS_NA")} />
+            {serviceStatus && (
+              <Row
+                className="border-none"
+                label={t("GC_SERVICE_STATUS_LABEL")}
+                text={
+                  <span className={serviceStatus === "ACTIVE" ? "gc-status-paid" : "gc-status-disconnected"}>
+                    {t(serviceStatus)}
+                  </span>
+                }
+              />
+            )}
             <Row
               className="border-none"
               label={t("GC_APPLICATION_STATUS_LABEL")}
@@ -295,7 +298,7 @@ const GCApplicationDetails = () => {
                 }
               />
             )}
-            {paymentAmount !== null && (
+            {paymentAmount !== undefined && paymentAmount !== null && (
               <Row
                 className="border-none"
                 label={t("GC_PAYMENT_AMOUNT_LABEL")}
@@ -416,7 +419,7 @@ const GCApplicationDetails = () => {
                 <SubmitBar
                   label={t("GC_EDIT_APPLICATION", "Edit Application")}
                   onSubmit={() =>
-                    navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`)
+                    navigate(`/upyog-ui/citizen/gc/edit/${appNo}`)
                   }
                 />
               )}

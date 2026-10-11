@@ -13,6 +13,10 @@ import org.egov.garbageservice.web.models.SchedulerLog;
 import org.egov.garbageservice.kafka.Producer;
 import org.egov.garbageservice.repository.DemandRepository;
 import org.egov.garbageservice.repository.GarbageAccountRepository;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.lang3.StringUtils;
+import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.util.GrbgUtils;
 import org.egov.garbageservice.util.MdmsUtil;
 import org.egov.garbageservice.util.ServiceConstants;
@@ -64,6 +68,7 @@ public class DemandService {
      *   <li>Assembles the {@link DemandDetail} elements (tax, penalty, and rebate).</li>
      *   <li>Saves the new demand and optionally updates the history of unpaid demands.</li>
      *   <li>Logs the generation event to Kafka for asynchronous tracking.</li>
+     *   <li>Updates the garbage account with the new due date, pending payment status, archives previous disconnection history, and pushes the updated account to Kafka.</li>
      * </ol>
      *
      * @param requestInfo    the contextual information for the API request
@@ -74,6 +79,8 @@ public class DemandService {
     public void generateDemand(RequestInfo requestInfo,
                                GarbageAccount garbageAccount,
                                LocalDate billingDate) {
+
+        String consumerCode = garbageAccount.getGrbgApplicationNumber();
 
         LocalDate periodFrom = billingDate;
         LocalDate periodTo = billingDate.plusMonths(1).minusDays(1);
@@ -89,7 +96,7 @@ public class DemandService {
                 demandRepository.searchAllDemands(
                         requestInfo,
                         garbageAccount.getTenantId(),
-                        garbageAccount.getGrbgApplicationNumber(),
+                        consumerCode,
                         config.getBusinessService(),
                         false);
 
@@ -102,18 +109,20 @@ public class DemandService {
         if (alreadyGenerated) {
             log.info(
                     "Demand already exists for garbage account {}, period {} to {}",
-                    garbageAccount.getGrbgApplicationNumber(),
+                    consumerCode,
                     periodFrom,
                     periodTo);
+            updateDisconnectionHistory(garbageAccount, userUuid, requestInfo);
+            garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
             return;
         }
 
         AmountCalculationResult currentAmount =
-                calculationService.calculateAmount(garbageAccount);
+                calculationService.calculateAmount(requestInfo, garbageAccount);
 
         log.info(
                 "Generating demand for garbage account {}, period {} to {}, amount {}",
-                garbageAccount.getGrbgApplicationNumber(),
+                consumerCode,
                 periodFrom,
                 periodTo,
                 currentAmount.getPayableAmount()
@@ -123,7 +132,7 @@ public class DemandService {
                 demandRepository.searchAllDemands(
                         requestInfo,
                         garbageAccount.getTenantId(),
-                        garbageAccount.getGrbgApplicationNumber(),
+                        consumerCode,
                         config.getBusinessService(),
                         true);
 
@@ -212,7 +221,7 @@ public class DemandService {
         }
 
         Demand demand = Demand.builder()
-                .consumerCode(garbageAccount.getGrbgApplicationNumber())
+                .consumerCode(consumerCode)
                 .demandDetails(demandDetails)
                 .payer(payer)
                 .tenantId(garbageAccount.getTenantId())
@@ -235,7 +244,7 @@ public class DemandService {
         SchedulerLog schedulerLog =
                 SchedulerLog.builder()
                         .id(UUID.randomUUID().toString())
-                        .garbageAccountId(garbageAccount.getGrbgApplicationNumber())
+                        .garbageAccountId(consumerCode)
                         .tenantId(garbageAccount.getTenantId())
                         .billingDate(billingDate)
                         .billingPeriodFrom(convertToTimestamp(periodFrom))
@@ -254,30 +263,93 @@ public class DemandService {
                 config.getSchedulerLogTopic(),
                 Map.of("schedulerLog", schedulerLog));
 
-        // Update allotment due date and status to PENDING_FOR_PAYMENT
+        /**
+         * Post-demand account synchronization:
+         * 1. Updates billing metadata on the account (due date, payment amount, and PENDING_FOR_PAYMENT status).
+         * 2. If resuming from a disconnection, updates disconnection history array with reconnection date,
+         *    clears active disconnection keys, and resets status to ACTIVE.
+         * 3. Updates audit details and persists the updated GarbageAccount via Kafka.
+         */
         try {
+            // 1. Set billing attributes
             garbageAccount.setDueDate(periodTo);
-            garbageAccount.setStatus(ServiceConstants.STATUS_PENDING_FOR_PAYMENT);
-            if (garbageAccount.getGrbgApplication() != null) {
-                garbageAccount.getGrbgApplication().setStatus(ServiceConstants.STATUS_PENDING_FOR_PAYMENT);
-            }
-            String updaterUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : ServiceConstants.STATUS_SYSTEM;
+            garbageAccount.setPaymentStatus(ServiceConstants.STATUS_PENDING_FOR_PAYMENT);
+            garbageAccount.setPaymentAmount(finalAmount);
+            garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+
+            // 2. If resuming from disconnection, update disconnection history and reactivate service status
+            updateDisconnectionHistory(garbageAccount, userUuid, requestInfo);
+
+            // 3. Update audit details and push account update to Kafka
             if (garbageAccount.getAuditDetails() != null) {
-                garbageAccount.getAuditDetails().setLastModifiedBy(updaterUuid);
+                garbageAccount.getAuditDetails().setLastModifiedBy(userUuid);
                 garbageAccount.getAuditDetails().setLastModifiedTime(Instant.now().toEpochMilli());
             } else {
-                garbageAccount.setAuditDetails(GrbgUtils.getAuditDetails(updaterUuid, false));
+                garbageAccount.setAuditDetails(GrbgUtils.getAuditDetails(userUuid, false));
             }
             GarbageAccountRequest garbageAccountRequest = new GarbageAccountRequest(requestInfo, List.of(garbageAccount), false, false);
             garbageAccountRepository.save(config.getUpdateGarbageAccountTopic(), garbageAccountRequest);
-            log.info("Updated Garbage Account due date to {} and status to PENDING_FOR_PAYMENT for Garbage Account Id: {}", periodTo, garbageAccount.getGrbgApplicationNumber());
+            log.info("Updated Garbage Account due date to {}, payment status to PENDING_FOR_PAYMENT, payment amount to {} for Garbage Account Id: {}", periodTo, finalAmount, consumerCode);
         } catch (Exception e) {
-            log.error("Failed to update allotment due date and status on demand generation: {}", e.getMessage(), e);
+            log.error("Failed to update allotment due date, payment status and payment amount on demand generation: {}", e.getMessage(), e);
         }
 
         log.info(
                 "Demand generated successfully for garbage account {}",
-                garbageAccount.getGrbgApplicationNumber());
+                consumerCode);
+    }
+
+    /**
+     * Updates and archives the disconnection history log when a garbage account resumes billing or service.
+     *
+     * <p>Checks if active disconnection fields exist in {@code additionalDetail}. If found,
+     * appends the disconnection cycle (disconnection date, reason, and reconnection date) into
+     * the {@code disconnectionHistory} array, clears the active disconnection attributes, resets
+     * the service status to {@code ACTIVE}, and persists the updated account state.
+     *
+     * @param garbageAccount the {@link GarbageAccount} whose disconnection history is being updated
+     * @param userUuid       the UUID of the user triggering the update
+     * @param requestInfo    the {@link RequestInfo} providing request metadata and user context
+     */
+    public void updateDisconnectionHistory(GarbageAccount garbageAccount, String userUuid, RequestInfo requestInfo) {
+        try {
+            if (garbageAccount != null && garbageAccount.getAdditionalDetail() != null && garbageAccount.getAdditionalDetail().isObject()) {
+                ObjectNode addDetail = (ObjectNode) garbageAccount.getAdditionalDetail();
+                String dDate = addDetail.hasNonNull(GrbgConstants.DISCONNECTION_DATE)
+                        ? addDetail.get(GrbgConstants.DISCONNECTION_DATE).asText() : null;
+                String dReason = addDetail.hasNonNull(GrbgConstants.DISCONNECTION_REASON)
+                        ? addDetail.get(GrbgConstants.DISCONNECTION_REASON).asText() : null;
+
+                if (StringUtils.isNotBlank(dDate)) {
+                    ArrayNode history = addDetail.has(GrbgConstants.DISCONNECTION_HISTORY) && addDetail.get(GrbgConstants.DISCONNECTION_HISTORY).isArray()
+                            ? (ArrayNode) addDetail.get(GrbgConstants.DISCONNECTION_HISTORY)
+                            : addDetail.putArray(GrbgConstants.DISCONNECTION_HISTORY);
+                    ObjectNode entry = history.addObject();
+                    entry.put(GrbgConstants.DISCONNECTION_DATE, dDate.trim());
+                    if (StringUtils.isNotBlank(dReason)) {
+                        entry.put(GrbgConstants.DISCONNECTION_REASON, dReason.trim());
+                    }
+                    entry.put(GrbgConstants.RECONNECTION_DATE, LocalDate.now().toString());
+
+                    addDetail.remove(GrbgConstants.DISCONNECTION_DATE);
+                    addDetail.remove(GrbgConstants.DISCONNECTION_REASON);
+                    garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+
+                    if (garbageAccount.getAuditDetails() != null) {
+                        garbageAccount.getAuditDetails().setLastModifiedBy(userUuid);
+                        garbageAccount.getAuditDetails().setLastModifiedTime(Instant.now().toEpochMilli());
+                    } else {
+                        garbageAccount.setAuditDetails(GrbgUtils.getAuditDetails(userUuid, false));
+                    }
+                    GarbageAccountRequest garbageAccountRequest = new GarbageAccountRequest(requestInfo, List.of(garbageAccount), false, false);
+                    garbageAccountRepository.save(config.getUpdateGarbageAccountTopic(), garbageAccountRequest);
+                    log.info("Updated disconnection history for Garbage Account: {}", garbageAccount.getGrbgApplicationNumber());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to update disconnection history for Garbage Account {}: {}",
+                    garbageAccount != null ? garbageAccount.getGrbgApplicationNumber() : "null", e.getMessage(), e);
+        }
     }
 
     /**

@@ -23,12 +23,12 @@ const GCApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
 
-  const applicant = application?.additionalDetail?.applicantDetails?.[0];
-  const name = applicant?.applicantName;
-  const mobileNumber = applicant?.mobileNumber;
+  const name = application?.name;
+  const mobileNumber = application?.mobileNumber;
 
   const appNo = application?.grbgApplicationNumber;
-  const appStatus = application?.status;
+  const appStatus = application?.applicationStatus;
+  const serviceStatus = application?.status;
   const paymentStatus = application?.paymentStatus;
   const paymentAmount = application?.paymentAmount;
 
@@ -59,6 +59,18 @@ const GCApplication = ({ application, tenantId }) => {
           appStatus ? (
             <span className={appStatus === "DISCONNECTED" ? "gc-status-disconnected" : ""}>
               {t(`GC_STATUS_${appStatus}`)}
+            </span>
+          ) : (
+            t("CS_NA")
+          )
+        }
+      />
+      <KeyNote
+        keyValue={t("GC_SERVICE_STATUS_LABEL")}
+        note={
+          serviceStatus ? (
+            <span className={serviceStatus === "ACTIVE" ? "gc-status-paid" : "gc-status-disconnected"}>
+              {t(serviceStatus)}
             </span>
           ) : (
             t("CS_NA")

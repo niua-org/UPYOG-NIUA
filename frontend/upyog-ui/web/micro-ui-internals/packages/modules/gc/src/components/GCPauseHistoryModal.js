@@ -26,11 +26,10 @@ const GCPauseHistoryModal = ({ isOpen, onClose, application }) => {
 
   const additionalDetail = application?.additionalDetail || {};
   const disconnectionHistory = additionalDetail?.disconnectionHistory || [];
-  const currentDisconnectionDate = additionalDetail.disconnectionDate;
-  const currentDisconnectionReason = additionalDetail.disconnectionReason;
-  const isDisconnected = application?.status === "DISCONNECTED";
+  const currentDisconnectionDate = additionalDetail?.disconnectionDate;
+  const currentDisconnectionReason = additionalDetail?.disconnectionReason;
 
-  const hasHistory = disconnectionHistory.length > 0 || (isDisconnected && Boolean(currentDisconnectionDate));
+  const hasHistory = disconnectionHistory.length > 0 || Boolean(currentDisconnectionDate);
 
   const formatDate = (dVal) => formatDateValue(dVal, t("CS_NA"));
 
@@ -43,8 +42,8 @@ const GCPauseHistoryModal = ({ isOpen, onClose, application }) => {
       >
         {hasHistory ? (
           <div className="gc-modal-content">
-            {/* Active Disconnection if currently disconnected */}
-            {isDisconnected && currentDisconnectionDate && (
+            {/* Active Disconnection Card */}
+            {currentDisconnectionDate && (
               <div className="gc-receipt-card" style={{ borderLeft: "4px solid #d9534f" }}>
                 <StatusTable className="gc-receipt-status-table">
                   <Row

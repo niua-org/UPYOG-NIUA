@@ -21,7 +21,7 @@ import java.util.List;
  * Links property, applicant details, workflow action, nested application/commercial data, bills, and child accounts.
  * Persisted and returned by GarbageAccountService on create, update, search, and status transitions.
  */
-@EqualsAndHashCode(exclude = {"id", "uuid", "garbageId", "propertyId", "isOnlyWorkflowCall", "workflowAction", "workflowComment", "grbgApplication", "grbgCommercialDetails", "auditDetails", "garbageBills", "childGarbageAccounts"})
+@EqualsAndHashCode(exclude = {"id", "uuid", "garbageId", "propertyId", "isOnlyWorkflowCall", "grbgApplication", "grbgCommercialDetails", "auditDetails", "garbageBills", "childGarbageAccounts"})
 public class GarbageAccount {
 
     private Long id;
@@ -62,12 +62,6 @@ public class GarbageAccount {
 
     @CustomSafeHtml
     private String declarationUuid;
-
-    @CustomSafeHtml
-    private String workflowAction;
-
-    @CustomSafeHtml
-    private String workflowComment;
 
     @Builder.Default
     private Boolean isOnlyWorkflowCall = false;
