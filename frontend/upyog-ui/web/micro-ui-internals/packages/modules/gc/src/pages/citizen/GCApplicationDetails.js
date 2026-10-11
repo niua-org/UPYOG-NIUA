@@ -169,6 +169,10 @@ const GCApplicationDetails = () => {
       label: t("GC_FEE_RECEIPT"),
       onClick: () => downloadGCReceipt(reciept_data.Payments[0].tenantId, reciept_data.Payments[0]),
     });
+    downloadOptions.push({
+      label: t("GC_VIEW_PAYMENT_HISTORY"),
+      onClick: () => setShowPaymentHistoryModal(true),
+    });
   }
   downloadOptions.push({
     label: t("GC_VIEW_DISCONNECTION_HISTORY"),
