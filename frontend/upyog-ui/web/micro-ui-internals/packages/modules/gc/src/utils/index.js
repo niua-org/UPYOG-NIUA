@@ -368,36 +368,10 @@ export const createDisconnectPayload = (application, { disconnectionDate, reason
           disconnectionDate: disconnectionDate,
           disconnectionReason: reasonText,
         },
-        ...(hasPendingPayment
-          ? {}
-          : {
-              workflowAction: "DISCONNECT",
-              isOnlyWorkflowCall: true,
-            }),
+        ...(!hasPendingPayment ? { isOnlyWorkflowCall: true } : {}),
         workflow: {
           action: hasPendingPayment ? "EDIT" : "DISCONNECT",
           comments: comments || (reasonText ? `GC_DISCONNECT_SERVICE: ${reasonText}` : "GC_SERVICE_DISCONNECTION_REQUESTED"),
-          assignes: [],
-        },
-      },
-    ],
-  };
-};
-
-/**
- * Builds the update payload for reconnecting / resuming a disconnected garbage collection service.
- * @param {object} application - Current garbage account application object
- * @param {string} comments - Reconnection workflow comments code
- * @returns {object} - Payload object formatted for Digit.GCServices.update
- */
-export const createReconnectPayload = (application, comments = "GC_SERVICE_RECONNECTION_REQUESTED") => {
-  return {
-    garbageAccounts: [
-      {
-        ...application,
-        workflow: {
-          action: "RECONNECT",
-          comments: comments || "GC_SERVICE_RECONNECTION_REQUESTED",
           assignes: [],
         },
       },
