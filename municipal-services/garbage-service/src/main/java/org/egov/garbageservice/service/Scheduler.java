@@ -7,7 +7,6 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.garbageservice.web.models.GarbageAccount;
 import org.egov.garbageservice.web.models.SearchCriteriaGarbageAccount;
 import org.egov.garbageservice.repository.GarbageAccountRepository;
-import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.util.ServiceConstants;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -84,7 +83,7 @@ public class Scheduler {
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
 
         SearchCriteriaGarbageAccount criteria = SearchCriteriaGarbageAccount.builder()
-                .status(List.of(GrbgConstants.SERVICE_STATUS_ACTIVE, ServiceConstants.STATUS_APPROVED))
+                .status(List.of(ServiceConstants.STATUS_APPROVED))
                 .build();
 
         List<GarbageAccount> garbageAccounts =
