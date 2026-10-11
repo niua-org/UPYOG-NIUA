@@ -1,11 +1,11 @@
 package org.egov.nationaldashboardingest.audit;
 
-import org.egov.externalaudit.config.ExternalApiAuditProperties;
-import org.egov.externalaudit.constants.ExternalApiAuditConstants;
-import org.egov.externalaudit.job.ExternalApiAuditCleanupJob;
-import org.egov.externalaudit.job.ExternalApiAuditReconciliationJob;
-import org.egov.externalaudit.model.ExternalApiAuditDetail;
-import org.egov.externalaudit.model.ExternalApiErrorDetails;
+import org.upyog.externalaudit.config.ExternalApiAuditProperties;
+import org.upyog.externalaudit.constants.ExternalApiAuditConstants;
+import org.upyog.externalaudit.job.ExternalApiAuditCleanupJob;
+import org.upyog.externalaudit.job.ExternalApiAuditReconciliationJob;
+import org.upyog.externalaudit.model.ExternalApiAuditDetail;
+import org.upyog.externalaudit.model.ExternalApiErrorDetails;
 import org.egov.nationaldashboardingest.audit.support.ExternalApiAuditTableHarness;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

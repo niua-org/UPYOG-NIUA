@@ -47,3 +47,13 @@ CREATE TABLE IF NOT EXISTS ug_external_api_error_detail (
 
 CREATE INDEX IF NOT EXISTS idx_ug_external_api_error_detail_correlation_id ON ug_external_api_error_detail (correlation_id);
 CREATE INDEX IF NOT EXISTS idx_ug_external_api_error_detail_created_time ON ug_external_api_error_detail (created_time);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ug_external_api_message_raw_detail_correlation_id_unique ON ug_external_api_message_raw_detail (correlation_id);
+
+
+CREATE TABLE IF NOT EXISTS shedlock (
+    name       VARCHAR(64)  NOT NULL PRIMARY KEY,
+    lock_until TIMESTAMP    NOT NULL,
+    locked_at  TIMESTAMP    NOT NULL,
+    locked_by  VARCHAR(255) NOT NULL
+);

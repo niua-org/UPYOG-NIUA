@@ -2,8 +2,8 @@ package org.egov.nationaldashboardingest.audit;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
-import org.egov.externalaudit.constants.ExternalApiAuditConstants;
-import org.egov.externalaudit.service.ExternalApiAuditLogger;
+import org.upyog.externalaudit.constants.ExternalApiAuditConstants;
+import org.upyog.externalaudit.service.ExternalApiAuditLogger;
 import org.egov.nationaldashboardingest.audit.support.ExternalApiAuditTableHarness;
 import org.egov.nationaldashboardingest.service.IngestService;
 import org.egov.nationaldashboardingest.utils.ResponseInfoFactory;

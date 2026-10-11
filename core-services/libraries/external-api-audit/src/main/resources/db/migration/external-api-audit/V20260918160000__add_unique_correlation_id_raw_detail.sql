@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX IF NOT EXISTS idx_ug_external_api_message_raw_detail_correlation_id_unique ON ug_external_api_message_raw_detail (correlation_id);
