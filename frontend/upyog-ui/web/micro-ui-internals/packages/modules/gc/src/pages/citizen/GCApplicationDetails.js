@@ -417,7 +417,7 @@ const GCApplicationDetails = () => {
               )}
               {canEdit && (
                 <SubmitBar
-                  label={t("GC_EDIT_APPLICATION", "Edit Application")}
+                  label={t("GC_EDIT_APPLICATION")}
                   onSubmit={() =>
                     navigate(`/upyog-ui/citizen/gc/edit/${appNo}`)
                   }
@@ -425,7 +425,7 @@ const GCApplicationDetails = () => {
               )}
               {isPendingPayment && (
                 <SubmitBar
-                  label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT", "Make Payment")}
+                  label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")}
                   onSubmit={handleMakePayment}
                 />
               )}
@@ -437,13 +437,13 @@ const GCApplicationDetails = () => {
           <Modal
             headerBarMain={<h1 className="heading-m">{t(`WF_EMPLOYEE_GC_${selectedAction.action}`)}</h1>}
             headerBarEnd={<CloseBtn onClick={() => setSelectedAction(null)} />}
-            actionCancelLabel={t("CS_COMMON_CANCEL", "Cancel")}
+            actionCancelLabel={t("CS_COMMON_CANCEL")}
             actionCancelOnSubmit={() => setSelectedAction(null)}
-            actionSaveLabel={t("CS_COMMON_SUBMIT", "Submit")}
+            actionSaveLabel={t("CS_COMMON_SUBMIT")}
             actionSaveOnSubmit={submitWorkflowAction}
           >
             <Card style={{ padding: "0px", margin: "0px", boxShadow: "none" }}>
-              <CardText>{t("WF_COMMON_COMMENTS", "Comments")}</CardText>
+              <CardText>{t("WF_COMMON_COMMENTS")}</CardText>
               <TextArea value={comments} onChange={(e) => setComments(e.target.value)} />
             </Card>
           </Modal>
