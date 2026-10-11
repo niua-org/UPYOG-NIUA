@@ -1,5 +1,5 @@
-import React from "react";
-import { Modal, StatusTable, Row, CloseSvg } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { useState, useEffect } from "react";
+import { Modal, StatusTable, Row, CloseSvg, LinkButton } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { formatDateValue } from "../utils";
 import "../css/gc-inline-auto.css";
@@ -10,17 +10,23 @@ const CloseBtn = (props) => (
   </div>
 );
 
+const initialLimit = 5;
+
 /**
  * GCDisconnectionHistoryModal Component
  * 
  * Displays full disconnection / reconnection service history for an application.
- * Extracts events from:
- * 1. application.additionalDetail.disconnectionHistory
- * 2. Active application.additionalDetail (disconnectionDate / disconnectionReason)
- * 3. Workflow timeline actions (DISCONNECT / RECONNECT)
+ * Supports "Load More" pagination for accounts with multiple disconnection cycles over years.
  */
 const GCPauseHistoryModal = ({ isOpen, onClose, application }) => {
   const { t } = useTranslation();
+  const [visibleCount, setVisibleCount] = useState(initialLimit);
+
+  useEffect(() => {
+    if (isOpen) {
+      setVisibleCount(initialLimit);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -30,6 +36,13 @@ const GCPauseHistoryModal = ({ isOpen, onClose, application }) => {
   const currentDisconnectionReason = additionalDetail?.disconnectionReason;
 
   const hasHistory = disconnectionHistory.length > 0 || Boolean(currentDisconnectionDate);
+
+  const visibleHistory = disconnectionHistory.slice(0, visibleCount);
+  const hasMore = disconnectionHistory.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + initialLimit);
+  };
 
   const formatDate = (dVal) => formatDateValue(dVal, t("CS_NA"));
 
@@ -68,7 +81,7 @@ const GCPauseHistoryModal = ({ isOpen, onClose, application }) => {
             )}
 
             {/* Past Disconnection Cycles from disconnectionHistory */}
-            {disconnectionHistory.map((item, index) => (
+            {visibleHistory.map((item, index) => (
               <div key={index} className="gc-receipt-card">
                 <StatusTable className="gc-receipt-status-table">
                   <Row
@@ -96,9 +109,18 @@ const GCPauseHistoryModal = ({ isOpen, onClose, application }) => {
                 </StatusTable>
               </div>
             ))}
+
+            {hasMore && (
+              <div className="gc-load-more-container">
+                <LinkButton
+                  label={`${t("CS_COMMON_LOAD_MORE")} (${visibleHistory.length}/${disconnectionHistory.length})`}
+                  onClick={handleLoadMore}
+                />
+              </div>
+            )}
           </div>
         ) : (
-          <div className="gc-no-history-text" style={{ textAlign: "center", padding: "20px" }}>
+          <div className="gc-no-history-text">
             {t("GC_NO_DISCONNECTION_HISTORY_FOUND")}
           </div>
         )}

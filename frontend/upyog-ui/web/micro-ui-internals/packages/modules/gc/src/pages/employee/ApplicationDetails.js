@@ -1,4 +1,4 @@
-import { Header, Loader, MultiLink, ActionBar, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
+import { Header, Loader, MultiLink, ActionBar, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -340,14 +340,6 @@ const ApplicationDetails = () => {
         onClose={() => setShowDisconnectionHistoryModal(false)}
         application={application}
       />
-
-      {showToast && (
-        <Toast
-          error={showToast.key === "error"}
-          label={showToast.label || showToast.message}
-          onClose={() => setShowToast(null)}
-        />
-      )}
     </div>
   );
 };

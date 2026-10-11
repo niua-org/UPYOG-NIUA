@@ -1,5 +1,5 @@
-import React from "react";
-import { Modal, StatusTable, Row, CloseSvg } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { useState, useEffect } from "react";
+import { Modal, StatusTable, Row, CloseSvg, LinkButton } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { downloadGCReceipt } from "../utils";
 import "../css/gc-inline-auto.css";
@@ -10,16 +10,33 @@ const CloseBtn = (props) => (
   </div>
 );
 
+const initialLimit = 5;
+
 /**
  * GCPaymentHistoryModal Component
  * 
  * Reusable modal popup to display previous bills and payment history
  * for both Citizen and Employee views.
+ * Supports "Load More" pagination to comfortably display multiple years of payment history.
  */
 const GCPaymentHistoryModal = ({ isOpen, onClose, payments = [], tenantId }) => {
   const { t } = useTranslation();
+  const [visibleCount, setVisibleCount] = useState(initialLimit);
+
+  useEffect(() => {
+    if (isOpen) {
+      setVisibleCount(initialLimit);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const visiblePayments = payments.slice(0, visibleCount);
+  const hasMore = payments.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + initialLimit);
+  };
 
   return (
     <div className="gc-payment-history-modal">
@@ -30,7 +47,7 @@ const GCPaymentHistoryModal = ({ isOpen, onClose, payments = [], tenantId }) => 
       >
         {payments && payments.length > 0 ? (
           <div className="gc-modal-content">
-            {payments.map((payment, index) => {
+            {visiblePayments.map((payment, index) => {
               const detail = payment?.paymentDetails?.[0];
               const receiptNo = detail?.receiptNumber;
               const receiptDate = detail?.receiptDate ? Digit.DateUtils.ConvertEpochToDate(detail.receiptDate) : t("CS_NA");
@@ -92,6 +109,15 @@ const GCPaymentHistoryModal = ({ isOpen, onClose, payments = [], tenantId }) => 
                 </div>
               );
             })}
+
+            {hasMore && (
+              <div className="gc-load-more-container">
+                <LinkButton
+                  label={`${t("CS_COMMON_LOAD_MORE")} (${visiblePayments.length}/${payments.length})`}
+                  onClick={handleLoadMore}
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div className="gc-no-history-text">

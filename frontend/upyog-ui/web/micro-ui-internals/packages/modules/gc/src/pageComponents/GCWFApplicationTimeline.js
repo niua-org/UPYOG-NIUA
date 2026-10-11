@@ -1,5 +1,5 @@
-import { CardSectionHeader, CheckPoint, ConnectingCheckPoints, Loader, TelePhone, DisplayPhotos } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { Fragment } from "react";
+import { CardSectionHeader, CheckPoint, ConnectingCheckPoints, Loader, TelePhone, DisplayPhotos, LinkButton } from "@nudmcdgnpm/digit-ui-react-components";
+import React, { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -49,6 +49,7 @@ const GCWFCaption = ({ data, OpenImage }) => {
  * with assignee details, timestamps, comments, and attachments.
  * Fetches workflow history using the `useWorkflowDetails` hook.
  * Renders a single `CheckPoint` for one-step workflows or `ConnectingCheckPoints` for multi-step.
+ * Supports collapsible timeline toggle (defaults to 2 most recent steps, with Expand/Collapse button).
  * 
  * Props:
  * - `application`: The GC application object containing tenantId, applicationNo/grbgApplicationNumber,
@@ -56,6 +57,7 @@ const GCWFCaption = ({ data, OpenImage }) => {
  */
 const GCWFApplicationTimeline = ({ application }) => {
   const { t } = useTranslation();
+  const [showAllTimeline, setShowAllTimeline] = useState(false);
   const businessService = application?.businessService || "garbage-service";
 
   const { isLoading, data } = Digit.Hooks.useWorkflowDetails({
@@ -66,6 +68,10 @@ const GCWFApplicationTimeline = ({ application }) => {
       enabled: !!(application?.tenantId && (application?.grbgApplication?.applicationNo || application?.grbgApplicationNumber)),
     },
   });
+
+  const toggleTimeline = () => {
+    setShowAllTimeline((prev) => !prev);
+  };
 
   function OpenImage(imageSource, index, thumbnailsToShow) {
     window.open(thumbnailsToShow?.fullImage?.[0], "_blank");
@@ -107,17 +113,25 @@ const GCWFApplicationTimeline = ({ application }) => {
             />
           ) : (
             <ConnectingCheckPoints>
-              {data.timeline.map((checkpoint, index) => (
-                <React.Fragment key={index}>
-                  <CheckPoint
-                    keyValue={index}
-                    isCompleted={index === 0}
-                    label={t(data?.processInstances?.[index]?.state?.["state"] || checkpoint.state || "NA")}
-                    customChild={getTimelineCaptions(checkpoint)}
-                  />
-                </React.Fragment>
-              ))}
+              {data.timeline
+                .slice(0, showAllTimeline ? data.timeline.length : 2)
+                .map((checkpoint, index) => (
+                  <React.Fragment key={index}>
+                    <CheckPoint
+                      keyValue={index}
+                      isCompleted={index === 0}
+                      label={t(data?.processInstances?.[index]?.state?.["state"] || checkpoint.state || "NA")}
+                      customChild={getTimelineCaptions(checkpoint)}
+                    />
+                  </React.Fragment>
+                ))}
             </ConnectingCheckPoints>
+          )}
+          {data?.timeline?.length > 2 && (
+            <LinkButton
+              label={showAllTimeline ? t("COLLAPSE") : t("VIEW_TIMELINE")}
+              onClick={toggleTimeline}
+            />
           )}
         </Fragment>
       )}

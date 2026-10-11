@@ -63,6 +63,13 @@
   color: #505a5f;
 }
 
+.gc-load-more-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0 8px 0;
+}
+
 .gc-payment-history-modal .popup-module {
   width: 700px !important;
   max-width: 95vw !important;
