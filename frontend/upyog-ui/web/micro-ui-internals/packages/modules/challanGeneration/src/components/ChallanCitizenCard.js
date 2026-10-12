@@ -1,3 +1,12 @@
+/**
+ * ChallanCitizenCard Component
+ * -----------------------------------------------------------------------------
+ * Displays the Challan Generation module card on the Citizen Landing / Home Page.
+ * Renders quick navigation links (e.g., "My Payments") allowing citizens to access
+ * their challans and complete pending payments directly from their dashboard.
+ * -----------------------------------------------------------------------------
+ */
+
 import React from "react";
 import { CitizenHomeCard, MCollectIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";

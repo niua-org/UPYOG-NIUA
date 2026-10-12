@@ -1,3 +1,15 @@
+/**
+ * CitizenApp Component - Challan Generation Module
+ * -----------------------------------------------------------------------------
+ * Acts as the top-level citizen router for the Challan Generation module.
+ * Responsible for handling citizen-facing routes such as:
+ *  - /my-payments       : Lists all active and paid challans associated with the logged-in citizen.
+ *  - /details/:challanNo: Displays detailed summary of a specific challan including offender info,
+ *                         offence description, evidence docs, workflow timeline, and payment actions.
+ *  - /response/:id      : Displays receipt/acknowledgement after online payment completion.
+ * -----------------------------------------------------------------------------
+ */
+
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";

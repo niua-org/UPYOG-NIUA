@@ -1,3 +1,16 @@
+/**
+ * ChallanMyPayments Component
+ * -----------------------------------------------------------------------------
+ * Citizen page displaying all Challans associated with the logged-in user.
+ * 
+ * Workflow:
+ *  1. Retrieves logged-in citizen info (mobile number) and tenant ID.
+ *  2. Queries Challan Search API (`useChallanGenerationSearch`) filtering by citizen's mobile number.
+ *  3. In parallel, retrieves receipt records for the found challans to accurately reflect payment status.
+ *  4. Iterates through the result set and renders individual `<ChallanPayments />` card items.
+ * -----------------------------------------------------------------------------
+ */
+
 import React, { useState, useEffect } from "react";
 import { Header, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";

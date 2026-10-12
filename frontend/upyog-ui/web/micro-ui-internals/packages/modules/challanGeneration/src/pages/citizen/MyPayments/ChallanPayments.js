@@ -1,3 +1,20 @@
+/**
+ * ChallanPayments Component
+ * -----------------------------------------------------------------------------
+ * Represents an individual Challan payment card inside the citizen's "My Payments" list.
+ * Displays summary metadata including:
+ *  - Challan Amount (extracted robustly across multiple data structures)
+ *  - Challan Number
+ *  - Offender / Citizen Name
+ *  - Creation Date (formatted from Epoch timestamp)
+ *  - Current Payment Status (PAID / UNPAID)
+ * 
+ * Provides interactive action buttons:
+ *  - "Challan Summary": Navigates to citizen details view (/details/:challanNo).
+ *  - "Pay Now": Available only if status is unpaid, directs to citizen payment checkout.
+ * -----------------------------------------------------------------------------
+ */
+
 import React from "react";
 import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";

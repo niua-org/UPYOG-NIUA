@@ -1,3 +1,27 @@
+/**
+ * =============================================================================
+ * MyChallanResult Component - Challan Generation Module (Citizen Side)
+ * =============================================================================
+ * Purpose:
+ *   Displays a list of all challans issued against the logged-in citizen's
+ *   registered mobile number.
+ *
+ * Key Functionality:
+ *   1. Identity Resolution: Retrieves logged-in citizen's mobile number and tenant context.
+ *   2. Search Execution   : Calls Challan Generation search API filtered by mobileNumber.
+ *   3. Responsive Listing : Renders each challan as a distinct Card with key attributes:
+ *                           - Challan Number
+ *                           - Offender / Citizen Name
+ *                           - Business Service
+ *                           - Total Due Amount
+ *                           - Current Lifecycle Status
+ *                           - Issue Date (formatted to en-IN)
+ *   4. Contextual Actions :
+ *       - Unpaid: Shows "Pay Now" button redirecting to bill payment checkout.
+ *       - Paid  : Shows "View Details" button navigating to Challan Details screen.
+ * =============================================================================
+ */
+
 import React from "react";
 import { Header, Loader, Card, CardText, SubmitBar, StatusTable, Row } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";

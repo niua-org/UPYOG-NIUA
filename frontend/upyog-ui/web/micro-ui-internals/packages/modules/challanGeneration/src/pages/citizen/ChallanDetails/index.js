@@ -1,3 +1,25 @@
+/**
+ * =============================================================================
+ * CitizenChallanDetails Component - Challan Generation Module
+ * =============================================================================
+ * Purpose:
+ *   Displays a comprehensive, read-only summary of a specific Challan for citizens.
+ *   Provides clear violation details, offender information, incident location,
+ *   supporting evidence documents, workflow audit history, and direct payment actions.
+ *
+ * Key Capabilities:
+ *   1. Challan Summary       : Displays Challan Number, Status, Amount, Issue Date, Due Date.
+ *   2. Offender Details      : Shows name, primary mobile number, email, and alternate contact.
+ *   3. Location / Address    : Formats address lines, landmark, locality, and city.
+ *   4. Offence Information   : Details violation type, category, vehicle number, GPS coordinates, waiver.
+ *   5. Document Viewer       : Previews uploaded photo/document proofs via CHBDocument.
+ *   6. Workflow Timeline     : Tracks real-time lifecycle events (creation, notices, payment status).
+ *   7. Action Bar Integration: Contextual action bar:
+ *                              - If unpaid (ACTIVE): Prompts citizen to "Pay Now".
+ *                              - If paid (PAID)    : Allows citizen to "Download Receipt".
+ * =============================================================================
+ */
+
 import {
   Card,
   CardSubHeader,
@@ -273,18 +295,6 @@ const CitizenChallanDetails = () => {
   return (
     <React.Fragment>
       <div>
-        {/* <div className="cardHeaderWithOptions" style={{ marginRight: "auto", maxWidth: "960px" }}>
-          <Header styles={{ fontSize: "32px" }}>{t("CHALLAN_DETAILS")}</Header>
-          {downloadOptions.length > 0 && (
-            <MultiLink
-              className="multilinkWrapper"
-              onHeadClick={() => setShowOptions(!showOptions)}
-              displayOptions={showOptions}
-              options={downloadOptions}
-            />
-          )}
-        </div> */}
-
         <Card>
           {/* Challan Summary */}
           <CardSubHeader style={{ fontSize: "24px" }}>{t("CHALLAN_SUMMARY")}</CardSubHeader>
