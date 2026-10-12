@@ -9,10 +9,11 @@
  * -----------------------------
  * - allowMultipleOpen   several panels open at once (default true)
  * - defaultOpenStep     panel id to expand on first paint
- * - continueOpensNext   Save & continue opens the following panel
+ * - showContinue       per-panel continue button (only when true, or when continueLabel is set)
+ * - continueOpensNext   continue button opens the following panel
  * - continueLabel       i18n key for the per-panel continue button
  * - continueLabelDefault fallback continue text
- * - showFilledHint      show filled/total on the header
+ * - showFilledHint      header shows required-field status (pending or completed)
  *
  * @see DynamicFormAccordionStep
  * @see buildAccordionSections
@@ -20,7 +21,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ButtonSelector from "../atoms/ButtonSelector";
-import { flattenFormConfig, isFieldVisible, sectionHasFieldError } from "../utilities/formUtils";
+import { evaluateFormRule, getFieldArrayName, isFieldVisible, sectionHasFieldError } from "../utilities/formUtils";
+import { validateFields } from "../utilities/validators";
 
 const ChevronIcon = () => (
   <svg className="dynamic-form-accordion__chevron" viewBox="0 0 20 20" aria-hidden="true">
@@ -31,21 +33,66 @@ const ChevronIcon = () => (
   </svg>
 );
 
-const isFilledValue = (value) => {
-  if (value === undefined || value === null || value === "") return false;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") {
-    return Boolean(value.code || value.filestoreId || value.fileStoreId || value.documentuuid);
-  }
-  return true;
+/** True when every visible field in the panel is filled and valid. */
+const sectionCanContinue = (form, formData) =>
+  Object.keys(validateFields(form || [], formData)).length === 0;
+
+const isRequiredNow = (fieldConfig, data) => {
+  const validation = fieldConfig?.validation || {};
+  if (validation.required) return true;
+  return Boolean(
+    validation.requiredWhen && evaluateFormRule(validation.requiredWhen, data || {})
+  );
 };
 
-const countFilledFields = (form, formData) => {
-  const leaves = flattenFormConfig(form || []).filter(
-    (fc) => fc?.field?.name && isFieldVisible(fc, formData)
-  );
-  const filled = leaves.filter((fc) => isFilledValue(formData?.[fc.field.name]));
-  return { filled: filled.length, total: leaves.length };
+/**
+ * Visible fields that are required right now.
+ * Field-array children use the same row scope as validateFields.
+ * @returns {"none"|"pending"|"complete"}
+ */
+const getRequiredSectionStatus = (form, formData) => {
+  const data = formData || {};
+  let requiredCount = 0;
+
+  const countLeaf = (fieldConfig, scope) => {
+    if (!fieldConfig?.field?.name) return;
+    if (!isFieldVisible(fieldConfig, scope)) return;
+    if (!isRequiredNow(fieldConfig, scope)) return;
+    requiredCount += 1;
+  };
+
+  (form || []).forEach((item) => {
+    if (!item || item.type === "sectionHeader" || item.hidden === true) return;
+    if (!isFieldVisible(item, data)) return;
+
+    if (item.type === "fieldArray") {
+      const name = getFieldArrayName(item);
+      const rows = Array.isArray(data[name]) ? data[name] : [];
+      const minItems = Math.max(1, Number(item.minItems) || 1);
+      const effectiveRows =
+        rows.length > 0 ? rows : Array.from({ length: minItems }, () => ({}));
+      effectiveRows.forEach((row) => {
+        (item.children || []).forEach((child) => countLeaf(child, row || {}));
+      });
+      return;
+    }
+
+    if (item.type === "group") {
+      (item.children || []).forEach((child) => countLeaf(child, data));
+      return;
+    }
+
+    countLeaf(item, data);
+  });
+
+  if (requiredCount === 0) return "none";
+  return sectionCanContinue(form, data) ? "complete" : "pending";
+};
+
+const translateWithFallback = (t, key, fallback) => {
+  const translated = t(key, { defaultValue: fallback });
+  if (!translated || translated === key) return fallback;
+  return translated;
 };
 
 const resolvePanelTitle = (section, t) => {
@@ -86,6 +133,9 @@ const DynamicFormAccordion = ({
   const allowMultipleOpen = accordion.allowMultipleOpen !== false;
   const continueOpensNext = accordion.continueOpensNext !== false;
   const showFilledHint = accordion.showFilledHint === true;
+  const showContinue =
+    accordion.showContinue === true ||
+    Boolean(accordion.continueLabel || accordion.continueLabelDefault);
   const continueLabel = accordion.continueLabel || "COMMON_SAVE_NEXT";
   const continueLabelDefault = accordion.continueLabelDefault || "Save & continue";
 
@@ -96,6 +146,41 @@ const DynamicFormAccordion = ({
   }, [accordion.defaultOpenStep, sections]);
 
   const [openIds, setOpenIds] = useState(() => new Set(defaultOpenId ? [defaultOpenId] : []));
+  /** Section the citizen tried to open before its required fields were ready. */
+  const [blockedId, setBlockedId] = useState(null);
+
+  const pendingHint = translateWithFallback(
+    t,
+    "TL_ACCORDION_FILL_REQUIRED",
+    "Incomplete - Please fill all the mandatory fields"
+  );
+  const completeHint = translateWithFallback(
+    t,
+    "TL_ACCORDION_REQUIRED_COMPLETE",
+    "Completed"
+  );
+  const blockedMessage = translateWithFallback(
+    t,
+    "TL_ACCORDION_SECTION_LOCKED",
+    "Please fill mendatory fields before opening this section."
+  );
+
+  const sectionStatus = useCallback(
+    (section) => getRequiredSectionStatus(section?.form, formData),
+    [formData]
+  );
+
+  const canOpenAt = useCallback(
+    (index) => {
+      if (!showFilledHint) return true;
+      if (sectionStatus(sections[index]) === "none") return false;
+      for (let i = 0; i < index; i += 1) {
+        if (sectionStatus(sections[i]) === "pending") return false;
+      }
+      return true;
+    },
+    [showFilledHint, sectionStatus, sections]
+  );
 
   const reportSection = useCallback(
     (id) => {
@@ -126,7 +211,27 @@ const DynamicFormAccordion = ({
     if (focusSectionId) openSection(focusSectionId);
   }, [focusSectionId, openSection]);
 
+  useEffect(() => {
+    if (!blockedId) return;
+    const index = sections.findIndex((section) => section.id === blockedId);
+    if (index < 0 || canOpenAt(index)) setBlockedId(null);
+  }, [blockedId, canOpenAt, sections]);
+
   const toggle = (id) => {
+    const index = sections.findIndex((section) => section.id === id);
+    if (index < 0) return;
+    const isOpen = openIds.has(id);
+
+    if (!isOpen && !canOpenAt(index)) {
+      setBlockedId(id);
+      const earlier = sections
+        .slice(0, index)
+        .find((section) => sectionStatus(section) === "pending");
+      if (earlier) openSection(earlier.id);
+      return;
+    }
+
+    setBlockedId(null);
     setOpenIds((prev) => {
       if (allowMultipleOpen) {
         const next = new Set(prev);
@@ -147,7 +252,13 @@ const DynamicFormAccordion = ({
     }
     if (!continueOpensNext) return;
     const next = sections[index + 1];
-    if (next) openSection(next.id, { exclusive: !allowMultipleOpen });
+    if (!next) return;
+    if (!canOpenAt(index + 1)) {
+      setBlockedId(next.id);
+      return;
+    }
+    setBlockedId(null);
+    openSection(next.id, { exclusive: !allowMultipleOpen });
   };
 
   if (!sections.length) return null;
@@ -169,12 +280,28 @@ const DynamicFormAccordion = ({
           const hasError = sectionHasFieldError(section.form, errors);
           const title = resolvePanelTitle(section, t);
           const hint = section.hintDefault;
-          const counts = showFilledHint ? countFilledFields(section.form, formData) : null;
+          const status = showFilledHint ? sectionStatus(section) : null;
+          const earlierHasPending = sections
+            .slice(0, index)
+            .some((earlier) => sectionStatus(earlier) === "pending");
+          // Incomplete hint belongs only on the section the citizen can fill now.
+          // A later section blocked by unfinished fields above stays quiet.
+          const hintState =
+            status === "complete"
+              ? "complete"
+              : status === "pending" && !earlierHasPending
+                ? "pending"
+                : null;
+          const statusLabel =
+            hintState === "complete" ? completeHint : hintState === "pending" ? pendingHint : null;
           const isLast = index === sections.length - 1;
+          const canContinue = sectionCanContinue(section.form, formData);
+          const isBlocked = blockedId === section.id;
           const itemClass = [
             "dynamic-form-accordion__item",
             isOpen ? "dynamic-form-accordion__item--open" : "",
             hasError ? "dynamic-form-accordion__item--error" : "",
+            isBlocked ? "dynamic-form-accordion__item--locked" : "",
           ]
             .filter(Boolean)
             .join(" ");
@@ -193,22 +320,29 @@ const DynamicFormAccordion = ({
                   {hint ? <span className="dynamic-form-accordion__sub">{hint}</span> : null}
                 </span>
                 <span className="dynamic-form-accordion__meta">
-                  {counts && counts.total > 0 ? (
-                    <span className="dynamic-form-accordion__hint">
-                      {counts.filled}/{counts.total}
+                  {statusLabel ? (
+                    <span className={`dynamic-form-accordion__hint dynamic-form-accordion__hint--${hintState}`}>
+                      {statusLabel}
                     </span>
                   ) : null}
                   <ChevronIcon />
                 </span>
               </button>
+              {isBlocked ? (
+                <p className="dynamic-form-accordion__notice" role="alert">
+                  {blockedMessage}
+                </p>
+              ) : null}
               <div className="dynamic-form-accordion__body" hidden={!isOpen}>
                 {isOpen ? (
                   <>
                     {renderFields?.(section.form)}
-                    {!isDisabled && !isLast && onContinue ? (
+                    {!isDisabled && !isLast && showContinue && onContinue ? (
                       <div className="dynamic-form-accordion__footer">
                         <ButtonSelector
                           theme="border"
+                          className="dynamic-form-field__lookup-btn"
+                          isDisabled={!canContinue}
                           label={
                             t(continueLabel, { defaultValue: continueLabelDefault }) === continueLabel
                               ? continueLabelDefault

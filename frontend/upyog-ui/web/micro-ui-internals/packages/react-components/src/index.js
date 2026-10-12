@@ -264,6 +264,8 @@ export {
   toDate,
   toInputDate,
   resolveConfigDate,
+  financialYearBounds,
+  resolveFieldDateBounds,
   buildInitialData,
 } from "./utilities/formUtils";
 export { resolveAppPath, resolveFormGate, shouldShowGatedActionBar } from "./utilities/formGateUtils";

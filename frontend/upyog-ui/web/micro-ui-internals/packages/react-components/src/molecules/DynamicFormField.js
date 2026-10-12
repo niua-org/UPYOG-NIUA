@@ -88,14 +88,17 @@ import {
   isFieldVisible,
   getFieldArrayName,
   createEmptyFieldArrayItem,
-  resolveConfigDate,
+  resolveFieldDateBounds,
   filterDependsOnOptions,
   evaluateFormRule,
 } from "../utilities/formUtils";
 import { formatDurationDisplay } from "../utilities/validators";
 
-/** Resolve DatePicker `min` / `max` from field.minDate / field.maxDate. */
-const resolveFieldBoundDate = (spec) => resolveConfigDate(spec) || undefined;
+/** Resolve DatePicker `min` / `max`, including the financial-year clamp. */
+const resolveFieldBoundDates = (field) => {
+  const { min, max } = resolveFieldDateBounds(field);
+  return { min: min || undefined, max: max || undefined };
+};
 
 /* ── shared sub-renderers ─────────────────────────────────────────────── */
 
@@ -402,7 +405,9 @@ const DynamicFormField = ({
                     errors={rowErrors}
                     dropdownData={dropdownData}
                     t={t}
-                    isDisabled={controlsDisabled}
+                    isDisabled={
+                      controlsDisabled && child?.field?.enabledWhenArrayLocked !== true
+                    }
                     onFileUpload={onFileUpload}
                     onFieldSearch={onFieldSearch}
                     isFieldSearching={isFieldSearching}
@@ -622,6 +627,7 @@ const DynamicFormField = ({
 
   // ── date ─────────────────────────────────────────────────────────────
   if (type === "date") {
+    const dateBounds = resolveFieldBoundDates(field);
     return (
       <LabelFieldPair>
         <FieldLabel text={labelText} required={showRequired} hasError={hasError} />
@@ -629,8 +635,8 @@ const DynamicFormField = ({
           <DatePicker
             date={toInputDate(value)}
             disable={fieldDisabled}
-            min={resolveFieldBoundDate(field.minDate)}
-            max={resolveFieldBoundDate(field.maxDate)}
+            min={dateBounds.min}
+            max={dateBounds.max}
             onChange={(d) => onChange(name, d)}
           />
           <FieldError show={hasError} message={errorMsg} />

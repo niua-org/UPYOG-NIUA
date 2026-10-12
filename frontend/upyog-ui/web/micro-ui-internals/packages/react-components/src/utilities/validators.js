@@ -18,7 +18,7 @@
  * @see formUtils.isFieldVisible
  */
 
-import { getFieldArrayName, resolveBillingCycleMultiplier, toDate, isFieldVisible, optionCode, toInputDate, resolveConfigDate, evaluateFormRule } from "./formUtils";
+import { getFieldArrayName, resolveBillingCycleMultiplier, toDate, isFieldVisible, optionCode, toInputDate, resolveConfigDate, resolveFieldDateBounds, financialYearBounds, evaluateFormRule } from "./formUtils";
 
 /**
  * True when a field value is considered empty for required checks.
@@ -116,8 +116,9 @@ export const fieldRules = {
   },
 
   /**
-   * Date must be on/after field.minDate (or validation.minDate override).
-   * Empty values pass (use required). Spec uses resolveConfigDate shapes.
+   * Date must be on/after the effective minimum.
+   * Empty values pass (use required). A withinFinancialYear field uses the
+   * later of minDate and 1 April, so a looser minDate cannot leave the year.
    */
   minDate: (value, { fieldConfig }) => {
     if (!value) return true;
@@ -126,7 +127,9 @@ export const fieldRules = {
       fieldConfig.validation?.minDate == null
         ? fieldConfig.field?.minDate
         : fieldConfig.validation.minDate;
-    const bound = resolveConfigDate(spec);
+    const bound = fieldConfig.field?.withinFinancialYear
+      ? resolveFieldDateBounds({ ...fieldConfig.field, minDate: spec }).min
+      : resolveConfigDate(spec);
     if (!bound) return true;
     const cmp = compareInputDates(value, bound);
     return cmp == null ? true : cmp >= 0;
@@ -143,10 +146,25 @@ export const fieldRules = {
       fieldConfig.validation?.maxDate == null
         ? fieldConfig.field?.maxDate
         : fieldConfig.validation.maxDate;
-    const bound = resolveConfigDate(spec);
+    const bound = fieldConfig.field?.withinFinancialYear
+      ? resolveFieldDateBounds({ ...fieldConfig.field, maxDate: spec }).max
+      : resolveConfigDate(spec);
     if (!bound) return true;
     const cmp = compareInputDates(value, bound);
     return cmp == null ? true : cmp <= 0;
+  },
+
+  /**
+   * Date must fall in the current financial year (1 April – 31 March).
+   * Empty values pass (use required). Ignores field.minDate.
+   */
+  financialYear: (value) => {
+    if (!value) return true;
+    const { start, end } = financialYearBounds();
+    const cmpStart = compareInputDates(value, start);
+    const cmpEnd = compareInputDates(value, end);
+    if (cmpStart == null || cmpEnd == null) return true;
+    return cmpStart >= 0 && cmpEnd <= 0;
   },
 
   /**
@@ -244,11 +262,19 @@ export function validateFields(formConfig, formData) {
     if (field.maxDate != null && validation.maxDate === undefined) {
       validation.maxDate = true;
     }
+    // Financial year is a hard limit. A looser minDate cannot turn it off.
+    if (field.withinFinancialYear) {
+      validation.financialYear = true;
+    }
 
     const value = data[field.name];
     const ctx = { fieldConfig: { ...fieldConfig, validation }, formData: data };
+    const ruleNames = Object.keys(validation);
+    const orderedRuleNames = validation.financialYear
+      ? ["financialYear", ...ruleNames.filter((name) => name !== "financialYear")]
+      : ruleNames;
 
-    for (const ruleName of Object.keys(validation)) {
+    for (const ruleName of orderedRuleNames) {
       const rule = fieldRules[ruleName];
       if (!rule) continue;
       if (validation[ruleName] === false) continue;

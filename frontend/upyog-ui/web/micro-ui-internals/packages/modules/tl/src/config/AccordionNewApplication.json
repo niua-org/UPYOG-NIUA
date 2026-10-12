@@ -1,7 +1,7 @@
 {
   "_readme": {
     "_comment": "TL citizen New Application — accordion form config. Keys named _comment / _readme are notes only; the screen ignores them.",
-    "pattern": "accordion = all sections on one page (Save & continue opens the next). Routes: info (docs from navigation.infoPage) → apply → check → acknowledgement.",
+    "pattern": "accordion = all sections on one page. Open the next section from its header after required fields are filled. Routes: info (docs from navigation.infoPage) → apply → check → acknowledgement.",
     "requirementsCovered": [
       "1 Structure & property — immovable/movable, building/vehicle type, property gate (search or redirect to create PT)",
       "2 Trade details — FY, license type, trade name, commencement, trade units (add/remove), accessories Yes/No + list, GST/area/employees",
@@ -42,14 +42,11 @@
           "nextLabel": "CS_COMMON_NEXT"
         },
         "accordion": {
-          "_comment": "defaultOpenStep = first panel key. showFilledHint = e.g. 2 of 5 filled. submitLabel = last sticky button on apply.",
+          "_comment": "defaultOpenStep = first panel key. showFilledHint = header says required fields are pending or completed. A section with no required fields yet stays closed. submitLabel = last sticky button on apply.",
           "defaultOpenStep": "structure",
           "showFilledHint": true,
           "submitLabel": "COMMON_SUBMIT_APPLICATION",
           "submitLabelDefault": "Submit Application",
-          "continueOpensNext": true,
-          "continueLabel": "COMMON_SAVE_NEXT",
-          "continueLabelDefault": "Save & Next",
           "introKey": "TL_ACCORDION_HINT",
           "introDefault": "Expand a section to fill details. Submit when every section is complete.",
           "subtitleKey": "TL_ACCORDION_SUBTITLE",
@@ -425,7 +422,7 @@
               }
             },
             {
-              "_comment": "Date the trade started. Allowed window is config-driven: minDate -3months, maxDate today (calendar disables out-of-range days). Example: within the last 3 months up to today.",
+              "_comment": "Date the trade started. Must fall in the current financial year (1 April–31 March) and cannot be after today. minDate can only move the earliest day later; a minDate before 1 April is raised to that day. maxDate cannot open a day after today.",
               "order": 5,
               "key": "TL_COMMENCEMENT_DATE",
               "apiFieldName": "commencementDate",
@@ -434,7 +431,8 @@
                 "name": "commencementDate",
                 "type": "date",
                 "minDate": "-6months",
-                "maxDate": "today"
+                "maxDate": "today",
+                "withinFinancialYear": true
               },
               "visibleWhen": {
                 "field": "showTradeDetails",
@@ -447,9 +445,11 @@
                 "error": "TL_COMMENCEMENT_DATE_REQUIRED",
                 "minDate": "TL_COMMENCEMENT_DATE_MIN",
                 "maxDate": "TL_COMMENCEMENT_DATE_MAX",
+                "financialYear": "TL_COMMENCEMENT_DATE_FINANCIAL_YEAR",
                 "labelDefault": "Trade Commencement Date",
-                "minDateDefault": "Commencement date cannot be earlier than 3 months ago",
-                "maxDateDefault": "Commencement date cannot be after today"
+                "minDateDefault": "Commencement date cannot be earlier than 6 months ago",
+                "maxDateDefault": "Commencement date cannot be after today",
+                "financialYearDefault": "Commencement date must be within the current financial year"
               }
             },
             {
@@ -1240,7 +1240,7 @@
               },
               "children": [
                 {
-                  "_comment": "Letters and spaces only. Example: Ramesh Sharma.",
+                  "_comment": "Same rule as the existing citizen owner screen: letters and spaces, at least 3 characters, must start and end with a letter. Example: Ramesh Sharma.",
                   "order": 0,
                   "key": "TL_OWNER_NAME",
                   "field": {
@@ -1250,16 +1250,15 @@
                     "type": "text"
                   },
                   "validation": {
-                    "pattern": "^[\\p{L}][\\p{L} .'-]{0,99}$",
-                    "patternFlags": "u",
+                    "pattern": "^[a-zA-Z][a-zA-Z ]+[a-zA-Z]$",
                     "regex": {
-                      "pattern": "[^\\p{L} .'-]",
-                      "flags": "gu"
+                      "pattern": "[^a-zA-Z ]",
+                      "flags": "g"
                     },
                     "required": true
                   },
                   "messages": {
-                    "error": "TL_INVALID_OWNER_NAME"
+                    "error": "TL_NAME_ERROR_MESSAGE"
                   }
                 },
                 {
@@ -1315,7 +1314,7 @@
                   }
                 },
                 {
-                  "_comment": "Letters and spaces only. Example: Suresh Sharma.",
+                  "_comment": "Same name rule as the existing citizen owner screen. Example: Suresh Sharma.",
                   "order": 3,
                   "key": "TL_FATHER_HUSBAND_NAME",
                   "field": {
@@ -1325,16 +1324,15 @@
                     "type": "text"
                   },
                   "validation": {
-                    "pattern": "^[\\p{L}][\\p{L} .'-]{0,99}$",
-                    "patternFlags": "u",
+                    "pattern": "^[a-zA-Z][a-zA-Z ]+[a-zA-Z]$",
                     "regex": {
-                      "pattern": "[^\\p{L} .'-]",
-                      "flags": "gu"
+                      "pattern": "[^a-zA-Z ]",
+                      "flags": "g"
                     },
                     "required": true
                   },
                   "messages": {
-                    "error": "TL_INVALID_FATHER_HUSBAND_NAME"
+                    "error": "TL_NAME_ERROR_MESSAGE"
                   }
                 },
                 {
@@ -1388,7 +1386,8 @@
                     "code": "TL_OWNERS_ADDRESS",
                     "name": "permanentAddress",
                     "placeholder": "TL_ENTER_OWNER_ADDRESS",
-                    "type": "text"
+                    "type": "text",
+                    "enabledWhenArrayLocked": true
                   },
                   "validation": {
                     "maxLength": 300,
@@ -1399,13 +1398,14 @@
                   }
                 },
                 {
-                  "_comment": "Shown only for a building. Yes means letters go to the trade address. Not sent to the server. Example: YES.",
+                  "_comment": "Shown only for a building, same as the existing owner-address checkbox. Yes copies the trade address into this owner's address. No clears that address. The Yes/No itself is not sent; the owner address is.",
                   "order": 7,
                   "key": "TL_CORRESPONDENCE_SAME_AS_TRADE",
                   "field": {
                     "code": "TL_CORRESPONDENCE_SAME_AS_TRADE",
                     "name": "isCorrespondenceAddress",
-                    "type": "radio"
+                    "type": "radio",
+                    "enabledWhenArrayLocked": true
                   },
                   "options": [
                     {
@@ -1423,8 +1423,7 @@
                   },
                   "excludeFromPayload": true
                 }
-              ],
-              "maxItems": 10
+              ]
             },
             {
               "_comment": "Heading only, above the three uploads.",
