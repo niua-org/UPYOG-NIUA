@@ -67,7 +67,6 @@ const ChallanStepperForm = () => {
   // ---------------------------------------------
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  //const stateId = Digit.ULBService.getStateId() || tenantId?.split(".")[0];
 
   const { data: categoryData, isLoading: categoryLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "Category" }]);
 
@@ -117,10 +116,6 @@ const ChallanStepperForm = () => {
     return value !== null && value !== undefined && value !== "";
   };
 
-  // const sanitizeText = (text) => {
-  //   if (typeof text !== "string") return text;
-  //   return text.replace(/&/g, "and");
-  // };
 
   // ---------------------------------------------
   // Form submission handler

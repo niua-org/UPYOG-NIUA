@@ -14,11 +14,10 @@ const OffenceDetails = ({ onGoBack, goNext, currentStepData, t }) => {
   const [loader, setLoader] = useState(false);
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const stateId = Digit.ULBService.getStateId() || tenantId?.split(".")[0];
 
-  const { data: categoryData, isLoading: categoryLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "Category" }]);
-  const { data: subCategoryData, isLoading: subCategoryLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "SubCategory" }]);
-  const { data: OffenceTypeData, isLoading: OffenceTypeLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "OffenceType" }]);
+  const { data: categoryData, isLoading: categoryLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "Category" }]);
+  const { data: subCategoryData, isLoading: subCategoryLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "SubCategory" }]);
+  const { data: OffenceTypeData, isLoading: OffenceTypeLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "OffenceType" }]);
 
   const {
     control,
