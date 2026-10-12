@@ -716,7 +716,8 @@ serviceMaps:
               isbulkgeneration = ?,
               isvariablecalculation = ?,
               no_of_units = ?,
-              ismonthlybilling = ?
+              ismonthlybilling = ?,
+              special_category = ?
             WHERE uuid = ?;
 
           basePath: $.garbageAccounts.*.grbgCollectionUnits.*
@@ -752,6 +753,8 @@ serviceMaps:
             - jsonPath: $.garbageAccounts.*.grbgCollectionUnits.*.no_of_units
 
             - jsonPath: $.garbageAccounts.*.grbgCollectionUnits.*.ismonthlybilling
+
+            - jsonPath: $.garbageAccounts.*.grbgCollectionUnits.*.specialCategory
 
             - jsonPath: $.garbageAccounts.*.grbgCollectionUnits.*.uuid
 

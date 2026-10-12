@@ -121,6 +121,15 @@ const ApplicationDetails = () => {
     navigate(`/upyog-ui/employee/payment/collect/garbage-service/${appNo}`);
   };
 
+  /**
+   * Handles garbage collection service disconnection submission:
+   * - Constructs disconnection payload using `createDisconnectPayload` (disconnectionDate, reason)
+   * - Dispatches mutation to update the garbage account workflow state
+   * - If pending payments exist, redirects to collect payment screen
+   * - Otherwise, displays success toast and refetches application & workflow details
+   * 
+   * @param {object} params - Disconnection details (disconnectionDate, reason, hasPendingPayment)
+   */
   const handleDisconnectService = async (params) => {
     try {
       const payload = createDisconnectPayload(application, params);

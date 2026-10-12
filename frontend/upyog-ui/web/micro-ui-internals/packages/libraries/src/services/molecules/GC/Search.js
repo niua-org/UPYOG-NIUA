@@ -24,6 +24,12 @@ export const GCSearch = {
     const collectionUnit = app?.grbgCollectionUnits?.[0] || {};
     const applicant = app?.additionalDetail?.applicantDetails?.[0] || {};
 
+    /**
+     * Formats epoch timestamps, ISO date strings ("YYYY-MM-DD"), or date objects to "DD/MM/YYYY" format.
+     * 
+     * @param {string|number} dVal - The date value to format
+     * @returns {string} Formatted date string or localized "CS_NA" fallback
+     */
     const formatDateValue = (dVal) => {
       if (!dVal) return t("CS_NA");
       if (typeof dVal === "number") return window?.Digit?.DateUtils?.ConvertEpochToDate(dVal) || dVal;

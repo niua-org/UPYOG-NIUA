@@ -120,6 +120,15 @@ const GCApplicationDetails = () => {
     }
   };
 
+  /**
+   * Handles garbage collection service disconnection submission:
+   * - Constructs disconnection payload using `createDisconnectPayload` (disconnectionDate, reason)
+   * - Dispatches mutation to update the garbage account workflow state
+   * - If pending payments exist, redirects to bill payment screen
+   * - Otherwise, displays success toast and refetches application & workflow details
+   * 
+   * @param {object} params - Disconnection details (disconnectionDate, reason, hasPendingPayment)
+   */
   const handleDisconnectService = async (params) => {
     try {
       const payload = createDisconnectPayload(application, params);
@@ -404,6 +413,13 @@ const GCApplicationDetails = () => {
 
         </Card>
 
+        {/**
+         * Action Bar: Displays citizen action buttons based on current application state:
+         * - Disconnect Service: Opens disconnection request modal (when status allows disconnection)
+         * - Reconnect Service: Redirects to application edit flow to resume service
+         * - Edit Application: Opens edit form when application status is EDIT_APPLICATION
+         * - Make Payment: Redirects to bill payment page when payments are pending
+         */}
         {(canEdit || canDisconnect || canReconnect || isPendingPayment) && (
           <ActionBar>
             <div className="gc-btn-row">
