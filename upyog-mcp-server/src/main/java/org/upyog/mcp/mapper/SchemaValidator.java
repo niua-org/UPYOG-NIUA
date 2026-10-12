@@ -3,13 +3,13 @@ package org.upyog.mcp.mapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import org.springframework.stereotype.Component;
 
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class SchemaValidator {
 
     private final ObjectMapper objectMapper;
-    private final JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+    private final SchemaRegistry schemaRegistry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_2020_12);
 
     public SchemaValidator(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -31,10 +31,10 @@ public class SchemaValidator {
      * @param payload MCP tool arguments after forbidden-field stripping
      */
     public void validate(JsonNode schema, JsonNode payload) {
-        JsonSchema compiled = factory.getSchema(schema);
-        Set<ValidationMessage> messages = compiled.validate(payload);
-        if (!messages.isEmpty()) {
-            String text = messages.stream().map(ValidationMessage::getMessage).collect(Collectors.joining("; "));
+        Schema compiled = schemaRegistry.getSchema(schema);
+        List<Error> errors = compiled.validate(payload);
+        if (!errors.isEmpty()) {
+            String text = errors.stream().map(Error::getMessage).collect(Collectors.joining("; "));
             throw new IllegalArgumentException(text);
         }
     }

@@ -21,7 +21,8 @@
         <java.version>17</java.version>
         <spring-ai.version>1.1.4</spring-ai.version>
         <resilience4j.version>2.3.0</resilience4j.version>
-        <json-schema.version>1.5.6</json-schema.version>
+        <!-- MCP SDK 0.17+ needs com.networknt.schema.dialect.Dialects (2.x). Do not downgrade. -->
+        <json-schema.version>2.0.0</json-schema.version>
         <wiremock.version>3.13.1</wiremock.version>
     </properties>
 
@@ -113,6 +114,7 @@
             <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
