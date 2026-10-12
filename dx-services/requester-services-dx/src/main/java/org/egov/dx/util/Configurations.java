@@ -135,4 +135,32 @@ public class Configurations {
 	@Value("${egov.user.endpoint}")
 	private String userEndpoint;
 
+	// ---------------- Aadhaar Gateway Configurations ----------------
+	@Value("${aadhaar.gateway.mock.enabled:true}")
+	private Boolean aadhaarGatewayMockEnabled;
+
+	@Value("${aadhaar.gateway.base.url:https://api.sandbox.co.in}")
+	private String aadhaarGatewayBaseUrl;
+
+	@Value("${aadhaar.gateway.send.otp.path:/kyc/aadhaar/okyc/otp}")
+	private String aadhaarGatewaySendOtpPath;
+
+	@Value("${aadhaar.gateway.verify.otp.path:/kyc/aadhaar/okyc/otp/verify}")
+	private String aadhaarGatewayVerifyOtpPath;
+
+	@Value("${aadhaar.gateway.api.key:}")
+	private String aadhaarGatewayApiKey;
+
+	@Value("${aadhaar.gateway.api.secret:}")
+	private String aadhaarGatewayApiSecret;
+
+	@Value("${aadhaar.gateway.api.version:1.0}")
+	private String aadhaarGatewayApiVersion;
+
+	@Value("${aadhaar.gateway.connect.timeout:5000}")
+	private Integer aadhaarGatewayConnectTimeout;
+
+	@Value("${aadhaar.gateway.read.timeout:10000}")
+	private Integer aadhaarGatewayReadTimeout;
+
 }
