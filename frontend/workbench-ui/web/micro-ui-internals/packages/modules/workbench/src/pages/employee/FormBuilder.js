@@ -17,19 +17,147 @@ import { useTranslation } from "react-i18next";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Config } from "../../configs/FormBuilderConfig";
 import { FORM_BUILDER_DATA } from "../../hooks/useFormBuilderSearch";
-import {
-  useModalState,
-  getModuleListFromMDMS,
-  getAccordionsForModule,
-  getFormsForModule,
-} from "../../utils/workbenchUtils";
+import { useModalState, getModuleListFromMDMS, getAccordionsForModule, getFormsForModule } from "../../utils/workbenchUtils";
+
+const SAMPLE_UPYOG_JSON = {
+  tenantId: "pg",
+  moduleName: "TRADE_LICENSE",
+  NEW_REGISTRATION: [
+    {
+      head: "TRADE_DETAILS",
+      body: [
+        {
+          key: "nEW_REGISTRATION",
+          route: "nEW_REGISTRATION",
+          component: "NEW_REGISTRATION",
+          nextStep: null,
+          isPreview: false,
+          withoutLabel: true,
+          type: "component",
+          hideInEmployee: false,
+          isMandatory: true,
+          sectionHeading: null,
+          payloadKey: "TRADE_LICENSE",
+          apiId: "Rainmaker",
+          form: [
+            {
+              order: 1,
+              key: "WBH_TRADE_LICENSE_NAME",
+              field: {
+                code: "WBH_TRADE_LICENSE_NAME",
+                name: "WBH_TRADE_LICENSE_NAME",
+                placeholder: "Enter applicant name",
+                type: "text",
+              },
+              validation: {
+                required: true,
+                disabled: false,
+                readOnly: false,
+                minLength: 3,
+                maxLength: 50,
+                pattern: "^[a-zA-Z0-9 ]+$",
+              },
+              messages: {
+                error: "Only letters and numbers are allowed",
+              },
+            },
+            {
+              order: 2,
+              key: "WBH_TRADE_LICENSE_SELECT",
+              field: {
+                code: "WBH_TRADE_LICENSE_SELECT",
+                name: "WBH_TRADE_LICENSE_SELECT",
+                placeholder: "Select category",
+                type: "dropdown",
+                dataSource: {
+                  type: "MDMS",
+                  moduleName: "TradeLicense",
+                  masterName: "AccessoriesCategory",
+                  customiztionRequired: true,
+                },
+              },
+              validation: {
+                required: true,
+                disabled: false,
+                readOnly: false,
+              },
+              messages: {
+                error: "Invalid field value",
+              },
+            },
+            {
+              order: 3,
+              key: "WBH_TRADE_LICENSE_GENDER",
+              field: {
+                code: "WBH_TRADE_LICENSE_GENDER",
+                name: "WBH_TRADE_LICENSE_GENDER",
+                placeholder: "Select option",
+                type: "radio",
+                options: [
+                  { code: "MALE", name: "Male" },
+                  { code: "FEMALE", name: "Female" },
+                ],
+              },
+              validation: {
+                required: true,
+                disabled: false,
+                readOnly: false,
+              },
+              messages: {
+                error: "Invalid field value",
+              },
+            },
+            {
+              order: 4,
+              key: "WBH_TRADE_LICENSE_CHECKBOX",
+              field: {
+                code: "WBH_TRADE_LICENSE_CHECKBOX",
+                name: "WBH_TRADE_LICENSE_CHECKBOX",
+                placeholder: "Select options",
+                type: "checkbox",
+                options: [
+                  { code: "OPT_1", name: "Option 1" },
+                  { code: "OPT_2", name: "Option 2" },
+                ],
+              },
+              validation: {
+                required: true,
+                disabled: false,
+                readOnly: false,
+              },
+              messages: {
+                error: "Invalid field value",
+              },
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 
 const FormBuilder = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const [callRefetch, setCallRefetch] = useState(false);
   const [tableData, setTableData] = useState(FORM_BUILDER_DATA);
+  const [showSampleModal, setShowSampleModal] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handleCopySampleJson = () => {
+    navigator.clipboard.writeText(JSON.stringify(SAMPLE_UPYOG_JSON, null, 2));
+    showToast(t("WBH_SAMPLE_JSON_COPIED") || "Sample JSON copied to clipboard!", false);
+  };
+
+  const handleDownloadSampleJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(SAMPLE_UPYOG_JSON, null, 2));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "sample-upyog-form-schema.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
 
   // Fetch MDMS ModuleAccordions store data
   const stateCode = Digit.ULBService.getStateId ? Digit.ULBService.getStateId() : "pg";
@@ -109,11 +237,9 @@ const FormBuilder = () => {
 
     // Navigate to the new Form Field Builder page with all 3 popup field values
     navigate(
-      `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
-        data.moduleName
-      )}&accordionName=${encodeURIComponent(data.accordionName)}&formName=${encodeURIComponent(
-        data.formName
-      )}`,
+      `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(data.moduleName)}&accordionName=${encodeURIComponent(
+        data.accordionName
+      )}&formName=${encodeURIComponent(data.formName)}`,
       {
         state: {
           moduleName: data.moduleName,
@@ -145,9 +271,7 @@ const FormBuilder = () => {
     navigate(
       `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
         rowData.moduleName || ""
-      )}&accordionName=${encodeURIComponent(rowData.accordionName || "")}&formName=${encodeURIComponent(
-        rowData.formName || ""
-      )}&isEdit=true`,
+      )}&accordionName=${encodeURIComponent(rowData.accordionName || "")}&formName=${encodeURIComponent(rowData.formName || "")}&isEdit=true`,
       {
         state: {
           isEdit: true,
@@ -167,9 +291,7 @@ const FormBuilder = () => {
     navigate(
       `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
         rowData.moduleName || ""
-      )}&accordionName=${encodeURIComponent(rowData.accordionName || "")}&formName=${encodeURIComponent(
-        newFormName
-      )}&isCopy=true`,
+      )}&accordionName=${encodeURIComponent(rowData.accordionName || "")}&formName=${encodeURIComponent(newFormName)}&isCopy=true`,
       {
         state: {
           isCopy: true,
@@ -232,26 +354,47 @@ const FormBuilder = () => {
           throw new Error("Invalid JSON structure");
         }
 
-        const uploadedModuleName = parsed?.moduleName || parsed?.module || "COMMON";
-        const uploadedAccordionName = parsed?.accordionName || parsed?.accordion || "UPLOADED_ACCORDION";
-        const uploadedFormName = parsed?.formName || parsed?.form || `FORM_${Date.now()}`;
-        const uploadedFields = Array.isArray(parsed?.fields)
-          ? parsed.fields
-          : Array.isArray(parsed?.schemaData)
-          ? parsed.schemaData
-          : Array.isArray(parsed)
-          ? parsed
-          : [];
+        let uploadedModuleName = parsed?.moduleName || parsed?.module || "COMMON";
+        let uploadedAccordionName = parsed?.accordionName || parsed?.accordion || "COMMON_DETAILS";
+        let uploadedFormName = parsed?.formName || parsed?.form || null;
+        let uploadedFields = [];
 
-        showToast(t("WBH_JSON_UPLOAD_SUCCESS") || "JSON configuration uploaded successfully!", false);
+        // Check for full UPYOG MDMS Form Config structure (e.g. { tenantId, moduleName, NEW_REGISTRATION: [ { head, body: [ { form: [...] } ] } ] })
+        const possibleFormKeys = Object.keys(parsed).filter(
+          (k) =>
+            !["tenantId", "moduleName", "_readme", "_comment"].includes(k) && Array.isArray(parsed[k]) && parsed[k].length > 0 && parsed[k][0]?.body
+        );
+
+        if (possibleFormKeys.length > 0) {
+          const formKey = possibleFormKeys[0];
+          uploadedFormName = uploadedFormName || formKey;
+          const accordionObj = parsed[formKey][0];
+          uploadedAccordionName = accordionObj?.head || uploadedAccordionName;
+
+          if (accordionObj?.body && Array.isArray(accordionObj.body) && accordionObj.body.length > 0) {
+            const bodyObj = accordionObj.body[0];
+            if (bodyObj?.form && Array.isArray(bodyObj.form)) {
+              uploadedFields = bodyObj.form;
+            }
+          }
+        }
+
+        if (!uploadedFields || uploadedFields.length === 0) {
+          if (Array.isArray(parsed?.fields)) uploadedFields = parsed.fields;
+          else if (Array.isArray(parsed?.existingFields)) uploadedFields = parsed.existingFields;
+          else if (Array.isArray(parsed?.schemaData)) uploadedFields = parsed.schemaData;
+          else if (Array.isArray(parsed)) uploadedFields = parsed;
+        }
+
+        uploadedFormName = uploadedFormName || `FORM_${Date.now()}`;
+
+        showToast(t("WBH_JSON_UPLOAD_SUCCESS") || `JSON configuration uploaded! Generated ${uploadedFields.length} field(s).`, false);
 
         setTimeout(() => {
           navigate(
             `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
               uploadedModuleName
-            )}&accordionName=${encodeURIComponent(uploadedAccordionName)}&formName=${encodeURIComponent(
-              uploadedFormName
-            )}&isUpload=true`,
+            )}&accordionName=${encodeURIComponent(uploadedAccordionName)}&formName=${encodeURIComponent(uploadedFormName)}&isUpload=true`,
             {
               state: {
                 isUpload: true,
@@ -283,24 +426,23 @@ const FormBuilder = () => {
     <React.Fragment>
       <div className="jk-header-btn-wrapper form-builder-header-wrapper">
         <Header className="works-header-search">{t(Config?.label || "WBH_FORM_BUILDER_HEADER")}</Header>
-        <ActionBar style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            accept=".json"
-            onChange={handleJsonFileUpload}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <input type="file" ref={fileInputRef} style={{ display: "none" }} accept=".json" onChange={handleJsonFileUpload} />
+          <Button
+            type="button"
+            variation="secondary"
+            className="header-btn-back-to-forms"
+            label={t("WBH_SHOW_SAMPLE_JSON") || "Display JSON"}
+            onButtonClick={() => setShowSampleModal(true)}
           />
           <Button
             type="button"
-            className="modal-btn-cancel"
-            label={t("WBH_UPLOAD_JSON") || "Upload JSON"}
             variation="secondary"
+            className="header-btn-back-to-forms"
+            label={t("WBH_UPLOAD_JSON") || "Upload JSON"}
             onButtonClick={() => fileInputRef.current && fileInputRef.current.click()}
-            style={{ margin: 0, whiteSpace: "nowrap" }}
           />
-          <SubmitBar disabled={false} onSubmit={handleAddNewField} label={t(Config?.actionLabel || "WBH_ADD_NEW_FIELD")} />
-        </ActionBar>
+        </div>
       </div>
 
       {Config && (
@@ -368,9 +510,7 @@ const FormBuilder = () => {
                         )}
                       />
                       {errors?.moduleName && (
-                        <CardLabelError className="form-field-error">
-                          {t("WBH_MODULE_NAME_REQUIRED") || "Module Name is required"}
-                        </CardLabelError>
+                        <CardLabelError className="form-field-error">{t("WBH_MODULE_NAME_REQUIRED") || "Module Name is required"}</CardLabelError>
                       )}
                     </div>
 
@@ -424,9 +564,7 @@ const FormBuilder = () => {
                         )}
                       />
                       {errors?.formName && (
-                        <CardLabelError className="form-field-error">
-                          {t("WBH_FORM_NAME_REQUIRED") || "Form Name is required"}
-                        </CardLabelError>
+                        <CardLabelError className="form-field-error">{t("WBH_FORM_NAME_REQUIRED") || "Form Name is required"}</CardLabelError>
                       )}
                     </div>
                   </div>
@@ -440,9 +578,7 @@ const FormBuilder = () => {
 
                       <h3 className="schema-title">{t("WBH_UPYOG_SCHEMA_HIERARCHY")}</h3>
 
-                      <p className="schema-description">
-                        {t("WBH_SCHEMA_HIERARCHY_DESC")}
-                      </p>
+                      <p className="schema-description">{t("WBH_SCHEMA_HIERARCHY_DESC")}</p>
 
                       <ul className="schema-bullets-list">
                         <li className="bullet-green">
@@ -463,7 +599,12 @@ const FormBuilder = () => {
                 <div className="create-form-modal-footer">
                   <Button type="button" className="modal-btn-cancel" label={t("WBH_CANCEL")} variation="secondary" onButtonClick={handleModalClose} />
 
-                  <SubmitBar submit={true} className="modal-btn-submit" label={t("WBH_PROCEED_TO_FORM_BUILDER")} onSubmit={handleSubmit(handleCreateFormSubmit)} />
+                  <SubmitBar
+                    submit={true}
+                    className="modal-btn-submit"
+                    label={t("WBH_PROCEED_TO_FORM_BUILDER")}
+                    onSubmit={handleSubmit(handleCreateFormSubmit)}
+                  />
                 </div>
               </form>
             </div>
@@ -483,7 +624,9 @@ const FormBuilder = () => {
                   </div>
                   <div>
                     <h2 className="modal-title-text">{t("WBH_DELETE_CONFIRM_TITLE") || "Delete Form Configuration"}</h2>
-                    <p className="modal-subtitle-text">{t("WBH_DELETE_CONFIRM_DESC") || "Are you sure you want to delete this form configuration?"}</p>
+                    <p className="modal-subtitle-text">
+                      {t("WBH_DELETE_CONFIRM_DESC") || "Are you sure you want to delete this form configuration?"}
+                    </p>
                   </div>
                 </div>
                 <button type="button" className="modal-close-btn" onClick={() => setDeleteModalRow(null)} aria-label="Close">
@@ -496,13 +639,95 @@ const FormBuilder = () => {
                   <strong>{t("WBH_FORM_NAME") || "Form Name"}:</strong> {deleteModalRow.formName}
                 </p>
                 <p style={{ margin: "0.35rem 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>
-                  <strong>{t("WBH_MODULE_NAME") || "Module"}:</strong> {deleteModalRow.moduleName} | <strong>{t("WBH_ACCORDION") || "Accordion"}:</strong> {deleteModalRow.accordionName}
+                  <strong>{t("WBH_MODULE_NAME") || "Module"}:</strong> {deleteModalRow.moduleName} |{" "}
+                  <strong>{t("WBH_ACCORDION") || "Accordion"}:</strong> {deleteModalRow.accordionName}
                 </p>
               </div>
 
               <div className="create-form-modal-footer">
-                <Button type="button" className="modal-btn-cancel" label={t("WBH_CANCEL") || "Cancel"} variation="secondary" onButtonClick={() => setDeleteModalRow(null)} />
-                <Button type="button" className="modal-btn-submit" style={{ background: "#dc2626" }} label={t("WBH_CONFIRM_DELETE") || "Delete Configuration"} onButtonClick={confirmDeleteForm} />
+                <Button
+                  type="button"
+                  className="modal-btn-cancel"
+                  label={t("WBH_CANCEL") || "Cancel"}
+                  variation="secondary"
+                  onButtonClick={() => setDeleteModalRow(null)}
+                />
+                <Button
+                  type="button"
+                  className="modal-btn-submit"
+                  style={{ background: "#dc2626" }}
+                  label={t("WBH_CONFIRM_DELETE") || "Delete Configuration"}
+                  onButtonClick={confirmDeleteForm}
+                />
+              </div>
+            </div>
+          </div>
+        </PopUp>
+      )}
+
+      {/* Fixed Bottom Action Bar */}
+      <ActionBar>
+        <SubmitBar disabled={false} onSubmit={handleAddNewField} label={t(Config?.actionLabel || "WBH_ADD_NEW_FIELD")} />
+      </ActionBar>
+
+      {/* Sample JSON Schema Popup Modal */}
+      {showSampleModal && (
+        <PopUp>
+          <div className="create-form-modal-overlay">
+            <div className="create-form-modal-container" style={{ maxWidth: "780px" }}>
+              <div className="create-form-modal-header">
+                <div className="modal-title-wrapper">
+                  <div className="modal-icon-badge" style={{ background: "#eff6ff", borderColor: "#bfdbfe" }}>
+                    <span style={{ fontSize: "1.2rem" }}>📋</span>
+                  </div>
+                  <div>
+                    <h2 className="modal-title-text">{t("WBH_SAMPLE_JSON_TITLE") || "Sample UPYOG Form JSON Schema"}</h2>
+                    <p className="modal-subtitle-text">
+                      {t("WBH_SAMPLE_JSON_DESC") || "Standard UPYOG MDMS single-component JSON schema format for uploading forms."}
+                    </p>
+                  </div>
+                </div>
+                <button type="button" className="modal-close-btn" onClick={() => setShowSampleModal(false)} aria-label="Close">
+                  <CloseSvg fill="#64748b" width="18" height="18" />
+                </button>
+              </div>
+
+              <div style={{ padding: "1.25rem 1.5rem", background: "#1e293b", maxHeight: "55vh", overflowY: "auto" }}>
+                <pre
+                  style={{
+                    color: "#f8fafc",
+                    fontFamily: "monospace",
+                    fontSize: "0.8rem",
+                    margin: 0,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {JSON.stringify(SAMPLE_UPYOG_JSON, null, 2)}
+                </pre>
+              </div>
+
+              <div className="create-form-modal-footer">
+                <Button
+                  type="button"
+                  className="modal-btn-cancel"
+                  label={t("WBH_COPY_JSON") || "📋 Copy JSON"}
+                  variation="secondary"
+                  onButtonClick={handleCopySampleJson}
+                />
+                <Button
+                  type="button"
+                  className="modal-btn-cancel"
+                  label={t("WBH_DOWNLOAD_SAMPLE") || "⬇️ Download Sample"}
+                  variation="secondary"
+                  onButtonClick={handleDownloadSampleJson}
+                />
+                <Button
+                  type="button"
+                  className="modal-btn-submit"
+                  label={t("WBH_CLOSE") || "Close"}
+                  onButtonClick={() => setShowSampleModal(false)}
+                />
               </div>
             </div>
           </div>

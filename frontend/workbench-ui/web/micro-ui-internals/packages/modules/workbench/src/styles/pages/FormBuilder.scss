@@ -547,6 +547,27 @@
               }
             }
 
+            .field-logic-btn {
+              background: #eff6ff;
+              color: #2563eb;
+              border: 1px solid #bfdbfe;
+              font-size: 0.75rem;
+              font-weight: 700;
+              padding: 0.25rem 0.65rem;
+              border-radius: 6px;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 0.25rem;
+              transition: all 0.15s ease;
+
+              &:hover {
+                background: #dbeafe;
+                border-color: #93c5fd;
+                color: #1d4ed8;
+              }
+            }
+
             .field-remove-btn {
               margin-left: auto;
               background: none;

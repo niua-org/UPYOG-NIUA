@@ -241,6 +241,7 @@ const FormCreate = () => {
   const [fields, setFields] = useState(getInitialFields);
   const [toast, setToast] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [activeLogicField, setActiveLogicField] = useState(null);
   const [previewFormData, setPreviewFormData] = useState({});
 
   // Check if field label is a duplicate among form fields
@@ -668,37 +669,88 @@ const FormCreate = () => {
               </div>
             ) : (
               <div className="canvas-fields-list">
-                {fields.map((field, index) => (
-                  <div key={field.id} className="canvas-field-card">
-                    <div className="field-card-header">
-                      <span className="field-number-tag">Field #{index + 1}</span>
+                {fields.map((field, index) => {
+                  const parentField = fields.find((pf) => pf.logic?.targetFieldId === field.id);
+                  const isChildField = !!parentField;
 
-                      {/* Field Ordering Re-sequence Controls */}
-                      <div className="field-ordering-controls">
-                        <button
-                          type="button"
-                          className="ordering-btn"
-                          onClick={() => handleMoveField(index, "UP")}
-                          disabled={index === 0}
-                          title="Move Field Up"
-                        >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          className="ordering-btn"
-                          onClick={() => handleMoveField(index, "DOWN")}
-                          disabled={index === fields.length - 1}
-                          title="Move Field Down"
-                        >
-                          ▼
-                        </button>
-                      </div>
+                  return (
+                    <div
+                      key={field.id}
+                      className={`canvas-field-card ${isChildField ? "child-field-card" : ""}`}
+                      style={
+                        isChildField
+                          ? {
+                              borderLeft: "4px solid #3b82f6",
+                              marginLeft: "1.75rem",
+                              background: "#f8fafc",
+                              borderColor: "#3b82f6",
+                            }
+                          : {}
+                      }
+                    >
+                      <div className="field-card-header">
+                        {isChildField ? (
+                          <span
+                            className="field-number-tag child-field-tag"
+                            style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", fontWeight: "700" }}
+                          >
+                            ↳ Child of: {parentField.label || parentField.id}
+                          </span>
+                        ) : (
+                          <span className="field-number-tag">Field #{index + 1}</span>
+                        )}
+
+                        {/* Field Ordering Re-sequence Controls (only shown for root parent fields to keep child fields grouped) */}
+                        {!isChildField && (
+                          <div className="field-ordering-controls">
+                            <button
+                              type="button"
+                              className="ordering-btn"
+                              onClick={() => handleMoveField(index, "UP")}
+                              disabled={index === 0}
+                              title="Move Field Up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              className="ordering-btn"
+                              onClick={() => handleMoveField(index, "DOWN")}
+                              disabled={index === fields.length - 1}
+                              title="Move Field Down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        )}
 
                       <span className="field-type-badge">{field.type.toUpperCase()}</span>
                       <span className={`field-requirement-badge ${field.required === "required" ? "req-mandatory" : "req-optional"}`}>
                         {field.required === "required" ? "REQUIRED" : "OPTIONAL"}
                       </span>
+                      <button
+                        type="button"
+                        className="field-logic-btn"
+                        onClick={() => setActiveLogicField(field)}
+                        title="Configure Field Logic & Conditions"
+                      >
+                        ⚡ Logic
+                      </button>
+                      {field.logic?.targetFieldId && (
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            background: "#f0fdf4",
+                            color: "#166534",
+                            border: "1px solid #bbf7d0",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontWeight: "600",
+                          }}
+                        >
+                          🔗 Displays: {field.logic.targetFieldLabel || "Field"}
+                        </span>
+                      )}
                       <button
                         type="button"
                         className="field-remove-btn"
@@ -1034,8 +1086,9 @@ const FormCreate = () => {
                         </div>
                       </div>
                     )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>
@@ -1095,8 +1148,26 @@ const FormCreate = () => {
                         const isDisabled = !!field.isDisabled;
                         const fieldVal = previewFormData[field.id] || "";
 
+                        // Check if field is dependent on another field's logic
+                        const parentField = fields.find((pf) => pf.logic?.targetFieldId === field.id);
+                        const isDependent = !!parentField;
+
                         return (
-                          <div key={field.id} className="preview-field-item">
+                          <div
+                            key={field.id}
+                            className={`preview-field-item ${isDependent ? "dependent-nested-field" : ""}`}
+                            style={
+                              isDependent
+                                ? {
+                                  borderLeft: "3px solid #cbd5e1",
+                                  paddingLeft: "16px",
+                                  marginLeft: "8px",
+                                  marginTop: "10px",
+                                  marginBottom: "10px",
+                                }
+                                : {}
+                            }
+                          >
                             {field.heading && (
                               <h4 className="preview-field-heading" style={{ fontSize: "0.95rem", fontWeight: "600", color: "#0f172a", margin: "0 0 4px 0" }}>
                                 {field.heading}
@@ -1270,6 +1341,297 @@ const FormCreate = () => {
         </PopUp>
       )}
 
+      {/* Right-Side Drawer Modal for Field Logic */}
+      {activeLogicField && (() => {
+        const availableFieldOptions =
+          Array.isArray(activeLogicField.options) && activeLogicField.options.length > 0
+            ? activeLogicField.options.map((opt) => ({
+              name: opt.name || opt.code,
+              code: opt.code || opt.name,
+            }))
+            : [
+              { name: "Male", code: "Male" },
+              { name: "Female", code: "Female" },
+              { name: "Option 1", code: "OPTION_1" },
+              { name: "Option 2", code: "OPTION_2" },
+            ];
+
+        const availableTargetFields = [
+          ...FIELD_TYPES.map((ft) => ({
+            name: ft.name,
+            code: ft.code,
+          })),
+          ...fields
+            .filter((f) => f.id !== activeLogicField.id)
+            .map((f) => ({
+              name: f.label || f.fieldKey || f.id,
+              code: f.id,
+            })),
+        ];
+
+        return (
+          <PopUp>
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "rgba(15, 23, 42, 0.4)",
+                display: "flex",
+                justifyContent: "flex-end",
+                zIndex: 9999,
+              }}
+              onClick={() => setActiveLogicField(null)}
+            >
+              <div
+                style={{
+                  background: "#ffffff",
+                  width: "100%",
+                  maxWidth: "440px",
+                  height: "100vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  boxShadow: "-4px 0 25px rgba(0, 0, 0, 0.15)",
+                  boxSizing: "border-box",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Drawer Header */}
+                <div
+                  style={{
+                    padding: "1.25rem 1.5rem",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderBottom: "1px solid #f1f5f9",
+                    background: "#ffffff",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "8px",
+                        background: "#eff6ff",
+                        border: "1px solid #bfdbfe",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span style={{ fontSize: "1.1rem" }}>⚡</span>
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
+                        {t("WBH_FIELD_LOGIC") || "Configure Logic"}
+                      </h3>
+                      <p style={{ margin: "0.15rem 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>
+                        Field: <strong>{activeLogicField.label || activeLogicField.id}</strong>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveLogicField(null)}
+                    style={{ background: "none", border: "none", fontSize: "1.25rem", cursor: "pointer", color: "#64748b" }}
+                    aria-label="Close"
+                  >
+                    <CloseSvg fill="#64748b" width="18" height="18" />
+                  </button>
+                </div>
+
+                {/* Drawer Body */}
+                <div style={{ padding: "1.5rem", flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                  {/* Section 1: If answer */}
+                  <div className="form-group-item">
+                    <CardLabel className="config-label" style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", marginBottom: "0.75rem" }}>
+                      If answer
+                    </CardLabel>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                      {/* Condition Dropdown (Equals / Not Equals) */}
+                      <div>
+                        <Dropdown
+                          option={[
+                            { name: "Equals", code: "EQUALS" },
+                            { name: "Not Equals", code: "NOT_EQUALS" },
+                          ]}
+                          optionKey="name"
+                          selected={[
+                            { name: "Equals", code: "EQUALS" },
+                            { name: "Not Equals", code: "NOT_EQUALS" },
+                          ].find((c) => c.code === (activeLogicField.logic?.condition || "EQUALS"))}
+                          select={(val) =>
+                            setActiveLogicField((prev) => ({
+                              ...prev,
+                              logic: { ...prev?.logic, condition: val?.code },
+                            }))
+                          }
+                          placeholder="Equals"
+                          t={t}
+                        />
+                      </div>
+
+                      {/* Select Option Dropdown */}
+                      <div>
+                        <Dropdown
+                          option={availableFieldOptions}
+                          optionKey="name"
+                          selected={availableFieldOptions.find(
+                            (opt) => opt.code === activeLogicField.logic?.selectedOption || opt.name === activeLogicField.logic?.selectedOption
+                          )}
+                          select={(val) =>
+                            setActiveLogicField((prev) => ({
+                              ...prev,
+                              logic: { ...prev?.logic, selectedOption: val?.code || val?.name },
+                            }))
+                          }
+                          placeholder="Select Option"
+                          t={t}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Then display */}
+                  <div className="form-group-item">
+                    <CardLabel className="config-label" style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", marginBottom: "0.75rem" }}>
+                      Then display
+                    </CardLabel>
+
+                    <div>
+                      <Dropdown
+                        option={availableTargetFields}
+                        optionKey="name"
+                        selected={availableTargetFields.find((f) => f.code === activeLogicField.logic?.targetFieldId)}
+                        select={(val) =>
+                          setActiveLogicField((prev) => ({
+                            ...prev,
+                            logic: { ...prev?.logic, targetFieldId: val?.code, targetFieldLabel: val?.name },
+                          }))
+                        }
+                        placeholder="Select Field to Display"
+                        t={t}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Drawer Footer */}
+                <div
+                  style={{
+                    padding: "1rem 1.5rem",
+                    borderTop: "1px solid #f1f5f9",
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "0.75rem",
+                    background: "#ffffff",
+                  }}
+                >
+                  <Button
+                    type="button"
+                    className="modal-btn-cancel"
+                    label="Cancel"
+                    variation="secondary"
+                    onButtonClick={() => setActiveLogicField(null)}
+                  />
+                  <Button
+                    type="button"
+                    className="modal-btn-submit"
+                    label="Save Logic >"
+                    onButtonClick={() => {
+                      const selectedTargetId = activeLogicField.logic?.targetFieldId;
+                      const isFieldType = FIELD_TYPES.some((ft) => ft.code === selectedTargetId);
+
+                      if (isFieldType) {
+                        // Selected a field type from FIELD_TYPES -> Automatically create new field!
+                        const fieldTypeObj = FIELD_TYPES.find((ft) => ft.code === selectedTargetId);
+                        const isFile = selectedTargetId === "file";
+                        const isDropdown = selectedTargetId === "dropdown";
+                        const isOptionsField = ["radio", "checkbox"].includes(selectedTargetId);
+
+                        const baseLabel = `New ${fieldTypeObj?.name || "Field"}`;
+                        let fieldLabel = baseLabel;
+                        let counter = 1;
+                        while (fields.some((f) => (f.label || "").trim().toLowerCase() === fieldLabel.trim().toLowerCase())) {
+                          fieldLabel = `${baseLabel} ${counter}`;
+                          counter++;
+                        }
+
+                        const newCreatedField = {
+                          id: `field_${Date.now()}`,
+                          label: fieldLabel,
+                          fieldKey: generateLocalizationKey(moduleName, fieldLabel),
+                          type: selectedTargetId,
+                          required: "required",
+                          isReadonly: false,
+                          isDisabled: false,
+                          placeholder: `Enter ${(fieldTypeObj?.name || "field").toLowerCase()}`,
+                          minLength: "",
+                          maxLength: "",
+                          heading: "",
+                          paragraph: "",
+                          regexType: "none",
+                          pattern: "",
+                          patternErrorMessage: "",
+                          options: isOptionsField
+                            ? [
+                                { code: "OPTION_1", name: "Option 1" },
+                                { code: "OPTION_2", name: "Option 2" },
+                              ]
+                            : undefined,
+                          mdmsModuleName: isDropdown ? moduleName : undefined,
+                          mdmsMasterName: isDropdown ? "" : undefined,
+                          uploadMode: isFile ? "single" : undefined,
+                          allowedFileTypes: isFile ? "pdf_image" : undefined,
+                          maxFileSize: isFile ? "5" : undefined,
+                          maxFileCount: isFile ? "5" : undefined,
+                          fileErrorMessage: isFile ? "Allowed formats: PDF, JPG, PNG up to 5MB" : undefined,
+                        };
+
+                        const updatedLogicData = {
+                          ...activeLogicField.logic,
+                          targetFieldId: newCreatedField.id,
+                          targetFieldLabel: newCreatedField.label,
+                        };
+
+                        setFields((prev) => {
+                          const parentIdx = prev.findIndex((f) => f.id === activeLogicField.id);
+                          const updatedList = prev.map((f) => (f.id === activeLogicField.id ? { ...f, logic: updatedLogicData } : f));
+
+                          if (parentIdx !== -1) {
+                            updatedList.splice(parentIdx + 1, 0, newCreatedField);
+                            return updatedList;
+                          }
+                          return [...updatedList, newCreatedField];
+                        });
+
+                        setActiveLogicField(null);
+                        setToast({
+                          label: t("WBH_LOGIC_FIELD_CREATED_SUCCESS") || `Created new ${newCreatedField.label} field and linked logic!`,
+                          error: false,
+                        });
+                      } else {
+                        // Selected an existing canvas field
+                        const logicData = activeLogicField.logic;
+                        setFields((prev) =>
+                          prev.map((f) => (f.id === activeLogicField.id ? { ...f, logic: logicData } : f))
+                        );
+                        setActiveLogicField(null);
+                        setToast({ label: t("WBH_LOGIC_SAVED_SUCCESS") || "Field logic configuration saved successfully!", error: false });
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </PopUp>
+        );
+      })()}
+
       {toast && (
         <Toast
           label={toast.label}
@@ -1283,3 +1645,6 @@ const FormCreate = () => {
 };
 
 export default FormCreate;
+
+
+
