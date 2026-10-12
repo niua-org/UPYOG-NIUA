@@ -6,18 +6,36 @@ import { useTranslation } from "react-i18next";
  * - Handles PDF download/print, receipt generation, workflow data, and helpers
  */
 
-export const printReciept = async (businessService, receiptNumber) => {
-  const tenantId = Digit.ULBService.getCurrentTenantId();
-  const state = Digit.ULBService.getStateId();
-  const payments = await Digit.PaymentService.getReciept(tenantId, businessService, { consumerCodes: receiptNumber });
-  let response = { filestoreIds: [payments.Payments[0]?.fileStoreId] };
+export const printReciept = async (businessService = "Challan_Generation", receiptNumber) => {
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+  const state = Digit.ULBService.getStateId() || tenantId;
 
-  if (!payments.Payments[0]?.fileStoreId) {
-    response = await Digit.PaymentService.generatePdf(state, { Payments: payments.Payments }, "consolidatedreceipt");
+  // 1. Sahi API method call karein jo /collection-services/payments/_search ko hit karta hai
+  let payments = await Digit.PaymentService.recieptSearch(tenantId, businessService, { consumerCodes: receiptNumber });
+  
+  if (!payments?.Payments || payments.Payments.length === 0) {
+    payments = await Digit.PaymentService.recieptSearch(tenantId, businessService, { receiptNumbers: receiptNumber });
   }
-  const fileStore = await Digit.PaymentService.printReciept(state, { fileStoreIds: response.filestoreIds[0] });
-  window.open(fileStore[response.filestoreIds[0]], "_blank");
+
+  let fileStoreId = payments?.Payments?.[0]?.fileStoreId;
+
+  // 2. Agar PDF pehle se generate nahi hui hai to challangeneration-receipt template se generate karein
+  if (!fileStoreId && payments?.Payments?.length > 0) {
+    const response = await Digit.PaymentService.generatePdf(state, { Payments: payments.Payments }, "challangeneration-receipt");
+    fileStoreId = response?.filestoreIds?.[0];
+  }
+
+  // 3. Filestore se valid URL milne par hi tab open karein
+  if (fileStoreId) {
+    const fileStore = await Digit.PaymentService.printReciept(state, { fileStoreIds: fileStoreId });
+    const fileUrl = fileStore?.[fileStoreId] || fileStore?.fileStoreIds?.[0]?.url;
+    if (fileUrl) {
+      window.open(fileUrl, "_blank");
+    }
+  }
 };
+
+
 
 export const ChallanData = (tenantId, consumerCode) => {
   const wfData = Digit.Hooks.useWorkflowDetails({

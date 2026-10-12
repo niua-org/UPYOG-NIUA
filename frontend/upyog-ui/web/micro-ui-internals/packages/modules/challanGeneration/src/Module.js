@@ -6,6 +6,9 @@ import EmployeeChallan from "./EmployeeChallan";
 import ConsumerDetails from "./pageComponents/ConsumerDetails";
 import ServiceDetails from "./pageComponents/ServiceDetails";
 import EmployeeApp from "./pages/employee";
+import CitizenApp from "./pages/citizen";
+import ChallanMyPayments from "./pages/citizen/MyPayments";
+import CitizenChallanDetails from "./pages/citizen/ChallanDetails";
 import SearchReceipt from "./pages/employee/SearchReceipt";
 import SearchChallan from "./pages/employee/SearchChallan";
 import ChallanStepperForm from "./pageComponents/ChallanStepper/ChallanStepperForm";
@@ -14,6 +17,7 @@ import ChallanDocuments from "./pageComponents/ChallanDocuments";
 import getRootReducer from "../redux/reducer";
 import ChallanResponseCitizen from "./components/ChallanResponseCitizen";
 import ChallanApplicationDetails from "./pages/employee/ChallanApplicationDetails";
+import ChallanCitizenLinks from "./components/ChallanCitizenCard";
 
 /**
  * ChallanGenerationModule:
@@ -31,7 +35,6 @@ export const ChallanGenerationModule = ({ stateCode, userType, tenants }) => {
     language,
   });
 
-  
   const { path, url } = Digit.Hooks.useModuleBasePath();
 
   Digit.SessionStorage.set("ChallanGeneration_TENANTS", tenants);
@@ -47,6 +50,7 @@ export const ChallanGenerationModule = ({ stateCode, userType, tenants }) => {
   return <CitizenApp />;
 };
 
+export const ChallanGenerationLinks = ChallanCitizenLinks;
 export const ChallanReducers = getRootReducer;
 
 const componentsToRegister = {
@@ -54,6 +58,12 @@ const componentsToRegister = {
   ServiceDetails,
   ChallanGenerationCard,
   ChallanGenerationModule,
+  ChallanGenerationLinks,
+  ChallanCitizenLinks,
+  ChallanMyPayments,
+  ChallanCitizenMyPayments: ChallanMyPayments,
+  ChallanCitizenMyChallans: ChallanMyPayments,
+  ChallanCitizenDetails: CitizenChallanDetails,
   MCollectEmployeeChallan: EmployeeChallan,
   SearchReceipt,
   SearchChallan,
@@ -62,7 +72,7 @@ const componentsToRegister = {
   ChallanApplicationDetails,
   OffenceDetails,
   ChallanDocuments,
-  ChallanResponseCitizen
+  ChallanResponseCitizen,
 };
 
 export const initChallanGenerationComponents = () => {

@@ -67,18 +67,19 @@ const ChallanStepperForm = () => {
   // ---------------------------------------------
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
+  const stateId = Digit.ULBService.getStateId() || tenantId?.split(".")[0];
 
-  const { data: categoryData, isLoading: categoryLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "Category" }]);
+  const { data: categoryData, isLoading: categoryLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "Category" }]);
 
-  const { data: subCategoryData, isLoading: subCategoryLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "SubCategory" }]);
+  const { data: subCategoryData, isLoading: subCategoryLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "SubCategory" }]);
 
-  const { data: OffenceTypeData, isLoading: OffenceTypeLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "OffenceType" }]);
+  const { data: OffenceTypeData, isLoading: OffenceTypeLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "OffenceType" }]);
 
-  const { data: OffenceRates, isLoading: OffenceRatesLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "Rates" }]);
+  const { data: OffenceRates, isLoading: OffenceRatesLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "Rates" }]);
 
-  const { data: docData, isLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "Documents" }]);
+  const { data: docData, isLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "Documents" }]);
 
-  const { data: OffenceActData, isLoading: OffenceActLoading } = Digit.Hooks.useCustomMDMS(tenantId, "Challan", [{ name: "Acts" }]);
+  const { data: OffenceActData, isLoading: OffenceActLoading } = Digit.Hooks.useCustomMDMS(stateId, "Challan", [{ name: "Acts" }]);
 
   // ---------------------------------------------
   // React Hook Form
@@ -114,6 +115,11 @@ const ChallanStepperForm = () => {
 
   const hasValue = (value) => {
     return value !== null && value !== undefined && value !== "";
+  };
+
+  const sanitizeText = (text) => {
+    if (typeof text !== "string") return text;
+    return text.replace(/&/g, "and");
   };
 
   // ---------------------------------------------
@@ -255,11 +261,11 @@ const ChallanStepperForm = () => {
 
       businessService: "Challan_Generation",
 
-      offenceTypeName: data?.offenceType?.name,
+      offenceTypeName: sanitizeText(data?.offenceType?.name),
 
-      offenceCategoryName: data?.offenceCategory?.name,
+      offenceCategoryName: sanitizeText(data?.offenceCategory?.name),
 
-      offenceSubCategoryName: data?.offenceSubCategory?.name,
+      offenceSubCategoryName: sanitizeText(data?.offenceSubCategory?.name),
 
       challanAmount: data?.challanAmount,
 
@@ -278,7 +284,7 @@ const ChallanStepperForm = () => {
 
         longitude: evidenceDocument?.longitude,
 
-        offenceActs: actString,
+        offenceActs: sanitizeText(actString),
       },
 
       // ---------------------------------------------
