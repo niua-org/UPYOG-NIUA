@@ -26,8 +26,9 @@ public class PFMSTransactionTransformer {
 
     public String toAdditionalDetailsJson(PFMSTransaction t) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("voucherType", t.getVoucherType());
         map.put("accountHeadCode", t.getAccountHeadCode());
+        map.put("functionCode", t.getFunctionCode());
+        map.put("schemeCode", t.getSchemeCode());
         map.put("debitAmount", t.getDebitAmount());
         map.put("creditAmount", t.getCreditAmount());
         map.put("narrationOrDescription", t.getNarrationOrDescription());

@@ -15,13 +15,11 @@ CREATE TABLE IF NOT EXISTS ug_pfms_transactions (
     id UUID PRIMARY KEY,
     correlation_id UUID NOT NULL,
 
-    ulb_code_or_pfms_agency_code VARCHAR(100) NOT NULL,
+    agencyCode VARCHAR(100) NOT NULL,
     voucher_number VARCHAR(100) NOT NULL,
     voucher_date DATE NOT NULL,
+    voucherType VARCHAR(100) NOT NULL,
     financial_year VARCHAR(20) NOT NULL,
-    function_code VARCHAR(100) NOT NULL,
-    scheme_code VARCHAR(100) NOT NULL,
-
     additionaldetails JSONB,
 
     status VARCHAR(50) NOT NULL,
@@ -35,7 +33,7 @@ CREATE TABLE IF NOT EXISTS ug_pfms_transactions (
         REFERENCES ug_pfms_data(id),
 
     CONSTRAINT uk_pfms_ulb_voucher_number
-        UNIQUE (ulb_code_or_pfms_agency_code, voucher_number)
+        UNIQUE (agencyCode, voucher_number)
 );
 
 

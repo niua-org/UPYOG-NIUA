@@ -31,20 +31,20 @@ public class PFMSTransactionRowMapper implements RowMapper<PFMSTransaction> {
         // Flat columns
         pfmsTransaction.setId(rs.getString("id"));
         pfmsTransaction.setCorrelationId(rs.getString("correlation_id"));
-        pfmsTransaction.setUlbCodeOrPFMSAgencyCode(rs.getString("ulb_code_or_pfms_agency_code"));
+        pfmsTransaction.setUlbCodeOrPFMSAgencyCode(rs.getString("agencyCode"));
         pfmsTransaction.setVoucherNumber(rs.getString("voucher_number"));
         pfmsTransaction.setVoucherDate(rs.getDate("voucher_date").toLocalDate());
+        pfmsTransaction.setVoucherType(rs.getString("voucherType"));
         pfmsTransaction.setFinancialYear(rs.getString("financial_year"));
-        pfmsTransaction.setFunctionCode(rs.getString("function_code"));
-        pfmsTransaction.setSchemeCode(rs.getString("scheme_code"));
 
         // Deserialize additionaldetails JSONB back into fields
         String json = rs.getString("additionaldetails");
         if (json != null) {
             try {
                 Map<String, Object> details = objectMapper.readValue(json, new TypeReference<>() {});
-                pfmsTransaction.setVoucherType(getString(details, "voucherType"));
                 pfmsTransaction.setAccountHeadCode(getList(details, "accountHeadCode"));
+                pfmsTransaction.setFunctionCode(getList(details, "functionCode"));
+                pfmsTransaction.setSchemeCode(getList(details, "schemeCode"));
                 pfmsTransaction.setDebitAmount(getBigDecimal(details, "debitAmount"));
                 pfmsTransaction.setCreditAmount(getBigDecimal(details, "creditAmount"));
                 pfmsTransaction.setNarrationOrDescription(getString(details, "narrationOrDescription"));

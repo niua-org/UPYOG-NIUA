@@ -52,11 +52,11 @@ public class PFMSTransaction {
     @NotEmpty
     private List<String> accountHeadCode;
 
-    @NotBlank
-    private String functionCode;
+    @NotEmpty
+    private List<String> functionCode;
 
-    @NotBlank
-    private String schemeCode;
+    @NotEmpty
+    private List<String> schemeCode;
 
     private BigDecimal debitAmount;
 

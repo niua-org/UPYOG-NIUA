@@ -6,7 +6,7 @@ public class PFMSQuery {
 
     public static final String FIND_EXISTING_VOUCHER_NUMBERS =
             "SELECT voucher_number FROM public.ug_pfms_transactions" +
-                    " WHERE voucher_number = ANY(?) AND ulb_code_or_pfms_agency_code = ?";
+                    " WHERE voucher_number = ANY(?) AND agencyCode = ?";
 
     public static final String FETCH_INITIATED_TRANSACTION_IDS =
             "SELECT id FROM public.ug_pfms_transactions" +
