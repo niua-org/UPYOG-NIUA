@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Represents the form data sent to the PFMS data push API.
@@ -129,7 +130,7 @@ public class PFMSTransactionFormData {
                 .voucherDate(t.getVoucherDate().format(PFMS_DATE_FORMAT))
                 .voucherType(t.getVoucherType())
                 .financialYear(t.getFinancialYear())
-                .accountHeadCode(t.getAccountHeadCode())
+                .accountHeadCode(t.getAccountHeadCode() == null ? "" : String.join("|", t.getAccountHeadCode()))
                 .functionCode(t.getFunctionCode())
                 .schemeCode(t.getSchemeCode())
                 .debitAmount(t.getDebitAmount() == null ? "" : t.getDebitAmount().toString())
