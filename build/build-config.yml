@@ -991,7 +991,7 @@ config:
     build:
       - work-dir: "business-services/dashboard-data-extractor"
         image-name: "dashboard-data-extractor"
-        dockerfile: "build/maven/Dockerfile"
+        dockerfile: "business-services/dashboard-data-extractor/build/Dockerfile"
       - work-dir: "business-services/dashboard-data-extractor/src/main/resources/db"
         image-name: "dashboard-data-extractor-db"
         
@@ -1032,6 +1032,14 @@ config:
       - work-dir: "municipal-services/upyog-aggregation-service"
         image-name: "upyog-aggregation-service"
         dockerfile: "municipal-services/upyog-aggregation-service/Dockerfile"
+
+  - name: "builds/upyog/dx-services/data-sharing-service-dx"
+    build:
+      - work-dir: "dx-services/data-sharing-service-dx"
+        image-name: "data-sharing-service-dx"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "dx-services/data-sharing-service-dx/src/main/resources/db"
+        image-name: "data-sharing-service-dx-db"
 
 
 
