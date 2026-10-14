@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+USE_EDGE_TTS = os.environ.get("USE_EDGE_TTS", "True").strip().lower() == "true"
 
 # Global state for stop flag (barge-in interruption)
 stop_generation = threading.Event()
@@ -243,8 +244,8 @@ def clean_text_for_tts(text: str, language_code: str = "en") -> str:
 
 
 def text_to_speech(text: str, language_code: str, gender: str = "female"):
-    """Convert text to speech using Edge-TTS with Bhashini fallback."""
-    logger.info(f"[TTS GENERATION] Input text length: {len(text)} | Language: '{language_code}' | Gender: '{gender}'")
+    """Use Edge TTS when selected, with Bhashini as fallback."""
+    logger.info(f"[TTS GENERATION] Input text length: {len(text)} | Language: '{language_code}' | Gender: '{gender}' | USE_EDGE_TTS={USE_EDGE_TTS}")
 
     # Clean markdown, headers and apply pronunciation rules
     text = clean_text_for_tts(text, language_code)
@@ -259,8 +260,8 @@ def text_to_speech(text: str, language_code: str, gender: str = "female"):
 
     logger.info(f"[TTS] Generating TTS for language: {language_code}")
 
-    # Try Edge-TTS first for English/Hindi
-    if language_code in ["en", "hi"]:
+    # Edge TTS is configured here for English and Hindi only.
+    if USE_EDGE_TTS and language_code in ["en", "hi"]:
         voice_map = {
             "en": "en-IN-NeerjaNeural",
             "hi": "hi-IN-MadhurNeural"
@@ -286,8 +287,12 @@ def text_to_speech(text: str, language_code: str, gender: str = "female"):
                 logger.error("[TTS EDGE-TTS] Edge-TTS generated empty or invalid audio file, falling back to Bhashini.")
         except Exception as e:
             logger.error(f"[TTS EDGE-TTS] Edge-TTS failed: {e}. Falling back to Bhashini...")
+    elif USE_EDGE_TTS:
+        logger.info(f"[TTS] No Edge TTS voice configured for '{language_code}'; using Bhashini.")
+    else:
+        logger.info("[TTS] USE_EDGE_TTS is false; using Bhashini directly.")
 
-    # Fallback to Bhashini
+    # Use Bhashini when selected or when Edge TTS is unavailable/fails.
     if language_code == "en":
         tts_service_id = TTS_SERVICE_ID_MISC
     elif language_code in ["hi", "mr", "bn", "gu", "pa", "as", "or"]:

@@ -66,6 +66,7 @@ except Exception as e:
 _grv_form_cfg = _raw_cfg.get("forms", {}).get("grievance", {})
 FORM_FIELDS   = _grv_form_cfg.get("fields", [])
 ALL_FIELDS    = [f["id"] for f in FORM_FIELDS]
+EXTRACTABLE_FIELDS = [f["id"] for f in FORM_FIELDS if f.get("extractable", False)]
 FIELD_HINTS   = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
 
 
@@ -249,7 +250,7 @@ def extraction_node(state: GrievanceState):
         logger.info(f"[grievance extract_node] User asked a question ('{user_msg}'), skipping field extraction.")
         return {"draft_grievance": draft}
 
-    missing = [f for f in ALL_FIELDS if not draft.get(f)]
+    missing = [f for f in EXTRACTABLE_FIELDS if not draft.get(f)]
     if not missing:
         return {"draft_grievance": draft}
 
@@ -344,7 +345,7 @@ def extraction_node(state: GrievanceState):
                 logger.info(f"[grievance extract] Unrecognized locality input: '{cleaned_input}', rejecting verbatim acceptance")
 
     # Fallback to LLM multi-field extraction if any missing fields remain and LLM is available
-    remaining_missing = [f for f in ALL_FIELDS if not draft.get(f)]
+    remaining_missing = [f for f in EXTRACTABLE_FIELDS if not draft.get(f)]
     if remaining_missing and llm:
         schema_hints = {}
         for f in remaining_missing:
