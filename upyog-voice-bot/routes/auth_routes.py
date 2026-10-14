@@ -27,7 +27,7 @@ def api_send_otp():
     client_ip = request.remote_addr or "unknown"
     rate_key = f"otp_ratelimit:{mobile}:{client_ip}"
     try:
-        from database import r_client
+        from storage.redis_manager import r_client
         attempts = r_client.incr(rate_key)
         if attempts == 1:
             r_client.expire(rate_key, 600)  # 10 minutes rate limit window

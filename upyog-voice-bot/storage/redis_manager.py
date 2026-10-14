@@ -378,4 +378,3 @@ def get_user_from_redis_token(token: str) -> Optional[dict]:
     except Exception as e:
         logger.warning(f"[Redis] Could not fetch user from access_token:{token[:8]}...: {e}")
     return None
-

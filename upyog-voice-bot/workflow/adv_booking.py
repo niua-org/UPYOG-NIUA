@@ -10,7 +10,12 @@ from langgraph.graph import StateGraph, END, START
 from langchain_groq import ChatGroq
 
 
-from memory_manager import MemoryManager, shared_memory
+from storage.qdrant_manager import MemoryManager, shared_memory
+from prompts.workflow_prompts import (
+    build_adv_extract_prompt,
+    build_adv_question_prompt,
+    build_adv_past_booking_filter_prompt,
+)
 
 from workflow.base_state import BaseAgentState
 # BaseAgentState = The universal "ID Card" (TypedDict) for all modules. Contains messages, phone, session_id etc.
@@ -237,11 +242,7 @@ def intent_and_ui_node(state: AdvBookingState):
             raw = search_ads(phone_number)
             
             # Step C: Extract filters from user text via LLM
-            prompt = f"""Extract any dates or booking IDs from this query to filter past bookings.
-Query: '{user_msg}'
-Return ONLY a JSON object (no other text) with:
-- "date_str": A string representing the exact date in YYYY-MM-DD format if mentioned, else null.
-- "booking_id": The exact ADV-... ID, or just the partial digits (like the last 4 numbers) if mentioned, else null."""
+            prompt = build_adv_past_booking_filter_prompt(user_msg=user_msg)
             
             try:
                 if llm:
@@ -391,27 +392,13 @@ def extraction_node(state: AdvBookingState):
             else:
                 schema_hints[f] = FIELD_HINTS.get(f, "relevant value")
         
-        extract_prompt = f"""You are a strict data extraction AI for UPYOG Advertisement bookings.
-Your ONLY job is to extract ANY updated or newly specified fields from the user's message.
-Target fields to extract: {json.dumps(llm_extractable_fields)}
-Hints: {json.dumps(schema_hints)}
-
-Already collected fields: {json.dumps(draft_booking)}
-Question the user is answering: "{last_assistant_msg}"
-User message: "{user_msg}"
-
-CRITICAL RULES:
-- If the user's message clearly answers or updates one or more target fields, extract them.
-- If a field is not mentioned or changed, return null for that field.
-- If the user just says "Yes" or "No", use the "Question the user is answering" to figure out which field they are answering (e.g., nightLight).
-- STRICT RULE FOR 'addType': Only extract if they mention a specific type (e.g. Hoarding, Unipole, Kiosk, Banner). Do NOT extract generic words like 'adv' or 'advertisement' as addType!
-
-Reply ONLY with valid JSON containing the extracted fields. No explanations.
-Example:
-{{
-  "location": "extracted value",
-  "address": null
-}}"""
+        extract_prompt = build_adv_extract_prompt(
+            llm_extractable_fields=llm_extractable_fields,
+            schema_hints=schema_hints,
+            draft_booking=draft_booking,
+            last_assistant_msg=last_assistant_msg,
+            user_msg=user_msg
+        )
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
             m = re.search(r'\{.*\}', ext.content.strip(), re.DOTALL)
@@ -469,22 +456,13 @@ def ask_next_node(state: AdvBookingState):
     if llm:
         is_hindi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
         lang_rule = "Respond in Hindi." if is_hindi else "Respond in English. Do NOT output any Devanagari or Hindi text."
-        ctx = f"""You are a conversational UPYOG advertisement booking concierge.
-Collected so far: {json.dumps({k: v for k, v in draft_booking.items() if v})}
-Your task: Ask the user to provide the next missing field: "{field_label}".
-Available options for this field: {json.dumps(options) if options else "None (free text/date/upload)"}
-
-User just said: "{user_msg}"
-
-Instructions:
-1. Language: {lang_rule}
-2. Generate a natural, polite, conversational question asking for the "{field_label}".
-3. Note: "Advertisement Type" refers to outdoor municipal advertising structure types (such as Hoarding, Unipole, Kiosk, Billboard, Banner, Poster, Digital Screen). NEVER ask about or refer to media file formats like videos, images, or audio formats.
-4. Do NOT say "Hello" unless the user explicitly greeted you.
-5. NEVER repeat or confirm what the user just selected. 
-6. DO NOT list the available options in the text (the UI will handle that).
-7. Maintain a formal, polite, professional tone. Never use informal or familial terms of address.
-8. Output ONLY the conversational question text."""
+        ctx = build_adv_question_prompt(
+            draft_booking=draft_booking,
+            field_label=field_label,
+            options=options,
+            user_msg=user_msg,
+            lang_rule=lang_rule
+        )
         try:
             conv = llm.invoke([SystemMessage(content=ctx)])
             text = conv.content.strip()
