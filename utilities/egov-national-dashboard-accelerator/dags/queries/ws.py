@@ -1438,7 +1438,8 @@ ws_todays_sla_compliance = {'path': 'wsapplications/_search',
 """
                             }
 
-ws_queries = [ws_collection_by_payment_channel_type,
+ws_queries = [
+	# ws_collection_by_payment_channel_type,
               ws_connections_created_by_connection_type,
               ws_pending_connections,
               ws_sewerage_connections,
