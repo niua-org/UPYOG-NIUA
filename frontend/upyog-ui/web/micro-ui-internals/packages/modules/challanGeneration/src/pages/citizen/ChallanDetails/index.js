@@ -42,7 +42,6 @@ import { useTranslation } from "react-i18next";
 import { useParams, useLocation } from "react-router-dom";
 import { downloadAndPrintChallan, printReciept, convertEpochToDate } from "../../../utils";
 import CHBDocument from "../../../components/ChallanDocument";
-import NewApplicationTimeline from "../../../../../templates/ApplicationDetails/components/NewApplicationTimeline";
 
 /**
  * CitizenChallanDetails Component
@@ -53,26 +52,9 @@ import NewApplicationTimeline from "../../../../../templates/ApplicationDetails/
  * Structured to match the GCApplicationDetails layout.
  */
 const getChallanAmount = (challan) => {
-  if (challan?.totalAmount !== undefined && challan?.totalAmount !== null && typeof challan?.totalAmount === "number") {
-    return challan.totalAmount;
-  }
-  if (challan?.totalDue !== undefined && challan?.totalDue !== null) {
-    return challan.totalDue;
-  }
-  if (challan?.calculation?.totalAmount !== undefined && challan?.calculation?.totalAmount !== null) {
-    return challan.calculation.totalAmount;
-  }
-  if (Array.isArray(challan?.amount)) {
-    return challan.amount.reduce((acc, curr) => acc + (Number(curr?.amount) || 0), 0);
-  }
-  if (typeof challan?.amount === "object" && challan?.amount !== null) {
-    return challan.amount.amount || 0;
-  }
-  if (challan?.amount !== undefined && challan?.amount !== null && typeof challan?.amount === "number") {
-    return challan.amount;
-  }
-  return 0;
+  return challan?.challanAmount || 0;
 };
+
 
 const getChallanAddress = (challan, defaultText = "N/A") => {
   const addr = challan?.address;
@@ -80,26 +62,7 @@ const getChallanAddress = (challan, defaultText = "N/A") => {
     return challan?.additionalDetail?.location || challan?.additionalDetail?.address || defaultText;
   }
   if (typeof addr === "string") return addr;
-
-  const parts = [
-    addr?.doorNo,
-    addr?.buildingName,
-    addr?.addressLine1,
-    addr?.addressLine2,
-    addr?.street,
-    addr?.landmark,
-    addr?.locality?.name || addr?.locality?.code,
-    addr?.city,
-    addr?.pincode,
-    addr?.detail,
-    addr?.address,
-  ].filter(Boolean);
-
-  if (parts.length > 0) {
-    return [...new Set(parts)].join(", ");
-  }
-
-  return challan?.additionalDetail?.location || challan?.additionalDetail?.address || defaultText;
+  return addr.addressLine1 || defaultText;
 };
 
 const CitizenChallanDetails = () => {
@@ -168,10 +131,9 @@ const CitizenChallanDetails = () => {
 
   const isPaid =
     challan?.applicationStatus === "PAID" ||
-    challan?.status === "PAID" ||
     (reciept_data?.Payments && reciept_data?.Payments?.length > 0);
 
-  const status = isPaid ? "PAID" : challan?.applicationStatus || challan?.status || "ACTIVE";
+  const status = isPaid ? "PAID" : challan?.applicationStatus || "ACTIVE";
   const amount = getChallanAmount(challan);
 
   const handleMakePayment = () => {
@@ -212,7 +174,7 @@ const CitizenChallanDetails = () => {
   }
 
   // ---------- Additional Details ----------
-  let additionalDetails = challan?.additionalDetail || challan?.additionalDetails || {};
+  let additionalDetails = challan?.additionalDetail || {};
   if (typeof additionalDetails === "string") {
     try {
       additionalDetails = JSON.parse(additionalDetails);
@@ -222,72 +184,23 @@ const CitizenChallanDetails = () => {
   }
 
   // ---------- Applicant / Offender Details ----------
-  const offenderName =
-    challan?.citizen?.name ||
-    additionalDetails?.ownerName ||
-    additionalDetails?.applicantName ||
-    additionalDetails?.name ||
-    t("CS_NA");
-
-  const mobileNumber =
-    challan?.citizen?.mobileNumber ||
-    additionalDetails?.mobileNumber ||
-    t("CS_NA");
-
-  const emailId =
-    challan?.citizen?.emailId ||
-    additionalDetails?.emailId ||
-    additionalDetails?.email ||
-    null;
-
-  const altMobileNumber =
-    additionalDetails?.altMobileNumber ||
-    additionalDetails?.alternateNumber ||
-    additionalDetails?.altMobileNo ||
-    null;
+  const offenderName = challan?.citizen?.name || t("CS_NA");
+  const mobileNumber = challan?.citizen?.mobileNumber || t("CS_NA");
+  const emailId = challan?.citizen?.emailId || null;
+  const altMobileNumber = additionalDetails?.altMobileNumber || null;
 
   // ---------- Address ----------
-  const address = challan?.address || {};
-  const doorNo = address?.doorNo || address?.houseNo || additionalDetails?.doorNo;
-  const buildingName = address?.buildingName || address?.houseName || additionalDetails?.buildingName;
-  const street = address?.street || address?.streetName || additionalDetails?.street;
-  const localityRaw = address?.locality || additionalDetails?.locality;
-  const localityText =
-    typeof localityRaw === "string"
-      ? t(localityRaw)
-      : localityRaw?.name
-      ? t(localityRaw.name)
-      : localityRaw?.code
-      ? t(localityRaw.code)
-      : null;
-  const landmark = address?.landmark || additionalDetails?.landmark;
-  const city = address?.city || additionalDetails?.city || challan?.tenantId;
-  const pincode = address?.pincode || additionalDetails?.pincode;
+  const city = challan?.address?.city || challan?.tenantId;
+  const localityText = challan?.address?.locality?.name ? t(challan.address.locality.name) : null;
+  const pincode = challan?.address?.pincode || null;
   const fullAddress = getChallanAddress(challan, t("CS_NA"));
 
   // ---------- Offence Details ----------
-  const offenceDetails = additionalDetails?.offenceDetails || {};
-  const offenceType =
-    challan?.offenceTypeName ||
-    offenceDetails?.offenceType ||
-    additionalDetails?.offenceType ||
-    t("CS_NA");
-  const offenceCategory =
-    challan?.offenceCategoryName ||
-    offenceDetails?.category ||
-    additionalDetails?.offenceCategory ||
-    null;
-  const vehicleNumber =
-    offenceDetails?.vehicleNumber ||
-    additionalDetails?.vehicleNumber ||
-    null;
-  const description =
-    challan?.description ||
-    offenceDetails?.description ||
-    additionalDetails?.description ||
-    t("CS_NA");
-  const latitude = additionalDetails?.latitude || offenceDetails?.latitude;
-  const longitude = additionalDetails?.longitude || offenceDetails?.longitude;
+  const offenceType = challan?.offenceTypeName || t("CS_NA");
+  const offenceCategory = challan?.offenceCategoryName || null;
+  const vehicleNumber = additionalDetails?.vehicleNumber || null;
+  const latitude = additionalDetails?.latitude;
+  const longitude = additionalDetails?.longitude;
 
   // ---------- Documents ----------
   const docs = challan?.documents || additionalDetails?.documents || [];
@@ -341,13 +254,8 @@ const CitizenChallanDetails = () => {
           </StatusTable>
 
           {/* Property Location / Address Details */}
-          <CardSubHeader style={{ fontSize: "24px" }}>{t("GC_PROPERTY_LOCATION_DETAILS") || t("CHALLAN_LOCATION_DETAILS")}</CardSubHeader>
+          <CardSubHeader style={{ fontSize: "24px" }}>{t("CHALLAN_ADDRESS_DETAILS")}</CardSubHeader>
           <StatusTable>
-            {doorNo && <Row className="border-none" label={t("UC_DOOR_NO_LABEL")} text={doorNo} />}
-            {buildingName && <Row className="border-none" label={t("UC_BUILDING_NAME_LABEL")} text={buildingName} />}
-            {street && <Row className="border-none" label={t("UC_STREET_NAME_LABEL")} text={street} />}
-            {localityText && <Row className="border-none" label={t("GC_LOCALITY") || t("UC_MOHALLA_LABEL")} text={localityText} />}
-            {landmark && <Row className="border-none" label={t("GC_LANDMARK")} text={landmark} />}
             <Row className="border-none" label={t("GC_CITY")} text={city ? t(city) : t("CS_NA")} />
             {pincode && <Row className="border-none" label={t("GC_PINCODE")} text={pincode} />}
             <Row className="border-none" label={t("CHALLAN_ADDRESS")} text={fullAddress} />
@@ -358,8 +266,6 @@ const CitizenChallanDetails = () => {
           <StatusTable>
             <Row className="border-none" label={t("CHALLAN_OFFENCE_TYPE")} text={offenceType} />
             {offenceCategory && <Row className="border-none" label={t("CHALLAN_OFFENCE_CATEGORY")} text={offenceCategory} />}
-            {vehicleNumber && <Row className="border-none" label={t("CHALLAN_VEHICLE_NO")} text={vehicleNumber} />}
-            <Row className="border-none" label={t("CHALLAN_DESCRIPTION")} text={description} />
             {latitude && longitude && (
               <Row
                 className="border-none"
@@ -389,10 +295,6 @@ const CitizenChallanDetails = () => {
             </>
           )}
 
-          {/* Workflow Timeline */}
-          {workflowDetails?.data && (
-            <NewApplicationTimeline workflowDetails={workflowDetails} t={t} />
-          )}
         </Card>
 
         {/* Action Bar */}

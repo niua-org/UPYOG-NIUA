@@ -31,36 +31,21 @@ const convertEpochToDate = (dateEpoch) => {
 };
 
 const getChallanAmount = (payment) => {
-  if (payment?.totalAmount !== undefined && payment?.totalAmount !== null) {
-    return payment.totalAmount;
-  }
-  if (payment?.totalDue !== undefined && payment?.totalDue !== null) {
-    return payment.totalDue;
-  }
-  if (payment?.calculation?.totalAmount !== undefined && payment?.calculation?.totalAmount !== null) {
-    return payment.calculation.totalAmount;
-  }
-  if (Array.isArray(payment?.amount)) {
-    return payment.amount.reduce((acc, curr) => acc + (Number(curr?.amount) || 0), 0);
-  }
-  if (typeof payment?.amount === "object" && payment?.amount !== null) {
-    return payment.amount.amount || 0;
-  }
-  if (payment?.amount !== undefined && payment?.amount !== null) {
-    return payment.amount;
-  }
-  return 0;
+  console.log("payment data ", payment);
+  return payment?.challanAmount || 0;
 };
+
+
 
 const ChallanPayments = ({ payment, receiptData }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const challanNo = payment?.challanNo || payment?.consumerCode
-  const tenantId = payment?.tenantId || Digit.ULBService.getCurrentTenantId();
+  const tenantId =  Digit.ULBService.getCurrentTenantId();
 
-  const isPaid = payment?.applicationStatus === "PAID" || payment?.status === "PAID" || !!receiptData;
-  const status = isPaid ? "PAID" : (payment?.applicationStatus || payment?.status || "UNPAID");
+  const challanNo = payment?.challanNo;
+  const isPaid = payment?.applicationStatus === "PAID" || !!receiptData;
+  const status = isPaid ? "PAID" : (payment?.applicationStatus || "UNPAID");
 
   const handleMakePayment = () => {
     navigate(`/upyog-ui/citizen/payment/my-bills/Challan_Generation/${challanNo}`, {
@@ -83,7 +68,7 @@ const ChallanPayments = ({ payment, receiptData }) => {
   };
 
   const amount = getChallanAmount(payment);
-  const name = payment?.citizen?.name || payment?.name || t("CS_NA");
+  const name = payment?.citizen?.name || t("CS_NA");
   const date = convertEpochToDate(payment?.auditDetails?.createdTime || payment?.createdTime) || t("CS_NA");
 
   return (

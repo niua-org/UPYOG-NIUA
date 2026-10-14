@@ -25,22 +25,17 @@ export const ChallanMyPayments = () => {
     mobileNumber: userInfo?.info?.mobileNumber,
   };
 
-  const useSearch =
-    Digit.Hooks?.challangeneration?.useChallanGenerationSearch ||
-    Digit.Hooks?.challanGeneration?.useChallanGenerationSearch;
-
-  const searchResult = useSearch
-    ? useSearch({ tenantId, filters }, { enabled: !!(tenantId && filters.mobileNumber) })
-    : { isLoading: false, data: null };
-
-  const { isLoading, data } = searchResult || {};
+  const { isLoading, data } = Digit.Hooks.challangeneration.useChallanGenerationSearch(
+    { tenantId, filters },
+    { enabled: Boolean(tenantId && filters?.mobileNumber) }
+  );
   const paymentsList = data?.challans || [];
 
   const [receiptsMap, setReceiptsMap] = useState({});
   const [isReceiptsLoading, setIsReceiptsLoading] = useState(false);
 
   const consumerCodes = paymentsList
-    .map((c) => c.challanNo || c.consumerCode)
+    .map((c) => c.challanNo )
     .filter(Boolean)
     .join(",");
 
@@ -60,10 +55,7 @@ export const ChallanMyPayments = () => {
           const map = {};
           if (res?.Payments && Array.isArray(res.Payments)) {
             res.Payments.forEach((payment) => {
-              const code =
-                payment?.paymentDetails?.[0]?.bill?.consumerCode ||
-                payment?.paymentDetails?.[0]?.bill?.billDetails?.[0]?.consumerCode ||
-                payment?.consumerCode;
+              const code = payment?.paymentDetails?.[0]?.bill?.consumerCode;
               if (code) {
                 map[code] = payment;
               }

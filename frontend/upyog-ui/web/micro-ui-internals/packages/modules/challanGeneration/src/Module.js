@@ -1,4 +1,4 @@
-import { CitizenHomeCard, Loader, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import InboxFilter from "./components/inbox/NewInboxFilter";
 import ChallanGenerationCard from "./components/ChallanGenerationCard";
@@ -17,7 +17,6 @@ import ChallanDocuments from "./pageComponents/ChallanDocuments";
 import getRootReducer from "../redux/reducer";
 import ChallanResponseCitizen from "./components/ChallanResponseCitizen";
 import ChallanApplicationDetails from "./pages/employee/ChallanApplicationDetails";
-import ChallanCitizenLinks from "./components/ChallanCitizenCard";
 
 /**
  * ChallanGenerationModule:
@@ -50,7 +49,6 @@ export const ChallanGenerationModule = ({ stateCode, userType, tenants }) => {
   return <CitizenApp />;
 };
 
-export const ChallanGenerationLinks = ChallanCitizenLinks;
 export const ChallanReducers = getRootReducer;
 
 const componentsToRegister = {
@@ -58,8 +56,6 @@ const componentsToRegister = {
   ServiceDetails,
   ChallanGenerationCard,
   ChallanGenerationModule,
-  ChallanGenerationLinks,
-  ChallanCitizenLinks,
   ChallanMyPayments,
   ChallanCitizenMyPayments: ChallanMyPayments,
   ChallanCitizenMyChallans: ChallanMyPayments,

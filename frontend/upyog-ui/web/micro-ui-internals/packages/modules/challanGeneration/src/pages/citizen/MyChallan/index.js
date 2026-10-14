@@ -37,12 +37,11 @@ const MyChallanResult = () => {
     mobileNumber: userInfo?.info?.mobileNumber,
   };
 
-  const useSearch = Digit.Hooks?.challangeneration?.useChallanGenerationSearch || Digit.Hooks?.challanGeneration?.useChallanGenerationSearch;
-  const searchResult = useSearch
-    ? useSearch({ tenantId, filters }, { enabled: !!(tenantId && filters.mobileNumber) })
-    : { isLoading: false, data: null };
+  const { isLoading, data } = Digit.Hooks.challangeneration.useChallanGenerationSearch(
+    { tenantId, filters },
+    { enabled: Boolean(tenantId && filters?.mobileNumber) }
+  );
 
-  const { isLoading, data } = searchResult || {};
   const challans = data?.challans || [];
 
   const handlePay = (challan) => {
@@ -52,6 +51,7 @@ const MyChallanResult = () => {
   const handleViewDetails = (challan) => {
     navigate(`/upyog-ui/citizen/challangeneration/details/${challan?.challanNo}`, { state: { challan } });
   };
+
 
   if (isLoading) {
     return <Loader />;
@@ -67,6 +67,7 @@ const MyChallanResult = () => {
       ) : (
         challans.map((challan, index) => {
           const isPaid = challan?.applicationStatus === "PAID";
+          const status = challan?.applicationStatus || "ACTIVE";
           return (
             <Card key={challan?.challanNo || index}>
               <StatusTable>
@@ -78,22 +79,22 @@ const MyChallanResult = () => {
                 <Row
                   className="border-none"
                   label={t("CHALLAN_NAME")}
-                  text={challan?.citizen?.name || challan?.additionalDetail?.ownerName || "N/A"}
+                  text={challan?.citizen?.name || "N/A"}
                 />
                 <Row
                   className="border-none"
                   label={t("CHALLAN_BUSINESS_SERVICE")}
-                  text={t(challan?.businessService) || challan?.businessService || "N/A"}
+                  text={challan?.businessService ? t(challan.businessService) : t("CS_NA")}
                 />
                 <Row
                   className="border-none"
                   label={t("CHALLAN_TOTAL_DUE")}
-                  text={`₹ ${challan?.totalAmount || challan?.amount || 0}`}
+                  text={`₹ ${challan?.challanAmount || 0}`}
                 />
                 <Row
                   className="border-none"
                   label={t("CHALLAN_STATUS")}
-                  text={t(`CHALLAN_STATUS_${challan?.applicationStatus}`) || challan?.applicationStatus || "ACTIVE"}
+                  text={t(`CHALLAN_STATUS_${status}`, status)}
                 />
                 <Row
                   className="border-none"

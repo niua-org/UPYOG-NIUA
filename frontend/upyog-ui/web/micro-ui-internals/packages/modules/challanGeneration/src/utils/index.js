@@ -10,7 +10,7 @@ export const printReciept = async (businessService = "Challan_Generation", recei
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const state = Digit.ULBService.getStateId() || tenantId;
 
-  // 1. Sahi API method call karein jo /collection-services/payments/_search ko hit karta hai
+  // 1. Search payments via receiptSearch API using consumerCode or receiptNumber
   let payments = await Digit.PaymentService.recieptSearch(tenantId, businessService, { consumerCodes: receiptNumber });
   
   if (!payments?.Payments || payments.Payments.length === 0) {
@@ -19,13 +19,13 @@ export const printReciept = async (businessService = "Challan_Generation", recei
 
   let fileStoreId = payments?.Payments?.[0]?.fileStoreId;
 
-  // 2. Agar PDF pehle se generate nahi hui hai to challangeneration-receipt template se generate karein
+  // 2. Generate PDF via challangeneration-receipt template if not already available
   if (!fileStoreId && payments?.Payments?.length > 0) {
     const response = await Digit.PaymentService.generatePdf(state, { Payments: payments.Payments }, "challangeneration-receipt");
     fileStoreId = response?.filestoreIds?.[0];
   }
 
-  // 3. Filestore se valid URL milne par hi tab open karein
+  // 3. Open receipt in a new tab once valid URL is obtained from filestore
   if (fileStoreId) {
     const fileStore = await Digit.PaymentService.printReciept(state, { fileStoreIds: fileStoreId });
     const fileUrl = fileStore?.[fileStoreId] || fileStore?.fileStoreIds?.[0]?.url;
