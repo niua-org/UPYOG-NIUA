@@ -59,7 +59,7 @@ default_args = {
 module_map = {
     # 'TL' : (tl_queries, empty_tl_payload),
     # 'PGR' : (pgr_queries, empty_pgr_payload),
-    # 'WS' : (ws_queries, empty_ws_payload),
+    'WS' : (ws_queries, empty_ws_payload),
     'PT' : (pt_queries, empty_pt_payload)
     # 'FIRENOC' : (firenoc_queries, empty_firenoc_payload),
     # 'MCOLLECT' : (mcollect_queries, empty_mcollect_payload),
