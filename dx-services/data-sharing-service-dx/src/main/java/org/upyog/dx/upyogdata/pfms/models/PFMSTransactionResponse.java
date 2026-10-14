@@ -13,7 +13,6 @@ import java.util.List;
 @Builder
 public class PFMSTransactionResponse {
     private ResponseInfo responseInfo;
-    private String correlationId;
     private List<TransactionResult> transactions;
 
     /**

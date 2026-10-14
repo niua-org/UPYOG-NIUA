@@ -9,6 +9,7 @@ import org.upyog.dx.upyogdata.pfms.models.*;
 import org.upyog.dx.upyogdata.pfms.producer.PFMSProducer;
 import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.springframework.stereotype.Service;
+import org.upyog.dx.upyogdata.util.DxUtils;
 
 import java.time.Instant;
 import java.util.*;
@@ -61,26 +62,10 @@ public class PFMSServiceImpl implements PFMSService {
             throw new RuntimeException("Failed to publish data coming from state", e);
         }
 
-        /**
-         * Builds the API response following the Upyog standard response structure.
-         *
-         * The final PFMSTransactionResponse bundles the responseInfo, id and the per-transaction results list into a single
-         * structured response object
-         */
-        RequestInfo requestInfo = request.getRequestInfo();
-        ResponseInfo responseInfo = ResponseInfo.builder()
-                .apiId(requestInfo != null ? requestInfo.getApiId() : null)
-                .ver(requestInfo != null ? requestInfo.getVer() : null)
-                .ts(Instant.now().toEpochMilli())
-                .msgId(requestInfo != null ? requestInfo.getMsgId() : null)
-                .resMsgId(Constants.SUCCESS_MESSAGE)
-                .status(Constants.SUCCESS)
-                .build();
-
-        String correlationId = request.getData().isEmpty() ? null : request.getData().get(0).getId();
+        // Building Response
+        ResponseInfo responseInfo = DxUtils.buildResponseInfo(request.getRequestInfo());
         return PFMSTransactionResponse.builder()
                 .responseInfo(responseInfo)
-                .correlationId(correlationId)
                 .transactions(results)
                 .build();
     }

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS ug_pfms_data (
-    id UUID PRIMARY KEY,
+    id VARCHAR(64) PRIMARY KEY,
     state VARCHAR(100),
     ulb VARCHAR(255),
     ward VARCHAR(100),
@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS ug_pfms_data (
 );
 
 CREATE TABLE IF NOT EXISTS ug_pfms_transactions (
-    id UUID PRIMARY KEY,
-    correlation_id UUID NOT NULL,
+    id VARCHAR(64) PRIMARY KEY,
+    correlation_id VARCHAR(64) NOT NULL,
 
     agencyCode VARCHAR(100) NOT NULL,
     voucher_number VARCHAR(100) NOT NULL,

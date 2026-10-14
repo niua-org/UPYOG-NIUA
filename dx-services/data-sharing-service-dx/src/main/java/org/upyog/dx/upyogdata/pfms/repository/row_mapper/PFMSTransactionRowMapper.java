@@ -75,11 +75,25 @@ public class PFMSTransactionRowMapper implements RowMapper<PFMSTransaction> {
         return pfmsTransaction;
     }
 
+    /**
+     * Retrieves a String value from the map for the specified key.
+     *
+     * @param map the map containing the key-value pairs; may be null or empty
+     * @param key the key whose associated value is to be returned
+     * @return the String representation of the value if present; {@code null} if the key is not found or the value is null
+     */
     private String getString(Map<String, Object> map, String key) {
         Object val = map.get(key);
         return val != null ? val.toString() : null;
     }
 
+    /**
+     * Retrieves a List of Strings from the map for the specified key.
+     *
+     * @param map the map containing the key-value pairs; may be null or empty
+     * @param key the key whose associated list is to be returned
+     * @return the value cast to a {@code List<String>} if it is an instance of {@code List}; an empty list otherwise
+     */
     @SuppressWarnings("unchecked")
     private List<String> getList(Map<String, Object> map, String key) {
         Object val = map.get(key);
@@ -87,6 +101,14 @@ public class PFMSTransactionRowMapper implements RowMapper<PFMSTransaction> {
         return Collections.emptyList();
     }
 
+    /**
+     * Safely parses and retrieves a {@link BigDecimal} value from the map for the specified key.
+     *
+     * @param map the map containing the key-value pairs; may be null or empty
+     * @param key the key whose associated value is to be converted to {@code BigDecimal}
+     * @return the value as a {@code BigDecimal} if valid; {@code null} if the key is missing,
+     *         the value is null, or string representation cannot be parsed into a {@code BigDecimal}
+     */
     private BigDecimal getBigDecimal(Map<String, Object> map, String key) {
         Object val = map.get(key);
         if (val == null) return null;

@@ -21,12 +21,12 @@ public class PFMSQuery {
                     " LIMIT ?";
 
     public static final String FETCH_TRANSACTION_BY_ID =
-            "SELECT * FROM public.ug_pfms_transactions WHERE id = ?::UUID";
+            "SELECT * FROM public.ug_pfms_transactions WHERE id = ?";
 
     public static final String UPDATE_TRANSACTION_STATUS =
             "UPDATE public.ug_pfms_transactions" +
                     " SET status = ?, ingestion_date = ?, last_modified_time = CURRENT_TIMESTAMP" +
-                    " WHERE id = ?::UUID";
+                    " WHERE id = ?";
 
     public static final String INSERT_SCHEDULER_LOG =
             "INSERT INTO public.ug_pfms_scheduler_log" +
