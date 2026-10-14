@@ -69,7 +69,7 @@ const ChallanPayments = ({ payment, receiptData }) => {
 
   const amount = getChallanAmount(payment);
   const name = payment?.citizen?.name || t("CS_NA");
-  const date = convertEpochToDate(payment?.auditDetails?.createdTime || payment?.createdTime) || t("CS_NA");
+  const date = convertEpochToDate(payment?.auditDetails?.createdTime) || t("CS_NA");
 
   return (
     <Card style={{ marginBottom: "16px" }}>

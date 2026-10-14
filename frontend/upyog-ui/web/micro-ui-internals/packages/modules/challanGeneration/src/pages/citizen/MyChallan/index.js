@@ -44,9 +44,10 @@ const MyChallanResult = () => {
 
   const challans = data?.challans || [];
 
-  const handlePay = (challan) => {
-    navigate(`/upyog-ui/citizen/payment/my-bills/${challan?.businessService || "Challan_Generation"}/${challan?.challanNo}?workflow=challangeneration`);
+    const handlePay = (challan) => {
+    navigate(`/upyog-ui/citizen/payment/my-bills/${challan?.businessService}/${challan?.challanNo}?workflow=challangeneration`);
   };
+
 
   const handleViewDetails = (challan) => {
     navigate(`/upyog-ui/citizen/challangeneration/details/${challan?.challanNo}`, { state: { challan } });

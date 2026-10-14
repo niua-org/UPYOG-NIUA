@@ -52,27 +52,20 @@ import CHBDocument from "../../../components/ChallanDocument";
  * Structured to match the GCApplicationDetails layout.
  */
 const getChallanAmount = (challan) => {
+  console.log("challan data", challan)
   return challan?.challanAmount || 0;
 };
 
 
 const getChallanAddress = (challan, defaultText = "N/A") => {
-  const addr = challan?.address;
-  if (!addr) {
-    return challan?.additionalDetail?.location || challan?.additionalDetail?.address || defaultText;
-  }
-  if (typeof addr === "string") return addr;
-  return addr.addressLine1 || defaultText;
+  return challan?.address?.addressLine1 || defaultText;
 };
 
 const CitizenChallanDetails = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const params = useParams();
+  const { challanNo } = useParams();
   const location = useLocation();
-
-  // Extract challan number from URL params
-  const challanNo = decodeURIComponent(params.challanNo || params.applicationNo || location.pathname.split("/").pop());
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
   const [showOptions, setShowOptions] = useState(false);
@@ -115,7 +108,7 @@ const CitizenChallanDetails = () => {
     }
   }, [challanNo]);
 
-  const businessService = challan?.businessService || "Challan_Generation";
+  const businessService = challan?.businessService;
 
   const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
     { tenantId, businessService: "Challan_Generation", consumerCodes: challanNo },
@@ -191,7 +184,6 @@ const CitizenChallanDetails = () => {
 
   // ---------- Address ----------
   const city = challan?.address?.city || challan?.tenantId;
-  const localityText = challan?.address?.locality?.name ? t(challan.address.locality.name) : null;
   const pincode = challan?.address?.pincode || null;
   const fullAddress = getChallanAddress(challan, t("CS_NA"));
 
@@ -203,7 +195,7 @@ const CitizenChallanDetails = () => {
   const longitude = additionalDetails?.longitude;
 
   // ---------- Documents ----------
-  const docs = challan?.documents || additionalDetails?.documents || [];
+  const docs = challan?.documents || [];
 
   return (
     <React.Fragment>
@@ -225,8 +217,6 @@ const CitizenChallanDetails = () => {
               text={
                 challan?.auditDetails?.createdTime
                   ? convertEpochToDate(challan.auditDetails.createdTime)
-                  : challan?.taxPeriodFrom
-                  ? convertEpochToDate(challan.taxPeriodFrom)
                   : t("CS_NA")
               }
             />
