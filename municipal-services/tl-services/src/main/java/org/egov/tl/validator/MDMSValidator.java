@@ -140,9 +140,6 @@ public class MDMSValidator {
     }
 
     private Map<String, String> getBillingSlabsAccessoryUomMap(Object billingSlabs) {
-        if (billingSlabs == null) {
-            throw new CustomException("BILLING_SLAB_ERROR", "Unable to fetch billing slabs");
-        }
 
         List<String> accessories = JsonPath.read(billingSlabs,TLConstants.BILLINGSLAB_ACCESSORY_JSONPATH_CODE);
         List<String> accessoryUOM = JsonPath.read(billingSlabs,TLConstants.BILLINGSLAB_ACCESSORY_JSONPATH_UOM);
@@ -157,9 +154,6 @@ public class MDMSValidator {
     }
 
     private Map<String, String> getBillingSlabsTradeTypeUomMap(Object billingSlabs) {
-        if (billingSlabs == null) {
-            throw new CustomException("BILLING_SLAB_ERROR", "Unable to fetch billing slabs");
-        }
 
         List<String> tradeTypes = JsonPath.read(billingSlabs,TLConstants.BILLINGSLAB_TRADETYPE_JSONPATH_CODE);
         List<String> tradeTypeUOM = JsonPath.read(billingSlabs,TLConstants.BILLINGSLAB_TRADETYPE_JSONPATH_UOM);

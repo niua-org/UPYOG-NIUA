@@ -149,12 +149,7 @@ public class WorkflowIntegrator {
 				/*
 				 * extracting message from client error exception
 				 */
-				String errorBody = e.getResponseBodyAsString();
-				if (errorBody == null || errorBody.trim().isEmpty()) {
-					throw new CustomException("EG_WF_ERROR",
-							"Workflow service returned an empty error response");
-				}
-				DocumentContext responseContext = JsonPath.parse(errorBody);
+				DocumentContext responseContext = JsonPath.parse(e.getResponseBodyAsString());
 				List<Object> errros = null;
 				try {
 					errros = responseContext.read("$.Errors");
@@ -174,9 +169,6 @@ public class WorkflowIntegrator {
 			 * on success result from work-flow read the data and set the status back to TL
 			 * object
 			 */
-			if (response == null || response.trim().isEmpty()) {
-				throw new CustomException("EG_WF_ERROR", "Empty response from workflow service");
-			}
 			DocumentContext responseContext = JsonPath.parse(response);
 			List<Map<String, Object>> responseArray = responseContext.read(PROCESSINSTANCESJOSNKEY);
 			Map<String, String> idStatusMap = new HashMap<>();
