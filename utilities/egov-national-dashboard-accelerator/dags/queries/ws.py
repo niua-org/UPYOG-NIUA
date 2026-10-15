@@ -218,9 +218,196 @@ def empty_ws_payload(region, ulb, ward, date):
         }
     }
 
-ws_collection_by_payment_channel_type = {'path': 'dss-collection_v2/_search', 'name': 'ws_collection_by_payment_channel_type', 'lambda': extract_ws_collection_by_payment_channel_type, 'query': '{{\n  "size": 0,\n  "query": {{\n    "bool": {{\n      "filter": [\n        {{\n          "range": {{\n            "dataObject.paymentDetails.receiptDate": {{\n              "gte": {0},\n              "lt": {1}\n            }}\n          }}\n        }}\n      ]\n    }}\n  }},\n  "aggs": {{\n    "ulb": {{\n      "terms": {{\n        "field": "dataObject.paymentDetails.tenantId.keyword",\n        "size": 10000\n      }},\n      "aggs": {{\n        "region": {{\n          "terms": {{\n            "field": "dataObject.tenantData.city.districtName.keyword",\n            "size": 10000\n          }},\n          "aggs": {{\n            "byChannel": {{\n              "terms": {{\n                "field": "dataObject.paymentMode.keyword",\n                "size": 1000\n              }},\n              "aggs": {{\n                "byChannel": {{\n                  "sum": {{\n                    "field": "dataObject.paymentDetails.totalAmountPaid"\n                  }}\n                }}\n              }}\n            }}\n          }}\n        }}\n      }}\n    }}\n  }}\n}}'}
+ws_collection_by_payment_channel_type = {
+    'path': 'dss-collection_v2/_search',
+    'name': 'ws_collection_by_payment_channel_type',
+    'lambda': extract_ws_collection_by_payment_channel_type,
+    'query': """
+{{
+  "size": 0,
+  "query": {{
+    "bool": {{
+      "must_not": [
+        {{
+          "term": {{
+            "dataObject.tenantId.keyword": "pb.testing"
+          }}
+        }},
+        {{
+          "terms": {{
+            "dataObject.paymentDetails.bill.status.keyword": [
+              "Cancelled"
+            ]
+          }}
+        }}
+      ],
+      "must": [
+        {{
+          "terms": {{
+            "dataObject.paymentDetails.businessService.keyword": [
+              "WS",
+              "WS.ONE_TIME_FEE",
+              "SW.ONE_TIME_FEE",
+              "SW"
+            ]
+          }}
+        }},
+        {{
+          "range": {{
+            "dataObject.paymentDetails.receiptDate": {{
+              "gte": {0},
+              "lte": {1},
+              "format": "epoch_millis"
+            }}
+          }}
+        }}
+      ]
+    }}
+  }},
+  "aggs": {{
+    "ward": {{
+      "terms": {{
+        "field": "domainObject.ward.name.keyword",
+        "size": 10000
+      }},
+      "aggs": {{
+        "ulb": {{
+          "terms": {{
+            "field": "dataObject.tenantId.keyword",
+            "size": 10000
+          }},
+          "aggs": {{
+            "region": {{
+              "terms": {{
+                "field": "dataObject.tenantData.city.districtName.keyword",
+                "size": 10000
+              }},
+              "aggs": {{
+                "byChannel": {{
+                  "terms": {{
+                    "field": "dataObject.paymentMode.keyword",
+                    "size": 1000
+                  }},
+                  "aggs": {{
+                    "byChannel": {{
+                      "sum": {{
+                        "field": "dataObject.paymentDetails.totalAmountPaid"
+                      }}
+                    }}
+                  }}
+                }},
+                "byUsageType": {{
+                  "terms": {{
+                    "field": "domainObject.propertyUsageType.keyword",
+                    "size": 1000
+                  }},
+                  "aggs": {{
+                    "byUsageType": {{
+                      "sum": {{
+                        "field": "dataObject.paymentDetails.totalAmountPaid"
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+}
 
-ws_collection_by_tax_head_connection_type = {'path': 'dss-collection_v2/_search', 'name': 'ws_collection_by_tax_head_connection_type', 'lambda': extract_ws_collection_by_tax_head_connection_type, 'query': '{{\n  "size": 0,\n  "query": {{\n    "bool": {{\n      "filter": [\n        {{\n          "range": {{\n            "dataObject.paymentDetails.receiptDate": {{\n              "gte": {0},\n              "lt": {1}\n            }}\n          }}\n        }}\n      ]\n    }}\n  }},\n  "aggs": {{\n    "ulb": {{\n      "terms": {{\n        "field": "dataObject.paymentDetails.tenantId.keyword",\n        "size": 10000\n      }},\n      "aggs": {{\n        "region": {{\n          "terms": {{\n            "field": "dataObject.tenantData.city.districtName.keyword",\n            "size": 10000\n          }},\n          "aggs": {{\n            "byTaxHead": {{\n              "terms": {{\n                "field": "dataObject.paymentDetails.bill.billDetails.billAccountDetails.taxHeadCode.keyword",\n                "size": 1000\n              }},\n              "aggs": {{\n                "amount": {{\n                  "sum": {{\n                    "field": "dataObject.paymentDetails.bill.billDetails.billAccountDetails.amount"\n                  }}\n                }}\n              }}\n            }}\n          }}\n        }}\n      }}\n    }}\n  }}\n}}'}
+ws_collection_by_tax_head_connection_type = {
+    'path': 'dss-collection_v2/_search',
+    'name': 'ws_collection_by_tax_head_connection_type',
+    'lambda': extract_ws_collection_by_tax_head_connection_type,
+    'query': """
+{{
+  "size": 0,
+  "query": {{
+    "bool": {{
+      "must_not": [
+        {{
+          "term": {{
+            "dataObject.tenantId.keyword": "pb.testing"
+          }}
+        }},
+        {{
+          "terms": {{
+            "dataObject.paymentDetails.bill.status.keyword": [
+              "Cancelled"
+            ]
+          }}
+        }}
+      ],
+      "must": [
+        {{
+          "terms": {{
+            "dataObject.paymentDetails.businessService.keyword": [
+              "WS",
+              "WS.ONE_TIME_FEE",
+              "SW.ONE_TIME_FEE",
+              "SW"
+            ]
+          }}
+        }},
+        {{
+          "range": {{
+            "dataObject.paymentDetails.receiptDate": {{
+              "gte": {0},
+              "lte": {1},
+              "format": "epoch_millis"
+            }}
+          }}
+        }}
+      ]
+    }}
+  }},
+  "aggs": {{
+    "ward": {{
+      "terms": {{
+        "field": "domainObject.ward.name.keyword",
+        "size": 10000
+      }},
+      "aggs": {{
+        "ulb": {{
+          "terms": {{
+            "field": "dataObject.tenantId.keyword",
+            "size": 10000
+          }},
+          "aggs": {{
+            "region": {{
+              "terms": {{
+                "field": "dataObject.tenantData.city.districtName.keyword",
+                "size": 10000
+              }},
+              "aggs": {{
+                "byTaxHead": {{
+                  "terms": {{
+                    "field": "dataObject.paymentDetails.bill.billDetails.billAccountDetails.taxHeadCode.keyword",
+                    "size": 1000
+                  }},
+                  "aggs": {{
+                    "amount": {{
+                      "sum": {{
+                        "field": "dataObject.paymentDetails.bill.billDetails.billAccountDetails.amount"
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+}
 
 ws_pending_connections = {'path': 'water-services,sewerage-services/_search', 'name': 'ws_pending_connections', 'lambda': extract_ws_pending_connections, 'query': '{{\n  "size": 0,\n  "query": {{\n    "bool": {{\n      "filter": []\n    }}\n  }},\n  "aggs": {{\n    "ward": {{\n      "terms": {{\n        "field": "Data.ward.name.keyword",\n        "size": 10000\n      }},\n      "aggs": {{\n        "ulb": {{\n          "terms": {{\n            "field": "Data.tenantId.keyword",\n            "size": 10000\n          }},\n          "aggs": {{\n            "region": {{\n              "terms": {{\n                "field": "Data.tenantData.city.districtName.keyword",\n                "size": 10000\n              }},\n              "aggs": {{\n                "applicationStatusBuckets": {{\n                  "terms": {{\n                    "field": "Data.applicationStatus.keyword",\n                    "size": 1000\n                  }}\n                }}\n              }}\n            }}\n          }}\n        }}\n      }}\n    }}\n  }}\n}}'}
 
@@ -236,7 +423,86 @@ ws_connections_created_by_connection_type = {'path': 'water-services,sewerage-se
 
 ws_connections_created_by_channel_type = {'path': 'water-services,sewerage-services/_search', 'name': 'ws_connections_created_by_channel_type', 'lambda': extract_ws_connections_created_by_channel_type, 'query': '{{\n  "size": 0,\n  "query": {{\n    "bool": {{\n      "filter": [\n        {{\n          "range": {{\n            "Data.auditDetails.createdTime": {{\n              "gte": {0},\n              "lt": {1}\n            }}\n          }}\n        }}\n      ]\n    }}\n  }},\n  "aggs": {{\n    "ward": {{\n      "terms": {{\n        "field": "Data.ward.name.keyword",\n        "size": 10000\n      }},\n      "aggs": {{\n        "ulb": {{\n          "terms": {{\n            "field": "Data.tenantId.keyword",\n            "size": 10000\n          }},\n          "aggs": {{\n            "region": {{\n              "terms": {{\n                "field": "Data.tenantData.city.districtName.keyword",\n                "size": 10000\n              }},\n              "aggs": {{\n                "channelType": {{\n                  "terms": {{\n                    "field": "Data.channel.keyword",\n                    "size": 1000\n                  }},\n                  "aggs": {{\n                    "count": {{\n                      "value_count": {{\n                        "field": "Data.applicationNo.keyword"\n                      }}\n                    }}\n                  }}\n                }}\n              }}\n            }}\n          }}\n        }}\n      }}\n    }}\n  }}\n}}'}
 
-ws_total_transactions = {'path': 'dss-collection_v2/_search', 'name': 'ws_total_transactions', 'lambda': extract_ws_total_transactions, 'query': '{{\n  "size": 0,\n  "query": {{\n    "bool": {{\n      "filter": [\n        {{\n          "range": {{\n            "dataObject.paymentDetails.receiptDate": {{\n              "gte": {0},\n              "lt": {1}\n            }}\n          }}\n        }}\n      ]\n    }}\n  }},\n  "aggs": {{\n    "ulb": {{\n      "terms": {{\n        "field": "dataObject.paymentDetails.tenantId.keyword",\n        "size": 10000\n      }},\n      "aggs": {{\n        "region": {{\n          "terms": {{\n            "field": "dataObject.tenantData.city.districtName.keyword",\n            "size": 10000\n          }},\n          "aggs": {{\n            "transactions": {{\n              "cardinality": {{\n                "field": "dataObject.transactionNumber.keyword"\n              }}\n            }}\n          }}\n        }}\n      }}\n    }}\n  }}\n}}'}
+ws_total_transactions = {
+    'path': 'dss-collection_v2/_search',
+    'name': 'ws_total_transactions',
+    'lambda': extract_ws_total_transactions,
+    'query': """
+{{
+  "size": 0,
+  "query": {{
+    "bool": {{
+      "must_not": [
+        {{
+          "term": {{
+            "dataObject.tenantId.keyword": "pb.testing"
+          }}
+        }},
+        {{
+          "terms": {{
+            "dataObject.paymentDetails.bill.status.keyword": [
+              "Cancelled"
+            ]
+          }}
+        }}
+      ],
+      "must": [
+        {{
+          "terms": {{
+            "dataObject.paymentDetails.businessService.keyword": [
+              "WS",
+              "WS.ONE_TIME_FEE",
+              "SW.ONE_TIME_FEE",
+              "SW"
+            ]
+          }}
+        }},
+        {{
+          "range": {{
+            "dataObject.paymentDetails.receiptDate": {{
+              "gte": {0},
+              "lte": {1},
+              "format": "epoch_millis"
+            }}
+          }}
+        }}
+      ]
+    }}
+  }},
+  "aggs": {{
+    "ward": {{
+      "terms": {{
+        "field": "domainObject.ward.name.keyword",
+        "size": 10000
+      }},
+      "aggs": {{
+        "ulb": {{
+          "terms": {{
+            "field": "dataObject.tenantId.keyword",
+            "size": 10000
+          }},
+          "aggs": {{
+            "region": {{
+              "terms": {{
+                "field": "dataObject.tenantData.city.districtName.keyword",
+                "size": 10000
+              }},
+              "aggs": {{
+                "transactions": {{
+                  "cardinality": {{
+                    "field": "dataObject.transactionNumber.keyword"
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+"""
+}
 
 ws_todays_completed_application_withinSLA = {'path': 'water-services,sewerage-services/_search', 'name': 'ws_todays_completed_application_withinSLA', 'lambda': extract_ws_todays_completed_applications_withinSLA, 'query': '{{\n  "size": 0,\n  "query": {{\n    "bool": {{\n      "filter": [\n        {{\n          "range": {{\n            "Data.auditDetails.lastModifiedTime": {{\n              "gte": {0},\n              "lt": {1}\n            }}\n          }}\n        }}\n      ]\n    }}\n  }},\n  "aggs": {{\n    "ward": {{\n      "terms": {{\n        "field": "Data.ward.name.keyword",\n        "size": 10000\n      }},\n      "aggs": {{\n        "ulb": {{\n          "terms": {{\n            "field": "Data.tenantId.keyword",\n            "size": 10000\n          }},\n          "aggs": {{\n            "region": {{\n              "terms": {{\n                "field": "Data.tenantData.city.districtName.keyword",\n                "size": 10000\n              }},\n              "aggs": {{\n                "status_distribution": {{\n                  "terms": {{\n                    "field": "Data.applicationStatus.keyword",\n                    "size": 1000\n                  }}\n                }},\n                "sla_values": {{\n                  "sum": {{\n                    "field": "Data.history.state.sla"\n                  }}\n                }}\n              }}\n            }}\n          }}\n        }}\n      }}\n    }}\n  }}\n}}'}
 
