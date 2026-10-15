@@ -14,7 +14,7 @@ serviceMaps:
             INSERT INTO public.ug_pfms_data
             (id, state, ward, module, data_date, ulb, target_destination)
             VALUES
-            (?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), ?, ?);
+            (?, ?, ?, ?, ?, ?, ?);
 
           basePath: data.*
 
@@ -24,6 +24,7 @@ serviceMaps:
             - jsonPath: $.data.*.ward
             - jsonPath: $.data.*.module
             - jsonPath: $.data.*.date
+              type: DATE
             - jsonPath: $.data.*.ulb
             - jsonPath: $.data.*.targetDestination
 
@@ -48,10 +49,10 @@ serviceMaps:
               ?,
               ?,
               ?,
-              TO_DATE(?, 'DD/MM/YYYY'),
               ?,
               ?,
-              ?::JSONB,
+              ?,
+              ?::jsonb,
               ?,
               ?
             );
@@ -64,8 +65,11 @@ serviceMaps:
             - jsonPath: $.data.*.transactions.*.ulbCodeOrPFMSAgencyCode
             - jsonPath: $.data.*.transactions.*.voucherNumber
             - jsonPath: $.data.*.transactions.*.voucherDate
+              type: DATE
             - jsonPath: $.data.*.transactions.*.voucherType
             - jsonPath: $.data.*.transactions.*.financialYear
             - jsonPath: $.data.*.transactions.*.additionalDetails
+              type: JSON
+              dbType: JSONB
             - jsonPath: $.data.*.transactions.*.status
             - jsonPath: $.data.*.transactions.*.ingestionDate

@@ -177,6 +177,7 @@ curl --location 'http://localhost:8281/data-sharing-service-dx/v1/transactions/_
 4. **egov-persister** (`upyog-data-dx.yml`) inserts:
    - `ug_pfms_data` — one row per batch
    - `ug_pfms_transactions` — flat columns + `additionaldetails` JSONB
+   - Persister mappings use `type: DATE` for date fields and `type: JSON` / `dbType: JSONB` for `additionalDetails` (required by egov-persister; do not rely on `TO_DATE` in SQL alone).
 
 ### Error responses (ingest)
 
