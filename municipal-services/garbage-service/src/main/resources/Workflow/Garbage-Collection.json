@@ -146,7 +146,8 @@
               "action": "EDIT",
               "nextState": "PENDING_FOR_VERIFICATION",
               "roles": [
-                "CITIZEN"
+                "CITIZEN",
+                "GC_CEMP"
               ],
               "active": true
             }
@@ -158,9 +159,39 @@
           "applicationStatus": "APPROVED",
           "docUploadRequired": false,
           "isStartState": false,
-          "isTerminateState": true,
-          "isStateUpdatable": false,
-          "actions": null
+          "isTerminateState": false,
+          "isStateUpdatable": true,
+          "actions": [
+            {
+              "action": "DISCONNECT",
+              "nextState": "DISCONNECTED",
+              "roles": [
+                "CITIZEN",
+                "GC_CEMP"
+              ],
+              "active": true
+            }
+          ]
+        },
+        {
+          "sla": null,
+          "state": "DISCONNECTED",
+          "applicationStatus": "DISCONNECTED",
+          "docUploadRequired": false,
+          "isStartState": false,
+          "isTerminateState": false,
+          "isStateUpdatable": true,
+          "actions": [
+            {
+              "action": "RECONNECT",
+              "nextState": "PENDING_FOR_VERIFICATION",
+              "roles": [
+                "CITIZEN",
+                "GC_CEMP"
+              ],
+              "active": true
+            }
+          ]
         },
         {
           "sla": null,

@@ -14,12 +14,7 @@ export const GCSearch = {
 
   application: async (tenantId, filters = {}) => {
     const response = await GCServices.search({ tenantId, filters });
-    return (
-      response?.garbageAccounts?.[0] ||
-      response?.GarbageApplications?.[0] ||
-      response?.data?.[0] ||
-      response
-    );
+    return response?.garbageAccounts?.[0];
   },
 
   BookingDetails: ({ garbageAccounts: app, t }) => {
@@ -29,14 +24,52 @@ export const GCSearch = {
     const collectionUnit = app?.grbgCollectionUnits?.[0] || {};
     const applicant = app?.additionalDetail?.applicantDetails?.[0] || {};
 
+    /**
+     * Formats epoch timestamps, ISO date strings ("YYYY-MM-DD"), or date objects to "DD/MM/YYYY" format.
+     * 
+     * @param {string|number} dVal - The date value to format
+     * @returns {string} Formatted date string or localized "CS_NA" fallback
+     */
+    const formatDateValue = (dVal) => {
+      if (!dVal) return t("CS_NA");
+      if (typeof dVal === "number") return window?.Digit?.DateUtils?.ConvertEpochToDate(dVal) || dVal;
+      const parts = String(dVal).split("-");
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return dVal;
+    };
+
     return [
       {
         title: "GC_APPLICATION_DETAILS",
         asSectionHeader: true,
         values: [
-          { title: "GC_APPLICATION_NUMBER_LABEL", value: appDetails?.applicationNo || t("CS_NA") },
-          { title: "GC_APPLICATION_STATUS_LABEL", value: appDetails?.status ? t(`GC_STATUS_${appDetails.status}`) : t("CS_NA") },
-          ...(app?.dueDate ? [{ title: "GC_DUE_DATE", value: app.dueDate }] : []),
+          { title: "GC_APPLICATION_NUMBER_LABEL", value: app?.grbgApplicationNumber || t("CS_NA") },
+          {
+            title: "GC_APPLICATION_STATUS_LABEL",
+            value: app?.applicationStatus ? t(`GC_STATUS_${app.applicationStatus}`) : t("CS_NA"),
+          },
+          {
+            title: "GC_SERVICE_STATUS_LABEL",
+            value: t(app?.status) || t("CS_NA"),
+          },
+          ...(app?.paymentStatus
+            ? [
+                {
+                  title: "GC_PAYMENT_STATUS_LABEL",
+                  value: t(`GC_STATUS_${app.paymentStatus}`),
+                },
+              ]
+            : []),
+          ...(app?.paymentAmount !== undefined && app?.paymentAmount !== null ? [{ title: "GC_PAYMENT_AMOUNT_LABEL", value: `₹ ${app.paymentAmount}` }] : []),
+          ...(app?.dueDate ? [{ title: "GC_DUE_DATE", value: formatDateValue(app.dueDate) }] : []),
+          ...(app?.applicationStatus === "DISCONNECTED" && app?.additionalDetail?.disconnectionDate
+            ? [{ title: "GC_DISCONNECTION_DATE_LABEL", value: formatDateValue(app.additionalDetail.disconnectionDate) }]
+            : []),
+          ...(app?.applicationStatus === "DISCONNECTED" && app?.additionalDetail?.disconnectionReason
+            ? [{ title: "GC_REASON_FOR_DISCONNECTION", value: app.additionalDetail.disconnectionReason }]
+            : []),
         ],
       },
       {

@@ -94,6 +94,8 @@ public class GarbageAccountRepository {
         accountInputs.put("approvalDate", account.getApprovalDate());
         accountInputs.put("channel", account.getChannel());
         accountInputs.put("isActive", account.getIsActive());
+        accountInputs.put("paymentStatus", account.getPaymentStatus());
+        accountInputs.put("paymentAmount", account.getPaymentAmount());
 
         namedParameterJdbcTemplate.update(GarbageAccountQueryBuilder.INSERT_ACCOUNT, accountInputs);
 
@@ -202,6 +204,8 @@ public class GarbageAccountRepository {
         accountInputs.put("channel", newGarbageAccount.getChannel());
         accountInputs.put("approvalDate", newGarbageAccount.getApprovalDate());
         accountInputs.put("dueDate", newGarbageAccount.getDueDate());
+        accountInputs.put("paymentStatus", newGarbageAccount.getPaymentStatus());
+        accountInputs.put("paymentAmount", newGarbageAccount.getPaymentAmount());
 
         namedParameterJdbcTemplate.update(GarbageAccountQueryBuilder.UPDATE_ACCOUNT_BY_ID, accountInputs);
 

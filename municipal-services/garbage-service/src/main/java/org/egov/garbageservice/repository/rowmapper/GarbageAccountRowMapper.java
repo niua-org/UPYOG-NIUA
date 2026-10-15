@@ -92,6 +92,8 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                         .approvalDate(rs.getLong("approval_date"))
                         .channel(rs.getString("channel"))
                         .dueDate(rs.getDate("due_date") != null ? rs.getDate("due_date").toLocalDate() : null)
+                        .paymentStatus(rs.getString("payment_status"))
+                        .paymentAmount(rs.getBigDecimal("payment_amount"))
                         .build();
 
                 accountsMap.put(accountId, garbageAccount);
@@ -105,6 +107,7 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                 garbageAccount.setGrbgApplicationNumber(
                         null != garbageApplication.getApplicationNo() ? garbageApplication.getApplicationNo()
                                 : null);
+                garbageAccount.setApplicationStatus(garbageApplication.getStatus());
             }
 
 
@@ -158,6 +161,7 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                         && null == subGarbageAccount.getGrbgApplication()) {
                     GrbgApplication subGarbageApplication = populateGarbageApplication(rs, "sub_app_");
                     subGarbageAccount.setGrbgApplication(subGarbageApplication);
+                    subGarbageAccount.setApplicationStatus(subGarbageApplication.getStatus());
                 }
 
 
@@ -530,6 +534,8 @@ public class GarbageAccountRowMapper implements ResultSetExtractor<List<GarbageA
                 .businessService(rs.getString(prefix + "business_service"))
                 .approvalDate(rs.getLong(prefix + "approval_date"))
                 .channel(rs.getString(prefix + "channel"))
+                .paymentStatus(rs.getString(prefix + "payment_status"))
+                .paymentAmount(rs.getBigDecimal(prefix + "payment_amount"))
                 .documents(new ArrayList<>())
                 .grbgCollectionUnits(new ArrayList<>())
                 .addresses(new ArrayList<>())

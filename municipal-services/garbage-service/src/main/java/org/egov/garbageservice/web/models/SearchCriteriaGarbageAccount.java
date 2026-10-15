@@ -45,6 +45,8 @@ public class SearchCriteriaGarbageAccount {
 
     private List<String> statusList;
 
+    private List<String> paymentStatus;
+
     private List<String> channels;
 
     private List<String> wardNames;
@@ -91,39 +93,4 @@ public class SearchCriteriaGarbageAccount {
     private Long fromDate;
 
     private Long toDate;
-
-    /**
-     * Creates a deep copy of the current search criteria instance.
-     *
-     * @return a new {@link SearchCriteriaGarbageAccount} instance with duplicated criteria fields
-     */
-
-    public SearchCriteriaGarbageAccount copy() {
-        return SearchCriteriaGarbageAccount.builder().id(copyList(this.id)).garbageId(copyList(this.garbageId))
-                .propertyId(copyList(this.propertyId)).uuid(copyList(this.uuid)).user_uuid(copyList(this.user_uuid))
-                .type(copyList(this.type)).name(copyList(this.name)).mobileNumber(copyList(this.mobileNumber))
-                .createdBy(copyList(this.createdBy)).applicationNumber(copyList(this.applicationNumber))
-                .tenantId(this.tenantId).status(copyList(this.status)).statusList(copyList(this.statusList)).isOwner(this.isOwner)
-                .parentAccount(this.parentAccount).orderBy(this.orderBy).startId(this.startId).endId(this.endId)
-                .isActiveSubAccount(this.isActiveSubAccount).isActiveAccount(this.isActiveAccount)
-                .isSchedulerCall(this.isSchedulerCall).offset(this.offset).limit(this.limit)
-                .channels(copyList(this.channels)).wardNames(copyList(this.wardNames))
-                .oldGarbageIds(copyList(this.oldGarbageIds)).unitTypes(copyList(this.unitTypes))
-                .unitCategories(copyList(this.unitCategories)).isPayNow(this.isPayNow)
-                .isMonthlyBilling(this.isMonthlyBilling).userType(this.userType)
-                .isUserUuidNull(this.isUserUuidNull).fromDate(this.fromDate).toDate(this.toDate).build();
-    }
-
-    /**
-     * Helper method to safely duplicate a list without mutating the source list.
-     *
-     * @param <T>          the element type of the list
-     * @param originalList the source list to copy
-     * @return a new list containing the same elements, or null if the source list was null
-     */
-
-    private <T> List<T> copyList(List<T> originalList) {
-        return originalList != null ? new java.util.ArrayList<>(originalList) : null;
-    }
-
 }
