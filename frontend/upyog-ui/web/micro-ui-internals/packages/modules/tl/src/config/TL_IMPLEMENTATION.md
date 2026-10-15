@@ -129,4 +129,6 @@ The info screen only lists what to bring. The upload fields are in the third pan
 3. The citizen confirms on the check page.
 4. The acknowledgement screen calls the existing create API and shows the application number.
 
+
+
 This document covers the citizen **new application**.
