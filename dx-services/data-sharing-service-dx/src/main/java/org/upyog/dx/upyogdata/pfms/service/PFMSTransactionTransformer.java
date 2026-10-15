@@ -1,6 +1,7 @@
 package org.upyog.dx.upyogdata.pfms.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.upyog.dx.upyogdata.pfms.entity.PfmsDataEntity;
 import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionAdditionalDetails;
@@ -16,16 +17,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Maps API contract models to persistence/Kafka entity models.
+ * Maps the public PFMS API contract to internal persistence/Kafka entity models.
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class PFMSTransactionTransformer {
 
+    /**
+     * Builds the full Kafka envelope from an inbound create request.
+     */
     public PFMSCreateTransactionKafkaMessage toKafkaMessage(PFMSCreateTransactionRequest request) {
         List<PfmsDataEntity> dataEntities = request.getData().stream()
                 .map(this::toDataEntity)
                 .collect(Collectors.toList());
+        log.debug("PFMS API mapped to Kafka entities | dataBatches={}", dataEntities.size());
         return new PFMSCreateTransactionKafkaMessage(request.getRequestInfo(), dataEntities);
     }
 
@@ -47,6 +53,9 @@ public class PFMSTransactionTransformer {
                 .build();
     }
 
+    /**
+     * Maps one API transaction to a persistence entity with internally assigned metadata.
+     */
     public PfmsTransactionEntity toEntity(PFMSTransaction transaction, String correlationId) {
         return PfmsTransactionEntity.builder()
                 .id(DxUtils.getRandomUUID())
@@ -62,6 +71,9 @@ public class PFMSTransactionTransformer {
                 .build();
     }
 
+    /**
+     * Copies non-flat API fields into the JSONB {@code additionaldetails} object.
+     */
     public PfmsTransactionAdditionalDetails toAdditionalDetails(PFMSTransaction transaction) {
         return PfmsTransactionAdditionalDetails.builder()
                 .accountHeadCode(transaction.getAccountHeadCode())

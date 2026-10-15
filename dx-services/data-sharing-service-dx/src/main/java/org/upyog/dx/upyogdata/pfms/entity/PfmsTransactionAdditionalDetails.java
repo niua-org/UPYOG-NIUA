@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * JSONB payload for extensible PFMS transaction attributes.
- * Not part of the inbound API contract.
+ * Variable PFMS transaction attributes stored in PostgreSQL {@code additionaldetails} JSONB.
+ * Populated internally from the API contract; not exposed on {@link org.upyog.dx.upyogdata.pfms.models.PFMSTransaction}.
  */
 @Getter
 @Setter

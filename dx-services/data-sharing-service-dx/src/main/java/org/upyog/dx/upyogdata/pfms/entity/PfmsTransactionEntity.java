@@ -14,7 +14,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Persistence and Kafka representation of a PFMS transaction.
+ * Internal persistence and Kafka model for a PFMS voucher transaction.
+ * Flat columns map to {@code ug_pfms_transactions}; extended fields live in {@link PfmsTransactionAdditionalDetails}.
  */
 @Getter
 @Setter
@@ -38,7 +39,7 @@ public class PfmsTransactionEntity {
     private LocalDateTime ingestionDate;
 
     /**
-     * Flat view used only for PFMS outbound form mapping until FormData is entity-native.
+     * Builds a temporary API-shaped view for {@link org.upyog.dx.upyogdata.pfms.models.PFMSTransactionFormData}.
      */
     public PFMSTransaction toPfmsPushView() {
         PFMSTransaction view = new PFMSTransaction();
@@ -83,6 +84,9 @@ public class PfmsTransactionEntity {
         return view;
     }
 
+    /**
+     * Converts this entity to PFMS outbound form fields (does not merge unknown JSONB keys).
+     */
     public PFMSTransactionFormData toFormData(String clientIp) {
         return PFMSTransactionFormData.from(toPfmsPushView(), clientIp);
     }

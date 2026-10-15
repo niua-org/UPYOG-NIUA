@@ -10,6 +10,9 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Parent batch row for Kafka and {@code ug_pfms_data} persistence.
+ */
 @Getter
 @Setter
 @Builder
@@ -17,6 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PfmsDataEntity {
 
+    /** Correlation id; maps to {@code ug_pfms_data.id}. */
     private String id;
     private String state;
     private String ward;

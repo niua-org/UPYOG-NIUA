@@ -1,7 +1,10 @@
 package org.upyog.dx.upyogdata.pfms.repository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
+import org.upyog.dx.upyogdata.pfms.exception.PfmsDataMappingException;
 import org.upyog.dx.upyogdata.pfms.models.SchedulerLog;
 import org.upyog.dx.upyogdata.pfms.repository.row_mapper.PFMSTransactionRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,6 +21,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class PFMSRepository {
 
     private final JdbcTemplate jdbcTemplate;
@@ -54,7 +58,12 @@ public class PFMSRepository {
      * @return PfmsTransactionEntity mapped from the database row
      */
     public PfmsTransactionEntity fetchTransactionById(String id) {
-        return jdbcTemplate.queryForObject(PFMSQuery.FETCH_TRANSACTION_BY_ID, transactionRowMapper, id);
+        try {
+            return jdbcTemplate.queryForObject(PFMSQuery.FETCH_TRANSACTION_BY_ID, transactionRowMapper, id);
+        } catch (DataAccessException ex) {
+            log.error("Failed to fetch PFMS transaction | id={}", id, ex);
+            throw new PfmsDataMappingException("Failed to load PFMS transaction id=" + id, ex);
+        }
     }
 
     /**

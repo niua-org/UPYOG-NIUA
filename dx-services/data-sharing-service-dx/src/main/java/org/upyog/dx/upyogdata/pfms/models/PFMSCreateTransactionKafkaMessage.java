@@ -11,7 +11,8 @@ import org.upyog.dx.upyogdata.pfms.entity.PfmsDataEntity;
 import java.util.List;
 
 /**
- * Kafka payload published after API contract is transformed into persistence entities.
+ * Kafka payload published after the inbound API contract is transformed into persistence entities.
+ * Consumed by egov-persister ({@code upyog-data-dx.yml}).
  */
 @Getter
 @Setter
@@ -22,5 +23,6 @@ public class PFMSCreateTransactionKafkaMessage {
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
 
+    /** Parent batches with {@link org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity} children. */
     private List<PfmsDataEntity> data;
 }
