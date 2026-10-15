@@ -583,8 +583,9 @@ def create_booking_node(state: AdvBookingState):
     draft_booking = dict(state.get("draft_booking", {}))
     logger.info(f"[adv_booking.create_booking_node] Executing booking registration for phone={phone_number}")
     
-    app_details = draft_booking.get("applicant_details") or {}
-    draft_booking["applicantName"] = app_details.get("name") or draft_booking.get("applicantName", "")
+    
+    app_details = draft_booking.get("applicant_details", {})
+    draft_booking["applicantName"] = app_details.get("name", "")
     draft_booking["mobileNumber"] = app_details.get("mobile") or (phone_number if phone_number != "default" else "")
     draft_booking["emailId"] = app_details.get("email", "")
     draft_booking["phone_number"] = phone_number
