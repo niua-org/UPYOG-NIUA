@@ -76,7 +76,7 @@ class PFMSInboundAuditIntegrationTest {
         String requestPayload = String.valueOf(harness.raw(correlationId).get("request_payload"));
         String responsePayload = String.valueOf(harness.raw(correlationId).get("response_payload"));
         assertTrue(requestPayload.contains("state-corr-1"));
-        assertTrue(requestPayload.contains("/upyog-data-dx/v1/transactions/_create"));
+        assertTrue(requestPayload.contains("/data-sharing-service-dx/v1/transactions/_create"));
         assertTrue(requestPayload.contains("\"endpoint\""));
         assertTrue(requestPayload.contains("\"method\""));
         assertTrue(requestPayload.contains("POST"));
@@ -148,9 +148,9 @@ class PFMSInboundAuditIntegrationTest {
         transaction.setVoucherDate(LocalDate.of(2026, 10, 5));
         transaction.setVoucherType("Journal Voucher");
         transaction.setFinancialYear("2026");
-        transaction.setAccountHeadCode("AH1");
-        transaction.setFunctionCode("FN1");
-        transaction.setSchemeCode("SC1");
+        transaction.setAccountHeadCode(List.of("AH1"));
+        transaction.setFunctionCode(List.of("FN1"));
+        transaction.setSchemeCode(List.of("SC1"));
         transaction.setUlbBankAccountNumber("123456789012");
         transaction.setBeneficiaryAccountNumber("998877665544");
 

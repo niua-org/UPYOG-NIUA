@@ -1,13 +1,15 @@
 package org.upyog.dx.upyogdata.pfms.repository;
 
 import lombok.RequiredArgsConstructor;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
+import org.upyog.dx.upyogdata.pfms.exception.PfmsDataMappingException;
 import org.upyog.dx.upyogdata.pfms.models.SchedulerLog;
 import org.upyog.dx.upyogdata.pfms.repository.row_mapper.PFMSTransactionRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,6 +21,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class PFMSRepository {
 
     private final JdbcTemplate jdbcTemplate;
@@ -30,12 +33,12 @@ public class PFMSRepository {
      * Used to catch duplicates before pushing to Kafka.
      *
      * @param voucherNumbers list of voucher numbers to check
-     * @param voucherDate    the voucher date to check against
+     * @param pfmsAgencyCode    the pfmsagencycode to check against
      * @return list of voucher numbers that already exist, empty if none
      */
-    public List<String> findExistingVoucherNumbers(List<String> voucherNumbers, LocalDate voucherDate) {
+    public List<String> findExistingVoucherNumbers(List<String> voucherNumbers, String pfmsAgencyCode) {
         return jdbcTemplate.queryForList(PFMSQuery.FIND_EXISTING_VOUCHER_NUMBERS, String.class,
-                voucherNumbers.toArray(new String[0]), voucherDate);
+                voucherNumbers.toArray(new String[0]), pfmsAgencyCode);
     }
 
     /**
@@ -52,10 +55,15 @@ public class PFMSRepository {
      * Fetches full transaction details by its UUID.
      *
      * @param id transaction UUID
-     * @return PFMSTransaction mapped from the database row
+     * @return PfmsTransactionEntity mapped from the database row
      */
-    public PFMSTransaction fetchTransactionById(String id) {
-        return jdbcTemplate.queryForObject(PFMSQuery.FETCH_TRANSACTION_BY_ID, transactionRowMapper, id);
+    public PfmsTransactionEntity fetchTransactionById(String id) {
+        try {
+            return jdbcTemplate.queryForObject(PFMSQuery.FETCH_TRANSACTION_BY_ID, transactionRowMapper, id);
+        } catch (DataAccessException ex) {
+            log.error("Failed to fetch PFMS transaction | id={}", id, ex);
+            throw new PfmsDataMappingException("Failed to load PFMS transaction id=" + id, ex);
+        }
     }
 
     /**

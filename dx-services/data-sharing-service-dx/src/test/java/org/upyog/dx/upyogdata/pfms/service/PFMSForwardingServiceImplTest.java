@@ -5,7 +5,7 @@ import feign.Request;
 import org.upyog.dx.upyogdata.config.PFMSProperties;
 import org.upyog.dx.upyogdata.constants.Constants;
 import org.upyog.dx.upyogdata.pfms.client.PFMSApiClient;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
 import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,9 +44,10 @@ class PFMSForwardingServiceImplTest {
 
     @Test
     void shouldReuseAuditCorrelationIdWhenRetryingUnauthorizedPush() {
-        PFMSTransaction transaction = new PFMSTransaction();
-        transaction.setId("txn-1");
-        transaction.setVoucherNumber("V1");
+        PfmsTransactionEntity transaction = PfmsTransactionEntity.builder()
+                .id("txn-1")
+                .voucherNumber("V1")
+                .build();
         when(pfmsRepository.fetchInitiatedTransactionIds(50)).thenReturn(List.of("txn-1"));
         when(pfmsRepository.fetchTransactionById("txn-1")).thenReturn(transaction);
         when(pfmsApiClient.fetchAccessToken()).thenReturn("token-1", "token-2");
