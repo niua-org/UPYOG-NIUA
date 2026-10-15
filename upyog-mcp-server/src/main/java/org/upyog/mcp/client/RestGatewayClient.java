@@ -17,6 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.upyog.mcp.service.McpException;
+import org.upyog.mcp.web.AuthenticatedUser;
+import org.upyog.mcp.web.GatewayIdentityHeaders;
+import org.upyog.mcp.web.UserContextHolder;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -58,13 +61,21 @@ public class RestGatewayClient implements GatewayClient {
 
     @Override
     public JsonNode postJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read) {
-        Supplier<JsonNode> call = () -> executeJson(gatewayPath, query, body, read);
+        return postJson(gatewayPath, query, body, read, Map.of());
+    }
+
+    @Override
+    public JsonNode postJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read,
+                             Map<String, String> headers) {
+        Supplier<JsonNode> call = () -> executeJson(gatewayPath, query, body, read, headers);
         if (read) {
             call = Retry.decorateSupplier(retries.retry(serviceName(gatewayPath)), call);
         }
         try {
             return CircuitBreaker.decorateSupplier(breaker(gatewayPath), call).get();
         } catch (DownstreamRetryException exception) {
+            log.warn("downstream_call path={} read={} status={} retriesExhausted=true",
+                    gatewayPath, read, exception.status());
             throw new McpException("DOWNSTREAM_UNAVAILABLE", "The UPYOG service is temporarily unavailable.",
                     true, "Try the same read again shortly.");
         }
@@ -78,10 +89,15 @@ public class RestGatewayClient implements GatewayClient {
     }
 
     private JsonNode executeJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read) {
+        return executeJson(gatewayPath, query, body, read, Map.of());
+    }
+
+    private JsonNode executeJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read,
+                                 Map<String, String> extraHeaders) {
         long started = System.nanoTime();
         try {
             RestClient client = read ? readClient : writeClient;
-            String raw = client.post()
+            RestClient.RequestBodySpec request = client.post()
                     .uri(builder -> {
                         builder.path(gatewayPath);
                         if (query != null) {
@@ -95,13 +111,29 @@ public class RestGatewayClient implements GatewayClient {
                         return builder.build();
                     })
                     .contentType(MediaType.APPLICATION_JSON)
-                    .header("x-correlation-id", correlation())
-                    .body(body == null ? objectMapper.createObjectNode() : body)
+                    .header("x-correlation-id", correlation());
+            // Inject Auth-Token for gateway RBAC on downstream service calls.
+            String contextToken = currentAuthToken();
+            if (contextToken != null && !contextToken.isBlank()) {
+                request = request.header(GatewayIdentityHeaders.AUTH_TOKEN, contextToken);
+            }
+            if (extraHeaders != null) {
+                for (Map.Entry<String, String> entry : extraHeaders.entrySet()) {
+                    String name = entry.getKey();
+                    String value = entry.getValue();
+                    if (name != null && !name.isBlank() && value != null && !value.isBlank()) {
+                        request = request.header(name, value);
+                    }
+                }
+            }
+            String raw = request.body(body == null ? objectMapper.createObjectNode() : body)
                     .retrieve()
-                    .onStatus(HttpStatusCode::isError, (request, response) -> {
+                    .onStatus(HttpStatusCode::isError, (httpRequest, response) -> {
                         String payload = new String(response.getBody().readAllBytes());
                         int status = response.getStatusCode().value();
                         if (read && status >= 500) {
+                            log.warn("downstream_call path={} read={} status={} latencyMs={} errorBody={} willRetry=true",
+                                    gatewayPath, read, status, elapsed(started), truncate(payload));
                             throw new DownstreamRetryException(status);
                         }
                         throw new DownstreamException(status, payload);
@@ -113,8 +145,8 @@ public class RestGatewayClient implements GatewayClient {
             }
             return objectMapper.readTree(raw);
         } catch (DownstreamException exception) {
-            log.info("downstream_call path={} read={} status={} latencyMs={}", gatewayPath, read,
-                    exception.status(), elapsed(started));
+            log.info("downstream_call path={} read={} status={} latencyMs={} errorBody={}",
+                    gatewayPath, read, exception.status(), elapsed(started), truncate(exception.body()));
             throw mapStatus(exception.status(), exception.body());
         } catch (DownstreamRetryException exception) {
             throw exception;
@@ -220,6 +252,20 @@ public class RestGatewayClient implements GatewayClient {
         return (System.nanoTime() - started) / 1_000_000;
     }
 
+    /** Reads the auth token from the current request's authenticated user context. */
+    private static String currentAuthToken() {
+        AuthenticatedUser user = UserContextHolder.get();
+        return user != null ? user.getAuthToken() : null;
+    }
+
+    private static String truncate(String body) {
+        if (body == null || body.isBlank()) {
+            return "";
+        }
+        String singleLine = body.replaceAll("\\s+", " ");
+        return singleLine.length() <= 500 ? singleLine : singleLine.substring(0, 500) + "…";
+    }
+
     private static final class DownstreamException extends RuntimeException {
         private final int status;
         private final String body;
@@ -239,8 +285,15 @@ public class RestGatewayClient implements GatewayClient {
     }
 
     private static final class DownstreamRetryException extends RuntimeException {
+        private final int status;
+
         private DownstreamRetryException(int status) {
             super(Integer.toString(status));
+            this.status = status;
+        }
+
+        private int status() {
+            return status;
         }
     }
 }

@@ -355,6 +355,20 @@ auth-token: <paste-citizen-access-token>
 x-correlation-id: local-test-1
 ```
 
+Required for direct MCP on `:8088` (session validation uses **`POST /user/_search`** only, same as the citizen UI):
+
+```text
+x-user-info: <paste RequestInfo.userInfo JSON from DevTools — same object as in the UI /user/_search body>
+```
+
+Or minimal:
+
+```text
+x-user-uuid: <RequestInfo.userInfo.uuid>
+```
+
+Production: call MCP **through the gateway** with `trust-gateway-identity=true` and gateway-forwarded `x-user-info` + `Auth-Token`.
+
 **1. Initialize**
 
 ```json

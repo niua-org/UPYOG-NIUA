@@ -27,9 +27,13 @@ public class McpProperties {
     private int rateLimitPerMinute = 60;
     /**
      * When true, MCP trusts {@code x-pass-through-gateway} and {@code x-user-info} from the API gateway
-     * and does not call {@code /user/_details} on the inbound MCP hop.
+     * and does not call {@code POST /user/_search} on the inbound MCP hop.
      */
     private boolean trustGatewayIdentity = true;
+    /** {@code RequestInfo.apiId} on gateway calls (UI uses {@code Rainmaker}). */
+    private String requestInfoApiId = "Rainmaker";
+    /** State tenant on {@code POST /user/_search} (for example {@code pg} on NIUA UAT). */
+    private String userSessionTenantId = "pg";
     private Redis redis = new Redis();
     private List<String> allowedGatewayPrefixes = new ArrayList<>();
 
@@ -135,6 +139,22 @@ public class McpProperties {
 
     public void setTrustGatewayIdentity(boolean trustGatewayIdentity) {
         this.trustGatewayIdentity = trustGatewayIdentity;
+    }
+
+    public String getRequestInfoApiId() {
+        return requestInfoApiId;
+    }
+
+    public void setRequestInfoApiId(String requestInfoApiId) {
+        this.requestInfoApiId = requestInfoApiId;
+    }
+
+    public String getUserSessionTenantId() {
+        return userSessionTenantId;
+    }
+
+    public void setUserSessionTenantId(String userSessionTenantId) {
+        this.userSessionTenantId = userSessionTenantId;
     }
 
     public Redis getRedis() {

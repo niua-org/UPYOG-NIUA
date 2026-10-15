@@ -42,6 +42,7 @@ management:
     readinessstate:
       enabled: true
   tracing:
+    enabled: ${OTEL_TRACING_ENABLED:false}
     sampling:
       probability: 1.0
   otlp:
@@ -68,8 +69,11 @@ upyog:
     max-free-text-chars: 1000
     max-upload-bytes: 2000000
     rate-limit-per-minute: 60
-    # Direct Postman/local MCP on :8088. Kubernetes sets this to true.
-    trust-gateway-identity: ${UPYOG_MCP_TRUST_GATEWAY_IDENTITY:false}
+    # Gateway validates auth on the inbound hop; MCP trusts x-user-info / x-pass-through-gateway.
+    # Set to false only for direct Postman/local testing without the gateway.
+    trust-gateway-identity: ${UPYOG_MCP_TRUST_GATEWAY_IDENTITY:true}
+    request-info-api-id: ${UPYOG_MCP_REQUEST_INFO_API_ID:Rainmaker}
+    user-session-tenant-id: ${UPYOG_MCP_USER_SESSION_TENANT_ID:pg}
     redis:
       enabled: ${REDIS_ENABLED:false}
       uri: ${REDIS_URI:redis://localhost:6379}

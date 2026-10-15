@@ -127,7 +127,8 @@ class PgrSearchAndPrepareTest {
             throw new IllegalStateException(exception);
         }
         PiiMasker masker = new PiiMasker();
-        return new McpOperations(registry, gateway, new RequestInfoBuilder(objectMapper), new BodyBuilder(objectMapper),
+        return new McpOperations(registry, gateway, new RequestInfoBuilder(objectMapper, properties),
+                new BodyBuilder(objectMapper),
                 new SchemaValidator(objectMapper), new ResponseProjector(objectMapper, masker, properties), masker,
                 new TenantValidator(), new ConfirmationTokenService(objectMapper, properties), new MemoryStore(),
                 properties, objectMapper, new RateLimitService(properties));

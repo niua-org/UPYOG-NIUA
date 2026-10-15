@@ -53,8 +53,8 @@ public class ClientConfiguration {
     }
 
     @Bean
-    RequestInfoBuilder requestInfoBuilder(ObjectMapper objectMapper) {
-        return new RequestInfoBuilder(objectMapper);
+    RequestInfoBuilder requestInfoBuilder(ObjectMapper objectMapper, McpProperties properties) {
+        return new RequestInfoBuilder(objectMapper, properties);
     }
 
     @Bean
@@ -80,6 +80,16 @@ public class ClientConfiguration {
         if (base.endsWith("/")) {
             base = base.substring(0, base.length() - 1);
         }
-        return RestClient.builder().baseUrl(base).requestFactory(factory).build();
+        String uiBase = properties.getUiBaseUrl();
+        if (uiBase.endsWith("/")) {
+            uiBase = uiBase.substring(0, uiBase.length() - 1);
+        }
+        // NIUA UAT gateway may reject server-side clients without same-origin browser headers.
+        return RestClient.builder()
+                .baseUrl(base)
+                .defaultHeader("Origin", uiBase)
+                .defaultHeader("Referer", uiBase + "/")
+                .requestFactory(factory)
+                .build();
     }
 }

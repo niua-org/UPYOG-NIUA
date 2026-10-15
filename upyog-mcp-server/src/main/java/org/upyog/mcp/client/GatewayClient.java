@@ -22,6 +22,14 @@ public interface GatewayClient {
     JsonNode postJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read);
 
     /**
+     * POST JSON with extra headers (for example {@code Auth-Token} on {@code /user/_details}).
+     */
+    default JsonNode postJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read,
+                              Map<String, String> headers) {
+        return postJson(gatewayPath, query, body, read);
+    }
+
+    /**
      * Uploads a document to filestore before a confirmed write.
      *
      * @param module filestore module from the descriptor ({@code PGR}, …)
