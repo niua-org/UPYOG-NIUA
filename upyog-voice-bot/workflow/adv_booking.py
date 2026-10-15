@@ -365,8 +365,10 @@ def extraction_node(state: AdvBookingState):
     is_edit_query = any(w in user_msg.lower() for w in ["change", "update", "edit", "modify", "set", "correct", "instead of"])
     
     missing_fields = [f for f in ALL_FIELDS if not draft_booking.get(f)]
+    # Use the form config to decide which fields the LLM is allowed to extract.
     extractable_fields = [field for field in FORM_FIELDS if field.get("extractable", False)]
     
+    # Edits can update any extractable field; normal collection targets only missing fields.
     if is_edit_query or draft_booking.get("_awaiting_confirm"):
         llm_extractable_fields = [field["id"] for field in extractable_fields]
     else:
@@ -408,6 +410,7 @@ def extraction_node(state: AdvBookingState):
         )
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
+            # The prompt requests JSON only; reject responses that are not JSON objects.
             extracted_data = json.loads(ext.content.strip())
             if not isinstance(extracted_data, dict):
                 raise ValueError("Extraction response must be a JSON object")
@@ -415,6 +418,7 @@ def extraction_node(state: AdvBookingState):
                 val = extracted_data.get(field)
                 if val is not None and str(val).lower() not in ("null", "none", ""):
                     if isinstance(val, dict) and isinstance(draft_booking.get(field), dict):
+                        # Merge partial nested details to preserve previously collected keys.
                         draft_booking[field].update(val)
                     else:
                         draft_booking[field] = val
