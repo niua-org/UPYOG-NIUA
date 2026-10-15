@@ -42,46 +42,46 @@ public class PfmsTransactionEntity {
      * Builds a temporary API-shaped view for {@link org.upyog.dx.upyogdata.pfms.models.PFMSTransactionFormData}.
      */
     public PFMSTransaction toPfmsPushView() {
-        PFMSTransaction view = new PFMSTransaction();
-        view.setId(id);
-        view.setCorrelationId(correlationId);
-        view.setUlbCodeOrPFMSAgencyCode(ulbCodeOrPFMSAgencyCode);
-        view.setVoucherNumber(voucherNumber);
-        view.setVoucherDate(voucherDate);
-        view.setVoucherType(voucherType);
-        view.setFinancialYear(financialYear);
-        view.setStatus(status);
-        view.setIngestionDate(ingestionDate);
+        PFMSTransaction pfmsTransaction = new PFMSTransaction();
+        pfmsTransaction.setId(id);
+        pfmsTransaction.setCorrelationId(correlationId);
+        pfmsTransaction.setUlbCodeOrPFMSAgencyCode(ulbCodeOrPFMSAgencyCode);
+        pfmsTransaction.setVoucherNumber(voucherNumber);
+        pfmsTransaction.setVoucherDate(voucherDate);
+        pfmsTransaction.setVoucherType(voucherType);
+        pfmsTransaction.setFinancialYear(financialYear);
+        pfmsTransaction.setStatus(status);
+        pfmsTransaction.setIngestionDate(ingestionDate);
 
         if (additionalDetails != null) {
-            view.setAccountHeadCode(additionalDetails.getAccountHeadCode());
-            view.setFunctionCode(additionalDetails.getFunctionCode());
-            view.setSchemeCode(additionalDetails.getSchemeCode());
-            view.setDebitAmount(additionalDetails.getDebitAmount());
-            view.setCreditAmount(additionalDetails.getCreditAmount());
-            view.setNarrationOrDescription(additionalDetails.getNarrationOrDescription());
-            view.setVoucherStatus(additionalDetails.getVoucherStatus());
-            view.setUlbBankAccountNumber(additionalDetails.getUlbBankAccountNumber());
-            view.setUlbIFSCCode(additionalDetails.getUlbIFSCCode());
-            view.setInstrumentReference(additionalDetails.getInstrumentReference());
-            view.setModeOfTransaction(additionalDetails.getModeOfTransaction());
-            view.setBeneficiaryOrPayeeName(additionalDetails.getBeneficiaryOrPayeeName());
-            view.setBeneficiaryAccountNumber(additionalDetails.getBeneficiaryAccountNumber());
-            view.setBeneficiaryIFSCCode(additionalDetails.getBeneficiaryIFSCCode());
-            view.setBeneficiaryType(additionalDetails.getBeneficiaryType());
-            view.setChallanNumber(additionalDetails.getChallanNumber());
-            view.setFromAccount(additionalDetails.getFromAccount());
-            view.setToAccount(additionalDetails.getToAccount());
-            view.setContraNature(additionalDetails.getContraNature());
-            view.setTransferInstructionReference(additionalDetails.getTransferInstructionReference());
-            view.setReferenceVoucherNumber(additionalDetails.getReferenceVoucherNumber());
-            view.setAdjustmentType(additionalDetails.getAdjustmentType());
-            view.setRelatedAssetOrLiabilityCode(additionalDetails.getRelatedAssetOrLiabilityCode());
-            view.setDebtorOrCreditorReference(additionalDetails.getDebtorOrCreditorReference());
-            view.setBasisOfAdjustment(additionalDetails.getBasisOfAdjustment());
-            view.setPeriodCovered(additionalDetails.getPeriodCovered());
+            pfmsTransaction.setAccountHeadCode(additionalDetails.getAccountHeadCode());
+            pfmsTransaction.setFunctionCode(additionalDetails.getFunctionCode());
+            pfmsTransaction.setSchemeCode(additionalDetails.getSchemeCode());
+            pfmsTransaction.setDebitAmount(additionalDetails.getDebitAmount());
+            pfmsTransaction.setCreditAmount(additionalDetails.getCreditAmount());
+            pfmsTransaction.setNarrationOrDescription(additionalDetails.getNarrationOrDescription());
+            pfmsTransaction.setVoucherStatus(additionalDetails.getVoucherStatus());
+            pfmsTransaction.setUlbBankAccountNumber(additionalDetails.getUlbBankAccountNumber());
+            pfmsTransaction.setUlbIFSCCode(additionalDetails.getUlbIFSCCode());
+            pfmsTransaction.setInstrumentReference(additionalDetails.getInstrumentReference());
+            pfmsTransaction.setModeOfTransaction(additionalDetails.getModeOfTransaction());
+            pfmsTransaction.setBeneficiaryOrPayeeName(additionalDetails.getBeneficiaryOrPayeeName());
+            pfmsTransaction.setBeneficiaryAccountNumber(additionalDetails.getBeneficiaryAccountNumber());
+            pfmsTransaction.setBeneficiaryIFSCCode(additionalDetails.getBeneficiaryIFSCCode());
+            pfmsTransaction.setBeneficiaryType(additionalDetails.getBeneficiaryType());
+            pfmsTransaction.setChallanNumber(additionalDetails.getChallanNumber());
+            pfmsTransaction.setFromAccount(additionalDetails.getFromAccount());
+            pfmsTransaction.setToAccount(additionalDetails.getToAccount());
+            pfmsTransaction.setContraNature(additionalDetails.getContraNature());
+            pfmsTransaction.setTransferInstructionReference(additionalDetails.getTransferInstructionReference());
+            pfmsTransaction.setReferenceVoucherNumber(additionalDetails.getReferenceVoucherNumber());
+            pfmsTransaction.setAdjustmentType(additionalDetails.getAdjustmentType());
+            pfmsTransaction.setRelatedAssetOrLiabilityCode(additionalDetails.getRelatedAssetOrLiabilityCode());
+            pfmsTransaction.setDebtorOrCreditorReference(additionalDetails.getDebtorOrCreditorReference());
+            pfmsTransaction.setBasisOfAdjustment(additionalDetails.getBasisOfAdjustment());
+            pfmsTransaction.setPeriodCovered(additionalDetails.getPeriodCovered());
         }
-        return view;
+        return pfmsTransaction;
     }
 
     /**
