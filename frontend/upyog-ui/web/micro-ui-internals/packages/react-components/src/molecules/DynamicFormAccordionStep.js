@@ -46,6 +46,8 @@ import { buildAccordionSections } from "../utilities/formUtils";
  *
  * @param {object} props — same as DynamicFormStep, but `config` is the full
  *   MDMS entry (`head`, `navigation`, `body[]`) rather than a single body step.
+ *   `reviseFormData` is forwarded so a module can copy owner address and radios
+ *   after each edit without the accordion owning that trade-license rule.
  * @returns {JSX.Element}
  */
 const DynamicFormAccordionStep = ({
@@ -68,6 +70,8 @@ const DynamicFormAccordionStep = ({
   enrichFieldArrayRow = null,
   transformDropdownData = null,
   onFieldChange = null,
+  // Module hook forwarded to DynamicForm. Null for modules that do not copy fields.
+  reviseFormData = null,
   pageClassName,
 }) => {
   const t = tProp || ((key) => key);
@@ -232,6 +236,7 @@ const DynamicFormAccordionStep = ({
         enrichFieldArrayRow={enrichFieldArrayRow}
         transformDropdownData={transformDropdownData}
         onFieldChange={onFieldChange}
+        reviseFormData={reviseFormData}
         onTimelineStep={timeline?.steps?.length ? handleTimelineStep : undefined}
       />
     </div>

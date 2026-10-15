@@ -5,53 +5,76 @@
  * payload flattening, and small DOM/date helpers used by DynamicForm and
  * related wizard/check-page utilities.
  *
+ * Configs come from MDMS (structure, order, master options) overlaid with
+ * module-local JSON (compute bindings, validation, labels, prefill). Values
+ * in the live form stay rich objects (`{ code, name, i18nKey, multiplier }`);
+ * wizard session storage stores the flattened code-plus-metadata shape that
+ * `buildPayload` produces and `rehydrateBillingCycleOption` reads back.
+ *
  * Responsibilities
  * ----------------
- * 1. Walk and normalize MDMS-driven form configs (flatten groups, sort by order,
- *    merge local overrides onto MDMS field definitions).
- * 2. Shape dropdown/radio option objects into the canonical `{ code, name, value, i18nKey }`
- *    format expected by DynamicFormField (i18nKey = display label, never raw code).
- * 3. Resolve option codes, enrich selections with MDMS metadata (multiplier,
- *    rentLabelKey, …), and derive billing-cycle rent multipliers.
- * 4. Build initial form values from raw API/edit assets and build flattened
- *    session payloads for wizard storage.
- * 5. Provide shared date parsing/formatting and scroll-to-error DOM helpers.
+ * 1. Walk and normalize MDMS-driven form configs: flatten groups and
+ *    fieldArrays, sort by `order`, merge local overrides onto MDMS fields,
+ *    and split a form into accordion panels.
+ * 2. Shape dropdown and radio values into the canonical
+ *    `{ code, name, value, i18nKey }` object DynamicFormField renders
+ *    (`i18nKey` is the display label, never the raw code). Coerce gender
+ *    and relationship radios that arrive as prefixed master codes.
+ * 3. Resolve option codes, enrich a selection with MDMS metadata
+ *    (multiplier, rentLabelKey, …), collapse dotted master codes into
+ *    category / type / subtype lists, and derive billing-cycle rent multipliers.
+ * 4. Evaluate config rules (`visibleWhen`, `requiredWhen`, `disabledWhen`,
+ *    `enabledWhen`) and resolve dynamic i18n labels from current form values.
+ * 5. Build initial form values from a raw API/edit asset (including repeating
+ *    fieldArray rows) and flatten those values for wizard session storage.
+ * 6. Parse and format dates for native date inputs, including financial-year
+ *    windows, and scroll the first field error into view.
  *
  * Exports
  * -------
  * Config walking:
- *   - flattenFormConfig       Expand group children into a flat field list.
- *   - sortByOrder             Sort top-level items and group children by `order`.
- *   - findFieldConfig         Find a leaf field config by `field.name`.
- *   - mergeFormFieldConfigs   Overlay local field overrides onto an MDMS form.
- *   - buildAccordionSections  body[] (or sectionHeader split) → accordion panels.
- *   - collectSectionFieldNames / sectionHasFieldError / findAccordionSectionId
+ *   - flattenFormConfig          Expand group / fieldArray children into a flat field list.
+ *   - getFieldArrayName          formData key for a fieldArray (`field.name`, else key tail).
+ *   - createEmptyFieldArrayItem  Blank row object from a fieldArray's children.
+ *   - sortByOrder                Sort top-level items and group children by `order`.
+ *   - findFieldConfig            Find a leaf field config by `field.name`.
+ *   - mergeFormFieldConfigs      Overlay local field overrides onto an MDMS form.
+ *   - buildAccordionSections     `body[]` (or sectionHeader split) → accordion panels.
+ *   - getAccordionCellClass      CSS span class for one cell in the accordion grid.
+ *   - collectSectionFieldNames / errorKeyBelongsTo / sectionHasFieldError / findAccordionSectionId
  *
  * Dropdown / option shaping:
- *   - toDropdownOption        Build canonical option object from code + name.
- *   - resolveOption           Resolve a code string or object to a full option.
- *   - enrichDropdownSelection Merge a selection with matching MDMS/config option.
- *   - optionCode              Normalize a value to an uppercase code string.
+ *   - toDropdownOption           Build the canonical option object from code + name.
+ *   - resolveOption              Resolve a code string or object to a full option.
+ *   - enrichDropdownSelection    Merge a selection with the matching MDMS/config option.
+ *   - optionCode                 Normalize a value to an uppercase code string.
+ *   - coerceRadioFieldValue      Strip prefixes and aliases down to a radio code.
+ *   - radioOptionMatches         Whether a stored radio value selects a given option.
  *   - normalizeBillingCycleCode  Uppercase billing-cycle code helper.
- *   - resolveBillingCycleMultiplier  Rent multiplier from billing-cycle option.
- *   - rehydrateBillingCycleOption    Rebuild billing-cycle object from flat session data.
+ *   - resolveBillingCycleMultiplier  Rent multiplier from the billing-cycle option.
+ *   - rehydrateBillingCycleOption    Rebuild a billing-cycle object from flat session data.
+ *   - filterDependsOnOptions     Collapse dotted master codes into category/type/subtype options.
  *
  * Field metadata / visibility:
- *   - resolveFieldLabelKey    Resolve i18n label key (supports `field.labelBy`).
- *   - getFieldWatchNames      Names whose changes should re-render a field.
- *   - isFieldVisible          Config-driven show/hide (hidden / visibleWhen).
+ *   - resolveFieldLabelKey       Resolve the i18n label key (supports `field.labelBy`).
+ *   - getFieldWatchNames         Names whose changes should re-render a field.
+ *   - isFieldVisible             Config-driven show/hide (`hidden` / `visibleWhen`).
+ *   - evaluateFormRule           Shared evaluator for visible/required/disabled/enabled rules.
  *
  * Prefill / payload:
- *   - buildInitialData        Generic initial values from form config + raw asset.
- *   - buildPayload            Flatten formData for wizard session storage.
+ *   - buildInitialData           Initial values from form config + raw asset.
+ *   - buildPayload               Flatten formData for wizard session storage.
  *
  * Date / DOM helpers:
- *   - toDate                  Parse string/epoch/Date → Date | null.
- *   - toInputDate             Format value as local yyyy-MM-dd for `<input type="date">`.
- *   - scrollToFirstError      Scroll first `[data-field-error="true"]` into view.
+ *   - toDate                     Parse string / epoch / Date → Date | null.
+ *   - toInputDate                Format a value as local yyyy-MM-dd for `<input type="date">`.
+ *   - resolveConfigDate          Resolve a minDate / maxDate spec to yyyy-MM-dd.
+ *   - financialYearBounds        Current FY start (1 April) and end (31 March).
+ *   - resolveFieldDateBounds     min/max for a date field, clamped to the FY when asked.
+ *   - scrollToFirstError         Scroll the first `[data-field-error="true"]` into view.
  *
- * NOTE: toDropdownOption/resolveOption used to exist here AND in
- * payloadUtils.js with CONFLICTING shapes (i18nKey=name vs i18nKey=code).
+ * NOTE: toDropdownOption / resolveOption used to exist here AND in
+ * payloadUtils.js with conflicting shapes (i18nKey = name vs i18nKey = code).
  * This file is now the only implementation; payloadUtils re-exports it.
  *
  * @see DynamicForm
@@ -74,6 +97,7 @@
  */
 export const flattenFormConfig = (formConfig = []) =>
   formConfig.reduce((acc, fc) => {
+    // Containers are replaced by their children; the group/fieldArray node itself is dropped.
     if (fc?.type === "group" || fc?.type === "fieldArray") {
       return [...acc, ...(fc.children || [])];
     }
@@ -82,10 +106,12 @@ export const flattenFormConfig = (formConfig = []) =>
 
 /**
  * Resolve the formData key for a fieldArray config.
- * Prefers field.name; falls back to camelCase of the last key segment.
+ * Prefers `field.name` so the session key stays stable if the MDMS `key`
+ * is renamed. Otherwise uses the last `_` segment of `key`, with only the
+ * first character lowercased (`EST_OWNERS` → `oWNERS`). Defaults to `"items"`.
  *
- * @param {object} fieldConfig
- * @returns {string}
+ * @param {object} fieldConfig  fieldArray config (`field.name` and/or `key`).
+ * @returns {string} Key under which the row array is stored on formData.
  */
 export const getFieldArrayName = (fieldConfig) => {
   if (fieldConfig?.field?.name) return fieldConfig.field.name;
@@ -96,9 +122,11 @@ export const getFieldArrayName = (fieldConfig) => {
 
 /**
  * Build an empty row object for a fieldArray from its children field names.
+ * Dropdowns and file inputs start as `null` (nothing selected / uploaded);
+ * every other type starts as `""` so controlled inputs stay defined.
  *
- * @param {Array<object>} [children=[]]
- * @returns {object}
+ * @param {Array<object>} [children=[]] Leaf field configs inside the fieldArray.
+ * @returns {object} Row keyed by each child's `field.name`.
  */
 export const createEmptyFieldArrayItem = (children = []) => {
   const row = {};
@@ -106,8 +134,7 @@ export const createEmptyFieldArrayItem = (children = []) => {
     const name = child?.field?.name;
     if (!name) return;
     const type = child.field.type;
-    if (type === "dropdown") row[name] = null;
-    else if (type === "file") row[name] = null;
+    if (type === "dropdown" || type === "file") row[name] = null;
     else row[name] = "";
   });
   return row;
@@ -150,23 +177,33 @@ export const toDropdownOption = (code, name) => ({
 
 /**
  * Resolve a raw code string or an already-hydrated option object into a
- * full option. When given a string, looks up `options` by code; synthesizes
- * via toDropdownOption when no match is found.
+ * full option. A string is looked up in `options` by code; when nothing
+ * matches, a synthetic option is built with `toDropdownOption` unless
+ * `strict` is set.
  *
  * @param {string|object|null|undefined} codeOrObj  Raw code or option object.
  * @param {string} [nameHint]                       Fallback display name when synthesizing.
  * @param {Array<object>} [options=[]]              Available options for lookup.
- * @returns {object|null} Resolved option object, or null when input is falsy.
+ * @param {object} [resolveOptions]
+ * @param {boolean} [resolveOptions.strict=false]
+ *        When true, return null if the code is not in `options` instead of
+ *        inventing an option. Used when a stale session code must not appear
+ *        as a selectable value.
+ * @returns {object|null} Resolved option object, or null when input is falsy
+ *          (or when `strict` and the code is unknown).
  */
 export const resolveOption = (codeOrObj, nameHint, options = [], { strict = false } = {}) => {
   if (!codeOrObj) return null;
   if (typeof codeOrObj === "object") {
     const enriched = enrichDropdownSelection(codeOrObj, options);
     if (!strict) return enriched;
+    // Strict mode keeps the object only when its code exists in the current list.
     const code = optionCode(enriched);
     const matched = (options || []).some((o) => optionCode(o) === code);
     return matched ? enriched : null;
   }
+  // optionCode uppercases both sides; the second find keeps a case-sensitive
+  // match for masters whose codes are not stored in uppercase.
   const matched =
     options.find((o) => optionCode(o) === optionCode(codeOrObj)) ||
     options.find((o) => o.code === codeOrObj);
@@ -185,16 +222,18 @@ export const resolveOption = (codeOrObj, nameHint, options = [], { strict = fals
  */
 export const enrichDropdownSelection = (selected, options = []) => {
   if (!selected) return selected;
-  if (!Array.isArray(options) || options.length === 0) {
-    return typeof selected === "object" ? selected : selected;
-  }
+  // Nothing to merge against — leave a string as a string and an object as an object.
+  if (!Array.isArray(options) || options.length === 0) return selected;
   const code = optionCode(selected);
   if (!code) return selected;
   const matched = options.find((o) => optionCode(o) === code);
   if (!matched) {
+    // Unknown string codes still become a displayable option; unknown objects stay as-is.
     return typeof selected === "object" ? selected : toDropdownOption(selected, selected);
   }
   if (typeof selected === "object") {
+    // Master metadata (multiplier, rentLabelKey) fills gaps; fields already on
+    // the selection win. The canonical code stays the matched option's code.
     return { ...matched, ...selected, code: matched.code || selected.code };
   }
   return matched;
@@ -215,7 +254,12 @@ export const optionCode = (val) => {
   return String(val).trim().toUpperCase();
 };
 
-/** Prefixes property masters store on gender and relationship codes. */
+/* ── radio value coercion ───────────────────────────────────────────── */
+
+/**
+ * Prefixes property / trade masters store in front of gender and relationship
+ * codes (`COMMON_GENDER_MALE`, `PT_RELATION_FATHER`). Radios compare the bare code.
+ */
 const RADIO_VALUE_PREFIXES = [
   "PT_COMMON_GENDER_",
   "COMMON_GENDER_",
@@ -224,6 +268,7 @@ const RADIO_VALUE_PREFIXES = [
   "PT_RELATION_",
 ];
 
+/** Short or alternate tokens that must select the same radio as the canonical code. */
 const RADIO_VALUE_ALIASES = {
   M: "MALE",
   MAN: "MALE",
@@ -233,6 +278,11 @@ const RADIO_VALUE_ALIASES = {
   TG: "TRANSGENDER",
   O: "OTHERS",
   OTHER: "OTHERS",
+  // Same-as-property-owner is stored as boolean true/"true" by the legacy flow.
+  TRUE: "YES",
+  Y: "YES",
+  FALSE: "NO",
+  N: "NO",
 };
 
 /**
@@ -251,16 +301,19 @@ export const coerceRadioFieldValue = (value) => {
     return coerceRadioFieldValue(nested);
   }
   let token = String(value).trim().toUpperCase();
+  // Masked privacy values ("****") and a stringified object are not selectable codes.
   if (!token || token.includes("*") || token === "[OBJECT OBJECT]") return "";
   RADIO_VALUE_PREFIXES.forEach((prefix) => {
     if (token.startsWith(prefix)) token = token.slice(prefix.length);
   });
   if (RADIO_VALUE_ALIASES[token]) return RADIO_VALUE_ALIASES[token];
+  // Unknown prefixes such as TL_GENDER_MALE: try the last segment.
   const tail = token.split("_").filter(Boolean).pop();
   if (tail && tail !== token && RADIO_VALUE_ALIASES[tail]) return RADIO_VALUE_ALIASES[tail];
   const known = ["MALE", "FEMALE", "TRANSGENDER", "OTHERS", "FATHER", "HUSBAND"];
   if (known.includes(token)) return token;
   if (tail && known.includes(tail)) return tail;
+  // Keep unrecognized codes (a module-specific relationship) so the radio can still match.
   return token;
 };
 
@@ -275,11 +328,14 @@ export const coerceRadioFieldValue = (value) => {
 export const radioOptionMatches = (value, option) => {
   const selected = coerceRadioFieldValue(value);
   if (!selected || !option) return false;
+  // Any of the option's labels may be what the API stored; compare after the same coercion.
   return [option.code, option.value, option.name, option.i18nKey, option.label]
     .map((part) => coerceRadioFieldValue(part))
     .filter(Boolean)
     .includes(selected);
 };
+
+/* ── billing cycle ──────────────────────────────────────────────────── */
 
 /**
  * Uppercase billing-cycle code from a dropdown value or plain string.
@@ -325,6 +381,8 @@ export const resolveBillingCycleMultiplier = (billingCycle, options = []) => {
   return LEGACY_BILLING_CYCLE_MULTIPLIERS[cycle] ?? 1;
 };
 
+/* ── dynamic labels ─────────────────────────────────────────────────── */
+
 /**
  * Resolve an i18n label key from a `labelBy` rule and current form values.
  * Prefers the selected option's `optionKey` property, then a flattened
@@ -340,10 +398,13 @@ export const resolveBillingCycleMultiplier = (billingCycle, options = []) => {
  */
 const resolveLabelByCode = (labelBy, formValues = {}) => {
   const selected = formValues[labelBy.field];
+  // Preferred: the live option object already carries the i18n key (e.g. rentLabelKey).
   if (labelBy.optionKey && selected && typeof selected === "object") {
     const fromOption = selected[labelBy.optionKey];
     if (fromOption) return fromOption;
   }
+  // After buildPayload the option is a string code; metadata lives on a sibling key
+  // such as billingCycle + rentLabelKey → billingCycleRentLabelKey.
   if (labelBy.optionKey) {
     const flatMetaKey = `${labelBy.field}${labelBy.optionKey.charAt(0).toUpperCase()}${labelBy.optionKey.slice(1)}`;
     if (formValues[flatMetaKey]) return formValues[flatMetaKey];
@@ -390,6 +451,8 @@ export const resolveFieldLabelKey = (fieldConfig, formValues = {}) => {
 export const findFieldConfig = (formConfig = [], fieldName) =>
   flattenFormConfig(formConfig).find((fc) => fc.field?.name === fieldName);
 
+/* ── MDMS / local field merge ──────────────────────────────────────── */
+
 /**
  * Merge a single local field override onto its MDMS counterpart.
  * Local wins for compute bindings (computeFrom, computeFn, labelBy, prefillFrom),
@@ -405,7 +468,7 @@ export const findFieldConfig = (formConfig = [], fieldName) =>
 const mergeFormField = (local, mdms) => {
   const mergedField = { ...local.field, ...mdms.field };
   // Local bindings for compute/label/prefill must survive MDMS field overrides.
-  ["name", "code", "computeFrom", "computeFn", "labelBy", "prefillFrom", "numeric", "unit", "defaultValue", "minDate", "maxDate", "createNewPath", "searchButton", "searchCard", "placeholder", "placeholderDefault", "resultLabel", "selectLabel", "notFoundLabel", "notFoundLabelDefault", "createNewLabel", "searchButtonLabel", "resultRows"].forEach((key) => {
+  ["name", "code", "computeFrom", "computeFn", "labelBy", "prefillFrom", "numeric", "unit", "defaultValue", "minDate", "maxDate", "withinFinancialYear", "createNewPath", "searchButton", "searchCard", "placeholder", "placeholderDefault", "resultLabel", "selectLabel", "notFoundLabel", "notFoundLabelDefault", "createNewLabel", "searchButtonLabel", "resultRows"].forEach((key) => {
     if (local.field?.[key] != null) mergedField[key] = local.field[key];
   });
   if (local.field?.dataSource || mdms.field?.dataSource) {
@@ -460,6 +523,9 @@ export const mergeFormFieldConfigs = (localForm = [], mdmsForm = []) => {
     if (fc?.key) localByKey.set(fc.key, fc);
   });
 
+  // Match on config `key` first. Fall back to `field.name` only when that name
+  // appears once locally — two "gender" radios in different groups must not
+  // pick up each other's override.
   const resolveLocal = (item) => {
     if (item?.key && localByKey.has(item.key)) return localByKey.get(item.key);
     const name = item?.field?.name;
@@ -487,6 +553,8 @@ export const mergeFormFieldConfigs = (localForm = [], mdmsForm = []) => {
 
   return sortByOrder(mdmsForm.map(overlayMdmsItem));
 };
+
+/* ── accordion sections ─────────────────────────────────────────────── */
 
 /**
  * Split a flat form[] into accordion panels on `type: "sectionHeader"`.
@@ -521,6 +589,7 @@ const splitFormBySectionHeaders = (form = []) => {
       return;
     }
     if (!current) {
+      // Fields that sit above the first sectionHeader still need a panel.
       startSection({
         id: "section-1",
         titleKey: "COMMON_FORM",
@@ -555,16 +624,19 @@ const applyAccordionListMeta = (form = [], lists = {}) => {
       addLabel: meta.addLabel || item.addLabel,
       removeLabel: meta.removeLabel || item.removeLabel,
       itemLabel: meta.itemLabelDefault || meta.itemLabel || item.itemLabel,
+      // The field config's own rule wins; lists metadata only fills a gap.
       visibleWhen: item.visibleWhen || meta.visibleWhen,
     };
   });
 };
 
 /**
- * CSS cell class for accordion dense grid (mirrors design-ref span rules).
+ * CSS cell class for the accordion dense grid.
+ * Headers, groups, repeating rows, and file uploads take the full row.
+ * Radios and search widgets span two columns. Everything else is one cell.
  *
- * @param {object} [fieldConfig={}]
- * @returns {string}
+ * @param {object} [fieldConfig={}] Leaf, group, or fieldArray config.
+ * @returns {string} `dynamic-form-accordion__cell`, plus `--full` or `--span-2`.
  */
 export const getAccordionCellClass = (fieldConfig = {}) => {
   const base = "dynamic-form-accordion__cell";
@@ -601,6 +673,7 @@ export const buildAccordionSections = (config = {}, localForm = []) => {
   const body = Array.isArray(config.body) ? config.body : [];
   const fromBody = body
     .filter((step) => {
+      // Preview and review steps are not editable accordion panels.
       if (step?.isPreview || step?.type === "review") return false;
       return Array.isArray(step?.form) && step.form.length > 0;
     })
@@ -609,6 +682,7 @@ export const buildAccordionSections = (config = {}, localForm = []) => {
       id: String(step.key || step.route || step.i18nKey || "section"),
       titleKey: step.i18nKey || step.texts?.header || step.key,
       titleDefault: step.labelDefault || step.shortLabel,
+      hintKey: step.hintKey,
       hintDefault: step.hintDefault,
       isMandatory: step.isMandatory,
       form: overlay(step.form),
@@ -640,6 +714,23 @@ export const collectSectionFieldNames = (form = []) => {
 };
 
 /**
+ * True when an error key is the field itself or a nested key under it.
+ * Field-array errors are stored as `owners.0.name`, so the array name matches.
+ *
+ * @param {string} key
+ * @param {Set<string>} names
+ * @returns {boolean}
+ */
+export const errorKeyBelongsTo = (key, names) => {
+  if (!key || !names?.size) return false;
+  if (names.has(key)) return true;
+  for (const name of names) {
+    if (key.startsWith(`${name}.`)) return true;
+  }
+  return false;
+};
+
+/**
  * True when `errors` includes a key belonging to this section's fields.
  *
  * @param {Array<object>} [form=[]]
@@ -648,10 +739,9 @@ export const collectSectionFieldNames = (form = []) => {
  */
 export const sectionHasFieldError = (form, errors = {}) => {
   const names = collectSectionFieldNames(form);
-  return Object.entries(errors || {}).some(([key, value]) => {
-    if (!value) return false;
-    return names.has(key) || [...names].some((n) => key.startsWith(`${n}.`));
-  });
+  return Object.entries(errors || {}).some(
+    ([key, value]) => Boolean(value) && errorKeyBelongsTo(key, names)
+  );
 };
 
 /**
@@ -689,6 +779,9 @@ export const rehydrateBillingCycleOption = (flatData = {}, routeConfig = {}) => 
 
   if (!raw) return raw;
 
+  // Session storage kept the multiplier / label beside the bare code
+  // (billingCycleMultiplier, billingCycleRentLabelKey). Rebuild the object
+  // when the option list itself is unavailable.
   const multiplier =
     flatData.billingCycleMultiplier ??
     flatData.billingCycleRentMultiplier ??
@@ -699,6 +792,8 @@ export const rehydrateBillingCycleOption = (flatData = {}, routeConfig = {}) => 
   }
   return raw;
 };
+
+/* ── visibility and form rules ──────────────────────────────────────── */
 
 /**
  * Collect field names referenced by a visibleWhen rule (including nested and/or).
@@ -735,12 +830,15 @@ export const getFieldWatchNames = (fieldConfig) => {
   }
   const field = fieldConfig?.field;
   if (!field) {
+    // sectionHeader and similar nodes only re-render when their visibility rule changes.
     const names = new Set();
     collectVisibleWhenFields(fieldConfig?.visibleWhen, names);
     return [...names];
   }
 
   const names = new Set([field.name]);
+  // Also watch the fields this one derives from: dynamic label, computed value,
+  // prefill source, cascading dropdown parent, and show/require/enable rules.
   if (field.labelBy?.field) names.add(field.labelBy.field);
   (field.computeFrom || []).forEach((n) => names.add(n));
   if (field.prefillFrom) names.add(field.prefillFrom);
@@ -795,6 +893,8 @@ export const evaluateFormRule = (rule, formData = {}) => {
   if (!rule.field) return true;
 
   const raw = formData[rule.field];
+  // Dropdown objects compare by code; everything else is trimmed and uppercased
+  // so "male" and "MALE" satisfy the same equals / in rule.
   const current =
     raw && typeof raw === "object" && raw.code != null
       ? String(raw.code).trim().toUpperCase()
@@ -819,6 +919,8 @@ export const evaluateFormRule = (rule, formData = {}) => {
  * @deprecated Use evaluateFormRule
  */
 const evaluateVisibleWhenRule = evaluateFormRule;
+
+/* ── hierarchical master options ────────────────────────────────────── */
 
 /**
  * Collapse dotted master codes into category / type / subtype options.
@@ -848,6 +950,7 @@ export const filterDependsOnOptions = (options = [], dataSource = {}, formData =
     return existing.startsWith(withPrefix) ? existing : `${withPrefix}${item.code}`;
   };
 
+  // MDMS spells this flag "customiztionRequired" (missing "a"); it means category mode.
   if (hierarchy === "category" || dataSource.customiztionRequired) {
     const seen = new Set();
     const out = [];
@@ -872,6 +975,8 @@ export const filterDependsOnOptions = (options = [], dataSource = {}, formData =
   const parentCode = optionCode(formData[parentName]);
   if (!parentCode) return [];
 
+  // Type level: keep the second segment of CATEGORY.TYPE.SUBTYPE rows whose
+  // category matches the parent, de-duplicated.
   if (hierarchy === "type" || dataSource.dependsOnSegment === 0) {
     const seen = new Set();
     const out = [];
@@ -932,6 +1037,8 @@ export const filterDependsOnOptions = (options = [], dataSource = {}, formData =
  */
 const readPrefillPath = (source, path) => {
   if (!source || typeof source !== "object" || path == null || path === "") return undefined;
+  // A literal key that exists on the source wins, so "address.city" stored as
+  // one property is not split into address → city.
   if (Object.prototype.hasOwnProperty.call(source, path) && source[path] !== undefined) {
     return source[path];
   }
@@ -939,6 +1046,7 @@ const readPrefillPath = (source, path) => {
   return String(path)
     .split(".")
     .reduce((acc, key) => {
+      // Refuse prototype-chain keys in a config-supplied path.
       if (acc == null || key === "__proto__" || key === "constructor" || key === "prototype") {
         return undefined;
       }
@@ -959,18 +1067,21 @@ const readPrefillPath = (source, path) => {
  * @param {object} [rawAsset={}]            Raw API/edit asset keyed by field name.
  * @param {object} [dropdownData={}]        Hook-built dropdown options keyed by field name.
  * @param {string} [tenantId]               Current tenant id (for tenantId dataSource fields).
+ * @param {object} [options]
+ * @param {boolean} [options.applyDefaults=true]
+ *        When false, skip `defaultValue`, `"today"`, and `prefillFrom` so an
+ *        edit screen shows only values that were actually stored.
  * @returns {object} Initial form values keyed by field.name.
  */
 export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = {}, tenantId, options = {}) => {
   const { applyDefaults = true } = options;
   const result = {};
 
-  // Initialize fieldArrays first (minItems empty rows or raw array).
+  // Initialize fieldArrays first (minItems empty rows, or the raw array from the asset).
   (formConfig || []).forEach((item) => {
     if (item?.type !== "fieldArray") return;
-    if (!isFieldVisible(item, { ...rawAsset, ...result })) {
-      // Still seed so the key exists after gate unlocks.
-    }
+    // Seed even when the array is currently hidden, so rows exist as soon as
+    // the visibleWhen gate that hides it unlocks.
     const arrayName = getFieldArrayName(item);
     const minItems = Math.max(1, Number(item.minItems) || 1);
     const rawRows = rawAsset[arrayName];
@@ -983,6 +1094,7 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
         (item.children || []).forEach((child) => {
           const childName = child?.field?.name;
           if (!childName || child?.field?.type !== "radio") return;
+          // API rows often store COMMON_GENDER_MALE; the radio wants MALE.
           next[childName] = coerceRadioFieldValue(next[childName]);
         });
         return next;
@@ -1005,7 +1117,7 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
     if (!field) return;
     const { name, type, dataSource } = field;
 
-    // Child fields of fieldArrays live inside array rows, not top-level.
+    // A fieldArray child's value lives on each row, not as a top-level form key.
     if (fieldArrayChildNames.has(name)) return;
 
     if (type === "dropdown") {
@@ -1047,6 +1159,7 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
         result[name] = raw;
         return;
       }
+      // APIs often return only the file-store id string; the file input expects an object.
       result[name] = { filestoreId: raw, documentuuid: raw, documentType: name };
       return;
     }
@@ -1069,6 +1182,7 @@ export const buildInitialData = (formConfig = [], rawAsset = {}, dropdownData = 
       result[name] = field.defaultValue;
       return;
     }
+    // Numbers become strings so controlled text inputs don't flip between types.
     result[name] =
       raw === undefined || raw === null
         ? ""
@@ -1196,6 +1310,49 @@ export const resolveConfigDate = (spec, now = new Date()) => {
   return "";
 };
 
+/**
+ * Current financial year as local calendar dates (1 April – 31 March).
+ * January–March belong to the year that started the previous April.
+ *
+ * @param {Date} [now=new Date()]
+ * @returns {{ start: string, end: string }} yyyy-MM-dd bounds
+ */
+export const financialYearBounds = (now = new Date()) => {
+  const year = now.getFullYear();
+  const startYear = now.getMonth() < 3 ? year - 1 : year;
+  return {
+    start: `${startYear}-04-01`,
+    end: `${startYear + 1}-03-31`,
+  };
+};
+
+/**
+ * Date-picker bounds for one field.
+ * `minDate` / `maxDate` still apply. When `field.withinFinancialYear` is set,
+ * the window stays inside the current financial year and cannot pass today:
+ * a minDate earlier than 1 April is raised to that day, and the latest day is
+ * today. A maxDate after today, before 1 April, or missing is replaced by today.
+ *
+ * @param {object} [field={}]
+ * @param {Date} [now=new Date()]
+ * @returns {{ min: string, max: string }} yyyy-MM-dd, or "" when that side is unset
+ */
+export const resolveFieldDateBounds = (field = {}, now = new Date()) => {
+  let min = resolveConfigDate(field.minDate, now);
+  let max = resolveConfigDate(field.maxDate, now);
+  if (!field.withinFinancialYear) return { min, max };
+
+  const { start, end } = financialYearBounds(now);
+  const today = toInputDate(now);
+  if (!min || min < start) min = start;
+  if (min > today) min = today;
+  // A maxDate inside the year and on or before today can tighten the window.
+  // Anything later than today, earlier than 1 April, or missing becomes today.
+  if (!max || max > today || max < start) max = today;
+  if (max > end) max = end;
+  return { min, max };
+};
+
 /* ── DOM helper ─────────────────────────────────────────────────────── */
 
 /**
@@ -1207,8 +1364,13 @@ export const resolveConfigDate = (spec, now = new Date()) => {
  */
 export const scrollToFirstError = () => {
   requestAnimationFrame(() => {
-    document
-      .querySelector('[data-field-error="true"]')
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const behavior = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+      ? "auto"
+      : "smooth";
+    document.querySelector('[data-field-error="true"]')?.scrollIntoView({
+      behavior,
+      block: "nearest",
+      inline: "nearest",
+    });
   });
 };

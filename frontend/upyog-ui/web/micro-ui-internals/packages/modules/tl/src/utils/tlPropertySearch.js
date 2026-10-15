@@ -236,6 +236,16 @@ const codeOf = (value) => {
   return String(value);
 };
 
+const ownerGender = (owner = {}) =>
+  coerceRadioFieldValue(
+    owner.gender ?? owner.user?.gender ?? owner.additionalDetails?.gender
+  );
+
+const ownerRelationship = (owner = {}) =>
+  coerceRadioFieldValue(
+    owner.relationship ?? owner.relation ?? owner.additionalDetails?.relationship
+  );
+
 const mapPropertyOwnersToForm = (property = {}) => {
   const owners = activePropertyOwners(property);
   const category = codeOf(property.ownershipCategory);
@@ -244,10 +254,10 @@ const mapPropertyOwnersToForm = (property = {}) => {
     return [
       {
         name: plainText(property?.institution?.nameOfAuthorizedPerson || first.name),
-        gender: coerceRadioFieldValue(first.gender ?? first.user?.gender),
+        gender: ownerGender(first),
         mobilenumber: plainText(first.mobileNumber),
         fatherOrHusbandName: plainText(first.fatherOrHusbandName || first.guardian),
-        relationship: coerceRadioFieldValue(first.relationship ?? first.relation),
+        relationship: ownerRelationship(first),
         emailId: plainText(first.emailId),
         permanentAddress: plainText(first.permanentAddress || first.correspondenceAddress),
       },
@@ -255,13 +265,55 @@ const mapPropertyOwnersToForm = (property = {}) => {
   }
   return owners.map((owner) => ({
     name: plainText(owner?.name),
-    gender: coerceRadioFieldValue(owner?.gender ?? owner?.user?.gender),
+    gender: ownerGender(owner),
     mobilenumber: plainText(owner?.mobileNumber),
     fatherOrHusbandName: plainText(owner?.fatherOrHusbandName || owner?.guardian),
-    relationship: coerceRadioFieldValue(owner?.relationship ?? owner?.relation),
+    relationship: ownerRelationship(owner),
     emailId: plainText(owner?.emailId),
     permanentAddress: plainText(owner?.permanentAddress || owner?.correspondenceAddress),
   }));
+};
+
+/** Same owner rows the form prefill keeps, so radio indexes stay aligned. */
+const formPropertyOwners = (property = {}) =>
+  mapPropertyOwnersToForm(property).filter((owner) => owner.name || owner.mobilenumber);
+
+/**
+ * Gender and relationship for each property owner.
+ * The form leaves these radios blank until same-as-property-owner is Yes.
+ * @param {object} property
+ * @returns {{ gender: string, relationship: string }[]}
+ */
+export const propertyOwnerRadios = (property = {}) =>
+  formPropertyOwners(property).map((owner) => ({
+    gender: owner.gender || "",
+    relationship: owner.relationship || "",
+  }));
+
+/**
+ * Property stashed on the form, or the CPT session written at property select.
+ * A refresh can drop `__property` from form state while `cpt` is still there.
+ * @returns {object|null}
+ */
+export const readStoredProperty = () => {
+  try {
+    const fromDigit = Digit?.SessionStorage?.get?.("cpt");
+    if (fromDigit && typeof fromDigit === "object") return fromDigit;
+    if (typeof fromDigit === "string" && fromDigit) {
+      const parsed = JSON.parse(fromDigit);
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch (e) {
+    /* ignore */
+  }
+  try {
+    const raw = sessionStorage.getItem("cpt");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (e) {
+    return null;
+  }
 };
 
 const ownershipCategoryCode = (property = {}) => {
@@ -326,11 +378,13 @@ const textOrCode = (value) => {
   return value;
 };
 
-export const mapPropertyToFormPrefill = (property = {}) => {
-  const address = property.address || {};
-  const owners = mapPropertyOwnersToForm(property).filter(
-    (owner) => owner.name || owner.mobilenumber
-  );
+/**
+ * Owner rows, ownership category, and documents taken from the linked property.
+ * Same-as-property-owner Yes writes this back over any edits made while No was selected.
+ * @param {object} property
+ * @returns {object}
+ */
+export const propertyLinkedFields = (property = {}) => {
   const ownershipCategory = ownershipCategoryCode(property);
   const proofOfIdentity = findPropertyDocument(
     property,
@@ -348,12 +402,30 @@ export const mapPropertyToFormPrefill = (property = {}) => {
     "OWNERPHOTO"
   );
   return {
+    owners: formPropertyOwners(property),
+    ...(ownershipCategory ? { ownershipCategory } : {}),
+    ...(proofOfIdentity ? { proofOfIdentity } : {}),
+    ...(proofOfOwnership ? { proofOfOwnership } : {}),
+    ...(ownerPhotoProof ? { ownerPhotoProof } : {}),
+  };
+};
+
+export const mapPropertyToFormPrefill = (property = {}) => {
+  const address = property.address || {};
+  const linked = propertyLinkedFields(property);
+  // Gender and relationship stay blank until the citizen chooses same-as-property-owner.
+  const owners = (linked.owners || []).map((owner) => ({
+    ...owner,
+    gender: "",
+    relationship: "",
+  }));
+  return {
     propertyId: property.propertyId || "",
     searchPropertyId: property.propertyId || "",
     hasPropertyId: "YES",
     showTradeDetails: "YES",
     propertyOwnersReady: propertyOwnersAreComplete(property) ? "YES" : "NO",
-    ...(ownershipCategory ? { ownershipCategory } : {}),
+    ...(linked.ownershipCategory ? { ownershipCategory: linked.ownershipCategory } : {}),
     pincode: address.pincode || "",
     city: property.tenantId || textOrCode(address.city),
     locality: textOrCode(address.locality),
@@ -361,9 +433,9 @@ export const mapPropertyToFormPrefill = (property = {}) => {
     doorNo: address.doorNo || "",
     landmark: address.landmark || "",
     ...(owners.length ? { owners } : {}),
-    ...(proofOfIdentity ? { proofOfIdentity } : {}),
-    ...(proofOfOwnership ? { proofOfOwnership } : {}),
-    ...(ownerPhotoProof ? { ownerPhotoProof } : {}),
+    ...(linked.proofOfIdentity ? { proofOfIdentity: linked.proofOfIdentity } : {}),
+    ...(linked.proofOfOwnership ? { proofOfOwnership: linked.proofOfOwnership } : {}),
+    ...(linked.ownerPhotoProof ? { ownerPhotoProof: linked.ownerPhotoProof } : {}),
     __property: property,
   };
 };

@@ -1,5 +1,5 @@
 {
-  "_comment": "TL citizen create — required documents for /info. Same shape as Estate.RequiredDocuments (workbench). Move to MDMS TradeLicense.RequiredDocuments later.",
+  "_comment": "TL citizen /info document rows. TradeLicense.js reads RequiredDocuments from this file. Same row shape as the future MDMS master TradeLicense.RequiredDocuments. Do not read TradeLicense.Documents for this screen.",
   "tenantId": "pg",
   "moduleName": "TradeLicense",
   "RequiredDocuments": [

@@ -25,7 +25,6 @@ const CREATE_PROPERTY_PATH =
  * Ensure createNewPath works even when remote MDMS is stale.
  * Billing-slab rules live here (not in AccordionNewApplication.json).
  */
-/* this is use to overlay the fields to overlay the default fields */
 const tlFormFieldOverlays = [
   {
     key: "TL_HAS_PROPERTY_ID",
@@ -54,6 +53,8 @@ const tlFormFieldOverlays = [
       notFoundLabel: "TL_PROPERTY_NOT_FOUND",
       notFoundLabelDefault: "No property found for this property ID or mobile number",
       createNewLabel: "TL_CREATE_NEW_PROPERTY",
+      // Shown when the localization key has no entry yet.
+      createNewLabelDefault: "Create new property",
     },
     messages: {
       error: "TL_PROPERTY_SEARCH_REQUIRED",
@@ -66,6 +67,22 @@ const tlFormFieldOverlays = [
     field: {
       name: "createPropertyRedirect",
       createNewPath: CREATE_PROPERTY_PATH,
+    },
+  },
+  {
+    // Local copy so an MDMS NewApplication cannot drop the financial-year limit.
+    key: "TL_COMMENCEMENT_DATE",
+    field: {
+      name: "commencementDate",
+      withinFinancialYear: true,
+    },
+    validation: {
+      financialYear: true,
+    },
+    messages: {
+      financialYear: "TL_COMMENCEMENT_DATE_FINANCIAL_YEAR",
+      financialYearDefault:
+        "Commencement date must be in the current financial year and cannot be after today",
     },
   },
   {

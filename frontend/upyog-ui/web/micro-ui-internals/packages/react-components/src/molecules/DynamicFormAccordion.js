@@ -14,12 +14,14 @@
  * - continueLabel       i18n key for the per-panel continue button
  * - continueLabelDefault fallback continue text
  * - showFilledHint      header shows required-field status (pending or completed)
+ * - openNextOnComplete when a section's mandatory fields become valid, close
+ *   that section and open the next one
  *
  * @see DynamicFormAccordionStep
  * @see buildAccordionSections
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ButtonSelector from "../atoms/ButtonSelector";
 import { evaluateFormRule, getFieldArrayName, isFieldVisible, sectionHasFieldError } from "../utilities/formUtils";
 import { validateFields } from "../utilities/validators";
@@ -89,6 +91,26 @@ const getRequiredSectionStatus = (form, formData) => {
   return sectionCanContinue(form, data) ? "complete" : "pending";
 };
 
+/** Smooth unless the user asked the browser to reduce motion. */
+const scrollBehavior = () =>
+  window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? "auto" : "smooth";
+
+/**
+ * Bring a newly opened section heading into view with the smallest scroll.
+ * The heading is the target, not the whole panel, so a tall section is not
+ * pulled to the top of the page. Focus stays where it is.
+ */
+const revealSectionHeader = (sectionId) => {
+  const item = document.getElementById(`dynamic-form-accordion-${sectionId}`);
+  const head = item?.querySelector(".dynamic-form-accordion__head");
+  if (!head) return;
+  head.scrollIntoView({
+    behavior: scrollBehavior(),
+    block: "nearest",
+    inline: "nearest",
+  });
+};
+
 const translateWithFallback = (t, key, fallback) => {
   const translated = t(key, { defaultValue: fallback });
   if (!translated || translated === key) return fallback;
@@ -116,6 +138,7 @@ const resolvePanelTitle = (section, t) => {
  * @param {string}   [props.focusSectionId] Force-open this panel (e.g. after submit errors).
  * @param {Function} props.renderFields   (formSlice) => React nodes.
  * @param {Function} [props.onContinue]   (section) => boolean; false keeps the panel open.
+ * @param {Function} [props.onSectionBlocked] (section) => void. Earlier panel that still has errors.
  * @param {Function} [props.onActiveSectionChange] (sectionId) => void. Latest panel the citizen opened.
  */
 const DynamicFormAccordion = ({
@@ -128,11 +151,13 @@ const DynamicFormAccordion = ({
   focusSectionId,
   renderFields,
   onContinue,
+  onSectionBlocked,
   onActiveSectionChange,
 }) => {
   const allowMultipleOpen = accordion.allowMultipleOpen !== false;
   const continueOpensNext = accordion.continueOpensNext !== false;
   const showFilledHint = accordion.showFilledHint === true;
+  const openNextOnComplete = accordion.openNextOnComplete === true;
   const showContinue =
     accordion.showContinue === true ||
     Boolean(accordion.continueLabel || accordion.continueLabelDefault);
@@ -151,35 +176,41 @@ const DynamicFormAccordion = ({
 
   const pendingHint = translateWithFallback(
     t,
-    "TL_ACCORDION_FILL_REQUIRED",
+    "COMMON_ACCORDION_INCOMPLETE",
     "Incomplete - Please fill all the mandatory fields"
   );
   const completeHint = translateWithFallback(
     t,
-    "TL_ACCORDION_REQUIRED_COMPLETE",
+    "COMMON_ACCORDION_COMPLETE",
     "Completed"
   );
   const blockedMessage = translateWithFallback(
     t,
-    "TL_ACCORDION_SECTION_LOCKED",
-    "Please fill mendatory fields before opening this section."
+    "COMMON_ACCORDION_SECTION_LOCKED",
+    "Please fill mandatory fields before opening this section."
   );
 
-  const sectionStatus = useCallback(
-    (section) => getRequiredSectionStatus(section?.form, formData),
-    [formData]
+  // One validation pass per form change. The joined string stays stable when
+  // the pending/complete result did not change, so the auto-open effect skips.
+  const statusSnapshot = useMemo(
+    () => sections.map((section) => getRequiredSectionStatus(section?.form, formData)).join("|"),
+    [sections, formData]
+  );
+  const sectionStatuses = useMemo(
+    () => (statusSnapshot ? statusSnapshot.split("|") : []),
+    [statusSnapshot]
   );
 
   const canOpenAt = useCallback(
     (index) => {
       if (!showFilledHint) return true;
-      if (sectionStatus(sections[index]) === "none") return false;
+      if (sectionStatuses[index] === "none") return false;
       for (let i = 0; i < index; i += 1) {
-        if (sectionStatus(sections[i]) === "pending") return false;
+        if (sectionStatuses[i] === "pending") return false;
       }
       return true;
     },
-    [showFilledHint, sectionStatus, sections]
+    [showFilledHint, sectionStatuses]
   );
 
   const reportSection = useCallback(
@@ -217,6 +248,57 @@ const DynamicFormAccordion = ({
     if (index < 0 || canOpenAt(index)) setBlockedId(null);
   }, [blockedId, canOpenAt, sections]);
 
+  const prevStatusRef = useRef(null);
+
+  // When a panel's required fields become valid, close it and open the next one.
+  // A panel that had no required fields and then gains some opens once the one above is complete.
+  useEffect(() => {
+    const statuses = sectionStatuses;
+    const previous = prevStatusRef.current;
+    prevStatusRef.current = statuses;
+    // First paint has no previous snapshot, so nothing auto-opens on load.
+    if (!openNextOnComplete || !previous || previous.length !== statuses.length) return;
+
+    let openIndex = -1;
+    let completedIndex = -1;
+    statuses.forEach((status, index) => {
+      if (previous[index] !== "complete" && status === "complete") completedIndex = index;
+    });
+    if (completedIndex >= 0) {
+      const nextIndex = completedIndex + 1;
+      const nextStatus = statuses[nextIndex];
+      const earlierStillPending = statuses
+        .slice(0, nextIndex)
+        .some((status) => status === "pending");
+      if (!earlierStillPending && nextStatus && nextStatus !== "none") openIndex = nextIndex;
+    }
+    if (openIndex < 0) {
+      statuses.forEach((status, index) => {
+        if (index === 0 || openIndex >= 0) return;
+        const previousReady = statuses[index - 1] === "complete";
+        if (previous[index] === "none" && status === "pending" && previousReady) openIndex = index;
+      });
+    }
+    if (openIndex < 0) return;
+
+    const next = sections[openIndex];
+    const finished = sections[openIndex - 1];
+    if (!next || !finished) return;
+
+    setBlockedId(null);
+    setOpenIds((prev) => {
+      const nextIds = allowMultipleOpen ? new Set(prev) : new Set();
+      nextIds.delete(finished.id);
+      nextIds.add(next.id);
+      return nextIds;
+    });
+    reportSection(next.id);
+    const nextId = next.id;
+    requestAnimationFrame(() => {
+      revealSectionHeader(nextId);
+    });
+  }, [sectionStatuses, openNextOnComplete, sections, allowMultipleOpen, reportSection]);
+
   const toggle = (id) => {
     const index = sections.findIndex((section) => section.id === id);
     if (index < 0) return;
@@ -226,8 +308,11 @@ const DynamicFormAccordion = ({
       setBlockedId(id);
       const earlier = sections
         .slice(0, index)
-        .find((section) => sectionStatus(section) === "pending");
-      if (earlier) openSection(earlier.id);
+        .find((_, earlierIndex) => sectionStatuses[earlierIndex] === "pending");
+      if (earlier) {
+        openSection(earlier.id);
+        onSectionBlocked?.(earlier);
+      }
       return;
     }
 
@@ -279,11 +364,13 @@ const DynamicFormAccordion = ({
           const isOpen = openIds.has(section.id);
           const hasError = sectionHasFieldError(section.form, errors);
           const title = resolvePanelTitle(section, t);
-          const hint = section.hintDefault;
-          const status = showFilledHint ? sectionStatus(section) : null;
-          const earlierHasPending = sections
+          const hint = section.hintKey
+            ? translateWithFallback(t, section.hintKey, section.hintDefault)
+            : section.hintDefault;
+          const status = showFilledHint ? sectionStatuses[index] : null;
+          const earlierHasPending = sectionStatuses
             .slice(0, index)
-            .some((earlier) => sectionStatus(earlier) === "pending");
+            .some((earlier) => earlier === "pending");
           // Incomplete hint belongs only on the section the citizen can fill now.
           // A later section blocked by unfinished fields above stays quiet.
           const hintState =
@@ -307,7 +394,12 @@ const DynamicFormAccordion = ({
             .join(" ");
 
           return (
-            <div key={section.id} className={itemClass} role="listitem">
+            <div
+              key={section.id}
+              id={`dynamic-form-accordion-${section.id}`}
+              className={itemClass}
+              role="listitem"
+            >
               <button
                 type="button"
                 className="dynamic-form-accordion__head"

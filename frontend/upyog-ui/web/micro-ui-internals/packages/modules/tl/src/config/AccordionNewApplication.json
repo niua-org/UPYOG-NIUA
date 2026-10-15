@@ -32,23 +32,29 @@
         "confirmRoute": "check",
         "ackRoute": "acknowledgement",
         "infoPage": {
-          "_comment": "EST-style docs landing for /info. List lives in config/RequiredDocuments.json (same shape as Estate.RequiredDocuments). Move both to workbench later.",
-          "key": "Documents",
+          "_comment": "Docs landing for /info. Headings only. Document rows are read from config/RequiredDocuments.json. *Default is the text shown until localization has the key.",
           "sectionHeading": "TL_DOC_REQ_SCREEN_HEADER",
+          "sectionHeadingDefault": "Documents required",
           "documentsHeading": "TL_NEW_APPLICATION_DOCUMENTS_REQUIRED",
+          "documentsHeadingDefault": "Documents required",
           "text": "TL_DOC_REQ_SCREEN_TEXT",
+          "textDefault": "Keep the following documents ready",
           "infoLabel": "CS_FILE_APPLICATION_INFO_LABEL",
+          "infoLabelDefault": "Info",
           "infoText": "TL_DOCUMENT_SIZE_INFO_MSG",
-          "nextLabel": "CS_COMMON_NEXT"
+          "infoTextDefault": "Accepted formats: jpg, jpeg, png, pdf. Maximum size 2 MB.",
+          "nextLabel": "CS_COMMON_NEXT",
+          "nextLabelDefault": "Next"
         },
         "accordion": {
-          "_comment": "defaultOpenStep = first panel key. showFilledHint = header says required fields are pending or completed. A section with no required fields yet stays closed. submitLabel = last sticky button on apply.",
+          "_comment": "defaultOpenStep = first panel key. showFilledHint = header says required fields are pending or completed. openNextOnComplete = the next panel opens when every mandatory field in the current panel is valid. A section with no required fields yet stays closed until the one above is complete. submitLabel = last sticky button on apply.",
           "defaultOpenStep": "structure",
           "showFilledHint": true,
+          "openNextOnComplete": true,
           "submitLabel": "COMMON_SUBMIT_APPLICATION",
           "submitLabelDefault": "Submit Application",
           "introKey": "TL_ACCORDION_HINT",
-          "introDefault": "Expand a section to fill details. Submit when every section is complete.",
+          "introDefault": "Fill the open section. The next section opens when every mandatory field is complete.",
           "subtitleKey": "TL_ACCORDION_SUBTITLE",
           "subtitleDefault": "All sections on this page should be filled before submittal. Fields marked with an asterisk (*) are mandatory."
         },
@@ -59,26 +65,26 @@
           "steps": [
             {
               "step": 1,
-              "label": "TL_STEP_STRUCTURE",
+              "label": "TL_TIMELINE_TRADE_DETAILS",
               "labelDefault": "Trade Details",
               "sections": ["structure"],
               "routes": ["apply"]
             },
             {
               "step": 2,
-              "label": "TL_STEP_TRADE_LOCATION",
+              "label": "TL_TIMELINE_LOCATION_OWNER",
               "labelDefault": "Location & Owner Details",
               "sections": ["tradeLocation"]
             },
             {
               "step": 3,
-              "label": "TL_STEP_OWNERS_DOCS",
+              "label": "TL_TIMELINE_DOCUMENT_DETAILS",
               "labelDefault": "Document Details",
               "sections": ["ownersDocs"]
             },
             {
               "step": 4,
-              "label": "TL_STEP_CONFIRM",
+              "label": "TL_TIMELINE_SUMMARY",
               "labelDefault": "Summary",
               "routes": ["check"]
             }
@@ -93,6 +99,7 @@
           "order": 1,
           "i18nKey": "TL_STEP_STRUCTURE",
           "labelDefault": "Trade Details",
+          "hintKey": "TL_STEP_STRUCTURE_HINT",
           "hintDefault": "Select the Trade Unit and property linkage.",
           "component": "TLCitizenNewApplication",
           "payloadKey": "Licenses",
@@ -272,6 +279,7 @@
                 "notFoundLabel": "TL_PROPERTY_NOT_FOUND",
                 "notFoundLabelDefault": "No property found for this property ID or mobile number",
                 "createNewLabel": "TL_CREATE_NEW_PROPERTY",
+                "createNewLabelDefault": "Create new property",
                 "createNewPath": "/upyog-ui/citizen/pt/property/new-application/info"
               },
               "visibleWhen": {
@@ -299,8 +307,10 @@
                 "type": "text",
                 "searchCard": true,
                 "createNewLabel": "TL_CREATE_NEW_PROPERTY",
+                "createNewLabelDefault": "Create new property",
                 "createNewPath": "/upyog-ui/citizen/pt/property/new-application/info",
-                "notFoundLabel": "TL_NO_PROPERTY_ID_CREATE_NEW"
+                "notFoundLabel": "TL_NO_PROPERTY_ID_CREATE_NEW",
+                "notFoundLabelDefault": "You do not have a property ID. Create a new property."
               },
               "visibleWhen": {
                 "field": "hasPropertyId",
@@ -382,6 +392,7 @@
           "order": 2,
           "i18nKey": "TL_STEP_TRADE_LOCATION",
           "labelDefault": "Trade details & Location",
+          "hintKey": "TL_STEP_TRADE_LOCATION_HINT",
           "hintDefault": "Fill Trade, Units, Operational, and trade address information.",
           "form": [
             {
@@ -466,7 +477,7 @@
               }
             },
             {
-              "_comment": "Repeatable list. At least 1 unit, at most 20. Example: one row for Grocery. Citizen can press Add trade unit for a second trade in the same shop.",
+              "_comment": "Repeatable list. At least 1 unit. Example: one row for Grocery. Citizen can press Add trade unit for a second trade in the same shop.",
               "order": 7,
               "key": "TL_TRADE_UNITS",
               "apiFieldName": "tradeLicenseDetail.tradeUnits",
@@ -558,7 +569,7 @@
                   }
                 },
                 {
-                  "_comment": "Third dropdown. Full TradeType code. Billing-slab match is enforced in the TL module (tlFormConfig / tlBillingSlab), not in this workbench schema.",
+                  "_comment": "Third dropdown. Full TradeType code. Picking a subtype looks up the NEW/PERMANENT billing slab and writes unit, fromUom, and toUom onto this row. fromUom and toUom are not inputs. Slab match is enforced in tlFormConfig / tlBillingSlab, not in this schema.",
                   "order": 2,
                   "key": "TL_TRADE_SUBTYPE",
                   "field": {
@@ -611,7 +622,7 @@
                   }
                 },
                 {
-                  "_comment": "UOM value. Required when unit set; digits only; must be > 0. Slab range (min/max fromField) is applied via tlFormConfig overlay.",
+                  "_comment": "Quantity in the unit above. Required when unit is set; digits only; must be > 0. tlFormConfig sets min fromField fromUom and max fromField toUom. Those are numbers the billing-slab enricher stored on this same row, not fields in this JSON. The check passes when fromUom <= quantity <= toUom. If the slab has no fromUom or toUom, that side of the range is skipped.",
                   "order": 4,
                   "key": "TL_TRADE_UOM_VALUE",
                   "field": {
@@ -726,7 +737,7 @@
               },
               "children": [
                 {
-                  "_comment": "Which accessory. Options restricted to NEW/PERMANENT billing slabs with rate>0 and uom (niuatt SelectAccessoriesDetails). UOM prefill + billingSlabFound via TL enricher / tlFormConfig.",
+                  "_comment": "Which accessory. Options restricted to NEW/PERMANENT billing slabs with rate>0 and uom. Picking one writes unit, fromUom, and toUom onto this row. fromUom and toUom are not inputs. UOM prefill and billingSlabFound live in the TL enricher / tlFormConfig.",
                   "order": 0,
                   "key": "TL_ACCESSORY_CATEGORY",
                   "field": {
@@ -807,7 +818,7 @@
                   }
                 },
                 {
-                  "_comment": "Quantity in that unit. Required when unit is set; digits only; > 0; slab range via tlFormConfig (fromUom/toUom).",
+                  "_comment": "Quantity in that unit. Required when unit is set; digits only; must be > 0. Same range as the trade UOM value: tlFormConfig min/max read fromUom and toUom on this row, copied from the accessory billing slab when the accessory was selected.",
                   "order": 3,
                   "key": "TL_ACCESSORY_UOM_VALUE",
                   "field": {
@@ -1109,6 +1120,7 @@
           "order": 3,
           "i18nKey": "TL_STEP_OWNERS_DOCS",
           "labelDefault": "Ownership & documents",
+          "hintKey": "TL_STEP_OWNERS_DOCS_HINT",
           "hintDefault": "Owner details and document uploads in this section.",
           "isPreview": false,
           "form": [
@@ -1126,7 +1138,7 @@
               }
             },
             {
-              "_comment": "Shown only for a building. Yes means the trade owner is the property owner. Example: YES.",
+              "_comment": "Shown only for a building, after a property is linked. Nothing is selected by default. Yes means the trade owner is the property owner: gender and relationship radios are then filled from that property and the owner fields lock when propertyOwnersReady is YES. No clears those two radios so the citizen can choose them. Example: YES.",
               "order": 2,
               "key": "TL_SAME_AS_PROPERTY_OWNER",
               "apiFieldName": "additionalDetail.isSameAsPropertyOwner",
@@ -1215,7 +1227,7 @@
               }
             },
             {
-              "_comment": "Repeatable list of owners. At least 1, at most 10. Prefilled from the property owners. Locked when same-as-property-owner is Yes and those owners are complete. Example: one row for Ramesh Sharma.",
+              "_comment": "Repeatable list of owners. At least 1, at most 10. Name, mobile, guardian, email, and address are copied when a property is selected. Gender and relationship radios stay empty until same-as-property-owner is Yes. The row locks when that answer is Yes and propertyOwnersReady is YES. Example: one row for Ramesh Sharma.",
               "order": 4,
               "key": "TL_OWNERS",
               "apiFieldName": "tradeLicenseDetail.owners",
@@ -1262,7 +1274,7 @@
                   }
                 },
                 {
-                  "_comment": "Comes from GenderType master. Example: MALE.",
+                  "_comment": "GenderType radio. Nothing is selected when the property is linked. Same-as-property-owner Yes selects the property owner's gender (example MALE). No clears it. Options: MALE, FEMALE, TRANSGENDER, OTHERS.",
                   "order": 1,
                   "key": "TL_OWNER_GENDER",
                   "field": {
@@ -1336,7 +1348,7 @@
                   }
                 },
                 {
-                  "_comment": "Father or husband. Example: FATHER.",
+                  "_comment": "Father or husband radio. Nothing is selected when the property is linked. Same-as-property-owner Yes selects the property owner's relationship (example FATHER). No clears it. Options: FATHER, HUSBAND.",
                   "order": 4,
                   "key": "TL_RELATIONSHIP",
                   "field": {
@@ -1379,7 +1391,7 @@
                   }
                 },
                 {
-                  "_comment": "Required. User service rejects addresses longer than 300 characters. Example: 12A, MG Road, Panipat.",
+                  "_comment": "Required. Same-as-trade copies the trade address into this field and keeps it updated. User service rejects addresses longer than 300 characters. Example: 12A, MG Road, Panipat.",
                   "order": 6,
                   "key": "TL_OWNER_PERMANENT_ADDRESS",
                   "field": {
@@ -1391,14 +1403,14 @@
                   },
                   "validation": {
                     "maxLength": 300,
-                    "required": false
+                    "required": true
                   },
                   "messages": {
                     "error": "TL_OWNER_ADDRESS_REQUIRED"
                   }
                 },
                 {
-                  "_comment": "Shown only for a building, same as the existing owner-address checkbox. Yes copies the trade address into this owner's address. No clears that address. The Yes/No itself is not sent; the owner address is.",
+                  "_comment": "Shown only for a building. Nothing is selected by default, and same-as-property-owner does not select it. Yes copies the trade address into this owner's address and keeps it updated. No clears that address. The Yes/No itself is not sent; the owner address is.",
                   "order": 7,
                   "key": "TL_CORRESPONDENCE_SAME_AS_TRADE",
                   "field": {
@@ -1517,6 +1529,7 @@
           "order": 4,
           "i18nKey": "TL_STEP_CONFIRM",
           "labelDefault": "Confirm",
+          "hintKey": "TL_STEP_CONFIRM_HINT",
           "hintDefault": "Review each section, then confirm the declaration to submit.",
           "isPreview": true,
           "type": "review",

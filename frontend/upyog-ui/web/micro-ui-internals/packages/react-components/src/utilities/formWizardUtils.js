@@ -114,12 +114,14 @@ export const buildWizardSteps = (initialConfig, indexRouteOrOptions) => {
 
       const docsRoute = entry.navigation?.indexRoute || indexRoute || "info";
       const formRoute = entry.navigation?.formRoute || "apply";
-      // Workbench / local JSON: docs list on navigation.infoPage (or entry.infoPage)
+      // Headings for the docs landing. Structural step fields are set after the
+      // spread so infoPage.key cannot replace the wizard step key.
       const infoPage =
         entry.navigation?.infoPage || entry.infoPage || {};
 
       if (docsComponent) {
         acc.push({
+          ...infoPage,
           key: "info",
           route: docsRoute,
           component: docsComponent,
@@ -127,7 +129,6 @@ export const buildWizardSteps = (initialConfig, indexRouteOrOptions) => {
           hideInEmployee: audience === "citizen" ? true : undefined,
           withoutLabel: true,
           type: "component",
-          ...infoPage,
           documents:
             infoPage.documents ||
             infoPage.Documents ||

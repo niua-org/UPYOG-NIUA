@@ -49,6 +49,8 @@ const DatePicker = (props) => {
           ref={dateInp}
           disabled={props.disabled}
           onChange={selectDate}
+          // DynamicForm validates the date when focus leaves the input.
+          onBlur={props.onBlur}
           defaultValue={props.defaultValue}
           min={props.min}
           max={props.max}

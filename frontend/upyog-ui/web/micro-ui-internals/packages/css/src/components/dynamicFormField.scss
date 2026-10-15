@@ -168,6 +168,44 @@
     gap: 12px 24px;
     margin-bottom: 16px;
 
+    /* The selected class draws the dot. The input stays enabled so :checked still matches. */
+    .radio-btn {
+      opacity: 0 !important;
+    }
+
+    .radio-btn-wrap--disabled {
+      pointer-events: none;
+    }
+
+    .radio-btn-checkmark {
+      position: relative;
+    }
+
+    .radio-btn-checkmark:after,
+    .radio-btn-wrap--selected .radio-btn-checkmark:after,
+    .radio-btn-wrap input:checked ~ .radio-btn-checkmark:after {
+      content: none !important;
+      display: none !important;
+    }
+
+    .radio-btn-dot {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      width: 8px;
+      height: 8px;
+      margin: auto;
+      transform: none;
+      border-radius: 50%;
+      background: #a82227;
+      pointer-events: none;
+    }
+
+    .radio-btn-wrap--selected .radio-btn-checkmark {
+      position: relative;
+      border-color: #a82227;
+    }
+
     &.radio-wrap {
       display: flex;
       flex-wrap: wrap;

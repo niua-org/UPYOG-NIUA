@@ -92,11 +92,14 @@ const ActionModal = ({ t, action, tenantId, state, id, closeModal, submitAction,
   }, [file]);
 
   function submit(data) {
-    let workflow = { action: action?.action, comments: data?.comments, businessService, moduleName: moduleCode };
+    // Form rules already block this. Trim again so a one-character or blank note cannot be sent.
+    const comment = String(data?.comments ?? "").trim();
+    if (comment.length < 2) return;
+    let workflow = { action: action?.action, comments: comment, businessService, moduleName: moduleCode };
     applicationData = {
       ...applicationData,
       action: action?.action,
-      comment: data?.comments,
+      comment,
       assignee: !selectedApprover?.uuid ? null : [selectedApprover?.uuid],
       // assignee: action?.isTerminateState ? [] : [selectedApprover?.uuid],
       wfDocuments: uploadedFile

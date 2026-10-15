@@ -156,13 +156,22 @@ export const fieldRules = {
 
   /**
    * Date must fall in the current financial year (1 April – 31 March).
-   * Empty values pass (use required). Ignores field.minDate.
+   * Empty values pass (use required).
+   * A `withinFinancialYear` field also cannot be after today, matching the
+   * date-picker max from resolveFieldDateBounds. A typed future date in the
+   * same year would otherwise pass while the picker refuses it.
    */
-  financialYear: (value) => {
+  financialYear: (value, { fieldConfig } = {}) => {
     if (!value) return true;
     const { start, end } = financialYearBounds();
+    // Picker max is today. Cap the check the same way so a typed future date fails.
+    let latest = end;
+    if (fieldConfig?.field?.withinFinancialYear) {
+      const today = toInputDate(new Date());
+      if (today && today < latest) latest = today;
+    }
     const cmpStart = compareInputDates(value, start);
-    const cmpEnd = compareInputDates(value, end);
+    const cmpEnd = compareInputDates(value, latest);
     if (cmpStart == null || cmpEnd == null) return true;
     return cmpStart >= 0 && cmpEnd <= 0;
   },

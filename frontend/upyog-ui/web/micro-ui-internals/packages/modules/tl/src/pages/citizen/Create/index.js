@@ -12,12 +12,12 @@ import {
   resolveFormConfig,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import localAccordion from "../../../config/AccordionNewApplication.json";
-import localRequiredDocuments from "../../../config/RequiredDocuments.json";
 import TLCitizenNewApplication from "../../../pageComponents/TLCitizenNewApplication";
 import TradeLicense from "../../../pageComponents/TradeLicense";
 import useTlWizard from "../../../utils/useTlWizard";
 import { mapDynamicTlToCheckSession } from "../../../utils/tlSessionAdapter";
 
+/** Resolves a wizard step name to the citizen accordion or documents component. */
 const resolveStepComponent = (component) => {
   if (typeof component !== "string") return component;
   const fromRegistry = Digit.ComponentRegistryService.getComponent(component);
@@ -27,24 +27,11 @@ const resolveStepComponent = (component) => {
   return null;
 };
 
-/** Attach EST-style requiredDocuments onto accordion navigation.infoPage. */
-const withRequiredDocuments = (config) => {
-  if (!Array.isArray(config) || !config[0]) return config;
-  const docs = (localRequiredDocuments?.RequiredDocuments || []).filter(
-    (d) => d.active !== false && d.active !== "false"
-  );
-  if (!docs.length) return config;
-  const entry = { ...config[0] };
-  const navigation = { ...(entry.navigation || {}) };
-  const infoPage = { ...(navigation.infoPage || {}) };
-  if (!Array.isArray(infoPage.requiredDocuments) || !infoPage.requiredDocuments.length) {
-    infoPage.requiredDocuments = docs;
-  }
-  navigation.infoPage = infoPage;
-  entry.navigation = navigation;
-  return [entry, ...config.slice(1)];
-};
-
+/**
+ * Citizen new-application wizard. Session key is TL_CREATE_TRADE; check and
+ * acknowledgement sit after the accordion form.
+ * Document rows for /info are read in TradeLicense from config/RequiredDocuments.json.
+ */
 const CreateTradeLicence = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -58,18 +45,16 @@ const CreateTradeLicence = () => {
       select: (data) => data?.TradeLicense?.NewApplication || null,
     }
   );
-
+  // Local accordion JSON, overlaid by MDMS TradeLicense.NewApplication when present.
   const initialConfig = useMemo(
     () =>
-      withRequiredDocuments(
-        resolveFormConfig({
-          local: localAccordion,
-          masterKey: "NewApplication",
-          mdms: mdmsConfig,
-          preferAccordion: true,
-          preferFieldArray: true,
-        })
-      ),
+      resolveFormConfig({
+        local: localAccordion,
+        masterKey: "NewApplication",
+        mdms: mdmsConfig,
+        preferAccordion: true,
+        preferFieldArray: true,
+      }),
     [mdmsConfig]
   );
 

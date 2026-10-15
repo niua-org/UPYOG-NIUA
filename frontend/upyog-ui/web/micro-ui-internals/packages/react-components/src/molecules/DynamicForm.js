@@ -127,7 +127,7 @@ import Modal from "../hoc/Modal";
 import DynamicFormField from "./DynamicFormField";
 import DynamicFormAccordion from "./DynamicFormAccordion";
 import { validateFields, validateCrossField, calculateDuration, calculateRentByBillingCycle } from "../utilities/validators";
-import { sortByOrder, buildPayload, scrollToFirstError, buildInitialData, flattenFormConfig, findFieldConfig, enrichDropdownSelection, optionCode, collectSectionFieldNames, findAccordionSectionId, getAccordionCellClass, isFieldVisible, getFieldArrayName, createEmptyFieldArrayItem } from "../utilities/formUtils";
+import { sortByOrder, buildPayload, scrollToFirstError, buildInitialData, flattenFormConfig, findFieldConfig, enrichDropdownSelection, optionCode, collectSectionFieldNames, findAccordionSectionId, getAccordionCellClass, isFieldVisible, getFieldArrayName, createEmptyFieldArrayItem, errorKeyBelongsTo } from "../utilities/formUtils";
 import {
   resolveFormGate,
   resolveCreateNewPath,
@@ -199,9 +199,82 @@ const isTouchedErrorKey = (key, keys, prefixes) =>
   keys.has(key) || prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`));
 
 /**
- * Drop touched error keys, then write back only the ones that are still invalid.
- * Untouched keys stay as they are, so fixing one field does not leave its old
- * message behind and does not clear errors on other fields.
+ * Field-array names whose row count changed.
+ * Index-based error keys (`owners.1.name`) no longer point at the same row,
+ * so those messages are dropped instead of being left on the next row.
+ */
+const resizedArrayNames = (before = {}, after = {}) => {
+  const names = [];
+  const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+  keys.forEach((name) => {
+    const nextRows = after?.[name];
+    const prevRows = before?.[name];
+    if (!Array.isArray(nextRows) && !Array.isArray(prevRows)) return;
+    const nextLen = Array.isArray(nextRows) ? nextRows.length : 0;
+    const prevLen = Array.isArray(prevRows) ? prevRows.length : 0;
+    if (nextLen !== prevLen) names.push(name);
+  });
+  return names;
+};
+
+/** Remove error keys that belong to the given field or field-array prefixes. */
+const dropErrorPrefixes = (errors, prefixes = []) => {
+  if (!prefixes.length) return errors;
+  const next = { ...errors };
+  Object.keys(next).forEach((key) => {
+    if (prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`))) {
+      delete next[key];
+    }
+  });
+  return next;
+};
+
+/**
+ * Error keys for field-array cells whose values changed in this update.
+ * Removed rows are included so a deleted `owners.2.name` message does not
+ * stay on screen after the row is gone. Same-reference arrays are skipped.
+ */
+const changedArrayCellKeys = (before = {}, after = {}) => {
+  const keys = [];
+  const names = new Set([
+    ...Object.keys(before || {}),
+    ...Object.keys(after || {}),
+  ]);
+  names.forEach((name) => {
+    const nextRows = after?.[name];
+    const prevRows = before?.[name];
+    const nextIsArray = Array.isArray(nextRows);
+    const prevIsArray = Array.isArray(prevRows);
+    if (!nextIsArray && !prevIsArray) return;
+    if (nextRows === prevRows) return;
+
+    const nextList = nextIsArray ? nextRows : [];
+    const prevList = prevIsArray ? prevRows : [];
+    const length = Math.max(nextList.length, prevList.length);
+    for (let index = 0; index < length; index += 1) {
+      const row = nextList[index];
+      const prev = prevList[index];
+      const prevCells = prev && typeof prev === "object" ? prev : {};
+      if (row && typeof row === "object") {
+        Object.keys(row).forEach((child) => {
+          if (row[child] !== prevCells[child]) keys.push(`${name}.${index}.${child}`);
+        });
+        continue;
+      }
+      // Row was removed. Clear every child that used to live at this index.
+      Object.keys(prevCells).forEach((child) => {
+        keys.push(`${name}.${index}.${child}`);
+      });
+    }
+  });
+  return keys;
+};
+
+/**
+ * Refresh errors for the fields just edited.
+ * A message that is already showing stays in sync and clears when the value becomes valid.
+ * A new message is added on focus out, not on the first keystroke.
+ * Fields the citizen has not edited keep the message they already have.
  *
  * @param {object}   prevErrors
  * @param {object}   freshErrors Result of validateFields for the updated form.
@@ -212,9 +285,8 @@ const isTouchedErrorKey = (key, keys, prefixes) =>
 const refreshTouchedErrors = (prevErrors, freshErrors, touchedKeys = [], prefixes = []) => {
   const keys = new Set(touchedKeys.filter(Boolean));
   const next = { ...prevErrors };
-  const previousTouched = Object.keys(next).filter((key) =>
-    isTouchedErrorKey(key, keys, prefixes)
-  );
+  const matches = (key) => isTouchedErrorKey(key, keys, prefixes);
+  const previousTouched = Object.keys(next).filter(matches);
   const hadPrefixErrors = prefixes.some((prefix) =>
     previousTouched.some((key) => key === prefix || key.startsWith(`${prefix}.`))
   );
@@ -224,10 +296,7 @@ const refreshTouchedErrors = (prevErrors, freshErrors, touchedKeys = [], prefixe
   });
 
   previousTouched.forEach((key) => {
-    const underPrefix = prefixes.some(
-      (prefix) => key === prefix || key.startsWith(`${prefix}.`)
-    );
-    if (!underPrefix && freshErrors?.[key]) next[key] = freshErrors[key];
+    if (freshErrors?.[key]) next[key] = freshErrors[key];
   });
 
   if (hadPrefixErrors) {
@@ -255,9 +324,7 @@ const refreshTouchedErrors = (prevErrors, freshErrors, touchedKeys = [], prefixe
 const replaceSectionErrors = (prevErrors, names, fieldErrors) => {
   const next = { ...prevErrors };
   Object.keys(next).forEach((key) => {
-    const inSection =
-      names.has(key) || [...names].some((name) => key.startsWith(`${name}.`));
-    if (inSection) delete next[key];
+    if (errorKeyBelongsTo(key, names)) delete next[key];
   });
   Object.keys(fieldErrors || {}).forEach((key) => {
     if (fieldErrors[key]) next[key] = fieldErrors[key];
@@ -308,6 +375,8 @@ const DynamicForm = ({
   enrichFieldArrayRow = null,
   transformDropdownData = null,
   onFieldChange = null,
+  /** (data, changedField) => nextData. Module hook for copied owner fields. */
+  reviseFormData = null,
   onTimelineStep = null,
 }) => {
   /** True when mode === "search" (filter UI, no wizard ActionBar). */
@@ -621,19 +690,23 @@ const DynamicForm = ({
           else if (source[key] !== undefined) kept[key] = source[key];
           else if (built[key] !== undefined) kept[key] = built[key];
         });
-        const merged = {
+        let merged = {
           ...built,
           ...stash,
           ...preserve,
           ...kept,
         };
+        if (typeof reviseFormData === "function") {
+          const revised = reviseFormData(merged, null);
+          if (revised && typeof revised === "object") merged = revised;
+        }
         const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
         return allComputeDeps.length
           ? applyComputedFields(merged, allComputeDeps)
           : merged;
       });
     },
-    [routeConfig.form, dropdownData, tenantId, flatFields, applyComputedFields, formGate]
+    [routeConfig.form, dropdownData, tenantId, flatFields, applyComputedFields, formGate, reviseFormData]
   );
 
   /**
@@ -804,7 +877,8 @@ const DynamicForm = ({
       if (fieldName === "billingCycle") {
         resolvedValue = enrichDropdownSelection(value, billingCycleOptions);
       }
-      let updated = { ...formDataRef.current, [fieldName]: resolvedValue };
+      const previousData = formDataRef.current;
+      let updated = { ...previousData, [fieldName]: resolvedValue };
       resetList.forEach((f) => {
         assignResetValue(updated, f);
       });
@@ -837,15 +911,18 @@ const DynamicForm = ({
         if (!show) return;
         if (!Array.isArray(updated[arrayName]) || updated[arrayName].length === 0) {
           const minItems = Math.max(1, Number(item.minItems) || 1);
-          const emptyRow = {};
-          (item.children || []).forEach((child) => {
-            const n = child?.field?.name;
-            if (!n) return;
-            emptyRow[n] = child.field.type === "dropdown" || child.field.type === "file" ? null : "";
-          });
-          updated[arrayName] = Array.from({ length: minItems }, () => ({ ...emptyRow }));
+          // One fresh row object per slot so later edits do not share state.
+          updated[arrayName] = Array.from({ length: minItems }, () =>
+            createEmptyFieldArrayItem(item.children)
+          );
         }
       });
+
+      // Module hook (trade license copies owner address / radios here).
+      if (typeof reviseFormData === "function") {
+        const revised = reviseFormData(updated, fieldName);
+        if (revised && typeof revised === "object") updated = revised;
+      }
 
       const nextData = applyComputedFields(updated, [fieldName, ...resetList]);
       formDataRef.current = nextData;
@@ -856,11 +933,17 @@ const DynamicForm = ({
       }
       const clearErrorKeys = Array.isArray(meta?.clearErrorKeys) ? meta.clearErrorKeys : [];
       const refreshPrefixes = Array.isArray(meta?.refreshPrefixes) ? meta.refreshPrefixes : [];
-      const touched = [fieldName, ...resetList, ...clearErrorKeys];
+      const touched = [
+        fieldName,
+        ...resetList,
+        ...clearErrorKeys,
+        ...changedArrayCellKeys(previousData, nextData),
+      ];
       if (fieldName === "city") touched.push("serviceType");
+      const resized = resizedArrayNames(previousData, nextData);
       setErrors((prev) =>
         refreshTouchedErrors(
-          prev,
+          dropErrorPrefixes(prev, resized),
           validateFields(routeConfig.form, nextData),
           touched,
           refreshPrefixes
@@ -876,8 +959,24 @@ const DynamicForm = ({
       flatFields,
       formGate,
       onFieldChange,
+      reviseFormData,
     ]
   );
+
+  /**
+   * Validate one field when focus leaves it. The message is for that field only.
+   * @param {string} errorKey Field name, or `array.index.child` for a repeated row.
+   */
+  const handleFieldBlur = useCallback((errorKey) => {
+    if (!errorKey) return;
+    const fresh = validateFields(routeConfig.form, formDataRef.current);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fresh[errorKey]) next[errorKey] = fresh[errorKey];
+      else delete next[errorKey];
+      return next;
+    });
+  }, [routeConfig.form]);
 
   /**
    * Runs the parent onFieldSearch for a lookup field (Enter / search button / typeahead).
@@ -1302,6 +1401,16 @@ const DynamicForm = ({
     [formData]
   );
 
+  /** Show every invalid field in the section that is keeping a later panel closed. */
+  const handleSectionBlocked = useCallback((section) => {
+    if (!section?.form) return;
+    const fieldErrors = validateFields(section.form, formDataRef.current);
+    const names = collectSectionFieldNames(section.form);
+    setErrors((prev) => replaceSectionErrors(prev, names, fieldErrors));
+    setAccordionFocusId(section.id || null);
+    scrollToFirstError();
+  }, []);
+
   /** Primary action label: Update (edit) / Search (search mode) / SAVE & NEXT (create). */
   const buttonLabel = isEditMode
     ? routeConfig.actionButton?.text?.edit || "UPDATE"
@@ -1351,6 +1460,7 @@ const DynamicForm = ({
       fieldConfig={fieldConfig}
       formData={formData}
       onChange={handleChange}
+      onFieldBlur={handleFieldBlur}
       errors={errors}
       dropdownData={dropdownData}
       t={t}
@@ -1386,6 +1496,7 @@ const DynamicForm = ({
           ))
       }
       onContinue={handleSectionContinue}
+      onSectionBlocked={handleSectionBlocked}
       onActiveSectionChange={setActiveSection}
     />
   ) : null;

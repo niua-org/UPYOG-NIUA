@@ -1,105 +1,98 @@
+/**
+ * Citizen documents landing for a new trade license. Lists the proofs the
+ * applicant must keep ready before the application form.
+ *
+ * Document rows come from config/RequiredDocuments.json. Headings stay on
+ * navigation.infoPage. When this list moves to MDMS TradeLicense.RequiredDocuments,
+ * read that master here instead of the local file.
+ */
 import {
   Card,
   CardHeader,
   CardSubHeader,
   CardText,
   CitizenInfoLabel,
-  Loader,
   SubmitBar,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import React, { useMemo } from "react";
+import React from "react";
 import localRequiredDocuments from "../config/RequiredDocuments.json";
 
-/**
- * /info — required-documents landing (EST AssignAstRequiredDoc pattern).
- * Prefers step config.requiredDocuments (workbench / Accordion navigation.infoPage),
- * then local RequiredDocuments.json, then TradeLicense.Documents MDMS.
- */
-const TradeLicense = ({ t, config, onSelect }) => {
-  const stateId = Digit.ULBService.getStateId();
-
-  const hasStepDocuments =
-    Array.isArray(config?.requiredDocuments) && config.requiredDocuments.length > 0;
-
-  const { isLoading, data: Documentsob = {} } = Digit.Hooks.tl.useTradeLicenseMDMS(
-    stateId,
-    "TradeLicense",
-    "TLDocuments"
+const activeDocuments = (list) =>
+  (Array.isArray(list) ? list : []).filter(
+    (doc) => doc && doc.active !== false && doc.active !== "false"
   );
 
-  const documents = useMemo(() => {
-    if (hasStepDocuments) {
-      return config.requiredDocuments.filter(
-        (doc) => doc.active !== false && doc.active !== "false"
-      );
-    }
+/** Use a localization hit when it exists; otherwise the text stored in JSON. */
+const textFrom = (t, key, fallback) => {
+  if (key && typeof t === "function") {
+    const translated = t(key);
+    if (translated && translated !== key) return translated;
+  }
+  return fallback || "";
+};
 
-    const fromLocalFile = (localRequiredDocuments?.RequiredDocuments || []).filter(
-      (doc) => doc.active !== false && doc.active !== "false"
-    );
-    if (fromLocalFile.length > 0) return fromLocalFile;
-
-    // Legacy MDMS Documents (nested dropdownData) → flat EST-like rows
-    const mdmsDocs = Documentsob?.TradeLicense?.Documents || [];
-    const flat = [];
-    mdmsDocs.forEach((group) => {
-      (group?.dropdownData || []).forEach((item, idx) => {
-        if (!item?.code) return;
-        flat.push({
-          order: flat.length + 1,
-          code: item.code,
-          i18nKey: `TRADELICENSE_${String(item.code).replace(/\./g, "_")}_LABEL`,
-          name: item.code,
-          active: item.active !== false,
-        });
-      });
-    });
-    return flat.filter((doc) => doc.active !== false);
-  }, [config, hasStepDocuments, Documentsob]);
+/** /info — required-documents landing. Rows from config/RequiredDocuments.json. */
+const TradeLicense = ({ t, config, onSelect }) => {
+  const documents = activeDocuments(localRequiredDocuments?.RequiredDocuments);
 
   const goNext = () => onSelect(config?.key || "info", {});
 
-  if (isLoading && !hasStepDocuments && !(localRequiredDocuments?.RequiredDocuments || []).length) {
-    return <Loader />;
-  }
+  const sectionHeading = textFrom(
+    t,
+    config?.sectionHeading || config?.header,
+    config?.sectionHeadingDefault || "Documents required"
+  );
+  const documentsHeading = textFrom(
+    t,
+    config?.documentsHeading,
+    config?.documentsHeadingDefault || "Documents required"
+  );
+  const intro = textFrom(
+    t,
+    config?.text || config?.cardText,
+    config?.textDefault || "Keep the following documents ready"
+  );
+  const nextLabel = textFrom(
+    t,
+    config?.nextLabel,
+    config?.nextLabelDefault || "Next"
+  );
+  const infoLabel = textFrom(
+    t,
+    config?.infoLabel,
+    config?.infoLabelDefault || "Info"
+  );
+  const infoText = textFrom(
+    t,
+    config?.infoText,
+    config?.infoTextDefault ||
+      "Accepted formats: jpg, jpeg, png, pdf. Maximum size 2 MB."
+  );
 
   return (
     <React.Fragment>
       <Card>
-        <CardHeader>
-          {t(config?.sectionHeading || config?.header || "TL_DOC_REQ_SCREEN_HEADER")}
-        </CardHeader>
+        <CardHeader>{sectionHeading}</CardHeader>
 
         <div>
-          <CardSubHeader>
-            {t(config?.documentsHeading || "TL_NEW_APPLICATION_DOCUMENTS_REQUIRED")}
-          </CardSubHeader>
-          {config?.text || config?.cardText ? (
-            <CardText>{t(config.text || config.cardText)}</CardText>
-          ) : (
-            <CardText>{t("TL_DOC_REQ_SCREEN_TEXT")}</CardText>
-          )}
+          <CardSubHeader>{documentsHeading}</CardSubHeader>
+          <CardText>{intro}</CardText>
 
           <div>
             {documents.map((doc, index) => (
               <CardText key={doc.code || doc.i18nKey || index} className="primaryColor">
-                {doc.order ?? index + 1}. {t(doc.i18nKey || doc.name || doc.label || "")}
+                {doc.order ?? index + 1}.{" "}
+                {textFrom(t, doc.i18nKey, doc.name || doc.label || "")}
               </CardText>
             ))}
           </div>
         </div>
 
         <span>
-          <SubmitBar
-            label={t(config?.nextLabel || "CS_COMMON_NEXT")}
-            onSubmit={goNext}
-          />
+          <SubmitBar label={nextLabel} onSubmit={goNext} />
         </span>
       </Card>
-      <CitizenInfoLabel
-        info={t(config?.infoLabel || "CS_FILE_APPLICATION_INFO_LABEL")}
-        text={t(config?.infoText || "TL_DOCUMENT_SIZE_INFO_MSG")}
-      />
+      <CitizenInfoLabel info={infoLabel} text={infoText} />
     </React.Fragment>
   );
 };

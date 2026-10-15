@@ -39,11 +39,27 @@
     box-shadow: 0 1px 0 rgba(168, 34, 39, 0.06);
   }
 
-  &__item--error {
+  /* Locked and invalid panels share the error border. */
+  &__item--error,
+  &__item--locked {
     border-color: #d4351c;
   }
 
+  /* Shown when a later panel is opened before earlier required fields are done. */
+  &__notice {
+    margin: 0;
+    padding: 10px 16px;
+    border-top: 1px solid #f4c7b8;
+    background: #fff4f0;
+    color: #7a1f1f;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
   &__head {
+    /* Keeps the heading clear of the page chrome when it is scrolled into view. */
+    scroll-margin-top: 16px;
+    scroll-margin-bottom: 96px;
     width: 100%;
     display: flex;
     align-items: center;
@@ -113,10 +129,23 @@
     flex: 0 0 auto;
   }
 
+  /* Status text in the panel header: pending (red) or complete (green). */
   &__hint {
+    max-width: 220px;
     font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
     color: #505a5f;
-    white-space: nowrap;
+    text-align: right;
+    white-space: normal;
+  }
+
+  &__hint--pending {
+    color: #a82227;
+  }
+
+  &__hint--complete {
+    color: #00703c;
   }
 
   &__chevron {

@@ -180,6 +180,21 @@ const applyTextInputChange = (e, { name, sanitizeRegex, validation, onChange }) 
 };
 
 /**
+ * Localization with a JSON fallback. A missing key comes back equal to itself,
+ * so the stored default is shown instead of the raw key.
+ *
+ * @param {Function} t
+ * @param {string} key
+ * @param {string} [fallback]
+ * @returns {string}
+ */
+const translateWithDefault = (t, key, fallback) => {
+  if (!fallback) return t(key);
+  const translated = t(key, { defaultValue: fallback });
+  return !translated || translated === key ? fallback : translated;
+};
+
+/**
  * Single-field (or group / sectionHeader) renderer for DynamicForm.
  * Branches on fieldConfig.type / field.type and returns the matching control.
  *
@@ -190,6 +205,7 @@ const DynamicFormField = ({
   fieldConfig,
   formData,
   onChange,
+  onFieldBlur,
   errors,
   dropdownData = {},
   t,
@@ -402,6 +418,7 @@ const DynamicFormField = ({
                     onChange={(name, value, resetFields) =>
                       updateRowField(rowIndex, name, value, resetFields)
                     }
+                    onFieldBlur={onFieldBlur}
                     errors={rowErrors}
                     dropdownData={dropdownData}
                     t={t}
@@ -450,6 +467,7 @@ const DynamicFormField = ({
               fieldConfig={child}
               formData={formData}
               onChange={onChange}
+              onFieldBlur={onFieldBlur}
               errors={errors}
               dropdownData={dropdownData}
               t={t}
@@ -516,6 +534,13 @@ const DynamicFormField = ({
     fieldDisabled = fieldDisabled || evaluateFormRule(field.disabledWhen, formData);
   }
 
+  // Blur key is `array.index.child` inside a repeated row, otherwise the field name.
+  const blurErrorKey = inputName || name;
+  const reportBlur = () => {
+    if (fieldDisabled) return;
+    onFieldBlur?.(blurErrorKey);
+  };
+
   const dropdownResetFields =
     field.dataSource?.resetFields || field.resetFields || fieldConfig.resetFields || [];
 
@@ -565,6 +590,7 @@ const DynamicFormField = ({
             t={tSafe}
             disable={isFieldDisabled}
             optionCardStyles={field.optionCardStyles}
+            onBlur={reportBlur}
           />
           <FieldError show={hasError} message={errorMsg} />
         </div>
@@ -579,7 +605,14 @@ const DynamicFormField = ({
       <LabelFieldPair>
         <FieldLabel text={labelText} required={showRequired} hasError={hasError} />
         <div className="field" data-field-error={hasError ? "true" : undefined}>
-          <div className="radio-wrap dynamic-form-field__radio-group">
+          <div
+            className="radio-wrap dynamic-form-field__radio-group"
+            onBlur={(event) => {
+              // Moving between radios in the same group is not a field blur.
+              if (event.currentTarget.contains(event.relatedTarget)) return;
+              reportBlur();
+            }}
+          >
             {options.map((opt, index) => {
               const selected = radioOptionMatches(value, opt);
               const key = opt.i18nKey || opt.label || opt.name || opt.code;
@@ -594,21 +627,41 @@ const DynamicFormField = ({
               );
               return (
                 <div key={String(opt.code ?? key)}>
-                  <span className="radio-btn-wrap">
+                  {/* The native control stays invisible. The dot is a real element so a locked radio still shows its choice. */}
+                  <span
+                    className={`radio-btn-wrap${
+                      selected ? " radio-btn-wrap--selected" : ""
+                    }${radioDisabled ? " radio-btn-wrap--disabled" : ""}`}
+                  >
                     <input
                       id={inputId}
                       type="radio"
                       name={radioInputName}
                       value={opt.code}
                       checked={selected}
-                      disabled={radioDisabled}
-                      onChange={() => onChange(name, opt.code, dropdownResetFields)}
+                      aria-disabled={radioDisabled || undefined}
+                      tabIndex={radioDisabled ? -1 : undefined}
+                      onClick={(event) => {
+                        if (radioDisabled) event.preventDefault();
+                      }}
+                      onChange={() => {
+                        if (radioDisabled) return;
+                        onChange(name, opt.code, dropdownResetFields);
+                      }}
                       className="radio-btn"
                     />
-                    <span className="radio-btn-checkmark" />
+                    <span
+                      className="radio-btn-checkmark"
+                      style={{
+                        position: "relative",
+                        ...(selected ? { borderColor: "#a82227" } : {}),
+                      }}
+                    >
+                      {selected ? <span className="radio-btn-dot" /> : null}
+                    </span>
                   </span>
                   <label
-                    htmlFor={inputId}
+                    htmlFor={radioDisabled ? undefined : inputId}
                     className={`dynamic-form-field__radio-label${
                       radioDisabled ? " dynamic-form-field__radio-label--disabled" : ""
                     }${selected ? " dynamic-form-field__radio-label--selected" : ""}`}
@@ -638,6 +691,7 @@ const DynamicFormField = ({
             min={dateBounds.min}
             max={dateBounds.max}
             onChange={(d) => onChange(name, d)}
+            onBlur={reportBlur}
           />
           <FieldError show={hasError} message={errorMsg} />
         </div>
@@ -667,6 +721,7 @@ const DynamicFormField = ({
             file={hasUploaded ? { name: uploadedLabel } : undefined}
             onUpload={(e) => onFileUpload && onFileUpload(name, e.target.files[0])}
             onDelete={() => onChange(name, null)}
+            onBlur={reportBlur}
           />
           <FieldError show={hasError} message={errorMsg} />
         </div>
@@ -701,6 +756,7 @@ const DynamicFormField = ({
                 onChange={(e) =>
                   applyTextInputChange(e, { name, sanitizeRegex, validation, onChange })
                 }
+                onBlur={reportBlur}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -760,23 +816,22 @@ const DynamicFormField = ({
               {panelForField?.status === "notFound" && (
                 <div className="dynamic-form-field__not-found">
                   <p className="dynamic-form-field__not-found-text">
-                    {(() => {
-                      const key = field.notFoundLabel || "CS_COMMON_NOT_FOUND";
-                      if (!field.notFoundLabelDefault) return t(key);
-                      const translated = t(key, {
-                        defaultValue: field.notFoundLabelDefault,
-                      });
-                      return !translated || translated === key
-                        ? field.notFoundLabelDefault
-                        : translated;
-                    })()}
+                    {translateWithDefault(
+                      t,
+                      field.notFoundLabel || "CS_COMMON_NOT_FOUND",
+                      field.notFoundLabelDefault
+                    )}
                   </p>
                   <button
                     type="button"
                     className="dynamic-form-field__create-button"
                     onClick={() => onCreateNewFromSearch?.(name)}
                   >
-                    {t(field.createNewLabel || "CS_COMMON_CREATE_NEW")}
+                    {translateWithDefault(
+                      t,
+                      field.createNewLabel || "CS_COMMON_CREATE_NEW",
+                      field.createNewLabelDefault
+                    )}
                   </button>
                 </div>
               )}
@@ -820,6 +875,7 @@ const DynamicFormField = ({
           onChange={(e) =>
             applyTextInputChange(e, { name, sanitizeRegex, validation, onChange })
           }
+          onBlur={reportBlur}
           disabled={fieldDisabled}
           readOnly={validation.readOnly}
           errorStyle={hasError}
@@ -887,6 +943,7 @@ const areEqual = (prev, next) => {
     prev.t !== next.t ||
     prev.isDisabled !== next.isDisabled ||
     prev.onChange !== next.onChange ||
+    prev.onFieldBlur !== next.onFieldBlur ||
     prev.onFileUpload !== next.onFileUpload ||
     prev.onFieldSearch !== next.onFieldSearch ||
     prev.isFieldSearching !== next.isFieldSearching ||
