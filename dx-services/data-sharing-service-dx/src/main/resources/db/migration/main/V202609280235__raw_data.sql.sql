@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS ug_pfms_data (
     ulb VARCHAR(255),
     ward VARCHAR(100),
     module VARCHAR(100),
-    data_date DATE,
+    data_received_on DATE,
     target_destination VARCHAR(255),
 
     created_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
