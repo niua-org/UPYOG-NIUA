@@ -744,6 +744,50 @@ export const SuccessfulPayment = (props) => {
     window.open(fileStore[fileStoreId], "_blank");
   };
 
+  
+  const printChallanReceipt = async () => {
+    const state = Digit.ULBService.getStateId() || tenantId;
+    let payments;
+    try {
+      payments = await Digit.PaymentService.getReciept(tenantId, businessService, { receiptNumbers: receiptNumber });
+    } catch (e) {
+      payments = await Digit.PaymentService.recieptSearch(tenantId, businessService, { receiptNumbers: receiptNumber });
+    }
+    if (!payments?.Payments || payments.Payments.length === 0) {
+      try {
+        payments = await Digit.PaymentService.recieptSearch(tenantId, businessService, { receiptNumbers: receiptNumber });
+      } catch (e) {}
+    }
+    if (!payments?.Payments || payments.Payments.length === 0) {
+      try {
+        payments = await Digit.PaymentService.recieptSearch(tenantId, businessService, { consumerCodes: consumerCode });
+      } catch (e) {}
+    }
+
+    let fileStoreId = payments?.Payments?.[0]?.fileStoreId;
+    if (!fileStoreId && payments?.Payments?.length > 0) {
+      let challan = null;
+      try {
+        const challanRes = await Digit.ChallanGenerationService.search({ tenantId, filters: { challanNo: consumerCode } });
+        challan = challanRes?.challans?.[0];
+      } catch (e) {}
+
+      const paymentList = challan
+        ? payments.Payments.map((p) => ({ ...p, challan }))
+        : payments.Payments;
+
+      let response = await Digit.PaymentService.generatePdf(state, { Payments: paymentList }, RECEIPT_KEYS.CHALLAN);
+      fileStoreId = response?.filestoreIds?.[0];
+    }
+    if (fileStoreId) {
+      const fileStore = await Digit.PaymentService.printReciept(state, { fileStoreIds: fileStoreId });
+      const fileUrl = fileStore?.[fileStoreId] || fileStore?.fileStoreIds?.[0]?.url;
+      if (fileUrl) {
+        window.open(fileUrl, "_blank");
+      }
+    }
+  };
+
   return (
     <React.Fragment>
       <Card>
@@ -893,6 +937,15 @@ export const SuccessfulPayment = (props) => {
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
                 </svg>
                 {t("NDC_FEE_RECIEPT")}
+              </div>
+            ) : null}
+            {businessService == "Challan_Generation" ? (
+              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printChallanReceipt}>
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
+                  <path d="M0 0h24v24H0V0z" fill="none" />
+                  <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
+                </svg>
+                {t("CHALLAN_FEE_RECIEPT")}
               </div>
             ) : null}
             {/* Estate Management Fee Receipt Action */}

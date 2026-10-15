@@ -1,4 +1,4 @@
-import { CitizenHomeCard, Loader, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
+import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import InboxFilter from "./components/inbox/NewInboxFilter";
 import ChallanGenerationCard from "./components/ChallanGenerationCard";
@@ -6,6 +6,9 @@ import EmployeeChallan from "./EmployeeChallan";
 import ConsumerDetails from "./pageComponents/ConsumerDetails";
 import ServiceDetails from "./pageComponents/ServiceDetails";
 import EmployeeApp from "./pages/employee";
+import CitizenApp from "./pages/citizen";
+import ChallanMyPayments from "./pages/citizen/MyPayments";
+import CitizenChallanDetails from "./pages/citizen/ChallanDetails";
 import SearchReceipt from "./pages/employee/SearchReceipt";
 import SearchChallan from "./pages/employee/SearchChallan";
 import ChallanStepperForm from "./pageComponents/ChallanStepper/ChallanStepperForm";
@@ -31,7 +34,6 @@ export const ChallanGenerationModule = ({ stateCode, userType, tenants }) => {
     language,
   });
 
-  
   const { path, url } = Digit.Hooks.useModuleBasePath();
 
   Digit.SessionStorage.set("ChallanGeneration_TENANTS", tenants);
@@ -54,6 +56,10 @@ const componentsToRegister = {
   ServiceDetails,
   ChallanGenerationCard,
   ChallanGenerationModule,
+  ChallanMyPayments,
+  ChallanCitizenMyPayments: ChallanMyPayments,
+  ChallanCitizenMyChallans: ChallanMyPayments,
+  ChallanCitizenDetails: CitizenChallanDetails,
   MCollectEmployeeChallan: EmployeeChallan,
   SearchReceipt,
   SearchChallan,
@@ -62,7 +68,7 @@ const componentsToRegister = {
   ChallanApplicationDetails,
   OffenceDetails,
   ChallanDocuments,
-  ChallanResponseCitizen
+  ChallanResponseCitizen,
 };
 
 export const initChallanGenerationComponents = () => {
