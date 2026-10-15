@@ -2,21 +2,19 @@ package org.upyog.dx.upyogdata.pfms.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.common.contract.request.RequestInfo;
 import org.upyog.dx.upyogdata.constants.Constants;
-import org.upyog.dx.upyogdata.pfms.enums.Status;
-import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
-import org.upyog.dx.upyogdata.pfms.models.PFMSData;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.pfms.enricher.PFMSDataEnricher;
+import org.upyog.dx.upyogdata.pfms.models.*;
 import org.upyog.dx.upyogdata.pfms.producer.PFMSProducer;
 import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
-import org.upyog.dx.upyogdata.util.DxUtils;
 import org.springframework.stereotype.Service;
+import org.upyog.dx.upyogdata.util.DxUtils;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
@@ -25,6 +23,8 @@ public class PFMSServiceImpl implements PFMSService {
 
     private final PFMSProducer pfmsProducer;
     private final PFMSRepository pfmsRepository;
+    private final PFMSDataEnricher enricher;
+
 
     @Override
     public Object createTransaction(PFMSCreateTransactionRequest request) {
@@ -33,25 +33,41 @@ public class PFMSServiceImpl implements PFMSService {
         // first validate the request that if coming voucher number of same voucher date is exisit or not
         validateDuplicates(request);
         log.info("Received PFMS transaction request from state is validated successfully");
-        for (PFMSData data : request.getData()) {
-            String correlationId = DxUtils.getRandomUUID();
-            data.setId(correlationId);
-            for (PFMSTransaction transaction : data.getTransactions()) {
-                transaction.setId(DxUtils.getRandomUUID());
-                transaction.setCorrelationId(correlationId);
-                transaction.setStatus(Status.INITIATED);
-                transaction.setIngestionDate(null);
-            }
-        }
+
+        enricher.enrich(request); // enrich the request
+
+        /**
+         * Builds a flat list of PFMSTransactionResponse.TransactionResult from the enriched request.
+         *
+         *  Each PFMSData in the request can contain multiple PFMSTransaction objects.
+         *  flatMap flattens this two-level nested structure (List of PFMSData → List of PFMSTransaction)
+         * into a single stream, and each transaction is mapped to a lightweight TransactionResult
+         * carrying only the assigned id, voucherNumber, and a SUCCESS status.
+         * This list is returned to the caller as part of the API response
+         */
+        List<PFMSTransactionResponse.TransactionResult> results = request.getData().stream()
+                .flatMap(data -> data.getTransactions().stream())
+                .map(t -> PFMSTransactionResponse.TransactionResult.builder()
+                        .id(t.getId())
+                        .voucherNumber(t.getVoucherNumber())
+                        .status(Constants.SUCCESS)
+                        .build())
+                .collect(Collectors.toList());
 
         try {
-            pfmsProducer.push(request).get();
+            pfmsProducer.push(request).get(); // using .get() to confirm that kafka successfully publihsed the event
             log.info("Data Received from State Pushed Successfully in Kafka Topic");
-            return Constants.SUCCESS;
         } catch (Exception e) {
             log.error("Failed to publish PFMS data received from state to Kafka", e);
             throw new RuntimeException("Failed to publish data coming from state", e);
         }
+
+        // Building Response
+        ResponseInfo responseInfo = DxUtils.buildResponseInfo(request.getRequestInfo());
+        return PFMSTransactionResponse.builder()
+                .responseInfo(responseInfo)
+                .transactions(results)
+                .build();
     }
 
     /**
@@ -59,14 +75,14 @@ public class PFMSServiceImpl implements PFMSService {
      * already-persisted records.
      *
      * A transaction is considered duplicate if the same voucherNumber
-     * already exists in the DB for the same voucherDate. This combination
+     * already exists in the DB for the same pfms agency code. This combination
      * acts as a business-level unique key
      *
      *
      *Logic:
      *
      * Group all incoming transactions by their voucherDate
-     * For each date group, query DB with all voucher numbers of that date
+     * For each date group, query DB with all voucher numbers of teh same pfms agency code
      * If any match found → throw exception with the conflicting voucher numbers
      *
      */
@@ -76,27 +92,26 @@ public class PFMSServiceImpl implements PFMSService {
             // Check for duplicates within the incoming request itself
             Set<String> voucherLists = new HashSet<>();
             for (PFMSTransaction t : data.getTransactions()) {
-                String key = t.getVoucherNumber() + "|" + t.getVoucherDate();
+                String key = t.getUlbCodeOrPFMSAgencyCode() + "|" + t.getVoucherNumber();
                 if (!voucherLists.add(key)) {
                     throw new IllegalArgumentException(
-                            "Duplicate voucher found in request - voucherNumber: " + t.getVoucherNumber()
-                                    + ", voucherDate: " + t.getVoucherDate());
+                            "Duplicate voucher in request - ulbCode: " + t.getUlbCodeOrPFMSAgencyCode()
+                                    + ", voucherNumber: " + t.getVoucherNumber());
                 }
             }
 
-            // Group transactions by voucherDate
-            Map<java.time.LocalDate, List<String>> byDate = data.getTransactions().stream()
+            // Group transactions by pfms agencycode
+            Map<String, List<String>> byUlb = data.getTransactions().stream()
                     .collect(Collectors.groupingBy(
-                            PFMSTransaction::getVoucherDate,
+                            PFMSTransaction::getUlbCodeOrPFMSAgencyCode,
                             Collectors.mapping(PFMSTransaction::getVoucherNumber, Collectors.toList())
                     ));
 
-            for (Map.Entry<java.time.LocalDate, List<String>> entry : byDate.entrySet()) {
-                List<String> duplicates = pfmsRepository.findExistingVoucherNumbers(
-                        entry.getValue(), entry.getKey());
+            for (Map.Entry<String, List<String>> entry : byUlb.entrySet()) {
+                List<String> duplicates = pfmsRepository.findExistingVoucherNumbers(entry.getValue(), entry.getKey());
 
                 if (!duplicates.isEmpty()) {
-                    throw new IllegalArgumentException("Duplicate vouchers found for date " + entry.getKey() + ": " + String.join(", ", duplicates));
+                    throw new IllegalArgumentException("Duplicate vouchers for ulbCode " + entry.getKey() + ": " + String.join(", ", duplicates));
                 }
             }
         }

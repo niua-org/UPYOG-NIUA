@@ -7,7 +7,6 @@ import org.upyog.dx.upyogdata.pfms.repository.row_mapper.PFMSTransactionRowMappe
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,12 +29,12 @@ public class PFMSRepository {
      * Used to catch duplicates before pushing to Kafka.
      *
      * @param voucherNumbers list of voucher numbers to check
-     * @param voucherDate    the voucher date to check against
+     * @param pfmsAgencyCode    the pfmsagencycode to check against
      * @return list of voucher numbers that already exist, empty if none
      */
-    public List<String> findExistingVoucherNumbers(List<String> voucherNumbers, LocalDate voucherDate) {
+    public List<String> findExistingVoucherNumbers(List<String> voucherNumbers, String pfmsAgencyCode) {
         return jdbcTemplate.queryForList(PFMSQuery.FIND_EXISTING_VOUCHER_NUMBERS, String.class,
-                voucherNumbers.toArray(new String[0]), voucherDate);
+                voucherNumbers.toArray(new String[0]), pfmsAgencyCode);
     }
 
     /**
