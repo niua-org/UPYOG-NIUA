@@ -3,7 +3,7 @@ package org.upyog.dx.upyogdata.pfms.producer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.upyog.dx.upyogdata.config.KafkaConfig;
-import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
+import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionKafkaMessage;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
@@ -19,9 +19,9 @@ public class PFMSProducer {
     private final KafkaConfig kafkaConfig;
 
     public CompletableFuture<SendResult<String, Object>> push(
-            PFMSCreateTransactionRequest request) {
+            PFMSCreateTransactionKafkaMessage message) {
         log.info("Publishing PFMS transaction request to Kafka topic: {}", kafkaConfig.getTopic());
-        return kafkaTemplate.send(kafkaConfig.getTopic(), request);
+        return kafkaTemplate.send(kafkaConfig.getTopic(), message);
     }
 
 }

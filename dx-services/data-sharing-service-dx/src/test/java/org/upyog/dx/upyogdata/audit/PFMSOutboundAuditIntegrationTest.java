@@ -179,9 +179,9 @@ class PFMSOutboundAuditIntegrationTest {
         transaction.setVoucherDate(LocalDate.of(2026, 10, 5));
         transaction.setVoucherType("Payment Voucher");
         transaction.setFinancialYear("2026");
-        transaction.setAccountHeadCode("AH1");
-        transaction.setFunctionCode("FN1");
-        transaction.setSchemeCode("SC1");
+        transaction.setAccountHeadCode(List.of("AH1"));
+        transaction.setFunctionCode(List.of("FN1"));
+        transaction.setSchemeCode(List.of("SC1"));
         transaction.setUlbBankAccountNumber("111122223333");
         transaction.setBeneficiaryAccountNumber("444455556666");
         transaction.setFromAccount("from-acc-secret");

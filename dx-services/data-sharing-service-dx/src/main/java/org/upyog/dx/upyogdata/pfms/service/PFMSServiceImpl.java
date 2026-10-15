@@ -2,16 +2,19 @@ package org.upyog.dx.upyogdata.pfms.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.egov.common.contract.request.RequestInfo;
 import org.upyog.dx.upyogdata.constants.Constants;
 import org.upyog.dx.upyogdata.pfms.enricher.PFMSDataEnricher;
-import org.upyog.dx.upyogdata.pfms.models.*;
+import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionKafkaMessage;
+import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
+import org.upyog.dx.upyogdata.pfms.models.PFMSData;
+import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.pfms.models.PFMSTransactionResponse;
+import org.upyog.dx.upyogdata.pfms.models.ResponseInfo;
 import org.upyog.dx.upyogdata.pfms.producer.PFMSProducer;
 import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.springframework.stereotype.Service;
 import org.upyog.dx.upyogdata.util.DxUtils;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,18 +37,9 @@ public class PFMSServiceImpl implements PFMSService {
         validateDuplicates(request);
         log.info("Received PFMS transaction request from state is validated successfully");
 
-        enricher.enrich(request); // enrich the request
+        PFMSCreateTransactionKafkaMessage kafkaMessage = enricher.enrich(request);
 
-        /**
-         * Builds a flat list of PFMSTransactionResponse.TransactionResult from the enriched request.
-         *
-         *  Each PFMSData in the request can contain multiple PFMSTransaction objects.
-         *  flatMap flattens this two-level nested structure (List of PFMSData → List of PFMSTransaction)
-         * into a single stream, and each transaction is mapped to a lightweight TransactionResult
-         * carrying only the assigned id, voucherNumber, and a SUCCESS status.
-         * This list is returned to the caller as part of the API response
-         */
-        List<PFMSTransactionResponse.TransactionResult> results = request.getData().stream()
+        List<PFMSTransactionResponse.TransactionResult> results = kafkaMessage.getData().stream()
                 .flatMap(data -> data.getTransactions().stream())
                 .map(t -> PFMSTransactionResponse.TransactionResult.builder()
                         .id(t.getId())
@@ -55,7 +49,7 @@ public class PFMSServiceImpl implements PFMSService {
                 .collect(Collectors.toList());
 
         try {
-            pfmsProducer.push(request).get(); // using .get() to confirm that kafka successfully publihsed the event
+            pfmsProducer.push(kafkaMessage).get();
             log.info("Data Received from State Pushed Successfully in Kafka Topic");
         } catch (Exception e) {
             log.error("Failed to publish PFMS data received from state to Kafka", e);

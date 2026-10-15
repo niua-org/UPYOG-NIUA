@@ -1,62 +1,95 @@
 package org.upyog.dx.upyogdata.pfms.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.springframework.stereotype.Component;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsDataEntity;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionAdditionalDetails;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
+import org.upyog.dx.upyogdata.pfms.enums.Status;
+import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionKafkaMessage;
+import org.upyog.dx.upyogdata.pfms.models.PFMSCreateTransactionRequest;
+import org.upyog.dx.upyogdata.pfms.models.PFMSData;
+import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.util.DxUtils;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * Transforms a  PFMSTransaction by extracting all non-flat fields
- * and serializing them into a JSON string suitable for JSONB storage.
- *
- * Fields serialized into  additionalDetails:
- * voucherType, accountHeadCode, debitAmount, creditAmount, narrationOrDescription,
- * voucherStatus, ulbBankAccountNumber, ulbIFSCCode, instrumentReference,
- * modeOfTransaction, beneficiary details, challanNumber, account transfer fields,
- * adjustment fields, and periodCovered.
+ * Maps API contract models to persistence/Kafka entity models.
  */
-
 @Component
 @RequiredArgsConstructor
 public class PFMSTransactionTransformer {
 
-    private final ObjectMapper objectMapper;
+    public PFMSCreateTransactionKafkaMessage toKafkaMessage(PFMSCreateTransactionRequest request) {
+        List<PfmsDataEntity> dataEntities = request.getData().stream()
+                .map(this::toDataEntity)
+                .collect(Collectors.toList());
+        return new PFMSCreateTransactionKafkaMessage(request.getRequestInfo(), dataEntities);
+    }
 
-    public String toAdditionalDetailsJson(PFMSTransaction t) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("accountHeadCode", t.getAccountHeadCode());
-        map.put("functionCode", t.getFunctionCode());
-        map.put("schemeCode", t.getSchemeCode());
-        map.put("debitAmount", t.getDebitAmount());
-        map.put("creditAmount", t.getCreditAmount());
-        map.put("narrationOrDescription", t.getNarrationOrDescription());
-        map.put("voucherStatus", t.getVoucherStatus());
-        map.put("ulbBankAccountNumber", t.getUlbBankAccountNumber());
-        map.put("ulbIFSCCode", t.getUlbIFSCCode());
-        map.put("instrumentReference", t.getInstrumentReference());
-        map.put("modeOfTransaction", t.getModeOfTransaction());
-        map.put("beneficiaryOrPayeeName", t.getBeneficiaryOrPayeeName());
-        map.put("beneficiaryAccountNumber", t.getBeneficiaryAccountNumber());
-        map.put("beneficiaryIFSCCode", t.getBeneficiaryIFSCCode());
-        map.put("beneficiaryType", t.getBeneficiaryType());
-        map.put("challanNumber", t.getChallanNumber());
-        map.put("fromAccount", t.getFromAccount());
-        map.put("toAccount", t.getToAccount());
-        map.put("contraNature", t.getContraNature());
-        map.put("transferInstructionReference", t.getTransferInstructionReference());
-        map.put("referenceVoucherNumber", t.getReferenceVoucherNumber());
-        map.put("adjustmentType", t.getAdjustmentType());
-        map.put("relatedAssetOrLiabilityCode", t.getRelatedAssetOrLiabilityCode());
-        map.put("debtorOrCreditorReference", t.getDebtorOrCreditorReference());
-        map.put("basisOfAdjustment", t.getBasisOfAdjustment());
-        map.put("periodCovered", t.getPeriodCovered());
-        try {
-            return objectMapper.writeValueAsString(map);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize additionalDetails", e);
-        }
+    private PfmsDataEntity toDataEntity(PFMSData data) {
+        String correlationId = DxUtils.getRandomUUID();
+        List<PfmsTransactionEntity> transactions = data.getTransactions().stream()
+                .map(transaction -> toEntity(transaction, correlationId))
+                .collect(Collectors.toList());
+
+        return PfmsDataEntity.builder()
+                .id(correlationId)
+                .state(data.getState())
+                .ward(data.getWard())
+                .module(data.getModule())
+                .date(data.getDate())
+                .ulb(data.getUlb())
+                .targetDestination(data.getTargetDestination())
+                .transactions(transactions)
+                .build();
+    }
+
+    public PfmsTransactionEntity toEntity(PFMSTransaction transaction, String correlationId) {
+        return PfmsTransactionEntity.builder()
+                .id(DxUtils.getRandomUUID())
+                .correlationId(correlationId)
+                .ulbCodeOrPFMSAgencyCode(transaction.getUlbCodeOrPFMSAgencyCode())
+                .voucherNumber(transaction.getVoucherNumber())
+                .voucherDate(transaction.getVoucherDate())
+                .voucherType(transaction.getVoucherType())
+                .financialYear(transaction.getFinancialYear())
+                .additionalDetails(toAdditionalDetails(transaction))
+                .status(Status.INITIATED)
+                .ingestionDate(null)
+                .build();
+    }
+
+    public PfmsTransactionAdditionalDetails toAdditionalDetails(PFMSTransaction transaction) {
+        return PfmsTransactionAdditionalDetails.builder()
+                .accountHeadCode(transaction.getAccountHeadCode())
+                .functionCode(transaction.getFunctionCode())
+                .schemeCode(transaction.getSchemeCode())
+                .debitAmount(transaction.getDebitAmount())
+                .creditAmount(transaction.getCreditAmount())
+                .narrationOrDescription(transaction.getNarrationOrDescription())
+                .voucherStatus(transaction.getVoucherStatus())
+                .ulbBankAccountNumber(transaction.getUlbBankAccountNumber())
+                .ulbIFSCCode(transaction.getUlbIFSCCode())
+                .instrumentReference(transaction.getInstrumentReference())
+                .modeOfTransaction(transaction.getModeOfTransaction())
+                .beneficiaryOrPayeeName(transaction.getBeneficiaryOrPayeeName())
+                .beneficiaryAccountNumber(transaction.getBeneficiaryAccountNumber())
+                .beneficiaryIFSCCode(transaction.getBeneficiaryIFSCCode())
+                .beneficiaryType(transaction.getBeneficiaryType())
+                .challanNumber(transaction.getChallanNumber())
+                .fromAccount(transaction.getFromAccount())
+                .toAccount(transaction.getToAccount())
+                .contraNature(transaction.getContraNature())
+                .transferInstructionReference(transaction.getTransferInstructionReference())
+                .referenceVoucherNumber(transaction.getReferenceVoucherNumber())
+                .adjustmentType(transaction.getAdjustmentType())
+                .relatedAssetOrLiabilityCode(transaction.getRelatedAssetOrLiabilityCode())
+                .debtorOrCreditorReference(transaction.getDebtorOrCreditorReference())
+                .basisOfAdjustment(transaction.getBasisOfAdjustment())
+                .periodCovered(transaction.getPeriodCovered())
+                .build();
     }
 }
-

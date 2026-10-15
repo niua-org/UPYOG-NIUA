@@ -111,7 +111,4 @@ public class PFMSTransaction {
     private Status status;
 
     private LocalDateTime ingestionDate;
-
-    // to save all other fields and additional fields required in future
-    private Object additionalDetails;
 }

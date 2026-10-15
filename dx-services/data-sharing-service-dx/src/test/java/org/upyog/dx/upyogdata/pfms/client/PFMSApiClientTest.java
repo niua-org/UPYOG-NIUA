@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,9 +77,9 @@ class PFMSApiClientTest {
         transaction.setVoucherDate(LocalDate.of(2026, 1, 1));
         transaction.setVoucherType("Journal Voucher");
         transaction.setFinancialYear("2026");
-        transaction.setAccountHeadCode("1");
-        transaction.setFunctionCode("2");
-        transaction.setSchemeCode("3");
+        transaction.setAccountHeadCode(List.of("1"));
+        transaction.setFunctionCode(List.of("2"));
+        transaction.setSchemeCode(List.of("3"));
         when(dataFeignClient.pushTransaction(any(), any())).thenReturn("SUCCESS");
 
         String result = pfmsApiClient.pushTransaction(transaction, "token", "audit-id", 1);

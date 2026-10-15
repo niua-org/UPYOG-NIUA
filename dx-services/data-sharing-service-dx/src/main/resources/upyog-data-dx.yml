@@ -14,7 +14,7 @@ serviceMaps:
             INSERT INTO public.ug_pfms_data
             (id, state, ward, module, data_date, ulb, target_destination)
             VALUES
-            (?::UUID, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), ?, ?);
+            (?, ?, ?, ?, TO_DATE(?, 'DD-MM-YYYY'), ?, ?);
 
           basePath: data.*
 
@@ -44,8 +44,8 @@ serviceMaps:
             )
             VALUES
             (
-              ?::UUID,
-              ?::UUID,
+              ?,
+              ?,
               ?,
               ?,
               TO_DATE(?, 'DD/MM/YYYY'),

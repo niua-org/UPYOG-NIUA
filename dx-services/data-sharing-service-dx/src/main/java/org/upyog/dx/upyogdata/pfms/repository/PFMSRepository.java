@@ -1,7 +1,7 @@
 package org.upyog.dx.upyogdata.pfms.repository;
 
 import lombok.RequiredArgsConstructor;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
 import org.upyog.dx.upyogdata.pfms.models.SchedulerLog;
 import org.upyog.dx.upyogdata.pfms.repository.row_mapper.PFMSTransactionRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -51,9 +51,9 @@ public class PFMSRepository {
      * Fetches full transaction details by its UUID.
      *
      * @param id transaction UUID
-     * @return PFMSTransaction mapped from the database row
+     * @return PfmsTransactionEntity mapped from the database row
      */
-    public PFMSTransaction fetchTransactionById(String id) {
+    public PfmsTransactionEntity fetchTransactionById(String id) {
         return jdbcTemplate.queryForObject(PFMSQuery.FETCH_TRANSACTION_BY_ID, transactionRowMapper, id);
     }
 
