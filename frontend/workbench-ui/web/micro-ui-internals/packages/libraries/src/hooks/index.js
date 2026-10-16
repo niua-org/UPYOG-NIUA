@@ -25,6 +25,8 @@ import { usePrivacyContext } from "./usePrivacyContext";
 import useStaticData from "./useStaticData";
 import useCustomNavigate from "./useCustomNavigate";
 import useGenderMDMS from "./useGenderMDMS";
+import useEnabledMDMS from "./useEnabledMDMS";
+import useSelectedMDMS from "./useSelectedMDMS";
 
 
 const Hooks = {
@@ -42,6 +44,8 @@ const Hooks = {
   useAccessControl,
   usePrivacyContext,
   useGenderMDMS,
+  useEnabledMDMS,
+  useSelectedMDMS,
   useRouteSubscription,
   useCustomAPIHook,
   useCustomAPIMutationHook,

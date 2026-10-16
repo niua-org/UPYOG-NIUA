@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PrivateRoute, AppContainer, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import LocalisationSearch from "./LocalisationSearch";
+import FormBuilder from "./FormBuilder";
 import ApplyWorkflow from "./ApplyWorkflow";
 // Added theme configuration component
 import ThemeCustomizeForm from "./ThemeCustomizeForm";
@@ -11,6 +12,7 @@ import OnBoardingContent from "./OnBoardingContent";
 // Added onboarding login component
 import OnBoardingLogin from "./OnBoardingLogin";
 import OnBoardingRegister from "./OnBoardingRegister";
+import EmployeeThemeBuilder from "./EmployeeThemeBuilder";
 import MDMSSearch from "./MDMSSearch";
 import MDMSAdd from "./MDMSAdd";
 import MDMSAddV2 from "./MDMSAddV2";
@@ -19,6 +21,7 @@ import MDMSView from "./MDMSView";
 import MDMSSearchv2 from "./MDMSSearchv2";
 import MDMSManageMaster from "./MDMSManageMaster";
 import LocalisationAdd from "./LocalisationAdd";
+import FormCreate from "./FormCreate";
 
 const WorkbenchBreadCrumb = ({ location, defaultPath }) => {
   const { t } = useTranslation();
@@ -91,6 +94,12 @@ const WorkbenchBreadCrumb = ({ location, defaultPath }) => {
       path: `/${window?.contextPath}/employee/workbench/onboarding-register-configuration`,
       content: t(`WBH_ONBOARDING_REGISTER_CONFIG`),
       show: pathVar.includes("onboarding-register-configuration")
+    },
+    {
+      // Employee Theme Builder
+      path: `/${window?.contextPath}/employee/workbench/theme-builder`,
+      content: t(`WBH_Employee_ThemeBuilder`),
+      show: pathVar.includes("theme-builder")
     }
 
   ];
@@ -124,7 +133,7 @@ const App = ({ path }) => {
     if (!currentUrl.includes("mdms-edit")) {
       clearSessionStorageWithPrefix('MDMS_edit');
     }
-  }, [window.location.href]);
+  }, [location]);
 
   useEffect(() => {
     if (!window.location.href.includes("mdms-add-v2") && sessionFormData && Object.keys(sessionFormData) != 0) {
@@ -205,6 +214,25 @@ const App = ({ path }) => {
             element={<PrivateRoute><OnBoardingRegister parentRoute={path} /></PrivateRoute>}
           />
 
+          <Route
+            path="theme-builder"
+            element={<PrivateRoute><EmployeeThemeBuilder parentRoute={path} /></PrivateRoute>}
+          />
+
+          <Route
+            path="form-builder"
+            element={<PrivateRoute><FormBuilder parentRoute={path} /></PrivateRoute>}
+          />
+
+          <Route
+            path="form-create"
+            element={<PrivateRoute><FormCreate parentRoute={path} /></PrivateRoute>}
+          />
+
+          {/* <Route
+            path="localisation-add"
+            element={<PrivateRoute><LocalisationAdd parentRoute={path} /></PrivateRoute>}
+          /> */}
 
         </Routes>
       </AppContainer>
