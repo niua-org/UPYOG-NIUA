@@ -123,12 +123,28 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     private AuthenticatedUser resolveUser(HttpServletRequest request) {
+        // Production path: gateway has already validated auth — trust its headers directly.
         if (properties.isTrustGatewayIdentity()) {
+            // Prefer x-pass-through-gateway + x-user-info (full gateway-enriched identity).
             AuthenticatedUser fromGateway = GatewayIdentityParser.fromGatewayHeaders(request, objectMapper);
             if (fromGateway != null) {
                 return fromGateway;
             }
+            // Chatbot sends auth-token + x-user-uuid (no gateway pass-through headers).
+            // Build identity directly — no upstream call needed; gateway validates the token
+            // on every downstream service call via RequestInfo.authToken.
+            String token = UserSessionClient.normalizeToken(GatewayIdentityParser.firstToken(request));
+            if (token.isBlank()) {
+                return null;
+            }
+            String userUuid = UserUuidResolver.fromRequest(request, objectMapper);
+            com.fasterxml.jackson.databind.JsonNode userInfo = UserUuidResolver.userInfoFromRequest(request, objectMapper);
+            if (!userUuid.isBlank()) {
+                return buildFromHeaders(token, userUuid, userInfo);
+            }
+            return null;
         }
+        // Local dev path (trust-gateway-identity=false): validate token via /user/_search.
         String token = UserSessionClient.normalizeToken(GatewayIdentityParser.firstToken(request));
         if (token.isBlank()) {
             return null;
@@ -137,6 +153,32 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         com.fasterxml.jackson.databind.JsonNode userInfo = UserUuidResolver.userInfoFromRequest(request, objectMapper);
         String cacheKey = hash(token) + ":" + userUuid;
         return users.get(cacheKey, key -> userSessionClient.resolve(token, userUuid, userInfo));
+    }
+
+    /**
+     * Builds {@link AuthenticatedUser} directly from request headers when the gateway is trusted.
+     * Uses full {@code x-user-info} when present; falls back to a minimal CITIZEN stub from uuid.
+     */
+    private AuthenticatedUser buildFromHeaders(String token, String uuid,
+                                               com.fasterxml.jackson.databind.JsonNode userInfo) {
+        if (userInfo != null && !userInfo.isNull() && !userInfo.path("uuid").asText("").isBlank()) {
+            java.util.List<String> roles = new java.util.ArrayList<>();
+            java.util.List<String> roleTenants = new java.util.ArrayList<>();
+            for (com.fasterxml.jackson.databind.JsonNode role : userInfo.path("roles")) {
+                roles.add(role.path("code").asText(""));
+                roleTenants.add(role.path("tenantId").asText(""));
+            }
+            String tenantId = userInfo.path("tenantId").asText("");
+            if (tenantId.isBlank()) tenantId = properties.getUserSessionTenantId();
+            String type = userInfo.path("type").asText("CITIZEN");
+            return new AuthenticatedUser(uuid, type, tenantId, roles, roleTenants, token);
+        }
+        // Minimal CITIZEN stub — downstream service calls carry authToken in RequestInfo;
+        // the gateway validates and enriches userInfo on those calls.
+        String tenantId = properties.getUserSessionTenantId();
+        log.info("mcp_identity_stub uuid={} tenantId={}", uuid, tenantId);
+        return new AuthenticatedUser(uuid, "CITIZEN", tenantId,
+                java.util.List.of("CITIZEN"), java.util.List.of(tenantId), token);
     }
 
     private void writeMcpFailure(HttpServletResponse response, McpException mcp) throws IOException {

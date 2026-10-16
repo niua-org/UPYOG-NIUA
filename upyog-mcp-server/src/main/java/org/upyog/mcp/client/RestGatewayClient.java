@@ -61,13 +61,23 @@ public class RestGatewayClient implements GatewayClient {
 
     @Override
     public JsonNode postJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read) {
-        return postJson(gatewayPath, query, body, read, Map.of());
+        return postJsonInternal(gatewayPath, query, body, read, Map.of(), true);
     }
 
     @Override
     public JsonNode postJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read,
                              Map<String, String> headers) {
-        Supplier<JsonNode> call = () -> executeJson(gatewayPath, query, body, read, headers);
+        return postJsonInternal(gatewayPath, query, body, read, headers, true);
+    }
+
+    @Override
+    public JsonNode postJsonNoToken(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read) {
+        return postJsonInternal(gatewayPath, query, body, read, Map.of(), false);
+    }
+
+    private JsonNode postJsonInternal(String gatewayPath, Map<String, List<String>> query, JsonNode body,
+                                      boolean read, Map<String, String> extraHeaders, boolean injectAuthToken) {
+        Supplier<JsonNode> call = () -> executeJson(gatewayPath, query, body, read, extraHeaders, injectAuthToken);
         if (read) {
             call = Retry.decorateSupplier(retries.retry(serviceName(gatewayPath)), call);
         }
@@ -88,12 +98,8 @@ public class RestGatewayClient implements GatewayClient {
         return CircuitBreaker.decorateSupplier(breaker(gatewayPath), call).get();
     }
 
-    private JsonNode executeJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read) {
-        return executeJson(gatewayPath, query, body, read, Map.of());
-    }
-
-    private JsonNode executeJson(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read,
-                                 Map<String, String> extraHeaders) {
+    private JsonNode executeJson(String gatewayPath, Map<String, List<String>> query, JsonNode body,
+                                 boolean read, Map<String, String> extraHeaders, boolean injectAuthToken) {
         long started = System.nanoTime();
         try {
             RestClient client = read ? readClient : writeClient;
@@ -113,9 +119,12 @@ public class RestGatewayClient implements GatewayClient {
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("x-correlation-id", correlation());
             // Inject Auth-Token for gateway RBAC on downstream service calls.
-            String contextToken = currentAuthToken();
-            if (contextToken != null && !contextToken.isBlank()) {
-                request = request.header(GatewayIdentityHeaders.AUTH_TOKEN, contextToken);
+            // Suppressed for /user/_search — the UI curl proves auth goes only in RequestInfo.authToken body.
+            if (injectAuthToken) {
+                String contextToken = currentAuthToken();
+                if (contextToken != null && !contextToken.isBlank()) {
+                    request = request.header(GatewayIdentityHeaders.AUTH_TOKEN, contextToken);
+                }
             }
             if (extraHeaders != null) {
                 for (Map.Entry<String, String> entry : extraHeaders.entrySet()) {

@@ -91,7 +91,10 @@ class UserSessionClientTest {
                 .withHeader("Auth-Token", absent())
                 .withRequestBody(containing("\"authToken\":\"216b04af-cfe7-4642-b4b4-2024048a51fb\""))
                 .withRequestBody(containing("\"uuid\":[\"u-2\"]"))
-                .withRequestBody(notContaining("userInfo")));
+                // userInfo must always be present (egov-user returns 500 without it)
+                .withRequestBody(containing("\"userInfo\""))
+                .withRequestBody(containing("\"uuid\":\"u-2\""))
+                .withRequestBody(containing("\"code\":\"CITIZEN\"")));
         server.stop();
     }
 

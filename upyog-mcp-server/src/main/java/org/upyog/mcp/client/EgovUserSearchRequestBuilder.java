@@ -42,10 +42,34 @@ public class EgovUserSearchRequestBuilder {
         requestInfo.put("authToken", accessToken);
         requestInfo.put("msgId", System.currentTimeMillis() + "|en_IN");
         requestInfo.set("plainAccessRequest", objectMapper.createObjectNode());
+        // egov-user /user/_search requires RequestInfo.userInfo — always include it.
+        // Use the full x-user-info when provided; otherwise build a minimal stub from uuid.
         if (userInfo != null && !userInfo.isNull()) {
             requestInfo.set("userInfo", userInfo.deepCopy());
+        } else {
+            requestInfo.set("userInfo", minimalUserInfo(userUuid, tenantId));
         }
         body.set("RequestInfo", requestInfo);
         return body;
     }
+
+    /**
+     * Builds the minimal {@code RequestInfo.userInfo} required when the caller passes only
+     * {@code x-user-uuid} (no full {@code x-user-info} header). Matches the structure the
+     * UPYOG citizen UI always includes in its {@code /user/_search} requests.
+     */
+    private ObjectNode minimalUserInfo(String uuid, String tenantId) {
+        ObjectNode ui = objectMapper.createObjectNode();
+        ui.put("uuid", uuid);
+        ui.put("type", "CITIZEN");
+        ui.put("tenantId", tenantId);
+        ArrayNode roles = ui.putArray("roles");
+        ObjectNode role = roles.addObject();
+        role.put("name", "Citizen");
+        role.put("code", "CITIZEN");
+        role.put("tenantId", tenantId);
+        ui.put("active", true);
+        return ui;
+    }
+
 }

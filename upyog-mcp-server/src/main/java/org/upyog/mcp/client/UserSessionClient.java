@@ -57,8 +57,8 @@ public class UserSessionClient {
 
     private JsonNode resolveViaUserSearch(String token, String uuid, JsonNode userInfo) {
         JsonNode body = searchRequestBuilder.build(token, uuid, userInfo);
-        // Citizen UI sends auth only in RequestInfo.authToken (no Auth-Token header on this call).
-        Map<String, String> headers = Map.of();
+        // Citizen UI sends auth only in RequestInfo.authToken body field — no Auth-Token header.
+        // Sending Auth-Token header triggers gateway RBAC which blocks CITIZEN role on /user/_search.
         GatewayHttpDebugLog.logPostWithReplayCurl(
                 log,
                 "gateway_user_search",
@@ -66,14 +66,13 @@ public class UserSessionClient {
                 EgovUserContracts.SEARCH_PATH,
                 Map.of(),
                 body,
-                headers,
+                Map.of(),
                 objectMapper);
-        JsonNode response = gatewayClient.postJson(
+        JsonNode response = gatewayClient.postJsonNoToken(
                 EgovUserContracts.SEARCH_PATH,
                 Map.of(),
                 body,
-                true,
-                headers);
+                true);
         log.info("gateway_user_search responsePreview={}", previewJson(response));
         rejectIfErrors(response);
         JsonNode first = EgovUserSearchResponseParser.firstUser(response);

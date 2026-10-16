@@ -30,6 +30,16 @@ public interface GatewayClient {
     }
 
     /**
+     * POST JSON without injecting any {@code Auth-Token} header.
+     * Use for endpoints like {@code /user/_search} where the UPYOG citizen UI proves auth is
+     * sent only in {@code RequestInfo.authToken} in the body — adding the header triggers
+     * gateway RBAC which blocks CITIZEN-role tokens.
+     */
+    default JsonNode postJsonNoToken(String gatewayPath, Map<String, List<String>> query, JsonNode body, boolean read) {
+        return postJson(gatewayPath, query, body, read);
+    }
+
+    /**
      * Uploads a document to filestore before a confirmed write.
      *
      * @param module filestore module from the descriptor ({@code PGR}, …)
