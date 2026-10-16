@@ -47,7 +47,7 @@ const App = () => {
           <Route path={`tradelicence/new-application/*`} element={<PrivateRoute><CreateTradeLicence path={path} /></PrivateRoute>} />
           <Route path={`tradelicence/edit-application/:id/:tenantId/*`} element={<PrivateRoute><EditTrade /></PrivateRoute>} />
           <Route path={`tradelicence/renew-trade/:id/:tenantId/*`} element={<PrivateRoute><RenewTrade /></PrivateRoute>} />
-          <Route path={`tradelicence/my-application`} element={<PrivateRoute><TLMyApplications /></PrivateRoute>} />
+          <Route path={`tradelicence/my-application/*`} element={<PrivateRoute><TLMyApplications /></PrivateRoute>} />
           <Route path={`tradelicence/my-bills`} element={<PrivateRoute><TLMyApplications view="bills" /></PrivateRoute>} />
           <Route path={`tradelicence/tl-info`} element={<PrivateRoute><TradeLicense /></PrivateRoute>} />
           <Route path={`tradelicence/application/:id/:tenantId`} element={<PrivateRoute><ApplicationDetails /></PrivateRoute>} />

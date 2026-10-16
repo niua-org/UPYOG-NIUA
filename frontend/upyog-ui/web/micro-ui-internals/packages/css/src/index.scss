@@ -86,6 +86,7 @@
 @import "./components/toggleSwitch.scss";
 @import "./components/plusMinus.scss";
 @import "./components/dynamicForm.scss";
+@import "./components/dynamicFormAccordion.scss";
 @import "./components/dynamicFormField.scss";
 @import "./components/dynamicCheckPage.scss";
 @import "./components/dynamicObjectRenderer.scss";
@@ -450,7 +451,7 @@ input[type="number"] {
   @apply relative w-full;
   input {
     &:hover {
-      @apply border-2 border-solid border-primary-main;
+   //   @apply border-2 border-solid border-primary-main;
     }
   }
 }

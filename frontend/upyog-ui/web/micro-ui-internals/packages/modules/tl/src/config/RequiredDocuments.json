@@ -1,0 +1,40 @@
+{
+  "_comment": "TL citizen /info document rows. TradeLicense.js reads RequiredDocuments from this file. Same row shape as the future MDMS master TradeLicense.RequiredDocuments. Do not read TradeLicense.Documents for this screen.",
+  "tenantId": "pg",
+  "moduleName": "TradeLicense",
+  "RequiredDocuments": [
+    {
+      "order": 1,
+      "code": "OWNERIDPROOF",
+      "i18nKey": "TL_PROOF_IDENTITY_HEADER",
+      "name": "Proof of Identity",
+      "acceptedFormat": ".jpg,.jpeg,.png,.pdf",
+      "documentType": "OWNERIDPROOF",
+      "applicationType": ["NEW", "RENEWAL"],
+      "required": true,
+      "active": true
+    },
+    {
+      "order": 2,
+      "code": "OWNERSHIPPROOF",
+      "i18nKey": "TL_OWNERSHIP_DOCUMENT",
+      "name": "Proof of Ownership",
+      "acceptedFormat": ".jpg,.jpeg,.png,.pdf",
+      "documentType": "OWNERSHIPPROOF",
+      "applicationType": ["NEW", "RENEWAL"],
+      "required": true,
+      "active": true
+    },
+    {
+      "order": 3,
+      "code": "OWNERPHOTO",
+      "i18nKey": "TL_OWNERS_PHOTOGRAPH_HEADER",
+      "name": "Owner Photograph",
+      "acceptedFormat": ".jpg,.jpeg,.png",
+      "documentType": "OWNERPHOTO",
+      "applicationType": ["NEW", "RENEWAL"],
+      "required": true,
+      "active": true
+    }
+  ]
+}

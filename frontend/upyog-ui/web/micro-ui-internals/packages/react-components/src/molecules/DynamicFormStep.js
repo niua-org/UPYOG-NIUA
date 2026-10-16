@@ -62,7 +62,10 @@
  * @param {string}   [wrapperClassName]  Outer wrapper class (default "employeeCard").
  * @param {string}   [defaultHeaderCode] Fallback header i18n key (default "COMMON_FORM").
  * @param {Function} [onFieldSearch]     Optional field-level search handler for DynamicForm.
+ * @param {Function} [onPrefillApplied]  Optional callback after a search result is applied.
  * @param {boolean}  [confirmCancel=false] Opt-in Cancel confirmation Modal (passed to DynamicForm).
+ * @param {Function} [reviseFormData] (data, changedField) => next form data.
+ *   Runs after each edit and after prefill so module-copied values stay in step.
  *
  * @see DynamicForm
  * @see mergeRouteConfig
@@ -96,7 +99,13 @@ const DynamicFormStep = ({
   wrapperClassName = "employeeCard",
   defaultHeaderCode = "COMMON_FORM",
   onFieldSearch,
+  onPrefillApplied,
   confirmCancel = false,
+  enrichFieldArrayRow = null,
+  transformDropdownData = null,
+  onFieldChange = null,
+  // See file-level reviseFormData. Passed straight through to DynamicForm.
+  reviseFormData = null,
 }) => {
   /**
    * i18n helper. Uses the `t` prop when provided; otherwise identity so missing
@@ -283,6 +292,11 @@ const DynamicFormStep = ({
         }
         onSaveDraft={onSaveDraft}
         onFieldSearch={onFieldSearch}
+        onPrefillApplied={onPrefillApplied}
+        enrichFieldArrayRow={enrichFieldArrayRow}
+        transformDropdownData={transformDropdownData}
+        onFieldChange={onFieldChange}
+        reviseFormData={reviseFormData}
       />
     </div>
   );

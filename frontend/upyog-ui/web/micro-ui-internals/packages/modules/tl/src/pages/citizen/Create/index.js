@@ -1,166 +1,141 @@
-import React from "react";
+/**
+ * CreateTradeLicence — citizen new-application flow.
+ *
+ * Consumes workbench AccordionNewApplication.json (or MDMS NewApplication) via
+ * shared resolveFormConfig + useFormWizard + FormFlowRoutes.
+ * Accordion when navigation.pattern = "accordion"; otherwise stepped wizard.
+ */
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { newConfig as newConfigTL } from "../../../config/config";
-// import CheckPage from "./CheckPage";
-// import TLAcknowledgement from "./TLAcknowledgement";
+import {
+  FormFlowRoutes,
+  resolveFormConfig,
+} from "@nudmcdgnpm/digit-ui-react-components";
+import localAccordion from "../../../config/AccordionNewApplication.json";
+import TLCitizenNewApplication from "../../../pageComponents/TLCitizenNewApplication";
+import TradeLicense from "../../../pageComponents/TradeLicense";
+import useTlWizard from "../../../utils/useTlWizard";
+import { mapDynamicTlToCheckSession } from "../../../utils/tlSessionAdapter";
 
-const CreateTradeLicence = ({ parentRoute }) => {
-  const queryClient = useQueryClient();
+/** Resolves a wizard step name to the citizen accordion or documents component. */
+const resolveStepComponent = (component) => {
+  if (typeof component !== "string") return component;
+  const fromRegistry = Digit.ComponentRegistryService.getComponent(component);
+  if (fromRegistry) return fromRegistry;
+  if (component === "TLCitizenNewApplication") return TLCitizenNewApplication;
+  if (component === "TradeLicense") return TradeLicense;
+  return null;
+};
+
+/**
+ * Citizen new-application wizard. Session key is TL_CREATE_TRADE; check and
+ * acknowledgement sit after the accordion form.
+ * Document rows for /info are read in TradeLicense from config/RequiredDocuments.json.
+ */
+const CreateTradeLicence = () => {
   const { t } = useTranslation();
-  const { pathname } = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("TL_CREATE_TRADE", {});
-  let isReneworEditTrade = window.location.href.includes("/renew-trade/") || window.location.href.includes("/edit-application/")
-
   const stateId = Digit.ULBService.getStateId();
-  let config = [];
-  let { data: newConfig, isLoading } = Digit.Hooks.tl.useMDMS.getFormConfig(stateId, {});
 
-  const goNext = (skipStep, index, isAddMultiple, key, isPTCreateSkip) => {
-    let currentPath = pathname.split("/").pop(),
-      nextPage;
-    let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
-    let { isCreateEnabled : enableCreate = true } = config.find((routeObj) => routeObj.route === currentPath);
-    if (typeof nextStep == "object" && nextStep != null) {
-      if((params?.cptId?.id || params?.cpt?.details?.propertyId || (isReneworEditTrade && params?.cpt?.details?.propertyId ))  && (nextStep[sessionStorage.getItem("isAccessories")] && nextStep[sessionStorage.getItem("isAccessories")] === "know-your-property")  )
-      {
-        nextStep = "property-details";
-      }
-      if (
-        nextStep[sessionStorage.getItem("isAccessories")] &&
-        (nextStep[sessionStorage.getItem("isAccessories")] === "accessories-details" ||
-          nextStep[sessionStorage.getItem("isAccessories")] === "map" ||
-          nextStep[sessionStorage.getItem("isAccessories")] === "owner-ship-details" || 
-          nextStep[sessionStorage.getItem("isAccessories")] === "other-trade-details")
-      ) {
-        nextStep = `${nextStep[sessionStorage.getItem("isAccessories")]}`;
-      } else if (
-        nextStep[sessionStorage.getItem("StructureType")] &&
-        (nextStep[sessionStorage.getItem("StructureType")] === "Building-type" ||
-          nextStep[sessionStorage.getItem("StructureType")] === "vehicle-type")
-      ) {
-        nextStep = `${nextStep[sessionStorage.getItem("StructureType")]}`;
-      } else if (
-        nextStep[sessionStorage.getItem("KnowProperty")] &&
-        (nextStep[sessionStorage.getItem("KnowProperty")] === "search-property" ||
-          nextStep[sessionStorage.getItem("KnowProperty")] === "create-property")
-      ) {
-          if(nextStep[sessionStorage.getItem("KnowProperty")] === "create-property" && !enableCreate)
-          {
-            nextStep = `map`;
-          }
-          else{
-         nextStep = `${nextStep[sessionStorage.getItem("KnowProperty")]}`;
-          }
-      }
-    }
-    if(nextStep === "know-your-property" && params?.TradeDetails?.StructureType?.code === "MOVABLE")
+  const { data: mdmsConfig, isLoading: isMdmsLoading } = Digit.Hooks.useEnabledMDMS(
+    stateId,
+    "TradeLicense",
+    [{ name: "NewApplication" }],
     {
-      nextStep = "map";
+      select: (data) => data?.TradeLicense?.NewApplication || null,
     }
-    if(nextStep === "landmark" && params?.TradeDetails?.StructureType?.code === "MOVABLE")
-    {
-      nextStep = "owner-ship-details";
-    }
-    if(nextStep === "owner-details" && (sessionStorage.getItem("isSameAsPropertyOwner") === "true"))
-    {
-      nextStep = "proof-of-identity"
-    }
-    if( (params?.cptId?.id || params?.cpt?.details?.propertyId || (isReneworEditTrade && params?.cpt?.details?.propertyId ))  && nextStep === "know-your-property" )
-    { 
-      nextStep = "property-details";
-    }
-    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
-    if (skipStep) {
-      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
-    }
-    if (isAddMultiple) {
-      nextStep = key;
-    }
-    if (nextStep === null) {
-      return redirectWithHistory(`check`);
-    }
-    if(isPTCreateSkip && nextStep === "acknowledge-create-property")
-    {
-      nextStep = "map";
-    }
-    nextPage = `${nextStep}`;
-    redirectWithHistory(nextPage);
-  };
+  );
+  // Local accordion JSON, overlaid by MDMS TradeLicense.NewApplication when present.
+  const initialConfig = useMemo(
+    () =>
+      resolveFormConfig({
+        local: localAccordion,
+        masterKey: "NewApplication",
+        mdms: mdmsConfig,
+        preferAccordion: true,
+        preferFieldArray: true,
+      }),
+    [mdmsConfig]
+  );
 
-  const createProperty = async () => {
-    sessionStorage.setItem("isCreateEnabled", "true");
-    navigate(`acknowledgement`);
-  };
+  const waitingForConfig = isMdmsLoading && !initialConfig;
+  const indexRoute = initialConfig?.[0]?.navigation?.indexRoute || "info";
 
-  function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
-    if(key === "formData")
-    setParams({...data})
-    else{
-    setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
-    if(key === "isSkip" && data === true)
-    {
-      goNext(skipStep, index, isAddMultiple, key, true);
-    }
-    else
-    {
-      goNext(skipStep, index, isAddMultiple, key);
-    }
-  }
-  }
-
-  const handleSkip = () => {};
-  const handleMultiple = () => {};
-
-  const onSuccess = () => {
-    sessionStorage.removeItem("CurrentFinancialYear");
-    queryClient.invalidateQueries({ queryKey: ["TL_CREATE_TRADE"] });
-  };
-
-  const onUpdateSuccess = () => {
-    sessionStorage.removeItem("CurrentFinancialYear");
-    clearParams();
-    queryClient.invalidateQueries({ queryKey: ["TL_CREATE_TRADE"] });
-  };
-  newConfig = newConfig ? newConfig : newConfigTL;
-  newConfig?.forEach((obj) => {
-    config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
+  const {
+    config,
+    params,
+    match,
+    handleSelect,
+    onAckSuccess,
+    onUpdateSuccess,
+    isReady,
+  } = useTlWizard({
+    mdmsData: initialConfig,
+    isLoading: waitingForConfig,
+    indexRoute,
+    sessionKey: "TL_CREATE_TRADE",
+    sessionStepKey: "newApplication",
+    terminalSegments: ["check", "acknowledgement", "info", "apply"],
+    multiStepNavigation: initialConfig?.[0]?.navigation?.multiStepNavigation === true,
+    invalidateQueryKey: "TL_CREATE_TRADE",
+    transformSession: mapDynamicTlToCheckSession,
   });
-  let skipenanbledOb = newConfig?.filter(obj => obj?.body?.some(com => com.component === "CPTCreateProperty"))?.[0];
-  let skipenabled = skipenanbledOb?.body?.filter((ob) => ob?.component === "CPTCreateProperty")?.[0]?.isSkipEnabled;
-  sessionStorage.setItem("skipenabled",skipenabled);
-  config.indexRoute = "info";
+
+  const checkValue = useMemo(() => mapDynamicTlToCheckSession(params), [params]);
+  const timeline = initialConfig?.[0]?.navigation?.timeline;
+
+  const goToAcknowledgement = async () => {
+    sessionStorage.setItem("isCreateEnabled", "true");
+    navigate("acknowledgement");
+  };
+
   const CheckPage = Digit?.ComponentRegistryService?.getComponent("TLCheckPage");
   const TLAcknowledgement = Digit?.ComponentRegistryService?.getComponent("TLAcknowledgement");
+
   return (
-    <Routes>
-      {config?.map((routeObj, index) => {
-        const { component, texts, inputs, key, isSkipEnabled, isMandatory } = routeObj;
-        const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
-        return (
-          <Route
-            path={`${routeObj.route}`}
-            key={index}
-            element={
-              <Component
-                config={{ texts, inputs, key, isSkipEnabled, isMandatory }}
-                onSelect={handleSelect}
-                onSkip={handleSkip}
-                t={t}
-                formData={params}
-                onAdd={handleMultiple}
-                userType="citizen"
-              />
-            }
+    <FormFlowRoutes
+      config={config}
+      isReady={isReady}
+      resolveComponent={resolveStepComponent}
+      onSelect={handleSelect}
+      formData={params}
+      t={t}
+      userType="citizen"
+      parentRoute={match?.pathnameBase}
+      indexRoute={config.indexRoute || indexRoute}
+      onStepSelect={(routeObj, key, data, skipStep, index, isAddMultiple) => {
+        if (routeObj.component === "TradeLicense") {
+          handleSelect(routeObj.key || "info", {}, false);
+          return;
+        }
+        try {
+          localStorage.setItem("TLAppSubmitEnabled", "true");
+        } catch (e) {
+          /* ignore */
+        }
+        handleSelect(key, data, skipStep, index, isAddMultiple);
+      }}
+      checkRoute={{
+        path: "check",
+        element: (
+          <CheckPage
+            onSubmit={goToAcknowledgement}
+            value={checkValue}
+            timeline={timeline}
           />
-        );
-      })}
-      <Route path={`check`} element={<CheckPage onSubmit={createProperty} value={params} />} />
-      <Route path={`acknowledgement`} element={<TLAcknowledgement data={params} onSuccess={onSuccess} onUpdateSuccess={onUpdateSuccess} />} />
-      <Route path="*" element={<Navigate to={`${config.indexRoute}`} />} />
-    </Routes>
+        ),
+      }}
+      ackRoute={{
+        path: "acknowledgement",
+        element: (
+          <TLAcknowledgement
+            data={checkValue}
+            onSuccess={onAckSuccess}
+            onUpdateSuccess={onUpdateSuccess}
+          />
+        ),
+      }}
+    />
   );
 };
 

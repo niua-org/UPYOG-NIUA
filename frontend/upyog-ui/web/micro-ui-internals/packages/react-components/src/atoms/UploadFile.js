@@ -248,6 +248,8 @@ const UploadFile = (props) => {
           accept={props.accept}
           disabled={props.disabled}
           onChange={(e) => props.onUpload(e)}
+          // DynamicForm validates the upload when focus leaves the file input.
+          onBlur={props.onBlur}
           onClick ={ event => {
             const { target = {} } = event || {};
             target.value = "";

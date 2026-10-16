@@ -152,6 +152,14 @@ const estateFormFieldOverlays = [
       name: "searchEstateNo",
       createNewPath: "/upyog-ui/employee/asset/assetservice/new-assets/info",
       searchButton: true,
+      searchButtonLabel: "ES_COMMON_SEARCH",
+      resultLabel: "CS_COMMON_ASSET_NUMBER",
+      resultRows: [
+        { key: "buildingName", label: "EST_BUILDING_NAME" },
+        { key: "assetType", label: "EST_ASSET_TYPE" },
+        { key: "serviceType", label: "EST_LOCALITY" },
+        { key: "city", label: "EST_CITY" },
+      ],
     },
   },
 ];

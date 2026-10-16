@@ -367,7 +367,10 @@ const TLApplicationDetails = () => {
           />}
               <CardSubHeader>{t("TL_COMMON_DOCS")}</CardSubHeader>
               <div>
-                {application?.tradeLicenseDetail?.applicationDocuments?.length > 0 ? <TLDocument value={{
+                {((application?.tradeLicenseDetail?.applicationDocuments || []).some((doc) => doc?.fileStoreId || doc?.filestoreId) ||
+                  (application?.tradeLicenseDetail?.owners || []).some((owner) =>
+                    (owner?.documents || []).some((doc) => doc?.fileStoreId || doc?.filestoreId)
+                  )) ? <TLDocument value={{
               ...application
             }}></TLDocument> : <StatusTable>
                     <Row text={t("TL_NO_DOCUMENTS_MSG")} />
