@@ -14,9 +14,22 @@ import {
   PopUp,
   Toast,
 } from "@upyog/workbench-ui-react-components";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
+import { FORM_TYPES } from "../../utils/workbenchUtils";
+import {
+  buildFormSchemaSkeleton,
+  buildVisibilityRules,
+  fieldToSchemaItem,
+  getEditableSections,
+  replaceSectionForm,
+  schemaItemToField,
+  sectionFromKey,
+  submitFormSchema,
+  toFieldName,
+  toLocalizationKey as generateLocalizationKey,
+} from "../../utils/formSchemaUtils";
 
 // Available Form Field Type Options for the Form Builder Canvas (Includes Password Input)
 const FIELD_TYPES = [
@@ -88,8 +101,24 @@ const FormCreate = () => {
 
   // Resolved parameters passed from popup / table row
   const moduleName = queryParams?.moduleName || stateData?.moduleName || "Not Specified";
-  const accordionName = queryParams?.accordionName || stateData?.accordionName || "Not Specified";
+  const formType = queryParams?.formType || stateData?.formType || FORM_TYPES.ACCORDION;
+  const isSingleForm = formType === FORM_TYPES.SINGLE;
   const formName = queryParams?.formName || stateData?.formName || "Not Specified";
+
+  // Last submitted form schema (template JSON). Sections not yet saved keep form: [].
+  // Comes from the create popup / JSON upload; on a page refresh it is rebuilt empty from the query.
+  const [schema, setSchema] = useState(
+    () =>
+      stateData?.schema ||
+      buildFormSchemaSkeleton({
+        tenantId: Digit.ULBService.getStateId ? Digit.ULBService.getStateId() : "pg",
+        moduleName,
+        formType,
+        formName,
+        sections: (queryParams?.sections || "").split(",").filter(Boolean).map(sectionFromKey),
+      })
+  );
+  const sections = useMemo(() => getEditableSections(schema, formName), [schema, formName]);
 
   const cityResponseObject = Digit.Hooks.useEnabledMDMS(
     "PG",
@@ -108,74 +137,9 @@ const FormCreate = () => {
   );
 
   console.log("MDMS AssetParentCategoryFields Response: ", cityResponseObject?.data);
-  // Helper function to auto-generate Localization Key based on Module Name and Field Label
-  // Format: WBH_<MODULE_NAME>_<FIELD_LABEL> (e.g. WBH_TRADE_LICENCE_APPLICANT_NAME)
-  const generateLocalizationKey = (module, label) => {
-    if (!label) return "";
-    const cleanModule = (module && module !== "Not Specified" ? module : "COMMON")
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_+|_+$/g, "");
 
-    const cleanLabel = label
-      .trim()
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "_")
-      .replace(/_+/g, "_")
-      .replace(/^_+|_+$/g, "");
-
-    return `${cleanModule}_${cleanLabel}`;
-  };
-
-  // Initial field configuration state depending on Edit vs Copy vs New mode
-  const getInitialFields = () => {
-    if (stateData?.existingFields && Array.isArray(stateData.existingFields) && stateData.existingFields.length > 0) {
-      return stateData.existingFields.map((item, idx) => {
-        const fieldObj = item.field || {};
-        const validationObj = item.validation || {};
-        const dataSourceObj = fieldObj.dataSource || {};
-
-        return {
-          id: item.id || `field_${Date.now()}_${idx}`,
-          label: item.label || fieldObj.name || fieldObj.code || `Field ${idx + 1}`,
-          fieldKey: fieldObj.code || item.fieldKey || item.key || `field_${idx + 1}`,
-          type: fieldObj.type || item.type || "text",
-          required: (validationObj.required ?? (item.required === "required")) ? "required" : "optional",
-          isReadonly: validationObj.readOnly ?? item.isReadonly ?? false,
-          isDisabled: validationObj.disabled ?? item.isDisabled ?? false,
-          placeholder: fieldObj.placeholder || item.placeholder || "",
-          minLength: validationObj.minLength || item.minLength || "",
-          maxLength: validationObj.maxLength || item.maxLength || "",
-          regexType: item.regexType || "none",
-          pattern: validationObj.pattern || item.pattern || "",
-          patternErrorMessage: item.patternErrorMessage || item.messages?.error || "",
-          heading: item.heading || fieldObj.heading || "",
-          paragraph: item.paragraph || fieldObj.paragraph || "",
-          // MDMS Dropdown Specific Settings
-          mdmsModuleName: dataSourceObj.moduleName || item.mdmsModuleName || moduleName,
-          mdmsMasterName: dataSourceObj.masterName || item.mdmsMasterName || "",
-          // Radio / Checkbox Options
-          options: Array.isArray(fieldObj.options)
-            ? fieldObj.options
-            : Array.isArray(item.options)
-              ? item.options
-              : ["radio", "checkbox"].includes(fieldObj.type || item.type)
-                ? [
-                  { code: "OPTION_1", name: "Option 1" },
-                  { code: "OPTION_2", name: "Option 2" },
-                ]
-                : undefined,
-          // File Upload Specific Settings
-          uploadMode: fieldObj.uploadMode || item.uploadMode || "single",
-          allowedFileTypes: fieldObj.allowedFileTypes || item.allowedFileTypes || "pdf_image",
-          maxFileSize: fieldObj.maxFileSize || item.maxFileSize || "5",
-          maxFileCount: fieldObj.maxFileCount || item.maxFileCount || "5",
-          fileErrorMessage: item.fileErrorMessage || item.messages?.error || "Allowed formats: PDF, JPG, PNG up to 5MB",
-        };
-      });
-    }
+  // Starter fields for the first section when a form opens without saved fields (Edit/Copy sample vs New)
+  const getStarterFields = () => {
     if (isEdit || isCopy) {
       // Pre-populated schema fields for EDIT / COPY case
       return [
@@ -238,7 +202,32 @@ const FormCreate = () => {
     ];
   };
 
-  const [fields, setFields] = useState(getInitialFields);
+  // Builder fields per section: { [sectionKey]: fields[] }. Saved/uploaded sections are prefilled from their form[].
+  const [sectionFields, setSectionFields] = useState(() =>
+    sections.reduce((acc, section, sectionIdx) => {
+      if (section.form.length > 0) {
+        acc[section.key] = section.form.map((item, idx) => schemaItemToField(item, `field_${section.key}_${idx}`, PREDEFINED_REGEX_OPTIONS));
+      } else {
+        acc[section.key] = sectionIdx === 0 ? getStarterFields().map((field) => ({ ...field, name: toFieldName(field.label) })) : [];
+      }
+      return acc;
+    }, {})
+  );
+  const [activeSectionKey, setActiveSectionKey] = useState(() => sections[0]?.key);
+  // Sections whose fields have been sent (uploaded sections that already have fields count as saved)
+  const [savedSectionKeys, setSavedSectionKeys] = useState(() => sections.filter((section) => section.form.length > 0).map((section) => section.key));
+
+  const activeSection = sections.find((section) => section.key === activeSectionKey) || {};
+  const sectionLabel = activeSection.labelDefault || t(activeSection.i18nKey || "") || activeSectionKey;
+  const allFields = useMemo(() => Object.values(sectionFields).flat(), [sectionFields]);
+
+  // Fields of the active section; every canvas handler below works on these
+  const fields = sectionFields[activeSectionKey] || [];
+  const setFields = (updater) =>
+    setSectionFields((prev) => ({
+      ...prev,
+      [activeSectionKey]: typeof updater === "function" ? updater(prev[activeSectionKey] || []) : updater,
+    }));
   const [toast, setToast] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [activeLogicField, setActiveLogicField] = useState(null);
@@ -251,11 +240,11 @@ const FormCreate = () => {
     return fields.some((f) => f.id !== currentField.id && (f.label || "").trim().toLowerCase() === cleanLabel);
   };
 
-  // Check if field key / ID is a duplicate among form fields
+  // Check if field key / ID is a duplicate among the fields of every section
   const isDuplicateFieldKey = (currentField) => {
     if (!currentField?.fieldKey || !currentField.fieldKey.trim()) return false;
     const cleanKey = currentField.fieldKey.trim().toLowerCase();
-    return fields.some((f) => f.id !== currentField.id && (f.fieldKey || "").trim().toLowerCase() === cleanKey);
+    return allFields.some((f) => !f.passthrough && f.id !== currentField.id && (f.fieldKey || "").trim().toLowerCase() === cleanKey);
   };
 
   // Add new field to the canvas
@@ -268,7 +257,7 @@ const FormCreate = () => {
     const baseLabel = `New ${fieldType.name}`;
     let fieldLabel = baseLabel;
     let counter = 1;
-    while (fields.some((f) => (f.label || "").trim().toLowerCase() === fieldLabel.trim().toLowerCase())) {
+    while (allFields.some((f) => (f.label || "").trim().toLowerCase() === fieldLabel.trim().toLowerCase())) {
       fieldLabel = `${baseLabel} ${counter}`;
       counter++;
     }
@@ -277,6 +266,7 @@ const FormCreate = () => {
       id: `field_${Date.now()}`,
       label: fieldLabel,
       fieldKey: generateLocalizationKey(moduleName, fieldLabel),
+      name: toFieldName(fieldLabel),
       type: fieldType.code,
       required: "required",
       isReadonly: false,
@@ -393,8 +383,10 @@ const FormCreate = () => {
       prev.map((field) => {
         if (field.id === fieldId) {
           const updatedField = { ...field, [key]: value };
-          if (key === "label") {
+          // Uploaded fields keep their key and data name; renaming them could break rules that reference them
+          if (key === "label" && !field.source) {
             updatedField.fieldKey = generateLocalizationKey(moduleName, value);
+            updatedField.name = toFieldName(value);
           }
           return updatedField;
         }
@@ -431,17 +423,23 @@ const FormCreate = () => {
     );
   };
 
-  // Save form configuration schema (Generates UPYOG Standard Single Field MDMS/Config JSON)
+  // Save the active section: its fields replace that section's form[] and the full form schema
+  // (all sections; sections not yet saved keep form: []) is submitted.
   const handleSaveSchema = () => {
+    const editableFields = fields.filter((field) => !field.passthrough);
+
+    if (fields.length === 0) {
+      setToast({ label: t("WBH_EMPTY_SECTION_ERROR") || "Add at least one field before saving this section.", error: true });
+      return;
+    }
+
     // 1. Validate Duplicate Field Names / Labels or Keys
     const labelSet = new Set();
-    const keySet = new Set();
     let duplicateLabelName = null;
     let duplicateKeyName = null;
 
-    for (const field of fields) {
+    for (const field of editableFields) {
       const normLabel = (field.label || "").trim().toLowerCase();
-      const normKey = (field.fieldKey || "").trim().toLowerCase();
 
       if (!normLabel) {
         setToast({
@@ -455,13 +453,13 @@ const FormCreate = () => {
         duplicateLabelName = field.label;
         break;
       }
-      if (normKey && keySet.has(normKey)) {
+      // Keys must be unique across every section of the form
+      if (isDuplicateFieldKey(field)) {
         duplicateKeyName = field.fieldKey;
         break;
       }
 
       labelSet.add(normLabel);
-      if (normKey) keySet.add(normKey);
     }
 
     if (duplicateLabelName) {
@@ -480,99 +478,23 @@ const FormCreate = () => {
       return;
     }
 
-    const stateCode = Digit.ULBService.getStateId ? Digit.ULBService.getStateId() : "pg";
-    const formattedKeyName = formName ? formName.charAt(0).toLowerCase() + formName.slice(1) : "form";
+    // 2. Build this section's form[] (Logic drawer rules become visibleWhen on the child fields)
+    const visibilityRules = buildVisibilityRules(allFields);
+    const sectionForm = fields.map((field, idx) => fieldToSchemaItem(field, idx + 1, visibilityRules[field.id]));
+    const nextSchema = replaceSectionForm(schema, formName, activeSectionKey, sectionForm);
+    const nextSavedKeys = savedSectionKeys.includes(activeSectionKey) ? savedSectionKeys : [...savedSectionKeys, activeSectionKey];
 
-    const formFieldsArray = fields.map((field, idx) => {
-      const fieldItem = {
-        order: idx + 1,
-        key: field.fieldKey || `field_${idx + 1}`,
-        heading: field.heading || "",
-        paragraph: field.paragraph || "",
-        field: {
-          code: field.fieldKey || `field_${idx + 1}`,
-          name: field.fieldKey || `field_${idx + 1}`,
-          heading: field.heading || "",
-          paragraph: field.paragraph || "",
-          placeholder: field.placeholder || "",
-          type: field.type,
-          ...(field.type === "dropdown" && {
-            dataSource: {
-              type: "MDMS",
-              moduleName: field.mdmsModuleName || moduleName || "",
-              masterName: field.mdmsMasterName || "",
-              customiztionRequired: true,
-            },
-          }),
-          ...(["radio", "checkbox"].includes(field.type) && {
-            options: (Array.isArray(field.options) && field.options.length > 0 ? field.options : [
-              { code: "OPTION_1", name: "Option 1" },
-              { code: "OPTION_2", name: "Option 2" },
-            ]).map((opt) => ({
-              code: opt.code || opt.name || "",
-              name: opt.name || opt.code || "",
-            })),
-          }),
-          ...(field.type === "file" && {
-            uploadMode: field.uploadMode || "single",
-            allowedFileTypes: field.allowedFileTypes || "pdf_image",
-            maxFileSize: field.maxFileSize ? Number(field.maxFileSize) : 5,
-            maxFileCount: field.uploadMode === "multiple" ? (field.maxFileCount ? Number(field.maxFileCount) : 5) : 1,
-          }),
-        },
-        validation: {
-          required: field.required === "required",
-          disabled: !!field.isDisabled,
-          readOnly: !!field.isReadonly,
-          ...(field.minLength ? { minLength: Number(field.minLength) } : {}),
-          ...(field.maxLength ? { maxLength: Number(field.maxLength) } : {}),
-          ...(field.pattern ? { pattern: field.pattern } : {}),
-        },
-        messages: {
-          error:
-            field.type === "file"
-              ? field.fileErrorMessage || "Invalid file format or size"
-              : field.patternErrorMessage || "Invalid field value",
-        },
-      };
-      return fieldItem;
-    });
-
-    // Complete Standard UPYOG Form JSON Schema structure
-    const formSchemaJSON = {
-      tenantId: stateCode,
-      moduleName: moduleName,
-      [formName]: [
-        {
-          head: accordionName,
-          body: [
-            {
-              key: formattedKeyName,
-              route: formattedKeyName,
-              component: formName,
-              nextStep: null,
-              isPreview: false,
-              withoutLabel: true,
-              type: "component",
-              hideInEmployee: false,
-              isMandatory: true,
-              sectionHeading: null,
-              payloadKey: moduleName,
-              apiId: "Rainmaker",
-              form: formFieldsArray,
-            },
-          ],
-        },
-      ],
-    };
-
-    console.log(`${isEdit ? "Updating" : "Saving"} Full Form Schema JSON Payload: `, JSON.stringify(formSchemaJSON, null, 2));
-
-    setToast({
-      label: isEdit
-        ? t("WBH_FORM_SCHEMA_UPDATED") || "Form Configuration Schema updated successfully!"
-        : t("WBH_FORM_SCHEMA_SAVED") || "Form Configuration Schema saved successfully!",
-      error: false,
+    submitFormSchema(nextSchema).then(() => {
+      setSchema(nextSchema);
+      setSavedSectionKeys(nextSavedKeys);
+      setToast({
+        label: isSingleForm
+          ? isEdit
+            ? t("WBH_FORM_SCHEMA_UPDATED") || "Form Configuration Schema updated successfully!"
+            : t("WBH_FORM_SCHEMA_SAVED") || "Form Configuration Schema saved successfully!"
+          : `${t("WBH_SECTION_SAVED") || "Section saved"}: ${sectionLabel} (${nextSavedKeys.length}/${sections.length})`,
+        error: false,
+      });
     });
   };
 
@@ -622,8 +544,14 @@ const FormCreate = () => {
             <span className="context-item-value highlight-blue">{moduleName}</span>
           </div>
           <div className="context-item-box">
-            <span className="context-item-label">{t("WBH_ACCORDION_NAME") || "Accordion Section"}</span>
-            <span className="context-item-value highlight-orange">{accordionName}</span>
+            <span className="context-item-label">{t("WBH_FORM_TYPE") || "Form Type"}</span>
+            <span className="context-item-value highlight-blue">{t(`WBH_FORM_TYPE_${formType}`)}</span>
+          </div>
+          <div className="context-item-box">
+            <span className="context-item-label">
+              {isSingleForm ? t("WBH_SINGLE_FORM_NAME") || "Single Form" : t("WBH_ACCORDION_NAME") || "Accordion Section"}
+            </span>
+            <span className="context-item-value highlight-orange">{sectionLabel}</span>
           </div>
           <div className="context-item-box">
             <span className="context-item-label">{t("WBH_FORM_NAME") || "Form Name"}</span>
@@ -631,6 +559,29 @@ const FormCreate = () => {
           </div>
         </div>
       </Card>
+
+      {/* Accordion Section Switcher (each section is built and saved separately) */}
+      {!isSingleForm && sections.length > 0 && (
+        <div className="theme-builder-tabs-container form-section-tabs">
+          {sections.map((section) => {
+            const isActive = section.key === activeSectionKey;
+            const isSaved = savedSectionKeys.includes(section.key);
+            return (
+              <button
+                key={section.key}
+                type="button"
+                className={`theme-tab-btn ${isActive ? "active" : ""}`}
+                onClick={() => setActiveSectionKey(section.key)}
+              >
+                {section.labelDefault || t(section.i18nKey)}
+                <span className={`section-status-badge ${isSaved ? "saved" : "pending"}`}>
+                  {isSaved ? t("WBH_SECTION_STATUS_SAVED") || "Saved" : t("WBH_SECTION_STATUS_PENDING") || "Pending"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Main Form Builder Workspace */}
       <div className="form-builder-workspace-grid">
@@ -670,8 +621,10 @@ const FormCreate = () => {
             ) : (
               <div className="canvas-fields-list">
                 {fields.map((field, index) => {
-                  const parentField = fields.find((pf) => pf.logic?.targetFieldId === field.id);
+                  const parentField = allFields.find((pf) => pf.logic?.targetFieldId === field.id);
                   const isChildField = !!parentField;
+                  // Show/hide rule that came with the uploaded JSON (shown read-only)
+                  const uploadedVisibleWhen = !isChildField ? field.source?.visibleWhen : null;
 
                   return (
                     <div
@@ -680,11 +633,11 @@ const FormCreate = () => {
                       style={
                         isChildField
                           ? {
-                              borderLeft: "4px solid #3b82f6",
-                              marginLeft: "1.75rem",
-                              background: "#f8fafc",
-                              borderColor: "#3b82f6",
-                            }
+                            borderLeft: "4px solid #3b82f6",
+                            marginLeft: "1.75rem",
+                            background: "#f8fafc",
+                            borderColor: "#3b82f6",
+                          }
                           : {}
                       }
                     >
@@ -724,368 +677,395 @@ const FormCreate = () => {
                           </div>
                         )}
 
-                      <span className="field-type-badge">{field.type.toUpperCase()}</span>
-                      <span className={`field-requirement-badge ${field.required === "required" ? "req-mandatory" : "req-optional"}`}>
-                        {field.required === "required" ? "REQUIRED" : "OPTIONAL"}
-                      </span>
-                      <button
-                        type="button"
-                        className="field-logic-btn"
-                        onClick={() => setActiveLogicField(field)}
-                        title="Configure Field Logic & Conditions"
-                      >
-                        ⚡ Logic
-                      </button>
-                      {field.logic?.targetFieldId && (
-                        <span
-                          style={{
-                            fontSize: "0.75rem",
-                            background: "#f0fdf4",
-                            color: "#166534",
-                            border: "1px solid #bbf7d0",
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            fontWeight: "600",
-                          }}
+                        <span className="field-type-badge">{field.type.toUpperCase()}</span>
+                        {!field.passthrough && (
+                          <React.Fragment>
+                            <span className={`field-requirement-badge ${field.required === "required" ? "req-mandatory" : "req-optional"}`}>
+                              {field.required === "required" ? "REQUIRED" : "OPTIONAL"}
+                            </span>
+                            <button
+                              type="button"
+                              className="field-logic-btn"
+                              onClick={() => setActiveLogicField(field)}
+                              title="Configure Field Logic & Conditions"
+                            >
+                              ⚡ Logic
+                            </button>
+                          </React.Fragment>
+                        )}
+                        {uploadedVisibleWhen?.field && (
+                          <span className="field-visible-when-badge">
+                            👁 {t("WBH_VISIBLE_WHEN") || "Visible when"}: {uploadedVisibleWhen.field}{" "}
+                            {Array.isArray(uploadedVisibleWhen.in)
+                              ? `in ${uploadedVisibleWhen.in.join(", ")}`
+                              : `= ${uploadedVisibleWhen.equals}`}
+                          </span>
+                        )}
+                        {field.logic?.targetFieldId && (
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              background: "#f0fdf4",
+                              color: "#166534",
+                              border: "1px solid #bbf7d0",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            🔗 Displays: {field.logic.targetFieldLabel || "Field"}
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="field-remove-btn"
+                          onClick={() => handleRemoveField(field.id)}
+                          title="Remove Field"
                         >
-                          🔗 Displays: {field.logic.targetFieldLabel || "Field"}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        className="field-remove-btn"
-                        onClick={() => handleRemoveField(field.id)}
-                        title="Remove Field"
-                      >
-                        ✕
-                      </button>
-                    </div>
-
-                    {/* Row 1: Basic Configs */}
-                    <div className="field-card-grid row-1">
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">
-                          {t("WBH_FIELD_LABEL") || "Field Label"} <span className="mandatory-asterisk">*</span>
-                        </CardLabel>
-                        <TextInput
-                          value={field.label}
-                          onChange={(e) => handleFieldChange(field.id, "label", e.target.value)}
-                          placeholder="e.g. Applicant Name"
-                          className={isDuplicateFieldLabel(field) ? "has-duplicate-error" : ""}
-                        />
-                        {isDuplicateFieldLabel(field) && (
-                          <CardLabelError className="duplicate-error-msg">
-                            ⚠️ {t("WBH_DUPLICATE_NAME_WARN") || "Duplicate field name! Each field must have a unique name."}
-                          </CardLabelError>
-                        )}
+                          ✕
+                        </button>
                       </div>
 
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_LOCALIZATION_KEY") || "Field Key / ID"}</CardLabel>
-                        <TextInput
-                          value={field.fieldKey}
-                          onChange={(e) => handleFieldChange(field.id, "fieldKey", e.target.value)}
-                          placeholder="e.g. applicantName"
-                          className={isDuplicateFieldKey(field) ? "has-duplicate-error" : ""}
-                        />
-                        {isDuplicateFieldKey(field) && (
-                          <CardLabelError className="duplicate-error-msg">
-                            ⚠️ {t("WBH_DUPLICATE_KEY_WARN") || "Duplicate field key! Field ID must be unique."}
-                          </CardLabelError>
-                        )}
-                      </div>
-
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_HEADING") || "Heading"}</CardLabel>
-                        <TextInput
-                          value={field.heading || ""}
-                          onChange={(e) => handleFieldChange(field.id, "heading", e.target.value)}
-                          placeholder="e.g. Enter heading"
-                        />
-                      </div>
-
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_PLACEHOLDER") || "Placeholder Text"}</CardLabel>
-                        <TextInput
-                          value={field.placeholder}
-                          onChange={(e) => handleFieldChange(field.id, "placeholder", e.target.value)}
-                          placeholder="e.g. Enter value"
-                        />
-                      </div>
-
-                      <div className="field-config-item span-2">
-                        <CardLabel className="config-label">{t("WBH_FIELD_PARAGRAPH") || "Paragraph"}</CardLabel>
-                        <textarea
-                          value={field.paragraph || ""}
-                          onChange={(e) => handleFieldChange(field.id, "paragraph", e.target.value)}
-                          placeholder="e.g. Enter paragraph text"
-                          rows={2}
-                          className="preview-textarea"
-                        />
-                      </div>
-
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_REQUIREMENT") || "Requirement"}</CardLabel>
-                        <div className="requirement-toggle-wrapper">
-                          <ToggleSwitch
-                            value={field.required === "required"}
-                            onChange={(e) => handleFieldChange(field.id, "required", e.target.checked ? "required" : "optional")}
-                            name={`required_${field.id}`}
-                          />
-                          <span className="toggle-status-label">
-                            {field.required === "required" ? "true" : "false"}
-                          </span>
+                      {field.passthrough ? (
+                        <div className="passthrough-field-note">
+                          <strong>{field.label}</strong> ({field.fieldKey}) —{" "}
+                          {t("WBH_PASSTHROUGH_FIELD_NOTE") || "configured in the uploaded JSON; kept as is and not editable in the builder."}
                         </div>
-                      </div>
-
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_READONLY") || "Read Only"}</CardLabel>
-                        <div className="requirement-toggle-wrapper">
-                          <ToggleSwitch
-                            value={!!field.isReadonly}
-                            onChange={(e) => handleFieldChange(field.id, "isReadonly", e.target.checked)}
-                            name={`readonly_${field.id}`}
-                          />
-                          <span className="toggle-status-label">
-                            {field.isReadonly ? "true" : "false"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="field-config-item">
-                        <CardLabel className="config-label">{t("WBH_FIELD_DISABLED") || "Disabled"}</CardLabel>
-                        <div className="requirement-toggle-wrapper">
-                          <ToggleSwitch
-                            value={!!field.isDisabled}
-                            onChange={(e) => handleFieldChange(field.id, "isDisabled", e.target.checked)}
-                            name={`disabled_${field.id}`}
-                          />
-                          <span className="toggle-status-label">
-                            {field.isDisabled ? "true" : "false"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Row 2: Validation, Length & Regex Settings */}
-                    {["text", "password", "textarea"].includes(field.type) && (
-                      <div className="field-validation-section">
-                        <div className="validation-section-header">
-                          <span>⚙️ {t("WBH_VALIDATION_LENGTH_SETTINGS") || "Length & Regex Pattern Validation Settings"}</span>
-                        </div>
-
-                        <div className="field-card-grid row-2">
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">{t("WBH_MIN_LENGTH") || "Min Length / Min Value"}</CardLabel>
-                            <TextInput
-                              type="number"
-                              value={field.minLength || ""}
-                              onChange={(e) => handleFieldChange(field.id, "minLength", e.target.value)}
-                              placeholder="e.g. 1"
-                            />
-                          </div>
-
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">{t("WBH_MAX_LENGTH") || "Max Length / Max Value"}</CardLabel>
-                            <TextInput
-                              type="number"
-                              value={field.maxLength || ""}
-                              onChange={(e) => handleFieldChange(field.id, "maxLength", e.target.value)}
-                              placeholder="e.g. 100"
-                            />
-                          </div>
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">{t("WBH_PREDEFINED_REGEX") || "Pattern Validation Dropdown"}</CardLabel>
-                            <Dropdown
-                              option={PREDEFINED_REGEX_OPTIONS}
-                              optionKey="name"
-                              selected={PREDEFINED_REGEX_OPTIONS.find((r) => r.code === (field.regexType || "none"))}
-                              select={(val) => handleRegexTypeChange(field.id, val)}
-                              t={t}
-                              placeholder="Select Regex Pattern"
-                            />
-                          </div>
-
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">
-                              {t("WBH_REGEX_PATTERN") || "Regex Pattern Rule"}
-                              {field.regexType === "custom" && <span className="mandatory-asterisk"> *</span>}
-                            </CardLabel>
-                            <TextInput
-                              value={field.pattern || ""}
-                              onChange={(e) => handleFieldChange(field.id, "pattern", e.target.value)}
-                              placeholder="e.g. ^[a-zA-Z0-9]+$"
-                              disabled={field.regexType !== "custom" && field.regexType !== "none" && !!field.pattern}
-                            />
-                          </div>
-
-                          <div className="field-config-item span-2">
-                            <CardLabel className="config-label">{t("WBH_PATTERN_ERROR_MSG") || "Validation Error Message"}</CardLabel>
-                            <TextInput
-                              value={field.patternErrorMessage || ""}
-                              onChange={(e) => handleFieldChange(field.id, "patternErrorMessage", e.target.value)}
-                              placeholder="e.g. Please enter a valid value"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Row 2: MDMS Dropdown Data Source Configuration */}
-                    {field.type === "dropdown" && (
-                      <div className="field-validation-section">
-                        <div className="validation-section-header">
-                          <span>🗂️ {t("WBH_MDMS_DROPDOWN_SETTINGS") || "MDMS Dropdown Data Source Configuration"}</span>
-                        </div>
-
-                        <div className="field-card-grid row-2">
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">
-                              {t("WBH_MDMS_MODULE_NAME") || "Module Name"} <span className="mandatory-asterisk">*</span>
-                            </CardLabel>
-                            <TextInput
-                              value={field.mdmsModuleName || ""}
-                              onChange={(e) => handleFieldChange(field.id, "mdmsModuleName", e.target.value)}
-                              placeholder="e.g. ASSET or PropertyTax"
-                            />
-                          </div>
-
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">
-                              {t("WBH_MDMS_MASTER_NAME") || "MDMS File Name / Master Name"} <span className="mandatory-asterisk">*</span>
-                            </CardLabel>
-                            <TextInput
-                              value={field.mdmsMasterName || ""}
-                              onChange={(e) => handleFieldChange(field.id, "mdmsMasterName", e.target.value)}
-                              placeholder="e.g. AssetParentCategoryFields"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Row 2: Radio & Checkbox Options Configuration */}
-                    {["radio", "checkbox"].includes(field.type) && (
-                      <div className="field-validation-section">
-                        <div className="validation-section-header validation-header-flex">
-                          <span>🔘 {t("WBH_OPTIONS_CONFIG_HEADER") || "Radio / Checkbox Options Configuration"}</span>
-                          <Button
-                            type="button"
-                            variation="secondary"
-                            className="add-option-btn"
-                            label={t("WBH_ADD_OPTION") || "+ Add Option"}
-                            onButtonClick={() => handleAddOption(field.id)}
-                          />
-                        </div>
-
-                        <div className="options-list-container">
-                          {(Array.isArray(field.options) && field.options.length > 0 ? field.options : [
-                            { code: "OPTION_1", name: "Option 1" },
-                            { code: "OPTION_2", name: "Option 2" },
-                          ]).map((opt, optIdx) => (
-                            <div key={optIdx} className="option-item-row">
-                              <span className="option-index-badge">#{optIdx + 1}</span>
-                              <div className="option-field-flex">
-                                <CardLabel className="config-label">
-                                  {t("WBH_OPTION_NAME") || "Display Label"}
-                                </CardLabel>
-                                <TextInput
-                                  value={opt.name || ""}
-                                  onChange={(e) => handleOptionChange(field.id, optIdx, "name", e.target.value)}
-                                  placeholder={t("WBH_OPTION_LABEL_PLACEHOLDER") || "e.g. Option 1 / Yes"}
-                                />
-                              </div>
-                              <div className="option-field-flex">
-                                <CardLabel className="config-label">
-                                  {t("WBH_OPTION_CODE") || "Value Code"}
-                                </CardLabel>
-                                <TextInput
-                                  value={opt.code || ""}
-                                  onChange={(e) => handleOptionChange(field.id, optIdx, "code", e.target.value)}
-                                  placeholder={t("WBH_OPTION_VALUE_PLACEHOLDER") || "e.g. OPTION_1 / YES"}
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                className="option-remove-btn"
-                                onClick={() => handleRemoveOption(field.id, optIdx)}
-                                title={t("WBH_REMOVE_OPTION") || "Remove Option"}
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Row 2: File Upload Specific Configuration & Validation Settings */}
-                    {field.type === "file" && (
-                      <div className="field-validation-section">
-                        <div className="validation-section-header">
-                          <span>📎 {t("WBH_FILE_UPLOAD_SETTINGS") || "File Upload Rules & Validation Settings"}</span>
-                        </div>
-
-                        <div className="field-card-grid row-2">
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">{t("WBH_FILE_UPLOAD_MODE") || "Upload Mode (Single / Multiple)"}</CardLabel>
-                            <Dropdown
-                              option={UPLOAD_MODE_OPTIONS}
-                              optionKey="name"
-                              selected={UPLOAD_MODE_OPTIONS.find((m) => m.code === (field.uploadMode || "single"))}
-                              select={(val) => handleFieldChange(field.id, "uploadMode", val?.code)}
-                              t={t}
-                              placeholder="Select Upload Mode"
-                            />
-                          </div>
-
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">{t("WBH_ALLOWED_FILE_TYPES") || "File Format Validation"}</CardLabel>
-                            <Dropdown
-                              option={FILE_TYPE_OPTIONS}
-                              optionKey="name"
-                              selected={FILE_TYPE_OPTIONS.find((ft) => ft.code === (field.allowedFileTypes || "pdf_image"))}
-                              select={(val) => handleFieldChange(field.id, "allowedFileTypes", val?.code)}
-                              t={t}
-                              placeholder="Select Allowed Formats"
-                            />
-                          </div>
-
-                          <div className="field-config-item">
-                            <CardLabel className="config-label">{t("WBH_MAX_FILE_SIZE") || "Max File Size Limit"}</CardLabel>
-                            <Dropdown
-                              option={FILE_SIZE_OPTIONS}
-                              optionKey="name"
-                              selected={FILE_SIZE_OPTIONS.find((fs) => fs.code === (field.maxFileSize || "5"))}
-                              select={(val) => handleFieldChange(field.id, "maxFileSize", val?.code)}
-                              t={t}
-                              placeholder="Select Max Size"
-                            />
-                          </div>
-
-                          {field.uploadMode === "multiple" && (
+                      ) : (
+                        <React.Fragment>
+                          {/* Row 1: Basic Configs */}
+                          <div className="field-card-grid row-1">
                             <div className="field-config-item">
-                              <CardLabel className="config-label">{t("WBH_MAX_FILE_COUNT") || "Max File Count Limit"}</CardLabel>
+                              <CardLabel className="config-label">
+                                {t("WBH_FIELD_LABEL") || "Field Label"} <span className="mandatory-asterisk">*</span>
+                              </CardLabel>
                               <TextInput
-                                type="number"
-                                value={field.maxFileCount || "5"}
-                                onChange={(e) => handleFieldChange(field.id, "maxFileCount", e.target.value)}
-                                placeholder="e.g. 5"
+                                value={field.label}
+                                onChange={(e) => handleFieldChange(field.id, "label", e.target.value)}
+                                placeholder="e.g. Applicant Name"
+                                className={isDuplicateFieldLabel(field) ? "has-duplicate-error" : ""}
                               />
+                              {isDuplicateFieldLabel(field) && (
+                                <CardLabelError className="duplicate-error-msg">
+                                  ⚠️ {t("WBH_DUPLICATE_NAME_WARN") || "Duplicate field name! Each field must have a unique name."}
+                                </CardLabelError>
+                              )}
+                            </div>
+
+                            <div className="field-config-item">
+                              <CardLabel className="config-label">{t("WBH_LOCALIZATION_KEY") || "Field Key / ID"}</CardLabel>
+                              <TextInput
+                                value={field.fieldKey}
+                                onChange={(e) => handleFieldChange(field.id, "fieldKey", e.target.value)}
+                                placeholder="e.g. applicantName"
+                                className={isDuplicateFieldKey(field) ? "has-duplicate-error" : ""}
+                              />
+                              {isDuplicateFieldKey(field) && (
+                                <CardLabelError className="duplicate-error-msg">
+                                  ⚠️ {t("WBH_DUPLICATE_KEY_WARN") || "Duplicate field key! Field ID must be unique."}
+                                </CardLabelError>
+                              )}
+                            </div>
+
+                            <div className="field-config-item">
+                              <CardLabel className="config-label">{t("WBH_FIELD_HEADING") || "Heading"}</CardLabel>
+                              <TextInput
+                                value={field.heading || ""}
+                                onChange={(e) => handleFieldChange(field.id, "heading", e.target.value)}
+                                placeholder="e.g. Enter heading"
+                              />
+                            </div>
+
+                            <div className="field-config-item">
+                              <CardLabel className="config-label">{t("WBH_FIELD_PLACEHOLDER") || "Placeholder Text"}</CardLabel>
+                              <TextInput
+                                value={field.placeholder}
+                                onChange={(e) => handleFieldChange(field.id, "placeholder", e.target.value)}
+                                placeholder="e.g. Enter value"
+                              />
+                            </div>
+
+                            <div className="field-config-item span-2">
+                              <CardLabel className="config-label">{t("WBH_FIELD_PARAGRAPH") || "Paragraph"}</CardLabel>
+                              <textarea
+                                value={field.paragraph || ""}
+                                onChange={(e) => handleFieldChange(field.id, "paragraph", e.target.value)}
+                                placeholder="e.g. Enter paragraph text"
+                                rows={2}
+                                className="preview-textarea"
+                              />
+                            </div>
+
+                            <div className="field-config-item">
+                              <CardLabel className="config-label">{t("WBH_FIELD_REQUIREMENT") || "Requirement"}</CardLabel>
+                              <div className="requirement-toggle-wrapper">
+                                <ToggleSwitch
+                                  value={field.required === "required"}
+                                  onChange={(e) => handleFieldChange(field.id, "required", e.target.checked ? "required" : "optional")}
+                                  name={`required_${field.id}`}
+                                />
+                                <span className="toggle-status-label">
+                                  {field.required === "required" ? "true" : "false"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="field-config-item">
+                              <CardLabel className="config-label">{t("WBH_FIELD_READONLY") || "Read Only"}</CardLabel>
+                              <div className="requirement-toggle-wrapper">
+                                <ToggleSwitch
+                                  value={!!field.isReadonly}
+                                  onChange={(e) => handleFieldChange(field.id, "isReadonly", e.target.checked)}
+                                  name={`readonly_${field.id}`}
+                                />
+                                <span className="toggle-status-label">
+                                  {field.isReadonly ? "true" : "false"}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="field-config-item">
+                              <CardLabel className="config-label">{t("WBH_FIELD_DISABLED") || "Disabled"}</CardLabel>
+                              <div className="requirement-toggle-wrapper">
+                                <ToggleSwitch
+                                  value={!!field.isDisabled}
+                                  onChange={(e) => handleFieldChange(field.id, "isDisabled", e.target.checked)}
+                                  name={`disabled_${field.id}`}
+                                />
+                                <span className="toggle-status-label">
+                                  {field.isDisabled ? "true" : "false"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Row 2: Validation, Length & Regex Settings */}
+                          {["text", "password", "textarea"].includes(field.type) && (
+                            <div className="field-validation-section">
+                              <div className="validation-section-header">
+                                <span>⚙️ {t("WBH_VALIDATION_LENGTH_SETTINGS") || "Length & Regex Pattern Validation Settings"}</span>
+                              </div>
+
+                              <div className="field-card-grid row-2">
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">{t("WBH_MIN_LENGTH") || "Min Length / Min Value"}</CardLabel>
+                                  <TextInput
+                                    type="number"
+                                    value={field.minLength || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "minLength", e.target.value)}
+                                    placeholder="e.g. 1"
+                                  />
+                                </div>
+
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">{t("WBH_MAX_LENGTH") || "Max Length / Max Value"}</CardLabel>
+                                  <TextInput
+                                    type="number"
+                                    value={field.maxLength || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "maxLength", e.target.value)}
+                                    placeholder="e.g. 100"
+                                  />
+                                </div>
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">{t("WBH_PREDEFINED_REGEX") || "Pattern Validation Dropdown"}</CardLabel>
+                                  <Dropdown
+                                    option={PREDEFINED_REGEX_OPTIONS}
+                                    optionKey="name"
+                                    selected={PREDEFINED_REGEX_OPTIONS.find((r) => r.code === (field.regexType || "none"))}
+                                    select={(val) => handleRegexTypeChange(field.id, val)}
+                                    t={t}
+                                    placeholder="Select Regex Pattern"
+                                  />
+                                </div>
+
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">
+                                    {t("WBH_REGEX_PATTERN") || "Regex Pattern Rule"}
+                                    {field.regexType === "custom" && <span className="mandatory-asterisk"> *</span>}
+                                  </CardLabel>
+                                  <TextInput
+                                    value={field.pattern || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "pattern", e.target.value)}
+                                    placeholder="e.g. ^[a-zA-Z0-9]+$"
+                                    disabled={field.regexType !== "custom" && field.regexType !== "none" && !!field.pattern}
+                                  />
+                                </div>
+
+                                <div className="field-config-item span-2">
+                                  <CardLabel className="config-label">{t("WBH_PATTERN_ERROR_MSG") || "Validation Error Message"}</CardLabel>
+                                  <TextInput
+                                    value={field.patternErrorMessage || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "patternErrorMessage", e.target.value)}
+                                    placeholder="e.g. Please enter a valid value"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           )}
 
-                          <div className="field-config-item span-2">
-                            <CardLabel className="config-label">{t("WBH_FILE_ERROR_MSG") || "Validation Error Message"}</CardLabel>
-                            <TextInput
-                              value={field.fileErrorMessage || ""}
-                              onChange={(e) => handleFieldChange(field.id, "fileErrorMessage", e.target.value)}
-                              placeholder="e.g. Allowed formats: PDF, JPG, PNG up to 5MB"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                          {/* Row 2: MDMS Dropdown Data Source Configuration */}
+                          {field.type === "dropdown" && (
+                            <div className="field-validation-section">
+                              <div className="validation-section-header">
+                                <span>🗂️ {t("WBH_MDMS_DROPDOWN_SETTINGS") || "MDMS Dropdown Data Source Configuration"}</span>
+                              </div>
+
+                              <div className="field-card-grid row-2">
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">
+                                    {t("WBH_MDMS_MODULE_NAME") || "Module Name"} <span className="mandatory-asterisk">*</span>
+                                  </CardLabel>
+                                  <TextInput
+                                    value={field.mdmsModuleName || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "mdmsModuleName", e.target.value)}
+                                    placeholder="e.g. ASSET or PropertyTax"
+                                  />
+                                </div>
+
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">
+                                    {t("WBH_MDMS_MASTER_NAME") || "MDMS File Name / Master Name"} <span className="mandatory-asterisk">*</span>
+                                  </CardLabel>
+                                  <TextInput
+                                    value={field.mdmsMasterName || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "mdmsMasterName", e.target.value)}
+                                    placeholder="e.g. AssetParentCategoryFields"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Row 2: Radio & Checkbox Options Configuration */}
+                          {["radio", "checkbox"].includes(field.type) && (
+                            <div className="field-validation-section">
+                              <div className="validation-section-header validation-header-flex">
+                                <span>🔘 {t("WBH_OPTIONS_CONFIG_HEADER") || "Radio / Checkbox Options Configuration"}</span>
+                                <Button
+                                  type="button"
+                                  variation="secondary"
+                                  className="add-option-btn"
+                                  label={t("WBH_ADD_OPTION") || "+ Add Option"}
+                                  onButtonClick={() => handleAddOption(field.id)}
+                                />
+                              </div>
+
+                              <div className="options-list-container">
+                                {Array.isArray(field.options) && field.options.length === 0 && field.source?.field?.dataSource && (
+                                  <span className="canvas-subtitle">
+                                    {t("WBH_OPTIONS_FROM_MDMS") || "Options are loaded from MDMS"}: {field.source.field.dataSource.moduleName}.
+                                    {field.source.field.dataSource.masterName}
+                                  </span>
+                                )}
+                                {(Array.isArray(field.options) ? field.options : [
+                                  { code: "OPTION_1", name: "Option 1" },
+                                  { code: "OPTION_2", name: "Option 2" },
+                                ]).map((opt, optIdx) => (
+                                  <div key={optIdx} className="option-item-row">
+                                    <span className="option-index-badge">#{optIdx + 1}</span>
+                                    <div className="option-field-flex">
+                                      <CardLabel className="config-label">
+                                        {t("WBH_OPTION_NAME") || "Display Label"}
+                                      </CardLabel>
+                                      <TextInput
+                                        value={opt.name || ""}
+                                        onChange={(e) => handleOptionChange(field.id, optIdx, "name", e.target.value)}
+                                        placeholder={t("WBH_OPTION_LABEL_PLACEHOLDER") || "e.g. Option 1 / Yes"}
+                                      />
+                                    </div>
+                                    <div className="option-field-flex">
+                                      <CardLabel className="config-label">
+                                        {t("WBH_OPTION_CODE") || "Value Code"}
+                                      </CardLabel>
+                                      <TextInput
+                                        value={opt.code || ""}
+                                        onChange={(e) => handleOptionChange(field.id, optIdx, "code", e.target.value)}
+                                        placeholder={t("WBH_OPTION_VALUE_PLACEHOLDER") || "e.g. OPTION_1 / YES"}
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="option-remove-btn"
+                                      onClick={() => handleRemoveOption(field.id, optIdx)}
+                                      title={t("WBH_REMOVE_OPTION") || "Remove Option"}
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Row 2: File Upload Specific Configuration & Validation Settings */}
+                          {field.type === "file" && (
+                            <div className="field-validation-section">
+                              <div className="validation-section-header">
+                                <span>📎 {t("WBH_FILE_UPLOAD_SETTINGS") || "File Upload Rules & Validation Settings"}</span>
+                              </div>
+
+                              <div className="field-card-grid row-2">
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">{t("WBH_FILE_UPLOAD_MODE") || "Upload Mode (Single / Multiple)"}</CardLabel>
+                                  <Dropdown
+                                    option={UPLOAD_MODE_OPTIONS}
+                                    optionKey="name"
+                                    selected={UPLOAD_MODE_OPTIONS.find((m) => m.code === (field.uploadMode || "single"))}
+                                    select={(val) => handleFieldChange(field.id, "uploadMode", val?.code)}
+                                    t={t}
+                                    placeholder="Select Upload Mode"
+                                  />
+                                </div>
+
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">{t("WBH_ALLOWED_FILE_TYPES") || "File Format Validation"}</CardLabel>
+                                  <Dropdown
+                                    option={FILE_TYPE_OPTIONS}
+                                    optionKey="name"
+                                    selected={FILE_TYPE_OPTIONS.find((ft) => ft.code === (field.allowedFileTypes || "pdf_image"))}
+                                    select={(val) => handleFieldChange(field.id, "allowedFileTypes", val?.code)}
+                                    t={t}
+                                    placeholder="Select Allowed Formats"
+                                  />
+                                </div>
+
+                                <div className="field-config-item">
+                                  <CardLabel className="config-label">{t("WBH_MAX_FILE_SIZE") || "Max File Size Limit"}</CardLabel>
+                                  <Dropdown
+                                    option={FILE_SIZE_OPTIONS}
+                                    optionKey="name"
+                                    selected={FILE_SIZE_OPTIONS.find((fs) => fs.code === (field.maxFileSize || "5"))}
+                                    select={(val) => handleFieldChange(field.id, "maxFileSize", val?.code)}
+                                    t={t}
+                                    placeholder="Select Max Size"
+                                  />
+                                </div>
+
+                                {field.uploadMode === "multiple" && (
+                                  <div className="field-config-item">
+                                    <CardLabel className="config-label">{t("WBH_MAX_FILE_COUNT") || "Max File Count Limit"}</CardLabel>
+                                    <TextInput
+                                      type="number"
+                                      value={field.maxFileCount || "5"}
+                                      onChange={(e) => handleFieldChange(field.id, "maxFileCount", e.target.value)}
+                                      placeholder="e.g. 5"
+                                    />
+                                  </div>
+                                )}
+
+                                <div className="field-config-item span-2">
+                                  <CardLabel className="config-label">{t("WBH_FILE_ERROR_MSG") || "Validation Error Message"}</CardLabel>
+                                  <TextInput
+                                    value={field.fileErrorMessage || ""}
+                                    onChange={(e) => handleFieldChange(field.id, "fileErrorMessage", e.target.value)}
+                                    placeholder="e.g. Allowed formats: PDF, JPG, PNG up to 5MB"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </React.Fragment>
+                      )}
                     </div>
                   );
                 })}
@@ -1100,7 +1080,13 @@ const FormCreate = () => {
         <SubmitBar
           disabled={false}
           onSubmit={handleSaveSchema}
-          label={isEdit ? t("WBH_UPDATE_FORM_CONFIG") || "Update Configuration" : t("WBH_SAVE_FORM_CONFIG") || "Save Configuration"}
+          label={
+            !isSingleForm
+              ? `${t("WBH_SAVE_SECTION") || "Save Section"}: ${sectionLabel}`
+              : isEdit
+                ? t("WBH_UPDATE_FORM_CONFIG") || "Update Configuration"
+                : t("WBH_SAVE_FORM_CONFIG") || "Save Configuration"
+          }
         />
       </ActionBar>
 
@@ -1120,7 +1106,7 @@ const FormCreate = () => {
                       {t("WBH_FORM_PREVIEW") || "Form Live Preview"}: {formName}
                     </h2>
                     <p className="modal-subtitle-text preview-modal-subtitle">
-                      {t("WBH_ACCORDION") || "Section"}: <strong>{accordionName}</strong> | {t("WBH_MODULE") || "Module"}: <strong>{moduleName}</strong> ({fields.length} {t("WBH_FIELDS") || "fields"})
+                      {isSingleForm ? t("WBH_SINGLE_FORM_NAME") || "Single Form" : t("WBH_ACCORDION") || "Section"}: <strong>{sectionLabel}</strong> | {t("WBH_MODULE") || "Module"}: <strong>{moduleName}</strong> ({fields.length} {t("WBH_FIELDS") || "fields"})
                     </p>
                   </div>
                 </div>
@@ -1133,7 +1119,7 @@ const FormCreate = () => {
               <div className="preview-modal-body">
                 <div className="preview-card-container">
                   <h3 className="preview-section-title">
-                    {accordionName}
+                    {sectionLabel}
                   </h3>
 
                   {fields.length === 0 ? (
@@ -1143,13 +1129,26 @@ const FormCreate = () => {
                   ) : (
                     <div className="preview-fields-grid">
                       {fields.map((field, idx) => {
+                        // Uploaded items the builder does not edit: headings preview as headings, the rest as a note
+                        if (field.passthrough) {
+                          return field.type === "sectionHeader" ? (
+                            <h4 key={field.id} className="preview-field-heading" style={{ fontSize: "0.95rem", fontWeight: "600", color: "#0f172a", margin: "0 0 4px 0" }}>
+                              {field.label}
+                            </h4>
+                          ) : (
+                            <div key={field.id} className="passthrough-field-note">
+                              {field.label} ({field.type})
+                            </div>
+                          );
+                        }
+
                         const isRequired = field.required === "required";
                         const isReadOnly = !!field.isReadonly;
                         const isDisabled = !!field.isDisabled;
                         const fieldVal = previewFormData[field.id] || "";
 
                         // Check if field is dependent on another field's logic
-                        const parentField = fields.find((pf) => pf.logic?.targetFieldId === field.id);
+                        const parentField = allFields.find((pf) => pf.logic?.targetFieldId === field.id);
                         const isDependent = !!parentField;
 
                         return (
@@ -1361,12 +1360,15 @@ const FormCreate = () => {
             name: ft.name,
             code: ft.code,
           })),
-          ...fields
-            .filter((f) => f.id !== activeLogicField.id)
-            .map((f) => ({
-              name: f.label || f.fieldKey || f.id,
-              code: f.id,
-            })),
+          // Existing editable fields of every section (fields in other sections are prefixed with their section)
+          ...sections.flatMap((section) =>
+            (sectionFields[section.key] || [])
+              .filter((f) => !f.passthrough && f.id !== activeLogicField.id)
+              .map((f) => ({
+                name: section.key === activeSectionKey ? f.label || f.fieldKey || f.id : `${section.labelDefault} › ${f.label || f.fieldKey || f.id}`,
+                code: f.id,
+              }))
+          ),
         ];
 
         return (
@@ -1556,7 +1558,7 @@ const FormCreate = () => {
                         const baseLabel = `New ${fieldTypeObj?.name || "Field"}`;
                         let fieldLabel = baseLabel;
                         let counter = 1;
-                        while (fields.some((f) => (f.label || "").trim().toLowerCase() === fieldLabel.trim().toLowerCase())) {
+                        while (allFields.some((f) => (f.label || "").trim().toLowerCase() === fieldLabel.trim().toLowerCase())) {
                           fieldLabel = `${baseLabel} ${counter}`;
                           counter++;
                         }
@@ -1565,6 +1567,7 @@ const FormCreate = () => {
                           id: `field_${Date.now()}`,
                           label: fieldLabel,
                           fieldKey: generateLocalizationKey(moduleName, fieldLabel),
+                          name: toFieldName(fieldLabel),
                           type: selectedTargetId,
                           required: "required",
                           isReadonly: false,
@@ -1579,9 +1582,9 @@ const FormCreate = () => {
                           patternErrorMessage: "",
                           options: isOptionsField
                             ? [
-                                { code: "OPTION_1", name: "Option 1" },
-                                { code: "OPTION_2", name: "Option 2" },
-                              ]
+                              { code: "OPTION_1", name: "Option 1" },
+                              { code: "OPTION_2", name: "Option 2" },
+                            ]
                             : undefined,
                           mdmsModuleName: isDropdown ? moduleName : undefined,
                           mdmsMasterName: isDropdown ? "" : undefined,

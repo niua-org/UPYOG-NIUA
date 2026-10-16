@@ -5,6 +5,8 @@ import {
   SubmitBar,
   PopUp,
   Dropdown,
+  MultiSelectDropdown,
+  TextInput,
   CardLabel,
   CardLabelError,
   Button,
@@ -17,119 +19,138 @@ import { useTranslation } from "react-i18next";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { Config } from "../../configs/FormBuilderConfig";
 import { FORM_BUILDER_DATA } from "../../hooks/useFormBuilderSearch";
-import { useModalState, getModuleListFromMDMS, getAccordionsForModule, getFormsForModule } from "../../utils/workbenchUtils";
+import {
+  useModalState,
+  getModuleListFromMDMS,
+  getAccordionsForModule,
+  getSingleFormsForModule,
+  getFormTypesForModule,
+  FORM_TYPES,
+} from "../../utils/workbenchUtils";
+import { buildFormSchemaSkeleton, parseFormSchema, toFormNameKey, sectionFromLabel } from "../../utils/formSchemaUtils";
+
+const EMPTY_CREATE_FORM = { moduleName: "", formType: "", sections: [], formName: "" };
+
+// Builds the form-create route + navigation state. The full form schema travels in state;
+// the query keeps enough to rebuild an empty schema on page refresh.
+const buildFormCreateNavigation = ({ moduleName, formType, formName, schema }, extraQuery = "", extraState = {}) => {
+  const sectionKeys = (schema?.[formName]?.[0]?.body || []).filter((s) => s?.type !== "review").map((s) => s.key);
+  return [
+    `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(moduleName || "")}&formType=${encodeURIComponent(
+      formType || ""
+    )}&formName=${encodeURIComponent(formName || "")}&sections=${encodeURIComponent(sectionKeys.join(","))}${extraQuery}`,
+    {
+      state: { ...extraState, moduleName, formType, formName, schema },
+    },
+  ];
+};
 
 const SAMPLE_UPYOG_JSON = {
   tenantId: "pg",
   moduleName: "TRADE_LICENSE",
   NEW_REGISTRATION: [
     {
-      head: "TRADE_DETAILS",
+      head: "TRADE_LICENSE_NEW_REGISTRATION",
+      headDefault: "New Registration",
+      navigation: {
+        pattern: "accordion",
+        formRoute: "apply",
+        confirmRoute: "check",
+        ackRoute: "acknowledgement",
+        accordion: {
+          defaultOpenStep: "tradeDetails",
+          showFilledHint: true,
+          submitLabel: "COMMON_SUBMIT_APPLICATION",
+          submitLabelDefault: "Submit Application",
+        },
+        timeline: {
+          citizenOnly: true,
+          hideOnRoutes: ["acknowledgement"],
+          steps: [
+            { step: 1, label: "WBH_ACCORDION_TRADE_DETAILS", labelDefault: "Trade Details", sections: ["tradeDetails"], routes: ["apply"] },
+            { step: 2, label: "WBH_ACCORDION_DOCUMENT_DETAILS", labelDefault: "Document Details", sections: ["documentDetails"] },
+            { step: 3, label: "TRADE_LICENSE_STEP_CONFIRM", labelDefault: "Summary", routes: ["check"] },
+          ],
+        },
+      },
       body: [
         {
-          key: "nEW_REGISTRATION",
-          route: "nEW_REGISTRATION",
+          key: "tradeDetails",
+          route: "trade-details",
+          order: 1,
+          i18nKey: "WBH_ACCORDION_TRADE_DETAILS",
+          labelDefault: "Trade Details",
           component: "NEW_REGISTRATION",
-          nextStep: null,
-          isPreview: false,
-          withoutLabel: true,
-          type: "component",
-          hideInEmployee: false,
-          isMandatory: true,
-          sectionHeading: null,
           payloadKey: "TRADE_LICENSE",
           apiId: "Rainmaker",
           form: [
             {
               order: 1,
-              key: "WBH_TRADE_LICENSE_NAME",
-              field: {
-                code: "WBH_TRADE_LICENSE_NAME",
-                name: "WBH_TRADE_LICENSE_NAME",
-                placeholder: "Enter applicant name",
-                type: "text",
-              },
-              validation: {
-                required: true,
-                disabled: false,
-                readOnly: false,
-                minLength: 3,
-                maxLength: 50,
-                pattern: "^[a-zA-Z0-9 ]+$",
-              },
-              messages: {
-                error: "Only letters and numbers are allowed",
-              },
+              key: "TRADE_LICENSE_TRADE_NAME",
+              field: { code: "TRADE_LICENSE_TRADE_NAME", name: "tradeName", placeholder: "Enter trade name", type: "text" },
+              validation: { required: true, minLength: 3, maxLength: 100, pattern: "^[a-zA-Z0-9 ]+$" },
+              messages: { error: "Only letters and numbers are allowed", labelDefault: "Trade Name" },
             },
             {
               order: 2,
-              key: "WBH_TRADE_LICENSE_SELECT",
-              field: {
-                code: "WBH_TRADE_LICENSE_SELECT",
-                name: "WBH_TRADE_LICENSE_SELECT",
-                placeholder: "Select category",
-                type: "dropdown",
-                dataSource: {
-                  type: "MDMS",
-                  moduleName: "TradeLicense",
-                  masterName: "AccessoriesCategory",
-                  customiztionRequired: true,
-                },
-              },
-              validation: {
-                required: true,
-                disabled: false,
-                readOnly: false,
-              },
-              messages: {
-                error: "Invalid field value",
-              },
+              key: "TRADE_LICENSE_STRUCTURE_TYPE",
+              field: { code: "TRADE_LICENSE_STRUCTURE_TYPE", name: "structureType", type: "radio" },
+              options: [
+                { code: "IMMOVABLE", name: "Immovable" },
+                { code: "MOVABLE", name: "Movable" },
+              ],
+              validation: { required: true },
+              messages: { labelDefault: "Structure Type" },
             },
             {
               order: 3,
-              key: "WBH_TRADE_LICENSE_GENDER",
+              key: "TRADE_LICENSE_BUILDING_TYPE",
               field: {
-                code: "WBH_TRADE_LICENSE_GENDER",
-                name: "WBH_TRADE_LICENSE_GENDER",
-                placeholder: "Select option",
-                type: "radio",
-                options: [
-                  { code: "MALE", name: "Male" },
-                  { code: "FEMALE", name: "Female" },
-                ],
+                code: "TRADE_LICENSE_BUILDING_TYPE",
+                name: "buildingType",
+                placeholder: "Select building type",
+                type: "dropdown",
+                dataSource: { type: "MDMS", moduleName: "common-masters", masterName: "StructureType", customiztionRequired: true },
               },
-              validation: {
-                required: true,
-                disabled: false,
-                readOnly: false,
-              },
-              messages: {
-                error: "Invalid field value",
-              },
-            },
-            {
-              order: 4,
-              key: "WBH_TRADE_LICENSE_CHECKBOX",
-              field: {
-                code: "WBH_TRADE_LICENSE_CHECKBOX",
-                name: "WBH_TRADE_LICENSE_CHECKBOX",
-                placeholder: "Select options",
-                type: "checkbox",
-                options: [
-                  { code: "OPT_1", name: "Option 1" },
-                  { code: "OPT_2", name: "Option 2" },
-                ],
-              },
-              validation: {
-                required: true,
-                disabled: false,
-                readOnly: false,
-              },
-              messages: {
-                error: "Invalid field value",
-              },
+              visibleWhen: { field: "structureType", equals: "IMMOVABLE" },
+              validation: { required: true },
+              messages: { labelDefault: "Building Type" },
             },
           ],
+        },
+        {
+          key: "documentDetails",
+          route: "document-details",
+          order: 2,
+          i18nKey: "WBH_ACCORDION_DOCUMENT_DETAILS",
+          labelDefault: "Document Details",
+          form: [
+            {
+              order: 1,
+              key: "TRADE_LICENSE_ID_PROOF",
+              field: { code: "TRADE_LICENSE_ID_PROOF", name: "proofOfIdentity", type: "file", accept: ".jpg,.jpeg,.png,.pdf" },
+              validation: { required: true, maxSizeMB: 2 },
+              messages: { error: "Allowed formats: PDF, JPG, PNG up to 2MB", labelDefault: "Proof of Identity" },
+            },
+          ],
+        },
+        {
+          key: "confirm",
+          route: "check",
+          order: 3,
+          i18nKey: "TRADE_LICENSE_STEP_CONFIRM",
+          labelDefault: "Confirm",
+          isPreview: true,
+          type: "review",
+          reviewSectionsFromSteps: ["tradeDetails", "documentDetails"],
+          declaration: {
+            required: true,
+            i18nKey: "TRADE_LICENSE_DECLARATION_CONFIRM",
+            labelDefault: "I confirm that the information provided above is true and correct to the best of my knowledge.",
+          },
+          submitLabel: "COMMON_SUBMIT_APPLICATION",
+          submitLabelDefault: "Submit Application",
+          form: [],
         },
       ],
     },
@@ -188,15 +209,12 @@ const FormBuilder = () => {
     reset,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      moduleName: "",
-      accordionName: "",
-      formName: "",
-    },
+    defaultValues: EMPTY_CREATE_FORM,
   });
 
-  // Watch selected moduleName
+  // Watch selected moduleName & formType
   const selectedModuleName = useWatch({ control, name: "moduleName" });
+  const selectedFormType = useWatch({ control, name: "formType" });
 
   // Selected module object matching selected module code
   const selectedModuleObj = useMemo(() => {
@@ -204,55 +222,93 @@ const FormBuilder = () => {
     return modulesList.find((m) => m?.code === selectedModuleName || m?.name === selectedModuleName);
   }, [modulesList, selectedModuleName]);
 
-  // 2. Dependent Accordion dropdown options based on selected module
+  // 2. Dependent Form Type (Accordion / Single) dropdown options based on selected module
+  const formTypeOptions = useMemo(() => {
+    return getFormTypesForModule(selectedModuleObj);
+  }, [selectedModuleObj]);
+
+  // 3a. Dependent Accordion section options based on selected module (Summary is auto-generated, so excluded)
   const accordionOptions = useMemo(() => {
-    return getAccordionsForModule(selectedModuleObj, []);
+    return getAccordionsForModule(selectedModuleObj, []).filter((option) => option.type !== "review");
   }, [selectedModuleObj]);
 
-  // 3. Dependent Form dropdown options based on selected module
-  const formOptions = useMemo(() => {
-    return getFormsForModule(selectedModuleObj, []);
+  // 3b. Dependent Single Form dropdown options based on selected module
+  const singleFormOptions = useMemo(() => {
+    return getSingleFormsForModule(selectedModuleObj, []);
   }, [selectedModuleObj]);
 
-  // Reset dependent Accordion & Form fields whenever selected module changes
+  // Section options for the selected form type
+  const sectionOptions = selectedFormType === FORM_TYPES.SINGLE ? singleFormOptions : accordionOptions;
+
+  // Reset dependent Form Type, Sections & Form Name whenever selected module changes
   useEffect(() => {
     if (selectedModuleName) {
-      setValue("accordionName", "");
+      setValue("formType", "");
+      setValue("sections", []);
       setValue("formName", "");
     }
   }, [selectedModuleName, setValue]);
 
+  // Reset Section selection whenever selected form type changes
+  useEffect(() => {
+    setValue("sections", []);
+  }, [selectedFormType, setValue]);
+
   const handleCreateFormSubmit = (data) => {
+    // Selected sections in MDMS order, not in the order they were ticked
+    const selectedSections = sectionOptions
+      .filter((option) => data.sections.includes(option.code))
+      .map((option) => ({ key: option.key, i18nKey: option.name, labelDefault: option.labelDefault }));
+
+    const schema = buildFormSchemaSkeleton({
+      tenantId: stateCode,
+      moduleName: data.moduleName,
+      formType: data.formType,
+      formName: data.formName,
+      sections: selectedSections,
+    });
+
     const newItem = {
       id: `${Date.now()}`,
       moduleName: data.moduleName,
-      accordionName: data.accordionName,
+      formType: data.formType,
+      accordionName: selectedSections.map((section) => section.labelDefault).join(", "),
       formName: data.formName,
     };
 
     setTableData((prev) => [newItem, ...prev]);
     handleModalCloseRaw();
-    reset({ moduleName: "", accordionName: "", formName: "" });
+    reset(EMPTY_CREATE_FORM);
     setCallRefetch((prev) => !prev);
 
-    // Navigate to the new Form Field Builder page with all 3 popup field values
-    navigate(
-      `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(data.moduleName)}&accordionName=${encodeURIComponent(
-        data.accordionName
-      )}&formName=${encodeURIComponent(data.formName)}`,
-      {
-        state: {
-          moduleName: data.moduleName,
-          accordionName: data.accordionName,
-          formName: data.formName,
-        },
-      }
-    );
+    // Navigate to the Form Field Builder page with the new (all sections pending) form schema
+    navigate(...buildFormCreateNavigation({ moduleName: data.moduleName, formType: data.formType, formName: data.formName, schema }));
+  };
+
+  // Builder navigation data for an existing list row
+  const getRowNavigationData = (rowData, formName) => {
+    const formType = rowData.formType || FORM_TYPES.ACCORDION;
+    // A copied row keeps its saved schema under the new form name
+    const { [rowData.formName]: savedForm, ...schemaMeta } = rowData.schema || {};
+    return {
+      moduleName: rowData.moduleName,
+      formType,
+      formName,
+      schema: savedForm
+        ? { ...schemaMeta, [formName]: savedForm }
+        : buildFormSchemaSkeleton({
+          tenantId: stateCode,
+          moduleName: rowData.moduleName,
+          formType,
+          formName,
+          sections: [sectionFromLabel(rowData.accordionName || formName)],
+        }),
+    };
   };
 
   const handleModalClose = () => {
     handleModalCloseRaw();
-    reset({ moduleName: "", accordionName: "", formName: "" });
+    reset(EMPTY_CREATE_FORM);
   };
 
   const [deleteModalRow, setDeleteModalRow] = useState(null);
@@ -268,40 +324,14 @@ const FormBuilder = () => {
   const handleEditForm = (row) => {
     const rowData = row?.original || row || {};
     console.log("Editing Form Configuration: ", rowData);
-    navigate(
-      `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
-        rowData.moduleName || ""
-      )}&accordionName=${encodeURIComponent(rowData.accordionName || "")}&formName=${encodeURIComponent(rowData.formName || "")}&isEdit=true`,
-      {
-        state: {
-          isEdit: true,
-          moduleName: rowData.moduleName,
-          accordionName: rowData.accordionName,
-          formName: rowData.formName,
-          existingFields: rowData.fields || rowData.schemaData || null,
-        },
-      }
-    );
+    navigate(...buildFormCreateNavigation(getRowNavigationData(rowData, rowData.formName), "&isEdit=true", { isEdit: true }));
   };
 
   const handleCopyForm = (row) => {
     const rowData = row?.original || row || {};
     console.log("Copying Form Configuration to New: ", rowData);
     const newFormName = `${rowData.formName || "FORM"}_COPY`;
-    navigate(
-      `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
-        rowData.moduleName || ""
-      )}&accordionName=${encodeURIComponent(rowData.accordionName || "")}&formName=${encodeURIComponent(newFormName)}&isCopy=true`,
-      {
-        state: {
-          isCopy: true,
-          moduleName: rowData.moduleName,
-          accordionName: rowData.accordionName,
-          formName: newFormName,
-          existingFields: rowData.fields || rowData.schemaData || null,
-        },
-      }
-    );
+    navigate(...buildFormCreateNavigation(getRowNavigationData(rowData, newFormName), "&isCopy=true", { isCopy: true }));
   };
 
   const confirmDeleteForm = () => {
@@ -350,61 +380,20 @@ const FormBuilder = () => {
     reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target.result);
-        if (!parsed || typeof parsed !== "object") {
-          throw new Error("Invalid JSON structure");
+        const { error, formName, formType, moduleName } = parseFormSchema(parsed);
+        if (error) {
+          showToast(
+            t("WBH_INVALID_FORM_SCHEMA_ERROR") || "JSON does not match the form schema template. Download the sample JSON to see the expected format.",
+            true
+          );
+          return;
         }
 
-        let uploadedModuleName = parsed?.moduleName || parsed?.module || "COMMON";
-        let uploadedAccordionName = parsed?.accordionName || parsed?.accordion || "COMMON_DETAILS";
-        let uploadedFormName = parsed?.formName || parsed?.form || null;
-        let uploadedFields = [];
-
-        // Check for full UPYOG MDMS Form Config structure (e.g. { tenantId, moduleName, NEW_REGISTRATION: [ { head, body: [ { form: [...] } ] } ] })
-        const possibleFormKeys = Object.keys(parsed).filter(
-          (k) =>
-            !["tenantId", "moduleName", "_readme", "_comment"].includes(k) && Array.isArray(parsed[k]) && parsed[k].length > 0 && parsed[k][0]?.body
-        );
-
-        if (possibleFormKeys.length > 0) {
-          const formKey = possibleFormKeys[0];
-          uploadedFormName = uploadedFormName || formKey;
-          const accordionObj = parsed[formKey][0];
-          uploadedAccordionName = accordionObj?.head || uploadedAccordionName;
-
-          if (accordionObj?.body && Array.isArray(accordionObj.body) && accordionObj.body.length > 0) {
-            const bodyObj = accordionObj.body[0];
-            if (bodyObj?.form && Array.isArray(bodyObj.form)) {
-              uploadedFields = bodyObj.form;
-            }
-          }
-        }
-
-        if (!uploadedFields || uploadedFields.length === 0) {
-          if (Array.isArray(parsed?.fields)) uploadedFields = parsed.fields;
-          else if (Array.isArray(parsed?.existingFields)) uploadedFields = parsed.existingFields;
-          else if (Array.isArray(parsed?.schemaData)) uploadedFields = parsed.schemaData;
-          else if (Array.isArray(parsed)) uploadedFields = parsed;
-        }
-
-        uploadedFormName = uploadedFormName || `FORM_${Date.now()}`;
-
-        showToast(t("WBH_JSON_UPLOAD_SUCCESS") || `JSON configuration uploaded! Generated ${uploadedFields.length} field(s).`, false);
+        const sectionCount = parsed[formName][0].body.filter((section) => section?.type !== "review").length;
+        showToast(t("WBH_JSON_UPLOAD_SUCCESS") || `JSON configuration uploaded! Loaded ${sectionCount} section(s).`, false);
 
         setTimeout(() => {
-          navigate(
-            `/${window?.contextPath}/employee/workbench/form-create?moduleName=${encodeURIComponent(
-              uploadedModuleName
-            )}&accordionName=${encodeURIComponent(uploadedAccordionName)}&formName=${encodeURIComponent(uploadedFormName)}&isUpload=true`,
-            {
-              state: {
-                isUpload: true,
-                moduleName: uploadedModuleName,
-                accordionName: uploadedAccordionName,
-                formName: uploadedFormName,
-                existingFields: uploadedFields,
-              },
-            }
-          );
+          navigate(...buildFormCreateNavigation({ moduleName, formType, formName, schema: parsed }, "&isUpload=true", { isUpload: true }));
         }, 600);
       } catch (err) {
         console.error("Failed to parse JSON file:", err);
@@ -514,35 +503,78 @@ const FormBuilder = () => {
                       )}
                     </div>
 
-                    {/* 2. Dependent Accordion Name Dropdown */}
+                    {/* 2. Dependent Form Type (Accordion / Single) Dropdown */}
                     <div className="form-group-item">
                       <CardLabel className="form-field-label">
-                        {t("WBH_ACCORDION_NAME")} <span className="mandatory-asterisk">*</span>
+                        {t("WBH_FORM_TYPE")} <span className="mandatory-asterisk">*</span>
                       </CardLabel>
                       <Controller
-                        name="accordionName"
+                        name="formType"
                         control={control}
                         rules={{ required: true }}
                         render={({ field: { onChange, value } }) => (
                           <Dropdown
-                            option={accordionOptions}
+                            option={formTypeOptions}
                             optionKey="name"
-                            selected={accordionOptions.find((a) => a.code === value)}
+                            selected={formTypeOptions.find((ft) => ft.code === value)}
                             select={(val) => onChange(val?.code)}
                             t={t}
-                            placeholder={t("WBH_SELECT_INITIAL_ACCORDION")}
+                            placeholder={t("WBH_SELECT_FORM_TYPE")}
                             disable={!selectedModuleName}
                           />
                         )}
                       />
-                      {errors?.accordionName && (
-                        <CardLabelError className="form-field-error">
-                          {t("WBH_ACCORDION_NAME_REQUIRED") || "Accordion Name is required"}
-                        </CardLabelError>
+                      {errors?.formType && (
+                        <CardLabelError className="form-field-error">{t("WBH_FORM_TYPE_REQUIRED") || "Form Type is required"}</CardLabelError>
                       )}
                     </div>
 
-                    {/* 3. Dependent Form Name Dropdown */}
+                    {/* 3. Dependent Sections: multi-select for Accordion, single select for Single form */}
+                    {selectedFormType && (
+                      <div className="form-group-item">
+                        <CardLabel className="form-field-label">
+                          {selectedFormType === FORM_TYPES.SINGLE ? t("WBH_SINGLE_FORM_NAME") : t("WBH_ACCORDION_NAME")}{" "}
+                          <span className="mandatory-asterisk">*</span>
+                        </CardLabel>
+                        <Controller
+                          key={selectedFormType}
+                          name="sections"
+                          control={control}
+                          rules={{ validate: (value) => Array.isArray(value) && value.length > 0 }}
+                          render={({ field: { onChange, value } }) =>
+                            selectedFormType === FORM_TYPES.SINGLE ? (
+                              <Dropdown
+                                option={sectionOptions}
+                                optionKey="name"
+                                selected={sectionOptions.find((s) => (value || []).includes(s.code))}
+                                select={(val) => onChange(val?.code ? [val.code] : [])}
+                                t={t}
+                                placeholder={t("WBH_SELECT_SINGLE_FORM")}
+                              />
+                            ) : (
+                              <MultiSelectDropdown
+                                options={sectionOptions}
+                                optionsKey="name"
+                                selected={sectionOptions.filter((s) => (value || []).includes(s.code))}
+                                onSelect={(list) => onChange((list || []).map((item) => item?.[1]?.code).filter(Boolean))}
+                                defaultLabel={t("WBH_SELECT_SECTIONS")}
+                                defaultUnit={t("WBH_SECTIONS_SELECTED")}
+                                config={{ isDropdownWithChip: true }}
+                              />
+                            )
+                          }
+                        />
+                        {errors?.sections && (
+                          <CardLabelError className="form-field-error">
+                            {selectedFormType === FORM_TYPES.SINGLE
+                              ? t("WBH_SINGLE_FORM_NAME_REQUIRED") || "Single Form Name is required"
+                              : t("WBH_SECTIONS_REQUIRED") || "Select at least one section"}
+                          </CardLabelError>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 4. Form Name (typed; becomes the form's JSON key, e.g. NEW_REGISTRATION) */}
                     <div className="form-group-item">
                       <CardLabel className="form-field-label">
                         {t("WBH_FORM_NAME")} <span className="mandatory-asterisk">*</span>
@@ -550,21 +582,26 @@ const FormBuilder = () => {
                       <Controller
                         name="formName"
                         control={control}
-                        rules={{ required: true }}
+                        rules={{
+                          required: true,
+                          validate: (value) =>
+                            !tableData.some((row) => row.moduleName === selectedModuleName && row.formName === value) || "DUPLICATE",
+                        }}
                         render={({ field: { onChange, value } }) => (
-                          <Dropdown
-                            option={formOptions}
-                            optionKey="name"
-                            selected={formOptions.find((f) => f.code === value)}
-                            select={(val) => onChange(val?.code)}
-                            t={t}
-                            placeholder={t("WBH_SELECT_TARGET_FORM")}
-                            disable={!selectedModuleName}
+                          <TextInput
+                            value={value}
+                            onChange={(e) => onChange(toFormNameKey(e.target.value))}
+                            placeholder={t("WBH_ENTER_FORM_NAME")}
+                            disabled={!selectedModuleName}
                           />
                         )}
                       />
                       {errors?.formName && (
-                        <CardLabelError className="form-field-error">{t("WBH_FORM_NAME_REQUIRED") || "Form Name is required"}</CardLabelError>
+                        <CardLabelError className="form-field-error">
+                          {errors.formName.message === "DUPLICATE"
+                            ? t("WBH_FORM_NAME_DUPLICATE") || "A form with this name already exists for the selected module"
+                            : t("WBH_FORM_NAME_REQUIRED") || "Form Name is required"}
+                        </CardLabelError>
                       )}
                     </div>
                   </div>

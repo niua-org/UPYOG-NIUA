@@ -159,52 +159,98 @@ export const getModuleListFromMDMS = (moduleAccordionsData) => {
   return [];
 };
 
+// Form layout types supported by a module in MDMS ModuleAccordions
+export const FORM_TYPES = {
+  ACCORDION: "ACCORDION",
+  SINGLE: "SINGLE",
+};
+
+/**
+ * Map a raw MDMS option list into enabled dropdown options.
+ *
+ * @param {Array} rawList - MDMS option list
+ * @param {string} keyPrefix - Localization prefix used when the item has no i18nKey
+ * @param {Array} fallback - Fallback options array if rawList is empty
+ * @returns {Array<{ name: string, code: string }>}
+ */
+const mapMdmsDropdownOptions = (rawList, keyPrefix, fallback = []) => {
+  if (!Array.isArray(rawList) || rawList.length === 0) return fallback;
+
+  return rawList
+    .filter((item) => item?.enabled !== false)
+    .map((item) => {
+      const code = item?.code || item?.value || item?.name;
+      return {
+        name: item?.i18nKey || (code ? `${keyPrefix}${String(code).toUpperCase()}` : code),
+        code: code,
+        i18nKey: item?.i18nKey || code,
+        // Form schema section key (e.g. "structure"); falls back to the MDMS code
+        key: item?.key || code,
+        labelDefault:
+          item?.labelDefault ||
+          String(code || "")
+            .toLowerCase()
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" "),
+        // "review" marks a review-only section (Summary) that is generated automatically
+        type: item?.type,
+      };
+    });
+};
+
 /**
  * Extract Accordion dropdown options for a specific selected module object.
- * 
+ *
  * @param {object} moduleObj - Selected module object from MDMS ModuleAccordions
  * @param {Array} fallback - Fallback options array if moduleObj has no accordions
  * @returns {Array<{ name: string, code: string }>}
  */
 export const getAccordionsForModule = (moduleObj, fallback = []) => {
   if (!moduleObj) return fallback;
-  const rawList = moduleObj.dropdownOptionsForAccortion || moduleObj.dropdownOptionsForAccordion || [];
-  if (!Array.isArray(rawList) || rawList.length === 0) return fallback;
+  return mapMdmsDropdownOptions(moduleObj.dropdownOptionsForAccortion || moduleObj.dropdownOptionsForAccordion, "WBH_ACCORDION_", fallback);
+};
 
-  return rawList
-    .filter((item) => item?.enabled !== false)
-    .map((item) => {
-      const code = item?.code || item?.value || item?.name;
-      return {
-        name: item?.i18nKey || (code ? `WBH_ACCORDION_${String(code).toUpperCase()}` : code),
-        code: code,
-        i18nKey: item?.i18nKey || code,
-      };
-    });
+/**
+ * Extract Single Form dropdown options for a specific selected module object.
+ *
+ * @param {object} moduleObj - Selected module object from MDMS ModuleAccordions
+ * @param {Array} fallback - Fallback options array if moduleObj has no single forms
+ * @returns {Array<{ name: string, code: string }>}
+ */
+export const getSingleFormsForModule = (moduleObj, fallback = []) => {
+  if (!moduleObj) return fallback;
+  return mapMdmsDropdownOptions(moduleObj.dropdownOptionsForSingleForm, "WBH_SINGLE_FORM_", fallback);
+};
+
+/**
+ * Extract Form Type (Accordion / Single) dropdown options for a specific selected module object.
+ * Uses the module's `formTypes` list; when absent, derives it from which option lists are configured.
+ *
+ * @param {object} moduleObj - Selected module object from MDMS ModuleAccordions
+ * @returns {Array<{ name: string, code: string }>}
+ */
+export const getFormTypesForModule = (moduleObj) => {
+  if (!moduleObj) return [];
+  let types = Array.isArray(moduleObj.formTypes) ? moduleObj.formTypes : null;
+  if (!types) {
+    types = [];
+    if (getAccordionsForModule(moduleObj).length > 0) types.push(FORM_TYPES.ACCORDION);
+    if (getSingleFormsForModule(moduleObj).length > 0) types.push(FORM_TYPES.SINGLE);
+  }
+  return types.map((type) => ({ name: `WBH_FORM_TYPE_${String(type).toUpperCase()}`, code: type }));
 };
 
 /**
  * Extract Form dropdown options for a specific selected module object.
- * 
+ *
  * @param {object} moduleObj - Selected module object from MDMS ModuleAccordions
  * @param {Array} fallback - Fallback options array if moduleObj has no forms
  * @returns {Array<{ name: string, code: string }>}
  */
 export const getFormsForModule = (moduleObj, fallback = []) => {
   if (!moduleObj) return fallback;
-  const rawList = moduleObj.dropdownOptionsForForm || [];
-  if (!Array.isArray(rawList) || rawList.length === 0) return fallback;
-
-  return rawList
-    .filter((item) => item?.enabled !== false)
-    .map((item) => {
-      const code = item?.code || item?.value || item?.name;
-      return {
-        name: item?.i18nKey || (code ? `WBH_FORM_${String(code).toUpperCase()}` : code),
-        code: code,
-        i18nKey: item?.i18nKey || code,
-      };
-    });
+  return mapMdmsDropdownOptions(moduleObj.dropdownOptionsForForm, "WBH_FORM_", fallback);
 };
 
 export default {
@@ -216,6 +262,8 @@ export default {
   extractAccordionOptions,
   getModuleListFromMDMS,
   getAccordionsForModule,
+  getSingleFormsForModule,
+  getFormTypesForModule,
   getFormsForModule,
   handleDynamicInputChange,
   getLocaleText,
