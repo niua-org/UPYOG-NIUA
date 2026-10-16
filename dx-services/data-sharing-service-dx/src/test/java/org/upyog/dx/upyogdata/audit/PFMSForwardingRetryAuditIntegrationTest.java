@@ -9,7 +9,8 @@ import org.upyog.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.upyog.dx.upyogdata.pfms.client.PFMSAuthFeignClient;
 import org.upyog.dx.upyogdata.pfms.client.PFMSDataFeignClient;
 import org.upyog.dx.upyogdata.pfms.models.PFMSAuthResponse;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionAdditionalDetails;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
 import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.upyog.dx.upyogdata.pfms.service.PFMSForwardingServiceImpl;
 import org.upyog.externalaudit.constants.ExternalApiAuditConstants;
@@ -65,7 +66,7 @@ class PFMSForwardingRetryAuditIntegrationTest {
 
     @Test
     void unauthorizedPushRetry_updatesSameDataPushRow() {
-        PFMSTransaction transaction = sampleTransaction("txn-1", "VCH-1");
+        PfmsTransactionEntity transaction = sampleTransaction("txn-1", "VCH-1");
         when(pfmsRepository.fetchInitiatedTransactionIds(50)).thenReturn(List.of("txn-1"));
         when(pfmsRepository.fetchTransactionById("txn-1")).thenReturn(transaction);
         when(authFeignClient.authenticate(any())).thenReturn(auth("token-1"), auth("token-2"));
@@ -94,7 +95,7 @@ class PFMSForwardingRetryAuditIntegrationTest {
 
     @Test
     void secondSchedulerCycle_createsANewDataPushRow() {
-        PFMSTransaction transaction = sampleTransaction("txn-2", "VCH-2");
+        PfmsTransactionEntity transaction = sampleTransaction("txn-2", "VCH-2");
         when(pfmsRepository.fetchInitiatedTransactionIds(50)).thenReturn(List.of("txn-2"));
         when(pfmsRepository.fetchTransactionById("txn-2")).thenReturn(transaction);
         when(authFeignClient.authenticate(any())).thenReturn(auth("token"));
@@ -114,7 +115,7 @@ class PFMSForwardingRetryAuditIntegrationTest {
 
     @Test
     void nonUnauthorizedPushFailure_writesFailedRowWithoutRetry() {
-        PFMSTransaction transaction = sampleTransaction("txn-3", "VCH-3");
+        PfmsTransactionEntity transaction = sampleTransaction("txn-3", "VCH-3");
         when(pfmsRepository.fetchFailedTransactionIds(50)).thenReturn(List.of("txn-3"));
         when(pfmsRepository.fetchTransactionById("txn-3")).thenReturn(transaction);
         when(authFeignClient.authenticate(any())).thenReturn(auth("token"));
@@ -136,19 +137,21 @@ class PFMSForwardingRetryAuditIntegrationTest {
         return response;
     }
 
-    private PFMSTransaction sampleTransaction(String id, String voucherNumber) {
-        PFMSTransaction transaction = new PFMSTransaction();
-        transaction.setId(id);
-        transaction.setCorrelationId("batch-" + id);
-        transaction.setUlbCodeOrPFMSAgencyCode("ULB1");
-        transaction.setVoucherNumber(voucherNumber);
-        transaction.setVoucherDate(LocalDate.of(2026, 10, 5));
-        transaction.setVoucherType("Payment Voucher");
-        transaction.setFinancialYear("2026");
-        transaction.setAccountHeadCode("AH1");
-        transaction.setFunctionCode("FN1");
-        transaction.setSchemeCode("SC1");
-        return transaction;
+    private PfmsTransactionEntity sampleTransaction(String id, String voucherNumber) {
+        return PfmsTransactionEntity.builder()
+                .id(id)
+                .correlationId("batch-" + id)
+                .ulbCodeOrPFMSAgencyCode("ULB1")
+                .voucherNumber(voucherNumber)
+                .voucherDate(LocalDate.of(2026, 10, 5))
+                .voucherType("Payment Voucher")
+                .financialYear("2026")
+                .additionalDetails(PfmsTransactionAdditionalDetails.builder()
+                        .accountHeadCode(List.of("AH1"))
+                        .functionCode(List.of("FN1"))
+                        .schemeCode(List.of("SC1"))
+                        .build())
+                .build();
     }
 
     private FeignException unauthorized() {

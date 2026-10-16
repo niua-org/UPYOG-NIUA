@@ -2,8 +2,8 @@ package org.upyog.dx.upyogdata.pfms.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +13,8 @@ import org.upyog.dx.upyogdata.pfms.enums.Status;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a PFMS transaction received from a state.
@@ -47,14 +49,14 @@ public class PFMSTransaction {
     @NotBlank
     private String financialYear;
 
-    @NotBlank
-    private String accountHeadCode;
+    @NotEmpty
+    private List<String> accountHeadCode;
 
-    @NotBlank
-    private String functionCode;
+    @NotEmpty
+    private List<String> functionCode;
 
-    @NotBlank
-    private String schemeCode;
+    @NotEmpty
+    private List<String> schemeCode;
 
     private BigDecimal debitAmount;
 

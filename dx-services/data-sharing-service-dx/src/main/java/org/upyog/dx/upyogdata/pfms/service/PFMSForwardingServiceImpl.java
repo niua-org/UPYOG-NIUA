@@ -6,7 +6,7 @@ import org.upyog.dx.upyogdata.config.PFMSProperties;
 import org.upyog.dx.upyogdata.constants.Constants;
 import org.upyog.dx.upyogdata.pfms.client.PFMSApiClient;
 import org.upyog.dx.upyogdata.pfms.enums.SchedulerType;
-import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
 import org.upyog.dx.upyogdata.pfms.models.SchedulerLog;
 import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.springframework.stereotype.Service;
@@ -69,7 +69,7 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
         int success = 0, failed = 0;
         for (String id : ids) {
             try {
-                PFMSTransaction transaction = pfmsRepository.fetchTransactionById(id);
+                PfmsTransactionEntity transaction = pfmsRepository.fetchTransactionById(id);
                 pfmsRepository.updateTransactionStatus(id, Constants.PROCESSING, null);
                 log.info("Pfms [{}] Processing | id={} voucherNumber={}", type, id, transaction.getVoucherNumber());
 
@@ -109,7 +109,7 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
      * First push uses retryCount 0. On 401 the same {@code auditCorrelationId} is reused with retryCount 1
      * so persister updates one {@code pfms-data-push} row instead of inserting a second.
      */
-    private String pushWithTokenRefreshOnExpiry(PFMSTransaction transaction) {
+    private String pushWithTokenRefreshOnExpiry(PfmsTransactionEntity transaction) {
         String auditCorrelationId = UUID.randomUUID().toString();
         try {
             return pfmsApiClient.pushTransaction(transaction, currentToken, auditCorrelationId, 0);

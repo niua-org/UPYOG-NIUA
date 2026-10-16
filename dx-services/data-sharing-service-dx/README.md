@@ -26,14 +26,15 @@ This service was built to:
 ```
 State System
     │
-    │  POST /upyog-data-dx/v1/transactions/_create
+    │  POST /data-sharing-service-dx/v1/transactions/_create
     ▼
 PFMSController
     │
     ▼
 PFMSServiceImpl
     ├── validateDuplicates()  ──► PostgreSQL (duplicate check)
-    ├── assign UUIDs, set status = INITIATED
+    ├── PFMSDataEnricher / PFMSTransactionTransformer
+    │       (API contract → PfmsTransactionEntity + additionalDetails JSONB)
     └── PFMSProducer.push()  ──► Kafka Topic: state-to-upyog-data-exchange
                                         │
                                         ▼
@@ -45,7 +46,7 @@ PFMSServiceImpl
 
                                         │
                           ┌─────────────┴──────────────┐
-                          │  Cron: 2:00 AM daily        │  Cron: 5:00 AM daily
+                          │  Cron: 4:00 PM daily        │  Cron: 6:00 PM daily
                           ▼                             ▼
               PFMSForwardingScheduler        PFMSRetryScheduler
                           │                             │
@@ -68,19 +69,30 @@ PFMSServiceImpl
 
 ---
 
+## Data models (API vs persistence)
+
+| Layer | Type | Purpose |
+|---|---|---|
+| Inbound API | `PFMSTransaction`, `PFMSData`, `PFMSCreateTransactionRequest` | Public contract for state systems. No `additionalDetails` field. |
+| Kafka / DB | `PfmsTransactionEntity`, `PfmsTransactionAdditionalDetails`, `PFMSCreateTransactionKafkaMessage` | Internal model: flat columns + JSONB for extensible attributes. |
+
+Optional and variable voucher fields from the API are copied into `additionalDetails` during enrichment before Kafka publish. egov-persister writes them to `ug_pfms_transactions.additionaldetails`.
+
+---
+
 ## Phase 1 — State Pushes Data (Ingestion)
 
 ### API
 
 ```
-POST http://localhost:8281/upyog-data-dx/v1/transactions/_create
+POST http://localhost:8281/data-sharing-service-dx/v1/transactions/_create
 Content-Type: application/json
 ```
 
 ### Sample cURL
 
 ```bash
-curl --location 'http://localhost:8281/upyog-data-dx/v1/transactions/_create' \
+curl --location 'http://localhost:8281/data-sharing-service-dx/v1/transactions/_create' \
 --header 'Content-Type: application/json' \
 --data '{
     "RequestInfo": {
@@ -117,9 +129,9 @@ curl --location 'http://localhost:8281/upyog-data-dx/v1/transactions/_create' \
                     "voucherDate": "21/08/2026",
                     "voucherType": "Journal Voucher",
                     "financialYear": "2026",
-                    "accountHeadCode": "2305202",
-                    "functionCode": "202404",
-                    "schemeCode": "20",
+                    "accountHeadCode": ["2305202"],
+                    "functionCode": ["202404"],
+                    "schemeCode": ["20"],
                     "debitAmount": 10000,
                     "creditAmount": 10000,
                     "narrationOrDescription": "Payment",
@@ -152,16 +164,31 @@ curl --location 'http://localhost:8281/upyog-data-dx/v1/transactions/_create' \
 
 ### What Happens Internally
 
-1. **Duplicate validation** — checks for duplicate `voucherNumber + voucherDate` combinations:
-   - Within the incoming request itself (intra-request check using a `HashSet`)
-   - Against already-persisted records in `ug_pfms_transactions` (DB query)
-   - Throws `IllegalArgumentException` if any duplicate is found
-2. **UUID assignment** — each `PFMSData` gets a `correlationId`; each `PFMSTransaction` gets its own `id` linked to that `correlationId`
-3. **Status set** — `status = INITIATED`, `ingestionDate = null`
-4. **Kafka publish** — full request pushed to topic `state-to-upyog-data-exchange`
-5. **egov-persister** consumes the message and runs two INSERTs:
-   - `INSERT INTO ug_pfms_data` — one row per data object
-   - `INSERT INTO ug_pfms_transactions` — one row per transaction
+1. **Duplicate validation** — rejects duplicate `agencyCode + voucherNumber`:
+   - Within the same request (`HashSet`)
+   - Against `ug_pfms_transactions` via JDBC
+   - Returns HTTP **400** with `{ "message": "..." }` (`IllegalArgumentException`)
+2. **Transform** — `PFMSTransactionTransformer` maps API models to `PfmsTransactionEntity`:
+   - Assigns `id` and `correlationId`
+   - Sets `status = INITIATED`, `ingestionDate = null`
+   - Moves non-flat fields into `additionalDetails` for JSONB
+3. **Kafka publish** — `PFMSCreateTransactionKafkaMessage` sent to `state-to-upyog-data-exchange`
+   - On failure: HTTP **500**, `PfmsKafkaPublishException`, error logged with cause
+4. **egov-persister** (`upyog-data-dx.yml`) inserts:
+   - `ug_pfms_data` — one row per batch
+   - `ug_pfms_transactions` — flat columns + `additionaldetails` JSONB
+
+### Error responses (ingest)
+
+| Condition | HTTP | Body |
+|---|---|---|
+| Bean validation (`@NotBlank`, etc.) | 400 | `{ "message": ["field: error"] }` |
+| Duplicate voucher | 400 | `{ "message": "Duplicate vouchers..." }` |
+| Invalid JSON / date format | 400 | `{ "message": "Invalid request body: ..." }` |
+| Kafka publish failure | 500 | `{ "message": "Failed to publish PFMS data to Kafka" }` |
+| Database error on duplicate check | 500 | `{ "message": "Database error while processing PFMS request" }` |
+
+Structured logs use prefixes such as `PFMS ingest`, `PFMS Kafka`, and `PFMS duplicate validation` at INFO/WARN/ERROR.
 
 ---
 
@@ -171,8 +198,8 @@ curl --location 'http://localhost:8281/upyog-data-dx/v1/transactions/_create' \
 
 | Scheduler | Cron | Purpose |
 |---|---|---|
-| `PFMSForwardingScheduler` | `0 0 2 * * *` (2:00 AM daily) | Picks up `INITIATED` transactions and forwards to PFMS |
-| `PFMSRetryScheduler` | `0 0 5 * * *` (5:00 AM daily) | Retries `FAILED` transactions |
+| `PFMSForwardingScheduler` | `0 0 16 * * *` (4:00 PM daily, see `application.properties`) | Picks up `INITIATED` transactions and forwards to PFMS |
+| `PFMSRetryScheduler` | `0 0 18 * * *` (6:00 PM daily) | Retries `FAILED` transactions |
 
 Both schedulers call the same `processBatch()` logic in `PFMSForwardingServiceImpl`.
 
@@ -232,7 +259,7 @@ Stores the top-level metadata for each batch pushed by a state.
 
 | Column | Type | Description |
 |---|---|---|
-| `id` | UUID PK | Correlation ID assigned by this service |
+| `id` | VARCHAR(64) PK | Correlation ID assigned by this service |
 | `state` | VARCHAR | State code (e.g. JK) |
 | `ward` | VARCHAR | Ward identifier |
 | `module` | VARCHAR | Module name (e.g. FINANCE) |
@@ -243,20 +270,23 @@ Stores the top-level metadata for each batch pushed by a state.
 | `last_modified_time` | TIMESTAMP | Updated on any change |
 
 ### `ug_pfms_transactions`
-Stores individual voucher transactions. Has a FK to `ug_pfms_data` via `correlation_id`.
+Stores individual voucher transactions. FK to `ug_pfms_data` via `correlation_id`.
 
 | Column | Type | Description |
 |---|---|---|
-| `id` | UUID PK | Unique transaction ID |
-| `correlation_id` | UUID FK | Links to `ug_pfms_data.id` |
+| `id` | VARCHAR(64) PK | Transaction id assigned at ingest |
+| `correlation_id` | VARCHAR(64) FK | Links to `ug_pfms_data.id` |
+| `agencyCode` | VARCHAR | ULB / PFMS agency code (`ulbCodeOrPFMSAgencyCode`) |
 | `voucher_number` | VARCHAR | Voucher number from state |
-| `voucher_date` | DATE | Voucher date from state |
+| `voucher_date` | DATE | Voucher date |
+| `voucherType` | VARCHAR | Voucher type |
+| `financial_year` | VARCHAR | Financial year |
+| `additionaldetails` | JSONB | Optional / extensible fields (`PfmsTransactionAdditionalDetails`) |
 | `status` | VARCHAR | `INITIATED` → `PROCESSING` → PFMS response / `FAILED` |
-| `ingestion_date` | TIMESTAMP | Set when PFMS responds (success or fail) |
-| `created_time` | TIMESTAMP | Auto-set on insert |
-| `last_modified_time` | TIMESTAMP | Updated by DB `CURRENT_TIMESTAMP` on every status update |
+| `ingestion_date` | TIMESTAMP | Set when PFMS responds |
+| `created_time` / `last_modified_time` | TIMESTAMP | Audit timestamps |
 
-> **Unique constraint:** `uk_pfms_voucher_number_date` on `(voucher_number, voucher_date)` — enforced at DB level.
+> **Unique constraint:** `uk_pfms_ulb_voucher_number` on `(agencyCode, voucher_number)`.
 
 ### `ug_pfms_scheduler_log`
 One row inserted per scheduler cycle run.
@@ -305,8 +335,8 @@ One row inserted per scheduler cycle run.
 | `pfms.auth.username` | `UMANG_API` | PFMS auth username |
 | `pfms.auth.password` | — | PFMS auth password (hashed) |
 | `pfms.client.ip` | — | Client IP sent to PFMS |
-| `pfms.scheduler.cron` | `0 0 2 * * *` | Forward scheduler cron |
-| `pfms.retry.scheduler.cron` | `0 0 5 * * *` | Retry scheduler cron |
+| `pfms.scheduler.cron` | `0 0 16 * * *` | Forward scheduler cron (4:00 PM) |
+| `pfms.retry.scheduler.cron` | `0 0 18 * * *` | Retry scheduler cron (6:00 PM) |
 | `pfms.scheduler.batch.size` | `50` | Max transactions per cycle |
 
 ---

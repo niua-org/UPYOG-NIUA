@@ -6,7 +6,7 @@ public class PFMSQuery {
 
     public static final String FIND_EXISTING_VOUCHER_NUMBERS =
             "SELECT voucher_number FROM public.ug_pfms_transactions" +
-                    " WHERE voucher_number = ANY(?) AND voucher_date = ?";
+                    " WHERE voucher_number = ANY(?) AND agencyCode = ?";
 
     public static final String FETCH_INITIATED_TRANSACTION_IDS =
             "SELECT id FROM public.ug_pfms_transactions" +
@@ -21,12 +21,12 @@ public class PFMSQuery {
                     " LIMIT ?";
 
     public static final String FETCH_TRANSACTION_BY_ID =
-            "SELECT * FROM public.ug_pfms_transactions WHERE id = ?::UUID";
+            "SELECT * FROM public.ug_pfms_transactions WHERE id = ?";
 
     public static final String UPDATE_TRANSACTION_STATUS =
             "UPDATE public.ug_pfms_transactions" +
                     " SET status = ?, ingestion_date = ?, last_modified_time = CURRENT_TIMESTAMP" +
-                    " WHERE id = ?::UUID";
+                    " WHERE id = ?";
 
     public static final String INSERT_SCHEDULER_LOG =
             "INSERT INTO public.ug_pfms_scheduler_log" +

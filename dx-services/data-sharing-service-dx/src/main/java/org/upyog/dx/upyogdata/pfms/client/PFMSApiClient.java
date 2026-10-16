@@ -6,6 +6,7 @@ import org.upyog.dx.upyogdata.config.PFMSProperties;
 import org.upyog.dx.upyogdata.constants.Constants;
 import org.upyog.dx.upyogdata.pfms.models.PFMSAuthRequest;
 import org.upyog.dx.upyogdata.pfms.models.PFMSAuthResponse;
+import org.upyog.dx.upyogdata.pfms.entity.PfmsTransactionEntity;
 import org.upyog.dx.upyogdata.pfms.models.PFMSTransaction;
 import org.upyog.dx.upyogdata.pfms.models.PFMSTransactionFormData;
 import org.upyog.externalaudit.constants.ExternalApiAuditConstants;
@@ -67,6 +68,10 @@ public class PFMSApiClient {
      * @param accessToken Bearer token from fetchAccessToken()
      * @return raw response body from PFMS
      */
+    public String pushTransaction(PfmsTransactionEntity transaction, String accessToken) {
+        return pushTransaction(transaction, accessToken, null, 0);
+    }
+
     public String pushTransaction(PFMSTransaction transaction, String accessToken) {
         return pushTransaction(transaction, accessToken, null, 0);
     }
@@ -81,6 +86,25 @@ public class PFMSApiClient {
      * @param auditCorrelationId table {@code correlation_id}; reuse on retry
      * @param retryCount         {@code 0} on first attempt, {@code 1} after 401 refresh
      */
+    public String pushTransaction(PfmsTransactionEntity transaction, String accessToken,
+            String auditCorrelationId, int retryCount) {
+        log.info("Pushing transaction to Pfms | voucherNumber={}", transaction.getVoucherNumber());
+        PFMSTransactionFormData formData = transaction.toFormData(pfmsProperties.getClient().getIp());
+        String response = auditLogger.logAndExecute(ExternalApiAuditDetail.builder()
+                .correlationId(auditCorrelationId)
+                .retryCount(retryCount)
+                .tenantId(Constants.PFMS_TENANT)
+                .externalApiName(ExternalApiAuditConstants.API_PFMS_DATA_PUSH)
+                .requestPayload(formData)
+                .originatingCorrelationId(transaction.getCorrelationId())
+                .businessReferenceId(transaction.getId())
+                .endpoint(pfmsProperties.getData().getUrl())
+                .method(Constants.HTTP_POST)
+                .build(), () -> dataFeignClient.pushTransaction("Bearer " + accessToken, formData));
+        log.info("Pfms Response | voucherNumber={} body={}", transaction.getVoucherNumber(), response);
+        return response;
+    }
+
     public String pushTransaction(PFMSTransaction transaction, String accessToken,
             String auditCorrelationId, int retryCount) {
         log.info("Pushing transaction to Pfms | voucherNumber={}", transaction.getVoucherNumber());

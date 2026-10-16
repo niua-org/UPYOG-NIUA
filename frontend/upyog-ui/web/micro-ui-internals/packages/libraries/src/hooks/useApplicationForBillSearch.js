@@ -13,10 +13,14 @@ import { TLService } from "../services/elements/TL";
 import { NOCService } from "../services/elements/NOC";
 import {ESTService} from "../services/elements/EST";
 import {GCServices} from "../services/elements/GC";
-
+import { ChallanGenerationService } from "../services/elements/ChallanGeneration";
 
 const fsmApplications = async (tenantId, filters) => {
   return (await FSMService.search(tenantId, { ...filters, limit: 10000 })).fsm;
+};
+
+const challanApplications = async (tenantId, filters) => {
+  return (await ChallanGenerationService.search({ tenantId, filters }))?.challans || [];
 };
 
 const ptrApplications = async (tenantId, filters) => {
@@ -159,11 +163,16 @@ const refObj = (tenantId, filters) => {
       key: "applicationNumber",
       label: "NOC_APPLICATION_NO",
     },
-     gc: {
+    gc: {
       searchFn: () => GCApplications(null, { ...filters, applicationNo: consumerCodes }),
       key: "applicationNo",
       label: "GC_APPLICATION_NO",
-    }
+    },
+    challan: {
+      searchFn: () => challanApplications(tenantId, { ...filters, challanNo: consumerCodes }),
+      key: "challanNo",
+      label: "CHALLAN_CHALLAN_NO",
+    },
   };
 };
 
@@ -210,7 +219,11 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   }
   if (window.location.href.includes("garbage-service")) {
     _key = "gc"
-  } 
+  }
+  if (window.location.href.toLowerCase().includes("challan")){
+    _key = "challan";
+  }
+  
   /* key from application ie being used as consumer code in bill */
   const { searchFn, key, label } = refObj(tenantId, filters)[_key];
   const applications = queryTemplate({ queryKey: ["applicationsForBillDetails", { tenantId, businessService, filters, searchFn }], queryFn: searchFn, config });

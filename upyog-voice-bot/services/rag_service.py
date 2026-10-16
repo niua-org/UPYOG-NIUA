@@ -191,7 +191,7 @@ def contextualize_query_for_search(query: str, history: list) -> str:
         if not groq_client:
             return query
 
-        recent_history = history[-4:] if len(history) >= 4 else history
+        recent_history = history[-8:] if len(history) >= 8 else history
         hist_lines = []
         for turn in recent_history:
             if isinstance(turn, dict):
@@ -257,7 +257,7 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
             redis_chat = get_chat_history(history_key)
             if redis_chat:
                 long_term_chat_str = "\n\nUSER'S PAST CHAT HISTORY (LONG-TERM REDIS MEMORY):\n"
-                for msg in redis_chat[-15:]:
+                for msg in redis_chat[-20:]:
                     role_label = "User" if msg.get("role") == "user" else "Assistant"
                     long_term_chat_str += f"{role_label}: {msg.get('content')}\n"
                     
@@ -496,7 +496,7 @@ def retrieve_document_stream(query: str, user_lang: str, history: list, phone_an
 
         messages = [
             {"role": "system", "content": system_instr},
-            *history[-10:],
+            *history[-15:],
             {"role": "user", "content": query}
         ]
 
