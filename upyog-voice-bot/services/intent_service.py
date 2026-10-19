@@ -8,6 +8,7 @@ import ast
 import importlib
 import yaml
 from datetime import datetime, timedelta
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from prompts.intent_prompts import (
@@ -45,7 +46,7 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
     global groq_client
     logger.info(f"[INTENT CLASSIFIER] Classifying intent for query='{query}', lang='{lang}'")
 
-    recent_history = history[-3:] if len(history) >= 3 else history
+    recent_history = history[-5:] if len(history) >= 5 else history
     history_text = "\n".join([
         f"{turn.get('role', 'user').upper()}: {turn.get('content', '')}"
         for turn in recent_history

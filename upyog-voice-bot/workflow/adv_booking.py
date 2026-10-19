@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 from typing import Dict, Any, List, Optional
 import os
 import yaml
@@ -159,6 +158,14 @@ def intent_and_ui_node(state: AdvBookingState):
                 
                 # 9. Save the selected slots into our temporary draft booking memory
                 draft_booking["selected_slots"] = parsed
+                selected_dates = sorted({
+                    str(slot.get("date", "")).strip()
+                    for slot in parsed
+                    if isinstance(slot, dict) and slot.get("date")
+                })
+                if selected_dates:
+                    draft_booking["start_date"] = selected_dates[0]
+                    draft_booking["end_date"] = selected_dates[-1]
                 # 10. Replace the ugly JSON message with a clean text message so the bot understands what happened
                 user_msg = "I have selected a slot."
         except Exception as e:
@@ -366,14 +373,17 @@ def extraction_node(state: AdvBookingState):
     is_edit_query = any(w in user_msg.lower() for w in ["change", "update", "edit", "modify", "set", "correct", "instead of"])
     
     missing_fields = [f for f in ALL_FIELDS if not draft_booking.get(f)]
+    # Use the form config to decide which fields the LLM is allowed to extract.
+    extractable_fields = [field for field in FORM_FIELDS if field.get("extractable", False)]
     
+    # Edits can update any extractable field; normal collection targets only missing fields.
     if is_edit_query or draft_booking.get("_awaiting_confirm"):
-        # When editing/updating, allow LLM to extract ANY non-doc field
-        llm_extractable_fields = [f for f in ALL_FIELDS if not f.startswith("doc_")]
+        llm_extractable_fields = [field["id"] for field in extractable_fields]
     else:
-        llm_extractable_fields = [f for f in missing_fields if not f.startswith("doc_")]
-        if not draft_booking.get("applicant_details"):
-            llm_extractable_fields = [f for f in llm_extractable_fields if f != "address"]
+        llm_extractable_fields = [
+            field["id"] for field in extractable_fields
+            if field["id"] in missing_fields
+        ]
     
     if user_msg and llm_extractable_fields and llm:
         schema_hints = {}
@@ -387,6 +397,13 @@ def extraction_node(state: AdvBookingState):
                     schema_hints[f] = f"MUST BE EXACTLY ONE OF: {options}. Map the user's input to the closest matching option."
                 else:
                     schema_hints[f] = FIELD_HINTS.get(f, "relevant value")
+            elif field_def and field_def.get("extract_fields"):
+                schema_hints[f] = (
+                    "Return an object with these keys: "
+                    + ", ".join(field_def["extract_fields"])
+                )
+            elif field_def and field_def.get("type") == "date":
+                schema_hints[f] = "Return the date in YYYY-MM-DD format."
             elif f == "nightLight":
                 schema_hints[f] = "Must be exactly 'Yes' or 'No'"
             else:
@@ -401,16 +418,19 @@ def extraction_node(state: AdvBookingState):
         )
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
-            m = re.search(r'\{.*\}', ext.content.strip(), re.DOTALL)
-            if m:
-                extracted_data = json.loads(m.group(0))
-                for field in missing_fields:
-                    val = extracted_data.get(field)
-                    # Fixed bug: val could be bool False or string "No". 
-                    # We check if val is not None instead of `if val`.
-                    if val is not None and str(val).lower() not in ("null", "none", ""):
+            # The prompt requests JSON only; reject responses that are not JSON objects.
+            extracted_data = json.loads(ext.content.strip())
+            if not isinstance(extracted_data, dict):
+                raise ValueError("Extraction response must be a JSON object")
+            for field in llm_extractable_fields:
+                val = extracted_data.get(field)
+                if val is not None and str(val).lower() not in ("null", "none", ""):
+                    if isinstance(val, dict) and isinstance(draft_booking.get(field), dict):
+                        # Merge partial nested details to preserve previously collected keys.
+                        draft_booking[field].update(val)
+                    else:
                         draft_booking[field] = val
-                        logger.info(f"[extract_node] {field} = {val}")
+                    logger.info(f"[extract_node] {field} = {val}")
         except Exception as e:
             logger.error(f"Extraction error: {e}")
             
@@ -539,9 +559,9 @@ def confirm_booking_node(state: AdvBookingState):
     draft_booking["_awaiting_confirm"] = True
     logger.info(f"[adv_booking.confirm_booking_node] Building booking summary for phone={phone_number}")
 
-    app_details = draft_booking.get("applicant_details", {})
+    app_details = draft_booking.get("applicant_details") or {}
     name = app_details.get("name") or draft_booking.get("applicantName", "N/A")
-    mobile = app_details.get("mobile") or draft_booking.get("mobileNumber", "N/A")
+    mobile = app_details.get("mobile") or draft_booking.get("mobileNumber") or (phone_number if phone_number != "default" else "N/A")
     email = app_details.get("email") or draft_booking.get("emailId", "N/A")
 
     summary_text = (
@@ -574,6 +594,7 @@ def create_booking_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
     draft_booking = dict(state.get("draft_booking", {}))
     logger.info(f"[adv_booking.create_booking_node] Executing booking registration for phone={phone_number}")
+    
     
     app_details = draft_booking.get("applicant_details", {})
     draft_booking["applicantName"] = app_details.get("name", "")

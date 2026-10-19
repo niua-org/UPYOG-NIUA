@@ -66,6 +66,8 @@ except Exception as e:
 _grv_form_cfg = _raw_cfg.get("forms", {}).get("grievance", {})
 FORM_FIELDS   = _grv_form_cfg.get("fields", [])
 ALL_FIELDS    = [f["id"] for f in FORM_FIELDS]
+# Only fields explicitly enabled in config.yml are eligible for chat extraction.
+EXTRACTABLE_FIELDS = [f["id"] for f in FORM_FIELDS if f.get("extractable", False)]
 FIELD_HINTS   = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
 
 
@@ -249,7 +251,8 @@ def extraction_node(state: GrievanceState):
         logger.info(f"[grievance extract_node] User asked a question ('{user_msg}'), skipping field extraction.")
         return {"draft_grievance": draft}
 
-    missing = [f for f in ALL_FIELDS if not draft.get(f)]
+    # Keep extraction active only while a chat-extractable field is missing.
+    missing = [f for f in EXTRACTABLE_FIELDS if not draft.get(f)]
     if not missing:
         return {"draft_grievance": draft}
 
@@ -311,13 +314,6 @@ def extraction_node(state: GrievanceState):
                 draft["category_code"] = matched["code"]
                 logger.info(f"[grievance extract] sub_category matched: {matched['name']}")
 
-    elif curr_field == "description":
-        # Any genuine answer to the problem description question is accepted
-        generic_intents = ["i want to file a complaint", "file a complaint", "raise a grievance", "file complaint", "want to file a complaint", "i have a complaint"] + meta_commands
-        if not any(g == ui_lower for g in generic_intents) and len(user_msg) >= 3 and ui_lower not in meta_commands:
-            draft["description"] = user_msg
-            logger.info(f"[grievance extract] description accepted: {user_msg}")
-
     elif curr_field == "locality":
         loc_ops = draft.get("_locality_options") or _pgr_localities()
         draft["_locality_options"] = loc_ops
@@ -344,7 +340,8 @@ def extraction_node(state: GrievanceState):
                 logger.info(f"[grievance extract] Unrecognized locality input: '{cleaned_input}', rejecting verbatim acceptance")
 
     # Fallback to LLM multi-field extraction if any missing fields remain and LLM is available
-    remaining_missing = [f for f in ALL_FIELDS if not draft.get(f)]
+    # Recheck after deterministic matching; only unresolved extractable fields go to the LLM.
+    remaining_missing = [f for f in EXTRACTABLE_FIELDS if not draft.get(f)]
     if remaining_missing and llm:
         schema_hints = {}
         for f in remaining_missing:

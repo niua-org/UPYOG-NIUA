@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Kafka payload published after the inbound API contract is transformed into persistence entities.
- * Consumed by egov-persister ({@code upyog-data-dx.yml}).
+ * Consumed by egov-persister.
  */
 @Getter
 @Setter
