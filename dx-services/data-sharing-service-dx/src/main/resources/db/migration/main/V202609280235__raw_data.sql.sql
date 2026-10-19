@@ -4,11 +4,11 @@ CREATE TABLE IF NOT EXISTS ug_pfms_data (
     ulb VARCHAR(255),
     ward VARCHAR(100),
     module VARCHAR(100),
-    data_date DATE,
+    data_received_on DATE,
     target_destination VARCHAR(255),
 
     created_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_modified_time TIMESTAMP
+    last_modified_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS ug_pfms_transactions (
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS ug_pfms_transactions (
 
 CREATE TABLE IF NOT EXISTS ug_pfms_scheduler_log (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    scheduler_type  VARCHAR(50)  NOT NULL,  -- INITIATED_FORWARD | FAILED_RETRY
+    scheduler_type  VARCHAR(50)  NOT NULL,
     started_at      TIMESTAMP    NOT NULL,
     ended_at        TIMESTAMP,
     duration_ms     BIGINT,
