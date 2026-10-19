@@ -46,6 +46,7 @@ public class AuthPreCheckFilter implements GlobalFilter, Ordered {
             log.info(OPEN_ENDPOINT_MESSAGE, endPointPath);
             return chain.filter(exchange);
         }
+        // UPYOG MCP: enable auth for /upyog-mcp-server/** without parsing JSON-RPC as a business RequestInfo body.
         if (UpyogMcpGatewaySupport.isMcpPath(endPointPath)) {
             exchange.getAttributes().put(AUTH_BOOLEAN_FLAG_NAME, Boolean.TRUE);
             return chain.filter(exchange);

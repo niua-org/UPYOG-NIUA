@@ -39,6 +39,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
         Boolean doAuth = exchange.getAttribute(AUTH_BOOLEAN_FLAG_NAME);
 
+        // UPYOG MCP: JSON-RPC body has no RequestInfo — authenticate from Auth-Token header only (see UpyogMcpGatewayAuthHelper).
         if (UpyogMcpGatewaySupport.isMcpPath(exchange.getRequest().getPath().value())) {
             if (Boolean.TRUE.equals(doAuth)) {
                 return upyogMcpGatewayAuthHelper.authenticateAndForward(exchange, chain);

@@ -120,6 +120,8 @@ If the user asks to pay now, debit a card, or mark a bill paid, the assistant re
 
 The token binds the user, service, operation, tenant, and payload hash. Default life: 5 minutes. It is single-use. Expiry or reuse returns an error. The assistant then starts again at `prepare_action`.
 
+Integration and QA teams running Postman or curl against `/mcp` should use **[mcp-manual-test-plan.md](./mcp-manual-test-plan.md)** and the automated script in **`scripts/`** (see README). This section remains the **assistant evaluation** set.
+
 ## 6. Evaluation set
 
 These cases are the acceptance tests for the assistant plus the MCP server. They are not executable yet. Expected tool names match section 2.

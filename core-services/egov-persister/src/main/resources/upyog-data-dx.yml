@@ -1,0 +1,75 @@
+serviceMaps:
+  serviceName: upyog-data-dx
+
+  mappings:
+
+    - version: 1.0
+      description: Persists PFMS parent data
+      fromTopic: state-to-upyog-data-exchange
+      isTransaction: true
+
+      queryMaps:
+
+        - query: >
+            INSERT INTO public.ug_pfms_data
+            (id, state, ward, module, data_date, ulb, target_destination)
+            VALUES
+            (?, ?, ?, ?, ?, ?, ?);
+
+          basePath: data.*
+
+          jsonMaps:
+            - jsonPath: $.data.*.id
+            - jsonPath: $.data.*.state
+            - jsonPath: $.data.*.ward
+            - jsonPath: $.data.*.module
+            - jsonPath: $.data.*.date
+              type: DATE
+            - jsonPath: $.data.*.ulb
+            - jsonPath: $.data.*.targetDestination
+
+
+        - query: >
+            INSERT INTO public.ug_pfms_transactions
+            (
+              id,
+              correlation_id,
+              agencyCode,
+              voucher_number,
+              voucher_date,
+              voucherType,
+              financial_year,
+              additionaldetails,
+              status,
+              ingestion_date
+            )
+            VALUES
+            (
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?,
+              ?::jsonb,
+              ?,
+              ?
+            );
+
+          basePath: data.*.transactions.*
+
+          jsonMaps:
+            - jsonPath: $.data.*.transactions.*.id
+            - jsonPath: $.data.*.transactions.*.correlationId
+            - jsonPath: $.data.*.transactions.*.ulbCodeOrPFMSAgencyCode
+            - jsonPath: $.data.*.transactions.*.voucherNumber
+            - jsonPath: $.data.*.transactions.*.voucherDate
+              type: DATE
+            - jsonPath: $.data.*.transactions.*.voucherType
+            - jsonPath: $.data.*.transactions.*.financialYear
+            - jsonPath: $.data.*.transactions.*.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.data.*.transactions.*.status
+            - jsonPath: $.data.*.transactions.*.ingestionDate

@@ -33,6 +33,7 @@ public class RbacFilter implements GlobalFilter , Ordered {
 
         Boolean rbacFlag = exchange.getAttribute(RBAC_BOOLEAN_FLAG_NAME);
 
+        // UPYOG MCP: RBAC uses user from gateway RequestInfo attribute + optional tenantId in JSON-RPC/tool args, not RequestInfo in body.
         if (UpyogMcpGatewaySupport.isMcpPath(exchange.getRequest().getPath().value())) {
             if (Boolean.TRUE.equals(rbacFlag)) {
                 return modifyRequestBodyFilter.apply(new ModifyRequestBodyGatewayFilterFactory.Config()

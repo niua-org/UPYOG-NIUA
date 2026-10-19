@@ -15,7 +15,19 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Authenticates Streamable HTTP MCP calls without injecting {@code RequestInfo} into the JSON-RPC body.
+ * Gateway authentication for UPYOG MCP ({@code /upyog-mcp-server/**}).
+ * <p>
+ * Streamable HTTP MCP sends JSON-RPC (for example {@code initialize}, {@code tools/call}) with
+ * <strong>no</strong> {@code RequestInfo} in the body. Standard {@link AuthCheckFilterHelper} expects
+ * a business JSON body with {@code RequestInfo.authToken}, so MCP uses this helper instead:
+ * <ol>
+ *   <li>Read {@code Auth-Token} / {@code auth-token} from HTTP headers.</li>
+ *   <li>Resolve the citizen/employee via {@link UserUtils#getUser(String)} (same as other gateway auth).</li>
+ *   <li>Store {@link RequestInfo} on the exchange for RBAC ({@link UpyogMcpGatewaySupport#GATEWAY_REQUEST_INFO_ATTR}).</li>
+ *   <li>Forward to MCP with {@code x-user-info} (serialized user) and {@code x-pass-through-gateway: true}
+ *       so the MCP server can trust identity on hop 1.</li>
+ * </ol>
+ * The JSON-RPC payload is not rewritten; downstream business APIs still get {@code RequestInfo} from MCP on hop 2.
  */
 @Slf4j
 @Component
@@ -33,6 +45,13 @@ public class UpyogMcpGatewayAuthHelper {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Validates the session token and attaches gateway identity headers for the MCP upstream call.
+     *
+     * @param exchange inbound gateway exchange (path under {@link UpyogMcpGatewaySupport#PATH_PREFIX})
+     * @param chain    remaining filter chain toward {@code upyog-mcp-server}
+     * @return completion when MCP route is forwarded or {@link CustomException} if token/user lookup fails
+     */
     public Mono<Void> authenticateAndForward(ServerWebExchange exchange, GatewayFilterChain chain) {
         String authToken = UpyogMcpGatewaySupport.firstAuthToken(exchange.getRequest().getHeaders());
         if (ObjectUtils.isEmpty(authToken)) {

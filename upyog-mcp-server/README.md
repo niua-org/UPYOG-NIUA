@@ -8,6 +8,8 @@ Stack: Java 17, Spring Boot 3.5.11, Spring AI 1.1.4 (`spring-ai-starter-mcp-serv
 
 Evaluation prompts in English and Hindi are in `docs/chatbot-team-guide.md`.
 
+**Testing:** manual Postman/curl — [`docs/mcp-manual-test-plan.md`](docs/mcp-manual-test-plan.md). Automated smoke script — [Automated smoke test](#automated-smoke-test) below.
+
 ## Connect the assistant
 
 | Item | Value |
@@ -335,112 +337,90 @@ Add `src/main/resources/descriptors/<module>.yaml`. Keep the gateway path on `up
 
 ```bash
 cd upyog-mcp-server
+export UPYOG_MCP_TOKEN_SECRET='local-dev-only-change-me-32chars'
 mvn spring-boot:run
 ```
 
-MCP listens on `http://localhost:8088/mcp`. It still calls UAT through `https://niuatt.niua.in/...` for `/user/_details` and business APIs. The UAT gateway route `/upyog-mcp-server/**` is not required for this local test.
+MCP listens on `http://localhost:8088/mcp`. It still calls UAT through `https://niuatt.niua.in/...` for session validation (`POST /user/_search`) and business APIs. The UAT gateway route `/upyog-mcp-server/**` is not required for this local test.
 
 Get a citizen token from [NIUA UAT citizen](https://niuatt.niua.in/upyog-ui/citizen/): log in, then copy `Auth-Token` (or access token) from DevTools → Network on any API call.
 
-#### Postman
+#### Postman / manual testing
 
-URL: `POST http://localhost:8088/mcp`
+Full numbered test cases (TC-01–TC-16), headers, curl, negative tests, and sign-off checklist: **[`docs/mcp-manual-test-plan.md`](docs/mcp-manual-test-plan.md)**.
 
-Headers:
+Quick start: `POST http://localhost:8088/mcp` with headers `Content-Type`, `Accept: application/json, text/event-stream`, `auth-token`, `x-user-uuid`, optional `x-correlation-id`; then JSON-RPC **`initialize`** (copy response header **`Mcp-Session-Id`**) → **`notifications/initialized`** → **`tools/call`** / `list_services`. **Every request after `initialize` must include `Mcp-Session-Id`** or the transport returns `Session ID missing`.
 
-```text
-Content-Type: application/json
-Accept: application/json, text/event-stream
-auth-token: <paste-citizen-access-token>
-x-correlation-id: local-test-1
+Assistant-oriented JSON examples remain in `docs/chatbot-team-guide.md` section 6.1.
+
+### Automated smoke test
+
+Scripted end-to-end check for integration/QA: MCP handshake, **`Mcp-Session-Id`** handling, and all nine tools. Every HTTP request and response is logged to **`logs/mcp-smoke-test.log`** (that file is **overwritten on each run**).
+
+| Item | Location |
+|------|----------|
+| Runner | `scripts/run-mcp-smoke-test.sh` |
+| Python implementation | `scripts/mcp-smoke-test.py` |
+| **Your credentials (edit this)** | `scripts/mcp-smoke-test.env` (gitignored) |
+| Template to copy | `scripts/mcp-smoke-test.env.example` |
+| Extra notes | `scripts/README.md` |
+
+#### One-time setup
+
+```bash
+cd upyog-mcp-server
+cp scripts/mcp-smoke-test.env.example scripts/mcp-smoke-test.env
 ```
 
-Required for direct MCP on `:8088` (session validation uses **`POST /user/_search`** only, same as the citizen UI):
+Edit **`scripts/mcp-smoke-test.env`** with a fresh NIUA UAT citizen token and uuid (from DevTools → Network after login on [citizen UI](https://niuatt.niua.in/upyog-ui/citizen/)):
 
-```text
-x-user-info: <paste RequestInfo.userInfo JSON from DevTools — same object as in the UI /user/_search body>
+```bash
+export MCP_URL='http://localhost:8088/mcp'
+export MCP_AUTH_TOKEN='<citizen access token>'
+export MCP_USER_UUID='<RequestInfo.userInfo.uuid>'
+export MCP_MOBILE='<logged-in mobile>'   # optional; used for PGR search
+export MCP_TENANT='pg'
 ```
 
-Or minimal:
+Optional: set `MCP_PROPERTY_ID` and `MCP_PROPERTY_TENANT` to exercise property search and billing tools. Leave `MCP_RUN_PREPARE=false` unless you intend to test writes.
 
-```text
-x-user-uuid: <RequestInfo.userInfo.uuid>
+#### Run (two terminals)
+
+**Terminal 1 — MCP server** (see [Local run (NIUA UAT)](#local-run-niua-uat)):
+
+```bash
+cd upyog-mcp-server
+export UPYOG_MCP_TOKEN_SECRET='local-dev-only-change-me-32chars'
+mvn spring-boot:run
 ```
 
-Production: call MCP **through the gateway** with `trust-gateway-identity=true` and gateway-forwarded `x-user-info` + `Auth-Token`.
+**Terminal 2 — smoke test**:
 
-**1. Initialize**
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "initialize",
-  "params": {
-    "protocolVersion": "2025-03-26",
-    "capabilities": {},
-    "clientInfo": { "name": "postman", "version": "1.0.0" }
-  }
-}
+```bash
+cd upyog-mcp-server
+chmod +x scripts/run-mcp-smoke-test.sh   # once
+./scripts/run-mcp-smoke-test.sh
 ```
 
-If the response has `Mcp-Session-Id`, copy it into the next request header.
+The wrapper loads `scripts/mcp-smoke-test.env` automatically (`Loaded config: ...`). Shell `export` values override the file.
 
-**2. List services**
+#### What the script does
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "tools/call",
-  "params": {
-    "name": "list_services",
-    "arguments": {}
-  }
-}
-```
+1. `initialize` — reads **`Mcp-Session-Id`** from **response headers** (not from JSON body).
+2. `notifications/initialized` — MCP lifecycle step before tools (see manual test plan §4.1).
+3. Tool calls: `list_services`, `describe_operation` (per service), `lookup_master`, PGR `search`, optional `get_status`, optional property/billing, optional `prepare_action` / `confirm_action` when enabled in env.
 
-**3. Search property** (replace `tenantId` and `propertyIds` with a record the token can access)
+#### Results
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 3,
-  "method": "tools/call",
-  "params": {
-    "name": "search",
-    "arguments": {
-      "service": "property",
-      "filters": {
-        "tenantId": "pg.citya",
-        "propertyIds": ["PT-107-001834"]
-      },
-      "page": 0,
-      "size": 20
-    }
-  }
-}
-```
+| Outcome | Meaning |
+|---------|---------|
+| Exit code `0` | No HTTP failures in the script |
+| Exit code `1` | At least one step failed — open the log |
+| Exit code `2` | Missing `mcp-smoke-test.env` or required variables |
 
-**4. Pending bill**
+Open **`logs/mcp-smoke-test.log`** for the latest full trace. Override log path with `MCP_LOG_FILE` in env.
 
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 4,
-  "method": "tools/call",
-  "params": {
-    "name": "get_pending_bill",
-    "arguments": {
-      "businessService": "PT",
-      "consumerCode": "PT-107-001834",
-      "tenantId": "pg.citya"
-    }
-  }
-}
-```
-
-More request/response samples are in `docs/chatbot-team-guide.md` section 6.1.
+Unit tests (no live UAT): `mvn test`.
 
 ### Test, Docker, Kubernetes
 

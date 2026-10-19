@@ -72,6 +72,16 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
                 throw new RuntimeException("User information not found. Can't execute RBAC filter");
             }
             tenantIds = tenantIdsFromUser(requestInfo.getUserInfo());
+            if (tenantIds.isEmpty()) {
+                tenantIds = commonUtils.getTenantIdsFromRequest(exchange.getRequest(), map);
+            }
+            if (tenantIds.isEmpty()) {
+                CustomException customException = new CustomException(
+                        "TENANT_MISSING",
+                        "Could not resolve tenantId from authenticated user, MCP JSON-RPC body, or query parameters");
+                customException.setCode(HttpStatus.BAD_REQUEST.toString());
+                throw customException;
+            }
         } else {
             requestInfo = objectMapper.convertValue(map.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
             tenantIds = commonUtils.validateRequestAndSetRequestTenantId(exchange, map);
@@ -134,9 +144,6 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
                     tenantIds.add(role.getTenantId());
                 }
             });
-        }
-        if (tenantIds.isEmpty()) {
-            tenantIds.add("pg");
         }
         return tenantIds;
     }
