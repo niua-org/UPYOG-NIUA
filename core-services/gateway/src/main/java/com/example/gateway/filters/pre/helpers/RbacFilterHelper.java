@@ -4,6 +4,7 @@ import com.example.gateway.config.ApplicationProperties;
 import com.example.gateway.model.AuthorizationRequest;
 import com.example.gateway.model.AuthorizationRequestWrapper;
 import com.example.gateway.utils.CommonUtils;
+import com.example.gateway.utils.UpyogMcpGatewaySupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
@@ -63,14 +64,33 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
     private void isIncomingURIInAuthorizedActionList(ServerWebExchange exchange, Map map) {
 
         String requestUri = exchange.getRequest().getURI().getPath();
-        RequestInfo requestInfo = objectMapper.convertValue(map.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
+        RequestInfo requestInfo;
+        Set<String> tenantIds;
+        if (UpyogMcpGatewaySupport.isMcpPath(requestUri)) {
+            requestInfo = exchange.getAttribute(UpyogMcpGatewaySupport.GATEWAY_REQUEST_INFO_ATTR);
+            if (requestInfo == null || requestInfo.getUserInfo() == null) {
+                throw new RuntimeException("User information not found. Can't execute RBAC filter");
+            }
+            tenantIds = tenantIdsFromUser(requestInfo.getUserInfo());
+            if (tenantIds.isEmpty()) {
+                tenantIds = commonUtils.getTenantIdsFromRequest(exchange.getRequest(), map);
+            }
+            if (tenantIds.isEmpty()) {
+                CustomException customException = new CustomException(
+                        "TENANT_MISSING",
+                        "Could not resolve tenantId from authenticated user, MCP JSON-RPC body, or query parameters");
+                customException.setCode(HttpStatus.BAD_REQUEST.toString());
+                throw customException;
+            }
+        } else {
+            requestInfo = objectMapper.convertValue(map.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
+            tenantIds = commonUtils.validateRequestAndSetRequestTenantId(exchange, map);
+        }
         User user = requestInfo.getUserInfo();
 
         if (user == null) {
             throw new RuntimeException("User information not found. Can't execute RBAC filter");
         }
-
-        Set<String> tenantIds = commonUtils.validateRequestAndSetRequestTenantId(exchange,map);
 
         /*
          * Adding tenantId to header for tracer logging with correlation-id
@@ -111,6 +131,21 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
             throw new CustomException(HttpStatus.UNAUTHORIZED.toString(), "You are not authorized to access this resource");
         }
 
+    }
+
+    private static Set<String> tenantIdsFromUser(User user) {
+        Set<String> tenantIds = new HashSet<>();
+        if (user.getTenantId() != null && !user.getTenantId().isBlank()) {
+            tenantIds.add(user.getTenantId());
+        }
+        if (user.getRoles() != null) {
+            user.getRoles().forEach(role -> {
+                if (role.getTenantId() != null && !role.getTenantId().isBlank()) {
+                    tenantIds.add(role.getTenantId());
+                }
+            });
+        }
+        return tenantIds;
     }
 
     private boolean isUriAuthorized(AuthorizationRequest authorizationRequest, RequestInfo requestInfo, ServerWebExchange exchange) {

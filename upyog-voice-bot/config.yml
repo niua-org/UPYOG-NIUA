@@ -29,6 +29,11 @@ services:
     description_hi: "संपत्ति कर, जल कनेक्शन, व्यापार लाइसेंस के बारे में प्रश्न पूछें"
 
 upyog:
+  # Voice agent calls this MCP server. Login and OTP stay in this bot.
+  mcp:
+    enabled: true
+    url: "http://localhost:8080/upyog-mcp-server/mcp"
+
   # Base URL of the UPYOG environment (can be dynamically overridden per request or via UPYOG_BASE_URL / UPYOG_ENV)
   default_env: "niuatt"
   base_url: "https://niuatt.niua.in"
