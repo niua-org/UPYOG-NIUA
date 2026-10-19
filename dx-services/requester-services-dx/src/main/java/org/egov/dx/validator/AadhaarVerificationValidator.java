@@ -3,8 +3,10 @@ package org.egov.dx.validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.dx.util.AadhaarConstants;
+import org.egov.dx.util.VerhoeffAlgorithm;
 import org.egov.dx.web.models.AadhaarVerificationRequest;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
@@ -25,8 +27,12 @@ public class AadhaarVerificationValidator {
     private static final Pattern AADHAAR_PATTERN = Pattern.compile(AadhaarConstants.REGEX_AADHAAR);
     private static final Pattern OTP_PATTERN = Pattern.compile(AadhaarConstants.REGEX_OTP);
 
+    @Value("${aadhaar.gateway.mock.enabled}")
+    private boolean mockEnabled;
+
     /**
      * Validates incoming request for the {@code /_sendOtp} operation.
+     * Enforces 12-digit format and UIDAI Verhoeff checksum validation.
      *
      * @param request the verification request containing RequestInfo and 12-digit Aadhaar number
      * @throws CustomException if request, RequestInfo, or Aadhaar number is null/invalid
@@ -46,6 +52,13 @@ public class AadhaarVerificationValidator {
         if (StringUtils.isBlank(aadhaarNumber) || !AADHAAR_PATTERN.matcher(aadhaarNumber).matches()) {
             log.warn("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_INVALID_AADHAAR);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
+        }
+
+        // Verhoeff Checksum verification (Validates 12th digit checksum and rejects repetitive numbers like 222222222222)
+        if (!VerhoeffAlgorithm.validateVerhoeff(aadhaarNumber)) {
+            log.warn("Aadhaar _sendOtp validation failed Verhoeff checksum for masked Aadhaar: XXXXXXXX{}",
+                    aadhaarNumber.substring(aadhaarNumber.length() - 4));
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR_CHECKSUM, AadhaarConstants.MSG_INVALID_AADHAAR_CHECKSUM);
         }
     }
 

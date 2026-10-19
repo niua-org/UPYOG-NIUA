@@ -136,31 +136,34 @@ public class Configurations {
 	private String userEndpoint;
 
 	// ---------------- Aadhaar Gateway Configurations ----------------
-	@Value("${aadhaar.gateway.mock.enabled:true}")
+	@Value("${aadhaar.gateway.mock.enabled}")
 	private Boolean aadhaarGatewayMockEnabled;
 
-	@Value("${aadhaar.gateway.base.url:https://api.sandbox.co.in}")
+	@Value("${aadhaar.gateway.base.url}")
 	private String aadhaarGatewayBaseUrl;
 
-	@Value("${aadhaar.gateway.send.otp.path:/kyc/aadhaar/okyc/otp}")
+	@Value("${aadhaar.gateway.send.otp.path}")
 	private String aadhaarGatewaySendOtpPath;
 
-	@Value("${aadhaar.gateway.verify.otp.path:/kyc/aadhaar/okyc/otp/verify}")
+	@Value("${aadhaar.gateway.verify.otp.path}")
 	private String aadhaarGatewayVerifyOtpPath;
 
-	@Value("${aadhaar.gateway.api.key:}")
+	@Value("${aadhaar.gateway.api.key}")
 	private String aadhaarGatewayApiKey;
 
-	@Value("${aadhaar.gateway.api.secret:}")
+	@Value("${aadhaar.gateway.api.secret}")
 	private String aadhaarGatewayApiSecret;
 
-	@Value("${aadhaar.gateway.api.version:1.0}")
+	@Value("${aadhaar.gateway.api.version}")
 	private String aadhaarGatewayApiVersion;
 
-	@Value("${aadhaar.gateway.connect.timeout:5000}")
+	@Value("${aadhaar.gateway.connect.timeout}")
 	private Integer aadhaarGatewayConnectTimeout;
 
-	@Value("${aadhaar.gateway.read.timeout:10000}")
+	@Value("${aadhaar.gateway.read.timeout}")
 	private Integer aadhaarGatewayReadTimeout;
+
+	@Value("${aadhaar.otp.max.attempts}")
+	private Integer aadhaarOtpMaxAttempts;
 
 }

@@ -48,9 +48,12 @@ public final class AadhaarConstants {
     public static final String ERR_CODE_INVALID_REQUEST = "INVALID_REQUEST";
     public static final String ERR_CODE_INVALID_REQUEST_INFO = "INVALID_REQUEST_INFO";
     public static final String ERR_CODE_INVALID_AADHAAR = "INVALID_AADHAAR";
+    public static final String ERR_CODE_INVALID_AADHAAR_CHECKSUM = "INVALID_AADHAAR_CHECKSUM";
     public static final String ERR_CODE_GATEWAY_ERROR = "GATEWAY_ERROR";
     public static final String ERR_CODE_MISSING_REFERENCE_ID = "MISSING_REFERENCE_ID";
     public static final String ERR_CODE_INVALID_OTP_FORMAT = "INVALID_OTP_FORMAT";
+    public static final String ERR_CODE_MAX_OTP_ATTEMPTS_EXCEEDED = "MAX_OTP_ATTEMPTS_EXCEEDED";
+    public static final String ERR_CODE_OTP_ALREADY_VERIFIED = "OTP_ALREADY_VERIFIED";
 
     /* -------------------------------------------------------------------------
      * Operation Success & Informational Messages
@@ -60,6 +63,9 @@ public final class AadhaarConstants {
     public static final String MSG_INVALID_OR_EXPIRED_OTP = "Invalid or expired OTP";
     public static final String MSG_GATEWAY_DISPATCH_FAILED = "Failed to dispatch OTP from Aadhaar gateway";
     public static final String MSG_GATEWAY_NO_RESPONSE = "Aadhaar gateway verification returned no response";
+    public static final String MSG_MAX_OTP_ATTEMPTS_EXCEEDED = "Maximum invalid OTP attempts exceeded. Transaction reference ID is locked. Please request a new OTP.";
+    public static final String MSG_OTP_ALREADY_VERIFIED = "This OTP transaction has already been verified and consumed. Replay is not permitted.";
+    public static final String MSG_INVALID_AADHAAR_CHECKSUM = "Aadhaar number failed UIDAI Verhoeff checksum validation.";
 
     /* -------------------------------------------------------------------------
      * Third-Party Gateway / Sandbox Entity Identifiers & HTTP Headers

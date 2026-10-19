@@ -246,6 +246,24 @@ Service properties are configured in `src/main/resources/application.properties`
 | `aadhaar.gateway.api.key` | `""` | Vendor authentication API key (`x-api-key`). |
 | `aadhaar.gateway.api.secret` | `""` | Vendor authentication API secret (`x-api-secret`). |
 | `aadhaar.gateway.api.version` | `1.0` | Vendor API version (`x-api-version`). |
+| `aadhaar.otp.max.attempts` | `3` | Maximum allowed failed OTP verification attempts per reference ID before locking the session. |
+
+---
+
+## Security, Rate Limiting & PII Protection
+
+In adherence to UIDAI, NIUA, and UPYOG privacy and security guidelines:
+- **Replay Attack Prevention**: Verifies that each OTP verification session (`referenceId` / `txnId`) can only be consumed once. Re-submitting a consumed `referenceId` is immediately rejected with `ERR_CODE_OTP_ALREADY_VERIFIED` (`MSG_OTP_ALREADY_VERIFIED`).
+- **UIDAI Verhoeff Checksum Algorithm**: Validates the 12th digit checksum of Aadhaar numbers using dihedral group D5 (`VerhoeffAlgorithm.java`) before dispatching OTP to vendor gateways (`ERR_CODE_INVALID_AADHAAR_CHECKSUM`). Detects all single-digit entry errors and adjacent transposition errors, and rejects trivial repetitive numbers (e.g. `222222222222`).
+- **Distributed Multi-Pod Rate Limiting & Replay Cache**: Backed by Redis keys (`aadhaar:otp:attempts:{refId}` and `aadhaar:otp:consumed:{refId}`) with in-memory concurrent data structure fallback if Redis is temporarily unreachable.
+- **Brute-Force & OTP Lockout Protection**: OTP verification attempts per `referenceId` are tracked. If invalid attempts reach `aadhaar.otp.max.attempts` (default `3`), the transaction is locked (`OTP_MAX_ATTEMPTS_EXCEEDED`), the cached reference is evicted, and the user must request a fresh OTP.
+- **Year-Only DOB (YOB) Normalization**: Standardizes UIDAI e-KYC responses where DOB is only returned as a 4-digit birth year (e.g., `"1965"` or `"00/00/1965"`) by normalizing it into `"YYYY-01-01"` to satisfy downstream date parsing requirements.
+- **Granular Rural Address Fallback**: Automatically defaults missing or sparse rural address fields (`doorNo`, `street`, `landmark`, `locality`, `city`) to prevent downstream validation failures when storing citizen profiles.
+- **Aadhaar Masking**: Raw 12-digit Aadhaar numbers are masked in all logs as `XXXXXXXX1234` (`maskAadhaar`).
+- **OTP Protection**: One-time passwords (`otp`) are excluded from `@ToString` in all request models to prevent accidental logging.
+- **Payload Sanitization**: Base64 photo strings are excluded from `@ToString` in demographic models to avoid log bloat and memory pressure.
+
+---
 
 ### Key External Service Dependencies:
 1. **PostgreSQL Database**:
@@ -260,15 +278,6 @@ Service properties are configured in `src/main/resources/application.properties`
    - `egov-idgen` (ID Generation)
    - `api.digitallocker.gov.in` (DigiLocker API)
    - `api.sandbox.co.in` (Aadhaar OKYC Gateway)
-
----
-
-## Security & PII Protection
-
-In adherence to UIDAI and UPYOG privacy and security guidelines:
-- **Aadhaar Masking**: Raw 12-digit Aadhaar numbers are masked in all logs as `XXXXXXXX1234` (`maskAadhaar`).
-- **OTP Protection**: One-time passwords (`otp`) are excluded from `@ToString` in all request models to prevent accidental logging.
-- **Payload Sanitization**: Base64 photo strings are excluded from `@ToString` in demographic models to avoid log bloat and memory pressure.
 
 ---
 

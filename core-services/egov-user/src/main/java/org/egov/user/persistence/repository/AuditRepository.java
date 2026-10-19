@@ -19,13 +19,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository layer for recording audit snapshots of user profiles into the {@code eg_user_audit_table}.
+ */
 @Repository
 public class AuditRepository {
 	
 	public static final String INSERT_AUDIT_DETAILS = "insert into eg_user_audit_table (id,uuid,tenantid,salutation,dob,locale,username,password,pwdexpirydate,mobilenumber,altcontactnumber,emailid,active,name,gender,pan,aadhaarnumber,"
-            + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,auditcreatedby,auditcreatedtime) values (:id,:uuid,:tenantid,:salutation,"
+            + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,auditcreatedby,auditcreatedtime,"
+            + "father_name,mother_name,spouse_name,is_identity_verified,identity_verified_date,last_resync_date,editted_count,last_login_method) values (:id,:uuid,:tenantid,:salutation,"
             + ":dob,:locale,:username,:password,:pwdexpirydate,:mobilenumber,:alternatemobilenumber,:emailid,:active,:name,:gender,:pan,:aadhaarnumber,:type,:guardian,:guardianrelation,:signature,"
-            + ":accountlocked,:bloodgroup,:photo,:identificationmark,:auditcreatedby,:auditcreatedtime) ";
+            + ":accountlocked,:bloodgroup,:photo,:identificationmark,:auditcreatedby,:auditcreatedtime,"
+            + ":father_name,:mother_name,:spouse_name,:is_identity_verified,:identity_verified_date,:last_resync_date,:editted_count,:last_login_method) ";
 
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private JdbcTemplate jdbcTemplate;
@@ -35,6 +40,13 @@ public class AuditRepository {
         this.jdbcTemplate = jdbcTemplate;
     }    
 
+    /**
+     * Persists an audit snapshot record of the user prior to an update.
+     *
+     * @param oldUser snapshot of user before changes
+     * @param userId  numeric ID of requester
+     * @param uuid    UUID of requester
+     */
 	public void auditUser(User oldUser, long userId, String uuid) {
 			
 		Map<String, Object> auditInputs = new HashMap<String, Object>();
@@ -147,9 +159,15 @@ public class AuditRepository {
 
         auditInputs.put("alternatemobilenumber", oldUser.getAlternateMobileNumber());
 
-        
-        
-    	
+        auditInputs.put("father_name", oldUser.getFatherName());
+        auditInputs.put("mother_name", oldUser.getMotherName());
+        auditInputs.put("spouse_name", oldUser.getSpouseName());
+        auditInputs.put("is_identity_verified", oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false);
+        auditInputs.put("identity_verified_date", oldUser.getIdentityVerifiedDate());
+        auditInputs.put("last_resync_date", oldUser.getLastResyncDate());
+        auditInputs.put("editted_count", oldUser.getEdittedCount() != null ? oldUser.getEdittedCount() : 0);
+        auditInputs.put("last_login_method", oldUser.getLastLoginMethod());
+
         namedParameterJdbcTemplate.update(INSERT_AUDIT_DETAILS, auditInputs); 
     	
 	}

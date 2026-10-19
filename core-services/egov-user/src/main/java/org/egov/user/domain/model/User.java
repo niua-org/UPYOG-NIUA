@@ -12,7 +12,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.config.*;
 import org.egov.user.domain.exception.InvalidUserCreateException;
 import org.egov.user.domain.exception.InvalidUserUpdateException;
@@ -20,6 +22,7 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -27,6 +30,10 @@ import java.util.stream.Collectors;
 
 import static org.springframework.util.ObjectUtils.isEmpty;
 
+/**
+ * Core domain entity representing a citizen or employee user in UPYOG.
+ * Encapsulates demographics, roles, addresses, audit timestamps, and authentication state.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -72,6 +79,7 @@ public class User {
     private Set<Role> roles = new HashSet<>();
     private Date dob;
     private Date passwordExpiryDate;
+    @Builder.Default
     private String locale = "en_IN";
     private UserType type;
     private BloodGroup bloodGroup;
@@ -88,10 +96,35 @@ public class User {
     private Long loggedInUserId;
     private String loggedInUserUuid;
     private boolean otpValidationMandatory;
+    @Builder.Default
     private boolean mobileValidationMandatory = true;
     private String alternateMobileNumber;
     private boolean digilockerRegistration;
 
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String fatherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String motherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String spouseName;
+
+    private Boolean isIdentityVerified;
+    private Date identityVerifiedDate;
+    private Date lastResyncDate;
+    private Integer edittedCount;
+    private String lastLoginMethod;
+
+    /**
+     * Appends an {@link Address} to this user's address collection.
+     *
+     * @param addressItem address to add
+     * @return current user instance
+     */
     public User addAddressItem(Address addressItem) {
         if (this.addresses == null) {
             this.addresses = new HashSet<>();
@@ -100,6 +133,12 @@ public class User {
         return this;
     }
 
+    /**
+     * Appends a {@link Role} to this user's role collection.
+     *
+     * @param roleItem role to add
+     * @return current user instance
+     */
     public User addRolesItem(Role roleItem) {
         if (this.roles == null) {
             this.roles = new HashSet<>();
@@ -118,8 +157,6 @@ public class User {
                 || isMobileNumberAbsent()
                 || isActiveIndicatorAbsent()
                 || isTypeAbsent()
-                || isPermanentAddressInvalid()
-                || isCorrespondenceAddressInvalid()
                 || isRolesAbsent()
                 || isOtpReferenceAbsent()
                 || isTenantIdAbsent()) {
@@ -136,7 +173,6 @@ public class User {
                 || isMobileNumberAbsent()
                 || isActiveIndicatorAbsent()
                 || isTypeAbsent()
-                || isAddressesInvalid()
                 || isRolesAbsent()
                 || isOtpReferenceAbsent()
                 || isTenantIdAbsent()) {
@@ -161,12 +197,102 @@ public class User {
     }
 
     public void validateUserModification() {
-        if (isPermanentAddressInvalid()
-                || isCorrespondenceAddressInvalid()
-                || isTenantIdAbsent()
-        ) {
+        if (isTenantIdAbsent()) {
             throw new InvalidUserUpdateException(this);
         }
+    }
+
+    /**
+     * Validates that all mandatory fields specified in Section 8 are present for citizen profile creation.
+     * Mandatory fields: Name, Father's Name, Mother's Name, Mobile Number, DOB, Email ID, Gender.
+     *
+     * @throws CustomException if any mandatory field is missing
+     */
+    public void validateMandatoryProfileFields() {
+        if (StringUtils.isBlank(this.name)) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Name is mandatory for profile creation.");
+        }
+        if (StringUtils.isBlank(this.fatherName)) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Father's Name is mandatory for profile creation.");
+        }
+        if (StringUtils.isBlank(this.motherName)) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Mother's Name is mandatory for profile creation.");
+        }
+        if (StringUtils.isBlank(this.mobileNumber)) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Mobile Number is mandatory for profile creation.");
+        }
+        if (this.dob == null) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Date of Birth is mandatory for profile creation.");
+        }
+        if (StringUtils.isBlank(this.emailId)) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Email ID is mandatory for profile creation.");
+        }
+        if (this.gender == null) {
+            throw new CustomException("MANDATORY_FIELD_MISSING", "Gender is mandatory for profile creation.");
+        }
+    }
+
+    /**
+     * Enforces Section 8 non-editable field constraints during profile updates.
+     * Non-editable fields: Name, Father's Name, Mother's Name, Mobile Number, DOB, Email ID, Gender.
+     * These cannot be changed once set, unless authorized via Aadhaar re-sync (for Name, DOB, Gender).
+     * Editable fields (Spouse Name, Guardian Name, Alternate Mobile Number, Profile Picture) are permitted.
+     *
+     * @param existingUser the existing user entity from database
+     * @param isResync     flag indicating whether update is authenticated via Aadhaar re-sync
+     * @throws CustomException if any non-editable field is illegally modified
+     */
+    public void validateNonEditableProfileFields(User existingUser, boolean isResync) {
+        if (existingUser == null) {
+            return;
+        }
+
+        // 1. Mobile Number (Non-Editable)
+        if (isFieldModified(this.mobileNumber, existingUser.getMobileNumber())) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_MOBILE);
+        }
+
+        // 2. Father's Name (Non-Editable)
+        if (isFieldModified(this.fatherName, existingUser.getFatherName())) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_FATHER_NAME);
+        }
+
+        // 3. Mother's Name (Non-Editable)
+        if (isFieldModified(this.motherName, existingUser.getMotherName())) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_MOTHER_NAME);
+        }
+
+        // 4. Email ID (Non-Editable)
+        if (isFieldModified(this.emailId, existingUser.getEmailId())) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_EMAIL);
+        }
+
+        // 5. Name (Non-Editable unless Aadhaar re-sync)
+        if (!isResync && isFieldModified(this.name, existingUser.getName())) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_NAME);
+        }
+
+        // 6. Date of Birth (Non-Editable unless Aadhaar re-sync)
+        if (!isResync && existingUser.getDob() != null && this.dob != null
+                && !DateUtils.isSameDay(this.dob, existingUser.getDob())) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_DOB);
+        }
+
+        // 7. Gender (Non-Editable unless Aadhaar re-sync)
+        if (!isResync && existingUser.getGender() != null && this.gender != null
+                && !existingUser.getGender().equals(this.gender)) {
+            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_GENDER);
+        }
+    }
+
+    private boolean isFieldModified(String incoming, String existing) {
+        if (StringUtils.isBlank(existing)) {
+            return false;
+        }
+        if (StringUtils.isBlank(incoming)) {
+            return false;
+        }
+        return !incoming.trim().equalsIgnoreCase(existing.trim());
     }
 
     @JsonIgnore
@@ -346,6 +472,14 @@ public class User {
 //        user.setGuardianRelation(u.relationship);
         user.setActive(u.active);
         user.setAlternateMobileNumber(u.alternateMobileNumber);
+        user.setFatherName(u.fatherName);
+        user.setMotherName(u.motherName);
+        user.setSpouseName(u.spouseName);
+        user.setIsIdentityVerified(u.isIdentityVerified);
+        user.setIdentityVerifiedDate(u.identityVerifiedDate);
+        user.setLastResyncDate(u.lastResyncDate);
+        user.setEdittedCount(u.edittedCount);
+        user.setLastLoginMethod(u.lastLoginMethod);
  
         // Address mappings
 //        if (u.permanentAddress != null || u.permanentCity != null || u.permanentPinCode != null) {

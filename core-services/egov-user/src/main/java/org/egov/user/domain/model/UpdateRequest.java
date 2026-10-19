@@ -14,6 +14,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Contract model representing a user update payload.
+ * Provides conversions between contract representations and {@link User} domain objects.
+ */
 @Setter
 @Getter
 @Builder
@@ -31,11 +35,17 @@ public class UpdateRequest {
     private String altContactNumber;
     private String pan;
     private String aadhaarNumber;
+    @JsonIgnore
     private String permanentAddress;
+    @JsonIgnore
     private String permanentCity;
+    @JsonIgnore
     private String permanentPinCode;
+    @JsonIgnore
     private String correspondenceAddress;
+    @JsonIgnore
     private String correspondenceCity;
+    @JsonIgnore
     private String correspondencePinCode;
     private Boolean active;
     private String locale;
@@ -100,8 +110,6 @@ public class UpdateRequest {
         this.fatherOrHusbandName = user.getGuardian();
         this.uuid = user.getUuid();
         this.alternatemobilenumber=user.getAlternateMobileNumber();
-        mapPermanentAddress(user);
-        mapCorrespondenceAddress(user);
     }
 
     private void mapCorrespondenceAddress(User user) {
@@ -125,6 +133,13 @@ public class UpdateRequest {
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());
     }
 
+    /**
+     * Converts this update request payload into a {@link User} domain model.
+     *
+     * @param loggedInUserId ID of the user performing the operation
+     * @param isCreate       indicates whether the domain model is being built for create or update
+     * @return the mapped {@link User} domain entity
+     */
     @JsonIgnore
     public User toDomain(Long loggedInUserId, boolean isCreate) {
         BloodGroup bloodGroup = null;

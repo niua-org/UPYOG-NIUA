@@ -9,6 +9,8 @@ import org.egov.dx.adapter.vendor.dto.VendorSendOtpRequest;
 import org.egov.dx.adapter.vendor.dto.VendorSendOtpResponse;
 import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpRequest;
 import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpSuccessResponse;
+import org.egov.dx.service.AadhaarSessionManager;
+import org.egov.dx.service.impl.AadhaarSessionManagerImpl;
 import org.egov.dx.util.AadhaarConstants;
 import org.egov.dx.validator.AadhaarVerificationValidator;
 import org.egov.dx.web.models.AadhaarVerificationRequest;
@@ -16,6 +18,7 @@ import org.egov.dx.web.models.AadhaarVerificationResponse;
 import org.egov.dx.web.models.ResponseInfoFactory;
 import org.egov.dx.web.models.UserDemographics;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,9 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Adheres 100% to SOLID principles:</p>
  * <ul>
- *   <li><b>Single Responsibility Principle (SRP):</b> Solely handles HTTP transport orchestration. Validation is delegated to {@link AadhaarVerificationValidator}.</li>
- *   <li><b>Dependency Inversion Principle (DIP):</b> Depends on the {@link AadhaarGatewayAdapter} interface abstraction via constructor injection, never on concrete classes.</li>
- *   <li><b>Open/Closed Principle (OCP):</b> New gateway adapters can be swapped or added via configuration without changing this controller.</li>
+ *   <li><b>Single Responsibility Principle (SRP):</b> Solely handles HTTP transport orchestration. Validation is delegated to {@link AadhaarVerificationValidator}, and session/rate tracking is delegated to {@link AadhaarSessionManager}.</li>
+ *   <li><b>Dependency Inversion Principle (DIP):</b> Depends purely on injected interface abstractions via constructor injection.</li>
+ *   <li><b>Open/Closed Principle (OCP):</b> New gateway adapters and session managers can be swapped via configuration without changing this controller.</li>
  * </ul>
  *
  * @author UPYOG Team
@@ -43,17 +46,27 @@ public class AadhaarVerificationController {
 
     private final AadhaarGatewayAdapter gatewayAdapter;
     private final AadhaarVerificationValidator validator;
+    private final AadhaarSessionManager sessionManager;
 
     /**
      * Constructor injection satisfying the Dependency Inversion Principle (DIP).
      *
      * @param gatewayAdapter abstraction for the configured vendor gateway adapter
      * @param validator component handling request validation
+     * @param sessionManager abstraction managing OTP attempts and replay prevention
      */
+    @Autowired
     public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
-                                         AadhaarVerificationValidator validator) {
+                                         AadhaarVerificationValidator validator,
+                                         AadhaarSessionManager sessionManager) {
         this.gatewayAdapter = gatewayAdapter;
         this.validator = validator;
+        this.sessionManager = sessionManager;
+    }
+
+    public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
+                                         AadhaarVerificationValidator validator) {
+        this(gatewayAdapter, validator, new AadhaarSessionManagerImpl(3, null));
     }
 
     /**
@@ -146,10 +159,22 @@ public class AadhaarVerificationController {
                 ? request.getReferenceId()
                 : request.getTxnId();
 
+        // 1. Replay Prevention: Verify if this OTP reference ID was already verified and consumed
+        if (StringUtils.isNotBlank(referenceId) && sessionManager.isReferenceIdConsumed(referenceId)) {
+            log.error("Replay attack prevented: referenceId {} has already been verified and consumed", referenceId);
+            return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_OTP_ALREADY_VERIFIED, AadhaarConstants.MSG_OTP_ALREADY_VERIFIED), HttpStatus.BAD_REQUEST);
+        }
+
+        // 2. Rate Limiting Check
+        if (StringUtils.isNotBlank(referenceId) && sessionManager.isAttemptLimitExceeded(referenceId)) {
+            log.error("Locked transaction: referenceId {} exceeded maximum allowed OTP attempts ({})", referenceId, sessionManager.getMaxOtpAttempts());
+            return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_MAX_OTP_ATTEMPTS_EXCEEDED, AadhaarConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED), HttpStatus.BAD_REQUEST);
+        }
+
         log.info("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, userUuid: {}",
                 referenceId, request.getRequestInfo().getApiId(), request.getIsResync(), request.getUserUuid());
 
-        // 2. Map to Vendor DTO
+        // 3. Map to Vendor DTO
         Long vendorRefId = null;
         try {
             vendorRefId = Long.valueOf(referenceId);
@@ -162,16 +187,17 @@ public class AadhaarVerificationController {
                 .otp(request.getOtp())
                 .build();
 
-        // 3. Invoke Gateway Adapter Abstraction (DIP)
+        // 4. Invoke Gateway Adapter Abstraction (DIP)
         VendorVerifyOtpSuccessResponse vendorRes;
         try {
             vendorRes = gatewayAdapter.verifyOtp(vendorReq);
         } catch (CustomException ce) {
+            sessionManager.recordFailedOtpAttempt(referenceId);
             log.warn("Aadhaar _verifyOtp failed at gateway: {} - {}", ce.getCode(), ce.getMessage());
             return new ResponseEntity<>(createErrorResponse(request, ce.getCode(), ce.getMessage()), HttpStatus.BAD_REQUEST);
         }
 
-        // 4. Validate Gateway Response
+        // 5. Validate Gateway Response
         if (vendorRes == null || vendorRes.getData() == null) {
             log.error("Gateway returned empty response during OTP verification for referenceId: {}", referenceId);
             return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_GATEWAY_ERROR, AadhaarConstants.MSG_GATEWAY_NO_RESPONSE), HttpStatus.BAD_GATEWAY);
@@ -181,6 +207,7 @@ public class AadhaarVerificationController {
                 && AadhaarConstants.STATUS_VALID.equalsIgnoreCase(vendorRes.getData().getStatus());
 
         if (!isValid) {
+            sessionManager.recordFailedOtpAttempt(referenceId);
             String failureMessage = StringUtils.isNotBlank(vendorRes.getData().getMessage())
                     ? vendorRes.getData().getMessage()
                     : AadhaarConstants.MSG_INVALID_OR_EXPIRED_OTP;
@@ -199,22 +226,31 @@ public class AadhaarVerificationController {
             return new ResponseEntity<>(errorRes, HttpStatus.BAD_REQUEST);
         }
 
-        // 5. Map Verified e-KYC Demographic & Address Details to UPYOG Model
+        // 6. Invalidate session reference ID upon successful verification (Replay Prevention)
+        if (StringUtils.isNotBlank(referenceId)) {
+            sessionManager.markReferenceIdConsumed(referenceId);
+            sessionManager.clearFailedOtpAttempts(referenceId);
+        }
+
+        // 7. Map Verified e-KYC Demographic & Address Details to UPYOG Model
         VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails details = vendorRes.getData();
         VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.AddressDetails addr = details.getAddress();
 
+        String rawDob = StringUtils.isNotBlank(details.getDob()) ? details.getDob() : details.getDateOfBirth();
+        String normalizedDob = normalizeDob(rawDob);
+
         UserDemographics demographics = UserDemographics.builder()
                 .name(details.getName())
-                .dob(StringUtils.isNotBlank(details.getDob()) ? details.getDob() : details.getDateOfBirth())
+                .dob(normalizedDob)
                 .gender(details.getGender())
                 .careOf(details.getCareOf())
                 .fullAddress(details.getFullAddress())
                 .photo(details.getPhoto())
-                .doorNo(addr != null ? addr.getHouse() : null)
-                .street(addr != null ? addr.getStreet() : null)
-                .landmark(addr != null ? addr.getLandmark() : null)
-                .locality(addr != null ? addr.getSubdistrict() : null)
-                .city(addr != null ? addr.getVtc() : null)
+                .doorNo(addr != null && StringUtils.isNotBlank(addr.getHouse()) ? addr.getHouse() : "N/A")
+                .street(addr != null && StringUtils.isNotBlank(addr.getStreet()) ? addr.getStreet() : "N/A")
+                .landmark(addr != null && StringUtils.isNotBlank(addr.getLandmark()) ? addr.getLandmark() : "N/A")
+                .locality(addr != null && StringUtils.isNotBlank(addr.getSubdistrict()) ? addr.getSubdistrict() : (addr != null ? addr.getVtc() : "N/A"))
+                .city(addr != null && StringUtils.isNotBlank(addr.getVtc()) ? addr.getVtc() : (addr != null ? addr.getDistrict() : "N/A"))
                 .district(addr != null ? addr.getDistrict() : null)
                 .state(addr != null ? addr.getState() : null)
                 .pincode(addr != null ? addr.getPincode() : null)
@@ -266,5 +302,28 @@ public class AadhaarVerificationController {
             return AadhaarConstants.DEFAULT_MASKED_AADHAAR;
         }
         return aadhaarNumber.replaceAll(AadhaarConstants.REGEX_AADHAAR_MASK, AadhaarConstants.MASK_CHAR);
+    }
+
+    /**
+     * Normalizes Date of Birth strings returned by UIDAI e-KYC gateways, handling Year-Only
+     * representations (e.g. "1965" or "00/00/1965") by defaulting day and month to "01-01-YYYY".
+     *
+     * @param rawDob raw date of birth string
+     * @return standardized date string
+     */
+    private String normalizeDob(String rawDob) {
+        if (StringUtils.isBlank(rawDob)) {
+            return null;
+        }
+        String trimmed = rawDob.trim();
+        // Check for 4-digit Year-Only DOB (e.g. "1965")
+        if (trimmed.matches("^[0-9]{4}$")) {
+            return trimmed + "-01-01";
+        }
+        // Check for "00/00/YYYY" or "00-00-YYYY"
+        if (trimmed.matches("^00[/-]00[/-]([0-9]{4})$")) {
+            return trimmed.substring(6) + "-01-01";
+        }
+        return trimmed;
     }
 }
