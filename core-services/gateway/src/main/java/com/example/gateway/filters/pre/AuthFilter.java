@@ -1,6 +1,8 @@
 package com.example.gateway.filters.pre;
 
 import com.example.gateway.filters.pre.helpers.AuthCheckFilterHelper;
+import com.example.gateway.filters.pre.helpers.UpyogMcpGatewayAuthHelper;
+import com.example.gateway.utils.UpyogMcpGatewaySupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -23,15 +25,27 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     private AuthCheckFilterHelper authCheckFilterHelper;
 
-    public AuthFilter(ModifyRequestBodyGatewayFilterFactory modifyRequestBodyFilter, AuthCheckFilterHelper authCheckFilterHelper) {
+    private UpyogMcpGatewayAuthHelper upyogMcpGatewayAuthHelper;
+
+    public AuthFilter(ModifyRequestBodyGatewayFilterFactory modifyRequestBodyFilter, AuthCheckFilterHelper authCheckFilterHelper,
+                      UpyogMcpGatewayAuthHelper upyogMcpGatewayAuthHelper) {
         this.modifyRequestBodyFilter = modifyRequestBodyFilter;
         this.authCheckFilterHelper = authCheckFilterHelper;
+        this.upyogMcpGatewayAuthHelper = upyogMcpGatewayAuthHelper;
     }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         Boolean doAuth = exchange.getAttribute(AUTH_BOOLEAN_FLAG_NAME);
+
+        // UPYOG MCP: JSON-RPC body has no RequestInfo — authenticate from Auth-Token header only (see UpyogMcpGatewayAuthHelper).
+        if (UpyogMcpGatewaySupport.isMcpPath(exchange.getRequest().getPath().value())) {
+            if (Boolean.TRUE.equals(doAuth)) {
+                return upyogMcpGatewayAuthHelper.authenticateAndForward(exchange, chain);
+            }
+            return chain.filter(exchange);
+        }
 
         if(doAuth) {
 
