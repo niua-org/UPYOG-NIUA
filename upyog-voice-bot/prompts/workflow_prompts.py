@@ -25,6 +25,7 @@ User message: "{user_msg}"
 CRITICAL RULES:
 - If the user's message clearly answers or updates one or more target fields, extract them.
 - If a field is not mentioned or changed, return null for that field.
+- If already collected fields contain selected_slots, their dates are authoritative for start_date and end_date; do not restore a wider date range from earlier messages.
 - Return object-valued fields using the keys specified in their hints.
 - If the user just says "Yes" or "No", use the "Question the user is answering" to figure out which field they are answering (e.g., nightLight).
 - STRICT RULE FOR 'addType': Only extract if they mention a specific type (e.g. Hoarding, Unipole, Kiosk, Banner). Do NOT extract generic words like 'adv' or 'advertisement' as addType!
@@ -96,7 +97,7 @@ Rules:
 2. Infer the complaint category from the meaning of the issue and return its exact name from the valid options. For example, water not reaching a home is a water-supply complaint if that option is available.
 3. For 'sub_category', return a value only when it exactly matches an option valid for the selected category. Never invent category or subcategory options.
 4. For 'locality', extract only a named area that matches a valid locality option. Phrases like 'near my house' are not a locality name. Never invent or accept arbitrary locality values.
-5. For 'description', preserve the user's actual issue in their language; do not add facts. Hindi, Hinglish, and other user languages are valid.
+5. For 'description', rewrite the reported issue as one concise, standalone sentence in the user's language. Remove filing instructions, use collected details when relevant, and never add facts.
 6. Return null for a field that cannot be determined or does not match its valid options.
 7. NEVER extract meta or navigation words like 'continue', 'resume', 'draft', 'show drafts', 'my drafts' as any field value.
 
