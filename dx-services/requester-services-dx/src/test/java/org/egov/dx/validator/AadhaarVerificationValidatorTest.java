@@ -22,7 +22,7 @@ public class AadhaarVerificationValidatorTest {
     void testValidateSendOtpRequest_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
                 .requestInfo(new RequestInfo())
-                .aadhaarNumber("548796521458")
+                .aadhaarNumber("548796521452")
                 .build();
 
         assertDoesNotThrow(() -> validator.validateSendOtpRequest(request));
