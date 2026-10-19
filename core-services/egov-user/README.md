@@ -173,7 +173,7 @@ To avoid data loss and preserve an immutable historical audit trail without need
 - **Lockout Rule**: Tracks invalid OTP attempts per transaction reference (`refId`/`txnId`) and mobile number. Upon the 3rd consecutive failed attempt, the transaction is invalidated and locked, rejecting further attempts with `ERROR_MAX_OTP_ATTEMPTS_EXCEEDED` until a new OTP is requested.
 
 #### 6. Storage Security & PII Protection
-- **Masked Aadhaar**: Persistent storage (`eg_user.aadhaarnumber`, `eg_user_document.document_uid`) only stores masked Aadhaar numbers (`XXXXXXXX1234`).
+- **Masked Aadhaar**: Persistent storage (`eg_user.aadhaarnumber`, `ug_user_document.document_uid`) only stores masked Aadhaar numbers (`XXXXXXXX1234`).
 - **Transparent Encryption**: PII data fields are encrypted at rest using `egov-enc-service` with dedicated keys (`USER_ENCRYPTION_KEY`, `USER_ADDRESS_ENCRYPTION_KEY`, `USER_DOCUMENT_ENCRYPTION_KEY`).
 
 #### 7. Centralized Constants Architecture (`UserConstants`)

@@ -16,14 +16,14 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
- * Repository performing persistence and retrieval operations on {@code eg_user_document}.
+ * Repository performing persistence and retrieval operations on {@code ug_user_document}.
  */
 @Repository
 @Slf4j
 public class UserDocumentRepository {
 
     private static final String INSERT_QUERY =
-            "INSERT INTO eg_user_document (" +
+            "INSERT INTO ug_user_document (" +
             "id, user_id, tenant_id, document_type, document_uid, filestore_id, file_name, " +
             "is_verified, active, additional_details, createdby, createddate, lastmodifiedby, lastmodifieddate" +
             ") VALUES (" +
@@ -32,7 +32,7 @@ public class UserDocumentRepository {
             ")";
 
     private static final String UPDATE_QUERY =
-            "UPDATE eg_user_document SET " +
+            "UPDATE ug_user_document SET " +
             "document_type = :document_type, " +
             "document_uid = :document_uid, " +
             "filestore_id = :filestore_id, " +
@@ -45,7 +45,7 @@ public class UserDocumentRepository {
             "WHERE id = :id";
 
     private static final String SOFT_DELETE_QUERY =
-            "UPDATE eg_user_document SET " +
+            "UPDATE ug_user_document SET " +
             "active = false, " +
             "lastmodifiedby = :lastmodifiedby, " +
             "lastmodifieddate = :lastmodifieddate " +
@@ -149,7 +149,7 @@ public class UserDocumentRepository {
      * @return list of matching {@link UserDocument} records
      */
     public List<UserDocument> search(UserDocumentSearchCriteria criteria) {
-        StringBuilder query = new StringBuilder("SELECT d.*, u.uuid as user_uuid FROM eg_user_document d LEFT JOIN eg_user u ON d.user_id = u.id AND d.tenant_id = u.tenantid WHERE 1=1 ");
+        StringBuilder query = new StringBuilder("SELECT d.*, u.uuid as user_uuid FROM ug_user_document d LEFT JOIN eg_user u ON d.user_id = u.id AND d.tenant_id = u.tenantid WHERE 1=1 ");
         Map<String, Object> params = new HashMap<>();
 
         if (StringUtils.isNotBlank(criteria.getId())) {
