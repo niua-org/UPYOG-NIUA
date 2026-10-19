@@ -158,6 +158,14 @@ def intent_and_ui_node(state: AdvBookingState):
                 
                 # 9. Save the selected slots into our temporary draft booking memory
                 draft_booking["selected_slots"] = parsed
+                selected_dates = sorted({
+                    str(slot.get("date", "")).strip()
+                    for slot in parsed
+                    if isinstance(slot, dict) and slot.get("date")
+                })
+                if selected_dates:
+                    draft_booking["start_date"] = selected_dates[0]
+                    draft_booking["end_date"] = selected_dates[-1]
                 # 10. Replace the ugly JSON message with a clean text message so the bot understands what happened
                 user_msg = "I have selected a slot."
         except Exception as e:
