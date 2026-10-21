@@ -24,8 +24,8 @@
 		<lombok.version>1.18.32</lombok.version>
 		<testcontainers.version>1.19.7</testcontainers.version>
 		<jacoco.version>0.8.11</jacoco.version>
-		<jacoco.line.coverage.minimum>0.00</jacoco.line.coverage.minimum>
-		<jacoco.branch.coverage.minimum>0.00</jacoco.branch.coverage.minimum>
+		<jacoco.line.coverage.minimum>0.20</jacoco.line.coverage.minimum>
+		<jacoco.branch.coverage.minimum>0.15</jacoco.branch.coverage.minimum>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -196,6 +196,7 @@
 									<includes>
 										<include>org.egov.demand.service</include>
 										<include>org.egov.demand.util</include>
+										<include>org.egov.demand.validation</include>
 									</includes>
 									<limits>
 										<limit>
