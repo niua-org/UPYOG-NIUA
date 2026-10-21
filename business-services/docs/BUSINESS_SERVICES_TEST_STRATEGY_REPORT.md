@@ -115,3 +115,90 @@ mvn -f business-services/egov-hrms test
 ```
 
 Integration tests skip automatically when Docker is unavailable.
+
+---
+
+## Follow-up — JDK 17 and service-layer coverage (PR #1941)
+
+### JDK / build tooling
+
+| Item | Value |
+|------|--------|
+| **Test JDK** | Eclipse Temurin **17.0.20.1** (`JAVA_HOME=/tmp/jdk-17` in Cloud Agent) |
+| **Maven wrapper script** | `business-services/scripts/mvn-java17.sh` |
+| **Toolchains** | `~/.m2/toolchains.xml` → JDK 17 |
+| **Test stack** | JUnit 5, Mockito, AssertJ, Testcontainers 1.19.7, WireMock 3.3.1, ArchUnit (dashboard-data-engine), JaCoCo 0.8.11 |
+
+**Production compile level unchanged** where bumping would be a product decision:
+
+| Module | Production `release` / `java.version` | Tests run on |
+|--------|----------------------------------------|--------------|
+| reconciliation-service | **11** (Spring Boot 2.7) | JDK 17 |
+| egf-master / egf-instrument / dashboard-analytics | **8** (legacy) | JDK 17 |
+| All other business-services modules | **17** | JDK 17 |
+
+### `mvn verify` on JDK 17 (this VM, 2026-10-21)
+
+All **14** modules: **BUILD SUCCESS** (Testcontainers ITs skip when Docker absent).
+
+| Module | verify |
+|--------|--------|
+| billing-service | OK |
+| collection-services | OK |
+| dashboard-analytics | OK |
+| dashboard-data-engine | OK |
+| dashboard-data-extractor | OK |
+| dashboard-ingest | OK |
+| egf-instrument | OK |
+| egf-master | OK |
+| egov-apportion-service | OK |
+| egov-hrms | OK |
+| employee-dashboard | OK |
+| finance-collections-voucher-consumer | OK |
+| reconciliation-service | OK |
+| verification-service | OK |
+
+### Coverage before vs after — **service / validator packages** (line % / branch %)
+
+| Service | Before (service pkg, approx.) | After line % | After branch % | JaCoCo gate (ratchet) |
+|---------|------------------------------|--------------|----------------|------------------------|
+| billing-service | ~0% (tests skipped) | **22.5%** | **17.0%** | service + validation floors in pom |
+| collection-services | ~40% partial | **39.9%** | **25.9%** | service + util |
+| egov-hrms | **0%** | **62.7%** | **28.7%** | service + validation |
+| verification-service | **&lt;5%** | **41.6%** (service+mapper) | **25.8%** | service/util/mapper |
+| reconciliation-service | **0%** | **86.4%** | **100%** | service ≥80%, validation ≥70% |
+| egov-apportion-service | minimal | **57.7%** | **31.1%** | service |
+| employee-dashboard | minimal | **97.7%** | **50.0%** | service.impl |
+| dashboard-analytics | **0%** | **36.8%** | **19.3%** | impl/org.service ≥25% |
+| dashboard-ingest | **0%** | **17.6%** | **5.2%** | service ≥15% |
+| dashboard-data-engine | partial | **76.4%** | **50.6%** | service.impl/util/validator |
+| dashboard-data-extractor | partial | **67.5%** | **50.9%** | service/util/impl |
+| egf-master | partial | **56.1%** | **52.4%** | domain.service |
+| egf-instrument | partial | **90.5%** | **85.0%** | domain.service |
+| finance-collections-voucher-consumer | **0%** | **15.4%** | **5.3%** | receipt + mdms service |
+
+**80% / 70%** remains the target; gates were **raised to measured baselines** so CI stays green while coverage increases.
+
+### Classes still without a dedicated `*Test` class (~78)
+
+Naming audit (`*Service*`, `*Validator*`, `*Util*`, `*Mapper*` in main). Many are **interfaces**, **DTOs**, **constants**, **repositories**, or **commented-out** code:
+
+| Reason | Examples |
+|--------|----------|
+| Interface — impl tested | `UserService` (HRMS), `CommonService`, `DigressService`, `IngestionPersistenceService` |
+| DTO / contract / constant | `ApportionConstants`, `BankAccountServiceMapping*`, `LegacyBatchIngestRequest` |
+| Repository / JDBC adapter | `ServiceRequestRepository*`, `BillingServiceRepository` |
+| **Commented-out** main source | `CollectionService`, `WorkflowService`, `ReceiptEnricher` (collection-services) |
+| Large ES orchestration — partial | `TarentoServiceImpl` (factory + impl helpers tested; full `getAggregatedData` needs chart JSON fixtures) |
+| Row mappers with SQL coupling | Some `*RowMapper` classes covered indirectly via repository ITs only |
+
+### New / updated Findings
+
+10. **Instrument API JSON** — `InstrumentService.createInstrument` uses `ObjectMapper.convertValue` on repository responses; mismatched fields (e.g. `transactionId`) fail deserialization (**smell**; test uses valid `InstrumentResponse` stub).
+11. **Java 11 reconciliation** — bytecode stays 11; running on JDK 17 is supported; bumping production to 17 requires Boot 3 migration (out of scope).
+12. **Legacy Java 8 modules** (egf, dashboard-analytics) — tests run on JDK 17 with `release` 8 for main sources.
+
+### Testability refactors (follow-up)
+
+- `ReceiptTestFixtures.receiptReqWithInstrument()` for finance consumer tests (test sources only).
+- `ClientServiceFactoryTest` for dashboard-analytics client routing.
