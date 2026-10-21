@@ -5,6 +5,20 @@ Auto-generated inventory: every `src/main/java` type and whether `<ClassName>Tes
 | Module | Total classes | Has test | Missing | Notes |
 |--------|---------------|----------|---------|-------|
 | billing-service | 141 | 139 | 2 | see detail below |
+| collection-services | 198 | 189 | 9 | see detail below |
+| dashboard-analytics | 97 | 85 | 12 | see detail below |
+| dashboard-data-engine | 74 | 70 | 4 | see detail below |
+| dashboard-data-extractor | 52 | 48 | 4 | see detail below |
+| dashboard-ingest | 68 | 57 | 11 | see detail below |
+| egf-instrument | 96 | 96 | 0 | see detail below |
+| egf-master | 378 | 373 | 5 | see detail below |
+| egov-apportion-service | 38 | 36 | 2 | see detail below |
+| egov-hrms | 54 | 51 | 3 | see detail below |
+| employee-dashboard | 25 | 23 | 2 | see detail below |
+| finance-collections-voucher-consumer | 107 | 105 | 2 | see detail below |
+| reconciliation-service | 13 | 9 | 4 | see detail below |
+| verification-service | 47 | 44 | 3 | see detail below |
+
 
 ## billing-service
 
@@ -22,7 +36,6 @@ Auto-generated inventory: every `src/main/java` type and whether `<ClassName>Tes
 
 _139 classes — omitted for brevity._
 
-| collection-services | 198 | 189 | 9 | see detail below |
 
 ## collection-services
 
@@ -50,7 +63,6 @@ _139 classes — omitted for brevity._
 
 _189 classes — omitted for brevity._
 
-| dashboard-analytics | 97 | 85 | 12 | see detail below |
 
 ## dashboard-analytics
 
@@ -75,7 +87,6 @@ _189 classes — omitted for brevity._
 
 _85 classes — omitted for brevity._
 
-| dashboard-data-engine | 74 | 70 | 4 | see detail below |
 
 ## dashboard-data-engine
 
@@ -92,7 +103,6 @@ _85 classes — omitted for brevity._
 
 _70 classes — omitted for brevity._
 
-| dashboard-data-extractor | 52 | 48 | 4 | see detail below |
 
 ## dashboard-data-extractor
 
@@ -159,7 +169,6 @@ _70 classes — omitted for brevity._
 - `org.upyog.dashboard.util.ExtractorUtil` (class)
 - `org.upyog.dashboard.util.HierarchyParser` (class)
 
-| dashboard-ingest | 68 | 57 | 11 | see detail below |
 
 ## dashboard-ingest
 
@@ -183,7 +192,6 @@ _70 classes — omitted for brevity._
 
 _57 classes — omitted for brevity._
 
-| egf-instrument | 96 | 96 | 0 | see detail below |
 
 ## egf-instrument
 
@@ -193,7 +201,6 @@ _57 classes — omitted for brevity._
 
 _96 classes — omitted for brevity._
 
-| egf-master | 378 | 373 | 5 | see detail below |
 
 ## egf-master
 
@@ -214,7 +221,6 @@ _96 classes — omitted for brevity._
 
 _373 classes — omitted for brevity._
 
-| egov-apportion-service | 38 | 36 | 2 | see detail below |
 
 ## egov-apportion-service
 
@@ -264,7 +270,6 @@ _373 classes — omitted for brevity._
 - `org.egov.web.models.enums.Purpose` (enum)
 - `org.egov.web.models.enums.ReceiptType` (enum)
 
-| egov-hrms | 54 | 51 | 3 | see detail below |
 
 ## egov-hrms
 
@@ -283,7 +288,6 @@ _373 classes — omitted for brevity._
 
 _51 classes — omitted for brevity._
 
-| employee-dashboard | 25 | 23 | 2 | see detail below |
 
 ## employee-dashboard
 
@@ -320,7 +324,6 @@ _51 classes — omitted for brevity._
 - `org.upyog.employee.dasboard.web.models.RoleBasedDashboardRequest` (class)
 - `org.upyog.employee.dasboard.web.models.RoleBasedDashboardResponse` (class)
 
-| finance-collections-voucher-consumer | 107 | 105 | 2 | see detail below |
 
 ## finance-collections-voucher-consumer
 
@@ -335,7 +338,6 @@ _51 classes — omitted for brevity._
 
 _105 classes — omitted for brevity._
 
-| reconciliation-service | 13 | 9 | 4 | see detail below |
 
 ## reconciliation-service
 
@@ -363,7 +365,6 @@ _105 classes — omitted for brevity._
 - `org.upyog.reconciliation.validation.ReconciliationValidationEngine` (class)
 - `org.upyog.reconciliation.validation.ValidationResult` (class)
 
-| verification-service | 47 | 44 | 3 | see detail below |
 
 ## verification-service
 
