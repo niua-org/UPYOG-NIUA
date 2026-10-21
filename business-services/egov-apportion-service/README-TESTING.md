@@ -1,14 +1,9 @@
-# egov-apportion-service tests
-
-## Commands
+# egov-apportion-service testing
 
 ```bash
+export JAVA_HOME=/tmp/jdk-17 PATH=$JAVA_HOME/bin:/tmp/apache-maven-3.9.6/bin:$PATH
 mvn -f business-services/test-support/pom.xml install -DskipTests
-cd business-services/egov-apportion-service
-mvn test          # unit tests (*Test.java)
-mvn verify        # unit + ApportionSchemaIT (Docker required)
+mvn -f business-services/egov-apportion-service/pom.xml test verify
 ```
 
-JaCoCo report: `target/site/jacoco/index.html`
-
-Integration tests use Testcontainers Postgres and are skipped when Docker is unavailable.
+JaCoCo gates target `org.egov.service` and `org.egov.service.apportions`. Flyway ITs skip when Docker is unavailable.
