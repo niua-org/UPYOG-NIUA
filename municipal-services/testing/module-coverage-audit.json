@@ -1,0 +1,440 @@
+[
+  {
+    "module": "advertisement-service",
+    "main_classes": 102,
+    "with_test": 102,
+    "missing": [],
+    "test_count": 103,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "asset-calculator",
+    "main_classes": 36,
+    "with_test": 36,
+    "missing": [],
+    "test_count": 37,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "asset-services",
+    "main_classes": 84,
+    "with_test": 84,
+    "missing": [],
+    "test_count": 86,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "birth-death-services",
+    "main_classes": 104,
+    "with_test": 104,
+    "missing": [],
+    "test_count": 105,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "bpa-calculator",
+    "main_classes": 54,
+    "with_test": 54,
+    "missing": [],
+    "test_count": 55,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "bpa-services",
+    "main_classes": 114,
+    "with_test": 114,
+    "missing": [],
+    "test_count": 115,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "challan-generation",
+    "main_classes": 88,
+    "with_test": 88,
+    "missing": [],
+    "test_count": 90,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "challan-generation-calculator",
+    "main_classes": 43,
+    "with_test": 43,
+    "missing": [],
+    "test_count": 44,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "cnd-calculator",
+    "main_classes": 32,
+    "with_test": 32,
+    "missing": [],
+    "test_count": 33,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "cnd-service",
+    "main_classes": 86,
+    "with_test": 86,
+    "missing": [],
+    "test_count": 88,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "community-hall-booking",
+    "main_classes": 123,
+    "with_test": 123,
+    "missing": [],
+    "test_count": 125,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "echallan-calculator",
+    "main_classes": 43,
+    "with_test": 43,
+    "missing": [],
+    "test_count": 44,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "echallan-services",
+    "main_classes": 75,
+    "with_test": 75,
+    "missing": [],
+    "test_count": 76,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "egov-user-event",
+    "main_classes": 35,
+    "with_test": 35,
+    "missing": [],
+    "test_count": 36,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "estate-management",
+    "main_classes": 77,
+    "with_test": 77,
+    "missing": [],
+    "test_count": 79,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "ewaste-services",
+    "main_classes": 72,
+    "with_test": 72,
+    "missing": [],
+    "test_count": 73,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "fsm",
+    "main_classes": 130,
+    "with_test": 130,
+    "missing": [],
+    "test_count": 131,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "fsm-calculator",
+    "main_classes": 57,
+    "with_test": 57,
+    "missing": [],
+    "test_count": 58,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "garbage-service",
+    "main_classes": 109,
+    "with_test": 109,
+    "missing": [],
+    "test_count": 110,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "inbox",
+    "main_classes": 140,
+    "with_test": 140,
+    "missing": [],
+    "test_count": 141,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "land-services",
+    "main_classes": 44,
+    "with_test": 44,
+    "missing": [],
+    "test_count": 45,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "ndc-calculator",
+    "main_classes": 56,
+    "with_test": 56,
+    "missing": [],
+    "test_count": 57,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "ndc-services",
+    "main_classes": 114,
+    "with_test": 114,
+    "missing": [],
+    "test_count": 115,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "noc-services",
+    "main_classes": 77,
+    "with_test": 77,
+    "missing": [],
+    "test_count": 78,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pet-services",
+    "main_classes": 99,
+    "with_test": 99,
+    "missing": [],
+    "test_count": 100,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pgr-ai-services",
+    "main_classes": 91,
+    "with_test": 91,
+    "missing": [],
+    "test_count": 92,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pgr-services",
+    "main_classes": 84,
+    "with_test": 84,
+    "missing": [],
+    "test_count": 85,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pqm",
+    "main_classes": 95,
+    "with_test": 84,
+    "missing": [
+      "MdmsTest",
+      "Test",
+      "TestDocumentQueryBuilder",
+      "TestQueryBuilder",
+      "TestRepository",
+      "TestRequest",
+      "TestResponse",
+      "TestResultStatus",
+      "TestRowMapper",
+      "TestSearchCriteria",
+      "TestSearchRequest"
+    ],
+    "test_count": 96,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pqm-anomaly-finder",
+    "main_classes": 53,
+    "with_test": 48,
+    "missing": [
+      "Test",
+      "TestAnomalyFinderValidator",
+      "TestRequest",
+      "TestResponse",
+      "TestResultStatus"
+    ],
+    "test_count": 54,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "property-services",
+    "main_classes": 171,
+    "with_test": 171,
+    "missing": [],
+    "test_count": 173,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pt-calculator-v2",
+    "main_classes": 146,
+    "with_test": 146,
+    "missing": [],
+    "test_count": 147,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "pt-services-v2",
+    "main_classes": 92,
+    "with_test": 92,
+    "missing": [],
+    "test_count": 94,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "rainmaker-pgr",
+    "main_classes": 68,
+    "with_test": 68,
+    "missing": [],
+    "test_count": 71,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "request-service",
+    "main_classes": 100,
+    "with_test": 100,
+    "missing": [],
+    "test_count": 102,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "street-vending",
+    "main_classes": 119,
+    "with_test": 119,
+    "missing": [],
+    "test_count": 121,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "sw-calculator",
+    "main_classes": 129,
+    "with_test": 129,
+    "missing": [],
+    "test_count": 130,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "sw-services",
+    "main_classes": 123,
+    "with_test": 123,
+    "missing": [],
+    "test_count": 124,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "tl-calculator",
+    "main_classes": 76,
+    "with_test": 76,
+    "missing": [],
+    "test_count": 78,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "tl-services",
+    "main_classes": 107,
+    "with_test": 107,
+    "missing": [],
+    "test_count": 108,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "tp-services",
+    "main_classes": 91,
+    "with_test": 90,
+    "missing": [
+      "State"
+    ],
+    "test_count": 92,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "turn-io-adapter",
+    "main_classes": 65,
+    "with_test": 65,
+    "missing": [],
+    "test_count": 66,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "vehicle",
+    "main_classes": 85,
+    "with_test": 84,
+    "missing": [
+      "DepartmentalTest"
+    ],
+    "test_count": 86,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "vendor",
+    "main_classes": 65,
+    "with_test": 64,
+    "missing": [
+      "DepartmentalTest"
+    ],
+    "test_count": 66,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "vendor-management",
+    "main_classes": 42,
+    "with_test": 42,
+    "missing": [],
+    "test_count": 43,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "ws-calculator",
+    "main_classes": 144,
+    "with_test": 144,
+    "missing": [],
+    "test_count": 145,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  },
+  {
+    "module": "ws-services",
+    "main_classes": 131,
+    "with_test": 131,
+    "missing": [],
+    "test_count": 133,
+    "line_coverage": 0.0,
+    "branch_coverage": 0.0
+  }
+]

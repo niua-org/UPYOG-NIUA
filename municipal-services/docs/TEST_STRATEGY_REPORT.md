@@ -16,26 +16,69 @@ All deployable modules under `municipal-services/` now have:
 
 Shared tooling: `municipal-services/testing/`, `.mvn/settings-public.xml` (Maven Central + UPYOG Nexus URLs).
 
-## Module test run matrix (JDK 17 agent run)
+## Per-class unit test expansion (JDK 17, in progress)
 
-Environment: **OpenJDK 17** (`JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64`), Maven 3.9.6, `testing/run_module_tests.sh` with `.mvn/settings-public.xml`.
+Tooling: [`testing/generate_per_class_unit_tests.py`](../testing/generate_per_class_unit_tests.py), [`testing/audit_module_coverage.py`](../testing/audit_module_coverage.py), [`testing/update_jacoco_floors.py`](../testing/update_jacoco_floors.py).
 
-| Result | Count |
-|--------|-------|
-| **PASS** | **46** / 46 Java Maven modules (`mvn test`) |
-| **FAIL** | **0** |
-| **BLOCKED** | **0** (Nexus-only resolution not hit on this sweep) |
+Inventory snapshot: [`module-coverage-audit.json`](../testing/module-coverage-audit.json) — **4,071** main types, **4,052** with a matching `*Test` (19 naming/inner-type gaps in `pqm*`, `tp-services`, `vehicle`, `vendor`).
 
-Full line-by-line results: [module-test-run-results.txt.summary](../testing/module-test-run-results.txt.summary).
+| mvn test (per-class sweep) | Count |
+|----------------------------|------:|
+| **PASS** (committed per module) | **23** |
+| **FAIL** (generated tests present locally; fixes in flight) | **23** |
 
-| Non-Java (not in shell sweep) | Status |
-|-------------------------------|--------|
-| firenoc-services / firenoc-calculator | Jest unit **PASS** (prior run) |
-| pqm-scheduler | pytest **PASS** (prior run) |
-| core-smoke-tests | `mvn test-compile` **PASS** (prior run) |
-| upyog-aggregation-service | Go smoke registered; `go test` not re-run here |
+Earlier baseline (layered scaffold only): [module-test-run-results.txt.summary](../testing/module-test-run-results.txt.summary) — **46/46 PASS** before the per-class generator landed.
 
-Test-only fixes applied for JDK 17 green run (no `src/main` changes): POM test dependencies moved from `dependencyManagement` → `dependencies` where needed; standalone MockMvc / JUnit 5 alignment; ArchUnit exclusions for legacy controller→repository coupling; GlobalExceptionHandler tests aligned to observed HTTP status codes.
+| Module | Main classes | With `FooTest` | Missing | Test classes | mvn test | Notes |
+|--------|-------------:|---------------:|--------:|-------------:|----------|-------|
+| advertisement-service | 102 | 102 | — | 103 | **PASS** |  |
+| asset-calculator | 36 | 36 | — | 37 | **PASS** |  |
+| asset-services | 84 | 84 | — | 86 | **PASS** |  |
+| birth-death-services | 104 | 104 | — | 105 | **PASS** |  |
+| bpa-calculator | 54 | 54 | — | 55 | **PASS** |  |
+| bpa-services | 114 | 114 | — | 115 | **PASS** |  |
+| challan-generation | 88 | 88 | — | 90 | FAIL | Generic-typed dependency mocks / compile |
+| challan-generation-calculator | 43 | 43 | — | 44 | **PASS** |  |
+| cnd-calculator | 32 | 32 | — | 33 | **PASS** | JaCoCo floor raised from measured (~30% line) |
+| cnd-service | 86 | 86 | — | 88 | FAIL | Legacy controller/exception tests |
+| community-hall-booking | 123 | 123 | — | 125 | FAIL | Seat-lock / Kafka paths |
+| echallan-calculator | 43 | 43 | — | 44 | **PASS** |  |
+| echallan-services | 75 | 75 | — | 76 | **PASS** |  |
+| egov-user-event | 35 | 35 | — | 36 | **PASS** |  |
+| estate-management | 77 | 77 | — | 79 | FAIL | Notification payload constructors |
+| ewaste-services | 72 | 72 | — | 73 | **PASS** |  |
+| fsm | 130 | 130 | — | 131 | **PASS** |  |
+| fsm-calculator | 57 | 57 | — | 58 | **PASS** |  |
+| garbage-service | 109 | 109 | — | 110 | FAIL | Service dependency graph |
+| inbox | 140 | 140 | — | 141 | FAIL | Large controller/repository surface |
+| land-services | 44 | 44 | — | 45 | **PASS** |  |
+| ndc-calculator | 56 | 56 | — | 57 | FAIL | Generated service compile |
+| ndc-services | 114 | 114 | — | 115 | FAIL | Generated service compile |
+| noc-services | 77 | 77 | — | 78 | **PASS** |  |
+| pet-services | 99 | 99 | — | 100 | FAIL | Validator/controller edge tests |
+| pgr-ai-services | 91 | 91 | — | 92 | **PASS** |  |
+| pgr-services | 84 | 84 | — | 85 | **PASS** |  |
+| pqm | 95 | 84 | MdmsTest, Test, TestDocumentQueryBuilder… | 96 | FAIL | Inner/reserved type names |
+| pqm-anomaly-finder | 53 | 48 | Test, TestAnomalyFinderValidator, TestRequest… | 54 | FAIL | Inner/reserved type names |
+| property-services | 171 | 171 | — | 173 | FAIL | Largest module; deep services |
+| pt-calculator-v2 | 146 | 146 | — | 147 | FAIL | Calculator graph |
+| pt-services-v2 | 92 | 92 | — | 94 | FAIL | Spring Boot 1.5 + mixed JUnit |
+| rainmaker-pgr | 68 | 68 | — | 71 | **PASS** |  |
+| request-service | 100 | 100 | — | 102 | FAIL | Service mocks |
+| street-vending | 119 | 119 | — | 121 | FAIL | GlobalExceptionHandler expectations |
+| sw-calculator | 129 | 129 | — | 130 | FAIL | Calculator graph |
+| sw-services | 123 | 123 | — | 124 | FAIL | Water/sewerage services |
+| tl-calculator | 76 | 76 | — | 78 | **PASS** |  |
+| tl-services | 107 | 107 | — | 108 | FAIL | Notification util imports |
+| tp-services | 91 | 90 | State | 92 | FAIL | Inner enum `State` |
+| turn-io-adapter | 65 | 65 | — | 66 | FAIL | Adapter models |
+| vehicle | 85 | 84 | DepartmentalTest | 86 | **PASS** | HRMS nested type name clash |
+| vendor | 65 | 64 | DepartmentalTest | 66 | **PASS** | HRMS nested type name clash |
+| vendor-management | 42 | 42 | — | 43 | **PASS** |  |
+| ws-calculator | 144 | 144 | — | 145 | FAIL | Calculator graph |
+| ws-services | 131 | 131 | — | 133 | FAIL | Water services |
+
+**Modules still red (one-line):** challan-generation — generic mock field types; cnd-service — legacy exception handler tests; community-hall-booking — Kafka/seat-lock; estate-management — all-args notification models; garbage-service / inbox / property-services / ws-* / sw-* — large service graphs need hand-tuned mocks; ndc-* — compile on generated services; pet-services / request-service / street-vending / tp-services / turn-io-adapter / tl-services — mixed legacy tests + generator compile gaps; pqm* — inner types named `Test*`.
 
 ## Coverage before vs after (qualitative)
 
