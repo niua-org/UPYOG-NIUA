@@ -1,14 +1,9 @@
-# verification-service tests
-
-## Commands
+# verification-service testing
 
 ```bash
+export JAVA_HOME=/tmp/jdk-17 PATH=$JAVA_HOME/bin:/tmp/apache-maven-3.9.6/bin:$PATH
 mvn -f business-services/test-support/pom.xml install -DskipTests
-cd business-services/verification-service
-mvn test          # unit tests (*Test.java)
-mvn verify        # unit + VerificationServiceContextIT (Docker required)
+mvn -f business-services/verification-service/pom.xml test verify
 ```
 
-JaCoCo report: `target/site/jacoco/index.html`
-
-Integration tests use Testcontainers Postgres for datasource wiring and are skipped when Docker is unavailable.
+Unit tests cover `CommonServiceImpl`, `UserService`, mappers, util, and validation without Spring context. Legacy `@Disabled` integration tests remain unchanged.
