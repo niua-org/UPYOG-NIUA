@@ -202,3 +202,48 @@ Naming audit (`*Service*`, `*Validator*`, `*Util*`, `*Mapper*` in main). Many ar
 
 - `ReceiptTestFixtures.receiptReqWithInstrument()` for finance consumer tests (test sources only).
 - `ClientServiceFactoryTest` for dashboard-analytics client routing.
+
+---
+
+## Full-class inventory pass (PR #1941 follow-up)
+
+See **`business-services/docs/UNIT_TEST_INVENTORY.md`** (generated via `scripts/generate-unit-test-inventory.py`).
+
+| Metric | Count |
+|--------|------:|
+| Total `src/main/java` types (14 modules) | **1388** |
+| With dedicated `<ClassName>Test` or `<ClassName>IT` | **1325** |
+| Without dedicated test class | **63** |
+
+The **63** remaining types are **interfaces** (covered via impl tests), **abstract** classes (subclass tests), or **block-commented** / non-compilable sources (see inventory per module).
+
+**Tooling added:** `scripts/generate-missing-unit-tests.py`, `scripts/fix-generated-rowmapper-tests.py`, `scripts/remove-tests-for-uncompiled-sources.py`.
+
+**TarentoServiceImpl:** `src/test/resources/fixtures/minimal-chart-api-config.json` + `TarentoServiceImplTest` (mocked ES/query stack).
+
+### Service-package JaCoCo after full-class test pass (line / branch)
+
+| Module | Before L/B | After L/B |
+|--------|------------|-----------|
+| billing-service | 22.5% / 17.0% | 22.5% / 17.0% |
+| collection-services | 39.9% / 25.9% | 39.9% / 25.9% |
+| dashboard-analytics | 36.8% / 19.3% | **52.8% / 34.1%** |
+| dashboard-data-engine | 76.4% / 50.6% | 76.4% / 50.6% |
+| dashboard-data-extractor | 67.5% / 50.9% | 67.5% / 50.9% |
+| dashboard-ingest | 17.6% / 5.2% | 17.6% / 5.2% |
+| egf-master | 56.1% / 52.4% | 56.1% / 52.4% |
+| egf-instrument | 90.5% / 85.0% | 90.5% / 85.0% |
+| egov-apportion-service | 57.7% / 31.1% | 57.7% / 31.1% |
+| egov-hrms | 62.7% / 28.7% | 62.7% / 28.7% |
+| employee-dashboard | 97.7% / 50.0% | 97.7% / 50.0% |
+| finance-collections-voucher-consumer | 15.4% / 5.3% | **17.7% / 6.4%** |
+| reconciliation-service | 86.4% / 100% | 86.4% / 100% |
+| verification-service | 41.6% / 25.8% | 41.6% / 25.8% |
+
+Per-class tests add compile-time coverage of every type; **service/validator line coverage toward 80/70** still requires deepening behavioral tests on large `@Service` methods (incremental follow-up).
+
+### New Findings (inventory pass)
+
+13. **`TarentoServiceImpl` / `ClientService.preHandle`** — `getAggregatedData` with **`filters == null`** NPEs in `preHandle` (tests use empty map; null is a bug).
+14. **Block-commented controllers/services** in collection-services (e.g. `ReceiptControllerV2`) — no compiled type; documented as not testable without uncommenting production code.
+15. **Generated `*Test` classes** for DTOs use `classLoads` / reflection smoke tests — they do not alone reach 80% on service packages.
