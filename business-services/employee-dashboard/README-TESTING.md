@@ -1,14 +1,9 @@
-# employee-dashboard tests
-
-## Commands
+# employee-dashboard testing
 
 ```bash
+export JAVA_HOME=/tmp/jdk-17 PATH=$JAVA_HOME/bin:/tmp/apache-maven-3.9.6/bin:$PATH
 mvn -f business-services/test-support/pom.xml install -DskipTests
-cd business-services/employee-dashboard
-mvn test          # unit tests (*Test.java)
-mvn verify        # unit + EmployeeDashboardSchemaIT (Docker required)
+mvn -f business-services/employee-dashboard/pom.xml test verify
 ```
 
-JaCoCo report: `target/site/jacoco/index.html`
-
-Integration tests use Testcontainers Postgres and are skipped when Docker is unavailable.
+Service and util packages are covered with Mockito-based unit tests and `@WebMvcTest`-style controller smoke tests.
