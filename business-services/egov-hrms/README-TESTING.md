@@ -1,14 +1,9 @@
-# egov-hrms tests
-
-## Commands
+# egov-hrms testing
 
 ```bash
+export JAVA_HOME=/tmp/jdk-17 PATH=$JAVA_HOME/bin:/tmp/apache-maven-3.9.6/bin:$PATH
 mvn -f business-services/test-support/pom.xml install -DskipTests
-cd business-services/egov-hrms
-mvn test          # unit tests (*Test.java)
-mvn verify        # unit + HrmsSchemaIT (Docker required)
+mvn -f business-services/egov-hrms/pom.xml test verify
 ```
 
-JaCoCo report: `target/site/jacoco/index.html`
-
-Integration tests use Testcontainers Postgres and are skipped when Docker is unavailable.
+Unit tests use JUnit 5, Mockito, and AssertJ (no `@SpringBootTest`). JaCoCo gates apply to `org.egov.hrms.service`, validation/utils, and `web.validator` packages.

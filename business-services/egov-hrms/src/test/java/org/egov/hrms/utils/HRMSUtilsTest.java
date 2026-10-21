@@ -51,4 +51,20 @@ class HRMSUtilsTest {
 
         assertThat(hrmsUtils.isAssignmentSearchReqd(criteria)).isFalse();
     }
+
+    @Test
+    void isAssignmentSearchReqd_whenDepartmentsPresent_returnsTrue() {
+        EmployeeSearchCriteria criteria = EmployeeSearchCriteria.builder()
+                .departments(Collections.singletonList("DEPT"))
+                .build();
+
+        assertThat(hrmsUtils.isAssignmentSearchReqd(criteria)).isTrue();
+    }
+
+    @Test
+    void generatePassword_onEmptyParams_usesFallback() {
+        String password = hrmsUtils.generatePassword(new ArrayList<>());
+
+        assertThat(password).isNotBlank();
+    }
 }
