@@ -4,6 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 //import org.apache.commons.io.IOUtils;
 import static org.egov.tracer.constants.TracerConstants.CORRELATION_ID_HEADER;
 import static org.egov.tracer.constants.TracerConstants.CORRELATION_ID_MDC;
+import static org.egov.tracer.constants.TracerConstants.EMPTY_BODY;
+import static org.egov.tracer.constants.TracerConstants.REQUEST_MESSAGE;
+import static org.egov.tracer.constants.TracerConstants.REQUEST_MESSAGE_WITH_BODY;
+import static org.egov.tracer.constants.TracerConstants.RESPONSE_BODY_ERROR_MESSAGE;
+import static org.egov.tracer.constants.TracerConstants.RESPONSE_MESSAGE;
+import static org.egov.tracer.constants.TracerConstants.RESPONSE_MESSAGE_WITH_BODY;
 import static org.egov.tracer.constants.TracerConstants.TENANTID_MDC;
 import static org.egov.tracer.constants.TracerConstants.TENANT_ID_HEADER;
 
@@ -27,14 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RestTemplateLoggingInterceptor implements ClientHttpRequestInterceptor {
 
-    private static final String REQUEST_MESSAGE_WITH_BODY = "Sending request to {} with verb {} with body {}";
-    private static final String REQUEST_MESSAGE = "Sending request to {} with verb {}";
-    private static final String RESPONSE_MESSAGE_WITH_BODY = "Received from {} response code {} and body {}: ";
-    private static final String RESPONSE_MESSAGE = "Received response from {}";
     private static final String FAILED_RESPONSE_MESSAGE = "Received error response from %s";
-    private static final String UTF_8 = "UTF-8";
-    private static final String RESPONSE_BODY_ERROR_MESSAGE = "Error reading response body";
-    private static final String EMPTY_BODY = "<NOT-AVAILABLE>";
     private static final List<String> JSON_MEDIA_TYPES =
         Arrays.asList(MediaType.APPLICATION_JSON_UTF8_VALUE, MediaType.APPLICATION_JSON_VALUE);
 

@@ -1,8 +1,13 @@
 package org.upyog.dashboard.adv.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+/**
+ * Model encapsulating aggregated revenue, application counts, and transaction JSON for ADV module.
+ */
+@Getter
+@Setter
 public class ADVAggregatedData {
     private Integer previousYearRevenue;
     private Integer currentFYCollection;

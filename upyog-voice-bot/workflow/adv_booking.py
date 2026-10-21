@@ -1,6 +1,5 @@
 import json
 import logging
-import re
 from typing import Dict, Any, List, Optional
 import os
 import yaml
@@ -10,14 +9,19 @@ from langgraph.graph import StateGraph, END, START
 from langchain_groq import ChatGroq
 
 
-from memory_manager import MemoryManager, shared_memory
+from storage.qdrant_manager import MemoryManager, shared_memory
+from prompts.workflow_prompts import (
+    build_adv_extract_prompt,
+    build_adv_question_prompt,
+    build_adv_past_booking_filter_prompt,
+)
 
 from workflow.base_state import BaseAgentState
 # BaseAgentState = The universal "ID Card" (TypedDict) for all modules. Contains messages, phone, session_id etc.
 
 logger = logging.getLogger(__name__)
 
-llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0) if os.environ.get("GROQ_API_KEY") else None
+llm = ChatGroq(model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b"), temperature=0) if os.environ.get("GROQ_API_KEY") else None
 
 # ==========================================
 # STATE
@@ -50,6 +54,7 @@ def _slot_search(draft: dict, phone_number: str = "default") -> list:
     if not isinstance(draft, dict):
         draft = {}
     from mcp_tools import slot_search
+    from datetime import datetime
     start = draft.get("start_date", "")
     end = draft.get("end_date") or start
     try:
@@ -65,11 +70,17 @@ def _slot_search(draft: dict, phone_number: str = "default") -> list:
         data = json.loads(raw) if isinstance(raw, str) else raw
         if not data:
             raise ValueError("Empty slot result from API")
+        
+        today_str = datetime.now().strftime("%Y-%m-%d")
+
         # Normalize to frontend field names: type, area, light, date, status
         normalized = []
         seen = set()
         for slot in data:
             s_date = slot.get("fromDate") or slot.get("bookingStartDate") or slot.get("date") or start
+            if not s_date or str(s_date).strip() <= today_str:
+                # Exclude today's slot and past dates
+                continue
             if s_date in seen:
                 continue
             seen.add(s_date)
@@ -133,16 +144,6 @@ def intent_and_ui_node(state: AdvBookingState):
     # 3. Extract the very last message sent by the user
     user_msg = messages[-1].content if messages else ""
     
-    # 4. Check if the user is asking for services we don't support yet (like Trade License)
-    unsupported_keywords = ["trade license", "property tax","fire noc"]
-    if any(w in user_msg.lower() for w in unsupported_keywords):
-        # 5. Tell the user we only support Advertisement booking right now
-        resp = "Currently, I can only assist you with Advertisement Bookings. Support for Trade License and Property Tax services is under development and will be launched soon. Please let me know if you would like to proceed with an advertisement booking!"
-        MemoryManager.save_long_term_interaction(phone_number=phone_number, role="user", content=user_msg)
-        MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
-        # 6. Stop further processing and return the response immediately
-        return {"messages": [AIMessage(content=resp)], "draft_booking": draft_booking, "missing_fields": []}
-    
     # 7. Check if the frontend UI sent us a hidden JSON payload containing Slot selections (starts with [ )
     if user_msg.strip().startswith("[") and user_msg.strip().endswith("]"):
         try:
@@ -157,6 +158,14 @@ def intent_and_ui_node(state: AdvBookingState):
                 
                 # 9. Save the selected slots into our temporary draft booking memory
                 draft_booking["selected_slots"] = parsed
+                selected_dates = sorted({
+                    str(slot.get("date", "")).strip()
+                    for slot in parsed
+                    if isinstance(slot, dict) and slot.get("date")
+                })
+                if selected_dates:
+                    draft_booking["start_date"] = selected_dates[0]
+                    draft_booking["end_date"] = selected_dates[-1]
                 # 10. Replace the ugly JSON message with a clean text message so the bot understands what happened
                 user_msg = "I have selected a slot."
         except Exception as e:
@@ -197,8 +206,8 @@ def intent_and_ui_node(state: AdvBookingState):
             user_msg = "continue"
 
     # 18. Check if the user wants to clear their current booking progress and start over
-    reset_keywords = ["start over", "new booking", "cancel booking", "start new", "restart", "cancel"]
-    if any(w in user_msg.lower() for w in reset_keywords):
+    reset_keywords = ["start over", "new booking", "cancel booking", "start new", "restart", "cancel", "clear draft", "delete draft"]
+    if user_msg == "[CANCEL_DRAFT]" or any(w in user_msg.lower() for w in reset_keywords):
         # 19. Wipe all fields in the draft memory completely clean
         draft_booking = {f: None for f in ALL_FIELDS}
         draft_booking["selected_slots"] = None
@@ -240,11 +249,7 @@ def intent_and_ui_node(state: AdvBookingState):
             raw = search_ads(phone_number)
             
             # Step C: Extract filters from user text via LLM
-            prompt = f"""Extract any dates or booking IDs from this query to filter past bookings.
-Query: '{user_msg}'
-Return ONLY a JSON object (no other text) with:
-- "date_str": A string representing the exact date in YYYY-MM-DD format if mentioned, else null.
-- "booking_id": The exact ADV-... ID, or just the partial digits (like the last 4 numbers) if mentioned, else null."""
+            prompt = build_adv_past_booking_filter_prompt(user_msg=user_msg)
             
             try:
                 if llm:
@@ -368,14 +373,17 @@ def extraction_node(state: AdvBookingState):
     is_edit_query = any(w in user_msg.lower() for w in ["change", "update", "edit", "modify", "set", "correct", "instead of"])
     
     missing_fields = [f for f in ALL_FIELDS if not draft_booking.get(f)]
+    # Use the form config to decide which fields the LLM is allowed to extract.
+    extractable_fields = [field for field in FORM_FIELDS if field.get("extractable", False)]
     
+    # Edits can update any extractable field; normal collection targets only missing fields.
     if is_edit_query or draft_booking.get("_awaiting_confirm"):
-        # When editing/updating, allow LLM to extract ANY non-doc field
-        llm_extractable_fields = [f for f in ALL_FIELDS if not f.startswith("doc_")]
+        llm_extractable_fields = [field["id"] for field in extractable_fields]
     else:
-        llm_extractable_fields = [f for f in missing_fields if not f.startswith("doc_")]
-        if not draft_booking.get("applicant_details"):
-            llm_extractable_fields = [f for f in llm_extractable_fields if f != "address"]
+        llm_extractable_fields = [
+            field["id"] for field in extractable_fields
+            if field["id"] in missing_fields
+        ]
     
     if user_msg and llm_extractable_fields and llm:
         schema_hints = {}
@@ -389,47 +397,58 @@ def extraction_node(state: AdvBookingState):
                     schema_hints[f] = f"MUST BE EXACTLY ONE OF: {options}. Map the user's input to the closest matching option."
                 else:
                     schema_hints[f] = FIELD_HINTS.get(f, "relevant value")
+            elif field_def and field_def.get("extract_fields"):
+                schema_hints[f] = (
+                    "Return an object with these keys: "
+                    + ", ".join(field_def["extract_fields"])
+                )
+            elif field_def and field_def.get("type") == "date":
+                schema_hints[f] = "Return the date in YYYY-MM-DD format."
             elif f == "nightLight":
                 schema_hints[f] = "Must be exactly 'Yes' or 'No'"
             else:
                 schema_hints[f] = FIELD_HINTS.get(f, "relevant value")
         
-        extract_prompt = f"""You are a strict data extraction AI for UPYOG Advertisement bookings.
-Your ONLY job is to extract ANY updated or newly specified fields from the user's message.
-Target fields to extract: {json.dumps(llm_extractable_fields)}
-Hints: {json.dumps(schema_hints)}
-
-Already collected fields: {json.dumps(draft_booking)}
-Question the user is answering: "{last_assistant_msg}"
-User message: "{user_msg}"
-
-CRITICAL RULES:
-- If the user's message clearly answers or updates one or more target fields, extract them.
-- If a field is not mentioned or changed, return null for that field.
-- If the user just says "Yes" or "No", use the "Question the user is answering" to figure out which field they are answering (e.g., nightLight).
-- STRICT RULE FOR 'addType': Only extract if they mention a specific type (e.g. Hoarding, Unipole, Kiosk, Banner). Do NOT extract generic words like 'adv' or 'advertisement' as addType!
-
-Reply ONLY with valid JSON containing the extracted fields. No explanations.
-Example:
-{{
-  "location": "extracted value",
-  "address": null
-}}"""
+        extract_prompt = build_adv_extract_prompt(
+            llm_extractable_fields=llm_extractable_fields,
+            schema_hints=schema_hints,
+            draft_booking=draft_booking,
+            last_assistant_msg=last_assistant_msg,
+            user_msg=user_msg
+        )
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
-            m = re.search(r'\{.*\}', ext.content.strip(), re.DOTALL)
-            if m:
-                extracted_data = json.loads(m.group(0))
-                for field in missing_fields:
-                    val = extracted_data.get(field)
-                    # Fixed bug: val could be bool False or string "No". 
-                    # We check if val is not None instead of `if val`.
-                    if val is not None and str(val).lower() not in ("null", "none", ""):
+            # The prompt requests JSON only; reject responses that are not JSON objects.
+            extracted_data = json.loads(ext.content.strip())
+            if not isinstance(extracted_data, dict):
+                raise ValueError("Extraction response must be a JSON object")
+            for field in llm_extractable_fields:
+                val = extracted_data.get(field)
+                if val is not None and str(val).lower() not in ("null", "none", ""):
+                    if isinstance(val, dict) and isinstance(draft_booking.get(field), dict):
+                        # Merge partial nested details to preserve previously collected keys.
+                        draft_booking[field].update(val)
+                    else:
                         draft_booking[field] = val
-                        logger.info(f"[extract_node] {field} = {val}")
+                    logger.info(f"[extract_node] {field} = {val}")
         except Exception as e:
             logger.error(f"Extraction error: {e}")
             
+    # Date constraint enforcement: bookings cannot start today or in the past
+    from datetime import datetime, timedelta
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    tomorrow_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    if draft_booking.get("start_date"):
+        s_date = str(draft_booking.get("start_date")).strip()
+        if s_date <= today_str:
+            draft_booking["start_date"] = tomorrow_str
+            logger.info(f"[extract_node] start_date was today/past ({s_date}), updated to tomorrow ({tomorrow_str})")
+    if draft_booking.get("end_date"):
+        e_date = str(draft_booking.get("end_date")).strip()
+        if e_date <= today_str:
+            draft_booking["end_date"] = tomorrow_str
+            logger.info(f"[extract_node] end_date was today/past ({e_date}), updated to tomorrow ({tomorrow_str})")
+
     return {"draft_booking": draft_booking}
 
 
@@ -455,21 +474,15 @@ def ask_next_node(state: AdvBookingState):
 
     text = f"Please provide the {field_label}."
     if llm:
-        ctx = f"""You are a conversational UPYOG advertisement booking concierge.
-Collected so far: {json.dumps({k: v for k, v in draft_booking.items() if v})}
-Your task: Ask the user to provide the next missing field: "{field_label}".
-Available options for this field: {json.dumps(options) if options else "None (free text/date/upload)"}
-
-User just said: "{user_msg}"
-
-Instructions:
-1. Generate a natural, polite, conversational question asking for the "{field_label}".
-2. Note: "Advertisement Type" refers to outdoor municipal advertising structure types (such as Hoarding, Unipole, Kiosk, Billboard, Banner, Poster, Digital Screen). NEVER ask about or refer to media file formats like videos, images, or audio formats.
-3. Do NOT say "Hello" unless the user explicitly greeted you.
-4. NEVER repeat or confirm what the user just selected. 
-5. DO NOT list the available options in the text (the UI will handle that).
-6. Maintain a formal, professional tone. NEVER use informal or familial terms of address like 'दीदी' (Didi), 'काकी' (Kaki), 'बेटा' (Beta), 'भैया' (Bhaiya), etc.
-7. Output ONLY the conversational question text."""
+        is_hindi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
+        lang_rule = "Respond in Hindi." if is_hindi else "Respond in English. Do NOT output any Devanagari or Hindi text."
+        ctx = build_adv_question_prompt(
+            draft_booking=draft_booking,
+            field_label=field_label,
+            options=options,
+            user_msg=user_msg,
+            lang_rule=lang_rule
+        )
         try:
             conv = llm.invoke([SystemMessage(content=ctx)])
             text = conv.content.strip()
@@ -480,7 +493,11 @@ Instructions:
         opts_str = ", ".join(f"'{o}'" for o in options)
         resp = f"{text}\n<ui-dropdown options=[{opts_str}] />"
     elif ui_type == "date":
-        resp = f"{text}\n<ui-calendar mode=\"single\" minDate=\"tomorrow\" />"
+        if next_step.get("id") == "end_date" and draft_booking.get("start_date"):
+            s_date = draft_booking.get("start_date")
+            resp = f"{text}\n<ui-calendar mode=\"single\" minDate=\"{s_date}\" />"
+        else:
+            resp = f"{text}\n<ui-calendar mode=\"single\" minDate=\"tomorrow\" />"
     else:
         resp = text
 
@@ -496,15 +513,28 @@ def slot_search_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
     messages = state.get("messages", [])
     user_msg = messages[-1].content if messages else ""
+    logger.info(f"[adv_booking.slot_search_node] Entering for phone={phone_number}")
     
     draft_booking = dict(state.get("draft_booking", {}))
     slots = _slot_search(draft_booking, phone_number=phone_number)
     if not slots:
-        resp = "Sorry, no available advertisement slots were found for your selected location and date range. Please try selecting a different date range or location."
+        logger.warning(f"[adv_booking.slot_search_node] No slots found for draft: {draft_booking}")
+        # Clear selected dates in draft so the user can easily select a new date range
+        draft_booking["start_date"] = None
+        draft_booking["end_date"] = None
+        resp = "Sorry, no available advertisement slots were found for your selected location and date range. Please select a new start date below:\n<ui-calendar mode=\"single\" minDate=\"tomorrow\" />"
         MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
-        return {"messages": [AIMessage(content=resp)], "missing_fields": ["start_date", "end_date"], "input_type": "text", "options": []}
+        return {
+            "messages": [AIMessage(content=resp)],
+            "draft_booking": draft_booking,
+            "missing_fields": ["start_date", "end_date"],
+            "input_type": "date",
+            "min_date": "tomorrow",
+            "options": []
+        }
 
     slots_json = json.dumps(slots)
+    logger.info(f"[adv_booking.slot_search_node] Found {len(slots)} slots. Presenting UI slot table.")
     resp = f"Great! Here are the available slots. Please select one or more:\n<ui-slot-table data={slots_json} />"
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
     return {"messages": [AIMessage(content=resp)], "missing_fields": ["selected_slots"], "input_type": "text", "options": []}
@@ -515,6 +545,7 @@ def applicant_form_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
     messages = state.get("messages", [])
     user_msg = messages[-1].content if messages else ""
+    logger.info(f"[adv_booking.applicant_form_node] Requesting applicant details for phone={phone_number}")
     
     resp = f"Great! Please fill in your details to finalize the booking:\n<ui-applicant-form cartAmount=\"0\" />"
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
@@ -526,10 +557,11 @@ def confirm_booking_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
     draft_booking = dict(state.get("draft_booking") or {})
     draft_booking["_awaiting_confirm"] = True
+    logger.info(f"[adv_booking.confirm_booking_node] Building booking summary for phone={phone_number}")
 
-    app_details = draft_booking.get("applicant_details", {})
+    app_details = draft_booking.get("applicant_details") or {}
     name = app_details.get("name") or draft_booking.get("applicantName", "N/A")
-    mobile = app_details.get("mobile") or draft_booking.get("mobileNumber", "N/A")
+    mobile = app_details.get("mobile") or draft_booking.get("mobileNumber") or (phone_number if phone_number != "default" else "N/A")
     email = app_details.get("email") or draft_booking.get("emailId", "N/A")
 
     summary_text = (
@@ -561,14 +593,18 @@ def confirm_booking_node(state: AdvBookingState):
 def create_booking_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
     draft_booking = dict(state.get("draft_booking", {}))
+    logger.info(f"[adv_booking.create_booking_node] Executing booking registration for phone={phone_number}")
+    
     
     app_details = draft_booking.get("applicant_details", {})
     draft_booking["applicantName"] = app_details.get("name", "")
-    draft_booking["mobileNumber"] = app_details.get("mobile", "")
+    draft_booking["mobileNumber"] = app_details.get("mobile") or (phone_number if phone_number != "default" else "")
     draft_booking["emailId"] = app_details.get("email", "")
+    draft_booking["phone_number"] = phone_number
     
     raw_resp = create_booking(json.dumps(draft_booking))
     resp = f"{raw_resp}\n\nIs there anything else I can help you with?"
+    logger.info(f"[adv_booking.create_booking_node] Booking API result: {raw_resp}")
     
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
     
@@ -588,6 +624,7 @@ def create_booking_node(state: AdvBookingState):
 def edit_prompt_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
     draft_booking = dict(state.get("draft_booking") or {})
+    logger.info(f"[adv_booking.edit_prompt_node] Prompting user for fields to edit for phone={phone_number}")
     
     resp = "Please tell me what details you would like to edit or change."
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
@@ -601,21 +638,27 @@ def router(state: AdvBookingState) -> str:
     user_msg = messages[-1].content if messages else ""
     
     if all(draft_booking.get(f) for f in SEARCH_FIELDS) and not draft_booking.get("selected_slots"):
+        logger.info("[adv_booking.router] Route -> slot_search")
         return "slot_search"
         
     if draft_booking.get("selected_slots") and not draft_booking.get("applicant_details"):
+        logger.info("[adv_booking.router] Route -> applicant_form")
         return "applicant_form"
         
     if all(draft_booking.get(f) for f in ALL_FIELDS):
         if draft_booking.get("_awaiting_confirm"):
             confirm_words = ["confirm", "submit", "yes", "yeah", "yup", "ok", "okay", "confirm & submit"]
             if any(w in user_msg.lower() for w in confirm_words):
+                logger.info("[adv_booking.router] Route -> create_booking (Confirmed)")
                 return "create_booking"
             edit_words = ["edit", "edit details", "modify", "correct", "update"]
             if any(w in user_msg.lower() for w in edit_words) and not any(f in user_msg.lower() for f in ["location", "address", "date", "type", "area"]):
+                logger.info("[adv_booking.router] Route -> edit_prompt")
                 return "edit_prompt"
+        logger.info("[adv_booking.router] Route -> confirm_booking")
         return "confirm_booking"
         
+    logger.info(f"[adv_booking.router] Route -> ask_next (missing fields: {[f for f in ALL_FIELDS if not draft_booking.get(f)]})")
     return "ask_next"
 
 # ==========================================

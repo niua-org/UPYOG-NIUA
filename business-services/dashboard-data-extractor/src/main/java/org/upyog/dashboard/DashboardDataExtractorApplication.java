@@ -2,6 +2,7 @@ package org.upyog.dashboard;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -11,9 +12,10 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * 
  * <p>Consolidates daily metrics extraction, state-configurable multi-module schema mapping
  * via YAML, payload transformation, validation, HTTP ingestion posting to the National Dashboard,
- * and Kafka audit logging.
+ * and Kafka event persistence.
  */
 @SpringBootApplication
+@EnableCaching
 @EnableScheduling
 @EnableFeignClients(basePackages = { "org.upyog.dashboard" })
 @ComponentScan(basePackages = { "org.upyog.dashboard", "org.egov.tracer" })

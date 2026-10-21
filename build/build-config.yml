@@ -72,7 +72,7 @@ config:
     build:
       - work-dir: "business-services/dashboard-data-extractor"
         image-name: "dashboard-data-extractor"
-        dockerfile: "build/maven/Dockerfile"
+        dockerfile: "business-services/dashboard-data-extractor/build/Dockerfile"
       - work-dir: "business-services/dashboard-data-extractor/src/main/resources/db"
         image-name: "dashboard-data-extractor-db"
 
@@ -1054,3 +1054,11 @@ config:
         dockerfile: "build/maven/Dockerfile"
       - work-dir: "core-services/upyog-draft-service/src/main/resources/db"
         image-name: "upyog-draft-service-db"
+
+  - name: "builds/upyog/dx-services/data-sharing-service-dx"
+    build:
+      - work-dir: "dx-services/data-sharing-service-dx"
+        image-name: "data-sharing-service-dx"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "dx-services/data-sharing-service-dx/src/main/resources/db"
+        image-name: "data-sharing-service-dx-db"

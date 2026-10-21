@@ -59,7 +59,7 @@ default_args = {
 module_map = {
     # 'TL' : (tl_queries, empty_tl_payload),
     # 'PGR' : (pgr_queries, empty_pgr_payload),
-    # 'WS' : (ws_queries, empty_ws_payload),
+    'WS' : (ws_queries, empty_ws_payload),
     'PT' : (pt_queries, empty_pt_payload)
     # 'FIRENOC' : (firenoc_queries, empty_firenoc_payload),
     # 'MCOLLECT' : (mcollect_queries, empty_mcollect_payload),
@@ -504,22 +504,22 @@ def transform(**kwargs):
 #     dag=dag)
 #
 # Disabled WS tasks (kept for reference)
-# extract_ws = PythonOperator(
-#     task_id='elastic_search_extract_ws',
-#     python_callable=dump_kibana,
-#     op_kwargs={ 'module' : 'WS'},
-#     dag=dag)
-#
-# transform_ws = PythonOperator(
-#     task_id='nudb_transform_ws',
-#     python_callable=transform,
-#     dag=dag)
-#
-# load_ws = PythonOperator(
-#     task_id='nudb_ingest_load_ws',
-#     python_callable=load,
-#     op_kwargs={ 'module' : 'WS'},
-#     dag=dag)
+extract_ws = PythonOperator(
+    task_id='elastic_search_extract_ws',
+    python_callable=dump_kibana,
+    op_kwargs={ 'module' : 'WS'},
+    dag=dag)
+
+transform_ws = PythonOperator(
+    task_id='nudb_transform_ws',
+    python_callable=transform,
+    dag=dag)
+
+load_ws = PythonOperator(
+    task_id='nudb_ingest_load_ws',
+    python_callable=load,
+    op_kwargs={ 'module' : 'WS'},
+    dag=dag)
 
 
 # Active PT pipeline: extract ES data -> transform (no-op) -> ingest to National Dashboard
@@ -631,7 +631,7 @@ load_pt = PythonOperator(
 
 # extract_tl >> transform_tl >> load_tl
 # extract_pgr >> transform_pgr >> load_pgr
-# extract_ws >> transform_ws >> load_ws
+extract_ws >> transform_ws >> load_ws
 #     python_callable=load,
 # #     op_kwargs={ 'module' : 'OBPS'},
 #     dag=dag)

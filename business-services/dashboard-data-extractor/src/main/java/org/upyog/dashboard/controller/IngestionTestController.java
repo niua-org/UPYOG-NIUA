@@ -3,7 +3,6 @@ package org.upyog.dashboard.controller;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,18 +10,27 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.upyog.dashboard.constants.DashboardExtractorConstants;
+import org.upyog.dashboard.enums.IngestionStatus;
 import org.upyog.dashboard.model.IngestionResult;
+import org.upyog.dashboard.model.IngestionSchedulerDetail;
+import org.upyog.dashboard.repository.IngestionSummaryRepository;
 import org.upyog.dashboard.service.DailyIngestionService;
+import org.upyog.dashboard.util.CommonUtils;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controller for manually triggering and testing daily multi-module ingestion via REST API.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/test")
+@RequiredArgsConstructor
 public class IngestionTestController {
 
-    @Autowired
-    private DailyIngestionService service;
+    private final DailyIngestionService service;
 
     /**
      * Manually triggers multi-module metrics extraction and ingestion.
@@ -40,3 +48,4 @@ public class IngestionTestController {
         return new ResponseEntity<>(results, HttpStatus.OK);
     }
 }
+
