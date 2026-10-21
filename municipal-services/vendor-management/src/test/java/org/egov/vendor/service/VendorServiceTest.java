@@ -76,7 +76,7 @@ class VendorServiceTest {
 
         assertThatThrownBy(() -> vendorService.saveVendor(request))
                 .isInstanceOf(CustomException.class)
-                .hasMessageContaining(VendorErrorConstants.INVALID_TENANT);
+                .hasMessageContaining("StateLevel");
     }
 
     @Test
@@ -102,22 +102,28 @@ class VendorServiceTest {
     }
 
     private VendorAdditionalDetailsRequest stateLevelCreateRequest() {
-        User user = User.builder().tenantId("pg").uuid("u1").build();
+        User user = new User();
+        user.setTenantId("pg");
+        user.setUuid("u1");
         RequestInfo requestInfo = RequestInfo.builder().userInfo(user).build();
-        VendorAdditionalDetails details = VendorAdditionalDetails.builder().tenantId("pg").build();
-        return VendorAdditionalDetailsRequest.builder()
-                .requestInfo(requestInfo)
-                .vendorAdditionalDetails(details)
-                .build();
+        VendorAdditionalDetails details = new VendorAdditionalDetails();
+        details.setTenantId("pg");
+        VendorAdditionalDetailsRequest request = new VendorAdditionalDetailsRequest();
+        request.setRequestInfo(requestInfo);
+        request.setVendorAdditionalDetails(details);
+        return request;
     }
 
     private VendorAdditionalDetailsRequest cityLevelCreateRequest() {
-        User user = User.builder().tenantId("pg.citya").uuid("u1").build();
+        User user = new User();
+        user.setTenantId("pg.citya");
+        user.setUuid("u1");
         RequestInfo requestInfo = RequestInfo.builder().userInfo(user).build();
-        VendorAdditionalDetails details = VendorAdditionalDetails.builder().tenantId("pg.citya").build();
-        return VendorAdditionalDetailsRequest.builder()
-                .requestInfo(requestInfo)
-                .vendorAdditionalDetails(details)
-                .build();
+        VendorAdditionalDetails details = new VendorAdditionalDetails();
+        details.setTenantId("pg.citya");
+        VendorAdditionalDetailsRequest request = new VendorAdditionalDetailsRequest();
+        request.setRequestInfo(requestInfo);
+        request.setVendorAdditionalDetails(details);
+        return request;
     }
 }

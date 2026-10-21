@@ -228,8 +228,17 @@
             <version>2.5.0</version> <!-- Use latest compatible with Spring Boot -->
         </dependency>
 
-
-    
+    </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2023.0.6</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -256,16 +265,6 @@
         </dependency>
 
     </dependencies>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2023.0.6</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
     </dependencyManagement>
 
     <repositories>
