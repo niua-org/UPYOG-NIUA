@@ -38,6 +38,11 @@ const WorkbenchCard = () => {
       link: `/${window?.contextPath}/employee/workbench/theme-builder`,
       roles: ROLES.MDMS,
     },
+    {
+      label: t("ACTION_TEST_FORM_BUILDER"), // Form Builder for Employee
+      link: `/${window?.contextPath}/employee/workbench/form-builder`,
+      roles: ROLES.MDMS
+    }
     // {
     //   label: t("WBH_THEME_CONFIGURATION"), // Theme Configuration 
     //   link: `/${window?.contextPath}/employee/workbench/theme-configuration`,

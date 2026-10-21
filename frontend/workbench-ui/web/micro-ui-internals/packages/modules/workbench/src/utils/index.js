@@ -275,7 +275,39 @@ export const deepSet = (obj, path, value) => {
 };
 
 import { formatLabel, getLabel, getCardIcon, groupMeta, getInitialThemeConfig, submitThemeConfig } from "./ThemeUtils";
-export { formatLabel, getLabel, getCardIcon, groupMeta, getInitialThemeConfig, submitThemeConfig };
+import {
+  useModalState,
+  useMDMSData,
+  transformToDropdownOptions,
+  extractModuleOptions,
+  extractFormOptions,
+  extractAccordionOptions,
+  getModuleListFromMDMS,
+  getAccordionsForModule,
+  getFormsForModule,
+  handleDynamicInputChange,
+  getLocaleText,
+} from "./workbenchUtils";
+
+export {
+  formatLabel,
+  getLabel,
+  getCardIcon,
+  groupMeta,
+  getInitialThemeConfig,
+  submitThemeConfig,
+  useModalState,
+  useMDMSData,
+  transformToDropdownOptions,
+  extractModuleOptions,
+  extractFormOptions,
+  extractAccordionOptions,
+  getModuleListFromMDMS,
+  getAccordionsForModule,
+  getFormsForModule,
+  handleDynamicInputChange,
+  getLocaleText,
+};
 
 export default {
   getConfig,
@@ -291,5 +323,16 @@ export default {
   getCardIcon,
   groupMeta,
   getInitialThemeConfig,
-  submitThemeConfig
+  submitThemeConfig,
+  useModalState,
+  useMDMSData,
+  transformToDropdownOptions,
+  extractModuleOptions,
+  extractFormOptions,
+  extractAccordionOptions,
+  getModuleListFromMDMS,
+  getAccordionsForModule,
+  getFormsForModule,
+  handleDynamicInputChange,
+  getLocaleText,
 };

@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PrivateRoute, AppContainer, BreadCrumb } from "@upyog/workbench-ui-react-components";
 import LocalisationSearch from "./LocalisationSearch";
+import FormBuilder from "./FormBuilder";
 import ApplyWorkflow from "./ApplyWorkflow";
 // Added theme configuration component
 import ThemeCustomizeForm from "./ThemeCustomizeForm";
@@ -20,6 +21,7 @@ import MDMSView from "./MDMSView";
 import MDMSSearchv2 from "./MDMSSearchv2";
 import MDMSManageMaster from "./MDMSManageMaster";
 import LocalisationAdd from "./LocalisationAdd";
+import FormCreate from "./FormCreate";
 
 const WorkbenchBreadCrumb = ({ location, defaultPath }) => {
   const { t } = useTranslation();
@@ -217,6 +219,20 @@ const App = ({ path }) => {
             element={<PrivateRoute><EmployeeThemeBuilder parentRoute={path} /></PrivateRoute>}
           />
 
+          <Route
+            path="form-builder"
+            element={<PrivateRoute><FormBuilder parentRoute={path} /></PrivateRoute>}
+          />
+
+          <Route
+            path="form-create"
+            element={<PrivateRoute><FormCreate parentRoute={path} /></PrivateRoute>}
+          />
+
+          {/* <Route
+            path="localisation-add"
+            element={<PrivateRoute><LocalisationAdd parentRoute={path} /></PrivateRoute>}
+          /> */}
 
         </Routes>
       </AppContainer>

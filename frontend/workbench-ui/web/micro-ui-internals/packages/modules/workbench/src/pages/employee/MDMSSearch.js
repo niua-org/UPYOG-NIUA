@@ -73,7 +73,7 @@ const MDMSSearch = () => {
   return (
     <React.Fragment>
       <div className="jk-header-btn-wrapper">
-        <Header styles={{ fontSize: "32px" }}>{t(updatedConfig?.label)}</Header>
+        <Header styles={{ fontSize: "32px" }}>{t(Config?.label)}</Header>
         {Digit.Utils.didEmployeeHasRole(updatedConfig?.actionRole) && (
           <Button
             label={t(updatedConfig?.actionLabel)}
