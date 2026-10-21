@@ -18,10 +18,10 @@
 		<spring-cloud.version>2021.0.4</spring-cloud.version>
 		<testcontainers.version>1.19.7</testcontainers.version>
 		<jacoco.version>0.8.11</jacoco.version>
-		<jacoco.line.coverage.minimum>0.00</jacoco.line.coverage.minimum>
-		<jacoco.branch.coverage.minimum>0.00</jacoco.branch.coverage.minimum>
 		<jacoco.service.line.minimum>0.80</jacoco.service.line.minimum>
 		<jacoco.validation.line.minimum>0.70</jacoco.validation.line.minimum>
+		<jacoco.producer.line.minimum>0.80</jacoco.producer.line.minimum>
+		<jacoco.extractor.line.minimum>0.70</jacoco.extractor.line.minimum>
 		<lombok.version>1.18.32</lombok.version>
 	</properties>
 	<dependencies>
@@ -224,6 +224,32 @@
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
 											<minimum>${jacoco.validation.line.minimum}</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.upyog.reconciliation.producer</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.producer.line.minimum}</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.upyog.reconciliation.extractor</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.extractor.line.minimum}</minimum>
 										</limit>
 									</limits>
 								</rule>
