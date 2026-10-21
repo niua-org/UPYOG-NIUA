@@ -3,6 +3,8 @@ package org.egov.receipt.consumer.support;
 import org.egov.receipt.consumer.model.Bill;
 import org.egov.receipt.consumer.model.BillDetail;
 import org.egov.receipt.consumer.model.BusinessService;
+import org.egov.receipt.consumer.model.Instrument;
+import org.egov.receipt.consumer.model.InstrumentType;
 import org.egov.receipt.consumer.model.Receipt;
 import org.egov.receipt.consumer.model.ReceiptReq;
 import org.egov.receipt.consumer.model.RequestInfo;
@@ -31,6 +33,16 @@ public final class ReceiptTestFixtures {
         ReceiptReq req = new ReceiptReq();
         req.setRequestInfo(new RequestInfo());
         req.setReceipt(List.of(receipt));
+        return req;
+    }
+
+    public static ReceiptReq receiptReqWithInstrument(String tenantId, String businessServiceCode) {
+        ReceiptReq req = receiptReq(tenantId, businessServiceCode);
+        InstrumentType type = new InstrumentType();
+        type.setName("Cash");
+        Instrument instrument = new Instrument();
+        instrument.setInstrumentType(type);
+        req.getReceipt().get(0).setInstrument(instrument);
         return req;
     }
 
