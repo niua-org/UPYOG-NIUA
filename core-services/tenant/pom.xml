@@ -123,6 +123,15 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/*IT.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
         <version>3.21.2</version>
         <executions>
@@ -185,6 +194,11 @@
                 <rule>
                   <element>BUNDLE</element>
                   <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.10</minimum>
+                    </limit>
                     <limit>
                       <counter>COMPLEXITY</counter>
                       <value>COVEREDRATIO</value>
