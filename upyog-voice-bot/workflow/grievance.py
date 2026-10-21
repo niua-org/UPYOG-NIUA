@@ -314,13 +314,6 @@ def extraction_node(state: GrievanceState):
                 draft["category_code"] = matched["code"]
                 logger.info(f"[grievance extract] sub_category matched: {matched['name']}")
 
-    elif curr_field == "description":
-        # Any genuine answer to the problem description question is accepted
-        generic_intents = ["i want to file a complaint", "file a complaint", "raise a grievance", "file complaint", "want to file a complaint", "i have a complaint"] + meta_commands
-        if not any(g == ui_lower for g in generic_intents) and len(user_msg) >= 3 and ui_lower not in meta_commands:
-            draft["description"] = user_msg
-            logger.info(f"[grievance extract] description accepted: {user_msg}")
-
     elif curr_field == "locality":
         loc_ops = draft.get("_locality_options") or _pgr_localities()
         draft["_locality_options"] = loc_ops
