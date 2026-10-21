@@ -1,0 +1,88 @@
+# Registry for post-deploy smoke tests. One entry per deployable service.
+# basePath is appended to BASE_URL (gateway root). healthPath/versionPath are relative to basePath unless absolute.
+services:
+  - name: property-services
+    basePath: /property-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-idgen, egov-workflow-v2]
+    coreRead:
+      method: POST
+      path: /property/_search
+    coreWrite:
+      method: POST
+      path: /property/_create
+  - name: pgr-services
+    basePath: /pgr-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-idgen, egov-workflow-v2, egov-hrms]
+    coreRead:
+      method: POST
+      path: /request/_search
+    coreWrite:
+      method: POST
+      path: /request/_create
+  - name: ws-services
+    basePath: /ws-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-idgen, egov-workflow-v2, property-services]
+    coreRead:
+      method: POST
+      path: /connection/_search
+    coreWrite:
+      method: POST
+      path: /connection/_create
+  - name: sw-services
+    basePath: /sw-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-idgen, property-services]
+  - name: bpa-services
+    basePath: /bpa-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-idgen, egov-workflow-v2, property-services]
+  - name: fsm
+    basePath: /fsm
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, vendor, vehicle]
+  - name: tl-services
+    basePath: /tl-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-workflow-v2]
+  - name: pt-services-v2
+    basePath: /pt-services-v2
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [property-services]
+  - name: vendor-management
+    basePath: /vendor-management
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service]
+    coreRead:
+      method: POST
+      path: /api/v1/_search
+    coreWrite:
+      method: POST
+      path: /api/v1/_create
+  - name: community-hall-booking
+    basePath: /community-hall-booking
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-workflow-v2]
+  - name: firenoc-services
+    basePath: /firenoc-services
+    healthPath: /health
+    versionPath: /info
+    dependsOn: [egov-mdms-service, egov-workflow-v2]
+    coreRead:
+      method: POST
+      path: /v1/fire-noc/_search
+    coreWrite:
+      method: POST
+      path: /v1/fire-noc/_create
