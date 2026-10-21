@@ -62,6 +62,8 @@ def main() -> None:
 
     grand_total = grand_tested = grand_missing = 0
 
+    module_stats: list[tuple[str, int, int, int, dict]] = []
+
     for mod in MODULES:
         main_java = ROOT / mod / "src/main/java"
         test_java = ROOT / mod / "src/test/java"
