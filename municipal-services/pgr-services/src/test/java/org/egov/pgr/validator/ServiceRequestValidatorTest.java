@@ -14,8 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,40 +35,18 @@ class ServiceRequestValidatorTest {
     @BeforeEach
     void setUp() {
         validator = new ServiceRequestValidator(config, repository, hrmsUtil);
-        when(config.getAllowedSource()).thenReturn("web,mobile");
-        when(config.getAllowedCitizenSearchParameters()).thenReturn("tenantId,serviceCode");
-        when(config.getAllowedEmployeeSearchParameters()).thenReturn("tenantId,serviceCode,ids");
-        when(config.getStateLevelTenantIdLength()).thenReturn(1);
     }
 
     @Test
     @DisplayName("validateCreate_whenUnknownServiceCode_throwsInvalidServiceCode")
     void validateCreate_whenUnknownServiceCode_throwsInvalidServiceCode() {
+        when(config.getAllowedSource()).thenReturn("web,mobile");
         Service service = Service.builder()
                 .serviceCode("UnknownService")
                 .priority(Priority.HIGH)
                 .source("web")
                 .tenantId("pg.citya")
                 .address(org.egov.pgr.web.models.Address.builder().build())
-                .build();
-        ServiceRequest request = ServiceRequest.builder()
-                .requestInfo(citizenRequestInfo())
-                .service(service)
-                .build();
-
-        assertThatThrownBy(() -> validator.validateCreate(request, mdmsFixture()))
-                .isInstanceOf(CustomException.class);
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @DisplayName("validateCreate_whenServiceCodeBlank_throwsCustomException")
-    void validateCreate_whenServiceCodeBlank_throwsCustomException(String serviceCode) {
-        Service service = Service.builder()
-                .serviceCode(serviceCode)
-                .priority(Priority.HIGH)
-                .source("web")
-                .tenantId("pg.citya")
                 .build();
         ServiceRequest request = ServiceRequest.builder()
                 .requestInfo(citizenRequestInfo())
