@@ -12,6 +12,9 @@
     <description>Shared post-deploy HTTP smoke suite for municipal-services</description>
 
     <properties>
+        <testcontainers.version>1.19.7</testcontainers.version>
+        <jacoco.line.coverage>0.01</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
