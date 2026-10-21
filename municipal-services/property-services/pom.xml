@@ -20,7 +20,7 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.22</lombok.version>
-		<jacoco.line.coverage>0.02</jacoco.line.coverage>
+		<jacoco.line.coverage>0.0758</jacoco.line.coverage>
 		<jacoco.branch.coverage>0.01</jacoco.branch.coverage>
 	</properties>
 	<dependencyManagement>

@@ -5,8 +5,8 @@
     "with_test": 102,
     "missing": [],
     "test_count": 103,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1647,
+    "branch_coverage": 0.0071
   },
   {
     "module": "asset-calculator",
@@ -14,7 +14,7 @@
     "with_test": 36,
     "missing": [],
     "test_count": 37,
-    "line_coverage": 0.0,
+    "line_coverage": 0.2224,
     "branch_coverage": 0.0
   },
   {
@@ -23,7 +23,7 @@
     "with_test": 84,
     "missing": [],
     "test_count": 86,
-    "line_coverage": 0.0,
+    "line_coverage": 0.2258,
     "branch_coverage": 0.0
   },
   {
@@ -32,8 +32,8 @@
     "with_test": 104,
     "missing": [],
     "test_count": 105,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0758,
+    "branch_coverage": 0.0038
   },
   {
     "module": "bpa-calculator",
@@ -41,8 +41,8 @@
     "with_test": 54,
     "missing": [],
     "test_count": 55,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1343,
+    "branch_coverage": 0.0024
   },
   {
     "module": "bpa-services",
@@ -50,7 +50,7 @@
     "with_test": 114,
     "missing": [],
     "test_count": 115,
-    "line_coverage": 0.0,
+    "line_coverage": 0.0648,
     "branch_coverage": 0.0
   },
   {
@@ -58,9 +58,9 @@
     "main_classes": 88,
     "with_test": 88,
     "missing": [],
-    "test_count": 90,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "test_count": 89,
+    "line_coverage": 0.1334,
+    "branch_coverage": 0.0008
   },
   {
     "module": "challan-generation-calculator",
@@ -68,8 +68,8 @@
     "with_test": 43,
     "missing": [],
     "test_count": 44,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1119,
+    "branch_coverage": 0.0029
   },
   {
     "module": "cnd-calculator",
@@ -77,8 +77,8 @@
     "with_test": 32,
     "missing": [],
     "test_count": 33,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.3008,
+    "branch_coverage": 0.0053
   },
   {
     "module": "cnd-service",
@@ -86,8 +86,8 @@
     "with_test": 86,
     "missing": [],
     "test_count": 88,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1495,
+    "branch_coverage": 0.0015
   },
   {
     "module": "community-hall-booking",
@@ -95,8 +95,8 @@
     "with_test": 123,
     "missing": [],
     "test_count": 125,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.3306,
+    "branch_coverage": 0.0853
   },
   {
     "module": "echallan-calculator",
@@ -104,8 +104,8 @@
     "with_test": 43,
     "missing": [],
     "test_count": 44,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1543,
+    "branch_coverage": 0.0037
   },
   {
     "module": "echallan-services",
@@ -113,8 +113,8 @@
     "with_test": 75,
     "missing": [],
     "test_count": 76,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.155,
+    "branch_coverage": 0.0061
   },
   {
     "module": "egov-user-event",
@@ -122,8 +122,8 @@
     "with_test": 35,
     "missing": [],
     "test_count": 36,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0934,
+    "branch_coverage": 0.0092
   },
   {
     "module": "estate-management",
@@ -131,8 +131,8 @@
     "with_test": 77,
     "missing": [],
     "test_count": 79,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1065,
+    "branch_coverage": 0.0044
   },
   {
     "module": "ewaste-services",
@@ -140,8 +140,8 @@
     "with_test": 72,
     "missing": [],
     "test_count": 73,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1519,
+    "branch_coverage": 0.0114
   },
   {
     "module": "fsm",
@@ -149,7 +149,7 @@
     "with_test": 130,
     "missing": [],
     "test_count": 131,
-    "line_coverage": 0.0,
+    "line_coverage": 0.0782,
     "branch_coverage": 0.0
   },
   {
@@ -158,8 +158,8 @@
     "with_test": 57,
     "missing": [],
     "test_count": 58,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1965,
+    "branch_coverage": 0.0026
   },
   {
     "module": "garbage-service",
@@ -167,8 +167,8 @@
     "with_test": 109,
     "missing": [],
     "test_count": 110,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1299,
+    "branch_coverage": 0.0061
   },
   {
     "module": "inbox",
@@ -176,8 +176,8 @@
     "with_test": 140,
     "missing": [],
     "test_count": 141,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0488,
+    "branch_coverage": 0.0031
   },
   {
     "module": "land-services",
@@ -185,7 +185,7 @@
     "with_test": 44,
     "missing": [],
     "test_count": 45,
-    "line_coverage": 0.0,
+    "line_coverage": 0.1209,
     "branch_coverage": 0.0
   },
   {
@@ -194,8 +194,8 @@
     "with_test": 56,
     "missing": [],
     "test_count": 57,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1717,
+    "branch_coverage": 0.0038
   },
   {
     "module": "ndc-services",
@@ -203,8 +203,8 @@
     "with_test": 114,
     "missing": [],
     "test_count": 115,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0945,
+    "branch_coverage": 0.0007
   },
   {
     "module": "noc-services",
@@ -212,7 +212,7 @@
     "with_test": 77,
     "missing": [],
     "test_count": 78,
-    "line_coverage": 0.0,
+    "line_coverage": 0.0523,
     "branch_coverage": 0.0
   },
   {
@@ -221,8 +221,8 @@
     "with_test": 99,
     "missing": [],
     "test_count": 100,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1129,
+    "branch_coverage": 0.0024
   },
   {
     "module": "pgr-ai-services",
@@ -230,8 +230,8 @@
     "with_test": 91,
     "missing": [],
     "test_count": 92,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1341,
+    "branch_coverage": 0.0007
   },
   {
     "module": "pgr-services",
@@ -239,8 +239,8 @@
     "with_test": 84,
     "missing": [],
     "test_count": 85,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1762,
+    "branch_coverage": 0.0092
   },
   {
     "module": "pqm",
@@ -260,8 +260,8 @@
       "TestSearchRequest"
     ],
     "test_count": 96,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.131,
+    "branch_coverage": 0.0042
   },
   {
     "module": "pqm-anomaly-finder",
@@ -275,8 +275,8 @@
       "TestResultStatus"
     ],
     "test_count": 54,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1941,
+    "branch_coverage": 0.0092
   },
   {
     "module": "property-services",
@@ -284,17 +284,19 @@
     "with_test": 171,
     "missing": [],
     "test_count": 173,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0798,
+    "branch_coverage": 0.0033
   },
   {
     "module": "pt-calculator-v2",
     "main_classes": 146,
-    "with_test": 146,
-    "missing": [],
-    "test_count": 147,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "with_test": 145,
+    "missing": [
+      "ReceiptService"
+    ],
+    "test_count": 146,
+    "line_coverage": 0.1277,
+    "branch_coverage": 0.0036
   },
   {
     "module": "pt-services-v2",
@@ -302,8 +304,8 @@
     "with_test": 92,
     "missing": [],
     "test_count": 94,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1198,
+    "branch_coverage": 0.0039
   },
   {
     "module": "rainmaker-pgr",
@@ -311,8 +313,8 @@
     "with_test": 68,
     "missing": [],
     "test_count": 71,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0866,
+    "branch_coverage": 0.0192
   },
   {
     "module": "request-service",
@@ -320,8 +322,8 @@
     "with_test": 100,
     "missing": [],
     "test_count": 102,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1169,
+    "branch_coverage": 0.0047
   },
   {
     "module": "street-vending",
@@ -329,8 +331,8 @@
     "with_test": 119,
     "missing": [],
     "test_count": 121,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1973,
+    "branch_coverage": 0.0038
   },
   {
     "module": "sw-calculator",
@@ -338,8 +340,8 @@
     "with_test": 129,
     "missing": [],
     "test_count": 130,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1108,
+    "branch_coverage": 0.0055
   },
   {
     "module": "sw-services",
@@ -347,8 +349,8 @@
     "with_test": 123,
     "missing": [],
     "test_count": 124,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1135,
+    "branch_coverage": 0.0053
   },
   {
     "module": "tl-calculator",
@@ -356,8 +358,8 @@
     "with_test": 76,
     "missing": [],
     "test_count": 78,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.194,
+    "branch_coverage": 0.0078
   },
   {
     "module": "tl-services",
@@ -365,8 +367,8 @@
     "with_test": 107,
     "missing": [],
     "test_count": 108,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1309,
+    "branch_coverage": 0.0028
   },
   {
     "module": "tp-services",
@@ -376,8 +378,8 @@
       "State"
     ],
     "test_count": 92,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.2203,
+    "branch_coverage": 0.0074
   },
   {
     "module": "turn-io-adapter",
@@ -385,8 +387,8 @@
     "with_test": 65,
     "missing": [],
     "test_count": 66,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1351,
+    "branch_coverage": 0.0022
   },
   {
     "module": "vehicle",
@@ -396,8 +398,8 @@
       "DepartmentalTest"
     ],
     "test_count": 86,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1018,
+    "branch_coverage": 0.0009
   },
   {
     "module": "vendor",
@@ -407,8 +409,8 @@
       "DepartmentalTest"
     ],
     "test_count": 66,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.0909,
+    "branch_coverage": 0.0014
   },
   {
     "module": "vendor-management",
@@ -416,8 +418,8 @@
     "with_test": 42,
     "missing": [],
     "test_count": 43,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.3344,
+    "branch_coverage": 0.0168
   },
   {
     "module": "ws-calculator",
@@ -425,8 +427,8 @@
     "with_test": 144,
     "missing": [],
     "test_count": 145,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1027,
+    "branch_coverage": 0.005
   },
   {
     "module": "ws-services",
@@ -434,7 +436,7 @@
     "with_test": 131,
     "missing": [],
     "test_count": 133,
-    "line_coverage": 0.0,
-    "branch_coverage": 0.0
+    "line_coverage": 0.1148,
+    "branch_coverage": 0.0056
   }
 ]

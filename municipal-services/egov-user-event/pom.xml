@@ -24,7 +24,7 @@
 		<project.reporting.outputEncoding>UTF-8
 		</project.reporting.outputEncoding>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.01</jacoco.line.coverage>
+        <jacoco.line.coverage>0.0887</jacoco.line.coverage>
         <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
 		<commons-lang-version>2.6</commons-lang-version>
 		<joda-time-version>2.9.6</joda-time-version>

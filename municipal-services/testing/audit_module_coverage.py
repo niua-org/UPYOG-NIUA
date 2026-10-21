@@ -36,16 +36,15 @@ def jacoco_ratios(module: Path) -> tuple[float, float]:
     csv_path = module / "target/site/jacoco/jacoco.csv"
     if not csv_path.exists():
         return 0.0, 0.0
-    line_cov = branch_cov = 0.0
+    lc = lm = bc = bm = 0.0
     with csv_path.open() as f:
         for row in csv.DictReader(f):
-            if row.get("PACKAGE") == "all":
-                lc = float(row["LINE_COVERED"])
-                lm = float(row["LINE_MISSED"])
-                line_cov = lc / max(1.0, lc + lm)
-                bc = float(row["BRANCH_COVERED"])
-                bm = float(row["BRANCH_MISSED"])
-                branch_cov = bc / max(1.0, bc + bm)
+            lc += float(row["LINE_COVERED"])
+            lm += float(row["LINE_MISSED"])
+            bc += float(row["BRANCH_COVERED"])
+            bm += float(row["BRANCH_MISSED"])
+    line_cov = lc / max(1.0, lc + lm)
+    branch_cov = bc / max(1.0, bc + bm)
     return line_cov, branch_cov
 
 

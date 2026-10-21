@@ -16,69 +16,64 @@ All deployable modules under `municipal-services/` now have:
 
 Shared tooling: `municipal-services/testing/`, `.mvn/settings-public.xml` (Maven Central + UPYOG Nexus URLs).
 
-## Per-class unit test expansion (JDK 17, in progress)
+## Per-class unit test expansion (JDK 17, complete)
 
-Tooling: [`testing/generate_per_class_unit_tests.py`](../testing/generate_per_class_unit_tests.py), [`testing/audit_module_coverage.py`](../testing/audit_module_coverage.py), [`testing/update_jacoco_floors.py`](../testing/update_jacoco_floors.py).
+Tooling: [`testing/generate_per_class_unit_tests.py`](../testing/generate_per_class_unit_tests.py), [`testing/generate_node_unit_tests.py`](../testing/generate_node_unit_tests.py), [`testing/audit_module_coverage.py`](../testing/audit_module_coverage.py), [`testing/update_jacoco_floors.py`](../testing/update_jacoco_floors.py).
 
-Inventory snapshot: [`module-coverage-audit.json`](../testing/module-coverage-audit.json) — **4,071** main types, **4,052** with a matching `*Test` (19 naming/inner-type gaps in `pqm*`, `tp-services`, `vehicle`, `vendor`).
+Inventory: [`module-coverage-audit.json`](../testing/module-coverage-audit.json) — **46/46** modules **PASS** `mvn test` on JDK 17 after per-class scaffolding; JaCoCo measured via full-tree `mvn test jacoco:report` (2026-10-21). POM floors set to ~95% of measured line/branch via `update_jacoco_floors.py`.
 
-| mvn test (per-class sweep) | Count |
-|----------------------------|------:|
-| **PASS** (committed per module) | **23** |
-| **FAIL** (generated tests present locally; fixes in flight) | **23** |
+Remaining **naming gaps** (hand-written or FQN tests; no production change): `pqm*` types named `Test*`, `tp-services` inner `State`, HRMS `DepartmentalTest` in `vehicle`/`vendor`, `pt-calculator-v2` `ReceiptService` (entire source file commented out in main — no test class).
 
-Earlier baseline (layered scaffold only): [module-test-run-results.txt.summary](../testing/module-test-run-results.txt.summary) — **46/46 PASS** before the per-class generator landed.
+| Module | Main classes | With `FooTest` | Missing | Test classes | mvn test | Line % | Branch % |
+|--------|-------------:|---------------:|--------:|-------------:|----------|-------:|---------:|
+| advertisement-service | 102 | 102 | — | 103 | **PASS** | 16.5% | 0.7% |
+| asset-calculator | 36 | 36 | — | 37 | **PASS** | 22.2% | 0.0% |
+| asset-services | 84 | 84 | — | 86 | **PASS** | 22.6% | 0.0% |
+| birth-death-services | 104 | 104 | — | 105 | **PASS** | 7.6% | 0.4% |
+| bpa-calculator | 54 | 54 | — | 55 | **PASS** | 13.4% | 0.2% |
+| bpa-services | 114 | 114 | — | 115 | **PASS** | 6.5% | 0.0% |
+| challan-generation | 88 | 88 | — | 89 | **PASS** | 13.3% | 0.1% |
+| challan-generation-calculator | 43 | 43 | — | 44 | **PASS** | 11.2% | 0.3% |
+| cnd-calculator | 32 | 32 | — | 33 | **PASS** | 30.1% | 0.5% |
+| cnd-service | 86 | 86 | — | 88 | **PASS** | 14.9% | 0.1% |
+| community-hall-booking | 123 | 123 | — | 125 | **PASS** | 33.1% | 8.5% |
+| echallan-calculator | 43 | 43 | — | 44 | **PASS** | 15.4% | 0.4% |
+| echallan-services | 75 | 75 | — | 76 | **PASS** | 15.5% | 0.6% |
+| egov-user-event | 35 | 35 | — | 36 | **PASS** | 9.3% | 0.9% |
+| estate-management | 77 | 77 | — | 79 | **PASS** | 10.7% | 0.4% |
+| ewaste-services | 72 | 72 | — | 73 | **PASS** | 15.2% | 1.1% |
+| fsm | 130 | 130 | — | 131 | **PASS** | 7.8% | 0.0% |
+| fsm-calculator | 57 | 57 | — | 58 | **PASS** | 19.7% | 0.3% |
+| garbage-service | 109 | 109 | — | 110 | **PASS** | 13.0% | 0.6% |
+| inbox | 140 | 140 | — | 141 | **PASS** | 4.9% | 0.3% |
+| land-services | 44 | 44 | — | 45 | **PASS** | 12.1% | 0.0% |
+| ndc-calculator | 56 | 56 | — | 57 | **PASS** | 17.2% | 0.4% |
+| ndc-services | 114 | 114 | — | 115 | **PASS** | 9.4% | 0.1% |
+| noc-services | 77 | 77 | — | 78 | **PASS** | 5.2% | 0.0% |
+| pet-services | 99 | 99 | — | 100 | **PASS** | 11.3% | 0.2% |
+| pgr-ai-services | 91 | 91 | — | 92 | **PASS** | 13.4% | 0.1% |
+| pgr-services | 84 | 84 | — | 85 | **PASS** | 17.6% | 0.9% |
+| pqm | 95 | 84 | MdmsTest, Test, TestDocumentQueryBuilder, TestQueryBuilder… | 96 | **PASS** | 13.1% | 0.4% |
+| pqm-anomaly-finder | 53 | 48 | Test, TestAnomalyFinderValidator, TestRequest, TestResponse… | 54 | **PASS** | 19.4% | 0.9% |
+| property-services | 171 | 171 | — | 173 | **PASS** | 8.0% | 0.3% |
+| pt-calculator-v2 | 146 | 145 | ReceiptService | 146 | **PASS** | 12.8% | 0.4% |
+| pt-services-v2 | 92 | 92 | — | 94 | **PASS** | 12.0% | 0.4% |
+| rainmaker-pgr | 68 | 68 | — | 71 | **PASS** | 8.7% | 1.9% |
+| request-service | 100 | 100 | — | 102 | **PASS** | 11.7% | 0.5% |
+| street-vending | 119 | 119 | — | 121 | **PASS** | 19.7% | 0.4% |
+| sw-calculator | 129 | 129 | — | 130 | **PASS** | 11.1% | 0.5% |
+| sw-services | 123 | 123 | — | 124 | **PASS** | 11.3% | 0.5% |
+| tl-calculator | 76 | 76 | — | 78 | **PASS** | 19.4% | 0.8% |
+| tl-services | 107 | 107 | — | 108 | **PASS** | 13.1% | 0.3% |
+| tp-services | 91 | 90 | State | 92 | **PASS** | 22.0% | 0.7% |
+| turn-io-adapter | 65 | 65 | — | 66 | **PASS** | 13.5% | 0.2% |
+| vehicle | 85 | 84 | DepartmentalTest | 86 | **PASS** | 10.2% | 0.1% |
+| vendor | 65 | 64 | DepartmentalTest | 66 | **PASS** | 9.1% | 0.1% |
+| vendor-management | 42 | 42 | — | 43 | **PASS** | 33.4% | 1.7% |
+| ws-calculator | 144 | 144 | — | 145 | **PASS** | 10.3% | 0.5% |
+| ws-services | 131 | 131 | — | 133 | **PASS** | 11.5% | 0.6% |
 
-| Module | Main classes | With `FooTest` | Missing | Test classes | mvn test | Notes |
-|--------|-------------:|---------------:|--------:|-------------:|----------|-------|
-| advertisement-service | 102 | 102 | — | 103 | **PASS** |  |
-| asset-calculator | 36 | 36 | — | 37 | **PASS** |  |
-| asset-services | 84 | 84 | — | 86 | **PASS** |  |
-| birth-death-services | 104 | 104 | — | 105 | **PASS** |  |
-| bpa-calculator | 54 | 54 | — | 55 | **PASS** |  |
-| bpa-services | 114 | 114 | — | 115 | **PASS** |  |
-| challan-generation | 88 | 88 | — | 90 | FAIL | Generic-typed dependency mocks / compile |
-| challan-generation-calculator | 43 | 43 | — | 44 | **PASS** |  |
-| cnd-calculator | 32 | 32 | — | 33 | **PASS** | JaCoCo floor raised from measured (~30% line) |
-| cnd-service | 86 | 86 | — | 88 | FAIL | Legacy controller/exception tests |
-| community-hall-booking | 123 | 123 | — | 125 | FAIL | Seat-lock / Kafka paths |
-| echallan-calculator | 43 | 43 | — | 44 | **PASS** |  |
-| echallan-services | 75 | 75 | — | 76 | **PASS** |  |
-| egov-user-event | 35 | 35 | — | 36 | **PASS** |  |
-| estate-management | 77 | 77 | — | 79 | FAIL | Notification payload constructors |
-| ewaste-services | 72 | 72 | — | 73 | **PASS** |  |
-| fsm | 130 | 130 | — | 131 | **PASS** |  |
-| fsm-calculator | 57 | 57 | — | 58 | **PASS** |  |
-| garbage-service | 109 | 109 | — | 110 | FAIL | Service dependency graph |
-| inbox | 140 | 140 | — | 141 | FAIL | Large controller/repository surface |
-| land-services | 44 | 44 | — | 45 | **PASS** |  |
-| ndc-calculator | 56 | 56 | — | 57 | FAIL | Generated service compile |
-| ndc-services | 114 | 114 | — | 115 | FAIL | Generated service compile |
-| noc-services | 77 | 77 | — | 78 | **PASS** |  |
-| pet-services | 99 | 99 | — | 100 | FAIL | Validator/controller edge tests |
-| pgr-ai-services | 91 | 91 | — | 92 | **PASS** |  |
-| pgr-services | 84 | 84 | — | 85 | **PASS** |  |
-| pqm | 95 | 84 | MdmsTest, Test, TestDocumentQueryBuilder… | 96 | FAIL | Inner/reserved type names |
-| pqm-anomaly-finder | 53 | 48 | Test, TestAnomalyFinderValidator, TestRequest… | 54 | FAIL | Inner/reserved type names |
-| property-services | 171 | 171 | — | 173 | FAIL | Largest module; deep services |
-| pt-calculator-v2 | 146 | 146 | — | 147 | FAIL | Calculator graph |
-| pt-services-v2 | 92 | 92 | — | 94 | FAIL | Spring Boot 1.5 + mixed JUnit |
-| rainmaker-pgr | 68 | 68 | — | 71 | **PASS** |  |
-| request-service | 100 | 100 | — | 102 | FAIL | Service mocks |
-| street-vending | 119 | 119 | — | 121 | FAIL | GlobalExceptionHandler expectations |
-| sw-calculator | 129 | 129 | — | 130 | FAIL | Calculator graph |
-| sw-services | 123 | 123 | — | 124 | FAIL | Water/sewerage services |
-| tl-calculator | 76 | 76 | — | 78 | **PASS** |  |
-| tl-services | 107 | 107 | — | 108 | FAIL | Notification util imports |
-| tp-services | 91 | 90 | State | 92 | FAIL | Inner enum `State` |
-| turn-io-adapter | 65 | 65 | — | 66 | FAIL | Adapter models |
-| vehicle | 85 | 84 | DepartmentalTest | 86 | **PASS** | HRMS nested type name clash |
-| vendor | 65 | 64 | DepartmentalTest | 66 | **PASS** | HRMS nested type name clash |
-| vendor-management | 42 | 42 | — | 43 | **PASS** |  |
-| ws-calculator | 144 | 144 | — | 145 | FAIL | Calculator graph |
-| ws-services | 131 | 131 | — | 133 | FAIL | Water services |
-
-**Modules still red (one-line):** challan-generation — generic mock field types; cnd-service — legacy exception handler tests; community-hall-booking — Kafka/seat-lock; estate-management — all-args notification models; garbage-service / inbox / property-services / ws-* / sw-* — large service graphs need hand-tuned mocks; ndc-* — compile on generated services; pet-services / request-service / street-vending / tp-services / turn-io-adapter / tl-services — mixed legacy tests + generator compile gaps; pqm* — inner types named `Test*`.
+Node/Python: **firenoc-services** / **firenoc-calculator** — Jest per-`src` smoke tests (20 + 18 files, entry/kafka/db skipped); **pqm-scheduler** — pytest for `cronJobAPIConfig.getRequestInfo`.
 
 ## Coverage before vs after (qualitative)
 
@@ -91,7 +86,7 @@ Earlier baseline (layered scaffold only): [module-test-run-results.txt.summary](
 | Node firenoc-* | eslint only | Jest unit scripts + tests |
 | core-smoke-tests | 11 services | **50+** services in `services.yaml` + smoke classes |
 
-Exact JaCoCo percentages: run `mvn test jacoco:report` per module in CI.
+JaCoCo percentages in the table above come from the 2026-10-21 full-tree run; CI should repeat `mvn test jacoco:report` on JDK 17.
 
 ## Phase 3 extras (status)
 
@@ -114,6 +109,9 @@ Exact JaCoCo percentages: run `mvn test jacoco:report` per module in CI.
 6. **GlobalExceptionHandler (street-vending, tp-services)** — standalone MockMvc tests observe **500** for some validation/custom paths where handlers map to generic error responses (tests assert observed behavior).
 7. **Tenant isolation** — smoke tests add black-box checks; repository-level isolation not proven for every API.
 8. **Generated controller tests** — many modules rely on standalone MockMvc or util/validator tests first; expand `@WebMvcTest` with service-specific `@MockBean`s over time.
+9. **Per-class generator** — `@Mock` fields keep generic types (`Map<String, Object>`); FQN constructor params resolve imports; `String` / `@Value` constructor params are literals, not mocks; model class `Test` uses FQN to avoid clashing with JUnit `@Test`; `@Builder` without `@NoArgsConstructor` gets builder-only tests.
+10. **pt-calculator-v2 `ReceiptService`** — production class is fully block-commented; per-class inventory skips a test for that type.
+11. **LocalizationConstants.EMPTY_DOCUMENT_ERROR** — constant is `null` in production; generated constants test asserts null, not blank.
 
 ## Small refactors for testability
 
