@@ -14,6 +14,80 @@ from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# Simple names that clash with JUnit / JDK when used unqualified in generated tests.
+TYPE_NAME_USE_FQN = frozenset({"Test", "Object"})
+
+NON_MOCKABLE_SIMPLE_TYPES = frozenset(
+    {
+        "String",
+        "int",
+        "long",
+        "boolean",
+        "double",
+        "float",
+        "byte",
+        "short",
+        "char",
+        "Integer",
+        "Long",
+        "Boolean",
+        "Double",
+        "Float",
+        "Byte",
+        "Short",
+        "Character",
+        "Class",
+    }
+)
+
+
+def strip_line_comments(text: str) -> str:
+    out: list[str] = []
+    for line in text.splitlines():
+        if "//" in line:
+            line = line[: line.index("//")]
+        out.append(line)
+    return "\n".join(out)
+
+
+def simple_type_name(ftype: str) -> str:
+    ftype = ftype.replace("final ", "").strip()
+    raw = ftype.split("<")[0].strip()
+    return raw.split(".")[-1]
+
+
+def is_mockable_type(ftype: str) -> bool:
+    st = simple_type_name(ftype)
+    if st in NON_MOCKABLE_SIMPLE_TYPES:
+        return False
+    if "Logger" in ftype or ftype.endswith(" log"):
+        return False
+    return True
+
+
+def type_ref(jt: JavaType) -> str:
+    if jt.name in TYPE_NAME_USE_FQN:
+        return f"{jt.package}.{jt.name}"
+    return jt.name
+
+
+def find_fqn_in_source(source_text: str, simple: str) -> Optional[str]:
+    for m in re.finditer(rf"([\w.]+\.{re.escape(simple)})\s+\w+", source_text):
+        return m.group(1)
+    return None
+
+
+def find_type_in_module(module: Path, simple: str) -> Optional[str]:
+    main = module / "src/main/java"
+    if not main.exists():
+        return None
+    hits = list(main.rglob(f"{simple}.java"))
+    if len(hits) == 1:
+        jt = parse_java(hits[0])
+        if jt:
+            return f"{jt.package}.{jt.name}"
+    return None
+
 
 @dataclass
 class JavaType:
@@ -65,8 +139,42 @@ def parse_java(path: Path) -> Optional[JavaType]:
     if impl:
         implements = [x.strip().split(".")[-1] for x in impl[0].split(",")]
 
+    def _extract_constructor_param_string(class_text: str, class_name: str) -> str | None:
+        m = re.search(r"public\s+" + re.escape(class_name) + r"\s*\(", class_text)
+        if not m:
+            return None
+        i = m.end()
+        depth = 1
+        while i < len(class_text) and depth > 0:
+            ch = class_text[i]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+            i += 1
+        if depth != 0:
+            return None
+        return class_text[m.end() : i - 1]
+
+    def _strip_ann(s: str) -> str:
+        prev = None
+        while prev != s:
+            prev = s
+            s = re.sub(
+                r"@\w+(?:\((?:[^()\"]|\"[^\"]*\"|\([^()]*\))*\))?\s*",
+                "",
+                s,
+            )
+        return s.strip()
+
+    def _valid_java_type(ftype: str) -> bool:
+        ftype = ftype.strip()
+        if not ftype or "=" in ftype or ftype.startswith("("):
+            return False
+        return bool(re.match(r"^[\w.$<>,\s\[\]?]+$", ftype))
+
     ctor_params: list[tuple[str, str]] = []
-    cm = re.search(r"public\s+" + re.escape(name) + r"\s*\(([^)]*)\)", text)
+    param_blob = _extract_constructor_param_string(text, name)
 
     def _split_params(param_str: str) -> list[str]:
         parts: list[str] = []
@@ -86,21 +194,24 @@ def parse_java(path: Path) -> Optional[JavaType]:
             parts.append("".join(cur).strip())
         return parts
 
-    def _strip_ann(s: str) -> str:
-        return re.sub(r"@\w+(?:\([^)]*\))?\s*", "", s).strip()
-
-    if cm and cm.group(1).strip():
-        for part in _split_params(cm.group(1)):
+    if param_blob and param_blob.strip():
+        for part in _split_params(param_blob):
             if not part:
                 continue
             part = _strip_ann(part)
             bits = part.rsplit(" ", 1)
-            if len(bits) == 2:
-                ctor_params.append((bits[0].strip(), bits[1].strip()))
+            if len(bits) != 2:
+                continue
+            ftype, fname = bits[0].strip(), bits[1].strip()
+            if not re.match(r"^[a-zA-Z_]\w*$", fname):
+                continue
+            if not _valid_java_type(ftype):
+                continue
+            ctor_params.append((ftype, fname))
 
     fields: list[tuple[str, str]] = []
     for fm in re.finditer(
-        r"^\s*(?:private|protected)\s+(?:final\s+)?(?!static)([\w<>,\s\[\]?]+?)\s+(\w+)\s*;",
+        r"^\s*(?:private|protected)\s+(?:final\s+)?(?!static)([\w.$<>,\s\[\]?]+?)\s+(\w+)\s*;",
         text,
         re.MULTILINE,
     ):
@@ -134,45 +245,109 @@ def parse_java(path: Path) -> Optional[JavaType]:
         fields=fields,
         methods=methods,
         is_abstract="abstract class" in text[: m.start() + 20],
-        has_lombok_builder="@Builder" in text,
-        has_lombok_getter="@Getter" in text or "@Data" in text,
-        has_lombok_setter="@Setter" in text or "@Data" in text,
+        has_lombok_builder="@Builder" in strip_line_comments(text),
+        has_lombok_getter="@Getter" in strip_line_comments(text)
+        or "@Data" in strip_line_comments(text),
+        has_lombok_setter="@Setter" in strip_line_comments(text)
+        or "@Data" in strip_line_comments(text),
         has_private_ctor=bool(re.search(r"private\s+" + re.escape(name) + r"\s*\(", text)),
     )
 
 
+def test_class_file_name(type_name: str) -> str:
+    # Avoid awkward but valid names like TestTest; keep Foo -> FooTest
+    return f"{type_name}Test.java"
+
+
 def test_path(module: Path, jt: JavaType) -> Path:
-    rel = jt.path.relative_to(module / "src/main/java")
-    return module / "src/test/java" / rel.parent / f"{jt.name}Test.java"
+    pkg_dir = Path(*jt.package.split("."))
+    return module / "src/test/java" / pkg_dir / test_class_file_name(jt.name)
 
 
 def test_exists(module: Path, jt: JavaType) -> bool:
     return test_path(module, jt).exists()
 
 
-def resolve_imports(source_text: str, type_names: list[str], package: str) -> list[str]:
+def resolve_imports(
+    source_text: str,
+    type_names: list[str],
+    package: str,
+    module: Optional[Path] = None,
+) -> list[str]:
     by_simple: dict[str, str] = {}
     for line in re.findall(r"^import\s+([\w.]+)\s*;", source_text, re.MULTILINE):
         by_simple[line.split(".")[-1]] = line
     out: list[str] = []
+    seen: set[str] = set()
     for tn in type_names:
-        simple = tn.replace("...", "").split(".")[-1].split("<")[0].strip()
+        raw = tn.replace("...", "").strip()
+        if not raw:
+            continue
+        base = raw.split("<")[0].strip()
+        if not base:
+            continue
+        if "." in base:
+            if base not in seen:
+                out.append(base)
+                seen.add(base)
+            continue
+        simple = base.split(".")[-1]
+        if not re.match(r"^[A-Z]\w*$", simple):
+            continue
         if simple in by_simple:
-            out.append(by_simple[simple])
+            imp = by_simple[simple]
         elif simple in ("String", "Integer", "Long", "Boolean", "Object", "BigDecimal", "List", "Map"):
             continue
         elif simple == "ObjectMapper":
-            out.append("com.fasterxml.jackson.databind.ObjectMapper")
+            imp = "com.fasterxml.jackson.databind.ObjectMapper"
         else:
-            out.append(f"{package}.{simple}")
-    return sorted(set(out))
+            fqn = find_fqn_in_source(source_text, simple)
+            if not fqn and module is not None:
+                fqn = find_type_in_module(module, simple)
+            imp = fqn if fqn else f"{package}.{simple}"
+        if imp not in seen:
+            out.append(imp)
+            seen.add(imp)
+    return sorted(out)
 
 
-def simple_type_names_from_params(ctor_params: list[tuple[str, str]]) -> list[str]:
-    names: list[str] = []
-    for ftype, _ in ctor_params:
-        names.append(ftype.split("<")[0].split()[-1])
-    return names
+def types_for_import_resolution(ctor_params: list[tuple[str, str]]) -> list[str]:
+    return [ftype for ftype, _ in ctor_params if is_mockable_type(ftype)]
+
+
+def build_ctor_mocks_and_init(
+    jt: JavaType,
+) -> tuple[str, str, list[tuple[str, str]]]:
+    """Return (mock_field_block, init_block, mockable_ctor_params)."""
+    if not jt.ctor_params:
+        return (
+            "",
+            f"""
+    @InjectMocks
+    private {jt.name} subject;
+""",
+            [],
+        )
+    mock_fields: list[str] = []
+    init_args: list[str] = []
+    mockable: list[tuple[str, str]] = []
+    for ftype, fname in jt.ctor_params:
+        if is_mockable_type(ftype):
+            mock_fields.append(f"    @Mock\n    private {ftype} {fname};")
+            init_args.append(fname)
+            mockable.append((ftype, fname))
+        else:
+            init_args.append(simple_type_default(ftype))
+    mocks = "\n".join(mock_fields)
+    init = f"""
+    private {jt.name} subject;
+
+    @BeforeEach
+    void setUp() {{
+        subject = new {jt.name}({", ".join(init_args)});
+    }}
+"""
+    return mocks, init, mockable
 
 
 def simple_type_default(ftype: str) -> str:
@@ -262,7 +437,19 @@ def gen_constants(jt: JavaType) -> str:
     body = ""
     if const_fields:
         first = const_fields[0]
-        body = f"""
+        null_init = re.search(
+            rf"public\s+static\s+final\s+\w+\s+{re.escape(first)}\s*=\s*null\s*;",
+            jt.text,
+        )
+        if null_init:
+            body = f"""
+            @Test
+            void {first}_whenRead_isDefined() {{
+                assertThat({jt.name}.{first}).isNull();
+            }}
+        """
+        else:
+            body = f"""
             @Test
             void {first}_whenRead_isNotBlank() {{
                 assertThat({jt.name}.{first}).isNotBlank();
@@ -322,23 +509,22 @@ def pick_model_field(jt: JavaType) -> Optional[tuple[str, str]]:
 
 
 def has_no_arg_constructor(jt: JavaType) -> bool:
-    if "@NoArgsConstructor" in jt.text:
-        return True
-    if "@AllArgsConstructor" in jt.text and "@NoArgsConstructor" not in jt.text:
-        return bool(
-            re.search(
-                r"public\s+" + re.escape(jt.name) + r"\s*\(\s*\)",
-                jt.text,
-            )
-        )
-    if "@Data" in jt.text:
-        return True
-    return bool(
+    src = strip_line_comments(jt.text)
+    explicit_no_arg = bool(
         re.search(
             r"public\s+" + re.escape(jt.name) + r"\s*\(\s*\)",
-            jt.text,
+            src,
         )
     )
+    if "@NoArgsConstructor" in src:
+        return True
+    if "@Builder" in src and "@NoArgsConstructor" not in src and not explicit_no_arg:
+        return False
+    if "@AllArgsConstructor" in src and "@NoArgsConstructor" not in src:
+        return explicit_no_arg
+    if "@Data" in src and "@AllArgsConstructor" not in src:
+        return True
+    return explicit_no_arg
 
 
 def builder_safe(jt: JavaType) -> bool:
@@ -346,12 +532,13 @@ def builder_safe(jt: JavaType) -> bool:
 
 
 def gen_model(jt: JavaType) -> str:
+    ref = type_ref(jt)
     builder_test = ""
     if builder_safe(jt):
         builder_test = f"""
     @Test
     void builder_whenDefaultBuilds_isNotNull() {{
-        assertThat({jt.name}.builder().build()).isNotNull();
+        assertThat({ref}.builder().build()).isNotNull();
     }}
 """
     no_arg_test = ""
@@ -359,14 +546,14 @@ def gen_model(jt: JavaType) -> str:
         no_arg_test = f"""
     @Test
     void newInstance_whenCreated_isNotNull() {{
-        assertThat(new {jt.name}()).isNotNull();
+        assertThat(new {ref}()).isNotNull();
     }}
 """
     else:
         no_arg_test = f"""
     @Test
     void class_whenLoaded_isNotNull() {{
-        assertThat({jt.name}.class).isNotNull();
+        assertThat({ref}.class).isNotNull();
     }}
 """
     return textwrap.dedent(
@@ -446,32 +633,15 @@ def gen_generic(jt: JavaType) -> str:
     ).strip() + "\n"
 
 
-def gen_service(jt: JavaType) -> str:
-    mocks = ""
-    init = ""
-    if jt.ctor_params:
-        mock_fields = []
-        init_args = []
-        for ftype, fname in jt.ctor_params:
-            mock_fields.append(f"    @Mock\n    private {ftype} {fname};")
-            init_args.append(fname)
-        mocks = "\n".join(mock_fields)
-        init = f"""
-    private {jt.name} subject;
-
-    @BeforeEach
-    void setUp() {{
-        subject = new {jt.name}({", ".join(init_args)});
-    }}
-"""
-    else:
-        init = f"""
-    @InjectMocks
-    private {jt.name} subject;
-"""
+def gen_service(jt: JavaType, module: Optional[Path] = None) -> str:
+    mocks, init, mockable_params = build_ctor_mocks_and_init(jt)
 
     test_methods = ""
-    if "CalculationService" == jt.name and "calculateFee" in jt.text:
+    if (
+        jt.name == "CalculationService"
+        and "calculateFee" in jt.text
+        and jt.package.startswith("org.upyog.cdwm.calculator")
+    ):
         test_methods = """
     @Test
     void calculateFee_whenMdmsEmpty_throwsCustomException() {
@@ -528,7 +698,7 @@ def gen_service(jt: JavaType) -> str:
 """
 
     extra_imports = resolve_imports(
-        jt.text, simple_type_names_from_params(jt.ctor_params), jt.package
+        jt.text, types_for_import_resolution(jt.ctor_params), jt.package, module
     )
     import_lines = "\n".join(f"import {imp};" for imp in extra_imports)
     body = f"""package {jt.package};
@@ -560,20 +730,28 @@ def controller_dependency_fields(jt: JavaType) -> list[tuple[str, str]]:
             continue
         if "[]" in ftype or ftype in ("int", "long", "boolean", "double", "float"):
             continue
+        if not is_mockable_type(ftype):
+            continue
         deps.append((ftype.replace("final ", "").strip(), fname))
     return deps
 
 
-def gen_controller(jt: JavaType) -> str:
+def gen_controller(jt: JavaType, module: Optional[Path] = None) -> str:
     if jt.ctor_params:
-        deps = jt.ctor_params
         mock_fields = []
         init_args = []
-        for ftype, fname in deps:
-            mock_fields.append(f"    @Mock\n    private {ftype} {fname};")
-            init_args.append(fname)
+        mockable_deps: list[tuple[str, str]] = []
+        for ftype, fname in jt.ctor_params:
+            if is_mockable_type(ftype):
+                mock_fields.append(f"    @Mock\n    private {ftype} {fname};")
+                init_args.append(fname)
+                mockable_deps.append((ftype, fname))
+            else:
+                init_args.append(simple_type_default(ftype))
         mocks = "\n".join(mock_fields)
-        extra_imports = resolve_imports(jt.text, simple_type_names_from_params(deps), jt.package)
+        extra_imports = resolve_imports(
+            jt.text, types_for_import_resolution(jt.ctor_params), jt.package, module
+        )
         import_lines = "\n".join(f"import {imp};" for imp in extra_imports)
         setup = f"""    @BeforeEach
     void setUp() {{
@@ -588,7 +766,9 @@ def gen_controller(jt: JavaType) -> str:
         for ftype, fname in deps:
             mock_fields.append(f"    @Mock\n    private {ftype} {fname};")
         mocks = "\n".join(mock_fields)
-        extra_imports = resolve_imports(jt.text, simple_type_names_from_params(deps), jt.package)
+        extra_imports = resolve_imports(
+            jt.text, types_for_import_resolution(deps), jt.package, module
+        )
         import_lines = "\n".join(f"import {imp};" for imp in extra_imports)
         setup = """    @BeforeEach
     void setUp() {
@@ -628,7 +808,7 @@ class {jt.name}Test {{
 """
 
 
-def generate_for_type(jt: JavaType) -> str:
+def generate_for_type(jt: JavaType, module: Optional[Path] = None) -> str:
     cat = classify(jt)
     if cat == "enum":
         return gen_enum(jt)
@@ -641,9 +821,9 @@ def generate_for_type(jt: JavaType) -> str:
     if cat == "interface":
         return gen_interface(jt)
     if cat == "controller":
-        return gen_controller(jt)
+        return gen_controller(jt, module)
     if cat == "service":
-        return gen_service(jt)
+        return gen_service(jt, module)
     if cat == "abstract":
         return gen_interface(jt)
     return gen_generic(jt)
@@ -666,7 +846,7 @@ def process_module(module_name: str, dry_run: bool = False) -> tuple[int, int]:
             skipped += 1
             continue
         out = test_path(module, jt)
-        content = generate_for_type(jt)
+        content = generate_for_type(jt, module)
         if dry_run:
             print("would create", out.relative_to(module))
             created += 1
