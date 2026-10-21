@@ -25,8 +25,10 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<testcontainers.version>1.19.7</testcontainers.version>
 		<jacoco.version>0.8.11</jacoco.version>
-		<jacoco.line.coverage.minimum>0.00</jacoco.line.coverage.minimum>
-		<jacoco.branch.coverage.minimum>0.00</jacoco.branch.coverage.minimum>
+		<jacoco.line.coverage.minimum>0.80</jacoco.line.coverage.minimum>
+		<jacoco.branch.coverage.minimum>0.60</jacoco.branch.coverage.minimum>
+		<jacoco.service.impl.line.minimum>0.75</jacoco.service.impl.line.minimum>
+		<jacoco.service.impl.branch.minimum>0.45</jacoco.service.impl.branch.minimum>
 		<archunit.version>1.2.1</archunit.version>
 	</properties>
 
@@ -143,6 +145,24 @@
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
 											<minimum>${jacoco.branch.coverage.minimum}</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.upyog.dashboard.service.impl</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.service.impl.line.minimum}</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.service.impl.branch.minimum}</minimum>
 										</limit>
 									</limits>
 								</rule>
