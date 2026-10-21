@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.domain.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -15,18 +16,18 @@ import org.egov.egf.instrument.TestConfiguration;
 import org.egov.egf.instrument.domain.model.InstrumentType;
 import org.egov.egf.instrument.domain.model.InstrumentTypeSearch;
 import org.egov.egf.instrument.domain.repository.InstrumentTypeRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
 
 @Import(TestConfiguration.class)
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class InstrumentTypeServiceTest {
 
     private InstrumentTypeService instrumentTypeService;
@@ -41,7 +42,7 @@ public class InstrumentTypeServiceTest {
 
     private BindingResult errors = new BeanPropertyBindingResult(null, null);
 
-    @Before
+    @BeforeEach
     public void setup() {
         instrumentTypeService = new InstrumentTypeService(validator, instrumentTypeRepository);
     }
@@ -60,7 +61,7 @@ public class InstrumentTypeServiceTest {
 
     }
 
-    @Test(expected = CustomBindException.class)
+    @Test
     public final void test_save_with_out_kafka_unique_false() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
@@ -68,22 +69,20 @@ public class InstrumentTypeServiceTest {
         when(instrumentTypeRepository.uniqueCheck(any(String.class), any(InstrumentType.class))).thenReturn(false);
         when(instrumentTypeRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.create(expextedResult, errors, requestInfo);
+        assertThrows(CustomBindException.class, () -> instrumentTypeService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_save_with_out_kafka_and_with_null_req() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
 
         when(instrumentTypeRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.create(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentTypeService.create(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -101,7 +100,7 @@ public class InstrumentTypeServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_with_out_kafka_null_id() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
@@ -110,13 +109,12 @@ public class InstrumentTypeServiceTest {
         when(instrumentTypeRepository.uniqueCheck(any(String.class), any(InstrumentType.class))).thenReturn(true);
         when(instrumentTypeRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.update(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentTypeService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = CustomBindException.class)
+    @Test
     public final void test_update_with_out_kafka_unique_false() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
@@ -124,9 +122,8 @@ public class InstrumentTypeServiceTest {
         when(instrumentTypeRepository.uniqueCheck(any(String.class), any(InstrumentType.class))).thenReturn(false);
         when(instrumentTypeRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.update(expextedResult, errors, requestInfo);
+        assertThrows(CustomBindException.class, () -> instrumentTypeService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -143,20 +140,19 @@ public class InstrumentTypeServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_with_out_kafka_nullrequest() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
 
         when(instrumentTypeRepository.delete(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.delete(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentTypeService.delete(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_with_out_kafka_null_id() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
@@ -164,22 +160,20 @@ public class InstrumentTypeServiceTest {
 
         when(instrumentTypeRepository.delete(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.delete(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentTypeService.delete(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_with_out_kafka_and_with_null_req() {
 
         List<InstrumentType> expextedResult = getInstrumentTypes();
 
         when(instrumentTypeRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentType> actualResult = instrumentTypeService.update(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentTypeService.update(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 

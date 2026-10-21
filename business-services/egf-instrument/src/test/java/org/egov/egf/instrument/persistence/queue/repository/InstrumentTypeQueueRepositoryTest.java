@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.persistence.queue.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
@@ -12,14 +13,15 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.egf.instrument.persistence.queue.FinancialInstrumentProducer;
 import org.egov.egf.instrument.web.contract.InstrumentTypeContract;
 import org.egov.egf.instrument.web.requests.InstrumentTypeRequest;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class InstrumentTypeQueueRepositoryTest {
 
     @Mock
@@ -32,7 +34,7 @@ public class InstrumentTypeQueueRepositoryTest {
 
     private static final String KEY_NAME = "key";
 
-    @Before
+    @BeforeEach
     public void setup() {
         instrumentTypeQueueRepository = new InstrumentTypeQueueRepository(financialInstrumentProducer, TOPIC_NAME,
                 KEY_NAME, TOPIC_NAME, KEY_NAME);

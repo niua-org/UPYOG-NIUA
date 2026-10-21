@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.domain.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,16 +18,17 @@ import org.egov.egf.instrument.persistence.queue.repository.InstrumentTypeQueueR
 import org.egov.egf.instrument.persistence.repository.InstrumentTypeJdbcRepository;
 import org.egov.egf.instrument.web.requests.InstrumentTypeRequest;
 import org.egov.egf.master.web.repository.FinancialConfigurationContractRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class InstrumentTypeRepositoryTest {
 
     @Mock
@@ -50,7 +52,7 @@ public class InstrumentTypeRepositoryTest {
     @Mock
     private InstrumentTypeESRepository instrumentTypeESRepository;
 
-    @Before
+    @BeforeEach
     public void setup() {
         instrumentTypeRepositoryWithKafka = new InstrumentTypeRepository(instrumentTypeJdbcRepository,
                 instrumentTypeQueueRepository, "yes", financialConfigurationContractRepository, instrumentTypeESRepository);
