@@ -72,7 +72,7 @@ import com.google.gson.Gson;
  * </ol>
  */
 @ExtendWith(MockitoExtension.class)
-class DateIngestionFlowIntegrationTest {
+class DateIngestionFlowIT {
 
     @Mock
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
