@@ -24,8 +24,12 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testcontainers.version>1.19.7</testcontainers.version>
         <jacoco.version>0.8.11</jacoco.version>
-        <jacoco.line.coverage.minimum>0.00</jacoco.line.coverage.minimum>
-        <jacoco.branch.coverage.minimum>0.00</jacoco.branch.coverage.minimum>
+        <jacoco.util.line.minimum>0.90</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.65</jacoco.util.branch.minimum>
+        <jacoco.service.line.minimum>0.65</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.50</jacoco.service.branch.minimum>
+        <jacoco.service.impl.line.minimum>0.70</jacoco.service.impl.line.minimum>
+        <jacoco.service.impl.branch.minimum>0.25</jacoco.service.impl.branch.minimum>
     </properties>
 
     <repositories>
@@ -150,18 +154,53 @@
                                     <element>PACKAGE</element>
                                     <includes>
                                         <include>org.upyog.dashboard.util</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
                                         <include>org.upyog.dashboard.service</include>
                                     </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage.minimum}</minimum>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.branch.coverage.minimum}</minimum>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.dashboard.service.impl</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.impl.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.impl.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

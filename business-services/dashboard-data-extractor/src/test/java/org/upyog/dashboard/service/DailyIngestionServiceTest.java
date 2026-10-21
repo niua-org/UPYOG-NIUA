@@ -301,4 +301,67 @@ class DailyIngestionServiceTest {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
                 service.ingestDailyData());
     }
+
+    @Test
+    @DisplayName("ingestDailyData returns empty list when no modules are enabled")
+    void ingestDailyData_noEnabledModules_returnsEmpty() {
+        when(schemaMappingConfig.getEnabledModules()).thenReturn(List.of());
+
+        List<IngestionResult> results = service.ingestDailyData(LocalDate.of(2026, 8, 1));
+
+        assertThat(results).isEmpty();
+        verify(dashboardClient, never()).execute(any());
+    }
+
+    @Test
+    @DisplayName("ingestDailyData skips module when extractor bean is missing")
+    void ingestDailyData_missingExtractor_skipsModule() {
+        when(schemaMappingConfig.getEnabledModules()).thenReturn(List.of(Module.PT));
+        when(extractorRegistry.get(Module.PT)).thenReturn(null);
+
+        List<IngestionResult> results = service.ingestDailyData(LocalDate.of(2026, 8, 2));
+
+        assertThat(results).isEmpty();
+        verify(extractor, never()).extractData(anyList(), any());
+    }
+
+    @Test
+    @DisplayName("executeScheduledIngestion records COMPLETED scheduler run on success")
+    void executeScheduledIngestion_success_completesSchedulerRun() throws Exception {
+        when(schemaMappingConfig.getEnabledModules()).thenReturn(List.of(Module.PT));
+        doReturn(extractor).when(extractorRegistry).get(Module.PT);
+        when(extractor.extractData(eq(List.of("pg")), any(LocalDate.class)))
+                .thenReturn(List.of(DashboardData.builder().module("PT").ulb("pg.citya").metrics(java.util.Map.of("assessments", 0)).build()));
+
+        service.executeScheduledIngestion("0 0 2 * * ?");
+
+        verify(summaryRepository).createSchedulerRun(any());
+        verify(summaryRepository).completeSchedulerRun(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.eq(2),
+                org.mockito.ArgumentMatchers.eq(2),
+                org.mockito.ArgumentMatchers.eq(0),
+                org.mockito.ArgumentMatchers.eq(DashboardExtractorConstants.STATUS_COMPLETED),
+                org.mockito.ArgumentMatchers.isNull());
+    }
+
+    @Test
+    @DisplayName("executeScheduledIngestion records FAILED scheduler run when ingestion throws")
+    void executeScheduledIngestion_failure_marksSchedulerFailed() {
+        when(schemaMappingConfig.getEnabledModules()).thenReturn(List.of(Module.PT));
+        when(summaryRepository.hasAnyModuleDetails()).thenReturn(false);
+
+        service.executeScheduledIngestion("0 0 2 * * ?");
+
+        verify(summaryRepository).createSchedulerRun(any());
+        verify(summaryRepository).completeSchedulerRun(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.eq(0),
+                org.mockito.ArgumentMatchers.eq(0),
+                org.mockito.ArgumentMatchers.eq(0),
+                org.mockito.ArgumentMatchers.eq(DashboardExtractorConstants.STATUS_FAILED),
+                org.mockito.ArgumentMatchers.contains("No tenant configuration"));
+    }
 }
