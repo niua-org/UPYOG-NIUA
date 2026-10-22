@@ -46,7 +46,8 @@ const EmployeeApp = ({ path, url, userType }) => {
   const ChallanSearch = Digit?.ComponentRegistryService?.getComponent("ChallanStepperForm");
   const ChallanResponseCitizen = Digit?.ComponentRegistryService?.getComponent("ChallanResponseCitizen");
   const ChallanApplicationDetails = Digit?.ComponentRegistryService?.getComponent("ChallanApplicationDetails");
-
+  const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
+  
   return (
     <React.Fragment>
       <div className="ground-container">
@@ -65,6 +66,16 @@ const EmployeeApp = ({ path, url, userType }) => {
           <Route path="generate-challan/*" element={<PrivateRoute><ChallanSearch /></PrivateRoute>} />
           <Route path="response/:id" element={<PrivateRoute><ChallanResponseCitizen /></PrivateRoute>} />
           <Route path="application/:acknowledgementIds/:tenantId" element={<PrivateRoute><ChallanApplicationDetails /></PrivateRoute>} />
+          <Route path="UserWiseCollectionsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="UserWiseCollectionsReport" /></PrivateRoute>} />
+          <Route path="ReceiptRegisterCHALLAN/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="ReceiptRegisterCHALLAN" /></PrivateRoute>} />
+          <Route path="StateUserWiseCollectionsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateUserWiseCollectionsReport" /></PrivateRoute>} />
+          <Route path="StateReceiptRegisterchallan/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateReceiptRegisterchallan" /></PrivateRoute>} />
+          <Route path="Categorywisechallanreport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="Categorywisechallanreport" /></PrivateRoute>} />
+          <Route path="StateCategoryWiseChallanDetailReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateCategoryWiseChallanDetailReport" /></PrivateRoute>} />
+          <Route path="ChallanDefaulterReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="ChallanDefaulterReport" /></PrivateRoute>} />
+          <Route path="StateChallanDefaulterReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateChallanDefaulterReport" /></PrivateRoute>} />
+          <Route path="ChallanSummaryReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="ChallanSummaryReport" /></PrivateRoute>} />
+          <Route path="StateChallanSummaryReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateChallanSummaryReport" /></PrivateRoute>} />
         </Routes>
       </div>
     </React.Fragment>

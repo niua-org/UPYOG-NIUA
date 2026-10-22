@@ -17,6 +17,8 @@ import ChallanDocuments from "./pageComponents/ChallanDocuments";
 import getRootReducer from "../redux/reducer";
 import ChallanResponseCitizen from "./components/ChallanResponseCitizen";
 import ChallanApplicationDetails from "./pages/employee/ChallanApplicationDetails";
+import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
+
 
 /**
  * ChallanGenerationModule:
@@ -69,6 +71,11 @@ const componentsToRegister = {
   OffenceDetails,
   ChallanDocuments,
   ChallanResponseCitizen,
+<<<<<<< HEAD
+=======
+  EnhancedReport,
+  ReportSearchApplication
+>>>>>>> 9ab5f0cfb2 (Added micro reports for GC, Estate, NDC and Challan)
 };
 
 export const initChallanGenerationComponents = () => {
