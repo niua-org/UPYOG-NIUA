@@ -4,13 +4,14 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
+import { downloadADSAcknowledgement } from "../../utils";
 
 /**
  * ApplicationDetails component fetches and displays detailed information about a specific advertisement booking.
  * It retrieves data based on the `bookingNo` from the URL parameters and fetches relevant details
  * such as application information, payment receipts, and permission letters.
  */
-import "../../css/ads-inline-auto.css";
+
 const ApplicationDetails = () => {
   const {
     t
@@ -119,6 +120,12 @@ const ApplicationDetails = () => {
     window.open(fileStore[fileStoreId], "_blank");
   }
   let dowloadOptions = [];
+
+  // Download Acknowledgement Form
+  dowloadOptions.push({
+    label: t("ADS_DOWNLOAD_ACK_FORM"),
+    onClick: () => downloadADSAcknowledgement(data?.bookingApplication?.[0], t),
+  });
   if (reciept_data && reciept_data?.Payments.length > 0 && recieptDataLoading == false) dowloadOptions.push({
     label: t("ADS_FEE_RECEIPT"),
     onClick: () => getRecieptSearch({
@@ -134,26 +141,26 @@ const ApplicationDetails = () => {
     })
   });
   return <div>
-        <div className={"employee-application-details ads-auto-102"}>
-          <Header styles={{
+    <div className={"employee-application-details ads-application-details-mb-md"}>
+      <Header styles={{
         marginLeft: "0px",
         paddingTop: "10px",
         fontSize: "32px"
       }}>{t("ADS_BOOKING_DETAILS")}</Header>
-          <div className="ads-auto-103">
-          <div className="ads-auto-104">
-        {dowloadOptions && dowloadOptions.length > 0 && <MultiLink className="multilinkWrapper" onHeadClick={() => setShowOptions(!showOptions)} displayOptions={showOptions} options={dowloadOptions} downloadBtnClassName={"employee-download-btn-className"} optionsClassName={"employee-options-btn-className"}
+      <div className="ads-application-details-row-reverse-row-center">
+        <div className="ads-application-details-relative-layered">
+          {dowloadOptions && dowloadOptions.length > 0 && <MultiLink className="multilinkWrapper" onHeadClick={() => setShowOptions(!showOptions)} displayOptions={showOptions} options={dowloadOptions} downloadBtnClassName={"employee-download-btn-className"} optionsClassName={"employee-options-btn-className"}
           // ref={menuRef}
           />}
+        </div>
       </div>
-      </div>
-      </div>
-      <ApplicationDetailsTemplate applicationDetails={appDetailsToShow?.applicationData} isLoading={isLoading} isDataLoading={isLoading} applicationData={appDetailsToShow?.applicationData?.applicationData} showToast={showToast} setShowToast={setShowToast} closeToast={closeToast} MenuStyle={{
+    </div>
+    <ApplicationDetailsTemplate applicationDetails={appDetailsToShow?.applicationData} isLoading={isLoading} isDataLoading={isLoading} applicationData={appDetailsToShow?.applicationData?.applicationData} showToast={showToast} setShowToast={setShowToast} closeToast={closeToast} MenuStyle={{
       color: "#FFFFFF",
       fontSize: "18px"
     }} />
-      
 
-    </div>;
+
+  </div>;
 };
 export default React.memo(ApplicationDetails);
