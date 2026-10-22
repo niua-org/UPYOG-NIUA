@@ -24,8 +24,6 @@ import { NDCNewFormSummaryStepThreeEmployee } from "./pages/employee/createNDCAp
 import MyApplications from "./pages/citizen/Applications/Application";
 import NDCResponseCitizen from "./pages/citizen/NDCResponseCitizen";
 import Timeline from "./components/NDCTimeline";
-import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
- 
 
 import getRootReducer from "./redux/reducers";
 
@@ -73,9 +71,7 @@ const componentsToRegister = {
   MyApplications,
   NDCResponseCitizen,
   CitizenApplicationOverview,
-  Timeline,
-  EnhancedReport,
-  ReportSearchApplication
+  Timeline
 };
 
 export const initNDCComponents = () => {

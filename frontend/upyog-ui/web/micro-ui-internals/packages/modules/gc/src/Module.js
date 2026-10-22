@@ -20,7 +20,6 @@ import SearchApp from "./pages/employee/SearchApp";
 import CreateApplication from "./pages/employee/Create";
 import { TableConfig } from "./config/inbox-table-config";
 import InboxFilter from "./components/inbox/NewInboxFilter";
-import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
 
 const componentsToRegister = {
   GCCreate,
@@ -38,8 +37,6 @@ const componentsToRegister = {
   GCInbox: Inbox,
   GCSearchApp: SearchApp,
   GCCreateEmp: CreateApplication,
-  ReportSearchApplication,
-  EnhancedReport
 };
 
 const addComponentsToRegistry = () => {
