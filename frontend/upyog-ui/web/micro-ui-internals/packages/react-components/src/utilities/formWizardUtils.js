@@ -52,12 +52,12 @@ const normalizeBuildOptions = (indexRouteOrOptions) => {
 
 /**
  * @param {object} step
- * @param {"citizen"|"employee"} audience
+ * @param {"citizen"|"employee"} userType
  * @returns {boolean}
  */
-const isHiddenForAudience = (step, audience) => {
-  if (audience === "citizen" && step?.hideInCitizen) return true;
-  if (audience === "employee" && step?.hideInEmployee) return true;
+const isHiddenForUserType = (step, userType) => {
+  if (userType === "citizen" && step?.hideInCitizen) return true;
+  if (userType === "employee" && step?.hideInEmployee) return true;
   return false;
 };
 
@@ -71,7 +71,7 @@ const isHiddenForAudience = (step, audience) => {
  * @param {Array} initialConfig
  * @param {string|object} [indexRouteOrOptions]
  * @param {string} [indexRouteOrOptions.indexRoute]
- * @param {"citizen"|"employee"} [indexRouteOrOptions.audience="employee"]
+ * @param {"citizen"|"employee"} [indexRouteOrOptions.userType="employee"]
  * @param {Set<string>|string[]} [indexRouteOrOptions.skipComponents]
  * @param {string} [indexRouteOrOptions.docsComponent] - Accordion docs landing component name
  * @param {string} [indexRouteOrOptions.formComponent] - Default accordion form component name
@@ -83,7 +83,7 @@ export const buildWizardSteps = (initialConfig, indexRouteOrOptions) => {
 
   const {
     indexRoute,
-    audience = "employee",
+    userType = "employee",
     skipComponents: skipOption,
     docsComponent,
     formComponent,
@@ -104,7 +104,7 @@ export const buildWizardSteps = (initialConfig, indexRouteOrOptions) => {
 
     if (getNavigationPattern(entry) === "accordion") {
       const formSteps = entry.body.filter((step) => {
-        if (isHiddenForAudience(step, audience)) return false;
+        if (isHiddenForUserType(step, userType)) return false;
         if (skipComponents.has(step.component)) return false;
         if (step.isPreview || step.type === "review") return false;
         return Array.isArray(step.form) && step.form.length > 0;
@@ -126,7 +126,7 @@ export const buildWizardSteps = (initialConfig, indexRouteOrOptions) => {
           route: docsRoute,
           component: docsComponent,
           nextStep: formRoute,
-          hideInEmployee: audience === "citizen" ? true : undefined,
+          hideInEmployee: userType === "citizen" ? true : undefined,
           withoutLabel: true,
           type: "component",
           documents:
@@ -154,7 +154,7 @@ export const buildWizardSteps = (initialConfig, indexRouteOrOptions) => {
 
     return acc.concat(
       entry.body.filter((step) => {
-        if (isHiddenForAudience(step, audience)) return false;
+        if (isHiddenForUserType(step, userType)) return false;
         if (skipComponents.has(step.component)) return false;
         if (step.isPreview && (!Array.isArray(step.form) || step.form.length === 0)) {
           return false;

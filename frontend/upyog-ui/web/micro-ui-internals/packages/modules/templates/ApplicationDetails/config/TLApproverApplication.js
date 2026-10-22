@@ -43,18 +43,17 @@ export const configTLApproverApplication = ({
             ),
           },
           {
-            // A blank or one-character note is not a review comment.
-            label: `${t("WF_COMMON_COMMENTS")} *`,
+            label: "WF_COMMON_COMMENTS",
+            isMandatory: true,
             type: "textarea",
             populators: {
               name: "comments",
               validation: {
-                required: "A review comment is required",
+                required: "TL_REVIEW_COMMENT_REQUIRED",
                 validate: (value) => {
                   const text = String(value ?? "").trim();
-                  // Spaces alone do not count. One letter is not a review comment.
-                  if (!text) return "A review comment is required";
-                  if (text.length < 2) return "A single character is not a valid review comment";
+                  if (!text) return "TL_REVIEW_COMMENT_REQUIRED";
+                  if (text.length < 2) return "TL_REVIEW_COMMENT_SINGLE_CHAR";
                   return true;
                 },
               },

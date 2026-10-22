@@ -47,12 +47,12 @@
           "nextLabelDefault": "Next"
         },
         "accordion": {
-          "_comment": "defaultOpenStep = first panel key. showFilledHint = header says required fields are pending or completed. openNextOnComplete = the next panel opens when every mandatory field in the current panel is valid. A section with no required fields yet stays closed until the one above is complete. submitLabel = last sticky button on apply.",
+          "_comment": "defaultOpenStep = first panel key. showFilledHint = header says required fields are pending or completed. openNextOnComplete = the next panel opens when every mandatory field in the current panel is valid. A section with no required fields yet stays closed until the one above is complete. submitLabel = last sticky button on apply; it continues to the check page, so the label is Next.",
           "defaultOpenStep": "structure",
           "showFilledHint": true,
           "openNextOnComplete": true,
-          "submitLabel": "COMMON_SUBMIT_APPLICATION",
-          "submitLabelDefault": "Submit Application",
+          "submitLabel": "CS_COMMON_NEXT",
+          "submitLabelDefault": "Next",
           "introKey": "TL_ACCORDION_HINT",
           "introDefault": "Fill the open section. The next section opens when every mandatory field is complete.",
           "subtitleKey": "TL_ACCORDION_SUBTITLE",
