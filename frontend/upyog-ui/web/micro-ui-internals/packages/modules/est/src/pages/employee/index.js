@@ -14,6 +14,7 @@ const EmployeeApp = ({ path }) => {
   const employeeHome = path?.replace(/\/est\/?$/, "") || "/upyog-ui/employee";
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const ESTApplicationDetails = Digit?.ComponentRegistryService?.getComponent("ESTApplicationDetails");
+  const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -81,6 +82,7 @@ const EmployeeApp = ({ path }) => {
           <Route path="create-asset/*" element={<PrivateRoute><ESTRegCreate parentRoute={path} /></PrivateRoute>} />
           <Route path="assignassets/*" element={<PrivateRoute><ESTAssignAssetCreate parentRoute={path} /></PrivateRoute>} />
           <Route path="application-details/:assetNo" element={<PrivateRoute><ESTApplicationDetails /></PrivateRoute>} />
+          <Route path="EstateApplicationReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-em" reportName="EstateApplicationReport" /></PrivateRoute>} />
         </Routes>
       </div>
     </AppContainer>

@@ -14,6 +14,8 @@ import ChallanDocuments from "./pageComponents/ChallanDocuments";
 import getRootReducer from "../redux/reducer";
 import ChallanResponseCitizen from "./components/ChallanResponseCitizen";
 import ChallanApplicationDetails from "./pages/employee/ChallanApplicationDetails";
+import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
+
 
 /**
  * ChallanGenerationModule:
@@ -62,7 +64,9 @@ const componentsToRegister = {
   ChallanApplicationDetails,
   OffenceDetails,
   ChallanDocuments,
-  ChallanResponseCitizen
+  ChallanResponseCitizen,
+  EnhancedReport,
+  ReportSearchApplication
 };
 
 export const initChallanGenerationComponents = () => {
