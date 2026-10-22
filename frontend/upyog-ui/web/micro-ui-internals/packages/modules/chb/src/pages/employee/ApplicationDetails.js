@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
-import getChbAcknowledgementData from "../../getChbAcknowledgementData";
+import { downloadCHBAcknowledgement } from "../../utils";
 import CHBCancelBooking from "../../components/CHBCancelBooking";
 
 /*
@@ -246,25 +246,30 @@ const ApplicationDetails = () => {
     }
   };
 
-  const dowloadOptions =
-    data?.hallsBookingApplication?.[0]?.paymentReceiptFilestoreId || data?.hallsBookingApplication?.[0]?.permissionLetterFilestoreId
-      ? [
-        data?.hallsBookingApplication?.[0]?.paymentReceiptFilestoreId && {
-          label: t("CHB_RECEIPT"),
-          onClick: () => getRecieptSearch({ tenantId: tenantId }),
-        },
-        data?.hallsBookingApplication?.[0]?.permissionLetterFilestoreId && {
-          label: t("CHB_PERMISSION_LETTER"),
-          onClick: () => getPermissionLetter({ tenantId: tenantId }),
-        },
-      ].filter(Boolean)
-      : [];
+  let dowloadOptions = [];
+
+  // Download Acknowledgement Form
+  dowloadOptions.push({
+    label: t("CHB_DOWNLOAD_ACK_FORM"),
+    onClick: () => downloadCHBAcknowledgement(data?.hallsBookingApplication?.[0], t),
+  });
+
+  if (reciept_data && reciept_data?.Payments.length > 0 && recieptDataLoading == false)
+    dowloadOptions.push({
+      label: t("CHB_FEE_RECEIPT"),
+      onClick: () => getRecieptSearch({ tenantId: reciept_data?.Payments[0]?.tenantId, payments: reciept_data?.Payments[0] }),
+    });
+  if (reciept_data && reciept_data?.Payments.length > 0 && recieptDataLoading == false)
+    dowloadOptions.push({
+      label: t("CHB_PERMISSION_LETTER"),
+      onClick: () => getPermissionLetter({ tenantId: reciept_data?.Payments[0]?.tenantId, payments: reciept_data?.Payments[0] }),
+    });
 
   return (
     <div>
-      <div className={"employee-application-details"} style={{ marginBottom: "15px" }}>
+      <div className={`${"employee-application-details"} chb-chb-cancellation-policy-card-2`}>
         <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>{t("CHB_BOOKING_DETAILS")}</Header>
-        <div style={{ zIndex: "10", display: "flex", flexDirection: "row-reverse", alignItems: "center", marginTop: "-25px" }}>
+        <div className="chb-application-details-flex-row">
           {dowloadOptions && dowloadOptions.length > 0 && (
             <MultiLink
               className="multilinkWrapper employee-mulitlink-main-div"
@@ -279,7 +284,7 @@ const ApplicationDetails = () => {
         </div>
       </div>
       {(isRefundInProgress || refundStatus || isRefunded) && (
-        <div style={{ padding: "10px 16px", borderRadius: "4px", marginBottom: "16px", fontWeight: "bold", fontSize: "16px", ...refundBannerStyle }}>
+        <div className="chb-refund-status-banner" style={refundBannerStyle}>
           {t("CHB_REFUND_STATUS") || "Refund Status"} &mdash; {refundStatus || (isRefunded ? "REFUNDED" : "")}
         </div>
       )}
