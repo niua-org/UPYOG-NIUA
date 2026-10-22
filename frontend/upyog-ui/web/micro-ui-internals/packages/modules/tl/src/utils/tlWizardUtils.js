@@ -1,6 +1,6 @@
 /**
  * tlWizardUtils.js
- * Thin TL wrappers over shared formWizardUtils (citizen audience + TL skip set).
+ * Thin TL wrappers over shared formWizardUtils (citizen userType + TL skip set).
  */
 import {
   buildWizardSteps as sharedBuildWizardSteps,
@@ -23,7 +23,7 @@ const TL_SKIP_COMPONENTS = ["ReviewDetails", "TLCheckPage"];
 export const buildWizardSteps = (initialConfig, indexRoute) =>
   sharedBuildWizardSteps(initialConfig, {
     indexRoute,
-    audience: "citizen",
+    userType: "citizen",
     skipComponents: TL_SKIP_COMPONENTS,
     docsComponent: "TradeLicense",
     formComponent: "TLCitizenNewApplication",

@@ -30,7 +30,7 @@ const useEstWizard = ({
     invalidateQueryKey,
     checkFlow,
     buildSuccessAckState,
-    audience: "employee",
+    userType: "employee",
     skipComponents: EST_SKIP_COMPONENTS,
   });
 

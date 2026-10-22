@@ -1,6 +1,6 @@
 /**
  * estWizardUtils.js
- * Thin EST wrappers over shared formWizardUtils (employee audience).
+ * Thin EST wrappers over shared formWizardUtils (employee userType).
  */
 import {
   buildWizardSteps as sharedBuildWizardSteps,
@@ -22,7 +22,7 @@ const EST_SKIP_COMPONENTS = ["ReviewDetails"];
 export const buildWizardSteps = (initialConfig, indexRoute) =>
   sharedBuildWizardSteps(initialConfig, {
     indexRoute,
-    audience: "employee",
+    userType: "employee",
     skipComponents: EST_SKIP_COMPONENTS,
   });
 

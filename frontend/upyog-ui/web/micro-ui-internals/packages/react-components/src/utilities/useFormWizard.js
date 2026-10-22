@@ -31,7 +31,7 @@ import {
  * @param {string} [options.invalidateQueryKey]
  * @param {Function} [options.transformSession]
  * @param {Function} [options.onAfterSelect] - Side effect after session merge (e.g. TL flag)
- * @param {"citizen"|"employee"} [options.audience="employee"]
+ * @param {"citizen"|"employee"} [options.userType="employee"]
  * @param {Set<string>|string[]} [options.skipComponents]
  * @param {string} [options.docsComponent]
  * @param {string} [options.formComponent]
@@ -50,7 +50,7 @@ const useFormWizard = ({
   invalidateQueryKey,
   transformSession,
   onAfterSelect,
-  audience = "employee",
+  userType = "employee",
   skipComponents,
   docsComponent,
   formComponent,
@@ -73,7 +73,7 @@ const useFormWizard = ({
     () =>
       buildWizardSteps(mdmsData, {
         indexRoute,
-        audience,
+        userType,
         skipComponents,
         docsComponent,
         formComponent,
@@ -82,7 +82,7 @@ const useFormWizard = ({
     [
       mdmsData,
       indexRoute,
-      audience,
+      userType,
       skipComponents,
       docsComponent,
       formComponent,

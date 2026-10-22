@@ -34,7 +34,7 @@ const useTlWizard = ({
     multiStepNavigation,
     invalidateQueryKey,
     transformSession,
-    audience: "citizen",
+    userType: "citizen",
     skipComponents: TL_SKIP_COMPONENTS,
     docsComponent: "TradeLicense",
     formComponent: "TLCitizenNewApplication",
