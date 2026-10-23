@@ -1,43 +1,91 @@
-import { Card, CardHeader, CardSubHeader, CardText, CitizenInfoLabel, Loader, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+/**
+ * Citizen documents landing for a new trade license. Lists the proofs the
+ * applicant must keep ready before the application form.
+ *
+ * Document rows come from config/RequiredDocuments.json. Headings stay on
+ * navigation.infoPage. When this list moves to MDMS TradeLicense.RequiredDocuments,
+ * read that master here instead of the local file.
+ */
+import {
+  Card,
+  CardHeader,
+  CardText,
+  CitizenInfoLabel,
+  SubmitBar,
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
-import { stringReplaceAll } from "../utils";
+import localRequiredDocuments from "../config/RequiredDocuments.json";
 
-const TradeLicense = ({ t, config, onSelect, userType, formData }) => {
-  const tenantId = Digit.ULBService.getCurrentTenantId();
-  const stateId = Digit.ULBService.getStateId();
+const activeDocuments = (list) =>
+  (Array.isArray(list) ? list : []).filter(
+    (doc) => doc && doc.active !== false && doc.active !== "false"
+  );
 
-  const { isLoading, data: Documentsob = {} } = Digit.Hooks.tl.useTradeLicenseMDMS(stateId, "TradeLicense", "TLDocuments");
-  let docs = Documentsob?.TradeLicense?.Documents;
-  function onSave() { }
-
-  function goNext() {
-    onSelect();
+/** Use a localization hit when it exists; otherwise the text stored in JSON. */
+const textFrom = (t, key, fallback) => {
+  if (key && typeof t === "function") {
+    const translated = t(key);
+    if (translated && translated !== key) return translated;
   }
+  return fallback || "";
+};
+
+/** /info — required-documents landing. Rows from config/RequiredDocuments.json. */
+const TradeLicense = ({ t, config, onSelect }) => {
+  const documents = activeDocuments(localRequiredDocuments?.RequiredDocuments);
+
+  const goNext = () => onSelect(config?.key || "info", {});
+
+  const sectionHeading = textFrom(
+    t,
+    config?.sectionHeading || config?.header,
+    config?.sectionHeadingDefault || "Documents required"
+  );
+  const intro = textFrom(
+    t,
+    config?.text || config?.cardText,
+    config?.textDefault || "Keep the following documents ready"
+  );
+  const nextLabel = textFrom(
+    t,
+    config?.nextLabel,
+    config?.nextLabelDefault || "Next"
+  );
+  const infoLabel = textFrom(
+    t,
+    config?.infoLabel,
+    config?.infoLabelDefault || "Info"
+  );
+  const infoText = textFrom(
+    t,
+    config?.infoText,
+    config?.infoTextDefault ||
+      "Accepted formats: jpg, jpeg, png, pdf. Maximum size 2 MB."
+  );
+
   return (
     <React.Fragment>
       <Card>
-        <CardHeader>{t("TL_DOC_REQ_SCREEN_HEADER")}</CardHeader>
+        <CardHeader>{sectionHeading}</CardHeader>
+
         <div>
-          <CardText>{t("TL_DOC_REQ_SCREEN_TEXT")}</CardText>
+          <CardText>{intro}</CardText>
+
           <div>
-            {isLoading && <Loader />}
-            {Array.isArray(docs)
-              ? docs?.map(({ code, dropdownData }, index) => (
-                <div key={index}>
-                  <CardSubHeader>{t("TRADELICENSE_" + stringReplaceAll(code, ".", "_") + "_HEADING")}</CardSubHeader>
-                  {dropdownData?.map((dropdownData, idx) => (
-                    <CardText key={dropdownData?.code || idx}>{t("TRADELICENSE_" + stringReplaceAll(dropdownData?.code, ".", "_") + "_LABEL")}</CardText>
-                  ))}
-                </div>
-              ))
-              : null}
+            {documents.map((doc, index) => (
+              <CardText key={doc.code || doc.i18nKey || index} className="primaryColor">
+                {doc.order ?? index + 1}.{" "}
+                {textFrom(t, doc.i18nKey, doc.name || doc.label || "")}
+              </CardText>
+            ))}
           </div>
         </div>
+
         <span>
-          <SubmitBar label={t("CS_COMMON_NEXT")} onSubmit={onSelect} />
+          <SubmitBar label={nextLabel} onSubmit={goNext} />
         </span>
       </Card>
-      {<CitizenInfoLabel info={t("CS_FILE_APPLICATION_INFO_LABEL")} text={t("TL_DOCUMENT_SIZE_INFO_MSG")} />}
+      <CitizenInfoLabel info={infoLabel} text={infoText} />
     </React.Fragment>
   );
 };

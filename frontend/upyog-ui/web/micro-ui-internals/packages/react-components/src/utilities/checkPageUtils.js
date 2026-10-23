@@ -158,7 +158,8 @@ const LOCAL_ROUTE_FALLBACK_KEYS = [
  * Behavior keys (staticFields, computedFields, etc.) always override MDMS;
  * fallback keys (payloadKey, pageHeading, etc.) apply only when MDMS is absent.
  * When either side defines `form`, field configs are deep-merged via
- * `mergeFormFieldConfigs` (local first, then MDMS).
+ * `mergeFormFieldConfigs` (local first, then MDMS). `formGate` is deep-merged
+ * the same way: module-local keys win, JSON keys fill the rest.
  *
  * @param {object} [mdmsRouteConfig={}] Route/step config from MDMS.
  * @param {object} [localFormConfig={}] Module-local overrides from the wizard step.
@@ -183,6 +184,11 @@ export const mergeRouteConfig = (mdmsRouteConfig = {}, localFormConfig = {}) => 
       localFormConfig.form || [],
       mdmsRouteConfig.form || []
     );
+  }
+
+  if (mdmsRouteConfig.formGate || localFormConfig.formGate) {
+    const { _comment, ...mdmsGate } = mdmsRouteConfig.formGate || {};
+    merged.formGate = { ...mdmsGate, ...(localFormConfig.formGate || {}) };
   }
 
   return merged;

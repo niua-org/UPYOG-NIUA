@@ -13,7 +13,13 @@ const ButtonSelector = (props) => {
   }
   return (
     <button
-      className={props.isDisabled ? "selector-button-primary-disabled" : theme}
+      className={[
+        // Extra class lets accordion continue buttons add layout without a new theme.
+        props.isDisabled ? "selector-button-primary-disabled" : theme,
+        props.className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       type={props.type || "submit"}
       form={props.formId}
       onClick={props.onSubmit}

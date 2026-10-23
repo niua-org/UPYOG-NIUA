@@ -1,10 +1,21 @@
-import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
+import {
+  Loader,
+  mergeSessionStepWithRouteConfig,
+  resolveFormConfig,
+} from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useParams, } from "react-router-dom";
 import { newConfig as newConfigTL } from "../../../config/config";
+import localAccordion from "../../../config/AccordionNewApplication.json";
+import TLCitizenNewApplication from "../../../pageComponents/TLCitizenNewApplication";
 import { getCommencementDataFormat, stringReplaceAll } from "../../../utils/index";
+import {
+  getTlDynamicFlatData,
+  mapDynamicTlToCheckSession,
+  mapLicenseToAccordionForm,
+} from "../../../utils/tlSessionAdapter";
 
 
 const getPath = (path, params) => {
@@ -170,6 +181,44 @@ const getTradeEditDetails = (data,t) => {
   return data;
 };
 
+/**
+ * Renewal edit form. Same accordion as a new application, prefilled from the license.
+ * Submit writes the session and returns to the renewal summary.
+ */
+const RenewalAccordionForm = ({ session, onSelect, t }) => {
+  const stateId = Digit.ULBService.getStateId();
+  const { data: mdmsConfig, isLoading: isMdmsLoading } = Digit.Hooks.useEnabledMDMS(
+    stateId,
+    "TradeLicense",
+    [{ name: "NewApplication" }],
+    {
+      select: (data) => data?.TradeLicense?.NewApplication || null,
+    }
+  );
+  const initialConfig = useMemo(
+    () =>
+      resolveFormConfig({
+        local: localAccordion,
+        masterKey: "NewApplication",
+        mdms: mdmsConfig,
+        preferAccordion: true,
+        preferFieldArray: true,
+      }),
+    [mdmsConfig]
+  );
+  const entry = initialConfig?.[0];
+  if ((isMdmsLoading && !entry) || !entry) return <Loader />;
+  return (
+    <TLCitizenNewApplication
+      config={entry}
+      formData={session}
+      persistedData={session}
+      onSelect={onSelect}
+      t={t}
+    />
+  );
+};
+
 const RenewTrade = ({ parentRoute }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -183,7 +232,6 @@ const RenewTrade = ({ parentRoute }) => {
   const { pathname } = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
   let config = [];
-  let application = {};
   const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("TL_RENEW_TRADE", {});
   let filter1 = {};
   if (licenseNo) filter1.licenseNumbers = licenseNo;
@@ -197,21 +245,42 @@ const RenewTrade = ({ parentRoute }) => {
   let { data: newConfig, isLoading: configLoading } = Digit.Hooks.tl.useMDMS.getFormConfig(stateId, {});
 
   useEffect(() => {
-    application = data?.Licenses && data.Licenses[0] && data.Licenses[0];
-    if (data && application) {
-      application = data?.Licenses[0];
-      if (editProperty) {
-        application.isEditProperty = true;
+    const loaded = data?.Licenses?.[0];
+    if (!loaded) return;
+    if (editProperty) loaded.isEditProperty = true;
+    sessionStorage.setItem("tradeInitialObject", JSON.stringify({ ...loaded }));
+    const tradeEditDetails = getTradeEditDetails(loaded, t);
+    setParams((prev) => {
+      const next = { ...(prev || {}), ...tradeEditDetails, __dynamicForm: true };
+      if (window.location.href.includes("property-details")) {
+        next.owners = {
+          ...prev?.owners,
+          documents: gettradedocuments(loaded?.tradeLicenseDetail?.applicationDocuments),
+        };
       }
-      sessionStorage.setItem("tradeInitialObject", JSON.stringify({ ...application }));
-      let tradeEditDetails = getTradeEditDetails(application,t);
-      if(window.location.href.includes("property-details"))
-      {
-        tradeEditDetails = {...params, owners:{...params?.owners, documents:gettradedocuments(application?.tradeLicenseDetail?.applicationDocuments)}}
+      // Keep an edit the citizen already saved. Otherwise fill the accordion from the license.
+      if (!getTlDynamicFlatData(prev).tradeName) {
+        next.newApplication = {
+          Licenses: [mapLicenseToAccordionForm(loaded)],
+        };
       }
-      setParams({ ...params, ...tradeEditDetails });
+      return next;
+    });
+  }, [data?.Licenses?.[0]?.applicationNumber]);
+
+  const onApplySelect = (key, stepData) => {
+    setParams((prev) =>
+      mapDynamicTlToCheckSession(
+        mergeSessionStepWithRouteConfig(prev || {}, key, stepData)
+      )
+    );
+    try {
+      localStorage.setItem("TLAppSubmitEnabled", "true");
+    } catch (e) {
+      /* ignore */
     }
-  }, [data?.Licenses[0]?.applicationNumber]);
+    navigate(`${basePath}/check`);
+  };
 
   const goNext = (skipStep, index, isAddMultiple, key, isPTCreateSkip) => {
     let currentPath = pathname.split("/").pop(),
@@ -280,6 +349,12 @@ const RenewTrade = ({ parentRoute }) => {
       nextStep = key;
     }
     if (nextStep === null) {
+      // Check page refuses to open unless this flag is set. Editing clears it on unmount.
+      try {
+        localStorage.setItem("TLAppSubmitEnabled", "true");
+      } catch (e) {
+        /* ignore */
+      }
       return redirectWithHistory(`${basePath}/check`);
     }
     if(isPTCreateSkip && nextStep === "acknowledge-create-property")
@@ -320,13 +395,20 @@ const RenewTrade = ({ parentRoute }) => {
   const TLAcknowledgement = Digit?.ComponentRegistryService?.getComponent('TLAcknowledgement');
   return (
     <Routes>
+      <Route
+        path="apply"
+        element={<RenewalAccordionForm session={params} onSelect={onApplySelect} t={t} />}
+      />
       {config?.map((routeObj, index) => {
-        const { component, texts, inputs, key, isSkipEnabled } = routeObj;
+        const { component, texts, inputs, key, isSkipEnabled, route } = routeObj;
+        if (!route) return null;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
+        if (!Component) return null;
+        // Parent route already includes /renew-trade/:id/:tenantId. Match only the step.
         return (
           <Route
-            path={`${basePath}/${routeObj.route}`}
-            key={index}
+            path={route}
+            key={route || index}
             element={
               <Component
                 config={{ texts, inputs, key, isSkipEnabled }}
@@ -340,8 +422,8 @@ const RenewTrade = ({ parentRoute }) => {
           />
         );
       })}
-      <Route path={`/check`} element={<CheckPage onSubmit={createProperty} value={params} />} />
-      <Route path={`/acknowledgement`} element={<TLAcknowledgement data={params} onSuccess={onSuccess} />} />
+      <Route path="check" element={<CheckPage onSubmit={createProperty} value={params} />} />
+      <Route path="acknowledgement" element={<TLAcknowledgement data={params} onSuccess={onSuccess} />} />
       <Route path="*" element={<Navigate to={`${basePath}/${config.indexRoute}`} replace />} />
     </Routes>
   );

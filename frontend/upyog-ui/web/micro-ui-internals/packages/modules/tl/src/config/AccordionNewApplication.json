@@ -1,0 +1,1551 @@
+{
+  "_readme": {
+    "_comment": "TL citizen New Application — accordion form config. Keys named _comment / _readme are notes only; the screen ignores them.",
+    "pattern": "accordion = all sections on one page. Open the next section from its header after required fields are filled. Routes: info (docs from navigation.infoPage) → apply → check → acknowledgement.",
+    "requirementsCovered": [
+      "1 Structure & property — immovable/movable, building/vehicle type, property gate (search or redirect to create PT)",
+      "2 Trade details — FY, license type, trade name, commencement, trade units (add/remove), accessories Yes/No + list, GST/area/employees",
+      "3 Location — pincode, city, locality, street, door, landmark (prefill from property when available)",
+      "4 Ownership — same-as-property-owner, category, owners[]",
+      "5 Documents — ID proof, ownership proof, owner photo",
+      "6 Confirm — review sections + declaration before submit"
+    ],
+    "howToRead": [
+      "navigation.pattern must stay accordion",
+      "body[] = accordion sections (confirm is review-only, not a panel)",
+      "form[] = questions; visibleWhen / formGate control show-hide",
+      "Write validation.required only when mandatory; omit disabled/readOnly false"
+    ]
+  },
+  "tenantId": "pg",
+  "moduleName": "TradeLicense",
+  "NewApplication": [
+    {
+      "_comment": "Trade License create — accordion layout. Section order: structure → tradeLocation → ownersDocs; then check page for confirm.",
+      "head": "TL_COMMON_NEW_TRADE_LICENSE",
+      "headDefault": "New Trade License",
+      "navigation": {
+        "_comment": "Flow: /info (docs list from infoPage) → /apply (accordion) → /check → /acknowledgement. Omit multiStepNavigation (defaults false) so Next stays on one page. Move infoPage to workbench NewApplication later.",
+        "pattern": "accordion",
+        "indexRoute": "info",
+        "formRoute": "apply",
+        "confirmRoute": "check",
+        "ackRoute": "acknowledgement",
+        "infoPage": {
+          "_comment": "Docs landing for /info. Headings only. Document rows are read from config/RequiredDocuments.json. *Default is the text shown until localization has the key.",
+          "sectionHeading": "TL_DOC_REQ_SCREEN_HEADER",
+          "sectionHeadingDefault": "Documents required",
+          "text": "TL_DOC_REQ_SCREEN_TEXT",
+          "textDefault": "Keep the following documents ready",
+          "infoLabel": "CS_FILE_APPLICATION_INFO_LABEL",
+          "infoLabelDefault": "Info",
+          "infoText": "TL_DOCUMENT_SIZE_INFO_MSG",
+          "infoTextDefault": "Accepted formats: jpg, jpeg, png, pdf. Maximum size 2 MB.",
+          "nextLabel": "CS_COMMON_NEXT",
+          "nextLabelDefault": "Next"
+        },
+        "accordion": {
+          "_comment": "defaultOpenStep = first panel key. showFilledHint = header says required fields are pending or completed. openNextOnComplete = the next panel opens when every mandatory field in the current panel is valid. A section with no required fields yet stays closed until the one above is complete. submitLabel = last sticky button on apply; it continues to the check page, so the label is Next.",
+          "defaultOpenStep": "structure",
+          "showFilledHint": true,
+          "openNextOnComplete": true,
+          "submitLabel": "CS_COMMON_NEXT",
+          "submitLabelDefault": "Next",
+          "introKey": "TL_ACCORDION_HINT",
+          "introDefault": "Fill the open section. The next section opens when every mandatory field is complete.",
+          "subtitleKey": "TL_ACCORDION_SUBTITLE",
+          "subtitleDefault": "All sections on this page should be filled before submittal. Fields marked with an asterisk (*) are mandatory."
+        },
+        "timeline": {
+          "_comment": "Labels match accordion panel titles (body[].i18nKey / labelDefault). One step per panel, then Summary on the check page. Hidden on the documents info page.",
+          "citizenOnly": true,
+          "hideOnRoutes": ["info", "acknowledgement"],
+          "steps": [
+            {
+              "step": 1,
+              "label": "TL_TIMELINE_TRADE_DETAILS",
+              "labelDefault": "Trade Details",
+              "sections": ["structure"],
+              "routes": ["apply"]
+            },
+            {
+              "step": 2,
+              "label": "TL_TIMELINE_LOCATION_OWNER",
+              "labelDefault": "Location & Owner Details",
+              "sections": ["tradeLocation"]
+            },
+            {
+              "step": 3,
+              "label": "TL_TIMELINE_DOCUMENT_DETAILS",
+              "labelDefault": "Document Details",
+              "sections": ["ownersDocs"]
+            },
+            {
+              "step": 4,
+              "label": "TL_TIMELINE_SUMMARY",
+              "labelDefault": "Summary",
+              "routes": ["check"]
+            }
+          ]
+        }
+      },
+      "body": [
+        {
+          "_comment": "Section 1 of 3. Where the trade runs, and the property link. Opens first. Example path: Yes (building) → Pucca → Yes I have a property id → search PT-2024-000123.",
+          "key": "structure",
+          "route": "structure",
+          "order": 1,
+          "i18nKey": "TL_STEP_STRUCTURE",
+          "labelDefault": "Trade Details",
+          "hintKey": "TL_STEP_STRUCTURE_HINT",
+          "hintDefault": "Select the Trade Unit and property linkage.",
+          "component": "TLCitizenNewApplication",
+          "payloadKey": "Licenses",
+          "apiId": "Rainmaker",
+          "uploadModule": "TL",
+          "dateFormat": "dd-MM-yyyy",
+          "form": [
+            {
+              "_comment": "Yes/No. Yes means the shop is in a building (code IMMOVABLE). No means it moves, like a cart (code MOVABLE). Example: a kirana shop in a building picks Yes.",
+              "order": 1,
+              "key": "TL_STRUCTURE_TYPE",
+              "apiFieldName": "structureType",
+              "summaryLabel": "TL_STRUCTURE_TYPE_IMMOVABLE_QUESTION",
+              "field": {
+                "code": "TL_STRUCTURE_TYPE_IMMOVABLE_QUESTION",
+                "name": "structureType",
+                "type": "radio"
+              },
+              "options": [
+                {
+                  "code": "IMMOVABLE",
+                  "i18nKey": "TL_COMMON_YES"
+                },
+                {
+                  "code": "MOVABLE",
+                  "i18nKey": "TL_COMMON_NO"
+                }
+              ],
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_STRUCTURE_TYPE_REQUIRED",
+                "labelDefault": "Do you run your trade on a immovable structure?"
+              }
+            },
+            {
+              "_comment": "Heading only. Shown after they pick Yes (building). It is not an answer and is not sent to the server.",
+              "order": 2,
+              "key": "TL_BUILDING_TYPE_HEADER",
+              "label": {
+                "code": "TL_BUILDING_TYPE_HEADER"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "structureType",
+                "equals": "IMMOVABLE"
+              },
+              "messages": {
+                "labelDefault": "Choose the type of building in which the trade is run."
+              }
+            },
+            {
+              "_comment": "Pucca or Kuccha. Shown only when structure is a building. Example: a concrete shop is IMMOVABLE.PUCCA.",
+              "order": 3,
+              "key": "TL_BUILDING_TYPE",
+              "apiFieldName": "structureSubType",
+              "summaryLabel": "TL_BUILDING_TYPE_PUCCA_KUCCHA_QUESTION",
+              "field": {
+                "code": "TL_BUILDING_TYPE_PUCCA_KUCCHA_QUESTION",
+                "name": "buildingType",
+                "type": "radio",
+                "resetFields": ["tradeUnits"]
+              },
+              "options": [
+                {
+                  "code": "IMMOVABLE.PUCCA",
+                  "i18nKey": "COMMON_MASTERS_STRUCTURETYPE_IMMOVABLE_PUCCA",
+                  "name": "Pucca"
+                },
+                {
+                  "code": "IMMOVABLE.KUTCHA",
+                  "i18nKey": "COMMON_MASTERS_STRUCTURETYPE_IMMOVABLE_KUTCHA",
+                  "name": "Kutcha"
+                }
+              ],
+              "visibleWhen": {
+                "field": "structureType",
+                "equals": "IMMOVABLE"
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_BUILDING_TYPE_REQUIRED",
+                "labelDefault": "Is it Pucca or Kuccha building?"
+              }
+            },
+            {
+              "_comment": "What the trade moves on. Shown only when they pick No (movable). Options come from the StructureType master, excluding IMMOVABLE. Example: HANDCART.",
+              "order": 4,
+              "key": "TL_VEHICLE_TYPE",
+              "apiFieldName": "structureSubType",
+              "summaryLabel": "TL_VEHICLE_TYPE_HEADER",
+              "field": {
+                "code": "TL_VEHICLE_TYPE_HEADER",
+                "name": "vehicleType",
+                "placeholder": "TL_SELECT_VEHICLE_TYPE",
+                "type": "radio",
+                "dataSource": {
+                  "type": "MDMS",
+                  "moduleName": "common-masters",
+                  "masterName": "StructureType",
+                  "i18nKeyPrefix": "COMMON_MASTERS_STRUCTURETYPE",
+                  "filter": {
+                    "codeExcludes": "IMMOVABLE"
+                  },
+                  "resetFields": ["tradeUnits"]
+                }
+              },
+              "visibleWhen": {
+                "field": "structureType",
+                "equals": "MOVABLE"
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_VEHICLE_TYPE_REQUIRED"
+              }
+            },
+            {
+              "_comment": "Yes or No. Not sent to the server. Yes shows search by property ID or mobile. No opens a message and sends them to create a property. Example: YES.",
+              "order": 6,
+              "key": "TL_HAS_PROPERTY_ID",
+              "field": {
+                "code": "TL_DO_YOU_HAVE_PROPERTY_ID_OR_MOBILE",
+                "name": "hasPropertyId",
+                "type": "radio"
+              },
+              "options": [
+                {
+                  "code": "YES",
+                  "i18nKey": "TL_COMMON_YES"
+                },
+                {
+                  "code": "NO",
+                  "i18nKey": "TL_COMMON_NO"
+                }
+              ],
+              "visibleWhen": {
+                "and": [
+                  {
+                    "field": "structureType",
+                    "equals": "IMMOVABLE"
+                  },
+                  {
+                    "field": "buildingType",
+                    "notEmpty": true
+                  }
+                ]
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_HAS_PROPERTY_ID_REQUIRED",
+                "labelDefault": "Do you have a property ID or mobile number?"
+              },
+              "excludeFromPayload": true
+            },
+            {
+              "_comment": "Search box. Shown when they answer Yes. Accepts a property id (example PT-2024-000123) or a 10-digit mobile. Not sent as-is; the found id is copied into Property ID below.",
+              "order": 7,
+              "key": "TL_PROPERTY_ID",
+              "field": {
+                "code": "TL_SEARCH_PROPERTY_OR_MOBILE",
+                "name": "searchPropertyId",
+                "placeholder": "TL_ENTER_PROPERTY_ID_OR_MOBILE",
+                "placeholderDefault": "Property ID or mobile number",
+                "type": "text",
+                "searchCard": true,
+                "searchButton": true,
+                "prefillFrom": "propertyRef",
+                "resultLabel": "TL_PROPERTY_ID",
+                "selectLabel": "CS_COMMON_SELECT",
+                "notFoundLabel": "TL_PROPERTY_NOT_FOUND",
+                "notFoundLabelDefault": "No property found for this property ID or mobile number",
+                "createNewLabel": "TL_CREATE_NEW_PROPERTY",
+                "createNewLabelDefault": "Create new property",
+                "createNewPath": "/upyog-ui/citizen/pt/property/new-application/info"
+              },
+              "visibleWhen": {
+                "field": "hasPropertyId",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 64,
+                "required": true
+              },
+              "messages": {
+                "error": "TL_PROPERTY_SEARCH_REQUIRED",
+                "errorDefault": "Enter a property ID or mobile number",
+                "labelDefault": "Property ID or mobile number"
+              },
+              "excludeFromPayload": true
+            },
+            {
+              "_comment": "Hidden on purpose (equals __NEVER__). The No answer uses the popup in formGate instead of showing this box.",
+              "order": 8,
+              "key": "TL_CREATE_PROPERTY_REDIRECT",
+              "field": {
+                "code": "TL_CREATE_PROPERTY_REDIRECT",
+                "name": "createPropertyRedirect",
+                "type": "text",
+                "searchCard": true,
+                "createNewLabel": "TL_CREATE_NEW_PROPERTY",
+                "createNewLabelDefault": "Create new property",
+                "createNewPath": "/upyog-ui/citizen/pt/property/new-application/info",
+                "notFoundLabel": "TL_NO_PROPERTY_ID_CREATE_NEW",
+                "notFoundLabelDefault": "You do not have a property ID. Create a new property."
+              },
+              "visibleWhen": {
+                "field": "hasPropertyId",
+                "equals": "__NEVER__"
+              },
+              "validation": {
+                "disabled": true,
+                "readOnly": true
+              },
+              "messages": {
+                "error": "TL_CREATE_PROPERTY_REQUIRED"
+              },
+              "excludeFromPayload": true
+            },
+            {
+              "_comment": "Filled after a property is found. Citizen cannot edit it. Sent as additionalDetail.propertyId. Example: PT-2024-000123.",
+              "order": 9,
+              "key": "TL_PROPERTY_ID_VALUE",
+              "apiFieldName": "additionalDetail.propertyId",
+              "summaryLabel": "TL_PROPERTY_ID",
+              "field": {
+                "code": "TL_PROPERTY_ID_VALUE",
+                "name": "propertyId",
+                "type": "text"
+              },
+              "visibleWhen": {
+                "and": [
+                  {
+                    "field": "structureType",
+                    "equals": "IMMOVABLE"
+                  },
+                  {
+                    "field": "showTradeDetails",
+                    "equals": "YES"
+                  }
+                ]
+              },
+              "validation": {
+                "required": true,
+                "disabled": true,
+                "readOnly": true
+              }
+            }
+          ],
+          "formGate": {
+            "_comment": "Trade License property gate. The shared form uses this object as-is. typeField hasPropertyId = radio field.name. searchField searchPropertyId = search box field.name. When YES, show search. When NO, popup then redirectPath. After a property is found, detailsField showTradeDetails becomes YES.",
+            "typeField": "hasPropertyId",
+            "detailsField": "showTradeDetails",
+            "searchValue": "YES",
+            "openValue": null,
+            "searchField": "searchPropertyId",
+            "redirectOnValue": "NO",
+            "redirectPath": "/upyog-ui/citizen/pt/property/new-application/info",
+            "redirectModalHeading": "TL_CREATE_NEW_PROPERTY",
+            "redirectModalMessage": "TL_PROCEED_POST_APPROVAL",
+            "redirectModalMessageDefault": "You will be able to proceed post approval.",
+            "unlockWhenFields": ["tradeName", "propertyId"],
+            "preserveOnPrefill": ["structureType", "buildingType", "vehicleType"],
+            "structureReset": {
+              "field": "structureType",
+              "unlockValue": "MOVABLE",
+              "clearFields": [
+                "hasPropertyId",
+                "searchPropertyId",
+                "propertyId",
+                "createPropertyRedirect",
+                "buildingType",
+                "vehicleType",
+                "propertyOwnersReady",
+                "isSameAsPropertyOwner"
+              ]
+            }
+          }
+        },
+        {
+          "_comment": "Section 2 of 3. License, trade units, accessories, and address. Opens after the property step sets showTradeDetails to YES.",
+          "key": "tradeLocation",
+          "route": "trade-location",
+          "order": 2,
+          "i18nKey": "TL_STEP_TRADE_LOCATION",
+          "labelDefault": "Trade details & Location",
+          "hintKey": "TL_STEP_TRADE_LOCATION_HINT",
+          "hintDefault": "Fill Trade, Units, Operational, and trade address information.",
+          "form": [
+            {
+              "_comment": "Heading only. Shown after a property is linked (showTradeDetails is YES).",
+              "order": 1,
+              "key": "TL_TRADE_DETAILS_HEADER",
+              "label": {
+                "code": "TL_COMMON_TR_DETAILS"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Name painted on the shop. Example: Sharma Kirana Store. Required, up to 100 letters.",
+              "order": 4,
+              "key": "TL_TRADE_NAME",
+              "apiFieldName": "tradeName",
+              "field": {
+                "code": "TL_TRADE_NAME_HEADER",
+                "name": "tradeName",
+                "placeholder": "TL_ENTER_TRADE_NAME",
+                "type": "text"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 100,
+                "required": true
+              },
+              "messages": {
+                "error": "TL_INVALID_TRADE_NAME",
+                "labelDefault": "Trade Name of Business"
+              }
+            },
+            {
+              "_comment": "Date the trade started. Must fall in the current financial year (1 April–31 March) and cannot be after today. minDate can only move the earliest day later; a minDate before 1 April is raised to that day. maxDate cannot open a day after today.",
+              "order": 5,
+              "key": "TL_COMMENCEMENT_DATE",
+              "apiFieldName": "commencementDate",
+              "field": {
+                "code": "TL_NEW_TRADE_DETAILS_TRADE_COMM_DATE_LABEL",
+                "name": "commencementDate",
+                "type": "date",
+                "minDate": "-6months",
+                "maxDate": "today",
+                "withinFinancialYear": true
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_COMMENCEMENT_DATE_REQUIRED",
+                "minDate": "TL_COMMENCEMENT_DATE_MIN",
+                "maxDate": "TL_COMMENCEMENT_DATE_MAX",
+                "financialYear": "TL_COMMENCEMENT_DATE_FINANCIAL_YEAR",
+                "labelDefault": "Trade Commencement Date",
+                "minDateDefault": "Commencement date cannot be earlier than 6 months ago",
+                "maxDateDefault": "Commencement date cannot be after today",
+                "financialYearDefault": "Commencement date must be within the current financial year"
+              }
+            },
+            {
+              "_comment": "Heading only, above the list of trade units.",
+              "order": 6,
+              "key": "TL_TRADE_UNITS_HEADER",
+              "label": {
+                "code": "TL_TRADE_UNITS_HEADER"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Repeatable list. At least 1 unit. Example: one row for Grocery. Citizen can press Add trade unit for a second trade in the same shop.",
+              "order": 7,
+              "key": "TL_TRADE_UNITS",
+              "apiFieldName": "tradeLicenseDetail.tradeUnits",
+              "type": "fieldArray",
+              "minItems": 1,
+              "addLabel": "TL_ADD_MORE_TRADE_UNITS",
+              "removeLabel": "TL_REMOVE_TRADE_UNIT",
+              "itemLabel": "TL_TRADE_UNIT",
+              "field": {
+                "name": "tradeUnits",
+                "type": "fieldArray"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "children": [
+                {
+                  "_comment": "Trade industry / category as radio (ATT SelectTradeUnits). Only TradeType rows with type TL and active true → GOODS + SERVICES. BPA stakeholder types (ARCHITECT, BUILDER, …) are excluded. Clears type/subtype/uom on change.",
+                  "order": 0,
+                  "key": "TL_TRADE_CATEGORY",
+                  "field": {
+                    "code": "TL_NEW_TRADE_DETAILS_TRADE_CAT_LABEL",
+                    "name": "tradecategory",
+                    "placeholder": "TL_SELECT_TRADE_CATEGORY",
+                    "type": "radio",
+                    "dataSource": {
+                      "type": "MDMS",
+                      "moduleName": "TradeLicense",
+                      "masterName": "TradeType",
+                      "hierarchy": "category",
+                      "i18nKeyPrefix": "TRADELICENSE_TRADETYPE",
+                      "customiztionRequired": true,
+                      "filter": {
+                        "type": "TL",
+                        "active": true
+                      },
+                      "resetFields": [
+                        "tradetype",
+                        "tradesubtype",
+                        "unit",
+                        "uom"
+                      ]
+                    }
+                  },
+                  "validation": {
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_TRADE_CATEGORY_REQUIRED",
+                    "labelDefault": "Trade Category"
+                  }
+                },
+                {
+                  "_comment": "Second dropdown. Depends on category (TradeType segment 1). Example: RETAIL. Same type=TL filter as category.",
+                  "order": 1,
+                  "key": "TL_TRADE_TYPE",
+                  "field": {
+                    "code": "TL_NEW_TRADE_DETAILS_TRADE_TYPE_LABEL",
+                    "name": "tradetype",
+                    "placeholder": "TL_SELECT_TRADE_TYPE",
+                    "type": "dropdown",
+                    "dataSource": {
+                      "type": "MDMS",
+                      "moduleName": "TradeLicense",
+                      "masterName": "TradeType",
+                      "dependsOn": "tradecategory",
+                      "hierarchy": "type",
+                      "i18nKeyPrefix": "TRADELICENSE_TRADETYPE",
+                      "sortOptions": "label",
+                      "dependsOnSegment": 0,
+                      "filter": {
+                        "type": "TL",
+                        "active": true
+                      },
+                      "resetFields": [
+                        "tradesubtype",
+                        "unit",
+                        "uom"
+                      ]
+                    }
+                  },
+                  "validation": {
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_TRADE_TYPE_REQUIRED",
+                    "labelDefault": "Trade Type"
+                  }
+                },
+                {
+                  "_comment": "Third dropdown. Full TradeType code. Picking a subtype looks up the NEW/PERMANENT billing slab and writes unit, fromUom, and toUom onto this row. fromUom and toUom are not inputs. Slab match is enforced in tlFormConfig / tlBillingSlab, not in this schema.",
+                  "order": 2,
+                  "key": "TL_TRADE_SUBTYPE",
+                  "field": {
+                    "code": "TL_NEW_TRADE_DETAILS_TRADE_SUBTYPE_LABEL",
+                    "name": "tradesubtype",
+                    "placeholder": "TL_SELECT_TRADE_SUBTYPE",
+                    "type": "dropdown",
+                    "dataSource": {
+                      "type": "MDMS",
+                      "moduleName": "TradeLicense",
+                      "masterName": "TradeType",
+                      "dependsOn": "tradetype",
+                      "hierarchy": "subtype",
+                      "leafI18nPrefix": "TL",
+                      "sortOptions": "label",
+                      "dependsOnSegment": 1,
+                      "filter": {
+                        "type": "TL",
+                        "active": true
+                      },
+                      "resetFields": [
+                        "unit",
+                        "uom"
+                      ]
+                    }
+                  },
+                  "validation": {
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_TRADE_SUBTYPE_REQUIRED",
+                    "labelDefault": "Trade Sub-Type"
+                  }
+                },
+                {
+                  "_comment": "Unit of measure. Prefillled by TL billing-slab enricher when subtype is selected. Read-only.",
+                  "order": 3,
+                  "key": "TL_TRADE_UOM",
+                  "field": {
+                    "code": "TL_UNIT_OF_MEASURE_LABEL",
+                    "name": "unit",
+                    "type": "text"
+                  },
+                  "validation": {
+                    "disabled": true,
+                    "readOnly": true
+                  },
+                  "messages": {
+                    "labelDefault": "Unit of Measure"
+                  }
+                },
+                {
+                  "_comment": "Quantity in the unit above. Required when unit is set; digits only; must be > 0. tlFormConfig sets min fromField fromUom and max fromField toUom. Those are numbers the billing-slab enricher stored on this same row, not fields in this JSON. The check passes when fromUom <= quantity <= toUom. If the slab has no fromUom or toUom, that side of the range is skipped.",
+                  "order": 4,
+                  "key": "TL_TRADE_UOM_VALUE",
+                  "field": {
+                    "code": "TL_NEW_TRADE_DETAILS_UOM_VALUE_LABEL",
+                    "name": "uom",
+                    "placeholder": "TL_ENTER_UOM",
+                    "type": "text",
+                    "numeric": true,
+                    "enabledWhen": {
+                      "field": "unit",
+                      "notEmpty": true
+                    }
+                  },
+                  "validation": {
+                    "pattern": "^[0-9]+$",
+                    "regex": {
+                      "pattern": "\\D",
+                      "flags": "g"
+                    },
+                    "gt": 0,
+                    "requiredWhen": {
+                      "field": "unit",
+                      "notEmpty": true
+                    }
+                  },
+                  "messages": {
+                    "error": "TL_WRONG_UOM_VALUE_ERROR",
+                    "requiredWhen": "TL_WRONG_UOM_VALUE_ERROR",
+                    "gt": "TL_UOM_VALUE_GREATER_O",
+                    "pattern": "TL_WRONG_UOM_VALUE_ERROR",
+                    "labelDefault": "UOM Value",
+                    "gtDefault": "UOM value must be greater than 0"
+                  }
+                }
+              ],
+              "maxItems": 20
+            },
+            {
+              "_comment": "Heading only, above the Yes/No for accessories.",
+              "order": 8,
+              "key": "TL_ACCESSORIES_HEADER",
+              "label": {
+                "code": "TL_ISACCESSORIES_HEADER"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Does the trade use accessories? ACCESSORY means Yes, NONACCESSORY means No. Not sent to the server. Example: a shop with a weighing scale picks Yes.",
+              "order": 9,
+              "key": "TL_IS_ACCESSORIES",
+              "field": {
+                "code": "TL_ISACCESSORIES_HEADER",
+                "name": "isAccessories",
+                "type": "radio"
+              },
+              "options": [
+                {
+                  "code": "ACCESSORY",
+                  "i18nKey": "TL_COMMON_YES"
+                },
+                {
+                  "code": "NONACCESSORY",
+                  "i18nKey": "TL_COMMON_NO"
+                }
+              ],
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_IS_ACCESSORIES_REQUIRED"
+              },
+              "excludeFromPayload": true
+            },
+            {
+              "_comment": "Heading only. Shown when they pick Yes for accessories.",
+              "order": 10,
+              "key": "TL_TRADE_ACCESSORIES_GROUP_HEADER",
+              "label": {
+                "code": "TL_TRADE_ACCESSORIES_HEADER"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "isAccessories",
+                "equals": "ACCESSORY"
+              }
+            },
+            {
+              "_comment": "Repeatable list. Shown only when accessories is Yes. At least 1 row, at most 20. Example: one weighing scale.",
+              "order": 11,
+              "key": "TL_ACCESSORIES",
+              "apiFieldName": "tradeLicenseDetail.accessories",
+              "type": "fieldArray",
+              "minItems": 1,
+              "addLabel": "TL_ADD_MORE_TRADE_ACC",
+              "removeLabel": "TL_REMOVE_ACCESSORY",
+              "itemLabel": "TL_TRADE_ACCESSORIES_HEADER",
+              "field": {
+                "name": "accessories",
+                "type": "fieldArray"
+              },
+              "visibleWhen": {
+                "field": "isAccessories",
+                "equals": "ACCESSORY"
+              },
+              "children": [
+                {
+                  "_comment": "Which accessory. Options restricted to NEW/PERMANENT billing slabs with rate>0 and uom. Picking one writes unit, fromUom, and toUom onto this row. fromUom and toUom are not inputs. UOM prefill and billingSlabFound live in the TL enricher / tlFormConfig.",
+                  "order": 0,
+                  "key": "TL_ACCESSORY_CATEGORY",
+                  "field": {
+                    "code": "TL_ACCESSORY_LABEL",
+                    "name": "accessory",
+                    "placeholder": "TL_SELECT_ACCESSORY",
+                    "type": "dropdown",
+                    "dataSource": {
+                      "type": "MDMS",
+                      "moduleName": "TradeLicense",
+                      "masterName": "AccessoriesCategory",
+                      "i18nKeyPrefix": "TRADELICENSE_ACCESSORIESCATEGORY",
+                      "sortOptions": "label",
+                      "filter": {
+                        "active": true
+                      },
+                      "resetFields": [
+                        "accessorycount",
+                        "unit",
+                        "uom"
+                      ]
+                    }
+                  },
+                  "validation": {
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_ACCESSORY_REQUIRED",
+                    "labelDefault": "Accessory"
+                  }
+                },
+                {
+                  "_comment": "How many of that accessory. Required. Digits only, 1–7 chars, must be > 0 (ATT SelectAccessoriesDetails).",
+                  "order": 1,
+                  "key": "TL_ACCESSORY_COUNT",
+                  "field": {
+                    "code": "TL_ACCESSORY_COUNT_LABEL",
+                    "name": "accessorycount",
+                    "placeholder": "TL_ENTER_ACCESSORY_COUNT",
+                    "type": "text",
+                    "numeric": true
+                  },
+                  "validation": {
+                    "maxLength": 7,
+                    "pattern": "^[0-9]+$",
+                    "regex": {
+                      "pattern": "\\D",
+                      "flags": "g"
+                    },
+                    "gt": 0,
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_INVALID_ACCESSORY_COUNT",
+                    "required": "TL_INVALID_ACCESSORY_COUNT",
+                    "pattern": "TL_ONLY_NUM_ALLOWED",
+                    "gt": "TL_ONLY_NUM_ALLOWED",
+                    "maxLength": "TL_ONLY_NUM_ALLOWED",
+                    "labelDefault": "Accessory Count",
+                    "gtDefault": "Enter a count greater than 0"
+                  }
+                },
+                {
+                  "_comment": "Unit for the accessory. Prefillled by TL billing-slab enricher. Citizen cannot edit it. Example: HP / NOS.",
+                  "order": 2,
+                  "key": "TL_ACCESSORY_UOM",
+                  "field": {
+                    "code": "TL_UNIT_OF_MEASURE_LABEL",
+                    "name": "unit",
+                    "type": "text"
+                  },
+                  "validation": {
+                    "disabled": true,
+                    "readOnly": true
+                  },
+                  "messages": {
+                    "labelDefault": "Unit of Measure"
+                  }
+                },
+                {
+                  "_comment": "Quantity in that unit. Required when unit is set; digits only; must be > 0. Same range as the trade UOM value: tlFormConfig min/max read fromUom and toUom on this row, copied from the accessory billing slab when the accessory was selected.",
+                  "order": 3,
+                  "key": "TL_ACCESSORY_UOM_VALUE",
+                  "field": {
+                    "code": "TL_NEW_TRADE_DETAILS_UOM_VALUE_LABEL",
+                    "name": "uom",
+                    "placeholder": "TL_ENTER_UOM",
+                    "type": "text",
+                    "numeric": true,
+                    "enabledWhen": {
+                      "field": "unit",
+                      "notEmpty": true
+                    }
+                  },
+                  "validation": {
+                    "pattern": "^[0-9]+$",
+                    "regex": {
+                      "pattern": "\\D",
+                      "flags": "g"
+                    },
+                    "gt": 0,
+                    "requiredWhen": {
+                      "field": "unit",
+                      "notEmpty": true
+                    }
+                  },
+                  "messages": {
+                    "error": "TL_WRONG_UOM_VALUE_ERROR",
+                    "requiredWhen": "TL_WRONG_UOM_VALUE_ERROR",
+                    "gt": "TL_UOM_VALUE_GREATER_O",
+                    "pattern": "TL_WRONG_UOM_VALUE_ERROR",
+                    "labelDefault": "UOM Value",
+                    "gtDefault": "UOM value must be greater than 0"
+                  }
+                }
+              ],
+              "maxItems": 20
+            },
+            {
+              "_comment": "Heading only, above GST, area, and employees.",
+              "order": 12,
+              "key": "TL_OTHER_TRADE_DETAILS_HEADER",
+              "label": {
+                "code": "TL_OTHER_TRADE_DETAILS_HEADER"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Optional. Leave blank or enter a 15-character GSTIN. Example: 22AAAAA0000A1Z5.",
+              "order": 13,
+              "key": "TL_GST_NUMBER",
+              "apiFieldName": "tradeLicenseDetail.additionalDetail.tradeGstNo",
+              "field": {
+                "code": "TL_TRADE_GST_NO",
+                "name": "tradeGSTNumber",
+                "placeholder": "TL_ENTER_GST_NUMBER",
+                "type": "text"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 15,
+                "pattern": "^$|^\\d{2}[A-Z]{5}\\d{4}[A-Z]{1}\\d[Z]{1}[A-Z\\d]{1}$"
+              },
+              "messages": {
+                "error": "TL_INVALID_GST_NUMBER"
+              }
+            },
+            {
+              "_comment": "Optional floor area in square feet. Digits only, up to 7, cannot be 0. Example: 250.",
+              "order": 14,
+              "key": "TL_OPERATIONAL_AREA",
+              "apiFieldName": "tradeLicenseDetail.operationalArea",
+              "field": {
+                "code": "TL_OPERATIONAL_AREA",
+                "name": "operationalSqFtArea",
+                "placeholder": "TL_ENTER_OPERATIONAL_AREA",
+                "type": "text",
+                "unit": "(sq.ft)",
+                "numeric": true
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 7,
+                "pattern": "^(0)*[1-9][0-9]{0,6}$",
+                "regex": {
+                  "pattern": "\\D",
+                  "flags": "g"
+                }
+              },
+              "messages": {
+                "error": "TL_INVALID_OPERATIONAL_AREA"
+              }
+            },
+            {
+              "_comment": "Optional. Digits only, up to 7, cannot be 0. Example: 4.",
+              "order": 15,
+              "key": "TL_NO_OF_EMPLOYEES",
+              "apiFieldName": "tradeLicenseDetail.noOfEmployees",
+              "field": {
+                "code": "TL_NO_OF_EMPLOYEES",
+                "name": "numberOfEmployees",
+                "placeholder": "TL_ENTER_NO_OF_EMPLOYEES",
+                "type": "text",
+                "numeric": true
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 7,
+                "pattern": "^(0)*[1-9][0-9]{0,6}$",
+                "regex": {
+                  "pattern": "\\D",
+                  "flags": "g"
+                }
+              },
+              "messages": {
+                "error": "TL_INVALID_NO_OF_EMPLOYEES"
+              }
+            },
+            {
+              "_comment": "Heading only, above the trade address.",
+              "order": 16,
+              "key": "TL_LOCATION_HEADER",
+              "label": {
+                "code": "TL_LOCATION_CAPTION"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Optional. Can be copied from the property. Example: 110001 or 110 001.",
+              "order": 17,
+              "key": "TL_PINCODE",
+              "apiFieldName": "tradeLicenseDetail.address.pincode",
+              "field": {
+                "code": "TL_PINCODE_HEADER",
+                "name": "pincode",
+                "placeholder": "TL_ENTER_PINCODE",
+                "type": "text",
+                "numeric": true,
+                "prefillFrom": "property.address.pincode"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "minLength": 6,
+                "maxLength": 7,
+                "pattern": "^[1-9]{1}[0-9]{2}\\s{0,1}[0-9]{3}$",
+                "regex": {
+                  "pattern": "[^0-9\\s]",
+                  "flags": "g"
+                }
+              },
+              "messages": {
+                "error": "TL_INVALID_PINCODE"
+              }
+            },
+            {
+              "_comment": "Required. Defaults from the logged-in city (tenant). Can be copied from the property. Example: pg.citya.",
+              "order": 18,
+              "key": "TL_CITY",
+              "apiFieldName": "tradeLicenseDetail.address.city",
+              "field": {
+                "code": "TL_CITY",
+                "name": "city",
+                "placeholder": "TL_SELECT_CITY",
+                "type": "dropdown",
+                "dataSource": {
+                  "defaultValueSource": "tenantId",
+                  "sortOptions": "label"
+                },
+                "prefillFrom": "property.address.city"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "disabled":true
+              },
+              "messages": {
+                "error": "TL_CITY_REQUIRED"
+              }
+            },
+            {
+              "_comment": "Required mohalla / locality. List comes from TenantBoundary. Example: Ward 12.",
+              "order": 19,
+              "key": "TL_LOCALITY",
+              "apiFieldName": "tradeLicenseDetail.address.locality",
+              "field": {
+                "code": "TL_LOCALITY",
+                "name": "locality",
+                "placeholder": "TL_SELECT_LOCALITY",
+                "type": "dropdown",
+                "dataSource": {
+                  "type": "MDMS",
+                  "moduleName": "egov-location",
+                  "masterName": "TenantBoundary",
+                  "customiztionRequired": true,
+                  "sortOptions": "label"
+                },
+                "strictOptions": true,
+                "prefillFrom": "property.address.locality"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_LOCALITY_REQUIRED",
+                "required": "TL_LOCALITY_REQUIRED"
+              }
+            },
+            {
+              "_comment": "Optional. Can be copied from the property. Up to 256 letters. Example: MG Road.",
+              "order": 20,
+              "key": "TL_STREET",
+              "apiFieldName": "tradeLicenseDetail.address.street",
+              "field": {
+                "code": "TL_STREET",
+                "name": "street",
+                "placeholder": "TL_ENTER_STREET",
+                "type": "text",
+                "prefillFrom": "property.address.street"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 256
+              }
+            },
+            {
+              "_comment": "Optional. Can be copied from the property. Up to 256 letters. Example: 12A.",
+              "order": 21,
+              "key": "TL_DOOR_NO",
+              "apiFieldName": "tradeLicenseDetail.address.doorNo",
+              "field": {
+                "code": "TL_DOOR_NO",
+                "name": "doorNo",
+                "placeholder": "TL_ENTER_DOOR_NO",
+                "type": "text",
+                "prefillFrom": "property.address.doorNo"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "maxLength": 256
+              }
+            },
+            {
+              "_comment": "Optional. Shown only for a building (immovable). Up to 1024 letters. Example: Near city hospital.",
+              "order": 22,
+              "key": "TL_LANDMARK",
+              "apiFieldName": "tradeLicenseDetail.address.landmark",
+              "field": {
+                "code": "TL_LANDMARK",
+                "name": "landmark",
+                "placeholder": "TL_ENTER_LANDMARK",
+                "type": "text",
+                "prefillFrom": "property.address.landmark"
+              },
+              "visibleWhen": {
+                "field": "structureType",
+                "equals": "IMMOVABLE"
+              },
+              "validation": {
+                "maxLength": 1024
+              }
+            }
+          ]
+        },
+        {
+          "_comment": "Section 3 of 3. Owners and the three document uploads.",
+          "key": "ownersDocs",
+          "route": "owners-documents",
+          "order": 3,
+          "i18nKey": "TL_STEP_OWNERS_DOCS",
+          "labelDefault": "Ownership & documents",
+          "hintKey": "TL_STEP_OWNERS_DOCS_HINT",
+          "hintDefault": "Owner details and document uploads in this section.",
+          "isPreview": false,
+          "form": [
+            {
+              "_comment": "Heading only, above owner questions.",
+              "order": 1,
+              "key": "TL_OWNERSHIP_HEADER",
+              "label": {
+                "code": "TL_PROVIDE_OWNERSHIP_DETAILS"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Shown only for a building, after a property is linked. Nothing is selected by default. Yes means the trade owner is the property owner: gender and relationship radios are then filled from that property and the owner fields lock when propertyOwnersReady is YES. No clears those two radios so the citizen can choose them. Example: YES.",
+              "order": 2,
+              "key": "TL_SAME_AS_PROPERTY_OWNER",
+              "apiFieldName": "additionalDetail.isSameAsPropertyOwner",
+              "field": {
+                "code": "TL_SAME_AS_PROPERTY_OWNER",
+                "name": "isSameAsPropertyOwner",
+                "type": "radio"
+              },
+              "options": [
+                {
+                  "code": "YES",
+                  "i18nKey": "TL_COMMON_YES"
+                },
+                {
+                  "code": "NO",
+                  "i18nKey": "TL_COMMON_NO"
+                }
+              ],
+              "visibleWhen": {
+                "and": [
+                  { "field": "structureType", "equals": "IMMOVABLE" },
+                  { "field": "showTradeDetails", "equals": "YES" },
+                  { "field": "propertyId", "notEmpty": true }
+                ]
+              }
+            },
+            {
+              "_comment": "YES when the linked property already has an owner name and mobile. Locks the owner fields when same-as-property-owner is also Yes.",
+              "order": 2.5,
+              "key": "TL_PROPERTY_OWNERS_READY",
+              "hidden": true,
+              "excludeFromPayload": true,
+              "field": {
+                "name": "propertyOwnersReady",
+                "type": "text"
+              }
+            },
+            {
+              "_comment": "Who owns the trade. Filled from the property when a property is selected. Locked when same-as-property-owner is Yes and that owner record is complete. MDMS master is common-masters.OwnerShipCategory. Example: INDIVIDUAL.SINGLEOWNER.",
+              "order": 3,
+              "key": "TL_OWNERSHIP_CATEGORY",
+              "apiFieldName": "tradeLicenseDetail.subOwnerShipCategory",
+              "field": {
+                "code": "TL_OWNERSHIP_TYPE",
+                "name": "ownershipCategory",
+                "placeholder": "TL_SELECT_OWNERSHIP_TYPE",
+                "type": "dropdown",
+                "disabledWhen": {
+                  "and": [
+                    { "field": "isSameAsPropertyOwner", "equals": "YES" },
+                    { "field": "propertyOwnersReady", "equals": "YES" }
+                  ]
+                },
+                "dataSource": {
+                  "type": "MDMS",
+                  "moduleName": "common-masters",
+                  "masterName": "OwnerShipCategory",
+                  "filter": {
+                    "codeIncludes": "INDIVIDUAL."
+                  },
+                  "i18nKeyPrefix": "COMMON_MASTERS_OWNERSHIPCATEGORY",
+                  "sortOptions": "label"
+                }
+              },
+              "options": [
+                {
+                  "code": "INDIVIDUAL.SINGLEOWNER",
+                  "name": "Single Owner",
+                  "i18nKey": "COMMON_MASTERS_OWNERSHIPCATEGORY_INDIVIDUAL_SINGLEOWNER"
+                },
+                {
+                  "code": "INDIVIDUAL.MULTIPLEOWNERS",
+                  "name": "Multiple Owners",
+                  "i18nKey": "COMMON_MASTERS_OWNERSHIPCATEGORY_INDIVIDUAL_MULTIPLEOWNERS"
+                }
+              ],
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true
+              },
+              "messages": {
+                "error": "TL_OWNERSHIP_CATEGORY_REQUIRED"
+              }
+            },
+            {
+              "_comment": "Repeatable list of owners. At least 1, at most 10. Name, mobile, guardian, email, and address are copied when a property is selected. Gender and relationship radios stay empty until same-as-property-owner is Yes. The row locks when that answer is Yes and propertyOwnersReady is YES. Example: one row for Ramesh Sharma.",
+              "order": 4,
+              "key": "TL_OWNERS",
+              "apiFieldName": "tradeLicenseDetail.owners",
+              "type": "fieldArray",
+              "minItems": 1,
+              "addLabel": "TL_ADD_OWNER",
+              "removeLabel": "TL_REMOVE_OWNER",
+              "itemLabel": "TL_OWNER",
+              "field": {
+                "name": "owners",
+                "type": "fieldArray",
+                "disabledWhen": {
+                  "and": [
+                    { "field": "isSameAsPropertyOwner", "equals": "YES" },
+                    { "field": "propertyOwnersReady", "equals": "YES" }
+                  ]
+                }
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "children": [
+                {
+                  "_comment": "Same rule as the existing citizen owner screen: letters and spaces, at least 3 characters, must start and end with a letter. Example: Ramesh Sharma.",
+                  "order": 0,
+                  "key": "TL_OWNER_NAME",
+                  "field": {
+                    "code": "TL_OWNER_NAME",
+                    "name": "name",
+                    "placeholder": "TL_ENTER_OWNER_NAME",
+                    "type": "text"
+                  },
+                  "validation": {
+                    "pattern": "^[a-zA-Z][a-zA-Z ]+[a-zA-Z]$",
+                    "regex": {
+                      "pattern": "[^a-zA-Z ]",
+                      "flags": "g"
+                    },
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_NAME_ERROR_MESSAGE"
+                  }
+                },
+                {
+                  "_comment": "GenderType radio. Nothing is selected when the property is linked. Same-as-property-owner Yes selects the property owner's gender (example MALE). No clears it. Options: MALE, FEMALE, TRANSGENDER, OTHERS.",
+                  "order": 1,
+                  "key": "TL_OWNER_GENDER",
+                  "field": {
+                    "code": "TL_OWNER_GENDER",
+                    "name": "gender",
+                    "type": "radio",
+                    "dataSource": {
+                      "type": "MDMS",
+                      "moduleName": "common-masters",
+                      "masterName": "GenderType",
+                      "i18nKeyPrefix": "TL_GENDER"
+                    }
+                  },
+                  "options": [
+                    { "code": "MALE", "i18nKey": "TL_GENDER_MALE" },
+                    { "code": "FEMALE", "i18nKey": "TL_GENDER_FEMALE" },
+                    { "code": "TRANSGENDER", "i18nKey": "TL_GENDER_TRANSGENDER" },
+                    { "code": "OTHERS", "i18nKey": "TL_GENDER_OTHERS" }
+                  ],
+                  "validation": {
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_GENDER_REQUIRED"
+                  }
+                },
+                {
+                  "_comment": "10 digits, must start with 6, 7, 8, or 9. Example: 9876543210.",
+                  "order": 2,
+                  "key": "TL_OWNER_MOBILE",
+                  "field": {
+                    "code": "TL_OWNER_MOBILE",
+                    "name": "mobilenumber",
+                    "placeholder": "TL_ENTER_MOBILE",
+                    "type": "text",
+                    "numeric": true
+                  },
+                  "validation": {
+                    "maxLength": 10,
+                    "pattern": "^[6-9]{1}[0-9]{9}$",
+                    "regex": {
+                      "pattern": "\\D",
+                      "flags": "g"
+                    },
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_INVALID_MOBILE"
+                  }
+                },
+                {
+                  "_comment": "Same name rule as the existing citizen owner screen. Example: Suresh Sharma.",
+                  "order": 3,
+                  "key": "TL_FATHER_HUSBAND_NAME",
+                  "field": {
+                    "code": "TL_FATHER_HUSBAND_NAME",
+                    "name": "fatherOrHusbandName",
+                    "placeholder": "TL_ENTER_FATHER_HUSBAND_NAME",
+                    "type": "text"
+                  },
+                  "validation": {
+                    "pattern": "^[a-zA-Z][a-zA-Z ]+[a-zA-Z]$",
+                    "regex": {
+                      "pattern": "[^a-zA-Z ]",
+                      "flags": "g"
+                    },
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_NAME_ERROR_MESSAGE"
+                  }
+                },
+                {
+                  "_comment": "Father or husband radio. Nothing is selected when the property is linked. Same-as-property-owner Yes selects the property owner's relationship (example FATHER). No clears it. Options: FATHER, HUSBAND.",
+                  "order": 4,
+                  "key": "TL_RELATIONSHIP",
+                  "field": {
+                    "code": "TL_RELATIONSHIP",
+                    "name": "relationship",
+                    "type": "radio"
+                  },
+                  "options": [
+                    {
+                      "code": "FATHER",
+                      "i18nKey": "TL_RELATIONSHIP_FATHER"
+                    },
+                    {
+                      "code": "HUSBAND",
+                      "i18nKey": "TL_RELATIONSHIP_HUSBAND"
+                    }
+                  ],
+                  "validation": {
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_RELATIONSHIP_REQUIRED"
+                  }
+                },
+                {
+                  "_comment": "Optional. Example: ramesh@gmail.com. Allowed endings: .com, .org, .in.",
+                  "order": 5,
+                  "key": "TL_OWNER_EMAIL",
+                  "field": {
+                    "code": "TL_OWNER_EMAIL",
+                    "name": "emailId",
+                    "placeholder": "TL_ENTER_EMAIL",
+                    "type": "text"
+                  },
+                  "validation": {
+                    "pattern": "^$|^[a-zA-Z0-9._%+-]+@[a-z.-]+\\.(com|org|in)$"
+                  },
+                  "messages": {
+                    "error": "TL_INVALID_EMAIL"
+                  }
+                },
+                {
+                  "_comment": "Required. Same-as-trade copies the trade address into this field and keeps it updated. User service rejects addresses longer than 300 characters. Example: 12A, MG Road, Panipat.",
+                  "order": 6,
+                  "key": "TL_OWNER_PERMANENT_ADDRESS",
+                  "field": {
+                    "code": "TL_OWNERS_ADDRESS",
+                    "name": "permanentAddress",
+                    "placeholder": "TL_ENTER_OWNER_ADDRESS",
+                    "type": "text",
+                    "enabledWhenArrayLocked": true
+                  },
+                  "validation": {
+                    "maxLength": 300,
+                    "required": true
+                  },
+                  "messages": {
+                    "error": "TL_OWNER_ADDRESS_REQUIRED"
+                  }
+                },
+                {
+                  "_comment": "Shown only for a building. Nothing is selected by default, and same-as-property-owner does not select it. Yes copies the trade address into this owner's address and keeps it updated. No clears that address. The Yes/No itself is not sent; the owner address is.",
+                  "order": 7,
+                  "key": "TL_CORRESPONDENCE_SAME_AS_TRADE",
+                  "field": {
+                    "code": "TL_CORRESPONDENCE_SAME_AS_TRADE",
+                    "name": "isCorrespondenceAddress",
+                    "type": "radio",
+                    "enabledWhenArrayLocked": true
+                  },
+                  "options": [
+                    {
+                      "code": "YES",
+                      "i18nKey": "TL_COMMON_YES"
+                    },
+                    {
+                      "code": "NO",
+                      "i18nKey": "TL_COMMON_NO"
+                    }
+                  ],
+                  "visibleWhen": {
+                    "field": "structureType",
+                    "equals": "IMMOVABLE"
+                  },
+                  "excludeFromPayload": true
+                }
+              ]
+            },
+            {
+              "_comment": "Heading only, above the three uploads.",
+              "order": 5,
+              "key": "TL_DOCUMENTS_HEADER",
+              "label": {
+                "code": "TL_NEW_APPLICATION_DOCUMENTS_REQUIRED"
+              },
+              "type": "sectionHeader",
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              }
+            },
+            {
+              "_comment": "Required file. jpg, jpeg, png, or pdf. Max 2 MB. Saved as document type OWNERIDPROOF. Example: aadhaar.pdf.",
+              "order": 6,
+              "key": "TL_PROOF_OF_IDENTITY",
+              "apiFieldName": "tradeLicenseDetail.applicationDocuments",
+              "field": {
+                "code": "TL_PROOF_IDENTITY_HEADER",
+                "name": "proofOfIdentity",
+                "type": "file",
+                "accept": ".jpg,.jpeg,.png,.pdf",
+                "documentType": "OWNERIDPROOF"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true,
+                "maxSizeMB": 2
+              },
+              "messages": {
+                "error": "TL_PROOF_OF_IDENTITY_REQUIRED"
+              }
+            },
+            {
+              "_comment": "Required file. jpg, jpeg, png, or pdf. Max 2 MB. Saved as OWNERSHIPPROOF. Example: registry.pdf.",
+              "order": 7,
+              "key": "TL_OWNERSHIP_PROOF",
+              "field": {
+                "code": "TL_OWNERSHIP_DOCUMENT",
+                "name": "proofOfOwnership",
+                "type": "file",
+                "accept": ".jpg,.jpeg,.png,.pdf",
+                "documentType": "OWNERSHIPPROOF"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true,
+                "maxSizeMB": 2
+              },
+              "messages": {
+                "error": "TL_OWNERSHIP_PROOF_REQUIRED"
+              }
+            },
+            {
+              "_comment": "Required photo. jpg, jpeg, or png. Max 2 MB. Saved as OWNERPHOTO. Example: photo.jpg.",
+              "order": 8,
+              "key": "TL_OWNER_PHOTO",
+              "field": {
+                "code": "TL_OWNERS_PHOTOGRAPH_HEADER",
+                "name": "ownerPhotoProof",
+                "type": "file",
+                "accept": ".jpg,.jpeg,.png",
+                "documentType": "OWNERPHOTO"
+              },
+              "visibleWhen": {
+                "field": "showTradeDetails",
+                "equals": "YES"
+              },
+              "validation": {
+                "required": true,
+                "maxSizeMB": 2
+              },
+              "messages": {
+                "error": "TL_OWNER_PHOTO_REQUIRED"
+              }
+            }
+          ]
+        },
+        {
+          "_comment": "Not shown inside the accordion. The separate check page is route check. This block is the declaration text the citizen must accept before submit.",
+          "key": "confirm",
+          "route": "check",
+          "order": 4,
+          "i18nKey": "TL_STEP_CONFIRM",
+          "labelDefault": "Confirm",
+          "hintKey": "TL_STEP_CONFIRM_HINT",
+          "hintDefault": "Review each section, then confirm the declaration to submit.",
+          "isPreview": true,
+          "type": "review",
+          "reviewSectionsFromSteps": [
+            "structure",
+            "tradeLocation",
+            "ownersDocs"
+          ],
+          "declaration": {
+            "required": true,
+            "i18nKey": "TL_DECLARATION_CONFIRM",
+            "labelDefault": "I confirm that the information provided above is true and correct to the best of my knowledge. I understand that providing false information may lead to rejection or legal action."
+          },
+          "submitLabel": "COMMON_SUBMIT_APPLICATION",
+          "submitLabelDefault": "Submit Application",
+          "form": []
+        }
+      ]
+    }
+  ]
+}

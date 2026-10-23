@@ -1,0 +1,111 @@
+{
+  "_readme": {
+    "_comment": "Citizen renewal list. The screen reads this file. MDMS TradeLicense.CitizenRenewalListConfig replaces these values when that master is present. Keys starting with _ are notes.",
+    "filters": "text matches matchFields on the license. dropdown matches filter.name exactly. Filters run on the client after the renewal search.",
+    "resultFields": "Card rows. format owner | workflowStatus | epochDate. Status and valid-upto stay separate so the status filter can match the status code.",
+    "cardActions": "renew opens the renew-trade screen after the renewal checks.",
+    "searchDefaults": "Sent to the trade-license search. RenewalPending and status keep the list to licenses that can be renewed.",
+    "MANUALEXPIRED": "MANUALEXPIRED means a trade license was expired by an employee, not by the system when its validity date ran out. This is a special case that should not be confused with EXPIRED."
+  },
+  "header": "TL_RENEW_TRADE_HEADER",
+  "description": "TL_RENEW_TRADE_TEXT",
+  "resultMode": "cards",
+  "autoSearch": true,
+  "businessService": "TL",
+  "listRoute": "/upyog-ui/citizen/tl/tradelicence/renewal-list",
+  "emptyValue": "CS_NA",
+  "emptyState": {
+    "message": "PT_NO_APPLICATION_FOUND_MSG"
+  },
+  "messages": {
+    "error": "CS_SOMETHING_WENT_WRONG",
+    "loadMore": "PT_LOAD_MORE_MSG",
+    "renewalPresent": "TL_RENEWAL_PRESENT_ERROR",
+    "renewalBlockedPrefix": "TL_ERROR_TOAST_RENEWAL_1",
+    "renewalBlockedSuffix": "TL_ERROR_TOAST_RENEWAL_2",
+    "cancelled": "TL_ERROR_TOAST_RENEWAL_CANCEL",
+    "manualExpired": "TL_ERROR_TOAST_MUTUALLY_EXPIRED"
+  },
+  "searchDefaults": {
+    "offset": 0,
+    "limit": 1000,
+    "RenewalPending": true,
+    "status": "APPROVED,CANCELLED,EXPIRED,MANUALEXPIRED"
+  },
+  "paginationDefaults": {
+    "offset": 0,
+    "limit": 50,
+    "sortBy": "tradeName",
+    "sortOrder": "ASC"
+  },
+  "filters": [
+    {
+      "order": 1,
+      "key": "TL_LICENSE_NUMBERL_LABEL",
+      "name": "licenseNumber",
+      "type": "text",
+      "placeholder": "TL_LICENSE_NUMBERL_LABEL",
+      "matchFields": ["licenseNumber", "tradeName", "applicationNumber"]
+    },
+    {
+      "order": 2,
+      "key": "TL_COMMON_TABLE_COL_STATUS",
+      "name": "status",
+      "type": "dropdown",
+      "placeholder": "TL_HOME_SEARCH_RESULTS_APP_STATUS_LABEL",
+      "options": [
+        { "code": "APPROVED", "i18nKey": "WF_NEWTL_APPROVED" },
+        { "code": "CANCELLED", "i18nKey": "WF_NEWTL_CANCELLED" },
+        { "code": "EXPIRED", "i18nKey": "WF_NEWTL_EXPIRED" },
+        { "code": "MANUALEXPIRED", "i18nKey": "WF_NEWTL_MANUALEXPIRED" } 
+      ]
+    }
+  ],
+  "resultFields": [
+    {
+      "order": 1,
+      "key": "TL_LOCALIZATION_TRADE_NAME",
+      "accessor": "tradeName"
+    },
+    {
+      "order": 2,
+      "key": "TL_LICENSE_NUMBERL_LABEL",
+      "accessor": "licenseNumber"
+    },
+    {
+      "order": 3,
+      "key": "TL_LOCALIZATION_OWNER_NAME",
+      "accessor": "ownerName",
+      "format": "owner"
+    },
+    {
+      "order": 4,
+      "key": "TL_FINANCIAL_YEAR_LABEL",
+      "accessor": "financialYear"
+    },
+    {
+      "order": 5,
+      "key": "TL_LOCALIZATION_LICENSE_STATUS",
+      "accessor": "status",
+      "format": "workflowStatus",
+      "i18nPrefix": "WF_NEWTL_"
+    },
+    {
+      "order": 6,
+      "key": "ES_APPLICATION_SEARCH_VALID_TO",
+      "accessor": "validTo",
+      "format": "epochDate"
+    }
+  ],
+  "cardActions": [
+    {
+      "name": "renew",
+      "label": "TL_RENEW_LABEL",
+      "route": "/upyog-ui/citizen/tl/tradelicence/renew-trade/:licenseNumber/:tenantId"
+    }
+  ],
+  "actionButton": {
+    "search": "ES_COMMON_SEARCH",
+    "clear": "ES_COMMON_CLEAR_ALL"
+  }
+}

@@ -43,10 +43,20 @@ export const configTLApproverApplication = ({
             ),
           },
           {
-            label: t("WF_COMMON_COMMENTS"),
+            label: "WF_COMMON_COMMENTS",
+            isMandatory: true,
             type: "textarea",
             populators: {
               name: "comments",
+              validation: {
+                required: "TL_REVIEW_COMMENT_REQUIRED",
+                validate: (value) => {
+                  const text = String(value ?? "").trim();
+                  if (!text) return "TL_REVIEW_COMMENT_REQUIRED";
+                  if (text.length < 2) return "TL_REVIEW_COMMENT_SINGLE_CHAR";
+                  return true;
+                },
+              },
             },
           },
           {

@@ -1,0 +1,444 @@
+/* Trade License citizen new-application only.
+ * Block: .tl-citizen-new-application
+ *   __timeline
+ *   __form-step
+ *   __form-step--accordion
+ * Shared accordion and timeline classes stay as descendants so other modules
+ * are unchanged.
+ */
+.tl-citizen-new-application {
+  box-sizing: border-box;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e4e2e0;
+  border-radius: 2px;
+  padding: 4px 4px 20px;
+
+  &__timeline {
+    &.timeline-container {
+      width: 100%;
+      margin: 0;
+      padding: 20px 28px 6px;
+      background: #fff;
+
+      .timeline-content .secondary-color {
+        color: #0b0c0c;
+        padding: 8px 6px 0;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.3;
+      }
+
+      .line {
+        top: 13px;
+        border-top-width: 3px;
+        border-top-color: #d6d5d4;
+
+        &.active {
+          border-top-color: #a82227;
+          background: transparent;
+        }
+      }
+
+      .circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background-color: #b1b4b6;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+
+        &.active {
+          background-color: #a82227;
+        }
+      }
+    }
+  }
+
+  &__form-step,
+  &__form-step--accordion {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 4px 20px 0;
+    box-shadow: none;
+  }
+
+  .dynamic-form-accordion-pagehead {
+    margin: 8px 0 16px;
+
+    .h1 {
+      margin: 0 0 6px;
+      padding: 0;
+      font-size: 28px !important;
+      line-height: 1.2;
+      color: #0b0c0c;
+    }
+
+    &__sub {
+      margin: 0;
+      max-width: none;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #6f777b;
+    }
+  }
+
+  .dynamic-form-accordion__intro {
+    display: none;
+  }
+
+  .dynamic-form-accordion {
+    gap: 16px;
+  }
+
+  .dynamic-form-accordion__item,
+  .dynamic-form-accordion__item--open {
+    border: 1px solid #e6e4e1;
+    border-radius: 6px;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .dynamic-form-accordion__head,
+  .dynamic-form-accordion__item--open .dynamic-form-accordion__head {
+    background: #fbf6f4;
+    padding: 12px 16px;
+    border-bottom-color: #f3e8e4;
+  }
+
+  .dynamic-form-accordion__num,
+  .dynamic-form-accordion__item--open .dynamic-form-accordion__num {
+    width: 22px;
+    height: 22px;
+    border: 0;
+    background: #a82227;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .dynamic-form-accordion__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0b0c0c;
+  }
+
+  .dynamic-form-accordion__sub {
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 400;
+    color: #6f777b;
+  }
+
+  .dynamic-form-accordion__hint {
+    /* The shared accordion hides this. Trade license shows pending / complete. */
+    display: block;
+  }
+
+  .dynamic-form-accordion__chevron,
+  .dynamic-form-accordion__item--open .dynamic-form-accordion__chevron {
+    color: #6f777b;
+  }
+
+  .dynamic-form-accordion__body {
+    padding: 18px 20px 8px;
+    gap: 14px 28px;
+  }
+
+  .dynamic-form-accordion__footer {
+    border-top: 0;
+    margin-top: 0;
+    padding: 4px 0 12px;
+    justify-content: flex-end;
+  }
+
+  /* Next sits on the right, beside Cancel. */
+  .dynamic-form-action.action-bar-wrap {
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 16px !important;
+    text-align: right !important;
+
+    .dynamic-form-action-primary {
+      display: flex !important;
+      width: auto !important;
+      margin: 0 !important;
+      order: 2 !important;
+      gap: 16px !important;
+    }
+
+    > button.selector-button-border {
+      order: 1 !important;
+      margin: 0 !important;
+    }
+
+    .submit-bar,
+    .submit-bar-disabled {
+      margin: 0;
+    }
+  }
+
+  .label-field-pair > .card-label,
+  .label-field-pair > .card-label-smaller,
+  .label-field-pair > h2.card-label,
+  .label-field-pair > h2.card-label-smaller {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1c1c1c;
+  }
+
+  .dynamic-form-field__section-header {
+    margin-top: 6px;
+    margin-bottom: 2px;
+    padding-top: 12px;
+    border-top: 1px solid #eceae8;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #0b0c0c;
+  }
+
+  .citizen-card-input,
+  .employee-card-input {
+    height: 40px !important;
+    margin-bottom: 0 !important;
+    padding: 0 12px;
+    border: 1px solid #c5c3c0 !important;
+    border-radius: 2px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 38px !important;
+    box-sizing: border-box;
+  }
+
+  .select-wrap {
+    max-width: 100%;
+    margin-bottom: 0;
+
+    .select,
+    .select-active {
+      height: 40px;
+      border: 1px solid #c5c3c0;
+      border-radius: 2px;
+      box-sizing: border-box;
+    }
+  }
+
+  .dynamic-form-field__lookup--with-button {
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .dynamic-form-field__lookup-btn {
+    height: 40px;
+    margin: 0;
+    padding: 0 22px;
+    background: #a82227;
+    box-shadow: none;
+    border: 0;
+    border-radius: 2px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    h2 {
+      /* ButtonSelector wraps the label in h2. Inherit the bar so it does not look like a page title. */
+      width: auto;
+      margin: 0;
+      color: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      line-height: 40px;
+    }
+
+    &:disabled {
+      background: #c5c5c5;
+      color: #fff;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+  }
+
+  .radio-wrap.dynamic-form-field__radio-group {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 22px;
+    margin: 2px 0 0 !important;
+    line-height: 1.4 !important;
+
+    > div {
+      display: flex !important;
+      align-items: center;
+      float: none;
+      margin: 0 !important;
+    }
+
+    .radio-btn-wrap {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+    }
+
+    .radio-btn {
+      z-index: 1;
+      width: 18px !important;
+      height: 18px !important;
+      margin: 0;
+      cursor: pointer;
+      /* Stay invisible when disabled. A native disabled radio paints over the dot. */
+      opacity: 0 !important;
+      appearance: none;
+    }
+
+    .radio-btn-checkmark {
+      position: relative;
+      z-index: 0;
+      pointer-events: none;
+      box-sizing: border-box;
+      width: 18px !important;
+      height: 18px !important;
+      border-radius: 50%;
+      border-color: #b1b4b6;
+    }
+
+    /* Shared radio CSS places :after for a 24px ring. Hide it so it cannot sit off-center in this 18px ring. */
+    .radio-btn-checkmark:after,
+    .radio-btn-wrap input:checked ~ .radio-btn-checkmark:after,
+    .radio-btn-wrap--selected .radio-btn-checkmark:after {
+      content: none !important;
+      display: none !important;
+    }
+
+    /* Centered in the ring. inset + margin auto is not shifted by the shared top/left offsets. */
+    .radio-btn-dot {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      width: 8px;
+      height: 8px;
+      margin: auto;
+      transform: none;
+      border-radius: 50%;
+      background: #a82227;
+      pointer-events: none;
+    }
+
+    .radio-btn-wrap--selected .radio-btn-checkmark,
+    .radio-btn-wrap input:checked ~ .radio-btn-checkmark {
+      border-color: #a82227 !important;
+    }
+
+    .radio-btn-wrap--disabled {
+      pointer-events: none;
+
+      .radio-btn {
+        cursor: not-allowed;
+      }
+    }
+
+    /* A locked radio still has to show the property owner's choice. */
+    .radio-btn-wrap--selected .radio-btn-dot,
+    .radio-btn-wrap--disabled.radio-btn-wrap--selected .radio-btn-dot {
+      display: block !important;
+      opacity: 1 !important;
+      background: #a82227 !important;
+    }
+
+    label {
+      margin-left: 8px;
+      font-size: 14px;
+      font-weight: 400;
+    }
+  }
+
+  .dynamic-form-field__field-array-card {
+    border: 1px solid #e4e2e0;
+    border-radius: 4px;
+    padding: 16px 16px 12px;
+    background: #fff;
+  }
+
+  .dynamic-form-field__field-array-card-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .dynamic-form-field__field-array-card-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+
+    > .label-field-pair:has(.dynamic-form-field__radio-group) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .dynamic-form-field__field-array-add {
+    min-height: 34px;
+    margin-top: 4px;
+    padding: 0 14px;
+    border: 1px solid #c5c3c0;
+    border-radius: 4px;
+    background: #fff;
+    color: #0b0c0c;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    &::before {
+      content: "+ ";
+    }
+  }
+
+  @media (min-width: 780px) {
+    .dynamic-form-action.action-bar-wrap {
+      left: 219px;
+      width: calc(100% - 219px);
+      max-width: none;
+      /* Match .tl-citizen (16px) + this card (4px) + the form step (20px). */
+      padding-right: 40px;
+    }
+  }
+
+  @media (max-width: 780px) {
+    padding: 0;
+
+    &__timeline.timeline-container {
+      padding: 16px 8px 4px;
+    }
+
+    &__form-step,
+    &__form-step--accordion {
+      padding: 0 8px;
+    }
+
+    .dynamic-form-field__field-array-card-body {
+      grid-template-columns: 1fr;
+    }
+
+    .dynamic-form-field__lookup--with-button {
+      flex-wrap: wrap;
+    }
+
+    .dynamic-form-field__lookup-btn {
+      margin-top: 8px;
+    }
+  }
+}

@@ -103,8 +103,11 @@
  * @param {Function} [onPersistDraft]      Debounced auto-save when no draft button is shown.
  * @param {Function} [onFieldSearch]       async (fieldName, formSnapshot) =>
  *                                         { prefill } | { matches } | { found } | { notFound } | { error }.
+ * @param {Function} [onPrefillApplied]    (prefill) => void after a search result is applied.
  * @param {string}   [mode="wizard"]       "wizard" | "search".
  * @param {string}   [searchLayout]        "inline" | "stack"; overrides routeConfig.searchLayout.
+ * @param {string}   [layout]              "accordion" groups fields by `sections` (JSON body[]).
+ * @param {Array}    [sections]            Accordion panels from buildAccordionSections.
  *
  * @see DynamicFormStep
  * @see DynamicFormField
@@ -114,14 +117,23 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { resolveConfigTimelineStep } from "./ConfigTimeline";
 import { SubmitBar, Toast, Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import ActionBar from "../atoms/ActionBar";
 import ButtonSelector from "../atoms/ButtonSelector";
 import CardText from "../atoms/CardText";
 import Modal from "../hoc/Modal";
 import DynamicFormField from "./DynamicFormField";
+import DynamicFormAccordion from "./DynamicFormAccordion";
 import { validateFields, validateCrossField, calculateDuration, calculateRentByBillingCycle } from "../utilities/validators";
-import { sortByOrder, buildPayload, scrollToFirstError, buildInitialData, flattenFormConfig, findFieldConfig, enrichDropdownSelection, optionCode } from "../utilities/formUtils";
+import { sortByOrder, buildPayload, scrollToFirstError, buildInitialData, flattenFormConfig, findFieldConfig, enrichDropdownSelection, optionCode, collectSectionFieldNames, findAccordionSectionId, getAccordionCellClass, isFieldVisible, getFieldArrayName, createEmptyFieldArrayItem, errorKeyBelongsTo } from "../utilities/formUtils";
+import {
+  resolveFormGate,
+  resolveCreateNewPath,
+  shouldShowGatedActionBar,
+  resolveAppPath,
+} from "../utilities/formGateUtils";
 import useDynamicMDMS from "../utilities/useDynamicMDMS";
 import { mapFormToSearchFilters } from "../utilities/searchUtils";
 import { SearchField, SearchForm } from "./SearchForm";
@@ -175,6 +187,152 @@ const COMPUTE_REGISTRY = {
 };
 
 /**
+ * True when an existing error key belongs to a field the user just edited.
+ * Prefixes cover field-array keys such as `tradeUnits.0.uom`.
+ *
+ * @param {string}   key
+ * @param {Set<string>} keys
+ * @param {string[]} prefixes
+ * @returns {boolean}
+ */
+const isTouchedErrorKey = (key, keys, prefixes) =>
+  keys.has(key) || prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`));
+
+/**
+ * Field-array names whose row count changed.
+ * Index-based error keys (`owners.1.name`) no longer point at the same row,
+ * so those messages are dropped instead of being left on the next row.
+ */
+const resizedArrayNames = (before = {}, after = {}) => {
+  const names = [];
+  const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+  keys.forEach((name) => {
+    const nextRows = after?.[name];
+    const prevRows = before?.[name];
+    if (!Array.isArray(nextRows) && !Array.isArray(prevRows)) return;
+    const nextLen = Array.isArray(nextRows) ? nextRows.length : 0;
+    const prevLen = Array.isArray(prevRows) ? prevRows.length : 0;
+    if (nextLen !== prevLen) names.push(name);
+  });
+  return names;
+};
+
+/** Remove error keys that belong to the given field or field-array prefixes. */
+const dropErrorPrefixes = (errors, prefixes = []) => {
+  if (!prefixes.length) return errors;
+  const next = { ...errors };
+  Object.keys(next).forEach((key) => {
+    if (prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`))) {
+      delete next[key];
+    }
+  });
+  return next;
+};
+
+/**
+ * Error keys for field-array cells whose values changed in this update.
+ * Removed rows are included so a deleted `owners.2.name` message does not
+ * stay on screen after the row is gone. Same-reference arrays are skipped.
+ */
+const changedArrayCellKeys = (before = {}, after = {}) => {
+  const keys = [];
+  const names = new Set([
+    ...Object.keys(before || {}),
+    ...Object.keys(after || {}),
+  ]);
+  names.forEach((name) => {
+    const nextRows = after?.[name];
+    const prevRows = before?.[name];
+    const nextIsArray = Array.isArray(nextRows);
+    const prevIsArray = Array.isArray(prevRows);
+    if (!nextIsArray && !prevIsArray) return;
+    if (nextRows === prevRows) return;
+
+    const nextList = nextIsArray ? nextRows : [];
+    const prevList = prevIsArray ? prevRows : [];
+    const length = Math.max(nextList.length, prevList.length);
+    for (let index = 0; index < length; index += 1) {
+      const row = nextList[index];
+      const prev = prevList[index];
+      const prevCells = prev && typeof prev === "object" ? prev : {};
+      if (row && typeof row === "object") {
+        Object.keys(row).forEach((child) => {
+          if (row[child] !== prevCells[child]) keys.push(`${name}.${index}.${child}`);
+        });
+        continue;
+      }
+      // Row was removed. Clear every child that used to live at this index.
+      Object.keys(prevCells).forEach((child) => {
+        keys.push(`${name}.${index}.${child}`);
+      });
+    }
+  });
+  return keys;
+};
+
+/**
+ * Refresh errors for the fields just edited.
+ * A message that is already showing stays in sync and clears when the value becomes valid.
+ * A new message is added on focus out, not on the first keystroke.
+ * Fields the citizen has not edited keep the message they already have.
+ *
+ * @param {object}   prevErrors
+ * @param {object}   freshErrors Result of validateFields for the updated form.
+ * @param {string[]} [touchedKeys]
+ * @param {string[]} [prefixes]
+ * @returns {object}
+ */
+const refreshTouchedErrors = (prevErrors, freshErrors, touchedKeys = [], prefixes = []) => {
+  const keys = new Set(touchedKeys.filter(Boolean));
+  const next = { ...prevErrors };
+  const matches = (key) => isTouchedErrorKey(key, keys, prefixes);
+  const previousTouched = Object.keys(next).filter(matches);
+  const hadPrefixErrors = prefixes.some((prefix) =>
+    previousTouched.some((key) => key === prefix || key.startsWith(`${prefix}.`))
+  );
+
+  previousTouched.forEach((key) => {
+    delete next[key];
+  });
+
+  previousTouched.forEach((key) => {
+    if (freshErrors?.[key]) next[key] = freshErrors[key];
+  });
+
+  if (hadPrefixErrors) {
+    Object.keys(freshErrors || {}).forEach((key) => {
+      if (
+        freshErrors[key] &&
+        prefixes.some((prefix) => key === prefix || key.startsWith(`${prefix}.`))
+      ) {
+        next[key] = freshErrors[key];
+      }
+    });
+  }
+
+  return next;
+};
+
+/**
+ * Replace errors that belong to one accordion section with a fresh validation result.
+ *
+ * @param {object}        prevErrors
+ * @param {Set<string>}   names
+ * @param {object}        fieldErrors
+ * @returns {object}
+ */
+const replaceSectionErrors = (prevErrors, names, fieldErrors) => {
+  const next = { ...prevErrors };
+  Object.keys(next).forEach((key) => {
+    if (errorKeyBelongsTo(key, names)) delete next[key];
+  });
+  Object.keys(fieldErrors || {}).forEach((key) => {
+    if (fieldErrors[key]) next[key] = fieldErrors[key];
+  });
+  return next;
+};
+
+/**
  * Config-driven form engine for wizard steps and search filter pages.
  * Loads MDMS options, hydrates/validates form state, runs computed fields,
  * and builds create / edit / search payloads.
@@ -209,11 +367,29 @@ const DynamicForm = ({
   onSaveDraft,
   onPersistDraft,
   onFieldSearch,
+  onPrefillApplied,
   mode = "wizard",
   searchLayout,
+  layout,
+  sections = [],
+  enrichFieldArrayRow = null,
+  transformDropdownData = null,
+  onFieldChange = null,
+  /** (data, changedField) => nextData. Module hook for copied owner fields. */
+  reviseFormData = null,
+  onTimelineStep = null,
 }) => {
   /** True when mode === "search" (filter UI, no wizard ActionBar). */
   const isSearchMode = mode === "search";
+  const { pathname } = useLocation();
+  const [activeSection, setActiveSection] = useState(null);
+  const [activeField, setActiveField] = useState(null);
+  const accordionConfig = routeConfig?.navigation?.accordion || {};
+  const isAccordionLayout =
+    !isSearchMode &&
+    Array.isArray(sections) &&
+    sections.length > 0 &&
+    (layout === "accordion" || routeConfig?.navigation?.pattern === "accordion");
   /** Effective search layout: prop → routeConfig.searchLayout → inline (search) / stack. */
   const resolvedSearchLayout =
     searchLayout || routeConfig?.searchLayout || (isSearchMode ? "inline" : "stack");
@@ -232,10 +408,18 @@ const DynamicForm = ({
   /**
    * MDMS / master dropdown options for all fields in routeConfig.form.
    * Localities are scoped to cityForLocality (selected city), not always tenantId.
+   * Module-level `transformDropdownData` (e.g. TL billing-slab filter) may
+   * narrow lists after formData is available.
    */
-  const { dropdownData, isLoading } = useDynamicMDMS(routeConfig.form, stateId, tenantId, t, {
-    city: cityForLocality || tenantId,
-  });
+  const { dropdownData: mdmsDropdownData, isLoading } = useDynamicMDMS(
+    routeConfig.form,
+    stateId,
+    tenantId,
+    t,
+    {
+      city: cityForLocality || tenantId,
+    }
+  );
 
   /**
    * Raw pre-fill source for buildInitialData / cancel reset.
@@ -254,15 +438,32 @@ const DynamicForm = ({
   /**
    * Hydrated form snapshot from config + rawAsset + live dropdownData.
    * Dropdown codes are resolved to option objects where possible.
+   * Uses unfiltered MDMS options so structure-gated filters don't block prefill.
    *
    * @returns {object} Initial formData shape keyed by field.name.
    */
   const initialData = useMemo(
-    () => buildInitialData(routeConfig.form, rawAsset, dropdownData, tenantId),
-    [routeConfig.form, rawAsset, dropdownData, tenantId]
+    () => buildInitialData(routeConfig.form, rawAsset, mdmsDropdownData, tenantId),
+    [routeConfig.form, rawAsset, mdmsDropdownData, tenantId]
   );
 
   const [formData, setFormData] = useState(initialData);
+  /** Latest form values for change handlers. Updated on render and on each edit. */
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+
+  /**
+   * Render-time dropdown map. Optional module transform (TL billing slabs, …)
+   * can depend on formData (e.g. buildingType / vehicleType).
+   */
+  const dropdownData = useMemo(() => {
+    if (typeof transformDropdownData !== "function") return mdmsDropdownData;
+    try {
+      return transformDropdownData(mdmsDropdownData, formData) || mdmsDropdownData;
+    } catch (_err) {
+      return mdmsDropdownData;
+    }
+  }, [mdmsDropdownData, formData, transformDropdownData]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [crossFieldMessages, setCrossFieldMessages] = useState([]);
@@ -288,6 +489,8 @@ const DynamicForm = ({
   const suppressSuggestRef = useRef(false);
   /** Wizard Cancel confirmation modal (reuses shared Modal / confirmation_box). */
   const [showCancelPopup, setShowCancelPopup] = useState(false);
+  /** Accordion panel to expand after validation errors (submit / continue). */
+  const [accordionFocusId, setAccordionFocusId] = useState(null);
   /** Create-new redirect confirm — holds target path when open. */
   const [createNewRedirectPath, setCreateNewRedirectPath] = useState(null);
 
@@ -313,6 +516,15 @@ const DynamicForm = ({
    * @returns {object[]}
    */
   const flatFields = useMemo(() => flattenFormConfig(routeConfig.form || []), [routeConfig.form]);
+
+  /**
+   * Optional top-of-form gate (Estate asset / TL property). Null when ungated.
+   * @returns {object|null}
+   */
+  const formGate = useMemo(
+    () => resolveFormGate(routeConfig, flatFields),
+    [routeConfig, flatFields]
+  );
 
   /**
    * Top-level form entries sorted by order for render.
@@ -424,13 +636,23 @@ const DynamicForm = ({
         Object.entries(prev).filter(([, v]) => v !== "" && v !== null && v !== undefined)
       );
       const merged = { ...initialData, ...userTouched };
-      if (
-        !merged.showRegistrationDetails &&
-        (isEditMode ||
-          merged.buildingName ||
-          String(merged.assetRegistrationType || "").toUpperCase() === "NEW_BUILDING")
-      ) {
-        merged.showRegistrationDetails = "YES";
+      if (formGate) {
+        const detailsKey = formGate.detailsField;
+        const typeVal = String(merged[formGate.typeField] || "").toUpperCase();
+        const openVal = formGate.openValue
+          ? String(formGate.openValue).toUpperCase()
+          : null;
+        const hintFields = formGate.unlockWhenFields || [];
+        const hasHint = hintFields.some((key) => {
+          const value = merged[key];
+          return value !== undefined && value !== null && String(value).trim() !== "";
+        });
+        if (
+          !merged[detailsKey] &&
+          (isEditMode || hasHint || (openVal && typeVal === openVal))
+        ) {
+          merged[detailsKey] = "YES";
+        }
       }
       const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
       return allComputeDeps.length ? applyComputedFields(merged, allComputeDeps) : merged;
@@ -449,111 +671,284 @@ const DynamicForm = ({
   const applyPrefill = useCallback(
     (prefill = {}, preserve = {}) => {
       setFormData((prev) => {
+        const source = { ...prev, ...prefill };
         const built = buildInitialData(
           routeConfig.form,
-          { ...prev, ...prefill },
+          source,
           dropdownData,
           tenantId
         );
-        const merged = { ...built, ...preserve };
+        // Keep stash keys (e.g. __property) that are not form fields —
+        // buildInitialData only copies configured field names.
+        const stash = {};
+        Object.keys(source).forEach((key) => {
+          if (key.startsWith("__")) stash[key] = source[key];
+        });
+        const kept = {};
+        (formGate?.preserveOnPrefill || []).forEach((key) => {
+          if (preserve[key] !== undefined) kept[key] = preserve[key];
+          else if (source[key] !== undefined) kept[key] = source[key];
+          else if (built[key] !== undefined) kept[key] = built[key];
+        });
+        let merged = {
+          ...built,
+          ...stash,
+          ...preserve,
+          ...kept,
+        };
+        if (typeof reviseFormData === "function") {
+          const revised = reviseFormData(merged, null);
+          if (revised && typeof revised === "object") merged = revised;
+        }
         const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
         return allComputeDeps.length
           ? applyComputedFields(merged, allComputeDeps)
           : merged;
       });
     },
-    [routeConfig.form, dropdownData, tenantId, flatFields, applyComputedFields]
+    [routeConfig.form, dropdownData, tenantId, flatFields, applyComputedFields, formGate, reviseFormData]
   );
 
   /**
    * Primary field onChange from DynamicFormField.
    * Special cases:
-   * - assetRegistrationType NEW_BUILDING / EXISTING_ASSET → wipe form to a blank
-   *   baseline with the right registration gate flags.
+   * - formGate.typeField (Estate asset / TL property) → wipe baseline + gate flags,
+   *   or open createNewPath redirect when redirectOnValue is selected.
    * - billingCycle → enrichDropdownSelection so multipliers stay on the value.
    * - city → update cityForLocality and clear serviceType.
-   * Always clears errors for the changed (and reset) fields and runs applyComputedFields.
+   * Re-validates the changed field (and field-array keys) so a fixed error
+   * drops out while other fields keep their current messages.
    *
    * @param {string}   fieldName     field.name that changed.
    * @param {*}        value         New value (string, option object, file meta, etc.).
    * @param {string[]} [resetFields] Sibling fields to null out (cascading clears).
+   * @param {object}   [meta]
+   * @param {string[]} [meta.clearErrorKeys] Exact error keys to refresh (field-array cells).
+   * @param {string[]} [meta.refreshPrefixes] Error-key prefixes to refresh (row add/remove).
    */
+  const notifyFieldChange = (name, nextValue) => {
+    if (name) setActiveField(name);
+    if (typeof onFieldChange !== "function") return;
+    try {
+      onFieldChange(name, nextValue);
+    } catch (err) {
+      console.warn("onFieldChange failed", err);
+    }
+  };
+
+  const assignResetValue = (updated, name) => {
+    const arrayItem = (routeConfig.form || []).find(
+      (item) => item?.type === "fieldArray" && getFieldArrayName(item) === name
+    );
+    if (arrayItem) {
+      const minItems = Math.max(1, Number(arrayItem.minItems) || 1);
+      updated[name] = Array.from({ length: minItems }, () =>
+        createEmptyFieldArrayItem(arrayItem.children)
+      );
+      return;
+    }
+    updated[name] = null;
+  };
+
   const handleChange = useCallback(
-    (fieldName, value, resetFields = []) => {
-      if (fieldName === "assetRegistrationType") {
+    (fieldName, value, resetFields = [], meta = {}) => {
+      if (formGate && fieldName === formGate.typeField) {
         suppressSuggestRef.current = false;
         setSearchPanel(null);
         setErrors({});
         setCrossFieldMessages([]);
 
-        if (value === "NEW_BUILDING") {
-          const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
-          const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
-          const cleared = {
-            ...blank,
-            assetRegistrationType: "NEW_BUILDING",
-            searchEstateNo: "",
-            showRegistrationDetails: "YES",
-          };
-          setFormData(
-            allComputeDeps.length
-              ? applyComputedFields(cleared, allComputeDeps)
-              : cleared
-          );
-          return;
-        }
+        const normalized = String(value || "").toUpperCase();
+        const openVal = formGate.openValue
+          ? String(formGate.openValue).toUpperCase()
+          : null;
+        const searchVal = String(formGate.searchValue || "").toUpperCase();
+        const redirectVal = formGate.redirectOnValue
+          ? String(formGate.redirectOnValue).toUpperCase()
+          : null;
 
-        if (value === "EXISTING_ASSET") {
+        if (redirectVal && normalized === redirectVal) {
+          const path =
+            formGate.redirectPath ||
+            resolveCreateNewPath(flatFields, formGate.searchField);
+          if (path) {
+            setCreateNewRedirectPath(path);
+          }
           setFormData((prev) => {
             const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
             const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+            const kept = {};
+            (formGate.preserveOnPrefill || []).forEach((key) => {
+              if (prev[key] !== undefined) kept[key] = prev[key];
+            });
             const cleared = {
               ...blank,
-              assetRegistrationType: "EXISTING_ASSET",
-              searchEstateNo: "",
-              showRegistrationDetails: "",
+              ...kept,
+              [formGate.typeField]: value,
+              [formGate.searchField]: "",
+              [formGate.detailsField]: "",
             };
             return allComputeDeps.length
               ? applyComputedFields(cleared, allComputeDeps)
               : cleared;
           });
+          notifyFieldChange(fieldName, value);
+          return;
+        }
+
+        if (openVal && normalized === openVal) {
+          setFormData((prev) => {
+            const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
+            const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+            const kept = {};
+            (formGate.preserveOnPrefill || []).forEach((key) => {
+              if (prev[key] !== undefined) kept[key] = prev[key];
+            });
+            const cleared = {
+              ...blank,
+              ...kept,
+              [formGate.typeField]: value,
+              [formGate.searchField]: "",
+              [formGate.detailsField]: "YES",
+            };
+            return allComputeDeps.length
+              ? applyComputedFields(cleared, allComputeDeps)
+              : cleared;
+          });
+          notifyFieldChange(fieldName, value);
+          return;
+        }
+
+        if (normalized === searchVal) {
+          setFormData((prev) => {
+            const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
+            const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+            const kept = {};
+            (formGate.preserveOnPrefill || []).forEach((key) => {
+              if (prev[key] !== undefined) kept[key] = prev[key];
+            });
+            const cleared = {
+              ...blank,
+              ...kept,
+              [formGate.typeField]: value,
+              [formGate.searchField]: "",
+              [formGate.detailsField]: "",
+            };
+            return allComputeDeps.length
+              ? applyComputedFields(cleared, allComputeDeps)
+              : cleared;
+          });
+          notifyFieldChange(fieldName, value);
           return;
         }
       }
 
-      setFormData((prev) => {
-        let resolvedValue = value;
-        if (fieldName === "billingCycle") {
-          resolvedValue = enrichDropdownSelection(value, billingCycleOptions);
-        }
-        let updated = { ...prev, [fieldName]: resolvedValue };
-        resetFields.forEach((f) => {
-          updated[f] = null;
+      const structureReset = formGate?.structureReset;
+      if (structureReset?.field && fieldName === structureReset.field) {
+        suppressSuggestRef.current = false;
+        setSearchPanel(null);
+        setErrors({});
+        setCrossFieldMessages([]);
+        const normalized = optionCode(value);
+        const unlock = String(structureReset.unlockValue || "").toUpperCase();
+        const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
+        const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
+        const cleared = {
+          ...blank,
+          [structureReset.field]: typeof value === "string" ? value : normalized,
+        };
+        (structureReset.clearFields || []).forEach((name) => {
+          cleared[name] = "";
         });
-
-        // City change → clear locality; localities will reload for the new city.
-        if (fieldName === "city") {
-          const nextCity =
-            optionCode(resolvedValue) ||
-            (typeof resolvedValue === "string" ? resolvedValue : "");
-          if (nextCity) setCityForLocality(String(nextCity).trim());
-          updated.serviceType = null;
-          updated.serviceTypeName = "";
+        if (formGate.detailsField) {
+          cleared[formGate.detailsField] = normalized === unlock ? "YES" : "";
         }
+        setFormData(
+          allComputeDeps.length
+            ? applyComputedFields(cleared, allComputeDeps)
+            : cleared
+        );
+        notifyFieldChange(fieldName, value);
+        return;
+      }
 
-        return applyComputedFields(updated, [fieldName, ...resetFields]);
+      const resetList = resetFields || [];
+      let resolvedValue = value;
+      if (fieldName === "billingCycle") {
+        resolvedValue = enrichDropdownSelection(value, billingCycleOptions);
+      }
+      const previousData = formDataRef.current;
+      let updated = { ...previousData, [fieldName]: resolvedValue };
+      resetList.forEach((f) => {
+        assignResetValue(updated, f);
       });
-      if (fieldName === "searchEstateNo") {
+
+      // City change → clear locality; localities will reload for the new city.
+      if (fieldName === "city") {
+        const nextCity =
+          optionCode(resolvedValue) ||
+          (typeof resolvedValue === "string" ? resolvedValue : "");
+        if (nextCity) setCityForLocality(String(nextCity).trim());
+        updated.serviceType = null;
+        updated.serviceTypeName = "";
+      }
+
+      // Seed fieldArray rows when a gate radio unlocks them (e.g. accessories).
+      (routeConfig.form || []).forEach((item) => {
+        if (item?.type !== "fieldArray") return;
+        const arrayName = item.field?.name;
+        if (!arrayName) return;
+        const rule = item.visibleWhen;
+        if (!rule?.field || rule.field !== fieldName) return;
+        const show =
+          rule.equals !== undefined
+            ? String(resolvedValue || "").toUpperCase() ===
+              String(rule.equals).toUpperCase()
+            : Array.isArray(rule.in) &&
+              rule.in
+                .map((v) => String(v).toUpperCase())
+                .includes(String(resolvedValue || "").toUpperCase());
+        if (!show) return;
+        if (!Array.isArray(updated[arrayName]) || updated[arrayName].length === 0) {
+          const minItems = Math.max(1, Number(item.minItems) || 1);
+          // One fresh row object per slot so later edits do not share state.
+          updated[arrayName] = Array.from({ length: minItems }, () =>
+            createEmptyFieldArrayItem(item.children)
+          );
+        }
+      });
+
+      // Module hook (trade license copies owner address / radios here).
+      if (typeof reviseFormData === "function") {
+        const revised = reviseFormData(updated, fieldName);
+        if (revised && typeof revised === "object") updated = revised;
+      }
+
+      const nextData = applyComputedFields(updated, [fieldName, ...resetList]);
+      formDataRef.current = nextData;
+      setFormData(nextData);
+      notifyFieldChange(fieldName, value);
+      if (formGate && fieldName === formGate.searchField) {
         suppressSuggestRef.current = false;
       }
-      setErrors((prev) => {
-        const updated = { ...prev, [fieldName]: false };
-        resetFields.forEach((f) => {
-          updated[f] = false;
-        });
-        if (fieldName === "city") updated.serviceType = false;
-        return updated;
-      });
+      const clearErrorKeys = Array.isArray(meta?.clearErrorKeys) ? meta.clearErrorKeys : [];
+      const refreshPrefixes = Array.isArray(meta?.refreshPrefixes) ? meta.refreshPrefixes : [];
+      const touched = [
+        fieldName,
+        ...resetList,
+        ...clearErrorKeys,
+        ...changedArrayCellKeys(previousData, nextData),
+      ];
+      if (fieldName === "city") touched.push("serviceType");
+      const resized = resizedArrayNames(previousData, nextData);
+      setErrors((prev) =>
+        refreshTouchedErrors(
+          dropErrorPrefixes(prev, resized),
+          validateFields(routeConfig.form, nextData),
+          touched,
+          refreshPrefixes
+        )
+      );
     },
     [
       applyComputedFields,
@@ -562,8 +957,26 @@ const DynamicForm = ({
       dropdownData,
       tenantId,
       flatFields,
+      formGate,
+      onFieldChange,
+      reviseFormData,
     ]
   );
+
+  /**
+   * Validate one field when focus leaves it. The message is for that field only.
+   * @param {string} errorKey Field name, or `array.index.child` for a repeated row.
+   */
+  const handleFieldBlur = useCallback((errorKey) => {
+    if (!errorKey) return;
+    const fresh = validateFields(routeConfig.form, formDataRef.current);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fresh[errorKey]) next[errorKey] = fresh[errorKey];
+      else delete next[errorKey];
+      return next;
+    });
+  }, [routeConfig.form]);
 
   /**
    * Runs the parent onFieldSearch for a lookup field (Enter / search button / typeahead).
@@ -598,7 +1011,10 @@ const DynamicForm = ({
           setToast({ message: t(result.error), error: true });
           return;
         }
-        if (result?.notFound || result?.error === "EST_ASSET_NOT_FOUND") {
+        if (
+          result?.notFound ||
+          (formGate?.notFoundError && result?.error === formGate.notFoundError)
+        ) {
           setSearchPanel({
             fieldName,
             status: "notFound",
@@ -616,12 +1032,21 @@ const DynamicForm = ({
           return;
         }
         if (result?.found || result?.prefill) {
-          setSearchPanel({
-            fieldName,
-            status: "found",
-            estateNo: result.estateNo || query,
-            prefill: result.prefill || {},
-          });
+          // Auto-apply single hit so gated detail fields unlock without an extra click.
+          const estateNo = result.estateNo || query;
+          const prefill = result.prefill || {};
+          suppressSuggestRef.current = true;
+          setSearchPanel(null);
+          const preserve = formGate
+            ? {
+                [formGate.typeField]: formGate.searchValue,
+                [formGate.searchField]: estateNo,
+                [formGate.detailsField]: "YES",
+              }
+            : { [fieldName]: estateNo };
+          applyPrefill(prefill, preserve);
+          onPrefillApplied?.(prefill);
+          setToast({ message: t("CS_COMMON_RECORD_FOUND"), error: false });
           return;
         }
         setSearchPanel({
@@ -636,48 +1061,53 @@ const DynamicForm = ({
         setIsFieldSearching(false);
       }
     },
-    [onFieldSearch, formData, t]
+    [onFieldSearch, formData, t, formGate, applyPrefill, onPrefillApplied]
   );
 
   /**
-   * Optional live typeahead for searchEstateNo when field.searchTypeahead === true
-   * and assetRegistrationType is EXISTING_ASSET. Debounces 250ms; requires ≥3 chars.
-   * Off by default — estate search normally uses exact match on Enter/button.
+   * Optional live typeahead for the gate search field when field.searchTypeahead === true
+   * and the gate is in search mode. Debounces 250ms; requires ≥3 chars.
+   * Off by default — estate / property search normally uses exact match on Enter/button.
    */
   useEffect(() => {
-    if (String(formData.assetRegistrationType || "").toUpperCase() !== "EXISTING_ASSET") {
+    if (!formGate) return undefined;
+    if (
+      String(formData[formGate.typeField] || "").toUpperCase() !==
+      String(formGate.searchValue || "").toUpperCase()
+    ) {
       return undefined;
     }
-    const searchField = flatFields.find((fc) => fc?.field?.name === "searchEstateNo");
+    const searchField = flatFields.find((fc) => fc?.field?.name === formGate.searchField);
     if (searchField?.field?.searchTypeahead !== true) {
       return undefined;
     }
     if (suppressSuggestRef.current) {
       return undefined;
     }
-    const query = String(formData.searchEstateNo || "").trim();
+    const query = String(formData[formGate.searchField] || "").trim();
     if (query.length < 3) {
       setSearchPanel((prev) =>
-        prev?.fieldName === "searchEstateNo" ? null : prev
+        prev?.fieldName === formGate.searchField ? null : prev
       );
       return undefined;
     }
     const timer = setTimeout(() => {
       if (suppressSuggestRef.current) return;
-      handleFieldSearch("searchEstateNo", query);
+      handleFieldSearch(formGate.searchField, query);
     }, 250);
     return () => clearTimeout(timer);
   }, [
-    formData.searchEstateNo,
-    formData.assetRegistrationType,
+    formGate,
+    formData?.[formGate?.typeField],
+    formData?.[formGate?.searchField],
     handleFieldSearch,
     flatFields,
   ]);
 
   /**
    * User picked a match from the suggestion list or the "found" result card.
-   * Prefills form via applyPrefill, locks registration to EXISTING_ASSET, and
-   * suppresses further typeahead until searchEstateNo is edited again.
+   * Prefills form via applyPrefill, locks the gate to search mode, and
+   * suppresses further typeahead until the search field is edited again.
    *
    * @param {string} fieldName - Lookup field name.
    * @param {object} [match]   - { estateNo, prefill } from suggestions; else uses searchPanel.
@@ -696,37 +1126,44 @@ const DynamicForm = ({
 
       suppressSuggestRef.current = true;
       setSearchPanel(null);
-      applyPrefill(selected.prefill || {}, {
-        assetRegistrationType: "EXISTING_ASSET",
-        searchEstateNo: selected.estateNo || formData[fieldName],
-        showRegistrationDetails: "YES",
-      });
+      const preserve = formGate
+        ? {
+            [formGate.typeField]: formGate.searchValue,
+            [formGate.searchField]: selected.estateNo || formData[fieldName],
+            [formGate.detailsField]: "YES",
+          }
+        : { [fieldName]: selected.estateNo || formData[fieldName] };
+      applyPrefill(selected.prefill || {}, preserve);
+      onPrefillApplied?.(selected.prefill || {});
       setToast({ message: t("CS_COMMON_RECORD_FOUND"), error: false });
     },
-    [searchPanel, applyPrefill, formData, t]
+    [searchPanel, applyPrefill, formData, t, formGate, onPrefillApplied]
   );
 
   /**
    * "Create new" from a not-found search panel.
    * When the field defines createNewPath, opens a confirmation modal before navigate.
-   * Otherwise resets to a blank NEW_BUILDING baseline with registration details shown.
+   * Otherwise, if the gate has openValue, resets to that baseline with details shown.
    */
   const handleCreateNewFromSearch = useCallback(
     (fieldName) => {
-      const createNewPath = flatFields.find((fc) => fc.field?.name === fieldName)
-        ?.field?.createNewPath;
+      const createNewPath =
+        flatFields.find((fc) => fc.field?.name === fieldName)?.field?.createNewPath ||
+        resolveCreateNewPath(flatFields, formGate?.searchField);
       if (createNewPath) {
         setCreateNewRedirectPath(createNewPath);
         return;
       }
 
+      if (!formGate?.openValue) return;
+
       const blank = buildInitialData(routeConfig.form, {}, dropdownData, tenantId);
       const allComputeDeps = flatFields.flatMap((fc) => fc.field?.computeFrom || []);
       const cleared = {
         ...blank,
-        assetRegistrationType: "NEW_BUILDING",
-        searchEstateNo: "",
-        showRegistrationDetails: "YES",
+        [formGate.typeField]: formGate.openValue,
+        [formGate.searchField]: "",
+        [formGate.detailsField]: "YES",
       };
       setFormData(
         allComputeDeps.length
@@ -743,6 +1180,7 @@ const DynamicForm = ({
       tenantId,
       flatFields,
       applyComputedFields,
+      formGate,
     ]
   );
 
@@ -817,6 +1255,11 @@ const DynamicForm = ({
       if (Object.keys(allErrors).length > 0) {
         setErrors(allErrors);
         setCrossFieldMessages(failures.map((f) => f.message));
+        if (isAccordionLayout) {
+          setAccordionFocusId(
+            findAccordionSectionId(sections, allErrors) || sections[0]?.id || null
+          );
+        }
         scrollToFirstError();
         return;
       }
@@ -860,6 +1303,8 @@ const DynamicForm = ({
     }
   }, [
     isSearchMode,
+    isAccordionLayout,
+    sections,
     routeConfig,
     formData,
     isEditMode,
@@ -936,6 +1381,36 @@ const DynamicForm = ({
     setToast({ message: t(draftSuccessLabel), error: false });
   }, [onSaveDraft, formData, draftSuccessLabel, t]);
 
+  /**
+   * Accordion "Save & continue": validate only this panel's fields.
+   * @param {{ id: string, form: object[] }} section
+   * @returns {boolean} false when the panel has errors.
+   */
+  const handleSectionContinue = useCallback(
+    (section) => {
+      const fieldErrors = validateFields(section?.form, formData);
+      const names = collectSectionFieldNames(section?.form);
+      setErrors((prev) => replaceSectionErrors(prev, names, fieldErrors));
+      if (Object.keys(fieldErrors).length > 0) {
+        setAccordionFocusId(section?.id || null);
+        scrollToFirstError();
+        return false;
+      }
+      return true;
+    },
+    [formData]
+  );
+
+  /** Show every invalid field in the section that is keeping a later panel closed. */
+  const handleSectionBlocked = useCallback((section) => {
+    if (!section?.form) return;
+    const fieldErrors = validateFields(section.form, formDataRef.current);
+    const names = collectSectionFieldNames(section.form);
+    setErrors((prev) => replaceSectionErrors(prev, names, fieldErrors));
+    setAccordionFocusId(section.id || null);
+    scrollToFirstError();
+  }, []);
+
   /** Primary action label: Update (edit) / Search (search mode) / SAVE & NEXT (create). */
   const buttonLabel = isEditMode
     ? routeConfig.actionButton?.text?.edit || "UPDATE"
@@ -944,34 +1419,48 @@ const DynamicForm = ({
   /** Clear / cancel label for search clear link (and related copy). */
   const clearLabel = cancelLabel || routeConfig.actionButton?.text?.clear || "ES_COMMON_CLEAR_ALL";
 
+  const timelineConfig = routeConfig?.navigation?.timeline;
+  useEffect(() => {
+    if (typeof onTimelineStep !== "function" || !timelineConfig?.steps?.length) return;
+    const parts = String(pathname || "").split("/").filter(Boolean);
+    const route = parts[parts.length - 1] || "";
+    const step = resolveConfigTimelineStep(timelineConfig, {
+      route,
+      activeSection,
+      activeField,
+      values: formData,
+    });
+    if (step != null) onTimelineStep(step);
+  }, [
+    onTimelineStep,
+    timelineConfig,
+    pathname,
+    activeSection,
+    activeField,
+    formData,
+  ]);
+
   // Only block the first paint. Remounting the form on later MDMS/locality
   // refetches wipes in-progress dropdown selections (search filters, etc.).
   if (isLoading && !hasSyncedRef.current) return <Loader />;
 
   /**
-   * True when this form uses the Existing Asset / New Building registration gate
-   * (assetRegistrationType field or visibleWhen on that gate). MDMS Estate.Config
-   * without that gate always shows the ActionBar.
+   * True when this form uses a top gate (Estate asset / TL property).
+   * Ungated forms always show the ActionBar.
    */
-  const usesRegistrationGate = flatFields.some(
-    (fc) =>
-      fc?.field?.name === "assetRegistrationType" ||
-      fc?.visibleWhen?.field === "showRegistrationDetails" ||
-      fc?.visibleWhen?.field === "assetRegistrationType"
-  );
-  /** Show Cancel/Draft/Submit only when ungated or registration details are ready. */
+  const usesRegistrationGate = !!formGate;
+  /** Show Cancel/Draft/Submit only when ungated or details are ready. */
   const showActionBar =
-    !usesRegistrationGate ||
-    String(formData.showRegistrationDetails || "").toUpperCase() === "YES" ||
-    String(formData.assetRegistrationType || "").toUpperCase() === "NEW_BUILDING";
+    !usesRegistrationGate || shouldShowGatedActionBar(formGate, formData);
 
-  /** One DynamicFormField node per sorted top-level form entry. */
-  const fieldNodes = sortedFields.map((fieldConfig) => (
+  /** One DynamicFormField node per form entry (shared by stack and accordion). */
+  const renderField = (fieldConfig) => (
     <DynamicFormField
       key={fieldConfig.key}
       fieldConfig={fieldConfig}
       formData={formData}
       onChange={handleChange}
+      onFieldBlur={handleFieldBlur}
       errors={errors}
       dropdownData={dropdownData}
       t={t}
@@ -982,8 +1471,35 @@ const DynamicForm = ({
       searchPanel={searchPanel}
       onSelectSearchResult={handleSelectSearchResult}
       onCreateNewFromSearch={handleCreateNewFromSearch}
+      enrichFieldArrayRow={enrichFieldArrayRow}
     />
-  ));
+  );
+
+  const fieldNodes = sortedFields.map(renderField);
+  const accordionNodes = isAccordionLayout ? (
+    <DynamicFormAccordion
+      sections={sections}
+      formData={formData}
+      errors={errors}
+      accordion={accordionConfig}
+      t={t}
+      isDisabled={isDisabled}
+      focusSectionId={accordionFocusId}
+      renderFields={(formSlice) =>
+        sortByOrder(formSlice)
+          // Skip invisible fields so empty grid cells don't leave gaps / overlaps.
+          .filter((fieldConfig) => isFieldVisible(fieldConfig, formData))
+          .map((fieldConfig) => (
+            <div key={fieldConfig.key} className={getAccordionCellClass(fieldConfig)}>
+              {renderField(fieldConfig)}
+            </div>
+          ))
+      }
+      onContinue={handleSectionContinue}
+      onSectionBlocked={handleSectionBlocked}
+      onActiveSectionChange={setActiveSection}
+    />
+  ) : null;
 
   /** Inline search: SubmitBar (form submit) + clear link inside SearchField. */
   const searchActions = !isDisabled && isSearchMode && (
@@ -1035,8 +1551,12 @@ const DynamicForm = ({
   }
 
   return (
-    <div className="dynamic-form-container">
-      {fieldNodes}
+    <div
+      className={`dynamic-form-container${
+        isAccordionLayout ? " dynamic-form-container--accordion" : ""
+      }`}
+    >
+      {accordionNodes || fieldNodes}
 
       {crossFieldMessages.map((msg, i) => (
         <p key={i} className="dynamic-form-error">{t(msg)}</p>
@@ -1093,7 +1613,13 @@ const DynamicForm = ({
       {createNewRedirectPath && (
         <Modal
           headerBarMain={
-            <CancelPopupHeading label={t("EST_CREATE_NEW_REGISTRATION")} />
+            <CancelPopupHeading
+              label={
+                formGate?.redirectModalHeading
+                  ? t(formGate.redirectModalHeading)
+                  : formGate?.redirectModalHeadingDefault || ""
+              }
+            />
           }
           headerBarEnd={
             <CancelPopupCloseBtn onClick={() => setCreateNewRedirectPath(null)} />
@@ -1102,16 +1628,19 @@ const DynamicForm = ({
           actionCancelOnSubmit={() => setCreateNewRedirectPath(null)}
           actionSaveLabel={t("CS_COMMON_OK")}
           actionSaveOnSubmit={() => {
-            window.location.href = createNewRedirectPath;
+            window.location.href = resolveAppPath(createNewRedirectPath);
           }}
           formId="modal-create-new-redirect"
         >
           <div className="confirmation_box">
             <CardText>
-              {t(
-                "EST_CREATE_NEW_REGISTRATION_REDIRECT_INFO",
-                "You are being redirected to the Asset Management page. The asset will start appearing after approval."
-              )}
+              {(() => {
+                const msgKey = formGate?.redirectModalMessage || "";
+                const msgDefault = formGate?.redirectModalMessageDefault || "";
+                const translated = t(msgKey, { defaultValue: msgDefault });
+                if (!translated || translated === msgKey) return msgDefault;
+                return translated;
+              })()}
             </CardText>
           </div>
         </Modal>

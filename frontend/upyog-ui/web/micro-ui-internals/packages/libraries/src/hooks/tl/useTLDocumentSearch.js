@@ -1,20 +1,55 @@
 import { queryTemplate } from "../../common/queryTemplate";
 import { useQueryClient } from "../../common/queryClientTemplate";
 
-const useTLDocumentSearch = (data1 = {}, config = {}) => {
+const fileId = (doc) => {
+  if (doc == null || doc === "") return "";
+  if (typeof doc === "string") return doc;
+  return doc.fileStoreId || doc.filestoreId || doc.documentuuid || "";
+};
+
+const collectFileIds = (value = {}) => {
+  const ids = [];
+  const push = (doc) => {
+    const id = fileId(doc);
+    if (id && !ids.includes(id)) ids.push(id);
+  };
+
+  const applicationDocs = value?.tradeLicenseDetail?.applicationDocuments;
+  if (Array.isArray(applicationDocs)) applicationDocs.forEach(push);
+
+  if (Array.isArray(value?.workflowDocs)) value.workflowDocs.forEach(push);
+
+  const sessionDocs = value?.owners?.documents;
+  if (sessionDocs && typeof sessionDocs === "object") {
+    Object.values(sessionDocs).forEach(push);
+  }
+
+  const owners = value?.tradeLicenseDetail?.owners;
+  if (Array.isArray(owners)) {
+    owners.forEach((owner) => {
+      if (Array.isArray(owner?.documents)) owner.documents.forEach(push);
+    });
+  }
+
+  return ids;
+};
+
+const useTLDocumentSearch = (data1 = {}) => {
   const client = useQueryClient();
   const tenant = Digit.ULBService.getStateId();
+  const filesArray = collectFileIds(data1?.value);
 
-  let filesArray = window.location.href.includes("/tl/tradelicence/application/")
-    ? data1?.value?.tradeLicenseDetail?.applicationDocuments.map((ob) => ob?.fileStoreId)
-    : [];
-  if (data1?.value?.workflowDocs) filesArray = data1?.value?.workflowDocs?.map((ob) => ob?.fileStoreId);
-  if (data1?.value?.owners?.documents["OwnerPhotoProof"]?.fileStoreId) filesArray.push(data1.value.owners.documents["OwnerPhotoProof"].fileStoreId);
-  if (data1?.value?.owners?.documents["ProofOfIdentity"]?.fileStoreId) filesArray.push(data1.value.owners.documents["ProofOfIdentity"].fileStoreId);
-  if (data1?.value?.owners?.documents["ProofOfOwnership"]?.fileStoreId) filesArray.push(data1.value.owners.documents["ProofOfOwnership"].fileStoreId);
-
-  const { isLoading, error, data } = queryTemplate({ queryKey: [`tlDocuments-${1}`, filesArray], queryFn: () => Digit.UploadServices.Filefetch(filesArray, tenant) });
-  return { isLoading, error, data: { pdfFiles: data?.data }, revalidate: () => client.invalidateQueries({ queryKey: [`tlDocuments-${1}`, filesArray] }) };
+  const { isLoading, error, data } = queryTemplate({
+    queryKey: [`tlDocuments-${1}`, filesArray],
+    queryFn: () => Digit.UploadServices.Filefetch(filesArray, tenant),
+    enabled: filesArray.length > 0,
+  });
+  return {
+    isLoading,
+    error,
+    data: { pdfFiles: data?.data },
+    revalidate: () => client.invalidateQueries({ queryKey: [`tlDocuments-${1}`, filesArray] }),
+  };
 };
 
 export default useTLDocumentSearch;
