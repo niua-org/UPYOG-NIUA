@@ -236,15 +236,91 @@ const codeOf = (value) => {
   return String(value);
 };
 
-const ownerGender = (owner = {}) =>
-  coerceRadioFieldValue(
-    owner.gender ?? owner.user?.gender ?? owner.additionalDetails?.gender
-  );
+/** additionalDetails is sometimes a JSON string rather than an object. */
+const ownerExtra = (owner = {}) => {
+  const extra = owner.additionalDetails;
+  if (!extra) return {};
+  if (typeof extra === "string") {
+    try {
+      const parsed = JSON.parse(extra);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  return typeof extra === "object" ? extra : {};
+};
 
-const ownerRelationship = (owner = {}) =>
-  coerceRadioFieldValue(
-    owner.relationship ?? owner.relation ?? owner.additionalDetails?.relationship
-  );
+/** User gender enum order, used when a property sends the ordinal instead of the name. */
+const GENDER_BY_ORDINAL = ["FEMALE", "MALE", "OTHERS", "TRANSGENDER"];
+
+const asGenderCode = (value) => {
+  if (typeof value === "number" && GENDER_BY_ORDINAL[value]) return GENDER_BY_ORDINAL[value];
+  if (typeof value === "string" && /^[0-3]$/.test(value.trim())) {
+    return GENDER_BY_ORDINAL[Number(value.trim())];
+  }
+  return coerceRadioFieldValue(value);
+};
+
+const ownerGender = (owner = {}) => {
+  const extra = ownerExtra(owner);
+  const user = owner.user && typeof owner.user === "object" ? owner.user : {};
+  for (const value of [
+    owner.gender,
+    user.gender,
+    extra.gender,
+    extra.ownerGender,
+    owner.genderType,
+  ]) {
+    const code = asGenderCode(value);
+    if (code) return code;
+  }
+  return "";
+};
+
+/**
+ * Guardian phrases on property records.
+ * Checked before the shared radio aliases, where "F" means female.
+ */
+const relationshipPhrase = (value) => {
+  if (value == null || value === "" || typeof value === "object") return "";
+  const token = String(value).trim().toUpperCase();
+  if (!token || token.includes("*")) return "";
+  if (token === "F" || token === "FATHER") return "FATHER";
+  if (token === "H" || token === "HUSBAND") return "HUSBAND";
+  if (/\b(FATHER|S\/O|D\/O|C\/O|SON|DAUGHTER)\b/.test(token)) return "FATHER";
+  if (/\b(HUSBAND|W\/O|H\/O|WIFE)\b/.test(token)) return "HUSBAND";
+  return "";
+};
+
+const relationshipCode = (value) => {
+  const phrase = relationshipPhrase(value);
+  if (phrase) return phrase;
+  if (value && typeof value === "object") {
+    const nested = value.code ?? value.value ?? value.name ?? value.i18nKey ?? value.i18nkey;
+    const nestedPhrase = relationshipPhrase(nested);
+    if (nestedPhrase) return nestedPhrase;
+  }
+  const code = coerceRadioFieldValue(value);
+  return relationshipPhrase(code) || (code === "FATHER" || code === "HUSBAND" ? code : "");
+};
+
+const ownerRelationship = (owner = {}) => {
+  const extra = ownerExtra(owner);
+  const candidates = [
+    owner.relationship,
+    owner.relation,
+    owner.guardianRelation,
+    extra.relationship,
+    extra.relation,
+    extra.guardianRelation,
+  ];
+  for (const value of candidates) {
+    const code = relationshipCode(value);
+    if (code) return code;
+  }
+  return "";
+};
 
 const mapPropertyOwnersToForm = (property = {}) => {
   const owners = activePropertyOwners(property);
@@ -290,18 +366,35 @@ export const propertyOwnerRadios = (property = {}) =>
     relationship: owner.relationship || "",
   }));
 
+/** Older CPT sessions wrap the property as `{ details }`. */
+const unwrapProperty = (value) => {
+  if (!value || typeof value !== "object") return null;
+  const details = value.details;
+  if (
+    details &&
+    typeof details === "object" &&
+    !value.owners &&
+    !value.propertyId &&
+    (details.owners || details.propertyId)
+  ) {
+    return details;
+  }
+  return value.owners || value.propertyId ? value : null;
+};
+
 /**
- * Property stashed on the form, or the CPT session written at property select.
+ * Property stashed in the CPT session when it was selected.
  * A refresh can drop `__property` from form state while `cpt` is still there.
  * @returns {object|null}
  */
 export const readStoredProperty = () => {
   try {
     const fromDigit = Digit?.SessionStorage?.get?.("cpt");
-    if (fromDigit && typeof fromDigit === "object") return fromDigit;
+    if (fromDigit && typeof fromDigit === "object") return unwrapProperty(fromDigit);
     if (typeof fromDigit === "string" && fromDigit) {
       const parsed = JSON.parse(fromDigit);
-      if (parsed && typeof parsed === "object") return parsed;
+      const property = unwrapProperty(parsed);
+      if (property) return property;
     }
   } catch (e) {
     /* ignore */
@@ -309,8 +402,7 @@ export const readStoredProperty = () => {
   try {
     const raw = sessionStorage.getItem("cpt");
     if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : null;
+    return unwrapProperty(JSON.parse(raw));
   } catch (e) {
     return null;
   }
@@ -433,9 +525,13 @@ export const mapPropertyToFormPrefill = (property = {}) => {
     doorNo: address.doorNo || "",
     landmark: address.landmark || "",
     ...(owners.length ? { owners } : {}),
-    ...(linked.proofOfIdentity ? { proofOfIdentity: linked.proofOfIdentity } : {}),
-    ...(linked.proofOfOwnership ? { proofOfOwnership: linked.proofOfOwnership } : {}),
+    // ID proof and ownership document are uploaded for this trade application.
+    // Property files must not appear as already attached.
+    proofOfIdentity: null,
+    proofOfOwnership: null,
     ...(linked.ownerPhotoProof ? { ownerPhotoProof: linked.ownerPhotoProof } : {}),
+    // Captured before gender/relationship are cleared on the visible rows.
+    __ownerRadios: propertyOwnerRadios(property),
     __property: property,
   };
 };

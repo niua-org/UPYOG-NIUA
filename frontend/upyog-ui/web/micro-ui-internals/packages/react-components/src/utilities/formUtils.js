@@ -263,7 +263,9 @@ export const optionCode = (val) => {
 const RADIO_VALUE_PREFIXES = [
   "PT_COMMON_GENDER_",
   "COMMON_GENDER_",
+  "TL_GENDER_",
   "PT_FORM3_",
+  "TL_RELATIONSHIP_",
   "COMMON_RELATION_",
   "PT_RELATION_",
 ];
@@ -293,26 +295,50 @@ const RADIO_VALUE_ALIASES = {
  * @param {string|object|null|undefined} value
  * @returns {string}
  */
+const RADIO_KNOWN_CODES = ["FEMALE", "MALE", "TRANSGENDER", "OTHERS", "HUSBAND", "FATHER"];
+
+/** First known radio code inside a master key, dotted code, or plain label. */
+const knownRadioCode = (token) => {
+  if (!token) return "";
+  if (RADIO_KNOWN_CODES.includes(token)) return token;
+  // FEMALE is listed before MALE so the longer word wins.
+  const found = token.match(/FEMALE|MALE|TRANSGENDER|OTHERS|HUSBAND|FATHER/);
+  return found ? found[0] : "";
+};
+
 export const coerceRadioFieldValue = (value) => {
   if (value == null || value === "") return "";
+  if (Array.isArray(value)) return coerceRadioFieldValue(value[0]);
   if (typeof value === "object") {
-    const nested = value.code ?? value.value ?? value.name ?? value.i18nKey ?? value.label;
+    const nested =
+      value.code ??
+      value.value ??
+      value.name ??
+      value.i18nKey ??
+      value.i18nkey ??
+      value.label ??
+      value.plainValue ??
+      value.unmaskedValue;
     if (nested && typeof nested === "object") return coerceRadioFieldValue(nested);
     return coerceRadioFieldValue(nested);
   }
-  let token = String(value).trim().toUpperCase();
+  let token = String(value)
+    .trim()
+    .toUpperCase()
+    .replace(/[\u200B-\u200D\uFEFF]/g, "");
   // Masked privacy values ("****") and a stringified object are not selectable codes.
   if (!token || token.includes("*") || token === "[OBJECT OBJECT]") return "";
   RADIO_VALUE_PREFIXES.forEach((prefix) => {
     if (token.startsWith(prefix)) token = token.slice(prefix.length);
   });
   if (RADIO_VALUE_ALIASES[token]) return RADIO_VALUE_ALIASES[token];
-  // Unknown prefixes such as TL_GENDER_MALE: try the last segment.
-  const tail = token.split("_").filter(Boolean).pop();
+  // Dotted and underscored master keys: GENDER.MALE, TL_GENDER_MALE, PT.RELATION.FATHER.
+  // Slash is left intact so a guardian phrase such as S/O is not read as OTHERS.
+  const parts = token.split(/[._\s-]+/).filter(Boolean);
+  const tail = parts[parts.length - 1];
   if (tail && tail !== token && RADIO_VALUE_ALIASES[tail]) return RADIO_VALUE_ALIASES[tail];
-  const known = ["MALE", "FEMALE", "TRANSGENDER", "OTHERS", "FATHER", "HUSBAND"];
-  if (known.includes(token)) return token;
-  if (tail && known.includes(tail)) return tail;
+  const known = knownRadioCode(token) || knownRadioCode(tail);
+  if (known) return known;
   // Keep unrecognized codes (a module-specific relationship) so the radio can still match.
   return token;
 };
