@@ -1,8 +1,14 @@
 package org.egov.tracer.config;
 
+import feign.Logger;
+import feign.RequestInterceptor;
 import io.opentracing.noop.NoopTracerFactory;
+import org.egov.tracer.http.FeignTracingRequestInterceptor;
 import org.egov.tracer.http.RestTemplateLoggingInterceptor;
+import org.egov.tracer.http.TracerFeignLogger;
 import org.egov.tracer.http.filters.TracerFilter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -55,6 +61,34 @@ public class TracerConfiguration {
         registration.setName("TracerFilter");
         registration.setOrder(1);
         return registration;
+    }
+
+    /**
+     * Feign interceptor mirroring {@link RestTemplateLoggingInterceptor}:
+     * correlation/tenant headers plus request logging.
+     */
+    @Bean
+    @ConditionalOnClass(RequestInterceptor.class)
+    @ConditionalOnMissingBean(name = "feignTracingRequestInterceptor")
+    public RequestInterceptor feignTracingRequestInterceptor(TracerProperties tracerProperties) {
+        return new FeignTracingRequestInterceptor(tracerProperties);
+    }
+
+    /**
+     * Feign logger mirroring RestTemplate response body logging.
+     */
+    @Bean
+    @ConditionalOnClass(Logger.class)
+    @ConditionalOnMissingBean(Logger.class)
+    public Logger tracerFeignLogger(TracerProperties tracerProperties) {
+        return new TracerFeignLogger(tracerProperties);
+    }
+
+    @Bean
+    @ConditionalOnClass(Logger.class)
+    @ConditionalOnMissingBean(Logger.Level.class)
+    public Logger.Level tracerFeignLoggerLevel() {
+        return Logger.Level.FULL;
     }
 
     /**

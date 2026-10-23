@@ -10,7 +10,7 @@ import os
 import yaml
 import logging
 from typing import List, Dict, Any, Optional
-from memory_manager import MemoryManager
+from storage.qdrant_manager import MemoryManager
 
 logger = logging.getLogger(__name__)
 

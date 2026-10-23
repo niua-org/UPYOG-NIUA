@@ -229,6 +229,7 @@ import DynamicFormAccordionStep from "./molecules/DynamicFormAccordionStep";
 import ConfigDrivenFormStep from "./molecules/ConfigDrivenFormStep";
 import FormFlowRoutes from "./molecules/FormFlowRoutes";
 import useFormWizard from "./utilities/useFormWizard";
+import UserActionCard from "./molecules/UserActionCard";
 
 import OpenLinkContainer from "./atoms/OpenLinkContainer";
 import UploadPitPhoto from "./molecules/UploadPitPhoto";
@@ -566,5 +567,6 @@ export {
   useFormWizard,
   DynamicObjectRenderer,
   DynamicCheckPage,
-  GeoLocationWithDigipin
+  GeoLocationWithDigipin,
+  UserActionCard
 };

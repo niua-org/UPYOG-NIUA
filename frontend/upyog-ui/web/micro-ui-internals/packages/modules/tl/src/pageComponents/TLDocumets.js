@@ -80,15 +80,15 @@ function TLDocument({
   if (isLoading) {
     return <Loader />;
   }
-  return <div className="tl-auto-91">
+  return <div className="tl-documets-item">
       <React.Fragment>
-        <div className="tl-auto-92">
+        <div className="tl-documets-flex">
           {documents.map((document, index) => {
           const documentLink = pdfDownloadLink(data?.pdfFiles, document?.fileStoreId);
           const label = documentLabel(document, t, Boolean(value?.workflowDocs));
-          return <a target="_blank" rel="noreferrer" href={documentLink || undefined} key={document.fileStoreId || index} className="tl-auto-93">
-                <PDFSvg width={85} height={100} className="tl-auto-94" />
-                <p className="tl-auto-95">{label}</p>
+          return <a target="_blank" rel="noreferrer" href={documentLink || undefined} key={document.fileStoreId || index} className="tl-documets-link">
+                <PDFSvg width={85} height={100} className="tl-documets-link-2" />
+                <p className="tl-documets-link-center-text">{label}</p>
               </a>;
         })}
         </div>

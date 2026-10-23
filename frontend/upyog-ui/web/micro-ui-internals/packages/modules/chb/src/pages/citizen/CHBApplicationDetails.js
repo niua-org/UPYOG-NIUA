@@ -18,15 +18,14 @@ import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 
 import { useParams, Link,  } from "react-router-dom";
-import getChbAcknowledgementData from "../../getChbAcknowledgementData";
 import CHBWFApplicationTimeline from "../../pageComponents/CHBWFApplicationTimeline";
 import CHBDocument from "../../pageComponents/CHBDocument";
 import ApplicationTable from "../../components/inbox/ApplicationTable";
-import { pdfDownloadLink } from "../../utils";
+import { pdfDownloadLink, downloadCHBAcknowledgement } from "../../utils";
 
 import get from "lodash/get";
 import { size } from "lodash";
-import "../../css/chb-inline.css";
+
 
 /**
 
@@ -154,8 +153,8 @@ const CHBApplicationDetails = () => {
   const refundBannerStyle = isRefundSuccess
     ? { backgroundColor: "#D4EDDA", border: "1px solid #C3E6CB", color: "#155724" }
     : isRefundInProgress
-    ? { backgroundColor: "#FFF3CD", border: "1px solid #FFEBAA", color: "#856404" }
-    : { backgroundColor: "#E2E3E5", border: "1px solid #D6D8DB", color: "#383D41" };
+      ? { backgroundColor: "#FFF3CD", border: "1px solid #FFEBAA", color: "#856404" }
+      : { backgroundColor: "#E2E3E5", border: "1px solid #D6D8DB", color: "#383D41" };
   //WorkFlow
   // if (!chb_details.workflow) {
   //   let workflow = {
@@ -179,13 +178,6 @@ const CHBApplicationDetails = () => {
   if (isLoading || auditDataLoading) {
     return <Loader />;
   }
-
-  const getChbAcknowledgement = async () => {
-    const applications = application || {}; // getting application details
-    const tenantInfo = tenants.find((tenant) => tenant.code === applications.tenantId);
-    const acknowldgementDataAPI = await getChbAcknowledgementData({ ...applications }, tenantInfo, t);
-    Digit.Utils.pdf.generate(acknowldgementDataAPI);
-  };
 
   let documentDate = t("CS_NA");
   if (chb_details?.additionalDetails?.documentDate) {
@@ -245,12 +237,11 @@ const CHBApplicationDetails = () => {
 
   let dowloadOptions = [];
 
-  // // Payment Receipt Button on Acknowledgement Page
-  // if (reciept_data?.Payments[0]?.paymentStatus !== "DEPOSITED")
-  // dowloadOptions.push({
-  //   label: t("CHB_DOWNLOAD_ACK_FORM"),
-  //   onClick: () => getChbAcknowledgement(),
-  // });
+  // Download Acknowledgement Form
+  dowloadOptions.push({
+    label: t("CHB_DOWNLOAD_ACK_FORM"),
+    onClick: () => downloadCHBAcknowledgement(application, t),
+  });
 
   //commented out, need later for download receipt and certificate
   if (reciept_data && reciept_data?.Payments.length > 0 && recieptDataLoading == false)
@@ -332,7 +323,7 @@ const CHBApplicationDetails = () => {
         </div>
         <Card>
           {(isRefundInProgress || refundStatus || isRefunded) && (
-            <div style={{ padding: "10px 16px", borderRadius: "4px", marginBottom: "16px", fontWeight: "bold", fontSize: "16px", ...refundBannerStyle }}>
+            <div className="chb-refund-status-banner" style={refundBannerStyle}>
               {t("CHB_REFUND_STATUS") || "Refund Status"} &mdash; {refundStatus || (isRefunded ? "REFUNDED" : "")}
             </div>
           )}
@@ -355,21 +346,21 @@ const CHBApplicationDetails = () => {
             <Row className="border-none" label={t("CHB_PURPOSE_DESCRIPTION")} text={chb_details?.purposeDescription || t("CS_NA")} />
           </StatusTable>
 
-          {/* <CardSubHeader style={{ fontSize: "24px" }}>{t("SLOT_DETAILS")}</CardSubHeader>
+          {/* <CardSubHeader className="custom-style">{t("SLOT_DETAILS")}</CardSubHeader>
             <StatusTable>
             <Row className="border-none" label={t("CHB_COMMUNITY_HALL_NAME")} text={chb_details?.communityHallCode || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_BOOKING_DATE")} text={getBookingDateRange(chb_details?.bookingSlotDetails) || t("CS_NA")} />
             <Row className="border-none" label={t("CHB_BOOKING_TIME")} text={getBookingTimeRange(chb_details?.bookingSlotDetails) || t("CS_NA")} />
             </StatusTable> */}
           <CardSubHeader className="chb-subheader-lg">{t("CHB_ADDRESS_DETAILS")}</CardSubHeader>
-            <StatusTable>
-              <Row className="border-none" label={t("CHB_PINCODE")} text={chb_details?.address?.pincode || t("CS_NA")} />
-              <Row className="border-none" label={t("CHB_CITY")} text={chb_details?.address?.city || t("CS_NA")}/>
-              <Row className="border-none" label={t("CHB_LOCALITY")} text={chb_details?.address?.locality || t("CS_NA")} />
-              <Row className="border-none" label={t("CHB_STREET_NAME")} text={chb_details?.address?.streetName || t("CS_NA")} />
-              <Row className="border-none" label={t("CHB_HOUSE_NO")} text={chb_details?.address?.houseNo || t("CS_NA")} />
-              <Row className="border-none" label={t("CHB_LANDMARK")} text={chb_details?.address?.landmark || t("CS_NA")} />
-            </StatusTable>
+          <StatusTable>
+            <Row className="border-none" label={t("CHB_PINCODE")} text={chb_details?.address?.pincode || t("CS_NA")} />
+            <Row className="border-none" label={t("CHB_CITY")} text={chb_details?.address?.city || t("CS_NA")} />
+            <Row className="border-none" label={t("CHB_LOCALITY")} text={chb_details?.address?.locality || t("CS_NA")} />
+            <Row className="border-none" label={t("CHB_STREET_NAME")} text={chb_details?.address?.streetName || t("CS_NA")} />
+            <Row className="border-none" label={t("CHB_HOUSE_NO")} text={chb_details?.address?.houseNo || t("CS_NA")} />
+            <Row className="border-none" label={t("CHB_LANDMARK")} text={chb_details?.address?.landmark || t("CS_NA")} />
+          </StatusTable>
           <CardSubHeader className="chb-subheader-lg">{t("CHB_BANK_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("CHB_ACCOUNT_NUMBER")} text={chb_details?.applicantDetail?.accountNumber || t("CS_NA")} />
@@ -380,15 +371,15 @@ const CHBApplicationDetails = () => {
           </StatusTable>
           <CardSubHeader className="chb-subheader-lg">{t("SLOT_DETAILS")}</CardSubHeader>
           <ApplicationTable
-                t={t}
-                data={slotlistRows}
-                columns={columns}
-                getCellProps={(cellInfo) => ({
-                  className: "chb-table-cell",
-                })}
-                isPaginationRequired={false}
-                totalRecords={slotlistRows.length}
-              />
+            t={t}
+            data={slotlistRows}
+            columns={columns}
+            getCellProps={(cellInfo) => ({
+              className: "chb-table-cell",
+            })}
+            isPaginationRequired={false}
+            totalRecords={slotlistRows.length}
+          />
           <CardSubHeader className="chb-subheader-lg">{t("CHB_DOCUMENTS_DETAILS")}</CardSubHeader>
           <StatusTable>
             <Card className="chb-doc-card">
@@ -405,7 +396,7 @@ const CHBApplicationDetails = () => {
 
           {refund && (
             <React.Fragment>
-              <CardSubHeader style={{ fontSize: "24px" }}>{t("CHB_REFUND_DETAILS")}</CardSubHeader>
+              <CardSubHeader className="chb-chbapplication-details-header">{t("CHB_REFUND_DETAILS")}</CardSubHeader>
               <StatusTable>
                 <Row className="border-none" label={t("CHB_REFUND_ID")} text={refund?.refundId || t("CS_NA")} />
                 <Row className="border-none" label={t("CHB_REFUND_AMOUNT")} text={refund?.refundAmount ? `₹${refund.refundAmount}` : t("CS_NA")} />

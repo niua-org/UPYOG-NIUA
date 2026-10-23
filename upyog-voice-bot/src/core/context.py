@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_redis():
-    from database import r_client
+    from storage.redis_manager import r_client
     return r_client
 
 

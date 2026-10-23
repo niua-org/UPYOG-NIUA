@@ -9,7 +9,11 @@ from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
 from langchain_groq import ChatGroq
 
-from memory_manager import MemoryManager, shared_memory
+from storage.qdrant_manager import MemoryManager, shared_memory
+from prompts.workflow_prompts import (
+    build_grievance_extract_prompt,
+    build_grievance_question_prompt,
+)
 from workflow.base_state import BaseAgentState
 
 logger = logging.getLogger(__name__)
@@ -62,6 +66,8 @@ except Exception as e:
 _grv_form_cfg = _raw_cfg.get("forms", {}).get("grievance", {})
 FORM_FIELDS   = _grv_form_cfg.get("fields", [])
 ALL_FIELDS    = [f["id"] for f in FORM_FIELDS]
+# Only fields explicitly enabled in config.yml are eligible for chat extraction.
+EXTRACTABLE_FIELDS = [f["id"] for f in FORM_FIELDS if f.get("extractable", False)]
 FIELD_HINTS   = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
 
 
@@ -245,7 +251,8 @@ def extraction_node(state: GrievanceState):
         logger.info(f"[grievance extract_node] User asked a question ('{user_msg}'), skipping field extraction.")
         return {"draft_grievance": draft}
 
-    missing = [f for f in ALL_FIELDS if not draft.get(f)]
+    # Keep extraction active only while a chat-extractable field is missing.
+    missing = [f for f in EXTRACTABLE_FIELDS if not draft.get(f)]
     if not missing:
         return {"draft_grievance": draft}
 
@@ -307,13 +314,6 @@ def extraction_node(state: GrievanceState):
                 draft["category_code"] = matched["code"]
                 logger.info(f"[grievance extract] sub_category matched: {matched['name']}")
 
-    elif curr_field == "description":
-        # Any genuine answer to the problem description question is accepted
-        generic_intents = ["i want to file a complaint", "file a complaint", "raise a grievance", "file complaint", "want to file a complaint", "i have a complaint"] + meta_commands
-        if not any(g == ui_lower for g in generic_intents) and len(user_msg) >= 3 and ui_lower not in meta_commands:
-            draft["description"] = user_msg
-            logger.info(f"[grievance extract] description accepted: {user_msg}")
-
     elif curr_field == "locality":
         loc_ops = draft.get("_locality_options") or _pgr_localities()
         draft["_locality_options"] = loc_ops
@@ -340,7 +340,8 @@ def extraction_node(state: GrievanceState):
                 logger.info(f"[grievance extract] Unrecognized locality input: '{cleaned_input}', rejecting verbatim acceptance")
 
     # Fallback to LLM multi-field extraction if any missing fields remain and LLM is available
-    remaining_missing = [f for f in ALL_FIELDS if not draft.get(f)]
+    # Recheck after deterministic matching; only unresolved extractable fields go to the LLM.
+    remaining_missing = [f for f in EXTRACTABLE_FIELDS if not draft.get(f)]
     if remaining_missing and llm:
         schema_hints = {}
         for f in remaining_missing:
@@ -359,24 +360,13 @@ def extraction_node(state: GrievanceState):
                 schema_hints[f] = "Detailed description of the issue provided by the citizen (e.g. 'i want a refund', 'dirty water from tap', 'pothole on road')"
 
         collected_str = json.dumps({k: v for k, v in draft.items() if v and not k.startswith("_")})
-        extract_prompt = f"""You are a data extraction AI for UPYOG Grievance filing.
-Extract missing form field values from the user's message.
-
-Missing fields: {json.dumps(remaining_missing)}
-Field hints & valid options: {json.dumps(schema_hints)}
-Already collected fields: {collected_str}
-Bot's last question: "{last_ai}"
-User's message: "{user_msg}"
-
-Rules:
-1. If the user answered the missing field in their message, extract the exact value.
-2. For 'category', 'sub_category', and 'locality', ONLY extract if it matches one of the valid options. DO NOT invent or accept arbitrary strings for locality.
-3. For 'description', extract the user's description of their problem/request (e.g. 'i want a refund', 'water leakage', 'streetlight damaged').
-4. Return null for any field not answered or not found in options.
-5. NEVER extract meta or navigation words like 'continue', 'resume', 'draft', 'show drafts', 'my drafts' as any field value.
-
-Reply ONLY with valid JSON:
-{{{', '.join(f'"{f}": "extracted value or null"' for f in remaining_missing)}}}"""
+        extract_prompt = build_grievance_extract_prompt(
+            remaining_missing=remaining_missing,
+            schema_hints=schema_hints,
+            collected_str=collected_str,
+            last_ai=last_ai,
+            user_msg=user_msg
+        )
 
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
@@ -461,21 +451,14 @@ def ask_next_node(state: GrievanceState):
     if llm:
         is_hindi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
         lang_rule = "Respond in Hindi." if is_hindi else "Respond in English. Do NOT output any Devanagari or Hindi text."
-        ctx = f"""You are a UPYOG grievance filing assistant collecting a specific form field.
-Collected so far: {json.dumps({k: v for k, v in draft.items() if v and not k.startswith("_")})}
-Next field to collect: "{field_label}" (field id: "{field_id}")
-Available options: {json.dumps(options) if options else "Free text -- user can type anything"}
-User's last message: "{user_msg}"
-
-CRITICAL INSTRUCTIONS:
-1. Language: {lang_rule}
-2. Ask ONLY for the "{field_label}" field. Do NOT ask anything else.
-3. Do NOT ask follow-up questions about duration, impact, or history.
-4. Do NOT list the options in text (the UI dropdown will show them).
-5. If field is 'description': ask the user to briefly describe the problem they are facing.
-6. Keep it to 1-2 sentences. Output ONLY the question, nothing else.
-7. Use **bold** for the field name when mentioning it.
-8. Maintain a formal, polite, professional tone. Never use informal or familial terms of address."""
+        ctx = build_grievance_question_prompt(
+            draft=draft,
+            field_label=field_label,
+            field_id=field_id,
+            options=options,
+            user_msg=user_msg,
+            lang_rule=lang_rule
+        )
         try:
             conv = llm.invoke([SystemMessage(content=ctx)])
             text = conv.content.strip()

@@ -51,7 +51,7 @@ from services.user_service import (
 )
 
 if __name__ == "__main__":
-    from memory_manager import init_collections
+    from storage.qdrant_manager import init_collections
     from services.intent_service import load_plugins
     from services.rag_service import load_resources
     try:
