@@ -8,7 +8,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.Map;
 
 /**
- * SQL Query Builder component for generating queries targeting {@code eg_user_document}.
+ * SQL Query Builder component for generating queries targeting {@code ug_user_document}.
  * Follows the standard UPYOG QueryBuilder architectural pattern.
  *
  * @author UPYOG Team
@@ -18,7 +18,7 @@ import java.util.Map;
 public class UserDocumentQueryBuilder {
 
     public static final String INSERT_QUERY =
-            "INSERT INTO eg_user_document (" +
+            "INSERT INTO ug_user_document (" +
             "id, user_id, tenant_id, document_type, document_uid, filestore_id, file_name, " +
             "is_verified, active, additional_details, createdby, createddate, lastmodifiedby, lastmodifieddate" +
             ") VALUES (" +
@@ -27,7 +27,7 @@ public class UserDocumentQueryBuilder {
             ")";
 
     public static final String UPDATE_QUERY =
-            "UPDATE eg_user_document SET " +
+            "UPDATE ug_user_document SET " +
             "document_type = :document_type, " +
             "document_uid = :document_uid, " +
             "filestore_id = :filestore_id, " +
@@ -40,14 +40,14 @@ public class UserDocumentQueryBuilder {
             "WHERE id = :id";
 
     public static final String SOFT_DELETE_QUERY =
-            "UPDATE eg_user_document SET " +
+            "UPDATE ug_user_document SET " +
             "active = false, " +
             "lastmodifiedby = :lastmodifiedby, " +
             "lastmodifieddate = :lastmodifieddate " +
             "WHERE id = :id";
 
     private static final String BASE_SEARCH_QUERY =
-            "SELECT d.*, u.uuid as user_uuid FROM eg_user_document d " +
+            "SELECT d.*, u.uuid as user_uuid FROM ug_user_document d " +
             "LEFT JOIN eg_user u ON d.user_id = u.id AND d.tenant_id = u.tenantid WHERE 1=1 ";
 
     /**

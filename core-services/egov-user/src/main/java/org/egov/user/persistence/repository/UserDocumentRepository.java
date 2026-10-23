@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
- * Repository performing persistence and retrieval operations on {@code eg_user_document}.
+ * Repository performing persistence and retrieval operations on {@code ug_user_document}.
  */
 @Repository
 @Slf4j
