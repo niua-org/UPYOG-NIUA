@@ -1,0 +1,15 @@
+// generated-by: generate_per_class_unit_tests.py
+package org.upyog.pgrai.util;
+
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class PGRConstantsTest {
+
+    @Test
+    void PGR_BUSINESSSERVICE_whenRead_isNotBlank() {
+        assertThat(PGRConstants.PGR_BUSINESSSERVICE).isNotBlank();
+    }
+
+}

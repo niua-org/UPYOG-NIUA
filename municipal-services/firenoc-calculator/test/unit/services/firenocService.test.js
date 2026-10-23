@@ -1,0 +1,12 @@
+// generated-by: generate_node_unit_tests.py
+describe('../../../src/services/firenocService', () => {
+  test('module_whenRequired_loadsWithoutThrow', () => {
+    jest.resetModules();
+    let mod;
+    expect(() => {
+      mod = require('../../../src/services/firenocService');
+    }).not.toThrow();
+    expect(mod).toBeDefined();
+    
+  });
+});
