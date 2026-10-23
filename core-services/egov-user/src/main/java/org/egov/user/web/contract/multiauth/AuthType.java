@@ -54,7 +54,7 @@ public enum AuthType {
                 return b;
             }
         }
-        if (text.equalsIgnoreCase("family") || text.equalsIgnoreCase("familyId")) {
+        if (text.equalsIgnoreCase("family") || text.equalsIgnoreCase("familyId") || text.equalsIgnoreCase("state_family") || text.equalsIgnoreCase("stateFamily")) {
             return FAMILY_ID;
         }
         if (text.equalsIgnoreCase("phone")) {

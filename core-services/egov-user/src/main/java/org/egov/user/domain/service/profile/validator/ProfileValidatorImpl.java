@@ -65,25 +65,25 @@ public class ProfileValidatorImpl implements ProfileValidator {
 
         // 1. Mandatory Demographics Validation
         if (StringUtils.isBlank(request.getName())) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_NAME_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NAME_MANDATORY, UserConstants.MSG_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(request.getFatherName())) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_FATHER_NAME_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_FATHER_NAME_MANDATORY, UserConstants.MSG_FATHER_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(request.getMotherName())) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_MOTHER_NAME_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_MOTHER_NAME_MANDATORY, UserConstants.MSG_MOTHER_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(request.getMobileNumber())) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_MOBILE_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_MOBILE_MANDATORY, UserConstants.MSG_MOBILE_MANDATORY);
         }
         if (request.getDob() == null) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_DOB_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_DOB_MANDATORY, UserConstants.MSG_DOB_MANDATORY);
         }
         if (StringUtils.isBlank(request.getEmailId())) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_EMAIL_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_EMAIL_MANDATORY, UserConstants.MSG_EMAIL_MANDATORY);
         }
         if (StringUtils.isBlank(request.getGender())) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_GENDER_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_GENDER_MANDATORY, UserConstants.MSG_GENDER_MANDATORY);
         }
 
         // Minor Citizen Guardian Check: If citizen is under 18 years old, Guardian details are mandatory
@@ -111,7 +111,7 @@ public class ProfileValidatorImpl implements ProfileValidator {
         // 2. Mandatory Address Validation
         List<Address> effectiveAddrs = request.getEffectiveAddresses();
         if (CollectionUtils.isEmpty(effectiveAddrs)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_ADDRESS_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_ADDRESS_MANDATORY, UserConstants.MSG_ADDRESS_MANDATORY);
         }
         for (Address addr : effectiveAddrs) {
             if (addr != null) {
@@ -134,7 +134,7 @@ public class ProfileValidatorImpl implements ProfileValidator {
                     } else {
                         String typeStr = addr.getType() != null ? addr.getType().name() : (addr.getAddressType() != null ? addr.getAddressType() : "Address");
                         log.error("[PROFILE-VALIDATOR] Upload Address Proof is mandatory for address: {}", typeStr);
-                        throw new CustomException(UserConstants.ERROR_MANDATORY_DOCUMENT_MISSING,
+                        throw new CustomException(UserConstants.UG_USER_DOC_ADDRESS_PROOF_MANDATORY,
                                 "Upload Address Proof is mandatory for " + typeStr + ".");
                     }
                 }
@@ -145,14 +145,14 @@ public class ProfileValidatorImpl implements ProfileValidator {
         boolean hasIdentityProof = StringUtils.isNotBlank(request.getIdentityProofFileStoreId())
                 || containsDocumentType(request.getDocuments(), UserConstants.IDENTITY_PROOF_TYPES);
         if (!hasIdentityProof) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_DOCUMENT_MISSING, UserConstants.MSG_IDENTITY_PROOF_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_DOC_IDENTITY_PROOF_MANDATORY, UserConstants.MSG_IDENTITY_PROOF_MANDATORY);
         }
 
         // D.O.B. Proof
         boolean hasDobProof = StringUtils.isNotBlank(request.getDobProofFileStoreId())
                 || containsDocumentType(request.getDocuments(), UserConstants.DOB_PROOF_TYPES);
         if (!hasDobProof) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_DOCUMENT_MISSING, UserConstants.MSG_DOB_PROOF_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_DOC_DOB_PROOF_MANDATORY, UserConstants.MSG_DOB_PROOF_MANDATORY);
         }
     }
 
@@ -195,45 +195,45 @@ public class ProfileValidatorImpl implements ProfileValidator {
         // A. Mobile Number (Non-Editable)
         if (isFieldModified(incomingProfile.getMobileNumber(), existingUser.getMobileNumber())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit Mobile Number: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_MOBILE);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOBILE, UserConstants.MSG_NON_EDITABLE_MOBILE);
         }
 
         // B. Father's Name (Non-Editable)
         if (isFieldModified(incomingProfile.getFatherName(), existingUser.getFatherName())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit Father's Name: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_FATHER_NAME);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_FATHER_NAME, UserConstants.MSG_NON_EDITABLE_FATHER_NAME);
         }
 
         // C. Mother's Name (Non-Editable)
         if (isFieldModified(incomingProfile.getMotherName(), existingUser.getMotherName())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit Mother's Name: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_MOTHER_NAME);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOTHER_NAME, UserConstants.MSG_NON_EDITABLE_MOTHER_NAME);
         }
 
         // D. Email ID (Non-Editable)
         if (isFieldModified(incomingProfile.getEmailId(), existingUser.getEmailId())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit Email ID: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_EMAIL);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_EMAIL, UserConstants.MSG_NON_EDITABLE_EMAIL);
         }
 
         // E. Name (Non-Editable unless Aadhaar re-sync)
         if (!isResync && isFieldModified(incomingProfile.getName(), existingUser.getName())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit Name without re-sync: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_NAME);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_NAME, UserConstants.MSG_NON_EDITABLE_NAME);
         }
 
         // F. Date of Birth (Non-Editable unless Aadhaar re-sync)
         if (!isResync && existingUser.getDob() != null && incomingProfile.getDob() != null
                 && !DateUtils.isSameDay(incomingProfile.getDob(), existingUser.getDob())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit DOB without re-sync: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_DOB);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_DOB, UserConstants.MSG_NON_EDITABLE_DOB);
         }
 
         // G. Gender (Non-Editable unless Aadhaar re-sync)
         if (!isResync && existingUser.getGender() != null && StringUtils.isNotBlank(incomingProfile.getGender())
                 && !incomingProfile.getGender().trim().equalsIgnoreCase(existingUser.getGender().name())) {
             log.error("[PROFILE-VALIDATOR] Non-editable restriction violated: Cannot edit Gender without re-sync: uuid={}", existingUser.getUuid());
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_GENDER);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_GENDER, UserConstants.MSG_NON_EDITABLE_GENDER);
         }
 
         // H. Alternate Mobile Validation on Update

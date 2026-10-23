@@ -98,6 +98,48 @@ public final class UserConstants {
     public static final String ERROR_GUARDIAN_MANDATORY_FOR_MINOR = "GUARDIAN_MANDATORY_FOR_MINOR";
     public static final String ERROR_INVALID_ADDRESS_TYPE = "INVALID_ADDRESS_TYPE";
 
+    // =========================================================================
+    // 3a. Localization Keys (UG_ standard)
+    // =========================================================================
+    // Address Mandatory Fields
+    public static final String UG_USER_ADDRESS_CITY_MANDATORY = "UG_USER_ADDRESS_CITY_MANDATORY";
+    public static final String UG_USER_ADDRESS_LOCALITY_MANDATORY = "UG_USER_ADDRESS_LOCALITY_MANDATORY";
+    public static final String UG_USER_ADDRESS_STREET_NAME_MANDATORY = "UG_USER_ADDRESS_STREET_NAME_MANDATORY";
+    public static final String UG_USER_ADDRESS_HOUSE_NUMBER_MANDATORY = "UG_USER_ADDRESS_HOUSE_NUMBER_MANDATORY";
+    public static final String UG_USER_ADDRESS_LANDMARK_MANDATORY = "UG_USER_ADDRESS_LANDMARK_MANDATORY";
+    public static final String UG_USER_ADDRESS_PIN_CODE_MANDATORY = "UG_USER_ADDRESS_PIN_CODE_MANDATORY";
+    public static final String UG_USER_ADDRESS_TYPE_MANDATORY = "UG_USER_ADDRESS_TYPE_MANDATORY";
+
+    // Address Non-Editable Fields
+    public static final String UG_USER_ADDRESS_NON_EDITABLE_CITY = "UG_USER_ADDRESS_NON_EDITABLE_CITY";
+    public static final String UG_USER_ADDRESS_NON_EDITABLE_LOCALITY = "UG_USER_ADDRESS_NON_EDITABLE_LOCALITY";
+    public static final String UG_USER_ADDRESS_NON_EDITABLE_HOUSE_NUMBER = "UG_USER_ADDRESS_NON_EDITABLE_HOUSE_NUMBER";
+    public static final String UG_USER_ADDRESS_NON_EDITABLE_PIN_CODE = "UG_USER_ADDRESS_NON_EDITABLE_PIN_CODE";
+
+    // Profile Demographics Mandatory Fields
+    public static final String UG_USER_PROFILE_NAME_MANDATORY = "UG_USER_PROFILE_NAME_MANDATORY";
+    public static final String UG_USER_PROFILE_FATHER_NAME_MANDATORY = "UG_USER_PROFILE_FATHER_NAME_MANDATORY";
+    public static final String UG_USER_PROFILE_MOTHER_NAME_MANDATORY = "UG_USER_PROFILE_MOTHER_NAME_MANDATORY";
+    public static final String UG_USER_PROFILE_MOBILE_MANDATORY = "UG_USER_PROFILE_MOBILE_MANDATORY";
+    public static final String UG_USER_PROFILE_DOB_MANDATORY = "UG_USER_PROFILE_DOB_MANDATORY";
+    public static final String UG_USER_PROFILE_EMAIL_MANDATORY = "UG_USER_PROFILE_EMAIL_MANDATORY";
+    public static final String UG_USER_PROFILE_GENDER_MANDATORY = "UG_USER_PROFILE_GENDER_MANDATORY";
+    public static final String UG_USER_PROFILE_ADDRESS_MANDATORY = "UG_USER_PROFILE_ADDRESS_MANDATORY";
+
+    // Profile Non-Editable Fields
+    public static final String UG_USER_PROFILE_NON_EDITABLE_MOBILE = "UG_USER_PROFILE_NON_EDITABLE_MOBILE";
+    public static final String UG_USER_PROFILE_NON_EDITABLE_FATHER_NAME = "UG_USER_PROFILE_NON_EDITABLE_FATHER_NAME";
+    public static final String UG_USER_PROFILE_NON_EDITABLE_MOTHER_NAME = "UG_USER_PROFILE_NON_EDITABLE_MOTHER_NAME";
+    public static final String UG_USER_PROFILE_NON_EDITABLE_EMAIL = "UG_USER_PROFILE_NON_EDITABLE_EMAIL";
+    public static final String UG_USER_PROFILE_NON_EDITABLE_NAME = "UG_USER_PROFILE_NON_EDITABLE_NAME";
+    public static final String UG_USER_PROFILE_NON_EDITABLE_DOB = "UG_USER_PROFILE_NON_EDITABLE_DOB";
+    public static final String UG_USER_PROFILE_NON_EDITABLE_GENDER = "UG_USER_PROFILE_NON_EDITABLE_GENDER";
+
+    // Profile Document Mandatory Fields
+    public static final String UG_USER_DOC_ADDRESS_PROOF_MANDATORY = "UG_USER_DOC_ADDRESS_PROOF_MANDATORY";
+    public static final String UG_USER_DOC_IDENTITY_PROOF_MANDATORY = "UG_USER_DOC_IDENTITY_PROOF_MANDATORY";
+    public static final String UG_USER_DOC_DOB_PROOF_MANDATORY = "UG_USER_DOC_DOB_PROOF_MANDATORY";
+
     // Regular expressions
     public static final String REGEX_INDIAN_MOBILE = "^[6-9][0-9]{9}$";
 

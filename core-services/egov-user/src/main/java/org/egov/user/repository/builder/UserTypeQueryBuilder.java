@@ -387,4 +387,31 @@ public class UserTypeQueryBuilder {
     public String getUserIdByUuid() {
         return "select id from eg_user where uuid = :uuid";
     }
+
+    /**
+     * Returns the SQL query to get tenant ID for a user by id.
+     *
+     * @return SQL select query string
+     */
+    public String getTenantIdByUserIdQuery() {
+        return "select tenantid from eg_user where id = :id";
+    }
+
+    /**
+     * Returns the SQL query to get tenant ID for a user by uuid.
+     *
+     * @return SQL select query string
+     */
+    public String getTenantIdByUuidQuery() {
+        return "select tenantid from eg_user where uuid = :uuid";
+    }
+
+    /**
+     * Returns the SQL query to get uuid for a user by id.
+     *
+     * @return SQL select query string
+     */
+    public String getUuidByUserIdQuery() {
+        return "select uuid from eg_user where id = :id";
+    }
 }

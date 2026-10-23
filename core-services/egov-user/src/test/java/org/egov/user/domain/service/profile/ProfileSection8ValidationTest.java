@@ -7,6 +7,7 @@ import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.enums.AddressType;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.service.profile.validator.ProfileValidatorImpl;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.UserRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
@@ -76,7 +77,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setName(null);
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NAME_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Name"));
         }
 
@@ -86,7 +87,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setFatherName("");
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_FATHER_NAME_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Father's Name"));
         }
 
@@ -96,7 +97,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setMotherName(null);
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_MOTHER_NAME_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Mother's Name"));
         }
 
@@ -106,7 +107,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setMobileNumber("   ");
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_MOBILE_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Mobile Number"));
         }
 
@@ -116,7 +117,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setDob(null);
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_DOB_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Date of Birth"));
         }
 
@@ -126,7 +127,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setEmailId(null);
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_EMAIL_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Email ID"));
         }
 
@@ -136,7 +137,7 @@ public class ProfileSection8ValidationTest {
             User user = createValidUser();
             user.setGender(null);
             CustomException ex = assertThrows(CustomException.class, user::validateMandatoryProfileFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_GENDER_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Gender"));
         }
 
@@ -149,7 +150,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableProfileFields(existing, false));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOBILE, ex.getCode());
             assertTrue(ex.getMessage().contains("Mobile Number"));
         }
 
@@ -162,7 +163,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableProfileFields(existing, false));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NON_EDITABLE_FATHER_NAME, ex.getCode());
             assertTrue(ex.getMessage().contains("Father's Name"));
         }
 
@@ -175,7 +176,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableProfileFields(existing, false));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOTHER_NAME, ex.getCode());
             assertTrue(ex.getMessage().contains("Mother's Name"));
         }
 
@@ -188,7 +189,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableProfileFields(existing, false));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NON_EDITABLE_EMAIL, ex.getCode());
             assertTrue(ex.getMessage().contains("Email ID"));
         }
 
@@ -201,7 +202,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableProfileFields(existing, false));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NON_EDITABLE_NAME, ex.getCode());
             assertTrue(ex.getMessage().contains("Name"));
         }
 
@@ -262,7 +263,7 @@ public class ProfileSection8ValidationTest {
             Address address = createValidAddress();
             address.setCity(null);
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_CITY_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("City"));
         }
 
@@ -272,7 +273,7 @@ public class ProfileSection8ValidationTest {
             Address address = createValidAddress();
             address.setLocality("");
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_LOCALITY_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Locality"));
         }
 
@@ -282,7 +283,7 @@ public class ProfileSection8ValidationTest {
             Address address = createValidAddress();
             address.setStreetName("   ");
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_STREET_NAME_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Street Name"));
         }
 
@@ -292,7 +293,7 @@ public class ProfileSection8ValidationTest {
             Address address = createValidAddress();
             address.setHouseNumber(null);
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_HOUSE_NUMBER_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("House Number"));
         }
 
@@ -302,7 +303,7 @@ public class ProfileSection8ValidationTest {
             Address address = createValidAddress();
             address.setLandmark(null);
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_LANDMARK_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Landmark"));
         }
 
@@ -312,7 +313,7 @@ public class ProfileSection8ValidationTest {
             Address address = createValidAddress();
             address.setPinCode("");
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_PIN_CODE_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Pin Code"));
         }
 
@@ -323,7 +324,7 @@ public class ProfileSection8ValidationTest {
             address.setType(null);
             address.setAddressType(null);
             CustomException ex = assertThrows(CustomException.class, address::validateMandatoryAddressFields);
-            assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_TYPE_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Address Type"));
         }
 
@@ -336,7 +337,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableAddressFields(existing));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_CITY, ex.getCode());
             assertTrue(ex.getMessage().contains("City"));
         }
 
@@ -349,7 +350,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableAddressFields(existing));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_LOCALITY, ex.getCode());
             assertTrue(ex.getMessage().contains("Locality"));
         }
 
@@ -362,7 +363,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableAddressFields(existing));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_HOUSE_NUMBER, ex.getCode());
             assertTrue(ex.getMessage().contains("House Number"));
         }
 
@@ -375,7 +376,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> incoming.validateNonEditableAddressFields(existing));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_PIN_CODE, ex.getCode());
             assertTrue(ex.getMessage().contains("Pin Code"));
         }
 
@@ -459,7 +460,7 @@ public class ProfileSection8ValidationTest {
             request.setDocuments(Collections.emptyList());
 
             CustomException ex = assertThrows(CustomException.class, () -> profileValidator.validateCreate(request));
-            assertEquals("MANDATORY_DOCUMENT_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_DOC_ADDRESS_PROOF_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Address Proof"));
         }
 
@@ -471,7 +472,7 @@ public class ProfileSection8ValidationTest {
             request.setDocuments(Collections.emptyList());
 
             CustomException ex = assertThrows(CustomException.class, () -> profileValidator.validateCreate(request));
-            assertEquals("MANDATORY_DOCUMENT_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_DOC_IDENTITY_PROOF_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("Identity Proof"));
         }
 
@@ -483,7 +484,7 @@ public class ProfileSection8ValidationTest {
             request.setDocuments(Collections.emptyList());
 
             CustomException ex = assertThrows(CustomException.class, () -> profileValidator.validateCreate(request));
-            assertEquals("MANDATORY_DOCUMENT_MISSING", ex.getCode());
+            assertEquals(UserConstants.UG_USER_DOC_DOB_PROOF_MANDATORY, ex.getCode());
             assertTrue(ex.getMessage().contains("D.O.B. Proof"));
         }
 
@@ -515,7 +516,7 @@ public class ProfileSection8ValidationTest {
 
             CustomException ex = assertThrows(CustomException.class,
                     () -> profileValidator.validateUpdate(updateReq, existing));
-            assertEquals("NON_EDITABLE_FIELD_MODIFIED", ex.getCode());
+            assertEquals(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOBILE, ex.getCode());
             assertTrue(ex.getMessage().contains("Mobile Number"));
         }
     }

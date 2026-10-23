@@ -210,25 +210,25 @@ public class User {
      */
     public void validateMandatoryProfileFields() {
         if (StringUtils.isBlank(this.name)) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Name is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NAME_MANDATORY, UserConstants.MSG_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(this.fatherName)) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Father's Name is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_FATHER_NAME_MANDATORY, UserConstants.MSG_FATHER_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(this.motherName)) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Mother's Name is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_MOTHER_NAME_MANDATORY, UserConstants.MSG_MOTHER_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(this.mobileNumber)) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Mobile Number is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_MOBILE_MANDATORY, UserConstants.MSG_MOBILE_MANDATORY);
         }
         if (this.dob == null) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Date of Birth is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_DOB_MANDATORY, UserConstants.MSG_DOB_MANDATORY);
         }
         if (StringUtils.isBlank(this.emailId)) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Email ID is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_EMAIL_MANDATORY, UserConstants.MSG_EMAIL_MANDATORY);
         }
         if (this.gender == null) {
-            throw new CustomException("MANDATORY_FIELD_MISSING", "Gender is mandatory for profile creation.");
+            throw new CustomException(UserConstants.UG_USER_PROFILE_GENDER_MANDATORY, UserConstants.MSG_GENDER_MANDATORY);
         }
     }
 
@@ -249,39 +249,39 @@ public class User {
 
         // 1. Mobile Number (Non-Editable)
         if (isFieldModified(this.mobileNumber, existingUser.getMobileNumber())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_MOBILE);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOBILE, UserConstants.MSG_NON_EDITABLE_MOBILE);
         }
 
         // 2. Father's Name (Non-Editable)
         if (isFieldModified(this.fatherName, existingUser.getFatherName())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_FATHER_NAME);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_FATHER_NAME, UserConstants.MSG_NON_EDITABLE_FATHER_NAME);
         }
 
         // 3. Mother's Name (Non-Editable)
         if (isFieldModified(this.motherName, existingUser.getMotherName())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_MOTHER_NAME);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_MOTHER_NAME, UserConstants.MSG_NON_EDITABLE_MOTHER_NAME);
         }
 
         // 4. Email ID (Non-Editable)
         if (isFieldModified(this.emailId, existingUser.getEmailId())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_EMAIL);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_EMAIL, UserConstants.MSG_NON_EDITABLE_EMAIL);
         }
 
         // 5. Name (Non-Editable unless Aadhaar re-sync)
         if (!isResync && isFieldModified(this.name, existingUser.getName())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_NAME);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_NAME, UserConstants.MSG_NON_EDITABLE_NAME);
         }
 
         // 6. Date of Birth (Non-Editable unless Aadhaar re-sync)
         if (!isResync && existingUser.getDob() != null && this.dob != null
                 && !DateUtils.isSameDay(this.dob, existingUser.getDob())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_DOB);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_DOB, UserConstants.MSG_NON_EDITABLE_DOB);
         }
 
         // 7. Gender (Non-Editable unless Aadhaar re-sync)
         if (!isResync && existingUser.getGender() != null && this.gender != null
                 && !existingUser.getGender().equals(this.gender)) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_GENDER);
+            throw new CustomException(UserConstants.UG_USER_PROFILE_NON_EDITABLE_GENDER, UserConstants.MSG_NON_EDITABLE_GENDER);
         }
     }
 

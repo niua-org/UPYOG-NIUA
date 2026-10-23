@@ -17,6 +17,7 @@ import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.egov.user.repository.builder.AuditQueryBuilder;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -25,12 +26,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class AuditRepository {
 	
-	public static final String INSERT_AUDIT_DETAILS = "insert into eg_user_audit_table (id,uuid,tenantid,salutation,dob,locale,username,password,pwdexpirydate,mobilenumber,altcontactnumber,emailid,active,name,gender,pan,aadhaarnumber,"
-            + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,auditcreatedby,auditcreatedtime,"
-            + "father_name,mother_name,spouse_name,is_identity_verified,identity_verified_date,last_resync_date,editted_count,last_login_method) values (:id,:uuid,:tenantid,:salutation,"
-            + ":dob,:locale,:username,:password,:pwdexpirydate,:mobilenumber,:alternatemobilenumber,:emailid,:active,:name,:gender,:pan,:aadhaarnumber,:type,:guardian,:guardianrelation,:signature,"
-            + ":accountlocked,:bloodgroup,:photo,:identificationmark,:auditcreatedby,:auditcreatedtime,"
-            + ":father_name,:mother_name,:spouse_name,:is_identity_verified,:identity_verified_date,:last_resync_date,:editted_count,:last_login_method) ";
+	public static final String INSERT_AUDIT_DETAILS = AuditQueryBuilder.INSERT_AUDIT_DETAILS;
 
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private JdbcTemplate jdbcTemplate;

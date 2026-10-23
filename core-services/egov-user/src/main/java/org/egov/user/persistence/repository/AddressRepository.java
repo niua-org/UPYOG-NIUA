@@ -28,13 +28,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class AddressRepository {
 
-    public static final String GET_ADDRESS_BY_USERID = "select * from eg_user_address where userid=:userId and tenantid =:tenantId and status=:status";
-    public static final String INSERT_ADDRESS_BYUSERID = "insert into eg_user_address (id,type,address,city,pincode,userid,tenantid,createddate,lastmodifieddate,createdby,lastmodifiedby) "
-            + "values(:id,:type,:address,:city,:pincode,:userid,:tenantid,:createddate,:lastmodifieddate,:createdby,:lastmodifiedby)";
-    public static final String SELECT_NEXT_SEQUENCE = "select nextval('seq_eg_user_address')";
-    public static final String DELETE_ADDRESSES = "delete from eg_user_address where id IN (:id)";
-    public static final String DELETE_ADDRESS = "delete from eg_user_address where id=:id";
-    public static final String UPDATE_ADDRESS_BYIDAND_TENANTID = "update eg_user_address set address=:address,city=:city,pincode=:pincode,lastmodifiedby=:lastmodifiedby,lastmodifieddate=:lastmodifieddate where userid=:userid and tenantid=:tenantid and type=:type";
+    public static final String GET_ADDRESS_BY_USERID = AddressQueryBuilder.GET_ADDRESS_BY_USERID;
+    public static final String INSERT_ADDRESS_BYUSERID = AddressQueryBuilder.INSERT_ADDRESS_BYUSERID;
+    public static final String SELECT_NEXT_SEQUENCE = AddressQueryBuilder.SELECT_NEXT_SEQUENCE;
+    public static final String DELETE_ADDRESSES = AddressQueryBuilder.DELETE_ADDRESSES;
+    public static final String DELETE_ADDRESS = AddressQueryBuilder.DELETE_ADDRESS_BY_ID;
+    public static final String UPDATE_ADDRESS_BYIDAND_TENANTID = AddressQueryBuilder.UPDATE_ADDRESS_BYIDAND_TENANTID;
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private JdbcTemplate jdbcTemplate;
     private AddressQueryBuilder addressQueryBuilder;
@@ -126,7 +125,7 @@ public class AddressRepository {
         final Map<String, Object> Map = new HashMap<String, Object>();
         Map.put("userId", userId);
         Map.put("status", UserConstants.ADDRESS_ACTIVE_STATUS);
-        StringBuilder query = new StringBuilder("select * from eg_user_address where userid=:userId and status=:status");
+        StringBuilder query = new StringBuilder(AddressQueryBuilder.GET_ADDRESS_BY_USERID_AND_STATUS);
         if (StringUtils.isNotBlank(tenantId)) {
             if (tenantId.contains(".")) {
                 Map.put("tenantId", tenantId);
@@ -262,7 +261,7 @@ public class AddressRepository {
         String userUuid = address.getUserUuid();
         if (StringUtils.isBlank(userUuid) && userId != null) {
             try {
-                userUuid = jdbcTemplate.queryForObject("SELECT uuid FROM eg_user WHERE id = ?", String.class, userId);
+                userUuid = jdbcTemplate.queryForObject(AddressQueryBuilder.SELECT_USER_UUID_BY_USER_ID, String.class, userId);
             } catch (Exception e) {
                 log.debug("User UUID not resolvable via id: {} ({})", userId, e.getMessage());
             }

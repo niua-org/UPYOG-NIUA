@@ -14,8 +14,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * while preserving the raw master-data string in {@code Address.getAddressType()}.</p>
  */
 public enum AddressType {
-    // This order should not be interrupted
-    PERMANENT("PERMANENT"), CORRESPONDENCE("CORRESPONDENCE"), USUALADDRESS("CORRESPONDENCE"), EVENTADDRESS("CORRESPONDENCE"), PRESENTADDRESS("CORRESPONDENCE"), PROPERTYADDRESS("CORRESPONDENCE"),
+    PERMANENT("PERMANENT"),
+    CORRESPONDENCE("CORRESPONDENCE"),
+    USUALADDRESS("USUALADDRESS"),
+    EVENTADDRESS("EVENTADDRESS"),
+    PRESENTADDRESS("PRESENTADDRESS"),
+    PROPERTYADDRESS("PROPERTYADDRESS"),
     // This category is added to handle the address type of other apart from the above-mentioned types and also this is part of V2 user api endpoints
     OTHER("OTHER");
 

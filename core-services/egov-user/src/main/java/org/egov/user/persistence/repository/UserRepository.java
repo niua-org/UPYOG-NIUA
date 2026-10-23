@@ -941,7 +941,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    "select tenantid from eg_user where id = :id",
+                    userTypeQueryBuilder.getTenantIdByUserIdQuery(),
                     Collections.singletonMap("id", userId),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -964,7 +964,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    "select tenantid from eg_user where uuid = :uuid",
+                    userTypeQueryBuilder.getTenantIdByUuidQuery(),
                     Collections.singletonMap("uuid", uuid),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -987,7 +987,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    "select uuid from eg_user where id = :id",
+                    userTypeQueryBuilder.getUuidByUserIdQuery(),
                     Collections.singletonMap("id", userId),
                     String.class);
         } catch (EmptyResultDataAccessException e) {

@@ -277,6 +277,53 @@ public class AadhaarVerificationController {
     }
 
     /**
+     * Validates a 12-digit UIDAI Aadhaar number using the mathematical Verhoeff checksum algorithm.
+     * Evaluates dihedral group D5 permutations to reject entry errors, transpositions, and repetitive sequences
+     * purely in-memory without contacting external vendor gateways.
+     *
+     * @param request {@link AadhaarVerificationRequest} containing RequestInfo and 12-digit aadhaarNumber
+     * @return {@link ResponseEntity} wrapping {@link AadhaarVerificationResponse} with checksum validity status
+     */
+    @PostMapping(value = {"/_validate", "/_validateChecksum"})
+    public ResponseEntity<AadhaarVerificationResponse> validateChecksum(
+            @RequestBody @Valid AadhaarVerificationRequest request) {
+
+        boolean isValidChecksum;
+        try {
+            isValidChecksum = validator.validateVerhoeffChecksum(request);
+        } catch (CustomException ce) {
+            return new ResponseEntity<>(createErrorResponse(request, ce.getCode(), ce.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+
+        String aadhaarNumber = request.getAadhaarNumber();
+        String maskedAadhaar = maskAadhaar(aadhaarNumber);
+        ResponseInfo responseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), isValidChecksum);
+
+        if (!isValidChecksum) {
+            log.warn("Verhoeff checksum validation failed for masked Aadhaar: {}", maskedAadhaar);
+            AadhaarVerificationResponse response = AadhaarVerificationResponse.builder()
+                    .responseInfo(responseInfo)
+                    .status(AadhaarConstants.STATUS_INVALID)
+                    .isVerified(false)
+                    .maskedAadhaar(maskedAadhaar)
+                    .message(AadhaarConstants.MSG_INVALID_AADHAAR_CHECKSUM)
+                    .build();
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        log.info("Verhoeff checksum validation succeeded for masked Aadhaar: {}", maskedAadhaar);
+        AadhaarVerificationResponse response = AadhaarVerificationResponse.builder()
+                .responseInfo(responseInfo)
+                .status(AadhaarConstants.STATUS_VALID)
+                .isVerified(true)
+                .maskedAadhaar(maskedAadhaar)
+                .message(AadhaarConstants.MSG_VALID_AADHAAR_CHECKSUM)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
      * Generates a standard error response wrapping eGov ResponseInfo and business error message.
      */
     private AadhaarVerificationResponse createErrorResponse(AadhaarVerificationRequest request, String status, String message) {

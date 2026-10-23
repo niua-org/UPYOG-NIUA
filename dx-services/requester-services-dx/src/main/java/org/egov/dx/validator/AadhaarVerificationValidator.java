@@ -94,4 +94,31 @@ public class AadhaarVerificationValidator {
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_OTP_FORMAT, AadhaarConstants.MSG_INVALID_OTP);
         }
     }
+
+    /**
+     * Validates an Aadhaar number's format and evaluates its UIDAI Verhoeff checksum.
+     *
+     * @param request the verification request containing RequestInfo and 12-digit Aadhaar number
+     * @return boolean indicating whether the Aadhaar number satisfies the Verhoeff checksum
+     * @throws CustomException if request or RequestInfo is null, or Aadhaar number format is invalid
+     */
+    public boolean validateVerhoeffChecksum(AadhaarVerificationRequest request) {
+        if (request == null) {
+            log.error("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
+        }
+
+        if (request.getRequestInfo() == null) {
+            log.error("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+        }
+
+        String aadhaarNumber = request.getAadhaarNumber();
+        if (StringUtils.isBlank(aadhaarNumber) || !AADHAAR_PATTERN.matcher(aadhaarNumber).matches()) {
+            log.warn("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_INVALID_AADHAAR);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
+        }
+
+        return VerhoeffAlgorithm.validateVerhoeff(aadhaarNumber);
+    }
 }

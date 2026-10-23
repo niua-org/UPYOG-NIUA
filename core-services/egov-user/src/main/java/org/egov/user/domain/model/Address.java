@@ -142,25 +142,25 @@ public class Address {
      */
     public void validateMandatoryAddressFields() {
         if (StringUtils.isBlank(this.city)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_CITY_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_CITY_MANDATORY, UserConstants.MSG_CITY_MANDATORY);
         }
         if (StringUtils.isBlank(this.locality)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_LOCALITY_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_LOCALITY_MANDATORY, UserConstants.MSG_LOCALITY_MANDATORY);
         }
         if (StringUtils.isBlank(this.streetName)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_STREET_NAME_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_STREET_NAME_MANDATORY, UserConstants.MSG_STREET_NAME_MANDATORY);
         }
         if (StringUtils.isBlank(this.houseNumber)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_HOUSE_NUMBER_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_HOUSE_NUMBER_MANDATORY, UserConstants.MSG_HOUSE_NUMBER_MANDATORY);
         }
         if (StringUtils.isBlank(this.landmark)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_LANDMARK_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_LANDMARK_MANDATORY, UserConstants.MSG_LANDMARK_MANDATORY);
         }
         if (StringUtils.isBlank(this.pinCode)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_PIN_CODE_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_PIN_CODE_MANDATORY, UserConstants.MSG_PIN_CODE_MANDATORY);
         }
         if (this.type == null && StringUtils.isBlank(this.addressType)) {
-            throw new CustomException(UserConstants.ERROR_MANDATORY_FIELD_MISSING, UserConstants.MSG_ADDRESS_TYPE_MANDATORY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_TYPE_MANDATORY, UserConstants.MSG_ADDRESS_TYPE_MANDATORY);
         }
     }
 
@@ -179,22 +179,22 @@ public class Address {
 
         // 1. City (Non-Editable)
         if (isAddressFieldModified(this.city, existingAddress.getCity())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_CITY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_CITY, UserConstants.MSG_NON_EDITABLE_CITY);
         }
 
         // 2. Locality (Non-Editable)
         if (isAddressFieldModified(this.locality, existingAddress.getLocality())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_LOCALITY);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_LOCALITY, UserConstants.MSG_NON_EDITABLE_LOCALITY);
         }
 
         // 3. House Number (Non-Editable)
         if (isAddressFieldModified(this.houseNumber, existingAddress.getHouseNumber())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_HOUSE_NUMBER);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_HOUSE_NUMBER, UserConstants.MSG_NON_EDITABLE_HOUSE_NUMBER);
         }
 
         // 4. Pin Code (Non-Editable)
         if (isAddressFieldModified(this.pinCode, existingAddress.getPinCode())) {
-            throw new CustomException(UserConstants.ERROR_NON_EDITABLE_FIELD_MODIFIED, UserConstants.MSG_NON_EDITABLE_PIN_CODE);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_NON_EDITABLE_PIN_CODE, UserConstants.MSG_NON_EDITABLE_PIN_CODE);
         }
     }
 

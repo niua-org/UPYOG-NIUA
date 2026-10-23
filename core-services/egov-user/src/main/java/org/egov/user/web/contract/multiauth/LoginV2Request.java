@@ -89,4 +89,9 @@ public class LoginV2Request implements Serializable {
     @JsonProperty("selectedUserUuid")
     @JsonAlias({"userUuid", "uuid"})
     private String selectedUserUuid;
+
+    @Schema(description = "Member ID selected from State Family roster during UC2 login", example = "MEM-1")
+    @JsonProperty("selectedMemberId")
+    @JsonAlias({"memberId"})
+    private String selectedMemberId;
 }

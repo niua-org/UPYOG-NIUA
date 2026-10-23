@@ -41,6 +41,7 @@ public final class AadhaarConstants {
     public static final String STATUS_INVALID_OTP = "INVALID_OTP";
     public static final String STATUS_FAILED = "FAILED";
     public static final String STATUS_VALID = "VALID";
+    public static final String STATUS_INVALID = "INVALID";
 
     /* -------------------------------------------------------------------------
      * Error Codes
@@ -66,6 +67,7 @@ public final class AadhaarConstants {
     public static final String MSG_MAX_OTP_ATTEMPTS_EXCEEDED = "Maximum invalid OTP attempts exceeded. Transaction reference ID is locked. Please request a new OTP.";
     public static final String MSG_OTP_ALREADY_VERIFIED = "This OTP transaction has already been verified and consumed. Replay is not permitted.";
     public static final String MSG_INVALID_AADHAAR_CHECKSUM = "Aadhaar number failed UIDAI Verhoeff checksum validation.";
+    public static final String MSG_VALID_AADHAAR_CHECKSUM = "Aadhaar number satisfies UIDAI Verhoeff checksum validation.";
 
     /* -------------------------------------------------------------------------
      * Third-Party Gateway / Sandbox Entity Identifiers & HTTP Headers

@@ -35,6 +35,14 @@ public class LoginV2ValidatorImpl implements LoginV2Validator {
             throw new CustomException(UserConstants.ERROR_INVALID_OTP, UserConstants.MSG_LOGIN_OTP_REQUIRED);
         }
 
+        if (StringUtils.isNotBlank(request.getMobileNumber())) {
+            String mobile = request.getMobileNumber().trim();
+            if (!mobile.matches("^[6-9]\\d{9}$")) {
+                log.error("[LOGIN-V2-VALIDATOR] Validation failed: invalid mobile number format: {}", mobile);
+                throw new CustomException(UserConstants.ERROR_INVALID_MOBILE_NUMBER, "Mobile number must be a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9");
+            }
+        }
+
         AuthType authType = request.getAuthType();
         if (authType != null) {
             validateChannelSpecificRequirements(request, authType);
@@ -68,10 +76,6 @@ public class LoginV2ValidatorImpl implements LoginV2Validator {
                 if (StringUtils.isBlank(request.getFamilyId())) {
                     log.error("[LOGIN-V2-VALIDATOR] Validation failed: familyId required for FAMILY_ID auth");
                     throw new CustomException(UserConstants.ERROR_INVALID_FAMILY_ID, UserConstants.MSG_FAMILY_ID_REQUIRED);
-                }
-                if (StringUtils.isBlank(request.getMobileNumber())) {
-                    log.error("[LOGIN-V2-VALIDATOR] Validation failed: member mobileNumber required for FAMILY_ID auth");
-                    throw new CustomException(UserConstants.ERROR_INVALID_MOBILE_NUMBER, UserConstants.MSG_FAMILY_MEMBER_MOBILE_REQUIRED);
                 }
                 break;
         }

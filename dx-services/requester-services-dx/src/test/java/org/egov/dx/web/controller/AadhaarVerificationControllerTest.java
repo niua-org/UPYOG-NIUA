@@ -177,4 +177,66 @@ public class AadhaarVerificationControllerTest {
         assertEquals("D/O John Citizen", body.getDemographics().getCareOf());
         verify(validator, times(1)).validateVerifyOtpRequest(request);
     }
+
+    @Test
+    void testValidateChecksum_Success() {
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .aadhaarNumber("548796521458")
+                .build();
+
+        when(validator.validateVerhoeffChecksum(request)).thenReturn(true);
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = controller.validateChecksum(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertEquals(AadhaarConstants.STATUS_VALID, body.getStatus());
+        assertTrue(body.getIsVerified());
+        assertEquals("XXXXXXXX1458", body.getMaskedAadhaar());
+        assertEquals(AadhaarConstants.MSG_VALID_AADHAAR_CHECKSUM, body.getMessage());
+        verify(validator, times(1)).validateVerhoeffChecksum(request);
+    }
+
+    @Test
+    void testValidateChecksum_InvalidChecksum() {
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .aadhaarNumber("222222222222")
+                .build();
+
+        when(validator.validateVerhoeffChecksum(request)).thenReturn(false);
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = controller.validateChecksum(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertEquals(AadhaarConstants.STATUS_INVALID, body.getStatus());
+        assertFalse(body.getIsVerified());
+        assertEquals("XXXXXXXX2222", body.getMaskedAadhaar());
+        assertEquals(AadhaarConstants.MSG_INVALID_AADHAAR_CHECKSUM, body.getMessage());
+        verify(validator, times(1)).validateVerhoeffChecksum(request);
+    }
+
+    @Test
+    void testValidateChecksum_ValidationError_ReturnsBadRequest() {
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder().build();
+
+        doThrow(new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, "Invalid Aadhaar format"))
+                .when(validator).validateVerhoeffChecksum(request);
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = controller.validateChecksum(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertEquals(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, body.getStatus());
+        assertFalse(body.getIsVerified());
+        assertEquals("Invalid Aadhaar format", body.getMessage());
+    }
 }

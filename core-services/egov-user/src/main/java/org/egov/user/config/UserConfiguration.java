@@ -100,4 +100,10 @@ public class UserConfiguration {
 
     @Value("${filestore.validation.enabled}")
     private Boolean filestoreValidationEnabled;
+
+    @Value("${family.service.host}")
+    private String familyServiceHost;
+
+    @Value("${family.service.state.jit.endpoint}")
+    private String familyServiceStateJitEndpoint;
 }

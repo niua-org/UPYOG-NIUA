@@ -13,6 +13,23 @@ public class AddressQueryBuilder {
 
     public static final String GET_ADDRESSBY_IDAND_TENANT = "select * from eg_user_address where userid=:userId and tenantid=:tenantId";
 
+    public static final String GET_ADDRESS_BY_USERID = "select * from eg_user_address where userid=:userId and tenantid =:tenantId and status=:status";
+
+    public static final String GET_ADDRESS_BY_USERID_AND_STATUS = "select * from eg_user_address where userid=:userId and status=:status";
+
+    public static final String INSERT_ADDRESS_BYUSERID = "insert into eg_user_address (id,type,address,city,pincode,userid,tenantid,createddate,lastmodifieddate,createdby,lastmodifiedby) "
+            + "values(:id,:type,:address,:city,:pincode,:userid,:tenantid,:createddate,:lastmodifieddate,:createdby,:lastmodifiedby)";
+
+    public static final String SELECT_NEXT_SEQUENCE = "select nextval('seq_eg_user_address')";
+
+    public static final String DELETE_ADDRESSES = "delete from eg_user_address where id IN (:id)";
+
+    public static final String DELETE_ADDRESS_BY_ID = "delete from eg_user_address where id=:id";
+
+    public static final String UPDATE_ADDRESS_BYIDAND_TENANTID = "update eg_user_address set address=:address,city=:city,pincode=:pincode,lastmodifiedby=:lastmodifiedby,lastmodifieddate=:lastmodifieddate where userid=:userid and tenantid=:tenantid and type=:type";
+
+    public static final String SELECT_USER_UUID_BY_USER_ID = "SELECT uuid FROM eg_user WHERE id = ?";
+
     public static final String DELETE_ADDRESS = "delete from eg_user_address where id IN (:id) ";
 
     // Adding new fields in Address select query: address2, houseNumber, houseName, streetName, landmark, locality, version, latitude, longitude, filestore_id, user_uuid
