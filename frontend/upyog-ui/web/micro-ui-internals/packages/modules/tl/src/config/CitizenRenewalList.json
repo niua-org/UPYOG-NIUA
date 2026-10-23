@@ -4,7 +4,8 @@
     "filters": "text matches matchFields on the license. dropdown matches filter.name exactly. Filters run on the client after the renewal search.",
     "resultFields": "Card rows. format owner | workflowStatus | epochDate. Status and valid-upto stay separate so the status filter can match the status code.",
     "cardActions": "renew opens the renew-trade screen after the renewal checks.",
-    "searchDefaults": "Sent to the trade-license search. RenewalPending and status keep the list to licenses that can be renewed."
+    "searchDefaults": "Sent to the trade-license search. RenewalPending and status keep the list to licenses that can be renewed.",
+    "MANUALEXPIRED": "MANUALEXPIRED means a trade license was expired by an employee, not by the system when its validity date ran out. This is a special case that should not be confused with EXPIRED."
   },
   "header": "TL_RENEW_TRADE_HEADER",
   "description": "TL_RENEW_TRADE_TEXT",
@@ -57,7 +58,6 @@
         { "code": "CANCELLED", "i18nKey": "WF_NEWTL_CANCELLED" },
         { "code": "EXPIRED", "i18nKey": "WF_NEWTL_EXPIRED" },
         { "code": "MANUALEXPIRED", "i18nKey": "WF_NEWTL_MANUALEXPIRED" } 
-        // MANUALEXPIRED means a trade license was expired by an employee, not by the system when its validity date ran out. This is a special case that should not be confused with EXPIRED.
       ]
     }
   ],
