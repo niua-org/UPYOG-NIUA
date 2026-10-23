@@ -56,7 +56,8 @@
         { "code": "APPROVED", "i18nKey": "WF_NEWTL_APPROVED" },
         { "code": "CANCELLED", "i18nKey": "WF_NEWTL_CANCELLED" },
         { "code": "EXPIRED", "i18nKey": "WF_NEWTL_EXPIRED" },
-        { "code": "MANUALEXPIRED", "i18nKey": "WF_NEWTL_MANUALEXPIRED" } // MANUALEXPIRED means a trade license was expired by an employee, not by the system when its validity date ran out. This is a special case that should not be confused with EXPIRED.
+        { "code": "MANUALEXPIRED", "i18nKey": "WF_NEWTL_MANUALEXPIRED" } 
+        // MANUALEXPIRED means a trade license was expired by an employee, not by the system when its validity date ran out. This is a special case that should not be confused with EXPIRED.
       ]
     }
   ],
