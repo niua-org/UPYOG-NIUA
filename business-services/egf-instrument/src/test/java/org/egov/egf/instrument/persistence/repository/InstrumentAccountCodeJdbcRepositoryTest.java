@@ -1,8 +1,9 @@
 package org.egov.egf.instrument.persistence.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,10 +19,11 @@ import org.egov.egf.instrument.domain.model.InstrumentAccountCodeSearch;
 import org.egov.egf.instrument.domain.model.InstrumentType;
 import org.egov.egf.instrument.persistence.entity.InstrumentAccountCodeEntity;
 import org.egov.egf.master.web.contract.ChartOfAccountContract;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
@@ -29,11 +31,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Ignore
+@Disabled
 public class InstrumentAccountCodeJdbcRepositoryTest {
 
     private InstrumentAccountCodeJdbcRepository instrumentAccountCodeJdbcRepository;
@@ -44,7 +46,7 @@ public class InstrumentAccountCodeJdbcRepositoryTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         instrumentAccountCodeJdbcRepository = new InstrumentAccountCodeJdbcRepository(namedParameterJdbcTemplate, jdbcTemplate);
     }
@@ -96,7 +98,7 @@ public class InstrumentAccountCodeJdbcRepositoryTest {
 
         List<Map<String, Object>> result = namedParameterJdbcTemplate.query("SELECT * FROM egf_instrumentAccountCode",
                 new InstrumentAccountCodeResultExtractor());
-        assertTrue("Result set length is zero", result.size() == 0);
+        assertTrue(result.size() == 0, "Result set length is zero");
     }
 
     @Test
@@ -147,14 +149,15 @@ public class InstrumentAccountCodeJdbcRepositoryTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     @Sql(scripts = { "/sql/instrumentaccountcode/clearInstrumentAccountCode.sql",
             "/sql/instrumentaccountcode/insertInstrumentAccountCodeData.sql" })
     public void test_search_invalid_sort_option() {
 
         InstrumentAccountCodeSearch search = getInstrumentAccountCodeSearch();
         search.setSortBy("desc");
-        instrumentAccountCodeJdbcRepository.search(search);
+        assertThrows(InvalidDataException.class, () -> instrumentAccountCodeJdbcRepository.search(search));
+
 
     }
 

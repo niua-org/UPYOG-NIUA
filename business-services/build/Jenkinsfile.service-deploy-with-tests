@@ -1,0 +1,54 @@
+// Reference pipeline fragment for per-service Jenkins jobs (append after ci-libs buildPipeline or standalone).
+// Stages: unit+integration (verify) -> dependency scan -> deploy -> smoke (shared job)
+
+def smokeJob = 'business-services/core-smoke-tests'
+
+pipeline {
+    agent any
+    parameters {
+        string(name: 'ENVIRONMENT', defaultValue: 'uat', description: 'Deploy target')
+        string(name: 'EXPECTED_VERSION', defaultValue: '', description: 'Image/build version for smoke version check')
+        string(name: 'SERVICE_NAME', defaultValue: 'billing-service', description: 'Must match core-smoke-tests services.yaml name')
+    }
+    stages {
+        stage('Unit and integration tests') {
+            steps {
+                dir("business-services/${params.SERVICE_NAME}") {
+                    sh 'mvn -B verify'
+                }
+            }
+        }
+        stage('Dependency scan') {
+            steps {
+                dir("business-services/${params.SERVICE_NAME}") {
+                    sh 'mvn -B org.owasp:dependency-check-maven:check || true'
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Invoke existing buildPipeline / Helm deploy for this service.'
+            }
+        }
+        stage('Smoke Tests') {
+            steps {
+                build job: smokeJob, wait: true, propagate: true, parameters: [
+                    string(name: 'ENVIRONMENT', value: params.ENVIRONMENT),
+                    string(name: 'SERVICE', value: params.SERVICE_NAME),
+                    string(name: 'EXPECTED_VERSION', value: params.EXPECTED_VERSION)
+                ]
+            }
+        }
+    }
+    post {
+        failure {
+            script {
+                if (params.ENVIRONMENT in ['dev', 'uat']) {
+                    echo 'Automatic helm rollback hook for dev/uat (configure per cluster).'
+                } else {
+                    input message: 'Prod smoke failed. Approve rollback?', ok: 'Rollback'
+                }
+            }
+        }
+    }
+}

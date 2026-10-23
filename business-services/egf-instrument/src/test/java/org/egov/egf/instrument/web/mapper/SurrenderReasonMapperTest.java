@@ -1,25 +1,27 @@
 package org.egov.egf.instrument.web.mapper;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.egov.common.contract.request.User;
 import org.egov.egf.instrument.domain.model.SurrenderReason;
 import org.egov.egf.instrument.domain.model.SurrenderReasonSearch;
 import org.egov.egf.instrument.web.contract.SurrenderReasonContract;
 import org.egov.egf.instrument.web.contract.SurrenderReasonSearchContract;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(MockitoJUnitRunner.class)
+import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
 public class SurrenderReasonMapperTest {
 
     @InjectMocks
     private SurrenderReasonMapper surrenderReasonMapper;
 
-    @Before
+    @BeforeEach
     public void setup() {
         surrenderReasonMapper = new SurrenderReasonMapper();
     }

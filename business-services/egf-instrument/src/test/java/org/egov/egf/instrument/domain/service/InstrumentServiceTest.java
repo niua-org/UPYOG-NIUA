@@ -1,8 +1,9 @@
 package org.egov.egf.instrument.domain.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -30,19 +31,18 @@ import org.egov.egf.master.web.contract.FinancialStatusContract;
 import org.egov.egf.master.web.repository.BankAccountContractRepository;
 import org.egov.egf.master.web.repository.BankContractRepository;
 import org.egov.egf.master.web.repository.FinancialStatusContractRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
 
 @Import(TestConfiguration.class)
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class InstrumentServiceTest {
 
     private InstrumentService instrumentService;
@@ -72,7 +72,7 @@ public class InstrumentServiceTest {
 
     private RequestInfo requestInfo = new RequestInfo();
 
-    @Before
+    @BeforeEach
     public void setup() {
         instrumentService = new InstrumentService(validator, instrumentRepository,
                 bankContractRepository, financialStatusContractRepository, bankAccountContractRepository,
@@ -89,10 +89,10 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("dd");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
@@ -105,7 +105,7 @@ public class InstrumentServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_dd_null_transnumber() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -117,23 +117,22 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("dd");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(false);
 
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_dd_null_bankdetails() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -144,19 +143,18 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("dd");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(false);
 
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -170,64 +168,10 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("cheque");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), Matchers.anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
-                .thenReturn(getFinancialStatusContract());
-        when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
-        when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
-
-        when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
-
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
-
-        assertEquals(expextedResult, actualResult);
-
-    }
-
-    @Test(expected = InvalidDataException.class)
-    public final void test_create_cheque_null_transnumber() {
-
-        List<Instrument> expextedResult = getInstruments();
-        expextedResult.get(0).getInstrumentType().setName("cheque");
-        expextedResult.get(0).setTransactionNumber(null);
-
-        Pagination<InstrumentType> pit = getInstrumentType();
-        pit.getPagedData().get(0).setName("cheque");
-
-        when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), Matchers.anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
-                .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
-                .thenReturn(getFinancialStatusContract());
-        when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
-        when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
-
-        when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
-
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
-
-        assertEquals(expextedResult, actualResult);
-
-    }
-
-    @Test(expected = InvalidDataException.class)
-    public final void test_create_cheque_null_bankdetails() {
-
-        List<Instrument> expextedResult = getInstruments();
-        expextedResult.get(0).getInstrumentType().setName("cheque");
-        expextedResult.get(0).setBank(null);
-
-        Pagination<InstrumentType> pit = getInstrumentType();
-        pit.getPagedData().get(0).setName("cheque");
-
-        when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), Matchers.anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
-                .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
@@ -241,6 +185,58 @@ public class InstrumentServiceTest {
     }
 
     @Test
+    public final void test_create_cheque_null_transnumber() {
+
+        List<Instrument> expextedResult = getInstruments();
+        expextedResult.get(0).getInstrumentType().setName("cheque");
+        expextedResult.get(0).setTransactionNumber(null);
+
+        Pagination<InstrumentType> pit = getInstrumentType();
+        pit.getPagedData().get(0).setName("cheque");
+
+        when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
+                .thenReturn(getBankAccountContract());
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
+                .thenReturn(getFinancialStatusContract());
+        when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
+        when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
+
+        when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
+
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
+
+
+    }
+
+    @Test
+    public final void test_create_cheque_null_bankdetails() {
+
+        List<Instrument> expextedResult = getInstruments();
+        expextedResult.get(0).getInstrumentType().setName("cheque");
+        expextedResult.get(0).setBank(null);
+
+        Pagination<InstrumentType> pit = getInstrumentType();
+        pit.getPagedData().get(0).setName("cheque");
+
+        when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
+                .thenReturn(getBankAccountContract());
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
+                .thenReturn(getFinancialStatusContract());
+        when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
+        when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
+
+        when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
+
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
+
+
+    }
+
+    @Test
     public final void test_create_cash() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -250,10 +246,10 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("cash");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
@@ -277,10 +273,10 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("cash");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
@@ -295,7 +291,7 @@ public class InstrumentServiceTest {
     
     
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_cash_null_transnumber() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -306,19 +302,18 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("cash");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), Matchers.anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
 
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -332,37 +327,10 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("online");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
-                .thenReturn(getFinancialStatusContract());
-        when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
-        when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
-
-        when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
-
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
-
-        assertEquals(expextedResult, actualResult);
-
-    }
-
-    @Test(expected = InvalidDataException.class)
-    public final void test_create_online_null_transnumber() {
-
-        List<Instrument> expextedResult = getInstruments();
-        expextedResult.get(0).getInstrumentType().setName("online");
-        expextedResult.get(0).setTransactionNumber(null);
-
-        Pagination<InstrumentType> pit = getInstrumentType();
-        pit.getPagedData().get(0).setName("online");
-
-        when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
-                .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
@@ -376,6 +344,32 @@ public class InstrumentServiceTest {
     }
 
     @Test
+    public final void test_create_online_null_transnumber() {
+
+        List<Instrument> expextedResult = getInstruments();
+        expextedResult.get(0).getInstrumentType().setName("online");
+        expextedResult.get(0).setTransactionNumber(null);
+
+        Pagination<InstrumentType> pit = getInstrumentType();
+        pit.getPagedData().get(0).setName("online");
+
+        when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
+                .thenReturn(getBankAccountContract());
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
+                .thenReturn(getFinancialStatusContract());
+        when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
+        when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
+
+        when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
+
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
+
+
+    }
+
+    @Test
     public final void test_create_bankchallan() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -385,10 +379,10 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("bankchallan");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), Matchers.anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
@@ -401,7 +395,7 @@ public class InstrumentServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_bankchallan_null_transnumber() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -412,23 +406,22 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("bankchallan");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
 
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_bankchallan_null_bankdetails() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -439,23 +432,22 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("bankchallan");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
 
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_bankchallan_null_bankaccountdetails() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -466,20 +458,19 @@ public class InstrumentServiceTest {
         pit.getPagedData().get(0).setName("bankchallan");
 
         when(instrumentTypeRepository.search(any(InstrumentTypeSearch.class))).thenReturn(pit);
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(getBankContract());
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(getBankContract());
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(getBankAccountContract());
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(getFinancialStatusContract());
         when(surrenderReasonRepository.findById(any(SurrenderReason.class))).thenReturn(getSurrenderReason());
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
 
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -504,7 +495,7 @@ public class InstrumentServiceTest {
         return page;
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_save_with_null_req() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -512,9 +503,8 @@ public class InstrumentServiceTest {
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(false);
         when(instrumentRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.create(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.create(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -532,7 +522,7 @@ public class InstrumentServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_null_id() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -541,9 +531,8 @@ public class InstrumentServiceTest {
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
         when(instrumentRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.update(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -563,7 +552,7 @@ public class InstrumentServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_null_id() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -572,13 +561,12 @@ public class InstrumentServiceTest {
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
         when(instrumentRepository.delete(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.delete(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.delete(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_with_null_req() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -586,13 +574,12 @@ public class InstrumentServiceTest {
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
         when(instrumentRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.update(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.update(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_without_id() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -600,13 +587,12 @@ public class InstrumentServiceTest {
 
         when(instrumentRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.update(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_with_null_req() {
 
         List<Instrument> expextedResult = getInstruments();
@@ -614,9 +600,8 @@ public class InstrumentServiceTest {
         when(instrumentRepository.uniqueCheck(any(String.class), any(Instrument.class))).thenReturn(true);
         when(instrumentRepository.delete(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.delete(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentService.delete(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -700,7 +685,7 @@ public class InstrumentServiceTest {
 
         instruments.get(0).setBank(expextedResult);
 
-        when(bankContractRepository.findById(any(BankContract.class), anyObject())).thenReturn(expextedResult);
+        when(bankContractRepository.findById(any(BankContract.class), any())).thenReturn(expextedResult);
 
         List<Instrument> actualResult = instrumentService.fetchRelated(instruments, new RequestInfo());
 
@@ -717,7 +702,7 @@ public class InstrumentServiceTest {
 
         instruments.get(0).setBankAccount(expextedResult);
 
-        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), anyObject()))
+        when(bankAccountContractRepository.findByAccountNumber(any(BankAccountContract.class), any()))
                 .thenReturn(expextedResult);
 
         List<Instrument> actualResult = instrumentService.fetchRelated(instruments, new RequestInfo());
@@ -735,7 +720,7 @@ public class InstrumentServiceTest {
 
         instruments.get(0).setFinancialStatus(expextedResult);
 
-        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), Matchers.anyObject()))
+        when(financialStatusContractRepository.findById(any(FinancialStatusContract.class), any()))
                 .thenReturn(expextedResult);
 
         List<Instrument> actualResult = instrumentService.fetchRelated(instruments, new RequestInfo());
@@ -760,7 +745,7 @@ public class InstrumentServiceTest {
         assertEquals(expextedResult, actualResult.get(0).getSurrenderReason());
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_fetch_instrumenttype_null() {
 
         List<Instrument> instruments = getInstrumentss();
@@ -773,13 +758,11 @@ public class InstrumentServiceTest {
 
         when(instrumentTypeRepository.search(null)).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.fetchRelated(instruments, new RequestInfo());
-
-        assertEquals(expextedResult.getPagedData().get(0), actualResult.get(0).getInstrumentType());
+        assertThrows(InvalidDataException.class, () -> instrumentService.fetchRelated(instruments, new RequestInfo()));
 
     }
 
-   /* @Test(expected = InvalidDataException.class)
+   /* @Test
     public final void test_fetch_bank_null() {
 
         List<Instrument> instruments = getInstrumentss();
@@ -790,12 +773,12 @@ public class InstrumentServiceTest {
 
         when(bankContractRepository.findById(null, new RequestInfo())).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.fetchRelated(instruments, new RequestInfo());
+        assertThrows(InvalidDataException.class, () -> instrumentService.fetchRelated(instruments, new RequestInfo()));
 
         assertEquals(expextedResult, actualResult.get(0).getBank());
     }*/
 
-   /* @Test(expected = InvalidDataException.class)
+   /* @Test
     public final void test_fetch_bankaccount_null() {
 
         List<Instrument> instruments = getInstrumentss();
@@ -807,7 +790,7 @@ public class InstrumentServiceTest {
 
         when(bankAccountContractRepository.findByAccountNumber(null, null)).thenReturn(expextedResult);
 
-        List<Instrument> actualResult = instrumentService.fetchRelated(instruments, new RequestInfo());
+        assertThrows(InvalidDataException.class, () -> instrumentService.fetchRelated(instruments, new RequestInfo()));
 
         assertEquals(expextedResult, actualResult.get(0).getBankAccount());
     }*/

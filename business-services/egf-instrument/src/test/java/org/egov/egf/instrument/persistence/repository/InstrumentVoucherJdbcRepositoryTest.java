@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.persistence.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,21 +17,22 @@ import org.egov.egf.instrument.domain.model.Instrument;
 import org.egov.egf.instrument.domain.model.InstrumentVoucher;
 import org.egov.egf.instrument.domain.model.InstrumentVoucherSearch;
 import org.egov.egf.instrument.persistence.entity.InstrumentVoucherEntity;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Ignore
+@Disabled
 public class InstrumentVoucherJdbcRepositoryTest {
 
     private InstrumentVoucherJdbcRepository instrumentVoucherJdbcRepository;
@@ -38,7 +40,7 @@ public class InstrumentVoucherJdbcRepositoryTest {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         instrumentVoucherJdbcRepository = new InstrumentVoucherJdbcRepository(namedParameterJdbcTemplate);
     }
@@ -128,13 +130,14 @@ public class InstrumentVoucherJdbcRepositoryTest {
         assertThat(page.getPagedData().size()).isEqualTo(0);
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     @Sql(scripts = { "/sql/instrumentvoucher/clearInstrumentVoucher.sql",
             "/sql/instrumentvoucher/insertInstrumentVoucherData.sql" })
     public void test_search_invalid_sort_option() {
         InstrumentVoucherSearch search = getInstrumentVoucherSearch();
         search.setSortBy("desc");
-        instrumentVoucherJdbcRepository.search(search);
+        assertThrows(InvalidDataException.class, () -> instrumentVoucherJdbcRepository.search(search));
+
     }
 
     @Test

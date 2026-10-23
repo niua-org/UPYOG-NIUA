@@ -1,0 +1,14 @@
+{
+  "smokeTestChart": {
+    "chartType": "metric",
+    "queries": [
+      {
+        "module": "COMMON",
+        "indexName": "test-index-*",
+        "aggrQuery": "{}",
+        "requestQueryMap": "{}",
+        "dateRefField": "@timestamp"
+      }
+    ]
+  }
+}
