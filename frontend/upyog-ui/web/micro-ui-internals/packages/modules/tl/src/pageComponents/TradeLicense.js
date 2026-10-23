@@ -9,7 +9,6 @@
 import {
   Card,
   CardHeader,
-  CardSubHeader,
   CardText,
   CitizenInfoLabel,
   SubmitBar,
@@ -42,11 +41,6 @@ const TradeLicense = ({ t, config, onSelect }) => {
     config?.sectionHeading || config?.header,
     config?.sectionHeadingDefault || "Documents required"
   );
-  const documentsHeading = textFrom(
-    t,
-    config?.documentsHeading,
-    config?.documentsHeadingDefault || "Documents required"
-  );
   const intro = textFrom(
     t,
     config?.text || config?.cardText,
@@ -75,7 +69,6 @@ const TradeLicense = ({ t, config, onSelect }) => {
         <CardHeader>{sectionHeading}</CardHeader>
 
         <div>
-          <CardSubHeader>{documentsHeading}</CardSubHeader>
           <CardText>{intro}</CardText>
 
           <div>

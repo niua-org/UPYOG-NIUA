@@ -412,7 +412,11 @@ const DynamicFormField = ({
               <div className="dynamic-form-field__field-array-card-body">
                 {children.map((child) => (
                   <DynamicFormField
-                    key={`${child.key}-${rowIndex}`}
+                    key={
+                      child?.field?.type === "radio"
+                        ? `${child.key}-${rowIndex}-${row?.[child?.field?.name] ?? ""}`
+                        : `${child.key}-${rowIndex}`
+                    }
                     fieldConfig={child}
                     formData={{ ...(formData || {}), ...(row || {}) }}
                     onChange={(name, value, resetFields) =>
@@ -606,6 +610,7 @@ const DynamicFormField = ({
         <FieldLabel text={labelText} required={showRequired} hasError={hasError} />
         <div className="field" data-field-error={hasError ? "true" : undefined}>
           <div
+            key={String(value ?? "")}
             className="radio-wrap dynamic-form-field__radio-group"
             onBlur={(event) => {
               // Moving between radios in the same group is not a field blur.

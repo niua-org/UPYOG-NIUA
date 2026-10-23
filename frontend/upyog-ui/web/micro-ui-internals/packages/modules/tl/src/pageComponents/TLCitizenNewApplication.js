@@ -123,10 +123,35 @@ const applyCorrespondenceChoice = (ctx, t) => {
 /** Linked property on the form, or the CPT session saved when it was selected. */
 const propertyForOwnerRestore = (data) => {
   const stashed = data?.__property;
-  if (stashed && typeof stashed === "object" && (stashed.owners || stashed.propertyId)) {
-    return stashed;
+  if (stashed && typeof stashed === "object") {
+    const details = stashed.details;
+    if (
+      details &&
+      typeof details === "object" &&
+      !stashed.owners &&
+      !stashed.propertyId &&
+      (details.owners || details.propertyId)
+    ) {
+      return details;
+    }
+    if (stashed.owners || stashed.propertyId) return stashed;
   }
   return readStoredProperty() || {};
+};
+
+/**
+ * Gender and relationship captured when the property was selected, then the
+ * live property, so a later edit of the visible row cannot wipe the codes.
+ */
+const ownerRadiosForRestore = (data) => {
+  const saved = Array.isArray(data?.__ownerRadios) ? data.__ownerRadios : [];
+  const linked = propertyLinkedFields(propertyForOwnerRestore(data));
+  const live = Array.isArray(linked.owners) ? linked.owners : [];
+  const length = Math.max(saved.length, live.length);
+  return Array.from({ length }, (_, index) => ({
+    gender: live[index]?.gender || saved[index]?.gender || "",
+    relationship: live[index]?.relationship || saved[index]?.relationship || "",
+  }));
 };
 
 const ownerRadioCode = (value) => coerceRadioFieldValue(value);
@@ -169,20 +194,26 @@ const ownerRowMatchesProperty = (row, source) => {
 };
 
 /**
- * Yes puts the linked property's owners, category, and documents back,
+ * Yes puts the linked property's owners and category back,
  * including after the citizen chose No and edited the name.
+ * ID proof and the ownership document stay as the citizen uploaded them.
  * No clears gender and relationship and leaves the edited name in place.
  * A prefill can leave Yes selected with blank radios; those are filled too.
  */
 const applySameAsPropertyOwner = (data, changedField) => {
   if (!Array.isArray(data?.owners) || !data.owners.length) return data;
   const same = optionCode(data.isSameAsPropertyOwner) === "YES";
-  const choseThis = changedField === "isSameAsPropertyOwner";
-  const blankAfterPrefill =
-    changedField == null &&
-    same &&
-    data.owners.some((row) => !ownerRadioCode(row?.gender) || !ownerRadioCode(row?.relationship));
-  if (!choseThis && !blankAfterPrefill) return data;
+  const choseThis =
+    changedField === "isSameAsPropertyOwner" || changedField === "TL_SAME_AS_PROPERTY_OWNER";
+  const radios = ownerRadiosForRestore(data);
+  const blankRadios = data.owners.some(
+    (row, index) =>
+      (radios[index]?.gender && !ownerRadioCode(row?.gender)) ||
+      (radios[index]?.relationship && !ownerRadioCode(row?.relationship))
+  );
+  // Fill on Yes, on the prefill that already has Yes, and whenever a code is
+  // still blank after that choice. Other edits must not overwrite a choice.
+  if (!choseThis && !(same && blankRadios) && !(changedField == null && same)) return data;
 
   if (!same) {
     let changed = false;
@@ -196,13 +227,31 @@ const applySameAsPropertyOwner = (data, changedField) => {
 
   const linked = propertyLinkedFields(propertyForOwnerRestore(data));
   const sourceRows = Array.isArray(linked.owners) ? linked.owners : [];
-  if (!sourceRows.length) return data;
+  if (!sourceRows.length && !radios.some((row) => row.gender || row.relationship)) return data;
 
   const ownersChanged =
-    data.owners.length !== sourceRows.length ||
-    sourceRows.some((source, index) => !ownerRowMatchesProperty(data.owners[index], source));
+    (sourceRows.length > 0 && data.owners.length !== sourceRows.length) ||
+    data.owners.some((row, index) => {
+      const source = sourceRows[index];
+      if (source && !ownerRowMatchesProperty(row, source)) return true;
+      const radio = radios[index] || {};
+      return (
+        (radio.gender && ownerRadioCode(row?.gender) !== radio.gender) ||
+        (radio.relationship && ownerRadioCode(row?.relationship) !== radio.relationship)
+      );
+    });
+  const baseRows =
+    choseThis && sourceRows.length ? sourceRows : data.owners;
   const owners = ownersChanged
-    ? sourceRows.map((source, index) => ownerRowFromProperty(source, data.owners[index]))
+    ? baseRows.map((row, index) => {
+        const source = sourceRows[index];
+        const previous = data.owners[index] || row;
+        const next = source ? ownerRowFromProperty(source, previous) : { ...previous };
+        const radio = radios[index] || {};
+        if (radio.gender) next.gender = radio.gender;
+        if (radio.relationship) next.relationship = radio.relationship;
+        return next;
+      })
     : data.owners;
 
   const next = { ...data, owners };
@@ -212,10 +261,8 @@ const applySameAsPropertyOwner = (data, changedField) => {
   ) {
     next.ownershipCategory = linked.ownershipCategory;
   }
-  ["proofOfIdentity", "proofOfOwnership", "ownerPhotoProof"].forEach((field) => {
-    if (linked[field]) next[field] = linked[field];
-  });
-  const documentsChanged = ["ownershipCategory", "proofOfIdentity", "proofOfOwnership", "ownerPhotoProof"].some(
+  if (linked.ownerPhotoProof) next.ownerPhotoProof = linked.ownerPhotoProof;
+  const documentsChanged = ["ownershipCategory", "ownerPhotoProof"].some(
     (field) => next[field] !== data[field]
   );
   if (!ownersChanged && !documentsChanged) return data;

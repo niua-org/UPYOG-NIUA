@@ -35,8 +35,6 @@
           "_comment": "Docs landing for /info. Headings only. Document rows are read from config/RequiredDocuments.json. *Default is the text shown until localization has the key.",
           "sectionHeading": "TL_DOC_REQ_SCREEN_HEADER",
           "sectionHeadingDefault": "Documents required",
-          "documentsHeading": "TL_NEW_APPLICATION_DOCUMENTS_REQUIRED",
-          "documentsHeadingDefault": "Documents required",
           "text": "TL_DOC_REQ_SCREEN_TEXT",
           "textDefault": "Keep the following documents ready",
           "infoLabel": "CS_FILE_APPLICATION_INFO_LABEL",

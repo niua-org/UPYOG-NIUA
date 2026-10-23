@@ -160,6 +160,32 @@
     justify-content: flex-end;
   }
 
+  /* Next sits on the right, beside Cancel. */
+  .dynamic-form-action.action-bar-wrap {
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 16px !important;
+    text-align: right !important;
+
+    .dynamic-form-action-primary {
+      display: flex !important;
+      width: auto !important;
+      margin: 0 !important;
+      order: 2 !important;
+      gap: 16px !important;
+    }
+
+    > button.selector-button-border {
+      order: 1 !important;
+      margin: 0 !important;
+    }
+
+    .submit-bar,
+    .submit-bar-disabled {
+      margin: 0;
+    }
+  }
+
   .label-field-pair > .card-label,
   .label-field-pair > .card-label-smaller,
   .label-field-pair > h2.card-label,
@@ -326,6 +352,14 @@
       }
     }
 
+    /* A locked radio still has to show the property owner's choice. */
+    .radio-btn-wrap--selected .radio-btn-dot,
+    .radio-btn-wrap--disabled.radio-btn-wrap--selected .radio-btn-dot {
+      display: block !important;
+      opacity: 1 !important;
+      background: #a82227 !important;
+    }
+
     label {
       margin-left: 8px;
       font-size: 14px;
@@ -370,6 +404,16 @@
 
     &::before {
       content: "+ ";
+    }
+  }
+
+  @media (min-width: 780px) {
+    .dynamic-form-action.action-bar-wrap {
+      left: 219px;
+      width: calc(100% - 219px);
+      max-width: none;
+      /* Match .tl-citizen (16px) + this card (4px) + the form step (20px). */
+      padding-right: 40px;
     }
   }
 

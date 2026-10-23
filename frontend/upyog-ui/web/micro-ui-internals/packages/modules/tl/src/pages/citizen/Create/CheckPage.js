@@ -137,9 +137,12 @@ const WrapCheckPage = ({
     routeLink = `${basePath}`;
     routeLink = routeLink.replace("/check", "");
   }
-  // Single-page DynamicForm flow — all summary edits return to the form step.
-  // Dynamic accordion form lives at /apply; docs landing stays /info.
-  const editRoute = value?.__dynamicForm ? `${routeLink}/apply` : null;
+  // New application and renewal edits open the accordion at /apply.
+  // The older edit-application flow still uses the step named on each pencil.
+  const opensAccordion =
+    pathname.includes("/renew-trade/") ||
+    (value?.__dynamicForm && !pathname.includes("/edit-application/"));
+  const editRoute = opensAccordion ? `${routeLink}/apply` : null;
   const goEdit = (legacyPath) => routeTo(editRoute || `${routeLink}/${legacyPath}`);
   return <React.Fragment>
       {window.location.href.includes("/citizen") ? (

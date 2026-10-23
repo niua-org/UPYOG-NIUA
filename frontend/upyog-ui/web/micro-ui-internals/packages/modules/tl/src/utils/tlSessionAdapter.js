@@ -181,6 +181,108 @@ const normalizeUnitRow = (row = {}) => ({
   accessory: asCodeObj(row.accessory, "TRADELICENSE_ACCESSORIESCATEGORY"),
 });
 
+const padDatePart = (value) => String(value).padStart(2, "0");
+
+/** License commencement epoch → yyyy-MM-dd for the accordion date field. */
+const epochToInputDate = (value) => {
+  if (value == null || value === "") return "";
+  const numeric = Number(value);
+  const date = new Date(Number.isFinite(numeric) ? numeric : value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`;
+};
+
+/** Application document whose type contains the token, in the file-field shape. */
+const documentByType = (documents, token) => {
+  const found = (documents || []).find((doc) =>
+    String(doc?.documentType || "").toUpperCase().includes(token)
+  );
+  const fileStoreId = found?.fileStoreId || found?.filestoreId;
+  if (!fileStoreId) return null;
+  return {
+    fileStoreId,
+    filestoreId: fileStoreId,
+    fileName: found.fileName || found.name || token,
+    documentType: found.documentType,
+  };
+};
+
+/**
+ * Existing trade license → flat accordion values (newApplication.Licenses[0]).
+ * The renewal edit pencil opens this shape in the same form as a new application.
+ *
+ * @param {object} license Trade-license search record
+ * @returns {object}
+ */
+export const mapLicenseToAccordionForm = (license = {}) => {
+  const detail = license.tradeLicenseDetail || {};
+  const structure = String(detail.structureType || "");
+  const structureRoot = structure.split(".")[0] || "";
+  const additional = detail.additionalDetail || {};
+  const propertyId =
+    additional.propertyId && additional.propertyId !== "null" ? additional.propertyId : "";
+  const sameOwner =
+    additional.isSameAsPropertyOwner === true || additional.isSameAsPropertyOwner === "true";
+  const accessories = Array.isArray(detail.accessories) ? detail.accessories : [];
+  const address = detail.address || {};
+  const documents = detail.applicationDocuments || [];
+
+  return {
+    structureType: structureRoot,
+    buildingType: structureRoot === "IMMOVABLE" ? structure : "",
+    vehicleType: structureRoot === "MOVABLE" ? structure : "",
+    hasPropertyId: propertyId ? "YES" : "",
+    propertyId,
+    showTradeDetails: "YES",
+    tradeName: license.tradeName || "",
+    commencementDate: epochToInputDate(license.commencementDate),
+    tradeUnits: (detail.tradeUnits || []).map((unit) => {
+      const parts = String(unit?.tradeType || "").split(".");
+      return {
+        tradecategory: parts[0] || "",
+        tradetype: parts[1] || "",
+        tradesubtype: unit?.tradeType || "",
+        unit: unit?.uom || "",
+        uom: unit?.uomValue != null ? String(unit.uomValue) : "",
+        id: unit?.id,
+      };
+    }),
+    isAccessories: accessories.length > 0 ? "ACCESSORY" : "NONACCESSORY",
+    accessories: accessories.map((item) => ({
+      accessory: item.accessoryCategory,
+      accessorycount: item.count != null ? String(item.count) : "",
+      unit: item.uom || "",
+      uom: item.uomValue != null ? String(item.uomValue) : "",
+      id: item.id,
+    })),
+    tradeGSTNumber: additional.tradeGstNo || additional.gstNo || "",
+    operationalSqFtArea: detail.operationalArea != null ? String(detail.operationalArea) : "",
+    numberOfEmployees: detail.noOfEmployees != null ? String(detail.noOfEmployees) : "",
+    pincode: address.pincode || "",
+    city: address.tenantId || license.tenantId || "",
+    locality: address.locality || "",
+    street: address.street || "",
+    doorNo: address.doorNo || "",
+    landmark: address.landmark || "",
+    isSameAsPropertyOwner: sameOwner ? "YES" : "NO",
+    ownershipCategory: detail.subOwnerShipCategory || "",
+    owners: (detail.owners || []).map((owner) => ({
+      name: owner.name || "",
+      gender: owner.gender || "",
+      mobilenumber: owner.mobileNumber || "",
+      fatherOrHusbandName: owner.fatherOrHusbandName || "",
+      relationship: owner.relationship || "",
+      emailId: owner.emailId || "",
+      permanentAddress: owner.permanentAddress || "",
+      id: owner.id,
+      uuid: owner.uuid,
+    })),
+    proofOfIdentity: documentByType(documents, "OWNERIDPROOF"),
+    proofOfOwnership: documentByType(documents, "OWNERSHIPPROOF"),
+    ownerPhotoProof: documentByType(documents, "OWNERPHOTO"),
+  };
+};
+
 /**
  * Extract flat form row from wizard session.
  * @param {object} session
