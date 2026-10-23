@@ -17,8 +17,10 @@ import org.egov.user.repository.builder.UserTypeQueryBuilder;
 import org.egov.user.repository.rowmapper.DigilockerUserResultSetExtractor;
 import org.egov.user.repository.rowmapper.UserResultSetExtractor;
 import org.egov.user.repository.rowmapper.UserResultSetExtractorV2;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -34,6 +36,11 @@ import static org.egov.user.repository.builder.UserTypeQueryBuilder.SELECT_FAILE
 import static org.egov.user.repository.builder.UserTypeQueryBuilder.SELECT_NEXT_SEQUENCE_USER;
 import static org.springframework.util.StringUtils.isEmpty;
 
+/**
+ * Repository layer for managing {@link User} entities in the {@code eg_user} table.
+ * Supports legacy and V2 CRUD operations, authentication metadata, role associations,
+ * and user audit logging.
+ */
 @Repository
 @Slf4j
 public class UserRepository {
@@ -45,7 +52,6 @@ public class UserRepository {
     private UserTypeQueryBuilder userTypeQueryBuilder;
     private RoleRepository roleRepository;
     private UserResultSetExtractor userResultSetExtractor;
-    @Autowired
     private UserResultSetExtractorV2 userResultSetExtractorV2;
 
     @Value("${user.address.mandatory.fields.enabled}")
@@ -58,7 +64,8 @@ public class UserRepository {
     UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
                    AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
                    JdbcTemplate jdbcTemplate,
-                   NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository) {
+                   NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository,
+                   @Autowired(required = false) UserResultSetExtractorV2 userResultSetExtractorV2) {
         this.addressRepository = addressRepository;
         this.roleRepository = roleRepository;
         this.userTypeQueryBuilder = userTypeQueryBuilder;
@@ -66,6 +73,15 @@ public class UserRepository {
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.auditRepository = auditRepository;
+        this.userResultSetExtractorV2 = userResultSetExtractorV2;
+    }
+
+    public UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
+                          AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
+                          JdbcTemplate jdbcTemplate,
+                          NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository) {
+        this(roleRepository, userTypeQueryBuilder, addressRepository, userResultSetExtractor,
+             jdbcTemplate, namedParameterJdbcTemplate, auditRepository, null);
     }
 
     /**
@@ -173,10 +189,6 @@ public class UserRepository {
         if (user.getRoles().size() > 0) {
             saveUserRoles(user);
         }
-        if (user.getPermanentAndCorrespondenceAddresses() != null) {
-            saveAddressIfValid(user.getCorrespondenceAddress(), savedUser, "correspondence");
-            saveAddressIfValid(user.getPermanentAddress(), savedUser, "permanent");
-        }
         return savedUser;
     }
 
@@ -193,12 +205,15 @@ public class UserRepository {
 
         Map<String, Object> updateuserInputs = new HashMap<>();
 
+        Long targetId = (oldUser != null && oldUser.getId() != null) ? oldUser.getId() : (user != null ? user.getId() : null);
+        String targetUuid = (oldUser != null && oldUser.getUuid() != null) ? oldUser.getUuid() : (user != null ? user.getUuid() : null);
+
+        updateuserInputs.put("id", targetId != null ? targetId : -1L);
+        updateuserInputs.put("uuid", targetUuid != null ? targetUuid : "");
         updateuserInputs.put("username", oldUser.getUsername());
         updateuserInputs.put("type", oldUser.getType().toString());
         updateuserInputs.put("tenantid", oldUser.getTenantId());
         updateuserInputs.put("AadhaarNumber", user.getAadhaarNumber());
- 		if(user.isDigilockerRegistration())
-        updateuserInputs.put("id", oldUser.getId());
 
         if (isNull(user.getAccountLocked()))
             updateuserInputs.put("AccountLocked", oldUser.getAccountLocked());
@@ -307,26 +322,33 @@ public class UserRepository {
 
         updateuserInputs.put("alternatemobilenumber", user.getAlternateMobileNumber());
 
+        updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
+        updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
+        updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
+        updateuserInputs.put("IsIdentityVerified", user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : (oldUser != null && oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false));
+        updateuserInputs.put("IdentityVerifiedDate", user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : (oldUser != null ? oldUser.getIdentityVerifiedDate() : null));
+        updateuserInputs.put("LastResyncDate", user.getLastResyncDate() != null ? user.getLastResyncDate() : (oldUser != null ? oldUser.getLastResyncDate() : null));
+
+        int currentEditCount = (oldUser != null && oldUser.getEdittedCount() != null) ? oldUser.getEdittedCount() : 0;
+        int nextEditCount = user.getEdittedCount() != null ? user.getEdittedCount() : (currentEditCount + 1);
+        updateuserInputs.put("EdittedCount", nextEditCount);
+        updateuserInputs.put("LastLoginMethod", user.getLastLoginMethod() != null ? user.getLastLoginMethod() : (oldUser != null ? oldUser.getLastLoginMethod() : null));
+
         updateuserInputs.put("LastModifiedDate", new Date());
         updateuserInputs.put("LastModifiedBy", userId );
         if(user.isDigilockerRegistration()) {
             namedParameterJdbcTemplate.update(userTypeQueryBuilder.getDigilockerUpdateQuery(), updateuserInputs);
         }else {
             updateAuditDetails(oldUser, userId, uuid);
-            namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+            int rowsUpdated = namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+            log.info("[USER-REPO] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
+            if (rowsUpdated == 0) {
+                log.warn("[USER-REPO] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
+                throw new CustomException("DATA_MISMATCH", "Data mismatch: User with id " + targetId + " or uuid " + targetUuid + " does not exist in the database");
+            }
             if (user.getRoles() != null && !CollectionUtils.isEmpty(user.getRoles()) && !oldUser.getRoles().equals(user.getRoles())) {
                 validateAndEnrichRoles(Collections.singletonList(user));
                 updateRoles(user);
-            }
-            if (user.getPermanentAndCorrespondenceAddresses() != null) {
-                // this will update the addresses only if the address soft update flag is enabled from properties file
-            // this is put to bypass existing logic of updating addresses where addresses were deleted and recreated
-            if (addressSoftUpdateFlag) {
-                log.info("Address soft update is enabled, updating addresses only if changed");
-                addressRepository.updateExistingAddressesV2(user.getPermanentAndCorrespondenceAddresses(), user.getId(), user.getTenantId());
-            } else {
-                addressRepository.update(user.getPermanentAndCorrespondenceAddresses(), user.getId(), user.getTenantId());
-            }
             }
         }
     }
@@ -582,6 +604,15 @@ public class UserRepository {
         userInputs.put("lastmodifiedby", entityUser.getLoggedInUserId());
         userInputs.put("alternatemobilenumber", entityUser.getAlternateMobileNumber());
 
+        userInputs.put("father_name", entityUser.getFatherName());
+        userInputs.put("mother_name", entityUser.getMotherName());
+        userInputs.put("spouse_name", entityUser.getSpouseName());
+        userInputs.put("is_identity_verified", entityUser.getIsIdentityVerified() != null ? entityUser.getIsIdentityVerified() : false);
+        userInputs.put("identity_verified_date", entityUser.getIdentityVerifiedDate());
+        userInputs.put("last_resync_date", entityUser.getLastResyncDate());
+        userInputs.put("editted_count", entityUser.getEdittedCount() != null ? entityUser.getEdittedCount() : 0);
+        userInputs.put("last_login_method", entityUser.getLastLoginMethod());
+
         namedParameterJdbcTemplate.update(userTypeQueryBuilder.getInsertUserQuery(), userInputs);
         return entityUser;
     }
@@ -654,13 +685,6 @@ public class UserRepository {
         if (!user.getRoles().isEmpty()) {
             saveUserRoles(user);
         }
-        
-        if (user.getAddresses() != null && !user.getAddresses().isEmpty()) {
-            log.info("Processing {} addresses for user: {}", user.getAddresses().size(), user.getUsername());
-            for (Address address : user.getAddresses()) {
-                saveAddressV2IfValid(address, savedUser);
-            }
-        }
         return savedUser;
     }
 
@@ -693,6 +717,11 @@ public class UserRepository {
 
         Map<String, Object> updateuserInputs = new HashMap<>();
 
+        Long targetId = (oldUser != null && oldUser.getId() != null) ? oldUser.getId() : (user != null ? user.getId() : null);
+        String targetUuid = (oldUser != null && oldUser.getUuid() != null) ? oldUser.getUuid() : (user != null ? user.getUuid() : null);
+
+        updateuserInputs.put("id", targetId != null ? targetId : -1L);
+        updateuserInputs.put("uuid", targetUuid != null ? targetUuid : "");
         updateuserInputs.put("username", oldUser.getUsername());
         updateuserInputs.put("type", oldUser.getType().toString());
         updateuserInputs.put("tenantid", oldUser.getTenantId());
@@ -804,13 +833,29 @@ public class UserRepository {
         }
 
         updateuserInputs.put("alternatemobilenumber", user.getAlternateMobileNumber());
+        updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
+        updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
+        updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
+        updateuserInputs.put("IsIdentityVerified", user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : (oldUser != null && oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false));
+        updateuserInputs.put("IdentityVerifiedDate", user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : (oldUser != null ? oldUser.getIdentityVerifiedDate() : null));
+        updateuserInputs.put("LastResyncDate", user.getLastResyncDate() != null ? user.getLastResyncDate() : (oldUser != null ? oldUser.getLastResyncDate() : null));
+
+        int currentEditCountV2 = (oldUser != null && oldUser.getEdittedCount() != null) ? oldUser.getEdittedCount() : 0;
+        int nextEditCountV2 = user.getEdittedCount() != null ? user.getEdittedCount() : (currentEditCountV2 + 1);
+        updateuserInputs.put("EdittedCount", nextEditCountV2);
+        updateuserInputs.put("LastLoginMethod", user.getLastLoginMethod() != null ? user.getLastLoginMethod() : (oldUser != null ? oldUser.getLastLoginMethod() : null));
 
         updateuserInputs.put("LastModifiedDate", new Date());
         updateuserInputs.put("LastModifiedBy", userId );
 
         updateAuditDetails(oldUser, userId, uuid);
 
-        namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);// This step will remain same as it is updating the user details only
+        int rowsUpdated = namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+        log.info("[USER-REPO-V2] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
+        if (rowsUpdated == 0) {
+            log.warn("[USER-REPO-V2] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
+            throw new CustomException("DATA_MISMATCH", "Data mismatch: User with id " + targetId + " or uuid " + targetUuid + " does not exist in the database");
+        }
         if (user.getRoles() != null && !CollectionUtils.isEmpty(user.getRoles()) && !oldUser.getRoles().equals(user.getRoles())) {
             validateAndEnrichRoles(Collections.singletonList(user));
             updateRoles(user);
@@ -861,14 +906,104 @@ public class UserRepository {
         return users;
     }
 
+    /**
+     * Retrieves the internal numeric user ID corresponding to the given user UUID.
+     *
+     * @param userUuid the unique user UUID string
+     * @return numeric user ID, or {@code null} if not found or blank
+     */
     public Long getUserIdByUuid(String userUuid) {
-        String query = userTypeQueryBuilder.getUserIdByUuid();
-        MapSqlParameterSource params = new MapSqlParameterSource("uuid", userUuid);
-        return namedParameterJdbcTemplate.queryForObject(query, params, Long.class);
+        if (StringUtils.isBlank(userUuid)) {
+            return null;
+        }
+        try {
+            String query = userTypeQueryBuilder.getUserIdByUuid();
+            MapSqlParameterSource params = new MapSqlParameterSource("uuid", userUuid);
+            return namedParameterJdbcTemplate.queryForObject(query, params, Long.class);
+        } catch (EmptyResultDataAccessException e) {
+            log.warn("No user found for uuid: {}", userUuid);
+            return null;
+        } catch (Exception e) {
+            log.error("Error fetching user id for uuid: {}", userUuid, e);
+            return null;
+        }
     }
 
     /**
-     * Helper method to save address if it has valid required fields
+     * Fetches the tenant identifier for a given user ID.
+     *
+     * @param userId the numeric user ID
+     * @return the tenant identifier string, or {@code null} if not found or invalid
+     */
+    public String getTenantIdByUserId(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        try {
+            return namedParameterJdbcTemplate.queryForObject(
+                    userTypeQueryBuilder.getTenantIdByUserIdQuery(),
+                    Collections.singletonMap("id", userId),
+                    String.class);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        } catch (Exception e) {
+            log.warn("Error fetching tenantId for userId: {}", userId, e);
+            return null;
+        }
+    }
+
+    /**
+     * Fetches the tenant identifier for a given user UUID.
+     *
+     * @param uuid the unique user UUID string
+     * @return the tenant identifier string, or {@code null} if not found or invalid
+     */
+    public String getTenantIdByUuid(String uuid) {
+        if (StringUtils.isBlank(uuid)) {
+            return null;
+        }
+        try {
+            return namedParameterJdbcTemplate.queryForObject(
+                    userTypeQueryBuilder.getTenantIdByUuidQuery(),
+                    Collections.singletonMap("uuid", uuid),
+                    String.class);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        } catch (Exception e) {
+            log.warn("Error fetching tenantId for uuid: {}", uuid, e);
+            return null;
+        }
+    }
+
+    /**
+     * Fetches the UUID string corresponding to a numeric user ID.
+     *
+     * @param userId the numeric user ID
+     * @return the UUID string, or {@code null} if not found or invalid
+     */
+    public String getUuidByUserId(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        try {
+            return namedParameterJdbcTemplate.queryForObject(
+                    userTypeQueryBuilder.getUuidByUserIdQuery(),
+                    Collections.singletonMap("id", userId),
+                    String.class);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        } catch (Exception e) {
+            log.warn("Error fetching uuid for userId: {}", userId, e);
+            return null;
+        }
+    }
+
+    /**
+     * Helper method to save address if it has valid required fields.
+     *
+     * @param address     the address object to persist
+     * @param savedUser   the parent user entity
+     * @param addressType address classification (e.g. correspondence or permanent)
      */
     private void saveAddressIfValid(Address address, User savedUser, String addressType) {
         if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
@@ -886,7 +1021,10 @@ public class UserRepository {
     }
 
     /**
-     * Helper method to save V2 address if it has valid required fields
+     * Helper method to save V2 address if it has valid required fields.
+     *
+     * @param address   the address object to persist
+     * @param savedUser the parent user entity
      */
     private void saveAddressV2IfValid(Address address, User savedUser) {
         if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
@@ -896,6 +1034,27 @@ public class UserRepository {
         } else {
             log.info("Skipping address persistence for type: {} - missing required fields (city, pincode, or address) for user: {}", 
                     address != null ? address.getType() : "null", savedUser.getUsername());
+        }
+    }
+
+    /**
+     * Updates the user's last authenticated login method (e.g., OTP, PASSWORD, AADHAAR, FAMILY_ID).
+     *
+     * @param userId      the numeric ID of the user
+     * @param loginMethod the authentication method identifier
+     */
+    public void updateLastLoginMethod(Long userId, String loginMethod) {
+        if (userId == null || StringUtils.isBlank(loginMethod)) {
+            return;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("id", userId);
+            params.put("lastLoginMethod", loginMethod);
+            namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateLastLoginMethodQuery(), params);
+            log.info("[USER-REPO] Updated last_login_method to '{}' for user ID: {}", loginMethod, userId);
+        } catch (Exception e) {
+            log.warn("[USER-REPO] Failed to update last_login_method for user ID {}: {}", userId, e.getMessage());
         }
     }
 }

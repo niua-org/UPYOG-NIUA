@@ -138,15 +138,44 @@ public class Configurations {
 	@Value("${esign.signature.content.size}")
 	private int SignatureContentSize;
 
+	// ---------------- Aadhaar Gateway Configurations ----------------
+	@Value("${aadhaar.gateway.mock.enabled}")
+	private Boolean aadhaarGatewayMockEnabled;
+
+	@Value("${aadhaar.gateway.base.url}")
+	private String aadhaarGatewayBaseUrl;
+
+	@Value("${aadhaar.gateway.send.otp.path}")
+	private String aadhaarGatewaySendOtpPath;
+
+	@Value("${aadhaar.gateway.verify.otp.path}")
+	private String aadhaarGatewayVerifyOtpPath;
+
+	@Value("${aadhaar.gateway.api.key}")
+	private String aadhaarGatewayApiKey;
+
+	@Value("${aadhaar.gateway.api.secret}")
+	private String aadhaarGatewayApiSecret;
+
+	@Value("${aadhaar.gateway.api.version}")
+	private String aadhaarGatewayApiVersion;
+
+	@Value("${aadhaar.gateway.connect.timeout}")
+	private Integer aadhaarGatewayConnectTimeout;
+
+	@Value("${aadhaar.gateway.read.timeout}")
+	private Integer aadhaarGatewayReadTimeout;
+
+	@Value("${aadhaar.otp.max.attempts}")
+	private Integer aadhaarOtpMaxAttempts;
+  
 	@Value("${esign.gateway.url}")
 	private String gatewayUrl;
-	
-	
+
 	@Value("${filestore.host}")
 	private String fileStoreUrl;
 	
 	@Value("${filestore.post.endpoint}")
 	private String fileStorePostUrl;
-	
 	
 }

@@ -8,6 +8,10 @@ import org.springframework.util.Assert;
 
 import java.time.Duration;
 
+/**
+ * Redis-backed implementation of Spring Security {@link OAuth2AuthorizationService}.
+ * Manages OAuth2 authorization entities, access tokens, and refresh tokens in Redis cache with TTL.
+ */
 public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationService {
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -19,8 +23,13 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
         this.redisTemplate = redisTemplate;
     }
 
+    /**
+     * Saves the {@link OAuth2Authorization} and indexes by access token and refresh token in Redis.
+     *
+     * @param authorization the authorization instance to save
+     */
     @Override
-    public void save(org.springframework.security.oauth2.server.authorization.OAuth2Authorization authorization) {
+    public void save(OAuth2Authorization authorization) {
         String authorizationKey = AUTHORIZATION_KEY_PREFIX + authorization.getId();
         redisTemplate.opsForValue().set(authorizationKey, authorization, Duration.ofMinutes(60));
         
@@ -37,8 +46,13 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
         }
     }
 
+    /**
+     * Removes the authorization record and its associated token indexes from Redis.
+     *
+     * @param authorization the authorization instance to delete
+     */
     @Override
-    public void remove(org.springframework.security.oauth2.server.authorization.OAuth2Authorization authorization) {
+    public void remove(OAuth2Authorization authorization) {
         String authorizationKey = AUTHORIZATION_KEY_PREFIX + authorization.getId();
         redisTemplate.delete(authorizationKey);
         
@@ -53,14 +67,27 @@ public class RedisOAuth2AuthorizationService implements OAuth2AuthorizationServi
         }
     }
 
+    /**
+     * Finds an {@link OAuth2Authorization} by its primary identifier in Redis.
+     *
+     * @param id the authorization ID
+     * @return the resolved authorization, or null if not found
+     */
     @Override
-    public org.springframework.security.oauth2.server.authorization.OAuth2Authorization findById(String id) {
+    public OAuth2Authorization findById(String id) {
         String key = AUTHORIZATION_KEY_PREFIX + id;
-        return (org.springframework.security.oauth2.server.authorization.OAuth2Authorization) redisTemplate.opsForValue().get(key);
+        return (OAuth2Authorization) redisTemplate.opsForValue().get(key);
     }
 
+    /**
+     * Resolves an {@link OAuth2Authorization} by searching for a matching token value in Redis.
+     *
+     * @param token     the access or refresh token value
+     * @param tokenType token classification (access_token or refresh_token)
+     * @return the associated authorization, or null if not found
+     */
     @Override
-    public org.springframework.security.oauth2.server.authorization.OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
+    public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
         String tokenKey = TOKEN_KEY_PREFIX + token;
         Object tokenValue = redisTemplate.opsForValue().get(tokenKey);
 

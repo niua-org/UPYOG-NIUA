@@ -2,10 +2,12 @@ package org.egov.user.repository.rowmapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.*;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -24,6 +26,10 @@ import static java.util.Objects.isNull;
 import static org.egov.user.domain.model.enums.AddressType.CORRESPONDENCE;
 import static org.egov.user.domain.model.enums.AddressType.PERMANENT;
 
+/**
+ * Result set extractor that aggregates tabular query results into domain {@link User} entities,
+ * mapping associated {@link Role} objects and extended V2 {@link Address} records.
+ */
 @Slf4j
 @Service
 public class UserResultSetExtractorV2 implements ResultSetExtractor<List<User>> {
@@ -35,6 +41,14 @@ public class UserResultSetExtractorV2 implements ResultSetExtractor<List<User>> 
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Extracts SQL {@link ResultSet} rows into a grouped list of {@link User} objects with attached roles and addresses.
+     *
+     * @param rs the database result set
+     * @return list of hydrated {@link User} instances
+     * @throws SQLException        if a database access error occurs
+     * @throws DataAccessException if Spring data access error occurs
+     */
     @Override
     public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
 
@@ -98,6 +112,34 @@ public class UserResultSetExtractorV2 implements ResultSetExtractor<List<User>> 
                     }
                 }
 
+                if (hasColumn(rs, "father_name")) {
+                    user.setFatherName(rs.getString("father_name"));
+                }
+                if (hasColumn(rs, "mother_name")) {
+                    user.setMotherName(rs.getString("mother_name"));
+                }
+                if (hasColumn(rs, "spouse_name")) {
+                    user.setSpouseName(rs.getString("spouse_name"));
+                }
+                if (hasColumn(rs, "is_identity_verified")) {
+                    user.setIsIdentityVerified(rs.getBoolean("is_identity_verified"));
+                }
+                if (hasColumn(rs, "identity_verified_date")) {
+                    user.setIdentityVerifiedDate(rs.getTimestamp("identity_verified_date"));
+                }
+                if (hasColumn(rs, "last_resync_date")) {
+                    user.setLastResyncDate(rs.getTimestamp("last_resync_date"));
+                }
+                if (hasColumn(rs, "editted_count")) {
+                    user.setEdittedCount(rs.getInt("editted_count"));
+                }
+                if (hasColumn(rs, "last_login_method")) {
+                    user.setLastLoginMethod(rs.getString("last_login_method"));
+                }
+                if (hasColumn(rs, "digilockerid")) {
+                    user.setDigilockerid(rs.getString("digilockerid"));
+                }
+
                 usersMap.put(userId, user);
 
             } else {
@@ -132,6 +174,9 @@ public class UserResultSetExtractorV2 implements ResultSetExtractor<List<User>> 
     }
 
     private Address populateAddress(ResultSet rs, User user) throws SQLException {
+        if (!hasColumn(rs, "addr_id")) {
+            return null;
+        }
         long id = rs.getLong("addr_id");
         if (id == 0L) {
             return null;
@@ -145,6 +190,7 @@ public class UserResultSetExtractorV2 implements ResultSetExtractor<List<User>> 
                 .city(rs.getString("addr_city"))
                 .pinCode(rs.getString("addr_pincode"))
                 .userId(rs.getLong("addr_userid"))
+                .userUuid(user != null ? user.getUuid() : null)
                 .tenantId(rs.getString("addr_tenantid"))
                 .address2(rs.getString("addr_address2"))
                 .houseNumber(rs.getString("addr_houseNumber"))
@@ -154,7 +200,38 @@ public class UserResultSetExtractorV2 implements ResultSetExtractor<List<User>> 
                 .locality(rs.getString("addr_locality"))
                 .build();
 
+        if (hasColumn(rs, "addr_latitude")) {
+            double lat = rs.getDouble("addr_latitude");
+            if (!rs.wasNull()) address.setLatitude(lat);
+        }
+        if (hasColumn(rs, "addr_longitude")) {
+            double lon = rs.getDouble("addr_longitude");
+            if (!rs.wasNull()) address.setLongitude(lon);
+        }
+        if (hasColumn(rs, "addr_filestore_id")) {
+            address.setFilestoreId(rs.getString("addr_filestore_id"));
+        }
+        if (hasColumn(rs, "addr_user_uuid") && StringUtils.isNotBlank(rs.getString("addr_user_uuid"))) {
+            address.setUserUuid(rs.getString("addr_user_uuid"));
+        }
+        if (hasColumn(rs, "addr_status") && StringUtils.isNotBlank(rs.getString("addr_status"))) {
+            address.setStatus(rs.getString("addr_status").toLowerCase());
+        } else {
+            address.setStatus(UserConstants.ADDRESS_ACTIVE_STATUS);
+        }
+
         return address;
 
+    }
+
+    private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+        ResultSetMetaData rsmd = rs.getMetaData();
+        int columns = rsmd.getColumnCount();
+        for (int x = 1; x <= columns; x++) {
+            if (columnName.equalsIgnoreCase(rsmd.getColumnLabel(x)) || columnName.equalsIgnoreCase(rsmd.getColumnName(x))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
