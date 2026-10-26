@@ -64,12 +64,9 @@ const EmployeeApp = ({ path }) => {
           <Route path="response/:id" element={<PrivateRoute><Response /></PrivateRoute>} />
           <Route path="ApplicationDetailReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="ApplicationDetailReport" /></PrivateRoute>} />
           <Route path="CollectionsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="CollectionsReport" /></PrivateRoute>} />
-          <Route path="SLAReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="SLAReport" /></PrivateRoute>} />
-          <Route path="ReceiptRegisterNDC/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="ReceiptRegisterNDC" /></PrivateRoute>} />
           <Route path="StateApplicationDetailReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="StateApplicationDetailReport" /></PrivateRoute>} />
           <Route path="StateCollectionsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="StateCollectionsReport" /></PrivateRoute>} />
           <Route path="StateSLAReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="StateSLAReport" /></PrivateRoute>} />
-          <Route path="StateReceiptRegisterNDC/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ndc" reportName="StateReceiptRegisterNDC" /></PrivateRoute>} />
         </Routes>
       </div>
     </Fragment>
