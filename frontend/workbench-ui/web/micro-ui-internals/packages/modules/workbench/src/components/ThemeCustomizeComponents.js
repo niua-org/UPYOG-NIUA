@@ -160,9 +160,11 @@ export function CardTitle({ icon, title, description, rightElement }) {
   return (
     <div className="theme-card-title-row">
       <div className="theme-card-title-left">
-        <div className="theme-card-title-icon-container">
-          {icon}
-        </div>
+        {icon && (
+          <div className="theme-card-title-icon-container">
+            {icon}
+          </div>
+        )}
         <div className="theme-card-title-text-container">
           <div className="theme-card-title-text">{title}</div>
           {description && <div className="theme-card-title-description">{description}</div>}
@@ -255,6 +257,172 @@ export function ColorField({ label, value, onChange }) {
 }
 
 /**
+ * PaletteSelectField Component
+ * Dropdown selector for picking a color from the predefined C1-C15 palette.
+ * Replaces freeform color pickers with a dropdown listing predefined palette tokens
+ * (e.g. "Primary Main (C1)", "Secondary Brand (C4)", etc.). Sends the matching hex code in `onChange`.
+ * 
+ * @param {Object} props
+ * @param {string} props.label - Configuration field name.
+ * @param {string} props.value - Active color value hex code.
+ * @param {Object} props.palette - Predefined palette map { C1: "#...", C2: "#...", ... }.
+ * @param {Object} [props.paletteDescriptions] - Predefined palette descriptions map { C1: "Primary Main", ... }.
+ * @param {Function} props.onChange - Selection trigger callback.
+ */
+export function PaletteSelectField({ label, value, palette = {}, paletteDescriptions = {}, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = React.useRef(null);
+
+  // Identify matching palette key for the current hex value
+  const currentKey = Object.keys(palette).find(
+    (k) => palette[k]?.toLowerCase() === value?.toLowerCase()
+  ) || Object.keys(palette)[0] || "Color01";
+
+  const activeHex = palette[currentKey] || value || "#000000";
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    const handleScroll = (e) => {
+      // Don't close if scrolling inside the dropdown popover list
+      if (e.target && e.target.classList && e.target.classList.contains("palette-dropdown-list")) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="field-col" ref={containerRef} style={{ position: "relative", zIndex: isOpen ? 1050 : "auto" }}>
+      {label && <span className="field-label-text">{label}</span>}
+      <div
+        className="palette-select-container"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justify: "space-between",
+          userSelect: "none"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+          <span
+            className="palette-color-badge"
+            style={{ backgroundColor: activeHex }}
+            title={activeHex}
+          />
+          <span style={{ fontSize: "13.5px", fontWeight: "600", color: "#1E293B", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+            {currentKey}
+          </span>
+          <span style={{ fontSize: "12px", color: "#64748B", fontFamily: "monospace" }}>
+            ({activeHex})
+          </span>
+        </div>
+        <span style={{ fontSize: "10px", color: "#64748B", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+          ▼
+        </span>
+      </div>
+
+      {isOpen && (
+        <div
+          className="palette-dropdown-popover"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            right: 0,
+            zIndex: 1050,
+            backgroundColor: "#FFFFFF",
+            border: "1.5px solid #E2E8F0",
+            borderRadius: "10px",
+            boxShadow: "0 12px 28px rgba(15, 23, 42, 0.18)",
+            overflow: "hidden",
+            boxSizing: "border-box"
+          }}
+        >
+          <div
+            className="palette-dropdown-list"
+            style={{
+              maxHeight: "220px",
+              overflowY: "auto",
+              padding: "6px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2px"
+            }}
+          >
+            {Object.keys(palette).map((cKey) => {
+              const hex = palette[cKey];
+              const isSelected = cKey === currentKey;
+
+              return (
+                <div
+                  key={cKey}
+                  onClick={() => {
+                    onChange(hex);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justify: "space-between",
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    backgroundColor: isSelected ? "#F1F5F9" : "transparent",
+                    transition: "background-color 0.15s ease",
+                    boxSizing: "border-box",
+                    lineHeight: "1.3"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = "#F8FAFC";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span
+                      style={{
+                        width: "18px",
+                        height: "18px",
+                        borderRadius: "4px",
+                        backgroundColor: hex,
+                        border: "1px solid rgba(0,0,0,0.12)",
+                        flexShrink: 0
+                      }}
+                    />
+                    <span style={{ fontSize: "13px", fontWeight: isSelected ? "700" : "500", color: "#1E293B" }}>
+                      {cKey}
+                    </span>
+                    <span style={{ fontSize: "12px", color: "#64748B", fontFamily: "monospace" }}>
+                      ({hex})
+                    </span>
+                  </div>
+                  {isSelected && <span style={{ color: "#a82227", fontWeight: "bold", fontSize: "12px" }}>✓</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * NumberField Component
  * Standard number configuration input field supporting customizable value units (e.g. "px", "rem").
  * 
@@ -265,14 +433,18 @@ export function ColorField({ label, value, onChange }) {
  * @param {Function} props.onChange - Field value change callback handler.
  * @param {Object} [props.style] - Inline style override properties.
  */
-export function NumberField({ label, value, unit, onChange }) {
+export function NumberField({ label, value, unit, onChange, step = "any" }) {
+  const rawVal = typeof value === "string" && unit ? value.replace(unit, "") : value;
+  const displayVal = rawVal !== undefined && rawVal !== null ? rawVal : "";
+
   return (
     <div className="field-col">
       {label && <span className="field-label-text">{label}</span>}
       <div className="input-container number-field-width">
         <input
           type="number"
-          value={parseInt(value) || 0}
+          step={step}
+          value={displayVal}
           onChange={(e) => onChange(e.target.value + (unit || ""))}
           className="number-field-input"
         />
@@ -555,8 +727,7 @@ export function SubmitButton({ label = "SUBMIT CHANGES", onClick }) {
  * @param {string} props.value - CSS box-shadow string.
  * @param {Function} props.onChange - Value update callback method.
  */
-export function ShadowField({ label, value, onChange }) {
-
+export function ShadowField({ label, value, onChange, palette, paletteDescriptions }) {
   /**
    * Helper utility method that parses raw CSS box-shadow strings.
    * Extracts horizontal, vertical offsets, blur, spread radius metrics, and opacity colors.
@@ -683,7 +854,6 @@ export function ShadowField({ label, value, onChange }) {
   return (
     <div className="picker-section-wrapper">
       <div className="field-col">
-        <span className="field-label-text">{label}</span>
         <input
           type="text"
           value={value}
@@ -741,23 +911,40 @@ export function ShadowField({ label, value, onChange }) {
 
         <div className="builder-grid-align-center">
           <div className="builder-field-col">
-            <span className="builder-slider-label">Color Hex</span>
-            <div className="input-container builder-hex-input-wrapper">
-              <div ref={rgbaPreviewRef} className="builder-mini-color-box">
-                <input
-                  type="color"
-                  value={colorData.hex}
-                  onChange={(e) => handleHexChange(e.target.value)}
-                  className="builder-invisible-color-input"
-                />
-              </div>
-              <input
-                type="text"
-                value={localHex}
-                onChange={(e) => handleHexChange(e.target.value)}
-                className="builder-hex-text-input"
+            {palette ? (
+              <PaletteSelectField
+                label="Shadow Color (Palette Slot)"
+                value={
+                  Object.entries(palette).find(([_, hex]) => hex.toLowerCase() === colorData.hex.toLowerCase())?.[0] || colorData.hex
+                }
+                palette={palette}
+                paletteDescriptions={paletteDescriptions}
+                onChange={(newC) => {
+                  const targetHex = palette[newC] || newC;
+                  updateShadow({ hex: targetHex });
+                }}
               />
-            </div>
+            ) : (
+              <>
+                <span className="builder-slider-label">Color Hex</span>
+                <div className="input-container builder-hex-input-wrapper">
+                  <div ref={rgbaPreviewRef} className="builder-mini-color-box">
+                    <input
+                      type="color"
+                      value={colorData.hex}
+                      onChange={(e) => handleHexChange(e.target.value)}
+                      className="builder-invisible-color-input"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={localHex}
+                    onChange={(e) => handleHexChange(e.target.value)}
+                    className="builder-hex-text-input"
+                  />
+                </div>
+              </>
+            )}
           </div>
           <div className="builder-field-col">
             <span className="builder-slider-label">Opacity: {Math.round(colorData.opacity * 100)}%</span>
