@@ -66,10 +66,7 @@ const EmployeeApp = ({ path, url, userType }) => {
           <Route path="generate-challan/*" element={<PrivateRoute><ChallanSearch /></PrivateRoute>} />
           <Route path="response/:id" element={<PrivateRoute><ChallanResponseCitizen /></PrivateRoute>} />
           <Route path="application/:acknowledgementIds/:tenantId" element={<PrivateRoute><ChallanApplicationDetails /></PrivateRoute>} />
-          <Route path="UserWiseCollectionsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="UserWiseCollectionsReport" /></PrivateRoute>} />
-          <Route path="ReceiptRegisterCHALLAN/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="ReceiptRegisterCHALLAN" /></PrivateRoute>} />
-          <Route path="StateUserWiseCollectionsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateUserWiseCollectionsReport" /></PrivateRoute>} />
-          <Route path="StateReceiptRegisterchallan/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateReceiptRegisterchallan" /></PrivateRoute>} />
+
           <Route path="Categorywisechallanreport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="Categorywisechallanreport" /></PrivateRoute>} />
           <Route path="StateCategoryWiseChallanDetailReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="StateCategoryWiseChallanDetailReport" /></PrivateRoute>} />
           <Route path="ChallanDefaulterReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-ch" reportName="ChallanDefaulterReport" /></PrivateRoute>} />
