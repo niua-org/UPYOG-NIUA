@@ -105,6 +105,56 @@ class DraftServiceTest {
     }
 
     @Test
+    void save_blankTenantId_throwsTenantIdRequired() {
+        DraftDetail draft = savableDraft();
+        draft.setTenantId(" ");
+        DraftRequest request = saveRequest(caller(USER_UUID, "CITIZEN"), draft);
+
+        assertThatThrownBy(() -> draftService.save(request))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("tenantId is required")
+                .hasFieldOrPropertyWithValue("code", "TENANT_ID_REQUIRED");
+        verifyNoInteractions(draftRepository);
+    }
+
+    @Test
+    void save_nullDraftData_throwsDraftDataRequired() {
+        DraftDetail draft = savableDraft();
+        draft.setDraftData(null);
+        DraftRequest request = saveRequest(caller(USER_UUID, "CITIZEN"), draft);
+
+        assertThatThrownBy(() -> draftService.save(request))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("draftData is required")
+                .hasFieldOrPropertyWithValue("code", "DRAFT_DATA_REQUIRED");
+        verifyNoInteractions(draftRepository);
+    }
+
+    @Test
+    void save_unknownCreatorType_usesEmployeeFromAuthenticatedUser() {
+        DraftDetail draft = savableDraft();
+        draft.setCreatorType("citizen");
+        DraftRequest request = saveRequest(caller(USER_UUID, "EMPLOYEE"), draft);
+
+        draftService.save(request);
+
+        verify(draftRepository).save(payloadCaptor.capture(), eq(true));
+        assertThat(payloadCaptor.getValue().getDraft().getCreatorType()).isEqualTo("EMPLOYEE");
+    }
+
+    @Test
+    void save_blankCreatorTypeWithCitizenUser_defaultsToUser() {
+        DraftDetail draft = savableDraft();
+        draft.setCreatorType(null);
+        DraftRequest request = saveRequest(caller(USER_UUID, "CITIZEN"), draft);
+
+        draftService.save(request);
+
+        verify(draftRepository).save(payloadCaptor.capture(), eq(true));
+        assertThat(payloadCaptor.getValue().getDraft().getCreatorType()).isEqualTo("USER");
+    }
+
+    @Test
     void save_missingUserInfo_throwsUserInfoRequired() {
         DraftRequest request = saveRequest(RequestInfo.builder().apiId("draft").build(), savableDraft());
 

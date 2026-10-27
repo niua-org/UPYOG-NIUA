@@ -73,6 +73,25 @@ class GisServiceTest {
     }
 
     @Test
+    void getEntitiesWithPolygons_existingPolygonGeometry_skipsAdapterExtraction() {
+        GisRequest request = request("pb.amritsar", "PT");
+        Map<String, Object> polygon = new HashMap<String, Object>();
+        polygon.put("type", "Polygon");
+        Map<String, Object> attributes = new HashMap<String, Object>();
+        attributes.put("polygonGeometry", polygon);
+        Entity entity = Entity.builder().id("prop-3").attributes(attributes).build();
+
+        when(serviceRegistry.getAdapter("PT")).thenReturn(adapter);
+        when(adapter.fetchEntities(request)).thenReturn(Collections.singletonList(entity));
+
+        GisResponse response = gisService.getEntitiesWithPolygons(request);
+
+        assertThat(response.getTotalCount()).isEqualTo(1);
+        assertThat(entity.getAttributes()).containsEntry("polygonGeometry", polygon);
+        verify(adapter, never()).extractPolygonGeometry(any(Entity.class));
+    }
+
+    @Test
     void getEntitiesWithPoints_nullPointGeometry_omitsPointAttribute() {
         GisRequest request = request("pb.amritsar", "PT");
         Map<String, Object> attributes = new HashMap<String, Object>();
