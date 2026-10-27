@@ -1,0 +1,124 @@
+package org.egov.dx.validator;
+
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.egov.dx.util.AadhaarConstants;
+import org.egov.dx.util.VerhoeffAlgorithm;
+import org.egov.dx.web.models.AadhaarVerificationRequest;
+import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.util.regex.Pattern;
+
+/**
+ * Dedicated validator responsible for business and format validation of Aadhaar requests.
+ *
+ * <p>Enforces the <b>Single Responsibility Principle (SRP)</b> by isolating validation rules
+ * and input sanity checks away from HTTP controller orchestration concerns.</p>
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ */
+@Component
+@Slf4j
+public class AadhaarVerificationValidator {
+
+    private static final Pattern AADHAAR_PATTERN = Pattern.compile(AadhaarConstants.REGEX_AADHAAR);
+    private static final Pattern OTP_PATTERN = Pattern.compile(AadhaarConstants.REGEX_OTP);
+
+    @Value("${aadhaar.gateway.mock.enabled}")
+    private boolean mockEnabled;
+
+    /**
+     * Validates incoming request for the {@code /_sendOtp} operation.
+     * Enforces 12-digit format and UIDAI Verhoeff checksum validation.
+     *
+     * @param request the verification request containing RequestInfo and 12-digit Aadhaar number
+     * @throws CustomException if request, RequestInfo, or Aadhaar number is null/invalid
+     */
+    public void validateSendOtpRequest(AadhaarVerificationRequest request) {
+        if (request == null) {
+            log.error("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
+        }
+
+        if (request.getRequestInfo() == null) {
+            log.error("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+        }
+
+        String aadhaarNumber = request.getAadhaarNumber();
+        if (StringUtils.isBlank(aadhaarNumber) || !AADHAAR_PATTERN.matcher(aadhaarNumber).matches()) {
+            log.warn("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_INVALID_AADHAAR);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
+        }
+
+        // Verhoeff Checksum verification (Validates 12th digit checksum and rejects repetitive numbers like 222222222222)
+        if (!VerhoeffAlgorithm.validateVerhoeff(aadhaarNumber)) {
+            log.warn("Aadhaar _sendOtp validation failed Verhoeff checksum for masked Aadhaar: XXXXXXXX{}",
+                    aadhaarNumber.substring(aadhaarNumber.length() - 4));
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR_CHECKSUM, AadhaarConstants.MSG_INVALID_AADHAAR_CHECKSUM);
+        }
+    }
+
+    /**
+     * Validates incoming request for the {@code /_verifyOtp} operation.
+     *
+     * @param request the verification request containing RequestInfo, referenceId, and 6-digit OTP
+     * @throws CustomException if request, RequestInfo, referenceId, or OTP is missing/invalid
+     */
+    public void validateVerifyOtpRequest(AadhaarVerificationRequest request) {
+        if (request == null) {
+            log.error("Aadhaar _verifyOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
+        }
+
+        if (request.getRequestInfo() == null) {
+            log.error("Aadhaar _verifyOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+        }
+
+        String referenceId = StringUtils.isNotBlank(request.getReferenceId())
+                ? request.getReferenceId()
+                : request.getTxnId();
+
+        if (StringUtils.isBlank(referenceId)) {
+            log.warn("Aadhaar _verifyOtp validation failed: {}", AadhaarConstants.MSG_MISSING_REFERENCE_ID);
+            throw new CustomException(AadhaarConstants.ERR_CODE_MISSING_REFERENCE_ID, AadhaarConstants.MSG_MISSING_REFERENCE_ID);
+        }
+
+        String otp = request.getOtp();
+        if (StringUtils.isBlank(otp) || !OTP_PATTERN.matcher(otp).matches()) {
+            log.warn("Aadhaar _verifyOtp validation failed: Invalid OTP for referenceId: {}", referenceId);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_OTP_FORMAT, AadhaarConstants.MSG_INVALID_OTP);
+        }
+    }
+
+    /**
+     * Validates an Aadhaar number's format and evaluates its UIDAI Verhoeff checksum.
+     *
+     * @param request the verification request containing RequestInfo and 12-digit Aadhaar number
+     * @return boolean indicating whether the Aadhaar number satisfies the Verhoeff checksum
+     * @throws CustomException if request or RequestInfo is null, or Aadhaar number format is invalid
+     */
+    public boolean validateVerhoeffChecksum(AadhaarVerificationRequest request) {
+        if (request == null) {
+            log.error("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
+        }
+
+        if (request.getRequestInfo() == null) {
+            log.error("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+        }
+
+        String aadhaarNumber = request.getAadhaarNumber();
+        if (StringUtils.isBlank(aadhaarNumber) || !AADHAAR_PATTERN.matcher(aadhaarNumber).matches()) {
+            log.warn("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_INVALID_AADHAAR);
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
+        }
+
+        return VerhoeffAlgorithm.validateVerhoeff(aadhaarNumber);
+    }
+}

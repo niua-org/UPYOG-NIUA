@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -59,7 +60,7 @@ public class CustomAuthenticationKeyGenerator {
 
     // LEGACY METHOD: For backward compatibility (if still needed elsewhere)
     // You can remove this if not used by other parts of your application
-    public String extractKeyFromAuthentication(Authentication authentication, String clientId, java.util.Set<String> scopes) {
+    public String extractKeyFromAuthentication(Authentication authentication, String clientId, Set<String> scopes) {
         Map<String, String> values = new LinkedHashMap<>();
         
         if (authentication != null && authentication.getName() != null) {

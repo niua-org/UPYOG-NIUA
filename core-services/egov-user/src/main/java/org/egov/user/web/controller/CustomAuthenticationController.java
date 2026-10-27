@@ -2,10 +2,12 @@ package org.egov.user.web.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.user.domain.exception.MultipleUsersFoundException;
 import org.egov.user.domain.model.SecureUser;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.persistence.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,11 +26,16 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,14 +43,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CustomAuthenticationController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtEncoder jwtEncoder;
+    private final UserService userService;
+    private final UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    @Autowired
-    private JwtEncoder jwtEncoder;
-
-    @Autowired
-    private UserService userService;
+    @Value("${citizen.login.password.otp.enabled}")
+    private boolean citizenLoginPasswordOtpEnabled;
 
     @Value("${access.token.validity.in.minutes}")
     private int accessTokenValidityInMinutes;
@@ -51,11 +58,21 @@ public class CustomAuthenticationController {
     @Value("${refresh.token.validity.in.minutes}")
     private int refreshTokenValidityInMinutes;
 
-    @Value("${oauth2.token.format:jwt}")
+    @Value("${oauth2.token.format}")
     private String tokenFormat;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    public CustomAuthenticationController(AuthenticationManager authenticationManager,
+                                          JwtEncoder jwtEncoder,
+                                          UserService userService,
+                                          UserRepository userRepository,
+                                          @Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
+        this.authenticationManager = authenticationManager;
+        this.jwtEncoder = jwtEncoder;
+        this.userService = userService;
+        this.userRepository = userRepository;
+        this.redisTemplate = redisTemplate;
+    }
 
     @PostMapping("/token")
     public ResponseEntity<?> authenticate(@RequestParam("grant_type") String grantType,
@@ -137,6 +154,18 @@ public class CustomAuthenticationController {
             Map<String, Object> details = new HashMap<>();
             details.put("tenantId", tenantId);
             details.put("userType", userType);
+
+            String selectedUserUuid = request.getParameter("selectedUserUuid");
+            if (selectedUserUuid == null) {
+                selectedUserUuid = request.getParameter("userUuid");
+            }
+            if (selectedUserUuid == null) {
+                selectedUserUuid = request.getParameter("uuid");
+            }
+            if (selectedUserUuid != null) {
+                details.put("selectedUserUuid", selectedUserUuid);
+            }
+
             // Only set isInternal if it was explicitly passed as a parameter
             // Never hardcode it to "true" for regular user login
             if (request.getParameter("isInternal") != null) {
@@ -159,6 +188,20 @@ public class CustomAuthenticationController {
                         log.warn("Could not reset failed login attempts for user: {} - {}", username, e.getMessage());
                     }
                 }
+
+                // Track last login method
+                String loginMethod = "PASSWORD";
+                if ("CITIZEN".equalsIgnoreCase(userType) && citizenLoginPasswordOtpEnabled) {
+                    loginMethod = "MOBILE_OTP";
+                }
+                if (secureUser.getUser() != null && secureUser.getUser().getId() != null) {
+                    try {
+                        userRepository.updateLastLoginMethod(secureUser.getUser().getId(), loginMethod);
+                        secureUser.getUser().setLastLoginMethod(loginMethod);
+                    } catch (Exception e) {
+                        log.warn("Could not update last login method for user: {} - {}", username, e.getMessage());
+                    }
+                }
                 
                 // Generate tokens
                 String accessToken = generateAccessToken(secureUser, scope);
@@ -172,6 +215,15 @@ public class CustomAuthenticationController {
                 throw new BadCredentialsException("Authentication failed - invalid user type");
             }
             
+        } catch (MultipleUsersFoundException e) {
+            // Edge case: In India, multiple Aadhaar/citizen accounts can be linked to a single mobile number.
+            // When multiple accounts match, return the account list with masked PII so the citizen can select which account to proceed with.
+            log.info("Multiple user accounts found for mobile: {}. Returning account list for selection.", e.getMobileNumber());
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("multipleUsersFound", true);
+            response.put("userAccounts", e.getUserAccounts());
+            response.put("ResponseInfo", createResponseInfo("Multiple user accounts found. Please select an account to proceed."));
+            return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
             log.warn("Authentication failed for user: {} - {}", username, e.getMessage());
             
@@ -234,7 +286,7 @@ public class CustomAuthenticationController {
 
     private String generateOpaqueAccessToken(SecureUser secureUser, String scope) {
         // Generate UUID-based token
-        String tokenValue = java.util.UUID.randomUUID().toString();
+        String tokenValue = UUID.randomUUID().toString();
 
         // Store token metadata in Redis
         Map<String, Object> tokenMetadata = new HashMap<>();
@@ -282,12 +334,13 @@ public class CustomAuthenticationController {
             userInfo.put("type", userToStore.getType());
             userInfo.put("tenantId", userToStore.getTenantId());
             userInfo.put("active", userToStore.isActive());
+            userInfo.put("lastLoginMethod", userToStore.getLastLoginMethod());
 
             // CRITICAL FIX: Convert roles to serializable format for Redis
             // Redis cannot properly serialize/deserialize Set<Role> objects
             // So we convert to List<Map<String, String>> which preserves all role data
             if (userToStore.getRoles() != null && !userToStore.getRoles().isEmpty()) {
-                java.util.List<Map<String, String>> rolesList = userToStore.getRoles().stream()
+                List<Map<String, String>> rolesList = userToStore.getRoles().stream()
                     .map(role -> {
                         Map<String, String> roleMap = new HashMap<>();
                         roleMap.put("code", role.getCode());
@@ -303,11 +356,12 @@ public class CustomAuthenticationController {
                         roleMap.get("code"), roleMap.get("name"), roleMap.get("tenantId"))
                 );
             } else {
-                userInfo.put("roles", new java.util.ArrayList<>());
+                userInfo.put("roles", new ArrayList<>());
                 log.warn("REDIS STORE: User has null/empty roles, storing empty list");
             }
 
             tokenMetadata.put("UserRequest", userInfo);
+            tokenMetadata.put("uuid", userToStore.getUuid());
             tokenMetadata.put("userId", userToStore.getId());
             tokenMetadata.put("userName", userToStore.getUserName());
             tokenMetadata.put("userType", userToStore.getType());
@@ -322,7 +376,7 @@ public class CustomAuthenticationController {
 
         // Store in Redis with expiration
         String key = "access_token:" + tokenValue;
-        redisTemplate.opsForValue().set(key, tokenMetadata, accessTokenValidityInMinutes, java.util.concurrent.TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(key, tokenMetadata, accessTokenValidityInMinutes, TimeUnit.MINUTES);
         
         return tokenValue;
     }
@@ -334,7 +388,7 @@ public class CustomAuthenticationController {
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
             .issuer("http://localhost:8080")
             .subject(secureUser.getUsername())
-            .audience(java.util.List.of("egov-user-client"))
+            .audience(List.of("egov-user-client"))
             .issuedAt(now)
             .expiresAt(expiry)
             .claim("scope", scope != null ? scope : "read write")
@@ -348,6 +402,7 @@ public class CustomAuthenticationController {
                 .claim("userName", user.getUserName())
                 .claim("userType", user.getType())
                 .claim("tenantId", user.getTenantId())
+                .claim("lastLoginMethod", user.getLastLoginMethod())
                 .claim("UserRequest", user);
         }
 
@@ -369,7 +424,7 @@ public class CustomAuthenticationController {
 
     private String generateOpaqueRefreshToken(SecureUser secureUser) {
         // Generate UUID-based refresh token
-        String tokenValue = java.util.UUID.randomUUID().toString();
+        String tokenValue = UUID.randomUUID().toString();
         
         // Store refresh token metadata in Redis
         Map<String, Object> tokenMetadata = new HashMap<>();
@@ -388,7 +443,7 @@ public class CustomAuthenticationController {
         
         // Store in Redis with expiration
         String key = "refresh_token:" + tokenValue;
-        redisTemplate.opsForValue().set(key, tokenMetadata, refreshTokenValidityInMinutes, java.util.concurrent.TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(key, tokenMetadata, refreshTokenValidityInMinutes, TimeUnit.MINUTES);
         
         return tokenValue;
     }
@@ -401,7 +456,7 @@ public class CustomAuthenticationController {
         JwtClaimsSet.Builder claimsBuilder = JwtClaimsSet.builder()
             .issuer("http://localhost:8080")
             .subject(secureUser.getUsername())
-            .audience(java.util.List.of("egov-user-client"))
+            .audience(List.of("egov-user-client"))
             .issuedAt(now)
             .expiresAt(expiry)
             .claim("token_type", "refresh_token");
@@ -426,7 +481,7 @@ public class CustomAuthenticationController {
 
     private String generateOpaqueClientCredentialsToken(String scope) {
         // Generate UUID-based token for client credentials
-        String tokenValue = java.util.UUID.randomUUID().toString();
+        String tokenValue = UUID.randomUUID().toString();
         
         // Store token metadata in Redis
         Map<String, Object> tokenMetadata = new HashMap<>();
@@ -441,7 +496,7 @@ public class CustomAuthenticationController {
 
         // Store in Redis with expiration
         String key = "access_token:" + tokenValue;
-        redisTemplate.opsForValue().set(key, tokenMetadata, accessTokenValidityInMinutes, java.util.concurrent.TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(key, tokenMetadata, accessTokenValidityInMinutes, TimeUnit.MINUTES);
         
         return tokenValue;
     }
@@ -453,7 +508,7 @@ public class CustomAuthenticationController {
         JwtClaimsSet claims = JwtClaimsSet.builder()
             .issuer("http://localhost:8080")
             .subject("egov-user-client")
-            .audience(java.util.List.of("egov-user-client"))
+            .audience(List.of("egov-user-client"))
             .issuedAt(now)
             .expiresAt(expiry)
             .claim("scope", scope != null ? scope : "read write")
@@ -531,6 +586,14 @@ public class CustomAuthenticationController {
             .active(contractUser.isActive())
             .type(contractUser.getType() != null ? UserType.fromValue(contractUser.getType()) : null)
             .tenantId(contractUser.getTenantId())
+            .fatherName(contractUser.getFatherName())
+            .motherName(contractUser.getMotherName())
+            .spouseName(contractUser.getSpouseName())
+            .isIdentityVerified(contractUser.getIsIdentityVerified())
+            .identityVerifiedDate(contractUser.getIdentityVerifiedDate() != null ? new Date(contractUser.getIdentityVerifiedDate()) : null)
+            .lastResyncDate(contractUser.getLastResyncDate() != null ? new Date(contractUser.getLastResyncDate()) : null)
+            .edittedCount(contractUser.getEdittedCount())
+            .lastLoginMethod(contractUser.getLastLoginMethod())
             .roles(contractUser.getRoles() != null ?
                 contractUser.getRoles().stream()
                     .map(role -> org.egov.user.domain.model.Role.builder()
@@ -561,6 +624,14 @@ public class CustomAuthenticationController {
             .active(domainUser.getActive())
             .type(domainUser.getType() != null ? domainUser.getType().name() : null)
             .tenantId(domainUser.getTenantId())
+            .fatherName(domainUser.getFatherName())
+            .motherName(domainUser.getMotherName())
+            .spouseName(domainUser.getSpouseName())
+            .isIdentityVerified(domainUser.getIsIdentityVerified())
+            .identityVerifiedDate(domainUser.getIdentityVerifiedDate() != null ? domainUser.getIdentityVerifiedDate().getTime() : null)
+            .lastResyncDate(domainUser.getLastResyncDate() != null ? domainUser.getLastResyncDate().getTime() : null)
+            .edittedCount(domainUser.getEdittedCount())
+            .lastLoginMethod(domainUser.getLastLoginMethod())
             .roles(convertRoles(domainUser.getRoles()))
             .build();
     }

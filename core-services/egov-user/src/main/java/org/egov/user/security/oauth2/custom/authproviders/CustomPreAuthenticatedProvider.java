@@ -36,11 +36,14 @@ import static org.springframework.util.StringUtils.isEmpty;
 @Slf4j
 public class CustomPreAuthenticatedProvider implements AuthenticationProvider {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final EncryptionDecryptionUtil encryptionDecryptionUtil;
 
     @Autowired
-    private EncryptionDecryptionUtil encryptionDecryptionUtil;
+    public CustomPreAuthenticatedProvider(UserService userService, EncryptionDecryptionUtil encryptionDecryptionUtil) {
+        this.userService = userService;
+        this.encryptionDecryptionUtil = encryptionDecryptionUtil;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
