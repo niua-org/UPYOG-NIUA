@@ -494,8 +494,15 @@ public class UserService {
      */
     // TODO Fix date formats
     public User updateWithoutOtpValidation(User user, RequestInfo requestInfo) {
-         	User existingUser = getUserByUuid(user.getUuid());
-            user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
+        if (user == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_UPDATE_REQUEST, "User payload cannot be null");
+        }
+        User existingUser = getUserByUuid(user.getUuid());
+        if (user.getId() != null && existingUser.getId() != null && !user.getId().equals(existingUser.getId())) {
+            log.error("[USER-SERVICE] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
+            throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
+        }
+        user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
             validateUserRoles(user);
             user.validateUserModification();
             validatePassword(user.getPassword());
@@ -1024,7 +1031,16 @@ public class UserService {
      * @return The updated user object with decrypted details.
      */
     public User updateUserV2(User user, RequestInfo requestInfo) {
+        if (user == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_UPDATE_REQUEST, "User payload cannot be null");
+        }
         final User existingUser = getUserByUuid(user.getUuid());
+        if (user.getId() != null && existingUser.getId() != null && !user.getId().equals(existingUser.getId())) {
+            log.error("[USER-SERVICE-V2] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
+            throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
+        }
+        User decryptedExistingUser = encryptionDecryptionUtil.decryptObject(existingUser, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+        user.validateNonEditableProfileFields(decryptedExistingUser != null ? decryptedExistingUser : existingUser, false);
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
         validateUserRoles(user);
         user.validateUserModification();

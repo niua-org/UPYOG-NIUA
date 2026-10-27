@@ -51,6 +51,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/**", "/health/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login", "/error").permitAll()
                 .requestMatchers("/user/oauth/**").permitAll()  // Allow access to custom auth endpoints
                 .requestMatchers("/_oauth2/**").permitAll()  // Allow access to custom OAuth2 endpoints
@@ -60,6 +61,10 @@ public class SecurityConfig {
                                "/users/_updatenovalidate", "/profile/_update",
                                "/digilocker/oauth/token",
                                "/users/v2/_create", "/users/v2/_search", "/users/v2/_update",
+                               "/users/v2/_login",
+                               "/profile/_create", "/profile/_init", "/profile/_search", "/profile/_resync",
+                               "/address/**",
+                               "/document/**",
                                "/_createAddress", "/_getAddress", "/_updateAddress").permitAll()
                 // Password Controller endpoints
                 .requestMatchers("/password/_update", "/password/nologin/_update").permitAll()
