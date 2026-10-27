@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +84,7 @@ public class FamilyServiceImpl implements FamilyService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         // 1. Generate formatted family_id
@@ -100,7 +101,14 @@ public class FamilyServiceImpl implements FamilyService {
                 .build();
         family.setAuditDetails(auditDetails);
 
+        if (StringUtils.isBlank(family.getId())) {
+            family.setId(UUID.randomUUID().toString());
+        }
+
         for (FamilyMember member : family.getMembers()) {
+            if (StringUtils.isBlank(member.getId())) {
+                member.setId(UUID.randomUUID().toString());
+            }
             member.setFamilyId(familyId);
             member.setTenantId(family.getTenantId());
             if (member.getActive() == null) {
@@ -114,6 +122,9 @@ public class FamilyServiceImpl implements FamilyService {
 
         if (family.getDocuments() != null) {
             for (FamilyDocument doc : family.getDocuments()) {
+                if (StringUtils.isBlank(doc.getId())) {
+                    doc.setId(UUID.randomUUID().toString());
+                }
                 doc.setFamilyId(familyId);
                 doc.setTenantId(family.getTenantId());
                 if (doc.getActive() == null) {
@@ -123,17 +134,14 @@ public class FamilyServiceImpl implements FamilyService {
             }
         }
 
-        // 3. Persist to Database
-        Family savedFamily = familyRepository.save(family);
-
-        // 4. Asynchronously publish event to Kafka
+        // 3. Persist to Database via Kafka Persister (standard UPYOG pattern)
         kafkaProducer.push(configuration.getCreateFamilyTopic(), request);
 
-        // 5. Enrich citizen demographics
-        enrichCitizenDemographics(Collections.singletonList(savedFamily), requestInfo);
+        // 4. Enrich citizen demographics
+        enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
-        log.info("[UPYOG-FAMILY-SERVICE] Successfully created family: {}", savedFamily.getFamilyId());
-        return savedFamily;
+        log.info("[UPYOG-FAMILY-SERVICE] Successfully queued family creation to Kafka persister: {}", family.getFamilyId());
+        return family;
     }
 
     /**
@@ -198,7 +206,7 @@ public class FamilyServiceImpl implements FamilyService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         existingFamily.getAuditDetails().setLastModifiedBy(userUuid);
@@ -242,11 +250,11 @@ public class FamilyServiceImpl implements FamilyService {
             }
         }
 
-        Family updatedFamily = familyRepository.update(existingFamily);
-        kafkaProducer.push(configuration.getUpdateFamilyTopic(), request);
+        // Asynchronously persist via Kafka Persister (standard UPYOG pattern)
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
 
-        enrichCitizenDemographics(Collections.singletonList(updatedFamily), requestInfo);
-        return updatedFamily;
+        enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
+        return existingFamily;
     }
 
     /**
@@ -277,7 +285,7 @@ public class FamilyServiceImpl implements FamilyService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         // 1. Separate splitting members out of parent family
@@ -296,7 +304,7 @@ public class FamilyServiceImpl implements FamilyService {
                         .userUuid(member.getUserUuid())
                         .tenantId(request.getTenantId())
                         .relationshipWithHead(member.getUserUuid().equals(request.getNewFamilyHeadUserUuid())
-                                ? "HEAD"
+                                ? FamilyConstants.RELATIONSHIP_HEAD
                                 : member.getRelationshipWithHead())
                         .isHead(member.getUserUuid().equals(request.getNewFamilyHeadUserUuid()))
                         .isVerified(member.getIsVerified())
@@ -308,14 +316,20 @@ public class FamilyServiceImpl implements FamilyService {
             }
         }
 
-        // Update parent family
+        // Update parent family via Kafka persister
         parentFamily.getAuditDetails().setLastModifiedBy(userUuid);
         parentFamily.getAuditDetails().setLastModifiedTime(now);
-        familyRepository.update(parentFamily);
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, parentFamily));
 
-        // 2. Create new child family unit
+        // 2. Create new child family unit via Kafka persister
         String newFamilyId = idGenRepository.generateFamilyId(requestInfo, request.getTenantId());
+        for (FamilyMember m : splittingMembers) {
+            if (StringUtils.isBlank(m.getId())) {
+                m.setId(UUID.randomUUID().toString());
+            }
+        }
         Family childFamily = Family.builder()
+                .id(UUID.randomUUID().toString())
                 .familyId(newFamilyId)
                 .tenantId(request.getTenantId())
                 .headUserUuid(request.getNewFamilyHeadUserUuid())
@@ -331,7 +345,7 @@ public class FamilyServiceImpl implements FamilyService {
                         .build())
                 .build();
 
-        Family savedChildFamily = familyRepository.save(childFamily);
+        kafkaProducer.push(configuration.getCreateFamilyTopic(), new FamilyRequest(requestInfo, childFamily));
 
         // 3. Record lineage history
         FamilyLineage lineage = FamilyLineage.builder()
@@ -345,8 +359,8 @@ public class FamilyServiceImpl implements FamilyService {
 
         kafkaProducer.push(configuration.getSplitFamilyTopic(), request);
 
-        enrichCitizenDemographics(Collections.singletonList(savedChildFamily), requestInfo);
-        return savedChildFamily;
+        enrichCitizenDemographics(Collections.singletonList(childFamily), requestInfo);
+        return childFamily;
     }
 
     /**
@@ -382,7 +396,7 @@ public class FamilyServiceImpl implements FamilyService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         // 1. Move members of merging family into surviving family
@@ -400,7 +414,7 @@ public class FamilyServiceImpl implements FamilyService {
                         .userUuid(member.getUserUuid())
                         .tenantId(request.getTenantId())
                         .relationshipWithHead(member.getUserUuid().equals(request.getCommonHeadUserUuid())
-                                ? "HEAD"
+                                ? FamilyConstants.RELATIONSHIP_HEAD
                                 : member.getRelationshipWithHead())
                         .isHead(member.getUserUuid().equals(request.getCommonHeadUserUuid()))
                         .isVerified(member.getIsVerified())
@@ -412,21 +426,24 @@ public class FamilyServiceImpl implements FamilyService {
             }
         }
 
-        // Deactivate merging family
+        // Deactivate merging family via Kafka persister
         mergingFamily.setStatus(FamilyStatus.MERGED);
         mergingFamily.getAuditDetails().setLastModifiedBy(userUuid);
         mergingFamily.getAuditDetails().setLastModifiedTime(now);
-        familyRepository.update(mergingFamily);
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, mergingFamily));
 
-        // Update surviving family with designated common HoF
+        // Update surviving family with designated common HoF via Kafka persister
         survivingFamily.setHeadUserUuid(request.getCommonHeadUserUuid());
         for (FamilyMember m : survivingFamily.getMembers()) {
+            if (StringUtils.isBlank(m.getId())) {
+                m.setId(UUID.randomUUID().toString());
+            }
             m.setIsHead(m.getUserUuid().equals(request.getCommonHeadUserUuid()));
         }
         survivingFamily.getAuditDetails().setLastModifiedBy(userUuid);
         survivingFamily.getAuditDetails().setLastModifiedTime(now);
 
-        Family updatedSurvivingFamily = familyRepository.update(survivingFamily);
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, survivingFamily));
 
         // 2. Record lineage
         FamilyLineage lineage = FamilyLineage.builder()
@@ -440,8 +457,8 @@ public class FamilyServiceImpl implements FamilyService {
 
         kafkaProducer.push(configuration.getMergeFamilyTopic(), request);
 
-        enrichCitizenDemographics(Collections.singletonList(updatedSurvivingFamily), requestInfo);
-        return updatedSurvivingFamily;
+        enrichCitizenDemographics(Collections.singletonList(survivingFamily), requestInfo);
+        return survivingFamily;
     }
 
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {

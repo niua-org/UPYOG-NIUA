@@ -41,8 +41,12 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     private final FamilyConfiguration configuration;
 
     private static final Set<String> DEFAULT_RELATIONSHIPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            "HEAD", "SPOUSE", "SON", "DAUGHTER", "FATHER", "MOTHER", "BROTHER", "SISTER",
-            "GRANDFATHER", "GRANDMOTHER", "GRANDSON", "GRANDDAUGHTER", "DAUGHTER_IN_LAW", "SON_IN_LAW", "OTHER"
+            FamilyConstants.RELATIONSHIP_HEAD, FamilyConstants.RELATIONSHIP_SPOUSE, FamilyConstants.RELATIONSHIP_SON,
+            FamilyConstants.RELATIONSHIP_DAUGHTER, FamilyConstants.RELATIONSHIP_CHILD, FamilyConstants.RELATIONSHIP_FATHER,
+            FamilyConstants.RELATIONSHIP_MOTHER, FamilyConstants.RELATIONSHIP_BROTHER, FamilyConstants.RELATIONSHIP_SISTER,
+            FamilyConstants.RELATIONSHIP_GRANDFATHER, FamilyConstants.RELATIONSHIP_GRANDMOTHER, FamilyConstants.RELATIONSHIP_GRANDSON,
+            FamilyConstants.RELATIONSHIP_GRANDDAUGHTER, FamilyConstants.RELATIONSHIP_DAUGHTER_IN_LAW, FamilyConstants.RELATIONSHIP_SON_IN_LAW,
+            FamilyConstants.RELATIONSHIP_DEPENDENT, FamilyConstants.RELATIONSHIP_GUARDIAN, FamilyConstants.RELATIONSHIP_OTHER
     )));
 
     public static class CacheEntry {
@@ -122,7 +126,8 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
 
         Set<String> relationships = fetchRelationshipsFromMdms(requestInfo, stateTenant);
         if (relationships == null || relationships.isEmpty()) {
-            log.warn("[UPYOG-FAMILY-MASTER] MDMS returned empty relationships. Using default UPYOG relationships.");
+            log.error("[UPYOG-FAMILY-MASTER] MDMS returned empty relationships for tenant {}. Falling back to default taxonomy: {}",
+                    stateTenant, DEFAULT_RELATIONSHIPS);
             relationships = DEFAULT_RELATIONSHIPS;
         }
 
@@ -152,8 +157,8 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[UPYOG-FAMILY-MASTER] Error calling UPYOG MDMS service at {}: {}. Falling back to default taxonomy.",
-                    url, e.getMessage());
+            log.error("[UPYOG-FAMILY-MASTER] Error calling UPYOG MDMS service at {}: {}. Falling back to default taxonomy.",
+                    url, e.getMessage(), e);
         }
 
         return Collections.emptySet();

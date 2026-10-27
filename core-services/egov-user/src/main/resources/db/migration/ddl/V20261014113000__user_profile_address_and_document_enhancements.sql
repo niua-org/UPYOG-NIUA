@@ -60,6 +60,15 @@ END $$;
 -- -----------------------------------------------------------------------------------------
 -- 3. Document Management Table (ug_user_document)
 -- -----------------------------------------------------------------------------------------
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'eg_user_id_unique'
+    ) THEN
+        ALTER TABLE eg_user ADD CONSTRAINT eg_user_id_unique UNIQUE (id);
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS ug_user_document (
     id VARCHAR(64) PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -75,7 +84,7 @@ CREATE TABLE IF NOT EXISTS ug_user_document (
     createddate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     lastmodifiedby BIGINT,
     lastmodifieddate TIMESTAMP,
-    CONSTRAINT fk_user_document_user FOREIGN KEY (user_id, tenant_id) REFERENCES eg_user (id, tenantid) ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT fk_user_document_user FOREIGN KEY (user_id) REFERENCES eg_user (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_doc_user_id ON ug_user_document(user_id);
@@ -101,17 +110,8 @@ FROM eg_user u
 WHERE a.userid = u.id AND a.user_uuid IS NULL;
 
 -- -----------------------------------------------------------------------------------------
--- 5. Decouple Address Foreign Key to eg_user(id)
+-- 5. Decouple Address and Document Foreign Keys to eg_user(id) directly
 -- -----------------------------------------------------------------------------------------
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'eg_user_id_unique'
-    ) THEN
-        ALTER TABLE eg_user ADD CONSTRAINT eg_user_id_unique UNIQUE (id);
-    END IF;
-END $$;
-
 ALTER TABLE eg_user_address DROP CONSTRAINT IF EXISTS eg_user_address_user_fkey;
 
 DO $$
@@ -122,6 +122,20 @@ BEGIN
         ALTER TABLE eg_user_address
             ADD CONSTRAINT eg_user_address_user_fkey
             FOREIGN KEY (userid) REFERENCES eg_user (id)
+            ON UPDATE CASCADE ON DELETE CASCADE;
+    END IF;
+END $$;
+
+ALTER TABLE ug_user_document DROP CONSTRAINT IF EXISTS fk_user_document_user;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_user_document_user'
+    ) THEN
+        ALTER TABLE ug_user_document
+            ADD CONSTRAINT fk_user_document_user
+            FOREIGN KEY (user_id) REFERENCES eg_user (id)
             ON UPDATE CASCADE ON DELETE CASCADE;
     END IF;
 END $$;

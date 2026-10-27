@@ -85,11 +85,11 @@ class FamilyControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_create should return 201 Created")
+    @DisplayName("POST /v1/family/_create should return 201 Created")
     void createFamily_Endpoint_Success() throws Exception {
         when(familyService.createFamily(any())).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_create")
+        mockMvc.perform(post("/v1/family/_create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(familyRequest)))
                 .andExpect(status().isCreated())
@@ -98,11 +98,11 @@ class FamilyControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_search should return 200 OK")
+    @DisplayName("POST /v1/family/_search should return 200 OK")
     void searchFamilies_Endpoint_Success() throws Exception {
         when(familyService.searchFamilies(any(), any())).thenReturn(Collections.singletonList(family));
 
-        mockMvc.perform(post("/v1/_search")
+        mockMvc.perform(post("/v1/family/_search")
                         .param("tenantId", "pg.citya")
                         .param("familyId", "FAM-2026-0001")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -112,11 +112,11 @@ class FamilyControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_update should return 200 OK")
+    @DisplayName("POST /v1/family/_update should return 200 OK")
     void updateFamily_Endpoint_Success() throws Exception {
         when(familyService.updateFamily(any())).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_update")
+        mockMvc.perform(post("/v1/family/_update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(familyRequest)))
                 .andExpect(status().isOk())
@@ -124,7 +124,7 @@ class FamilyControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_split should return 201 Created")
+    @DisplayName("POST /v1/family/_split should return 201 Created")
     void splitFamily_Endpoint_Success() throws Exception {
         FamilySplitRequest splitRequest = FamilySplitRequest.builder()
                 .requestInfo(requestInfo)
@@ -143,7 +143,7 @@ class FamilyControllerTest {
 
         when(familyService.splitFamily(any())).thenReturn(childFamily);
 
-        mockMvc.perform(post("/v1/_split")
+        mockMvc.perform(post("/v1/family/_split")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(splitRequest)))
                 .andExpect(status().isCreated())
@@ -151,7 +151,7 @@ class FamilyControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_merge should return 200 OK")
+    @DisplayName("POST /v1/family/_merge should return 200 OK")
     void mergeFamily_Endpoint_Success() throws Exception {
         FamilyMergeRequest mergeRequest = FamilyMergeRequest.builder()
                 .requestInfo(requestInfo)
@@ -163,7 +163,7 @@ class FamilyControllerTest {
 
         when(familyService.mergeFamily(any())).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_merge")
+        mockMvc.perform(post("/v1/family/_merge")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mergeRequest)))
                 .andExpect(status().isOk())

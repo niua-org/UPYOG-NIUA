@@ -106,7 +106,6 @@ class FamilyMemberServiceImplTest {
                 .build();
 
         when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
-        when(familyRepository.update(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Family result = memberService.addMember(request);
 
@@ -132,7 +131,6 @@ class FamilyMemberServiceImplTest {
                 .build();
 
         when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
-        when(familyRepository.update(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Family result = memberService.joinFamily(request);
 
@@ -164,7 +162,6 @@ class FamilyMemberServiceImplTest {
                 .build();
 
         when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
-        when(familyRepository.update(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Family result = memberService.leaveFamily(request);
 
@@ -205,7 +202,6 @@ class FamilyMemberServiceImplTest {
                 .name("Dependent Child")
                 .mobileNumber("9876543210")
                 .build());
-        when(familyRepository.update(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Family result = memberService.addMember(request);
 

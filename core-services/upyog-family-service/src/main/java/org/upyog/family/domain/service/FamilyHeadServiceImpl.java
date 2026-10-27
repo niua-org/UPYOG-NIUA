@@ -14,6 +14,7 @@ import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
+import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -72,7 +73,7 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         existingFamily.setHeadUserUuid(request.getNewHeadUserUuid());
@@ -84,7 +85,7 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
                 boolean isNewHead = request.getNewHeadUserUuid().equals(member.getUserUuid());
                 member.setIsHead(isNewHead);
                 if (isNewHead) {
-                    member.setRelationshipWithHead("HEAD");
+                    member.setRelationshipWithHead(FamilyConstants.RELATIONSHIP_HEAD);
                 }
                 if (member.getAuditDetails() != null) {
                     member.getAuditDetails().setLastModifiedBy(userUuid);
@@ -93,14 +94,14 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
             }
         }
 
-        Family updatedFamily = familyRepository.update(existingFamily);
-        kafkaProducer.push(configuration.getAssignHofTopic(), request);
+        // Persist to Database via Kafka Persister (standard UPYOG pattern)
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
 
-        enrichCitizenDemographics(Collections.singletonList(updatedFamily), requestInfo);
-        log.info("[UPYOG-HEAD-SERVICE] Successfully transferred HoF role to citizen: {} in family: {}",
-                request.getNewHeadUserUuid(), updatedFamily.getFamilyId());
+        enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
+        log.info("[UPYOG-HEAD-SERVICE] Successfully queued HoF role transfer to citizen: {} in family: {} in Kafka persister",
+                request.getNewHeadUserUuid(), existingFamily.getFamilyId());
 
-        return updatedFamily;
+        return existingFamily;
     }
 
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {

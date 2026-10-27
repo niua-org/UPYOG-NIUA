@@ -284,7 +284,7 @@ public class AadhaarVerificationController {
      * @param request {@link AadhaarVerificationRequest} containing RequestInfo and 12-digit aadhaarNumber
      * @return {@link ResponseEntity} wrapping {@link AadhaarVerificationResponse} with checksum validity status
      */
-    @PostMapping(value = {"/_validate", "/_validateChecksum"})
+    @PostMapping("/_validate")
     public ResponseEntity<AadhaarVerificationResponse> validateChecksum(
             @RequestBody @Valid AadhaarVerificationRequest request) {
 

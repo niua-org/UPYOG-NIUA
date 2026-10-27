@@ -152,13 +152,26 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         // 2. Resolve member user or auto-create
         String stateTenant = resolveStateTenant(tenantId);
 
-        // 2a. If client specified a selected user UUID (from multi-profile selection), resolve that user directly
+        // 2a. Query citizen accounts associated with verified identifier (mobile or familyId)
+        List<User> matchedUsers = Collections.emptyList();
+        if (StringUtils.isNotBlank(mobileNumber)) {
+            matchedUsers = findUsersByMobile(mobileNumber, stateTenant, request.getRequestInfo());
+        }
+        if (CollectionUtils.isEmpty(matchedUsers) && StringUtils.isNotBlank(familyId)) {
+            matchedUsers = findUsersByUserName(familyId, stateTenant, request.getRequestInfo());
+        }
+
+        // 2b. If client specified a selected user UUID, verify that it belongs to the matched accounts for this verified identifier
         if (StringUtils.isNotBlank(request.getSelectedUserUuid())) {
             log.info("[FAMILY-AUTH-STRATEGY] Resolving selected user UUID: {} for effective identifier: {}",
                     request.getSelectedUserUuid(), maskMobile(effectiveIdentifier));
-            User selectedUser = findUserByUuid(request.getSelectedUserUuid(), stateTenant, request.getRequestInfo());
+            User selectedUser = matchedUsers.stream()
+                    .filter(u -> request.getSelectedUserUuid().equals(u.getUuid()))
+                    .findFirst()
+                    .orElse(null);
+
             if (selectedUser == null) {
-                log.error("[FAMILY-AUTH-STRATEGY] Selected citizen profile not found for UUID: {}", request.getSelectedUserUuid());
+                log.error("[FAMILY-AUTH-STRATEGY] Selected citizen profile not found or does not belong to verified identifier: {}", request.getSelectedUserUuid());
                 throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, UserConstants.MSG_SELECTED_USER_NOT_FOUND);
             }
             selectedUser.setLastLoginMethod(AuthType.FAMILY_ID.name());
@@ -168,21 +181,6 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                     .isNewUser(false)
                     .authType(AuthType.FAMILY_ID)
                     .build();
-        }
-
-        // 2b. Query citizen accounts associated with aadhaarNumber, mobileNumber, or familyId
-        List<User> matchedUsers = Collections.emptyList();
-        if (StringUtils.isNotBlank(request.getAadhaarNumber())) {
-            matchedUsers = findUsersByAadhaar(request.getAadhaarNumber(), stateTenant, request.getRequestInfo());
-            if (!CollectionUtils.isEmpty(matchedUsers)) {
-                log.info("[FAMILY-AUTH-STRATEGY] Found {} citizen profiles matching Aadhaar: {}",
-                        matchedUsers.size(), maskMobile(request.getAadhaarNumber()));
-            }
-        }
-        if (CollectionUtils.isEmpty(matchedUsers)) {
-            matchedUsers = StringUtils.isNotBlank(mobileNumber)
-                    ? findUsersByMobile(mobileNumber, stateTenant, request.getRequestInfo())
-                    : findUsersByUserName(familyId, stateTenant, request.getRequestInfo());
         }
 
         // 2c. Edge Case: If 2 or more users are linked to same identifier, return list for user selection
@@ -202,11 +200,6 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             log.info("[FAMILY-AUTH-STRATEGY] Matched single citizen ID: {}, UUID: {} for familyId: {}",
                     user.getId(), user.getUuid(), familyId);
             user.setLastLoginMethod(AuthType.FAMILY_ID.name());
-            if (StringUtils.isNotBlank(request.getAadhaarNumber()) && StringUtils.isBlank(user.getAadhaarNumber())) {
-                user.setAadhaarNumber(request.getAadhaarNumber());
-                user.setIsIdentityVerified(true);
-                user.setIdentityVerifiedDate(new Date());
-            }
             triggerFamilyJitProvision(user, request);
             return AuthenticatedUserResult.builder()
                     .user(user)

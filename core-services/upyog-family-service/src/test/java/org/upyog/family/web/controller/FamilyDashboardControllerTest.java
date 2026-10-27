@@ -42,7 +42,7 @@ class FamilyDashboardControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_dashboard should return HTTP 200 OK with dashboard metrics")
+    @DisplayName("POST /v1/dashboard/_search should return HTTP 200 OK with dashboard metrics")
     void getDashboard_Success() throws Exception {
         FamilyDashboardMetrics metrics = FamilyDashboardMetrics.builder()
                 .familyId("FAM-2026-0001")
@@ -61,7 +61,7 @@ class FamilyDashboardControllerTest {
 
         when(dashboardService.getFamilyDashboard(eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(response);
 
-        mockMvc.perform(post("/v1/_dashboard")
+        mockMvc.perform(post("/v1/dashboard/_search")
                         .param("familyId", "FAM-2026-0001")
                         .param("tenantId", "pg.citya")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -33,7 +33,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping({"/v1/family", "/v1"})
+@RequestMapping("/v1/family")
 @Slf4j
 @Tag(name = "UPYOG Family Registry", description = "Endpoints for registering, searching, updating, splitting and merging household units in UPYOG")
 public class FamilyController {

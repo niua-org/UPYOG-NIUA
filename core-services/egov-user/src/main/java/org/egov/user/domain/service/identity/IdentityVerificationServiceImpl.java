@@ -129,7 +129,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
-                boolean isVerified = root.path("isVerified").asBoolean(true);
+                boolean isVerified = root.path("isVerified").asBoolean(false);
                 if (!isVerified) {
                     recordFailedOtpAttempt(refId);
                     log.error("[IDENTITY-VERIFY-SERVICE] Identity provider reported verification unsuccessful");
@@ -160,12 +160,10 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
         } catch (CustomException ce) {
             throw ce;
         } catch (Exception e) {
-            log.warn("[IDENTITY-VERIFY-SERVICE] External identity provider call failed ({}: {}). Falling back to mock verified demographics for dev environment.",
-                    e.getClass().getSimpleName(), e.getMessage());
-            if (StringUtils.isNotBlank(refId)) {
-                otpAttemptsByRefId.remove(refId);
-            }
-            return createMockDemographics(rawAadhaar, refId);
+            recordFailedOtpAttempt(refId);
+            log.error("[IDENTITY-VERIFY-SERVICE] External identity provider call failed ({}: {}). Failing closed.",
+                    e.getClass().getSimpleName(), e.getMessage(), e);
+            throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, UserConstants.MSG_AADHAAR_VERIFICATION_REJECTED);
         }
 
         recordFailedOtpAttempt(refId);

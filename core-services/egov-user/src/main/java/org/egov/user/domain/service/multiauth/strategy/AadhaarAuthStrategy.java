@@ -384,10 +384,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
      * @return matched {@link User} entity or null to trigger new profile auto-creation
      */
     private User findExistingUser(String maskedAadhaar, String mobileNumber, String stateTenant, String selectedUserUuid) {
-        // 1. Direct match by unique Aadhaar number
-        if (StringUtils.isNotBlank(maskedAadhaar)) {
+        // 1. Direct match by Aadhaar AND verified mobile number together to ensure collision-free identity resolution
+        if (StringUtils.isNotBlank(maskedAadhaar) && StringUtils.isNotBlank(mobileNumber)) {
             UserSearchCriteria criteria = UserSearchCriteria.builder()
                     .aadhaarNumber(maskedAadhaar)
+                    .mobileNumber(mobileNumber)
                     .tenantId(stateTenant)
                     .type(UserType.CITIZEN)
                     .build();
@@ -398,7 +399,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             }
         }
 
-        // 2. If selectedUserUuid is explicitly provided, match that user
+        // 2. If selectedUserUuid is explicitly provided from verified candidate list, match that user
         if (StringUtils.isNotBlank(selectedUserUuid)) {
             UserSearchCriteria criteria = UserSearchCriteria.builder()
                     .uuid(Collections.singletonList(selectedUserUuid))
@@ -408,31 +409,28 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             List<User> users = userRepository.findAll(criteria);
             if (!users.isEmpty()) {
                 User candidate = users.get(0);
-                if (StringUtils.isBlank(candidate.getAadhaarNumber()) || candidate.getAadhaarNumber().equalsIgnoreCase(maskedAadhaar)) {
+                if (maskedAadhaar.equalsIgnoreCase(candidate.getAadhaarNumber())
+                        && (StringUtils.isBlank(candidate.getMobileNumber()) || candidate.getMobileNumber().equals(mobileNumber))) {
                     return candidate;
                 }
             }
         }
 
-        // 3. Fallback to mobile search: Match an unverified citizen on this mobile who has NO Aadhaar bound yet
-        if (StringUtils.isNotBlank(mobileNumber)) {
+        // 3. Fallback: Check if there is an account with this exact Aadhaar already bound
+        if (StringUtils.isNotBlank(maskedAadhaar)) {
             UserSearchCriteria criteria = UserSearchCriteria.builder()
-                    .mobileNumber(mobileNumber)
+                    .aadhaarNumber(maskedAadhaar)
                     .tenantId(stateTenant)
                     .type(UserType.CITIZEN)
                     .build();
 
             List<User> users = userRepository.findAll(criteria);
-            for (User u : users) {
-                // If user has no Aadhaar bound yet, this Aadhaar belongs to this unverified account
-                if (StringUtils.isBlank(u.getAadhaarNumber())) {
-                    return u;
-                }
+            if (users.size() == 1) {
+                return users.get(0);
             }
         }
 
-        // 4. All existing profiles on this mobile already belong to other family members with their own Aadhaar cards.
-        // Return null to provision a new individual profile for this citizen on the shared phone.
+        // 4. Return null to safely auto-provision a new individual profile for this verified Aadhaar citizen
         return null;
     }
 

@@ -63,7 +63,7 @@ class FamilyHeadControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_assignHof should return HTTP 200 OK")
+    @DisplayName("POST /v1/head/_assign should return HTTP 200 OK")
     void assignHeadOfFamily_Success() throws Exception {
         AssignHofRequest request = AssignHofRequest.builder()
                 .requestInfo(new RequestInfo())
@@ -75,7 +75,7 @@ class FamilyHeadControllerTest {
 
         when(headService.assignHeadOfFamily(any(AssignHofRequest.class))).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_assignHof")
+        mockMvc.perform(post("/v1/head/_assign")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

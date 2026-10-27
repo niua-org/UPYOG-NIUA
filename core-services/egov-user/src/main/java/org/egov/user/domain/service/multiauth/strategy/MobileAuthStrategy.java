@@ -132,13 +132,21 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         // 2. Resolve existing user or auto-create
         String stateTenant = resolveStateTenant(tenantId);
 
-        // 2a. If client specified a selected user UUID (from multi-profile selection), resolve that user directly
+        // 2a. Query all citizen accounts associated with this verified mobile number
+        log.debug("[MOBILE-AUTH-STRATEGY] Querying citizen profiles for mobile: {} in tenant: {}", maskMobile(mobileNumber), stateTenant);
+        List<User> matchedUsers = findUsersByMobile(mobileNumber, stateTenant, request.getRequestInfo());
+
+        // 2b. If client specified a selected user UUID, verify that it belongs to the matched accounts for this mobile
         if (StringUtils.isNotBlank(request.getSelectedUserUuid())) {
             log.info("[MOBILE-AUTH-STRATEGY] Resolving selected user UUID: {} for mobile: {}",
                     request.getSelectedUserUuid(), maskMobile(mobileNumber));
-            User selectedUser = findUserByUuid(request.getSelectedUserUuid(), stateTenant, request.getRequestInfo());
+            User selectedUser = matchedUsers.stream()
+                    .filter(u -> request.getSelectedUserUuid().equals(u.getUuid()))
+                    .findFirst()
+                    .orElse(null);
+
             if (selectedUser == null) {
-                log.error("[MOBILE-AUTH-STRATEGY] Selected citizen profile not found for UUID: {}", request.getSelectedUserUuid());
+                log.error("[MOBILE-AUTH-STRATEGY] Selected citizen profile not found or does not belong to verified mobile: {}", request.getSelectedUserUuid());
                 throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, UserConstants.MSG_SELECTED_USER_NOT_FOUND);
             }
             selectedUser.setLastLoginMethod(AuthType.MOBILE.name());
@@ -148,10 +156,6 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                     .authType(AuthType.MOBILE)
                     .build();
         }
-
-        // 2b. Query all citizen accounts associated with this mobile number in this state tenant
-        log.debug("[MOBILE-AUTH-STRATEGY] Querying citizen profiles for mobile: {} in tenant: {}", maskMobile(mobileNumber), stateTenant);
-        List<User> matchedUsers = findUsersByMobile(mobileNumber, stateTenant, request.getRequestInfo());
 
         // 2c. Edge Case: If 2 or more users are linked to same mobile number, return list for user selection
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() > 1) {

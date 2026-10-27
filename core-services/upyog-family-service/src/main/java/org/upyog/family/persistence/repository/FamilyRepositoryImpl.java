@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.upyog.family.domain.model.LineageActionType;
 import org.upyog.family.persistence.builder.FamilyQueryBuilder;
 import org.upyog.family.persistence.rowmapper.FamilyRowMapper;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyDocument;
 import org.upyog.family.web.contract.FamilyLineage;
@@ -33,17 +34,17 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     private final JdbcTemplate jdbcTemplate;
     private final FamilyQueryBuilder queryBuilder;
     private final FamilyRowMapper rowMapper;
-    private final ObjectMapper objectMapper;
+    private final org.upyog.family.util.FamilyJsonConverter jsonConverter;
 
     @Autowired
     public FamilyRepositoryImpl(JdbcTemplate jdbcTemplate,
                                 FamilyQueryBuilder queryBuilder,
                                 FamilyRowMapper rowMapper,
-                                ObjectMapper objectMapper) {
+                                org.upyog.family.util.FamilyJsonConverter jsonConverter) {
         this.jdbcTemplate = jdbcTemplate;
         this.queryBuilder = queryBuilder;
         this.rowMapper = rowMapper;
-        this.objectMapper = objectMapper;
+        this.jsonConverter = jsonConverter != null ? jsonConverter : new org.upyog.family.util.FamilyJsonConverter(new ObjectMapper());
     }
 
     /**
@@ -69,7 +70,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                 family.getTenantId(),
                 family.getHeadUserUuid(),
                 family.getCategory(),
-                family.getStatus() != null ? family.getStatus().name() : "ACTIVE",
+                family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE,
                 additionalDetailsJson,
                 family.getAuditDetails() != null ? family.getAuditDetails().getCreatedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getCreatedTime() : null,
@@ -96,7 +97,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                         Boolean.TRUE.equals(member.getIsHead()),
                         Boolean.TRUE.equals(member.getIsVerified()),
                         member.getActive() != null ? member.getActive() : Boolean.TRUE,
-                        member.getStatus() != null ? member.getStatus().name() : (Boolean.FALSE.equals(member.getActive()) ? "EXITED" : "ACTIVE"),
+                        member.getStatus() != null ? member.getStatus().name() : (Boolean.FALSE.equals(member.getActive()) ? FamilyConstants.STATUS_EXITED : FamilyConstants.STATUS_ACTIVE),
                         member.getExitReason() != null ? member.getExitReason().name() : null,
                         member.getExitDate(),
                         member.getConsentToken(),
@@ -154,7 +155,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
         jdbcTemplate.update(FamilyQueryBuilder.UPDATE_FAMILY_SQL,
                 family.getHeadUserUuid(),
                 family.getCategory(),
-                family.getStatus() != null ? family.getStatus().name() : "ACTIVE",
+                family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE,
                 additionalDetailsJson,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedTime() : null,
@@ -172,7 +173,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                             Boolean.TRUE.equals(member.getIsHead()),
                             Boolean.TRUE.equals(member.getIsVerified()),
                             member.getActive() != null ? member.getActive() : Boolean.TRUE,
-                            member.getStatus() != null ? member.getStatus().name() : (Boolean.FALSE.equals(member.getActive()) ? "EXITED" : "ACTIVE"),
+                            member.getStatus() != null ? member.getStatus().name() : (Boolean.FALSE.equals(member.getActive()) ? FamilyConstants.STATUS_EXITED : FamilyConstants.STATUS_ACTIVE),
                             member.getExitReason() != null ? member.getExitReason().name() : null,
                             member.getExitDate(),
                             member.getConsentToken(),
@@ -200,7 +201,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                             Boolean.TRUE.equals(member.getIsHead()),
                             Boolean.TRUE.equals(member.getIsVerified()),
                             member.getActive() != null ? member.getActive() : Boolean.TRUE,
-                            member.getStatus() != null ? member.getStatus().name() : (Boolean.FALSE.equals(member.getActive()) ? "EXITED" : "ACTIVE"),
+                            member.getStatus() != null ? member.getStatus().name() : (Boolean.FALSE.equals(member.getActive()) ? FamilyConstants.STATUS_EXITED : FamilyConstants.STATUS_ACTIVE),
                             member.getExitReason() != null ? member.getExitReason().name() : null,
                             member.getExitDate(),
                             member.getConsentToken(),
@@ -334,17 +335,6 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     }
 
     private String convertToJsonString(Object obj) {
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof String) {
-            return (String) obj;
-        }
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            log.warn("[UPYOG-FAMILY-REPO] Error converting object to JSON string", e);
-            return null;
-        }
+        return jsonConverter.convertToJsonString(obj);
     }
 }

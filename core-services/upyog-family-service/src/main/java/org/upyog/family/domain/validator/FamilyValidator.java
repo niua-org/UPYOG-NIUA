@@ -89,6 +89,17 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_HEAD_UUID_MISMATCH, "family.headUserUuid must match the userUuid of the member where isHead is true");
         }
 
+        // Caller ownership check: Caller must be the designated HoF
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(headMember.getUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the designated Head of Family can create the family unit.");
+                }
+            }
+        }
+
         // 2. Validate member UUID uniqueness, MDMS relationship, and multi-family exclusivity
         Set<String> memberUuids = new HashSet<>();
         for (FamilyMember member : family.getMembers()) {
@@ -145,6 +156,17 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Cannot update family with status: " + existingFamily.getStatus());
         }
 
+        // Caller authorization: Only current HoF is authorized to update family metadata
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(existingFamily.getHeadUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the Head of Family is authorized to update family metadata.");
+                }
+            }
+        }
+
         Family family = request.getFamily();
 
         if (family.getMembers() != null && !family.getMembers().isEmpty()) {
@@ -190,6 +212,17 @@ public class FamilyValidator {
 
         if (!FamilyStatus.ACTIVE.equals(parentFamily.getStatus())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_SPLIT, "Parent family is not in ACTIVE state");
+        }
+
+        // Caller authorization: Only parent family HoF can initiate split
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(parentFamily.getHeadUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the parent family Head of Family is authorized to initiate a family split.");
+                }
+            }
         }
 
         Set<String> parentMemberUuids = new HashSet<>();
@@ -242,6 +275,17 @@ public class FamilyValidator {
         }
         if (!FamilyStatus.ACTIVE.equals(mergingFamily.getStatus())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_MERGE, "Merging family is not ACTIVE");
+        }
+
+        // Caller authorization: Caller must be HoF of one of the merging family units
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(survivingFamily.getHeadUserUuid()) && !callerUuid.equals(mergingFamily.getHeadUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the Head of Family of one of the merging family units is authorized to merge families.");
+                }
+            }
         }
 
         Set<String> allActiveMemberUuids = new HashSet<>();

@@ -68,6 +68,17 @@ public class JoinFamilyValidator {
                     "Applicant userUuid is mandatory.");
         }
 
+        // Caller authorization: Applicant userUuid must match the authenticated caller
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(request.getApplicantUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Applicant userUuid must match the authenticated caller.");
+                }
+            }
+        }
+
         // Validate relationship against UPYOG MDMS
         masterDataService.validateRelationship(request.getRequestInfo(), request.getTenantId(), request.getRelationshipWithHead());
 
@@ -84,7 +95,12 @@ public class JoinFamilyValidator {
                     "Head of Family authorization OTP / consent token is mandatory to join this family.");
         }
 
-        boolean consentValid = requesterDxClient.verifyConsentToken(request.getHofConsentOtp(), request.getTenantId(), request.getRequestInfo());
+        boolean consentValid = requesterDxClient.verifyConsentToken(
+                request.getHofConsentOtp(),
+                request.getApplicantUserUuid(),
+                existingFamily.getFamilyId(),
+                request.getTenantId(),
+                request.getRequestInfo());
         if (!consentValid) {
             throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
                     "Head of Family consent verification failed.");

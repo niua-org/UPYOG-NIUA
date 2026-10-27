@@ -48,7 +48,7 @@ import java.util.List;
  */
 @Tag(name = "User Documents", description = "Citizen identity and address proof document management with egov-filestore integration")
 @RestController
-@RequestMapping({"/document", "/user/document"})
+@RequestMapping("/document")
 @Slf4j
 public class UserDocumentController {
 

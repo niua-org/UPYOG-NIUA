@@ -63,6 +63,9 @@ public class FamilyConfiguration {
     @Value("${requester.services.dx.verify.otp.path}")
     private String requesterDxVerifyOtpPath;
 
+    @Value("${family.consent.mock.enabled:false}")
+    private Boolean mockConsentEnabled;
+
     @Value("${family.mdms.module}")
     private String mdmsFamilyModule;
 

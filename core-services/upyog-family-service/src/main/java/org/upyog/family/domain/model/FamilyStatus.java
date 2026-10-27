@@ -10,11 +10,13 @@ import org.apache.commons.lang3.StringUtils;
  * @author UPYOG Team
  * @since 1.0.0
  */
+import org.upyog.family.util.FamilyConstants;
+
 public enum FamilyStatus {
-    ACTIVE("ACTIVE"),
-    INACTIVE("INACTIVE"),
-    SPLIT("SPLIT"),
-    MERGED("MERGED");
+    ACTIVE(FamilyConstants.STATUS_ACTIVE),
+    INACTIVE(FamilyConstants.STATUS_INACTIVE),
+    SPLIT(FamilyConstants.STATUS_SPLIT),
+    MERGED(FamilyConstants.STATUS_MERGED);
 
     private final String value;
 

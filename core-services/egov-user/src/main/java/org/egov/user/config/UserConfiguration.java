@@ -101,9 +101,9 @@ public class UserConfiguration {
     @Value("${filestore.validation.enabled}")
     private Boolean filestoreValidationEnabled;
 
-    @Value("${family.service.host}")
+    @Value("${family.service.host:http://upyog-family-service.egov:8080/}")
     private String familyServiceHost;
 
-    @Value("${family.service.state.jit.endpoint}")
+    @Value("${family.service.state.jit.endpoint:family/v1/state/_jitProvision}")
     private String familyServiceStateJitEndpoint;
 }

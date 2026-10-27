@@ -29,7 +29,7 @@ import java.util.Collections;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping({"/v1/member", "/v1"})
+@RequestMapping("/v1/member")
 @Slf4j
 @Tag(name = "UPYOG Family Member Management", description = "Endpoints for adding verified members with Aadhaar consent, joining families, and recording member exits")
 public class FamilyMemberController {
@@ -50,10 +50,10 @@ public class FamilyMemberController {
      * @param request the add member request envelope containing member details, relationship with head, and consent token
      * @return response entity containing the updated Family aggregate with HTTP 200 OK status
      */
-    @PostMapping({"/_add", "/_create", "/_addMember"})
+    @PostMapping("/_add")
     @Operation(summary = "Add a verified member to an existing Family Unit with Aadhaar OTP consent in UPYOG")
     public ResponseEntity<FamilyResponse> addMember(@Valid @RequestBody AddMemberRequest request) {
-        log.info("[UPYOG-MEMBER-CONTROLLER] Received /_addMember request for family: {}", request.getFamilyId());
+        log.info("[UPYOG-MEMBER-CONTROLLER] Received /_add request for family: {}", request.getFamilyId());
         Family updatedFamily = memberService.addMember(request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
 
@@ -73,10 +73,10 @@ public class FamilyMemberController {
      * @param request the join family request envelope containing family ID, applicant UUID, and HoF consent token
      * @return response entity containing the updated Family aggregate with HTTP 200 OK status
      */
-    @PostMapping({"/_join", "/_joinFamily"})
+    @PostMapping("/_join")
     @Operation(summary = "Citizen requests to join an existing Family Unit with HoF authorization in UPYOG")
     public ResponseEntity<FamilyResponse> joinFamily(@Valid @RequestBody JoinFamilyRequest request) {
-        log.info("[UPYOG-MEMBER-CONTROLLER] Received /_joinFamily request for family: {} by applicant: {}",
+        log.info("[UPYOG-MEMBER-CONTROLLER] Received /_join request for family: {} by applicant: {}",
                 request.getFamilyId(), request.getApplicantUserUuid());
         Family updatedFamily = memberService.joinFamily(request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
@@ -97,7 +97,7 @@ public class FamilyMemberController {
      * @param request the leave family request envelope containing family ID, member UUID, and exit reason
      * @return response entity containing the updated Family aggregate with HTTP 200 OK status
      */
-    @PostMapping({"/_leave", "/_exit", "/_leaveFamily"})
+    @PostMapping("/_leave")
     @Operation(summary = "Process a member leaving a Family Unit with exit reason and status tracking in UPYOG")
     public ResponseEntity<FamilyResponse> leaveFamily(@Valid @RequestBody LeaveFamilyRequest request) {
         log.info("[UPYOG-MEMBER-CONTROLLER] Received /_leaveFamily request for member: {} in family: {}",

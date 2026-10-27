@@ -10,11 +10,13 @@ import org.apache.commons.lang3.StringUtils;
  * @author UPYOG Team
  * @since 1.0.0
  */
+import org.upyog.family.util.FamilyConstants;
+
 public enum ExitReason {
-    MARRIAGE("MARRIAGE"),
-    DEMISE("DEMISE"),
-    RELOCATION("RELOCATION"),
-    OTHER("OTHER");
+    MARRIAGE(FamilyConstants.EXIT_REASON_MARRIAGE),
+    DEMISE(FamilyConstants.EXIT_REASON_DEMISE),
+    RELOCATION(FamilyConstants.EXIT_REASON_RELOCATION),
+    OTHER(FamilyConstants.EXIT_REASON_OTHER);
 
     private final String value;
 

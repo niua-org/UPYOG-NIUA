@@ -106,7 +106,6 @@ class FamilyServiceImplTest {
     void createFamily_Success() {
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-2026-0001");
         when(configuration.getCreateFamilyTopic()).thenReturn("save-ug-family");
-        when(familyRepository.save(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Map<String, CitizenProfile> profileMap = new HashMap<>();
         profileMap.put("user-uuid-head", CitizenProfile.builder().name("Rajesh Sharma").build());
@@ -118,7 +117,6 @@ class FamilyServiceImplTest {
         assertEquals("FAM-2026-0001", result.getFamilyId());
         assertEquals(FamilyStatus.ACTIVE, result.getStatus());
         verify(kafkaProducer).push(eq("save-ug-family"), eq(request));
-        verify(familyRepository).save(any(Family.class));
     }
 
     @Test
@@ -152,7 +150,6 @@ class FamilyServiceImplTest {
         when(familyRepository.search(any())).thenReturn(Collections.singletonList(family));
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-CHILD-002");
         when(configuration.getSplitFamilyTopic()).thenReturn("split-ug-family");
-        when(familyRepository.save(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         FamilySplitRequest splitRequest = FamilySplitRequest.builder()
                 .requestInfo(requestInfo)
@@ -207,7 +204,6 @@ class FamilyServiceImplTest {
         when(familyRepository.search(any())).thenReturn(Collections.singletonList(surviving))
                 .thenReturn(Collections.singletonList(merging));
         when(configuration.getMergeFamilyTopic()).thenReturn("merge-ug-family");
-        when(familyRepository.update(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         FamilyMergeRequest mergeRequest = FamilyMergeRequest.builder()
                 .requestInfo(requestInfo)

@@ -18,6 +18,7 @@ import org.upyog.family.web.contract.AuditDetails;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
+import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.JoinFamilyRequest;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
@@ -86,7 +87,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         FamilyMember newMember = request.getMember();
@@ -102,7 +103,27 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                                 .gender(newMember.getGender())
                                 .build(),
                         requestInfo);
-                newMember.setUserUuid(created != null ? created.getUuid() : UUID.randomUUID().toString());
+                if (created == null || StringUtils.isBlank(created.getUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Unable to create citizen profile for new member");
+                }
+                newMember.setUserUuid(created.getUuid());
+            }
+
+            // Verify exclusivity after resolving user UUID
+            if (existingFamily.getMembers() != null) {
+                boolean alreadyActive = existingFamily.getMembers().stream()
+                        .anyMatch(m -> newMember.getUserUuid().equals(m.getUserUuid()) && Boolean.TRUE.equals(m.getActive()));
+                if (alreadyActive) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ALREADY_EXISTS,
+                            "Citizen is already an active member of family " + existingFamily.getFamilyId());
+                }
+            }
+            List<String> activeFamilyIds = familyRepository.findActiveFamilyIdsByMemberUuid(newMember.getUserUuid());
+            for (String activeFamId : activeFamilyIds) {
+                if (!activeFamId.equals(existingFamily.getFamilyId())) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ALREADY_EXISTS,
+                            "Citizen " + newMember.getUserUuid() + " already belongs to active family: " + activeFamId);
+                }
             }
         }
 
@@ -115,9 +136,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         newMember.setIsVerified(true);
         newMember.setActive(true);
         newMember.setStatus(MemberStatus.ACTIVE);
-        newMember.setConsentToken(StringUtils.isNotBlank(request.getConsentToken())
-                ? request.getConsentToken()
-                : newMember.getConsentToken());
+        newMember.setConsentToken(maskOrHashConsentToken(request.getConsentToken()));
         newMember.setConsentDate(now);
         newMember.setEffectiveFrom(now);
         newMember.setAuditDetails(AuditDetails.builder()
@@ -135,14 +154,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         existingFamily.getAuditDetails().setLastModifiedBy(userUuid);
         existingFamily.getAuditDetails().setLastModifiedTime(now);
 
-        Family updatedFamily = familyRepository.update(existingFamily);
-        kafkaProducer.push(configuration.getAddMemberTopic(), request);
+        // Persist to Database via Kafka Persister (standard UPYOG pattern)
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
 
-        enrichCitizenDemographics(Collections.singletonList(updatedFamily), requestInfo);
-        log.info("[UPYOG-MEMBER-SERVICE] Successfully linked member {} to family {}",
-                newMember.getUserUuid(), updatedFamily.getFamilyId());
+        enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
+        log.info("[UPYOG-MEMBER-SERVICE] Successfully queued member {} link to family {} in Kafka persister",
+                newMember.getUserUuid(), existingFamily.getFamilyId());
 
-        return updatedFamily;
+        return existingFamily;
     }
 
     /**
@@ -164,7 +183,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         FamilyMember joinedMember = FamilyMember.builder()
@@ -177,7 +196,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 .isVerified(true)
                 .active(true)
                 .status(MemberStatus.ACTIVE)
-                .consentToken(request.getHofConsentOtp())
+                .consentToken(maskOrHashConsentToken(request.getHofConsentOtp()))
                 .consentDate(now)
                 .effectiveFrom(now)
                 .auditDetails(AuditDetails.builder()
@@ -196,14 +215,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         existingFamily.getAuditDetails().setLastModifiedBy(userUuid);
         existingFamily.getAuditDetails().setLastModifiedTime(now);
 
-        Family updatedFamily = familyRepository.update(existingFamily);
-        kafkaProducer.push(configuration.getAddMemberTopic(), request);
+        // Persist to Database via Kafka Persister (standard UPYOG pattern)
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
 
-        enrichCitizenDemographics(Collections.singletonList(updatedFamily), requestInfo);
-        log.info("[UPYOG-MEMBER-SERVICE] Successfully added joined member {} to family {}",
-                joinedMember.getUserUuid(), updatedFamily.getFamilyId());
+        enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
+        log.info("[UPYOG-MEMBER-SERVICE] Successfully queued joined member {} to family {} in Kafka persister",
+                joinedMember.getUserUuid(), existingFamily.getFamilyId());
 
-        return updatedFamily;
+        return existingFamily;
     }
 
     /**
@@ -225,7 +244,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         RequestInfo requestInfo = request.getRequestInfo();
         String userUuid = requestInfo != null && requestInfo.getUserInfo() != null
                 ? requestInfo.getUserInfo().getUuid()
-                : "SYSTEM";
+                : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
         for (FamilyMember member : existingFamily.getMembers()) {
@@ -247,14 +266,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         existingFamily.getAuditDetails().setLastModifiedBy(userUuid);
         existingFamily.getAuditDetails().setLastModifiedTime(now);
 
-        Family updatedFamily = familyRepository.update(existingFamily);
-        kafkaProducer.push(configuration.getLeaveFamilyTopic(), request);
+        // Persist to Database via Kafka Persister (standard UPYOG pattern)
+        kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
 
-        enrichCitizenDemographics(Collections.singletonList(updatedFamily), requestInfo);
-        log.info("[UPYOG-MEMBER-SERVICE] Successfully exited member {} from family {}",
-                request.getMemberUserUuid(), updatedFamily.getFamilyId());
+        enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
+        log.info("[UPYOG-MEMBER-SERVICE] Successfully queued exit for member {} from family {} in Kafka persister",
+                request.getMemberUserUuid(), existingFamily.getFamilyId());
 
-        return updatedFamily;
+        return existingFamily;
     }
 
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {
@@ -297,5 +316,15 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 }
             }
         }
+    }
+
+    private String maskOrHashConsentToken(String token) {
+        if (StringUtils.isBlank(token)) {
+            return null;
+        }
+        if (token.startsWith("REF-") || token.startsWith("DX-") || token.length() > 20) {
+            return token;
+        }
+        return "CONSENT-REF-" + Integer.toHexString(token.hashCode()).toUpperCase();
     }
 }

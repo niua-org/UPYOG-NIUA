@@ -140,5 +140,8 @@ class FamilyMasterDataServiceImplTest {
         assertTrue(result.contains("HEAD"));
         assertTrue(result.contains("SPOUSE"));
         assertTrue(result.contains("SON"));
+        assertTrue(result.contains("CHILD"));
+        assertTrue(result.contains("DEPENDENT"));
+        assertTrue(result.contains("GUARDIAN"));
     }
 }

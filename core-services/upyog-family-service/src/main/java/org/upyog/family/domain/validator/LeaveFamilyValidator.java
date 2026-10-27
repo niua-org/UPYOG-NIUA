@@ -49,6 +49,19 @@ public class LeaveFamilyValidator {
                     "Exit reason (MARRIAGE, DEMISE, RELOCATION, OTHER) is mandatory.");
         }
 
+        // Caller authorization: Only the member themselves or the current HoF can process member departure
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                boolean isSelf = callerUuid.equals(request.getMemberUserUuid());
+                boolean isHof = callerUuid.equals(existingFamily.getHeadUserUuid());
+                if (!isSelf && !isHof) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the member themselves or the Head of Family is authorized to leave/exit the family unit.");
+                }
+            }
+        }
+
         // Find the member in the family
         FamilyMember memberToLeave = null;
         int activeMembersCount = 0;

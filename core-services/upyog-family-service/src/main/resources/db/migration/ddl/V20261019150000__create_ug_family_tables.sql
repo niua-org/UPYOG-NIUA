@@ -98,3 +98,8 @@ CREATE INDEX IF NOT EXISTS idx_ug_family_lineage_child ON ug_family_lineage(chil
 
 CREATE INDEX IF NOT EXISTS idx_ug_state_family_sync_state_family_id ON ug_state_family_sync(state_family_id);
 CREATE INDEX IF NOT EXISTS idx_ug_state_family_sync_tenant ON ug_state_family_sync(tenant_id);
+
+-- Enforce multi-family exclusivity at DB level: a citizen can only be an active member of one family at a time
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ug_family_member_active_exclusivity
+    ON ug_family_member (user_uuid)
+    WHERE active = TRUE AND status = 'ACTIVE';

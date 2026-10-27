@@ -62,7 +62,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
-        when(requesterDxClient.verifyConsentToken(eq("OTP-1234"), eq("pg.citya"), any())).thenReturn(true);
+        when(requesterDxClient.verifyConsentToken(eq("OTP-1234"), eq("applicant-uuid-5"), eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(request, activeFamily));
     }

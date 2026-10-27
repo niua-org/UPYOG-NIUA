@@ -10,10 +10,12 @@ import org.apache.commons.lang3.StringUtils;
  * @author UPYOG Team
  * @since 1.0.0
  */
+import org.upyog.family.util.FamilyConstants;
+
 public enum MemberStatus {
-    ACTIVE("ACTIVE"),
-    EXITED("EXITED"),
-    PENDING_APPROVAL("PENDING_APPROVAL");
+    ACTIVE(FamilyConstants.STATUS_ACTIVE),
+    EXITED(FamilyConstants.STATUS_EXITED),
+    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL);
 
     private final String value;
 

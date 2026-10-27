@@ -67,7 +67,7 @@ class FamilyMemberControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_addMember should return HTTP 200 OK")
+    @DisplayName("POST /v1/member/_add should return HTTP 200 OK")
     void addMember_Success() throws Exception {
         FamilyMember member = FamilyMember.builder()
                 .userUuid("member-uuid-2")
@@ -84,7 +84,7 @@ class FamilyMemberControllerTest {
 
         when(memberService.addMember(any(AddMemberRequest.class))).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_addMember")
+        mockMvc.perform(post("/v1/member/_add")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -92,7 +92,7 @@ class FamilyMemberControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_joinFamily should return HTTP 200 OK")
+    @DisplayName("POST /v1/member/_join should return HTTP 200 OK")
     void joinFamily_Success() throws Exception {
         JoinFamilyRequest request = JoinFamilyRequest.builder()
                 .requestInfo(new RequestInfo())
@@ -105,7 +105,7 @@ class FamilyMemberControllerTest {
 
         when(memberService.joinFamily(any(JoinFamilyRequest.class))).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_joinFamily")
+        mockMvc.perform(post("/v1/member/_join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -113,7 +113,7 @@ class FamilyMemberControllerTest {
     }
 
     @Test
-    @DisplayName("POST /v1/_leaveFamily should return HTTP 200 OK")
+    @DisplayName("POST /v1/member/_leave should return HTTP 200 OK")
     void leaveFamily_Success() throws Exception {
         LeaveFamilyRequest request = LeaveFamilyRequest.builder()
                 .requestInfo(new RequestInfo())
@@ -125,7 +125,7 @@ class FamilyMemberControllerTest {
 
         when(memberService.leaveFamily(any(LeaveFamilyRequest.class))).thenReturn(family);
 
-        mockMvc.perform(post("/v1/_leaveFamily")
+        mockMvc.perform(post("/v1/member/_leave")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

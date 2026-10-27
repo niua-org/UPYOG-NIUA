@@ -42,6 +42,17 @@ public class AssignHofValidator {
                     "Cannot assign Head of Family for a family with status: " + existingFamily.getStatus());
         }
 
+        // Caller authorization: Only current HoF is authorized to transfer/assign HoF role
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(existingFamily.getHeadUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the current Head of Family is authorized to transfer or assign the HoF role.");
+                }
+            }
+        }
+
         if (StringUtils.isBlank(request.getNewHeadUserUuid())) {
             throw new CustomException(FamilyConstants.ERROR_HEAD_OF_FAMILY_REQUIRED,
                     "New Head User UUID is mandatory.");

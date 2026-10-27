@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "Authentication V2", description = "Multi-channel unified citizen authentication (Mobile OTP, UIDAI Aadhaar e-KYC, and Family ID)")
 @RestController
-@RequestMapping({"/users/v2", "/users"})
+@RequestMapping("/users/v2")
 @Slf4j
 public class LoginV2Controller {
 
@@ -55,7 +55,7 @@ public class LoginV2Controller {
 
     /**
      * Unified multi-auth entry point supporting Mobile, Aadhaar, and Family ID channels.
-     * Mapped to canonical {@code POST /users/v2/_login} and alias {@code POST /users/loginv2}.
+     * Mapped to canonical {@code POST /users/v2/_login}.
      *
      * @param requestBody optional JSON body binding {@link LoginV2Request}
      * @param servletRequest underlying servlet request for query/form parameter extraction
@@ -72,7 +72,7 @@ public class LoginV2Controller {
             @ApiResponse(responseCode = "401", description = "Unauthorized - OTP or Aadhaar verification failed"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping({"/_login"})
+    @PostMapping("/_login")
     public ResponseEntity<LoginV2Response> login(
             @RequestBody(required = false) @Valid LoginV2Request requestBody,
             HttpServletRequest servletRequest) {

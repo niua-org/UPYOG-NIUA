@@ -79,7 +79,7 @@ class AddMemberValidatorTest {
     @DisplayName("Should pass validation when all rules and Aadhaar consent succeed")
     void validate_Success() {
         when(familyRepository.findActiveFamilyIdsByMemberUuid("member-uuid-2")).thenReturn(Collections.emptyList());
-        when(requesterDxClient.verifyConsentToken(eq("CONSENT-VERIFIED-12345"), eq("pg.citya"), any())).thenReturn(true);
+        when(requesterDxClient.verifyConsentToken(eq("CONSENT-VERIFIED-12345"), eq("member-uuid-2"), eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(validRequest, activeFamily));
     }
@@ -107,11 +107,33 @@ class AddMemberValidatorTest {
     }
 
     @Test
+    @DisplayName("Should pass validation when adding minor under HoF guardian without adult OTP token")
+    void validate_MinorUnderGuardian_Success() {
+        FamilyMember child = FamilyMember.builder()
+                .userUuid("child-uuid-3")
+                .relationshipWithHead("CHILD")
+                .isHead(false)
+                .active(true)
+                .build();
+
+        AddMemberRequest childRequest = AddMemberRequest.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .member(child)
+                .build();
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid("child-uuid-3")).thenReturn(Collections.emptyList());
+
+        assertDoesNotThrow(() -> validator.validate(childRequest, activeFamily));
+    }
+
+    @Test
     @DisplayName("Should throw exception if Aadhaar consent is invalid")
     void validate_ConsentInvalid() {
         when(familyRepository.findActiveFamilyIdsByMemberUuid("member-uuid-2")).thenReturn(Collections.emptyList());
-        when(requesterDxClient.verifyConsentToken(eq("CONSENT-VERIFIED-12345"), eq("pg.citya"), any())).thenReturn(false);
+        when(requesterDxClient.verifyConsentToken(eq("CONSENT-VERIFIED-12345"), eq("member-uuid-2"), eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(false);
 
         assertThrows(CustomException.class, () -> validator.validate(validRequest, activeFamily));
     }
 }
+

@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping({"/v1/dashboard", "/v1"})
+@RequestMapping("/v1/dashboard")
 @Slf4j
 @Validated
 @Tag(name = "UPYOG Family Dashboard", description = "Endpoints for aggregated household metrics and demographic summaries")
@@ -46,14 +46,14 @@ public class FamilyDashboardController {
      * @param requestInfo UPYOG request context envelope
      * @return response entity containing aggregated FamilyDashboardResponse metrics with HTTP 200 OK status
      */
-    @PostMapping({"/_search", "/_get", "/_dashboard", ""})
+    @PostMapping("/_search")
     @Operation(summary = "Retrieve aggregated household metrics and verification statistics in UPYOG")
     public ResponseEntity<FamilyDashboardResponse> getDashboard(
             @NotBlank(message = "Family ID is mandatory") @RequestParam("familyId") String familyId,
             @NotBlank(message = "Tenant ID is mandatory") @RequestParam("tenantId") String tenantId,
             @RequestBody(required = false) RequestInfo requestInfo) {
 
-        log.info("[UPYOG-DASHBOARD-CONTROLLER] Received /_dashboard request for family: {}, tenant: {}", familyId, tenantId);
+        log.info("[UPYOG-DASHBOARD-CONTROLLER] Received /_search request for family: {}, tenant: {}", familyId, tenantId);
         FamilyDashboardResponse response = dashboardService.getFamilyDashboard(familyId, tenantId, requestInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

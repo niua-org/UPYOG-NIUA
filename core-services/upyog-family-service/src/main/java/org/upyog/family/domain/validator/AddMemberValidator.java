@@ -63,6 +63,17 @@ public class AddMemberValidator {
                     "Cannot add members to a family with status: " + existingFamily.getStatus());
         }
 
+        // Caller authorization: Only current HoF is authorized to add members
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                if (!callerUuid.equals(existingFamily.getHeadUserUuid())) {
+                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                            "Only the Head of Family is authorized to add new members to the family unit.");
+                }
+            }
+        }
+
         FamilyMember member = request.getMember();
         if (member == null || (StringUtils.isBlank(member.getUserUuid()) && StringUtils.isBlank(member.getMobileNumber()))) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
@@ -83,7 +94,7 @@ public class AddMemberValidator {
         }
 
         // 3. Ensure member is not already an active member of this family
-        if (existingFamily.getMembers() != null) {
+        if (existingFamily.getMembers() != null && StringUtils.isNotBlank(member.getUserUuid())) {
             boolean alreadyActive = existingFamily.getMembers().stream()
                     .anyMatch(m -> member.getUserUuid().equals(m.getUserUuid()) && Boolean.TRUE.equals(m.getActive()));
             if (alreadyActive) {
@@ -93,11 +104,13 @@ public class AddMemberValidator {
         }
 
         // 4. Ensure member is not active in any OTHER family unit (One-Citizen-One-Active-Family Rule)
-        List<String> activeFamilyIds = familyRepository.findActiveFamilyIdsByMemberUuid(member.getUserUuid());
-        for (String activeFamId : activeFamilyIds) {
-            if (!activeFamId.equals(existingFamily.getFamilyId())) {
-                throw new CustomException(FamilyConstants.ERROR_MEMBER_ALREADY_EXISTS,
-                        "Citizen " + member.getUserUuid() + " already belongs to active family: " + activeFamId);
+        if (StringUtils.isNotBlank(member.getUserUuid())) {
+            List<String> activeFamilyIds = familyRepository.findActiveFamilyIdsByMemberUuid(member.getUserUuid());
+            for (String activeFamId : activeFamilyIds) {
+                if (!activeFamId.equals(existingFamily.getFamilyId())) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ALREADY_EXISTS,
+                            "Citizen " + member.getUserUuid() + " already belongs to active family: " + activeFamId);
+                }
             }
         }
 
@@ -106,15 +119,31 @@ public class AddMemberValidator {
                 ? request.getConsentToken()
                 : member.getConsentToken();
 
-        if (StringUtils.isBlank(consentToken)) {
-            throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Aadhaar OTP verification consent token is required to add an adult member to the family.");
-        }
+        boolean isMinor = (member.getAdditionalDetails() != null && member.getAdditionalDetails().toString().contains("isMinor"))
+                || "CHILD".equalsIgnoreCase(member.getRelationshipWithHead())
+                || "DEPENDENT".equalsIgnoreCase(member.getRelationshipWithHead());
 
-        boolean consentVerified = requesterDxClient.verifyConsentToken(consentToken, request.getTenantId(), request.getRequestInfo());
-        if (!consentVerified) {
-            throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Aadhaar OTP verification failed. Member consent could not be validated.");
+        if (StringUtils.isBlank(consentToken)) {
+            if (!isMinor) {
+                throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
+                        "Aadhaar OTP verification consent token is required to add an adult member to the family.");
+            }
+            log.info("[UPYOG-ADD-MEMBER-VALIDATOR] Member is a minor/dependent under Head of Family guardian. OTP consent bypassed for minor.");
+        } else {
+            String memberIdentifier = StringUtils.isNotBlank(member.getUserUuid())
+                    ? member.getUserUuid()
+                    : member.getMobileNumber();
+
+            boolean consentVerified = requesterDxClient.verifyConsentToken(
+                    consentToken,
+                    memberIdentifier,
+                    existingFamily.getFamilyId(),
+                    request.getTenantId(),
+                    request.getRequestInfo());
+            if (!consentVerified) {
+                throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
+                        "Aadhaar OTP verification failed. Member consent could not be validated.");
+            }
         }
 
         log.info("[UPYOG-ADD-MEMBER-VALIDATOR] Successfully validated add member request for citizen: {}", member.getUserUuid());

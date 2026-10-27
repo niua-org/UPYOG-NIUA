@@ -64,7 +64,7 @@ public class SecurityConfig {
                                "/users/v2/_login",
                                "/profile/_create", "/profile/_init", "/profile/_search", "/profile/_resync",
                                "/address/**",
-                               "/user/document/**",
+                               "/document/**",
                                "/_createAddress", "/_getAddress", "/_updateAddress").permitAll()
                 // Password Controller endpoints
                 .requestMatchers("/password/_update", "/password/nologin/_update").permitAll()

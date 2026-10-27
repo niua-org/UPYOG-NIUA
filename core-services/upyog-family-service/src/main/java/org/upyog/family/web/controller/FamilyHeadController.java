@@ -27,7 +27,7 @@ import java.util.Collections;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping({"/v1/head", "/v1/hof", "/v1"})
+@RequestMapping("/v1/head")
 @Slf4j
 @Tag(name = "UPYOG Family Head Management", description = "Endpoints for transferring and assigning Head of Family (HoF) leadership roles")
 public class FamilyHeadController {
@@ -48,10 +48,10 @@ public class FamilyHeadController {
      * @param request the HoF assignment request envelope containing family ID, new head UUID, and optional justification
      * @return response entity containing the updated Family aggregate with HTTP 200 OK status
      */
-    @PostMapping({"/_assign", "/_update", "/_assignHof"})
+    @PostMapping("/_assign")
     @Operation(summary = "Transfer or assign Head of Family (HoF) role to an active member in UPYOG")
     public ResponseEntity<FamilyResponse> assignHeadOfFamily(@Valid @RequestBody AssignHofRequest request) {
-        log.info("[UPYOG-HEAD-CONTROLLER] Received /_assignHof request for family: {} to new head: {}",
+        log.info("[UPYOG-HEAD-CONTROLLER] Received /_assign request for family: {} to new head: {}",
                 request.getFamilyId(), request.getNewHeadUserUuid());
         Family updatedFamily = headService.assignHeadOfFamily(request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);

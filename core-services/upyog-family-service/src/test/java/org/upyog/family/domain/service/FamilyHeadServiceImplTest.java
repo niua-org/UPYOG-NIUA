@@ -97,7 +97,6 @@ class FamilyHeadServiceImplTest {
                 .build();
 
         when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
-        when(familyRepository.update(any(Family.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Family result = headService.assignHeadOfFamily(request);
 
