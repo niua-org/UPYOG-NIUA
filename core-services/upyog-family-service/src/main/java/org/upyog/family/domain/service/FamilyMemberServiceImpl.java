@@ -132,8 +132,9 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         }
         newMember.setFamilyId(existingFamily.getFamilyId());
         newMember.setTenantId(existingFamily.getTenantId());
-        newMember.setIsHead(false);
-        newMember.setIsVerified(true);
+        boolean verified = StringUtils.isNotBlank(request.getConsentToken())
+                || Boolean.TRUE.equals(newMember.getIsVerified());
+        newMember.setIsVerified(verified);
         newMember.setActive(true);
         newMember.setStatus(MemberStatus.ACTIVE);
         newMember.setConsentToken(maskOrHashConsentToken(request.getConsentToken()));
@@ -193,7 +194,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 .userUuid(request.getApplicantUserUuid())
                 .relationshipWithHead(request.getRelationshipWithHead())
                 .isHead(false)
-                .isVerified(true)
+                .isVerified(StringUtils.isNotBlank(request.getHofConsentOtp()))
                 .active(true)
                 .status(MemberStatus.ACTIVE)
                 .consentToken(maskOrHashConsentToken(request.getHofConsentOtp()))
