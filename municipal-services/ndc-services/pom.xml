@@ -11,8 +11,12 @@
 		<java.version>17</java.version>
 <log4j2.version>2.21.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.0898</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+        <jacoco.validator.line.minimum>0.04</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.02</jacoco.validator.branch.minimum>
+        <jacoco.util.line.minimum>0.03</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.01</jacoco.util.branch.minimum>
+        <jacoco.builder.line.minimum>0.03</jacoco.builder.line.minimum>
+        <jacoco.builder.branch.minimum>0.01</jacoco.builder.branch.minimum>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <lombok.version>1.18.32</lombok.version>
@@ -197,6 +201,17 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/web/model/**</exclude>
+                        <exclude>**/web/models/**</exclude>
+                        <exclude>**/models/**</exclude>
+                        <exclude>**/config/**</exclude>
+                        <exclude>**/*Configuration.class</exclude>
+                        <exclude>**/*Constants.class</exclude>
+                        <exclude>**/NDCApplication.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -222,13 +237,54 @@
                                 <rule>
                                     <element>PACKAGE</element>
                                     <includes>
-                                        <include>org.egov.ndc.validation</include>
+                                        <include>org.egov.ndc.validator</include>
                                     </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage}</minimum>
+                                            <minimum>${jacoco.validator.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.validator.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.ndc.util</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.ndc.repository.builder</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.builder.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.builder.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
