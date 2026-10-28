@@ -18,8 +18,8 @@
 		<java.version>17</java.version>
 <log4j2.version>2.21.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.1443</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.0108</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.0844</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.1187</jacoco.branch.coverage>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.32</lombok.version>
