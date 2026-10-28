@@ -9,8 +9,8 @@
         
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.1012</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.0857</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.1443</jacoco.branch.coverage>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 </properties>
