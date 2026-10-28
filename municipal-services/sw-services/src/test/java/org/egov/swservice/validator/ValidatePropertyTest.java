@@ -1,27 +1,33 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.swservice.validator;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.common.contract.request.RequestInfo;
+import org.egov.swservice.web.models.Property;
+import org.egov.swservice.web.models.SewerageConnection;
+import org.egov.swservice.web.models.Status;
+import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
 class ValidatePropertyTest {
 
-
-    @InjectMocks
-    private ValidateProperty subject;
-
+    private final ValidateProperty validateProperty = new ValidateProperty();
 
     @Test
-    void validatePropertyFields_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void validatePropertyFields_whenTenantIdMissing_throws() {
+        Property property = Property.builder().status(Status.ACTIVE).build();
+
+        assertThatThrownBy(() -> validateProperty.validatePropertyFields(property, RequestInfo.builder().build()))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("INVALID_PROPERTY");
     }
 
+    @Test
+    void validatePropertyForConnection_whenPropertyIdMissing_logsErrorWithoutThrow() {
+        SewerageConnection connection = SewerageConnection.builder().applicationNo("SW-APP-1").build();
+
+        validateProperty.validatePropertyForConnection(List.of(connection));
+    }
 }
