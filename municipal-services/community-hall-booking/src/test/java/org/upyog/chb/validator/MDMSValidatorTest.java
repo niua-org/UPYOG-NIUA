@@ -1,27 +1,31 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.upyog.chb.validator;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
 class MDMSValidatorTest {
 
-
-    @InjectMocks
-    private MDMSValidator subject;
-
+    private final MDMSValidator mdmsValidator = new MDMSValidator();
 
     @Test
-    void validateMdmsData_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void getAttributeValues_whenMdmsPayloadValid_returnsMasterMap() {
+        Map<String, Object> mdmsRoot = Map.of("MdmsRes", Map.of("CHB", Map.of("CHBPurpose", List.of("Wedding"))));
+
+        Map<String, List<String>> attributes = mdmsValidator.getAttributeValues(mdmsRoot);
+
+        assertThat(attributes).containsKey("CHBPurpose");
     }
 
+    @Test
+    void getAttributeValues_whenJsonPathMissing_throwsCustomException() {
+        assertThatThrownBy(() -> mdmsValidator.getAttributeValues(new HashMap<>()))
+                .isInstanceOf(CustomException.class);
+    }
 }

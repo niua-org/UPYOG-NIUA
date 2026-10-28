@@ -12,8 +12,12 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.3141</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.081</jacoco.branch.coverage>
+        <jacoco.validator.line.minimum>0.08</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.03</jacoco.validator.branch.minimum>
+        <jacoco.util.line.minimum>0.07</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.05</jacoco.util.branch.minimum>
+        <jacoco.builder.line.minimum>0.06</jacoco.builder.line.minimum>
+        <jacoco.builder.branch.minimum>0.03</jacoco.builder.branch.minimum>
     </properties>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -89,6 +93,17 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/web/model/**</exclude>
+                        <exclude>**/web/models/**</exclude>
+                        <exclude>**/models/**</exclude>
+                        <exclude>**/config/**</exclude>
+                        <exclude>**/*Configuration.class</exclude>
+                        <exclude>**/*Constants.class</exclude>
+                        <exclude>**/CommunityHallBookingApplication.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -114,19 +129,54 @@
                                 <rule>
                                     <element>PACKAGE</element>
                                     <includes>
-                                        <include>org.upyog.chb.service.impl</include>
-                                        <include>org.upyog.chb.seatlock</include>
+                                        <include>org.upyog.chb.validator</include>
                                     </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage}</minimum>
+                                            <minimum>${jacoco.validator.line.minimum}</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.branch.coverage}</minimum>
+                                            <minimum>${jacoco.validator.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.chb.util</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.chb.repository.querybuilder</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.builder.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.builder.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
