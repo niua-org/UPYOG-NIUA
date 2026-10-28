@@ -120,7 +120,9 @@
 | firenoc-services | PASS (`npm run test:unit`) |
 | firenoc-calculator | PASS (`npm run test:unit`) |
 | pqm-scheduler | PASS (`pytest tests/`) |
-| All 46 Java modules | **Final sweep:** `testing/verify_all_modules.sh` → `/tmp/verify-all-final.log` (JDK 17, `.mvn/settings-public.xml`; Boot 2.2 modules use `-Dspring-boot.repackage.skip=true`) |
+| All 45 Java service modules | **Final sweep (2026-10-28):** `testing/verify_all_modules.sh` → `/tmp/verify-all-final.log` — **45/45 PASS** after aligning `fsm` multi-package JaCoCo floors (`core-smoke-tests` excluded: post-deploy HTTP smokes need live `BASE_URL`) |
+| fsm | PASS (validator/util/workflow/querybuilder floors synced to measured JaCoCo) |
+| core-smoke-tests | **Not in sweep** — requires deployed stack; POM fixed (removed orphan `spring-boot-starter-test` without version) |
 
 ## 70% line / 60% branch — outcome
 

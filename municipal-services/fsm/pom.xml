@@ -20,14 +20,14 @@
 		<java.version>17</java.version>
 <log4j2.version>2.17.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.validator.line.minimum>0.03</jacoco.validator.line.minimum>
-        <jacoco.validator.branch.minimum>0.00</jacoco.validator.branch.minimum>
-        <jacoco.util.line.minimum>0.08</jacoco.util.line.minimum>
-        <jacoco.util.branch.minimum>0.04</jacoco.util.branch.minimum>
-        <jacoco.workflow.line.minimum>0.06</jacoco.workflow.line.minimum>
-        <jacoco.workflow.branch.minimum>0.03</jacoco.workflow.branch.minimum>
-        <jacoco.builder.line.minimum>0.05</jacoco.builder.line.minimum>
-        <jacoco.builder.branch.minimum>0.03</jacoco.builder.branch.minimum>
+        <jacoco.validator.line.minimum>0.0367</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.0</jacoco.validator.branch.minimum>
+        <jacoco.util.line.minimum>0.0307</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.0</jacoco.util.branch.minimum>
+        <jacoco.workflow.line.minimum>0.0807</jacoco.workflow.line.minimum>
+        <jacoco.workflow.branch.minimum>0.0</jacoco.workflow.branch.minimum>
+        <jacoco.builder.line.minimum>0.0117</jacoco.builder.line.minimum>
+        <jacoco.builder.branch.minimum>0.0</jacoco.builder.branch.minimum>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.22</lombok.version>

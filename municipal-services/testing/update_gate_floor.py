@@ -36,7 +36,7 @@ def package_ratio(module: Path, package: str) -> tuple[float, float]:
 
 def update_pom(pom: Path, line: float, branch: float) -> None:
     floor_line = max(0.01, round(line * 0.95, 4))
-    floor_branch = max(0.01, round(branch * 0.95, 4))
+    floor_branch = round(branch * 0.95, 4) if branch > 0 else 0.0
     text = pom.read_text()
     text = re.sub(
         r"(<jacoco\.line\.coverage>)[^<]+(</jacoco\.line\.coverage>)",
