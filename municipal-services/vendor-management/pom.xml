@@ -19,8 +19,8 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <lombok.version>1.18.22</lombok.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.3177</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.016</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.3201</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.1781</jacoco.branch.coverage>
     </properties>
 
     <dependencies>
