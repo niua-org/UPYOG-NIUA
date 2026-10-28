@@ -2,6 +2,7 @@ package org.egov.tenant.domain.service;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tenant.domain.exception.DuplicateTenantCodeException;
+import org.egov.tenant.domain.exception.TenantInvalidCodeException;
 import org.egov.tenant.domain.model.City;
 import org.egov.tenant.domain.model.Tenant;
 import org.egov.tenant.persistence.repository.MdmsRepository;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import net.minidev.json.JSONArray;
 
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +55,17 @@ class TenantServiceUnitTest {
     }
 
     @Test
+    void getTenants_mdmsReturnsEmptyArray_returnsEmptyList() {
+        RequestInfo requestInfo = RequestInfo.builder().apiId("tenant").action("search").build();
+        when(mdmsRepository.getByCriteria(null, null, null, null, Collections.emptyList(), requestInfo))
+                .thenReturn(new JSONArray());
+
+        List<Tenant> result = tenantService.getTenants(Collections.emptyList(), requestInfo);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void getTenants_mdmsReturnsNull_returnsEmptyList() {
         List<String> codes = Collections.emptyList();
         RequestInfo requestInfo = RequestInfo.builder().apiId("tenant").action("search").build();
@@ -60,6 +74,29 @@ class TenantServiceUnitTest {
 
         assertThat(result).isEmpty();
         verify(mdmsRepository).getByCriteria(null, null, null, null, codes, requestInfo);
+    }
+
+    @Test
+    void updateTenant_unknownCode_throwsTenantInvalidCodeException() {
+        Tenant tenant = validTenant();
+        when(tenantRepository.isTenantPresent(tenant.getCode())).thenReturn(0L);
+
+        assertThatThrownBy(() -> tenantService.updateTenant(tenant))
+                .isInstanceOf(TenantInvalidCodeException.class);
+
+        verify(tenantRepository, never()).update(tenant);
+    }
+
+    @Test
+    void updateTenant_existingCode_persistsUpdate() {
+        Tenant tenant = validTenant();
+        when(tenantRepository.isTenantPresent(tenant.getCode())).thenReturn(1L);
+        when(tenantRepository.update(tenant)).thenReturn(tenant);
+
+        Tenant result = tenantService.updateTenant(tenant);
+
+        assertThat(result).isEqualTo(tenant);
+        verify(tenantRepository).update(tenant);
     }
 
     @Test
