@@ -30,7 +30,8 @@ class SewerageFieldValidatorTest {
 
     @Test
     void validateUpdateRequest_whenActivateWithoutExecutionDate_fails() {
-        SewerageConnection connection = SewerageConnection.builder().connectionType("NON_METERED").build();
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setConnectionType("NON_METERED");
         connection.setProcessInstance(ProcessInstance.builder().action(SWConstants.ACTIVATE_CONNECTION_CONST).build());
         SewerageConnectionRequest request = SewerageConnectionRequest.builder().sewerageConnection(connection).build();
 
@@ -54,9 +55,8 @@ class SewerageFieldValidatorTest {
 
     @Test
     void validateUpdateRequest_whenApproveWithIncompleteRoadCutting_fails() {
-        SewerageConnection connection = SewerageConnection.builder()
-                .roadCuttingInfo(List.of(RoadCuttingInfo.builder().roadType("").build()))
-                .build();
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setRoadCuttingInfo(List.of(RoadCuttingInfo.builder().roadType("").build()));
         connection.setProcessInstance(ProcessInstance.builder().action(SWConstants.APPROVE_CONNECTION_CONST).build());
         SewerageConnectionRequest request = SewerageConnectionRequest.builder().sewerageConnection(connection).build();
 

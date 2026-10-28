@@ -26,8 +26,10 @@ class PropertyValidatorTest {
 
     @Test
     void validate_whenPropertyIdPresent_returnsSuccess() {
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setPropertyId("prop-1");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
-                .sewerageConnection(SewerageConnection.builder().propertyId("prop-1").build())
+                .sewerageConnection(connection)
                 .build();
 
         ValidatorResult result = propertyValidator.validate(request, SWConstants.CREATE_APPLICATION);

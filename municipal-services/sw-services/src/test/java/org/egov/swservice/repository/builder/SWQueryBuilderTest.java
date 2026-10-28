@@ -12,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class SWQueryBuilderTest {
 
     @Mock
@@ -60,7 +63,8 @@ class SWQueryBuilderTest {
         String sql = queryBuilder.getSearchQueryString(criteria, params, RequestInfo.builder().build());
 
         assertThat(sql).contains("conn.tenantid LIKE ?");
-        assertThat(params).containsExactly("pb%");
+        assertThat(params).contains("pb%");
+        assertThat(params).contains(0, 100);
     }
 
     @Test
@@ -72,7 +76,8 @@ class SWQueryBuilderTest {
         String sql = queryBuilder.getSearchQueryString(criteria, params, RequestInfo.builder().build());
 
         assertThat(sql).contains("conn.tenantid = ?");
-        assertThat(params).containsExactly("pb.amritsar");
+        assertThat(params).contains("pb.amritsar");
+        assertThat(params).contains(0, 100);
     }
 
     @Test

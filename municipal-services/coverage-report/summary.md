@@ -10,7 +10,7 @@
 |--------|----------------:|-----------:|------------------:|-------------:|-----------------------:|:----------:|
 | property-services | 8.0 (audit) / 2.2 (class baseline) | **4.6** | 0.3 / 1.5 | **4.6** | ~35 methods across validator, builder, util, service, consumer | No — large services still untested |
 | ws-services | 11.5 (audit) | **1.8** | 0.6 | **1.1** | 4 (`ActionValidatorTest`, `ResponseInfoFactoryTest`) | No |
-| sw-services | 11.3 | — | 0.5 | — | 0 | No |
+| sw-services | 11.3 | **9.7** | 0.5 | **9.0** | 38 methods (`ActionValidatorTest`, `SewerageConnectionValidatorTest`, `SWQueryBuilderTest`, util/validator/service batch) | No |
 | pgr-services | 17.6 | — | 0.9 | — | 0 (existing validator tests) | No |
 | tl-services | 13.1 | — | 0.3 | — | 0 | No |
 | bpa-services | 6.5 | — | 0.0 | — | 0 | No |

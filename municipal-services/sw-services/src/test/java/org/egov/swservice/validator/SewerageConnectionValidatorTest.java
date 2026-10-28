@@ -30,7 +30,8 @@ class SewerageConnectionValidatorTest {
 
     @Test
     void validateSewerageConnection_whenActionMissing_throwsInvalidAction() {
-        SewerageConnection connection = SewerageConnection.builder().propertyId("p1").build();
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setPropertyId("p1");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
                 .requestInfo(RequestInfo.builder().userInfo(User.builder().type("CITIZEN").build()).build())
                 .sewerageConnection(connection)
@@ -43,7 +44,8 @@ class SewerageConnectionValidatorTest {
 
     @Test
     void validateSewerageConnection_whenPayAction_throwsInvalidAction() {
-        SewerageConnection connection = SewerageConnection.builder().propertyId("p1").build();
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setPropertyId("p1");
         connection.setProcessInstance(ProcessInstance.builder().action("PAY").build());
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
                 .requestInfo(RequestInfo.builder().userInfo(User.builder().type("CITIZEN").build()).build())
@@ -57,7 +59,9 @@ class SewerageConnectionValidatorTest {
 
     @Test
     void validateSewerageConnection_whenEmployeeUsesCitizenChannel_throwsInvalidChannel() {
-        SewerageConnection connection = SewerageConnection.builder().propertyId("p1").channel("CITIZEN").build();
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setPropertyId("p1");
+        connection.setChannel("CITIZEN");
         connection.setProcessInstance(ProcessInstance.builder().action("APPLY").build());
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
                 .requestInfo(RequestInfo.builder().userInfo(User.builder().type("EMPLOYEE").build()).build())
@@ -71,8 +75,10 @@ class SewerageConnectionValidatorTest {
 
     @Test
     void validateUpdate_whenApplicationNoMismatch_throwsInvalidUpdate() {
-        SewerageConnection update = SewerageConnection.builder().applicationNo("SW-NEW").build();
-        SewerageConnection search = SewerageConnection.builder().applicationNo("SW-OLD").build();
+        SewerageConnection update = SewerageConnection.builder().build();
+        update.setApplicationNo("SW-NEW");
+        SewerageConnection search = SewerageConnection.builder().build();
+        search.setApplicationNo("SW-OLD");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder().sewerageConnection(update).build();
 
         assertThatThrownBy(() -> validator.validateUpdate(request, search))
@@ -82,15 +88,17 @@ class SewerageConnectionValidatorTest {
 
     @Test
     void validateUpdate_whenDuplicateDocuments_throwsDuplicateDocument() {
-        SewerageConnection update = SewerageConnection.builder().applicationNo("SW-1").build();
+        SewerageConnection update = SewerageConnection.builder().build();
+        update.setApplicationNo("SW-1");
         update.setDocuments(List.of(
                 Document.builder().fileStoreId("fs-1").build(),
                 Document.builder().fileStoreId("fs-1").build()));
-        SewerageConnection search = SewerageConnection.builder().applicationNo("SW-1").build();
+        SewerageConnection search = SewerageConnection.builder().build();
+        search.setApplicationNo("SW-1");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder().sewerageConnection(update).build();
 
         assertThatThrownBy(() -> validator.validateUpdate(request, search))
                 .isInstanceOf(CustomException.class)
-                .hasMessageContaining("DUPLICATE_DOCUMENT");
+                .hasMessageContaining("Same document cannot be used multiple times");
     }
 }

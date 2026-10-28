@@ -22,8 +22,10 @@ class DiffServiceTest {
 
     @Test
     void checkDifferenceAndSendEditNotification_whenNotificationFails_doesNotPropagate() {
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setApplicationNo("SW-1");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
-                .sewerageConnection(SewerageConnection.builder().applicationNo("SW-1").build())
+                .sewerageConnection(connection)
                 .build();
         doThrow(new RuntimeException("notify failed")).when(editNotificationService).sendEditNotification(request);
 
@@ -34,8 +36,10 @@ class DiffServiceTest {
 
     @Test
     void checkDifferenceAndSendEditNotification_whenSuccess_invokesNotification() {
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setApplicationNo("SW-2");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
-                .sewerageConnection(SewerageConnection.builder().applicationNo("SW-2").build())
+                .sewerageConnection(connection)
                 .build();
 
         diffService.checkDifferenceAndSendEditNotification(request, SewerageConnection.builder().build());

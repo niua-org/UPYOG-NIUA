@@ -8,7 +8,6 @@ import org.egov.swservice.web.models.SewerageConnectionRequest;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,11 +17,18 @@ class MDMSValidatorTest {
 
     private final MDMSValidator mdmsValidator = new MDMSValidator();
 
+    private static SewerageConnection sewerageWithTenant(String tenantId) {
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setTenantId(tenantId);
+        return connection;
+    }
+
     @Test
     void validateCodesForCreateRequest_whenInvalidOwnerType_throws() {
-        SewerageConnection connection = SewerageConnection.builder()
-                .connectionHolders(List.of(OwnerInfo.builder().ownerType("UNKNOWN").build()))
-                .build();
+        OwnerInfo holder = new OwnerInfo();
+        holder.setOwnerType("UNKNOWN");
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setConnectionHolders(List.of(holder));
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
                 .requestInfo(RequestInfo.builder().build())
                 .sewerageConnection(connection)
@@ -36,9 +42,10 @@ class MDMSValidatorTest {
 
     @Test
     void validateCodesForCreateRequest_whenOwnerTypeValid_passes() {
-        SewerageConnection connection = SewerageConnection.builder()
-                .connectionHolders(List.of(OwnerInfo.builder().ownerType("OWNER").build()))
-                .build();
+        OwnerInfo holder = new OwnerInfo();
+        holder.setOwnerType("OWNER");
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setConnectionHolders(List.of(holder));
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
                 .requestInfo(RequestInfo.builder().build())
                 .sewerageConnection(connection)
@@ -52,7 +59,7 @@ class MDMSValidatorTest {
     void validateMasterData_whenUnknownReqType_doesNotThrow() {
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
                 .requestInfo(RequestInfo.builder().build())
-                .sewerageConnection(SewerageConnection.builder().tenantId("pb.amritsar").build())
+                .sewerageConnection(sewerageWithTenant("pb.amritsar"))
                 .build();
 
         mdmsValidator.validateMasterData(request, -1);

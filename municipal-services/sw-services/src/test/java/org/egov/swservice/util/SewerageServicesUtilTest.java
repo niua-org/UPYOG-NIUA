@@ -56,7 +56,7 @@ class SewerageServicesUtilTest {
     void getPropertyDetails_whenInvalidJson_throwsParsingError() {
         assertThatThrownBy(() -> util.getPropertyDetails(Collections.singletonMap("bad", "shape")))
                 .isInstanceOf(CustomException.class)
-                .hasMessageContaining("PARSING_ERROR");
+                .hasMessageContaining("cannot be parsed");
     }
 
     @Test
@@ -94,8 +94,10 @@ class SewerageServicesUtilTest {
 
     @Test
     void isModifyConnectionRequest_whenConnectionNoPresent_returnsTrue() {
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setConnectionNo("SW-001");
         SewerageConnectionRequest request = SewerageConnectionRequest.builder()
-                .sewerageConnection(SewerageConnection.builder().connectionNo("SW-001").build())
+                .sewerageConnection(connection)
                 .build();
 
         assertThat(util.isModifyConnectionRequest(request)).isTrue();

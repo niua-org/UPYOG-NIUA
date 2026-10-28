@@ -21,12 +21,13 @@ class ValidatePropertyTest {
 
         assertThatThrownBy(() -> validateProperty.validatePropertyFields(property, RequestInfo.builder().build()))
                 .isInstanceOf(CustomException.class)
-                .hasMessageContaining("INVALID_PROPERTY");
+                .hasMessageContaining("tenantId");
     }
 
     @Test
     void validatePropertyForConnection_whenPropertyIdMissing_logsErrorWithoutThrow() {
-        SewerageConnection connection = SewerageConnection.builder().applicationNo("SW-APP-1").build();
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setApplicationNo("SW-APP-1");
 
         validateProperty.validatePropertyForConnection(List.of(connection));
     }

@@ -37,8 +37,12 @@ class UnmaskingUtilTest {
 
     @Test
     void getUnmaskedPlumberInfo_whenMaskedMobile_replacesFromSearchResult() {
-        PlumberInfo masked = PlumberInfo.builder().id("pl-1").mobileNumber("99****99").build();
-        PlumberInfo unmasked = PlumberInfo.builder().id("pl-1").mobileNumber("9911223344").build();
+        PlumberInfo masked = new PlumberInfo();
+        masked.setId("pl-1");
+        masked.setMobileNumber("99****99");
+        PlumberInfo unmasked = new PlumberInfo();
+        unmasked.setId("pl-1");
+        unmasked.setMobileNumber("9911223344");
 
         boolean swapped = unmaskingUtil.getUnmaskedPlumberInfo(List.of(masked), List.of(unmasked));
 
@@ -48,30 +52,28 @@ class UnmaskingUtilTest {
 
     @Test
     void getOwnerDetailsUnmasked_whenUserReturned_unmasksMaskedFields() {
-        OwnerInfo holder = OwnerInfo.builder()
-                .uuid("u1")
-                .mobileNumber("99****99")
-                .name("Jo**")
-                .userName("user")
-                .gender("M")
-                .build();
-        OwnerInfo full = OwnerInfo.builder()
-                .uuid("u1")
-                .mobileNumber("9911223344")
-                .name("John")
-                .userName("user")
-                .gender("M")
-                .build();
-        SewerageConnection connection = SewerageConnection.builder()
-                .tenantId("pb.amritsar")
-                .connectionHolders(List.of(holder))
-                .build();
+        OwnerInfo holder = new OwnerInfo();
+        holder.setUuid("u1");
+        holder.setMobileNumber("99****99");
+        holder.setName("Jo**");
+        holder.setUserName("user");
+        holder.setGender("M");
+        OwnerInfo full = new OwnerInfo();
+        full.setUuid("u1");
+        full.setMobileNumber("9911223344");
+        full.setName("John");
+        full.setUserName("user");
+        full.setGender("M");
+        SewerageConnection connection = SewerageConnection.builder().build();
+        connection.setTenantId("pb.amritsar");
+        connection.setConnectionHolders(List.of(holder));
         RequestInfo requestInfo = RequestInfo.builder()
                 .plainAccessRequest(PlainAccessRequest.builder().recordId("u1").build())
                 .build();
-        when(userService.getBaseUserSearchRequest(any(), any())).thenReturn(UserSearchRequest.builder().build());
-        when(userService.getUser(any(UserSearchRequest.class)))
-                .thenReturn(UserDetailResponse.builder().user(List.of(full)).build());
+        when(userService.getBaseUserSearchRequest(any(), any())).thenReturn(new UserSearchRequest());
+        UserDetailResponse response = new UserDetailResponse();
+        response.setUser(List.of(full));
+        when(userService.getUser(any(UserSearchRequest.class))).thenReturn(response);
 
         unmaskingUtil.getOwnerDetailsUnmasked(connection, requestInfo);
 
