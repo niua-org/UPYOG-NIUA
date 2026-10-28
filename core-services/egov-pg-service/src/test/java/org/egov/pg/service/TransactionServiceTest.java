@@ -34,6 +34,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -105,7 +106,8 @@ public class TransactionServiceTest {
         Transaction resp = transactionService.initiateTransaction(transactionRequest);
 
         assertTrue(resp.getRedirectUrl().equalsIgnoreCase(redirectUrl));
-
+        verify(validator).validateCreateTxn(transactionRequest);
+        verify(gatewayService).initiateTxn(txn);
     }
 
     /**
