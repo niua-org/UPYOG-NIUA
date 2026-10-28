@@ -1,27 +1,30 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.bpa.calculator.repository.querybuilder;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.bpa.calculator.web.models.PreapprovedPlanSearchCriteria;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class PreapprovedPlanQueryBuilderTest {
 
-
-    @InjectMocks
-    private PreapprovedPlanQueryBuilder subject;
-
+    private final PreapprovedPlanQueryBuilder queryBuilder = new PreapprovedPlanQueryBuilder();
 
     @Test
-    void getPreapprovedPlanSearchQuery_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
-    }
+    void getPreapprovedPlanSearchQuery_withDrawingNoAndTenant_addsWhereClauses() {
+        List<Object> params = new ArrayList<>();
+        PreapprovedPlanSearchCriteria criteria = PreapprovedPlanSearchCriteria.builder()
+                .tenantId("pb.amritsar")
+                .drawingNo("DR-9")
+                .build();
 
+        String sql = queryBuilder.getPreapprovedPlanSearchQuery(criteria, params);
+
+        assertThat(sql).contains("eg_bpa_preapprovedplan");
+        assertThat(sql).contains("ebpap.tenantid=?");
+        assertThat(sql).contains("ebpap.drawing_number=?");
+        assertThat(params.subList(0, 2)).containsExactly("pb.amritsar", "DR-9");
+    }
 }
