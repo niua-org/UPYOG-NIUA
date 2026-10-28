@@ -2,10 +2,10 @@
 set -uo pipefail
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+WS="$(cd "$ROOT/.." && pwd)"
 LOG="$ROOT/coverage-report/verify-all.log"
 : > "$LOG"
 
-# 13 Maven modules from PR #1943 + pdf-service (npm) = 14 deliverables
 MAVEN_MODULES=(
   core-smoke-tests
   egov-idgen
@@ -21,12 +21,28 @@ MAVEN_MODULES=(
   upyog-draft-service
 )
 
+BUSINESS_MODULES=(
+  finance-collections-voucher-consumer
+  dashboard-analytics
+)
+
 echo "verify-all $(date -u +%Y-%m-%dT%H:%M:%SZ)" | tee -a "$LOG"
 ok=0
 fail=0
 for mod in "${MAVEN_MODULES[@]}"; do
   echo "=== $mod ===" | tee -a "$LOG"
   if (cd "$ROOT/$mod" && mvn -q clean verify >> "$LOG" 2>&1); then
+    echo "OK $mod" | tee -a "$LOG"
+    ok=$((ok + 1))
+  else
+    echo "FAIL $mod" | tee -a "$LOG"
+    fail=$((fail + 1))
+  fi
+done
+
+for mod in "${BUSINESS_MODULES[@]}"; do
+  echo "=== $mod ===" | tee -a "$LOG"
+  if (cd "$WS/business-services/$mod" && mvn -q clean verify >> "$LOG" 2>&1); then
     echo "OK $mod" | tee -a "$LOG"
     ok=$((ok + 1))
   else

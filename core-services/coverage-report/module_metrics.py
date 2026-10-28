@@ -40,8 +40,16 @@ if __name__ == "__main__":
         "egov-pg-service", "egov-user", "egov-workflow-v2", "gateway", "gis-service",
         "mdms-v2", "tenant", "upyog-draft-service",
     ]
+    ws = root.parent
+    business = {
+        "finance-collections-voucher-consumer",
+        "dashboard-analytics",
+    }
     for mod in modules:
-        xml = root / mod / "target" / "site" / "jacoco" / "jacoco.xml"
+        if mod in business:
+            xml = ws / "business-services" / mod / "target" / "site" / "jacoco" / "jacoco.xml"
+        else:
+            xml = root / mod / "target" / "site" / "jacoco" / "jacoco.xml"
         if not xml.exists():
             print(f"{mod},NA,NA")
             continue
