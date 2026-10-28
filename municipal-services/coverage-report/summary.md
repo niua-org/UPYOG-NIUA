@@ -13,7 +13,7 @@
 | sw-services | 11.3 | **9.7** | 0.5 | **9.0** | 38 methods (`ActionValidatorTest`, `SewerageConnectionValidatorTest`, `SWQueryBuilderTest`, util/validator/service batch) | No |
 | pgr-services | 17.6 | **13.4** | 0.9 | **13.4** | ~24 methods (`ServiceRequestValidatorTest`, `PGRQueryBuilderTest`, `PGRUtilsTest`, `EnrichmentServiceTest`, `ResponseInfoFactoryTest`, `AdditionalDetailValidatorTest`) | No |
 | tl-services | 13.1 | — | 0.3 | — | 0 | No |
-| bpa-services | 6.5 | — | 0.0 | — | 0 | No |
+| bpa-services | 6.5 | **9.3** | 0.0 | **8.4** | 27 methods (`ActionValidatorTest`, `WorkflowServiceTest`, `BPAUtilTest`, `ResponseInfoFactoryTest`, `BPAValidatorTest`, `BPAQueryBuilderTest`, `MDMSValidatorTest`; purged 17 service/util scaffolds) | No |
 | *remaining 40 modules* | see [baseline.md](baseline.md) | — | — | — | 0 | No |
 
 ## Tooling
@@ -30,4 +30,5 @@
 | ws-services | PASS (util/validator floors 1% / 3% branch) |
 | sw-services | PASS (validator/util/builder package JaCoCo gates) |
 | pgr-services | PASS (validator/util/service/rowmapper package JaCoCo gates) |
+| bpa-services | PASS (validator/util/workflow/querybuilder package JaCoCo gates) |
 | All 46 | Pending end-of-run sweep |

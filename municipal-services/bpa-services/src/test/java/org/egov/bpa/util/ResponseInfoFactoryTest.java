@@ -1,27 +1,31 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.bpa.util;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.response.ResponseInfo;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class ResponseInfoFactoryTest {
 
-
-    @InjectMocks
-    private ResponseInfoFactory subject;
-
+    private final ResponseInfoFactory factory = new ResponseInfoFactory();
 
     @Test
-    void createResponseInfoFromRequestInfo_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void createResponseInfoFromRequestInfo_whenSuccessTrue_statusIsSuccessful() {
+        RequestInfo requestInfo = RequestInfo.builder().apiId("Rainmaker").ver("1.0").msgId("m1").build();
+
+        ResponseInfo response = factory.createResponseInfoFromRequestInfo(requestInfo, true);
+
+        assertThat(response.getStatus()).isEqualTo("successful");
+        assertThat(response.getApiId()).isEqualTo("Rainmaker");
+        assertThat(response.getMsgId()).isEqualTo("m1");
     }
 
+    @Test
+    void createResponseInfoFromRequestInfo_whenSuccessFalse_statusIsFailed() {
+        ResponseInfo response = factory.createResponseInfoFromRequestInfo(null, false);
+
+        assertThat(response.getStatus()).isEqualTo("failed");
+        assertThat(response.getApiId()).isEmpty();
+    }
 }
