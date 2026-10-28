@@ -1,5 +1,5 @@
 # Coverage baseline (JDK 17)
-Generated: 2026-10-28T07:54:58Z
+Generated: 2026-10-28T08:17:40Z
 
 ## core-smoke-tests
 Status: OK (no jacoco.xml — see raw/core-smoke-tests.log)
@@ -15,13 +15,13 @@ Status: OK (no jacoco.xml — see raw/core-smoke-tests.log)
 | `org.egov.id.api.IdGenerationController` | 100.0 | 100.0 | 0 | 0 |
 
 ## egov-indexer
-**Module line:** 12.0% (130/1080) | **Module branch:** 13.0% (56/432)
+**Module line:** 16.2% (175/1080) | **Module branch:** 15.5% (67/432)
 
 | Class | Line % | Branch % | Missed lines | Missed branches |
 | --- | ---: | ---: | ---: | ---: |
 | `org.egov.infra.indexer.util.IndexerUtils` | 11.4 | 11.8 | 273 | 97 |
-| `org.egov.infra.indexer.service.DataTransformationService` | 10.3 | 8.7 | 113 | 42 |
 | `org.egov.infra.indexer.service.LegacyIndexService$1` | 0.0 | 0.0 | 94 | 24 |
+| `org.egov.infra.indexer.service.DataTransformationService` | 39.7 | 32.6 | 76 | 31 |
 | `org.egov.infra.indexer.service.ReindexService` | 0.0 | 0.0 | 67 | 14 |
 | `org.egov.infra.indexer.service.ReindexService$1` | 0.0 | 0.0 | 61 | 14 |
 | `org.egov.infra.indexer.bulkindexer.BulkIndexer` | 1.7 | 0.0 | 57 | 10 |
@@ -38,7 +38,6 @@ Status: OK (no jacoco.xml — see raw/core-smoke-tests.log)
 | `org.egov.infra.indexer.models.IndexJob$StatusEnum` | 0.0 | 0.0 | 12 | 4 |
 | `org.egov.infra.indexer.consumer.PTCustomIndexMessageListener` | 0.0 | 0.0 | 12 | 2 |
 | `org.egov.infra.indexer.consumer.BPACustomIndexMessageListener` | 0.0 | 100.0 | 10 | 0 |
-| `org.egov.infra.indexer.consumer.CoreIndexMessageListener` | 0.0 | 100.0 | 8 | 0 |
 | `org.egov.infra.indexer.producer.IndexerProducer` | 0.0 | 100.0 | 6 | 0 |
 | `org.egov.infra.indexer.models.IndexJobWrapper` | 0.0 | 0.0 | 6 | 22 |
 | `org.egov.infra.indexer.service.IndexerService` | 92.9 | 78.6 | 4 | 6 |
@@ -46,6 +45,7 @@ Status: OK (no jacoco.xml — see raw/core-smoke-tests.log)
 | `org.egov.infra.indexer.models.AuditDetails$AuditDetailsBuilder` | 0.0 | 100.0 | 1 | 0 |
 | `org.egov.infra.indexer.models.IndexJobWrapper$IndexJobWrapperBuilder` | 0.0 | 100.0 | 1 | 0 |
 | `org.egov.infra.indexer.util.IndexerConstants` | 0.0 | 100.0 | 1 | 0 |
+| `org.egov.infra.indexer.consumer.CoreIndexMessageListener` | 100.0 | 100.0 | 0 | 0 |
 | `org.egov.infra.indexer.util.ResponseInfoFactory` | 100.0 | 100.0 | 0 | 0 |
 
 ## egov-notification-sms
@@ -98,7 +98,7 @@ Status: BUILD_FAILED (no jacoco.xml — see raw/egov-notification-sms.log)
 | `org.egov.pg.service.jobs.earlyReconciliation.EarlyRefundScheduler` | 0.0 | 0.0 | 25 | 4 |
 
 ## egov-user
-**Module line:** 10.3% (391/3787) | **Module branch:** 7.0% (103/1474)
+**Module line:** 10.9% (413/3787) | **Module branch:** 7.4% (109/1474)
 
 | Class | Line % | Branch % | Missed lines | Missed branches |
 | --- | ---: | ---: | ---: | ---: |
@@ -108,9 +108,9 @@ Status: BUILD_FAILED (no jacoco.xml — see raw/egov-notification-sms.log)
 | `org.egov.user.domain.service.utils.EncryptionDecryptionUtil` | 0.4 | 0.0 | 224 | 168 |
 | `org.egov.user.security.oauth2.custom.authproviders.CustomAuthenticationProvider` | 0.0 | 0.0 | 187 | 80 |
 | `org.egov.user.persistence.repository.AddressRepository` | 0.6 | 0.0 | 159 | 62 |
-| `org.egov.user.domain.service.TokenService` | 0.6 | 0.0 | 156 | 58 |
+| `org.egov.user.domain.service.TokenService` | 8.9 | 8.6 | 143 | 53 |
 | `org.egov.user.security.oauth2.custom.CustomOpaqueTokenGenerator` | 0.0 | 0.0 | 131 | 30 |
-| `org.egov.user.web.controller.UserController` | 25.1 | 33.3 | 125 | 32 |
+| `org.egov.user.web.controller.UserController` | 29.3 | 35.4 | 118 | 31 |
 | `org.egov.user.repository.builder.UserTypeQueryBuilder` | 0.0 | 0.0 | 116 | 74 |
 | `org.egov.user.repository.rowmapper.UserResultSetExtractorV2` | 0.0 | 0.0 | 82 | 34 |
 | `org.egov.user.repository.rowmapper.UserResultSetExtractor` | 0.0 | 0.0 | 79 | 34 |
@@ -179,14 +179,13 @@ Status: BUILD_FAILED (no jacoco.xml — see raw/egov-notification-sms.log)
 | `org.egov.wf.repository.EscalationRepository` | 100.0 | 100.0 | 0 | 0 |
 
 ## gateway
-**Module line:** 51.4% (407/792) | **Module branch:** 47.2% (154/326)
+**Module line:** 53.5% (424/792) | **Module branch:** 47.5% (155/326)
 
 | Class | Line % | Branch % | Missed lines | Missed branches |
 | --- | ---: | ---: | ---: | ---: |
 | `com.example.gateway.filters.pre.helpers.UpyogMcpGatewayAuthHelper` | 0.0 | 0.0 | 31 | 4 |
 | `com.example.gateway.filters.pre.helpers.RbacFilterHelper` | 64.1 | 26.5 | 28 | 25 |
 | `com.example.gateway.filters.post.CustomAsyncFilter` | 0.0 | 0.0 | 25 | 2 |
-| `com.example.gateway.filters.pre.helpers.CorrIdFormDataFilterHelper` | 0.0 | 0.0 | 24 | 12 |
 | `com.example.gateway.filters.pre.AuthPreCheckFilter` | 0.0 | 0.0 | 23 | 10 |
 | `com.example.gateway.filters.pre.RbacFilter` | 0.0 | 0.0 | 22 | 12 |
 | `com.example.gateway.filters.pre.AuthFilter` | 0.0 | 0.0 | 21 | 12 |
@@ -204,6 +203,7 @@ Status: BUILD_FAILED (no jacoco.xml — see raw/egov-notification-sms.log)
 | `com.example.gateway.filters.pre.PreHookFilter` | 0.0 | 0.0 | 11 | 6 |
 | `com.example.gateway.ratelimiters.RateLimiterConfiguration` | 0.0 | 100.0 | 11 | 0 |
 | `com.example.gateway.utils.ExceptionUtils` | 85.5 | 82.4 | 8 | 6 |
+| `com.example.gateway.filters.pre.helpers.CorrIdFormDataFilterHelper` | 70.8 | 8.3 | 7 | 11 |
 | `com.example.gateway.filters.error.ErrorFilter` | 0.0 | 100.0 | 6 | 0 |
 | `com.example.gateway.filters.pre.RequestStartTimeFilter` | 0.0 | 100.0 | 5 | 0 |
 | `com.example.gateway.filters.post.PostHookFilter` | 0.0 | 100.0 | 4 | 0 |
@@ -238,13 +238,13 @@ Status: BUILD_FAILED (no jacoco.xml — see raw/egov-notification-sms.log)
 | `org.egov.gis.web.controller.GisController` | 100.0 | 100.0 | 0 | 0 |
 
 ## mdms-v2
-**Module line:** 26.6% (256/962) | **Module branch:** 27.9% (72/258)
+**Module line:** 31.3% (301/962) | **Module branch:** 34.1% (88/258)
 
 | Class | Line % | Branch % | Missed lines | Missed branches |
 | --- | ---: | ---: | ---: | ---: |
-| `org.egov.infra.mdms.service.impl.ThemeConfigServiceImpl` | 0.0 | 0.0 | 100 | 46 |
 | `org.egov.infra.mdms.service.impl.WorkflowServiceImpl` | 0.0 | 0.0 | 65 | 12 |
 | `org.egov.infra.mdms.repository.impl.ThemeConfigRepositoryImpl` | 0.0 | 0.0 | 62 | 18 |
+| `org.egov.infra.mdms.service.impl.ThemeConfigServiceImpl` | 45.0 | 34.8 | 55 | 30 |
 | `org.egov.infra.mdms.service.MDMSServiceV2` | 0.0 | 0.0 | 52 | 8 |
 | `org.egov.infra.mdms.service.SchemaDefinitionService` | 1.9 | 0.0 | 51 | 6 |
 | `org.egov.infra.mdms.repository.querybuilder.MdmsDataQueryBuilderV2` | 0.0 | 0.0 | 48 | 20 |
@@ -324,7 +324,7 @@ Status: OK (no jacoco.xml — see raw/tenant.log)
 | `org.egov.mdms.service.TokenService$1` | 0.0 | 100.0 | 1 | 0 |
 
 ## dashboard-analytics
-**Module line:** 0.9% (25/2655) | **Module branch:** 0.6% (7/1158)
+**Module line:** 1.3% (34/2655) | **Module branch:** 0.8% (9/1158)
 
 | Class | Line % | Branch % | Missed lines | Missed branches |
 | --- | ---: | ---: | ---: | ---: |
@@ -341,8 +341,8 @@ Status: OK (no jacoco.xml — see raw/tenant.log)
 | `com.tarento.analytics.handler.PerformanceChartResponeHandler` | 1.6 | 0.0 | 62 | 36 |
 | `com.tarento.analytics.service.impl.RestService` | 0.0 | 0.0 | 58 | 6 |
 | `com.tarento.analytics.controllers.DashboardController` | 0.0 | 0.0 | 56 | 8 |
-| `com.tarento.analytics.helper.TargetPerDateComputeHelper` | 0.0 | 0.0 | 55 | 36 |
 | `com.tarento.analytics.dto.Tenant` | 0.0 | 100.0 | 53 | 0 |
+| `com.tarento.analytics.helper.TargetPerDateComputeHelper` | 9.1 | 0.0 | 50 | 36 |
 | `com.tarento.analytics.handler.MetricsInsightsHandler` | 0.0 | 0.0 | 45 | 26 |
 | `com.tarento.analytics.utils.ResponseGenerator` | 0.0 | 0.0 | 44 | 4 |
 | `com.tarento.analytics.org.service.MdmsService` | 0.0 | 0.0 | 44 | 4 |
