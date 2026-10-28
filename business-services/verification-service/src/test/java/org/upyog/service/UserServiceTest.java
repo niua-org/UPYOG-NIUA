@@ -73,4 +73,11 @@ class UserServiceTest {
 
         assertThat(userService.searchByUserName("internal", "pb").getUser()).isNull();
     }
+
+    @Test
+    void fetchUserUUIDs_whenRepositoryThrows_returnsEmptyMap() {
+        when(serviceRequestRepository.fetchResult(any(), any())).thenThrow(new RuntimeException("down"));
+
+        assertThat(userService.fetchUserUUIDs("9999999999", new RequestInfo(), "pb")).isEmpty();
+    }
 }

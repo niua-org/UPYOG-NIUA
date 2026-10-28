@@ -6,6 +6,7 @@ import org.upyog.web.models.ResponseInfo;
 import org.upyog.web.models.ResponseInfo.StatusEnum;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,5 +52,31 @@ class CommonDetailUtilTest {
     @Test
     void getTenantId_returnsStateLevelTenant() {
         assertThat(CommonDetailUtil.getTenantId("pb.amritsar")).isEqualTo("pb");
+    }
+
+    @Test
+    void dateTolong_parsesDateTimePattern() {
+        assertThat(CommonDetailUtil.dateTolong("01-01-2024 10:00:00", "dd-MM-yyyy HH:mm:ss")).isPositive();
+    }
+
+    @Test
+    void convertToFormattedDate_formatsEpochString() {
+        String formatted = CommonDetailUtil.convertToFormattedDate(String.valueOf(1704067200000L), "yyyy-MM-dd");
+        assertThat(formatted).isNotBlank();
+    }
+
+    @Test
+    void addOneYearToEpoch_returnsFormattedDate() {
+        assertThat(CommonDetailUtil.addOneYearToEpoch(String.valueOf(1704067200000L))).matches("\\d{2}-\\d{2}-\\d{4}");
+    }
+
+    @Test
+    void beuatifyJson_returnsPrettyPrintedJson() {
+        assertThat(CommonDetailUtil.beuatifyJson(Map.of("key", "value"))).contains("key");
+    }
+
+    @Test
+    void createReponseInfo_nullRequestInfo_usesDefaults() {
+        assertThat(CommonDetailUtil.createReponseInfo(null, "res", ResponseInfo.StatusEnum.FAILED).getApiId()).isEmpty();
     }
 }
