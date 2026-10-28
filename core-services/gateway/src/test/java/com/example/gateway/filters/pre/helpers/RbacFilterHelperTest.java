@@ -34,6 +34,8 @@ import java.util.Set;
 import static com.example.gateway.constants.GatewayConstants.CORRELATION_ID_KEY;
 import static com.example.gateway.constants.GatewayConstants.CURRENT_REQUEST_SANITIZED_BODY;
 import static com.example.gateway.constants.GatewayConstants.REQUEST_INFO_FIELD_NAME_PASCAL_CASE;
+import static com.example.gateway.constants.GatewayConstants.TENANTID_MDC;
+import static com.example.gateway.utils.UpyogMcpGatewaySupport.GATEWAY_REQUEST_INFO_ATTR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,6 +99,48 @@ class RbacFilterHelperTest {
         assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("User information not found");
+    }
+
+    @Test
+    void apply_mcpPathWithoutUser_throwsRuntimeException() {
+        ServerWebExchange exchange = exchangeFor("/upyog-mcp-server/mcp");
+        Map<String, Object> body = new HashMap<>();
+
+        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("User information not found");
+    }
+
+    @Test
+    void apply_mcpPathWithoutTenantInUserOrRequest_throwsTenantMissing() {
+        ServerWebExchange exchange = exchangeFor("/upyog-mcp-server/mcp");
+        Map<String, Object> body = new HashMap<>();
+        User user = User.builder().uuid("user-mcp").roles(List.of()).build();
+        RequestInfo requestInfo = RequestInfo.builder().userInfo(user).build();
+        when(exchange.getAttribute(GATEWAY_REQUEST_INFO_ATTR)).thenReturn(requestInfo);
+        when(commonUtils.getTenantIdsFromRequest(any(), eq(body))).thenReturn(Set.of());
+
+        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
+                .isInstanceOfSatisfying(CustomException.class, ex ->
+                        assertThat(ex.getMessage()).contains("Could not resolve tenantId"));
+    }
+
+    @Test
+    void apply_accessControlUnknownError_treatedAsUnauthorized() {
+        ServerWebExchange exchange = exchangeFor("/secure");
+        Map<String, Object> body = new HashMap<>();
+        body.put(REQUEST_INFO_FIELD_NAME_PASCAL_CASE, Map.of());
+        when(objectMapper.convertValue(body.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class))
+                .thenReturn(requestInfoWithUser("user-3", "pb"));
+        when(centralInstanceUtil.getIsEnvironmentCentralInstance()).thenReturn(false);
+        when(commonUtils.validateRequestAndSetRequestTenantId(any(), eq(body))).thenReturn(Set.of("pb"));
+        when(applicationProperties.getAuthorizationUrl()).thenReturn("http://access-control/actions/test");
+        when(restTemplate.postForEntity(any(), any(), eq(Void.class)))
+                .thenThrow(new IllegalStateException("network down"));
+
+        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
+                .isInstanceOfSatisfying(CustomException.class, ex ->
+                        assertThat(ex.getMessage()).contains("not authorized"));
     }
 
     @Test

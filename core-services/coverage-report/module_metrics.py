@@ -5,9 +5,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 POJO_PACKAGES = (".model.", ".web.models.", ".contract.", ".config.", ".web.contract.")
+# Align with gateway JaCoCo bundle excludes (model/constants/application entrypoints).
+BUNDLE_EXTRA_EXCLUDES = (".constants.", "Application")
 
 def is_excluded(name: str) -> bool:
-    return any(p in name for p in POJO_PACKAGES)
+    return any(p in name for p in POJO_PACKAGES + BUNDLE_EXTRA_EXCLUDES)
 
 def metrics(xml_path: Path):
     root = ET.parse(xml_path).getroot()

@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -102,6 +103,19 @@ class PreHookFilterHelperTest {
                     assertThat(exception.getCode()).isEqualTo("PRE_HOOK_ERROR");
                     assertThat(exception.getMessage()).contains("Pre-hook url threw an error");
                 });
+    }
+
+    @Test
+    void apply_preHookServerError_throwsPreHookError() throws Exception {
+        Map<String, Object> body = Map.of("tenantId", "pg");
+        when(objectMapper.writeValueAsString(body)).thenReturn("{}");
+        when(restTemplate.postForObject(eq(PRE_HOOK_URL), any(), eq(String.class)))
+                .thenThrow(HttpServerErrorException.create(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "server error", null, null, null));
+
+        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
+                .isInstanceOfSatisfying(CustomException.class, exception ->
+                        assertThat(exception.getCode()).isEqualTo("PRE_HOOK_ERROR"));
     }
 
     @Test

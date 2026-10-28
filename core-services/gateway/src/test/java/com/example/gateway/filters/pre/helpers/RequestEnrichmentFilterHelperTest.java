@@ -25,8 +25,11 @@ import static com.example.gateway.constants.GatewayConstants.CORRELATION_ID_KEY;
 import static com.example.gateway.constants.GatewayConstants.REQUEST_INFO_FIELD_NAME_PASCAL_CASE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static com.example.gateway.constants.GatewayConstants.TENANTID_MDC;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +54,26 @@ class RequestEnrichmentFilterHelperTest {
         Object result = Mono.from(helper.apply(exchange, null)).block();
 
         assertThat(result).isNull();
+    }
+
+    @Test
+    void apply_nonCompatibleBodyWithUser_addsUserInfoHeader() {
+        ServerWebExchange exchange = exchangeWithCorrelationId();
+        ServerHttpRequest request = exchange.getRequest();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.TEXT_PLAIN);
+        when(request.getHeaders()).thenReturn(headers);
+        when(request.getMethod()).thenReturn(HttpMethod.POST);
+
+        Map<String, Object> body = new HashMap<>();
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().uuid("u1").userName("citizen").build())
+                .build();
+        body.put(REQUEST_INFO_FIELD_NAME_PASCAL_CASE, new ObjectMapper().convertValue(requestInfo, Map.class));
+
+        Mono.from(helper.apply(exchange, body)).block();
+
+        verify(request, atLeastOnce()).mutate();
     }
 
     @Test

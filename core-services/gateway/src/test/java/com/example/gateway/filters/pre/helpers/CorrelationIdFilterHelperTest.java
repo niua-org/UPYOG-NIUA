@@ -86,6 +86,20 @@ class CorrelationIdFilterHelperTest {
     }
 
     @Test
+    void apply_centralMixedEndpoint_resolvesTenantFromBody() {
+        ServerWebExchange exchange = exchangeFor("/mixed-endpoint");
+        Map<String, Object> body = Map.of("tenantId", "pg.cityb");
+        when(applicationProperties.getOpenEndpointsWhitelist()).thenReturn(List.of());
+        when(applicationProperties.getMixedModeEndpointsWhitelist()).thenReturn(List.of("/mixed-endpoint"));
+        when(centralInstanceUtil.getIsEnvironmentCentralInstance()).thenReturn(true);
+        when(commonUtils.getLowLevelTenantIdFromSet(Set.of("pg.cityb"))).thenReturn("pg.cityb");
+
+        Mono.from(helper.apply(exchange, body)).block();
+
+        assertThat(exchange.getAttributes()).containsEntry(TENANTID_MDC, "pg.cityb");
+    }
+
+    @Test
     void apply_centralOpenEndpointWithTenant_setsTenantMdcAttribute() {
         ServerWebExchange exchange = exchangeFor("/open-endpoint");
         Map<String, Object> body = Map.of("tenantId", "pg.citya");
