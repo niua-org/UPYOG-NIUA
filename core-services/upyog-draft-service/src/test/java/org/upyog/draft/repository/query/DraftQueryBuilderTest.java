@@ -84,4 +84,30 @@ class DraftQueryBuilderTest {
 
         assertThat(params).containsExactly(1_700_000_000_000L);
     }
+
+    @Test
+    void getSearchQuery_unknownSortBy_fallsBackToDefaultSortColumn() {
+        DraftSearchCriteria criteria = DraftSearchCriteria.builder()
+                .sortBy("createdBy; DROP TABLE ug_draft_detail")
+                .build();
+        List<Object> params = new ArrayList<>();
+
+        String sql = queryBuilder.getSearchQuery(criteria, params);
+
+        assertThat(sql).contains("ORDER BY lastmodifiedtime DESC");
+        assertThat(sql).doesNotContain("DROP TABLE");
+    }
+
+    @Test
+    void getSearchQuery_allowedSortBy_createdtime_usesAllowlistedColumn() {
+        DraftSearchCriteria criteria = DraftSearchCriteria.builder()
+                .sortBy("createdtime")
+                .sortOrder("ASC")
+                .build();
+        List<Object> params = new ArrayList<>();
+
+        String sql = queryBuilder.getSearchQuery(criteria, params);
+
+        assertThat(sql).contains("ORDER BY createdtime ASC");
+    }
 }
