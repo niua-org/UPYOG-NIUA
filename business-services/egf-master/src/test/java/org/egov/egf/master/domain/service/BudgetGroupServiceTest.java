@@ -3,6 +3,8 @@ package org.egov.egf.master.domain.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -78,6 +80,43 @@ class BudgetGroupServiceTest {
 
         assertThat(result.get(0).getMajorCode()).isSameAs(major);
         assertThat(result.get(0).getTenantId()).isEqualTo("default");
+    }
+
+    @Test
+    void add_whenValid_assignsSequenceAndReturnsGroups() {
+        ChartOfAccount major = ChartOfAccount.builder().id("major").build();
+        BudgetGroup group = sampleGroup();
+        group.setMajorCode(major);
+        group.setName("revenue");
+        when(chartOfAccountRepository.findById(major)).thenReturn(major);
+        when(budgetGroupRepository.uniqueCheck(eq("name"), any(BudgetGroup.class))).thenReturn(true);
+        when(budgetGroupRepository.getNextSequence()).thenReturn("bg-1");
+
+        List<BudgetGroup> result = budgetGroupService.add(new ArrayList<>(List.of(group)), errors);
+
+        assertThat(result.get(0).getId()).isEqualTo("bg-1");
+        assertThat(result.get(0).getTenantId()).isEqualTo("default");
+    }
+
+    @Test
+    void update_whenValid_returnsEnrichedGroups() {
+        ChartOfAccount major = ChartOfAccount.builder().id("major").build();
+        BudgetGroup group = sampleGroup();
+        group.setMajorCode(major);
+        when(chartOfAccountRepository.findById(major)).thenReturn(major);
+        when(budgetGroupRepository.uniqueCheck(eq("name"), any(BudgetGroup.class))).thenReturn(true);
+
+        List<BudgetGroup> result = budgetGroupService.update(new ArrayList<>(List.of(group)), errors);
+
+        assertThat(result.get(0).getMajorCode()).isSameAs(major);
+    }
+
+    @Test
+    void addToQue_delegatesToRepository() {
+        org.egov.egf.master.web.requests.BudgetGroupRequest request =
+                new org.egov.egf.master.web.requests.BudgetGroupRequest();
+        budgetGroupService.addToQue(request);
+        verify(budgetGroupRepository).add(request);
     }
 
     @Test
