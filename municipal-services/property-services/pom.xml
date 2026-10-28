@@ -246,6 +246,17 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.11</version>
+				<configuration>
+					<excludes>
+						<exclude>**/models/**</exclude>
+						<exclude>**/web/contracts/**</exclude>
+						<exclude>**/web/models/**</exclude>
+						<exclude>**/config/**</exclude>
+						<exclude>**/*Configuration.class</exclude>
+						<exclude>**/*Constants.class</exclude>
+						<exclude>**/PropertyApplication.class</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
@@ -277,7 +288,30 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>${jacoco.line.coverage}</minimum>
+											<minimum>0.06</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.06</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.egov.pt.repository.builder</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.20</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.14</minimum>
 										</limit>
 									</limits>
 								</rule>
