@@ -21,21 +21,32 @@ Baseline: `baseline-snapshot.md`. Current: post-pass JaCoCo XML.
 | Module | Baseline line % | New line % | Baseline branch % | New branch % | Meaningful tests added (approx.) |
 |--------|-----------------|------------|-------------------|--------------|----------------------------------|
 | billing-service | 61.2 | 61.2 | 50.5 | 50.5 | 40+ (service/validation); JaCoCo gate on `org.egov.demand.service` ~86% line |
-| collection-services | 73.1 | 73.1 | 58.1 | 58.1 | 35+ incl. `*BehaviorTest` payment/remittance |
+| collection-services | 73.1 | 73.1 | 58.1 | 58.1 | 35+ incl. `*BehaviorTest`; **JaCoCo gate** `service`+`util` **86.3% / 69.2%** |
 | dashboard-analytics | 59.0 | 65.7 | 34.7 | 49.3 | 25+ (`TarentoServiceImplTest`, query behaviour) |
 | dashboard-data-engine | 79.2 | 79.2 | 54.5 | 54.5 | 2 restored + existing unit tests |
 | dashboard-data-extractor | 57.5 | 57.5 | 45.4 | 45.4 | 3 restored controller/mapper tests |
 | dashboard-ingest | 47.8 | 48.6 | 36.6 | 38.0 | 15+ service tests; util JSON helpers extended |
 | egf-instrument | 38.8 | 38.8 | 33.9 | 33.9 | structural + existing; needs dedicated service pass |
-| egf-master | 29.2 | 29.2 | 24.0 | 24.0 | 20+ domain `*ServiceTest` create/update/search |
-| egov-apportion-service | 68.7 | 68.7 | 52.3 | 52.3 | 10+ apportion rule tests |
-| egov-hrms | 41.3 | 41.3 | 22.7 | 22.7 | 15+ HRMS service tests |
+| egf-master | 29.2 | 29.2 | 24.0 | 24.0 | 20+ domain `*ServiceTest`; **gate** `domain.service` **~59.5% / ~56.1%** |
+| egov-apportion-service | 68.7 | 68.7 | 52.3 | 52.3 | 10+ apportion tests; **gate** `org.egov.service` **88% / 62%**, `apportions` **52% / 44%** |
+| egov-hrms | 41.3 | 41.3 | 22.7 | 22.7 | 15+ HRMS tests; **gate** `org.egov.hrms.service` **76.1% / 44.8%** (filter drags in `repository`/`web.validator`) |
 | employee-dashboard | 67.7 | 67.7 | 27.5 | 27.5 | existing; branch coverage low |
 | finance-collections-voucher-consumer | 35.1 | 41.5 | 6.4 | 7.8 | 12+ (`EgfKafkaListenerTest`, `ReceiptServiceTest`) |
 | reconciliation-service | 87.5 | 87.5 | 100.0 | 100.0 | already above target |
 | verification-service | 64.4 | 70.5 | 45.2 | 51.2 | 15+ util/service/mapper tests |
 
 **Meaningful test** = at least one assertion on output, state, or `verify()`/captors; excludes `classLoads`-only stubs (see `shallow-tests.md`).
+
+The **module-wide filter** (`module-summary-from-jacoco.py`) sums every package whose name contains `service`, `util`, `repository`, etc. That understates modules where JaCoCo **verify** gates only a subset (e.g. collection **service+util** at 86%/69% while the filter stays ~73%/58% because `repository` and other packages are included).
+
+### JaCoCo `verify` gates (subset packages)
+
+| Module | Gated packages | Line % | Branch % | Floor (line / branch) |
+|--------|----------------|--------|----------|------------------------|
+| collection-services | `org.egov.collection.service`, `util` | 86.3 | 69.2 | 0.80 / 0.70 |
+| egov-hrms | `org.egov.hrms.service`, `validation` | 76.1 / 100 | 44.8 / 100 | 0.75 / 0.44 (service) |
+| egov-apportion-service | `org.egov.service`, `apportions` | 88.1 / 51.9 | 62.1 / 44.3 | 0.80 / 0.61 and 0.51 / 0.43 |
+| egf-master | `org.egov.egf.master.domain.service` | 59.5 | 56.1 | 0.59 / 0.55 |
 
 ## Modules below 70% / 60% target (service-layer filter)
 
@@ -48,10 +59,10 @@ Baseline: `baseline-snapshot.md`. Current: post-pass JaCoCo XML.
 | billing-service (module-wide filter) | 61% / 51% | Validators/consumers/controllers dominate; gated packages meet higher bar |
 | dashboard-data-extractor | 58% / 45% | JDBC mappers and schedulers need DB-backed tests |
 | dashboard-analytics | 66% / 49% | `QueryServiceImpl`, metadata, S3 client largely untested |
-| egov-hrms | 41% / 23% | Kafka notifications and MDMS integration paths |
+| egov-hrms | 41% / 23% (filter) | **Gated `hrms.service` ~76% / ~45%**; `repository` + `web.validator` dominate filter |
 | employee-dashboard | 68% / 28% | Low branch coverage in dashboard aggregations |
-| collection-services | 73% / **58%** | Branch just under 60%; enrichers partially covered |
-| egov-apportion-service | 69% / 52% | Near line target; apportion branches need more CSV cases |
+| collection-services | 73% / 58% (filter) | **Gated service+util meets 80% / ~70%**; v1/ repository packages still thin |
+| egov-apportion-service | 69% / 52% (filter) | **`org.egov.service` ≥80% line**; `apportions` branch still below 60% |
 
 ## JaCoCo anti-regression
 
