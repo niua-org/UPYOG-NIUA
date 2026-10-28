@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -67,5 +68,49 @@ class ReceiptServiceTest {
         ArgumentCaptor<StringBuilder> urlCaptor = ArgumentCaptor.forClass(StringBuilder.class);
         verify(serviceRequestRepository).fetchResult(urlCaptor.capture(), eq(req), eq("pb.amritsar"));
         assertThat(urlCaptor.getValue().toString()).isEqualTo("http://collection/receipts/_update");
+    }
+
+    @Test
+    void updateReceipt_whenCollectionReturnsNull_returnsNull() throws Exception {
+        var req = ReceiptTestFixtures.receiptReqFromFixture();
+        Voucher voucher = new Voucher();
+        voucher.setVoucherNumber("VCH-100");
+        VoucherResponse voucherResponse = new VoucherResponse();
+        voucherResponse.setVouchers(List.of(voucher));
+        when(propertiesManager.getSiUserInfo()).thenReturn(null);
+        when(serviceRequestRepository.fetchResult(any(StringBuilder.class), any(), anyString())).thenReturn(null);
+
+        ReceiptResponse response = receiptService.updateReceipt(req, voucherResponse);
+
+        assertThat(response).isNull();
+        assertThat(req.getRequestInfo().getUserInfo()).isNull();
+        assertThat(req.getReceipt().get(0).getBill().get(0).getBillDetails().get(0).getVoucherHeader())
+                .isEqualTo("VCH-100");
+    }
+
+    @Test
+    void updateReceipt_whenCollectionCallFails_propagatesException() throws Exception {
+        var req = ReceiptTestFixtures.receiptReqFromFixture();
+        Voucher voucher = new Voucher();
+        voucher.setVoucherNumber("VCH-100");
+        VoucherResponse voucherResponse = new VoucherResponse();
+        voucherResponse.setVouchers(List.of(voucher));
+        when(propertiesManager.getSiUserInfo()).thenReturn(new User());
+        when(serviceRequestRepository.fetchResult(any(StringBuilder.class), any(), anyString()))
+                .thenThrow(new RuntimeException("collection unavailable"));
+
+        assertThatThrownBy(() -> receiptService.updateReceipt(req, voucherResponse))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("collection unavailable");
+    }
+
+    @Test
+    void updateReceipt_whenVoucherListEmpty_throwsIndexOutOfBounds() throws Exception {
+        var req = ReceiptTestFixtures.receiptReqFromFixture();
+        VoucherResponse voucherResponse = new VoucherResponse();
+        voucherResponse.setVouchers(List.of());
+
+        assertThatThrownBy(() -> receiptService.updateReceipt(req, voucherResponse))
+                .isInstanceOf(IndexOutOfBoundsException.class);
     }
 }
