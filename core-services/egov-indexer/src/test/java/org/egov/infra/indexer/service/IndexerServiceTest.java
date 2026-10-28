@@ -4,6 +4,7 @@ import com.github.zafarkhaja.semver.Version;
 import org.egov.IndexerApplicationRunnerImpl;
 import org.egov.infra.indexer.bulkindexer.BulkIndexer;
 import org.egov.infra.indexer.util.IndexerUtils;
+import org.egov.infra.indexer.web.contract.CustomJsonMapping;
 import org.egov.infra.indexer.web.contract.Index;
 import org.egov.infra.indexer.web.contract.Mapping;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -104,7 +105,7 @@ class IndexerServiceTest {
 		when(utils.getSemVer(anyString())).thenReturn(semVer);
 		Mapping mapping = mock(Mapping.class);
 		when(mapping.getTopic()).thenReturn("other-topic");
-		Map<String, List<Mapping>> versionMap = new HashMap<String, List<Mapping>>();
+		ConcurrentHashMap<String, List<Mapping>> versionMap = new ConcurrentHashMap<>();
 		versionMap.put(semVer.getNormalVersion(), Collections.singletonList(mapping));
 		when(runner.getVersionMap()).thenReturn(versionMap);
 
@@ -145,7 +146,7 @@ class IndexerServiceTest {
 		Index index = mock(Index.class);
 		when(index.getName()).thenReturn("citizen-index");
 		when(index.getType()).thenReturn("citizen");
-		when(index.getCustomJsonMapping()).thenReturn("custom-mapping");
+		when(index.getCustomJsonMapping()).thenReturn(CustomJsonMapping.builder().build());
 		when(dataTransformationService.buildJsonForIndex(index, KAFKA_JSON, false, true)).thenReturn(BULK_JSON);
 
 		indexerService.indexProccessor(index, nonLegacyConfigKey(), KAFKA_JSON, false);
@@ -169,7 +170,7 @@ class IndexerServiceTest {
 		when(mapping.getIndexes()).thenReturn(Collections.singletonList(index));
 		when(mapping.getConfigKey()).thenReturn(nonLegacyConfigKey());
 
-		Map<String, List<Mapping>> versionMap = new HashMap<String, List<Mapping>>();
+		ConcurrentHashMap<String, List<Mapping>> versionMap = new ConcurrentHashMap<>();
 		versionMap.put(semVer.getNormalVersion(), Collections.singletonList(mapping));
 		when(runner.getVersionMap()).thenReturn(versionMap);
 		when(dataTransformationService.buildJsonForIndex(index, kafkaJson, true, false)).thenReturn(bulkJson);
