@@ -1,42 +1,43 @@
 package org.egov.rb.pgr.v2.models;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.validation.ConstraintValidatorContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AdditionalDetailValidatorTest {
 
-    private final AdditionalDetailValidator validator = new AdditionalDetailValidator();
-    private final ConstraintValidatorContext context = mock(ConstraintValidatorContext.class);
+    private AdditionalDetailValidator validator;
+
+    @Mock
+    private ConstraintValidatorContext context;
 
     @BeforeEach
     void setUp() {
-        CharacterConstraint constraint = mock(CharacterConstraint.class);
-        when(constraint.size()).thenReturn(10);
+        validator = new AdditionalDetailValidator();
+        CharacterConstraint constraint = org.mockito.Mockito.mock(CharacterConstraint.class);
+        org.mockito.Mockito.when(constraint.size()).thenReturn(5);
         validator.initialize(constraint);
     }
 
     @Test
-    @DisplayName("isValid_whenNull_returnsTrue")
     void isValid_whenNull_returnsTrue() {
         assertThat(validator.isValid(null, context)).isTrue();
     }
 
     @Test
-    @DisplayName("isValid_whenWithinSize_returnsTrue")
-    void isValid_whenWithinSize_returnsTrue() {
-        assertThat(validator.isValid("short", context)).isTrue();
+    void isValid_whenTooLong_returnsFalse() {
+        assertThat(validator.isValid("123456", context)).isFalse();
     }
 
     @Test
-    @DisplayName("isValid_whenExceedsSize_returnsFalse")
-    void isValid_whenExceedsSize_returnsFalse() {
-        assertThat(validator.isValid("this value is too long", context)).isFalse();
+    void isValid_whenWithinSize_returnsTrue() {
+        assertThat(validator.isValid("12345", context)).isTrue();
     }
 }
