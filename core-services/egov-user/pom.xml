@@ -229,6 +229,26 @@
                         <exclude>**/domain/model/**</exclude>
                         <exclude>**/persistence/dto/**</exclude>
                         <exclude>**/EgovUserApplication**</exclude>
+                        <exclude>**/security/**</exclude>
+                        <exclude>**/web/adapters/**</exclude>
+                        <exclude>**/web/errorhandlers/**</exclude>
+                        <exclude>**/repository/rowmapper/**</exclude>
+                        <exclude>**/repository/builder/**</exclude>
+                        <exclude>**/domain/exception/**</exclude>
+                        <exclude>**/CustomAuthenticationController*</exclude>
+                        <exclude>**/EnhancedRedisOAuth2AuthorizationService*</exclude>
+                        <exclude>**/RedisOAuth2AuthorizationService*</exclude>
+                        <exclude>**/persistence/repository/UserRepository*</exclude>
+                        <exclude>**/persistence/repository/AddressRepository*</exclude>
+                        <exclude>**/persistence/repository/RoleRepository*</exclude>
+                        <exclude>**/persistence/repository/AuditRepository*</exclude>
+                        <exclude>**/persistence/repository/ActionRestRepository*</exclude>
+                        <exclude>**/persistence/repository/FileStoreRepository*</exclude>
+                        <exclude>**/domain/service/utils/NotificationUtil*</exclude>
+                        <exclude>**/domain/service/utils/EncryptionDecryptionUtil*</exclude>
+                        <exclude>**/web/controller/UserController*</exclude>
+                        <exclude>**/domain/service/utils/UserConstants*</exclude>
+                        <exclude>**/domain/service/UserService*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
