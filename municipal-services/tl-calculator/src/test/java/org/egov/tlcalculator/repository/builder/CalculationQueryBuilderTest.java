@@ -1,27 +1,29 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.tlcalculator.repository.builder;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.tlcalculator.web.models.CalculationSearchCriteria;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class CalculationQueryBuilderTest {
 
-
-    @InjectMocks
-    private CalculationQueryBuilder subject;
-
+    private final CalculationQueryBuilder queryBuilder = new CalculationQueryBuilder();
 
     @Test
-    void getSearchQuery_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
-    }
+    void getSearchQuery_bindsTenantAndApplicationNumber() {
+        List<Object> params = new ArrayList<>();
+        CalculationSearchCriteria criteria = new CalculationSearchCriteria();
+        criteria.setTenantId("pb.amritsar");
+        criteria.setAplicationNumber("TL-001");
 
+        String sql = queryBuilder.getSearchQuery(criteria, params);
+
+        assertThat(sql).contains("tp.tenantid=?");
+        assertThat(sql).contains("tp.consumercode=?");
+        assertThat(sql).contains("LIMIT 1");
+        assertThat(params).containsExactly("pb.amritsar", "TL-001");
+    }
 }
