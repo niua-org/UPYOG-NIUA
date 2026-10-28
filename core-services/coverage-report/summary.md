@@ -64,4 +64,20 @@ Line/branch % exclude typical DTO/model/config packages (see `parse_jacoco.py`).
 
 Run: `coverage-report/verify-all.sh` (logs to `verify-all.log`).  
 **Confirmed locally:** `upyog-draft-service` **verify OK** with new JaCoCo gate.  
-Full 14-module log populated when `verify-all.sh` completes (expect **FAIL** for `egov-notification-sms` until dependencies resolve).
+**Latest `verify-all.sh` run (JDK 17):** **11 OK**, **2 FAIL** — see `verify-all.log`.
+
+| Module | `mvn clean verify` |
+| --- | --- |
+| core-smoke-tests | OK |
+| egov-idgen | OK |
+| egov-indexer | OK |
+| egov-notification-sms | **FAIL** (SNAPSHOT dependency resolution) |
+| egov-pg-service | **FAIL** (see `verify-all.log`; dependency/build) |
+| egov-user | OK |
+| egov-workflow-v2 | OK |
+| gateway | OK |
+| gis-service | OK |
+| mdms-v2 | OK |
+| tenant | OK |
+| upyog-draft-service | OK |
+| pdf-service (npm test) | OK |
