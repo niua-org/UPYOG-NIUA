@@ -2,6 +2,7 @@ package org.egov.tenant.web.controller;
 
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -87,6 +88,8 @@ public class TenantControllerTest {
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(content().json(new Resources().getFileContents("tenantCreateResponse.json")));
+
+        verify(tenantService).createTenant(tenant);
     }
 
     @Test
