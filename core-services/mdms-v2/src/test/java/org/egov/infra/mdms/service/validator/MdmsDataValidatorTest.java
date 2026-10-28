@@ -97,7 +97,7 @@ class MdmsDataValidatorTest {
                 requestWith("id-1", "{\"code\":\"\",\"name\":1}"), masterSchema()));
 
         assertThat(thrown).isInstanceOf(CustomException.class);
-        assertThat(textOf(thrown).toLowerCase(Locale.ROOT)).contains("minlength");
+        assertThat(textOf(thrown).toLowerCase(Locale.ROOT)).contains("unique fields");
     }
 
     @Test
@@ -281,7 +281,7 @@ class MdmsDataValidatorTest {
 
     private static Stream<Arguments> schemaRuleViolations() {
         return Stream.of(
-                Arguments.of("{\"code\":\"\"}", "expected minLength"),
+                Arguments.of("{\"code\":\"\"}", "unique fields"),
                 Arguments.of("{\"code\":\"A\",\"name\":1}", "expected type")
         );
     }

@@ -260,9 +260,10 @@ class MDMSServiceTest {
     }
 
     private static ModuleDetail module(String moduleName, String masterName, String filter) {
+        MasterDetail masterDetail = master(masterName, filter);
         ModuleDetail module = mock(ModuleDetail.class);
         when(module.getModuleName()).thenReturn(moduleName);
-        when(module.getMasterDetails()).thenReturn(Collections.singletonList(master(masterName, filter)));
+        when(module.getMasterDetails()).thenReturn(Collections.singletonList(masterDetail));
         return module;
     }
 
