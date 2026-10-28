@@ -1,4 +1,3 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.pt.consumer;
 
 import org.junit.jupiter.api.Test;
@@ -8,7 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class HashMapDeserializerTest {
 
     @Test
-    void class_whenLoaded_isNotNull() {
-        assertThat(HashMapDeserializer.class).isNotNull();
+    void constructor_whenCreated_targetsHashMapType() {
+        HashMapDeserializer deserializer = new HashMapDeserializer();
+        assertThat(deserializer).isNotNull();
     }
 }

@@ -1,27 +1,34 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.pt.service;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.pt.models.Property;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class DiffServiceTest {
 
-
-    @InjectMocks
-    private DiffService subject;
-
+    private final DiffService diffService = new DiffService();
 
     @Test
-    void getUpdatedFields_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void getUpdatedFields_whenLandAreaChanges_includesLandArea() {
+        Property fromDb = Property.builder().tenantId("pb.amritsar").landArea(100.0).build();
+        Property update = Property.builder().tenantId("pb.amritsar").landArea(200.0).build();
+
+        List<String> updated = diffService.getUpdatedFields(update, fromDb, "");
+
+        assertThat(updated).contains("landArea");
+    }
+
+    @Test
+    void getUpdatedFields_whenIdentical_returnsEmptyList() {
+        Property fromDb = Property.builder().tenantId("pb.amritsar").landArea(100.0).build();
+        Property update = Property.builder().tenantId("pb.amritsar").landArea(100.0).build();
+
+        List<String> updated = diffService.getUpdatedFields(update, fromDb, "");
+
+        assertThat(updated).isEmpty();
     }
 
 }
