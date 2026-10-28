@@ -1,13 +1,11 @@
 package org.upyog.pgrai.validation;
 
+import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import jakarta.validation.ConstraintValidatorContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,20 +23,17 @@ class SanitizeHtmlValidatorTest {
     }
 
     @Test
-    @DisplayName("isValid_whenNull_returnsTrue")
     void isValid_whenNull_returnsTrue() {
         assertThat(validator.isValid(null, context)).isTrue();
     }
 
     @Test
-    @DisplayName("isValid_whenPlainText_returnsTrue")
     void isValid_whenPlainText_returnsTrue() {
         assertThat(validator.isValid("hello", context)).isTrue();
     }
 
     @Test
-    @DisplayName("isValid_whenScriptTag_returnsFalse")
     void isValid_whenScriptTag_returnsFalse() {
-        assertThat(validator.isValid("<script>alert(1)</script>", context)).isFalse();
+        assertThat(validator.isValid("<script>x</script>", context)).isFalse();
     }
 }
