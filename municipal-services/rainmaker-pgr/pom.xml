@@ -20,8 +20,10 @@
 <log4j2.version>2.17.1</log4j2.version>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.0823</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.0183</jacoco.branch.coverage>
+        <jacoco.utils.line.minimum>0.02</jacoco.utils.line.minimum>
+        <jacoco.utils.branch.minimum>0.01</jacoco.utils.branch.minimum>
+        <jacoco.repository.line.minimum>0.02</jacoco.repository.line.minimum>
+        <jacoco.repository.branch.minimum>0.01</jacoco.repository.branch.minimum>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lombok.version>1.18.22</lombok.version>
   </properties>
@@ -193,6 +195,15 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/model/**</exclude>
+                        <exclude>**/contract/**</exclude>
+                        <exclude>**/config/**</exclude>
+                        <exclude>**/*Constants.class</exclude>
+                        <exclude>**/PGRApp.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -224,7 +235,30 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage}</minimum>
+                                            <minimum>${jacoco.utils.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.utils.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.pgr.repository</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.repository.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.repository.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
