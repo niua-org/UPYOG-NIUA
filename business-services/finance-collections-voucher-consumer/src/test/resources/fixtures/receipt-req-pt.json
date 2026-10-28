@@ -1,0 +1,35 @@
+{
+  "RequestInfo": {
+    "apiId": "Rainmaker"
+  },
+  "Receipt": [
+    {
+      "tenantId": "pb.amritsar",
+      "instrument": {
+        "instrumentType": {
+          "name": "Cash"
+        }
+      },
+      "Bill": [
+        {
+          "billDetails": [
+            {
+              "businessService": "PT",
+              "receiptNumber": "RCPT-001",
+              "consumerCode": "PT-001",
+              "receiptDate": 1700000000000,
+              "amountPaid": 100,
+              "billAccountDetails": [
+                {
+                  "taxHeadCode": "PT_TAX",
+                  "adjustedAmount": 100
+                }
+              ],
+              "voucherHeader": "VCH-EXISTING"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
