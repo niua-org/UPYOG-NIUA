@@ -73,4 +73,45 @@ class ThemeConfigServiceImplTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Theme name is mandatory");
     }
+
+    @Test
+    void update_validRequest_createsPendingStagingRow() {
+        ThemeConfig input = ThemeConfig.builder()
+                .tenantId("pg.citya")
+                .themeType("LOGIN")
+                .themeName("City Theme")
+                .build();
+        when(themeConfigRepository.existsThemeName("pg.citya", "LOGIN", "City Theme")).thenReturn(false);
+        when(themeConfigRepository.existsPendingTheme("pg.citya", "LOGIN")).thenReturn(false);
+        when(workflowService.createWorkflow(any(), any())).thenReturn("wf-1");
+
+        ThemeConfig updated = service.update(input, RequestInfo.builder().build());
+
+        assertThat(updated.getStatus()).isEqualTo("PENDING");
+        assertThat(updated.getWorkflowId()).isEqualTo("wf-1");
+        verify(themeConfigRepository).createStaging(updated);
+    }
+
+    @Test
+    void updateWorkflowStatus_setDefault_activatesTheme() {
+        ThemeConfig input = ThemeConfig.builder()
+                .id("theme-1")
+                .tenantId("pg.citya")
+                .themeType("LOGIN")
+                .build();
+
+        ThemeConfig result = service.updateWorkflowStatus(
+                input, "SET_DEFAULT", RequestInfo.builder().build());
+
+        assertThat(result.getIsActive()).isTrue();
+        verify(themeConfigRepository).setDefaultTheme("theme-1", "pg.citya", "LOGIN");
+    }
+
+    @Test
+    void search_delegatesToRepository() {
+        when(themeConfigRepository.search("pg.citya", "LOGIN", true))
+                .thenReturn(java.util.List.of(ThemeConfig.builder().id("t1").build()));
+
+        assertThat(service.search("pg.citya", "LOGIN", true)).hasSize(1);
+    }
 }

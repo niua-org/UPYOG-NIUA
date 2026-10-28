@@ -184,6 +184,11 @@
                     <excludes>
                         <exclude>**/model/**</exclude>
                         <exclude>**/config/**</exclude>
+                        <exclude>**/rowmapper/**</exclude>
+                        <exclude>**/constants/**</exclude>
+                        <exclude>**/producer/**</exclude>
+                        <exclude>**/errors/**</exclude>
+                        <exclude>**/*Application*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
