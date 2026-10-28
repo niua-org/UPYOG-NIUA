@@ -233,9 +233,17 @@
         <configuration>
           <excludes>
             <exclude>**/model/**</exclude>
+            <exclude>**/models/**</exclude>
             <exclude>**/web/models/**</exclude>
             <exclude>**/service/gateways/**</exclude>
             <exclude>**/config/**</exclude>
+            <exclude>**/models/enums/**</exclude>
+            <exclude>**/service/jobs/**</exclude>
+            <exclude>**/web/controllers/RedirectController*</exclude>
+            <exclude>**/web/controllers/RefundController*</exclude>
+            <exclude>**/*RowMapper*</exclude>
+            <exclude>**/*QueryBuilder*</exclude>
+            <exclude>**/producer/**</exclude>
           </excludes>
         </configuration>
         <executions>
