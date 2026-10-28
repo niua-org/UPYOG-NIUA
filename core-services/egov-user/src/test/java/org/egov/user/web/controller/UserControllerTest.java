@@ -8,12 +8,23 @@ import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.TokenService;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.domain.model.Address;
+import org.egov.user.domain.model.SecureUser;
+import org.egov.user.domain.model.UserDetail;
+import org.egov.user.web.contract.AddressRequest;
+import org.egov.user.web.contract.AddressResponse;
 import org.egov.user.web.contract.CreateUserRequest;
+import org.egov.user.web.contract.CreateUserRequestV2;
 import org.egov.user.web.contract.RoleRequest;
+import org.egov.user.domain.model.UpdateResponse;
 import org.egov.user.web.contract.UserDetailResponse;
+import org.egov.user.web.contract.UserDetailResponseV2;
 import org.egov.user.web.contract.UserRequest;
+import org.egov.user.web.contract.UserRequestV2;
 import org.egov.user.web.contract.UserSearchRequest;
+import org.egov.user.web.contract.UserSearchRequestV2;
 import org.egov.user.web.contract.UserSearchResponse;
+import org.egov.user.web.contract.auth.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -192,9 +203,118 @@ class UserControllerTest {
                 .isInstanceOf(UserNotFoundException.class);
     }
 
+    @Test
+    void getUser_mapsSecureUserToCommonContract() {
+        org.egov.user.web.contract.auth.User authUser = org.egov.user.web.contract.auth.User.builder()
+                .id(3L)
+                .uuid("uuid-3")
+                .userName("alice")
+                .name("Alice")
+                .tenantId("pb")
+                .roles(Set.of(new Role("Citizen", "CITIZEN", "pb")))
+                .build();
+        SecureUser secureUser = new SecureUser(authUser);
+        when(tokenService.getUser("token-abc")).thenReturn(new UserDetail(secureUser, null));
+
+        org.egov.common.contract.request.User commonUser = controller.getUser("token-abc");
+
+        assertThat(commonUser.getUuid()).isEqualTo("uuid-3");
+        assertThat(commonUser.getRoles()).hasSize(1);
+        assertThat(commonUser.getRoles().get(0).getCode()).isEqualTo("CITIZEN");
+    }
+
+    @Test
+    void patch_delegatesToPartialUpdate() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder().id(1L).uuid("uuid-1").build())
+                .build();
+        User persisted = User.builder().uuid("uuid-1").username("alice").active(true).type(UserType.EMPLOYEE).build();
+        when(userService.partialUpdate(any(User.class), eq(requestInfo))).thenReturn(persisted);
+
+        UserRequest profileRequest = userRequest("alice");
+        profileRequest.setUuid("uuid-1");
+        profileRequest.setId(1L);
+        UpdateResponse response = controller.patch(new CreateUserRequest(requestInfo, profileRequest));
+
+        assertThat(response.getUser()).hasSize(1);
+        verify(userService).partialUpdate(any(User.class), eq(requestInfo));
+    }
+
+    @Test
+    void updateUserWithoutValidation_delegatesToService() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder().id(1L).uuid("uuid-1").build())
+                .build();
+        User updated = User.builder().uuid("uuid-1").username("alice").active(true).type(UserType.EMPLOYEE).build();
+        when(userService.updateWithoutOtpValidation(any(User.class), eq(requestInfo))).thenReturn(updated);
+
+        UpdateResponse response = controller.updateUserWithoutValidation(
+                new CreateUserRequest(requestInfo, userRequest("alice")), gatewayHeaders());
+
+        assertThat(response.getUser()).hasSize(1);
+        verify(userService).updateWithoutOtpValidation(any(User.class), eq(requestInfo));
+    }
+
+    @Test
+    void createAddress_returnsCreatedResponse() {
+        Address saved = Address.builder().city("City").pinCode("123456").address("Line 1").build();
+        when(userService.createAddress(eq("uuid-1"), any(Address.class))).thenReturn(saved);
+
+        ResponseEntity<AddressResponse> response = controller.createAddress(
+                new AddressRequest(null, Address.builder().city("City").pinCode("123456").address("Line 1").build(),
+                        "uuid-1", null));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(response.getBody().getAddress()).containsExactly(saved);
+    }
+
+    @Test
+    void getAddress_returnsAddressList() {
+        Address stored = Address.builder().city("City").build();
+        when(userService.getAddress("uuid-1", "pb")).thenReturn(Collections.singletonList(stored));
+
+        AddressResponse response = controller.getAddress("uuid-1", "pb");
+
+        assertThat(response.getAddress()).containsExactly(stored);
+    }
+
+    @Test
+    void createUserWithAddressV2_delegatesToService() {
+        RequestInfo requestInfo = RequestInfo.builder().build();
+        User persisted = User.builder().uuid("uuid-v2").username("alice").active(true).type(UserType.EMPLOYEE).build();
+        when(userService.createUserWithAddressV2(any(User.class), eq(requestInfo))).thenReturn(persisted);
+
+        Object response = controller.createUserWithAddress(
+                new CreateUserRequestV2(requestInfo, userRequestV2("alice")), gatewayHeaders());
+
+        assertThat(response).isInstanceOf(UserDetailResponseV2.class);
+        verify(userService).createUserWithAddressV2(any(User.class), eq(requestInfo));
+    }
+
+    @Test
+    void getUsersV2_capsPageSizeForExternalCalls() {
+        UserSearchRequestV2 request = new UserSearchRequestV2();
+        request.setRequestInfo(RequestInfo.builder().build());
+        request.setUserName("alice");
+        request.setTenantId("pb");
+        request.setPageSize(0);
+        when(userService.searchUsersV2(any(), eq(false), any())).thenReturn(Collections.emptyList());
+
+        UserSearchResponse response = controller.getUsersV2(request, gatewayHeaders());
+
+        assertThat(response.getUserSearchResponseContent()).isEmpty();
+        ArgumentCaptor<UserSearchCriteria> criteria = ArgumentCaptor.forClass(UserSearchCriteria.class);
+        verify(userService).searchUsersV2(criteria.capture(), eq(false), any());
+        assertThat(criteria.getValue().getLimit()).isEqualTo(100);
+    }
+
     private CreateUserRequest createRequest(RequestInfo requestInfo) {
-        UserRequest userRequest = UserRequest.builder()
-                .userName("9999999999")
+        return new CreateUserRequest(requestInfo, userRequest("9999999999"));
+    }
+
+    private UserRequest userRequest(String userName) {
+        return UserRequest.builder()
+                .userName(userName)
                 .name("Citizen")
                 .mobileNumber("9999999999")
                 .tenantId("pb")
@@ -202,7 +322,18 @@ class UserControllerTest {
                 .active(true)
                 .roles(Set.of(RoleRequest.builder().code("CITIZEN").build()))
                 .build();
-        return new CreateUserRequest(requestInfo, userRequest);
+    }
+
+    private UserRequestV2 userRequestV2(String userName) {
+        return UserRequestV2.builder()
+                .userName(userName)
+                .name("Citizen")
+                .mobileNumber("9999999999")
+                .tenantId("pb")
+                .type(UserType.EMPLOYEE)
+                .active(true)
+                .roles(Set.of(RoleRequest.builder().code("EMPLOYEE").build()))
+                .build();
     }
 
     private UserSearchRequest searchRequest(Boolean active, int pageSize) {
