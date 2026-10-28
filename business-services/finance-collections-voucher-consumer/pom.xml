@@ -119,13 +119,16 @@
 							<excludes>
 								<exclude>**/model/**</exclude>
 								<exclude>**/v2/model/**</exclude>
+								<exclude>**/entity/**</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/FinanceCollectionsVoucherConsumerApplication.java</exclude>
 							</excludes>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>
 									<limits>
-										<limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.30</minimum></limit>
-										<limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.30</minimum></limit>
+										<limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.70</minimum></limit>
+										<limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.60</minimum></limit>
 									</limits>
 								</rule>
 							</rules>
