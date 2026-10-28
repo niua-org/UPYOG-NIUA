@@ -83,4 +83,64 @@ class AssetServiceAdapterTest {
         assertThat(entities).hasSize(1);
         assertThat(entities.get(0).getId()).isEqualTo("A-1");
     }
+
+    @Test
+    void fetchEntities_withSearchCriteria_appliesCustomQueryParams() {
+        when(config.getAssetHost()).thenReturn("http://localhost:8090/");
+        when(config.getAssetSearchEndpoint()).thenReturn("asset-services/assets/_search");
+        when(serviceRequestRepository.fetchResult(any(StringBuilder.class), any()))
+                .thenReturn(Optional.of(Map.of("Assets", List.of())));
+
+        GisRequest request = GisRequest.builder()
+                .tenantId("pg.citya")
+                .requestInfo(RequestInfo.builder().build())
+                .searchCriteria(Map.of("assetCategory", "LAND", "tenantId", "pg.citya"))
+                .build();
+
+        List<Entity> entities = adapter.fetchEntities(request);
+
+        assertThat(entities).isEmpty();
+    }
+
+    @Test
+    void fetchEntities_withDateRange_buildsDefaultApprovedQuery() {
+        when(config.getAssetHost()).thenReturn("http://localhost:8090/");
+        when(config.getAssetSearchEndpoint()).thenReturn("asset-services/assets/_search");
+        when(serviceRequestRepository.fetchResult(any(StringBuilder.class), any()))
+                .thenReturn(Optional.of(Map.of("Assets", List.of())));
+
+        GisRequest request = GisRequest.builder()
+                .tenantId("pg.citya")
+                .fromDate(1_704_067_200_000L)
+                .toDate(1_735_689_600_000L)
+                .requestInfo(RequestInfo.builder().build())
+                .build();
+
+        assertThat(adapter.fetchEntities(request)).isEmpty();
+    }
+
+    @Test
+    void extractPointGeometry_readsPointFromEntityAttributes() {
+        Map<String, Object> point = Map.of("type", "Point", "coordinates", List.of(1.0, 2.0));
+        Entity entity = Entity.builder()
+                .attributes(Map.of("pointGeometry", point))
+                .build();
+
+        assertThat(adapter.extractPointGeometry(entity)).isEqualTo(point);
+    }
+
+    @Test
+    void transformToGenericEntity_addressLatLon_populatesPointGeometry() {
+        Map<String, Object> asset = new HashMap<>();
+        asset.put("id", "A-2");
+        asset.put("tenantId", "pg.citya");
+        asset.put("addressDetails", Map.of("latitude", 31.6, "longitude", 74.8));
+
+        Entity entity = adapter.transformToGenericEntity(asset);
+
+        assertThat(entity.getAttributes()).containsKey("pointGeometry");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> point = (Map<String, Object>) entity.getAttributes().get("pointGeometry");
+        assertThat(point.get("type")).isEqualTo("Point");
+    }
 }
