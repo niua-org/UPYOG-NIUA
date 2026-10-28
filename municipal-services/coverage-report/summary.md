@@ -29,7 +29,13 @@
 | garbage-service | 0.0 | **6.3** | 0.0 | **5.6** | ~6 methods (util, `GarbageAccountQueryBuilderTest`; purged 15 scaffolds) | No |
 | fsm | 0.0 | **8.3** | 0.0 | **3.2** | ~12 methods (util, workflow, querybuilder, validator; purged 25 scaffolds) | No |
 | street-vending | 0.0 | **8.6** | 0.0 | **6.2** | ~8 methods (util, validator, querybuilder; purged 28 scaffolds) | No |
-| *remaining 25 modules* | see [baseline.md](baseline.md) | — | — | — | 0 | No |
+| ndc-services | 0.0 | **15.0** | 0.0 | **9.9** | ~15 methods (validator, util, builder, config; purged 14 scaffolds) | No |
+| request-service | 0.0 | **5.3** | 0.0 | **6.5** | ~12 methods (util, querybuilder, validation; purged 24 scaffolds) | No |
+| pet-services | 0.0 | **7.8** | 0.0 | **5.6** | ~8 methods (util, validator; purged 19 scaffolds) | No |
+| rainmaker-pgr | 0.0 | **6.3** | 0.0 | **2.2** | ~10 methods (utils, repository; purged 6 scaffolds) | No |
+| noc-services | 0.0 | **5.1** | 0.0 | **2.5** | ~6 methods (validator, builder; purged 15 scaffolds) | No |
+| vendor | 0.0 | **6.2** | 0.0 | **2.9** | ~10 methods (validator, util, querybuilder; purged 14 scaffolds) | No |
+| *remaining 19 modules* | see [baseline.md](baseline.md) | — | — | — | pending | No |
 
 ## Tooling
 
