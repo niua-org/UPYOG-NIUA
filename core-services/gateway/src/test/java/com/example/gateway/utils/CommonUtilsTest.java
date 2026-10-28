@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -26,11 +24,11 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class CommonUtilsTest {
 
     private CommonUtils commonUtils;
@@ -45,49 +43,49 @@ class CommonUtilsTest {
 
     @Test
     void isRequestBodyCompatible_postJson_returnsTrue() {
-        ServerHttpRequest request = request(HttpMethod.POST, "application/json", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.POST, "application/json");
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isTrue();
     }
 
     @Test
     void isRequestBodyCompatible_putJsonWithCharset_returnsTrue() {
-        ServerHttpRequest request = request(HttpMethod.PUT, "application/json;charset=UTF-8", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.PUT, "application/json;charset=UTF-8");
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isTrue();
     }
 
     @Test
     void isRequestBodyCompatible_patchFormUrlEncoded_returnsTrue() {
-        ServerHttpRequest request = request(HttpMethod.PATCH, "application/x-www-form-urlencoded", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.PATCH, "application/x-www-form-urlencoded");
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isTrue();
     }
 
     @Test
     void isRequestBodyCompatible_getJson_returnsFalse() {
-        ServerHttpRequest request = request(HttpMethod.GET, "application/json", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.GET, "application/json");
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isFalse();
     }
 
     @Test
     void isRequestBodyCompatible_postMultipart_returnsFalse() {
-        ServerHttpRequest request = request(HttpMethod.POST, "multipart/form-data", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.POST, "multipart/form-data");
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isFalse();
     }
 
     @Test
     void isRequestBodyCompatible_postPlainText_returnsFalse() {
-        ServerHttpRequest request = request(HttpMethod.POST, "text/plain", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.POST, "text/plain");
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isFalse();
     }
 
     @Test
     void isRequestBodyCompatible_postWithoutContentType_returnsFalse() {
-        ServerHttpRequest request = request(HttpMethod.POST, null, query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.POST, null);
 
         assertThat(CommonUtils.isRequestBodyCompatible(request)).isFalse();
     }
@@ -103,7 +101,7 @@ class CommonUtilsTest {
 
     @Test
     void getRequestContentType_missingHeader_returnsEmptyString() {
-        ServerHttpRequest request = request(HttpMethod.POST, null, query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.POST, null);
 
         assertThat(CommonUtils.getRequestContentType(request)).isEmpty();
     }
@@ -120,7 +118,7 @@ class CommonUtilsTest {
 
     @Test
     void getRequestContentType_mixedCaseHeader_returnsLowerCase() {
-        ServerHttpRequest request = request(HttpMethod.POST, "Application/JSON", query());
+        ServerHttpRequest request = requestWithoutQuery(HttpMethod.POST, "Application/JSON");
 
         assertThat(CommonUtils.getRequestContentType(request)).isEqualTo("application/json");
     }
@@ -171,7 +169,7 @@ class CommonUtilsTest {
         body.put("RequestInfo", Map.of("userInfo", Map.of("tenantId", "from-user")));
         body.put("Property", Map.of("tenantId", "pg.citya"));
 
-        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(query()), body);
+        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(null), body);
 
         assertThat(tenantIds).containsExactly("pg.citya");
     }
@@ -195,7 +193,7 @@ class CommonUtilsTest {
         body.put("requestInfo", Map.of("tenantId", "from-camel", "userInfo", Map.of("tenantId", "from-user")));
         body.put("tenantId", "pg.cityc");
 
-        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(query()), body);
+        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(null), body);
 
         assertThat(tenantIds).containsExactly("pg.cityc");
     }
@@ -206,7 +204,7 @@ class CommonUtilsTest {
         body.put("RequestInfo", Map.of("tenantId", "from-pascal"));
         body.put("requestInfo", Map.of("tenantId", "from-camel"));
 
-        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(query()), body);
+        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(null), body);
 
         assertThat(tenantIds).containsExactly("from-camel");
     }
@@ -222,7 +220,7 @@ class CommonUtilsTest {
 
     @Test
     void getTenantIdsFromRequest_missingBodyAndQuery_fallsBackToPg() {
-        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(query()), new HashMap<>());
+        Set<String> tenantIds = commonUtils.getTenantIdsFromRequest(jsonPost(null), new HashMap<>());
 
         assertThat(tenantIds).containsExactly("pg");
     }
@@ -316,7 +314,7 @@ class CommonUtilsTest {
 
     @Test
     void getTenantIdsFromRequest_nullBody_throwsParseFailed() {
-        assertThatThrownBy(() -> commonUtils.getTenantIdsFromRequest(jsonPost(query()), null))
+        assertThatThrownBy(() -> commonUtils.getTenantIdsFromRequest(jsonPost(null), null))
                 .isInstanceOfSatisfying(CustomException.class, exception -> {
                     assertThat(exception.getCode()).isEqualTo("401 UNAUTHORIZED");
                     assertThat(exception.getMessage()).isEqualTo("Failed to parse request at API gateway");
@@ -368,19 +366,28 @@ class CommonUtilsTest {
     }
 
     private static ServerHttpRequest jsonPost(MultiValueMap<String, String> queryParams) {
+        if (queryParams == null) {
+            return requestWithoutQuery(HttpMethod.POST, "application/json");
+        }
         return request(HttpMethod.POST, "application/json", queryParams);
     }
 
     private static ServerHttpRequest request(HttpMethod method, String contentType, MultiValueMap<String, String> queryParams) {
         ServerHttpRequest request = mock(ServerHttpRequest.class);
-        when(request.getMethod()).thenReturn(method);
+        lenient().when(request.getMethod()).thenReturn(method);
         HttpHeaders headers = new HttpHeaders();
         if (contentType != null) {
             headers.set(HttpHeaders.CONTENT_TYPE, contentType);
         }
         when(request.getHeaders()).thenReturn(headers);
-        when(request.getQueryParams()).thenReturn(queryParams);
+        if (queryParams != null) {
+            lenient().when(request.getQueryParams()).thenReturn(queryParams);
+        }
         return request;
+    }
+
+    private static ServerHttpRequest requestWithoutQuery(HttpMethod method, String contentType) {
+        return request(method, contentType, null);
     }
 
     private static LinkedMultiValueMap<String, String> query(String... tenantIds) {

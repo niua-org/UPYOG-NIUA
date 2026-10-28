@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * API tests for PaymentsApiController
  */
 @RunWith(SpringRunner.class)
-@WebMvcTest
+@WebMvcTest(controllers = TransactionsApiController.class)
 @Import(TestConfiguration.class)
 public class TransactionsApiControllerTest {
 

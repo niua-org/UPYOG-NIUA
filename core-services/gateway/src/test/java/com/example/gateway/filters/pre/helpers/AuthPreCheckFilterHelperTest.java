@@ -9,8 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.RequestPath;
@@ -25,11 +23,11 @@ import java.util.Map;
 import static com.example.gateway.constants.GatewayConstants.AUTH_BOOLEAN_FLAG_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class AuthPreCheckFilterHelperTest {
 
     @Mock
@@ -132,10 +130,10 @@ class AuthPreCheckFilterHelperTest {
         ServerWebExchange exchange = mock(ServerWebExchange.class);
         ServerHttpRequest request = mock(ServerHttpRequest.class);
         RequestPath requestPath = mock(RequestPath.class);
-        when(requestPath.value()).thenReturn(path);
-        when(request.getPath()).thenReturn(requestPath);
-        when(exchange.getRequest()).thenReturn(request);
-        when(exchange.getAttributes()).thenReturn(new HashMap<>());
+        lenient().when(requestPath.value()).thenReturn(path);
+        lenient().when(request.getPath()).thenReturn(requestPath);
+        lenient().when(exchange.getRequest()).thenReturn(request);
+        lenient().when(exchange.getAttributes()).thenReturn(new HashMap<>());
         return exchange;
     }
 }

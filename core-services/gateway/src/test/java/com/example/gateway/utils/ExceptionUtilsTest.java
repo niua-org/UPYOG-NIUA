@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.cloud.gateway.support.NotFoundException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
@@ -28,12 +26,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class ExceptionUtilsTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -236,14 +234,14 @@ class ExceptionUtilsTest {
         ServerWebExchange exchange = mock(ServerWebExchange.class);
         ServerHttpRequest request = mock(ServerHttpRequest.class);
         DataBufferFactory bufferFactory = mock(DataBufferFactory.class);
-        when(exchange.getRequest()).thenReturn(request);
-        when(exchange.getResponse()).thenReturn(response);
-        when(request.getPath()).thenReturn(RequestPath.parse("/missing-resource", null));
-        when(response.getStatusCode()).thenReturn(status);
-        when(response.bufferFactory()).thenReturn(bufferFactory);
-        when(response.writeWith(any())).thenReturn(Mono.empty());
+        lenient().when(exchange.getRequest()).thenReturn(request);
+        lenient().when(exchange.getResponse()).thenReturn(response);
+        lenient().when(request.getPath()).thenReturn(RequestPath.parse("/missing-resource", null));
+        lenient().when(response.getStatusCode()).thenReturn(status);
+        lenient().when(response.bufferFactory()).thenReturn(bufferFactory);
+        lenient().when(response.writeWith(any())).thenReturn(Mono.empty());
         ArgumentCaptor<byte[]> bodyBytes = ArgumentCaptor.forClass(byte[].class);
-        when(bufferFactory.wrap(bodyBytes.capture())).thenReturn(mock(DataBuffer.class));
+        lenient().when(bufferFactory.wrap(bodyBytes.capture())).thenReturn(mock(DataBuffer.class));
         return new Fixture(exchange, response, bodyBytes);
     }
 
