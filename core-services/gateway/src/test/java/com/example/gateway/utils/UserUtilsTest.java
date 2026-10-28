@@ -2,6 +2,8 @@ package com.example.gateway.utils;
 
 import com.example.gateway.config.ApplicationProperties;
 import org.egov.common.contract.request.User;
+import org.egov.common.contract.user.UserDetailResponse;
+import org.egov.common.utils.MultiStateInstanceUtil;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +11,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,11 +35,15 @@ class UserUtilsTest {
     @Mock
     private ApplicationProperties applicationProperties;
 
+    @Mock
+    private MultiStateInstanceUtil multiStateInstanceUtil;
+
     private UserUtils userUtils;
 
     @BeforeEach
     void setUp() {
         userUtils = new UserUtils(restTemplate, applicationProperties);
+        ReflectionTestUtils.setField(userUtils, "multiStateInstanceUtil", multiStateInstanceUtil);
     }
 
     @Test
@@ -67,10 +78,41 @@ class UserUtilsTest {
     }
 
     @Test
-    void fetchSystemUser_uninjectedMultiStateUtil_throwsNullPointerException() {
-        assertThatThrownBy(() -> userUtils.fetchSystemUser("pg", "corr-1"))
-                .isInstanceOf(NullPointerException.class);
+    void fetchSystemUser_returnsFirstSystemUser() {
+        when(applicationProperties.getUserSearchURI()).thenReturn("http://user-host/user/_search");
+        when(multiStateInstanceUtil.getIsEnvironmentCentralInstance()).thenReturn(false);
+        User systemUser = User.builder().uuid("sys-1").userName("system").build();
+        UserDetailResponse response = org.mockito.Mockito.mock(UserDetailResponse.class);
+        when(response.getUser()).thenReturn(List.of(systemUser));
+        when(restTemplate.postForObject(eq("http://user-host/user/_search"), org.mockito.ArgumentMatchers.any(HttpEntity.class),
+                eq(UserDetailResponse.class))).thenReturn(response);
 
-        verifyNoInteractions(restTemplate);
+        User actual = userUtils.fetchSystemUser("pg.city", "corr-1");
+
+        assertThat(actual).isSameAs(systemUser);
+    }
+
+    @Test
+    void fetchSystemUser_centralInstance_addsTenantHeader() {
+        when(applicationProperties.getUserSearchURI()).thenReturn("http://user-host/user/_search");
+        when(multiStateInstanceUtil.getIsEnvironmentCentralInstance()).thenReturn(true);
+        UserDetailResponse response = org.mockito.Mockito.mock(UserDetailResponse.class);
+        when(response.getUser()).thenReturn(Collections.emptyList());
+        when(restTemplate.postForObject(eq("http://user-host/user/_search"), org.mockito.ArgumentMatchers.any(HttpEntity.class),
+                eq(UserDetailResponse.class))).thenReturn(response);
+
+        User actual = userUtils.fetchSystemUser("pg.city", "corr-2");
+
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    void fetchSystemUser_restFailure_returnsNull() {
+        when(applicationProperties.getUserSearchURI()).thenReturn("http://user-host/user/_search");
+        when(multiStateInstanceUtil.getIsEnvironmentCentralInstance()).thenReturn(false);
+        when(restTemplate.postForObject(eq("http://user-host/user/_search"), org.mockito.ArgumentMatchers.any(HttpEntity.class),
+                eq(UserDetailResponse.class))).thenThrow(new RuntimeException("down"));
+
+        assertThat(userUtils.fetchSystemUser("pg", "corr-3")).isNull();
     }
 }
