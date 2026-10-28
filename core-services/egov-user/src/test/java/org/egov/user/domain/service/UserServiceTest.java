@@ -7,8 +7,11 @@ import org.egov.user.domain.exception.InvalidUpdatePasswordRequestException;
 import org.egov.user.domain.exception.InvalidUserCreateException;
 import org.egov.user.domain.exception.InvalidUserSearchCriteriaException;
 import org.egov.user.domain.exception.OtpValidationPendingException;
+import org.egov.user.domain.exception.PasswordMismatchException;
 import org.egov.user.domain.exception.UserNameNotValidException;
 import org.egov.user.domain.exception.UserNotFoundException;
+import org.egov.user.domain.exception.UserProfileUpdateDeniedException;
+import org.egov.user.domain.model.NonLoggedInUserUpdatePasswordRequest;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.LoggedInUserUpdatePasswordRequest;
 import org.egov.user.domain.model.Role;
@@ -16,6 +19,7 @@ import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
+import org.egov.user.domain.service.utils.NotificationUtil;
 import org.egov.user.persistence.dto.FailedLoginAttempt;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FileStoreRepository;
@@ -69,6 +73,8 @@ class UserServiceTest {
     private EncryptionDecryptionUtil encryptionDecryptionUtil;
     @Mock
     private AddressRepository addressRepository;
+    @Mock
+    private NotificationUtil notificationUtil;
 
     private UserService userService;
 
@@ -76,6 +82,7 @@ class UserServiceTest {
     void setUp() {
         userService = new UserService(userRepository, otpRepository, fileRepository, passwordEncoder,
                 encryptionDecryptionUtil, 90, true, false, PWD_REGEX, 32, 8, addressRepository);
+        ReflectionTestUtils.setField(userService, "notificationUtil", notificationUtil);
         lenient().when(encryptionDecryptionUtil.encryptObject(any(), any(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), nullable(RequestInfo.class)))
@@ -464,6 +471,163 @@ class UserServiceTest {
         when(otpRepository.validateOtp(any())).thenReturn(false);
 
         assertThat(userService.validateOtp(user)).isFalse();
+    }
+
+    @Test
+    void updatePasswordForLoggedInUser_validEmployee_updatesRepository() {
+        ReflectionTestUtils.setField(userService, "isCitizenLoginOtpBased", false);
+        User stored = storedUser("alice", UserType.EMPLOYEE).toBuilder().password("existing-hash").build();
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
+        when(passwordEncoder.matches("Oldpass1@", "existing-hash")).thenReturn(true);
+        LoggedInUserUpdatePasswordRequest request = LoggedInUserUpdatePasswordRequest.builder()
+                .userName("alice")
+                .tenantId("pb")
+                .type(UserType.EMPLOYEE)
+                .existingPassword("Oldpass1@")
+                .newPassword("Newpass1@")
+                .build();
+
+        userService.updatePasswordForLoggedInUser(request);
+
+        verify(userRepository).update(any(User.class), eq(stored), eq(1L), eq("uuid-1"));
+    }
+
+    @Test
+    void updatePasswordForLoggedInUser_wrongExistingPassword_throwsPasswordMismatchException() {
+        ReflectionTestUtils.setField(userService, "isCitizenLoginOtpBased", false);
+        User stored = storedUser("alice", UserType.EMPLOYEE).toBuilder().password("existing-hash").build();
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
+        when(passwordEncoder.matches(anyString(), eq("existing-hash"))).thenReturn(false);
+        LoggedInUserUpdatePasswordRequest request = LoggedInUserUpdatePasswordRequest.builder()
+                .userName("alice")
+                .tenantId("pb")
+                .type(UserType.EMPLOYEE)
+                .existingPassword("Wrongpass1@")
+                .newPassword("Newpass1@")
+                .build();
+
+        assertThatThrownBy(() -> userService.updatePasswordForLoggedInUser(request))
+                .isInstanceOf(PasswordMismatchException.class);
+        verify(userRepository, never()).update(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    void updatePasswordForNonLoggedInUser_validOtp_updatesEncryptedUser() {
+        ReflectionTestUtils.setField(userService, "isCitizenLoginOtpBased", false);
+        User stored = storedUser("alice", UserType.EMPLOYEE).toBuilder().password("existing-hash").build();
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
+        when(otpRepository.validateOtp(any())).thenReturn(true);
+        NonLoggedInUserUpdatePasswordRequest request = NonLoggedInUserUpdatePasswordRequest.builder()
+                .userName("alice")
+                .tenantId("pb")
+                .type(UserType.EMPLOYEE)
+                .otpReference("123456")
+                .newPassword("Newpass1@")
+                .build();
+
+        userService.updatePasswordForNonLoggedInUser(request, requestWithUser());
+
+        verify(encryptionDecryptionUtil, org.mockito.Mockito.atLeastOnce())
+                .decryptObject(any(), eq("User"), eq(User.class), any());
+        verify(encryptionDecryptionUtil).encryptObject(any(), eq("User"), eq(User.class));
+        verify(userRepository).update(any(User.class), any(User.class), eq(1L), eq("actor"));
+    }
+
+    @Test
+    void partialUpdate_sameLoggedInUser_returnsDecryptedUser() {
+        User existing = storedUser("alice", UserType.EMPLOYEE);
+        User patch = existing.toBuilder()
+                .loggedInUserId(1L)
+                .loggedInUserUuid("uuid-1")
+                .emailId("new@example.com")
+                .build();
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(existing));
+
+        User updated = userService.partialUpdate(patch, requestWithUser());
+
+        assertThat(updated).isSameAs(existing);
+        verify(userRepository).update(any(User.class), eq(existing), eq(1L), eq("actor"));
+    }
+
+    @Test
+    void partialUpdate_differentLoggedInUser_throwsUserProfileUpdateDeniedException() {
+        User existing = storedUser("alice", UserType.EMPLOYEE);
+        User patch = existing.toBuilder()
+                .loggedInUserId(99L)
+                .loggedInUserUuid("other-uuid")
+                .build();
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(existing));
+
+        assertThatThrownBy(() -> userService.partialUpdate(patch, requestWithUser()))
+                .isInstanceOf(UserProfileUpdateDeniedException.class);
+        verify(userRepository, never()).update(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    void updateWithoutOtpValidation_unlocksAccount_resetsFailedAttempts() {
+        User locked = storedUser("alice", UserType.EMPLOYEE).toBuilder()
+                .accountLocked(true)
+                .roles(Set.of(Role.builder().code("EMPLOYEE").build()))
+                .build();
+        User unlockRequest = locked.toBuilder()
+                .accountLocked(false)
+                .password("Newpass1@")
+                .loggedInUserId(1L)
+                .loggedInUserUuid("uuid-1")
+                .build();
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(locked));
+
+        userService.updateWithoutOtpValidation(unlockRequest, requestWithUser());
+
+        verify(userRepository).resetFailedLoginAttemptsForUser("uuid-1");
+    }
+
+    @Test
+    void getUserBymobileNumber_knownMobile_returnsUser() {
+        User stored = storedUser("alice", UserType.CITIZEN);
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
+
+        assertThat(userService.getUserBymobileNumber("9999999999").getUsername()).isEqualTo("alice");
+    }
+
+    @Test
+    void createAddress_validRequest_persistsAddress() {
+        ReflectionTestUtils.setField(userService, "addressMandatoryFieldsEnabled", false);
+        when(userRepository.getUserIdByUuid("uuid-1")).thenReturn(5L);
+        Address saved = Address.builder().city("City").build();
+        when(addressRepository.createAddressV2(any(), eq(5L), any())).thenReturn(saved);
+
+        Address created = userService.createAddress("uuid-1", Address.builder().city("City").tenantId("pb").build());
+
+        assertThat(created.getCity()).isEqualTo("City");
+        verify(addressRepository).createAddressV2(any(Address.class), eq(5L), eq("pb"));
+    }
+
+    @Test
+    void searchUsersV2_withMatches_returnsDecryptedUsers() {
+        User stored = storedUser("alice", UserType.CITIZEN);
+        when(userRepository.findAllV2(any())).thenReturn(Collections.singletonList(stored));
+        UserSearchCriteria criteria = UserSearchCriteria.builder()
+                .userName("alice")
+                .tenantId("pb.amritsar")
+                .type(UserType.CITIZEN)
+                .build();
+
+        List<User> result = userService.searchUsersV2(criteria, false, requestWithUser());
+
+        assertThat(result).containsExactly(stored);
+        verify(userRepository).findAllV2(any(UserSearchCriteria.class));
+    }
+
+    @Test
+    void getAddress_storedAddresses_returnsDecryptedList() {
+        Address stored = Address.builder().city("City").build();
+        when(addressRepository.getAddressV2(any())).thenReturn(Collections.singletonList(stored));
+
+        assertThat(userService.getAddress("uuid-1", "pb")).containsExactly(stored);
+        verify(encryptionDecryptionUtil).decryptObject(eq(Collections.singletonList(stored)),
+                eq(org.egov.user.domain.service.utils.UserConstants.USER_ADDRESS_ENCRYPTION_KEY),
+                eq(Address.class), eq(null));
     }
 
     private RequestInfo requestWithUser() {
