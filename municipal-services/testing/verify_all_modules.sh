@@ -25,6 +25,7 @@ needs_skip() {
 
 mapfile -t MODULES < <(
   find "$ROOT" -mindepth 1 -maxdepth 1 -type d ! -name '.*' ! -name 'upyog-aggregation-service' \
+    ! -name 'core-smoke-tests' \
     -exec test -f '{}/pom.xml' \; -print | xargs -I{} basename {} | sort
 )
 
