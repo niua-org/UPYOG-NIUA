@@ -1,27 +1,30 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.userevent.utils;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.userevent.web.contract.EventSearchCriteria;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class UserEventsUtilsTest {
 
-
-    @InjectMocks
-    private UserEventsUtils subject;
-
+    private final UserEventsUtils utils = new UserEventsUtils();
 
     @Test
-    void buildRecepientListForSearch_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void buildRecepientListForSearch_addsAllKeyword() {
+        EventSearchCriteria criteria = new EventSearchCriteria();
+        criteria.setTenantId("pb.amritsar");
+        utils.buildRecepientListForSearch(criteria);
+        assertThat(criteria.getRecepients()).contains(UserEventsConstants.ALL_KEYWORD);
     }
 
+    @Test
+    void buildRecepientListForSearch_withRole_expandsPatterns() {
+        EventSearchCriteria criteria = new EventSearchCriteria();
+        criteria.setRoles(List.of("CITIZEN.EMPLOYEE"));
+        criteria.setTenantId("pb");
+        utils.buildRecepientListForSearch(criteria);
+        assertThat(criteria.getRecepients()).anyMatch(r -> r.contains("CITIZEN"));
+    }
 }
