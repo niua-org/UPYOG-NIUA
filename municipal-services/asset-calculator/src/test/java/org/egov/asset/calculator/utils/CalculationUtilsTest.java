@@ -1,27 +1,18 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.asset.calculator.utils;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.asset.calculator.web.models.AuditDetails;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class CalculationUtilsTest {
 
-
-    @InjectMocks
-    private CalculationUtils subject;
-
+    private final CalculationUtils utils = new CalculationUtils();
 
     @Test
-    void getAuditDetails_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void getAuditDetails_whenCreate_setsCreatedFields() {
+        AuditDetails audit = utils.getAuditDetails("user", true);
+        assertThat(audit.getCreatedBy()).isEqualTo("user");
+        assertThat(audit.getCreatedTime()).isNotNull();
     }
-
 }
