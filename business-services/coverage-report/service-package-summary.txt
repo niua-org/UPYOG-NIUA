@@ -1,0 +1,16 @@
+| Module | Line % | Branch % |
+|--------|--------|----------|
+| billing-service | 61.2% | 50.5% |
+| collection-services | 73.1% | 58.1% |
+| dashboard-analytics | 65.7% | 49.3% |
+| dashboard-data-engine | 79.2% | 54.5% |
+| dashboard-data-extractor | 57.5% | 45.4% |
+| dashboard-ingest | 48.6% | 38.0% |
+| egf-instrument | 38.8% | 33.9% |
+| egf-master | 29.2% | 24.0% |
+| egov-apportion-service | 68.7% | 52.3% |
+| egov-hrms | 41.3% | 22.7% |
+| employee-dashboard | 67.7% | 27.5% |
+| finance-collections-voucher-consumer | 41.5% | 7.8% |
+| reconciliation-service | 87.5% | 100.0% |
+| verification-service | 70.5% | 51.2% |
