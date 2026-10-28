@@ -82,4 +82,53 @@ class OrderByPriorityTest {
         assertThatThrownBy(() -> orderByPriority.apportionPaidAmount(request, null))
                 .isInstanceOf(CustomException.class);
     }
+
+    @Test
+    void apportionPaidAmount_partialPayment_adjustsBuckets() {
+        when(config.getApportionByValueAndOrder()).thenReturn(true);
+
+        Bucket bucket = Bucket.builder()
+                .amount(new BigDecimal("100"))
+                .adjustedAmount(BigDecimal.ZERO)
+                .priority(1)
+                .build();
+        TaxDetail taxDetail = TaxDetail.builder()
+                .fromPeriod(1L)
+                .amountToBePaid(new BigDecimal("100"))
+                .buckets(new ArrayList<>(List.of(bucket)))
+                .build();
+        ApportionRequestV2 request = ApportionRequestV2.builder()
+                .amountPaid(new BigDecimal("25"))
+                .isAdvanceAllowed(false)
+                .taxDetails(new ArrayList<>(List.of(taxDetail)))
+                .build();
+
+        OrderByPriority orderByPriority = new OrderByPriority(taxHeadMasterService, config);
+        List<TaxDetail> result = orderByPriority.apportionPaidAmount(request, null);
+
+        assertThat(result.get(0).getBuckets().get(0).getAdjustedAmount())
+                .isEqualByComparingTo("25");
+    }
+
+    @Test
+    void apportionPaidAmount_zeroBillAndZeroPayment_marksBucketsPaid() {
+        Bucket bucket = Bucket.builder()
+                .amount(BigDecimal.ZERO)
+                .adjustedAmount(BigDecimal.ZERO)
+                .build();
+        TaxDetail taxDetail = TaxDetail.builder()
+                .fromPeriod(1L)
+                .amountToBePaid(BigDecimal.ZERO)
+                .buckets(new ArrayList<>(List.of(bucket)))
+                .build();
+        ApportionRequestV2 request = ApportionRequestV2.builder()
+                .amountPaid(BigDecimal.ZERO)
+                .taxDetails(new ArrayList<>(List.of(taxDetail)))
+                .build();
+
+        OrderByPriority orderByPriority = new OrderByPriority(taxHeadMasterService, config);
+        orderByPriority.apportionPaidAmount(request, null);
+
+        assertThat(bucket.getAdjustedAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
 }
