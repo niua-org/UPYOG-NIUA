@@ -296,7 +296,7 @@ class WorkflowServiceTest {
 
         List<ProcessInstance> result = workflowService.search(requestInfo, criteria);
 
-        assertThat(result).extracting(ProcessInstance::getId).containsExactly("other", "latest");
+        assertThat(result).extracting(ProcessInstance::getId).containsExactly("latest", "other");
         assertThat(criteria.getAssignee()).isEqualTo("user-1");
         verify(enrichmentService).enrichUsersFromSearch(eq(requestInfo), eq(result));
     }
