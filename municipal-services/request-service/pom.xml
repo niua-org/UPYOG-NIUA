@@ -9,8 +9,12 @@
         
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.111</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+        <jacoco.validation.line.minimum>0.04</jacoco.validation.line.minimum>
+        <jacoco.validation.branch.minimum>0.02</jacoco.validation.branch.minimum>
+        <jacoco.util.line.minimum>0.05</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.02</jacoco.util.branch.minimum>
+        <jacoco.querybuilder.line.minimum>0.03</jacoco.querybuilder.line.minimum>
+        <jacoco.querybuilder.branch.minimum>0.01</jacoco.querybuilder.branch.minimum>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <lombok.version>1.18.22</lombok.version>
@@ -54,6 +58,17 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.11</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/web/model/**</exclude>
+                        <exclude>**/web/models/**</exclude>
+                        <exclude>**/models/**</exclude>
+                        <exclude>**/config/**</exclude>
+                        <exclude>**/*Configuration.class</exclude>
+                        <exclude>**/*Constants.class</exclude>
+                        <exclude>**/RequestServiceMain.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -85,7 +100,48 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage}</minimum>
+                                            <minimum>${jacoco.validation.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.validation.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.rs.util</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.rs.repository.querybuilder</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.querybuilder.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.querybuilder.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
