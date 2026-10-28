@@ -1,32 +1,36 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.asset.repository.querybuilder;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.egov.asset.config.AssetConfiguration;
+import org.egov.asset.web.models.AssetSearchCriteria;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.egov.asset.config.AssetConfiguration;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class AssetQueryBuilderTest {
+
     @Mock
-    private AssetConfiguration config;
+    private AssetConfiguration assetConfiguration;
 
-    private AssetQueryBuilder subject;
+    private AssetQueryBuilder builder;
 
-    @BeforeEach
+    @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        subject = new AssetQueryBuilder(config);
+        builder = new AssetQueryBuilder(assetConfiguration);
     }
-
 
     @Test
-    void getAssetSearchQuery_whenSubjectReady_subjectIsNotNull() {
-        assertThat(subject).isNotNull();
+    void getAssetSearchQuery_withTenantId_addsPredicate() {
+        AssetSearchCriteria criteria = AssetSearchCriteria.builder().tenantId("pb").build();
+        List<Object> params = new ArrayList<>();
+        String query = builder.getAssetSearchQuery(criteria, params);
+        assertThat(query).contains("tenantid");
+        assertThat(params).isNotEmpty();
     }
-
 }
