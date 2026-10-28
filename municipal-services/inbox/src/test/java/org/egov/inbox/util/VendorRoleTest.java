@@ -1,4 +1,3 @@
-// generated-by: generate_per_class_unit_tests.py
 package org.egov.inbox.util;
 
 import org.junit.jupiter.api.Test;
@@ -8,13 +7,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 class VendorRoleTest {
 
     @Test
-    void values_whenQueried_isNotEmpty() {
-        assertThat(VendorRole.values()).isNotEmpty();
+    void values_containsExpectedVendorRoles() {
+        assertThat(VendorRole.values()).containsExactly(
+                VendorRole.FSM_DSO,
+                VendorRole.WT_VENDOR,
+                VendorRole.MT_VENDOR,
+                VendorRole.CND_VENDOR,
+                VendorRole.CND_FACILITY_CEMP
+        );
     }
 
     @Test
-    void valueOf_whenFirstConstantName_returnsConstant() {
-        VendorRole first = VendorRole.values()[0];
-        assertThat(VendorRole.valueOf(first.name())).isEqualTo(first);
+    void valueOf_resolvesKnownRole() {
+        assertThat(VendorRole.valueOf("FSM_DSO")).isEqualTo(VendorRole.FSM_DSO);
     }
 }
