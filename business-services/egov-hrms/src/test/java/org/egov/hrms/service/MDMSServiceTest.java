@@ -73,6 +73,14 @@ class MDMSServiceTest {
     }
 
     @Test
+    void fetchMDMSDataLoc_returnsResponseFromRestTemplate() {
+        MdmsResponse mdmsResponse = new MdmsResponse();
+        when(restTemplate.postForObject(any(String.class), any(), eq(MdmsResponse.class))).thenReturn(mdmsResponse);
+
+        assertThat(mdmsService.fetchMDMSDataLoc(new RequestInfo(), "pb")).isSameAs(mdmsResponse);
+    }
+
+    @Test
     void getMDMSData_whenResponseNull_returnsEmptyMap() {
         when(restTemplate.postForObject(any(String.class), any(), eq(MdmsResponse.class))).thenReturn(null);
 

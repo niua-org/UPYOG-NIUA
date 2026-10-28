@@ -117,6 +117,48 @@ class NotificationServiceTest {
     }
 
     @Test
+    void sendNotification_whenMessageConfigured_pushesSms() {
+        Map<String, Object> locResult = new HashMap<>();
+        locResult.put("messages", List.of(
+                Map.of("code", HRMSConstants.HRMS_EMP_CREATE_LOCLZN_CODE,
+                        "message", "Hi $employeename ($username) pwd=$password link=$applink")
+        ));
+        when(repository.fetchResult(any(), any())).thenReturn(locResult);
+
+        Employee employee = Employee.builder()
+                .tenantId("pb.amritsar")
+                .code("EMP1")
+                .uuid("uuid-1")
+                .user(User.builder().mobileNumber("9999999999").name("Bob").build())
+                .build();
+        EmployeeRequest request = EmployeeRequest.builder()
+                .requestInfo(new RequestInfo())
+                .employees(Collections.singletonList(employee))
+                .build();
+
+        notificationService.sendNotification(request, Map.of("uuid-1", "secret"));
+
+        verify(producer).push(eq("sms-topic"), any());
+    }
+
+    @Test
+    void sendNotification_whenMessageMissing_skipsProducer() {
+        when(repository.fetchResult(any(), any())).thenReturn(Map.of("messages", List.of()));
+
+        EmployeeRequest request = EmployeeRequest.builder()
+                .requestInfo(new RequestInfo())
+                .employees(Collections.singletonList(Employee.builder()
+                        .tenantId("pb.amritsar")
+                        .user(User.builder().mobileNumber("9999999999").build())
+                        .build()))
+                .build();
+
+        notificationService.sendNotification(request, Map.of());
+
+        verify(producer, never()).push(any(), any());
+    }
+
+    @Test
     void sendReactivationNotification_sendsSmsForEligibleEmployee() {
         Map<String, Object> locResult = new HashMap<>();
         locResult.put("messages", List.of(

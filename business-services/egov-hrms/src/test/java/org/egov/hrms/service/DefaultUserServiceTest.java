@@ -26,6 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import org.egov.common.contract.request.User;
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class DefaultUserServiceTest {
@@ -118,5 +120,62 @@ class DefaultUserServiceTest {
         UserResponse response = defaultUserService.getUser(new RequestInfo(), criteria);
 
         assertThat(response).isNotNull();
+    }
+
+    @Test
+    void getUser_whenDecryptionEnabled_restoresOriginalUserInfo() {
+        when(propertiesManager.getUserSearchEndpoint()).thenReturn("/user/_search");
+        when(propertiesManager.getIsDecryptionEnable()).thenReturn(true);
+        when(centralInstanceUtil.getStateLevelTenant("pb.amritsar")).thenReturn("pb");
+        ReflectionTestUtils.setField(defaultUserService, "internalMicroserviceRoleUuid", "system-uuid");
+
+        LinkedHashMap<String, Object> user = new LinkedHashMap<>();
+        user.put("uuid", "u1");
+        user.put("id", 1);
+        user.put("createdDate", "01-01-2020 00:00:00");
+        user.put("dob", "1990-01-01");
+        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+        responseMap.put("user", List.of(user));
+        when(restCallRepository.fetchResult(any(), any())).thenReturn(responseMap);
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().uuid("caller-uuid").build())
+                .build();
+        Map<String, Object> criteria = new HashMap<>();
+        criteria.put("tenantId", "pb.amritsar");
+
+        UserResponse response = defaultUserService.getUser(requestInfo, criteria);
+
+        assertThat(response.getUser()).hasSize(1);
+        assertThat(requestInfo.getUserInfo().getUuid()).isEqualTo("caller-uuid");
+    }
+
+    @Test
+    void getUser_parsesExtendedDateFieldsOnSearchResponse() {
+        when(propertiesManager.getUserSearchEndpoint()).thenReturn("/user/_search");
+        LinkedHashMap<String, Object> user = new LinkedHashMap<>();
+        user.put("uuid", "u1");
+        user.put("id", 1);
+        user.put("createdDate", "01-01-2020 00:00:00");
+        user.put("lastModifiedDate", "02-01-2020 00:00:00");
+        user.put("pwdExpiryDate", "03-01-2020 00:00:00");
+        user.put("dob", "1990-01-01");
+        LinkedHashMap<String, Object> responseMap = new LinkedHashMap<>();
+        responseMap.put("user", List.of(user));
+        when(restCallRepository.fetchResult(any(), any())).thenReturn(responseMap);
+
+        UserResponse response = defaultUserService.getUser(new RequestInfo(), Map.of("tenantId", "pb"));
+
+        assertThat(response.getUser().get(0).getUuid()).isEqualTo("u1");
+    }
+
+    @Test
+    void createUser_whenRestCallFails_returnsNull() {
+        when(propertiesManager.getUserCreateEndpoint()).thenReturn("/user/_create");
+        when(restCallRepository.fetchResult(any(), any())).thenThrow(new RuntimeException("down"));
+
+        UserResponse response = defaultUserService.createUser(UserRequest.builder().requestInfo(new RequestInfo()).build());
+
+        assertThat(response).isNull();
     }
 }
