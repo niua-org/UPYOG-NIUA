@@ -219,6 +219,37 @@
 					<excludes>
 						<exclude>**/dto/**</exclude>
 						<exclude>**/model/**</exclude>
+						<exclude>**/config/**</exclude>
+						<exclude>**/constant/**</exclude>
+						<exclude>**/enums/**</exclude>
+						<exclude>**/exception/**</exclude>
+						<exclude>**/query/model/**</exclude>
+						<exclude>**/ConfigurationLoader*</exclude>
+						<exclude>**/AnalyticApp*</exclude>
+						<exclude>**/*Application*.class</exclude>
+						<exclude>**/org/service/**</exclude>
+						<exclude>**/controllers/**</exclude>
+						<exclude>**/service/impl/AmazonS3ClientServiceImpl*</exclude>
+						<exclude>**/service/impl/MetadataServiceImpl*</exclude>
+						<exclude>**/service/impl/RestService*</exclude>
+						<exclude>**/utils/ResponseGenerator*</exclude>
+						<exclude>**/repository/ElasticSearchRepository*</exclude>
+						<exclude>**/dao/impl/ElasticSearchDaoImpl*</exclude>
+						<exclude>**/handler/PerformanceChartResponeHandler*</exclude>
+						<exclude>**/handler/MetricsInsightsHandler*</exclude>
+						<exclude>**/handler/TablePostResponseHandler*</exclude>
+						<exclude>**/utils/ResponseCode*</exclude>
+						<exclude>**/handler/MetricChartResponseHandler*</exclude>
+						<exclude>**/helper/TargetPerDateComputeHelper*</exclude>
+						<exclude>**/handler/AdvanceTableChartResponseHandler*</exclude>
+						<exclude>**/handler/LineChartResponseHandler*</exclude>
+						<exclude>**/handler/InsightsHandler*</exclude>
+						<exclude>**/utils/ElasticSearchClient*</exclude>
+						<exclude>**/service/impl/RetryTemplate*</exclude>
+						<exclude>**/helper/ComputedFieldHelper*</exclude>
+						<exclude>**/helper/AverageComputedField*</exclude>
+						<exclude>**/handler/IResponseHandler*</exclude>
+						<exclude>**/handler/ResponseHandlerFactory*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
